@@ -26,7 +26,6 @@ export default {
   },
   dialect: "postgresql",
   out: "./src/database/migrations",
-
-  schema: "./src/database/schemas",
+  schema: "./src/database/schema.ts",
   strict: true,
 } satisfies Config;

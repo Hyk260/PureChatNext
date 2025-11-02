@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "db:check": "drizzle-kit check",
+    "db:generate": "drizzle-kit generate",
     "db:generate-client": "npx tsx ./scripts/migrateClientDB/compile-migrations.ts",
     "db:migrate": "npx tsx ./scripts/migrateServerDB/index.ts",
     "db:studio": "drizzle-kit studio",

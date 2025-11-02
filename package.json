@@ -6,24 +6,42 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "db:check": "drizzle-kit check",
+    "db:generate-client": "npx tsx ./scripts/migrateClientDB/compile-migrations.ts",
+    "db:migrate": "npx tsx ./scripts/migrateServerDB/index.ts",
+    "db:studio": "drizzle-kit studio",
     "lint": "eslint"
   },
   "dependencies": {
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "next": "16.0.1",
+    "@ai-sdk/openai": "^2.0.59",
+    "@lobehub/ui": "^2.13.5",
+    "@supabase/supabase-js": "^2.78.0",
+    "ai": "5.0.26",
+    "debug": "^4.4.3",
+    "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.6",
+    "drizzle-orm": "^0.44.7",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.539.0",
-    "ai": "5.0.26"
+    "next": "16.0.1",
+    "next-auth": "^4.24.13",
+    "pino": "^10.1.0",
+    "postgres": "^3.4.7",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-layout-kit": "^2.0.0",
+    "tls-sig-api-v2": "^1.0.2",
+    "tsx": "^4.20.6"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@tailwindcss/postcss": "^4",
+    "@types/debug": "^4.1.12",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
-    "eslint-config-next": "16.0.1"
+    "eslint-config-next": "16.0.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

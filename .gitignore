@@ -49,7 +49,6 @@ bun.lockb
 # Build outputs
 dist/
 es/
-lib/
 .next/
 logs/
 test-output/

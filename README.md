@@ -131,7 +131,7 @@ PureChatNext/
 │   │       └── refresh/   # 刷新 Token
 │   ├── layout.tsx         # 根布局
 │   └── page.tsx           # 首页
-├── lib/
+├── libs/
 │   ├── supabase/          # Supabase 客户端配置
 │   │   ├── client.ts      # 客户端 Supabase
 │   │   └── server.ts      # 服务端 Supabase

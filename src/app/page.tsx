@@ -1,9 +1,9 @@
-import TestAuthPage from './test-auth/page';
-import TestUsersPage from './test-users/page';
-
+import Welcome from './welcome/page';
 
 export default function Home() {
   return (
-    <TestUsersPage />
+    <div>
+      <Welcome />
+    </div>
   ); 
 }

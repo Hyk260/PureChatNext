@@ -13,17 +13,13 @@ import {
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
-// 加载环境变量
-config({
-  path: ".env.local",
-});
+config();
 
-// Optionally, if not using email/pass login, you can
-// use the Drizzle adapter for Auth.js / NextAuth
+// 如果不使用邮箱/密码登录，可以使用适用于Auth.js / NextAuth的Drizzle适配器
 // https://authjs.dev/reference/adapter/drizzle
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is not set. Please check your .env.local file.");
+  throw new Error("未设置 DATABASE_URL 环境变量。请检查您的.env文件。");
 }
 
 const client = postgres(process.env.DATABASE_URL);

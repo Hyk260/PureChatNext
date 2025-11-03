@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { pino } from '@/lib/logger';
+import { pino } from '@/libs/logger';
 
 /**
  * REST API

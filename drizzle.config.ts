@@ -5,9 +5,7 @@ import type { Config } from "drizzle-kit";
 
 // 传递给Node.js的dotenv_config_path参数
 
-config({
-  path: ".env.local",
-});
+config();
 
 let connectionString = process.env.DATABASE_URL;
 

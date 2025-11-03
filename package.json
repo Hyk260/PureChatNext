@@ -1,6 +1,6 @@
 {
   "name": "pure-chat-next",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,16 +8,21 @@
     "start": "next start",
     "db:check": "drizzle-kit check",
     "db:generate": "drizzle-kit generate",
-    "db:generate-client": "npx tsx ./scripts/migrateClientDB/compile-migrations.ts",
-    "db:migrate": "npx tsx ./scripts/migrateServerDB/index.ts",
+    "db:migrate": "npx tsx ./scripts/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "lint": "eslint"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.59",
     "@lobehub/ui": "^2.13.5",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.78.0",
     "ai": "5.0.26",
+    "antd": "^5.28.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "debug": "^4.4.3",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.6",
@@ -31,6 +36,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-layout-kit": "^2.0.0",
+    "tailwind-merge": "^3.3.1",
     "tls-sig-api-v2": "^1.0.2",
     "tsx": "^4.20.6"
   },

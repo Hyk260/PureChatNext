@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
-import { corsMiddleware } from '@/lib/utils/cors';
+import { corsMiddleware } from '@/libs/cors';
 
 /**
  * 刷新 Token 接口

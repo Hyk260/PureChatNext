@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
-import { corsMiddleware } from '@/lib/utils/cors';
+import { supabase } from '@/libs/supabase/client';
+import { corsMiddleware } from '@/libs/cors';
 
 /**
  * 注册接口

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { corsMiddleware } from '@/lib/utils/cors';
+import { corsMiddleware } from '@/libs/cors';
 
 /**
  * 登出接口

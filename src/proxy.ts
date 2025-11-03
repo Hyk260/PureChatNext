@@ -18,7 +18,7 @@ export async function proxy(request: NextRequest) {
   logDefault('Processing request: %s %s', request.method, request.url);
   
   // 详细的请求信息（开发环境）
-  if (isDev) {
+  if (isDev && false) {
     console.log('\n========== Proxy Debug Info ==========');
     console.log('📋 Request Method:', request.method);
     console.log('🔗 Full URL:', request.url);

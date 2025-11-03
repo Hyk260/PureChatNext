@@ -14,11 +14,13 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.59",
+    "@auth/core": "^0.34.3",
     "@lobehub/ui": "^2.13.5",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.78.0",
+    "@t3-oss/env-nextjs": "^0.13.8",
     "ai": "5.0.26",
     "antd": "^5.28.0",
     "class-variance-authority": "^0.7.1",
@@ -38,7 +40,8 @@
     "react-layout-kit": "^2.0.0",
     "tailwind-merge": "^3.3.1",
     "tls-sig-api-v2": "^1.0.2",
-    "tsx": "^4.20.6"
+    "tsx": "^4.20.6",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -4,6 +4,10 @@ export const generateUserSig = ({ identifier = "" }) => {
   const appId = process.env.IM_SDK_APPID || "";
   const appKey = process.env.IM_SDK_KEY || "";
 
+  if (!appId || !appKey) {
+    throw new Error("appId or appKey is not defined");
+  }
+
   const EXPIRETIME = 86400 * 7;
 
   const api = new TLSSigAPIv2.Api(appId, appKey);

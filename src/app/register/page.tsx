@@ -24,13 +24,13 @@ export default function RegisterPage() {
     setError(null);
 
     if (password !== repeatPassword) {
-      setError("Passwords do not match");
+      setError("密码不匹配");
       setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError("密码必须至少包含6个字符");
       setIsLoading(false);
       return;
     }

@@ -7,6 +7,7 @@ export default async function ProtectedPage() {
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.getUser();
+
   if (error || !data?.user) {
     redirect("/login");
   }
@@ -44,9 +45,7 @@ export default async function ProtectedPage() {
               <Button>
                 <Link href="/test">Test API</Link>
               </Button>
-              <form action="/api/auth/logout" method="POST">
-                <Button>Logout</Button>
-              </form>
+              <Button>Logout</Button>
             </div>
           </div>
         </Card>

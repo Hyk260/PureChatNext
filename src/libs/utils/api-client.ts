@@ -64,6 +64,7 @@ async function refreshAccessToken(): Promise<string | null> {
     saveTokens(data.session.access_token, data.session.refresh_token);
     return data.session.access_token;
   } catch (error) {
+    console.warn(error)
     clearTokens();
     return null;
   }

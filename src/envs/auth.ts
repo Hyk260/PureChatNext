@@ -14,7 +14,7 @@ declare global {
       NEXT_AUTH_SECRET?: string;
       NEXT_AUTH_DEBUG?: string;
 
-      // Github
+      // ===== Github ===== //
       GITHUB_CLIENT_ID?: string;
       GITHUB_CLIENT_SECRET?: string;
     }
@@ -43,6 +43,7 @@ export const getAuthConfig = () => {
        */
       NEXT_AUTH_SECRET: z.string().optional(),
       NEXT_AUTH_DEBUG: z.boolean().optional().default(false),
+      NEXT_AUTH_SSO_SESSION_STRATEGY: z.enum(['jwt', 'database']).optional().default('jwt'),
 
       // Github
       GITHUB_CLIENT_ID: z.string().optional(),
@@ -63,6 +64,7 @@ export const getAuthConfig = () => {
         process.env.NEXT_PUBLIC_ENABLE_NEXT_AUTH === "1",
       NEXT_AUTH_SECRET: process.env.NEXT_AUTH_SECRET,
       NEXT_AUTH_DEBUG: !!process.env.NEXT_AUTH_DEBUG,
+      NEXT_AUTH_SSO_SESSION_STRATEGY: process.env.NEXT_AUTH_SSO_SESSION_STRATEGY || 'jwt',
 
       // Github
       GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,

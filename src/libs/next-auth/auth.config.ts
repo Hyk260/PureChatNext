@@ -1,10 +1,19 @@
-import type { Session, User, SessionStrategy } from 'next-auth';
-import type { JWT } from 'next-auth/jwt';
-import GitHub from 'next-auth/providers/github';
+import type { Session, User } from "next-auth";
+import type { JWT } from "next-auth/jwt";
+import GitHub from "next-auth/providers/github";
 
-import { getAuthConfig } from '@/envs/auth';
+import { getAuthConfig } from "@/envs/auth";
+import { getServerDBConfig } from "@/envs/serverDB";
 
-const { NEXT_AUTH_DEBUG, NEXT_AUTH_SECRET } = getAuthConfig();
+const {
+  GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET,
+  NEXT_AUTH_DEBUG,
+  NEXT_AUTH_SECRET,
+  NEXT_AUTH_SSO_SESSION_STRATEGY,
+} = getAuthConfig();
+
+const { NEXT_PUBLIC_ENABLED_SERVER_SERVICE } = getServerDBConfig();
 
 // Notice this is only an object, not a full Auth.js instance
 const authConfig = {
@@ -15,12 +24,21 @@ const authConfig = {
       }
       return token;
     },
-    async session({ session, token, user }: { session: Session; token: JWT; user?: User }) {
+    async session({
+      session,
+      token,
+      user,
+    }: {
+      session: Session;
+      token: JWT;
+      user?: User;
+    }) {
       if (session.user) {
         if (user) {
           (session.user as unknown as { id?: string }).id = user.id as string;
         } else {
-          (session.user as unknown as { id?: string }).id = (token.userId ?? (session.user as unknown as { id?: string }).id) as string;
+          (session.user as unknown as { id?: string }).id = (token.userId ??
+            (session.user as unknown as { id?: string }).id) as string;
         }
       }
       return session;
@@ -28,14 +46,14 @@ const authConfig = {
   },
   debug: NEXT_AUTH_DEBUG,
   pages: {
-    error: '/next-auth/error',
-    signIn: '/next-auth/signin',
+    error: "/next-auth/error",
+    signIn: "/next-auth/signin",
   },
   providers: [
     GitHub({
-      authorization: { params: { scope: 'read:user user:email' } },
-      clientId: (process.env.GITHUB_CLIENT_ID ?? process.env.AUTH_GITHUB_ID) ?? '',
-      clientSecret: (process.env.GITHUB_CLIENT_SECRET ?? process.env.AUTH_GITHUB_SECRET) ?? '',
+      authorization: { params: { scope: "read:user user:email" } },
+      clientId: GITHUB_CLIENT_ID ?? process.env.AUTH_GITHUB_ID ?? "",
+      clientSecret: GITHUB_CLIENT_SECRET ?? process.env.AUTH_GITHUB_SECRET ?? "",
       profile: (profile) => {
         return {
           email: profile.email,
@@ -50,9 +68,14 @@ const authConfig = {
   ],
   secret: NEXT_AUTH_SECRET,
   session: {
-    strategy: 'jwt' as SessionStrategy,
+    // Force use JWT if server service is disabled
+    strategy: NEXT_PUBLIC_ENABLED_SERVER_SERVICE
+      ? NEXT_AUTH_SSO_SESSION_STRATEGY
+      : "jwt",
   },
-  trustHost: process.env?.AUTH_TRUST_HOST ? process.env.AUTH_TRUST_HOST === 'true' : true,
+  trustHost: process.env?.AUTH_TRUST_HOST
+    ? process.env.AUTH_TRUST_HOST === "true"
+    : true,
 };
 
 export default authConfig;

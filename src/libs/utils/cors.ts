@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { appEnv } from '@/envs/app';
 
 /**
  * CORS 配置
  */
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  appEnv.APP_URL,
   'http://localhost:3000',
   'http://localhost:8080',
   'http://localhost:8038'

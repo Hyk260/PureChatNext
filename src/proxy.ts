@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
+import debug from "debug";
 // import { getToken } from "next-auth/jwt";
 import { isDev } from "./libs/constants";
-import debug from "debug";
 
 const backendApiEndpoints = ["/api", "/trpc", "/webapi", "/oidc"];
 

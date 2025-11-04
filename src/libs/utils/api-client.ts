@@ -1,9 +1,10 @@
+import { appEnv } from '@/envs/app';
+
 /**
  * API 客户端工具函数
  * 用于前端调用后端 API
  */
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE_URL = appEnv.APP_URL || '';
 
 /**
  * 获取存储的 access token

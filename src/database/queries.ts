@@ -7,6 +7,7 @@ import {
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { serverDBEnv } from "@/envs/serverDB";
 import {
   type User,
   user,
@@ -15,14 +16,14 @@ import { generateHashedPassword, verifyPassword } from "./utils";
 
 config();
 
-// 如果不使用邮箱/密码登录，可以使用适用于Auth.js / NextAuth的Drizzle适配器
+// 如果不使用邮箱/密码登录，可以使用适用于Auth.js/NextAuth的Drizzle适配器
 // https://authjs.dev/reference/adapter/drizzle
 
-if (!process.env.DATABASE_URL) {
+if (!serverDBEnv.DATABASE_URL) {
   throw new Error("未设置 DATABASE_URL 环境变量。请检查您的.env文件。");
 }
 
-const client = postgres(process.env.DATABASE_URL);
+const client = postgres(serverDBEnv.DATABASE_URL);
 const db = drizzle(client);
 
 /**

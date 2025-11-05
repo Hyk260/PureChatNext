@@ -54,7 +54,7 @@ export async function generateAccessToken(userId: string): Promise<string> {
   return await new SignJWT({ userId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("15m") // 15分钟
+    .setExpirationTime("15m")
     .sign(secret)
 }
 
@@ -64,7 +64,7 @@ export async function generateRefreshToken(userId: string): Promise<{ token: str
   const token = await new SignJWT({ userId, family: tokenFamily })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("7d") // 7天
+    .setExpirationTime("7d")
     .sign(secret)
 
   return { token, family: tokenFamily }

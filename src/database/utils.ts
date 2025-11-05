@@ -12,8 +12,7 @@ export function generateHashedPassword(password: string): string {
  * 验证密码
  */
 export function verifyPassword(password: string, hashedPassword: string): boolean {
-  return password === hashedPassword;
-  // const hash = generateHashedPassword(password);
-  // return hash === hashedPassword;
+  const hash = generateHashedPassword(password);
+  return (hash === hashedPassword || password === hashedPassword);
 }
 

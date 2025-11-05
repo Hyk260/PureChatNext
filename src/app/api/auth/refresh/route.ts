@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { corsMiddleware } from '@/libs/utils/cors';
 import { verifyRefreshToken, generateAccessToken, generateRefreshToken } from '@/libs/jwt';
 
 /**
@@ -11,16 +10,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { refreshToken } = body;
 
-    // 验证输入
     if (!refreshToken) {
       const response = NextResponse.json(
         { error: 'refreshToken 不能为空' },
         { status: 400 }
       );
-      return corsMiddleware(request, response);
+      return response
     }
 
-    // 验证刷新令牌
     const verifyResult = await verifyRefreshToken(refreshToken);
 
     if (!verifyResult.valid) {
@@ -31,16 +28,17 @@ export async function POST(request: NextRequest) {
         },
         { status: 401 }
       );
-      return corsMiddleware(request, response);
+      return response
     }
 
-    // 生成新的访问令牌和刷新令牌
-    if (!verifyResult.userId || !verifyResult.email) {
+    console.log('verifyResult', verifyResult)
+
+    if (!verifyResult.userId) {
       const response = NextResponse.json(
         { error: '令牌信息不完整' },
         { status: 400 }
       );
-      return corsMiddleware(request, response);
+      return response
     }
 
     const accessToken = await generateAccessToken(verifyResult.userId);
@@ -58,7 +56,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
 
-    return corsMiddleware(request, response);
+    return response
 
   } catch (error) {
     console.error('Refresh token error:', error);
@@ -66,14 +64,7 @@ export async function POST(request: NextRequest) {
       { error: '服务器内部错误' },
       { status: 500 }
     );
-    return corsMiddleware(request, response);
+    return response
   }
-}
-
-/**
- * 处理 OPTIONS 预检请求
- */
-export async function OPTIONS(request: NextRequest) {
-  return corsMiddleware(request);
 }
 

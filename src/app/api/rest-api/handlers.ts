@@ -11,13 +11,24 @@ interface AccountImportParams {
   FaceUrl?: string;
 }
 
+interface CheckResultItem {
+  AccountStatus: string;
+}
+
+interface SendMsgParams {
+  From_Account: string
+  To_Account: string
+  Text: string
+  CloudCustomData?: string
+}
+
 /**
  * 用于查询自有账号是否已导入即时通信 IM，支持批量查询。
  * https://cloud.tencent.com/document/product/269/38417
  */
 export const accountCheck = async (params: CheckItem[]): Promise<boolean> => {
   try {
-    const result = await http.request({
+    const result = await http.request<CheckResultItem[]>({
       url: "v4/im_open_login_svc/account_check",
       method: "post",
       data: { CheckItem: params },
@@ -50,7 +61,7 @@ export const accountImport = async (params: AccountImportParams): Promise<boolea
  * 单发单聊消息
  * https://cloud.tencent.com/document/product/269/2282
  */
-export const restSendMsg = async (params: any) => {
+export const restSendMsg = async (params: SendMsgParams) => {
   const { From_Account, To_Account, Text, CloudCustomData } = params;
   const result = await http.request({
     url: "v4/openim/sendmsg",

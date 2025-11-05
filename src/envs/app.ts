@@ -8,6 +8,7 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       ACCESS_CODE?: string;
+      ALLOWED_ORIGINS?: string;
     }
   }
 }
@@ -33,12 +34,17 @@ export const getAppConfig = () => {
     server: {
       APP_URL: z.string().optional(),
       VERCEL_EDGE_CONFIG: z.string().optional(),
+      /**
+       * 允许跨域请求的源地址（多个用逗号分隔，* 表示允许所有源）
+       */
+      ALLOWED_ORIGINS: z.string().optional(),
     },
     runtimeEnv: {
       // Sentry
       NEXT_PUBLIC_ENABLE_SENTRY: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
       VERCEL_EDGE_CONFIG: process.env.VERCEL_EDGE_CONFIG,
       APP_URL,
+      ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
     },
   });
 };

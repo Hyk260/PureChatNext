@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { corsMiddleware } from "@/libs/utils/cors";
 import { createUser, getUserByLoginId } from "@/database/queries";
+import { pino } from '@/libs/logger';
 
 /**
  * 注册接口
@@ -10,30 +10,31 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, password, username: login_id } = body;
+    pino.info(`[POST /api/auth/register] email:${email} password:${password} login_id:${login_id}`);
 
     // 验证输入
     if (!email || !password || !login_id) {
       const response = NextResponse.json(
-        { 
+        {
           error: "邮箱、密码和登录ID不能为空",
-          message: "邮箱、密码和登录ID不能为空"
+          message: "邮箱、密码和登录ID不能为空",
         },
         { status: 400 }
       );
-      return corsMiddleware(request, response);
+      return response;
     }
 
     // 验证邮箱格式
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       const response = NextResponse.json(
-        { 
+        {
           error: "邮箱格式不正确",
-          message: "请输入有效的邮箱地址"
+          message: "请输入有效的邮箱地址",
         },
         { status: 400 }
       );
-      return corsMiddleware(request, response);
+      return response;
     }
 
     // 验证密码长度
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
-      return corsMiddleware(request, response);
+      return response;
     }
 
     // 验证 login_id：仅允许小写字母和数字，长度 4-32
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
-      return corsMiddleware(request, response);
+      return response;
     }
 
     if (login_id.length < 4 || login_id.length > 32) {
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
-      return corsMiddleware(request, response);
+      return response;
     }
 
     // 检查 login_id 是否已存在
@@ -82,8 +83,23 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
-      return corsMiddleware(request, response);
+      return response;
     }
+
+    // if (email) {
+    //   const existingEmail = await getUser(email);
+    //   pino.info(`Checking if email ${existingEmail} already exists`);
+    //   if (existingEmail) {
+    //     const response = NextResponse.json(
+    //       {
+    //         error: "该邮箱已被注册",
+    //         message: "邮箱已被注册",
+    //       },
+    //       { status: 400 }
+    //     );
+    //     return response;
+    //   }
+    // }
 
     // 创建用户
     const newUser = await createUser(email, password, login_id);
@@ -103,7 +119,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
 
-    return corsMiddleware(request, response);
+    return response;
   } catch (error) {
     console.error("Register error:", error);
     const response = NextResponse.json(
@@ -113,13 +129,6 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
-    return corsMiddleware(request, response);
+    return response;
   }
-}
-
-/**
- * 处理 OPTIONS 预检请求
- */
-export async function OPTIONS(request: NextRequest) {
-  return corsMiddleware(request);
 }

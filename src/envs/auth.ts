@@ -17,6 +17,9 @@ declare global {
       // ===== Github ===== //
       GITHUB_CLIENT_ID?: string;
       GITHUB_CLIENT_SECRET?: string;
+      // electron
+      GITHUB_ELECTRON_ID?: string;
+      GITHUB_ELECTRON_SECRET?: string;
     }
   }
 }
@@ -48,6 +51,8 @@ export const getAuthConfig = () => {
       // Github
       GITHUB_CLIENT_ID: z.string().optional(),
       GITHUB_CLIENT_SECRET: z.string().optional(),
+      GITHUB_ELECTRON_ID: z.string().optional(),
+      GITHUB_ELECTRON_SECRET: z.string().optional(),
     },
 
     runtimeEnv: {
@@ -66,9 +71,13 @@ export const getAuthConfig = () => {
       NEXT_AUTH_DEBUG: !!process.env.NEXT_AUTH_DEBUG,
       NEXT_AUTH_SSO_SESSION_STRATEGY: process.env.NEXT_AUTH_SSO_SESSION_STRATEGY || 'jwt',
 
-      // Github
+      // ===== Github ===== //
+      // webapp
       GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
       GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
+      // electron
+      GITHUB_ELECTRON_ID: process.env.GITHUB_ELECTRON_ID,
+      GITHUB_ELECTRON_SECRET: process.env.GITHUB_ELECTRON_SECRET,
     },
   });
 };

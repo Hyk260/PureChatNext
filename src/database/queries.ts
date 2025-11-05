@@ -31,7 +31,7 @@ const db = drizzle(client);
  */
 export async function getUser(email: string): Promise<User[]> {
   try {
-    return await db.select().from(user).where(eq(user.email, email));
+    return await db.select().from(user).where(eq(user.email, email)).limit(1);
   } catch (error) {
     console.error("Error getting user by email:", error);
     throw error;

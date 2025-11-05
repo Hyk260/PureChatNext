@@ -28,8 +28,7 @@ export const getServerDBConfig = () => {
 
       KEY_VAULTS_SECRET: process.env.KEY_VAULTS_SECRET,
 
-      NEXT_PUBLIC_ENABLED_SERVER_SERVICE:
-        process.env.NEXT_PUBLIC_SERVICE_MODE === "server",
+      NEXT_PUBLIC_ENABLED_SERVER_SERVICE: process.env.NEXT_PUBLIC_SERVICE_MODE === "server",
     },
   });
 };

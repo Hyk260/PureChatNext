@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import debug from "debug";
+import { addCorsHeaders, createCorsPreflightResponse } from "@/libs/utils/cors";
 // import { getToken } from "next-auth/jwt";
 import { isDev } from "./libs/constants";
 
@@ -7,26 +8,20 @@ const backendApiEndpoints = ["/api", "/trpc", "/webapi", "/oidc"];
 
 const logDefault = debug("proxy:default");
 
-// 开发环境下启用所有调试日志
-if (isDev) {
-  debug.enabled("proxy:*");
-}
-
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
-  
-  logDefault('Processing request: %s %s', request.method, request.url);
-  
-  // 详细的请求信息（开发环境）
-  if (isDev && false) {
-    console.log('\n========== Proxy Debug Info ==========');
-    console.log('📋 Request Method:', request.method);
-    console.log('🔗 Full URL:', request.url);
-    console.log('📍 Pathname:', pathname);
-    console.log('🔍 Query Params:', Object.fromEntries(searchParams));
-    console.log('🌐 Origin:', request.nextUrl.origin);
-    console.log('🔐 Protocol:', request.nextUrl.protocol);
-    console.log('======================================\n');
+
+  logDefault("Processing request: %s %s", request.method, request.url);
+
+  if (isDev) {
+    console.log("\n========== Proxy Debug Info ==========");
+    console.log("📋 Request Method:", request.method);
+    console.log("🔗 Full URL:", request.url);
+    console.log("📍 Pathname:", pathname);
+    console.log("🔍 Query Params:", Object.fromEntries(searchParams));
+    console.log("🌐 Origin:", request.nextUrl.origin);
+    console.log("🔐 Protocol:", request.nextUrl.protocol);
+    console.log("======================================\n");
   }
 
   /*
@@ -36,10 +31,17 @@ export async function proxy(request: NextRequest) {
     return new Response("pong", { status: 200 });
   }
 
-  // 跳过所有API请求
   if (backendApiEndpoints.some((path) => pathname.startsWith(path))) {
-    logDefault('Skipping API request: %s', pathname);
-    return NextResponse.next();
+    logDefault("Processing API request with CORS: %s", pathname);
+
+    // 处理 OPTIONS 预检请求
+    if (request.method === "OPTIONS") {
+      return createCorsPreflightResponse(request);
+    }
+
+    const response = NextResponse.next();
+    addCorsHeaders(request, response.headers);
+    return response;
   }
 
   return NextResponse.next();
@@ -60,4 +62,3 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };
-

@@ -1,0 +1,36 @@
+# general
+.DS_Store
+.editorconfig
+.idea
+.vscode
+.history
+.temp
+.env.local
+.husky
+.npmrc
+.gitkeep
+LICENSE
+
+# TypeScript
+*.d.ts
+
+# dependencies
+node_modules
+*.log
+*.lock
+package-lock.json
+
+# production
+dist
+lib
+logs
+
+# ignore files
+.*ignore
+
+# image
+*.webp
+*.gif
+*.png
+*.jpg
+*.svg

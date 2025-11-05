@@ -1,7 +1,7 @@
 import { generateUserSig } from "./signature";
+import { imEnv } from "@/envs/im";
 
-const appId = process.env.IM_SDK_APPID || "";
-const administrator = process.env.IM_ADMIN_ISTRATOR || "";
+const { IM_SDK_APPID: appId, IM_ADMIN_ISTRATOR: administrator } = imEnv;
 
 let cachedSig: string = "";
 let cacheExpiration: number | null = null;
@@ -29,6 +29,10 @@ export function getUserSig() {
 }
 
 export function buildURL(baseURL: string) {
+  if (!appId || !administrator) {
+    throw new Error("appId or administrator is not defined");
+  }
+
   const params: Params = {
     sdkappid: appId,
     identifier: administrator,

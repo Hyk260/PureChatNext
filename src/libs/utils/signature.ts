@@ -1,8 +1,8 @@
-import TLSSigAPIv2 from 'tls-sig-api-v2';
+import TLSSigAPIv2 from "tls-sig-api-v2";
+import { imEnv } from "@/envs/im";
 
 export const generateUserSig = ({ identifier = "" }) => {
-  const appId = process.env.IM_SDK_APPID || "";
-  const appKey = process.env.IM_SDK_KEY || "";
+  const { IM_SDK_APPID: appId, IM_SDK_KEY: appKey } = imEnv;
 
   if (!appId || !appKey) {
     throw new Error("appId or appKey is not defined");

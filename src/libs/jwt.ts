@@ -11,15 +11,6 @@ export interface JWTPayload {
   exp?: number
 }
 
-// 生成 JWT Token
-export async function signToken(payload: JWTPayload): Promise<string> {
-  return await new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("24h") // Token 有效期 24 小时
-    .sign(secret)
-}
-
 // 验证 JWT Token
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {

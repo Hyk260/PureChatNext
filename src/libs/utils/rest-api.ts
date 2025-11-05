@@ -4,12 +4,15 @@ import axios, {
   type AxiosError,
 } from "axios";
 import { buildURL } from "./buildURL";
+import { imEnv } from "@/envs/im";
+
+const { IM_SERVER_BASE_URL, IM_REQUEST_TIMEOUT } = imEnv;
 
 // https://cloud.tencent.com/document/product/269/1519
 const defaultConfig = {
-  baseURL: process.env.IM_SERVER_BASE_URL || "https://console.tim.qq.com",
+  baseURL: IM_SERVER_BASE_URL || "https://console.tim.qq.com",
   // 请求超时时间
-  timeout: parseInt(process.env.IM_REQUEST_TIMEOUT || "10000", 10),
+  timeout: parseInt(IM_REQUEST_TIMEOUT || "10000", 10),
 };
 
 // 响应数据接口

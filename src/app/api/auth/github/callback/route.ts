@@ -3,7 +3,7 @@ import GitHubAPI, { type ClientType } from "@/libs/auth/gtihub";
 import { generateUserSig } from "@/libs/utils/signature";
 import { generateAccessToken, generateRefreshToken } from "@/libs/jwt";
 import { registerAccount } from "@/libs/utils/register";
-import { pino } from '@/libs/logger';
+import { logger } from '@/libs/logger';
 
 /**
  * GitHub OAuth 回调
@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "授权失败" }, { status: 400 });
     }
 
-    pino.info(`[GitHub] userInfo:${JSON.stringify(userInfo)}`);
+    console.log(userInfo, '[GitHub] User Info Fetched');
+    logger.info(userInfo, '[GitHub] User Info Fetched');
 
     const githubId = userInfo.id?.toString();
     const githubLogin = userInfo?.login || "";
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("GitHub callback error:", error);
+    logger.error(error, "GitHub callback error:");
     return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

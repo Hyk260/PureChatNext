@@ -1,5 +1,6 @@
 import { http } from '@/libs/utils/rest-api';
 import { generateRandomInt32 } from '@/libs/utils/buildURL';
+import { pino } from '@/libs/logger';
 
 interface CheckItem {
   UserID: string;
@@ -87,6 +88,7 @@ export const restSendMsg = async (params: SendMsgParams) => {
       ],
     },
   });
+  pino.info(`restSendMsg: ${result}`);
   return result;
 };
 
@@ -103,6 +105,7 @@ export const addGroupMember = async (params: any) => {
       MemberList: [{ Member_Account: member }],
     },
   });
+  pino.info(`addGroupMember: ${result}`);
   return result;
 };
 

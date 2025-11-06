@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/libs/jwt';
 
-const testToken = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJhZG1pbiIsImlhdCI6MTc2MjMzMjU4MywiZXhwIjoxNzYyMzMzNDgzfQ.lp684UTU2klD5QuYSSqa9qsQFe0W5qbk3evZ-ZmboH4"
-
 /**
  * JWT 验证测试接口
  * GET /api/protected
@@ -13,7 +11,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJhZG1pbiIsImlhdCI6M
 export async function GET(request: NextRequest) {
   try {
     // 从 Authorization header 中获取 token
-    const authHeader = request.headers.get('authorization') || testToken;
+    const authHeader = request.headers.get('authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(

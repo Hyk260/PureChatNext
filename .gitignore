@@ -33,7 +33,7 @@ tmp/
 .cache/
 
 # Environment files
-.env
+# .env
 .env.local
 .env*.local
 venv/

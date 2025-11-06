@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createUser, getUserByLoginId } from "@/database/queries";
-import { pino } from '@/libs/logger';
+import { logger } from '@/libs/logger';
 
 /**
  * 注册接口
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, password, username: login_id } = body;
-    pino.info(`[POST /api/auth/register] email:${email} password:${password} login_id:${login_id}`);
+    logger.info(`[POST /api/auth/register] email:${email} password:${password} login_id:${login_id}`);
 
     // 验证输入
     if (!email || !password || !login_id) {
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("Register error:", error);
+    logger.error(error, "Register error:");
     const response = NextResponse.json(
       {
         message: "服务器内部错误",

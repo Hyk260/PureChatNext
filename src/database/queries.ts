@@ -1,18 +1,14 @@
 import "server-only";
 
 import { config } from "dotenv";
-import {
-  asc,
-  eq,
-} from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { serverDBEnv } from "@/envs/serverDB";
-import {
-  type User,
-  user,
-} from "./schema";
+import { type User, user } from "./schema";
 import { generateHashedPassword, verifyPassword } from "./utils";
+import { logger } from '@/libs/logger';
+import { type } from "os";
 
 config();
 
@@ -26,12 +22,41 @@ if (!serverDBEnv.DATABASE_URL) {
 const client = postgres(serverDBEnv.DATABASE_URL);
 const db = drizzle(client);
 
+export type UserWithoutPassword = Omit<User, "password">;
+
+export const excludePassword = (user: User): UserWithoutPassword => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { password, ...userWithoutPassword } = user;
+  return userWithoutPassword;
+};
+
+/**
+ * 检查邮箱是否已存在
+ */
+export async function isEmailExists(email: string): Promise<boolean> {
+  const existingUser = await getUserByEmail(email);
+  return existingUser !== null;
+}
+
+/**
+ * 检查 login_id 是否已存在
+ */
+export async function isLoginIdExists(loginId: string): Promise<boolean> {
+  const existingUser = await getUserByLoginId(loginId);
+  return existingUser !== null;
+}
+
 /**
  * 根据邮箱获取用户
  */
-export async function getUser(email: string): Promise<User[]> {
+export async function getUserByEmail(email: string): Promise<User | null> {
   try {
-    return await db.select().from(user).where(eq(user.email, email)).limit(1);
+    const result = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, email))
+      .limit(1);
+    return result[0] || null;
   } catch (error) {
     console.error("Error getting user by email:", error);
     throw error;
@@ -39,38 +64,20 @@ export async function getUser(email: string): Promise<User[]> {
 }
 
 /**
- * 通过邮箱和密码查询用户信息（返回不包含密码的数据）
+ * 通过邮箱和密码验证用户
  */
 export async function getUserByEmailAndPassword(
   email: string,
   password: string
-): Promise<Omit<User, "password"> | null> {
+): Promise<UserWithoutPassword | null> {
   try {
-    const users = await db.select().from(user).where(eq(user.email, email)).limit(1);
+    const foundUser = await getUserByEmail(email);
     
-    if (users.length === 0) {
+    if (!foundUser?.password || !verifyPassword(password, foundUser.password)) {
       return null;
     }
 
-    const foundUser = users[0];
-    
-    // 验证密码
-    if (!foundUser.password || !verifyPassword(password, foundUser.password)) {
-      return null;
-    }
-
-    // 返回不包含密码的用户信息
-    const userWithoutPassword: Omit<User, "password"> = {
-      id: foundUser.id,
-      email: foundUser.email,
-      login_id: foundUser.login_id,
-      nick_name: foundUser.nick_name,
-      avatar_url: foundUser.avatar_url,
-      phone: foundUser.phone,
-      created_at: foundUser.created_at,
-      updated_at: foundUser.updated_at,
-    };
-    return userWithoutPassword;
+    return excludePassword(foundUser);
   } catch (error) {
     console.error("Error getting user by email and password:", error);
     throw error;
@@ -82,7 +89,11 @@ export async function getUserByEmailAndPassword(
  */
 export async function getUserByLoginId(loginId: string): Promise<User | null> {
   try {
-    const result = await db.select().from(user).where(eq(user.login_id, loginId)).limit(1);
+    const result = await db
+      .select()
+      .from(user)
+      .where(eq(user.login_id, loginId))
+      .limit(1);
     return result[0] || null;
   } catch (error) {
     console.error("Error getting user by login_id:", error);
@@ -91,38 +102,20 @@ export async function getUserByLoginId(loginId: string): Promise<User | null> {
 }
 
 /**
- * 通过 login_id 和密码查询用户信息（返回不包含密码的数据）
+ * 通过 login_id 和密码验证用户
  */
 export async function getUserByLoginIdAndPassword(
   loginId: string,
   password: string
-): Promise<Omit<User, "password"> | null> {
+): Promise<UserWithoutPassword | null> {
   try {
-    const users = await db.select().from(user).where(eq(user.login_id, loginId)).limit(1);
-    
-    if (users.length === 0) {
+    const foundUser = await getUserByLoginId(loginId);
+
+    if (!foundUser?.password || !verifyPassword(password, foundUser.password)) {
       return null;
     }
 
-    const foundUser = users[0];
-    
-    // 验证密码
-    if (!foundUser.password || !verifyPassword(password, foundUser.password)) {
-      return null;
-    }
-
-    // 返回不包含密码的用户信息
-    const userWithoutPassword: Omit<User, "password"> = {
-      id: foundUser.id,
-      email: foundUser.email,
-      login_id: foundUser.login_id,
-      nick_name: foundUser.nick_name,
-      avatar_url: foundUser.avatar_url,
-      phone: foundUser.phone,
-      created_at: foundUser.created_at,
-      updated_at: foundUser.updated_at,
-    };
-    return userWithoutPassword;
+    return excludePassword(foundUser);
   } catch (error) {
     console.error("Error getting user by login_id and password:", error);
     throw error;
@@ -184,11 +177,11 @@ export async function updateUser(
 ): Promise<User | null> {
   try {
     const updateData: { email?: string; password?: string } = {};
-    
+
     if (updates.email) {
       updateData.email = updates.email;
     }
-    
+
     if (updates.password) {
       updateData.password = generateHashedPassword(updates.password);
     }
@@ -202,7 +195,7 @@ export async function updateUser(
       .set(updateData)
       .where(eq(user.id, id))
       .returning();
-    
+
     return result[0] || null;
   } catch (error) {
     console.error("Error updating user:", error);

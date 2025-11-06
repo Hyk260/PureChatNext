@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import debug from "debug";
+import { ipAddress } from '@vercel/functions';
 import { addCorsHeaders, createCorsPreflightResponse } from "@/libs/utils/cors";
 // import { getToken } from "next-auth/jwt";
+import { logger } from '@/libs/logger';
 import { isDev } from "./libs/constants";
 
 const backendApiEndpoints = ["/api", "/trpc", "/webapi", "/oidc"];
@@ -10,6 +12,10 @@ const logDefault = debug("proxy:default");
 
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+
+  // const ip = ipAddress(request)
+
+  // logger.info(`clientIp: ${ip}`)
 
   logDefault("Processing request: %s %s", request.method, request.url);
 

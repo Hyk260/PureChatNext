@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { pino } from '@/libs/logger';
+import { logger } from '@/libs/logger';
 import { API_METHODS, ApiMethodName } from './handlers';
-import { parseRequestBodyUtf8 } from '@/libs/utils/http';
 import { requireAuth } from '@/libs/auth/middleware';
+
+const safeJsonStringify = (value: unknown) => {
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return value
+  }
+}
 
 /**
  * REST API
@@ -20,16 +27,16 @@ export async function POST(request: NextRequest) {
     const authError = await requireAuth(request);
     if (authError) return authError
 
-    type RestApiRequestBody = { funName?: ApiMethodName; params?: unknown };
-    const body = (await parseRequestBodyUtf8(request)) as RestApiRequestBody | string;
-    const { funName, params = {} } = (typeof body === 'string' ? {} as RestApiRequestBody : body);
+    const body = await request.json();
+    const { funName, params } = body
 
-    pino.info(`REST API POST: funName=${funName}`);
-    console.log("[REST API POST] params:", JSON.stringify(params));
+    logger.info(`[REST API POST] funName: ${funName}`);
+
+    logger.info(`[REST API POST] params: ${safeJsonStringify(params)}`);
     
     // 验证函数名
     if (!funName || !(funName in API_METHODS)) {
-      pino.warn(`Invalid function name: ${funName}`);
+      logger.warn(`Invalid function name: ${funName}`);
       const response = NextResponse.json(
         {
           success: false,
@@ -46,7 +53,7 @@ export async function POST(request: NextRequest) {
     const method = API_METHODS[funName as ApiMethodName] as (p: unknown) => Promise<unknown>;
     const result = await method(params);
 
-    pino.info(`REST API POST success: funName=${funName}`);
+    logger.info(`REST API POST success: funName=${funName}`);
 
     const response = NextResponse.json(
       {
@@ -59,7 +66,7 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    pino.error(`REST API POST error: ${errorMessage}`);
+    logger.error(`REST API POST error: ${errorMessage}`);
 
     const response = NextResponse.json(
       {
@@ -78,7 +85,7 @@ export async function POST(request: NextRequest) {
  * GET /api/rest-api
  */
 export async function GET(request: NextRequest) {
-  pino.info(`REST API GET: ${request.url}`);
+  logger.info(`REST API GET: ${request.url}`);
 
   const authError = await requireAuth(request);
   if (authError) {

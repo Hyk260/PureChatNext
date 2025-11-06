@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, getUserByLoginId } from "@/database/queries";
+import { createUser, getUserByLoginId, getUserByEmail } from "@/database/queries";
 import { logger } from '@/libs/logger';
 
 /**
@@ -86,20 +86,19 @@ export async function POST(request: NextRequest) {
       return response;
     }
 
-    // if (email) {
-    //   const existingEmail = await getUser(email);
-    //   pino.info(`Checking if email ${existingEmail} already exists`);
-    //   if (existingEmail) {
-    //     const response = NextResponse.json(
-    //       {
-    //         error: "该邮箱已被注册",
-    //         message: "邮箱已被注册",
-    //       },
-    //       { status: 400 }
-    //     );
-    //     return response;
-    //   }
-    // }
+    if (email) {
+      const existingEmail = await getUserByEmail(email);
+      if (existingEmail) {
+        const response = NextResponse.json(
+          {
+            error: "该邮箱已被注册",
+            message: "邮箱已被注册",
+          },
+          { status: 400 }
+        );
+        return response;
+      }
+    }
 
     // 创建用户
     const newUser = await createUser(email, password, login_id);

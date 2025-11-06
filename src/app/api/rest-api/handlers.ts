@@ -1,6 +1,6 @@
 import { http } from '@/libs/utils/rest-api';
 import { generateRandomInt32 } from '@/libs/utils/buildURL';
-import { pino } from '@/libs/logger';
+import { logger } from '@/libs/logger';
 
 interface CheckItem {
   UserID: string;
@@ -21,6 +21,14 @@ interface SendMsgParams {
   To_Account: string
   Text: string
   CloudCustomData?: string
+}
+
+const safeJsonStringify = (value: unknown) => {
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return value
+  }
 }
 
 /**
@@ -88,7 +96,7 @@ export const restSendMsg = async (params: SendMsgParams) => {
       ],
     },
   });
-  pino.info(`restSendMsg: ${result}`);
+  logger.info(`restSendMsg: ${safeJsonStringify(result)}`);
   return result;
 };
 
@@ -105,14 +113,14 @@ export const addGroupMember = async (params: any) => {
       MemberList: [{ Member_Account: member }],
     },
   });
-  pino.info(`addGroupMember: ${result}`);
+  logger.info(`addGroupMember: ${safeJsonStringify(result)}`);
   return result;
 };
 
 // API方法映射
 export const API_METHODS = {
-  accountCheck,
-  accountImport,
+  // accountCheck,
+  // accountImport,
   restSendMsg,
   addGroupMember
 } as const;

@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "用户名或密码错误",
-          message: "用户名或密码错误",
         },
         { status: 400 }
       );
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest) {
       {
         message: "登录成功",
         code: 200,
-        result: {
+        data: {
           username: user.login_id,
           userSig,
           accessToken,

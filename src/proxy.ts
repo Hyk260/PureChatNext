@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import debug from "debug";
+import { verifyAuth } from '@/libs/auth/middleware';
 import { ipAddress } from '@vercel/functions';
 import { addCorsHeaders, createCorsPreflightResponse } from "@/libs/utils/cors";
 // import { getToken } from "next-auth/jwt";
@@ -8,14 +9,71 @@ import { isDev } from "./libs/constants";
 
 const backendApiEndpoints = ["/api"];
 
+const protectedRoutes = [
+  "/api/rest-api", // REST API 需要验证
+]
+
 const logDefault = debug("proxy:default");
+
+/**
+ * 检查路径是否需要JWT验证
+ */
+function isProtectedRoute(pathname: string): boolean {
+  return protectedRoutes.some((route) => {
+    if (route.endsWith("*")) {
+      return pathname.startsWith(route.slice(0, -1))
+    }
+    return pathname === route || pathname.startsWith(route + "/")
+  })
+}
+
+/**
+ * 处理受保护路由的JWT验证
+ * @param request - 请求对象
+ * @param pathname - 请求路径
+ * @returns 包含用户信息的响应或未授权响应
+ */
+async function handleProtectedRoute(request: NextRequest, pathname: string): Promise<NextResponse> {
+  const { user, error } = await verifyAuth(request)
+
+  if (!user) {
+    logger.warn(`[Proxy Auth] Unauthorized access attempt to ${pathname}: ${error}`)
+    const response = NextResponse.json(
+      {
+        success: false,
+        error: error || "Unauthorized",
+        message: "请提供有效的 Bearer token",
+      },
+      { status: 401 },
+    )
+    addCorsHeaders(request, response.headers)
+    return response
+  }
+
+  // 将用户信息附加到请求头中，供后续路由使用
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set("x-user-id", user.userId)
+  if (user.role) {
+    requestHeaders.set("x-user-role", user.role)
+  }
+
+  logger.info(`[Proxy Auth] User ${user.userId} authenticated for ${pathname}`)
+
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
+  addCorsHeaders(request, response.headers)
+  return response
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
-  // const ip = ipAddress(request)
+  const ip = ipAddress(request)
 
-  // logger.info(`clientIp: ${ip}`)
+  if (ip) logger.info(`clientIp: ${ip}`)
 
   logDefault("Processing request: %s %s", request.method, request.url);
 
@@ -43,6 +101,10 @@ export async function proxy(request: NextRequest) {
     // 处理 OPTIONS 预检请求
     if (request.method === "OPTIONS") {
       return createCorsPreflightResponse(request);
+    }
+    
+    if (isProtectedRoute(pathname)) {
+      return handleProtectedRoute(request, pathname)
     }
 
     const response = NextResponse.next();

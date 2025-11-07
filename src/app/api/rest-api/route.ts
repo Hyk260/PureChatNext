@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from '@/libs/logger';
 import { API_METHODS, ApiMethodName } from './handlers';
-import { requireAuth } from '@/libs/auth/middleware';
 
 const safeJsonStringify = (value: unknown) => {
   try {
@@ -23,10 +22,6 @@ const safeJsonStringify = (value: unknown) => {
  */
 export async function POST(request: NextRequest) {
   try {
-    // JWT 验证
-    const authError = await requireAuth(request);
-    if (authError) return authError
-
     const body = await request.json();
     const { funName, params } = body
 
@@ -86,11 +81,6 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   logger.info(`REST API GET: ${request.url}`);
-
-  const authError = await requireAuth(request);
-  if (authError) {
-    return authError
-  }
 
   const response = NextResponse.json(
     {

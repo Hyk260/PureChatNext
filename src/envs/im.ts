@@ -16,7 +16,6 @@ declare global {
 
 export const getIMConfig = () => {
   return createEnv({
-    client: {},
     server: {
       IM_SDK_APPID: z.string().optional(),
       IM_SDK_KEY: z.string().optional(),

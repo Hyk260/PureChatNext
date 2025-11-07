@@ -6,7 +6,7 @@ import { addCorsHeaders, createCorsPreflightResponse } from "@/libs/utils/cors";
 import { logger } from '@/libs/logger';
 import { isDev } from "./libs/constants";
 
-const backendApiEndpoints = ["/api", "/trpc", "/webapi", "/oidc"];
+const backendApiEndpoints = ["/api"];
 
 const logDefault = debug("proxy:default");
 

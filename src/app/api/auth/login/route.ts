@@ -6,6 +6,75 @@ import {
 import { generateUserSig } from "@/libs/utils/signature";
 import { generateAccessToken, generateRefreshToken } from "@/libs/jwt";
 
+interface LoginRequestBody {
+  email?: string;
+  username?: string;
+  password: string;
+}
+
+interface LoginResponse {
+  message: string;
+  code: number;
+  data?: {
+    username: string;
+    userSig: string;
+    accessToken: string;
+    refreshToken: string;
+  };
+  error?: string;
+  timestamp: string;
+}
+
+// 常量配置
+const LOGIN_CONFIG = {
+  MIN_PASSWORD_LENGTH: 6,
+  MAX_LOGIN_ATTEMPTS: 5, // 可扩展为实际频率限制
+  ERROR_MESSAGES: {
+    INVALID_CREDENTIALS: "用户名或密码错误",
+    INVALID_INPUT: "用户名/邮箱和密码不能为空",
+    SERVER_ERROR: "服务器内部错误",
+    PASSWORD_TOO_SHORT: "密码长度不能少于6位"
+  },
+  SECURITY_HEADERS: {
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block"
+  }
+} as const;
+
+/**
+ * 邮箱格式验证
+ */
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+/**
+ * 输入验证函数
+ */
+function validateInput(data: LoginRequestBody): string | null {
+  // 检查基本字段
+  if (!data.password || (!data.email && !data.username)) {
+    return LOGIN_CONFIG.ERROR_MESSAGES.INVALID_INPUT;
+  }
+
+  // 密码长度验证
+  if (data.password.length < LOGIN_CONFIG.MIN_PASSWORD_LENGTH) {
+    return LOGIN_CONFIG.ERROR_MESSAGES.PASSWORD_TOO_SHORT;
+  }
+
+  // 邮箱格式验证（如果提供）
+  if (data.email && !isValidEmail(data.email)) {
+    return "邮箱格式不正确";
+  }
+
+  return null;
+}
+
 /**
  * 登录接口
  * POST /api/auth/login

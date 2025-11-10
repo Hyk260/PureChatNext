@@ -1,3 +1,10 @@
+export interface ApiResponse<T = unknown> {
+  code: number
+  massage?: string
+  error?: string
+  data: T
+}
+
 export interface LoginRequest {
   email: string;
   password: string;

@@ -5,6 +5,7 @@ import {
 } from "@/database/queries";
 import { generateUserSig } from "@/libs/utils/signature";
 import { generateAccessToken, generateRefreshToken } from "@/libs/jwt";
+import { isValidEmail } from "@/utils";
 
 interface LoginRequestBody {
   email?: string;
@@ -34,24 +35,8 @@ const LOGIN_CONFIG = {
     INVALID_INPUT: "用户名/邮箱和密码不能为空",
     SERVER_ERROR: "服务器内部错误",
     PASSWORD_TOO_SHORT: "密码长度不能少于6位"
-  },
-  SECURITY_HEADERS: {
-    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-    "Pragma": "no-cache",
-    "Expires": "0",
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
-    "X-XSS-Protection": "1; mode=block"
   }
 } as const;
-
-/**
- * 邮箱格式验证
- */
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
 
 /**
  * 输入验证函数

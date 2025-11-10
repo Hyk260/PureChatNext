@@ -8,11 +8,12 @@ import { logger } from "@/libs/logger";
 import { isDev } from "./libs/constants";
 import { PROXY_CONFIG } from "./const/branding";
 
-
 const backendApiEndpoints = ["/api"];
 
 const protectedRoutes = [
-  "/api/rest-api", // REST API 需要验证
+  ...PROXY_CONFIG.PROTECTED_ROUTES,
+  // "/api/rest-api",
+  // "/api/chat",
 ];
 
 const logDefault = debug("proxy:default");
@@ -114,7 +115,7 @@ async function handleProtectedRoute(
 }
 
 export async function proxy(request: NextRequest) {
-  const { pathname, searchParams } = request.nextUrl;
+  const { pathname } = request.nextUrl;
   const clientIP = getClientIP(request);
 
   if (clientIP) {

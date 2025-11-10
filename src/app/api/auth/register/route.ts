@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, getUserByLoginId, getUserByEmail } from "@/database/queries";
-import { logger } from '@/libs/logger';
+import {
+  createUser,
+  getUserByLoginId,
+  getUserByEmail,
+} from "@/database/queries";
+import { isValidEmail } from "@/utils";
+import { logger } from "@/libs/logger";
 
 /**
  * 注册接口
@@ -10,7 +15,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, password, username: login_id } = body;
-    logger.info(`[POST /api/auth/register] email:${email} password:${password} login_id:${login_id}`);
 
     // 验证输入
     if (!email || !password || !login_id) {
@@ -24,26 +28,16 @@ export async function POST(request: NextRequest) {
     }
 
     // 验证邮箱格式
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      const response = NextResponse.json(
-        {
-          error: "邮箱格式不正确",
-        },
-        { status: 400 }
-      );
-      return response;
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: "邮箱格式不正确" }, { status: 400 });
     }
 
     // 验证密码长度
     if (password.length < 6) {
-      const response = NextResponse.json(
-        {
-          error: "密码长度至少为 6 个字符",
-        },
+      return NextResponse.json(
+        { error: "密码长度至少为 6 个字符" },
         { status: 400 }
       );
-      return response;
     }
 
     // 验证 login_id：仅允许小写字母和数字，长度 4-32
@@ -83,13 +77,12 @@ export async function POST(request: NextRequest) {
     if (email) {
       const existingEmail = await getUserByEmail(email);
       if (existingEmail) {
-        const response = NextResponse.json(
+        return NextResponse.json(
           {
             error: "该邮箱已被注册",
           },
           { status: 400 }
         );
-        return response;
       }
     }
 

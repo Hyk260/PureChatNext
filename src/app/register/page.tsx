@@ -1,12 +1,9 @@
 "use client";
-
-import type React from "react";
-
-import { createClient } from "@/libs/supabase/client";
-import { Button, Card, Input } from "antd";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Button, Card, Input } from "antd";
+import { createClient } from "@/libs/supabase/client";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -17,8 +14,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignUp = async () => {
     const supabase = createClient();
     setIsLoading(true);
     setError(null);

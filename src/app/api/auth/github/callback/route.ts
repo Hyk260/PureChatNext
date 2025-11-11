@@ -47,8 +47,7 @@ export async function GET(request: NextRequest) {
       {
         message: "登录成功",
         code: 200,
-        result: {
-          loginId: identifier,
+        data: {
           username: identifier,
           userSig,
           accessToken,

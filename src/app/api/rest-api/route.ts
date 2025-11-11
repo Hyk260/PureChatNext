@@ -50,28 +50,24 @@ export async function POST(request: NextRequest) {
 
     logger.info(`REST API POST success: funName=${funName}`);
 
-    const response = NextResponse.json(
+    return NextResponse.json(
       {
         success: true,
         result,
       },
       { status: 200 }
     );
-
-    return response
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     logger.error(`REST API POST error: ${errorMessage}`);
 
-    const response = NextResponse.json(
+    return NextResponse.json(
       {
         success: false,
         error: errorMessage,
       },
       { status: 500 }
     );
-    
-    return response
   }
 }
 

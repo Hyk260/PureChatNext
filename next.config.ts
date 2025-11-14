@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { codeInspectorPlugin } from 'code-inspector-plugin'
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -16,6 +17,11 @@ const nextConfig: NextConfig = {
   },
   // 启用严格模式（开发环境）
   // reactStrictMode: true,
+  turbopack: {
+    rules: codeInspectorPlugin({
+      bundler: 'turbopack',
+    }),
+  },
 };
 
 export default nextConfig;

@@ -61,10 +61,13 @@ function isProtectedRoute(pathname: string): boolean {
  */
 function getClientIP(request: NextRequest): string | null {
   try {
-    return ipAddress(request) ?? null;
+    // 如果IP地址辅助工具失败或处于非Vercel环境，则回退到标准头部
+    const xForwardedFor = request.headers.get("x-forwarded-for");
+    const ip = ipAddress(request) || (xForwardedFor ? xForwardedFor.split(',')[0] : "127.0.0.1");
+    return ip ?? "127.0.0.1";
   } catch {
     logger.warn("[Proxy] Failed to get client IP");
-    return null;
+    return "127.0.0.1";
   }
 }
 
@@ -81,9 +84,7 @@ async function handleProtectedRoute(
   const { user, error } = await verifyAuth(request);
 
   if (!user) {
-    logger.warn(
-      `[Proxy Auth] Unauthorized access attempt to ${pathname}: ${error}`
-    );
+    logger.warn(`[Proxy Auth] Unauthorized access attempt to ${pathname}: ${error}`);
     const response = NextResponse.json(
       {
         success: false,
@@ -123,8 +124,7 @@ export async function proxy(request: NextRequest) {
       method: request.method,
       path: pathname,
       ip: clientIP,
-      userAgent:
-        request.headers.get("user-agent")?.substring(0, 100) || "Unknown",
+      userAgent: request.headers.get("user-agent")?.substring(0, 100) || "Unknown",
     });
   }
 

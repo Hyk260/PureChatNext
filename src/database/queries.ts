@@ -5,10 +5,10 @@ import { asc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { serverDBEnv } from "@/envs/serverDB";
-import { type User, user } from "./schema";
+import { user } from "./schema";
 import { generateHashedPassword, verifyPassword } from "./utils";
-import { logger } from '@/libs/logger';
-import { type } from "os";
+
+import type { User } from "./schema";
 
 config();
 

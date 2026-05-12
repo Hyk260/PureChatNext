@@ -1,25 +1,25 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod";
+import { createEnv } from '@t3-oss/env-nextjs'
+import { z } from 'zod'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface ProcessEnv {
       // ===== Clerk ===== //
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?: string;
-      CLERK_SECRET_KEY?: string;
-      CLERK_WEBHOOK_SECRET?: string;
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?: string
+      CLERK_SECRET_KEY?: string
+      CLERK_WEBHOOK_SECRET?: string
 
       // ===== Next Auth ===== //
-      NEXT_AUTH_SECRET?: string;
-      NEXT_AUTH_DEBUG?: string;
+      NEXT_AUTH_SECRET?: string
+      NEXT_AUTH_DEBUG?: string
 
       // ===== Github ===== //
-      GITHUB_CLIENT_ID?: string;
-      GITHUB_CLIENT_SECRET?: string;
+      GITHUB_CLIENT_ID?: string
+      GITHUB_CLIENT_SECRET?: string
       // electron
-      GITHUB_ELECTRON_ID?: string;
-      GITHUB_ELECTRON_SECRET?: string;
+      GITHUB_ELECTRON_ID?: string
+      GITHUB_ELECTRON_SECRET?: string
     }
   }
 }
@@ -57,16 +57,13 @@ export const getAuthConfig = () => {
 
     runtimeEnv: {
       // Clerk
-      NEXT_PUBLIC_ENABLE_CLERK_AUTH:
-        !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
-        process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+      NEXT_PUBLIC_ENABLE_CLERK_AUTH: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
       CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
       CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
 
       // Next Auth
-      NEXT_PUBLIC_ENABLE_NEXT_AUTH:
-        process.env.NEXT_PUBLIC_ENABLE_NEXT_AUTH === "1",
+      NEXT_PUBLIC_ENABLE_NEXT_AUTH: process.env.NEXT_PUBLIC_ENABLE_NEXT_AUTH === '1',
       NEXT_AUTH_SECRET: process.env.NEXT_AUTH_SECRET,
       NEXT_AUTH_DEBUG: !!process.env.NEXT_AUTH_DEBUG,
       NEXT_AUTH_SSO_SESSION_STRATEGY: process.env.NEXT_AUTH_SSO_SESSION_STRATEGY || 'jwt',
@@ -79,7 +76,7 @@ export const getAuthConfig = () => {
       GITHUB_ELECTRON_ID: process.env.GITHUB_ELECTRON_ID,
       GITHUB_ELECTRON_SECRET: process.env.GITHUB_ELECTRON_SECRET,
     },
-  });
-};
+  })
+}
 
-export const authEnv = getAuthConfig();
+export const authEnv = getAuthConfig()

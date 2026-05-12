@@ -1,38 +1,36 @@
-import { Analytics } from '@vercel/analytics/next';
-import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from '@vercel/analytics/next'
+import { Geist, Geist_Mono } from 'next/font/google'
 
-import type { Metadata } from "next";
+import type { Metadata } from 'next'
 
-import "@/styles/globals.css";
+import '@/styles/globals.css'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 export const metadata: Metadata = {
-  title: "PureChat",
-  description: "PureChat is a chat application that allows you to chat with your friends and family.",
-};
+  title: 'PureChat',
+  description: 'PureChat is a chat application that allows you to chat with your friends and family.',
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang='en'>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <Analytics />
       </body>
     </html>
-  );
+  )
 }

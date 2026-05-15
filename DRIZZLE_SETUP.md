@@ -36,7 +36,7 @@ pnpm db:check
 
 ### 步骤 1: 生成迁移文件
 
-根据 `src/database/schema.ts` 中的定义生成数据库迁移文件：
+根据 `src/database/schemas/user.ts` 中的定义生成数据库迁移文件：
 
 ```bash
 pnpm db:generate
@@ -64,7 +64,7 @@ pnpm db:studio
 
 ## 📊 当前 Schema
 
-项目已定义 User 表，位于 `src/database/schema.ts`：
+项目已定义 User 表，位于 `src/database/schema`：
 
 ```typescript
 export const user = pgTable("User", {
@@ -78,14 +78,14 @@ export const user = pgTable("User", {
 
 | 命令 | 说明 |
 |------|------|
-| `pnpm db:check` | 检查 Drizzle 配置是否正确 |
-| `pnpm db:generate` | 根据 schema 生成迁移文件 |
+| `pnpm db:check` | 检查 Drizzle 配置是否正确 | 
+| `pnpm db:generate` | 根据 schemas 生成迁移文件 |
 | `pnpm db:migrate` | 运行迁移，将更改应用到数据库 |
 | `pnpm db:studio` | 打开 Drizzle Studio 可视化工具 |
 
 ## 🛠️ 修改 Schema 并更新数据库
 
-1. 编辑 `src/database/schema.ts` 文件
+1. 编辑 `src/database/schemas` 文件
 2. 运行 `pnpm db:generate` 生成新的迁移文件
 3. 运行 `pnpm db:migrate` 应用更改
 

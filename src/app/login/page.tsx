@@ -28,10 +28,7 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error } = await supabase.from("users").select().eq("email", email);
 
       if (error) throw error;
 

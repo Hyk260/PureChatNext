@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserByEmailAndPassword, getUserByLoginIdAndPassword } from '@/database/queries'
+import { UserModel } from '@/database/models/user'
 import { generateUserSig } from '@/libs/utils/signature'
 import { generateAccessToken, generateRefreshToken } from '@/libs/jwt'
+
+import type { User } from '@/database/schemas/user'
 
 /**
  * 登录接口
@@ -10,40 +12,56 @@ import { generateAccessToken, generateRefreshToken } from '@/libs/jwt'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, username, password } = body
+    const { email, username: userId, password } = body as User
 
-    if (!username || !password) {
-      return NextResponse.json({ error: '用户名和密码不能为空' }, { status: 400 })
+    if (!userId || !password) {
+      return NextResponse.json({ error: '账号和密码不能为空' }, { status: 400 })
     }
 
-    let user = null
+    let user: User | null = null
     if (email) {
-      // 通过邮箱登录
-      user = await getUserByEmailAndPassword(email, password)
-    } else if (username) {
-      // 通过 login_id 登录
-      user = await getUserByLoginIdAndPassword(username, password)
+      user = await UserModel.findByEmailAndPassword(email, password)
+      if (!user) {
+        return NextResponse.json(
+          {
+            error: '邮箱或密码错误',
+          },
+          { status: 400 }
+        )
+      }
+    }
+    if (userId) {
+      user = await UserModel.findByUserIdAndPassword(userId, password)
+      if (!user) {
+        return NextResponse.json(
+          {
+            error: '账号或密码错误',
+          },
+          { status: 400 }
+        )
+      }
     }
 
     if (!user) {
       return NextResponse.json(
         {
-          error: '用户名或密码错误',
+          error: '用户不存在',
         },
         { status: 400 }
       )
     }
 
-    const identifier = user.login_id || username || email
+    const identifier = user.userId || userId || email || ''
     const userSig = generateUserSig({ identifier })
-    const accessToken = await generateAccessToken(user.login_id)
-    const { token: refreshToken } = await generateRefreshToken(user.login_id)
+    const accessToken = await generateAccessToken(user.userId)
+    const { token: refreshToken } = await generateRefreshToken(user.userId)
 
     const loginResponse = {
       message: '登录成功',
       code: 200,
       data: {
-        username: user.login_id,
+        username: user.userId,
+        userId: user.userId,
         userSig,
         accessToken,
         refreshToken,

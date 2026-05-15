@@ -61,7 +61,7 @@ export class UserModel {
     return this.db
       .update(users)
       .set({ ...nextValue, updatedAt: new Date() })
-      .where(eq(users.userId, users.userId));
+      .where(eq(users.userId, value.userId!));
   };
 
   static deleteUser = async (id: string) => {

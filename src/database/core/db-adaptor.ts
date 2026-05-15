@@ -16,5 +16,3 @@ export const getServerDB = (): ChatDatabase => {
     throw error;
   }
 };
-
-export const serverDB = getDBInstance();

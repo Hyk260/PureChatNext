@@ -11,33 +11,30 @@ export async function POST(request: NextRequest) {
     const { refreshToken } = body;
 
     if (!refreshToken) {
-      const response = NextResponse.json(
+      return NextResponse.json(
         { error: 'refreshToken 不能为空' },
         { status: 400 }
       );
-      return response
     }
 
     const verifyResult = await verifyRefreshToken(refreshToken);
 
     if (!verifyResult.valid) {
-      const response = NextResponse.json(
+      return NextResponse.json(
         {
           error: verifyResult.expired ? '刷新令牌已过期' : '无效的刷新令牌',
         },
         { status: 401 }
       );
-      return response
     }
 
     console.log('verifyResult', verifyResult)
 
     if (!verifyResult.userId) {
-      const response = NextResponse.json(
+      return NextResponse.json(
         { error: '令牌信息不完整' },
         { status: 400 }
       );
-      return response
     }
 
     const accessToken = await generateAccessToken(verifyResult.userId);

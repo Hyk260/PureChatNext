@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { verifyToken, type JWTPayload } from '@/libs/jwt'
 import { logger } from '@/libs/logger'
 

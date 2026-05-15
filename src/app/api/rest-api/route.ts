@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest} from "next/server";
+import { NextResponse } from "next/server";
 import { logger } from '@/libs/logger';
-import { API_METHODS, ApiMethodName } from './handlers';
+import type { ApiMethodName } from './handlers';
+import { API_METHODS } from './handlers';
 
 const safeJsonStringify = (value: unknown) => {
   try {

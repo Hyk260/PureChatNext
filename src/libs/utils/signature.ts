@@ -1,6 +1,10 @@
 import TLSSigAPIv2 from "tls-sig-api-v2";
 import { imEnv } from "@/envs/im";
 
+import debug from "debug";
+
+const log = debug("Signature");
+
 export const generateUserSig = ({ identifier = "" }) => {
   const { IM_SDK_APPID: appId, IM_SDK_KEY: appKey } = imEnv;
 
@@ -12,7 +16,7 @@ export const generateUserSig = ({ identifier = "" }) => {
 
   const api = new TLSSigAPIv2.Api(appId, appKey);
 
-  console.log("计算userSig:", identifier);
+  log(`生成 userId: ${identifier} 的 userSig`);
 
   return api.genSig(identifier, EXPIRETIME);
 };

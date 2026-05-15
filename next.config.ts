@@ -1,15 +1,31 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
 
-const isProd = process.env.NODE_ENV === 'production';
+const isProd = process.env.NODE_ENV === 'production'
 
 const nextConfig: NextConfig = {
-  compress: isProd, // 启用压缩（生产环境）
+  // 启用压缩
+  compress: isProd,
   // 启用实验性功能以提高性能
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+  },
+  async headers() {
+    const securityHeaders = [
+      {
+        key: 'x-robots-tag',
+        value: 'all',
+      },
+    ]
+
+    return [
+      {
+        headers: securityHeaders,
+        source: '/:path*',
+      },
+    ]
   },
   // 优化图片和静态资源
   images: {
@@ -22,6 +38,6 @@ const nextConfig: NextConfig = {
       bundler: 'turbopack',
     }),
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig

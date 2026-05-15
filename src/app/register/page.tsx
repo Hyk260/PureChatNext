@@ -33,7 +33,7 @@ export default function RegisterPage() {
 
     try {
       const { data, error } = await supabase
-        .from("User")
+        .from("users")
         .insert([{ email: email, password: password }])
         .select();
       console.log(data, error);

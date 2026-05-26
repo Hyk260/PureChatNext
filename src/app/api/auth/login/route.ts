@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { UserModel } from '@/database/models/user'
 import { generateUserSig } from '@/libs/utils/signature'
 import { generateAccessToken, generateRefreshToken } from '@/libs/jwt'
 
 import type { User } from '@/database/schemas/user'
+import type { NextRequest } from 'next/server';
 
 /**
  * 登录接口
@@ -12,7 +13,7 @@ import type { User } from '@/database/schemas/user'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, username: userId, password } = body as User
+    const { email, userId, password } = body as User
 
     if (!userId || !password) {
       return NextResponse.json({ error: '账号和密码不能为空' }, { status: 400 })
@@ -60,7 +61,6 @@ export async function POST(request: NextRequest) {
       message: '登录成功',
       code: 200,
       data: {
-        username: user.userId,
         userId: user.userId,
         userSig,
         accessToken,

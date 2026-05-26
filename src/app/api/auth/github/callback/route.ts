@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import GitHubAPI, { type ClientType } from "@/libs/auth/gtihub";
 import { generateUserSig } from "@/libs/utils/signature";
 import { generateAccessToken, generateRefreshToken } from "@/libs/jwt";
 import { registerAccount } from "@/libs/utils/register";
 import { logger } from '@/libs/logger';
+
+import type { NextRequest} from "next/server";
 
 /**
  * GitHub OAuth 回调
@@ -48,7 +50,7 @@ export async function GET(request: NextRequest) {
         message: "登录成功",
         code: 200,
         data: {
-          username: identifier,
+          userId: identifier,
           userSig,
           accessToken,
           refreshToken,

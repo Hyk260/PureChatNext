@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { UserModel } from '@/database/models/user'
 import { isValidEmail } from '@/utils'
 import { logger } from '@/libs/logger'
 
 import type { User } from '@/database/schemas/user'
+import type { NextRequest} from 'next/server';
 
 /**
  * 注册接口
@@ -12,7 +13,7 @@ import type { User } from '@/database/schemas/user'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, username: userId, password } = body as User
+    const { email, userId, password } = body as User
 
     if (!email || !userId || !password) {
       return NextResponse.json(

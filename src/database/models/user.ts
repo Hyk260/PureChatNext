@@ -11,16 +11,15 @@ export class UserModel {
   private static readonly db: ChatDatabase = getServerDB()
 
   private static normalizeUniqueUserFields = <
-    T extends { email?: string | null; phone?: string | null; username?: string | null; password?: string | null },
+    T extends { email?: string | null; phone?: string | null; userId?: string | null; password?: string | null },
   >(
     value: T
   ) => {
     const normalizedEmail = typeof value.email === 'string' && value.email.trim() === '' ? null : value.email
     const normalizedPhone = typeof value.phone === 'string' && value.phone.trim() === '' ? null : value.phone
+    const normalizedUserId = typeof value.userId === 'string' && value.userId.trim() === '' ? null : value.userId?.trim()
     const normalizedPassword = typeof value.password === 'string' && value.password.trim() === '' ? null : value.password
-    const normalizedUsername =
-      typeof value.username === 'string' && value.username.trim() === '' ? null : value.username?.trim()
-
+    
     const passwordOut =
       value.password === undefined
         ? {}
@@ -35,7 +34,7 @@ export class UserModel {
       ...value,
       ...(value.email !== undefined ? { email: normalizedEmail } : {}),
       ...(value.phone !== undefined ? { phone: normalizedPhone } : {}),
-      ...(value.username !== undefined ? { username: normalizedUsername } : {}),
+      ...(value.userId !== undefined ? { userId: normalizedUserId } : {}),
       ...passwordOut,
     }
   }

@@ -5,9 +5,9 @@ import { timestamps } from './_helpers'
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   username: text('username').unique(),
+  userId: varchar('user_id', { length: 32 }).notNull().unique(),
   email: text('email').unique(),
   password: varchar('password', { length: 64 }),
-  userId: varchar('user_id', { length: 32 }).notNull().unique(),
   avatar: text('avatar'),
   phone: text('phone').unique(),
   role: text('role'),

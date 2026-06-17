@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest} from "next/server";
+import { NextResponse } from "next/server";
 import { getGitHubSecretKey, type ClientType } from "@/libs/auth/gtihub";
 
 /**

@@ -1,6 +1,6 @@
 {
   "name": "pure-chat-next",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -22,7 +22,8 @@
     "@radix-ui/react-accordion": "^1.2.12",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.78.0",
-    "@t3-oss/env-nextjs": "^0.13.8",
+    "@t3-oss/env-core": "^0.13.10",
+    "@t3-oss/env-nextjs": "^0.13.10",
     "@vercel/analytics": "^1.5.0",
     "@vercel/functions": "^3.2.0",
     "ai": "5.0.26",

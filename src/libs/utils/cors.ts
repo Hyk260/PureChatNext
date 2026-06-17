@@ -17,7 +17,7 @@ const defaultAllowedOrigins = [
 
 const extraAllowedOrigins = (appEnv.ALLOWED_ORIGINS || '')
   .split(',')
-  .map((s) => s.trim())
+  .map((s: string) => s.trim())
   .filter(Boolean);
 
 export const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...extraAllowedOrigins]));

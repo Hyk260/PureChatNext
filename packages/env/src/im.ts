@@ -1,5 +1,5 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod";
+import { createEnv } from '@t3-oss/env-core';
+import { z } from 'zod';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -34,5 +34,3 @@ export const getIMConfig = () => {
 };
 
 export const imEnv = getIMConfig();
-
-

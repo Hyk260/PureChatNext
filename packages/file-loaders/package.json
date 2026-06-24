@@ -1,0 +1,39 @@
+{
+  "name": "@pure/file-loaders",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Utilities for reading and processing various file types",
+  "keywords": [
+    "file",
+    "loader",
+    "parser"
+  ],
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "scripts": {
+    "test": "vitest",
+    "test:coverage": "vitest --coverage --silent='passed-only'"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.70",
+    "@xmldom/xmldom": "^0.9.8",
+    "concat-stream": "^2.0.0",
+    "debug": "^4.4.3",
+    "mammoth": "^1.11.0",
+    "officeparser": "5.1.1",
+    "pdfjs-dist": "5.4.530",
+    "word-extractor": "^1.0.4",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "yauzl": "^3.2.0"
+  },
+  "devDependencies": {
+    "@types/concat-stream": "^2.0.3",
+    "@types/yauzl": "^2.10.3",
+    "@vitest/coverage-v8": "3.2.4",
+    "happy-dom": "^20.10.6",
+    "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "typescript": ">=5"
+  }
+}

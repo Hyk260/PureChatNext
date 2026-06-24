@@ -3,7 +3,7 @@ import { imEnv } from "@/envs/im";
 
 import debug from "debug";
 
-const log = debug("Signature");
+const log = debug("utils:Signature");
 
 export const generateUserSig = ({ identifier = "" }) => {
   const { IM_SDK_APPID: appId, IM_SDK_KEY: appKey } = imEnv;
@@ -16,7 +16,7 @@ export const generateUserSig = ({ identifier = "" }) => {
 
   const api = new TLSSigAPIv2.Api(appId, appKey);
 
-  log(`生成 userId: ${identifier} 的 userSig`);
+  log('生成 userId: %s, 的 userSig', identifier);
 
   return api.genSig(identifier, EXPIRETIME);
 };

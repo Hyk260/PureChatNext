@@ -1,26 +1,26 @@
 import { generateUserSig } from "./signature";
 import { imEnv } from "@/envs/im";
 
-const { IM_SDK_APPID: appId, IM_ADMIN_ISTRATOR: administrator } = imEnv;
+const { IM_SDK_APPID: sdkAppId, IM_ADMIN_ISTRATOR: administrator } = imEnv;
 
-let cachedSig: string = "";
-let cacheExpiration: number | null = null;
+let cachedSig = "";
+let cacheExpiration = 0;
 
-interface Params {
+interface URLParams {
   sdkappid: string;
   identifier: string;
   usersig: string;
-  random: number | string;
+  random: number;
   contenttype: string;
 }
 
-export function generateRandomInt32() {
+export function generateRandomInt32(): number {
   return Math.floor(Math.random() * 0x100000000);
 }
 
-export function getUserSig() {
+export function getUserSig(): string {
   const now = Date.now();
-  if (cachedSig && cacheExpiration && cacheExpiration > now) {
+  if (cachedSig && cacheExpiration > now) {
     return cachedSig;
   }
   cachedSig = generateUserSig({ identifier: administrator });
@@ -28,23 +28,23 @@ export function getUserSig() {
   return cachedSig;
 }
 
-export function buildURL(baseURL: string) {
-  if (!appId || !administrator) {
-    throw new Error("appId or administrator is not defined");
+export function buildURL(baseURL: string): string {
+  if (!sdkAppId || !administrator) {
+    throw new Error("sdkAppId or administrator is not defined");
   }
 
-  const params: Params = {
-    sdkappid: appId,
+  const params: URLParams = {
+    sdkappid: sdkAppId,
     identifier: administrator,
     usersig: getUserSig(),
     random: generateRandomInt32(),
     contenttype: "json",
   };
-  const enCode = (t: string | number) => encodeURIComponent(t);
-  const query = Object.keys(params)
-    .map((key) => {
-      return `${enCode(key)}=${enCode(params[key as keyof Params])}`;
-    })
+
+  const encode = (value: string | number) => encodeURIComponent(value);
+  const query = Object.entries(params)
+    .map(([key, value]) => `${encode(key)}=${encode(value)}`)
     .join("&");
+
   return `${baseURL}?${query}`;
 }

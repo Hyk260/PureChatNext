@@ -1,8 +1,4 @@
-import axios, {
-  type AxiosInstance,
-  type AxiosRequestConfig,
-  type AxiosError,
-} from "axios";
+import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 import { buildURL } from "./buildURL";
 import { imEnv } from "@/envs/im";
 
@@ -11,70 +7,49 @@ const { IM_SERVER_BASE_URL, IM_REQUEST_TIMEOUT } = imEnv;
 // https://cloud.tencent.com/document/product/269/1519
 const defaultConfig = {
   baseURL: IM_SERVER_BASE_URL || "https://console.tim.qq.com",
-  // 请求超时时间
   timeout: parseInt(IM_REQUEST_TIMEOUT || "10000", 10),
 };
 
-// 响应数据接口
-interface IMResponse<T = unknown> {
+interface IMApiResponse {
   ActionStatus: string;
   ErrorCode: number;
   ErrorInfo: string;
-  ResultItem?: T;
-  data?: T;
-}
-
-interface IMErrorResponse {
-  ActionStatus: string
-  ErrorCode: number
-  ErrorInfo: string
+  [key: string]: unknown;
 }
 
 class IMServerHttp {
-  service: AxiosInstance;
+  private service: AxiosInstance;
 
   constructor() {
-    this.service = axios.create({ ...defaultConfig });
-    this.httpInterceptorsRequest();
-    this.httpInterceptorsResponse();
+    this.service = axios.create(defaultConfig);
+    this.setupRequestInterceptor();
+    this.setupResponseInterceptor();
   }
 
-  /** 请求拦截 */
-  httpInterceptorsRequest() {
+  private setupRequestInterceptor() {
     this.service.interceptors.request.use(
-      (config) => {
-        return config;
-      },
-      (error: AxiosError) => {
-        Promise.reject(error);
-      }
+      (config) => config,
+      (error) => Promise.reject(error),
     );
   }
 
-  /** 响应拦截 */
-  httpInterceptorsResponse() {
+  private setupResponseInterceptor() {
     this.service.interceptors.response.use(
       (response) => {
         const { data, status } = response;
         if (status === 200) {
           return data;
         }
-        return Promise.reject(data); // 处理非200状态
+        return Promise.reject(data);
       },
-      (error: AxiosError<IMErrorResponse>) => {
-        Promise.reject(error);
-      }
+      (error) => Promise.reject(error),
     );
   }
 
-  /**
-   * 通用请求方法
-   */
-  async request<T = unknown>(
-    config: AxiosRequestConfig
-  ): Promise<IMResponse<T>> {
+  async request<T = IMApiResponse>(config: AxiosRequestConfig): Promise<T> {
     return this.service.request({
       ...config,
+      method: "post",
       url: buildURL(config.url || ""),
     });
   }

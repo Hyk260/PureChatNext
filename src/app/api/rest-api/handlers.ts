@@ -1,6 +1,5 @@
 import { http } from '@/libs/utils/rest-api';
 import { generateRandomInt32 } from '@/libs/utils/buildURL';
-import { logger } from '@/libs/logger';
 
 interface CheckItem {
   UserID: string;
@@ -12,58 +11,50 @@ interface AccountImportParams {
   FaceUrl?: string;
 }
 
-interface CheckResultItem {
-  AccountStatus: string;
-}
-
 interface SendMsgParams {
-  From_Account: string
-  To_Account: string
-  Text: string
-  CloudCustomData?: string
+  From_Account: string;
+  To_Account: string;
+  Text: string;
+  CloudCustomData?: string;
 }
 
-const safeJsonStringify = (value: unknown) => {
-  try {
-    return JSON.stringify(value)
-  } catch {
-    return value
-  }
+interface AddGroupMemberParams {
+  groupId: string;
+  member: string;
+}
+
+interface CheckResult {
+  ResultItem?: Array<{ AccountStatus: string }>;
+}
+
+interface ImportResult {
+  ErrorCode: number;
 }
 
 /**
- * 用于查询自有账号是否已导入即时通信 IM，支持批量查询。
+ * 查询账号
  * https://cloud.tencent.com/document/product/269/38417
  */
-export const accountCheck = async (params: CheckItem[]): Promise<boolean> => {
-  try {
-    const result = await http.request<CheckResultItem[]>({
-      url: "v4/im_open_login_svc/account_check",
-      method: "post",
-      data: { CheckItem: params },
-    });
-    return result?.ResultItem?.[0]?.AccountStatus === "Imported";
-  } catch (error) {
-    console.error('Account check failed:', error);
-    return false;
-  }
+export const accountCheck = async (params: CheckItem[]) => {
+  const result = await http.request<CheckResult>({
+    url: 'v4/im_open_login_svc/account_check',
+    data: { CheckItem: params },
+  });
+  return result
+  // .ResultItem?.[0]?.AccountStatus === 'Imported';
 };
 
 /**
- * 导入单个账号
+ * 导入账号
+ * https://cloud.tencent.com/document/product/269/1608
  */
-export const accountImport = async (params: AccountImportParams): Promise<boolean> => {
-  try {
-    const result = await http.request({
-      url: "v4/im_open_login_svc/account_import",
-      method: "post",
-      data: { ...params },
-    });
-    return result.ErrorCode === 0;
-  } catch (error) {
-    console.error('Account import failed:', error);
-    return false;
-  }
+export const accountImport = async (params: AccountImportParams) => {
+  const { UserID, Nick, FaceUrl } = params;
+  const result = await http.request<ImportResult>({
+    url: 'v4/im_open_login_svc/account_import',
+    data: { UserID, Nick, FaceUrl },
+  });
+  return result
 };
 
 /**
@@ -71,58 +62,46 @@ export const accountImport = async (params: AccountImportParams): Promise<boolea
  * https://cloud.tencent.com/document/product/269/2282
  */
 export const restSendMsg = async (params: SendMsgParams) => {
-  const { From_Account, To_Account, Text, CloudCustomData } = params;
+  const { From_Account, To_Account, Text, CloudCustomData = '' } = params;
   const result = await http.request({
-    url: "v4/openim/sendmsg",
-    method: "post",
+    url: 'v4/openim/sendmsg',
     data: {
-      SyncOtherMachine: 1, // 消息同步1 不同步 2
+      SyncOtherMachine: 1, 
       From_Account,
       To_Account,
-      // MsgSeq: "",
-      CloudCustomData: CloudCustomData || "",
+      CloudCustomData: CloudCustomData,
       MsgRandom: generateRandomInt32(),
-      ForbidCallbackControl: [
-        "ForbidBeforeSendMsgCallback",
-        "ForbidAfterSendMsgCallback",
-      ], // 禁止回调控制选项
-      MsgBody: [
-        {
-          MsgType: "TIMTextElem",
-          MsgContent: {
-            Text,
-          },
-        },
-      ],
+      ForbidCallbackControl: ['ForbidBeforeSendMsgCallback', 'ForbidAfterSendMsgCallback'],
+      MsgBody: [{
+        MsgType: 'TIMTextElem',
+        MsgContent: { Text },
+      }],
     },
   });
-  logger.info(`restSendMsg: ${safeJsonStringify(result)}`);
   return result;
 };
 
 /**
- * 拉人入群
+ * 增加群成员
+ * https://cloud.tencent.com/document/product/269/1621
  */
-export const addGroupMember = async (params: any) => {
+export const addGroupMember = async (params: AddGroupMemberParams) => {
   const { groupId, member } = params;
   const result = await http.request({
-    url: "v4/group_open_http_svc/add_group_member",
-    method: "post",
+    url: 'v4/group_open_http_svc/add_group_member',
     data: {
       GroupId: groupId,
       MemberList: [{ Member_Account: member }],
     },
   });
-  logger.info(`addGroupMember: ${safeJsonStringify(result)}`);
   return result;
 };
 
-// API方法映射
 export const API_METHODS = {
-  // accountCheck,
-  // accountImport,
+  accountCheck,
+  accountImport,
   restSendMsg,
-  addGroupMember
+  addGroupMember,
 } as const;
 
 export type ApiMethodName = keyof typeof API_METHODS;

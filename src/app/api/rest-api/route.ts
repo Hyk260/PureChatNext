@@ -1,21 +1,25 @@
-import type { NextRequest} from "next/server";
-import { NextResponse } from "next/server";
-import { logger } from '@/libs/logger';
-import type { ApiMethodName } from './handlers';
-import { API_METHODS } from './handlers';
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import { API_METHODS } from './handlers'
+import type { ApiMethodName } from './handlers'
+import debug from 'debug'
 
-const safeJsonStringify = (value: unknown) => {
-  try {
-    return JSON.stringify(value)
-  } catch {
-    return value
-  }
-}
+const log = debug('route:rest-api')
+
+const methodNotAllowed = () =>
+  NextResponse.json(
+    {
+      success: false,
+      error: 'Invalid function name',
+      availableMethods: Object.keys(API_METHODS),
+    },
+    { status: 400 }
+  )
 
 /**
  * REST API
  * POST /api/rest-api
- * 
+ *
  * Request body:
  * {
  *   funName: "accountCheck" | "accountImport" | "restSendMsg" | "addGroupMember",
@@ -24,52 +28,26 @@ const safeJsonStringify = (value: unknown) => {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json()
     const { funName, params } = body
 
-    logger.info(`[REST API POST] funName: ${funName}`);
+    log('funName: %s, params: %o', funName, params)
 
-    logger.info(`[REST API POST] params: ${safeJsonStringify(params)}`);
-    
-    // 验证函数名
     if (!funName || !(funName in API_METHODS)) {
-      logger.warn(`Invalid function name: ${funName}`);
-      const response = NextResponse.json(
-        {
-          success: false,
-          error: "Invalid function name",
-          availableMethods: Object.keys(API_METHODS),
-        },
-        { status: 400 }
-      );
-
-      return response
+      return methodNotAllowed()
     }
 
-    // 调用相应的API方法
-    const method = API_METHODS[funName as ApiMethodName] as (p: unknown) => Promise<unknown>;
-    const result = await method(params);
+    const method = API_METHODS[funName as ApiMethodName]
+    const result = await method(params)
 
-    logger.info(`REST API POST success: funName=${funName}`);
+    log('result: %o', result)
 
-    return NextResponse.json(
-      {
-        success: true,
-        result,
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, result }, { status: 200 })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error(`REST API POST error: ${errorMessage}`);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    log('error: %s', errorMessage)
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: errorMessage,
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
   }
 }
 
@@ -77,16 +55,12 @@ export async function POST(request: NextRequest) {
  * REST API
  * GET /api/rest-api
  */
-export async function GET(request: NextRequest) {
-  logger.info(`REST API GET: ${request.url}`);
-
-  const response = NextResponse.json(
+export async function GET() {
+  return NextResponse.json(
     {
-      message: "REST API",
+      message: 'REST API',
       availableMethods: Object.keys(API_METHODS),
     },
     { status: 200 }
-  );
-
-  return response
+  )
 }

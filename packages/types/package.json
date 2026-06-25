@@ -1,0 +1,21 @@
+{
+  "name": "@pure/types",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:update": "vitest -u",
+    "test:coverage": "vitest --coverage --silent='passed-only'"
+  },
+  "dependencies": {
+    "type-fest": "^4.41.0",
+    "zustand": "5.0.4"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "zod": "^3.25.76"
+  }
+}

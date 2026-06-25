@@ -1,0 +1,144 @@
+# PureChatNext 开发指南
+
+面向 AI coding agent 的本仓库开发约定。
+
+## 技术栈
+
+- Next.js 16 + React 19 + TypeScript（App Router，`src/app/`）
+- Tailwind CSS 4 + `@lobehub/ui` / antd（按需使用，非 SPA 架构）
+- Supabase Auth + Drizzle ORM + PostgreSQL（Supabase）
+- Vercel AI SDK（`@ai-sdk/*`、`ai`），聊天入口见 `src/app/api/chat/route.ts`
+- 环境变量：`@t3-oss/env-core`，集中在 `packages/env/src/`，通过 `@/envs/*` 别名引用
+- Monorepo：pnpm workspace，内部包 `@pure/*`
+- 测试：Vitest（根目录 + 各 package 独立配置）
+- 日志：`debug` 包，命名空间约定见 `.cursor/rules/debug-usage.md`
+
+**不包含**（避免误导）：react-router SPA、bun、TRPC 路由层、react-i18next、Electron。
+
+## 项目结构
+
+```plaintext
+PureChatNext/
+├── packages/                  # @pure/* 工作区包
+│   ├── env/                   # 环境变量校验（auth、tools、serverDB 等）
+│   ├── types/                 # 共享类型（search、crawler 等）
+│   ├── utils/                 # 共享工具（apiKey、jina 等）
+│   ├── file-loaders/          # 文档加载（pdf、docx、pptx、excel…）
+│   ├── web-crawler/           # 网页爬虫多实现（naive、firecrawl、tavily…）
+│   └── ssrf-safe-fetch/       # SSRF 安全 fetch 封装
+├── src/
+│   ├── app/                   # Next.js 页面与 API 路由
+│   │   ├── api/               # REST API（auth、chat、rest-api、read-file…）
+│   │   ├── chat/              # 聊天页面
+│   │   └── …                  # login、register、welcome 等
+│   ├── database/              # Drizzle schema、models、migrations
+│   ├── server/                # 服务端业务（search 搜索聚合等）
+│   ├── libs/                  # Supabase、next-auth、auth 中间件、工具
+│   ├── components/            # 通用 React 组件
+│   └── styles/                # 全局样式
+├── docs/                      # 人类可读文档（快速开始、环境、Drizzle、联网搜索）
+├── scripts/                   # migrate.ts、gateway.ts
+└── tests/                     # Vitest setup
+```
+
+## 领域约定
+
+### Monorepo 包
+
+- 新增共享逻辑优先放入 `packages/`，命名 `@pure/<name>`
+- 根 `package.json` 通过 `workspace:*` 引用；修改 package 后无需单独 publish
+- 各 package 自带 `vitest.config.ts`，测试在 package 目录内运行
+
+### 环境变量
+
+- 定义在 `packages/env/src/`（如 `auth.ts`、`tools.ts`、`serverDB.ts`）
+- 业务代码通过 `import { toolsEnv } from '@/envs/tools'` 访问，**不要**直接散落 `process.env`
+- 新增 env 字段：在对应 env 模块加 zod schema + runtimeEnv 映射
+- 详细说明见 `docs/ENV_SETUP.md`；联网搜索/爬虫见 `docs/self-hosting/online-search.zh-CN.md`
+
+### 搜索与爬虫
+
+- 搜索聚合：`src/server/search/`，`SearchService` 按 `SEARCH_PROVIDERS` 环境变量链式调用多 provider
+- 新增 search provider：在 `src/server/search/impls/<name>/` 实现并注册到 `impls/index.ts`
+- 网页爬取：`packages/web-crawler/`，`CRAWLER_IMPLS` 控制实现优先级
+- 对外暴露：`/api/rest-api` 等路由（见 `src/app/api/rest-api/route.ts`）
+
+### 数据库（Drizzle）
+
+- Schema：`src/database/schemas/`
+- Model 层：`src/database/models/`
+- 常用命令：
+
+```bash
+pnpm db:check      # 校验配置
+pnpm db:generate   # 生成迁移
+pnpm db:migrate    # 执行迁移
+pnpm db:studio     # Drizzle Studio
+```
+
+- 完整流程见 `docs/DRIZZLE_SETUP.md`
+
+### API 路由
+
+- 认证相关：`src/app/api/auth/`（register、login、logout、github OAuth）
+- 鉴权中间件：`src/libs/auth/middleware.ts`
+- CORS：`src/libs/utils/cors.ts`，需配置 `ALLOWED_ORIGINS`
+- 错误处理：复用 `src/libs/errors.ts` 中的 `ChatSDKError` 等
+
+## 开发
+
+### 启动开发环境
+
+```bash
+pnpm install          # 安装依赖
+pnpm dev              # 开发服务器（默认 http://localhost:3000）
+pnpm build            # 生产构建
+pnpm start            # 生产启动（端口 3210）
+pnpm gateway          # 运行 gateway 脚本
+pnpm lint             # ESLint
+```
+
+- 环境变量：复制 `.env.example` 为 `.env.local`，参考 `docs/QUICK_START.md`
+- **不要**提交 `.env`、`.env.local` 等含密钥文件
+
+### Git 工作流
+
+- 主分支：`main`
+- 提交信息风格：中文描述 + conventional 前缀（如 `feat:`、`refactor:`、`chore:`）
+- PR 目标分支：`main`
+
+### 包管理
+
+- **仅使用 `pnpm`**（`packageManager: pnpm@10.33.4`）
+- 根目录与各 package 各自维护 `package.json`
+
+### 测试
+
+```bash
+# 根目录（src/server 等，排除 packages/**）
+pnpm exec vitest run --silent='passed-only' 'src/server/search/index.test.ts'
+
+# 单个 workspace package
+cd packages/web-crawler && pnpm test
+cd packages/file-loaders && pnpm exec vitest run --silent='passed-only' 'src/loadFile.test.ts'
+```
+
+- 根 `vitest.config.ts` 的 `exclude` 含 `**/packages/**`，package 测试需在对应目录执行
+- 优先 `vi.spyOn` 而非大范围 `vi.mock`
+
+### 代码风格
+
+- ESLint：`eslint.config.js`，强制 `@typescript-eslint/consistent-type-imports`（type import 与 value import 分离）
+- 单文件超过 ~800 行时考虑拆分
+- Debug 日志遵循 `.cursor/rules/debug-usage.md` 命名空间（如 `auth:*`、`db:*`）
+- 修改范围：只做任务相关的最小 diff，不重构无关代码
+
+## 延伸阅读
+
+| 文档 | 用途 |
+|------|------|
+| `docs/QUICK_START.md` | 快速开始、Supabase 配置 |
+| `docs/ENV_SETUP.md` | 环境变量详解 |
+| `docs/DRIZZLE_SETUP.md` | 数据库迁移 |
+| `docs/self-hosting/online-search.zh-CN.md` | 联网搜索与爬虫配置 |
+| `.cursor/rules/debug-usage.md` | debug 日志规范 |

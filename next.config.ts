@@ -31,6 +31,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
+  serverExternalPackages: ['@napi-rs/canvas'],
   // 启用严格模式（开发环境）
   // reactStrictMode: true,
   turbopack: {

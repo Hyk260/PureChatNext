@@ -38,7 +38,7 @@ const protectedRoutes = [
   // "/api/chat",
 ]
 
-const logDefault = debug('Cors:default')
+const logDefault = debug('cors:default')
 
 /**
  * 添加 CORS 头部到响应

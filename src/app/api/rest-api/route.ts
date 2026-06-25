@@ -1,13 +1,14 @@
-import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { API_METHODS } from './handlers'
-import type { ApiMethodName } from './handlers'
 import debug from 'debug'
+
+import type { ApiMethodName } from './handlers'
+import type { NextRequest } from 'next/server'
 
 const log = debug('route:rest-api')
 
-const methodNotAllowed = () =>
-  NextResponse.json(
+const methodNotAllowed = () => {
+  return NextResponse.json(
     {
       success: false,
       error: 'Invalid function name',
@@ -15,6 +16,7 @@ const methodNotAllowed = () =>
     },
     { status: 400 }
   )
+}
 
 /**
  * REST API

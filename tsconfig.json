@@ -20,6 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
+      "@/utils/*": ["./packages/utils/src/*", "./src/utils/*"],
       "@/envs/*": ["./packages/env/src/*", "./src/envs/*"],
     }
   },
@@ -29,7 +30,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts", 
+    "eslint.config.js"  
   ],
   "exclude": ["node_modules"]
 }

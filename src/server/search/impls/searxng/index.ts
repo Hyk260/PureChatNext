@@ -1,6 +1,7 @@
 import { type UniformSearchResponse } from '@pure/types';
 import { TRPCError } from '@trpc/server';
 
+import { SEARCH_SEARXNG_NOT_CONFIG } from '@pure/types';
 import { toolsEnv } from '@/envs/tools';
 import { SearXNGClient } from './client';
 
@@ -19,7 +20,7 @@ export class SearXNGImpl implements SearchServiceImpl {
     },
   ): Promise<UniformSearchResponse> {
     if (!toolsEnv.SEARXNG_URL) {
-      throw new TRPCError({ code: 'NOT_IMPLEMENTED', message: 'SearXNG is not configured' });
+      throw new TRPCError({ code: 'NOT_IMPLEMENTED', message: SEARCH_SEARXNG_NOT_CONFIG });
     }
 
     const client = new SearXNGClient(toolsEnv.SEARXNG_URL);

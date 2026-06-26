@@ -10,19 +10,19 @@ const logDefault = debug('proxy:default')
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  logDefault('Processing request: %s %s', request.method, request.url)
+  // logDefault('Processing request: %s %s', request.method, request.url)
 
-  const ua = request.headers.get('user-agent')
+  // const ua = request.headers.get('user-agent')
 
-  const device = new UAParser(ua || '').getDevice()
+  // const device = new UAParser(ua || '').getDevice()
 
-  logDefault('User preferences: %O', {
-    deviceType: device.type,
-  })
+  // logDefault('User preferences: %O', {
+  //   deviceType: device.type,
+  // })
 
   // 处理API请求
   if (backendApiEndpoints.some((path) => pathname.startsWith(path))) {
-    logDefault('Processing API request with CORS: %s', pathname)
+    // logDefault('Processing API request with CORS: %s', pathname)
 
     // 处理 OPTIONS 预检请求
     if (request.method === 'OPTIONS') {

@@ -1,8 +1,10 @@
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   DeleteObjectsCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -31,6 +33,7 @@ export interface PreSignedUpload {
   url: string;
 }
 
+// https://docs.aws.amazon.com/zh_cn/AmazonS3/latest/userguide/viewing-bucket-key-settings.html
 export class S3 {
   private readonly client: S3Client;
 
@@ -212,6 +215,39 @@ export class S3 {
       CacheControl: `public, max-age=${YEAR}`,
       ContentType: contentType,
       Key: key,
+    });
+
+    await this.client.send(command);
+  }
+
+  /**
+   * List files in the bucket with an optional prefix
+   */
+  public async listFiles(prefix?: string): Promise<FileType[]> {
+    const command = new ListObjectsV2Command({
+      Bucket: this.bucket,
+      ...(prefix ? { Prefix: prefix } : {}),
+    });
+
+    const response = await this.client.send(command);
+
+    return (
+      response.Contents?.map((obj) => ({
+        Key: obj.Key ?? '',
+        LastModified: obj.LastModified ?? new Date(0),
+        Size: obj.Size ?? 0,
+      })) ?? []
+    );
+  }
+
+  /**
+   * Copy an object from sourceKey to destinationKey
+   */
+  public async copyObject(sourceKey: string, destinationKey: string): Promise<void> {
+    const command = new CopyObjectCommand({
+      Bucket: this.bucket,
+      CopySource: `${this.bucket}/${sourceKey}`,
+      Key: destinationKey,
     });
 
     await this.client.send(command);

@@ -13,7 +13,6 @@ const DEFAULT_CRAWLER_RETRY = 1;
 const log = debug('web-browsing:search-service');
 
 const parseImplEnv = (envString: string = '') => {
-  // Handle full-width commas and extra whitespace
   const envValue = envString.replaceAll('，', ',').trim();
   return envValue.split(',').filter(Boolean);
 };
@@ -29,8 +28,8 @@ const getMemorySnapshot = () => {
 };
 
 /**
- * Search service class
- * Uses different implementations for different search operations
+ * 搜索服务类
+ * 使用不同的实现来处理不同的搜索操作
  */
 export class SearchService {
   private searchImpList: SearchServiceImpl[];
@@ -124,8 +123,8 @@ export class SearchService {
   }
 
   /**
-   * A successful crawl result always includes `contentType` (e.g. 'text', 'json')
-   * in `result.data`, while a failed result contains `errorType`/`errorMessage` instead.
+   * 成功的抓取结果在 `result.data` 中始终包含 `contentType`（例如 'text'、'json'），
+   * 而失败的结果则包含 `errorType`/`errorMessage`。
    */
   private isFailedCrawlResult(result: CrawlUniformResult): boolean {
     return !('contentType' in result.data);
@@ -136,7 +135,7 @@ export class SearchService {
   }
 
   /**
-   * Query for search results using the specified impl
+   * 使用指定实现查询搜索结果
    */
   private async queryWithImpl(impl: SearchServiceImpl, query: string, params?: SearchParams) {
     try {
@@ -154,7 +153,7 @@ export class SearchService {
   }
 
   /**
-   * Query for search results (uses the first provider)
+   * 查询搜索结果（使用第一个提供者）
    */
   async query(query: string, params?: SearchParams) {
     return this.queryWithImpl(this.searchImpList[0], query, params);
@@ -191,7 +190,7 @@ export class SearchService {
         searchTimeRange,
       });
 
-      // First retry: remove search engine restrictions if no results found
+      // 第一次重试：如果没有结果，移除搜索引擎限制
       if (data.results.length === 0 && searchEngines && searchEngines?.length > 0) {
         data = await this.queryWithImpl(impl, query, {
           searchCategories,
@@ -200,21 +199,20 @@ export class SearchService {
         });
       }
 
-      // Second retry: remove all restrictions if still no results found
+      // 第二次重试：如果仍然没有结果，移除所有限制
       if (data.results.length === 0) {
         data = await this.queryWithImpl(impl, query);
       }
 
-      // If this provider returned results, use them
+      // 如果此提供者返回了结果，直接使用
       if (data.results.length > 0) {
         return data;
       }
     }
 
-    // All providers exhausted, return empty result
+    // 所有提供者均已尝试完毕，返回空结果
     return { costTime: 0, query, resultNumbers: 0, results: [] };
   }
 }
 
-// Add a default exported instance for convenience
 export const searchService = new SearchService();

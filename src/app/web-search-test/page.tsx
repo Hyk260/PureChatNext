@@ -347,7 +347,7 @@ export default function WebSearchTestPage() {
                 <div className="mt-4 grid gap-4">
                   <div>
                     <label className="text-sm font-medium text-slate-800" htmlFor="web-search-urls">
-                      URLs
+                      URL 列表 · URLs
                     </label>
                     <textarea
                       id="web-search-urls"
@@ -365,7 +365,7 @@ export default function WebSearchTestPage() {
 
                   <div>
                     <label className="text-sm font-medium text-slate-800" htmlFor="web-search-impls">
-                      Crawler impls
+                      抓取实现 · Crawler impls
                     </label>
                     <input
                       id="web-search-impls"
@@ -380,7 +380,7 @@ export default function WebSearchTestPage() {
                 <div className="mt-4 grid gap-4">
                   <div>
                     <label className="text-sm font-medium text-slate-800" htmlFor="web-search-query">
-                      Query
+                      搜索关键词 · Query
                     </label>
                     <textarea
                       id="web-search-query"
@@ -398,41 +398,70 @@ export default function WebSearchTestPage() {
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div>
                       <label className="text-sm font-medium text-slate-800" htmlFor="web-search-categories">
-                        Categories
+                        分类 · Categories
                       </label>
-                      <input
+                      <select
                         id="web-search-categories"
                         value={categories}
                         onChange={event => setCategories(event.target.value)}
-                        placeholder="general,news"
-                        className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100"
-                      />
+                        className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100"
+                      >
+                        <option value="general">通用 · general</option>
+                        <option value="news">新闻 · news</option>
+                        <option value="images">图片 · images</option>
+                        <option value="videos">视频 · videos</option>
+                        <option value="science">科学 · science</option>
+                        <option value="files">文件 · files</option>
+                        <option value="music">音乐 · music</option>
+                        <option value="social media">社交媒体 · social media</option>
+                        <option value="map">地图 · map</option>
+                        <option value="it">IT · it</option>
+                      </select>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-800" htmlFor="web-search-engines">
-                        Engines
+                        搜索引擎 · Engines
                       </label>
-                      <input
+                      <select
                         id="web-search-engines"
                         value={engines}
                         onChange={event => setEngines(event.target.value)}
-                        placeholder="google,bing"
-                        className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100"
-                      />
+                        className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100"
+                      >
+                        <option value="">全部 · All</option>
+                        <option value="google">Google</option>
+                        <option value="bing">Bing</option>
+                        <option value="duckduckgo">DuckDuckGo</option>
+                        <option value="yahoo">Yahoo</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="x">X (Twitter)</option>
+                        <option value="reddit">Reddit</option>
+                        <option value="github">GitHub</option>
+                        <option value="arxiv">arXiv</option>
+                        <option value="wechat">微信 · WeChat</option>
+                        <option value="bilibili">Bilibili</option>
+                        <option value="imdb">IMDb</option>
+                        <option value="wikipedia">Wikipedia</option>
+                      </select>
                     </div>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-slate-800" htmlFor="web-search-time-range">
-                      Time range
+                      时间范围 · Time range
                     </label>
-                    <input
+                    <select
                       id="web-search-time-range"
                       value={timeRange}
                       onChange={event => setTimeRange(event.target.value)}
-                      placeholder="day / week / month / year"
-                      className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100"
-                    />
+                      className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100"
+                    >
+                      <option value="">不限 · anytime</option>
+                      <option value="day">一天 · day</option>
+                      <option value="week">一周 · week</option>
+                      <option value="month">一月 · month</option>
+                      <option value="year">一年 · year</option>
+                    </select>
                   </div>
                 </div>
               )}
@@ -505,7 +534,7 @@ export default function WebSearchTestPage() {
             </div>
           </section>
 
-          <section className="min-w-0 rounded-lg border border-slate-200 bg-white shadow-sm">
+          <section className="flex min-w-0 flex-col rounded-lg border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 p-4">
               {error ? (
                 <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-red-800">
@@ -573,9 +602,9 @@ export default function WebSearchTestPage() {
               </div>
             </div>
 
-            <div className="min-h-[440px] p-4">
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
               {view === 'json' ? (
-                <pre className="h-[560px] overflow-auto rounded-lg bg-slate-950 p-4 font-mono text-xs leading-5 text-slate-100">
+                <pre className="h-full overflow-auto rounded-lg bg-slate-950 p-4 font-mono text-xs leading-5 text-slate-100">
                   {rawJson || '// Response JSON will appear here'}
                 </pre>
               ) : searchResult ? (

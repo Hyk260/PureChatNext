@@ -5,10 +5,18 @@ import { addCorsHeaders, createCorsPreflightResponse, isProtectedRoute, handlePr
 
 const backendApiEndpoints = ['/api']
 
+const testEndpoints = ['/web-search-test']
+
 const logDefault = debug('proxy:default')
 
 export async function proxy(request: NextRequest) {
+  const isProd = process.env.NODE_ENV === 'production';
   const { pathname } = request.nextUrl
+
+  // 生产环境禁止访问测试页面
+  if (isProd && testEndpoints.some((path) => pathname.startsWith(path))) {
+    return new NextResponse('dev only', { status: 404 })
+  }
 
   // logDefault('Processing request: %s %s', request.method, request.url)
 

@@ -38,7 +38,7 @@ const protectedRoutes = [
   // "/api/chat",
 ]
 
-const logDefault = debug('cors:default')
+const log = debug('cors:default')
 
 /**
  * 添加 CORS 头部到响应
@@ -100,7 +100,7 @@ export async function handleProtectedRoute(request: NextRequest, pathname: strin
   const { user, error } = await verifyAuth(request)
 
   if (!user) {
-    logDefault(`Unauthorized access attempt to ${pathname}: ${error}`)
+    log(`Unauthorized access attempt to ${pathname}: ${error}`)
     const response = NextResponse.json(
       {
         success: false,
@@ -120,7 +120,7 @@ export async function handleProtectedRoute(request: NextRequest, pathname: strin
     requestHeaders.set('x-user-role', user.role)
   }
 
-  logDefault(`User ${user.userId} authenticated for ${pathname}`)
+  log(`User ${user.userId} authenticated for ${pathname}`)
 
   const response = NextResponse.next({
     request: {

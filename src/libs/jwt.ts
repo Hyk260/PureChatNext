@@ -6,7 +6,6 @@ const secret = new TextEncoder().encode(authEnv.NEXT_AUTH_SECRET)
 
 export interface JWTPayload {
   userId: string
-  email?: string
   role?: string
   exp?: number
 }
@@ -50,7 +49,6 @@ export async function verifyRefreshToken(token: string): Promise<{ valid: boolea
       valid: true,
       expired: false,
       userId: payload.userId as string,
-      email: payload.email as string,
       family: payload.family as string | undefined
     }
   } catch (error) {

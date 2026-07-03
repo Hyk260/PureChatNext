@@ -34,8 +34,6 @@ const allowedHeaders = [
 
 const protectedRoutes = [
   ...PROXY_CONFIG.PROTECTED_ROUTES,
-  // "/api/rest-api",
-  // "/api/chat",
 ]
 
 const log = debug('cors:default')

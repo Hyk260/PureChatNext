@@ -17,7 +17,6 @@ export const PROXY_CONFIG = {
    */
   PROTECTED_ROUTES: [
     "/api/rest-api",
-    "/api/chat"
   ],
   PING_PATH: "/ping",
   USER_HEADERS: {

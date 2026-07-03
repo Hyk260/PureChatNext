@@ -11,7 +11,7 @@ import { type NodemailerConfig } from './type';
 const log = debug('email:Nodemailer');
 
 /**
- * Nodemailer implementation of the email service
+ * 基于 Nodemailer 的邮件服务实现
  */
 export class NodemailerImpl implements EmailServiceImpl {
   private transporter: Transporter;
@@ -25,7 +25,6 @@ export class NodemailerImpl implements EmailServiceImpl {
       );
     }
 
-    // Note: Use || to handle empty string from Dockerfile defaults
     const transportConfig: NodemailerConfig = {
       auth: {
         pass: emailEnv.SMTP_PASS,
@@ -49,8 +48,11 @@ export class NodemailerImpl implements EmailServiceImpl {
     }
   }
 
+  /**
+   * 发送邮件
+   */
   async sendMail(payload: EmailPayload): Promise<EmailResponse> {
-    // Use SMTP_FROM as default sender, fallback to SMTP_USER for backward compatibility
+    // 默认发件人优先使用 SMTP_FROM，回退到 SMTP_USER 以保持向后兼容
     const from = payload.from || emailEnv.SMTP_FROM || emailEnv.SMTP_USER!;
 
     log('Sending email with payload: %o', {
@@ -89,7 +91,7 @@ export class NodemailerImpl implements EmailServiceImpl {
   }
 
   /**
-   * Verify the SMTP connection configuration
+   * 校验 SMTP 连接配置是否可用
    */
   async verify(): Promise<boolean> {
     try {

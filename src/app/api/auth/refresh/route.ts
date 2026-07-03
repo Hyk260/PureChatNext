@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { verifyRefreshToken, generateAccessToken, generateRefreshToken } from '@/libs/jwt';
+import debug from 'debug';
+
+const log = debug('refresh-token');
 
 /**
  * 刷新 Token 接口
@@ -28,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('verifyResult', verifyResult)
+    log('verifyResult: %O', verifyResult)
 
     if (!verifyResult.userId) {
       return NextResponse.json(
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Refresh token error:', error);
+    log('Refresh token error: %O', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }

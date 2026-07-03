@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { email, userId, password } = body as User
 
-    if (!userId || !password) {
-      return NextResponse.json({ error: '账号和密码不能为空' }, { status: 400 })
+    if (!password) {
+      return NextResponse.json({ error: '密码不能为空' }, { status: 400 })
     }
 
     let user: User | null = null
@@ -30,8 +30,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
-    }
-    if (userId) {
+    } else if (userId) {
       user = await UserModel.findByUserIdAndPassword(userId, password)
       if (!user) {
         return NextResponse.json(
@@ -41,6 +40,8 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
+    } else {
+      return NextResponse.json({ error: '邮箱或账号不能为空' }, { status: 400 })
     }
 
     if (!user) {
@@ -52,8 +53,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const identifier = user.userId || userId || email || ''
-    const userSig = generateUserSig({ identifier })
+    const userSig = generateUserSig({ identifier: user.userId })
     const accessToken = await generateAccessToken(user.userId)
     const { token: refreshToken } = await generateRefreshToken(user.userId)
 

@@ -15,6 +15,13 @@
       "when": 1778748755278,
       "tag": "0001_fat_firedrake",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782894530394,
+      "tag": "0002_cuddly_marauders",
+      "breakpoints": true
     }
   ]
 }

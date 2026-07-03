@@ -17,9 +17,10 @@ export class UserModel {
   ) => {
     const normalizedEmail = typeof value.email === 'string' && value.email.trim() === '' ? null : value.email
     const normalizedPhone = typeof value.phone === 'string' && value.phone.trim() === '' ? null : value.phone
-    const normalizedUserId = typeof value.userId === 'string' && value.userId.trim() === '' ? null : value.userId?.trim()
-    const normalizedPassword = typeof value.password === 'string' && value.password.trim() === '' ? null : value.password
-    
+    const normalizedUserId = value.userId == null || value.userId.trim() === '' ? null : value.userId.trim()
+    const normalizedPassword =
+      typeof value.password === 'string' && value.password.trim() === '' ? null : value.password
+
     const passwordOut =
       value.password === undefined
         ? {}
@@ -55,17 +56,18 @@ export class UserModel {
   }
 
   static updateUser = async (value: Partial<UserItem>) => {
-    const nextValue = UserModel.normalizeUniqueUserFields(value);
-
-    return this.db
-      .update(users)
-      .set({ ...nextValue, updatedAt: new Date() })
-      .where(eq(users.userId, value.userId!));
-  };
+    const nextValue = UserModel.normalizeUniqueUserFields(value)
+    if (value.userId) {
+      return this.db
+        .update(users)
+        .set({ ...nextValue, updatedAt: new Date() })
+        .where(eq(users.userId, value.userId))
+    }
+  }
 
   static deleteUser = async (id: string) => {
     return this.db.delete(users).where(eq(users.userId, id))
-  };
+  }
 
   static findById = async (id: string) => {
     return this.db.query.users.findFirst({ where: eq(users.id, id) })
@@ -89,14 +91,17 @@ export class UserModel {
     return this.toUserWithoutPasswordIfPasswordOk(user, password)
   }
 
-  static createUser = async (params: User) => {
-    if (params.id) {
-      const existing = await this.db.query.users.findFirst({ where: eq(users.id, params.id) })
-      if (existing) return { duplicate: true as const }
+  static createUser = async (params: Partial<User>) => {
+    const normalizedParams = this.normalizeUniqueUserFields(params)
+
+    if (normalizedParams.userId == null) {
+      normalizedParams.userId = crypto.randomUUID().replace(/-/g, '')
     }
 
-    const normalizedParams = this.normalizeUniqueUserFields(params)
-    const [user] = await this.db.insert(users).values(normalizedParams).returning()
+    const [user] = await this.db
+      .insert(users)
+      .values(normalizedParams as User)
+      .returning()
 
     return { duplicate: false as const, user }
   }

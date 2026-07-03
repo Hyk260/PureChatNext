@@ -24,11 +24,11 @@ export const getIMConfig = () => {
       IM_REQUEST_TIMEOUT: z.string().optional(),
     },
     runtimeEnv: {
-      IM_REQUEST_TIMEOUT: process.env.IM_REQUEST_TIMEOUT,
-      IM_SERVER_BASE_URL: process.env.IM_SERVER_BASE_URL,
-      IM_ADMIN_ISTRATOR: process.env.IM_ADMIN_ISTRATOR,
       IM_SDK_APPID: process.env.IM_SDK_APPID,
       IM_SDK_KEY: process.env.IM_SDK_KEY,
+      IM_ADMIN_ISTRATOR: process.env.IM_ADMIN_ISTRATOR,
+      IM_SERVER_BASE_URL: process.env.IM_SERVER_BASE_URL,
+      IM_REQUEST_TIMEOUT: process.env.IM_REQUEST_TIMEOUT,
     },
   });
 };

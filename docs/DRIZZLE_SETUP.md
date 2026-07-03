@@ -110,6 +110,48 @@ export const user = pgTable("User", {
 - 检查 Supabase 项目的 IP 白名单设置（如果启用了）
 
 ### 迁移失败
+
+#### `relation "xxx" already exists`
+
+这通常表示 **数据库 schema 与 `drizzle.__drizzle_migrations` 记录不同步**：表已经存在，但 Drizzle 认为对应迁移尚未执行，从而重复 `CREATE TABLE`。
+
+常见原因：
+
+- 手动向 `drizzle.__drizzle_migrations` 写入了错误记录（如 `hash` 填迁移 tag 名而非 SHA256，`created_at` 填 `0`）
+- 直接执行了 SQL 文件，但未更新迁移记录
+- `_journal.json` 与已应用的迁移不一致
+
+Drizzle 判定逻辑：取 `__drizzle_migrations` 中 `created_at` 最大的一条，若小于 journal 中某条迁移的 `when`，就会重跑该迁移。
+
+**修复步骤（已有表、需对齐记录时）：**
+
+1. 确认 `src/database/migrations/meta/_journal.json` 包含所有已应用的 `.sql` 条目
+2. 计算对应 `.sql` 文件的 SHA256 哈希（Drizzle 写入 `hash` 字段的值）：
+
+```bash
+node -e "
+const { createHash } = require('crypto');
+const fs = require('fs');
+const sql = fs.readFileSync('src/database/migrations/0000_xxx.sql', 'utf8');
+console.log(createHash('sha256').update(sql).digest('hex'));
+"
+```
+
+3. 将最新已应用迁移的记录写入数据库（`created_at` 取 journal 中该条的 `when`）：
+
+```sql
+DELETE FROM drizzle.__drizzle_migrations;
+
+INSERT INTO drizzle.__drizzle_migrations (hash, created_at)
+VALUES ('<SHA256>', <when>);
+```
+
+4. 重新执行 `pnpm db:migrate`
+
+**注意：** 不要手动往 `drizzle.__drizzle_migrations` 写迁移 tag 名（如 `0000_flowery_microchip`），`hash` 必须是 SQL 文件内容的 SHA256。`pnpm db:migrate` 会在执行前预检此类异常并提前报错。
+
+#### 其他迁移错误
+
 - 检查迁移文件是否已存在冲突
 - 查看 Supabase 日志获取详细错误信息
 - 确认数据库用户有足够权限执行 DDL 操作

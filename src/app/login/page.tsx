@@ -1,8 +1,7 @@
 "use client";
 
 import type React from "react";
-
-import { createClient } from "@/libs/supabase/client";
+import { login } from '@/libs/utils/api-client';
 import { Button, Input, Card } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,17 +22,14 @@ export default function LoginPage() {
       return;
     }
 
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const response = await login({
         email,
         password,
       });
-
-      if (error) throw error;
 
       // Redirect after successful login
       router.push("/protected");
@@ -86,7 +82,7 @@ export default function LoginPage() {
           </div>
           <div className="mt-4 text-center text-sm">
             没有账户?{" "}
-            <Link href="/register" className="underline underline-offset-4">
+            <Link href="/signup" className="underline underline-offset-4">
               注册
             </Link>
           </div>

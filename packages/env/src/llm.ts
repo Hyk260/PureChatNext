@@ -14,10 +14,10 @@ export const getLLMConfig = () => {
     },
     runtimeEnv: {
       API_KEY_SELECT_MODE: process.env.API_KEY_SELECT_MODE,
-
+      // OpenAI
       ENABLED_OPENAI: process.env.ENABLED_OPENAI !== '0',
       OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-
+      // Deepseek
       ENABLED_DEEPSEEK: !!process.env.DEEPSEEK_API_KEY,
       DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
     },

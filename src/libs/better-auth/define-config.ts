@@ -1,0 +1,292 @@
+import { betterAuth } from 'better-auth/minimal'
+import bcrypt from 'bcryptjs'
+import { verifyPassword } from 'better-auth/crypto'
+import { EmailService } from '@/server/services/email'
+import { admin, emailOTP, genericOAuth, magicLink } from 'better-auth/plugins'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import * as schema from '@/database/schemas';
+import { serverDB } from '@/database/core/db-adaptor'
+import debug from 'debug'
+
+import {
+  getChangeEmailVerificationTemplate,
+  getMagicLinkEmailTemplate,
+  getResetPasswordEmailTemplate,
+  getVerificationEmailTemplate,
+  getVerificationOTPEmailTemplate,
+} from '@/libs/better-auth/email-templates'
+import { OTP_EXPIRES_IN } from '@/libs/better-auth/constants'
+import { verifyLegacyStoredPassword } from '@/libs/better-auth/legacy-password'
+import { initBetterAuthSSOProviders } from '@/libs/better-auth/sso'
+import { parseSSOProviders } from '@/libs/better-auth/utils/server'
+
+const log = debug('better-auth:define-config')
+
+import { appEnv } from '@/envs/app'
+import { authEnv } from '@/envs/auth'
+
+import { type BetterAuthOptions } from 'better-auth/minimal'
+
+const enabledSSOProviders = parseSSOProviders(authEnv.AUTH_SSO_PROVIDERS)
+const { socialProviders, genericOAuthProviders } = initBetterAuthSSOProviders()
+
+// 邮件验证链接过期时间（单位：秒）
+// 默认值为 1 小时（3600 秒），参考 Better Auth 文档
+const VERIFICATION_LINK_EXPIRES_IN = 3600
+const MAGIC_LINK_EXPIRES_IN = 900
+const enableMagicLink = authEnv.AUTH_ENABLE_MAGIC_LINK
+const useOtpEmailVerification = authEnv.AUTH_EMAIL_VERIFICATION_MODE === 'otp'
+
+/**
+ * 构建 Better Auth 服务端实例。
+ * 集中定义账户关联、邮箱登录、会话、数据库适配与用户字段映射等配置。
+ */
+export function defineConfig() {
+  const options: BetterAuthOptions = {
+    // 账户关联：同邮箱下合并 OAuth 与本地密码账户
+    account: {
+      accountLinking: {
+        // 开启账户关联
+        enabled: true,
+        // 允许邮箱密码用户与 OAuth 同邮箱账户自动关联（需将 provider 加入 trustedProviders）
+        trustedProviders: enabledSSOProviders,
+        // 兼容未开启邮箱验证时注册的本地用户（emailVerified 默认为 false）
+        requireLocalEmailVerified: false,
+      },
+    },
+    // 应用对外 URL，用于生成回调链接与 Cookie 域
+    baseURL: appEnv.APP_URL,
+    // 会话签名与加密密钥（AUTH_SECRET）
+    secret: authEnv.AUTH_SECRET,
+    // 邮箱 + 密码登录
+    emailAndPassword: {
+      // 注册/登录成功后自动创建会话
+      autoSignIn: true,
+      // disableSignUp: authEnv.AUTH_DISABLE_EMAIL_PASSWORD,
+      enabled: true,
+      maxPasswordLength: 64,
+      minPasswordLength: 8,
+      // 注册后是否需要验证邮箱
+      requireEmailVerification: authEnv.AUTH_EMAIL_VERIFICATION,
+      // 重置密码后撤销该用户所有已有会话
+      revokeSessionsOnPasswordReset: true,
+      // 自定义密码校验：兼容 Clerk 迁移的 bcrypt 哈希；新密码仍使用 Better Auth 默认 scrypt
+      password: {
+        async verify({ hash, password }: { hash: string; password: string }): Promise<boolean> {
+          if (!hash) return false
+
+          // Clerk 导出的 bcrypt 哈希（$2a$ / $2b$ 前缀）
+          if (hash.startsWith('$2a$') || hash.startsWith('$2b$')) {
+            return bcrypt.compare(password, hash)
+          }
+
+          const legacyResult = verifyLegacyStoredPassword(hash, password)
+          if (legacyResult !== null) {
+            return legacyResult
+          }
+
+          // 其余情况走 Better Auth 默认校验逻辑
+          return verifyPassword({ hash, password })
+        },
+      },
+      // 发送重置密码邮件
+      sendResetPassword: async ({ user, url }) => {
+        const template = getResetPasswordEmailTemplate({ url })
+
+        const emailService = new EmailService()
+        await emailService.sendMail({
+          to: user.email,
+          ...template,
+        })
+      },
+    },
+    // 邮箱验证（注册确认、修改邮箱等）
+    emailVerification: {
+      // 验证完成后自动登录
+      autoSignInAfterVerification: true,
+      expiresIn: VERIFICATION_LINK_EXPIRES_IN,
+      sendVerificationEmail: async ({ user, url }, request) => {
+        const isChangeEmail = request?.url?.includes('/change-email')
+
+        // OTP 模式下注册验证由 verify-email 页触发 sendVerificationOtp
+        if (!isChangeEmail && useOtpEmailVerification) {
+          return
+        }
+
+        const template = isChangeEmail
+          ? getChangeEmailVerificationTemplate({
+              expiresInSeconds: VERIFICATION_LINK_EXPIRES_IN,
+              url,
+              userName: user.name,
+            })
+          : getVerificationEmailTemplate({
+              expiresInSeconds: VERIFICATION_LINK_EXPIRES_IN,
+              url,
+              userName: user.name,
+            })
+
+        const emailService = new EmailService()
+        await emailService.sendMail({
+          to: user.email,
+          ...template,
+        })
+      },
+    },
+    // 会话与 Cookie 缓存
+    session: {
+      cookieCache: {
+        enabled: true,
+        // Cookie 侧会话缓存时长（秒），减轻 get-session 数据库查询
+        maxAge: 2 * 60,
+      },
+      // Redis 等二级存储条目缺失时，仍可从数据库恢复会话
+      storeSessionInDatabase: true,
+    },
+    // Drizzle + PostgreSQL 适配器
+    database: drizzleAdapter(serverDB, {
+      provider: 'pg',
+      // 实验性联表查询需传入完整 schema 关系
+      schema,
+    }),
+    // API 错误时重定向到自定义页面
+    onAPIError: {
+      errorURL: '/auth-error',
+    },
+    /**
+     * 数据库联表查询在 Better-Auth 需要单次查询从多张表获取关联数据时非常有用。
+     * /get-session、/get-full-organization 等端点因此特性受益显著，
+     * 根据数据库延迟，性能可提升 2 到 3 倍。
+     * Ref: https://www.better-auth.com/docs/adapters/drizzle#joins-experimental
+     */
+    experimental: { joins: false },
+    /**
+     * 为每个新创建的账户运行用户引导流程（邮箱、魔法链接、OAuth/社交登录等）。
+     * 使用 Better Auth 数据库钩子可以捕获绕过 /sign-up/* 路由的社交登录流程。
+     * Ref: https://www.better-auth.com/docs/reference/options#databasehooks
+     */
+    databaseHooks: {
+      user: {
+        create: {
+          // 写入前：确保业务侧 userId（无连字符 UUID）存在
+          before: async (user) => {
+            log('user create before: %O', user)
+            const userId =
+              typeof user.userId === 'string' && user.userId.trim() !== ''
+                ? user.userId
+                : crypto.randomUUID().replace(/-/g, '')
+
+            return {
+              data: {
+                ...user,
+                userId,
+              },
+            }
+          },
+          // 写入后：可在此初始化用户默认数据（聊天配置等）
+          after: async (user) => {
+            log('user create after: %O', user)
+            // const userService = new UserService(serverDB);
+            // await userService.initUser({
+            //   email: user.email,
+            //   id: user.id,
+            //   username: user.username as string | null,
+            //   createdAt: user.createdAt,
+            //   // TODO: 若接入 phone 插件，在此填充手机号
+            // });
+          },
+        },
+      },
+    },
+    // 用户表字段映射与扩展字段（对齐现有 users 表结构）
+    user: {
+      changeEmail: {
+        enabled: true,
+      },
+      additionalFields: {
+        // 业务用户 ID，与 auth 主键 id 分离；客户端不可直接提交
+        userId: {
+          defaultValue: () => crypto.randomUUID().replace(/-/g, ''),
+          input: false,
+          required: false,
+          type: 'string',
+        },
+      },
+      fields: {
+        // Better Auth image → 数据库 avatar
+        image: 'avatar',
+        // Better Auth name → 数据库 username
+        name: 'username',
+      },
+      modelName: 'users',
+    },
+    // 内置社交登录（GitHub、Google 等，由 AUTH_SSO_PROVIDERS 控制）
+    socialProviders,
+    rateLimit: {
+      customRules: {
+        ...(useOtpEmailVerification
+          ? { '/email-otp/send-verification-otp': { max: 3, window: 60 } }
+          : {}),
+        '/request-password-reset': { max: 3, window: 60 },
+        '/send-verification-email': { max: 3, window: 60 },
+      },
+    },
+    plugins: [
+      admin(),
+      ...(useOtpEmailVerification
+        ? [
+            emailOTP({
+              allowedAttempts: 3,
+              expiresIn: OTP_EXPIRES_IN,
+              otpLength: 6,
+              // 注册验证由 verify-email 页手动触发 OTP 发送
+              sendVerificationOnSignUp: false,
+              async sendVerificationOTP({ email, otp }) {
+                const template = getVerificationOTPEmailTemplate({
+                  expiresInSeconds: OTP_EXPIRES_IN,
+                  otp,
+                  userName: null,
+                })
+
+                const emailService = new EmailService()
+                await emailService.sendMail({
+                  to: email,
+                  ...template,
+                })
+              },
+            }),
+          ]
+        : []),
+      ...(genericOAuthProviders.length > 0
+        ? [
+            genericOAuth({
+              config: genericOAuthProviders,
+            }),
+          ]
+        : []),
+      ...(enableMagicLink
+        ? [
+            magicLink({
+              expiresIn: MAGIC_LINK_EXPIRES_IN,
+              sendMagicLink: async ({ email, url }) => {
+                const template = getMagicLinkEmailTemplate({
+                  expiresInSeconds: MAGIC_LINK_EXPIRES_IN,
+                  url,
+                })
+
+                const emailService = new EmailService()
+                await emailService.sendMail({
+                  to: email,
+                  ...template,
+                })
+              },
+            }),
+          ]
+        : []),
+    ],
+  }
+
+  // log('Better Auth Config: %O', options)
+  // log("socialProviders: %O", options.socialProviders)
+
+  return betterAuth(options)
+}

@@ -1,15 +1,15 @@
-import { createBrowserClient } from "@supabase/ssr"
+import { createBrowserClient } from '@supabase/ssr'
+import { getServerDBConfig } from '@/envs/serverDB'
 
 /**
  * Get Supabase environment variables with validation
  */
 function getSupabaseEnv() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const { NEXT_PUBLIC_SUPABASE_URL: url, NEXT_PUBLIC_SUPABASE_ANON_KEY: key } = getServerDBConfig()
 
   if (!url || !key) {
     throw new Error(
-      "Missing Supabase environment variables. Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set."
+      'Missing Supabase environment variables. Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.'
     )
   }
 

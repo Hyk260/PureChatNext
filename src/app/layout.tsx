@@ -1,36 +1,31 @@
-import { Analytics } from '@vercel/analytics/next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { type ReactNode, Suspense } from 'react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+
+import Analytics from '@/components/Analytics'
 
 import type { Metadata } from 'next'
 
 import '@/styles/globals.css'
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
 
 export const metadata: Metadata = {
   title: 'PureChat',
   description: 'PureChat is a chat application that allows you to chat with your friends and family.',
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+const inVercel = process.env.VERCEL === '1'
+
+const RootLayout = ({ children }: { children: ReactNode }) => {
   return (
-    <html lang='en'>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang='zh-CN' suppressHydrationWarning style={{ height: '100%' }}>
+      <body style={{ height: '100%', margin: 0 }}>
         {children}
-        <Analytics />
+        <Suspense fallback={null}>
+          <Analytics />
+          {inVercel && <SpeedInsights />}
+        </Suspense>
       </body>
     </html>
   )
 }
+
+export default RootLayout

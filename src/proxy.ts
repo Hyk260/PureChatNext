@@ -5,15 +5,15 @@ import { addCorsHeaders, createCorsPreflightResponse, isProtectedRoute, handlePr
 
 const backendApiEndpoints = ['/api']
 
-const testEndpoints = ['/web-search-test']
+const testEndpoints = ['/dev', '/api/dev']
 
 const logDefault = debug('proxy:default')
 
 export async function proxy(request: NextRequest) {
-  const isProd = process.env.NODE_ENV === 'production';
+  const isProd = process.env.NODE_ENV === 'production'
   const { pathname } = request.nextUrl
 
-  // 生产环境禁止访问测试页面
+  // 生产环境禁止访问开发页面与开发 API
   if (isProd && testEndpoints.some((path) => pathname.startsWith(path))) {
     return new NextResponse('dev only', { status: 404 })
   }
@@ -53,9 +53,23 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/(api|trpc|webapi)(.*)',
+    // include the /
     '/',
-    '/api/:path*',
     '/login',
+
+    '/me',
+    '/me(.*)',
+    '/share(.*)',
+
+    '/signup(.*)',
+    '/signin(.*)',
+    '/dev(.*)',
+    '/verify-email(.*)',
+    // '/verify-im(.*)',
+    '/reset-password(.*)',
+    '/auth-error(.*)',
+    '/oauth(.*)',
 
     /*
      * 匹配所有请求路径，除了以下路径：
@@ -63,6 +77,6 @@ export const config = {
      * - _next/image (图片优化文件)
      * - favicon.ico, sitemap.xml, robots.txt (元数据文件)
      */
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+    // '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
   ],
 }

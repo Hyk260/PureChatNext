@@ -1,11 +1,6 @@
-import { config } from "dotenv";
 import type { Config } from "drizzle-kit";
 
-// 如果存在.env文件，则读取该文件，或者读取由指定的文件
-
-// 传递给Node.js的dotenv_config_path参数
-
-config();
+import "./scripts/lib/load-env";
 
 const connectionString = process.env.DATABASE_URL;
 

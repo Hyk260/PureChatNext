@@ -1,10 +1,12 @@
+import { isDev } from '@/libs/constants'
+
 import { RouteNavSidebar } from './RouteNavSidebar'
 import { WelcomeActions } from './WelcomeActions'
 
 export default function WelcomePage() {
   return (
     <div className="flex min-h-svh w-full">
-      <RouteNavSidebar />
+      {isDev ? <RouteNavSidebar /> : null}
       <main className="flex min-h-svh flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-16 lg:px-8">
         <div className="w-full max-w-2xl text-center">
           <div className="mb-16 lg:mb-20">

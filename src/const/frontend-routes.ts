@@ -44,6 +44,7 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
       { href: '/dev/read-file', label: '文件读取' },
       { href: '/dev/s3', label: 'S3 测试' },
       { href: '/dev/web-search', label: '联网搜索' },
+      { href: '/dev/delete-user', label: '删除用户' },
     ],
   },
 ]

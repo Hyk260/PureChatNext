@@ -58,7 +58,7 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg bg-muted/50 p-6 text-center text-sm text-muted-foreground">
-        请输入发送到邮箱的 6 位验证码。验证码将在 {expirationText} 后过期；如未收到，请检查垃圾邮件文件夹。
+        验证码将在 {expirationText} 后过期；如未收到，请检查垃圾邮件文件夹。
       </div>
 
       <div className="flex justify-center">

@@ -2,6 +2,9 @@
   "plugins": {
     "vercel": {
       "enabled": true
+    },
+    "figma": {
+      "enabled": true
     }
   }
 }

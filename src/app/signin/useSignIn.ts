@@ -22,6 +22,7 @@ export const useSignIn = () => {
   const { config, ready: serverConfigInit } = useAuthConfig()
   const [form] = Form.useForm<SignInFormValues>()
   const [loading, setLoading] = useState(false)
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false)
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
   const [isSocialOnly, setIsSocialOnly] = useState(false)
@@ -184,14 +185,31 @@ export const useSignIn = () => {
   }
 
   const handleForgotPassword = async () => {
+    if (forgotPasswordLoading) return
+
+    setForgotPasswordLoading(true)
     try {
-      await requestPasswordReset({
+      const { error } = await requestPasswordReset({
         email,
         redirectTo: `/reset-password?email=${encodeURIComponent(email)}`,
       })
+
+      if (error) {
+        const isRateLimited =
+          error.status === 429 || error.code === 'RATE_LIMIT_EXCEEDED'
+        message.error(
+          isRateLimited
+            ? '请求过于频繁，请 60 秒后再试'
+            : (error.message ?? '发送重置邮件失败'),
+        )
+        return
+      }
+
       message.success('密码重置链接已发送到您的邮箱')
     } catch {
       message.error('发送重置邮件失败')
+    } finally {
+      setForgotPasswordLoading(false)
     }
   }
 
@@ -213,6 +231,7 @@ export const useSignIn = () => {
     form,
     handleBackToEmail,
     handleCheckUser,
+    forgotPasswordLoading,
     handleForgotPassword,
     handleGoToSignup,
     handleSendMagicLink,

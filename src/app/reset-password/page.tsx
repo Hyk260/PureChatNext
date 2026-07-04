@@ -1,22 +1,33 @@
 'use client'
 
-import { Card } from 'antd'
+import { Button } from '@lobehub/ui'
+import { ChevronLeft } from 'lucide-react'
+import Link from 'next/link'
 import { Suspense } from 'react'
 
+import { AuthPageContainer } from '@/components/AuthPageContainer'
 import Loading from '@/components/Loading/BrandTextLoading'
+import AuthCard from '@/features/AuthCard'
 
 import { ResetPasswordForm } from './ResetPasswordForm'
 
 const ResetPasswordPageContent = () => {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <Card title={<div className="text-2xl">重置密码</div>}>
-          <div className="mb-4 text-sm text-muted-foreground">请输入您的新密码</div>
-          <ResetPasswordForm />
-        </Card>
-      </div>
-    </div>
+    <AuthPageContainer>
+      <AuthCard
+        footer={
+          <Link href="/signin">
+            <Button block icon={ChevronLeft} size="large">
+              返回登录
+            </Button>
+          </Link>
+        }
+        subtitle="请输入您的新密码"
+        title="重置密码"
+      >
+        <ResetPasswordForm />
+      </AuthCard>
+    </AuthPageContainer>
   )
 }
 

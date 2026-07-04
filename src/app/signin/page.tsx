@@ -15,6 +15,7 @@ const SignInContent = () => {
     email,
     enableMagicLink,
     form,
+    forgotPasswordLoading,
     handleBackToEmail,
     handleCheckUser,
     handleForgotPassword,
@@ -55,6 +56,7 @@ const SignInContent = () => {
         <SignInPasswordStep
           email={email}
           enableMagicLink={enableMagicLink}
+          forgotPasswordLoading={forgotPasswordLoading}
           form={form}
           isSocialOnly={isSocialOnly}
           loading={loading}

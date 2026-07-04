@@ -1,11 +1,14 @@
 'use client'
 
-import { Button, Card } from 'antd'
+import { Button, Flexbox, Text } from '@lobehub/ui'
+import { cssVar } from 'antd-style'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense, memo } from 'react'
 
+import { AuthPageContainer } from '@/components/AuthPageContainer'
 import Loading from '@/components/Loading/BrandTextLoading'
+import AuthCard from '@/features/AuthCard'
 
 const ERROR_MESSAGES: Record<string, string> = {
   ACCOUNT_ALREADY_LINKED_TO_DIFFERENT_USER: '该第三方账户已关联到其他用户',
@@ -37,38 +40,42 @@ const ERROR_MESSAGES: Record<string, string> = {
   USER_NOT_FOUND: '未找到该用户',
 }
 
-const normalizeErrorCode = (code: string | null) => {
-  if (!code) return 'UNKNOWN'
-  return code.trim().replace(/\s+/g, '_').toUpperCase()
-}
+const normalizeErrorCode = (code?: string | null) =>
+  (code || 'UNKNOWN').trim().toUpperCase().replaceAll('-', '_').replace(/\s+/g, '_')
 
 const AuthErrorContent = memo(() => {
   const searchParams = useSearchParams()
-  const errorCode = normalizeErrorCode(searchParams.get('error'))
+  const error = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')?.trim()
-  const description = errorDescription || ERROR_MESSAGES[errorCode] || ERROR_MESSAGES.UNKNOWN
+
+  const code = normalizeErrorCode(error)
+  const description = errorDescription || ERROR_MESSAGES[code] || ERROR_MESSAGES.UNKNOWN
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <Card title={<div className="text-2xl">登录失败</div>}>
-          <div className="mb-6 text-sm leading-relaxed text-muted-foreground">{description}</div>
-          <div className="flex flex-col gap-3">
-            <Link className="block w-full" href="/signin">
-              <Button block type="primary">
+    <AuthPageContainer>
+      <AuthCard
+        footer={
+          <Flexbox gap={12} justify="center" wrap="wrap">
+            <Link href="/signin">
+              <Button block size="large" type="primary">
                 返回登录
               </Button>
             </Link>
-            <Link className="block w-full" href="/">
-              <Button block>返回首页</Button>
+            <Link href="/">
+              <Button block size="large">
+                返回首页
+              </Button>
             </Link>
-          </div>
-          <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-            若问题持续出现，请尝试清除浏览器缓存后重试，或联系管理员。
-          </p>
-        </Card>
-      </div>
-    </div>
+          </Flexbox>
+        }
+        subtitle={description}
+        title="登录失败"
+      >
+        <Text style={{ fontFamily: cssVar.fontFamilyCode }} type="secondary">
+          ErrorCode: {error || 'UNKNOWN'}
+        </Text>
+      </AuthCard>
+    </AuthPageContainer>
   )
 })
 

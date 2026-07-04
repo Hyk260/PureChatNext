@@ -1,53 +1,54 @@
 'use client'
 
-import { Button, Form, Input } from 'antd'
-import Link from 'next/link'
+import { Block, Button, Icon, InputPassword, Text } from '@lobehub/ui'
+import { Form } from 'antd'
+import { Lock } from 'lucide-react'
 
 import { useResetPassword, type ResetPasswordFormValues } from './useResetPassword'
 
 export const ResetPasswordForm = () => {
   const [form] = Form.useForm<ResetPasswordFormValues>()
-  const { email, handleResetPassword, loading, token } = useResetPassword()
+  const { handleResetPassword, loading, token } = useResetPassword()
 
   if (!token) {
     return (
-      <div className='space-y-4'>
-        <p className='text-sm text-muted-foreground'>重置链接无效或已过期。请返回登录页重新申请密码重置邮件。</p>
-        <Link href={email ? `/signin?email=${encodeURIComponent(email)}` : '/signin'}>
-          <Button block type='primary'>
-            返回登录
-          </Button>
-        </Link>
-      </div>
+      <Block padding={24}>
+        <Text align="center" fontSize={16}>
+          重置链接无效或已过期。请返回登录页重新申请密码重置邮件。
+        </Text>
+      </Block>
     )
   }
 
   return (
-    <Form form={form} layout='vertical' onFinish={handleResetPassword}>
-      {email ? (
-        <p className='mb-4 text-sm text-muted-foreground'>
-          正在为 <span className='font-medium text-foreground'>{email}</span> 设置新密码
-        </p>
-      ) : null}
-
+    <Form form={form} layout="vertical" onFinish={handleResetPassword}>
       <Form.Item
-        label='新密码'
-        name='password'
+        name="password"
         rules={[
-          { required: true, message: '请输入新密码' },
-          { min: 8, message: '密码至少 8 个字符' },
-          { max: 64, message: '密码最多 64 个字符' },
+          { message: '请输入新密码', required: true },
+          { message: '密码至少 8 个字符', min: 8 },
+          { message: '密码最多 64 个字符', max: 64 },
         ]}
       >
-        <Input.Password placeholder='请输入新密码' />
+        <InputPassword
+          placeholder="请输入新密码"
+          size="large"
+          prefix={
+            <Icon
+              icon={Lock}
+              style={{
+                marginInline: 6,
+              }}
+            />
+          }
+        />
       </Form.Item>
 
       <Form.Item
         dependencies={['password']}
-        label='确认密码'
-        name='confirmPassword'
+        name="confirmPassword"
         rules={[
-          { required: true, message: '请确认密码' },
+          { message: '请确认密码', required: true },
           ({ getFieldValue }) => ({
             validator(_, value) {
               if (!value || getFieldValue('password') === value) {
@@ -58,11 +59,22 @@ export const ResetPasswordForm = () => {
           }),
         ]}
       >
-        <Input.Password placeholder='请再次输入新密码' />
+        <InputPassword
+          placeholder="请再次输入新密码"
+          size="large"
+          prefix={
+            <Icon
+              icon={Lock}
+              style={{
+                marginInline: 6,
+              }}
+            />
+          }
+        />
       </Form.Item>
 
-      <Form.Item>
-        <Button block htmlType='submit' loading={loading} type='primary'>
+      <Form.Item style={{ marginBottom: 0 }}>
+        <Button block htmlType="submit" loading={loading} size="large" type="primary">
           重置密码
         </Button>
       </Form.Item>

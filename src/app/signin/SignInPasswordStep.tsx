@@ -20,6 +20,7 @@ interface SignInPasswordStepProps {
   enableMagicLink?: boolean
   form: FormInstance<SignInFormValues>
   isSocialOnly?: boolean
+  forgotPasswordLoading?: boolean
   loading: boolean
   oAuthSSOProviders: readonly string[]
   onBack: () => void
@@ -32,6 +33,7 @@ export const SignInPasswordStep = ({
   email,
   enableMagicLink,
   form,
+  forgotPasswordLoading = false,
   isSocialOnly,
   loading,
   oAuthSSOProviders,
@@ -97,10 +99,21 @@ export const SignInPasswordStep = ({
         <>
           <Text fontSize={13} type="secondary">
             <a
-              style={{ color: 'inherit', cursor: 'pointer', textDecoration: 'underline' }}
-              onClick={onForgotPassword}
+              aria-disabled={forgotPasswordLoading}
+              style={{
+                color: 'inherit',
+                cursor: forgotPasswordLoading ? 'not-allowed' : 'pointer',
+                opacity: forgotPasswordLoading ? 0.6 : 1,
+                pointerEvents: forgotPasswordLoading ? 'none' : 'auto',
+                textDecoration: 'underline',
+              }}
+              onClick={(event) => {
+                event.preventDefault()
+                if (forgotPasswordLoading) return
+                void onForgotPassword()
+              }}
             >
-              忘记密码？
+              {'忘记密码？'}
             </a>
           </Text>
           <Button icon={ChevronLeft} size="large" style={{ marginTop: 12 }} onClick={onBack}>

@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth/minimal'
 import bcrypt from 'bcryptjs'
 import { verifyPassword } from 'better-auth/crypto'
 import { EmailService } from '@/server/services/email'
+import { type EmailPayload } from '@/server/services/email/impls'
 import { admin, emailOTP, genericOAuth, magicLink } from 'better-auth/plugins'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import * as schema from '@/database/schemas';
@@ -30,12 +31,85 @@ import { type BetterAuthOptions } from 'better-auth/minimal'
 const enabledSSOProviders = parseSSOProviders(authEnv.AUTH_SSO_PROVIDERS)
 const { socialProviders, genericOAuthProviders } = initBetterAuthSSOProviders()
 
-// 邮件验证链接过期时间（单位：秒）
-// 默认值为 1 小时（3600 秒），参考 Better Auth 文档
-const VERIFICATION_LINK_EXPIRES_IN = 3600
+const VERIFICATION_LINK_EXPIRES_IN = 600
 const MAGIC_LINK_EXPIRES_IN = 900
 const enableMagicLink = authEnv.AUTH_ENABLE_MAGIC_LINK
 const useOtpEmailVerification = authEnv.AUTH_EMAIL_VERIFICATION_MODE === 'otp'
+
+/** 邮件类 Auth 端点限流：60 秒窗口内最多 1 次请求 */
+const EMAIL_ENDPOINT_RATE_LIMIT = { max: 1, window: 60 }
+
+async function sendAuthEmail(
+  to: string,
+  template: Pick<EmailPayload, 'html' | 'subject' | 'text'>,
+) {
+  await new EmailService().sendMail({ to, ...template })
+}
+
+function buildOptionalAuthPlugins() {
+  const plugins = []
+
+  if (useOtpEmailVerification) {
+    plugins.push(
+      emailOTP({
+        allowedAttempts: 3,
+        expiresIn: OTP_EXPIRES_IN,
+        otpLength: 6,
+        // 注册验证由 verify-email 页手动触发 OTP 发送
+        sendVerificationOnSignUp: false,
+        async sendVerificationOTP({ email, otp }) {
+          await sendAuthEmail(
+            email,
+            getVerificationOTPEmailTemplate({
+              expiresInSeconds: OTP_EXPIRES_IN,
+              otp,
+              userName: null,
+            }),
+          )
+        },
+      }),
+    )
+  }
+
+  if (genericOAuthProviders.length > 0) {
+    plugins.push(genericOAuth({ config: genericOAuthProviders }))
+  }
+
+  if (enableMagicLink) {
+    plugins.push(
+      magicLink({
+        expiresIn: MAGIC_LINK_EXPIRES_IN,
+        async sendMagicLink({ email, url }) {
+          await sendAuthEmail(
+            email,
+            getMagicLinkEmailTemplate({
+              expiresInSeconds: MAGIC_LINK_EXPIRES_IN,
+              url,
+            }),
+          )
+        },
+      }),
+    )
+  }
+
+  return plugins
+}
+
+function buildRateLimitCustomRules() {
+  const rules: Record<string, { max: number; window: number }> = {
+    // 忘记密码：发送重置链接
+    '/request-password-reset': { max: 1, window: 360 },
+    // 邮箱验证链接（link 模式）或修改邮箱确认
+    '/send-verification-email': EMAIL_ENDPOINT_RATE_LIMIT,
+  }
+
+  if (useOtpEmailVerification) {
+    // OTP 注册验证：verify-email 页手动触发
+    rules['/email-otp/send-verification-otp'] = EMAIL_ENDPOINT_RATE_LIMIT
+  }
+
+  return rules
+}
 
 /**
  * 构建 Better Auth 服务端实例。
@@ -104,6 +178,7 @@ export function defineConfig() {
     emailVerification: {
       // 验证完成后自动登录
       autoSignInAfterVerification: true,
+      // 验证链接过期时间
       expiresIn: VERIFICATION_LINK_EXPIRES_IN,
       sendVerificationEmail: async ({ user, url }, request) => {
         const isChangeEmail = request?.url?.includes('/change-email')
@@ -221,68 +296,12 @@ export function defineConfig() {
     },
     // 内置社交登录（GitHub、Google 等，由 AUTH_SSO_PROVIDERS 控制）
     socialProviders,
+    // 敏感邮件端点限流，防止滥发（开发环境默认关闭，需显式启用）
     rateLimit: {
-      customRules: {
-        ...(useOtpEmailVerification
-          ? { '/email-otp/send-verification-otp': { max: 3, window: 60 } }
-          : {}),
-        '/request-password-reset': { max: 3, window: 60 },
-        '/send-verification-email': { max: 3, window: 60 },
-      },
+      enabled: true,
+      customRules: buildRateLimitCustomRules(),
     },
-    plugins: [
-      admin(),
-      ...(useOtpEmailVerification
-        ? [
-            emailOTP({
-              allowedAttempts: 3,
-              expiresIn: OTP_EXPIRES_IN,
-              otpLength: 6,
-              // 注册验证由 verify-email 页手动触发 OTP 发送
-              sendVerificationOnSignUp: false,
-              async sendVerificationOTP({ email, otp }) {
-                const template = getVerificationOTPEmailTemplate({
-                  expiresInSeconds: OTP_EXPIRES_IN,
-                  otp,
-                  userName: null,
-                })
-
-                const emailService = new EmailService()
-                await emailService.sendMail({
-                  to: email,
-                  ...template,
-                })
-              },
-            }),
-          ]
-        : []),
-      ...(genericOAuthProviders.length > 0
-        ? [
-            genericOAuth({
-              config: genericOAuthProviders,
-            }),
-          ]
-        : []),
-      ...(enableMagicLink
-        ? [
-            magicLink({
-              expiresIn: MAGIC_LINK_EXPIRES_IN,
-              sendMagicLink: async ({ email, url }) => {
-                const template = getMagicLinkEmailTemplate({
-                  expiresInSeconds: MAGIC_LINK_EXPIRES_IN,
-                  url,
-                })
-
-                const emailService = new EmailService()
-                await emailService.sendMail({
-                  to: email,
-                  ...template,
-                })
-              },
-            }),
-          ]
-        : []),
-    ],
+    plugins: [admin(), ...buildOptionalAuthPlugins()],
   }
 
   // log('Better Auth Config: %O', options)

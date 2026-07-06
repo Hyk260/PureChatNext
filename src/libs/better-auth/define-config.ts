@@ -17,6 +17,7 @@ import {
   getVerificationOTPEmailTemplate,
 } from '@/libs/better-auth/email-templates'
 import { OTP_EXPIRES_IN } from '@/libs/better-auth/constants'
+import { createVerificationDailyRateLimitStorage } from '@/libs/better-auth/rate-limit-storage'
 import { verifyLegacyStoredPassword } from '@/libs/better-auth/legacy-password'
 import { initBetterAuthSSOProviders } from '@/libs/better-auth/sso'
 import { parseSSOProviders } from '@/libs/better-auth/utils/server'
@@ -52,8 +53,11 @@ function buildOptionalAuthPlugins() {
   if (useOtpEmailVerification) {
     plugins.push(
       emailOTP({
+        // 一次性密码的允许尝试次数
         allowedAttempts: 3,
+        // 一次性密码的过期时间
         expiresIn: OTP_EXPIRES_IN,
+        // 一次性密码的长度
         otpLength: 6,
         // 注册验证由 verify-email 页手动触发 OTP 发送
         sendVerificationOnSignUp: false,
@@ -98,17 +102,26 @@ function buildOptionalAuthPlugins() {
 function buildRateLimitCustomRules() {
   const rules: Record<string, { max: number; window: number }> = {
     // 忘记密码：发送重置链接
-    '/request-password-reset': { max: 1, window: 360 },
-    // 邮箱验证链接（link 模式）或修改邮箱确认
+    '/request-password-reset': EMAIL_ENDPOINT_RATE_LIMIT,
+    // 邮箱验证链接（link 模式）或修改邮箱确认；另受 IP 日限（见 rateLimit.customStorage）
     '/send-verification-email': EMAIL_ENDPOINT_RATE_LIMIT,
   }
 
   if (useOtpEmailVerification) {
-    // OTP 注册验证：verify-email 页手动触发
+    // OTP 注册验证：verify-email 页手动触发；另受 IP 日限（见 rateLimit.customStorage）
     rules['/email-otp/send-verification-otp'] = EMAIL_ENDPOINT_RATE_LIMIT
   }
 
   return rules
+}
+
+function buildRateLimitConfig(): NonNullable<BetterAuthOptions['rateLimit']> {
+  return {
+    enabled: true,
+    customRules: buildRateLimitCustomRules(),
+    // 验证类端点在 customRules 短窗口限流之外，同一 IP 24h 内最多 VERIFICATION_DAILY_IP_MAX 次
+    customStorage: createVerificationDailyRateLimitStorage(),
+  }
 }
 
 /**
@@ -296,11 +309,8 @@ export function defineConfig() {
     },
     // 内置社交登录（GitHub、Google 等，由 AUTH_SSO_PROVIDERS 控制）
     socialProviders,
-    // 敏感邮件端点限流，防止滥发（开发环境默认关闭，需显式启用）
-    rateLimit: {
-      enabled: true,
-      customRules: buildRateLimitCustomRules(),
-    },
+    // 敏感邮件端点限流，防止滥发（短窗口 customRules + 验证类 IP 日限 customStorage）
+    rateLimit: buildRateLimitConfig(),
     plugins: [admin(), ...buildOptionalAuthPlugins()],
   }
 

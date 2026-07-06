@@ -79,7 +79,7 @@ export function RouteNavSidebar() {
             <p className="mt-1 text-base font-semibold">PureChat 路由</p>
           </div>
         }
-        width={224}
+        size={224}
       >
         <RouteNavContent onNavigate={() => setOpen(false)} pathname={pathname} />
       </Drawer>

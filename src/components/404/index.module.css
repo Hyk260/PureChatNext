@@ -1,0 +1,71 @@
+.notFoundPage {
+  align-items: center;
+  background: #fff;
+  color: #171717;
+  display: flex;
+  font-family: Arial, Helvetica, sans-serif;
+  justify-content: center;
+  min-height: 100svh;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.bg {
+  filter: blur(8px);
+  font-size: min(480px, 50vw);
+  font-weight: 800;
+  left: 50%;
+  line-height: 1;
+  margin: 0;
+  opacity: 0.12;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  user-select: none;
+  z-index: 0;
+}
+
+.content {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.desc {
+  line-height: 1.8;
+  margin: 1rem 0 2rem;
+}
+
+.link {
+  background: #007aff;
+  border-radius: 8px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .notFoundPage {
+    background: #0a0a0a;
+    color: #ededed;
+  }
+
+  .link {
+    background: #2e8dff;
+    color: #000;
+  }
+}

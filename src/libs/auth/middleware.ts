@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server'
-import { verifyToken, type JWTPayload } from '@/libs/jwt'
+import { verifyAccessToken, type AccessTokenPayload } from '@/libs/auth/jwt'
 import { logger } from '@/libs/logger'
 
 /**
@@ -8,7 +8,7 @@ import { logger } from '@/libs/logger'
  * @returns 返回验证结果，包含用户信息和错误信息
  */
 export async function verifyAuth(request: NextRequest): Promise<{
-  user: JWTPayload | null
+  user: AccessTokenPayload | null
   error: string | null
 }> {
   const authHeader = request.headers.get('authorization')
@@ -40,7 +40,7 @@ export async function verifyAuth(request: NextRequest): Promise<{
 
   // 验证 token
   try {
-    const payload = await verifyToken(token)
+    const payload = await verifyAccessToken(token)
 
     if (!payload) {
       return {

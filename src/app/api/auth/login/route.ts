@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { UserModel } from '@/database/models/user'
 import { generateUserSig } from '@/libs/utils/signature'
-import { generateAccessToken, generateRefreshToken } from '@/libs/jwt'
+import { signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
 
 import type { User } from '@/database/schemas/user'
 import type { NextRequest } from 'next/server';
@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
     }
 
     const userSig = generateUserSig({ identifier: user.userId })
-    const accessToken = await generateAccessToken(user.userId)
-    const { token: refreshToken } = await generateRefreshToken(user.userId)
+    const accessToken = await signAccessToken(user.userId)
+    const { token: refreshToken } = await signRefreshToken(user.userId)
 
     const loginResponse = {
       message: '登录成功',

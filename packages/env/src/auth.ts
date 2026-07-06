@@ -5,7 +5,13 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface ProcessEnv {
-      NEXT_AUTH_SECRET?: string;
+      /**
+       * RS256 RSA key pair in JWKS JSON format for signing/verifying user JWTs.
+       * Generate with: node scripts/generate-jwks-key.mjs
+       */
+      JWKS_KEY?: string;
+      JWT_ACCESS_EXPIRATION?: string;
+      JWT_REFRESH_EXPIRATION?: string;
 
       AUTH_APPLE_CLIENT_ID?: string;
       AUTH_APPLE_CLIENT_SECRET?: string;
@@ -41,7 +47,10 @@ export const getAuthConfig = () => {
       AUTH_SSO_PROVIDERS: z.string().optional().default(''),
 
       AUTH_SECRET: z.string().optional(),
-      NEXT_AUTH_SECRET: z.string().optional(),
+
+      JWKS_KEY: z.string().optional(),
+      JWT_ACCESS_EXPIRATION: z.string().default('15m'),
+      JWT_REFRESH_EXPIRATION: z.string().default('7d'),
 
       AUTH_APPLE_CLIENT_ID: z.string().optional(),
       AUTH_APPLE_CLIENT_SECRET: z.string().optional(),
@@ -72,7 +81,11 @@ export const getAuthConfig = () => {
       AUTH_SSO_PROVIDERS: process.env.AUTH_SSO_PROVIDERS,
 
       AUTH_SECRET: process.env.AUTH_SECRET,
-      NEXT_AUTH_SECRET: process.env.NEXT_AUTH_SECRET,
+
+      JWKS_KEY: process.env.JWKS_KEY,
+      JWT_ACCESS_EXPIRATION: process.env.JWT_ACCESS_EXPIRATION,
+      JWT_REFRESH_EXPIRATION: process.env.JWT_REFRESH_EXPIRATION,
+
       // Apple 配置
       AUTH_APPLE_CLIENT_ID: process.env.AUTH_APPLE_CLIENT_ID,
       AUTH_APPLE_CLIENT_SECRET: process.env.AUTH_APPLE_CLIENT_SECRET,

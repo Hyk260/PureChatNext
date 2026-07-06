@@ -8,8 +8,8 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const alias = {
-  // '@': resolve(__dirname, './src'),
-  // '@/envs': resolve(__dirname, './packages/env/src'),
+  '@/envs': resolve(__dirname, './packages/env/src'),
+  '@': resolve(__dirname, './src'),
 }
 
 export default defineConfig({

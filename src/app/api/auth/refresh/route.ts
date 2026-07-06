@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { verifyRefreshToken, generateAccessToken, generateRefreshToken } from '@/libs/jwt';
+import { verifyRefreshToken, signAccessToken, signRefreshToken } from '@/libs/auth/jwt';
 import debug from 'debug';
 
 const log = debug('refresh-token');
@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const accessToken = await generateAccessToken(verifyResult.userId);
-    const { token: newRefreshToken } = await generateRefreshToken(verifyResult.userId);
+    const accessToken = await signAccessToken(verifyResult.userId);
+    const { token: newRefreshToken } = await signRefreshToken(verifyResult.userId);
 
     return NextResponse.json(
       {

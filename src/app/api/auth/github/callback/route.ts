@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import GitHubAPI, { type ClientType } from '@/libs/auth/gtihub'
 import { generateUserSig } from '@/libs/utils/signature'
-import { generateAccessToken, generateRefreshToken } from '@/libs/jwt'
+import { signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
 import { registerAccount } from '@/libs/utils/register'
 import { logger } from '@/libs/logger'
 
@@ -40,8 +40,8 @@ export async function GET(request: NextRequest) {
 
     const identifier = githubId
     const userSig = generateUserSig({ identifier })
-    const accessToken = await generateAccessToken(identifier)
-    const { token: refreshToken } = await generateRefreshToken(identifier)
+    const accessToken = await signAccessToken(identifier)
+    const { token: refreshToken } = await signRefreshToken(identifier)
 
     return NextResponse.json(
       {

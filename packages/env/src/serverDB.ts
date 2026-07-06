@@ -18,6 +18,7 @@ export const getServerDBConfig = () => {
       DATABASE_DRIVER: process.env.DATABASE_DRIVER || 'neon',
       DATABASE_TEST_URL: process.env.DATABASE_TEST_URL,
       DATABASE_URL: process.env.DATABASE_URL,
+
       KEY_VAULTS_SECRET: process.env.KEY_VAULTS_SECRET,
 
       // supabase config

@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import { verifyToken } from '@/libs/jwt'
+import { verifyAccessToken } from '@/libs/auth/jwt'
 
 /**
  * JWT 验证测试接口
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     // 验证 token
     try {
-      const payload = await verifyToken(token)
+      const payload = await verifyAccessToken(token)
 
       if (!payload) {
         return NextResponse.json(

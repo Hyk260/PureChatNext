@@ -1,5 +1,7 @@
 'use client'
 
+import { Spin } from 'antd'
+import { Loader2, Pencil } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
@@ -59,33 +61,43 @@ export function AvatarSetting({
     }
   }
 
+  const avatarContent = (
+    <button
+      className="group relative shrink-0 cursor-pointer overflow-hidden rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
+      disabled={!s3Configured || uploading}
+      onClick={() => inputRef.current?.click()}
+      title={s3Configured ? '点击上传头像' : '头像上传需配置 S3'}
+      type="button"
+    >
+      {avatar ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          alt={displayName}
+          className="h-10 w-10 rounded-lg object-cover"
+          src={avatar}
+        />
+      ) : (
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-sm font-semibold text-primary">
+          {initials}
+        </div>
+      )}
+      {s3Configured ? (
+        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+          <Pencil className="h-4 w-4 text-white" />
+        </div>
+      ) : null}
+    </button>
+  )
+
   return (
-    <SettingRow label="头像">
-      <button
-        className="relative shrink-0 disabled:opacity-50"
-        disabled={!s3Configured || uploading}
-        onClick={() => inputRef.current?.click()}
-        title={s3Configured ? '点击上传头像' : '头像上传需配置 S3'}
-        type="button"
-      >
-        {avatar ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            alt={displayName}
-            className="h-10 w-10 rounded-full object-cover ring-2 ring-border"
-            src={avatar}
-          />
-        ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-primary ring-2 ring-border">
-            {initials}
-          </div>
-        )}
-        {uploading ? (
-          <span className="absolute inset-0 flex items-center justify-center rounded-full bg-background/70 text-xs">
-            …
-          </span>
-        ) : null}
-      </button>
+    <SettingRow
+      action={
+        <Spin indicator={<Loader2 className="h-4 w-4 animate-spin" />} spinning={uploading}>
+          {avatarContent}
+        </Spin>
+      }
+      label="头像"
+    >
       <input
         accept="image/jpeg,image/png,image/webp,image/gif"
         className="hidden"

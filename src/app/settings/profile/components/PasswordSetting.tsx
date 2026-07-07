@@ -1,6 +1,7 @@
 'use client'
 
-import { Button, Modal } from 'antd'
+import { Button } from '@lobehub/ui'
+import { Modal } from 'antd'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
@@ -52,10 +53,13 @@ export function PasswordSetting({ email, hasCredentialAccount }: PasswordSetting
   }
 
   return (
-    <SettingRow label="密码">
-      <Button loading={loading} onClick={handleReset} size="small">
-        重置密码
-      </Button>
-    </SettingRow>
+    <SettingRow
+      action={
+        <Button loading={loading} onClick={handleReset} size="small">
+          重置密码
+        </Button>
+      }
+      label="密码"
+    />
   )
 }

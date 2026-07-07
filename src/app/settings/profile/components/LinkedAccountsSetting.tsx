@@ -1,9 +1,18 @@
 'use client'
 
-import { Button } from 'antd'
+import AuthIcons from '@/components/AuthIcons'
+import { message } from '@/components/AntdStaticMethods'
+import {
+  ActionIcon,
+  DropdownMenu,
+  Flexbox,
+  Text,
+  type MenuProps,
+} from '@lobehub/ui'
+import { Modal } from 'antd'
+import { ArrowRight, Plus, Unlink } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { message } from '@/components/AntdStaticMethods'
 import {
   BUILTIN_BETTER_AUTH_PROVIDERS,
   SSO_PROVIDER_LABELS,
@@ -79,6 +88,9 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
     return config.oAuthSSOProviders.filter((provider) => !linkedProviderIds.has(provider))
   }, [config.oAuthSSOProviders, linkedProviderIds, ready])
 
+  const allowUnlink =
+    oauthAccounts.length > 1 || accounts.some((item) => item.providerId === 'credential')
+
   const handleLink = async (provider: string) => {
     setLinkingProvider(provider)
 
@@ -97,12 +109,22 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
     }
   }
 
-  const handleUnlink = async (account: LinkedAccount) => {
-    if (oauthAccounts.length <= 1 && !accounts.some((item) => item.providerId === 'credential')) {
+  const confirmUnlink = (account: LinkedAccount) => {
+    if (!allowUnlink) {
       message.warning('至少需要保留一种登录方式')
       return
     }
 
+    Modal.confirm({
+      content: `确定要解绑 ${getProviderLabel(account.providerId)} 账户吗？`,
+      okButtonProps: { danger: true },
+      okText: '解绑',
+      onOk: () => handleUnlink(account),
+      title: '解绑账户',
+    })
+  }
+
+  const handleUnlink = async (account: LinkedAccount) => {
     setUnlinkingId(account.id)
 
     try {
@@ -125,50 +147,72 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
     }
   }
 
+  const linkMenuItems: MenuProps['items'] = availableProviders.map((provider) => ({
+    icon: AuthIcons(provider, 16),
+    key: provider,
+    label: getProviderLabel(provider),
+    onClick: () => {
+      void handleLink(provider)
+    },
+  }))
+
   return (
-    <SettingRow label="已关联的账户" vertical>
-      <div className="space-y-2">
+    <SettingRow label="已关联的账户">
+      <Flexbox gap={8} style={{ width: '100%' }}>
         {loading ? (
-          <p className="text-sm text-muted-foreground">加载中…</p>
+          <Text type="secondary">加载中…</Text>
         ) : oauthAccounts.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无关联的第三方账户</p>
+          <Text type="secondary">暂无关联的第三方账户</Text>
         ) : (
           oauthAccounts.map((account) => (
-            <div
-              className="flex items-center justify-between gap-3 rounded-lg border border-border bg-secondary/40 px-3 py-2"
+            <Flexbox
+              align="center"
+              gap={8}
+              horizontal
+              justify="space-between"
               key={account.id}
             >
-              <div className="min-w-0">
-                <p className="text-sm font-medium">{getProviderLabel(account.providerId)}</p>
-                <p className="truncate text-xs text-muted-foreground">{userEmail || account.accountId}</p>
-              </div>
-              <Button
-                danger
-                loading={unlinkingId === account.id}
-                onClick={() => handleUnlink(account)}
+              <Flexbox align="center" gap={6} horizontal style={{ fontSize: 12, minWidth: 0 }}>
+                {AuthIcons(account.providerId, 16)}
+                <span>{getProviderLabel(account.providerId)}</span>
+                {userEmail ? (
+                  <Text fontSize={11} type="secondary">
+                    · {userEmail}
+                  </Text>
+                ) : null}
+              </Flexbox>
+              <ActionIcon
+                disabled={!allowUnlink || unlinkingId === account.id}
+                icon={Unlink}
+                onClick={() => confirmUnlink(account)}
                 size="small"
-              >
-                解绑
-              </Button>
-            </div>
+              />
+            </Flexbox>
           ))
         )}
 
         {availableProviders.length > 0 ? (
-          <div className="flex flex-wrap gap-2 pt-1">
-            {availableProviders.map((provider) => (
-              <Button
-                key={provider}
-                loading={linkingProvider === provider}
-                onClick={() => handleLink(provider)}
-                size="small"
-              >
-                + 关联 {getProviderLabel(provider)}
-              </Button>
-            ))}
-          </div>
+          <DropdownMenu
+            items={linkMenuItems}
+            popupProps={{ style: { maxWidth: 200 } }}
+          >
+            <Flexbox
+              align="center"
+              gap={6}
+              horizontal
+              style={{
+                cursor: linkingProvider ? 'wait' : 'pointer',
+                fontSize: 12,
+                opacity: linkingProvider ? 0.6 : 1,
+              }}
+            >
+              <Plus size={14} />
+              <span>关联账户</span>
+              <ArrowRight size={14} />
+            </Flexbox>
+          </DropdownMenu>
         ) : null}
-      </div>
+      </Flexbox>
     </SettingRow>
   )
 }

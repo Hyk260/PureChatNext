@@ -1,7 +1,9 @@
 'use client'
 
-import { Button, Input } from 'antd'
-import { useState } from 'react'
+import { Button, Flexbox, Input, Text } from '@lobehub/ui'
+import { type InputRef } from 'antd'
+import { Loader2 } from 'lucide-react'
+import { type ChangeEvent, useCallback, useRef, useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
 import { updateUser } from '@/libs/better-auth/auth-client'
@@ -13,74 +15,134 @@ interface UsernameSettingProps {
   onUpdated: (username: string) => void
 }
 
-export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
-  const [editing, setEditing] = useState(false)
-  const [value, setValue] = useState(username ?? '')
-  const [loading, setLoading] = useState(false)
+const USERNAME_REGEX = /^\w+$/
 
-  const handleSave = async () => {
+export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [dirty, setDirty] = useState(false)
+  const inputRef = useRef<InputRef>(null)
+
+  const validateUsername = (value: string) => {
     const trimmed = value.trim()
 
-    if (!trimmed) {
-      message.error('用户名不能为空')
+    if (!trimmed) return '用户名不能为空'
+    if (trimmed.length > 64) return '用户名不能超过 64 个字符'
+    if (!USERNAME_REGEX.test(trimmed)) return '用户名只能包含字母、数字和下划线'
+
+    return ''
+  }
+
+  const handleSave = useCallback(async () => {
+    const value = inputRef.current?.input?.value?.trim()
+
+    if (!value || value === username) {
+      setError('')
+      setDirty(false)
       return
     }
 
-    if (trimmed === username) {
-      setEditing(false)
+    const validationError = validateUsername(value)
+
+    if (validationError) {
+      setError(validationError)
       return
     }
 
-    setLoading(true)
+    setSaving(true)
+    setError('')
 
     try {
-      const { error } = await updateUser({ name: trimmed })
+      const { error: updateError } = await updateUser({ name: value })
 
-      if (error) {
-        message.error(error.message ?? '用户名更新失败')
+      if (updateError) {
+        setError(updateError.message ?? '用户名更新失败')
         return
       }
 
-      onUpdated(trimmed)
-      setEditing(false)
+      onUpdated(value)
+      setDirty(false)
       message.success('用户名已更新')
     } catch {
-      message.error('用户名更新失败')
+      setError('用户名更新失败')
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
+  }, [onUpdated, username])
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value
+    setDirty(value.trim() !== (username || ''))
+
+    if (!value.trim()) {
+      setError('')
+      return
+    }
+
+    if (!USERNAME_REGEX.test(value)) {
+      setError('用户名只能包含字母、数字和下划线')
+      return
+    }
+
+    setError('')
   }
 
-  const handleCancel = () => {
-    setValue(username ?? '')
-    setEditing(false)
-  }
+  const handleCancel = useCallback(() => {
+    if (inputRef.current?.input) {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value',
+      )?.set
+      nativeInputValueSetter?.call(inputRef.current.input, username || '')
+      inputRef.current.input.dispatchEvent(new Event('input', { bubbles: true }))
+    }
 
-  if (editing) {
-    return (
-      <SettingRow label="用户名">
-        <Input
-          className="max-w-xs"
-          onChange={(event) => setValue(event.target.value)}
-          onPressEnter={handleSave}
-          value={value}
-        />
-        <Button loading={loading} onClick={handleSave} size="small" type="primary">
-          保存
-        </Button>
-        <Button disabled={loading} onClick={handleCancel} size="small">
-          取消
-        </Button>
-      </SettingRow>
-    )
-  }
+    setError('')
+    setDirty(false)
+    inputRef.current?.blur()
+  }, [username])
 
   return (
     <SettingRow label="用户名">
-      <span className="truncate text-sm text-muted-foreground">{username || '-'}</span>
-      <Button onClick={() => setEditing(true)} size="small">
-        修改
-      </Button>
+      <Flexbox align="center" gap={8} horizontal style={{ minWidth: 0, width: '100%' }}>
+        {saving ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : null}
+        {error ? (
+          <Text style={{ fontSize: 12, whiteSpace: 'nowrap' }} type="danger">
+            {error}
+          </Text>
+        ) : null}
+        {dirty && !saving ? (
+          <Button
+            onMouseDown={(event) => {
+              event.preventDefault()
+              handleCancel()
+            }}
+            size="small"
+            variant="outlined"
+          >
+            取消
+          </Button>
+        ) : null}
+        <Input
+          defaultValue={username || ''}
+          disabled={saving}
+          key={username}
+          onBlur={handleSave}
+          onChange={handleChange}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              handleCancel()
+            }
+          }}
+          onPressEnter={handleSave}
+          placeholder="请输入用户名"
+          ref={inputRef}
+          status={error ? 'error' : undefined}
+          style={{ flex: 1, maxWidth: 320 }}
+          variant="filled"
+        />
+      </Flexbox>
     </SettingRow>
   )
 }

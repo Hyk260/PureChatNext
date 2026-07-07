@@ -1,29 +1,43 @@
+import { Text } from '@lobehub/ui'
 import type { ReactNode } from 'react'
 
 interface SettingRowProps {
   action?: ReactNode
   children?: ReactNode
   label: string
+  labelSlot?: ReactNode
   vertical?: boolean
 }
 
-export function SettingRow({ action, children, label, vertical }: SettingRowProps) {
+export function SettingRow({ action, children, label, labelSlot, vertical }: SettingRowProps) {
   if (vertical) {
     return (
-      <div className="px-5 py-4">
-        <div className="mb-3 text-sm font-medium text-foreground">{label}</div>
-        {children}
-        {action ? <div className="mt-3">{action}</div> : null}
+      <div className="flex flex-col gap-3 px-5 py-4">
+        <div className="shrink-0 md:w-40">
+          {labelSlot ?? (
+            <Text strong fontSize={14}>
+              {label}
+            </Text>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">{children}</div>
+        {action ? <div className="shrink-0">{action}</div> : null}
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-14 items-center justify-between gap-4 px-5 py-3.5">
-      <span className="shrink-0 text-sm font-medium text-foreground">{label}</span>
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+    <div className="flex min-h-12 flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:gap-6">
+      <div className="shrink-0 md:w-40">
+        {labelSlot ?? (
+          <Text strong fontSize={14}>
+            {label}
+          </Text>
+        )}
+      </div>
+      <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
         {children}
-        {action}
+        {action ? <div className="ms-auto shrink-0">{action}</div> : null}
       </div>
     </div>
   )

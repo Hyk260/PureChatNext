@@ -1,6 +1,7 @@
 'use client'
 
-import { Button, Form, Input, Modal } from 'antd'
+import { Button, Input, Text } from '@lobehub/ui'
+import { Form, Modal } from 'antd'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
@@ -47,11 +48,20 @@ export function EmailSetting({ email }: EmailSettingProps) {
 
   return (
     <>
-      <SettingRow label="邮箱">
-        <span className="truncate text-sm text-muted-foreground">{email || '未绑定邮箱'}</span>
-        <Button disabled={!email} onClick={() => setOpen(true)} size="small">
-          修改邮箱
-        </Button>
+      <SettingRow
+        action={
+          email ? (
+            <Text
+              onClick={() => setOpen(true)}
+              style={{ cursor: 'pointer', fontSize: 13 }}
+            >
+              修改邮箱
+            </Text>
+          ) : null
+        }
+        label="邮箱"
+      >
+        <Text type={email ? undefined : 'secondary'}>{email || '未绑定邮箱'}</Text>
       </SettingRow>
 
       <Modal
@@ -61,9 +71,9 @@ export function EmailSetting({ email }: EmailSettingProps) {
         open={open}
         title="修改邮箱"
       >
-        <p className="mb-4 text-sm text-muted-foreground">
+        <Text style={{ display: 'block', marginBottom: 16 }} type="secondary">
           验证邮件将发送到新邮箱地址，验证完成后邮箱才会更新。
-        </p>
+        </Text>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             label="新邮箱"

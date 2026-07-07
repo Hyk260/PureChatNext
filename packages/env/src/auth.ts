@@ -34,6 +34,7 @@ declare global {
       GITHUB_ELECTRON_ID?: string;
       GITHUB_ELECTRON_SECRET?: string;
 
+      AUTH_DISABLE_EMAIL_PASSWORD?: string;
       AUTH_EMAIL_VERIFICATION?: string;
       AUTH_EMAIL_VERIFICATION_MODE?: string;
       AUTH_ENABLE_MAGIC_LINK?: string;
@@ -73,6 +74,7 @@ export const getAuthConfig = () => {
       GITHUB_ELECTRON_ID: z.string().optional(),
       GITHUB_ELECTRON_SECRET: z.string().optional(),
 
+      AUTH_DISABLE_EMAIL_PASSWORD: z.boolean().optional().default(false),
       AUTH_EMAIL_VERIFICATION: z.boolean().optional().default(false),
       AUTH_EMAIL_VERIFICATION_MODE: z.enum(['otp', 'link']).optional().default('otp'),
       AUTH_ENABLE_MAGIC_LINK: z.boolean().optional().default(false),
@@ -113,6 +115,7 @@ export const getAuthConfig = () => {
       GITHUB_ELECTRON_ID: process.env.GITHUB_ELECTRON_ID,
       GITHUB_ELECTRON_SECRET: process.env.GITHUB_ELECTRON_SECRET,
 
+      AUTH_DISABLE_EMAIL_PASSWORD: process.env.AUTH_DISABLE_EMAIL_PASSWORD === '1',
       AUTH_EMAIL_VERIFICATION: process.env.AUTH_EMAIL_VERIFICATION === '1',
       AUTH_EMAIL_VERIFICATION_MODE:
         process.env.AUTH_EMAIL_VERIFICATION_MODE === 'link' ? 'link' : 'otp',

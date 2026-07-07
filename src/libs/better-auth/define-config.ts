@@ -143,16 +143,17 @@ export function defineConfig() {
     },
     // 应用对外 URL，用于生成回调链接与 Cookie 域
     baseURL: appEnv.APP_URL,
-    // 会话签名与加密密钥（AUTH_SECRET）
+    // 会话签名与加密密钥
     secret: authEnv.AUTH_SECRET,
     // 邮箱 + 密码登录
     emailAndPassword: {
       // 注册/登录成功后自动创建会话
       autoSignIn: true,
-      // disableSignUp: authEnv.AUTH_DISABLE_EMAIL_PASSWORD,
+      // 禁用邮箱密码注册（AUTH_DISABLE_EMAIL_PASSWORD=1 时仅允许 SSO 登录）
+      disableSignUp: authEnv.AUTH_DISABLE_EMAIL_PASSWORD,
       enabled: true,
-      maxPasswordLength: 64,
       minPasswordLength: 8,
+      maxPasswordLength: 64,
       // 注册后是否需要验证邮箱
       requireEmailVerification: authEnv.AUTH_EMAIL_VERIFICATION,
       // 重置密码后撤销该用户所有已有会话

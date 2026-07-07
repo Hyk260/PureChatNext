@@ -2,16 +2,34 @@ import type { NextConfig } from 'next'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
 
 const isProd = process.env.NODE_ENV === 'production'
+const isVercel = !!process.env.VERCEL_ENV
 
 const nextConfig: NextConfig = {
-  // 启用压缩
+  ...(isVercel
+    ? {
+        outputFileTracingExcludes: {
+          '*': [
+            'node_modules/.pnpm/@napi-rs+canvas-*-musl*',
+            'node_modules/.pnpm/@img+sharp-libvips-*musl*',
+          ],
+        },
+      }
+    : {}),
   compress: isProd,
-  // 启用实验性功能以提高性能
-  // experimental: {
-  //   serverActions: {
-  //     bodySizeLimit: '2mb',
-  //   },
-  // },
+  compiler: {
+    emotion: true,
+  },
+  reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: ['@lobehub/ui', 'lucide-react', 'antd'],
+    webVitalsAttribution: ['CLS', 'LCP'],
+  },
+  logging: {
+    fetches: {
+      fullUrl: true,
+      hmrRefreshes: true,
+    },
+  },
   async headers() {
     const securityHeaders = [
       {
@@ -27,13 +45,10 @@ const nextConfig: NextConfig = {
       },
     ]
   },
-  // 优化图片和静态资源
   images: {
     remotePatterns: [],
   },
-  serverExternalPackages: ['@napi-rs/canvas'],
-  // 启用严格模式（开发环境）
-  // reactStrictMode: true,
+  serverExternalPackages: ['@napi-rs/canvas', 'pdfjs-dist'],
   turbopack: {
     rules: codeInspectorPlugin({
       bundler: 'turbopack',

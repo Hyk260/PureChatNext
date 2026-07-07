@@ -9,10 +9,14 @@ let message: MessageInstance
 let notification: NotificationInstance
 let modal: Omit<ModalStaticFunctions, 'warn'>
 
+// eslint-disable-next-line react/display-name
 export default memo(() => {
   const staticFunction = App.useApp()
+  // eslint-disable-next-line react-hooks/globals
   message = staticFunction.message
+  // eslint-disable-next-line react-hooks/globals
   modal = staticFunction.modal
+  // eslint-disable-next-line react-hooks/globals
   notification = staticFunction.notification
   return null
 })

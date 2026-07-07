@@ -37,11 +37,17 @@ type DeleteResult =
       found: true;
     };
 
-type ApiSuccess = {
-  action: 'lookup' | 'delete';
-  result: LookupResult | DeleteResult;
-  success: true;
-};
+type ApiSuccess =
+  | {
+      action: 'lookup';
+      result: LookupResult;
+      success: true;
+    }
+  | {
+      action: 'delete';
+      result: DeleteResult;
+      success: true;
+    };
 
 type ApiFailure = {
   error: string;
@@ -126,8 +132,8 @@ export default function DeleteUserDevPage() {
       setLastResult(data);
       setView('summary');
 
-      if (action === 'lookup') {
-        setPreview(data.result as LookupResult);
+      if (data.action === 'lookup') {
+        setPreview(data.result);
         setConfirmEmail('');
         return;
       }

@@ -135,7 +135,11 @@ export const useSignIn = () => {
       )
 
       if (result.error && result.error.status !== 403) {
-        message.error(result.error.message || '登录遇到了问题。请检查账号与密码后重试')
+        if (result.error.status === 401 && result.error.code === 'INVALID_EMAIL_OR_PASSWORD') {
+          message.error('邮箱或密码错误')
+        } else {
+          message.error(result.error.message || '登录遇到了问题。请检查账号与密码后重试')
+        }
       }
     } catch (error) {
       console.error('Sign in error:', error)
@@ -195,13 +199,8 @@ export const useSignIn = () => {
       })
 
       if (error) {
-        const isRateLimited =
-          error.status === 429 || error.code === 'RATE_LIMIT_EXCEEDED'
-        message.error(
-          isRateLimited
-            ? '请求过于频繁，请 60 秒后再试'
-            : (error.message ?? '发送重置邮件失败'),
-        )
+        const isRateLimited = error.status === 429 || error.code === 'RATE_LIMIT_EXCEEDED'
+        message.error(isRateLimited ? '请求过于频繁，请 60 秒后再试' : (error.message ?? '发送重置邮件失败'))
         return
       }
 
@@ -213,9 +212,7 @@ export const useSignIn = () => {
     }
   }
 
-  const uiProviders = oAuthSSOProviders.filter((p) =>
-    (AUTH_UI_SSO_PROVIDERS as readonly string[]).includes(p)
-  )
+  const uiProviders = oAuthSSOProviders.filter((p) => (AUTH_UI_SSO_PROVIDERS as readonly string[]).includes(p))
   const sortedProviders = lastAuthProvider
     ? [...uiProviders].sort((a, b) => {
         if (a === lastAuthProvider) return -1

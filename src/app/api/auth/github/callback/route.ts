@@ -38,8 +38,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '无效的 GitHub 用户' }, { status: 400 });
     }
 
-    log('GitHub user fetched: %s (%s)', githubId, githubLogin);
-
     const { status: imStatus } = await registerAccount({
       id: githubId,
       nick: githubLogin,
@@ -54,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: '登录成功',
+        message: 'Authorization successful',
         code: 200,
         data: {
           userId: githubId,

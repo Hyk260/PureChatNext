@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
 import { signUp } from '@/libs/better-auth/auth-client'
+import { checkUserByEmail } from '@/libs/better-auth/check-user'
 import { useAuthConfig } from '@/libs/better-auth/use-auth-config'
 
 export interface SignUpFormValues {
@@ -33,6 +34,17 @@ export const useSignUp = () => {
     try {
       const email = values.email.trim().toLowerCase()
       const callbackUrl = searchParams.get('callbackUrl') || '/'
+
+      const existingUser = await checkUserByEmail(email)
+      if (existingUser.exists) {
+        message.info('该邮箱已注册，请前往登录')
+        const params = new URLSearchParams({ email })
+        const callbackUrlParam = searchParams.get('callbackUrl')
+        if (callbackUrlParam) params.set('callbackUrl', callbackUrlParam)
+        router.push(`/signin?${params.toString()}`)
+        return
+      }
+
       const name = email.split('@')[0] ?? email
 
       const result = await signUp.email({

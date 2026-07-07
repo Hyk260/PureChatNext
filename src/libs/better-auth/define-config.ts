@@ -3,9 +3,10 @@ import bcrypt from 'bcryptjs'
 import { verifyPassword } from 'better-auth/crypto'
 import { EmailService } from '@/server/services/email'
 import { type EmailPayload } from '@/server/services/email/impls'
+// import { imAccountPlugin } from '@/libs/better-auth/plugins/im-account'
 import { admin, emailOTP, genericOAuth, magicLink } from 'better-auth/plugins'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import * as schema from '@/database/schemas';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import * as schema from '@/database/schemas'
 import { serverDB } from '@/database/core/db-adaptor'
 import debug from 'debug'
 
@@ -40,10 +41,7 @@ const useOtpEmailVerification = authEnv.AUTH_EMAIL_VERIFICATION_MODE === 'otp'
 /** 邮件类 Auth 端点限流：60 秒窗口内最多 1 次请求 */
 const EMAIL_ENDPOINT_RATE_LIMIT = { max: 1, window: 60 }
 
-async function sendAuthEmail(
-  to: string,
-  template: Pick<EmailPayload, 'html' | 'subject' | 'text'>,
-) {
+async function sendAuthEmail(to: string, template: Pick<EmailPayload, 'html' | 'subject' | 'text'>) {
   await new EmailService().sendMail({ to, ...template })
 }
 
@@ -68,10 +66,10 @@ function buildOptionalAuthPlugins() {
               expiresInSeconds: OTP_EXPIRES_IN,
               otp,
               userName: null,
-            }),
+            })
           )
         },
-      }),
+      })
     )
   }
 
@@ -89,10 +87,10 @@ function buildOptionalAuthPlugins() {
             getMagicLinkEmailTemplate({
               expiresInSeconds: MAGIC_LINK_EXPIRES_IN,
               url,
-            }),
+            })
           )
         },
-      }),
+      })
     )
   }
 
@@ -259,29 +257,24 @@ export function defineConfig() {
           // 写入前：确保业务侧 userId（无连字符 UUID）存在
           before: async (user) => {
             log('user create before: %O', user)
-            const userId =
-              typeof user.userId === 'string' && user.userId.trim() !== ''
-                ? user.userId
-                : crypto.randomUUID().replace(/-/g, '')
-
-            return {
-              data: {
-                ...user,
-                userId,
-              },
-            }
+            // const userData = {
+            //   name: '3320487134',
+            //   email: '3320487134@qq.com',
+            //   emailVerified: false,
+            //   image: null,
+            //   createdAt: new Date(),
+            //   updatedAt: new Date(),
+            //   role: 'user',
+            //   banned: false,
+            //   banReason: null,
+            //   banExpires: null,
+            //   userId: '',
+            //   id: '',
+            // }
           },
-          // 写入后：可在此初始化用户默认数据（聊天配置等）
+          // 写入后：导入 IM 账号（含 GitHub 等 OAuth 首次登录创建的用户）
           after: async (user) => {
             log('user create after: %O', user)
-            // const userService = new UserService(serverDB);
-            // await userService.initUser({
-            //   email: user.email,
-            //   id: user.id,
-            //   username: user.username as string | null,
-            //   createdAt: user.createdAt,
-            //   // TODO: 若接入 phone 插件，在此填充手机号
-            // });
           },
         },
       },

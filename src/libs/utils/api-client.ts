@@ -156,7 +156,6 @@ export async function logout() {
 
 /** 获取当前用户信息 */
 export async function me() {
-  // debugger
   try {
     return await apiRequest('/api/auth/me', { method: 'GET' });
   } catch (error) {

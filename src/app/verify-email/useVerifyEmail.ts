@@ -34,6 +34,10 @@ export const useVerifyEmail = ({ email, callbackUrl, mode }: UseVerifyEmailParam
       })
 
       if (result.error) {
+        if (result.error.status === 429 && result.error.statusText === 'Too Many Requests') {
+          message.error('发送验证码过于频繁，请稍后重试')
+          return false
+        }
         message.error(result.error.message || '发送验证码失败，请稍后重试')
         return false
       }
@@ -79,7 +83,7 @@ export const useVerifyEmail = ({ email, callbackUrl, mode }: UseVerifyEmailParam
     if (mode !== 'otp' || !email || initialOtpSendRef.current) return
 
     initialOtpSendRef.current = true
-    void sendOtp()
+    sendOtp()
   }, [email, mode, sendOtp])
 
   const handleVerify = async () => {

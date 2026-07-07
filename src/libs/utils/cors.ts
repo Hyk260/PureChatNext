@@ -1,25 +1,11 @@
 import debug from 'debug'
 import { type NextRequest, NextResponse } from 'next/server'
-import { appEnv } from '@/envs/app'
 import { verifyAuth } from '@/libs/auth/middleware'
+import { getAllowedOrigins } from '@/libs/utils/allowed-origins'
 
 import { PROXY_CONFIG } from '@/const/branding'
 
-// 允许的跨域源：默认基础域 + 环境变量扩展
-const defaultAllowedOrigins = [
-  appEnv.APP_URL,
-  'http://localhost:3000',
-  'http://localhost:4173',
-  'http://localhost:8080',
-  'http://localhost:8038',
-].filter(Boolean) as string[]
-
-const extraAllowedOrigins = (appEnv.ALLOWED_ORIGINS || '')
-  .split(',')
-  .map((s: string) => s.trim())
-  .filter(Boolean)
-
-export const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...extraAllowedOrigins]))
+export const allowedOrigins = getAllowedOrigins()
 const allowedOriginSet = new Set(allowedOrigins)
 
 /**

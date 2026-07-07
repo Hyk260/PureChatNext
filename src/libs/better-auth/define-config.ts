@@ -27,6 +27,7 @@ const log = debug('better-auth:define-config')
 
 import { appEnv } from '@/envs/app'
 import { authEnv } from '@/envs/auth'
+import { getAllowedOrigins } from '@/libs/utils/allowed-origins'
 
 import { type BetterAuthOptions } from 'better-auth/minimal'
 
@@ -141,6 +142,8 @@ export function defineConfig() {
     },
     // 应用对外 URL，用于生成回调链接与 Cookie 域
     baseURL: appEnv.APP_URL,
+    // sign-out 等带 Cookie 的请求会校验 Origin；需与 CORS 的 ALLOWED_ORIGINS 保持一致
+    trustedOrigins: getAllowedOrigins(),
     // 会话签名与加密密钥
     secret: authEnv.AUTH_SECRET,
     // 邮箱 + 密码登录

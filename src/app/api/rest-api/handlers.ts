@@ -1,46 +1,24 @@
 import { http } from '@/libs/utils/rest-api';
 import { generateRandomInt32 } from '@/libs/utils/buildURL';
 
-interface CheckItem {
-  UserID: string;
-}
-
-interface AccountImportParams {
-  UserID: string;
-  Nick?: string;
-  FaceUrl?: string;
-}
-
-interface SendMsgParams {
-  From_Account: string;
-  To_Account: string;
-  Text: string;
-  CloudCustomData?: string;
-}
-
-interface AddGroupMemberParams {
-  groupId: string;
-  member: string;
-}
-
-interface CheckResult {
-  ResultItem?: Array<{ AccountStatus: string }>;
-}
-
-interface ImportResult {
-  ErrorCode: number;
-}
+import type {
+  AccountCheckItem,
+  AccountCheckResult,
+  AccountImportParams,
+  AddGroupMemberParams,
+  ImportResult,
+  SendMsgParams,
+} from './types';
 
 /**
  * 查询账号
  * https://cloud.tencent.com/document/product/269/38417
  */
-export const accountCheck = async (params: CheckItem[]) => {
-  const result = await http.request<CheckResult>({
+export const accountCheck = async (params: AccountCheckItem[]) => {
+  return http.request<AccountCheckResult>({
     url: 'v4/im_open_login_svc/account_check',
     data: { CheckItem: params },
   });
-  return result
   // .ResultItem?.[0]?.AccountStatus === 'Imported';
 };
 
@@ -49,12 +27,10 @@ export const accountCheck = async (params: CheckItem[]) => {
  * https://cloud.tencent.com/document/product/269/1608
  */
 export const accountImport = async (params: AccountImportParams) => {
-  const { UserID, Nick, FaceUrl } = params;
-  const result = await http.request<ImportResult>({
+  return http.request<ImportResult>({
     url: 'v4/im_open_login_svc/account_import',
-    data: { UserID, Nick, FaceUrl },
+    data: params,
   });
-  return result
 };
 
 /**
@@ -63,13 +39,13 @@ export const accountImport = async (params: AccountImportParams) => {
  */
 export const restSendMsg = async (params: SendMsgParams) => {
   const { From_Account, To_Account, Text, CloudCustomData = '' } = params;
-  const result = await http.request({
+  return http.request({
     url: 'v4/openim/sendmsg',
     data: {
-      SyncOtherMachine: 1, 
+      SyncOtherMachine: 1,
       From_Account,
       To_Account,
-      CloudCustomData: CloudCustomData,
+      CloudCustomData,
       MsgRandom: generateRandomInt32(),
       ForbidCallbackControl: ['ForbidBeforeSendMsgCallback', 'ForbidAfterSendMsgCallback'],
       MsgBody: [{
@@ -78,7 +54,6 @@ export const restSendMsg = async (params: SendMsgParams) => {
       }],
     },
   });
-  return result;
 };
 
 /**
@@ -86,15 +61,14 @@ export const restSendMsg = async (params: SendMsgParams) => {
  * https://cloud.tencent.com/document/product/269/1621
  */
 export const addGroupMember = async (params: AddGroupMemberParams) => {
-  const { groupId, member } = params;
-  const result = await http.request({
+  const { GroupId, Member_Account } = params;
+  return http.request({
     url: 'v4/group_open_http_svc/add_group_member',
     data: {
-      GroupId: groupId,
-      MemberList: [{ Member_Account: member }],
+      GroupId,
+      MemberList: [{ Member_Account }],
     },
   });
-  return result;
 };
 
 export const API_METHODS = {
@@ -104,4 +78,4 @@ export const API_METHODS = {
   addGroupMember,
 } as const;
 
-export type ApiMethodName = keyof typeof API_METHODS;
+export type { ApiMethodName } from './types';

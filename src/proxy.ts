@@ -1,13 +1,25 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import debug from 'debug'
-import { UAParser } from 'ua-parser-js'
-import { addCorsHeaders, createCorsPreflightResponse, isProtectedRoute, handleProtectedRoute } from '@/libs/utils/cors'
-
-const backendApiEndpoints = ['/api']
+import {
+  createCorsPreflightResponse,
+  handleProtectedRoute,
+  isBackendApiPath,
+  isProtectedRoute,
+  withCors,
+} from '@/libs/utils/cors'
 
 const testEndpoints = ['/dev', '/api/dev']
 
-const logDefault = debug('proxy:default')
+async function handleApiRequest(request: NextRequest, pathname: string) {
+  if (request.method === 'OPTIONS') {
+    return createCorsPreflightResponse(request)
+  }
+
+  if (isProtectedRoute(pathname)) {
+    return handleProtectedRoute(request, pathname)
+  }
+
+  return withCors(request, NextResponse.next())
+}
 
 export async function proxy(request: NextRequest) {
   const isProd = process.env.NODE_ENV === 'production'
@@ -18,34 +30,8 @@ export async function proxy(request: NextRequest) {
     return new NextResponse('dev only', { status: 404 })
   }
 
-  // logDefault('Processing request: %s %s', request.method, request.url)
-
-  // const ua = request.headers.get('user-agent')
-
-  // const device = new UAParser(ua || '').getDevice()
-
-  // logDefault('User preferences: %O', {
-  //   deviceType: device.type,
-  // })
-
-  // 处理API请求
-  if (backendApiEndpoints.some((path) => pathname.startsWith(path))) {
-    // logDefault('Processing API request with CORS: %s', pathname)
-
-    // 处理 OPTIONS 预检请求
-    if (request.method === 'OPTIONS') {
-      return createCorsPreflightResponse(request)
-    }
-
-    // 处理受保护的路由
-    if (isProtectedRoute(pathname)) {
-      return handleProtectedRoute(request, pathname)
-    }
-
-    // 处理普通API请求
-    const response = NextResponse.next()
-    addCorsHeaders(request, response.headers)
-    return response
+  if (isBackendApiPath(pathname)) {
+    return handleApiRequest(request, pathname)
   }
 
   return NextResponse.next()
@@ -53,7 +39,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/(api|trpc|webapi)(.*)',
+    '/api(.*)',
     // include the /
     '/',
     '/login',

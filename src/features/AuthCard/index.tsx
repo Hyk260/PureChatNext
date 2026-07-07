@@ -1,3 +1,4 @@
+/* eslint-disable react/display-name */
 'use client';
 
 import { type FlexboxProps } from '@lobehub/ui';

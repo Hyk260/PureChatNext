@@ -23,7 +23,6 @@ export const PROXY_CONFIG = {
     ID: "x-user-id",
     ROLE: "x-user-role"
   },
-  CORS_ALLOWED_ORIGINS: "*", // 可根据需要配置具体的允许域名
 };
 
 // securehity-headers

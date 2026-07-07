@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { API_METHODS } from './handlers'
 import debug from 'debug'
 
-import type { ApiMethodName } from './handlers'
-import type { NextRequest } from 'next/server'
+import type { ApiMethodName } from './types'
 
 const log = debug('route:rest-api')
 
@@ -25,7 +24,7 @@ const methodNotAllowed = () => {
  * Request body:
  * {
  *   funName: "accountCheck" | "accountImport" | "restSendMsg" | "addGroupMember",
- *   params: { ... }
+ *   params: AccountCheckItem[] | AccountImportParams | SendMsgParams | AddGroupMemberParams
  * }
  */
 export async function POST(request: NextRequest) {

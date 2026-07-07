@@ -1,4 +1,8 @@
-import { authEnv } from '@/envs/auth'
+import debug from 'debug';
+
+import { authEnv } from '@/envs/auth';
+
+const log = debug('auth:github');
 
 export type ClientType = 'web' | 'app'
 
@@ -92,8 +96,8 @@ export default class GitHubAPI {
     const { clientId, clientSecret } = getGitHubSecretKey(client)
 
     if (!clientId || !clientSecret) {
-      console.error(`GitHub客户端配置无效: ${client}`)
-      return null
+      log('invalid client config: %s', client);
+      return null;
     }
 
     return {
@@ -165,15 +169,11 @@ export default class GitHubAPI {
 
   private static handleError(context: string, error: unknown): void {
     if (error instanceof GitHubAPIError) {
-      console.error(`${context}:`, {
-        message: error.message,
-        status: error.status,
-        code: error.code,
-      })
+      log('%s: %s (status=%d, code=%s)', context, error.message, error.status, error.code);
     } else if (error instanceof Error) {
-      console.error(`${context}:`, error.message)
+      log('%s: %s', context, error.message);
     } else {
-      console.error(`${context}:`, '未知错误')
+      log('%s: unknown error', context);
     }
   }
 

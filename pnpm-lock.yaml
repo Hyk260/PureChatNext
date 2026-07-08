@@ -229,6 +229,8 @@ importers:
         specifier: 3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.24)(@vitest/ui@3.2.4)(happy-dom@20.10.6)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)
 
+  packages/const: {}
+
   packages/env:
     dependencies:
       '@t3-oss/env-core':
@@ -237,6 +239,18 @@ importers:
       zod:
         specifier: ^3.25.76
         version: 3.25.76
+
+  packages/fetch-sse:
+    dependencies:
+      '@pure/const':
+        specifier: workspace:*
+        version: link:../const
+      '@pure/types':
+        specifier: workspace:*
+        version: link:../types
+      '@pure/utils':
+        specifier: workspace:*
+        version: link:../utils
 
   packages/file-loaders:
     dependencies:

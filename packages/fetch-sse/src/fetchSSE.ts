@@ -1,7 +1,6 @@
 // import OpenAI from "openai"
-import { MESSAGE_CANCEL_FLAT } from "@pure/const"
-import {
-  ChatErrorType,
+import { MESSAGE_CANCEL_FLAT } from '@pure/const'
+import type {
   ChatImageChunk,
   ChatMessageError,
   ModelReasoning,
@@ -9,12 +8,13 @@ import {
   ModelPerformance,
   ResponseAnimation,
   ResponseAnimationStyle,
-} from "@pure/types"
+} from '@pure/types'
+import { ChatErrorType } from '@pure/types'
 
-import { fetchEventSource, nanoid } from "@pure/utils"
-import { getMessageError } from "./parseError"
+import { fetchEventSource, nanoid } from '@pure/utils'
+import { getMessageError } from './parseError'
 
-type SSEFinishType = "done" | "error" | "abort"
+type SSEFinishType = 'done' | 'error' | 'abort'
 
 export interface contextParams {
   images?: ChatImageChunk[]
@@ -27,36 +27,36 @@ export interface contextParams {
 export type OnFinishHandler = (text: string, context?: contextParams) => Promise<void>
 
 export interface MessageUsageChunk {
-  type: "usage"
+  type: 'usage'
   usage: ModelUsage
 }
 
 export interface MessageTextChunk {
   text: string
-  type: "text"
+  type: 'text'
 }
 
 export interface MessageStopChunk {
   reason: string
-  type: "stop"
+  type: 'stop'
 }
 
 export interface MessageSpeedChunk {
   speed: ModelPerformance
-  type: "speed"
+  type: 'speed'
 }
 
 export interface MessageBase64ImageChunk {
   id: string
   image: ChatImageChunk
   images: ChatImageChunk[]
-  type: "base64_image"
+  type: 'base64_image'
 }
 
 export interface MessageReasoningChunk {
   signature?: string
   text?: string
-  type: "reasoning"
+  type: 'reasoning'
 }
 
 export interface FetchSSEOptions {
@@ -102,8 +102,8 @@ const createSmoothMessage = (params: {
 
   const reasoningQueue: string[] = []
   const textQueue: string[] = []
-  let reasoningBuffer = ""
-  let textBuffer = ""
+  let reasoningBuffer = ''
+  let textBuffer = ''
   let isAnimationActive = false
   let animationFrameId: number | null = null
   let lastFrameTime = 0
@@ -139,14 +139,14 @@ const createSmoothMessage = (params: {
   const consumeActiveQueue = (charsToProcess: number): boolean => {
     if (reasoningQueue.length > 0) {
       const actual = Math.min(charsToProcess, reasoningQueue.length)
-      const chars = reasoningQueue.splice(0, actual).join("")
+      const chars = reasoningQueue.splice(0, actual).join('')
       reasoningBuffer += chars
       params.onReasoningUpdate(chars, reasoningBuffer)
       return reasoningQueue.length > 0
     }
     if (textQueue.length > 0) {
       const actual = Math.min(charsToProcess, textQueue.length)
-      const chars = textQueue.splice(0, actual).join("")
+      const chars = textQueue.splice(0, actual).join('')
       textBuffer += chars
       params.onTextUpdate(chars, textBuffer)
       return textQueue.length > 0
@@ -230,22 +230,22 @@ const createSmoothMessage = (params: {
   }
 
   const pushReasoning = (text: string) => {
-    reasoningQueue.push(...text.split(""))
+    reasoningQueue.push(...text.split(''))
   }
 
   const pushText = (text: string) => {
-    textQueue.push(...text.split(""))
+    textQueue.push(...text.split(''))
   }
 
   /** 清空所有队列，reasoning 优先确保顺序（仅作为动画未正常完成的兜底） */
   const flushQueue = () => {
     if (reasoningQueue.length > 0) {
-      const chars = reasoningQueue.splice(0).join("")
+      const chars = reasoningQueue.splice(0).join('')
       reasoningBuffer += chars
       params.onReasoningUpdate(chars, reasoningBuffer)
     }
     if (textQueue.length > 0) {
-      const chars = textQueue.splice(0).join("")
+      const chars = textQueue.splice(0).join('')
       textBuffer += chars
       params.onTextUpdate(chars, textBuffer)
     }
@@ -265,13 +265,13 @@ const createSmoothMessage = (params: {
 export const standardizeAnimationStyle = (
   animationStyle?: ResponseAnimation
 ): Exclude<ResponseAnimation, ResponseAnimationStyle> => {
-  return typeof animationStyle === "object" ? animationStyle : { text: animationStyle }
+  return typeof animationStyle === 'object' ? animationStyle : { text: animationStyle }
 }
 
 export const fetchSSE = async (url: string, options: RequestInit & FetchSSEOptions = {}) => {
   let triggerOnMessageHandler = false
 
-  let finishedType: SSEFinishType = "done"
+  let finishedType: SSEFinishType = 'done'
   let response!: Response
   const fetchStartTime = Date.now()
 
@@ -279,49 +279,49 @@ export const fetchSSE = async (url: string, options: RequestInit & FetchSSEOptio
   /**
    * 平滑效果
    */
-  const textSmoothing = text === "smooth"
-  const shouldSkipTextProcessing = text === "none"
+  const textSmoothing = text === 'smooth'
+  const shouldSkipTextProcessing = text === 'none'
 
-  let textBuffer = ""
+  let textBuffer = ''
   let bufferTimer: ReturnType<typeof setTimeout> | null = null
   const BUFFER_INTERVAL = 50 // ms
 
   const flushTextBuffer = () => {
     if (textBuffer) {
-      options.onMessageHandle?.({ text: textBuffer, type: "text" })
-      textBuffer = ""
+      options.onMessageHandle?.({ text: textBuffer, type: 'text' })
+      textBuffer = ''
     }
   }
 
-  let output = ""
-  let thinking = ""
+  let output = ''
+  let thinking = ''
   let thinkingSignature: string | undefined
 
   const smoothController = createSmoothMessage({
     onReasoningUpdate: (delta, fullText) => {
       thinking = fullText
-      options.onMessageHandle?.({ text: delta, type: "reasoning" })
+      options.onMessageHandle?.({ text: delta, type: 'reasoning' })
     },
     onTextUpdate: (delta, fullText) => {
       output = fullText
-      options.onMessageHandle?.({ text: delta, type: "text" })
+      options.onMessageHandle?.({ text: delta, type: 'text' })
     },
     startSpeed: smoothingSpeed,
   })
 
-  let thinkingBuffer = ""
+  let thinkingBuffer = ''
   let thinkingBufferTimer: ReturnType<typeof setTimeout> | null = null
 
   const flushThinkingBuffer = () => {
     if (thinkingBuffer) {
-      options.onMessageHandle?.({ text: thinkingBuffer, type: "reasoning" })
-      thinkingBuffer = ""
+      options.onMessageHandle?.({ text: thinkingBuffer, type: 'reasoning' })
+      thinkingBuffer = ''
     }
   }
 
   let usage: ModelUsage | undefined = undefined
   let speed: ModelPerformance | undefined = undefined
-  let images: ChatImageChunk[] = []
+  const images: ChatImageChunk[] = []
 
   await fetchEventSource(url, {
     body: options.body,
@@ -329,16 +329,16 @@ export const fetchSSE = async (url: string, options: RequestInit & FetchSSEOptio
     headers: options.headers as Record<string, string>,
     method: options.method,
     onerror: (error) => {
-      console.warn("onerror:", error)
-      if (error === MESSAGE_CANCEL_FLAT || (error as TypeError).name === "AbortError") {
-        finishedType = "abort"
+      console.warn('onerror:', error)
+      if (error === MESSAGE_CANCEL_FLAT || (error as TypeError).name === 'AbortError') {
+        finishedType = 'abort'
         options?.onAbort?.(output)
         smoothController.stopAnimation()
       } else {
-        finishedType = "error"
+        finishedType = 'error'
 
         const elapsedMs = Date.now() - fetchStartTime
-        const networkStatus = typeof navigator !== "undefined" ? navigator.onLine : undefined
+        const networkStatus = typeof navigator !== 'undefined' ? navigator.onLine : undefined
 
         const contextBody = {
           elapsedMs,
@@ -366,33 +366,33 @@ export const fetchSSE = async (url: string, options: RequestInit & FetchSSEOptio
       try {
         data = JSON.parse(ev.data)
       } catch (e) {
-        console.warn("parse error:", e)
+        console.warn('parse error:', e)
 
         const chatError = {
           context: {
             chunk: ev.data,
             error: { message: (e as Error).message, name: (e as Error).name },
           },
-          message: "chat response streaming chunk parse error, please contact your API Provider to fix it.",
+          message: 'chat response streaming chunk parse error, please contact your API Provider to fix it.',
         }
 
         options.onErrorHandle?.({
           body: chatError,
-          message: "parse error",
-          type: "StreamChunkError",
+          message: 'parse error',
+          type: 'StreamChunkError',
         })
 
         return
       }
       // console.log("onmessage: [ev]", ev)
       switch (ev.event) {
-        case "text": {
+        case 'text': {
           if (!data) break
           // console.log("onmessage text:", data)
 
           if (shouldSkipTextProcessing) {
             output += data
-            options.onMessageHandle?.({ text: data, type: "text" })
+            options.onMessageHandle?.({ text: data, type: 'text' })
           } else if (textSmoothing) {
             smoothController.pushText(data)
 
@@ -413,7 +413,7 @@ export const fetchSSE = async (url: string, options: RequestInit & FetchSSEOptio
           break
         }
         // 推理
-        case "reasoning": {
+        case 'reasoning': {
           if (!data) break
           // console.log("onmessage reasoning:", data)
           // if (shouldSkipTextProcessing) {
@@ -440,39 +440,39 @@ export const fetchSSE = async (url: string, options: RequestInit & FetchSSEOptio
           break
         }
 
-        case "usage": {
+        case 'usage': {
           usage = data
-          options.onMessageHandle?.({ type: "usage", usage: data })
+          options.onMessageHandle?.({ type: 'usage', usage: data })
           break
         }
 
-        case "reasoning_signature": {
+        case 'reasoning_signature': {
           thinkingSignature = data
           break
         }
 
-        case "base64_image": {
-          const id = "tmp_img_" + nanoid()
+        case 'base64_image': {
+          const id = 'tmp_img_' + nanoid()
           const item = { data, id, isBase64: true }
           images.push(item)
 
-          options.onMessageHandle?.({ id, image: item, images, type: "base64_image" })
+          options.onMessageHandle?.({ id, image: item, images, type: 'base64_image' })
           break
         }
         // 速度
-        case "speed": {
+        case 'speed': {
           speed = data
-          options.onMessageHandle?.({ speed: data, type: "speed" })
+          options.onMessageHandle?.({ speed: data, type: 'speed' })
           break
         }
 
-        case "stop": {
-          options.onMessageHandle?.({ reason: data, type: "stop" })
+        case 'stop': {
+          options.onMessageHandle?.({ reason: data, type: 'stop' })
           break
         }
 
-        case "error": {
-          finishedType = "error"
+        case 'error': {
+          finishedType = 'error'
           options.onErrorHandle?.(data)
           break
         }
@@ -508,7 +508,7 @@ export const fetchSSE = async (url: string, options: RequestInit & FetchSSEOptio
 
       if (!triggerOnMessageHandler) {
         output = await response.clone().text()
-        options.onMessageHandle?.({ text: output, type: "text" })
+        options.onMessageHandle?.({ text: output, type: 'text' })
       }
 
       smoothController.flushQueue()

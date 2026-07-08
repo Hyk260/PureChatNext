@@ -1,4 +1,4 @@
-import { ChatMessageError, ErrorResponse, ErrorType } from "@pure/types"
+import type { ChatMessageError, ErrorResponse, ErrorType } from "@pure/types"
 
 export const getMessageError = async (response: Response) => {
   let chatMessageError: ChatMessageError

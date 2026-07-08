@@ -38,6 +38,21 @@ function buildPublicS3Url(key: string) {
   return `${url.protocol}//${bucket}.${url.host}/${key}`
 }
 
+function avatarPrefix(userId: string) {
+  return `user/avatar/${userId}/`
+}
+
+async function deletePreviousAvatars(fileS3: FileS3, userId: string, keepKey: string) {
+  const files = await fileS3.listFiles(avatarPrefix(userId))
+  const keysToDelete = files.map((file) => file.Key).filter((key) => key && key !== keepKey)
+
+  if (keysToDelete.length === 0) {
+    return
+  }
+
+  await fileS3.deleteFiles(keysToDelete)
+}
+
 /**
  * 上传用户头像
  * POST /api/webapi/user/avatar
@@ -94,6 +109,12 @@ export async function POST(req: Request) {
       body: { image: avatar },
       headers: await headers(),
     })
+
+    try {
+      await deletePreviousAvatars(fileS3, user.userId, s3Key)
+    } catch (deleteError) {
+      console.error('Failed to delete previous avatar:', deleteError)
+    }
 
     return NextResponse.json({ avatar })
   } catch (error) {

@@ -8,6 +8,7 @@ import {
   Cloud,
   Code2,
   Download,
+  Eye,
   File as FileIcon,
   FileJson,
   HardDrive,
@@ -66,6 +67,13 @@ const formatSize = (bytes: number): string => {
 const formatDate = (dateStr: string): string => {
   const d = new Date(dateStr);
   return d.toLocaleString();
+};
+
+const IMAGE_EXTENSIONS = new Set(['avif', 'bmp', 'gif', 'jpeg', 'jpg', 'png', 'svg', 'webp']);
+
+const isImageKey = (key: string): boolean => {
+  const ext = key.split('.').pop()?.toLowerCase();
+  return ext ? IMAGE_EXTENSIONS.has(ext) : false;
 };
 
 const actionOptions: Array<{
@@ -141,6 +149,8 @@ export default function S3TestPage() {
 
   // File list for display
   const [fileList, setFileList] = useState<FileInfo[]>([]);
+  const [imagePreview, setImagePreview] = useState<{ key: string; url: string } | null>(null);
+  const [previewLoadingKey, setPreviewLoadingKey] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastIdRef = useRef(0);
@@ -391,21 +401,40 @@ export default function S3TestPage() {
     }
   };
 
-  const downloadFile = async (key: string) => {
+  const fetchDownloadUrl = async (key: string) => {
     const url = new URL('/api/dev/s3-test', window.location.origin);
     url.searchParams.set('action', 'downloadUrl');
     url.searchParams.set('key', key);
 
+    const res = await fetch(url.toString());
+    const json = await res.json() as ApiResult<{ downloadUrl: string }>;
+
+    if (!json.success) {
+      throw new Error('error' in json ? json.error : 'Request failed');
+    }
+
+    return json.data.downloadUrl;
+  };
+
+  const downloadFile = async (key: string) => {
     try {
-      const res = await fetch(url.toString());
-      const json = await res.json() as ApiResult<{ downloadUrl: string }>;
-      if (json.success) {
-        window.open(json.data.downloadUrl, '_blank');
-      } else {
-        addToast('error' in json ? json.error : 'Download failed', 'error');
-      }
-    } catch {
-      addToast('Download failed', 'error');
+      const downloadUrl = await fetchDownloadUrl(key);
+      window.open(downloadUrl, '_blank');
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Download failed', 'error');
+    }
+  };
+
+  const previewImage = async (key: string) => {
+    setPreviewLoadingKey(key);
+
+    try {
+      const downloadUrl = await fetchDownloadUrl(key);
+      setImagePreview({ key, url: downloadUrl });
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Preview failed', 'error');
+    } finally {
+      setPreviewLoadingKey(null);
     }
   };
 
@@ -433,6 +462,41 @@ export default function S3TestPage() {
           </div>
         ))}
       </div>
+
+      {imagePreview ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setImagePreview(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="图片预览"
+        >
+          <div
+            className="relative flex max-h-[90vh] max-w-[90vw] flex-col overflow-hidden rounded-lg bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+              <div className="min-w-0 truncate font-mono text-xs text-slate-600">{imagePreview.key}</div>
+              <button
+                type="button"
+                onClick={() => setImagePreview(null)}
+                title="关闭"
+                className="shrink-0 rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <div className="overflow-auto p-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imagePreview.url}
+                alt={imagePreview.key}
+                className="max-h-[75vh] max-w-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
         {/* Header */}
@@ -878,6 +942,21 @@ export default function S3TestPage() {
                           </td>
                           <td className="px-4 py-2.5 text-right">
                             <div className="flex items-center justify-end gap-1">
+                              {isImageKey(file.Key) ? (
+                                <button
+                                  type="button"
+                                  onClick={() => previewImage(file.Key)}
+                                  disabled={previewLoadingKey === file.Key}
+                                  title="预览"
+                                  className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-violet-600 disabled:opacity-50"
+                                >
+                                  {previewLoadingKey === file.Key ? (
+                                    <Loader2 className="size-4 animate-spin" />
+                                  ) : (
+                                    <Eye className="size-4" />
+                                  )}
+                                </button>
+                              ) : null}
                               <button
                                 type="button"
                                 onClick={() => downloadFile(file.Key)}

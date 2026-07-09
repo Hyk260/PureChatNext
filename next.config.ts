@@ -52,6 +52,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     rules: codeInspectorPlugin({
       bundler: 'turbopack',
+      showSwitch: true, 
+      editor: 'cursor', 
+      // hotKeys: ['altKey', 'shiftKey'],
     }),
   },
 }

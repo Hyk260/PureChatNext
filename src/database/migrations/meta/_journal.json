@@ -22,6 +22,20 @@
       "when": 1782894530394,
       "tag": "0002_cuddly_marauders",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783562263400,
+      "tag": "0003_fat_orphan",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783563233516,
+      "tag": "0004_flashy_psynapse",
+      "breakpoints": true
     }
   ]
 }

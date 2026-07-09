@@ -1,0 +1,48 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { memo } from 'react'
+
+import { Flexbox } from '@lobehub/ui'
+import { FileText, ImageIcon, LayoutPanelTopIcon, Mic2, SquarePlay } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+
+import NavItem from '@/components/NavItem'
+import { FilesTabs } from '@/types/files'
+
+const CATEGORIES: { icon: LucideIcon; key: FilesTabs; label: string }[] = [
+  { icon: LayoutPanelTopIcon, key: FilesTabs.All, label: '全部' },
+  { icon: FileText, key: FilesTabs.Documents, label: '文档' },
+  { icon: ImageIcon, key: FilesTabs.Images, label: '图片' },
+  { icon: Mic2, key: FilesTabs.Audios, label: '音频' },
+  { icon: SquarePlay, key: FilesTabs.Videos, label: '视频' },
+]
+
+const CategoryMenu = memo(() => {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const category = searchParams.get('category') ?? FilesTabs.All
+
+  if (!pathname.startsWith('/resources') || pathname.includes('/library/')) return null
+
+  return (
+    <Flexbox gap={1} paddingInline={8}>
+      {CATEGORIES.map((item) => {
+        const href =
+          item.key === FilesTabs.All ? '/resources' : `/resources?category=${item.key}`
+        const active = category === item.key
+
+        return (
+          <Link key={item.key} href={href} style={{ color: 'inherit', textDecoration: 'none' }}>
+            <NavItem active={active} clickable icon={item.icon} title={item.label} />
+          </Link>
+        )
+      })}
+    </Flexbox>
+  )
+})
+
+CategoryMenu.displayName = 'CategoryMenu'
+
+export default CategoryMenu

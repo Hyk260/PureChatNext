@@ -1,0 +1,1 @@
+ALTER TABLE "global_files" ADD COLUMN "accessed_at" timestamp with time zone DEFAULT now() NOT NULL;

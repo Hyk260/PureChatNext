@@ -15,6 +15,8 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
       { href: '/', label: '首页' },
       { href: '/welcome', label: '欢迎页' },
       { href: '/chat', label: '聊天' },
+      { href: '/community', label: '社区' },
+      { href: '/resources', label: '资源' },
     ],
   },
   {

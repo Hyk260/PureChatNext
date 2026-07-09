@@ -1,12 +1,14 @@
 'use client'
 
-import { ThemeProvider } from '@lobehub/ui'
+import { ConfigProvider, ThemeProvider } from '@lobehub/ui'
 import { StyleProvider, extractStaticStyle } from 'antd-style'
+import * as m from 'motion/react-m'
 import { useServerInsertedHTML } from 'next/navigation'
 import { type PropsWithChildren, useRef } from 'react'
 
 import AntdStaticMethods from '@/components/AntdStaticMethods'
 import { useSystemAppearance } from '@/hooks/useSystemAppearance'
+import { ModalHost } from '@/libs/modal'
 
 const AppThemeProvider = ({ children }: PropsWithChildren) => {
   const appearance = useSystemAppearance()
@@ -41,7 +43,10 @@ const AppThemeProvider = ({ children }: PropsWithChildren) => {
         theme={{ cssVar: { key: 'pure-vars' } }}
       >
         <AntdStaticMethods />
-        {children}
+        <ConfigProvider motion={m}>
+          {children}
+          <ModalHost />
+        </ConfigProvider>
       </ThemeProvider>
     </StyleProvider>
   )

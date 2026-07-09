@@ -1,30 +1,47 @@
-import { openai } from '@ai-sdk/openai';
-import { deepseek } from '@ai-sdk/deepseek';
-import { ChatSDKError } from "@/libs/errors";
-import { streamText, UIMessage, convertToModelMessages } from 'ai';
+import { openai } from '@ai-sdk/openai'
+import { deepseek } from '@ai-sdk/deepseek'
+import { convertToModelMessages, streamText, type UIMessage } from 'ai'
 
-export const maxDuration = 30;
+import { ChatSDKError } from '@/libs/errors'
+
+export const maxDuration = 30
+
+const resolveModel = (provider: string | undefined, model: string | undefined) => {
+  const resolvedProvider = provider ?? 'deepseek'
+  const resolvedModel = model ?? 'deepseek-chat'
+
+  switch (resolvedProvider) {
+    case 'openai':
+      return openai(resolvedModel)
+    case 'deepseek':
+    default:
+      return deepseek(resolvedModel)
+  }
+}
 
 /**
  * chat API
  * POST /api/chat
  */
 export async function POST(request: Request) {
-  let requestBody;
+  let requestBody: {
+    messages: UIMessage[]
+    model?: string
+    provider?: string
+  }
 
   try {
-    const json = await request.json();
-    requestBody = json;
+    requestBody = await request.json()
   } catch {
-    return new ChatSDKError("bad_request:api").toResponse();
+    return new ChatSDKError('bad_request:api').toResponse()
   }
-  const { messages }: { messages: UIMessage[] } = requestBody
-  console.log('messages:', messages);
+
+  const { messages, model, provider } = requestBody
 
   const result = streamText({
-    model: deepseek('deepseek-chat'),
     messages: convertToModelMessages(messages),
-  });
+    model: resolveModel(provider, model),
+  })
 
-  return result.toUIMessageStreamResponse();
+  return result.toUIMessageStreamResponse()
 }

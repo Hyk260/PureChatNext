@@ -10,6 +10,7 @@ import { FileModel } from '@/database/models/file'
 import type { DocumentItem, FileItem } from '@/database/schemas/file'
 import { documents, files } from '@/database/schemas/file'
 import type { ChatDatabase } from '@/database/type'
+import { resolveFileAccessUrl } from '@/server/modules/S3/url'
 
 export interface KnowledgeItem {
   content?: string | null
@@ -99,7 +100,10 @@ export class KnowledgeRepo {
       slug: item.slug,
       sourceType: item.sourceType,
       updatedAt: item.updatedAt,
-      url: item.url ?? '',
+      url:
+        item.sourceType === 'file' && item.url
+          ? resolveFileAccessUrl(item.id, item.url)
+          : (item.url ?? ''),
     }
   }
 

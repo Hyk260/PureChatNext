@@ -19,7 +19,6 @@ import {
 } from '@/libs/better-auth/email-templates'
 import { OTP_EXPIRES_IN } from '@/libs/better-auth/constants'
 import { createVerificationDailyRateLimitStorage } from '@/libs/better-auth/rate-limit-storage'
-import { verifyLegacyStoredPassword } from '@/libs/better-auth/legacy-password'
 import { initBetterAuthSSOProviders } from '@/libs/better-auth/sso'
 import { parseSSOProviders } from '@/libs/better-auth/utils/server'
 
@@ -159,22 +158,13 @@ export function defineConfig() {
       requireEmailVerification: authEnv.AUTH_EMAIL_VERIFICATION,
       // 重置密码后撤销该用户所有已有会话
       revokeSessionsOnPasswordReset: true,
-      // 自定义密码校验：兼容 Clerk 迁移的 bcrypt 哈希；新密码仍使用 Better Auth 默认 scrypt
+      // 密码校验
       password: {
         async verify({ hash, password }: { hash: string; password: string }): Promise<boolean> {
+          // log('verify: %O', { hash, password })
           if (!hash) return false
 
-          // Clerk 导出的 bcrypt 哈希（$2a$ / $2b$ 前缀）
-          if (hash.startsWith('$2a$') || hash.startsWith('$2b$')) {
-            return bcrypt.compare(password, hash)
-          }
-
-          const legacyResult = verifyLegacyStoredPassword(hash, password)
-          if (legacyResult !== null) {
-            return legacyResult
-          }
-
-          // 其余情况走 Better Auth 默认校验逻辑
+          // Better Auth scrypt校验
           return verifyPassword({ hash, password })
         },
       },

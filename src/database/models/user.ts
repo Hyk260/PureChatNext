@@ -1,11 +1,14 @@
-import { getServerDB } from '../core/db-adaptor'
-import { generateHashedPassword, verifyPassword } from '@/utils'
+import { hashPassword } from 'better-auth/crypto'
+import { and, count, eq, inArray } from 'drizzle-orm'
 
+import { getServerDB } from '../core/db-adaptor'
 import { account, passkey, session, twoFactor, users, verification } from '../schemas'
-import { count, eq, inArray } from 'drizzle-orm'
+import { verifyAccountPassword } from '@/libs/better-auth/verify-account-password'
 
 import type { User, UserItem, UserWithoutPassword } from '../schemas'
 import type { ChatDatabase } from '../type'
+
+const CREDENTIAL_PROVIDER = 'credential'
 
 export type UserRelatedCounts = {
   accounts: number
@@ -29,32 +32,19 @@ export class UserModel {
   private static readonly db: ChatDatabase = getServerDB()
 
   private static normalizeUniqueUserFields = <
-    T extends { email?: string | null; phone?: string | null; userId?: string | null; password?: string | null },
+    T extends { email?: string | null; phone?: string | null; userId?: string | null },
   >(
     value: T
   ) => {
     const normalizedEmail = typeof value.email === 'string' && value.email.trim() === '' ? null : value.email
     const normalizedPhone = typeof value.phone === 'string' && value.phone.trim() === '' ? null : value.phone
     const normalizedUserId = value.userId == null || value.userId.trim() === '' ? null : value.userId.trim()
-    const normalizedPassword =
-      typeof value.password === 'string' && value.password.trim() === '' ? null : value.password
-
-    const passwordOut =
-      value.password === undefined
-        ? {}
-        : {
-            password:
-              normalizedPassword != null && normalizedPassword !== ''
-                ? generateHashedPassword(normalizedPassword)
-                : null,
-          }
 
     return {
       ...value,
       ...(value.email !== undefined ? { email: normalizedEmail } : {}),
       ...(value.phone !== undefined ? { phone: normalizedPhone } : {}),
       ...(value.userId !== undefined ? { userId: normalizedUserId } : {}),
-      ...passwordOut,
     }
   }
 
@@ -63,18 +53,33 @@ export class UserModel {
     return userWithoutPassword
   }
 
-  private static toUserWithoutPasswordIfPasswordOk(
+  private static findCredentialAccountPassword = async (authUserId: string) => {
+    const [credentialAccount] = await this.db
+      .select({ password: account.password })
+      .from(account)
+      .where(and(eq(account.userId, authUserId), eq(account.providerId, CREDENTIAL_PROVIDER)))
+      .limit(1)
+
+    return credentialAccount?.password ?? null
+  }
+
+  private static async toUserWithoutPasswordIfPasswordOk(
     user: UserItem | undefined,
     plainPassword: string
-  ): UserWithoutPassword | null {
-    if (!user?.password || !verifyPassword(plainPassword, user.password)) {
+  ): Promise<UserWithoutPassword | null> {
+    if (!user) return null
+
+    const storedHash = await this.findCredentialAccountPassword(user.id)
+    if (!storedHash || !(await verifyAccountPassword(storedHash, plainPassword))) {
       return null
     }
+
     return this.excludePassword(user)
   }
 
   static updateUser = async (value: Partial<UserItem>) => {
-    const nextValue = UserModel.normalizeUniqueUserFields(value)
+    const { password: _password, ...rest } = value
+    const nextValue = UserModel.normalizeUniqueUserFields(rest)
     if (value.userId) {
       return this.db
         .update(users)
@@ -189,11 +194,16 @@ export class UserModel {
     return this.toUserWithoutPasswordIfPasswordOk(user, password)
   }
 
-  static createUser = async (params: Partial<User>) => {
-    const normalizedParams = this.normalizeUniqueUserFields(params)
+  static createUser = async (params: Partial<User> & { password?: string | null }) => {
+    const { password: plainPassword, ...userFields } = params
+    const normalizedParams = this.normalizeUniqueUserFields(userFields)
 
     if (normalizedParams.userId == null) {
       normalizedParams.userId = crypto.randomUUID().replace(/-/g, '')
+    }
+
+    if (normalizedParams.id == null) {
+      normalizedParams.id = crypto.randomUUID()
     }
 
     const [user] = await this.db
@@ -201,6 +211,19 @@ export class UserModel {
       .values(normalizedParams as User)
       .returning()
 
-    return { duplicate: false as const, user }
+    if (plainPassword != null && plainPassword.trim() !== '') {
+      const email = user.email?.trim().toLowerCase()
+      await this.db.insert(account).values({
+        accountId: email || user.id,
+        createdAt: new Date(),
+        id: crypto.randomUUID(),
+        password: await hashPassword(plainPassword),
+        providerId: CREDENTIAL_PROVIDER,
+        updatedAt: new Date(),
+        userId: user.id,
+      })
+    }
+
+    return { duplicate: false as const, user: this.excludePassword(user) }
   }
 }

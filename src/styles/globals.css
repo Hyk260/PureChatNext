@@ -52,7 +52,7 @@ body {
 }
 
 /* @lobehub/ui Flexbox relies on these styles (normally injected by ThemeProvider GlobalStyle) */
-@layer lobe-base {
+/* @layer lobe-base {
   :where(.lobe-flex) {
     --lobe-flex: 0 1 auto;
     --lobe-flex-direction: column;
@@ -82,4 +82,4 @@ body {
   .lobe-flex-hidden {
     display: none;
   }
-}
+} */

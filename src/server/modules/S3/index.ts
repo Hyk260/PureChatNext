@@ -13,7 +13,7 @@ import mime from 'mime';
 import { z } from 'zod';
 
 import { fileEnv } from '@/envs/file';
-import { YEAR } from '@/utils/units';
+import { YEAR } from '@pure/utils';
 
 export const fileSchema = z.object({
   Key: z.string(),

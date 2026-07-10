@@ -7,6 +7,7 @@ import {
   jsonError,
   unauthorizedResponse,
 } from '@/libs/auth/get-session-user'
+import { resolveFileAccessUrl } from '@/server/modules/S3/url'
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getAuthenticatedUserId()
@@ -16,7 +17,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const file = await new FileModel(userId).findById(id)
   if (!file) return jsonError('File not found', 404)
 
-  return NextResponse.json(file)
+  return NextResponse.json({
+    ...file,
+    url: resolveFileAccessUrl(file.id, file.url),
+  })
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -28,7 +32,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const file = await new FileModel(userId).update(id, body)
   if (!file) return jsonError('File not found', 404)
 
-  return NextResponse.json(file)
+  return NextResponse.json({
+    ...file,
+    url: resolveFileAccessUrl(file.id, file.url),
+  })
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

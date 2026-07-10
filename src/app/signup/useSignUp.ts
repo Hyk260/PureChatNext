@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { message } from '@/components/AntdStaticMethods'
 import { signUp } from '@/libs/better-auth/auth-client'
 import { checkUserByEmail } from '@/libs/better-auth/check-user'
+import { reclaimUnverifiedEmail } from '@/libs/better-auth/reclaim-unverified-email'
 import { useAuthConfig } from '@/libs/better-auth/use-auth-config'
 
 export interface SignUpFormValues {
@@ -37,12 +38,19 @@ export const useSignUp = () => {
 
       const existingUser = await checkUserByEmail(email)
       if (existingUser.exists) {
-        message.info('该邮箱已注册，请前往登录')
-        const params = new URLSearchParams({ email })
-        const callbackUrlParam = searchParams.get('callbackUrl')
-        if (callbackUrlParam) params.set('callbackUrl', callbackUrlParam)
-        router.push(`/signin?${params.toString()}`)
-        return
+        const canReclaim =
+          config.enableEmailVerification && existingUser.emailVerified === false
+
+        if (canReclaim) {
+          await reclaimUnverifiedEmail(email)
+        } else {
+          message.info('该邮箱已注册，请前往登录')
+          const params = new URLSearchParams({ email })
+          const callbackUrlParam = searchParams.get('callbackUrl')
+          if (callbackUrlParam) params.set('callbackUrl', callbackUrlParam)
+          router.push(`/signin?${params.toString()}`)
+          return
+        }
       }
 
       const name = email.split('@')[0] ?? email

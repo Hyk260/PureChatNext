@@ -2,7 +2,7 @@
 
 import { Flexbox, ScrollShadow } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo } from 'react'
+import { Suspense, memo } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
@@ -46,7 +46,9 @@ const HomeSidebar = memo(() => {
             showHomeIcon
           />
           <Flexbox flex={1} gap={16} paddingBlock={8} style={{ overflow: 'auto' }}>
-            <CategoryMenu />
+            <Suspense fallback={null}>
+              <CategoryMenu />
+            </Suspense>
             {/* 知识库功能暂未开放 */}
           </Flexbox>
         </Flexbox>

@@ -6,6 +6,7 @@ import Analytics from '@/components/Analytics'
 import type { Metadata } from 'next'
 
 import '@/styles/globals.css'
+import '@/styles/scrollbar.css'
 
 export const metadata: Metadata = {
   title: 'PureChat',

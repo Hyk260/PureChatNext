@@ -1,7 +1,6 @@
 'use client'
 
 import { ActionIcon, Button, DropdownMenu, Flexbox, Icon, Text } from '@lobehub/ui'
-import { confirmModal } from '@/libs/modal'
 import { App } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
@@ -20,6 +19,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { useResourceManagerStore } from '@/features/resources/store'
+import { confirmModal } from '@/libs/modal'
 
 import ActionIconWithChevron from '../ToolBar/ActionIconWithChevron'
 import SearchInput from './SearchInput'

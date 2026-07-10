@@ -78,7 +78,6 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     ].map((item) => ({
       ...item,
       onClick: (event: React.MouseEvent<HTMLAnchorElement>) => {
-        item.onClick?.(event)
         if (event.defaultPrevented) return
 
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return

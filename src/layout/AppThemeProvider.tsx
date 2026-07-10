@@ -2,6 +2,7 @@
 
 import { ConfigProvider, ThemeProvider } from '@lobehub/ui'
 import { StyleProvider, extractStaticStyle } from 'antd-style'
+import { LazyMotion, domMax } from 'motion/react'
 import * as m from 'motion/react-m'
 import { useServerInsertedHTML } from 'next/navigation'
 import { type PropsWithChildren, useRef } from 'react'
@@ -38,15 +39,17 @@ const AppThemeProvider = ({ children }: PropsWithChildren) => {
         appearance={appearance}
         defaultAppearance="light"
         defaultThemeMode="light"
-        enableGlobalStyle={false}
         style={{ height: '100%' }}
         theme={{ cssVar: { key: 'pure-vars' } }}
       >
         <AntdStaticMethods />
-        <ConfigProvider motion={m}>
-          {children}
-          <ModalHost />
-        </ConfigProvider>
+        {/* base-ui Modal uses motion/react-m + AnimatePresence; features must be loaded */}
+        <LazyMotion features={domMax}>
+          <ConfigProvider motion={m}>
+            {children}
+            <ModalHost />
+          </ConfigProvider>
+        </LazyMotion>
       </ThemeProvider>
     </StyleProvider>
   )

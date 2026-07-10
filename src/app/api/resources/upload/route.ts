@@ -11,18 +11,7 @@ import {
   unauthorizedResponse,
 } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'
-
-function buildPublicS3Url(key: string) {
-  const endpoint = fileEnv.S3_ENDPOINT!.replace(/\/$/, '')
-  const bucket = fileEnv.S3_BUCKET!
-
-  if (fileEnv.S3_ENABLE_PATH_STYLE) {
-    return `${endpoint}/${bucket}/${key}`
-  }
-
-  const url = new URL(endpoint)
-  return `${url.protocol}//${bucket}.${url.host}/${key}`
-}
+import { buildPublicS3Url, resolveFileAccessUrl } from '@/server/modules/S3/url'
 
 function isS3Configured() {
   return Boolean(
@@ -74,7 +63,14 @@ export async function POST(request: NextRequest) {
     )
 
     const created = await model.findById(result.id)
-    return NextResponse.json(created)
+    if (!created) {
+      return NextResponse.json({ error: 'Upload succeeded but file not found' }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      ...created,
+      url: resolveFileAccessUrl(created.id, created.url),
+    })
   } catch (error) {
     console.error('[resources/upload] POST failed:', error)
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })

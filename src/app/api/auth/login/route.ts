@@ -3,8 +3,8 @@ import { UserModel } from '@/database/models/user'
 import { generateUserSig } from '@/libs/utils/signature'
 import { signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
 
-import type { User } from '@/database/schemas/user'
-import type { NextRequest } from 'next/server';
+import type { UserWithoutPassword } from '@/database/schemas/user'
+import type { NextRequest } from 'next/server'
 
 /**
  * 登录接口
@@ -13,13 +13,17 @@ import type { NextRequest } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, userId, password } = body as User
+    const { email, userId, password } = body as {
+      email?: string
+      password?: string
+      userId?: string
+    }
 
     if (!password) {
       return NextResponse.json({ error: '密码不能为空' }, { status: 400 })
     }
 
-    let user: User | null = null
+    let user: UserWithoutPassword | null = null
     if (email) {
       user = await UserModel.findByEmailAndPassword(email, password)
       if (!user) {

@@ -40,8 +40,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   USER_NOT_FOUND: '未找到该用户',
 }
 
-const normalizeErrorCode = (code?: string | null) =>
-  (code || 'UNKNOWN').trim().toUpperCase().replaceAll('-', '_').replace(/\s+/g, '_')
+const normalizeErrorCode = (code?: string | null) => {
+  return (code || 'UNKNOWN').trim().toUpperCase().replaceAll('-', '_').replace(/\s+/g, '_')
+}
 
 const AuthErrorContent = memo(() => {
   const searchParams = useSearchParams()
@@ -55,23 +56,23 @@ const AuthErrorContent = memo(() => {
     <AuthPageContainer>
       <AuthCard
         footer={
-          <Flexbox gap={12} justify="center" wrap="wrap">
-            <Link href="/signin">
-              <Button block size="large" type="primary">
+          <Flexbox gap={12} justify='center' wrap='wrap'>
+            <Link href='/signin'>
+              <Button block size='large' type='primary'>
                 返回登录
               </Button>
             </Link>
-            <Link href="/">
-              <Button block size="large">
+            <Link href='/'>
+              <Button block size='large'>
                 返回首页
               </Button>
             </Link>
           </Flexbox>
         }
         subtitle={description}
-        title="登录失败"
+        title='登录失败'
       >
-        <Text style={{ fontFamily: cssVar.fontFamilyCode }} type="secondary">
+        <Text style={{ fontFamily: cssVar.fontFamilyCode }} type='secondary'>
           ErrorCode: {error || 'UNKNOWN'}
         </Text>
       </AuthCard>
@@ -83,7 +84,7 @@ AuthErrorContent.displayName = 'AuthErrorContent'
 
 const AuthErrorPage = () => {
   return (
-    <Suspense fallback={<Loading debugId="AuthError" />}>
+    <Suspense fallback={<Loading debugId='AuthError' />}>
       <AuthErrorContent />
     </Suspense>
   )

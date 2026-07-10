@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { UserModel } from '@/database/models/user'
-import { isValidEmail } from '@/utils'
 import { logger } from '@/libs/logger'
 
 import type { User } from '@/database/schemas/user'
@@ -25,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 验证邮箱格式
-    if (!isValidEmail(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: '邮箱格式不正确' }, { status: 400 })
     }
 

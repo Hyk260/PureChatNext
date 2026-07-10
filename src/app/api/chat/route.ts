@@ -38,8 +38,12 @@ export async function POST(request: Request) {
 
   const { messages, model, provider } = requestBody
 
+  if (!Array.isArray(messages)) {
+    return new ChatSDKError('bad_request:api').toResponse()
+  }
+
   const result = streamText({
-    messages: convertToModelMessages(messages),
+    messages: await convertToModelMessages(messages),
     model: resolveModel(provider, model),
   })
 

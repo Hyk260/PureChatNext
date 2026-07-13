@@ -3,7 +3,6 @@
 import { Suspense } from 'react'
 
 import { AuthPageContainer } from '@/components/AuthPageContainer'
-import Loading from '@/components/Loading/BrandTextLoading'
 
 import { SignUpForm } from './SignUpForm'
 
@@ -17,7 +16,7 @@ const SignUpContent = () => {
 
 const SignUpPage = () => {
   return (
-    <Suspense fallback={<Loading debugId="Signup" />}>
+    <Suspense fallback={null}>
       <SignUpContent />
     </Suspense>
   )

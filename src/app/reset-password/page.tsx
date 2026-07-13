@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 
 import { AuthPageContainer } from '@/components/AuthPageContainer'
-import Loading from '@/components/Loading/BrandTextLoading'
 import AuthCard from '@/features/AuthCard'
 
 import { ResetPasswordForm } from './ResetPasswordForm'
@@ -33,7 +32,7 @@ const ResetPasswordPageContent = () => {
 
 const ResetPasswordPage = () => {
   return (
-    <Suspense fallback={<Loading debugId="ResetPassword" />}>
+    <Suspense fallback={null}>
       <ResetPasswordPageContent />
     </Suspense>
   )

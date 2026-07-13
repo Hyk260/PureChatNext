@@ -7,7 +7,6 @@ import { useSearchParams } from 'next/navigation'
 import { Suspense, memo } from 'react'
 
 import { AuthPageContainer } from '@/components/AuthPageContainer'
-import Loading from '@/components/Loading/BrandTextLoading'
 import AuthCard from '@/features/AuthCard'
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -84,7 +83,7 @@ AuthErrorContent.displayName = 'AuthErrorContent'
 
 const AuthErrorPage = () => {
   return (
-    <Suspense fallback={<Loading debugId='AuthError' />}>
+    <Suspense fallback={null}>
       <AuthErrorContent />
     </Suspense>
   )

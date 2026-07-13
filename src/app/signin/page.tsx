@@ -73,7 +73,7 @@ const SignInContent = () => {
 
 const SignInPage = () => {
   return (
-    <Suspense fallback={<Loading debugId="Signin" />}>
+    <Suspense fallback={null}>
       <SignInContent />
     </Suspense>
   )

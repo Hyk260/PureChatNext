@@ -7,7 +7,6 @@ import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
 import { AuthPageContainer } from '@/components/AuthPageContainer'
-import Loading from '@/components/Loading/BrandTextLoading'
 import AuthCard from '@/features/AuthCard'
 import { useAuthConfig } from '@/libs/better-auth/use-auth-config'
 
@@ -55,7 +54,7 @@ const VerifyEmailPageContent = () => {
 
 const VerifyEmailPage = () => {
   return (
-    <Suspense fallback={<Loading debugId="VerifyEmail" />}>
+    <Suspense fallback={null}>
       <VerifyEmailPageContent />
     </Suspense>
   )

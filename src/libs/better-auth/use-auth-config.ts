@@ -11,20 +11,51 @@ const defaultConfig: AuthServerConfig = {
   oAuthSSOProviders: [],
 }
 
+let cachedConfig: AuthServerConfig | null = null
+let inflight: Promise<AuthServerConfig> | null = null
+
+export const getCachedAuthConfig = (): AuthServerConfig | null => cachedConfig
+
+export const resetAuthConfigCacheForTests = (): void => {
+  cachedConfig = null
+  inflight = null
+}
+
+export const loadAuthServerConfig = (): Promise<AuthServerConfig> => {
+  if (cachedConfig) return Promise.resolve(cachedConfig)
+  if (inflight) return inflight
+
+  inflight = fetch('/api/auth/config')
+    .then((response) => response.json() as Promise<AuthServerConfig>)
+    .then((data) => {
+      cachedConfig = data
+      return data
+    })
+    .catch(() => {
+      cachedConfig = defaultConfig
+      return defaultConfig
+    })
+    .finally(() => {
+      inflight = null
+    })
+
+  return inflight
+}
+
 export const useAuthConfig = () => {
-  const [config, setConfig] = useState<AuthServerConfig | null>(null)
+  const [config, setConfig] = useState<AuthServerConfig | null>(() => cachedConfig)
 
   useEffect(() => {
     let cancelled = false
 
-    fetch('/api/auth/config')
-      .then((response) => response.json())
-      .then((data: AuthServerConfig) => {
-        if (!cancelled) setConfig(data)
-      })
-      .catch(() => {
-        if (!cancelled) setConfig(defaultConfig)
-      })
+    if (cachedConfig) {
+      setConfig(cachedConfig)
+      return
+    }
+
+    void loadAuthServerConfig().then((data) => {
+      if (!cancelled) setConfig(data)
+    })
 
     return () => {
       cancelled = true

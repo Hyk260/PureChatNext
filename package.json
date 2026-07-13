@@ -84,7 +84,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/ua-parser-js": "^0.7.39",
-    "code-inspector-plugin": "^1.6.1",
+    "code-inspector-plugin": "^2.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "mime": "^4.1.0",

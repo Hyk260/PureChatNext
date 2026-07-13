@@ -5,11 +5,11 @@ import { ActionIcon, ActionIconGroup, Flexbox, Text, copyToClipboard } from '@lo
 import { App } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import type { UIMessage } from 'ai'
-import { Check, Copy, Edit, Trash, X } from 'lucide-react'
+import { Check, ChevronRight, Copy, Edit, Trash, X } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
 
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
-import { getMessageText } from '@/features/chat/messageText'
+import { getMessageReasoning, getMessageText } from '@/features/chat/messageText'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -79,6 +79,40 @@ const styles = createStaticStyles(({ css }) => ({
       margin-block: 8px;
     }
   `,
+  reasoning: css`
+    margin-block-end: 10px;
+    border-block-end: 1px solid ${cssVar.colorBorderSecondary};
+    padding-block-end: 10px;
+  `,
+  reasoningBody: css`
+    margin-block-start: 6px;
+    color: ${cssVar.colorTextSecondary};
+    font-size: 13px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+  `,
+  reasoningChevron: css`
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+  `,
+  reasoningChevronOpen: css`
+    transform: rotate(90deg);
+  `,
+  reasoningSummary: css`
+    display: inline-flex;
+    cursor: pointer;
+    align-items: center;
+    gap: 4px;
+    list-style: none;
+    color: ${cssVar.colorTextTertiary};
+    font-size: 12px;
+    user-select: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  `,
   row: css`
     position: relative;
     display: flex;
@@ -114,6 +148,38 @@ const ACTION_ITEMS: ActionIconGroupItemType[] = [
   { danger: true, icon: Trash, key: 'delete', label: '删除' },
 ]
 
+interface ReasoningBlockProps {
+  isStreaming?: boolean
+  text: string
+}
+
+const ReasoningBlock = memo<ReasoningBlockProps>(({ text, isStreaming = false }) => {
+  const [open, setOpen] = useState(isStreaming)
+
+  useEffect(() => {
+    setOpen(isStreaming)
+  }, [isStreaming])
+
+  return (
+    <details
+      className={styles.reasoning}
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary className={styles.reasoningSummary}>
+        <ChevronRight
+          className={cx(styles.reasoningChevron, open && styles.reasoningChevronOpen)}
+          size={14}
+        />
+        {isStreaming ? '思考中…' : '思考过程'}
+      </summary>
+      <div className={styles.reasoningBody}>{text}</div>
+    </details>
+  )
+})
+
+ReasoningBlock.displayName = 'ReasoningBlock'
+
 interface ChatMessageItemProps {
   disabled?: boolean
   isStreaming?: boolean
@@ -128,6 +194,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
     const [editing, setEditing] = useState(false)
     const [draft, setDraft] = useState('')
     const text = getMessageText(message)
+    const reasoning = getMessageReasoning(message)
     const isUser = message.role === 'user'
 
     const handleAction = useCallback(
@@ -167,7 +234,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
       setEditing(false)
     }, [draft, message.id, onEdit, text])
 
-    if (!text && !isStreaming) return null
+    if (!text && !reasoning && !isStreaming) return null
 
     return (
       <div className={styles.row} data-role={message.role}>
@@ -210,15 +277,19 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
             </Flexbox>
           ) : (
             <>
+              {!isUser && reasoning ? (
+                <ReasoningBlock isStreaming={isStreaming} text={reasoning} />
+              ) : null}
+
               {text ? (
                 <MessageMarkdown
                   className={cx(styles.markdown, isUser && styles.userMarkdown)}
                   isStreaming={isStreaming}
                   text={text}
                 />
-              ) : (
+              ) : isStreaming ? (
                 <Text type='secondary'>…</Text>
-              )}
+              ) : null}
 
               {!disabled && (
                 <div
@@ -268,9 +339,10 @@ const ChatMessages = memo<ChatMessagesProps>(
   ({ messages, disabled, isStreaming = false, onDelete, onEdit }) => {
     const lastMessage = messages.at(-1)
     const lastText = lastMessage ? getMessageText(lastMessage) : ''
+    const lastReasoning = lastMessage ? getMessageReasoning(lastMessage) : ''
 
     const { ref, handleScroll, resetScrollLock } = useAutoScroll<HTMLDivElement>({
-      deps: [messages.length, lastText],
+      deps: [messages.length, lastText, lastReasoning],
       enabled: isStreaming || disabled === true,
     })
 

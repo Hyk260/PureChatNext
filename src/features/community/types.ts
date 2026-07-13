@@ -13,3 +13,11 @@ export interface DiscoverProviderItem {
   name: string
   url: string
 }
+
+export interface DiscoverModelItem {
+  description: string
+  displayName: string
+  id: string
+  identifier: string
+  providers: string[]
+}

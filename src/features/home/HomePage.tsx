@@ -17,9 +17,9 @@ const HomePage = memo(() => {
         style={{ overflowY: 'auto', paddingBlock: '0 16vh' }}
         width='100%'
       >
-        {/* <WideScreenContainer style={{ paddingBlock: 24 }}>
+        <WideScreenContainer style={{ paddingBlock: 24 }}>
           <HomeContent />
-        </WideScreenContainer> */}
+        </WideScreenContainer>
       </Flexbox>
     </Flexbox>
   )

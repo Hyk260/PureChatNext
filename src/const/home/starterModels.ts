@@ -20,13 +20,13 @@ export const STARTER_MODELS: StarterModelItem[] = [
   {
     displayName: 'Nano Banana 2 Lite',
     label: 'Nano Banana 2 Lite',
-    model: 'deepseek-chat',
+    model: 'deepseek-v4-flash',
     provider: 'deepseek',
   },
   {
     displayName: 'Seedance 2.0',
     label: 'Seedance 2.0',
-    model: 'deepseek-reasoner',
+    model: 'deepseek-v4-pro',
     provider: 'deepseek',
   },
 ]

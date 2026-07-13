@@ -17,7 +17,7 @@ export const COMMUNITY_PROVIDERS: DiscoverProviderItem[] = [
     id: 'deepseek',
     identifier: 'deepseek',
     modelCount: 2,
-    models: ['deepseek-chat', 'deepseek-reasoner'],
+    models: ['deepseek-v4-flash', 'deepseek-v4-pro'],
     name: 'DeepSeek',
     url: 'https://deepseek.com',
   },

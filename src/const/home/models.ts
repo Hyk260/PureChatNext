@@ -7,8 +7,8 @@ export interface HomeModelItem {
 }
 
 const MODEL_DISPLAY_NAMES: Record<string, string> = {
-  'deepseek-chat': 'DeepSeek V4 Pro',
-  'deepseek-reasoner': 'DeepSeek Reasoner',
+  'deepseek-v4-flash': 'DeepSeek V4 Flash',
+  'deepseek-v4-pro': 'DeepSeek V4 Pro',
   'gpt-4o': 'GPT-4o',
   'gpt-4o-mini': 'GPT-4o Mini',
   o1: 'OpenAI o1',
@@ -25,7 +25,7 @@ export const HOME_MODELS: HomeModelItem[] = COMMUNITY_PROVIDERS.flatMap((provide
 
 export const DEFAULT_HOME_MODEL: HomeModelItem = {
   displayName: 'DeepSeek V4 Pro',
-  model: 'deepseek-chat',
+  model: 'deepseek-v4-pro',
   provider: 'deepseek',
 }
 

@@ -3,7 +3,7 @@
 import { ActionIcon } from '@lobehub/ui'
 import { Input } from 'antd'
 import { SearchIcon, XIcon } from 'lucide-react'
-import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 import { useResourceManagerStore } from '@/features/resources/store'
 
@@ -46,7 +46,7 @@ const SearchInput = memo(() => {
   }, [expanded])
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    (e: KeyboardEvent) => {
       if (e.key === 'Escape') handleCollapse()
     },
     [handleCollapse],

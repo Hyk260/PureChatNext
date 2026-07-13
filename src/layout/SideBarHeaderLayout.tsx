@@ -6,7 +6,7 @@ import { Breadcrumb } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronRightIcon, HomeIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { memo, type ReactNode } from 'react'
+import { memo, type MouseEvent, type ReactNode } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
@@ -77,7 +77,7 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
       ...breadcrumb,
     ].map((item) => ({
       ...item,
-      onClick: (event: React.MouseEvent<HTMLAnchorElement>) => {
+      onClick: (event: MouseEvent<HTMLAnchorElement>) => {
         if (event.defaultPrevented) return
 
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return

@@ -1,6 +1,12 @@
 import { openai } from '@ai-sdk/openai'
 import { deepseek } from '@ai-sdk/deepseek'
-import { convertToModelMessages, streamText, type UIMessage } from 'ai'
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  type UIMessage,
+} from 'ai'
 
 import { ChatSDKError } from '@/libs/errors'
 
@@ -47,5 +53,7 @@ export async function POST(request: Request) {
     model: resolveModel(provider, model),
   })
 
-  return result.toUIMessageStreamResponse()
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  })
 }

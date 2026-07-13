@@ -2,7 +2,7 @@
 
 import { Spin } from 'antd'
 import { Loader2, Pencil } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
 
@@ -26,7 +26,7 @@ export function AvatarSetting({
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
 

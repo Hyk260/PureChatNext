@@ -4,7 +4,7 @@ import 'dotenv/config';
 async function main() {
   const result = streamText({
     model: 'openai/gpt-4.1',
-    prompt: 'Invent a new holiday and describe its traditions.',
+    prompt: '创造一个新的节日，并描述它的传统。',
   });
 
   for await (const textPart of result.textStream) {

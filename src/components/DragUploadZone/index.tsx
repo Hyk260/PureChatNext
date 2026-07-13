@@ -2,7 +2,7 @@
 
 import { Flexbox } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo, useCallback, useRef, useState } from 'react'
+import { memo, useCallback, useRef, useState, type DragEvent, type ReactNode } from 'react'
 
 const styles = createStaticStyles(({ css }) => ({
   overlay: css`
@@ -31,7 +31,7 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 interface DragUploadZoneProps {
-  children: React.ReactNode
+  children: ReactNode
   disabled?: boolean
   onUploadFiles: (files: File[]) => void
 }
@@ -41,7 +41,7 @@ const DragUploadZone = memo<DragUploadZoneProps>(({ children, disabled, onUpload
   const dragCounter = useRef(0)
 
   const handleDragEnter = useCallback(
-    (e: React.DragEvent) => {
+    (e: DragEvent) => {
       e.preventDefault()
       if (disabled) return
       dragCounter.current += 1
@@ -50,7 +50,7 @@ const DragUploadZone = memo<DragUploadZoneProps>(({ children, disabled, onUpload
     [disabled],
   )
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
+  const handleDragLeave = useCallback((e: DragEvent) => {
     e.preventDefault()
     dragCounter.current -= 1
     if (dragCounter.current <= 0) {
@@ -59,12 +59,12 @@ const DragUploadZone = memo<DragUploadZoneProps>(({ children, disabled, onUpload
     }
   }, [])
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDragOver = useCallback((e: DragEvent) => {
     e.preventDefault()
   }, [])
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
+    (e: DragEvent) => {
       e.preventDefault()
       dragCounter.current = 0
       setActive(false)

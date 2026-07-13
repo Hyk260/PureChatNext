@@ -1,11 +1,10 @@
 "use client";
 
-import type React from "react";
 import { login } from '@/libs/utils/api-client';
 import { Button, Input, Card } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -14,7 +13,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {

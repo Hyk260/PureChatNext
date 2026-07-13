@@ -2,7 +2,7 @@
 
 import { Center, Checkbox, Flexbox } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo, useCallback } from 'react'
+import { memo, useCallback, type MouseEvent, type PointerEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
@@ -45,14 +45,14 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
   const { allSelected, indeterminate, selectedCount } = useExplorerSelectionSummary({ data })
 
   const handleHeaderCheckboxClick = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       e.stopPropagation()
       handleSelectAll(!allSelected)
     },
     [allSelected, handleSelectAll],
   )
 
-  const handleHeaderCheckboxPointerDown = useCallback((e: React.PointerEvent) => {
+  const handleHeaderCheckboxPointerDown = useCallback((e: PointerEvent) => {
     e.stopPropagation()
   }, [])
 

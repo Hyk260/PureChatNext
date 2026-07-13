@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react'
 import { Flexbox, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { DefaultChatTransport, type UIMessage } from 'ai'
-import { memo, useCallback, useEffect, useMemo, useSyncExternalStore } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 
 import ChatInput from '@/features/chat/ChatInput'
 import ChatMessages from '@/features/chat/ChatMessages'
@@ -53,15 +53,29 @@ const ChatView = memo<ChatViewProps>(({ initialMessages }) => {
   const { messages, sendMessage, setMessages, status, error, clearError, stop } = useChat({
     id: CHAT_ID,
     messages: initialMessages,
+    // Throttle UI updates so Markdown/Streamdown isn't re-rendered on every chunk
+    throttle: 50,
     transport: chatTransport,
   })
 
-  useEffect(() => {
-    saveMessages(messages)
-  }, [messages])
-
+  // Keep a ref so edit callbacks stay stable during streaming.
+  const messagesRef = useRef(messages)
   const isBusy = status === 'submitted' || status === 'streaming'
   const isStreaming = status === 'streaming'
+
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
+
+  // Debounce localStorage writes while streaming — sync JSON on every token
+  // blocks the main thread and makes the bubble look like it isn't streaming.
+  useEffect(() => {
+    if (isBusy) {
+      const timer = window.setTimeout(() => saveMessages(messages), 400)
+      return () => window.clearTimeout(timer)
+    }
+    saveMessages(messages)
+  }, [isBusy, messages])
 
   const requestBody = useMemo(
     () => ({
@@ -93,7 +107,7 @@ const ChatView = memo<ChatViewProps>(({ initialMessages }) => {
 
   const handleEdit = useCallback(
     async (id: string, text: string) => {
-      const target = messages.find((message) => message.id === id)
+      const target = messagesRef.current.find((message) => message.id === id)
       if (!target) return
 
       clearError()
@@ -113,7 +127,7 @@ const ChatView = memo<ChatViewProps>(({ initialMessages }) => {
         prev.map((message) => (message.id === id ? withMessageText(message, text) : message)),
       )
     },
-    [clearError, messages, requestBody, sendMessage, setMessages],
+    [clearError, requestBody, sendMessage, setMessages],
   )
 
   const handleStop = useCallback(() => {

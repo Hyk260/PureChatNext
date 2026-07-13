@@ -2,7 +2,7 @@
 
 import { Center, Checkbox, Flexbox, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo, useCallback } from 'react'
+import { memo, useCallback, type MouseEvent, type PointerEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import FileIcon from '@/components/FileIcon'
@@ -81,14 +81,14 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
   const isFolder = item.fileType === DOCUMENT_FOLDER_TYPE
 
   const handleCheckboxClick = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       e.stopPropagation()
       toggleSelectFile(item.id)
     },
     [item.id, toggleSelectFile],
   )
 
-  const handleCheckboxPointerDown = useCallback((e: React.PointerEvent) => {
+  const handleCheckboxPointerDown = useCallback((e: PointerEvent) => {
     e.stopPropagation()
   }, [])
 

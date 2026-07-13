@@ -2,7 +2,7 @@
 
 import { Block, Center, Checkbox, Flexbox, Grid, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo, useCallback } from 'react'
+import { memo, useCallback, type MouseEvent, type PointerEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import FileIcon from '@/components/FileIcon'
@@ -60,14 +60,14 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
   const isImage = item.fileType.startsWith('image/')
 
   const handleCheckboxClick = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       e.stopPropagation()
       toggleSelectFile(item.id)
     },
     [item.id, toggleSelectFile],
   )
 
-  const handleCheckboxPointerDown = useCallback((e: React.PointerEvent) => {
+  const handleCheckboxPointerDown = useCallback((e: PointerEvent) => {
     e.stopPropagation()
   }, [])
 
@@ -122,14 +122,14 @@ const MasonryHeader = memo<MasonryHeaderProps>(({ data }) => {
   const { allSelected, indeterminate, selectedCount } = useExplorerSelectionSummary({ data })
 
   const handleHeaderCheckboxClick = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       e.stopPropagation()
       handleSelectAll(!allSelected)
     },
     [allSelected, handleSelectAll],
   )
 
-  const handleHeaderCheckboxPointerDown = useCallback((e: React.PointerEvent) => {
+  const handleHeaderCheckboxPointerDown = useCallback((e: PointerEvent) => {
     e.stopPropagation()
   }, [])
 

@@ -1,20 +1,14 @@
 'use client'
 
 import type { ActionIconGroupEvent, ActionIconGroupItemType } from '@lobehub/ui'
-import {
-  ActionIcon,
-  ActionIconGroup,
-  Flexbox,
-  Markdown,
-  Text,
-  copyToClipboard,
-} from '@lobehub/ui'
+import { ActionIcon, ActionIconGroup, Flexbox, Text, copyToClipboard } from '@lobehub/ui'
 import { App } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import type { UIMessage } from 'ai'
 import { Check, Copy, Edit, Trash, X } from 'lucide-react'
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 
+import MessageMarkdown from '@/features/chat/MessageMarkdown'
 import { getMessageText } from '@/features/chat/messageText'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
 
@@ -120,14 +114,6 @@ const ACTION_ITEMS: ActionIconGroupItemType[] = [
   { danger: true, icon: Trash, key: 'delete', label: '删除' },
 ]
 
-const MARKDOWN_COMPONENT_PROPS = {
-  // Disable stream highlighter — animated+shiki-stream hits max update depth
-  // while parent re-renders on every token.
-  highlight: { animated: false, fullFeatured: true },
-  // Avoid @lobehub/ui Image preview's deprecated antd `rootClassName`
-  img: { preview: false },
-} as const
-
 interface ChatMessageItemProps {
   disabled?: boolean
   isStreaming?: boolean
@@ -225,19 +211,11 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
           ) : (
             <>
               {text ? (
-                <Markdown
-                  // Keep stream animation off: animated/enableStream + parent
-                  // re-render per token triggers "Maximum update depth exceeded".
-                  animated={false}
+                <MessageMarkdown
                   className={cx(styles.markdown, isUser && styles.userMarkdown)}
-                  componentProps={MARKDOWN_COMPONENT_PROPS}
-                  enableImageGallery={false}
-                  enableStream={false}
-                  fullFeaturedCodeBlock
-                  variant='chat'
-                >
-                  {text}
-                </Markdown>
+                  isStreaming={isStreaming}
+                  text={text}
+                />
               ) : (
                 <Text type='secondary'>…</Text>
               )}
@@ -264,6 +242,16 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
       </div>
     )
   },
+  // Compare message by reference. AI SDK mutates the live streaming message
+  // in place before replaceMessage snapshots it — content-based compare via
+  // getMessageText(prev) already sees the new text, so memo would skip and
+  // leave the bubble stuck on "…".
+  (prev, next) =>
+    prev.disabled === next.disabled &&
+    prev.isStreaming === next.isStreaming &&
+    prev.message === next.message &&
+    prev.onDelete === next.onDelete &&
+    prev.onEdit === next.onEdit,
 )
 
 ChatMessageItem.displayName = 'ChatMessageItem'
@@ -291,35 +279,31 @@ const ChatMessages = memo<ChatMessagesProps>(
       if (isStreaming) resetScrollLock()
     }, [isStreaming, resetScrollLock])
 
-    const content = useMemo(() => {
-      if (messages.length === 0) {
-        return (
-          <Flexbox align='center' flex={1} justify='center'>
-            <Text className={styles.empty}>开始对话吧</Text>
-          </Flexbox>
-        )
-      }
-
-      return messages.map((message, index) => {
-        const streamingThis =
-          isStreaming && index === messages.length - 1 && message.role === 'assistant'
-
-        return (
-          <ChatMessageItem
-            key={message.id}
-            disabled={disabled}
-            isStreaming={streamingThis}
-            message={message}
-            onDelete={onDelete}
-            onEdit={onEdit}
-          />
-        )
-      })
-    }, [disabled, isStreaming, messages, onDelete, onEdit])
+    if (messages.length === 0) {
+      return (
+        <Flexbox ref={ref} className={styles.list} align='center' justify='center'>
+          <Text className={styles.empty}>开始对话吧</Text>
+        </Flexbox>
+      )
+    }
 
     return (
       <Flexbox ref={ref} className={styles.list} gap={16} onScroll={handleScroll}>
-        {content}
+        {messages.map((message, index) => {
+          const streamingThis =
+            isStreaming && index === messages.length - 1 && message.role === 'assistant'
+
+          return (
+            <ChatMessageItem
+              key={message.id}
+              disabled={disabled}
+              isStreaming={streamingThis}
+              message={message}
+              onDelete={onDelete}
+              onEdit={onEdit}
+            />
+          )
+        })}
       </Flexbox>
     )
   },

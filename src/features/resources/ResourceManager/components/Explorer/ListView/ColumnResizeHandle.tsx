@@ -1,7 +1,7 @@
 'use client'
 
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 
 const styles = createStaticStyles(({ css }) => ({
   handle: css`
@@ -72,7 +72,7 @@ const ColumnResizeHandle = memo<ColumnResizeHandleProps>(
     }, [])
 
     const handleMouseDown = useCallback(
-      (e: React.MouseEvent) => {
+      (e: ReactMouseEvent<HTMLDivElement>) => {
         e.preventDefault()
         e.stopPropagation()
         setIsDragging(true)

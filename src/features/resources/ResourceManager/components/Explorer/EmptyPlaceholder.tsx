@@ -3,7 +3,7 @@
 import { Center, FileTypeIcon, Flexbox, Icon, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowUpIcon } from 'lucide-react'
-import { memo, useRef } from 'react'
+import { memo, useRef, type ChangeEvent } from 'react'
 
 const ICON_SIZE = 80
 
@@ -65,7 +65,7 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const folderInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
     if (files.length) void onUpload(files)
     e.target.value = ''

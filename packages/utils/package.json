@@ -7,6 +7,7 @@
     "./server": "./src/server/index.ts",
     "./client": "./src/client/index.ts",
     "./fetchEventSource": "./src/client/fetchEventSource/index.ts",
+    "./http/response": "./src/http/response.ts",
     "./object": "./src/object.ts",
     "./*": "./src/*.ts"
   },

@@ -1,51 +1,34 @@
-export interface CrawlSuccessResult {
-  content?: string;
-  contentType: 'text' | 'json';
-  description?: string;
-  length?: number;
-  siteName?: string;
-  title?: string;
-  url: string;
-}
+import type { CrawlSuccessResult } from '@pure/types'
 
-export interface CrawlErrorResult {
-  content: string;
-  errorMessage?: string;
-  errorType?: string;
-  url?: string;
-}
+export type {
+  CrawlErrorResult,
+  CrawlSuccessResult,
+  CrawlUniformResult,
+} from '@pure/types'
 
 export interface FilterOptions {
   // Whether to enable Readability
-  enableReadability?: boolean;
+  enableReadability?: boolean
 
-  pureText?: boolean;
+  pureText?: boolean
 }
 
-type CrawlImplType = 'naive' | 'jina' | 'browserless' | 'search1api';
-
 type CrawlImplParams<T> = T & {
-  filterOptions: FilterOptions;
-};
+  filterOptions: FilterOptions
+}
 
 export type CrawlImpl<Params = object> = (
   url: string,
   params: CrawlImplParams<Params>,
-) => Promise<CrawlSuccessResult | undefined>;
+) => Promise<CrawlSuccessResult | undefined>
 
 export interface CrawlUrlRule {
   // Content filtering configuration (optional)
-  filterOptions?: FilterOptions;
-  impls?: CrawlImplType[];
+  filterOptions?: FilterOptions
+  /** Impl names from `crawlImpls`; invalid names are ignored at runtime. */
+  impls?: string[]
   // URL matching pattern, only supports regular expressions
-  urlPattern: string;
+  urlPattern: string
   // URL transformation template (optional), performs URL conversion if provided
-  urlTransform?: string;
-}
-
-export interface CrawlUniformResult {
-  crawler: string;
-  data: CrawlSuccessResult | CrawlErrorResult;
-  originalUrl: string;
-  transformedUrl?: string;
+  urlTransform?: string
 }

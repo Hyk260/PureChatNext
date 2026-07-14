@@ -2,6 +2,8 @@ import { createEnv } from '@t3-oss/env-core'
 import type { RedisConfig } from '@pure/types'
 import { z } from 'zod'
 
+import { parseEnvBoolean, parseEnvInt } from './helpers'
+
 export type { RedisConfig } from '@pure/types'
 
 declare global {
@@ -19,17 +21,6 @@ declare global {
   }
 }
 
-const parseNumber = (value?: string) => {
-  const parsed = Number.parseInt(value ?? '', 10)
-  return Number.isInteger(parsed) ? parsed : undefined
-}
-
-const parseRedisTls = (value?: string) => {
-  if (!value) return false
-  const normalized = value.trim().toLowerCase()
-  return normalized === 'true' || normalized === '1'
-}
-
 export const getRedisEnv = () => {
   return createEnv({
     server: {
@@ -42,10 +33,10 @@ export const getRedisEnv = () => {
       REDIS_USERNAME: z.string().optional(),
     },
     runtimeEnv: {
-      REDIS_DATABASE: parseNumber(process.env.REDIS_DATABASE),
+      REDIS_DATABASE: parseEnvInt(process.env.REDIS_DATABASE),
       REDIS_PASSWORD: process.env.REDIS_PASSWORD,
       REDIS_PREFIX: process.env.REDIS_PREFIX || 'purechat',
-      REDIS_TLS: parseRedisTls(process.env.REDIS_TLS),
+      REDIS_TLS: parseEnvBoolean(process.env.REDIS_TLS),
       REDIS_URL: process.env.REDIS_URL,
       REDIS_USERNAME: process.env.REDIS_USERNAME,
     },

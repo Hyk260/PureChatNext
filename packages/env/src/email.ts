@@ -1,6 +1,8 @@
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 
+import { parseEnvBoolean, parseEnvInt } from './helpers'
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
@@ -34,8 +36,8 @@ export const getEmailConfig = () => {
     runtimeEnv: {
       SMTP_FROM: process.env.SMTP_FROM,
       SMTP_HOST: process.env.SMTP_HOST,
-      SMTP_PORT: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined,
-      SMTP_SECURE: process.env.SMTP_SECURE === 'true',
+      SMTP_PORT: parseEnvInt(process.env.SMTP_PORT),
+      SMTP_SECURE: parseEnvBoolean(process.env.SMTP_SECURE),
       SMTP_USER: process.env.SMTP_USER,
       SMTP_PASS: process.env.SMTP_PASS,
       EMAIL_SERVICE_PROVIDER: process.env.EMAIL_SERVICE_PROVIDER

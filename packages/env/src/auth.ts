@@ -1,6 +1,8 @@
 import { createEnv } from '@t3-oss/env-core';
 import { z } from 'zod';
 
+import { parseEnvBoolean } from './helpers';
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
@@ -115,11 +117,11 @@ export const getAuthConfig = () => {
       GITHUB_ELECTRON_ID: process.env.GITHUB_ELECTRON_ID,
       GITHUB_ELECTRON_SECRET: process.env.GITHUB_ELECTRON_SECRET,
 
-      AUTH_DISABLE_EMAIL_PASSWORD: process.env.AUTH_DISABLE_EMAIL_PASSWORD === '1',
-      AUTH_EMAIL_VERIFICATION: process.env.AUTH_EMAIL_VERIFICATION === '1',
+      AUTH_DISABLE_EMAIL_PASSWORD: parseEnvBoolean(process.env.AUTH_DISABLE_EMAIL_PASSWORD),
+      AUTH_EMAIL_VERIFICATION: parseEnvBoolean(process.env.AUTH_EMAIL_VERIFICATION),
       AUTH_EMAIL_VERIFICATION_MODE:
         process.env.AUTH_EMAIL_VERIFICATION_MODE === 'link' ? 'link' : 'otp',
-      AUTH_ENABLE_MAGIC_LINK: process.env.AUTH_ENABLE_MAGIC_LINK === '1',
+      AUTH_ENABLE_MAGIC_LINK: parseEnvBoolean(process.env.AUTH_ENABLE_MAGIC_LINK),
     },
   });
 };

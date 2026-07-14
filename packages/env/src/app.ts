@@ -1,6 +1,8 @@
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 
+import { parseEnvBoolean } from './helpers'
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
@@ -11,11 +13,12 @@ declare global {
   }
 }
 
-const isInVercel = process.env.VERCEL === '1'
+/** True when running on Vercel (`VERCEL=1`). */
+export const IS_VERCEL = parseEnvBoolean(process.env.VERCEL)
 
 const vercelUrl = `https://${process.env.VERCEL_URL}`
 
-const APP_URL = process.env.APP_URL ? process.env.APP_URL : isInVercel ? vercelUrl : undefined
+const APP_URL = process.env.APP_URL ? process.env.APP_URL : IS_VERCEL ? vercelUrl : undefined
 
 export const getAppConfig = () => {
   return createEnv({

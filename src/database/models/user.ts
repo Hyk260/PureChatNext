@@ -1,3 +1,4 @@
+import { generateCompactUuid } from '@pure/utils'
 import { hashPassword } from 'better-auth/crypto'
 import { and, count, eq, inArray } from 'drizzle-orm'
 
@@ -215,7 +216,7 @@ export class UserModel {
     const normalizedParams = this.normalizeUniqueUserFields(userFields)
 
     if (normalizedParams.userId == null) {
-      normalizedParams.userId = crypto.randomUUID().replace(/-/g, '')
+      normalizedParams.userId = generateCompactUuid()
     }
 
     if (normalizedParams.id == null) {

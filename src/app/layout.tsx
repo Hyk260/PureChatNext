@@ -2,6 +2,7 @@ import { type ReactNode, Suspense } from 'react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
 import Analytics from '@/components/Analytics'
+import { IS_VERCEL } from '@/envs/app'
 
 import type { Metadata } from 'next'
 
@@ -13,8 +14,6 @@ export const metadata: Metadata = {
   description: 'PureChat is a chat application that allows you to chat with your friends and family.',
 }
 
-const inVercel = process.env.VERCEL === '1'
-
 const RootLayout = ({ children }: { children: ReactNode }) => {
   return (
     <html lang='zh-CN' suppressHydrationWarning style={{ height: '100%' }}>
@@ -22,7 +21,7 @@ const RootLayout = ({ children }: { children: ReactNode }) => {
         {children}
         <Suspense fallback={null}>
           <Analytics />
-          {inVercel && <SpeedInsights />}
+          {IS_VERCEL && <SpeedInsights />}
         </Suspense>
       </body>
     </html>

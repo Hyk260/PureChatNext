@@ -12,6 +12,7 @@
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
     "@pure/ssrf-safe-fetch": "workspace:*",
+    "@pure/types": "workspace:*",
     "@pure/utils": "workspace:*",
     "happy-dom": "^20.0.11",
     "node-html-markdown": "^1.3.0",

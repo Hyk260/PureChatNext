@@ -15,44 +15,15 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+import type { CrawlUniformResult, UniformSearchResponse } from '@pure/types';
+
 type ActionMode = 'query' | 'webSearch' | 'crawlPages';
 type ResultView = 'summary' | 'json';
 
-type UniformSearchResult = {
-  category?: string;
-  content: string;
-  engines: string[];
-  parsedUrl: string;
-  publishedDate?: string;
-  score: number;
-  title: string;
-  url: string;
-};
-
-type SearchResponse = {
-  costTime: number;
-  errorDetail?: string;
-  query: string;
-  resultNumbers: number;
-  results: UniformSearchResult[];
-};
-
-type CrawlResult = {
-  crawler: string;
-  data: {
-    content?: string;
-    contentType?: string;
-    errorMessage?: string;
-    errorType?: string;
-    title?: string;
-    url?: string;
-  };
-  originalUrl: string;
-  transformedUrl?: string;
-};
+type SearchResponse = UniformSearchResponse;
 
 type CrawlResponse = {
-  results: CrawlResult[];
+  results: CrawlUniformResult[];
 };
 
 type ApiSuccess = {

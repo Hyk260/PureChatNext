@@ -1,3 +1,4 @@
+import { generateCompactUuid } from '@pure/utils'
 import debug from 'debug'
 
 import { UserService } from '@/server/services/user'
@@ -32,7 +33,7 @@ export const imAccountPlugin = () => ({
                 const userId =
                   typeof user.userId === 'string' && user.userId.trim() !== ''
                     ? user.userId
-                    : crypto.randomUUID().replace(/-/g, '')
+                    : generateCompactUuid()
 
                 return {
                   data: {

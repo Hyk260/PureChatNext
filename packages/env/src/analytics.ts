@@ -1,6 +1,8 @@
 import { createEnv } from '@t3-oss/env-core';
 import { z } from 'zod';
 
+import { parseEnvBoolean } from './helpers';
+
 export const getAnalyticsConfig = () => {
   return createEnv({
     server: {
@@ -11,8 +13,8 @@ export const getAnalyticsConfig = () => {
     },
     runtimeEnv: {
       // Vercel Analytics
-      ENABLE_VERCEL_ANALYTICS: process.env.ENABLE_VERCEL_ANALYTICS === '1',
-      DEBUG_VERCEL_ANALYTICS: process.env.DEBUG_VERCEL_ANALYTICS === '1',
+      ENABLE_VERCEL_ANALYTICS: parseEnvBoolean(process.env.ENABLE_VERCEL_ANALYTICS),
+      DEBUG_VERCEL_ANALYTICS: parseEnvBoolean(process.env.DEBUG_VERCEL_ANALYTICS),
 
       // React Scan Monitor
       // https://dashboard.react-scan.com

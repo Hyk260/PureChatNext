@@ -425,6 +425,9 @@ importers:
       '@pure/ssrf-safe-fetch':
         specifier: workspace:*
         version: link:../ssrf-safe-fetch
+      '@pure/types':
+        specifier: workspace:*
+        version: link:../types
       '@pure/utils':
         specifier: workspace:*
         version: link:../utils

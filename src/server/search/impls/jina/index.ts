@@ -3,10 +3,12 @@ import {
   type UniformSearchResponse,
   type UniformSearchResult,
 } from '@pure/types';
-import { getJinaSearchBaseUrl } from '@pure/utils';
+import { getJinaSearchBaseUrl, parseJSONResponse } from '@pure/utils';
 import { TRPCError } from '@trpc/server';
 import debug from 'debug';
 import urlJoin from 'url-join';
+
+import { toolsEnv } from '@/envs/tools';
 
 import { type SearchServiceImpl } from '../type';
 import { type JinaResponse, type JinaSearchParameters } from './type';
@@ -23,7 +25,7 @@ export class JinaImpl implements SearchServiceImpl {
   }
 
   private get baseUrl(): string {
-    return getJinaSearchBaseUrl();
+    return getJinaSearchBaseUrl(toolsEnv.JINA_USE_CN_DOMAINS === 'true');
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
@@ -76,7 +78,7 @@ export class JinaImpl implements SearchServiceImpl {
     }
 
     try {
-      const jinaResponse = (await response.json()) as JinaResponse;
+      const jinaResponse = await parseJSONResponse<JinaResponse>(response, 'Jina');
 
       log('Parsed Jina response: %o', jinaResponse);
 

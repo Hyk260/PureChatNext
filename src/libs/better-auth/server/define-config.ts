@@ -1,3 +1,4 @@
+import { generateCompactUuid } from '@pure/utils'
 import { betterAuth } from 'better-auth/minimal'
 import bcrypt from 'bcryptjs'
 import { verifyPassword } from 'better-auth/crypto'
@@ -281,7 +282,7 @@ export function defineConfig() {
       additionalFields: {
         // 业务用户 ID，与 auth 主键 id 分离；客户端不可直接提交
         userId: {
-          defaultValue: () => crypto.randomUUID().replace(/-/g, ''),
+          defaultValue: () => generateCompactUuid(),
           input: false,
           required: false,
           type: 'string',

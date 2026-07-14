@@ -17,28 +17,10 @@ import {
   X,
 } from 'lucide-react';
 
+import type { DocumentPage, FileDocument } from '@pure/file-loaders';
+
 type RequestMode = 'file' | 'url';
 type ResultView = 'content' | 'pages' | 'json';
-
-type DocumentPage = {
-  charCount?: number;
-  lineCount?: number;
-  metadata?: Record<string, unknown>;
-  pageContent?: string;
-};
-
-type FileDocument = {
-  content?: string;
-  createdTime?: string;
-  filename?: string;
-  fileType?: string;
-  metadata?: Record<string, unknown>;
-  modifiedTime?: string;
-  pages?: DocumentPage[];
-  source?: string;
-  totalCharCount?: number;
-  totalLineCount?: number;
-};
 
 type ApiError = {
   error?: string;

@@ -86,29 +86,46 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
     transport: chatTransport,
   })
 
-  // Keep a ref so edit callbacks stay stable during streaming.
+  // Keep a ref so edit callbacks and unmount PUT flush see the latest messages
+  // even if the syncing effect has not run yet.
   const messagesRef = useRef(messages)
+  messagesRef.current = messages
   const isBusy = status === 'submitted' || status === 'streaming'
   const isStreaming = status === 'streaming'
-
-  useEffect(() => {
-    messagesRef.current = messages
-  }, [messages])
 
   // Debounce PUT /api/chat/topics/[id]/messages while streaming — syncing on every
   // token blocks the main thread and makes the bubble look like it isn't streaming.
   // Only persists when a topic has been solidified (topicId !== null).
+  // Skip the first run after mount so an empty handoff mount cannot race a PUT []
+  // past a later PUT that already saved the first user message.
   const putControllerRef = useRef<AbortController | null>(null)
+  const skipInitialPutRef = useRef(true)
+
+  const persistMessages = useCallback(
+    (body: UIMessage[], signal?: AbortSignal) => {
+      if (!topicId) return
+      void putMessages(topicId, body, signal ? { signal } : undefined).catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        if (error instanceof Error && error.name === 'AbortError') return
+        console.error('[chat] putMessages failed', error)
+      })
+    },
+    [topicId],
+  )
+
   useEffect(() => {
     if (!topicId) return
+
+    if (skipInitialPutRef.current) {
+      skipInitialPutRef.current = false
+      return
+    }
 
     const fire = () => {
       putControllerRef.current?.abort()
       const controller = new AbortController()
       putControllerRef.current = controller
-      void putMessages(topicId, messages, { signal: controller.signal }).catch((error) => {
-        console.error('[chat] putMessages failed', error)
-      })
+      persistMessages(messages, controller.signal)
     }
 
     if (isBusy) {
@@ -116,7 +133,19 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
       return () => window.clearTimeout(timer)
     }
     fire()
-  }, [agentId, isBusy, messages, topicId])
+  }, [isBusy, messages, persistMessages, topicId])
+
+  // Flush latest messages on unmount (topic switch / navigate away) so a cancelled
+  // debounce window does not drop the tail of a stream. Skip empty snapshots to avoid
+  // Strict Mode / pre-handoff unmount racing a PUT [] past a later real save.
+  useEffect(() => {
+    if (!topicId) return
+    return () => {
+      putControllerRef.current?.abort()
+      if (messagesRef.current.length === 0) return
+      persistMessages(messagesRef.current)
+    }
+  }, [persistMessages, topicId])
 
   const requestBody = useMemo(
     () => ({
@@ -145,12 +174,16 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
   const sendOrSolidify = useCallback(
     async (text: string) => {
       if (!topicId) {
-        const topic = await createTopic(agentId, truncateTitle(text))
-        onTopicsRefresh()
-        setPendingTopicSend(text)
-        router.replace(
-          `/chat?agent=${encodeURIComponent(agentId)}&topic=${encodeURIComponent(topic.id)}`,
-        )
+        try {
+          const topic = await createTopic(agentId, truncateTitle(text))
+          onTopicsRefresh()
+          setPendingTopicSend(text)
+          router.replace(
+            `/chat?agent=${encodeURIComponent(agentId)}&topic=${encodeURIComponent(topic.id)}`,
+          )
+        } catch (error) {
+          console.error('[chat] createTopic failed', error)
+        }
         return
       }
 
@@ -321,12 +354,21 @@ const ChatPage = memo(() => {
     }
   }, [agentId, isClient])
 
-  // Fetch messages for the active topic. Draft (activeTopicId === null) resolves
-  // synchronously via the render branch below — no setState needed here.
+  // Fetch messages for the active topic. Draft (activeTopicId === null) is ready
+  // immediately; invalidate loadedTopicId so returning to a prior topic always refetches
+  // (avoids mounting ChatView with stale parent initialMessages after a draft visit).
   useEffect(() => {
-    if (!isClient || activeTopicId === null) return
+    if (!isClient) return
+
+    if (activeTopicId === null) {
+      setInitialMessages(EMPTY_MESSAGES)
+      setLoadedTopicId(null)
+      return
+    }
 
     let cancelled = false
+    setLoadedTopicId(undefined)
+
     fetchMessages(activeTopicId)
       .then((msgs) => {
         if (cancelled) return
@@ -335,9 +377,7 @@ const ChatPage = memo(() => {
       })
       .catch((error) => {
         console.error('[chat] fetchMessages failed', error)
-        if (cancelled) return
-        setInitialMessages(EMPTY_MESSAGES)
-        setLoadedTopicId(activeTopicId)
+        // Do NOT mark ready with [] — ChatView would mount and risk PUT replaceAll wipe.
       })
 
     return () => {

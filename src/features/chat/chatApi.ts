@@ -69,5 +69,5 @@ export const putMessages = async (
     method: 'PUT',
     signal: init?.signal,
   })
-  if (!res.ok && res.status !== 499) throw new Error(`putMessages failed: ${res.status}`)
+  if (!res.ok) throw new Error(`putMessages failed: ${res.status}`)
 }

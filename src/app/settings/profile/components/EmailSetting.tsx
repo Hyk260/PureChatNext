@@ -5,7 +5,7 @@ import { Form, Modal } from 'antd'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
-import { changeEmail } from '@/libs/better-auth/auth-client'
+import { changeEmail } from '@/libs/better-auth/client'
 
 import { SettingRow } from './SettingRow'
 

@@ -5,7 +5,7 @@ import { EmailImplType, EmailService } from '@/server/services/email';
 
 import { GET, POST } from './route';
 
-vi.mock('@/libs/better-auth/email-templates/utils/preview', () => ({
+vi.mock('@/libs/better-auth/email-templates/preview', () => ({
   parseEmailTemplateKey: (value: unknown) => {
     const keys = ['verification', 'change-email', 'magic-link', 'reset-password', 'verification-otp'];
 

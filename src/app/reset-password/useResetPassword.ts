@@ -2,7 +2,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
-import { resetPassword } from '@/libs/better-auth/auth-client'
+import { resetPassword } from '@/libs/better-auth/client'
 
 export interface ResetPasswordFormValues {
   confirmPassword: string

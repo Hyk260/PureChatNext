@@ -1,7 +1,7 @@
 import {
   VERIFICATION_DAILY_IP_MAX,
   VERIFICATION_DAILY_IP_WINDOW_SECONDS,
-} from '@/libs/better-auth/constants'
+} from '@/libs/better-auth/shared'
 
 type RateLimitRecord = {
   count: number

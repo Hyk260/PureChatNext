@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import Menu from '@/components/Menu'
-import { signOut, useSession } from '@/libs/better-auth/auth-client'
+import { signOut, useSession } from '@/libs/better-auth/client'
 
 const styles = createStaticStyles(({ css }) => ({
   popover: css`

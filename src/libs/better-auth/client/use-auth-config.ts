@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-import type { AuthServerConfig } from '@/libs/better-auth/get-auth-config'
+import type { AuthServerConfig } from '@/libs/better-auth/shared'
 
 const defaultConfig: AuthServerConfig = {
   emailVerificationMode: 'otp',

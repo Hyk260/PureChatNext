@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation'
 import { memo, useMemo } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
-import { useSession } from '@/libs/better-auth/auth-client'
+import { useSession } from '@/libs/better-auth/client'
 
 import { DiscoverTab } from '@/features/community/types'
 

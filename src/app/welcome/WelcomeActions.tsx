@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 
-import { useSession } from '@/libs/better-auth/auth-client'
+import { useSession } from '@/libs/better-auth/client'
 
 export function WelcomeActions() {
   const { data: session, isPending } = useSession()

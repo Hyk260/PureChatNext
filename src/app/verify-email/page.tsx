@@ -8,7 +8,7 @@ import { Suspense } from 'react'
 
 import { AuthPageContainer } from '@/components/AuthPageContainer'
 import AuthCard from '@/features/AuthCard'
-import { useAuthConfig } from '@/libs/better-auth/use-auth-config'
+import { useAuthConfig } from '@/libs/better-auth/client'
 
 import { VerifyEmailContent } from './VerifyEmailContent'
 

@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import { verifyPassword } from 'better-auth/crypto'
 import { EmailService } from '@/server/services/email'
 import { type EmailPayload } from '@/server/services/email/impls'
-// import { imAccountPlugin } from '@/libs/better-auth/plugins/im-account'
+// import { imAccountPlugin } from '@/libs/better-auth/server/plugins/im-account'
 import { admin, emailOTP, genericOAuth, magicLink } from 'better-auth/plugins'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import * as schema from '@/database/schemas'
@@ -17,10 +17,9 @@ import {
   getVerificationEmailTemplate,
   getVerificationOTPEmailTemplate,
 } from '@/libs/better-auth/email-templates'
-import { OTP_EXPIRES_IN } from '@/libs/better-auth/constants'
-import { createVerificationDailyRateLimitStorage } from '@/libs/better-auth/rate-limit-storage'
-import { initBetterAuthSSOProviders } from '@/libs/better-auth/sso'
-import { parseSSOProviders } from '@/libs/better-auth/utils/server'
+import { OTP_EXPIRES_IN } from '@/libs/better-auth/shared'
+import { initBetterAuthSSOProviders, parseSSOProviders } from '@/libs/better-auth/sso'
+import { createVerificationDailyRateLimitStorage } from './rate-limit-storage'
 
 const log = debug('better-auth:define-config')
 
@@ -228,6 +227,7 @@ export function defineConfig() {
       // 实验性联表查询需传入完整 schema 关系
       schema,
     }),
+    // secondaryStorage: createSecondaryStorage(),
     // API 错误时重定向到自定义页面
     onAPIError: {
       errorURL: '/auth-error',

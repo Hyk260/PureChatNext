@@ -3,7 +3,7 @@ import { and, count, eq, inArray } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { account, passkey, session, twoFactor, users, verification } from '../schemas'
-import { verifyAccountPassword } from '@/libs/better-auth/verify-account-password'
+import { verifyAccountPassword } from '@/libs/better-auth/server'
 
 import type { User, UserItem, UserWithoutPassword } from '../schemas'
 import type { ChatDatabase } from '../type'

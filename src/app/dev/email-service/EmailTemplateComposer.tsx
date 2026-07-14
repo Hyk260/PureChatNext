@@ -9,7 +9,7 @@ import {
   type EmailTemplateParamField,
   type EmailTemplateParams,
   type RenderedEmailTemplate,
-} from '@/libs/better-auth/email-templates/utils/preview-catalog';
+} from '@/libs/better-auth/email-templates/preview';
 
 type Props = {
   onRendered: (template: RenderedEmailTemplate) => void;

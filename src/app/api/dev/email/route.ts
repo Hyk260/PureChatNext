@@ -5,7 +5,7 @@ import {
   parseEmailTemplateKey,
   parseEmailTemplateParams,
   renderEmailTemplate,
-} from '@/libs/better-auth/email-templates/utils/preview';
+} from '@/libs/better-auth/email-templates/preview';
 import { EmailImplType, EmailService } from '@/server/services/email';
 import { type EmailPayload } from '@/server/services/email/impls';
 

@@ -2,10 +2,9 @@ import { Form } from 'antd'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { message } from '@/components/AntdStaticMethods'
-import { checkUserByEmail } from '@/libs/better-auth/check-user'
-import { requestPasswordReset, signIn } from '@/libs/better-auth/auth-client'
-import { AUTH_UI_SSO_PROVIDERS, BUILTIN_BETTER_AUTH_PROVIDERS } from '@/libs/better-auth/constants'
-import { useAuthConfig } from '@/libs/better-auth/use-auth-config'
+
+import { AUTH_UI_SSO_PROVIDERS, BUILTIN_BETTER_AUTH_PROVIDERS } from '@/libs/better-auth/shared'
+import { checkUserByEmail, requestPasswordReset, signIn, useAuthConfig } from '@/libs/better-auth/client'
 
 type Step = 'email' | 'password'
 

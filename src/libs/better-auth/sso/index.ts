@@ -3,14 +3,16 @@ import { type SocialProviders } from 'better-auth/social-providers';
 
 import { appEnv } from '@/envs/app';
 import { authEnv } from '@/envs/auth';
-import { BUILTIN_BETTER_AUTH_PROVIDERS } from '@/libs/better-auth/constants';
-import { parseSSOProviders } from '@/libs/better-auth/utils/server';
+import { BUILTIN_BETTER_AUTH_PROVIDERS } from '@/libs/better-auth/shared';
 
+import { parseSSOProviders } from './parse-providers';
 // import Apple from './providers/apple';
 import Feishu from './providers/feishu';
 import Github from './providers/github';
 import Google from './providers/google';
 import Wechat from './providers/wechat';
+
+export { parseSSOProviders } from './parse-providers';
 
 const providerDefinitions = [
   // Apple,
@@ -25,7 +27,7 @@ const builtInProviderIds = new Set(BUILTIN_BETTER_AUTH_PROVIDERS);
 for (const definition of providerDefinitions) {
   if (definition.type === 'builtin' && !builtInProviderIds.has(definition.id)) {
     throw new Error(
-      `[Better-Auth] Built-in provider "${definition.id}" is not registered in BUILTIN_BETTER_AUTH_PROVIDERS (src/libs/better-auth/constants.ts). Please update the constant to keep them in sync.`,
+      `[Better-Auth] Built-in provider "${definition.id}" is not registered in BUILTIN_BETTER_AUTH_PROVIDERS (src/libs/better-auth/shared/constants.ts). Please update the constant to keep them in sync.`,
     );
   }
 }

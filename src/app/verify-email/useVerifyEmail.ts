@@ -2,10 +2,9 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
-import { emailOtp, sendVerificationEmail } from '@/libs/better-auth/auth-client'
-import { OTP_EXPIRES_IN } from '@/libs/better-auth/constants'
+import { emailOtp, sendVerificationEmail } from '@/libs/better-auth/client'
 import { formatExpirationText } from '@/libs/better-auth/email-templates/utils/format-expiration-text'
-import type { EmailVerificationMode } from '@/libs/better-auth/get-auth-config'
+import { OTP_EXPIRES_IN, type EmailVerificationMode } from '@/libs/better-auth/shared'
 
 interface UseVerifyEmailParams {
   callbackUrl: string

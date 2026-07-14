@@ -12,7 +12,7 @@ import { useEffect, useRef } from 'react'
 
 import Loading from '@/components/Loading/BrandTextLoading'
 
-import { useAuthConfig } from '@/libs/better-auth/use-auth-config'
+import { useAuthConfig } from '@/libs/better-auth/client'
 
 import { useSignUp, type SignUpFormValues } from './useSignUp'
 

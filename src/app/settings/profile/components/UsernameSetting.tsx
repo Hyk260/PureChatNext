@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react'
 import { type ChangeEvent, useCallback, useRef, useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
-import { updateUser } from '@/libs/better-auth/auth-client'
+import { updateUser } from '@/libs/better-auth/client'
 
 import { SettingRow } from './SettingRow'
 

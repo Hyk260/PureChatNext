@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { memo } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
-import { useSession } from '@/libs/better-auth/auth-client'
+import { useSession } from '@/libs/better-auth/client'
 
 const styles = createStaticStyles(({ css }) => ({
   header: css`

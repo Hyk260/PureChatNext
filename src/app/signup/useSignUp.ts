@@ -2,10 +2,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
-import { signUp } from '@/libs/better-auth/auth-client'
-import { checkUserByEmail } from '@/libs/better-auth/check-user'
-import { reclaimUnverifiedEmail } from '@/libs/better-auth/reclaim-unverified-email'
-import { useAuthConfig } from '@/libs/better-auth/use-auth-config'
+import { signUp, checkUserByEmail, reclaimUnverifiedEmail, useAuthConfig } from '@/libs/better-auth/client'
 
 export interface SignUpFormValues {
   confirmPassword: string

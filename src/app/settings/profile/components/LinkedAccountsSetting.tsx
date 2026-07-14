@@ -16,9 +16,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   BUILTIN_BETTER_AUTH_PROVIDERS,
   SSO_PROVIDER_LABELS,
-} from '@/libs/better-auth/constants'
-import { linkSocial, listAccounts, oauth2, unlinkAccount } from '@/libs/better-auth/auth-client'
-import { useAuthConfig } from '@/libs/better-auth/use-auth-config'
+} from '@/libs/better-auth/shared'
+import { linkSocial, listAccounts, oauth2, unlinkAccount, useAuthConfig } from '@/libs/better-auth/client'
 
 import { SettingRow } from './SettingRow'
 

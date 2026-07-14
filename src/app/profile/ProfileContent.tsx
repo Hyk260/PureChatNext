@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { type ReactNode, useState } from 'react'
 
 import type { UserWithoutPassword } from '@/database/schemas'
-import { signOut } from '@/libs/better-auth/auth-client'
+import { signOut } from '@/libs/better-auth/client'
 
 type DateKeys =
   | 'accessedAt'

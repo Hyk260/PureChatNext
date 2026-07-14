@@ -1,7 +1,7 @@
 'use client'
 
 import { AuthCard } from '@/features/AuthCard'
-import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/constants'
+import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
 import { Alert, Button, Icon, InputPassword, Text } from '@lobehub/ui'
 import { Form } from 'antd'
 import { cssVar } from 'antd-style'

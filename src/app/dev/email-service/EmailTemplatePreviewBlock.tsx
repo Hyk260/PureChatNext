@@ -2,7 +2,7 @@
 
 import { AlertCircle, Loader2 } from 'lucide-react';
 
-import type { RenderedEmailTemplate } from '@/libs/better-auth/email-templates/utils/preview-catalog';
+import type { RenderedEmailTemplate } from '@/libs/better-auth/email-templates/preview';
 
 type Props = {
   error?: string | null;

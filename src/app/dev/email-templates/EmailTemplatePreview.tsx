@@ -3,7 +3,7 @@
 import { Tabs } from 'antd';
 import { Mail } from 'lucide-react';
 
-import type { EmailTemplatePreview } from '@/libs/better-auth/email-templates/utils/preview-catalog';
+import type { EmailTemplatePreview } from '@/libs/better-auth/email-templates/preview';
 
 type Props = {
   templates: EmailTemplatePreview[];

@@ -1,3 +1,3 @@
-import { defineConfig } from '@/libs/better-auth/define-config';
+import { defineConfig } from '@/libs/better-auth/server'
 
 export const auth = defineConfig();

@@ -5,7 +5,7 @@ import { Modal } from 'antd'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
-import { requestPasswordReset } from '@/libs/better-auth/auth-client'
+import { requestPasswordReset } from '@/libs/better-auth/client'
 
 import { SettingRow } from './SettingRow'
 

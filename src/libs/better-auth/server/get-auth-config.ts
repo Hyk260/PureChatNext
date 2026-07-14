@@ -1,14 +1,8 @@
 import { authEnv } from '@/envs/auth'
-import { parseSSOProviders } from '@/libs/better-auth/utils/server'
+import type { AuthServerConfig } from '@/libs/better-auth/shared'
+import { parseSSOProviders } from '@/libs/better-auth/sso'
 
-export type EmailVerificationMode = 'link' | 'otp'
-
-export interface AuthServerConfig {
-  emailVerificationMode: EmailVerificationMode
-  enableEmailVerification: boolean
-  enableMagicLink: boolean
-  oAuthSSOProviders: string[]
-}
+export type { AuthServerConfig, EmailVerificationMode } from '@/libs/better-auth/shared'
 
 export const getAuthServerConfig = (): AuthServerConfig => ({
   emailVerificationMode: authEnv.AUTH_EMAIL_VERIFICATION_MODE,

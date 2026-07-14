@@ -19,6 +19,12 @@ type ConsumeResult = {
   retryAfter: number | null
 }
 
+type ConsumeDecision = {
+  allowed: boolean
+  next: RateLimitRecord
+  retryAfter: number | null
+}
+
 /** Better Auth createRateLimitKey 中用于跨验证端点共享 IP 日限的后缀 */
 const VERIFICATION_DAILY_RATE_LIMIT_PATH = '__verification_daily__'
 
@@ -45,7 +51,7 @@ function decideConsume(
   data: RateLimitRecord | undefined,
   rule: RateLimitRule,
   now: number,
-): { allowed: boolean; next: RateLimitRecord; retryAfter: number | null; update: boolean } {
+): ConsumeDecision {
   const windowInMs = rule.window * 1000
 
   if (!data) {
@@ -53,7 +59,6 @@ function decideConsume(
       allowed: true,
       next: { count: 1, key: '', lastRequest: now },
       retryAfter: null,
-      update: false,
     }
   }
 
@@ -62,7 +67,6 @@ function decideConsume(
       allowed: true,
       next: { ...data, count: 1, lastRequest: now },
       retryAfter: null,
-      update: true,
     }
   }
 
@@ -71,7 +75,6 @@ function decideConsume(
       allowed: false,
       next: data,
       retryAfter: getRetryAfter(data.lastRequest, rule.window),
-      update: true,
     }
   }
 
@@ -79,7 +82,6 @@ function decideConsume(
     allowed: true,
     next: { ...data, count: data.count + 1, lastRequest: now },
     retryAfter: null,
-    update: true,
   }
 }
 
@@ -103,18 +105,27 @@ function pruneMemoryStore() {
   }
 }
 
+function readRecord(key: string, now: number): RateLimitRecord | undefined {
+  const entry = memory.get(key)
+  if (!entry || now >= entry.expiresAt) return undefined
+  return entry.data
+}
+
+function writeRecord(key: string, next: RateLimitRecord, windowSeconds: number, now: number) {
+  memory.set(key, {
+    data: { ...next, key },
+    expiresAt: now + windowSeconds * 1000,
+  })
+}
+
 function consumeMemory(key: string, rule: RateLimitRule): ConsumeResult {
   pruneMemoryStore()
 
   const now = Date.now()
-  const entry = memory.get(key)
-  const decision = decideConsume(entry && now < entry.expiresAt ? entry.data : undefined, rule, now)
+  const decision = decideConsume(readRecord(key, now), rule, now)
 
   if (decision.allowed) {
-    memory.set(key, {
-      data: { ...decision.next, key },
-      expiresAt: now + rule.window * 1000,
-    })
+    writeRecord(key, decision.next, rule.window, now)
   }
 
   return {
@@ -136,6 +147,8 @@ function parseRateLimitKey(key: string): { ip: string; path: string } | null {
 /**
  * 在 Better Auth 默认内存限流之上，对验证类邮件端点追加同一 IP 的日发送上限。
  * 短窗口规则仍由 rateLimit.customRules 控制。
+ *
+ * 验证类路径会先只读判定日限与短窗口，两者都允许后才一并写入，避免短窗口 429 时误耗日配额。
  */
 export function createVerificationDailyRateLimitStorage() {
   return {
@@ -158,15 +171,44 @@ export function createVerificationDailyRateLimitStorage() {
     async consume(key: string, rule: RateLimitRule): Promise<ConsumeResult> {
       const parsed = parseRateLimitKey(key)
 
-      if (parsed && VERIFICATION_SEND_PATHS.has(parsed.path)) {
-        const dailyKey = `${parsed.ip}|${VERIFICATION_DAILY_RATE_LIMIT_PATH}`
-        const dailyResult = consumeMemory(dailyKey, VERIFICATION_DAILY_IP_RATE_LIMIT)
-        if (!dailyResult.allowed) {
-          return dailyResult
+      if (!parsed || !VERIFICATION_SEND_PATHS.has(parsed.path)) {
+        return consumeMemory(key, rule)
+      }
+
+      pruneMemoryStore()
+
+      const now = Date.now()
+      const dailyKey = `${parsed.ip}|${VERIFICATION_DAILY_RATE_LIMIT_PATH}`
+
+      const dailyDecision = decideConsume(
+        readRecord(dailyKey, now),
+        VERIFICATION_DAILY_IP_RATE_LIMIT,
+        now,
+      )
+      if (!dailyDecision.allowed) {
+        return {
+          allowed: false,
+          retryAfter: dailyDecision.retryAfter,
         }
       }
 
-      return consumeMemory(key, rule)
+      const shortDecision = decideConsume(readRecord(key, now), rule, now)
+      if (!shortDecision.allowed) {
+        return {
+          allowed: false,
+          retryAfter: shortDecision.retryAfter,
+        }
+      }
+
+      writeRecord(dailyKey, dailyDecision.next, VERIFICATION_DAILY_IP_RATE_LIMIT.window, now)
+      writeRecord(key, shortDecision.next, rule.window, now)
+
+      return { allowed: true, retryAfter: null }
     },
   }
+}
+
+/** @internal test helper */
+export function resetVerificationRateLimitMemoryForTests() {
+  memory.clear()
 }

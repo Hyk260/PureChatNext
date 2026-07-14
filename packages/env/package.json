@@ -10,6 +10,7 @@
     "./*": "./src/*.ts"
   },
   "dependencies": {
+    "@pure/types": "workspace:*",
     "@t3-oss/env-core": "^0.13.10",
     "zod": "^3.25.76"
   }

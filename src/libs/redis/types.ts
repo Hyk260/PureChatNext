@@ -1,7 +1,7 @@
+export type { RedisConfig } from '@pure/types';
+
 export type RedisKey = string | Buffer;
 export type RedisValue = string | Buffer | number;
-
-export type { RedisConfig } from '@lobechat/types';
 
 export interface SetOptions {
   ex?: number;

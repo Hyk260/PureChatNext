@@ -19,6 +19,7 @@ import {
 } from '@/libs/better-auth/email-templates'
 import { OTP_EXPIRES_IN } from '@/libs/better-auth/shared'
 import { initBetterAuthSSOProviders, parseSSOProviders } from '@/libs/better-auth/sso'
+import { createSecondaryStorage } from './create-secondary-storage'
 import { createVerificationDailyRateLimitStorage } from './rate-limit-storage'
 
 const log = debug('better-auth:define-config')
@@ -227,7 +228,7 @@ export function defineConfig() {
       // 实验性联表查询需传入完整 schema 关系
       schema,
     }),
-    // secondaryStorage: createSecondaryStorage(),
+    secondaryStorage: createSecondaryStorage(),
     // API 错误时重定向到自定义页面
     onAPIError: {
       errorURL: '/auth-error',

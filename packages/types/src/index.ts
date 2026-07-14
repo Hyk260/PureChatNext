@@ -1,4 +1,5 @@
 export * from "./aiProvider"
 export * from "./fetch"
 export * from "./message"
+export * from "./redis"
 export * from "./tool"

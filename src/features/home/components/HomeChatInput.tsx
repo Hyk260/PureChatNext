@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import { memo, useState } from 'react'
 
 import { findHomeAgent, HOME_AGENTS } from '@/const/home/agents'
-import { clearMessages, setPendingChatText } from '@/features/chat/chatLocalStorage'
+import { setPendingChatText } from '@/features/chat/chatLocalStorage'
 import ModelSelector from '@/features/home/components/ModelSelector'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
@@ -76,10 +76,9 @@ const HomeChatInput = memo(() => {
         })
       }
 
-      clearMessages()
       setPendingChatText(text)
       setInput('')
-      router.push('/chat')
+      router.push(`/chat?agent=${encodeURIComponent(selectedAgentId)}`)
     } catch (error) {
       console.error('[home] start chat failed:', error)
       message.error('无法开始对话')

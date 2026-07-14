@@ -1,8 +1,13 @@
+import path from 'node:path'
+
 import type { NextConfig } from 'next'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
 
 const isProd = process.env.NODE_ENV === 'production'
 const isVercel = !!process.env.VERCEL_ENV
+
+/** Absolute path required by code-inspector `injectTo` (shared client entry). */
+const codeInspectorInjectTo = path.join(process.cwd(), 'src/components/CodeInspectorAnchor.tsx')
 
 const nextConfig: NextConfig = {
   ...(isVercel
@@ -52,8 +57,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     rules: codeInspectorPlugin({
       bundler: 'turbopack',
-      showSwitch: true, 
-      editor: 'cursor', 
+      showSwitch: true,
+      editor: 'cursor',
+      injectTo: codeInspectorInjectTo,
       // hotKeys: ['altKey', 'shiftKey'],
     }),
   },

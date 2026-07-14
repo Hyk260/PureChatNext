@@ -58,9 +58,8 @@ const HomeUserTrigger = memo(() => {
   const displayName =
     session?.user?.name ?? session?.user?.email?.split('@')[0] ?? '访客'
 
-  const avatarText = session?.user
-    ? displayName.slice(0, 2).toUpperCase()
-    : '?'
+  const avatarFallback = session?.user ? displayName.slice(0, 2).toUpperCase() : '?'
+  const avatar = session?.user?.image || avatarFallback
 
   const handleSignOut = useCallback(async () => {
     await signOut()
@@ -117,7 +116,8 @@ const HomeUserTrigger = memo(() => {
   const menuContent = session?.user ? (
     <Flexbox gap={2} style={{ minWidth: 300 }}>
       <UserInfoSection
-        avatar={avatarText}
+        avatar={avatar}
+        email={session.user.email}
         name={displayName}
       />
       <Menu items={settingsItems} onClick={handleMenuClick} />
@@ -125,7 +125,7 @@ const HomeUserTrigger = memo(() => {
     </Flexbox>
   ) : (
     <Flexbox gap={2} style={{ minWidth: 300 }}>
-      <UserInfoSection avatar={avatarText} name='访客' />
+      <UserInfoSection avatar={avatar} name='访客' />
       <Flexbox paddingBlock={12} paddingInline={16} width='100%'>
         <Link href='/signin' style={{ color: 'inherit', textDecoration: 'none' }}>
           <Button block type='primary' onClick={() => setOpen(false)}>
@@ -164,7 +164,7 @@ const HomeUserTrigger = memo(() => {
           paddingInlineStart: 2,
         }}
       >
-        <Avatar avatar={avatarText} shape='square' size={28} />
+        <Avatar avatar={avatar} shape='square' size={28} />
         <Flexbox horizontal align='center' gap={4} style={{ overflow: 'hidden' }}>
           <Text ellipsis style={{ flex: 1 }} weight={500}>
             {displayName}

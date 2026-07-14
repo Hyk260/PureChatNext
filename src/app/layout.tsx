@@ -2,6 +2,7 @@ import { type ReactNode, Suspense } from 'react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
 import Analytics from '@/components/Analytics'
+import CodeInspectorAnchor from '@/components/CodeInspectorAnchor'
 import { IS_VERCEL } from '@/envs/app'
 
 import type { Metadata } from 'next'
@@ -18,6 +19,7 @@ const RootLayout = ({ children }: { children: ReactNode }) => {
   return (
     <html lang='zh-CN' suppressHydrationWarning style={{ height: '100%' }}>
       <body style={{ height: '100%', margin: 0 }}>
+        <CodeInspectorAnchor />
         {children}
         <Suspense fallback={null}>
           <Analytics />

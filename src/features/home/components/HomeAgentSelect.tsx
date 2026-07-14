@@ -40,11 +40,24 @@ const HomeAgentSelect = memo(() => {
   const [open, setOpen] = useState(false)
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
+  const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
 
   const currentAgent = useMemo(
     () => findHomeAgent(selectedAgentId),
     [selectedAgentId],
   )
+
+  const selectAgent = (agentId: string) => {
+    const agent = findHomeAgent(agentId)
+    setSelectedAgentId(agent.id)
+    setActiveAgent({
+      avatar: agent.avatar,
+      identifier: agent.id,
+      systemRole: agent.systemRole,
+      title: agent.title,
+    })
+    setOpen(false)
+  }
 
   const listContent = (
     <Flexbox gap={2} padding={4} style={{ width: 360 }}>
@@ -59,10 +72,7 @@ const HomeAgentSelect = memo(() => {
             className={[styles.item, active ? styles.itemActive : ''].join(' ')}
             gap={12}
             padding={8}
-            onClick={() => {
-              setSelectedAgentId(agent.id)
-              setOpen(false)
-            }}
+            onClick={() => selectAgent(agent.id)}
           >
             <Avatar avatar={agent.avatar} background={agent.backgroundColor} shape='square' size={32} />
             <Flexbox flex={1} gap={2} style={{ overflow: 'hidden' }}>

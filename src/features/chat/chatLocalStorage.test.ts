@@ -2,9 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   CHAT_MESSAGES_STORAGE_KEY,
+  claimPendingChatText,
   clearMessages,
   loadMessages,
   saveMessages,
+  setPendingChatText,
 } from './chatLocalStorage'
 
 describe('chatLocalStorage', () => {
@@ -67,5 +69,16 @@ describe('chatLocalStorage', () => {
     ])
     clearMessages()
     expect(loadMessages()).toEqual([])
+  })
+
+  it('claims pending chat text once', () => {
+    setPendingChatText('  start chat  ')
+    expect(claimPendingChatText()).toBe('start chat')
+    expect(claimPendingChatText()).toBeNull()
+  })
+
+  it('ignores empty pending chat text', () => {
+    setPendingChatText('   ')
+    expect(claimPendingChatText()).toBeNull()
   })
 })

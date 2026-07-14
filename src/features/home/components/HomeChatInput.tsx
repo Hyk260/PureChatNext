@@ -3,10 +3,12 @@
 import { ActionIcon, Block, Flexbox } from '@lobehub/ui'
 import { App } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { ArrowUp, Plus } from 'lucide-react'
-import { memo, useCallback, useState } from 'react'
+import { ArrowUp } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { memo, useState } from 'react'
 
-import AgentModeButton from '@/features/home/components/AgentModeButton'
+import { findHomeAgent, HOME_AGENTS } from '@/const/home/agents'
+import { clearMessages, setPendingChatText } from '@/features/chat/chatLocalStorage'
 import ModelSelector from '@/features/home/components/ModelSelector'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
@@ -40,61 +42,50 @@ const styles = createStaticStyles(({ css }) => ({
 
 const HomeChatInput = memo(() => {
   const { message } = App.useApp()
+  const router = useRouter()
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
-  const selectedModel = useHomeStore((s) => s.selectedModel)
-  const selectedProvider = useHomeStore((s) => s.selectedProvider)
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
-  const agentMode = useHomeStore((s) => s.agentMode)
+  const activeAgent = useHomeStore((s) => s.activeAgent)
+  const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
 
-  const handleSend = useCallback(async () => {
+  const handleSend = () => {
     const text = input.trim()
     if (!text || sending) return
 
-    const payload = {
-      agentId: selectedAgentId,
-      agentMode,
-      model: selectedModel,
-      provider: selectedProvider,
-      text,
-    }
-
-    console.log('[home] send:', payload)
     setSending(true)
 
     try {
-      await fetch('/api/chat', {
-        body: JSON.stringify({
-          messages: [
-            {
-              id: crypto.randomUUID(),
-              parts: [{ text, type: 'text' }],
-              role: 'user',
-            },
-          ],
-          model: selectedModel,
-          provider: selectedProvider,
-        }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      })
-      message.info('消息已发送（UI 演示模式）')
+      const homeAgent = HOME_AGENTS.find((agent) => agent.id === selectedAgentId)
+
+      if (homeAgent) {
+        setActiveAgent({
+          avatar: homeAgent.avatar,
+          identifier: homeAgent.id,
+          systemRole: homeAgent.systemRole,
+          title: homeAgent.title,
+        })
+      } else if (activeAgent?.identifier !== selectedAgentId) {
+        // Fallback: selectedId isn't a home agent and doesn't match activeAgent.
+        const fallback = findHomeAgent(selectedAgentId)
+        setActiveAgent({
+          avatar: fallback.avatar,
+          identifier: fallback.id,
+          systemRole: fallback.systemRole,
+          title: fallback.title,
+        })
+      }
+
+      clearMessages()
+      setPendingChatText(text)
       setInput('')
+      router.push('/chat')
     } catch (error) {
-      console.error('[home] send failed:', error)
-      message.error('发送失败')
-    } finally {
+      console.error('[home] start chat failed:', error)
+      message.error('无法开始对话')
       setSending(false)
     }
-  }, [
-    agentMode,
-    input,
-    message,
-    selectedAgentId,
-    selectedModel,
-    selectedProvider,
-    sending,
-  ])
+  }
 
   return (
     <Block className={styles.shell} padding={16} variant='outlined'>
@@ -106,15 +97,15 @@ const HomeChatInput = memo(() => {
         onKeyDown={(event) => {
           if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault()
-            void handleSend()
+            handleSend()
           }
         }}
       />
 
       <Flexbox horizontal align='center' justify='space-between' style={{ marginTop: 12 }}>
         <Flexbox horizontal align='center' gap={8}>
-          <AgentModeButton />
-          <ActionIcon icon={Plus} size='small' title='添加' />
+          {/* <AgentModeButton />
+          <ActionIcon icon={Plus} size='small' title='添加' /> */}
         </Flexbox>
 
         <Flexbox horizontal align='center' gap={12}>
@@ -125,7 +116,7 @@ const HomeChatInput = memo(() => {
             loading={sending}
             size={{ blockSize: 32, size: 16 }}
             title='发送'
-            onClick={() => void handleSend()}
+            onClick={handleSend}
           />
         </Flexbox>
       </Flexbox>

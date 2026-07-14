@@ -4,11 +4,18 @@ import { useChat } from '@ai-sdk/react'
 import { Flexbox, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { DefaultChatTransport, type UIMessage } from 'ai'
+import { useSearchParams } from 'next/navigation'
 import { memo, useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 
+import { findHomeAgent } from '@/const/home/agents'
 import ChatInput from '@/features/chat/ChatInput'
 import ChatMessages from '@/features/chat/ChatMessages'
-import { loadMessages, saveMessages } from '@/features/chat/chatLocalStorage'
+import {
+  claimPendingChatText,
+  finishPendingChatText,
+  loadMessages,
+  saveMessages,
+} from '@/features/chat/chatLocalStorage'
 import { withMessageText } from '@/features/chat/messageText'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
@@ -47,9 +54,13 @@ interface ChatViewProps {
 }
 
 const ChatView = memo<ChatViewProps>(({ initialMessages }) => {
+  const searchParams = useSearchParams()
+  const agentFromQuery = searchParams.get('agent')
   const selectedModel = useHomeStore((s) => s.selectedModel)
   const selectedProvider = useHomeStore((s) => s.selectedProvider)
   const activeAgent = useHomeStore((s) => s.activeAgent)
+  const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
+  const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
   const chatId = activeAgent?.identifier
     ? `purechat-agent-${activeAgent.identifier}`
     : CHAT_ID
@@ -66,6 +77,21 @@ const ChatView = memo<ChatViewProps>(({ initialMessages }) => {
   const messagesRef = useRef(messages)
   const isBusy = status === 'submitted' || status === 'streaming'
   const isStreaming = status === 'streaming'
+
+  // Deep-link / refresh: sync `?agent=` into home store.
+  useEffect(() => {
+    if (!agentFromQuery) return
+    if (activeAgent?.identifier === agentFromQuery) return
+
+    const agent = findHomeAgent(agentFromQuery)
+    setSelectedAgentId(agent.id)
+    setActiveAgent({
+      avatar: agent.avatar,
+      identifier: agent.id,
+      systemRole: agent.systemRole,
+      title: agent.title,
+    })
+  }, [activeAgent?.identifier, agentFromQuery, setActiveAgent, setSelectedAgentId])
 
   useEffect(() => {
     messagesRef.current = messages
@@ -102,6 +128,16 @@ const ChatView = memo<ChatViewProps>(({ initialMessages }) => {
     },
     [clearError, requestBody, sendMessage],
   )
+
+  // Home → /chat: auto-start the first user message with current agent/model.
+  useEffect(() => {
+    const pending = claimPendingChatText()
+    if (!pending) return
+
+    void handleSend(pending).finally(() => {
+      finishPendingChatText(pending)
+    })
+  }, [handleSend])
 
   const handleDelete = useCallback(
     (id: string) => {

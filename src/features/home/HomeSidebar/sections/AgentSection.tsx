@@ -2,9 +2,11 @@
 
 import { AccordionItem, Avatar, Block, Center, Flexbox, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
+import { useRouter } from 'next/navigation'
 import { memo } from 'react'
 
 import { HOME_AGENTS } from '@/const/home/agents'
+import { clearMessages } from '@/features/chat/chatLocalStorage'
 import SectionActions from '@/features/home/HomeSidebar/components/SectionActions'
 import { useAgentSectionDropdownMenu } from '@/features/home/HomeSidebar/hooks/useAgentSectionDropdownMenu'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
@@ -24,9 +26,11 @@ interface AgentSectionProps {
 }
 
 const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
+  const router = useRouter()
   const dropdownMenu = useAgentSectionDropdownMenu()
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
+  const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
 
   return (
     <AccordionItem
@@ -55,7 +59,17 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
                 height={36}
                 paddingInline={4}
                 variant={active ? 'filled' : 'borderless'}
-                onClick={() => setSelectedAgentId(agent.id)}
+                onClick={() => {
+                  setSelectedAgentId(agent.id)
+                  setActiveAgent({
+                    avatar: agent.avatar,
+                    identifier: agent.id,
+                    systemRole: agent.systemRole,
+                    title: agent.title,
+                  })
+                  clearMessages()
+                  router.push(`/chat?agent=${encodeURIComponent(agent.id)}`)
+                }}
               >
                 <Center flex='none' height={28} width={28}>
                   <Avatar avatar={agent.avatar} background={agent.backgroundColor} size={28} />

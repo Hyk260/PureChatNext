@@ -27,3 +27,7 @@ export const saveMessages = (messages: UIMessage[]): void => {
     // Ignore quota / private mode errors
   }
 }
+
+export const clearMessages = (): void => {
+  saveMessages([])
+}

@@ -15,7 +15,7 @@ import { DiscoverTab } from '@/features/community/types'
 const styles = createStaticStyles(({ css }) => ({
   header: css`
     flex: none;
-    height: 44px;
+    height: 53px;
     padding-inline: 8px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
     background: ${cssVar.colorBgContainer};

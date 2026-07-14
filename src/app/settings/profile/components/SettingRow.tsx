@@ -1,43 +1,61 @@
+'use client'
+
 import { Text } from '@lobehub/ui'
+import { createStaticStyles } from 'antd-style'
 import type { ReactNode } from 'react'
 
 interface SettingRowProps {
   action?: ReactNode
   children?: ReactNode
-  label: string
+  label?: string
   labelSlot?: ReactNode
-  vertical?: boolean
 }
 
-export function SettingRow({ action, children, label, labelSlot, vertical }: SettingRowProps) {
-  if (vertical) {
-    return (
-      <div className="flex flex-col gap-3 px-5 py-4">
-        <div className="shrink-0 md:w-40">
-          {labelSlot ?? (
-            <Text strong fontSize={14}>
-              {label}
-            </Text>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">{children}</div>
-        {action ? <div className="shrink-0">{action}</div> : null}
-      </div>
-    )
-  }
+const styles = createStaticStyles(({ css, responsive }) => ({
+  action: css`
+    flex-shrink: 0;
+    margin-inline-start: auto;
+  `,
+  body: css`
+    display: flex;
+    flex: 1;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    min-height: 32px;
+  `,
+  label: css`
+    flex: 0 0 160px;
+    padding-block: 4px;
 
+    ${responsive.md} {
+      flex: 0 0 auto;
+      padding-block: 0;
+    }
+  `,
+  row: css`
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    min-height: 48px;
+    padding-block: 16px;
+
+    ${responsive.md} {
+      flex-direction: column;
+      gap: 12px;
+      align-items: stretch;
+    }
+  `,
+}))
+
+export function SettingRow({ action, children, label, labelSlot }: SettingRowProps) {
   return (
-    <div className="flex min-h-12 flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:gap-6">
-      <div className="shrink-0 md:w-40">
-        {labelSlot ?? (
-          <Text strong fontSize={14}>
-            {label}
-          </Text>
-        )}
-      </div>
-      <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+    <div className={styles.row}>
+      <div className={styles.label}>{labelSlot ?? (label ? <Text strong>{label}</Text> : null)}</div>
+      <div className={styles.body}>
         {children}
-        {action ? <div className="ms-auto shrink-0">{action}</div> : null}
+        {action ? <div className={styles.action}>{action}</div> : null}
       </div>
     </div>
   )

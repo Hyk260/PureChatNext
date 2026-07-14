@@ -1,0 +1,146 @@
+'use client'
+
+import { Flexbox, Icon, Tag, Text } from '@lobehub/ui'
+import { createStaticStyles, cssVar } from 'antd-style'
+import {
+  BadgeDollarSignIcon,
+  BriefcaseIcon,
+  Coffee,
+  DramaIcon,
+  GamepadIcon,
+  GraduationCapIcon,
+  ImageIcon,
+  LanguagesIcon,
+  LaughIcon,
+  Layers,
+  LayoutPanelTop,
+  MicroscopeIcon,
+  PencilIcon,
+  PrinterIcon,
+  TerminalSquareIcon,
+  type LucideIcon,
+} from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { memo, useCallback, useMemo } from 'react'
+
+import {
+  ASSISTANT_BUSINESS_CATEGORIES,
+  ASSISTANT_CATEGORY_LABELS,
+  getAssistantCategoryCounts,
+} from '@/const/community/agents'
+import { AssistantCategory } from '@/features/community/types'
+
+const styles = createStaticStyles(({ css }) => ({
+  active: css`
+    background: ${cssVar.colorFillTertiary};
+    color: ${cssVar.colorText};
+  `,
+  count: css`
+    margin-inline-start: auto;
+  `,
+  item: css`
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: ${cssVar.colorTextSecondary};
+    font-size: 14px;
+    text-align: left;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: ${cssVar.colorFillSecondary};
+      color: ${cssVar.colorText};
+    }
+  `,
+  root: css`
+    position: sticky;
+    top: 0;
+    flex: none;
+    width: 220px;
+    max-height: calc(100vh - 120px);
+    overflow: auto;
+  `,
+}))
+
+const CATEGORY_ICONS: Record<AssistantCategory, LucideIcon> = {
+  [AssistantCategory.All]: LayoutPanelTop,
+  [AssistantCategory.Academic]: MicroscopeIcon,
+  [AssistantCategory.Career]: BriefcaseIcon,
+  [AssistantCategory.CopyWriting]: PencilIcon,
+  [AssistantCategory.Design]: ImageIcon,
+  [AssistantCategory.Education]: GraduationCapIcon,
+  [AssistantCategory.Emotions]: LaughIcon,
+  [AssistantCategory.Entertainment]: DramaIcon,
+  [AssistantCategory.Games]: GamepadIcon,
+  [AssistantCategory.General]: Layers,
+  [AssistantCategory.Life]: Coffee,
+  [AssistantCategory.Marketing]: BadgeDollarSignIcon,
+  [AssistantCategory.Office]: PrinterIcon,
+  [AssistantCategory.Programming]: TerminalSquareIcon,
+  [AssistantCategory.Translation]: LanguagesIcon,
+}
+
+const CATEGORY_KEYS: AssistantCategory[] = [
+  AssistantCategory.All,
+  ...ASSISTANT_BUSINESS_CATEGORIES,
+]
+
+const AgentCategory = memo(() => {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const selected = (searchParams.get('category') as AssistantCategory | null) ?? AssistantCategory.All
+  const counts = useMemo(() => getAssistantCategoryCounts(), [])
+
+  const handleSelect = useCallback(
+    (key: AssistantCategory) => {
+      const next = new URLSearchParams(searchParams.toString())
+      if (key === AssistantCategory.All) {
+        next.delete('category')
+      } else {
+        next.set('category', key)
+      }
+      const query = next.toString()
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+    },
+    [pathname, router, searchParams],
+  )
+
+  return (
+    <Flexbox className={styles.root} gap={4}>
+      {CATEGORY_KEYS.map((key) => {
+        const isActive = selected === key
+        return (
+          <button
+            className={`${styles.item}${isActive ? ` ${styles.active}` : ''}`}
+            key={key}
+            type='button'
+            onClick={() => handleSelect(key)}
+          >
+            <Icon icon={CATEGORY_ICONS[key]} size={18} />
+            <Text ellipsis>{ASSISTANT_CATEGORY_LABELS[key]}</Text>
+            {counts[key] > 0 ? (
+              <Tag
+                className={styles.count}
+                size='small'
+                style={{ borderRadius: 12, paddingInline: 6 }}
+              >
+                {counts[key]}
+              </Tag>
+            ) : null}
+          </button>
+        )
+      })}
+    </Flexbox>
+  )
+})
+
+AgentCategory.displayName = 'AgentCategory'
+
+export default AgentCategory

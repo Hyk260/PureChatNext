@@ -88,6 +88,22 @@ export class UserModel {
     }
   }
 
+  /** 按 Better Auth 主键 id 更新资料字段（全名、兴趣等） */
+  static updateProfileById = async (
+    id: string,
+    value: { fullName?: string | null; interests?: string[] },
+  ) => {
+    return this.db
+      .update(users)
+      .set({ ...value, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning({
+        fullName: users.fullName,
+        id: users.id,
+        interests: users.interests,
+      })
+  }
+
   static deleteUser = async (id: string) => {
     return this.db.delete(users).where(eq(users.userId, id))
   }

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   CHAT_MESSAGES_STORAGE_KEY,
+  clearMessages,
   loadMessages,
   saveMessages,
 } from './chatLocalStorage'
@@ -54,5 +55,17 @@ describe('chatLocalStorage', () => {
         },
       ]),
     ).not.toThrow()
+  })
+
+  it('clearMessages empties storage', () => {
+    saveMessages([
+      {
+        id: 'msg-1',
+        parts: [{ text: 'hello', type: 'text' as const }],
+        role: 'user' as const,
+      },
+    ])
+    clearMessages()
+    expect(loadMessages()).toEqual([])
   })
 })

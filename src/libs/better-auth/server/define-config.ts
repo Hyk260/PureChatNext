@@ -285,6 +285,13 @@ export function defineConfig() {
           required: false,
           type: 'string',
         },
+        // 展示用全名；实际读写走 /api/webapi/user/profile，此处声明便于 schema 对齐
+        fullName: {
+          fieldName: 'full_name',
+          input: false,
+          required: false,
+          type: 'string',
+        },
       },
       fields: {
         // Better Auth image → 数据库 avatar

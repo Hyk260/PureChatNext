@@ -136,7 +136,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
             }
           }}
           onPressEnter={handleSave}
-          placeholder="请输入用户名"
+          placeholder="字母、数字或下划线"
           ref={inputRef}
           status={error ? 'error' : undefined}
           style={{ flex: 1, maxWidth: 320 }}

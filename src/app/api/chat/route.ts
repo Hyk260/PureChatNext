@@ -53,6 +53,7 @@ export async function POST(request: Request) {
     messages: UIMessage[]
     model?: string
     provider?: string
+    system?: string
   }
 
   try {
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
 
-  const { messages, model, provider } = requestBody
+  const { messages, model, provider, system } = requestBody
 
   if (!Array.isArray(messages)) {
     return new ChatSDKError('bad_request:api').toResponse()
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
   const result = streamText({
     messages: await convertToModelMessages(messages),
     model: resolvedModel,
-    // system: 'You are a helpful assistant.',
+    ...(system?.trim() ? { system: system.trim() } : {}),
   })
 
   return createUIMessageStreamResponse({

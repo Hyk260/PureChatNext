@@ -1,0 +1,59 @@
+'use client'
+
+import { Flexbox, Input } from '@lobehub/ui'
+import { type InputRef } from 'antd'
+import { Loader2 } from 'lucide-react'
+import { useCallback, useRef, useState } from 'react'
+
+import { message } from '@/components/AntdStaticMethods'
+
+import { patchUserProfile } from './patchUserProfile'
+import { SettingRow } from './SettingRow'
+
+interface FullNameSettingProps {
+  fullName: string | null
+  onUpdated: (fullName: string | null) => void
+}
+
+export function FullNameSetting({ fullName, onUpdated }: FullNameSettingProps) {
+  const [saving, setSaving] = useState(false)
+  const inputRef = useRef<InputRef>(null)
+
+  const handleSave = useCallback(async () => {
+    const value = inputRef.current?.input?.value?.trim() ?? ''
+    const next = value || null
+
+    if (next === (fullName || null) || (!value && !fullName)) return
+
+    setSaving(true)
+
+    try {
+      const result = await patchUserProfile({ fullName: next })
+      onUpdated(result.fullName)
+      message.success('全名已更新')
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '全名更新失败')
+    } finally {
+      setSaving(false)
+    }
+  }, [fullName, onUpdated])
+
+  return (
+    <SettingRow label="全名">
+      <Flexbox align="center" gap={8} horizontal style={{ minWidth: 0, width: '100%' }}>
+        {saving ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : null}
+        <Input
+          defaultValue={fullName || ''}
+          disabled={saving}
+          key={fullName}
+          onBlur={handleSave}
+          onPressEnter={handleSave}
+          placeholder="全名"
+          ref={inputRef}
+          style={{ flex: 1, maxWidth: 320 }}
+          variant="filled"
+        />
+      </Flexbox>
+    </SettingRow>
+  )
+}

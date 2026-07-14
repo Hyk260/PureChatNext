@@ -1,7 +1,9 @@
 packages:
   - packages/**
 allowBuilds:
+  '@code-inspector/core': true
   '@swc/core': true
   esbuild: true
+  node-pty: true
   sharp: true
   unrs-resolver: true

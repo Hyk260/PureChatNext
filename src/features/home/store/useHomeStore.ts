@@ -5,6 +5,7 @@ import { persist } from 'zustand/middleware'
 
 import { DEFAULT_HOME_AGENT_ID } from '@/const/home/agents'
 import { DEFAULT_HOME_MODEL } from '@/const/home/models'
+import type { ActiveCommunityAgent } from '@/features/community/types'
 
 import {
   DEFAULT_HOME_SIDEBAR_STATE,
@@ -16,6 +17,7 @@ import {
 export type HomeAgentMode = 'agent' | 'chat'
 
 interface HomeStoreState {
+  activeAgent: ActiveCommunityAgent | null
   agentGroups: HomeAgentGroup[]
   agentMode: HomeAgentMode
   hiddenSidebarSections: string[]
@@ -26,8 +28,10 @@ interface HomeStoreState {
   sidebarExpandedKeys: string[]
   sidebarItems: string[]
   addAgentGroup: (name: string) => void
+  clearActiveAgent: () => void
   removeAgentGroup: (groupId: string) => void
   resetSidebarCustomization: () => void
+  setActiveAgent: (agent: ActiveCommunityAgent) => void
   setAgentMode: (mode: HomeAgentMode) => void
   setSelectedAgentId: (agentId: string) => void
   setSelectedModel: (provider: string, model: string) => void
@@ -46,6 +50,7 @@ export const useHomeStore = create<HomeStoreState>()(
   persist(
     (set, get) => ({
       ...DEFAULT_HOME_SIDEBAR_STATE,
+      activeAgent: null,
       agentMode: 'agent',
       selectedAgentId: DEFAULT_HOME_AGENT_ID,
       selectedModel: DEFAULT_HOME_MODEL.model,
@@ -62,6 +67,7 @@ export const useHomeStore = create<HomeStoreState>()(
             },
           ],
         })),
+      clearActiveAgent: () => set({ activeAgent: null }),
       removeAgentGroup: (groupId) =>
         set((state) => ({
           agentGroups: state.agentGroups
@@ -73,6 +79,7 @@ export const useHomeStore = create<HomeStoreState>()(
           ...DEFAULT_HOME_SIDEBAR_STATE,
           agentGroups: state.agentGroups,
         })),
+      setActiveAgent: (agent) => set({ activeAgent: agent }),
       setAgentMode: (mode) => set({ agentMode: mode }),
       setSelectedAgentId: (agentId) => set({ selectedAgentId: agentId }),
       setSelectedModel: (provider, model) =>

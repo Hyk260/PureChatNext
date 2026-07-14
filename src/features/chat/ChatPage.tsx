@@ -49,9 +49,13 @@ interface ChatViewProps {
 const ChatView = memo<ChatViewProps>(({ initialMessages }) => {
   const selectedModel = useHomeStore((s) => s.selectedModel)
   const selectedProvider = useHomeStore((s) => s.selectedProvider)
+  const activeAgent = useHomeStore((s) => s.activeAgent)
+  const chatId = activeAgent?.identifier
+    ? `purechat-agent-${activeAgent.identifier}`
+    : CHAT_ID
 
   const { messages, sendMessage, setMessages, status, error, clearError, stop } = useChat({
-    id: CHAT_ID,
+    id: chatId,
     messages: initialMessages,
     // Throttle UI updates so Markdown/Streamdown isn't re-rendered on every chunk
     throttle: 50,
@@ -81,8 +85,9 @@ const ChatView = memo<ChatViewProps>(({ initialMessages }) => {
     () => ({
       model: selectedModel,
       provider: selectedProvider,
+      ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
     }),
-    [selectedModel, selectedProvider],
+    [activeAgent, selectedModel, selectedProvider],
   )
 
   const handleSend = useCallback(

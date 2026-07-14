@@ -1,4 +1,4 @@
-import { pgTable, index, varchar, text, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, index, varchar, text, boolean, jsonb } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
 import { timestamps, timestamptz } from './_helpers'
@@ -11,6 +11,10 @@ export const users = pgTable(
     id: text('id').primaryKey().notNull(),
     // 用户名，可用于登录或展示
     username: text('username').unique(),
+    // 展示用全名
+    fullName: text('full_name'),
+    // 兴趣领域（预定义 key 或自定义文本）
+    interests: jsonb('interests').$type<string[]>().default([]),
     // 业务侧用户标识（32 位无连字符 UUID），兼容旧版 API 查询
     userId: varchar('user_id', { length: 32 }).notNull().unique(),
     // 用户邮箱，可用于登录，全局唯一

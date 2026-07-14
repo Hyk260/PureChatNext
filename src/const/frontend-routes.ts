@@ -34,6 +34,7 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
     title: '用户',
     routes: [
       { href: '/profile', label: '个人资料' },
+      { href: '/settings', label: '设置' },
       { href: '/settings/profile', label: '账号设置' },
       { href: '/protected', label: '受保护页' },
     ],

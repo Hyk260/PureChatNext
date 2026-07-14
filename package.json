@@ -49,6 +49,7 @@
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.6",
     "drizzle-orm": "^0.44.7",
+    "ioredis": "^5.11.1",
     "jose": "^6.1.0",
     "lodash-es": "^4.17.21",
     "lucide-react": "^1.23.0",

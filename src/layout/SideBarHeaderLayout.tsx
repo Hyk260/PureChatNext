@@ -120,14 +120,18 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
         padding='8px 6px'
       >
         {leftContent}
-        <Flexbox horizontal align='center' gap={2} justify='flex-end'>
+        <Flexbox horizontal align='center' flex='none' gap={2} justify='flex-end'>
           {right}
           {showTogglePanelButton ? (
             <ActionIcon
               icon={sidebarCollapsed ? PanelLeftOpen : PanelLeftClose}
               size='small'
               title={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
-              onClick={toggleSidebarCollapsed}
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                toggleSidebarCollapsed()
+              }}
             />
           ) : null}
         </Flexbox>

@@ -8,9 +8,9 @@ const AgentEmpty = memo(() => {
   return (
     <Center height='100%' style={{ minHeight: '50vh' }} width='100%'>
       <Empty
-        description='助理列表即将上线，敬请期待'
+        description='试试调整分类或搜索关键词'
         icon={Bot}
-        title='暂无助理'
+        title='暂无匹配助理'
         type='page'
         descriptionProps={{
           fontSize: 14,

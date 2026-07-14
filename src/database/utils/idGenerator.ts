@@ -1,6 +1,7 @@
 import  { createNanoId } from '@pure/utils'
 
 const prefixes = {
+  chatTopics: 'topic',
   documents: 'docs',
   files: 'file',
   knowledgeBases: 'kb',

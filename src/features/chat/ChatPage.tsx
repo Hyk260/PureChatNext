@@ -8,24 +8,27 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 
 import { findHomeAgent } from '@/const/home/agents'
+import {
+  createTopic,
+  deleteTopic,
+  fetchMessages,
+  fetchTopics,
+  putMessages,
+  renameTopic,
+} from '@/features/chat/chatApi'
+import {
+  claimPendingChatText,
+  claimPendingTopicSend,
+  finishPendingChatText,
+  finishPendingTopicSend,
+  setPendingTopicSend,
+  truncateTitle,
+} from '@/features/chat/chatLocalStorage'
 import ChatInput from '@/features/chat/ChatInput'
 import ChatLayout from '@/features/chat/ChatLayout'
 import ChatMessages from '@/features/chat/ChatMessages'
 import ParamsPanel from '@/features/chat/ParamsPanel'
 import TopicSidebar from '@/features/chat/TopicSidebar'
-import {
-  claimPendingChatText,
-  claimPendingTopicSend,
-  clearDraftMessages,
-  createTopicFromDraft,
-  finishPendingChatText,
-  finishPendingTopicSend,
-  listTopicsForAgent,
-  loadMessages,
-  saveMessages,
-  setPendingTopicSend,
-  touchTopic,
-} from '@/features/chat/chatLocalStorage'
 import { withMessageText } from '@/features/chat/messageText'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
@@ -92,14 +95,27 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
     messagesRef.current = messages
   }, [messages])
 
-  // Debounce localStorage writes while streaming — sync JSON on every token
-  // blocks the main thread and makes the bubble look like it isn't streaming.
+  // Debounce PUT /api/chat/topics/[id]/messages while streaming — syncing on every
+  // token blocks the main thread and makes the bubble look like it isn't streaming.
+  // Only persists when a topic has been solidified (topicId !== null).
+  const putControllerRef = useRef<AbortController | null>(null)
   useEffect(() => {
+    if (!topicId) return
+
+    const fire = () => {
+      putControllerRef.current?.abort()
+      const controller = new AbortController()
+      putControllerRef.current = controller
+      void putMessages(topicId, messages, { signal: controller.signal }).catch((error) => {
+        console.error('[chat] putMessages failed', error)
+      })
+    }
+
     if (isBusy) {
-      const timer = window.setTimeout(() => saveMessages(agentId, topicId, messages), 400)
+      const timer = window.setTimeout(fire, 400)
       return () => window.clearTimeout(timer)
     }
-    saveMessages(agentId, topicId, messages)
+    fire()
   }, [agentId, isBusy, messages, topicId])
 
   const requestBody = useMemo(
@@ -120,18 +136,16 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
           body: requestBody,
         },
       )
-      if (topicId) {
-        touchTopic(topicId)
-        onTopicsRefresh()
-      }
+      // replaceAll (PUT) bumps topic.updatedAt server-side; refresh sidebar order.
+      onTopicsRefresh()
     },
-    [clearError, onTopicsRefresh, requestBody, sendMessage, topicId],
+    [clearError, onTopicsRefresh, requestBody, sendMessage],
   )
 
   const sendOrSolidify = useCallback(
     async (text: string) => {
       if (!topicId) {
-        const topic = createTopicFromDraft({ agentId, titleFrom: text })
+        const topic = await createTopic(agentId, truncateTitle(text))
         onTopicsRefresh()
         setPendingTopicSend(text)
         router.replace(
@@ -203,10 +217,7 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
             body: requestBody,
           },
         )
-        if (topicId) {
-          touchTopic(topicId)
-          onTopicsRefresh()
-        }
+        onTopicsRefresh()
         return
       }
 
@@ -214,7 +225,7 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
         prev.map((message) => (message.id === id ? withMessageText(message, text) : message)),
       )
     },
-    [clearError, onTopicsRefresh, requestBody, sendMessage, setMessages, topicId],
+    [clearError, onTopicsRefresh, requestBody, sendMessage, setMessages],
   )
 
   const handleStop = useCallback(() => {
@@ -239,7 +250,7 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
 ChatView.displayName = 'ChatView'
 
 const ChatPage = memo(() => {
-  // Defer localStorage read until after hydration to avoid SSR mismatch.
+  // Defer searchParams reads until after hydration to avoid SSR mismatch.
   const isClient = useSyncExternalStore(subscribeNoop, getClientSnapshot, getServerSnapshot)
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -259,10 +270,20 @@ const ChatPage = memo(() => {
   const setParams = useChatUiStore((s) => s.setParams)
   const params: ChatLlmParams = paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS
 
-  const [topics, setTopics] = useState<LocalChatTopic[]>(() => listTopicsForAgent(agentId))
+  const [topics, setTopics] = useState<LocalChatTopic[]>([])
+  const [initialMessages, setInitialMessages] = useState<UIMessage[]>(EMPTY_MESSAGES)
+  // Tracks which topicId the currently-loaded initialMessages belong to.
+  // undefined = not yet loaded; null = draft (empty); string = that topic's messages.
+  const [loadedTopicId, setLoadedTopicId] = useState<string | null | undefined>(undefined)
 
-  const refreshTopics = useCallback(() => {
-    setTopics(listTopicsForAgent(agentId))
+  const refreshTopics = useCallback(async () => {
+    if (!agentId) return
+    try {
+      const items = await fetchTopics(agentId)
+      setTopics(items)
+    } catch (error) {
+      console.error('[chat] refreshTopics failed', error)
+    }
   }, [agentId])
 
   // Deep-link / refresh: sync `?agent=` into home store.
@@ -280,14 +301,53 @@ const ChatPage = memo(() => {
     })
   }, [activeAgent?.identifier, agentFromQuery, setActiveAgent, setSelectedAgentId])
 
+  // Fetch topic list whenever agentId changes (client-only; server renders []).
+  // setState lives in the async continuation so the effect body stays free of
+  // synchronous setState calls.
   useEffect(() => {
-    setTopics(listTopicsForAgent(agentId))
-  }, [agentId])
+    if (!isClient || !agentId) return
+
+    let cancelled = false
+    fetchTopics(agentId)
+      .then((items) => {
+        if (!cancelled) setTopics(items)
+      })
+      .catch((error) => {
+        console.error('[chat] refreshTopics failed', error)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [agentId, isClient])
+
+  // Fetch messages for the active topic. Draft (activeTopicId === null) resolves
+  // synchronously via the render branch below — no setState needed here.
+  useEffect(() => {
+    if (!isClient || activeTopicId === null) return
+
+    let cancelled = false
+    fetchMessages(activeTopicId)
+      .then((msgs) => {
+        if (cancelled) return
+        setInitialMessages(msgs)
+        setLoadedTopicId(activeTopicId)
+      })
+      .catch((error) => {
+        console.error('[chat] fetchMessages failed', error)
+        if (cancelled) return
+        setInitialMessages(EMPTY_MESSAGES)
+        setLoadedTopicId(activeTopicId)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeTopicId, isClient])
 
   const handleNewTopic = useCallback(() => {
-    clearDraftMessages(agentId)
+    // No draft bucket to clear — messages live on the server per topic now.
     router.push(`/chat?agent=${encodeURIComponent(agentId)}`)
-    setTopics(listTopicsForAgent(agentId))
   }, [agentId, router])
 
   const handleSelectTopic = useCallback(
@@ -299,6 +359,31 @@ const ChatPage = memo(() => {
     [agentId, router],
   )
 
+  const handleRenameTopic = useCallback(async (id: string, title: string) => {
+    try {
+      const updated = await renameTopic(id, title)
+      setTopics((prev) => prev.map((t) => (t.id === id ? updated : t)))
+    } catch (error) {
+      console.error('[chat] renameTopic failed', error)
+    }
+  }, [])
+
+  const handleDeleteTopic = useCallback(
+    async (id: string) => {
+      try {
+        await deleteTopic(id)
+        setTopics((prev) => prev.filter((t) => t.id !== id))
+        // Deleting the active topic falls back to the draft view for this agent.
+        if (id === activeTopicId) {
+          router.push(`/chat?agent=${encodeURIComponent(agentId)}`)
+        }
+      } catch (error) {
+        console.error('[chat] deleteTopic failed', error)
+      }
+    },
+    [activeTopicId, agentId, router],
+  )
+
   const handleParamsChange = useCallback(
     (patch: Partial<ChatLlmParams>) => {
       setParams(agentId, patch)
@@ -306,10 +391,8 @@ const ChatPage = memo(() => {
     [agentId, setParams],
   )
 
-  const initialMessages = useMemo(
-    () => (isClient ? loadMessages(agentId, activeTopicId) : EMPTY_MESSAGES),
-    [activeTopicId, agentId, isClient],
-  )
+  const messagesReady = activeTopicId === null ? true : loadedTopicId === activeTopicId
+  const showShell = !isClient || !messagesReady
 
   return (
     <ChatLayout
@@ -319,19 +402,19 @@ const ChatPage = memo(() => {
           topics={topics}
           onNewTopic={handleNewTopic}
           onSelectTopic={handleSelectTopic}
+          onRenameTopic={handleRenameTopic}
+          onDeleteTopic={handleDeleteTopic}
         />
       }
       right={<ParamsPanel value={params} onChange={handleParamsChange} />}
     >
-      {!isClient ? (
-        <div className={styles.page} />
-      ) : (
+      {showShell ? <div className={styles.page} /> : (
         <ChatView
           key={`${agentId}:${activeTopicId ?? 'draft'}`}
           agentId={agentId}
-          initialMessages={initialMessages}
+          initialMessages={activeTopicId === null ? EMPTY_MESSAGES : initialMessages}
           topicId={activeTopicId}
-          onTopicsRefresh={refreshTopics}
+          onTopicsRefresh={() => void refreshTopics()}
         />
       )}
     </ChatLayout>

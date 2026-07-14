@@ -18,17 +18,21 @@ type Props = {
   topics: LocalChatTopic[]
   activeTopicId: string | null
   onSelect: (topicId: string) => void
+  onRename: (id: string, title: string) => void | Promise<void>
+  onDelete: (id: string) => void | Promise<void>
 }
 
-const TopicList = memo<Props>(({ topics, activeTopicId, onSelect }) => (
+const TopicList = memo<Props>(({ topics, activeTopicId, onSelect, onRename, onDelete }) => (
   <Flexbox gap={1} paddingBlock={1}>
     {topics.length > 0 ? (
       topics.map((topic) => (
         <TopicItem
-          key={topic.id}
           active={activeTopicId === topic.id}
-          topic={topic}
+          key={topic.id}
+          onDelete={onDelete}
+          onRename={onRename}
           onSelect={onSelect}
+          topic={topic}
         />
       ))
     ) : (

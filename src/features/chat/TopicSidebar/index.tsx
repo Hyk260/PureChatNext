@@ -14,35 +14,45 @@ type Props = {
   activeTopicId: string | null
   onNewTopic: () => void
   onSelectTopic: (topicId: string) => void
+  onRenameTopic: (id: string, title: string) => void | Promise<void>
+  onDeleteTopic: (id: string) => void | Promise<void>
 }
 
-const TopicSidebar = memo<Props>(({ topics, activeTopicId, onNewTopic, onSelectTopic }) => {
-  const router = useRouter()
+const TopicSidebar = memo<Props>(
+  ({ topics, activeTopicId, onNewTopic, onSelectTopic, onRenameTopic, onDeleteTopic }) => {
+    const router = useRouter()
 
-  return (
-    <Flexbox gap={8} height='100%' padding={12} style={{ minWidth: 220 }}>
-      <Flexbox horizontal align='center' gap={4}>
-        <ActionIcon
-          icon={ArrowLeft}
-          title='返回首页'
-          onClick={() => {
-            router.push('/')
-          }}
-        />
-        <Text ellipsis style={{ flex: 1 }} weight={500}>
-          话题
+    return (
+      <Flexbox gap={8} height='100%' padding={12} style={{ minWidth: 220 }}>
+        <Flexbox align='center' gap={4} horizontal>
+          <ActionIcon
+            icon={ArrowLeft}
+            title='返回首页'
+            onClick={() => {
+              router.push('/')
+            }}
+          />
+          <Text ellipsis style={{ flex: 1 }} weight={500}>
+            话题
+          </Text>
+        </Flexbox>
+        <Button block icon={MessageSquarePlus} onClick={onNewTopic}>
+          开启新话题
+        </Button>
+        <Text fontSize={12} type='secondary' weight={500}>
+          列表
         </Text>
+        <TopicList
+          activeTopicId={activeTopicId}
+          onDelete={onDeleteTopic}
+          onRename={onRenameTopic}
+          onSelect={onSelectTopic}
+          topics={topics}
+        />
       </Flexbox>
-      <Button block icon={MessageSquarePlus} onClick={onNewTopic}>
-        开启新话题
-      </Button>
-      <Text fontSize={12} type='secondary' weight={500}>
-        列表
-      </Text>
-      <TopicList activeTopicId={activeTopicId} topics={topics} onSelect={onSelectTopic} />
-    </Flexbox>
-  )
-})
+    )
+  },
+)
 
 TopicSidebar.displayName = 'TopicSidebar'
 

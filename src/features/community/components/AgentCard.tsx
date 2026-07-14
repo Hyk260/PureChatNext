@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation'
 import { memo, useCallback } from 'react'
 
 import { ASSISTANT_CATEGORY_LABELS } from '@/const/community/agents'
-import { clearDraftMessages } from '@/features/chat/chatLocalStorage'
 import type { DiscoverAgentItem } from '@/features/community/types'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
@@ -78,7 +77,6 @@ const AgentCard = memo<DiscoverAgentItem>(
         title,
       })
       setSelectedAgentId(identifier)
-      clearDraftMessages(identifier)
       router.push(`/chat?agent=${encodeURIComponent(identifier)}`)
     }, [
       avatar,

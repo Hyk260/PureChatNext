@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { memo } from 'react'
 
 import { HOME_AGENTS } from '@/const/home/agents'
-import { clearDraftMessages } from '@/features/chat/chatLocalStorage'
 import SectionActions from '@/features/home/HomeSidebar/components/SectionActions'
 import { useAgentSectionDropdownMenu } from '@/features/home/HomeSidebar/hooks/useAgentSectionDropdownMenu'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
@@ -67,7 +66,6 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
                     systemRole: agent.systemRole,
                     title: agent.title,
                   })
-                  clearDraftMessages(agent.id)
                   router.push(`/chat?agent=${encodeURIComponent(agent.id)}`)
                 }}
               >

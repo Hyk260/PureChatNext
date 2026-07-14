@@ -170,4 +170,30 @@ describeIfDb('ChatMessageModel ownership', () => {
     expect(messages).toHaveLength(1)
     expect(messages[0]?.parts).toEqual([{ type: 'text', text: 'hello' }])
   })
+
+  it('preserves message order after replaceAll then listByTopic', async () => {
+    const orderedMessages = [
+      {
+        id: `${TEST_PREFIX}-order-1`,
+        role: 'user' as const,
+        parts: [{ type: 'text' as const, text: 'first' }],
+      },
+      {
+        id: `${TEST_PREFIX}-order-2`,
+        role: 'assistant' as const,
+        parts: [{ type: 'text' as const, text: 'second' }],
+      },
+      {
+        id: `${TEST_PREFIX}-order-3`,
+        role: 'user' as const,
+        parts: [{ type: 'text' as const, text: 'third' }],
+      },
+    ]
+
+    await new ChatMessageModel(userAId, db).replaceAll(topicId, orderedMessages)
+
+    const messages = await new ChatMessageModel(userAId, db).listByTopic(topicId)
+    expect(messages.map((message) => message.id)).toEqual(orderedMessages.map((message) => message.id))
+    expect(messages.map((message) => message.parts)).toEqual(orderedMessages.map((message) => message.parts))
+  })
 })

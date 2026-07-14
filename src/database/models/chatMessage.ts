@@ -68,9 +68,11 @@ export class ChatMessageModel {
         .where(and(eq(chatMessages.topicId, topicId), eq(chatMessages.userId, this.userId)))
 
       if (messages.length > 0) {
+        const base = Date.now()
         await tx.insert(chatMessages).values(
-          messages.map((message) => {
+          messages.map((message, index) => {
             const { model, provider } = extractMetadata(message)
+            const timestamp = new Date(base + index)
             return {
               id: message.id,
               userId: this.userId,
@@ -81,6 +83,8 @@ export class ChatMessageModel {
               parts: message.parts,
               model,
               provider,
+              createdAt: timestamp,
+              updatedAt: timestamp,
             }
           }),
         )

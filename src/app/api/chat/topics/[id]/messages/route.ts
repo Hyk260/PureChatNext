@@ -13,7 +13,7 @@ import {
 
 const uiMessageSchema = z.object({
   id: z.string().min(1),
-  role: z.string().min(1),
+  role: z.enum(['user', 'assistant', 'system']),
   parts: z.array(z.unknown()),
 })
 
@@ -38,17 +38,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (!userId) return unauthorizedResponse()
 
   const { id } = await params
+  const topic = await new ChatTopicModel(userId).findById(id)
+  if (!topic) return jsonError('Topic not found', 404)
+
   const body = await request.json()
   const parsed = replaceMessagesSchema.safeParse(body)
   if (!parsed.success) return jsonError(parsed.error.message)
 
-  try {
-    await new ChatMessageModel(userId).replaceAll(id, parsed.data.messages as UIMessage[])
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Topic not found') {
-      return jsonError('Topic not found', 404)
-    }
-    throw error
-  }
+  await new ChatMessageModel(userId).replaceAll(id, parsed.data.messages as UIMessage[])
+  return NextResponse.json({ success: true })
 }

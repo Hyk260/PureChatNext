@@ -10,6 +10,8 @@ import { memo, useCallback, useMemo, useState } from 'react'
 import Menu from '@/components/Menu'
 import { signOut, useSession } from '@/libs/better-auth/client'
 
+import DataStatistics from './DataStatistics'
+
 const styles = createStaticStyles(({ css }) => ({
   popover: css`
     inset-block-start: 8px !important;
@@ -120,6 +122,7 @@ const HomeUserTrigger = memo(() => {
         email={session.user.email}
         name={displayName}
       />
+      <DataStatistics />
       <Menu items={settingsItems} onClick={handleMenuClick} />
       <Menu items={logoutItems} onClick={handleMenuClick} />
     </Flexbox>

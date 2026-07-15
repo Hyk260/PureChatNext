@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { chatTopics } from '../schemas/chat'
@@ -16,6 +16,14 @@ export class ChatTopicModel {
   }
 
   private ownership = () => eq(chatTopics.userId, this.userId)
+
+  countAll = async () => {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(chatTopics)
+      .where(this.ownership())
+    return row?.count ?? 0
+  }
 
   listByAgent = async (agentId: string) => {
     return this.db.query.chatTopics.findMany({

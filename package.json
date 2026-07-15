@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start -p 3210",
     "gateway": "npx tsx ./scripts/gateway.ts",
+    "agents:sync": "npx tsx ./scripts/fetch-community-agents.ts",
     "db:check": "drizzle-kit check",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "npx tsx ./scripts/migrate.ts",

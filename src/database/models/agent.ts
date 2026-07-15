@@ -156,6 +156,15 @@ export class AgentModel {
     return item
   }
 
+  countVisible = async () => {
+    await this.ensureBuiltin()
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(agents)
+      .where(this.visibleWhere())
+    return row?.count ?? 0
+  }
+
   countTopics = async (agentId: string) => {
     const [row] = await this.db
       .select({ count: sql<number>`count(*)::int` })

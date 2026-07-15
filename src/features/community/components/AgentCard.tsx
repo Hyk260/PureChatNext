@@ -154,7 +154,7 @@ const AgentCard = memo<DiscoverAgentItem>(
               <Text as='h2' className={styles.title} ellipsis>
                 {title}
               </Text>
-              <div className={styles.author}>{author}</div>
+              {/* <div className={styles.author}>{author}</div> */}
             </Flexbox>
           </Flexbox>
         </Flexbox>

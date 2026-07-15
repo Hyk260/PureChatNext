@@ -1,5 +1,5 @@
 import type { UIMessage } from 'ai'
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, eq, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import type { ChatMessageItem } from '../schemas/chat'
@@ -42,6 +42,14 @@ export class ChatMessageModel {
     this.userId = userId
     this.db = db
     this.topicModel = new ChatTopicModel(userId, db)
+  }
+
+  countAll = async () => {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(chatMessages)
+      .where(eq(chatMessages.userId, this.userId))
+    return row?.count ?? 0
   }
 
   listByTopic = async (topicId: string): Promise<UIMessage[]> => {

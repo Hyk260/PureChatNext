@@ -1,11 +1,12 @@
 'use client'
 
-import { ActionIcon, Button, Flexbox, Text } from '@lobehub/ui'
-import { ArrowLeft, MessageSquarePlus } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Button, Flexbox, Text } from '@lobehub/ui'
+import { MessageSquarePlus } from 'lucide-react'
 import { memo } from 'react'
 
+import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { LocalChatTopic } from '@/features/chat/types'
+import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
 
 import TopicList from './TopicList'
 
@@ -20,35 +21,38 @@ type Props = {
 
 const TopicSidebar = memo<Props>(
   ({ topics, activeTopicId, onNewTopic, onSelectTopic, onRenameTopic, onDeleteTopic }) => {
-    const router = useRouter()
+    const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
+    const toggleLeftCollapsed = useChatUiStore((s) => s.toggleLeftCollapsed)
 
     return (
-      <Flexbox gap={8} height='100%' padding={12} style={{ minWidth: 220 }}>
-        <Flexbox align='center' gap={4} horizontal>
-          <ActionIcon
-            icon={ArrowLeft}
-            title='返回首页'
-            onClick={() => {
-              router.push('/')
-            }}
-          />
-          <Text ellipsis style={{ flex: 1 }} weight={500}>
-            话题
-          </Text>
-        </Flexbox>
-        <Button block icon={MessageSquarePlus} onClick={onNewTopic}>
-          开启新话题
-        </Button>
-        <Text fontSize={12} type='secondary' weight={500}>
-          列表
-        </Text>
-        <TopicList
-          activeTopicId={activeTopicId}
-          onDelete={onDeleteTopic}
-          onRename={onRenameTopic}
-          onSelect={onSelectTopic}
-          topics={topics}
+      <Flexbox gap={8} height='100%' style={{ minWidth: 220 }}>
+        <SideBarHeaderLayout
+          breadcrumb={[
+            {
+              href: '/chat',
+              title: '话题',
+            },
+          ]}
+          collapsed={leftCollapsed}
+          homeHref='/'
+          showHomeIcon
+          onToggleCollapsed={toggleLeftCollapsed}
         />
+        <Flexbox gap={8} paddingInline={12} style={{ minHeight: 0 }} flex={1}>
+          <Button block icon={MessageSquarePlus} onClick={onNewTopic}>
+            开启新话题
+          </Button>
+          <Text fontSize={12} type='secondary' weight={500}>
+            列表
+          </Text>
+          <TopicList
+            activeTopicId={activeTopicId}
+            onDelete={onDeleteTopic}
+            onRename={onRenameTopic}
+            onSelect={onSelectTopic}
+            topics={topics}
+          />
+        </Flexbox>
       </Flexbox>
     )
   },

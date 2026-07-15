@@ -1,9 +1,11 @@
+export { default as ChatHeader } from './ChatHeader'
 export { default as ChatInput } from './ChatInput'
 export { default as ChatLayout } from './ChatLayout'
 export { default as ChatMessages } from './ChatMessages'
 export { default as ChatPage } from './ChatPage'
 export { default as ParamsPanel } from './ParamsPanel'
 export { default as TopicSidebar } from './TopicSidebar'
+export { default as WideScreenContainer } from './WideScreenContainer'
 export {
   PENDING_CHAT_TEXT_KEY,
   PENDING_TOPIC_SEND_KEY,

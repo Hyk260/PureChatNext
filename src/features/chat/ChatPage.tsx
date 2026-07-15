@@ -29,6 +29,7 @@ import ChatLayout from '@/features/chat/ChatLayout'
 import ChatMessages from '@/features/chat/ChatMessages'
 import ParamsPanel from '@/features/chat/ParamsPanel'
 import TopicSidebar from '@/features/chat/TopicSidebar'
+import WideScreenContainer from '@/features/chat/WideScreenContainer'
 import { withMessageText } from '@/features/chat/messageText'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
@@ -39,6 +40,7 @@ const subscribeNoop = () => () => {}
 const getClientSnapshot = () => true
 const getServerSnapshot = () => false
 const EMPTY_MESSAGES: UIMessage[] = []
+const DRAFT_TOPIC_TITLE = '新话题'
 
 const styles = createStaticStyles(({ css }) => ({
   error: css`
@@ -52,10 +54,13 @@ const styles = createStaticStyles(({ css }) => ({
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 720px;
-    height: 100dvh;
-    margin-inline: auto;
-    padding: 48px 16px 24px;
+    height: 100%;
+    min-height: 0;
+    padding-block: 16px 24px;
+  `,
+  shell: css`
+    width: 100%;
+    height: 100%;
   `,
 }))
 
@@ -266,17 +271,21 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
   }, [stop])
 
   return (
-    <Flexbox className={styles.page} gap={16}>
-      <ChatMessages
-        disabled={isBusy}
-        isStreaming={isStreaming}
-        messages={messages}
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-      />
-      {error ? <Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Text> : null}
-      <ChatInput isBusy={isBusy} onSend={handleSend} onStop={handleStop} />
-    </Flexbox>
+    <WideScreenContainer>
+      <Flexbox className={styles.page} gap={16}>
+        <ChatMessages
+          disabled={isBusy}
+          isStreaming={isStreaming}
+          messages={messages}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+        />
+        {error ? (
+          <Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Text>
+        ) : null}
+        <ChatInput isBusy={isBusy} onSend={handleSend} onStop={handleStop} />
+      </Flexbox>
+    </WideScreenContainer>
   )
 })
 
@@ -434,6 +443,11 @@ const ChatPage = memo(() => {
   const messagesReady = activeTopicId === null ? true : loadedTopicId === activeTopicId
   const showShell = !isClient || !messagesReady
 
+  const topicTitle = useMemo(() => {
+    if (!activeTopicId) return DRAFT_TOPIC_TITLE
+    return topics.find((topic) => topic.id === activeTopicId)?.title ?? DRAFT_TOPIC_TITLE
+  }, [activeTopicId, topics])
+
   return (
     <ChatLayout
       left={
@@ -447,8 +461,11 @@ const ChatPage = memo(() => {
         />
       }
       right={<ParamsPanel value={params} onChange={handleParamsChange} />}
+      title={topicTitle}
     >
-      {showShell ? <div className={styles.page} /> : (
+      {showShell ? (
+        <div className={styles.shell} />
+      ) : (
         <ChatView
           key={`${agentId}:${activeTopicId ?? 'draft'}`}
           agentId={agentId}

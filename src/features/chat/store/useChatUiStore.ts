@@ -9,10 +9,13 @@ import type { ChatLlmParams } from '@/features/chat/types'
 type ChatUiState = {
   leftCollapsed: boolean
   rightCollapsed: boolean
+  /** true = 聊天区占满主栏宽度；false = 居中限宽 */
+  wideScreen: boolean
   /** agentId → params */
   paramsByAgent: Record<string, ChatLlmParams>
   toggleLeftCollapsed: () => void
   toggleRightCollapsed: () => void
+  toggleWideScreen: (value?: boolean) => void
   setLeftCollapsed: (v: boolean) => void
   setRightCollapsed: (v: boolean) => void
   getParams: (agentId: string) => ChatLlmParams
@@ -24,9 +27,14 @@ export const useChatUiStore = create<ChatUiState>()(
     (set, get) => ({
       leftCollapsed: false,
       rightCollapsed: false,
+      wideScreen: false,
       paramsByAgent: {},
       toggleLeftCollapsed: () => set((s) => ({ leftCollapsed: !s.leftCollapsed })),
       toggleRightCollapsed: () => set((s) => ({ rightCollapsed: !s.rightCollapsed })),
+      toggleWideScreen: (value) =>
+        set((s) => ({
+          wideScreen: typeof value === 'boolean' ? value : !s.wideScreen,
+        })),
       setLeftCollapsed: (leftCollapsed) => set({ leftCollapsed }),
       setRightCollapsed: (rightCollapsed) => set({ rightCollapsed }),
       getParams: (agentId) => get().paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS,

@@ -45,8 +45,12 @@ const styles = createStaticStyles(({ css, cssVar: token }) => ({
 
 interface SideBarHeaderLayoutProps {
   breadcrumb?: BreadcrumbProps['items']
+  /** 受控折叠状态；未传时回退到 useHomeStore.sidebarCollapsed */
+  collapsed?: boolean
   homeHref?: string
   left?: ReactNode
+  /** 受控折叠切换；未传时回退到 useHomeStore.toggleSidebarCollapsed */
+  onToggleCollapsed?: () => void
   right?: ReactNode
   showHomeIcon?: boolean
   showTogglePanelButton?: boolean
@@ -55,14 +59,18 @@ interface SideBarHeaderLayoutProps {
 const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
   ({
     breadcrumb = [],
+    collapsed,
     homeHref = '/',
     left,
+    onToggleCollapsed,
     right,
     showHomeIcon = true,
     showTogglePanelButton = true,
   }) => {
-    const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
-    const toggleSidebarCollapsed = useHomeStore((s) => s.toggleSidebarCollapsed)
+    const homeSidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
+    const toggleHomeSidebarCollapsed = useHomeStore((s) => s.toggleSidebarCollapsed)
+    const sidebarCollapsed = collapsed ?? homeSidebarCollapsed
+    const toggleSidebarCollapsed = onToggleCollapsed ?? toggleHomeSidebarCollapsed
     const router = useRouter()
 
     const breadcrumbItems: BreadcrumbProps['items'] = [

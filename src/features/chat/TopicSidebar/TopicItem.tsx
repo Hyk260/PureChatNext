@@ -97,12 +97,13 @@ const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) 
               title='删除该话题？'
               description='话题下的所有消息将一并删除。'
             >
-              <ActionIcon
-                icon={Trash2}
-                size={16}
-                title='删除'
+              <span
                 onClick={(event) => event.stopPropagation()}
-              />
+                onKeyDown={(event) => event.stopPropagation()}
+                role='presentation'
+              >
+                <ActionIcon icon={Trash2} size={16} title='删除' />
+              </span>
             </Popconfirm>
           </Flexbox>
         </Flexbox>

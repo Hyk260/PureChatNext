@@ -1,8 +1,13 @@
-import  { createNanoId } from '@pure/utils'
+import { createNanoId } from '@pure/utils'
+import { generate } from 'random-words'
 
 const prefixes = {
-  chatTopics: 'topic',
+  topics: 'tpc',
   documents: 'docs',
+  sessions: 'ssn',
+  tasks: 'task',
+  agents: 'agt',
+  user: 'user',
   files: 'file',
   knowledgeBases: 'kb',
 } as const
@@ -13,23 +18,6 @@ export const idGenerator = (namespace: keyof typeof prefixes, size = 12) => {
   return `${prefix}_${hash()}`
 }
 
-const SLUG_WORDS = [
-  'alpha',
-  'beta',
-  'gamma',
-  'delta',
-  'echo',
-  'foxtrot',
-  'golf',
-  'hotel',
-  'india',
-  'juliet',
-]
+export const randomSlug = (count = 2) => (generate(count) as string[]).join('-')
 
-export const randomSlug = (count = 2) => {
-  const words: string[] = []
-  for (let i = 0; i < count; i++) {
-    words.push(SLUG_WORDS[Math.floor(Math.random() * SLUG_WORDS.length)]!)
-  }
-  return words.join('-')
-}
+export const inboxSessionId = (userId: string) => `ssn_inbox_${userId}`

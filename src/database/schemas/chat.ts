@@ -8,7 +8,7 @@ export const chatTopics = pgTable(
   'chat_topics',
   {
     id: text('id')
-      .$defaultFn(() => idGenerator('chatTopics'))
+      .$defaultFn(() => idGenerator('topics'))
       .primaryKey(),
     userId: text('user_id')
       .references(() => users.id, { onDelete: 'cascade' })

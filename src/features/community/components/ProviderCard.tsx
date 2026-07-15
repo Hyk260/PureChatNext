@@ -1,6 +1,6 @@
 'use client'
 
-import { Github, ModelTag, ProviderCombine } from '@lobehub/icons'
+import { ModelTag, ProviderCombine } from '@lobehub/icons'
 import { ActionIcon, Block, Flexbox, MaskShadow, stopPropagation, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { GlobeIcon } from 'lucide-react'
@@ -57,14 +57,6 @@ const ProviderCard = memo<DiscoverProviderItem>(
           <Flexbox horizontal align='center'>
             <a href={url} rel='noopener noreferrer' target='_blank' onClick={stopPropagation}>
               <ActionIcon color={cssVar.colorTextDescription} icon={GlobeIcon} />
-            </a>
-            <a
-              href='https://github.com/lobehub/lobe-chat'
-              rel='noopener noreferrer'
-              target='_blank'
-              onClick={stopPropagation}
-            >
-              <ActionIcon fill={cssVar.colorTextDescription} icon={Github} />
             </a>
           </Flexbox>
         </Flexbox>

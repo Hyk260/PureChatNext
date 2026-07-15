@@ -1,5 +1,3 @@
-import path from 'node:path'
-
 import { codeInspectorPlugin } from 'code-inspector-plugin'
 import type { NextConfig } from 'next'
 
@@ -7,20 +5,15 @@ const isProd = process.env.NODE_ENV === 'production'
 const isVercel = !!process.env.VERCEL_ENV
 const enableCodeInspector = process.env.CODE_INSPECTOR === '1'
 
-/** Absolute path required by code-inspector `injectTo` (shared client entry). */
-const codeInspectorInjectTo = path.join(process.cwd(), 'src/components/CodeInspectorAnchor.tsx')
-
 const nextConfig: NextConfig = {
-  ...(isVercel
-    ? {
-        outputFileTracingExcludes: {
-          '*': [
-            'node_modules/.pnpm/@napi-rs+canvas-*-musl*',
-            'node_modules/.pnpm/@img+sharp-libvips-*musl*',
-          ],
-        },
-      }
-    : {}),
+  ...(isVercel && {
+    outputFileTracingExcludes: {
+      '*': [
+        'node_modules/.pnpm/@napi-rs+canvas-*-musl*',
+        'node_modules/.pnpm/@img+sharp-libvips-*musl*',
+      ],
+    },
+  }),
   compress: isProd,
   compiler: {
     emotion: true,
@@ -44,16 +37,9 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    const securityHeaders = [
-      {
-        key: 'x-robots-tag',
-        value: 'all',
-      },
-    ]
-
     return [
       {
-        headers: securityHeaders,
+        headers: [{ key: 'x-robots-tag', value: 'all' }],
         source: '/:path*',
       },
     ]
@@ -62,18 +48,17 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
   },
   serverExternalPackages: ['@napi-rs/canvas', 'pdfjs-dist'],
-  ...(enableCodeInspector
-    ? {
-        turbopack: {
-          rules: codeInspectorPlugin({
-            bundler: 'turbopack',
-            showSwitch: true,
-            editor: 'cursor',
-            injectTo: codeInspectorInjectTo,
-          }),
-        },
-      }
-    : {}),
+  ...(enableCodeInspector && {
+    turbopack: {
+      rules: codeInspectorPlugin({
+        bundler: 'turbopack',
+        // editor: 'cursor',
+        // launchType: 'open',
+        // port: 5678,
+        // printServer: true,
+      }),
+    },
+  }),
 }
 
 export default nextConfig

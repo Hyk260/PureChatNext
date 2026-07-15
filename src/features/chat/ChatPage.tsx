@@ -36,6 +36,8 @@ import { DEFAULT_CHAT_LLM_PARAMS, type ChatLlmParams, type LocalChatTopic } from
 import { fetchAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
+import { isSettingsProviderId } from '@/features/settings/provider/const'
+import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
 
 const subscribeNoop = () => () => {}
 const getClientSnapshot = () => true
@@ -67,6 +69,16 @@ const styles = createStaticStyles(({ css }) => ({
 
 const chatTransport = new DefaultChatTransport({
   api: '/api/chat',
+  headers: (): Record<string, string> => {
+    debugger
+    const provider = useHomeStore.getState().selectedProvider
+    if (!isSettingsProviderId(provider)) return {}
+
+    const apiKey = useProviderConfigStore.getState().configs[provider].apiKey.trim()
+    if (!apiKey) return {}
+
+    return { Authorization: `Bearer ${apiKey}` }
+  },
 })
 
 interface ChatViewProps {
@@ -81,6 +93,11 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
   const selectedModel = useHomeStore((s) => s.selectedModel)
   const selectedProvider = useHomeStore((s) => s.selectedProvider)
   const activeAgent = useHomeStore((s) => s.activeAgent)
+  const providerBaseURL = useProviderConfigStore((s) =>
+    isSettingsProviderId(selectedProvider)
+      ? s.configs[selectedProvider].baseURL.trim()
+      : '',
+  )
 
   const chatId = `purechat-${agentId}-${topicId ?? 'draft'}`
 
@@ -157,9 +174,10 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
     () => ({
       model: selectedModel,
       provider: selectedProvider,
+      ...(providerBaseURL ? { baseURL: providerBaseURL } : {}),
       ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
     }),
-    [activeAgent, selectedModel, selectedProvider],
+    [activeAgent, providerBaseURL, selectedModel, selectedProvider],
   )
 
   const sendWithBody = useCallback(

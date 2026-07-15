@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, DropdownMenu, Flexbox, Text } from '@lobehub/ui'
+import { ActionIcon, DropdownMenu, Flexbox, Icon, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Maximize2, MoreHorizontal, PanelLeftOpen, PanelRightOpen } from 'lucide-react'
 import { memo, useMemo } from 'react'
@@ -14,6 +14,43 @@ const styles = createStaticStyles(({ css }) => ({
     padding-inline: 8px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
     background: ${cssVar.colorBgContainer};
+  `,
+  menuTrigger: css`
+    cursor: pointer;
+
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+
+    color: ${cssVar.colorTextSecondary};
+    background: transparent;
+    outline: none;
+
+    &:hover {
+      color: ${cssVar.colorText};
+      background: ${cssVar.colorFillSecondary};
+    }
+  `,
+  srOnly: css`
+    position: absolute;
+
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+
+    white-space: nowrap;
   `,
   title: css`
     min-width: 0;
@@ -63,8 +100,18 @@ const ChatHeader = memo<Props>(({ title }) => {
         <Text className={styles.title} ellipsis>
           {title}
         </Text>
-        <DropdownMenu items={menuItems} nativeButton placement='bottomLeft'>
-          <ActionIcon icon={MoreHorizontal} size='small' title='更多' />
+        {/*
+          Multiple children avoid DropdownMenu cloning a single ActionIcon and
+          reading element.ref (removed in React 19).
+        */}
+        <DropdownMenu
+          items={menuItems}
+          nativeButton
+          placement='bottomLeft'
+          triggerProps={{ className: styles.menuTrigger, title: '更多' }}
+        >
+          <Icon icon={MoreHorizontal} size='small' />
+          <span className={styles.srOnly}>更多</span>
         </DropdownMenu>
       </Flexbox>
 

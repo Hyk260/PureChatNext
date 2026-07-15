@@ -109,6 +109,17 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
     }
   }
 
+  const handlePin = async (agent: AgentListItem, pinned: boolean) => {
+    try {
+      await updateAgent(agent.id, { pinned })
+      await fetchAgentsList()
+      message.success(pinned ? '已置顶' : '已取消置顶')
+    } catch (error) {
+      console.error('[agents] pin failed:', error)
+      message.error('操作失败')
+    }
+  }
+
   const handleDelete = async (id: string) => {
     await deleteAgent(id)
     removeLocal(id)
@@ -140,6 +151,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
                 agent={agent}
                 onDelete={handleDelete}
                 onEdit={setEditing}
+                onPin={handlePin}
                 onSelect={applyAgent}
               />
             ))

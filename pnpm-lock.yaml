@@ -223,8 +223,8 @@ importers:
         specifier: ^0.7.39
         version: 0.7.39
       code-inspector-plugin:
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.0.1
+        version: 2.0.1
       eslint:
         specifier: ^9
         version: 9.39.0(jiti@2.6.1)
@@ -1022,8 +1022,8 @@ packages:
   '@chevrotain/types@11.1.2':
     resolution: {integrity: sha512-U+HFai5+zmJCkK86QsaJtoITlboZHBqrVketcO2ROv865xfCMSFpELQoz1GkX5GzME8pTa+3kbKrZHQtI0gdbw==}
 
-  '@code-inspector/core@2.0.0':
-    resolution: {integrity: sha512-n8c3jib2JQsxCWd22Gan7vxlRZXwolg33z+nmyx6h1LrK/LtoJYir4iQ6N0rOcoaRR4aAqUkF1CfYuWT6ofK0w==}
+  '@code-inspector/core@2.0.1':
+    resolution: {integrity: sha512-pVW1FM7OTlsWDq3WKDMGDc9Fk8Jf4+xg3kLrKg4opk2PpNNvYvNjWr+air64UDwzojxcozQQipZNvCRspkeyOQ==}
     peerDependencies:
       '@anthropic-ai/claude-agent-sdk': ^0.2.29
       '@openai/codex-sdk': ^0.106.0
@@ -1036,20 +1036,20 @@ packages:
       '@opencode-ai/sdk':
         optional: true
 
-  '@code-inspector/esbuild@2.0.0':
-    resolution: {integrity: sha512-7dd8IfhV4TTLNU6zy/ue3WsVOZktSRHFKbI+OziHoOq0NzGZbPVJrw+4jcV1Msq1D/tCJqx1jnTZiH/FawTe2Q==}
+  '@code-inspector/esbuild@2.0.1':
+    resolution: {integrity: sha512-95bWhxkRxUC9cH6HyDaHp+n1LGJ636D+lhTnI4NTj5E2ryv4XebcaklLPFI6oHGqkS1LnhBmeGAv/w9Y8qHCew==}
 
-  '@code-inspector/mako@2.0.0':
-    resolution: {integrity: sha512-lMDBG7rZGGYxQ2JF85wiA0K7BZFNFjzT1WovJzm7Cyy4MaTMdW0dKjbgO4GIDEq/ReNZjQghRwm4TYhXxemqlA==}
+  '@code-inspector/mako@2.0.1':
+    resolution: {integrity: sha512-QrX8CscLkSm4czC0IFa/8qnFWruZJSrWqrViryl27glaw3kHOoHItxMqztnonoHZzZnl9+wpmLbkF12XAY1eiQ==}
 
-  '@code-inspector/turbopack@2.0.0':
-    resolution: {integrity: sha512-89ftKEfgp4b5rqILDal5vhPDCJXj2+P2a3edyozzlfSBvvbExn7rLBKO5W0n+9iEuwjv/dydOcicVaalRY9jyA==}
+  '@code-inspector/turbopack@2.0.1':
+    resolution: {integrity: sha512-5HUtnKDtDsl+dYf+qFGRI62M6fLPhVpjLfXze0lQgZStgoxeRjBl3WLgZ4Tno2mbK6Av3PLjMNbtYIIcD9jfqA==}
 
-  '@code-inspector/vite@2.0.0':
-    resolution: {integrity: sha512-/Tdcn8Uro5jnWTlnkcsr64/JMO5FCatzJX23lt1kHdyL+Fxs4kwuBlkbZAyp0UfOsme5WKE0RDun/1QK1HaOmw==}
+  '@code-inspector/vite@2.0.1':
+    resolution: {integrity: sha512-cmbycJnDhoLjQCvlRx3HtamLu+w3PmUCtdob2VqLcN1bTeDh+fuBGjeoDbFjzn4Ap0R2KVRe/M7kDODk+4zF4Q==}
 
-  '@code-inspector/webpack@2.0.0':
-    resolution: {integrity: sha512-mLhKKndDtneK6T45e4SX4b2egCCpHyotF/lt1tzbLYymVUAHE2BPQrVYKIuiKzoiXU49R1opdiIfs7dy8T31Eg==}
+  '@code-inspector/webpack@2.0.1':
+    resolution: {integrity: sha512-qPMkGyshsCOW2t0p3RINFrTFWM2kgqULxzL7AGgXrDaXnA0xOq8yVWxurAzCTHEYPTcvCTZCK3aGQI9YoMjHfA==}
 
   '@dnd-kit/accessibility@3.1.1':
     resolution: {integrity: sha512-2P+YgaXF+gRsIihwwY1gCsQSYnu9Zyj2py8kY5fFvUM1qm2WA2u639R6YNVfU4GWr+ZM5mqEsfHZZLoRONbemw==}
@@ -4678,8 +4678,8 @@ packages:
     resolution: {integrity: sha512-rwHwUfXL40Chm1r08yrhU3qpUvdVlgkKNeyeGPOxnW8/SyVDvgRaed/Uz54AqWNaTCAThlj6QAs3TZcKI0xDEw==}
     engines: {node: '>=0.10.0'}
 
-  code-inspector-plugin@2.0.0:
-    resolution: {integrity: sha512-kZhWDYHDkMw2QehZQ6rCygbVCfwDBML2Rv7InUj4ShlAuZnd/YC9ZP8pyHqiGLAkeTyAIlanxOxRHyeEdFt+gA==}
+  code-inspector-plugin@2.0.1:
+    resolution: {integrity: sha512-m1CS5otAi6D9vlJ59HA0+OkLJXlARpi3DqtgwlhejenJOq9QT+6SCUU73jdPgcqnGQnxVdFx3915NrYO+0FITg==}
 
   collapse-white-space@2.1.0:
     resolution: {integrity: sha512-loKTxY1zCOuG4j9f6EPnuyyYkf58RnhhWTvRoZEokgB+WbdXehfjFviyOVYkqzEWz1Q5kRiZdBYS5SwxbQYwzw==}
@@ -9848,7 +9848,7 @@ snapshots:
 
   '@chevrotain/types@11.1.2': {}
 
-  '@code-inspector/core@2.0.0':
+  '@code-inspector/core@2.0.1':
     dependencies:
       '@vue/compiler-dom': 3.5.24
       '@xterm/addon-fit': 0.11.0
@@ -9865,9 +9865,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@code-inspector/esbuild@2.0.0':
+  '@code-inspector/esbuild@2.0.1':
     dependencies:
-      '@code-inspector/core': 2.0.0
+      '@code-inspector/core': 2.0.1
     transitivePeerDependencies:
       - '@anthropic-ai/claude-agent-sdk'
       - '@openai/codex-sdk'
@@ -9876,9 +9876,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@code-inspector/mako@2.0.0':
+  '@code-inspector/mako@2.0.1':
     dependencies:
-      '@code-inspector/core': 2.0.0
+      '@code-inspector/core': 2.0.1
     transitivePeerDependencies:
       - '@anthropic-ai/claude-agent-sdk'
       - '@openai/codex-sdk'
@@ -9887,10 +9887,10 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@code-inspector/turbopack@2.0.0':
+  '@code-inspector/turbopack@2.0.1':
     dependencies:
-      '@code-inspector/core': 2.0.0
-      '@code-inspector/webpack': 2.0.0
+      '@code-inspector/core': 2.0.1
+      '@code-inspector/webpack': 2.0.1
     transitivePeerDependencies:
       - '@anthropic-ai/claude-agent-sdk'
       - '@openai/codex-sdk'
@@ -9899,9 +9899,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@code-inspector/vite@2.0.0':
+  '@code-inspector/vite@2.0.1':
     dependencies:
-      '@code-inspector/core': 2.0.0
+      '@code-inspector/core': 2.0.1
       chalk: 4.1.1
     transitivePeerDependencies:
       - '@anthropic-ai/claude-agent-sdk'
@@ -9911,9 +9911,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@code-inspector/webpack@2.0.0':
+  '@code-inspector/webpack@2.0.1':
     dependencies:
-      '@code-inspector/core': 2.0.0
+      '@code-inspector/core': 2.0.1
     transitivePeerDependencies:
       - '@anthropic-ai/claude-agent-sdk'
       - '@openai/codex-sdk'
@@ -13579,14 +13579,14 @@ snapshots:
 
   cluster-key-slot@1.1.1: {}
 
-  code-inspector-plugin@2.0.0:
+  code-inspector-plugin@2.0.1:
     dependencies:
-      '@code-inspector/core': 2.0.0
-      '@code-inspector/esbuild': 2.0.0
-      '@code-inspector/mako': 2.0.0
-      '@code-inspector/turbopack': 2.0.0
-      '@code-inspector/vite': 2.0.0
-      '@code-inspector/webpack': 2.0.0
+      '@code-inspector/core': 2.0.1
+      '@code-inspector/esbuild': 2.0.1
+      '@code-inspector/mako': 2.0.1
+      '@code-inspector/turbopack': 2.0.1
+      '@code-inspector/vite': 2.0.1
+      '@code-inspector/webpack': 2.0.1
       chalk: 4.1.1
     transitivePeerDependencies:
       - '@anthropic-ai/claude-agent-sdk'

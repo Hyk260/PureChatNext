@@ -24,20 +24,29 @@ const resolveApiKeyFromHeader = (request: Request) => {
   return token || undefined
 }
 
+const resolveProviderOptions = (apiKey: string | undefined, baseURL: string | undefined) => {
+  const options: { apiKey?: string; baseURL?: string } = {}
+  if (apiKey) options.apiKey = apiKey
+  if (baseURL) options.baseURL = baseURL
+  return Object.keys(options).length > 0 ? options : undefined
+}
+
 const resolveModel = (
   provider: string | undefined,
   model: string | undefined,
   apiKey: string | undefined,
+  baseURL: string | undefined,
 ) => {
   const resolvedProvider = provider ?? 'deepseek'
   const resolvedModel = model ?? 'deepseek-v4-flash'
+  const options = resolveProviderOptions(apiKey, baseURL)
 
   switch (resolvedProvider) {
     case 'openai':
-      return createOpenAI(apiKey ? { apiKey } : undefined)(resolvedModel)
+      return createOpenAI(options)(resolvedModel)
     case 'deepseek':
     default:
-      return createDeepSeek(apiKey ? { apiKey } : undefined)(resolvedModel)
+      return createDeepSeek(options)(resolvedModel)
   }
 }
 
@@ -47,9 +56,11 @@ const resolveModel = (
  *
  * Optional header: `Authorization: Bearer <api-key>`
  * When present, overrides `DEEPSEEK_API_KEY` / `OPENAI_API_KEY`.
+ * Optional body `baseURL` overrides the provider default endpoint.
  */
 export async function POST(request: Request) {
   let requestBody: {
+    baseURL?: string
     messages: UIMessage[]
     model?: string
     provider?: string
@@ -62,15 +73,16 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
 
-  const { messages, model, provider, system } = requestBody
+  const { baseURL, messages, model, provider, system } = requestBody
 
   if (!Array.isArray(messages)) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
 
   const apiKey = resolveApiKeyFromHeader(request)
+  const resolvedBaseURL = typeof baseURL === 'string' && baseURL.trim() ? baseURL.trim() : undefined
 
-  const resolvedModel = resolveModel(provider, model, apiKey)
+  const resolvedModel = resolveModel(provider, model, apiKey, resolvedBaseURL)
 
   log('modelId: %o, provider: %o', resolvedModel.modelId, resolvedModel.provider)
 

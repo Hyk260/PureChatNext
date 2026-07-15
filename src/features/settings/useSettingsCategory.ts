@@ -67,7 +67,6 @@ export const SETTINGS_EMPTY_TABS = [
   SettingsTab.Language,
   SettingsTab.Hotkey,
   SettingsTab.Notification,
-  SettingsTab.Provider,
   SettingsTab.ServiceModel,
   SettingsTab.Skill,
   SettingsTab.Connector,
@@ -127,7 +126,7 @@ export function useSettingsCategory(): SettingsCategoryGroup[] {
       {
         items: [
           {
-            href: tabHref(SettingsTab.Provider),
+            href: '/settings/provider/all',
             icon: Brain,
             key: SettingsTab.Provider,
             label: 'AI 服务商',

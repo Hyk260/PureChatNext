@@ -6,7 +6,6 @@ import { memo, type ReactNode } from 'react'
 
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 
-/** 非全宽时聊天区居中限宽，与 lobe-chat CONVERSATION_MIN_WIDTH 对齐 */
 export const CONVERSATION_MAX_WIDTH = 960
 
 const styles = createStaticStyles(({ css }) => ({

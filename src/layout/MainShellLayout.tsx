@@ -26,9 +26,9 @@ const MainShellLayout = ({ children, header, sidebar }: MainShellLayoutProps) =>
   return (
     <Flexbox className={styles.shell} horizontal height='100%' width='100%'>
       {sidebar}
-      <Flexbox className={styles.main} flex={1} height='100%'>
+      <Flexbox className={styles.main} flex={1} height='100%' style={{ minHeight: 0 }}>
         {header}
-        <Flexbox flex={1} style={{ overflow: 'auto' }} width='100%'>
+        <Flexbox flex={1} height='100%' style={{ minHeight: 0, overflow: 'auto' }} width='100%'>
           {children}
         </Flexbox>
       </Flexbox>

@@ -14,32 +14,32 @@ describe('GitHub', () => {
     const gh = new GitHub();
 
     it('should parse standard GitHub URL', () => {
-      const result = gh.parseRepoUrl('https://github.com/lobehub/lobe-chat');
+      const result = gh.parseRepoUrl('https://github.com/Hyk260/PureChat');
       expect(result).toEqual({
         branch: 'main',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
     });
 
     it('should parse GitHub URL with tree/branch', () => {
-      const result = gh.parseRepoUrl('https://github.com/lobehub/lobe-chat/tree/develop');
+      const result = gh.parseRepoUrl('https://github.com/Hyk260/PureChat/tree/develop');
       expect(result).toEqual({
         branch: 'develop',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
     });
 
     it('should parse GitHub URL with tree/branch and path', () => {
       const result = gh.parseRepoUrl(
-        'https://github.com/lobehub/lobe-chat/tree/feature/new-ui/src/components',
+        'https://github.com/Hyk260/PureChat/tree/feature/new-ui/src/components',
       );
       expect(result).toEqual({
         branch: 'feature',
-        owner: 'lobehub',
+        owner: 'Hyk260',
         path: 'new-ui/src/components',
-        repo: 'lobe-chat',
+        repo: 'PureChat',
       });
     });
 
@@ -59,22 +59,22 @@ describe('GitHub', () => {
 
     it('should capture nested subdirectory path from GitHub URL', () => {
       const result = gh.parseRepoUrl(
-        'https://github.com/lobehub/skills/tree/develop/agents/coding/python-expert',
+        'https://github.com/Hyk260/skills/tree/develop/agents/coding/python-expert',
       );
       expect(result).toEqual({
         branch: 'develop',
-        owner: 'lobehub',
+        owner: 'Hyk260',
         path: 'agents/coding/python-expert',
         repo: 'skills',
       });
     });
 
     it('should not have path when URL has no subdirectory', () => {
-      const result = gh.parseRepoUrl('https://github.com/lobehub/lobe-chat/tree/main');
+      const result = gh.parseRepoUrl('https://github.com/Hyk260/PureChat/tree/main');
       expect(result).toEqual({
         branch: 'main',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
       expect(result.path).toBeUndefined();
     });
@@ -114,38 +114,38 @@ describe('GitHub', () => {
     });
 
     it('should parse GitHub URL without protocol', () => {
-      const result = gh.parseRepoUrl('github.com/lobehub/lobe-chat');
+      const result = gh.parseRepoUrl('github.com/Hyk260/PureChat');
       expect(result).toEqual({
         branch: 'main',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
     });
 
     it('should parse GitHub URL with .git suffix', () => {
-      const result = gh.parseRepoUrl('https://github.com/lobehub/lobe-chat.git');
+      const result = gh.parseRepoUrl('https://github.com/Hyk260/PureChat.git');
       expect(result).toEqual({
         branch: 'main',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
     });
 
     it('should parse shorthand format (owner/repo)', () => {
-      const result = gh.parseRepoUrl('lobehub/lobe-chat');
+      const result = gh.parseRepoUrl('Hyk260/PureChat');
       expect(result).toEqual({
         branch: 'main',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
     });
 
     it('should use custom default branch', () => {
-      const result = gh.parseRepoUrl('https://github.com/lobehub/lobe-chat', 'dev');
+      const result = gh.parseRepoUrl('https://github.com/Hyk260/PureChat', 'dev');
       expect(result).toEqual({
         branch: 'dev',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
     });
 
@@ -171,20 +171,20 @@ describe('GitHub', () => {
     it('should build correct ZIP URL', () => {
       const url = gh.buildRepoZipUrl({
         branch: 'main',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
-      expect(url).toBe('https://github.com/lobehub/lobe-chat/archive/refs/heads/main.zip');
+      expect(url).toBe('https://github.com/Hyk260/PureChat/archive/refs/heads/main.zip');
     });
 
     it('should handle different branches', () => {
       const url = gh.buildRepoZipUrl({
         branch: 'feature/new-ui',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
       expect(url).toBe(
-        'https://github.com/lobehub/lobe-chat/archive/refs/heads/feature/new-ui.zip',
+        'https://github.com/Hyk260/PureChat/archive/refs/heads/feature/new-ui.zip',
       );
     });
   });
@@ -196,21 +196,21 @@ describe('GitHub', () => {
       const url = gh.buildRawFileUrl({
         branch: 'main',
         filePath: 'README.md',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
-      expect(url).toBe('https://raw.githubusercontent.com/lobehub/lobe-chat/main/README.md');
+      expect(url).toBe('https://raw.githubusercontent.com/Hyk260/PureChat/main/README.md');
     });
 
     it('should handle nested file paths', () => {
       const url = gh.buildRawFileUrl({
         branch: 'develop',
         filePath: 'src/components/Button/index.tsx',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
       expect(url).toBe(
-        'https://raw.githubusercontent.com/lobehub/lobe-chat/develop/src/components/Button/index.tsx',
+        'https://raw.githubusercontent.com/Hyk260/PureChat/develop/src/components/Button/index.tsx',
       );
     });
   });
@@ -236,13 +236,13 @@ describe('GitHub', () => {
 
       const result = await gh.downloadRepoZip({
         branch: 'main',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
 
       expect(result).toBeInstanceOf(Buffer);
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://github.com/lobehub/lobe-chat/archive/refs/heads/main.zip',
+        'https://github.com/Hyk260/PureChat/archive/refs/heads/main.zip',
         {
           headers: {
             'User-Agent': 'LobeHub',
@@ -261,7 +261,7 @@ describe('GitHub', () => {
       await expect(
         gh.downloadRepoZip({
           branch: 'main',
-          owner: 'lobehub',
+          owner: 'Hyk260',
           repo: 'non-existent',
         }),
       ).rejects.toThrow(GitHubNotFoundError);
@@ -277,8 +277,8 @@ describe('GitHub', () => {
       await expect(
         gh.downloadRepoZip({
           branch: 'main',
-          owner: 'lobehub',
-          repo: 'lobe-chat',
+          owner: 'Hyk260',
+          repo: 'PureChat',
         }),
       ).rejects.toThrow(GitHubDownloadError);
     });
@@ -293,8 +293,8 @@ describe('GitHub', () => {
 
       await customGh.downloadRepoZip({
         branch: 'main',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
 
       expect(mockFetch).toHaveBeenCalledWith(expect.any(String), {
@@ -327,13 +327,13 @@ describe('GitHub', () => {
       const result = await gh.downloadRawFile({
         branch: 'main',
         filePath: 'README.md',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
 
       expect(result).toBe(mockContent);
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://raw.githubusercontent.com/lobehub/lobe-chat/main/README.md',
+        'https://raw.githubusercontent.com/Hyk260/PureChat/main/README.md',
         {
           headers: {
             'User-Agent': 'LobeHub',
@@ -353,8 +353,8 @@ describe('GitHub', () => {
         gh.downloadRawFile({
           branch: 'main',
           filePath: 'non-existent.md',
-          owner: 'lobehub',
-          repo: 'lobe-chat',
+          owner: 'Hyk260',
+          repo: 'PureChat',
         }),
       ).rejects.toThrow(GitHubNotFoundError);
     });
@@ -382,8 +382,8 @@ describe('GitHub', () => {
       const result = await gh.downloadRawFileBuffer({
         branch: 'main',
         filePath: 'image.png',
-        owner: 'lobehub',
-        repo: 'lobe-chat',
+        owner: 'Hyk260',
+        repo: 'PureChat',
       });
 
       expect(result).toBeInstanceOf(Buffer);

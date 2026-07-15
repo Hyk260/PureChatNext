@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server';
 import {
   parseEmailTemplateKey,
   parseEmailTemplateParams,
-  renderEmailTemplate,
 } from '@/libs/better-auth/email-templates/preview';
+import { renderEmailTemplate } from '@/libs/better-auth/email-templates/preview/server';
 import { EmailImplType, EmailService } from '@/server/services/email';
 import { type EmailPayload } from '@/server/services/email/impls';
 

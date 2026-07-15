@@ -1,4 +1,4 @@
-import { getEmailTemplatePreviews } from '@/libs/better-auth/email-templates/preview';
+import { getEmailTemplatePreviews } from '@/libs/better-auth/email-templates/preview/server';
 
 import { EmailTemplatePreviewPanel } from './EmailTemplatePreview';
 

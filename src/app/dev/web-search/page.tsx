@@ -638,7 +638,13 @@ export default function WebSearchTestPage() {
               ) : crawlResult ? (
                 <div className="grid gap-3">
                   {crawlResult.results.map((item, index) => {
-                    const isError = Boolean(item.data.errorType || item.data.errorMessage);
+                    const errorType = 'errorType' in item.data ? item.data.errorType : undefined;
+                    const errorMessage =
+                      'errorMessage' in item.data ? item.data.errorMessage : undefined;
+                    const isError = Boolean(errorType || errorMessage);
+                    const title = 'title' in item.data ? item.data.title : undefined;
+                    const contentType =
+                      'contentType' in item.data ? item.data.contentType : undefined;
 
                     return (
                       <article key={`${item.originalUrl}-${index}`} className="rounded-lg border border-slate-200 p-4">
@@ -650,7 +656,7 @@ export default function WebSearchTestPage() {
                               rel="noreferrer"
                               className="text-base font-semibold text-slate-950 hover:text-cyan-700"
                             >
-                              {item.data.title || item.originalUrl}
+                              {title || item.originalUrl}
                             </a>
                             <div className="mt-1 truncate font-mono text-xs text-cyan-700">{item.originalUrl}</div>
                           </div>
@@ -663,12 +669,12 @@ export default function WebSearchTestPage() {
                                 isError ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'
                               }`}
                             >
-                              {isError ? item.data.errorType || 'error' : item.data.contentType || 'ok'}
+                              {isError ? errorType || 'error' : contentType || 'ok'}
                             </span>
                           </div>
                         </div>
                         <p className="mt-3 line-clamp-5 text-sm leading-6 text-slate-600">
-                          {item.data.errorMessage || item.data.content || 'No content returned'}
+                          {errorMessage || item.data.content || 'No content returned'}
                         </p>
                       </article>
                     );

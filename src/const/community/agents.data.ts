@@ -4,7 +4,7 @@
  */
 import type { DiscoverAgentItem } from '@/features/community/types'
 
-export const COMMUNITY_AGENTS_DATA: DiscoverAgentItem[] = [
+export const COMMUNITY_AGENTS_DATA = [
   {
     "author": "swarfte",
     "avatar": "📘",
@@ -20,7 +20,7 @@ export const COMMUNITY_AGENTS_DATA: DiscoverAgentItem[] = [
   },
   {
     "author": "AdijeShen",
-    "avatar": "https://registry.npmmirror.com/@lobehub/fluent-emoji-3d/latest/files/assets/1f4da.webp",
+    "avatar": "📖",
     "category": "academic",
     "createdAt": "2025-05-09",
     "description": "擅长将复杂学术论文通俗易懂讲解",
@@ -2308,7 +2308,7 @@ export const COMMUNITY_AGENTS_DATA: DiscoverAgentItem[] = [
   },
   {
     "author": "canisminor1990",
-    "avatar": "https://bilibili.chat-plugin.lobehub.com/logo.webp",
+    "avatar": "🎥",
     "category": "entertainment",
     "createdAt": "2024-01-27",
     "description": "Bilibili Assistant, skilled at parsing video content, generating well-formatted text, responding to user queries, and recommending the latest videos.",
@@ -2477,7 +2477,7 @@ export const COMMUNITY_AGENTS_DATA: DiscoverAgentItem[] = [
   },
   {
     "author": "canisminor1990",
-    "avatar": "https://steam.chat-plugin.lobehub.com/logo.webp",
+    "avatar": "🎮",
     "category": "games",
     "createdAt": "2024-01-27",
     "description": "Steam 游戏专家顾问，热门游戏推荐和深度游戏解析",
@@ -2945,7 +2945,7 @@ export const COMMUNITY_AGENTS_DATA: DiscoverAgentItem[] = [
   },
   {
     "author": "He-Xun",
-    "avatar": "https://registry.npmmirror.com/@lobehub/fluent-emoji-3d/latest/files/assets/1f4d6.webp",
+    "avatar": "🌽",
     "category": "life",
     "createdAt": "2025-03-07",
     "description": "擅长分析和补充菜谱信息，生成详细文档",
@@ -2958,7 +2958,7 @@ export const COMMUNITY_AGENTS_DATA: DiscoverAgentItem[] = [
   },
   {
     "author": "WeR-Best",
-    "avatar": "https://registry.npmmirror.com/@lobehub/fluent-emoji-3d/latest/files/assets/1f9d1-200d-1f33e.webp",
+    "avatar": "🌳",
     "category": "life",
     "createdAt": "2025-02-23",
     "description": "园艺专家，擅长植物养护与环境优化",
@@ -2971,7 +2971,7 @@ export const COMMUNITY_AGENTS_DATA: DiscoverAgentItem[] = [
   },
   {
     "author": "WeR-Best",
-    "avatar": "https://registry.npmmirror.com/@lobehub/fluent-emoji-3d/latest/files/assets/1f5fa-fe0f.webp",
+    "avatar": "⛰️",
     "category": "life",
     "createdAt": "2025-02-22",
     "description": "Travel planning expert offering intelligent itineraries, food navigation, cultural explanations, and emergency guides",
@@ -3140,7 +3140,7 @@ export const COMMUNITY_AGENTS_DATA: DiscoverAgentItem[] = [
   },
   {
     "author": "zer0boss",
-    "avatar": "https://registry.npmmirror.com/@lobehub/fluent-emoji-3d/1.1.0/files/assets/1f331.webp",
+    "avatar": "🧘‍♂️",
     "category": "life",
     "createdAt": "2024-07-20",
     "description": "擅长用对话的方式帮助用户自我探索，找到解决之道和成长之路",
@@ -3686,7 +3686,7 @@ export const COMMUNITY_AGENTS_DATA: DiscoverAgentItem[] = [
   },
   {
     "author": "WeR-Best",
-    "avatar": "https://registry.npmmirror.com/@lobehub/fluent-emoji-3d/latest/files/assets/1f6e1-fe0f.webp",
+    "avatar": "🏢",
     "category": "programming",
     "createdAt": "2025-02-22",
     "description": "企业系统架构与安全专家：精通架构设计、Linux、网络安全及合规",
@@ -4360,4 +4360,4 @@ export const COMMUNITY_AGENTS_DATA: DiscoverAgentItem[] = [
     "pluginCount": 0,
     "tokenUsage": 202
   }
-]
+] as DiscoverAgentItem[]

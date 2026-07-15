@@ -171,11 +171,12 @@ async function main() {
     ' */',
     "import type { DiscoverAgentItem } from '@/features/community/types'",
     '',
-    'export const COMMUNITY_AGENTS_DATA: DiscoverAgentItem[] =',
+    'export const COMMUNITY_AGENTS_DATA =',
   ].join('\n')
 
   const body = JSON.stringify(items, null, 2)
-  const content = `${header} ${body}\n`
+  // String enum categories from JSON are asserted — TS does not widen '"academic"' to AssistantCategory.
+  const content = `${header} ${body} as DiscoverAgentItem[]\n`
 
   writeFileSync(OUT_PATH, content, 'utf8')
   console.log(`[agents:sync] wrote ${items.length} agents → ${OUT_PATH}`)

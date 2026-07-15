@@ -1,13 +1,16 @@
 'use client'
 
 import { Avatar, Block, Flexbox, Icon, Tag, Text } from '@lobehub/ui'
+import { App } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { BookTextIcon, ClockIcon, CoinsIcon, GitForkIcon, PuzzleIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { memo, useCallback } from 'react'
+import { memo, useCallback, useState } from 'react'
 
 import { ASSISTANT_CATEGORY_LABELS } from '@/const/community/agents'
 import type { DiscoverAgentItem } from '@/features/community/types'
+import { createAgent } from '@/features/home/agentApi'
+import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -65,27 +68,55 @@ const AgentCard = memo<DiscoverAgentItem>(
     title,
     tokenUsage,
   }) => {
+    const { message } = App.useApp()
     const router = useRouter()
+    const [adding, setAdding] = useState(false)
     const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
     const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
+    const upsertLocal = useAgentsStore((s) => s.upsertLocal)
 
-    const handleClick = useCallback(() => {
-      setActiveAgent({
-        avatar,
-        identifier,
-        systemRole,
-        title,
-      })
-      setSelectedAgentId(identifier)
-      router.push(`/chat?agent=${encodeURIComponent(identifier)}`)
+    const handleClick = useCallback(async () => {
+      if (adding) return
+      setAdding(true)
+
+      try {
+        const agent = await createAgent({
+          avatar,
+          backgroundColor,
+          description,
+          marketIdentifier: identifier,
+          systemRole,
+          title,
+        })
+        upsertLocal(agent)
+        setSelectedAgentId(agent.id)
+        setActiveAgent({
+          avatar: agent.avatar,
+          identifier: agent.id,
+          systemRole: agent.systemRole,
+          title: agent.title,
+        })
+        message.success(`已添加「${agent.title}」到助理列表`)
+        router.push(`/chat?agent=${encodeURIComponent(agent.id)}`)
+      } catch (error) {
+        console.error('[community] add agent failed:', error)
+        message.error('添加助理失败，请先登录后再试')
+      } finally {
+        setAdding(false)
+      }
     }, [
+      adding,
       avatar,
+      backgroundColor,
+      description,
       identifier,
+      message,
       router,
       setActiveAgent,
       setSelectedAgentId,
       systemRole,
       title,
+      upsertLocal,
     ])
 
     return (
@@ -95,8 +126,13 @@ const AgentCard = memo<DiscoverAgentItem>(
         height='100%'
         variant='outlined'
         width='100%'
-        style={{ overflow: 'hidden', position: 'relative' }}
-        onClick={handleClick}
+        style={{
+          cursor: adding ? 'wait' : 'pointer',
+          opacity: adding ? 0.7 : 1,
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+        onClick={() => void handleClick()}
       >
         <Flexbox
           horizontal

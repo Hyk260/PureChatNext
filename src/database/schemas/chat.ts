@@ -4,6 +4,9 @@ import { idGenerator } from '../utils/idGenerator'
 import { timestamps } from './_helpers'
 import { users } from './user'
 
+/**
+ * 话题表。`agentId` 约定对应 `agents.id`（不加 FK，便于删助理策略独立演进）。
+ */
 export const chatTopics = pgTable(
   'chat_topics',
   {
@@ -13,6 +16,7 @@ export const chatTopics = pgTable(
     userId: text('user_id')
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
+    /** 对应 `agents.id` */
     agentId: text('agent_id').notNull(),
     title: text('title').notNull(),
     ...timestamps,
@@ -36,6 +40,7 @@ export const chatMessages = pgTable(
     topicId: text('topic_id')
       .references(() => chatTopics.id, { onDelete: 'cascade' })
       .notNull(),
+    /** 对应 `agents.id`（冗余便于查询） */
     agentId: text('agent_id').notNull(),
     role: varchar('role', { length: 32 }).notNull(),
     content: text('content'),

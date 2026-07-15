@@ -50,6 +50,13 @@
       "when": 1784013822092,
       "tag": "0006_real_typhoid_mary",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784080507030,
+      "tag": "0007_bouncy_network",
+      "breakpoints": true
     }
   ]
 }

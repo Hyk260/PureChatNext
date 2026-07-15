@@ -3,9 +3,10 @@
 import { ActionIcon, Avatar, Block, Flexbox, Popover, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronsUpDownIcon } from 'lucide-react'
-import { memo, useMemo, useState } from 'react'
+import { memo, useEffect, useMemo, useState } from 'react'
 
-import { findHomeAgent, HOME_AGENTS } from '@/const/home/agents'
+import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
+import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -42,13 +43,20 @@ const HomeAgentSelect = memo(() => {
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
   const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
 
+  const agents = useAgentsStore((s) => s.agents)
+  const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
+
+  useEffect(() => {
+    void fetchAgentsList()
+  }, [fetchAgentsList])
+
   const currentAgent = useMemo(
-    () => findHomeAgent(selectedAgentId),
-    [selectedAgentId],
+    () => agents.find((agent) => agent.id === selectedAgentId) ?? agents[0] ?? DEFAULT_PURE_AI_META,
+    [agents, selectedAgentId],
   )
 
   const selectAgent = (agentId: string) => {
-    const agent = findHomeAgent(agentId)
+    const agent = agents.find((item) => item.id === agentId) ?? DEFAULT_PURE_AI_META
     setSelectedAgentId(agent.id)
     setActiveAgent({
       avatar: agent.avatar,
@@ -61,7 +69,7 @@ const HomeAgentSelect = memo(() => {
 
   const listContent = (
     <Flexbox gap={2} padding={4} style={{ width: 360 }}>
-      {HOME_AGENTS.map((agent) => {
+      {agents.map((agent) => {
         const active = agent.id === selectedAgentId
 
         return (
@@ -74,7 +82,12 @@ const HomeAgentSelect = memo(() => {
             padding={8}
             onClick={() => selectAgent(agent.id)}
           >
-            <Avatar avatar={agent.avatar} background={agent.backgroundColor} shape='square' size={32} />
+            <Avatar
+              avatar={agent.avatar}
+              background={agent.backgroundColor ?? undefined}
+              shape='square'
+              size={32}
+            />
             <Flexbox flex={1} gap={2} style={{ overflow: 'hidden' }}>
               <Text ellipsis fontSize={14} weight={500}>
                 {agent.title}
@@ -112,7 +125,7 @@ const HomeAgentSelect = memo(() => {
       >
         <Avatar
           avatar={currentAgent.avatar}
-          background={currentAgent.backgroundColor}
+          background={currentAgent.backgroundColor ?? undefined}
           shape='square'
           size={32}
         />

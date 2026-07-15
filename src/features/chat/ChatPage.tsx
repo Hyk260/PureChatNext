@@ -7,7 +7,7 @@ import { DefaultChatTransport, type UIMessage } from 'ai'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 
-import { findHomeAgent } from '@/const/home/agents'
+import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import {
   createTopic,
   deleteTopic,
@@ -32,8 +32,9 @@ import TopicSidebar from '@/features/chat/TopicSidebar'
 import WideScreenContainer from '@/features/chat/WideScreenContainer'
 import { withMessageText } from '@/features/chat/messageText'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
-import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
-import type { ChatLlmParams, LocalChatTopic } from '@/features/chat/types'
+import { DEFAULT_CHAT_LLM_PARAMS, type ChatLlmParams, type LocalChatTopic } from '@/features/chat/types'
+import { fetchAgent } from '@/features/home/agentApi'
+import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
 const subscribeNoop = () => () => {}
@@ -306,7 +307,10 @@ const ChatPage = memo(() => {
   const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
 
-  const agentId = agentFromQuery ?? activeAgent?.identifier ?? selectedAgentId
+  const agentId = agentFromQuery ?? activeAgent?.identifier ?? selectedAgentId ?? PURE_AI_AGENT_ID
+
+  const upsertLocalAgent = useAgentsStore((s) => s.upsertLocal)
+  const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
 
   const paramsByAgent = useChatUiStore((s) => s.paramsByAgent)
   const setParams = useChatUiStore((s) => s.setParams)
@@ -328,20 +332,46 @@ const ChatPage = memo(() => {
     }
   }, [agentId])
 
-  // Deep-link / refresh: sync `?agent=` into home store.
+  // Deep-link / refresh: sync `?agent=` into home store from API.
   useEffect(() => {
     if (!agentFromQuery) return
     if (activeAgent?.identifier === agentFromQuery) return
 
-    const agent = findHomeAgent(agentFromQuery)
-    setSelectedAgentId(agent.id)
-    setActiveAgent({
-      avatar: agent.avatar,
-      identifier: agent.id,
-      systemRole: agent.systemRole,
-      title: agent.title,
-    })
-  }, [activeAgent?.identifier, agentFromQuery, setActiveAgent, setSelectedAgentId])
+    let cancelled = false
+    void (async () => {
+      try {
+        const agent = await fetchAgent(agentFromQuery)
+        if (cancelled) return
+        upsertLocalAgent(agent)
+        setSelectedAgentId(agent.id)
+        setActiveAgent({
+          avatar: agent.avatar,
+          identifier: agent.id,
+          systemRole: agent.systemRole,
+          title: agent.title,
+        })
+      } catch (error) {
+        console.error('[chat] fetchAgent failed', error)
+        if (cancelled) return
+        const fallback = DEFAULT_PURE_AI_META
+        setSelectedAgentId(fallback.id)
+        setActiveAgent({
+          avatar: fallback.avatar,
+          identifier: fallback.id,
+          systemRole: fallback.systemRole,
+          title: fallback.title,
+        })
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeAgent?.identifier, agentFromQuery, setActiveAgent, setSelectedAgentId, upsertLocalAgent])
+
+  useEffect(() => {
+    void fetchAgentsList()
+  }, [fetchAgentsList])
 
   // Fetch topic list whenever agentId changes (client-only; server renders []).
   // setState lives in the async continuation so the effect body stays free of

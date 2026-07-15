@@ -5,11 +5,12 @@ import { App } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowUp } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { memo, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 
-import { findHomeAgent, HOME_AGENTS } from '@/const/home/agents'
+import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import { setPendingChatText } from '@/features/chat/chatLocalStorage'
 import ModelSelector from '@/features/home/components/ModelSelector'
+import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -49,6 +50,13 @@ const HomeChatInput = memo(() => {
   const activeAgent = useHomeStore((s) => s.activeAgent)
   const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
 
+  const agents = useAgentsStore((s) => s.agents)
+  const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
+
+  useEffect(() => {
+    void fetchAgentsList()
+  }, [fetchAgentsList])
+
   const handleSend = () => {
     const text = input.trim()
     if (!text || sending) return
@@ -56,18 +64,18 @@ const HomeChatInput = memo(() => {
     setSending(true)
 
     try {
-      const homeAgent = HOME_AGENTS.find((agent) => agent.id === selectedAgentId)
+      const agentId = selectedAgentId || PURE_AI_AGENT_ID
+      const listed = agents.find((agent) => agent.id === agentId)
 
-      if (homeAgent) {
+      if (listed) {
         setActiveAgent({
-          avatar: homeAgent.avatar,
-          identifier: homeAgent.id,
-          systemRole: homeAgent.systemRole,
-          title: homeAgent.title,
+          avatar: listed.avatar,
+          identifier: listed.id,
+          systemRole: listed.systemRole,
+          title: listed.title,
         })
-      } else if (activeAgent?.identifier !== selectedAgentId) {
-        // Fallback: selectedId isn't a home agent and doesn't match activeAgent.
-        const fallback = findHomeAgent(selectedAgentId)
+      } else if (activeAgent?.identifier !== agentId) {
+        const fallback = agents[0] ?? DEFAULT_PURE_AI_META
         setActiveAgent({
           avatar: fallback.avatar,
           identifier: fallback.id,
@@ -78,7 +86,7 @@ const HomeChatInput = memo(() => {
 
       setPendingChatText(text)
       setInput('')
-      router.push(`/chat?agent=${encodeURIComponent(selectedAgentId)}`)
+      router.push(`/chat?agent=${encodeURIComponent(agentId)}`)
     } catch (error) {
       console.error('[home] start chat failed:', error)
       message.error('无法开始对话')

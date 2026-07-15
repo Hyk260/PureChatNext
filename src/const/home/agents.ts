@@ -1,38 +1,31 @@
-export interface HomeAgentItem {
+/** Pure AI 系统内置助理固定 id（对应 `agents.id`） */
+export const PURE_AI_AGENT_ID = 'agt_inbox'
+
+/** @deprecated 使用 PURE_AI_AGENT_ID */
+export const DEFAULT_HOME_AGENT_ID = PURE_AI_AGENT_ID
+
+export interface AgentListItem {
   avatar: string
-  backgroundColor?: string
-  description?: string
+  backgroundColor?: string | null
+  description?: string | null
   id: string
+  isBuiltin?: boolean
+  pinned?: boolean | null
+  slug?: string
   systemRole: string
   title: string
 }
 
-export const HOME_AGENTS: HomeAgentItem[] = [
-  {
-    avatar: '🧘',
-    description: '继续前行吧 听候差遣',
-    id: 'zen-master',
-    systemRole: [
-      '你是「禅定法师」，一位沉稳、简洁、务实的助手。',
-      '回答保持清晰、可执行；必要时给出分步建议。',
-      '语气平和克制，不夸张，不堆砌空话。',
-    ].join('\n'),
-    title: '禅定法师',
-  },
-  {
-    avatar: '📝',
-    description: '专注写作与文稿整理',
-    id: 'writer',
-    systemRole: [
-      '你是「写作助理」，专注写作、改写与文稿整理。',
-      '优先输出结构清晰、可直接使用的文本。',
-      '若需求不明确，先提出最多 2 个澄清问题。',
-    ].join('\n'),
-    title: '写作助理',
-  },
-]
-
-export const DEFAULT_HOME_AGENT_ID = HOME_AGENTS[0].id
-
-export const findHomeAgent = (agentId: string) =>
-  HOME_AGENTS.find((item) => item.id === agentId) ?? HOME_AGENTS[0]
+export const DEFAULT_PURE_AI_META: AgentListItem = {
+  avatar: '✨',
+  description: '你的默认 AI 助手',
+  id: PURE_AI_AGENT_ID,
+  isBuiltin: true,
+  pinned: true,
+  slug: 'inbox',
+  systemRole: [
+    '你是 Pure AI，一位友好、清晰、务实的助手。',
+    '回答保持结构清楚、可执行；不确定时主动说明假设。',
+  ].join('\n'),
+  title: 'Pure AI',
+}

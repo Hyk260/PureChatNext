@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { DEFAULT_HOME_AGENT_ID } from '@/const/home/agents'
+import { PURE_AI_AGENT_ID } from '@/const/home/agents'
 import { DEFAULT_HOME_MODEL } from '@/const/home/models'
 import type { ActiveCommunityAgent } from '@/features/community/types'
 
@@ -52,7 +52,7 @@ export const useHomeStore = create<HomeStoreState>()(
       ...DEFAULT_HOME_SIDEBAR_STATE,
       activeAgent: null,
       agentMode: 'agent',
-      selectedAgentId: DEFAULT_HOME_AGENT_ID,
+      selectedAgentId: PURE_AI_AGENT_ID,
       selectedModel: DEFAULT_HOME_MODEL.model,
       selectedProvider: DEFAULT_HOME_MODEL.provider,
       sidebarCollapsed: false,

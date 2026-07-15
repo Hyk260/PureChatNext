@@ -12,7 +12,7 @@
 | 鉴权 | **聊天必须登录**；未登录访问 `/chat` 重定向登录 |
 | 存储 | **全部走 DB**；移除 Phase 1 的 localStorage 消息/话题分桶 |
 | 话题管理 | 支持 **删除、重命名**（列表行内或菜单） |
-| Agent | 继续用 `HOME_AGENTS` 常量字符串，**不建 agents 表** |
+| Agent | ~~继续用 `HOME_AGENTS`、不建 agents 表~~ → **已由** [`2026-07-15-agents-db-design.md`](./2026-07-15-agents-db-design.md) **取代**（`agents` 表 + Pure AI） |
 | LLM 参数 | 仍只存客户端 `useChatUiStore`（Phase 3 再透传/落库） |
 | `/api/chat` | 仍只负责流式生成；消息持久化由独立 REST + 前端在流式结束后写入 |
 
@@ -30,7 +30,7 @@
 
 ## 非目标
 
-- agents 表、社区 agent 入库
+- ~~agents 表~~（见 2026-07-15 agents 规格）；社区 agent 入库仍非目标
 - Phase 3 LLM 参数透传 / 入库
 - 本地→DB 历史导入（旧 localStorage 可忽略或一次性清 key）
 - 消息编辑/删除同步到 DB（可后续；本期至少保证发送后全量同步）

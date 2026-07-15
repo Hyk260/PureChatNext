@@ -4,8 +4,17 @@ import { useChat } from '@ai-sdk/react'
 import { Flexbox, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { DefaultChatTransport, type UIMessage } from 'ai'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useSearchParams } from 'next/navigation'
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import {
@@ -44,6 +53,21 @@ const getClientSnapshot = () => true
 const getServerSnapshot = () => false
 const EMPTY_MESSAGES: UIMessage[] = []
 const DRAFT_TOPIC_TITLE = '新话题'
+
+const buildChatHref = (agentId: string, topicId?: string | null) => {
+  const params = new URLSearchParams({ agent: agentId })
+  if (topicId) params.set('topic', topicId)
+  return `/chat?${params.toString()}`
+}
+
+/** Shallow URL update — avoids App Router RSC refetch remounting ChatPage / topics. */
+const pushChatHref = (agentId: string, topicId?: string | null) => {
+  window.history.pushState(null, '', buildChatHref(agentId, topicId))
+}
+
+const replaceChatHref = (agentId: string, topicId?: string | null) => {
+  window.history.replaceState(null, '', buildChatHref(agentId, topicId))
+}
 
 const styles = createStaticStyles(({ css }) => ({
   error: css`
@@ -89,7 +113,6 @@ interface ChatViewProps {
 }
 
 const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTopicsRefresh }) => {
-  const router = useRouter()
   const selectedModel = useHomeStore((s) => s.selectedModel)
   const selectedProvider = useHomeStore((s) => s.selectedProvider)
   const activeAgent = useHomeStore((s) => s.activeAgent)
@@ -110,9 +133,12 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
   })
 
   // Keep a ref so edit callbacks and unmount PUT flush see the latest messages
-  // even if the syncing effect has not run yet.
+  // even if the syncing effect has not run yet. Sync in layout effect — React
+  // forbids writing refs during render (React Compiler / Strict).
   const messagesRef = useRef(messages)
-  messagesRef.current = messages
+  useLayoutEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
   const isBusy = status === 'submitted' || status === 'streaming'
   const isStreaming = status === 'streaming'
 
@@ -202,9 +228,7 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
           const topic = await createTopic(agentId, truncateTitle(text))
           onTopicsRefresh()
           setPendingTopicSend(text)
-          router.replace(
-            `/chat?agent=${encodeURIComponent(agentId)}&topic=${encodeURIComponent(topic.id)}`,
-          )
+          replaceChatHref(agentId, topic.id)
         } catch (error) {
           console.error('[chat] createTopic failed', error)
         }
@@ -213,7 +237,7 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
 
       await sendWithBody(text)
     },
-    [agentId, onTopicsRefresh, router, sendWithBody, topicId],
+    [agentId, onTopicsRefresh, sendWithBody, topicId],
   )
 
   const handleSend = useCallback(
@@ -228,8 +252,10 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
   // identity churn during streaming would re-fire sendMessage repeatedly.
   const sendWithBodyRef = useRef(sendWithBody)
   const sendOrSolidifyRef = useRef(sendOrSolidify)
-  sendWithBodyRef.current = sendWithBody
-  sendOrSolidifyRef.current = sendOrSolidify
+  useLayoutEffect(() => {
+    sendWithBodyRef.current = sendWithBody
+    sendOrSolidifyRef.current = sendOrSolidify
+  }, [sendOrSolidify, sendWithBody])
   const handoffStartedRef = useRef(false)
 
   useEffect(() => {
@@ -314,7 +340,6 @@ const ChatPage = memo(() => {
   // Defer searchParams reads until after hydration to avoid SSR mismatch.
   const isClient = useSyncExternalStore(subscribeNoop, getClientSnapshot, getServerSnapshot)
   const searchParams = useSearchParams()
-  const router = useRouter()
 
   const agentFromQuery = searchParams.get('agent')
   const topicFromQuery = searchParams.get('topic')
@@ -443,17 +468,17 @@ const ChatPage = memo(() => {
   }, [activeTopicId, isClient])
 
   const handleNewTopic = useCallback(() => {
-    // No draft bucket to clear — messages live on the server per topic now.
-    router.push(`/chat?agent=${encodeURIComponent(agentId)}`)
-  }, [agentId, router])
+    // Already on draft for this agent — no-op.
+    if (activeTopicId === null) return
+    pushChatHref(agentId)
+  }, [activeTopicId, agentId])
 
   const handleSelectTopic = useCallback(
     (id: string) => {
-      router.push(
-        `/chat?agent=${encodeURIComponent(agentId)}&topic=${encodeURIComponent(id)}`,
-      )
+      if (id === activeTopicId) return
+      pushChatHref(agentId, id)
     },
-    [agentId, router],
+    [activeTopicId, agentId],
   )
 
   const handleRenameTopic = useCallback(async (id: string, title: string) => {
@@ -472,13 +497,13 @@ const ChatPage = memo(() => {
         setTopics((prev) => prev.filter((t) => t.id !== id))
         // Deleting the active topic falls back to the draft view for this agent.
         if (id === activeTopicId) {
-          router.push(`/chat?agent=${encodeURIComponent(agentId)}`)
+          pushChatHref(agentId)
         }
       } catch (error) {
         console.error('[chat] deleteTopic failed', error)
       }
     },
-    [activeTopicId, agentId, router],
+    [activeTopicId, agentId],
   )
 
   const handleParamsChange = useCallback(
@@ -487,6 +512,10 @@ const ChatPage = memo(() => {
     },
     [agentId, setParams],
   )
+
+  const handleTopicsRefresh = useCallback(() => {
+    void refreshTopics()
+  }, [refreshTopics])
 
   const messagesReady = activeTopicId === null ? true : loadedTopicId === activeTopicId
   const showShell = !isClient || !messagesReady
@@ -519,7 +548,7 @@ const ChatPage = memo(() => {
           agentId={agentId}
           initialMessages={activeTopicId === null ? EMPTY_MESSAGES : initialMessages}
           topicId={activeTopicId}
-          onTopicsRefresh={() => void refreshTopics()}
+          onTopicsRefresh={handleTopicsRefresh}
         />
       )}
     </ChatLayout>

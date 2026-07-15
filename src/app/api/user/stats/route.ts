@@ -3,12 +3,9 @@ import { NextResponse } from 'next/server'
 import { AgentModel } from '@/database/models/agent'
 import { ChatMessageModel } from '@/database/models/chatMessage'
 import { ChatTopicModel } from '@/database/models/chatTopic'
-import { getAuthenticatedUserId, unauthorizedResponse } from '@/libs/auth/get-session-user'
+import { withAuth } from '@/libs/auth/get-session-user'
 
-export async function GET() {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const GET = withAuth(async (_request, { userId }) => {
   try {
     const agentModel = new AgentModel(userId)
     const topicModel = new ChatTopicModel(userId)
@@ -25,4 +22,4 @@ export async function GET() {
     console.error('[api/user/stats] GET failed:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
-}
+})

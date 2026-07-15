@@ -1,18 +1,10 @@
-import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
 import { FileModel } from '@/database/models/file'
-import {
-  getAuthenticatedUserId,
-  jsonError,
-  unauthorizedResponse,
-} from '@/libs/auth/get-session-user'
+import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { resolveFileAccessUrl } from '@/server/modules/S3/url'
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const GET = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
   const file = await new FileModel(userId).findById(id)
   if (!file) return jsonError('File not found', 404)
@@ -21,12 +13,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     ...file,
     url: resolveFileAccessUrl(file.id, file.url),
   })
-}
+})
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const PATCH = withAuth(async (request, { params, userId }) => {
   const { id } = await params
   const body = await request.json()
   const file = await new FileModel(userId).update(id, body)
@@ -36,15 +25,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     ...file,
     url: resolveFileAccessUrl(file.id, file.url),
   })
-}
+})
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const DELETE = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
   const file = await new FileModel(userId).delete(id)
   if (!file) return jsonError('File not found', 404)
 
   return NextResponse.json({ success: true })
-}
+})

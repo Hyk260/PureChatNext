@@ -1,13 +1,8 @@
-import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { AgentDeleteError, AgentModel } from '@/database/models/agent'
-import {
-  getAuthenticatedUserId,
-  jsonError,
-  unauthorizedResponse,
-} from '@/libs/auth/get-session-user'
+import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const updateSchema = z.object({
   avatar: z.string().optional(),
@@ -23,21 +18,15 @@ const updateSchema = z.object({
   title: z.string().min(1).optional(),
 })
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const GET = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
   const item = await new AgentModel(userId).findVisibleById(id)
   if (!item) return jsonError('Agent not found', 404)
 
   return NextResponse.json(item)
-}
+})
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const PATCH = withAuth(async (request, { params, userId }) => {
   const { id } = await params
   const body = await request.json()
   const parsed = updateSchema.safeParse(body)
@@ -47,12 +36,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!item) return jsonError('Agent not found', 404)
 
   return NextResponse.json(item)
-}
+})
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const DELETE = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
 
   try {
@@ -66,4 +52,4 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
     }
     throw error
   }
-}
+})

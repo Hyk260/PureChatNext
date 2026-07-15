@@ -1,13 +1,8 @@
-import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { KnowledgeRepo } from '@/database/repositories/knowledge'
-import {
-  getAuthenticatedUserId,
-  jsonError,
-  unauthorizedResponse,
-} from '@/libs/auth/get-session-user'
+import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const batchSchema = z.object({
   action: z.enum(['delete']),
@@ -21,10 +16,7 @@ const batchSchema = z.object({
     .min(1),
 })
 
-export async function POST(request: NextRequest) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const POST = withAuth(async (request, { userId }) => {
   const body = await request.json()
   const parsed = batchSchema.safeParse(body)
   if (!parsed.success) return jsonError(parsed.error.message)
@@ -35,4 +27,4 @@ export async function POST(request: NextRequest) {
   }
 
   return jsonError('Unsupported action')
-}
+})

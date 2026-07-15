@@ -1,10 +1,10 @@
-import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 import { auth } from '@/auth'
 import { appEnv } from '@/envs/app'
 import { fileEnv } from '@/envs/file'
 import { UserModel } from '@/database/models/user'
+import { withAuth } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024
@@ -57,13 +57,7 @@ async function deletePreviousAvatars(fileS3: FileS3, userId: string, keepKey: st
  * 上传用户头像
  * POST /api/webapi/user/avatar
  */
-export async function POST(req: Request) {
-  const session = await auth.api.getSession({ headers: await headers() })
-
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
+export const POST = withAuth(async (req, { userId }) => {
   if (!isS3Configured()) {
     return NextResponse.json(
       { error: 'Avatar upload requires S3 configuration' },
@@ -86,7 +80,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Image must be smaller than 2MB' }, { status: 400 })
   }
 
-  const user = await UserModel.findById(session.user.id)
+  const user = await UserModel.findById(userId)
 
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -107,7 +101,7 @@ export async function POST(req: Request) {
 
     await auth.api.updateUser({
       body: { image: avatar },
-      headers: await headers(),
+      headers: req.headers,
     })
 
     try {
@@ -121,4 +115,4 @@ export async function POST(req: Request) {
     console.error('Avatar upload failed:', error)
     return NextResponse.json({ error: 'Failed to upload avatar' }, { status: 500 })
   }
-}
+})

@@ -1,15 +1,10 @@
 import { createHash } from 'node:crypto'
 
-import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
 import { FileModel } from '@/database/models/file'
 import { fileEnv } from '@/envs/file'
-import {
-  getAuthenticatedUserId,
-  jsonError,
-  unauthorizedResponse,
-} from '@/libs/auth/get-session-user'
+import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'
 import { buildPublicS3Url, resolveFileAccessUrl } from '@/server/modules/S3/url'
 
@@ -22,10 +17,7 @@ function isS3Configured() {
   )
 }
 
-export async function POST(request: NextRequest) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const POST = withAuth(async (request, { userId }) => {
   if (!isS3Configured()) {
     return jsonError('S3 is not configured', 503)
   }
@@ -75,4 +67,4 @@ export async function POST(request: NextRequest) {
     console.error('[resources/upload] POST failed:', error)
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
   }
-}
+})

@@ -3,20 +3,13 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { ChatTopicModel } from '@/database/models/chatTopic'
-import {
-  getAuthenticatedUserId,
-  jsonError,
-  unauthorizedResponse,
-} from '@/libs/auth/get-session-user'
+import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const updateSchema = z.object({
   title: z.string().min(1),
 })
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const PATCH = withAuth(async (request, { params, userId }) => {
   const { id } = await params
   const body = await request.json()
   const parsed = updateSchema.safeParse(body)
@@ -26,12 +19,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!item) return jsonError('Topic not found', 404)
 
   return NextResponse.json(item)
-}
+})
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const DELETE = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
   const topicModel = new ChatTopicModel(userId)
   const topic = await topicModel.findById(id)
@@ -39,4 +29,4 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 
   await topicModel.delete(id)
   return NextResponse.json({ success: true })
-}
+})

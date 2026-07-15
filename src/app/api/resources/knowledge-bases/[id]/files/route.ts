@@ -1,23 +1,15 @@
-import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { KnowledgeBaseModel } from '@/database/models/knowledgeBase'
-import {
-  getAuthenticatedUserId,
-  jsonError,
-  unauthorizedResponse,
-} from '@/libs/auth/get-session-user'
+import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const schema = z.object({
   action: z.enum(['add', 'remove']),
   fileIds: z.array(z.string()).min(1),
 })
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const POST = withAuth(async (request, { params, userId }) => {
   const { id } = await params
   const body = await request.json()
   const parsed = schema.safeParse(body)
@@ -34,4 +26,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   return NextResponse.json({ success: true })
-}
+})

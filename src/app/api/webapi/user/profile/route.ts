@@ -1,10 +1,9 @@
-import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { auth } from '@/auth'
 import { UserModel } from '@/database/models/user'
 import { normalizeInterestsForStorage } from '@/features/settings/const/interests'
+import { withAuth } from '@/libs/auth/get-session-user'
 
 const updateProfileSchema = z
   .object({
@@ -15,13 +14,7 @@ const updateProfileSchema = z
     message: 'At least one field is required',
   })
 
-export async function PATCH(request: Request) {
-  const session = await auth.api.getSession({ headers: await headers() })
-
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
+export const PATCH = withAuth(async (request, { userId }) => {
   let body: unknown
 
   try {
@@ -47,7 +40,7 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const [updated] = await UserModel.updateProfileById(session.user.id, patch)
+    const [updated] = await UserModel.updateProfileById(userId, patch)
 
     if (!updated) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -61,4 +54,4 @@ export async function PATCH(request: Request) {
     console.error('Failed to update profile:', error)
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
   }
-}
+})

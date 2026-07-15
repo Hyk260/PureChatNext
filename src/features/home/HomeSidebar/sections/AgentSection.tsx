@@ -147,7 +147,6 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
             agents.map((agent) => (
               <AgentItem
                 key={agent.id}
-                active={selectedAgentId === agent.id}
                 agent={agent}
                 onDelete={handleDelete}
                 onEdit={setEditing}

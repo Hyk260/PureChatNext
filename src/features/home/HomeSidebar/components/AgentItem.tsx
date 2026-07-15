@@ -72,7 +72,6 @@ const stopMenuEvent = (info: MenuInfo) => {
 }
 
 interface AgentItemProps {
-  active: boolean
   agent: AgentListItem
   onDelete: (id: string) => void | Promise<void>
   onEdit: (agent: AgentListItem) => void
@@ -80,7 +79,7 @@ interface AgentItemProps {
   onSelect: (agent: AgentListItem) => void
 }
 
-const AgentItem = memo<AgentItemProps>(({ active, agent, onDelete, onEdit, onPin, onSelect }) => {
+const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSelect }) => {
   const { message } = App.useApp()
   const [menuOpen, setMenuOpen] = useState(false)
   const canOperate = !agent.isBuiltin
@@ -143,23 +142,21 @@ const AgentItem = memo<AgentItemProps>(({ active, agent, onDelete, onEdit, onPin
   return (
     <Block
       key={agent.id}
+      clickable
       horizontal
       align='center'
       className={styles.agentItem}
       gap={8}
       height={36}
       paddingInline={4}
-      variant={active ? 'filled' : 'borderless'}
+      variant='borderless'
       onClick={() => onSelect(agent)}
     >
       <Center flex='none' height={28} width={28}>
         <Avatar avatar={agent.avatar} background={agent.backgroundColor ?? undefined} size={28} />
       </Center>
       <Flexbox flex={1} style={{ minWidth: 0, overflow: 'hidden' }}>
-        <Text
-          color={active ? cssVar.colorText : cssVar.colorTextSecondary}
-          ellipsis={{ tooltipWhenOverflow: true }}
-        >
+        <Text color={cssVar.colorTextSecondary} ellipsis={{ tooltipWhenOverflow: true }}>
           {agent.title}
         </Text>
       </Flexbox>
@@ -180,7 +177,7 @@ const AgentItem = memo<AgentItemProps>(({ active, agent, onDelete, onEdit, onPin
             items={menuItems}
             nativeButton
             open={menuOpen}
-            placement='bottomRight'
+            placement='bottomLeft'
             triggerProps={{ className: styles.trigger, title: '更多' }}
             onOpenChange={setMenuOpen}
           >

@@ -1,10 +1,5 @@
-import type { NextRequest } from 'next/server'
-
 import { FileModel } from '@/database/models/file'
-import {
-  getAuthenticatedUserId,
-  unauthorizedResponse,
-} from '@/libs/auth/get-session-user'
+import { withAuth } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'
 import { extractS3KeyFromUrl } from '@/server/modules/S3/url'
 
@@ -14,13 +9,7 @@ import { extractS3KeyFromUrl } from '@/server/modules/S3/url'
  *
  * Streams the object from S3 so private buckets work without public ACL.
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const userId = await getAuthenticatedUserId()
-  if (!userId) return unauthorizedResponse()
-
+export const GET = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
   const file = await new FileModel(userId).findById(id)
   if (!file?.url) {
@@ -44,4 +33,4 @@ export async function GET(
     console.error('[resources/files/content] GET failed:', error)
     return new Response('Failed to fetch file', { status: 500 })
   }
-}
+})

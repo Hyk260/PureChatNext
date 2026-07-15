@@ -2,12 +2,26 @@
 import { NextRequest } from 'next/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/libs/auth/get-session-user', () => ({
-  getAuthenticatedUserId: vi.fn(),
-  jsonError: (message: string, status = 400) =>
-    Response.json({ error: message }, { status }),
-  unauthorizedResponse: () => Response.json({ error: 'Unauthorized' }, { status: 401 }),
-}))
+vi.mock('@/libs/auth/get-session-user', () => {
+  const getAuthenticatedUserId = vi.fn()
+
+  return {
+    getAuthenticatedUserId,
+    jsonError: (message: string, status = 400) => Response.json({ error: message }, { status }),
+    unauthorizedResponse: () => Response.json({ error: 'Unauthorized' }, { status: 401 }),
+    withAuth:
+      (handler: (request: NextRequest, context: { params: Promise<Record<string, string>>; userId: string }) => unknown) =>
+      async (request: NextRequest, context?: { params?: Promise<Record<string, string>> }) => {
+        const userId = await getAuthenticatedUserId()
+        if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+        return handler(request, {
+          params: context?.params ?? Promise.resolve({}),
+          userId,
+        })
+      },
+  }
+})
 
 vi.mock('@/database/models/chatTopic', () => ({
   ChatTopicModel: vi.fn(),

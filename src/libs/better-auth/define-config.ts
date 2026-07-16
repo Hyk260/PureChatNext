@@ -20,8 +20,8 @@ import {
 } from '@/libs/better-auth/email-templates'
 import { OTP_EXPIRES_IN } from '@/libs/better-auth/shared'
 import { initBetterAuthSSOProviders, parseSSOProviders } from '@/libs/better-auth/sso'
-import { createSecondaryStorage } from './create-secondary-storage'
-import { createVerificationDailyRateLimitStorage } from './rate-limit-storage'
+import { createSecondaryStorage } from './server/create-secondary-storage'
+import { createVerificationDailyRateLimitStorage } from './server/rate-limit-storage'
 
 const log = debug('better-auth:define-config')
 

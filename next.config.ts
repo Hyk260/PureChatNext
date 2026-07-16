@@ -48,17 +48,23 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
   },
   serverExternalPackages: ['@napi-rs/canvas', 'pdfjs-dist'],
-  ...(enableCodeInspector && {
-    turbopack: {
-      rules: codeInspectorPlugin({
-        bundler: 'turbopack',
-        // editor: 'cursor',
-        // launchType: 'open',
-        // port: 5678,
-        // printServer: true,
-      }),
+  turbopack: {
+    rules: {
+      '*.html': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+      ...(enableCodeInspector
+        ? codeInspectorPlugin({
+            bundler: 'turbopack',
+            // editor: 'cursor',
+            // launchType: 'open',
+            // port: 5678,
+            // printServer: true,
+          })
+        : {}),
     },
-  }),
+  },
 }
 
 export default nextConfig

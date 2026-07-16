@@ -1,5 +1,4 @@
 export { createSecondaryStorage } from './create-secondary-storage'
-export { defineConfig } from './define-config'
 export { getAuthServerConfig } from './get-auth-config'
 export { imAccountPlugin } from './plugins/im-account'
 export {

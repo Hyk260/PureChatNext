@@ -31,7 +31,7 @@ vi.mock('@/envs/file', () => ({
 }));
 
 // Mock utilities
-vi.mock('@/utils/url', () => ({
+vi.mock('@pure/utils/url', () => ({
   inferContentTypeFromImageUrl: vi.fn((key: string) => {
     if (key.endsWith('.jpg') || key.endsWith('.jpeg')) return 'image/jpeg';
     if (key.endsWith('.png')) return 'image/png';

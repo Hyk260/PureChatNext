@@ -1,5 +1,3 @@
-import 'server-only';
-
 import { getChangeEmailVerificationTemplate } from '../change-email';
 import { getMagicLinkEmailTemplate } from '../magic-link';
 import { getResetPasswordEmailTemplate } from '../reset-password';

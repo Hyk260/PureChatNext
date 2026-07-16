@@ -4,16 +4,17 @@
 
 ## 技术栈
 
-- Next.js 16 + React 19 + TypeScript（App Router，`src/app/`）
-- Tailwind CSS 4 + `@lobehub/ui` / antd（按需使用，非 SPA 架构）
-- Supabase Auth + Drizzle ORM + PostgreSQL（Supabase）
+- **SPA + Next BFF**：业务 UI 走 Vite + react-router；Next.js 16 只保留 API / auth / 生产 SPA HTML 壳（同域部署）
+- React 19 + TypeScript；UI：Tailwind CSS 4 + `@lobehub/ui` / antd（按需）
+- better-auth + Drizzle ORM + PostgreSQL（Supabase）
 - Vercel AI SDK（`@ai-sdk/*`、`ai`），聊天入口见 `src/app/api/chat/route.ts`
 - 环境变量：`@t3-oss/env-core`，集中在 `packages/env/src/`，通过 `@/envs/*` 别名引用
 - Monorepo：pnpm workspace，内部包 `@pure/*`
 - 测试：Vitest（根目录 + 各 package 独立配置）
 - 日志：`debug` 包，命名空间约定见 `.cursor/rules/debug-usage.md`
 
-**不包含**（避免误导）：react-router SPA、bun、TRPC 路由层、react-i18next、Electron。
+**不包含**（避免误导）：独立前端仓库 / 独立域名、tRPC 改造、react-i18next、Electron / 多端入口、LobeHub Debug Proxy。  
+脚本运行可用本机 `bun`（`dev` / `build` 链路）；包管理仍仅用 `pnpm`。
 
 ## 项目结构
 
@@ -27,13 +28,13 @@ PureChatNext/
 │   ├── web-crawler/           # 网页爬虫多实现（naive、firecrawl、tavily…）
 │   └── ssrf-safe-fetch/       # SSRF 安全 fetch 封装
 ├── src/
-│   ├── app/                   # Next.js 页面与 API 路由
-│   │   ├── api/               # REST API（auth、chat、rest-api、read-file…）
-│   │   ├── chat/              # 聊天页面
-│   │   └── …                  # login、register、welcome 等
+│   ├── spa/                   # Vite SPA 入口与 Router（迁移中）
+│   ├── features/              # 业务 UI（供 SPA 路由挂载）
+│   ├── app/                   # Next：API / auth / 生产 SPA 壳；历史 page 逐步退役
+│   │   └── api/               # REST API（auth、chat、rest-api、read-file…）
 │   ├── database/              # Drizzle schema、models、migrations
 │   ├── server/                # 服务端业务（search 搜索聚合等）
-│   ├── libs/                  # Supabase、next-auth、auth 中间件、工具
+│   ├── libs/                  # better-auth、工具、中间件
 │   ├── components/            # 通用 React 组件
 │   └── styles/                # 全局样式
 ├── docs/                      # 人类可读文档（快速开始、环境、Drizzle、联网搜索）
@@ -90,15 +91,19 @@ pnpm db:studio     # Drizzle Studio
 ### 启动开发环境
 
 ```bash
-pnpm install          # 安装依赖
-pnpm dev              # 开发服务器（默认 http://localhost:3000）
-pnpm build            # 生产构建
+pnpm install          # 安装依赖（包管理仍用 pnpm）
+pnpm dev / bun run dev  # 启动脚本并发 Next + Vite SPA（需本机 bun）
+pnpm dev:next         # 仅 Next API / BFF（http://localhost:3000）
+pnpm dev:spa          # 仅 Vite SPA（http://localhost:5174，代理 /api → Next）
+pnpm build            # bun：build:spa → copy → build:next
 pnpm start            # 生产启动（端口 3210）
 pnpm gateway          # 运行 gateway 脚本
 pnpm lint             # ESLint
 ```
 
+- 本地开发：浏览器访问 **SPA 端口** `http://localhost:5174`（不要依赖线上 Debug Proxy）；Next 在 `3000`
 - 环境变量：复制 `.env.example` 为 `.env.local`，参考 `docs/QUICK_START.md`
+- SPA 改造进度：`docs/spa-migration-checklist.md`
 - **不要**提交 `.env`、`.env.local` 等含密钥文件
 
 ### Git 工作流

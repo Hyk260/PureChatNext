@@ -1,18 +1,12 @@
 'use client'
 
-import { ConfigProvider, ThemeProvider } from '@lobehub/ui'
-import { StyleProvider, extractStaticStyle } from 'antd-style'
-import { LazyMotion, domAnimation } from 'motion/react'
-import * as m from 'motion/react-m'
+import { extractStaticStyle } from 'antd-style'
 import { useServerInsertedHTML } from 'next/navigation'
 import { type PropsWithChildren, useRef } from 'react'
 
-import AntdStaticMethods from '@/components/AntdStaticMethods'
-import { useSystemAppearance } from '@/hooks/useSystemAppearance'
-import { ModalHost } from '@/libs/modal'
+import ThemeProviders from './ThemeProviders'
 
 const AppThemeProvider = ({ children }: PropsWithChildren) => {
-  const appearance = useSystemAppearance()
   const isStyleInserted = useRef(false)
 
   useServerInsertedHTML(() => {
@@ -33,26 +27,7 @@ const AppThemeProvider = ({ children }: PropsWithChildren) => {
     )
   })
 
-  return (
-    <StyleProvider ssrInline={false} speedy>
-      <ThemeProvider
-        appearance={appearance}
-        defaultAppearance="light"
-        defaultThemeMode="light"
-        style={{ height: '100%' }}
-        theme={{ cssVar: { key: 'pure-vars' } }}
-      >
-        <AntdStaticMethods />
-        {/* base-ui Modal uses motion/react-m + AnimatePresence; features must be loaded */}
-        <LazyMotion features={domAnimation}>
-          <ConfigProvider motion={m}>
-            {children}
-            <ModalHost />
-          </ConfigProvider>
-        </LazyMotion>
-      </ThemeProvider>
-    </StyleProvider>
-  )
+  return <ThemeProviders>{children}</ThemeProviders>
 }
 
 export default AppThemeProvider

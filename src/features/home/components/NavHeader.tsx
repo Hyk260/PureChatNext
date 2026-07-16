@@ -3,7 +3,7 @@
 import { ActionIcon, Avatar, Flexbox } from '@lobehub/ui'
 import { createStaticStyles } from 'antd-style'
 import { PanelLeftOpen } from 'lucide-react'
-import Link from 'next/link'
+import Link from '@/utils/link'
 import { memo } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'

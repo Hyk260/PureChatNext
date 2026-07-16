@@ -3,8 +3,8 @@
 import { ActionIcon, Button, Flexbox, Text } from '@lobehub/ui'
 import { App } from 'antd'
 import { Plus, Trash2 } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import Link from '@/utils/link'
+import { usePathname } from '@/utils/navigation'
 import { memo } from 'react'
 
 import NavItem from '@/components/NavItem'

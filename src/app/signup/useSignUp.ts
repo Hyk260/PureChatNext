@@ -1,8 +1,9 @@
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from '@/utils/navigation'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
 import { signUp, checkUserByEmail, reclaimUnverifiedEmail, useAuthConfig } from '@/libs/better-auth/client'
+import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 export interface SignUpFormValues {
   confirmPassword: string
@@ -31,7 +32,7 @@ export const useSignUp = () => {
 
     try {
       const email = values.email.trim().toLowerCase()
-      const callbackUrl = searchParams.get('callbackUrl') || '/'
+      const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
 
       const existingUser = await checkUserByEmail(email)
       if (existingUser.exists) {
@@ -43,7 +44,7 @@ export const useSignUp = () => {
         } else {
           message.info('该邮箱已注册，请前往登录')
           const params = new URLSearchParams({ email })
-          const callbackUrlParam = searchParams.get('callbackUrl')
+          const callbackUrlParam = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
           if (callbackUrlParam) params.set('callbackUrl', callbackUrlParam)
           router.push(`/signin?${params.toString()}`)
           return
@@ -71,8 +72,8 @@ export const useSignUp = () => {
         if (isEmailDuplicate) {
           message.info('该邮箱已注册，请前往登录')
           const params = new URLSearchParams({ email })
-          const callbackUrl = searchParams.get('callbackUrl')
-          if (callbackUrl) params.set('callbackUrl', callbackUrl)
+          const safeCallback = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
+          if (safeCallback) params.set('callbackUrl', safeCallback)
           router.push(`/signin?${params.toString()}`)
           return
         }

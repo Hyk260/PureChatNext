@@ -2,7 +2,7 @@
 
 import { Button } from '@lobehub/ui'
 import { ChevronLeft } from 'lucide-react'
-import Link from 'next/link'
+import Link from '@/utils/link'
 import { Suspense } from 'react'
 
 import { AuthPageContainer } from '@/components/AuthPageContainer'

@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import Link from '@/utils/link'
+import { usePathname } from '@/utils/navigation'
 import { useState } from 'react'
 import { Button, Drawer } from 'antd'
 import { Menu } from 'lucide-react'

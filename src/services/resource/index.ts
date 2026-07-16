@@ -1,9 +1,9 @@
 import type { FileListItem, PaginatedFileList, QueryFileListParams } from '@/types/files'
 import type { KnowledgeBaseListItem } from '@/types/resource'
+import { apiFetch } from '@/utils/apiFetch'
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    credentials: 'include',
+  const res = await apiFetch(url, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
@@ -38,9 +38,8 @@ export const resourceService = {
     if (options?.knowledgeBaseId) formData.append('knowledgeBaseId', options.knowledgeBaseId)
     if (options?.parentId) formData.append('parentId', options.parentId)
 
-    const res = await fetch('/api/resources/upload', {
+    const res = await apiFetch('/api/resources/upload', {
       body: formData,
-      credentials: 'include',
       method: 'POST',
     })
 

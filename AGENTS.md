@@ -82,8 +82,9 @@ pnpm db:studio     # Drizzle Studio
 ### API 路由
 
 - 认证相关：`src/app/api/auth/`（register、login、logout、github OAuth）
-- 鉴权中间件：`src/libs/auth/middleware.ts`
-- CORS：`src/libs/utils/cors.ts`，需配置 `ALLOWED_ORIGINS`
+- 鉴权中间件：`src/libs/auth/middleware.ts`（JWT `verifyAuth`）
+- 请求边界：`src/proxy.ts`（Next.js 16 Proxy；CORS + `/api/rest-api` JWT；勿改回 `middleware.ts`）
+- CORS：`src/libs/utils/cors.ts`，需配置 `ALLOWED_ORIGINS`（本地含 Vite `5174`）
 - 错误处理：复用 `src/libs/errors.ts` 中的 `ChatSDKError` 等
 
 ## 开发

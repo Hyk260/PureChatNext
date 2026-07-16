@@ -4,7 +4,7 @@ import { ProviderCombine } from '@lobehub/icons'
 import { Block, Flexbox, Text } from '@lobehub/ui'
 import { Switch } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/utils/navigation'
 import { memo } from 'react'
 
 import { getSettingsProviderMeta } from './const'

@@ -2,8 +2,8 @@
 
 import { Button, Flexbox, Text } from '@lobehub/ui'
 import { cssVar } from 'antd-style'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import Link from '@/utils/link'
+import { useSearchParams } from '@/utils/navigation'
 import { Suspense, memo } from 'react'
 
 import { AuthPageContainer } from '@/components/AuthPageContainer'

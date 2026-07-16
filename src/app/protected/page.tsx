@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { me, logout } from "@/libs/utils/api-client";
-import { useRouter } from "next/navigation";
+import { useRouter } from '@/utils/navigation';
 
 interface UserData {
   id: string;

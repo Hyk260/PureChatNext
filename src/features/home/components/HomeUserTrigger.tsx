@@ -4,7 +4,7 @@ import { Avatar, Block, Button, Flexbox, Icon, Popover, Text } from '@lobehub/ui
 import { App } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronDownIcon, LogOut, Settings2 } from 'lucide-react'
-import Link from 'next/link'
+import Link from '@/utils/link'
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import Menu from '@/components/Menu'

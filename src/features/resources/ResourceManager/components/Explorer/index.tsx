@@ -4,7 +4,7 @@ import { Flexbox } from '@lobehub/ui'
 import { Spin } from 'antd'
 import { App } from 'antd'
 import { memo, useCallback, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/utils/navigation'
 import { useQueryState } from 'nuqs'
 import { useShallow } from 'zustand/react/shallow'
 

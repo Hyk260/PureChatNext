@@ -1,11 +1,12 @@
 'use client'
 
-import Link from 'next/link'
-import { useParams, usePathname, useRouter } from 'next/navigation'
+import Link from '@/utils/link'
+import { useParams, usePathname, useRouter } from '@/utils/navigation'
 import { memo } from 'react'
 
 import NavItem from '@/components/NavItem'
 import { DOCUMENT_FOLDER_TYPE } from '@/const/resources/fileTypes'
+import { useFolderPath } from '@/features/resources/hooks/useFolderPath'
 import { useFetchKnowledgeBaseList, useFetchResources, useResourceStore } from '@/features/resources/store/resourceStore'
 import { Flexbox, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
@@ -27,10 +28,8 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 const LibraryHierarchy = memo(() => {
-  const params = useParams<{ id: string; slug?: string[] }>()
   const pathname = usePathname()
-  const libraryId = params.id
-  const slugParts = params.slug ?? []
+  const { libraryId } = useFolderPath()
 
   const queryParams = {
     knowledgeBaseId: libraryId,

@@ -1,5 +1,7 @@
 import type { UIMessage } from 'ai'
 
+import { apiFetch } from '@/utils/apiFetch'
+
 import type { LocalChatTopic } from './types'
 
 type ApiTopic = {
@@ -17,7 +19,7 @@ const toLocalTopic = (t: ApiTopic): LocalChatTopic => ({
 })
 
 export const fetchTopics = async (agentId: string): Promise<LocalChatTopic[]> => {
-  const res = await fetch(`/api/chat/topics?agentId=${encodeURIComponent(agentId)}`)
+  const res = await apiFetch(`/api/chat/topics?agentId=${encodeURIComponent(agentId)}`)
   if (!res.ok) throw new Error(`fetchTopics failed: ${res.status}`)
 
   const items = (await res.json()) as ApiTopic[]
@@ -25,7 +27,7 @@ export const fetchTopics = async (agentId: string): Promise<LocalChatTopic[]> =>
 }
 
 export const createTopic = async (agentId: string, title?: string): Promise<LocalChatTopic> => {
-  const res = await fetch('/api/chat/topics', {
+  const res = await apiFetch('/api/chat/topics', {
     body: JSON.stringify({ agentId, title }),
     headers: { 'Content-Type': 'application/json' },
     method: 'POST',
@@ -36,7 +38,7 @@ export const createTopic = async (agentId: string, title?: string): Promise<Loca
 }
 
 export const renameTopic = async (id: string, title: string): Promise<LocalChatTopic> => {
-  const res = await fetch(`/api/chat/topics/${encodeURIComponent(id)}`, {
+  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}`, {
     body: JSON.stringify({ title }),
     headers: { 'Content-Type': 'application/json' },
     method: 'PATCH',
@@ -47,12 +49,12 @@ export const renameTopic = async (id: string, title: string): Promise<LocalChatT
 }
 
 export const deleteTopic = async (id: string): Promise<void> => {
-  const res = await fetch(`/api/chat/topics/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}`, { method: 'DELETE' })
   if (!res.ok) throw new Error(`deleteTopic failed: ${res.status}`)
 }
 
 export const fetchMessages = async (topicId: string): Promise<UIMessage[]> => {
-  const res = await fetch(`/api/chat/topics/${encodeURIComponent(topicId)}/messages`)
+  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(topicId)}/messages`)
   if (!res.ok) throw new Error(`fetchMessages failed: ${res.status}`)
 
   return (await res.json()) as UIMessage[]
@@ -63,7 +65,7 @@ export const putMessages = async (
   messages: UIMessage[],
   init?: { signal?: AbortSignal },
 ): Promise<void> => {
-  const res = await fetch(`/api/chat/topics/${encodeURIComponent(topicId)}/messages`, {
+  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(topicId)}/messages`, {
     body: JSON.stringify({ messages }),
     headers: { 'Content-Type': 'application/json' },
     method: 'PUT',

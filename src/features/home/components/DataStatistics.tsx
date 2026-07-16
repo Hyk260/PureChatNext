@@ -5,6 +5,8 @@ import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, type ReactNode } from 'react'
 import useSWR from 'swr'
 
+import { apiFetch } from '@/utils/apiFetch'
+
 export type UserStats = {
   agents: number
   messages: number
@@ -37,7 +39,7 @@ const formatShortenNumber = (value: number): string => {
 }
 
 const fetchUserStats = async (): Promise<UserStats> => {
-  const res = await fetch('/api/user/stats')
+  const res = await apiFetch('/api/user/stats')
   if (!res.ok) throw new Error(`fetchUserStats failed: ${res.status}`)
   return res.json() as Promise<UserStats>
 }

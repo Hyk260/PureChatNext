@@ -1,7 +1,7 @@
 'use client'
 
 import { Flexbox } from '@lobehub/ui'
-import { usePathname } from 'next/navigation'
+import { usePathname } from '@/utils/navigation'
 import { type ReactNode } from 'react'
 
 import MainShellLayout from '@/layout/MainShellLayout'

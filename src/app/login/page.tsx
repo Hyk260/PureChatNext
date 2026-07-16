@@ -2,8 +2,8 @@
 
 import { login } from '@/libs/utils/api-client';
 import { Button, Input, Card } from "antd";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from '@/utils/link';
+import { useRouter } from '@/utils/navigation';
 import { type FormEvent, useState } from "react";
 
 export default function LoginPage() {

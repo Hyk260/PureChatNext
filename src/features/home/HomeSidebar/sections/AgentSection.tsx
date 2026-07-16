@@ -3,7 +3,7 @@
 import { AccordionItem, Flexbox, Text } from '@lobehub/ui'
 import { App } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/utils/navigation'
 import { memo, useCallback, useEffect, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'

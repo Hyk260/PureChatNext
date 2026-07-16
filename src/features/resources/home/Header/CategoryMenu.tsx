@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import Link from '@/utils/link'
+import { usePathname, useSearchParams } from '@/utils/navigation'
 import { memo } from 'react'
 
 import { Flexbox } from '@lobehub/ui'

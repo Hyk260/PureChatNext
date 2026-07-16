@@ -20,7 +20,7 @@ import {
   TerminalSquareIcon,
   type LucideIcon,
 } from 'lucide-react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
 import { memo, useCallback, useMemo } from 'react'
 
 import {

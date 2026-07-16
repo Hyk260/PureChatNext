@@ -1,7 +1,7 @@
 'use client'
 
 import { SearchBar } from '@lobehub/ui'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
 import { memo, useCallback, useEffect, useState, useTransition } from 'react'
 
 const AgentSearch = memo(() => {

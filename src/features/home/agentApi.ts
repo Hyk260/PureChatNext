@@ -1,4 +1,5 @@
 import type { AgentListItem } from '@/const/home/agents'
+import { apiFetch } from '@/utils/apiFetch'
 
 export type ApiAgent = {
   avatar: string | null
@@ -39,20 +40,20 @@ const toListItem = (a: ApiAgent): AgentListItem => ({
 })
 
 export const fetchAgents = async (): Promise<AgentListItem[]> => {
-  const res = await fetch('/api/agents')
+  const res = await apiFetch('/api/agents')
   if (!res.ok) throw new Error(`fetchAgents failed: ${res.status}`)
   const items = (await res.json()) as ApiAgent[]
   return items.map(toListItem)
 }
 
 export const fetchAgent = async (id: string): Promise<AgentListItem> => {
-  const res = await fetch(`/api/agents/${encodeURIComponent(id)}`)
+  const res = await apiFetch(`/api/agents/${encodeURIComponent(id)}`)
   if (!res.ok) throw new Error(`fetchAgent failed: ${res.status}`)
   return toListItem((await res.json()) as ApiAgent)
 }
 
 export const createAgent = async (body: AgentCreateBody): Promise<AgentListItem> => {
-  const res = await fetch('/api/agents', {
+  const res = await apiFetch('/api/agents', {
     body: JSON.stringify(body),
     headers: { 'Content-Type': 'application/json' },
     method: 'POST',
@@ -62,7 +63,7 @@ export const createAgent = async (body: AgentCreateBody): Promise<AgentListItem>
 }
 
 export const updateAgent = async (id: string, body: AgentUpdateBody): Promise<AgentListItem> => {
-  const res = await fetch(`/api/agents/${encodeURIComponent(id)}`, {
+  const res = await apiFetch(`/api/agents/${encodeURIComponent(id)}`, {
     body: JSON.stringify(body),
     headers: { 'Content-Type': 'application/json' },
     method: 'PATCH',
@@ -72,7 +73,7 @@ export const updateAgent = async (id: string, body: AgentUpdateBody): Promise<Ag
 }
 
 export const deleteAgent = async (id: string): Promise<void> => {
-  const res = await fetch(`/api/agents/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  const res = await apiFetch(`/api/agents/${encodeURIComponent(id)}`, { method: 'DELETE' })
   if (res.status === 403) throw new Error('BUILTIN')
   if (res.status === 409) throw new Error('HAS_TOPICS')
   if (!res.ok) throw new Error(`deleteAgent failed: ${res.status}`)

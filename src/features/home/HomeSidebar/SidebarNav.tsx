@@ -1,8 +1,8 @@
 'use client'
 
 import { App } from 'antd'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import Link from '@/utils/link'
+import { usePathname } from '@/utils/navigation'
 import { memo } from 'react'
 
 import NavItem from '@/components/NavItem'

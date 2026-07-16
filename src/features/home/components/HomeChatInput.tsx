@@ -4,7 +4,7 @@ import { ActionIcon, Block, Flexbox } from '@lobehub/ui'
 import { App } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowUp } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/utils/navigation'
 import { memo, useEffect, useState } from 'react'
 
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'

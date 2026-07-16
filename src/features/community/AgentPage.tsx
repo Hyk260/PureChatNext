@@ -1,7 +1,7 @@
 'use client'
 
 import { Flexbox } from '@lobehub/ui'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams } from '@/utils/navigation'
 import { memo, useMemo } from 'react'
 
 import {

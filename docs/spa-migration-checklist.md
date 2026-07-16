@@ -58,55 +58,56 @@
 
 ## 2. 路由迁移表（按模块勾选）
 
-> 现有 43 个 `page.tsx` → SPA route；Next `page.tsx` 最终可删或改成 redirect 到 SPA shell。
+> 现有 43 个 `page.tsx` → SPA route；Next `page.tsx` 最终可删或改成 redirect 到 SPA shell。  
+> SPA 树：`src/spa/router/webRouter.config.tsx` + `src/routes/**` 薄层 → features / `app`（经 Vite shim）。
 
 ### 2.1 核心业务（优先）
 
 | 原路径 | SPA 路由 | Feature 入口 | 状态 |
 |--------|----------|-------------|------|
-| `/(main)` | `/` | `features/home/HomePage` | [ ] |
-| `/chat` | `/chat` | `features/chat/ChatPage` | [ ] |
-| `/resources/(home)` | `/resources` | ResourceHome | [ ] |
-| `/resources/library/[id]` | `/resources/library/:id` | ResourceLibrary | [ ] |
-| `/resources/library/[id]/[...slug]` | `/resources/library/:id/*` | ResourceLibrary | [ ] |
+| `/(main)` | `/` | `features/home/HomePage` | [x] |
+| `/chat` | `/chat` | `features/chat/ChatPage` | [x]（`RequireAuth` gate，见 §4） |
+| `/resources/(home)` | `/resources` | ResourceHome | [x] |
+| `/resources/library/[id]` | `/resources/library/:id` | ResourceLibrary | [x] |
+| `/resources/library/[id]/[...slug]` | `/resources/library/:id/*` | ResourceLibrary | [x] |
 
 ### 2.2 Auth / 账号
 
 | 原路径 | SPA 路由 | 备注 | 状态 |
 |--------|----------|------|------|
-| `/signin` | `/signin` | hooks 在 `app/signin`，建议迁到 `features/auth` | [ ] |
-| `/signup` | `/signup` | 同上 | [ ] |
-| `/login` | `/login` | 与 signin 是否合并，决策后勾选 | [ ] |
-| `/verify-email` | `/verify-email` | | [ ] |
-| `/reset-password` | `/reset-password` | | [ ] |
-| `/auth-error` | `/auth-error` | | [ ] |
-| `/welcome` | `/welcome` | | [ ] |
-| `/profile` | `/profile` | | [ ] |
-| `/protected` | `/protected` | 或改纯客户端 gate | [ ] |
+| `/signin` | `/signin` | 薄层 re-export `app/signin`；迁 `features/auth` → §9 | [x] |
+| `/signup` | `/signup` | 同上 | [x] |
+| `/login` | `/login` | 保留 legacy（旧 JWT 表单）；主流程用 `/signin` | [x] |
+| `/verify-email` | `/verify-email` | | [x] |
+| `/reset-password` | `/reset-password` | | [x] |
+| `/auth-error` | `/auth-error` | | [x] |
+| `/welcome` | `/welcome` | | [x] |
+| `/profile` | `/profile` | → `/settings/profile` | [x] |
+| `/protected` | `/protected` | 客户端 `me()` gate | [x] |
 
 ### 2.3 Settings（多数空壳，可批量迁）
 
 | 原路径 | 状态 |
 |--------|------|
-| `/settings` | [ ] |
-| `/settings/profile` | [ ] （原有 SSR 预取，需改客户端） |
-| `/settings/provider`、`/all`、`/[id]` | [ ] |
-| `/settings/appearance` `/language` `/hotkey` `/notification` `/stats` | [ ] |
-| `/settings/advanced` `/storage` `/memory` `/creds` `/about` | [ ] |
-| `/settings/messenger` `/connector` `/skill` `/service-model` | [ ] |
+| `/settings` | [x] → `/settings/profile` |
+| `/settings/profile` | [x] 客户端拉取 `GET /api/webapi/user/profile` → `ProfileSettingsContent` |
+| `/settings/provider`、`/all`、`/[id]` | [x] |
+| `/settings/appearance` `/language` `/hotkey` `/notification` `/stats` | [x]（空壳，与 Next 对等） |
+| `/settings/advanced` `/storage` `/memory` `/creds` `/about` | [x]（空壳，与 Next 对等） |
+| `/settings/messenger` `/connector` `/skill` `/service-model` | [x]（空壳，与 Next 对等） |
 
 ### 2.4 Community
 
 | 原路径 | 状态 |
 |--------|------|
-| `/community` | [ ] |
-| `/community/agent` `/model` `/provider` | [ ] |
+| `/community` | [x] → `/community/provider` |
+| `/community/agent` `/model` `/provider` | [x] |
 
 ### 2.5 Dev（可后置）
 
 | 原路径 | 状态 |
 |--------|------|
-| `/dev/*`（web-search、email、s3、read-file、delete-user…） | [ ] 生产仍 404 |
+| `/dev/*`（web-search、email、s3、read-file、delete-user…） | [x] 仅 `import.meta.env.DEV` 注册；生产构建不进路由表（仍 404） |
 
 ---
 
@@ -116,63 +117,69 @@
 
 按目录扫并替换（当前命中示例）：
 
-- [ ] `src/features/chat/ChatPage.tsx`
-- [ ] `src/features/home/**`（Sidebar、HomeChatInput…）
-- [ ] `src/features/settings/**`（Shell、Sidebar、provider nav…）
-- [ ] `src/features/community/**`
-- [ ] `src/features/resources/**`（Explorer、Sidebar、pages、hooks）
-- [ ] `src/layout/**`（`AppShellLayout`、`SideBarHeaderLayout`、`AppThemeProvider`）
-- [ ] `src/app/signin|signup|verify-email|reset-password|auth-error|login|profile|welcome/**`（hooks/表单）
+- [x] `src/features/chat/ChatPage.tsx`
+- [x] `src/features/home/**`（Sidebar、HomeChatInput…）
+- [x] `src/features/settings/**`（Shell、Sidebar、provider nav…）
+- [x] `src/features/community/**`
+- [x] `src/features/resources/**`（Explorer、Sidebar、pages、hooks；splat `*` ↔ slug）
+- [x] `src/layout/**`（`SideBarHeaderLayout`；`AppThemeProvider` 仍用 Next `useServerInsertedHTML`）
+- [x] `src/app/signin|signup|verify-email|reset-password|auth-error|login|profile|welcome/**`（hooks/表单）
+
+> 客户端统一走 `@/utils/navigation` / `@/utils/link`（re-export `next/*`）。  
+> Vite 将 `next/navigation|link` alias 到 `src/spa/shims/*`（react-router），故 **Next 与 SPA 双运行时** 共用同一套 import。  
+> 仍直接写 `next/navigation` 的仅限：Next 服务端 `redirect` / `notFound` page，以及 `AppThemeProvider`（`useServerInsertedHTML`）。  
+> SPA 专用：`Navigate` 等从 `react-router` 引入（见 `SettingsProfilePage`）。
 
 替换对照：
 
-| Next | React Router |
+| Next | 薄层 / SPA |
 |------|----------------|
-| `useRouter().push` | `useNavigate()` |
-| `usePathname` | `useLocation().pathname` |
-| `useSearchParams` | `useSearchParams`（react-router） |
-| `redirect()`（server） | 客户端 `<Navigate>` / `navigate()` |
-| `useParams` | `useParams` |
+| `useRouter().push` | `@/utils/navigation` → Vite shim → `useNavigate()` |
+| `usePathname` | `@/utils/navigation` |
+| `useSearchParams` | `@/utils/navigation`（shim 已 unwrap RR tuple） |
+| `redirect()`（server） | 客户端 SPA：`<Navigate>`；Next page 暂留至 §9 |
+| `useParams` | `@/utils/navigation`（Resources splat 见 `useFolderPath`） |
+| `next/link` `href` | `@/utils/link` → shim → RR `to` |
 
-- [ ] 统一封装薄层 `src/utils/router.ts`（可选，降低扩散）
+- [x] 统一封装薄层：`src/utils/navigation.ts` + `src/utils/link.tsx`（`src/utils/router.tsx` 仍负责 route factory）
 
 ### 3.2 `nuqs`
 
-- [ ] `AppShellLayout` 等处的 `nuqs/adapters/next/app` → `nuqs/adapters/react-router`（按 nuqs 文档选对应 adapter）
-- [ ] Resources 相关 URL state 全量回归
+- [x] SPA：`AppLayer` 使用 `nuqs/adapters/react-router/v8`；Next `AppShellLayout` 暂留 `nuqs/adapters/next/app`（至 §9 删 layout）
+- [ ] Resources 相关 URL state 全量回归（手工冒烟，见 §8.2）
 
 ### 3.3 链接组件
 
-- [ ] `next/link` → `react-router` 的 `Link`（全局搜一遍勾选）
+- [x] `next/link` → `@/utils/link`（`href` API → react-router `to`；全局客户端已扫）
 
 ---
 
 ## 4. Auth 适配（关键路径）
 
-- [ ] **保留** `src/app/api/auth/[...all]/route.ts`（better-auth）
-- [ ] 客户端 session：统一 `useSession` / better-auth client，去掉依赖 `headers()` 的 page 门禁
-- [ ] 改造原 SSR 页：
-  - [ ] `src/app/chat/page.tsx`（session + redirect）→ SPA loader/guard
-  - [ ] `src/app/settings/profile/page.tsx`（DB 预取）→ 进页后 fetch
-  - [ ] `src/app/settings/provider/[id]/page.tsx`（校验）→ 客户端校验
-- [ ] OAuth / 邮件回调 URL：确认仍指向 **同源** `/api/auth/...`（生产不变；本地注意端口）
+- [x] **保留** `src/app/api/auth/[...all]/route.ts`（better-auth）
+- [x] 客户端 session：统一 `useSession` / better-auth client；SPA 用 `RequireAuth`，去掉对 `headers()` page 门禁的依赖（Next SSR 页仍可暂留至 §9）
+- [x] 改造原 SSR 页：
+  - [x] `src/app/chat/page.tsx`（session + redirect）→ SPA：`src/routes/chat/_layout.tsx` + `RequireAuth`
+  - [x] `src/app/settings/profile/page.tsx`（DB 预取）→ 进页后 fetch（`SettingsProfilePage` + `GET /api/webapi/user/profile`；Next SSR 页仍保留至 §9）
+  - [x] `src/app/settings/provider/[id]/page.tsx`（校验）→ SPA 客户端校验（`src/routes/settings/provider/[id]/page.tsx`）
+- [x] OAuth / 邮件回调 URL：仍指向 **同源** `/api/auth/...`（`APP_URL` + better-auth；本地 SPA `5174` 经 Vite proxy `/api`；OAuth 完成后落地 `APP_URL`，生产同域无感）
 - [x] 开发 CORS：Vite origin 加入 `allowed-origins`（`localhost:5174`）；API `credentials: 'include'`
-- [ ] 处理 `src/proxy.ts`：恢复为 `middleware.ts` 或并入 API 层（CORS + `/api/rest-api` JWT）
-- [ ] 登录后 `callbackUrl` 在 SPA 内跳转，不依赖 Next `redirect`
+- [x] 处理 `src/proxy.ts`：Next.js 16 已用 **Proxy** 替代 Middleware —— **保留** `proxy.ts`（CORS + `/api/rest-api` JWT）；勿改回 `middleware.ts`
+- [x] 登录后 `callbackUrl`：`resolveCallbackUrl` 防开放重定向；邮箱密码成功后 `router.push`（SPA 内跳转）
 
 ---
 
 ## 5. 数据与 API（尽量不动）
 
-- [ ] 确认前端请求一律相对路径：`/api/...`（禁止写死 `localhost:3000`）
-- [ ] 抽查关键 API 在 SPA 下可用：
-  - [ ] `/api/chat` 流式
-  - [ ] `/api/chat/topics/*`
-  - [ ] `/api/agents*`
-  - [ ] `/api/resources/*`（含文件 content）
-  - [ ] `/api/auth/*`、`/api/user/*`
-- [ ] SWR / 自研 fetch 的 baseURL 行为确认
-- [ ] `@ai-sdk/react` `useChat` 的 `api` 路径仍指向 `/api/chat`
+- [x] 确认前端请求一律相对路径：`/api/...`（禁止写死 `localhost:3000`；业务客户端已扫，无硬编码 host）
+- [x] 抽查关键 API 在 SPA 下可用（经 Vite `5174` → Next proxy；未登录期望 401/400，非 404/502）：
+  - [x] `/api/chat` 流式（`DefaultChatTransport` `api: '/api/chat'` + `credentials: 'include'`；空 POST → 400）
+  - [x] `/api/chat/topics/*`（`chatApi` → `apiFetch`；未登录 401）
+  - [x] `/api/agents*`（`agentApi` → `apiFetch`；未登录 401）
+  - [x] `/api/resources/*`（含 `files/.../content`；`resourceService` → `apiFetch`；未登录 401）
+  - [x] `/api/auth/*`、`/api/user/*`、`/api/webapi/user/profile`（config 200；stats/profile 未登录 401）
+- [x] SWR / 自研 fetch：`API_BASE_URL = ''`；统一薄层 `src/utils/apiFetch.ts`（相对路径 + cookie）
+- [x] `@ai-sdk/react` `useChat` 的 transport `api` 仍指向 `/api/chat`（已去掉误留 `debugger`）
 
 ---
 

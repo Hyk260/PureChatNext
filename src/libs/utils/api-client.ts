@@ -1,6 +1,6 @@
 /**
  * API 客户端工具函数
- * 用于前端调用后端 API
+ * 用于前端调用后端 API（相对路径 `/api/...`；`API_BASE_URL` 保持空串，禁止写死 host）
  */
 const API_BASE_URL = '';
 

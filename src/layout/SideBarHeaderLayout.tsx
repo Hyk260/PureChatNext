@@ -5,7 +5,7 @@ import type { BreadcrumbProps } from 'antd'
 import { Breadcrumb } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronRightIcon, HomeIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/utils/navigation'
 import { memo, type MouseEvent, type ReactNode } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'

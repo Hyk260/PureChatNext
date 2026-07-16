@@ -43,7 +43,9 @@ describe('auth config cache', () => {
     await expect(loadAuthServerConfig()).resolves.toEqual(mockConfig)
     expect(getCachedAuthConfig()).toEqual(mockConfig)
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(fetchMock).toHaveBeenCalledWith('/api/auth/config')
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/config', {
+      credentials: 'include',
+    })
 
     await expect(loadAuthServerConfig()).resolves.toEqual(mockConfig)
     expect(fetchMock).toHaveBeenCalledTimes(1)

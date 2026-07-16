@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import type { AuthServerConfig } from '@/libs/better-auth/shared'
+import { apiFetch } from '@/utils/apiFetch'
 
 const defaultConfig: AuthServerConfig = {
   emailVerificationMode: 'otp',
@@ -25,7 +26,7 @@ export const loadAuthServerConfig = (): Promise<AuthServerConfig> => {
   if (cachedConfig) return Promise.resolve(cachedConfig)
   if (inflight) return inflight
 
-  inflight = fetch('/api/auth/config')
+  inflight = apiFetch('/api/auth/config')
     .then((response) => response.json() as Promise<AuthServerConfig>)
     .then((data) => {
       cachedConfig = data

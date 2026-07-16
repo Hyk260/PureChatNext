@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/utils/link'
 
 import styles from './index.module.css'
 

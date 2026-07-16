@@ -1,10 +1,11 @@
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/utils/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
 import { emailOtp, sendVerificationEmail } from '@/libs/better-auth/client'
 import { formatExpirationText } from '@/libs/better-auth/email-templates/utils/format-expiration-text'
 import { OTP_EXPIRES_IN, type EmailVerificationMode } from '@/libs/better-auth/shared'
+import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 interface UseVerifyEmailParams {
   callbackUrl: string
@@ -60,7 +61,10 @@ export const useVerifyEmail = ({ email, callbackUrl, mode }: UseVerifyEmailParam
 
     setSending(true)
     try {
-      const result = await sendVerificationEmail({ callbackURL: callbackUrl, email })
+      const result = await sendVerificationEmail({
+        callbackURL: resolveCallbackUrl(callbackUrl),
+        email,
+      })
 
       if (result.error) {
         message.error(result.error.message || '发送验证邮件失败，请稍后重试')
@@ -106,7 +110,7 @@ export const useVerifyEmail = ({ email, callbackUrl, mode }: UseVerifyEmailParam
       }
 
       message.success('邮箱验证成功')
-      router.push(callbackUrl)
+      router.push(resolveCallbackUrl(callbackUrl))
     } catch (error) {
       console.error('Error verifying email OTP:', error)
       message.error('验证失败，请稍后重试')

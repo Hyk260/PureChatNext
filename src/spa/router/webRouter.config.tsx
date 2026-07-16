@@ -25,7 +25,13 @@ export const webRoutes: RouteObject[] = [
 
   // —— Chat ——
   {
-    element: dynamicElement(() => import('@/routes/chat/page'), 'Chat'),
+    children: [
+      {
+        element: dynamicElement(() => import('@/routes/chat/page'), 'Chat'),
+        index: true,
+      },
+    ],
+    element: dynamicLayout(() => import('@/routes/chat/_layout'), 'ChatLayout'),
     path: 'chat',
   },
 

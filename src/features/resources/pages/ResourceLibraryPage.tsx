@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams } from '@/utils/navigation'
 
 import ResourceManager from '@/features/resources/ResourceManager'
 import { useResourceManagerStore } from '@/features/resources/store'

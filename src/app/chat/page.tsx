@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { ChatPage } from '@/features/chat'
 
+/** Next SSR gate — SPA uses `routes/chat/_layout` + `RequireAuth` instead. */
 export default async function Chat({
   searchParams,
 }: {

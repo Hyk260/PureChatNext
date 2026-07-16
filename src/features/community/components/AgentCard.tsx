@@ -4,7 +4,7 @@ import { Avatar, Block, Flexbox, Icon, Tag, Text } from '@lobehub/ui'
 import { App } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { BookTextIcon, ClockIcon, CoinsIcon, GitForkIcon, PuzzleIcon } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/utils/navigation'
 import { memo, useCallback, useState } from 'react'
 
 import { ASSISTANT_CATEGORY_LABELS } from '@/const/community/agents'

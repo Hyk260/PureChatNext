@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from '@/utils/navigation'
 import { useShallow } from 'zustand/react/shallow'
 
 import ResourceManager from '@/features/resources/ResourceManager'

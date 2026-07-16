@@ -3,8 +3,8 @@
 import { ActionIcon, Avatar, Flexbox, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { PanelLeftOpen } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import Link from '@/utils/link'
+import { usePathname } from '@/utils/navigation'
 import { memo, useMemo } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'

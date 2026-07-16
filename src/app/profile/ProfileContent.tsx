@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import Link from '@/utils/link'
+import { useRouter } from '@/utils/navigation'
 import { type ReactNode, useState } from 'react'
 
 import type { UserWithoutPassword } from '@/database/schemas'

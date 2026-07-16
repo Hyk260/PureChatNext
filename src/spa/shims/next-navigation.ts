@@ -2,7 +2,6 @@
  * Vite-only shim: map Next App Router navigation APIs → react-router.
  * Aliased in vite.config.ts; Next builds keep using real `next/navigation`.
  */
-import type { ReactNode } from 'react'
 import {
   Navigate,
   useLocation,
@@ -28,13 +27,19 @@ export function useRouter() {
     back: () => navigate(-1),
     forward: () => navigate(1),
     prefetch: async (_href: string) => {},
-    push: (href: string | { pathname?: string; query?: Record<string, string>; hash?: string }, _opts?: NavigateOptions) => {
+    push: (
+      href: string | { pathname?: string; query?: Record<string, string>; hash?: string },
+      _opts?: NavigateOptions,
+    ) => {
       navigate(toHref(href))
     },
     refresh: () => {
       window.location.reload()
     },
-    replace: (href: string | { pathname?: string; query?: Record<string, string>; hash?: string }, _opts?: NavigateOptions) => {
+    replace: (
+      href: string | { pathname?: string; query?: Record<string, string>; hash?: string },
+      _opts?: NavigateOptions,
+    ) => {
       navigate(toHref(href), { replace: true })
     },
   }
@@ -50,7 +55,7 @@ export function useSearchParams() {
   return searchParams
 }
 
-export function useParams<T extends Record<string, string | undefined> = Record<string, string | undefined>>() {
+export function useParams<T extends Record<string, unknown> = Record<string, string | undefined>>() {
   return useRRParams() as T
 }
 
@@ -66,6 +71,6 @@ export function notFound(): never {
 }
 
 /** No-op in SPA (Next layout CSS injection only). */
-export function useServerInsertedHTML(_callback: () => ReactNode) {}
+export function useServerInsertedHTML(_callback: () => unknown) {}
 
 export { Navigate }

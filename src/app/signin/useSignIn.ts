@@ -1,10 +1,11 @@
 import { Form } from 'antd'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from '@/utils/navigation'
 import { useEffect, useState } from 'react'
 import { message } from '@/components/AntdStaticMethods'
 
 import { AUTH_UI_SSO_PROVIDERS, BUILTIN_BETTER_AUTH_PROVIDERS } from '@/libs/better-auth/shared'
 import { checkUserByEmail, requestPasswordReset, signIn, useAuthConfig } from '@/libs/better-auth/client'
+import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 type Step = 'email' | 'password'
 
@@ -50,7 +51,7 @@ export const useSignIn = () => {
 
     setLoading(true)
     try {
-      const callbackUrl = searchParams.get('callbackUrl') || '/'
+      const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
       const { error } = await signIn.magicLink({
         email: resolvedEmail,
         callbackURL: callbackUrl,
@@ -81,7 +82,7 @@ export const useSignIn = () => {
       if (!result.exists) {
         message.info('该邮箱尚未注册，请先创建账户')
         const params = new URLSearchParams({ email: normalizedEmail })
-        const callbackUrl = searchParams.get('callbackUrl')
+        const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
         if (callbackUrl) params.set('callbackUrl', callbackUrl)
         router.push(`/signup?${params.toString()}`)
         return
@@ -113,7 +114,7 @@ export const useSignIn = () => {
   const handleSignIn = async (values: Pick<SignInFormValues, 'password'>) => {
     setLoading(true)
     try {
-      const callbackUrl = searchParams.get('callbackUrl') || '/'
+      const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
       const result = await signIn.email(
         {
           email,
@@ -129,6 +130,7 @@ export const useSignIn = () => {
               )
             }
           },
+          // SPA in-app navigation — do not rely on Next server redirect
           onSuccess: () => router.push(callbackUrl),
         }
       )
@@ -155,7 +157,7 @@ export const useSignIn = () => {
       } catch {
         // Ignore localStorage errors (e.g., quota exceeded, private mode)
       }
-      const callbackUrl = searchParams.get('callbackUrl') || '/'
+      const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
       const isBuiltin = (BUILTIN_BETTER_AUTH_PROVIDERS as readonly string[]).includes(provider)
       const result = isBuiltin
         ? await signIn.social({
@@ -183,6 +185,8 @@ export const useSignIn = () => {
   const handleGoToSignup = () => {
     const params = new URLSearchParams()
     if (email) params.set('email', email)
+    const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
+    if (callbackUrl) params.set('callbackUrl', callbackUrl)
     const query = params.toString()
     router.push(query ? `/signup?${query}` : '/signup')
   }

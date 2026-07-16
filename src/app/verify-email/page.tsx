@@ -2,13 +2,14 @@
 
 import { Button } from '@lobehub/ui'
 import { ChevronLeft } from 'lucide-react'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import Link from '@/utils/link'
+import { useSearchParams } from '@/utils/navigation'
 import { Suspense } from 'react'
 
 import { AuthPageContainer } from '@/components/AuthPageContainer'
 import AuthCard from '@/features/AuthCard'
 import { useAuthConfig } from '@/libs/better-auth/client'
+import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 import { VerifyEmailContent } from './VerifyEmailContent'
 
@@ -31,7 +32,7 @@ const VerifyEmailDescription = ({ email }: { email: string | null }) => {
 const VerifyEmailPageContent = () => {
   const searchParams = useSearchParams()
   const email = searchParams.get('email')
-  const callbackUrl = searchParams.get('callbackUrl') || '/'
+  const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
 
   return (
     <AuthPageContainer>

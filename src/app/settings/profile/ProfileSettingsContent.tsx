@@ -2,7 +2,7 @@
 
 import { Block, Flexbox } from '@lobehub/ui'
 import { Divider } from 'antd'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/utils/navigation'
 import { Fragment, useMemo, useState, type ReactNode } from 'react'
 
 import type { ProfileUser } from '@/app/profile/ProfileContent'

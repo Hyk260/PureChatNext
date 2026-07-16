@@ -1,9 +1,56 @@
+import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import type { ProfileUser } from '@/app/profile/ProfileContent'
+import { auth } from '@/auth'
 import { UserModel } from '@/database/models/user'
+import type { UserItem } from '@/database/schemas'
+import { fileEnv } from '@/envs/file'
 import { normalizeInterestsForStorage } from '@/features/settings/const/interests'
 import { withAuth } from '@/libs/auth/get-session-user'
+
+function serializeUser(user: UserItem): ProfileUser {
+  const { password: _password, ...rest } = user
+
+  return {
+    ...rest,
+    accessedAt: rest.accessedAt.toISOString(),
+    banExpires: rest.banExpires?.toISOString() ?? null,
+    createdAt: rest.createdAt.toISOString(),
+    emailVerifiedAt: rest.emailVerifiedAt?.toISOString() ?? null,
+    lastActiveAt: rest.lastActiveAt.toISOString(),
+    updatedAt: rest.updatedAt.toISOString(),
+  }
+}
+
+function isS3Configured() {
+  return Boolean(
+    fileEnv.S3_ACCESS_KEY_ID &&
+      fileEnv.S3_SECRET_ACCESS_KEY &&
+      fileEnv.S3_ENDPOINT &&
+      fileEnv.S3_BUCKET,
+  )
+}
+
+/** GET /api/webapi/user/profile — SPA / client settings profile bootstrap */
+export const GET = withAuth(async (_request, { userId }) => {
+  const user = await UserModel.findById(userId)
+
+  if (!user) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  }
+
+  const accounts = await auth.api.listUserAccounts({
+    headers: await headers(),
+  })
+
+  return NextResponse.json({
+    hasCredentialAccount: accounts.some((account) => account.providerId === 'credential'),
+    s3Configured: isS3Configured(),
+    user: serializeUser(user),
+  })
+})
 
 const updateProfileSchema = z
   .object({

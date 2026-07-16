@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react'
 import { Flexbox, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { DefaultChatTransport, type UIMessage } from 'ai'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams } from '@/utils/navigation'
 import {
   memo,
   useCallback,
@@ -93,8 +93,8 @@ const styles = createStaticStyles(({ css }) => ({
 
 const chatTransport = new DefaultChatTransport({
   api: '/api/chat',
+  credentials: 'include',
   headers: (): Record<string, string> => {
-    debugger
     const provider = useHomeStore.getState().selectedProvider
     if (!isSettingsProviderId(provider)) return {}
 

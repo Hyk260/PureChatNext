@@ -42,7 +42,28 @@ const nextConfig: NextConfig = {
         headers: [{ key: 'x-robots-tag', value: 'all' }],
         source: '/:path*',
       },
+      {
+        // Hashed Vite assets under public/_spa — long cache
+        source: '/_spa/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
     ]
+  },
+  async rewrites() {
+    return {
+      // After pages / API / public files: unmatched UI paths → SPA HTML shell
+      fallback: [
+        {
+          source: '/:path*',
+          destination: '/spa/:path*',
+        },
+      ],
+    }
   },
   images: {
     remotePatterns: [],

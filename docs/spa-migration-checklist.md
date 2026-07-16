@@ -44,10 +44,15 @@
 
 ### 1.4 Next 侧 SPA 壳（生产用，可第二周再做）
 
-- [ ] 新增 SPA HTML 服务路由（参考 LobeHub `src/app/spa/...`）：注入必要 config 后返回 `index.html` 模板
-- [ ] `build:spa` 产物拷到 `public/_spa`（或等价目录）
-- [ ] 页面路由 fallback：非 `/api/*` 的前端路径落到 SPA shell
-- [ ] 本地开发：直接访问 `http://localhost:5174`，**不要**依赖线上 Debug Proxy
+- [x] 新增 SPA HTML 服务路由（参考 LobeHub `src/app/spa/...`）：注入必要 config 后返回 `index.html` 模板
+  - 路由：`src/app/spa/[[...path]]/route.ts`；注入：`window.__SERVER_CONFIG__`（`src/server/spaHtml`）
+- [x] `build:spa` 产物拷到 `public/_spa`（或等价目录）
+  - `scripts/copySpaBuild.mts`：assets → `public/_spa/`；HTML → `src/app/spa/spaHtmlTemplate.generated.ts`
+  - Vite 生产 `base: '/_spa/'`
+- [x] 页面路由 fallback：非 `/api/*` 的前端路径落到 SPA shell
+  - `next.config.ts` `rewrites.fallback` → `/spa/:path*`（有对应 Next page 时仍优先 page；迁移删 page 后走壳）
+  - `/_spa/**` 长缓存；SPA HTML `Cache-Control: no-cache`
+- [x] 本地开发：直接访问 `http://localhost:5174`，**不要**依赖线上 Debug Proxy
 
 ---
 

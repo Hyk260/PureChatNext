@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => {
   const nextTarget = resolveNextProxyTarget(env)
 
   return {
+    // Production assets are served from Next `public/_spa` (same-origin).
+    base: mode === 'production' ? '/_spa/' : '/',
+    // Avoid copying Next `public/` (incl. `_spa`) into Vite `dist` — prevents nested `_spa/_spa`.
+    publicDir: false,
     plugins: [react()],
     resolve: {
       alias: {

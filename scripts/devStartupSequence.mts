@@ -1,3 +1,36 @@
+/**
+ * 本地开发启动编排：并发拉起 Next（API / BFF）与 Vite SPA。
+ *
+ * ## 用途
+ * - 由 `pnpm dev` / `bun run dev` 调用（见 package.json `dev`）
+ * - 加载 `.env` → `.env.local`（后者覆盖）
+ * - 启动 `next dev`，再启动 `dev:spa`（Vite，默认 5174，`/api` 代理到 Next）
+ * - 任一子进程异常退出时，优雅结束另一进程；Ctrl+C 发 SIGTERM，超时后 SIGKILL
+ *
+ * ## 使用
+ * ```bash
+ * pnpm dev                 # 推荐：Next :3000 + SPA :5174
+ * pnpm dev -- -p 3001      # 自定义 Next 端口（`-p` > PORT > 3000）
+ * PORT=3001 pnpm dev       # 等价：用环境变量指定 Next 端口
+ * ```
+ *
+ * ## 访问
+ * - UI：http://localhost:5174/ （请用 SPA 端口，不要依赖 Debug Proxy）
+ * - API：http://localhost:<next-port>/ （默认 3000）
+ *
+ * ## 仅启动其一
+ * ```bash
+ * pnpm dev:next            # 仅 Next
+ * pnpm dev:spa             # 仅 Vite SPA（需本机已有 Next 或可连的 API）
+ * ```
+ *
+ * ## 前置
+ * - 包管理：pnpm；本脚本用 bun 拉起子进程（需本机安装 bun）
+ * - 环境变量：根目录 `.env.local`（参考 docs/QUICK_START.md）
+ *
+ * 生产预览请用 `pnpm build && pnpm start`（:3210），不要走本脚本。
+ */
+
 import type { ChildProcess, SpawnOptions } from 'node:child_process'
 import { spawn } from 'node:child_process'
 import net from 'node:net'

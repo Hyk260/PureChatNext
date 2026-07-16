@@ -102,9 +102,10 @@ pnpm lint             # ESLint
 ```
 
 - 本地开发：浏览器访问 **SPA 端口** `http://localhost:5174`（不要依赖线上 Debug Proxy）；Next 在 `3000`
+- 生产同域：Vite 产物在 `public/_spa/**`；HTML 由 `src/app/spa/[[...path]]/route.ts` 注入 `__SERVER_CONFIG__`；未匹配 UI 路径经 `rewrites.fallback` → `/spa`
 - 环境变量：复制 `.env.example` 为 `.env.local`，参考 `docs/QUICK_START.md`
 - SPA 改造进度：`docs/spa-migration-checklist.md`
-- **不要**提交 `.env`、`.env.local` 等含密钥文件
+- **不要**提交 `.env`、`.env.local` 等含密钥文件；本地 `build:spa:copy` 会改写 `spaHtmlTemplate.generated.ts`，勿提交构建后的 HTML
 
 ### Git 工作流
 

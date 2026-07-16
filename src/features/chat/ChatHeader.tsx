@@ -13,7 +13,6 @@ const styles = createStaticStyles(({ css }) => ({
     height: 44px;
     padding-inline: 8px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
-    background: ${cssVar.colorBgContainer};
   `,
   menuTrigger: css`
     cursor: pointer;
@@ -88,7 +87,7 @@ const ChatHeader = memo<Props>(({ title }) => {
 
   return (
     <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
-      <Flexbox horizontal align='center' flex={1} gap={2} style={{ minWidth: 0, overflow: 'hidden' }}>
+      <Flexbox horizontal align='center' flex={1} gap={4} style={{ minWidth: 0, overflow: 'hidden' }}>
         {leftCollapsed ? (
           <ActionIcon
             icon={PanelLeftOpen}

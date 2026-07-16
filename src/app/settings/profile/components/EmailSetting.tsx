@@ -1,10 +1,9 @@
 'use client'
 
 import { Button, Input, Text } from '@lobehub/ui'
-import { Form, Modal } from 'antd'
+import { App, Form, Modal } from 'antd'
 import { useState } from 'react'
 
-import { message } from '@/components/AntdStaticMethods'
 import { changeEmail } from '@/libs/better-auth/client'
 
 import { SettingRow } from './SettingRow'
@@ -18,6 +17,7 @@ interface ChangeEmailFormValues {
 }
 
 export function EmailSetting({ email }: EmailSettingProps) {
+  const { message } = App.useApp()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [form] = Form.useForm<ChangeEmailFormValues>()

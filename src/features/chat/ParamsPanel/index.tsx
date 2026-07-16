@@ -37,7 +37,7 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
   const toggleRightCollapsed = useChatUiStore((s) => s.toggleRightCollapsed)
 
   return (
-    <Flexbox height='100%' style={{ minWidth: 260 }}>
+    <Flexbox height='100%' style={{ overflow: 'hidden', width: 320 }}>
       <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
         <Text style={{ marginInlineStart: 8 }} weight={500}>
           高级设置

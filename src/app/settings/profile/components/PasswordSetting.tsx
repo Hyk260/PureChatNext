@@ -1,10 +1,9 @@
 'use client'
 
 import { Button } from '@lobehub/ui'
-import { Modal } from 'antd'
+import { App, Modal } from 'antd'
 import { useState } from 'react'
 
-import { message } from '@/components/AntdStaticMethods'
 import { requestPasswordReset } from '@/libs/better-auth/client'
 
 import { SettingRow } from './SettingRow'
@@ -15,6 +14,7 @@ interface PasswordSettingProps {
 }
 
 export function PasswordSetting({ email, hasCredentialAccount }: PasswordSettingProps) {
+  const { message } = App.useApp()
   const [loading, setLoading] = useState(false)
 
   const handleReset = () => {

@@ -1,11 +1,10 @@
 'use client'
 
 import { Button, Flexbox, Input, Text } from '@lobehub/ui'
-import { type InputRef } from 'antd'
+import { App, type InputRef } from 'antd'
 import { Loader2 } from 'lucide-react'
 import { type ChangeEvent, useCallback, useRef, useState } from 'react'
 
-import { message } from '@/components/AntdStaticMethods'
 import { updateUser } from '@/libs/better-auth/client'
 
 import { SettingRow } from './SettingRow'
@@ -18,6 +17,7 @@ interface UsernameSettingProps {
 const USERNAME_REGEX = /^\w+$/
 
 export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
+  const { message } = App.useApp()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [dirty, setDirty] = useState(false)
@@ -68,7 +68,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
     } finally {
       setSaving(false)
     }
-  }, [onUpdated, username])
+  }, [message, onUpdated, username])
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value

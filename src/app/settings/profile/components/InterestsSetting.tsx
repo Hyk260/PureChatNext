@@ -1,11 +1,11 @@
 'use client'
 
 import { Block, Flexbox, Icon, Input, Text } from '@lobehub/ui'
+import { App } from 'antd'
 import { cssVar } from 'antd-style'
 import { BriefcaseIcon } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 
-import { message } from '@/components/AntdStaticMethods'
 import {
   INTEREST_AREAS,
   normalizeInterestsForStorage,
@@ -22,6 +22,7 @@ interface InterestsSettingProps {
 }
 
 export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps) {
+  const { message } = App.useApp()
   const [customInput, setCustomInput] = useState('')
   const [showCustomInput, setShowCustomInput] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -39,7 +40,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
         setSaving(false)
       }
     },
-    [onUpdated],
+    [message, onUpdated],
   )
 
   const toggleInterest = useCallback(

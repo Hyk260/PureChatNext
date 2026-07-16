@@ -1,11 +1,9 @@
 'use client'
 
 import { Flexbox, Input } from '@lobehub/ui'
-import { type InputRef } from 'antd'
+import { App, type InputRef } from 'antd'
 import { Loader2 } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
-
-import { message } from '@/components/AntdStaticMethods'
 
 import { patchUserProfile } from './patchUserProfile'
 import { SettingRow } from './SettingRow'
@@ -16,6 +14,7 @@ interface FullNameSettingProps {
 }
 
 export function FullNameSetting({ fullName, onUpdated }: FullNameSettingProps) {
+  const { message } = App.useApp()
   const [saving, setSaving] = useState(false)
   const inputRef = useRef<InputRef>(null)
 
@@ -36,7 +35,7 @@ export function FullNameSetting({ fullName, onUpdated }: FullNameSettingProps) {
     } finally {
       setSaving(false)
     }
-  }, [fullName, onUpdated])
+  }, [fullName, message, onUpdated])
 
   return (
     <SettingRow label="全名">

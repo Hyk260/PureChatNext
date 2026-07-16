@@ -25,7 +25,7 @@ const TopicSidebar = memo<Props>(
     const toggleLeftCollapsed = useChatUiStore((s) => s.toggleLeftCollapsed)
 
     return (
-      <Flexbox gap={8} height='100%' style={{ minWidth: 220 }}>
+      <Flexbox gap={8} height='100%' style={{ overflow: 'hidden', width: 240 }}>
         <SideBarHeaderLayout
           breadcrumb={[
             {
@@ -38,7 +38,7 @@ const TopicSidebar = memo<Props>(
           showHomeIcon
           onToggleCollapsed={toggleLeftCollapsed}
         />
-        <Flexbox gap={8} paddingInline={12} style={{ minHeight: 0 }} flex={1}>
+        <Flexbox flex={1} gap={8} paddingInline={12} style={{ minHeight: 0, overflowX: 'hidden', overflowY: 'auto' }}>
           <Button block icon={MessageSquarePlus} onClick={onNewTopic}>
             开启新话题
           </Button>

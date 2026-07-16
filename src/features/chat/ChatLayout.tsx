@@ -1,11 +1,14 @@
 'use client'
 
 import { Flexbox } from '@lobehub/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { memo, type ReactNode } from 'react'
 
 import ChatHeader from '@/features/chat/ChatHeader'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
+
+const LEFT_WIDTH = 240
+const RIGHT_WIDTH = 320
 
 const styles = createStaticStyles(({ css }) => ({
   content: css`
@@ -16,10 +19,18 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   left: css`
     flex: none;
-    width: 260px;
+    width: ${LEFT_WIDTH}px;
+    min-width: 0;
     height: 100dvh;
+    overflow: hidden;
     border-inline-end: 1px solid ${cssVar.colorBorderSecondary};
-    overflow: auto;
+    transition:
+      width 0.25s ${cssVar.motionEaseInOut},
+      border-color 0.25s ${cssVar.motionEaseInOut};
+  `,
+  leftCollapsed: css`
+    width: 0 !important;
+    border-inline-end-color: transparent;
   `,
   main: css`
     flex: 1;
@@ -28,10 +39,18 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   right: css`
     flex: none;
-    width: 320px;
+    width: ${RIGHT_WIDTH}px;
+    min-width: 0;
     height: 100dvh;
+    overflow: hidden;
     border-inline-start: 1px solid ${cssVar.colorBorderSecondary};
-    overflow: auto;
+    transition:
+      width 0.25s ${cssVar.motionEaseInOut},
+      border-color 0.25s ${cssVar.motionEaseInOut};
+  `,
+  rightCollapsed: css`
+    width: 0 !important;
+    border-inline-start-color: transparent;
   `,
 }))
 
@@ -47,13 +66,23 @@ const ChatLayout = memo<Props>(({ left, right, title, children }) => {
   const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
 
   return (
-    <Flexbox horizontal height='100dvh' width='100%'>
-      {!leftCollapsed ? <aside className={styles.left}>{left}</aside> : null}
+    <Flexbox horizontal height='100dvh' width='100%' style={{ overflow: 'hidden' }}>
+      <aside
+        className={cx(styles.left, leftCollapsed && styles.leftCollapsed)}
+        style={{ width: leftCollapsed ? 0 : LEFT_WIDTH }}
+      >
+        <div style={{ height: '100%', width: LEFT_WIDTH }}>{left}</div>
+      </aside>
       <Flexbox className={styles.main} height='100%' style={{ minWidth: 0 }}>
         <ChatHeader title={title} />
         <div className={styles.content}>{children}</div>
       </Flexbox>
-      {!rightCollapsed ? <aside className={styles.right}>{right}</aside> : null}
+      <aside
+        className={cx(styles.right, rightCollapsed && styles.rightCollapsed)}
+        style={{ width: rightCollapsed ? 0 : RIGHT_WIDTH }}
+      >
+        <div style={{ height: '100%', width: RIGHT_WIDTH }}>{right}</div>
+      </aside>
     </Flexbox>
   )
 })

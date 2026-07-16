@@ -1,7 +1,6 @@
 'use client'
 
 import AuthIcons from '@/components/AuthIcons'
-import { message } from '@/components/AntdStaticMethods'
 import {
   ActionIcon,
   DropdownMenu,
@@ -9,7 +8,7 @@ import {
   Text,
   type MenuProps,
 } from '@lobehub/ui'
-import { Modal } from 'antd'
+import { App, Modal } from 'antd'
 import { ArrowRight, Plus, Unlink } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -42,6 +41,7 @@ function isBuiltinProvider(provider: string) {
 }
 
 export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps) {
+  const { message } = App.useApp()
   const { config, ready } = useAuthConfig()
   const [accounts, setAccounts] = useState<LinkedAccount[]>([])
   const [loading, setLoading] = useState(true)
@@ -65,7 +65,7 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [message])
 
   useEffect(() => {
     void loadAccounts()

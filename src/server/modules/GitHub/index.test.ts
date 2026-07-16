@@ -245,7 +245,7 @@ describe('GitHub', () => {
         'https://github.com/Hyk260/PureChat/archive/refs/heads/main.zip',
         {
           headers: {
-            'User-Agent': 'LobeHub',
+            'User-Agent': 'PureChat',
           },
         },
       );
@@ -336,7 +336,7 @@ describe('GitHub', () => {
         'https://raw.githubusercontent.com/Hyk260/PureChat/main/README.md',
         {
           headers: {
-            'User-Agent': 'LobeHub',
+            'User-Agent': 'PureChat',
           },
         },
       );

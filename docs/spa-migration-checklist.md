@@ -187,12 +187,12 @@
 
 从根 `layout.tsx` / 各段 layout 迁到 SPA：
 
-- [ ] Theme（antd / antd-style / `AppThemeProvider`）
-- [ ] 全局 CSS / Tailwind
-- [ ] Analytics（`@vercel/analytics`：注意 SPA 下 pageview，可能要挂 router 监听）
-- [ ] Speed Insights
-- [ ] 各 Shell：`MainShell` / Chat layout / `SettingsShell` / Community / Resources
-- [ ] 根 `metadata`：生产由 SPA shell 或 Next 壳页提供静态 title（聊天站 SEO 要求低）
+- [x] Theme（SPA：`ThemeProviders` via `AppLayer`；Next 仍用 `AppThemeProvider` SSR 样式注入）
+- [x] 全局 CSS / Tailwind（`entry.web.tsx` 与 Next root layout 同导入）
+- [x] Analytics（`SpaTelemetry`：`@vercel/analytics/react` + react-router `path`/`route`；开关经 `__SERVER_CONFIG__`）
+- [x] Speed Insights（`@vercel/speed-insights/react`，同挂 `AppLayer`；生产 `IS_VERCEL` 注入）
+- [x] 各 Shell：`MainShell` / Chat（`RequireAuth` + 页内 `ChatLayout`）/ `SettingsShell` / Community / Resources
+- [x] 根 `metadata`：`index.html` / SPA shell 静态 `title` + `description`（聊天站 SEO 要求低）
 
 ---
 
@@ -202,7 +202,7 @@
 - [ ] `build`：`build:spa` → copy → `next build`
 - [ ] Vercel：仍单项目；确认 install/build command；环境变量不变
 - [ ] 缓存：`/_spa/**` 可加长缓存（参考 LobeHub `vercel.json` headers，可选）
-- [ ] 回滚方案：保留一版「纯 Next `dev`/`build`」分支或 flag，直到 SPA 稳定
+- [x] 回滚方案：保留一版「纯 Next `dev`/`build`」分支或 flag，直到 SPA 稳定
 
 ---
 

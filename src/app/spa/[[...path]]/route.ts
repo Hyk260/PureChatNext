@@ -1,3 +1,5 @@
+import { analyticsEnv } from '@/envs/analytics'
+import { IS_VERCEL } from '@/envs/app'
 import { renderSpaHtml } from '@/server/spaHtml'
 import type { SPAServerConfig } from '@/types/spaServerConfig'
 
@@ -8,6 +10,9 @@ export const dynamic = 'force-dynamic'
 function buildServerConfig(): SPAServerConfig {
   return {
     renderedAt: new Date().toISOString(),
+    enableVercelAnalytics: analyticsEnv.ENABLE_VERCEL_ANALYTICS,
+    debugVercelAnalytics: analyticsEnv.DEBUG_VERCEL_ANALYTICS,
+    enableSpeedInsights: IS_VERCEL,
   }
 }
 

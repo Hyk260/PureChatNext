@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
 
-import SettingsShellLayout from '@/features/settings/SettingsShellLayout'
 import AppShellLayout from '@/layout/AppShellLayout'
+import SettingsLayout from '@/routes/settings/_layout'
 
-export default function SettingsLayout({ children }: { children: ReactNode }) {
+export default function Layout({ children }: { children: ReactNode }) {
   return (
     <AppShellLayout>
-      <SettingsShellLayout>{children}</SettingsShellLayout>
+      <SettingsLayout>{children}</SettingsLayout>
     </AppShellLayout>
   )
 }

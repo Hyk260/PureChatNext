@@ -1,5 +1,3 @@
-'use client'
-
 import type { ReactNode } from 'react'
 
 import ProviderShellLayout from '@/features/settings/provider/ProviderShellLayout'

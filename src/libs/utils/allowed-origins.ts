@@ -2,6 +2,7 @@ import { appEnv } from '@/envs/app'
 
 const LOCAL_DEV_ORIGINS = [
   'http://localhost:3000',
+  'http://localhost:5174', // Vite SPA (`pnpm dev:spa`)
   'http://localhost:4173',
   'http://localhost:8080',
   'http://localhost:8038',

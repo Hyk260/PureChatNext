@@ -19,7 +19,7 @@ DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:
 
 # CORS 配置
 # 允许的源（多个用逗号分隔，* 表示允许所有源）
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5174
 
 # Node 环境
 NODE_ENV=development

@@ -21,6 +21,9 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@/envs': path.resolve(rootDir, 'packages/env/src'),
         '@': path.resolve(rootDir, 'src'),
+        // SPA: Next navigation/link → react-router shims (Next build untouched)
+        'next/navigation': path.resolve(rootDir, 'src/spa/shims/next-navigation.ts'),
+        'next/link': path.resolve(rootDir, 'src/spa/shims/next-link.tsx'),
       },
     },
     server: {

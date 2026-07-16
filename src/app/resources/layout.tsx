@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react'
 
 import AppShellLayout from '@/layout/AppShellLayout'
-import DndContextWrapper from '@/features/resources/DndContextWrapper'
+import ResourcesRootLayout from '@/routes/resources/_layout'
 
-const ResourcesRootLayout = ({ children }: { children: ReactNode }) => {
+const Layout = ({ children }: { children: ReactNode }) => {
   return (
     <AppShellLayout>
-      <DndContextWrapper>{children}</DndContextWrapper>
+      <ResourcesRootLayout>{children}</ResourcesRootLayout>
     </AppShellLayout>
   )
 }
 
-export default ResourcesRootLayout
+export default Layout

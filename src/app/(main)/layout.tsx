@@ -1,15 +1,14 @@
 import type { ReactNode } from 'react'
 
-import HomeSidebar from '@/features/home/HomeSidebar'
 import AppShellLayout from '@/layout/AppShellLayout'
-import MainShellLayout from '@/layout/MainShellLayout'
+import MainLayout from '@/routes/(main)/_layout'
 
-const MainLayout = ({ children }: { children: ReactNode }) => {
+const Layout = ({ children }: { children: ReactNode }) => {
   return (
     <AppShellLayout>
-      <MainShellLayout sidebar={<HomeSidebar />}>{children}</MainShellLayout>
+      <MainLayout>{children}</MainLayout>
     </AppShellLayout>
   )
 }
 
-export default MainLayout
+export default Layout

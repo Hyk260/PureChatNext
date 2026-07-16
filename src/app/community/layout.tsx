@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react'
 
-import CommunityShellLayout from '@/features/community/CommunityShellLayout'
 import AppShellLayout from '@/layout/AppShellLayout'
+import CommunityLayout from '@/routes/community/_layout'
 
-const CommunityLayout = ({ children }: { children: ReactNode }) => {
+const Layout = ({ children }: { children: ReactNode }) => {
   return (
     <AppShellLayout>
-      <CommunityShellLayout>{children}</CommunityShellLayout>
+      <CommunityLayout>{children}</CommunityLayout>
     </AppShellLayout>
   )
 }
 
-export default CommunityLayout
+export default Layout

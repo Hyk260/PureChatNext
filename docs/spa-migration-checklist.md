@@ -36,9 +36,11 @@
 
 ### 1.3 路由骨架
 
-- [ ] 新增 `src/spa/router/webRouter.config.tsx`（或 `src/routes` 薄层 + features）
-- [ ] 把现有 App Router 树映射为 react-router 配置（见下节路由表）
-- [ ] Layout 组件从 `src/app/**/layout.tsx` 抽到 `src/layout` / `src/features/*/Shell`，供 SPA 复用
+- [x] 新增 `src/spa/router/webRouter.config.tsx`（或 `src/routes` 薄层 + features）
+- [x] 把现有 App Router 树映射为 react-router 配置（见下节路由表）
+- [x] Layout 组件从 `src/app/**/layout.tsx` 抽到 `src/layout` / `src/features/*/Shell`，供 SPA 复用
+  - 薄层：`src/routes/**/_layout.tsx` + `page.tsx`；Shell：`MainShellLayout` / `SettingsShellLayout` / `CommunityShellLayout` / `ResourcesShellLayout` / `ProviderShellLayout`
+  - 辅助：`src/utils/router.tsx`（`dynamicElement` / `dynamicLayout` / `createAppRouter`）；Vite shim：`src/spa/shims/next-*`
 
 ### 1.4 Next 侧 SPA 壳（生产用，可第二周再做）
 
@@ -149,7 +151,7 @@
   - [ ] `src/app/settings/profile/page.tsx`（DB 预取）→ 进页后 fetch
   - [ ] `src/app/settings/provider/[id]/page.tsx`（校验）→ 客户端校验
 - [ ] OAuth / 邮件回调 URL：确认仍指向 **同源** `/api/auth/...`（生产不变；本地注意端口）
-- [ ] 开发 CORS：Vite origin 加入 `allowed-origins`；API `credentials: 'include'`
+- [x] 开发 CORS：Vite origin 加入 `allowed-origins`（`localhost:5174`）；API `credentials: 'include'`
 - [ ] 处理 `src/proxy.ts`：恢复为 `middleware.ts` 或并入 API 层（CORS + `/api/rest-api` JWT）
 - [ ] 登录后 `callbackUrl` 在 SPA 内跳转，不依赖 Next `redirect`
 

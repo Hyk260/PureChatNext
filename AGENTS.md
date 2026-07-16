@@ -96,14 +96,16 @@ pnpm install          # 安装依赖（包管理仍用 pnpm）
 pnpm dev / bun run dev  # 启动脚本并发 Next + Vite SPA（需本机 bun）
 pnpm dev:next         # 仅 Next API / BFF（http://localhost:3000）
 pnpm dev:spa          # 仅 Vite SPA（http://localhost:5174，代理 /api → Next）
-pnpm build            # bun：build:spa → copy → build:next
+pnpm build            # build:spa → copy → build:next（Vercel 同此；见 vercel.json）
 pnpm start            # 生产启动（端口 3210）
 pnpm gateway          # 运行 gateway 脚本
 pnpm lint             # ESLint
 ```
 
 - 本地开发：浏览器访问 **SPA 端口** `http://localhost:5174`（不要依赖线上 Debug Proxy）；Next 在 `3000`
-- 生产同域：Vite 产物在 `public/_spa/**`；HTML 由 `src/app/spa/[[...path]]/route.ts` 注入 `__SERVER_CONFIG__`；未匹配 UI 路径经 `rewrites.fallback` → `/spa`
+- 生产同域：Vite 产物在 `public/_spa/**`（`next.config` 长缓存）；HTML 由 `src/app/spa/[[...path]]/route.ts` 注入 `__SERVER_CONFIG__`；未匹配 UI 路径经 `rewrites.fallback` → `/spa`
+- Vercel：单项目；`installCommand` / `buildCommand` 见根目录 `vercel.json`；环境变量不变
+- 回滚：`main` 仍为改造前纯 Next App Router，直到 SPA 分支稳定
 - 环境变量：复制 `.env.example` 为 `.env.local`，参考 `docs/QUICK_START.md`
 - SPA 改造进度：`docs/spa-migration-checklist.md`
 - **不要**提交 `.env`、`.env.local` 等含密钥文件；本地 `build:spa:copy` 会改写 `spaHtmlTemplate.generated.ts`，勿提交构建后的 HTML

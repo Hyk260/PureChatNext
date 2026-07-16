@@ -51,7 +51,7 @@
 
 ## 👋 项目简介
 
-PureChat（PureChatNext）是一个面向自托管场景的 AI 聊天 Web 应用。它采用 **Next.js App Router** 全栈架构，将对话、认证、搜索与文件处理整合在同一项目中，便于二次开发与私有部署。
+PureChat（PureChatNext）是一个面向自托管场景的 AI 聊天 Web 应用。架构为 **Vite SPA（react-router）+ Next.js BFF**：业务 UI 走 SPA，Next 保留 API / auth / 生产 SPA HTML 壳，同域部署。
 
 > [!IMPORTANT]
 >
@@ -158,11 +158,15 @@ cp .env.example .env.local
 # 执行数据库迁移
 pnpm db:migrate
 
-# 启动开发服务器
+# 启动开发（并发 Next :3000 + Vite SPA :5174，需本机 bun）
 pnpm dev
+
+# 或分终端
+pnpm dev:next   # API / BFF → http://localhost:3000
+pnpm dev:spa    # UI → http://localhost:5174（/api 代理到 Next）
 ```
 
-打开 [http://localhost:3000](http://localhost:3000) 即可访问应用。
+本地请打开 **[http://localhost:5174](http://localhost:5174)**（SPA 端口）；不要依赖 Next `:3000` 上的业务页。
 
 > [!TIP]
 >
@@ -181,7 +185,14 @@ pnpm db:studio      # 打开 Drizzle Studio
 
 ### 部署到 Vercel
 
-PureChat 可部署到 [Vercel](https://vercel.com) 或其他支持 Next.js 的平台。
+仍为**单项目**部署（Framework：Next.js）。仓库已含 `vercel.json`：
+
+| 设置 | 值 |
+| --- | --- |
+| Install Command | `pnpm install` |
+| Build Command | `pnpm build`（`build:spa` → copy → `next build`） |
+
+环境变量与改造前相同，无需为 SPA 单独加一套。
 
 部署前请确保：
 
@@ -189,6 +200,8 @@ PureChat 可部署到 [Vercel](https://vercel.com) 或其他支持 Next.js 的�
 2. 设置 `APP_URL` 为生产域名
 3. 配置 `ALLOWED_ORIGINS` 为实际前端域名（生产环境勿使用 `*`）
 4. 运行数据库迁移（可在 CI 或部署脚本中执行 `pnpm db:migrate`）
+
+生产同域：静态资源 `/_spa/**`（长缓存）；未匹配 UI 路径 fallback 到 SPA HTML 壳。
 
 <div align="right">
 [![][back-to-top]](#readme-top)
@@ -254,17 +267,18 @@ PureChatNext/
 │   ├── web-crawler/           # 网页爬虫
 │   └── ssrf-safe-fetch/       # 安全 fetch
 ├── src/
-│   ├── app/                   # Next.js 页面与 API 路由
+│   ├── spa/                   # Vite SPA 入口与 Router
+│   ├── features/              # 业务 UI（供 SPA 路由挂载）
+│   ├── app/                   # Next：API / auth / 生产 SPA 壳
 │   │   ├── api/               # REST API（auth、chat、rest-api…）
-│   │   ├── chat/              # 聊天页面
-│   │   ├── signin/ signup/    # 登录 / 注册
-│   │   └── settings/          # 用户设置
+│   │   └── spa/               # 生产 HTML 壳（注入 __SERVER_CONFIG__）
+│   ├── routes/                # react-router 薄层 page / layout
 │   ├── database/              # Drizzle schema、models、migrations
 │   ├── server/                # 服务端业务（搜索聚合等）
-│   ├── libs/                  # Better Auth、Supabase、工具库
+│   ├── libs/                  # Better Auth、工具库
 │   └── components/            # 通用 React 组件
 ├── docs/                      # 文档
-└── scripts/                   # migrate.ts、gateway.ts 等
+└── scripts/                   # migrate、copySpaBuild、dev 编排等
 ```
 
 <div align="right">
@@ -276,8 +290,10 @@ PureChatNext/
 ## ⌨️ 开发命令
 
 ```bash
-pnpm dev              # 开发模式（http://localhost:3000）
-pnpm build            # 生产构建
+pnpm dev              # Next :3000 + SPA :5174（UI 请用 5174）
+pnpm dev:next         # 仅 Next API / BFF
+pnpm dev:spa          # 仅 Vite SPA
+pnpm build            # build:spa → copy → next build
 pnpm start            # 生产启动（端口 3210）
 pnpm lint             # ESLint 检查
 pnpm gateway          # 运行 gateway 脚本

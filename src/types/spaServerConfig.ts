@@ -10,6 +10,8 @@ export type SPAServerConfig = {
   debugVercelAnalytics?: boolean
   /** Mirrors Next root layout: enable when deployed on Vercel. */
   enableSpeedInsights?: boolean
+  /** React Scan Monitor API key (same as `REACT_SCAN_MONITOR_API_KEY`). */
+  reactScanApiKey?: string
 }
 
 declare global {

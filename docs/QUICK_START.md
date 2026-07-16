@@ -45,12 +45,21 @@ NODE_ENV=development
 ## 4. 启动开发服务器
 
 ```bash
+# 推荐：并发 Next（API :3000）+ Vite SPA（UI :5174）
 pnpm dev
+
+# 或分终端
+pnpm dev:next
+pnpm dev:spa
 ```
+
+浏览器访问 **http://localhost:5174**（SPA）。Next `:3000` 只作 API / BFF，不要当主 UI 入口。
+
+> CORS：`.env.local` 的 `ALLOWED_ORIGINS` 需包含 `http://localhost:5174`（见上文示例）。
 
 ## 5. 测试认证功能
 
-1. 打开浏览器访问：`http://localhost:3000/test-auth`
+1. 打开浏览器访问：`http://localhost:5174/signin`（或首页引导）
 2. 尝试注册一个新账号
 3. 注册成功后会自动登录
 4. 测试获取当前用户信息

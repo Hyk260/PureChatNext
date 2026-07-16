@@ -47,7 +47,7 @@
 - [x] 新增 SPA HTML 服务路由（参考 LobeHub `src/app/spa/...`）：注入必要 config 后返回 `index.html` 模板
   - 路由：`src/app/spa/[[...path]]/route.ts`；注入：`window.__SERVER_CONFIG__`（`src/server/spaHtml`）
 - [x] `build:spa` 产物拷到 `public/_spa`（或等价目录）
-  - `scripts/copySpaBuild.mts`：assets → `public/_spa/`；HTML → `src/app/spa/spaHtmlTemplate.generated.ts`
+  - `scripts/copySpaBuild.mjs`：assets → `public/_spa/`；HTML → `src/app/spa/spaHtmlTemplate.generated.ts`
   - Vite 生产 `base: '/_spa/'`
 - [x] 页面路由 fallback：非 `/api/*` 的前端路径落到 SPA shell
   - `next.config.ts` `rewrites.fallback` → `/spa/:path*`（有对应 Next page 时仍优先 page；迁移删 page 后走壳）
@@ -198,41 +198,43 @@
 
 ## 7. 构建与部署
 
-- [ ] 本地：`pnpm dev:next` + `pnpm dev:spa` 文档写清访问 `http://localhost:<spa-port>`
-- [ ] `build`：`build:spa` → copy → `next build`
-- [ ] Vercel：仍单项目；确认 install/build command；环境变量不变
-- [ ] 缓存：`/_spa/**` 可加长缓存（参考 LobeHub `vercel.json` headers，可选）
-- [x] 回滚方案：保留一版「纯 Next `dev`/`build`」分支或 flag，直到 SPA 稳定
+- [x] 本地：`pnpm dev` / `dev:next` + `dev:spa`；文档写明 UI 访问 `http://localhost:5174`（`README` / `QUICK_START` / `AGENTS.md`）
+- [x] `build`：`pnpm build` = `build:spa` → `build:spa:copy`（`node scripts/copySpaBuild.mjs`）→ `build:next`；另有 `vercel-build`
+- [x] Vercel：单项目 `pure-chat-next`；根目录 `vercel.json`（`pnpm install` + `pnpm build`）；环境变量不变
+- [x] 缓存：`/_spa/**` 长缓存（`next.config.ts` `Cache-Control: public, max-age=31536000, immutable`）；SPA HTML `no-cache`
+- [x] 回滚方案：`main` 保留改造前纯 Next `dev`/`build`，直到 `spa` 分支稳定
 
 ---
 
 ## 8. 测试与验收清单
 
+> 2026-07-16：自动化 / 代码核查已跑一轮；**标 `[ ]` 的交互项仍需在浏览器（:5174）人工点一遍**。
+
 ### 8.1 冒烟（每迁完一个模块勾）
 
-- [ ] 未登录访问 `/chat` → 进登录
-- [ ] 邮箱/密码注册登录
-- [ ] GitHub（或已接的）OAuth 往返
-- [ ] 首页建会话 → 进入 `/chat` 流式回复
-- [ ] Topic 切换 / 新建
-- [ ] Settings profile 读写
-- [ ] Provider 列表与 `[id]` 页
-- [ ] Resources：列表、进库、上传、预览
-- [ ] Community 列表点击跳转
-- [ ] 刷新深链（如 `/settings/appearance`、`/resources/library/:id/...`）不 404
+- [x] 未登录访问 `/chat` → 进登录（`RequireAuth` + 单测；未登录 API 401）
+- [ ] 邮箱/密码注册登录（待浏览器）
+- [ ] GitHub（或已接的）OAuth 往返（`/api/auth/config` 已返回 `github`；往返待浏览器）
+- [ ] 首页建会话 → 进入 `/chat` 流式回复（待浏览器；本地曾见 `chat_messages` insert 报错，需顺带确认）
+- [ ] Topic 切换 / 新建（待浏览器；topics API 在已登录会话下 200）
+- [ ] Settings profile 读写（待浏览器；未登录 `/api/webapi/user/profile` 401）
+- [ ] Provider 列表与 `[id]` 页（深链 `/settings/provider` SPA 200；交互待浏览器）
+- [ ] Resources：列表、进库、上传、预览（深链 + 已登录 `items` API 200；上传/预览待浏览器）
+- [ ] Community 列表点击跳转（深链 200；点击待浏览器）
+- [x] 刷新深链（`/settings/appearance`、`/resources/library/:id` 等）SPA :5174 均 200
 
 ### 8.2 回归重点（易出问题）
 
-- [ ] Cookie session 在 SPA 端口下是否带上
-- [ ] 流式中断 / 取消
-- [ ] Resources + `nuqs` URL 同步
-- [ ] 生产直开子路径（需 SPA fallback）
-- [ ] Dev 页生产 404
+- [x] Cookie session 在 SPA 端口下是否带上（`apiFetch` `credentials: 'include'`；CORS `ACAO=5174` + `ACAC=true`；已登录会话下 agents/topics 200）
+- [x] 流式中断 / 取消（`ChatPage` → `useChat().stop` + PUT `AbortController`；`ChatInput` `onStop`）
+- [x] Resources + `nuqs` URL 同步（`AppLayer` → `nuqs/adapters/react-router/v8`；resources hooks `useQueryState`）
+- [x] 生产直开子路径（`rewrites.fallback` → `/spa`；`/spa/settings/appearance` 200 + `__SERVER_CONFIG__` + `Cache-Control: no-cache`）
+- [x] Dev 页生产 404（SPA：`import.meta.env.DEV` 才挂 `/dev`；Next：`src/app/dev/layout.tsx` 生产 `notFound()`）
 
 ### 8.3 测试代码
 
-- [ ] 涉及 `next/navigation` mock 的测试改为 react-router
-- [ ] 关键路由 smoke test（可选）
+- [x] 涉及 `next/navigation` mock 的测试改为 react-router（仓库内已无此类 mock）
+- [x] 关键路由 smoke test：`src/spa/router/webRouter.smoke.test.ts`；另补 `RequireAuth.test.tsx`
 
 ---
 

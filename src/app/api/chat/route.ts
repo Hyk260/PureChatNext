@@ -81,21 +81,38 @@ export async function POST(request: Request) {
 
   const apiKey = resolveApiKeyFromHeader(request)
   const resolvedBaseURL = typeof baseURL === 'string' && baseURL.trim() ? baseURL.trim() : undefined
+  const resolvedProvider = provider ?? 'deepseek'
+
+  // Fail fast with a JSON error so the client can surface it (streamText would
+  // otherwise return 200 with a broken stream when the env key is missing).
+  if (!apiKey) {
+    const envKey =
+      resolvedProvider === 'openai' ? process.env.OPENAI_API_KEY : process.env.DEEPSEEK_API_KEY
+    if (!envKey?.trim()) {
+      return new ChatSDKError('bad_request:api', `Missing API key for provider "${resolvedProvider}"`).toResponse()
+    }
+  }
 
   const resolvedModel = resolveModel(provider, model, apiKey, resolvedBaseURL)
 
   log('modelId: %o, provider: %o', resolvedModel.modelId, resolvedModel.provider)
 
-  const result = streamText({
-    messages: await convertToModelMessages(messages),
-    model: resolvedModel,
-    ...(system?.trim() ? { system: system.trim() } : {}),
-  })
+  try {
+    const result = streamText({
+      messages: await convertToModelMessages(messages),
+      model: resolvedModel,
+      ...(system?.trim() ? { system: system.trim() } : {}),
+    })
 
-  return createUIMessageStreamResponse({
-    stream: toUIMessageStream({
-      sendReasoning: true,
-      stream: result.stream,
-    }),
-  })
+    return createUIMessageStreamResponse({
+      stream: toUIMessageStream({
+        sendReasoning: true,
+        stream: result.stream,
+      }),
+    })
+  } catch (error) {
+    log('streamText failed: %o', error)
+    const message = error instanceof Error ? error.message : 'Failed to start chat stream'
+    return new ChatSDKError('bad_request:api', message).toResponse()
+  }
 }

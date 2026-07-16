@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react'
 import { Flexbox, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { DefaultChatTransport, type UIMessage } from 'ai'
-import { useSearchParams } from '@/utils/navigation'
+import { useRouter, useSearchParams } from '@/utils/navigation'
 import {
   memo,
   useCallback,
@@ -60,15 +60,6 @@ const buildChatHref = (agentId: string, topicId?: string | null) => {
   return `/chat?${params.toString()}`
 }
 
-/** Shallow URL update — avoids App Router RSC refetch remounting ChatPage / topics. */
-const pushChatHref = (agentId: string, topicId?: string | null) => {
-  window.history.pushState(null, '', buildChatHref(agentId, topicId))
-}
-
-const replaceChatHref = (agentId: string, topicId?: string | null) => {
-  window.history.replaceState(null, '', buildChatHref(agentId, topicId))
-}
-
 const styles = createStaticStyles(({ css }) => ({
   error: css`
     padding: 8px 12px;
@@ -113,6 +104,7 @@ interface ChatViewProps {
 }
 
 const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTopicsRefresh }) => {
+  const router = useRouter()
   const selectedModel = useHomeStore((s) => s.selectedModel)
   const selectedProvider = useHomeStore((s) => s.selectedProvider)
   const activeAgent = useHomeStore((s) => s.activeAgent)
@@ -228,7 +220,9 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
           const topic = await createTopic(agentId, truncateTitle(text))
           onTopicsRefresh()
           setPendingTopicSend(text)
-          replaceChatHref(agentId, topic.id)
+          // Must go through the SPA router — raw history.replaceState does not
+          // update react-router useSearchParams, so ChatView would never remount.
+          router.replace(buildChatHref(agentId, topic.id))
         } catch (error) {
           console.error('[chat] createTopic failed', error)
         }
@@ -237,7 +231,7 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
 
       await sendWithBody(text)
     },
-    [agentId, onTopicsRefresh, sendWithBody, topicId],
+    [agentId, onTopicsRefresh, router, sendWithBody, topicId],
   )
 
   const handleSend = useCallback(
@@ -339,11 +333,20 @@ ChatView.displayName = 'ChatView'
 const ChatPage = memo(() => {
   // Defer searchParams reads until after hydration to avoid SSR mismatch.
   const isClient = useSyncExternalStore(subscribeNoop, getClientSnapshot, getServerSnapshot)
+  const router = useRouter()
   const searchParams = useSearchParams()
 
   const agentFromQuery = searchParams.get('agent')
   const topicFromQuery = searchParams.get('topic')
   const activeTopicId = topicFromQuery
+
+  /** SPA: update react-router searchParams. Next shim / App Router: soft navigate. */
+  const pushChatHref = useCallback(
+    (nextAgentId: string, topicId?: string | null) => {
+      router.push(buildChatHref(nextAgentId, topicId))
+    },
+    [router],
+  )
 
   const activeAgent = useHomeStore((s) => s.activeAgent)
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
@@ -471,14 +474,14 @@ const ChatPage = memo(() => {
     // Already on draft for this agent — no-op.
     if (activeTopicId === null) return
     pushChatHref(agentId)
-  }, [activeTopicId, agentId])
+  }, [activeTopicId, agentId, pushChatHref])
 
   const handleSelectTopic = useCallback(
     (id: string) => {
       if (id === activeTopicId) return
       pushChatHref(agentId, id)
     },
-    [activeTopicId, agentId],
+    [activeTopicId, agentId, pushChatHref],
   )
 
   const handleRenameTopic = useCallback(async (id: string, title: string) => {
@@ -503,7 +506,7 @@ const ChatPage = memo(() => {
         console.error('[chat] deleteTopic failed', error)
       }
     },
-    [activeTopicId, agentId],
+    [activeTopicId, agentId, pushChatHref],
   )
 
   const handleParamsChange = useCallback(

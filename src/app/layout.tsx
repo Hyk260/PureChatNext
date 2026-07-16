@@ -1,6 +1,5 @@
 import { type ReactNode, Suspense } from 'react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
-import Script from 'next/script'
 
 import Analytics from '@/components/Analytics'
 
@@ -19,9 +18,6 @@ export const metadata: Metadata = {
 const RootLayout = ({ children }: { children: ReactNode }) => {
   return (
     <html lang='zh-CN' suppressHydrationWarning style={{ height: '100%' }}>
-      <head>
-        <Script src='//unpkg.com/react-scan/dist/auto.global.js' crossOrigin='anonymous' strategy='beforeInteractive' />
-      </head>
       <body style={{ height: '100%', margin: 0 }}>
         {children}
         <Suspense fallback={null}>

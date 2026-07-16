@@ -172,8 +172,14 @@ const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) 
         <Flexbox align='center' gap={4} horizontal>
           <Text
             color={active ? cssVar.colorText : cssVar.colorTextSecondary}
-            ellipsis={{ tooltipWhenOverflow: true }}
-            style={{ flex: 1, minWidth: 0 }}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+            title={topic.title}
           >
             {topic.title}
           </Text>

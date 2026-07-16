@@ -2,6 +2,8 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights, computeRoute } from '@vercel/speed-insights/react'
 import { useLocation, useParams } from 'react-router'
 
+import ReactScan from '@/components/Analytics/ReactScan'
+
 /**
  * Vercel Analytics + Speed Insights for the Vite SPA.
  * Flags come from `window.__SERVER_CONFIG__` (injected by Next SPA shell).
@@ -13,7 +15,11 @@ const SpaTelemetry = () => {
   const { pathname, search } = useLocation()
   const params = useParams()
 
-  if (!config?.enableVercelAnalytics && !config?.enableSpeedInsights) {
+  if (
+    !config?.enableVercelAnalytics &&
+    !config?.enableSpeedInsights &&
+    !config?.reactScanApiKey
+  ) {
     return null
   }
 
@@ -26,6 +32,7 @@ const SpaTelemetry = () => {
         <Analytics debug={config.debugVercelAnalytics} path={path} route={route} />
       ) : null}
       {config.enableSpeedInsights ? <SpeedInsights route={route} /> : null}
+      {config.reactScanApiKey ? <ReactScan apiKey={config.reactScanApiKey} /> : null}
     </>
   )
 }

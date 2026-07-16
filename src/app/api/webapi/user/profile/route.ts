@@ -2,7 +2,7 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import type { ProfileUser } from '@/app/profile/ProfileContent'
+import type { ProfileUser } from '@/features/settings/profile/ProfileContent'
 import { auth } from '@/auth'
 import { UserModel } from '@/database/models/user'
 import type { UserItem } from '@/database/schemas'

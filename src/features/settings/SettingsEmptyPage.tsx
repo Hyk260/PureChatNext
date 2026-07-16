@@ -3,7 +3,7 @@
 import { Flexbox, Text } from '@lobehub/ui'
 import { Divider } from 'antd'
 
-import { SettingHeader } from '@/app/settings/profile/components/SettingHeader'
+import { SettingHeader } from '@/features/settings/profile/components/SettingHeader'
 
 interface SettingsEmptyPageProps {
   description?: string

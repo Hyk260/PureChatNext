@@ -5,8 +5,8 @@ import { Skeleton } from 'antd'
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 
-import type { ProfileUser } from '@/app/profile/ProfileContent'
-import { ProfileSettingsContent } from '@/app/settings/profile/ProfileSettingsContent'
+import type { ProfileUser } from '@/features/settings/profile/ProfileContent'
+import { ProfileSettingsContent } from '@/features/settings/profile/ProfileSettingsContent'
 import { useSession } from '@/libs/better-auth/client'
 import { apiFetch } from '@/utils/apiFetch'
 

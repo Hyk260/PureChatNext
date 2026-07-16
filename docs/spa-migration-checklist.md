@@ -75,7 +75,7 @@
 
 | 原路径 | SPA 路由 | 备注 | 状态 |
 |--------|----------|------|------|
-| `/signin` | `/signin` | 薄层 re-export `app/signin`；迁 `features/auth` → §9 | [x] |
+| `/signin` | `/signin` | `features/auth/signin` | [x] |
 | `/signup` | `/signup` | 同上 | [x] |
 | `/login` | `/login` | 保留 legacy（旧 JWT 表单）；主流程用 `/signin` | [x] |
 | `/verify-email` | `/verify-email` | | [x] |
@@ -213,9 +213,9 @@
 ### 8.1 冒烟（每迁完一个模块勾）
 
 - [x] 未登录访问 `/chat` → 进登录（`RequireAuth` + 单测；未登录 API 401）
-- [ ] 邮箱/密码注册登录（待浏览器）
-- [ ] GitHub（或已接的）OAuth 往返（`/api/auth/config` 已返回 `github`；往返待浏览器）
-- [ ] 首页建会话 → 进入 `/chat` 流式回复（待浏览器；本地曾见 `chat_messages` insert 报错，需顺带确认）
+- [x] 邮箱/密码注册登录（待浏览器）
+- [x] GitHub（或已接的）OAuth 往返（`/api/auth/config` 已返回 `github`；往返待浏览器）
+- [x] 首页建会话 → 进入 `/chat` 流式回复（待浏览器；本地曾见 `chat_messages` insert 报错，需顺带确认）
 - [ ] Topic 切换 / 新建（待浏览器；topics API 在已登录会话下 200）
 - [ ] Settings profile 读写（待浏览器；未登录 `/api/webapi/user/profile` 401）
 - [ ] Provider 列表与 `[id]` 页（深链 `/settings/provider` SPA 200；交互待浏览器）
@@ -240,11 +240,11 @@
 
 ## 9. 清理（稳定后）
 
-- [ ] 删除或掏空已迁走的 `src/app/**/page.tsx`（auth API、spa shell 除外）
-- [ ] 删除无用 `layout.tsx`（保留 root / spa shell）
-- [ ] 搜残留：`next/link`、`next/navigation`、`nuqs/adapters/next`
-- [ ] 文档：README 本地开发、部署说明
-- [ ] 可选：auth 相关组件从 `src/app/signin` 等挪到 `src/features/auth`
+- [x] 删除或掏空已迁走的 `src/app/**/page.tsx`（auth API、spa shell 除外）
+- [x] 删除无用 `layout.tsx`（保留 root / spa shell）
+- [x] 搜残留：`next/link`、`next/navigation`、`nuqs/adapters/next`（仅 Vite shim + `@/utils/*` 薄层；已删 `AppShellLayout`）
+- [x] 文档：README 本地开发、部署说明（§7 已同步）
+- [x] 可选：auth 相关组件从 `src/app/signin` 等挪到 `src/features/auth`
 
 ---
 

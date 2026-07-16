@@ -1,1 +1,1 @@
-export { default } from '@/app/protected/page'
+export { default } from '@/features/auth/protected/ProtectedPage'

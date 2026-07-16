@@ -11,7 +11,7 @@ import { useSystemAppearance } from '@/hooks/useSystemAppearance'
 import { ModalHost } from '@/libs/modal'
 
 /**
- * Client theme stack shared by Next AppShell and Vite SPA AppLayer.
+ * Client theme stack shared by Vite SPA AppLayer (and legacy Next root if needed).
  * No Next-specific APIs — safe for Vite bundling.
  */
 const ThemeProviders = ({ children }: PropsWithChildren) => {
@@ -27,7 +27,6 @@ const ThemeProviders = ({ children }: PropsWithChildren) => {
         theme={{ cssVar: { key: 'pure-vars' } }}
       >
         <AntdStaticMethods />
-        {/* base-ui Modal uses motion/react-m + AnimatePresence; features must be loaded */}
         <LazyMotion features={domAnimation}>
           <ConfigProvider motion={m}>
             {children}

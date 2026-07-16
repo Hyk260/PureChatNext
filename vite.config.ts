@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    warmup: {},
     build: {
       outDir: 'dist',
       emptyOutDir: true,

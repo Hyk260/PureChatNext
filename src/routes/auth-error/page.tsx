@@ -1,1 +1,1 @@
-export { default } from '@/app/auth-error/page'
+export { default } from '@/features/auth/auth-error/AuthErrorPage'

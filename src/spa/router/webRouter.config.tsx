@@ -306,39 +306,39 @@ export const webRoutes: RouteObject[] = [
           children: [
             {
               element: dynamicElement(
-                () => import('@/app/dev/web-search/page'),
+                () => import('@/features/dev/WebSearchPage'),
                 'Dev > WebSearch',
               ),
               path: 'web-search',
             },
             {
               element: dynamicElement(
-                () => import('@/app/dev/email-service/page'),
+                () => import('@/features/dev/EmailServicePage'),
                 'Dev > EmailService',
               ),
               path: 'email-service',
             },
             {
               element: dynamicElement(
-                () => import('@/app/dev/email-templates/page'),
+                () => import('@/features/dev/EmailTemplatesPage'),
                 'Dev > EmailTemplates',
               ),
               path: 'email-templates',
             },
             {
-              element: dynamicElement(() => import('@/app/dev/s3/page'), 'Dev > S3'),
+              element: dynamicElement(() => import('@/features/dev/S3Page'), 'Dev > S3'),
               path: 's3',
             },
             {
               element: dynamicElement(
-                () => import('@/app/dev/read-file/page'),
+                () => import('@/features/dev/ReadFilePage'),
                 'Dev > ReadFile',
               ),
               path: 'read-file',
             },
             {
               element: dynamicElement(
-                () => import('@/app/dev/delete-user/page'),
+                () => import('@/features/dev/DeleteUserPage'),
                 'Dev > DeleteUser',
               ),
               path: 'delete-user',

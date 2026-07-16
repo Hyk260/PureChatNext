@@ -7,7 +7,7 @@ import SpaTelemetry from '@/spa/SpaTelemetry'
 /**
  * SPA global providers (Theme / URL state / telemetry).
  * Auth session via better-auth client hooks — no Provider required.
- * Extracted from Next `AppShellLayout` for Vite runtime.
+ * Extracted from the former Next App Router shell for Vite runtime.
  */
 const AppLayer = ({ children }: PropsWithChildren) => {
   return (

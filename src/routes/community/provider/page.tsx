@@ -1,1 +1,1 @@
-export { default } from '@/app/community/provider/page'
+export { default } from '@/features/community/pages/ProviderPage'

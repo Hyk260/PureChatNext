@@ -1,1 +1,1 @@
-export { default } from '@/app/signin/page'
+export { default } from '@/features/auth/signin/SignInPage'

@@ -17,6 +17,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 # postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
 
+# 应用对外地址（本地统一 SPA 端口）
+APP_URL=http://localhost:5174
+
 # CORS 配置
 # 允许的源（多个用逗号分隔，* 表示允许所有源）
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5174
@@ -42,6 +45,26 @@ NODE_ENV=development
 
 ## 配置说明
 
+### APP_URL
+
+应用对外根地址，用作 better-auth `baseURL`、认证邮件链接、OAuth `redirectURI` 等。
+
+| 环境 | 推荐值 | 说明 |
+|------|--------|------|
+| 本地开发 | `http://localhost:5174` | UI 在 Vite SPA；邮件/OAuth 链接同源，`/api` 经 Vite 代理到 Next `:3000` |
+| 生产 | 正式域名（如 `https://next.purechat.cn`） | 前后端同域，见 `.env.production` |
+
+**不要**在本地把 `APP_URL` 设为 `http://localhost:3000`：邮件点开后会落在 Next 壳而不是 SPA，重置密码 / 验证邮箱体验会错乱。
+
+端口对照：
+
+| 端口 | 角色 | 何时使用 |
+|------|------|----------|
+| `5174` | Vite SPA（本地 UI） | 浏览器打开站点、`APP_URL`、邮件落地 |
+| `3000` | Next API / BFF | `/api/*`、curl 直打接口；不当主站入口 |
+
+修改后需重启 Next（`pnpm dev:next` 或 `pnpm dev`）。
+
 ### NEXT_PUBLIC_SUPABASE_URL
 Supabase 项目的 URL，格式通常是：`https://xxxxx.supabase.co`
 
@@ -52,7 +75,7 @@ Supabase 的匿名/公开密钥，用于客户端访问。
 允许跨域请求的源地址。在生产环境中，应该设置为你的实际域名。
 
 示例：
-- 开发环境：`http://localhost:3000`
+- 开发环境：`http://localhost:3000,http://localhost:5174`（需同时包含 Next 与 SPA）
 - 生产环境：`https://yourdomain.com,https://www.yourdomain.com`
 
 ### DATABASE_URL

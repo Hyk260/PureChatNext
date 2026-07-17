@@ -162,7 +162,7 @@
   - [x] `src/app/chat/page.tsx`（session + redirect）→ SPA：`src/routes/chat/_layout.tsx` + `RequireAuth`
   - [x] `src/app/settings/profile/page.tsx`（DB 预取）→ 进页后 fetch（`SettingsProfilePage` + `GET /api/webapi/user/profile`；Next SSR 页仍保留至 §9）
   - [x] `src/app/settings/provider/[id]/page.tsx`（校验）→ SPA 客户端校验（`src/routes/settings/provider/[id]/page.tsx`）
-- [x] OAuth / 邮件回调 URL：仍指向 **同源** `/api/auth/...`（`APP_URL` + better-auth；本地 SPA `5174` 经 Vite proxy `/api`；OAuth 完成后落地 `APP_URL`，生产同域无感）
+- [x] OAuth / 邮件回调 URL：仍指向 **同源** `/api/auth/...`（本地 `APP_URL=http://localhost:5174` + Vite proxy `/api` → Next；生产 `APP_URL`=正式域名同域）
 - [x] 开发 CORS：Vite origin 加入 `allowed-origins`（`localhost:5174`）；API `credentials: 'include'`
 - [x] 处理 `src/proxy.ts`：Next.js 16 已用 **Proxy** 替代 Middleware —— **保留** `proxy.ts`（CORS + `/api/rest-api` JWT）；勿改回 `middleware.ts`
 - [x] 登录后 `callbackUrl`：`resolveCallbackUrl` 防开放重定向；邮箱密码成功后 `router.push`（SPA 内跳转）

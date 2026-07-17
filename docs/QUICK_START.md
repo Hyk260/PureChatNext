@@ -36,11 +36,14 @@ pnpm install
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+APP_URL=http://localhost:5174
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5174
 NODE_ENV=development
 ```
 
 ⚠️ **注意**：将上面的 URL 和 KEY 替换为你从 Supabase 获取的实际值。
+
+本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [ENV_SETUP.md · APP_URL](./ENV_SETUP.md#app_url)。
 
 ## 4. 启动开发服务器
 
@@ -55,8 +58,8 @@ pnpm dev:spa
 
 浏览器访问 **http://localhost:5174**（SPA）。Next `:3000` 只作 API / BFF，不要当主 UI 入口。
 
-> CORS：`.env.local` 的 `ALLOWED_ORIGINS` 需包含 `http://localhost:5174`（见上文示例）。
-
+> CORS：`.env.local` 的 `ALLOWED_ORIGINS` 需包含 `http://localhost:5174`（见上文示例）。  
+> 修改 `APP_URL` 后需重启 `dev:next`。
 ## 5. 测试认证功能
 
 1. 打开浏览器访问：`http://localhost:5174/signin`（或首页引导）

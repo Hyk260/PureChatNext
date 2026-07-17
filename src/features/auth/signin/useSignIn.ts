@@ -28,7 +28,7 @@ export const useSignIn = () => {
   const [isSocialOnly, setIsSocialOnly] = useState(false)
   const [lastAuthProvider, setLastAuthProvider] = useState<string | null>(null)
 
-  const { enableMagicLink, oAuthSSOProviders } = config
+  const { enableEmailVerification, enableMagicLink, oAuthSSOProviders } = config
 
   useEffect(() => {
     if (!serverConfigInit) return
@@ -78,13 +78,23 @@ export const useSignIn = () => {
     setLoading(true)
     try {
       const result = await checkUserByEmail(normalizedEmail)
+      const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
+      const callbackUrlParam = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
 
       if (!result.exists) {
         message.info('该邮箱尚未注册，请先创建账户')
         const params = new URLSearchParams({ email: normalizedEmail })
-        const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
-        if (callbackUrl) params.set('callbackUrl', callbackUrl)
+        if (callbackUrlParam) params.set('callbackUrl', callbackUrlParam)
         router.push(`/signup?${params.toString()}`)
+        return
+      }
+
+      // 未验证邮箱不能进密码页，先完成验证
+      if (enableEmailVerification && result.emailVerified === false) {
+        message.info('请先完成邮箱验证')
+        router.push(
+          `/verify-email?email=${encodeURIComponent(normalizedEmail)}&callbackUrl=${encodeURIComponent(callbackUrl)}`,
+        )
         return
       }
 
@@ -126,13 +136,13 @@ export const useSignIn = () => {
             console.error('Sign in error:', ctx.error)
             if (ctx.error.status === 403) {
               router.push(
-                `/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`
+                `/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`,
               )
             }
           },
           // SPA in-app navigation — do not rely on Next server redirect
           onSuccess: () => router.push(callbackUrl),
-        }
+        },
       )
 
       if (result.error && result.error.status !== 403) {

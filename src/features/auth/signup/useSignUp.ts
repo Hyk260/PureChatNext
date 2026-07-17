@@ -2,7 +2,12 @@ import { useRouter, useSearchParams } from '@/utils/navigation'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
-import { checkUserByEmail, signUp, useAuthConfig } from '@/libs/better-auth/client'
+import {
+  checkUserByEmail,
+  reclaimUnverifiedEmail,
+  signUp,
+  useAuthConfig,
+} from '@/libs/better-auth/client'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 export interface SignUpFormValues {
@@ -24,7 +29,7 @@ interface SignUpErrorLike {
 const redirectToSignIn = (
   router: ReturnType<typeof useRouter>,
   searchParams: ReturnType<typeof useSearchParams>,
-  email: string
+  email: string,
 ) => {
   const params = new URLSearchParams({ email })
   const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
@@ -45,12 +50,16 @@ export const useSignUp = () => {
       const email = values.email.trim().toLowerCase()
       const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
 
-      // 已注册：直接去登录（开启邮箱验证时 better-auth 会对已存在邮箱伪成功）
       const existingUser = await checkUserByEmail(email)
       if (existingUser.exists) {
-        message.info('该邮箱已注册，请前往登录')
-        redirectToSignIn(router, searchParams, email)
-        return
+        if (existingUser.emailVerified) {
+          message.info('该邮箱已注册，请前往登录')
+          redirectToSignIn(router, searchParams, email)
+          return
+        }
+
+        // 未验证占坑：回收后按首次注册继续走验证
+        await reclaimUnverifiedEmail(email)
       }
 
       const name = email.split('@')[0] ?? email
@@ -65,7 +74,9 @@ export const useSignUp = () => {
       if (error) {
         const signUpError = error as SignUpErrorLike
         const isEmailDuplicate =
-          signUpError.code === 'FAILED_TO_CREATE_USER' && signUpError.details?.cause?.code === '23505'
+          signUpError.code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' ||
+          (signUpError.code === 'FAILED_TO_CREATE_USER' &&
+            signUpError.details?.cause?.code === '23505')
 
         if (isEmailDuplicate) {
           message.info('该邮箱已注册，请前往登录')
@@ -82,9 +93,10 @@ export const useSignUp = () => {
         return
       }
 
-      // 仅首次注册成功后进入邮箱验证
       if (config.enableEmailVerification) {
-        router.push(`/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`)
+        router.push(
+          `/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`,
+        )
         return
       }
 

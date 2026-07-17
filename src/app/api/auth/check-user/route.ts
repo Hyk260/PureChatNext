@@ -7,6 +7,7 @@ import { users } from '@/database/schemas/user'
 import { serverDB } from '@/database/core/db-adaptor'
 
 export interface CheckUserResponseData {
+  emailVerified?: boolean
   exists: boolean
   hasPassword?: boolean
 }
@@ -15,7 +16,7 @@ export interface CheckUserResponseData {
  * POST /api/auth/check-user
  * Check if a user exists by email
  * @param req - POST request with { email: string }
- * @returns { exists: boolean, hasPassword?: boolean }
+ * @returns { exists: boolean, emailVerified?: boolean, hasPassword?: boolean }
  */
 export async function POST(req: NextRequest) {
   try {
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
 
     const [user] = await serverDB
       .select({
+        emailVerified: users.emailVerified,
         id: users.id,
       })
       .from(users)
@@ -50,6 +52,7 @@ export async function POST(req: NextRequest) {
     )
 
     return NextResponse.json({
+      emailVerified: user.emailVerified,
       exists: true,
       hasPassword,
     })

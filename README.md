@@ -219,14 +219,14 @@ pnpm db:studio      # 打开 Drizzle Studio
 | `OPENAI_API_KEY` | 推荐 | OpenAI API 密钥 | `sk-xxxxxx` |
 | `OPENAI_PROXY_URL` | 可选 | OpenAI 代理地址 | `https://api.openai.com/v1` |
 | `DEEPSEEK_API_KEY` | 可选 | DeepSeek API 密钥 | `sk-xxxxxx` |
-| `APP_URL` | 推荐 | 应用公网地址 | `http://localhost:3000` |
+| `APP_URL` | 推荐 | 应用对外地址（本地用 SPA） | 本地 `http://localhost:5174`；生产正式域名 |
 | `AUTH_SSO_PROVIDERS` | 可选 | 启用的 OAuth 提供商 | `github,wechat` |
 | `AUTH_EMAIL_VERIFICATION` | 可选 | 启用邮箱验证 | `1` |
 | `AUTH_EMAIL_VERIFICATION_MODE` | 可选 | 注册验证方式：`otp`（默认）或 `link` | `otp` |
 | `AUTH_ENABLE_MAGIC_LINK` | 可选 | 启用魔法链接登录 | `1` |
 | `SEARCH_PROVIDERS` | 可选 | 搜索引擎链 | `searxng,brave` |
 | `CRAWLER_IMPLS` | 可选 | 爬虫实现链 | `naive,firecrawl` |
-| `ALLOWED_ORIGINS` | 可选 | CORS 允许源 | `http://localhost:3000` |
+| `ALLOWED_ORIGINS` | 可选 | CORS 允许源 | `http://localhost:3000,http://localhost:5174` |
 
 > [!NOTE]
 >

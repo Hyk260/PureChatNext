@@ -1,6 +1,6 @@
 import { generateCompactUuid } from '@pure/utils'
 import { hashPassword } from 'better-auth/crypto'
-import { and, count, eq, inArray } from 'drizzle-orm'
+import { and, count, eq, inArray, lt } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { account, passkey, session, twoFactor, users, verification } from '../schemas'
@@ -204,6 +204,36 @@ export class UserModel {
       },
       found: true as const,
     }
+  }
+
+  /** 删除创建超过 maxAgeMs 且仍未验证邮箱的用户（释放占坑邮箱） */
+  static deleteUnverifiedOlderThan = async (maxAgeMs: number) => {
+    const cutoff = new Date(Date.now() - maxAgeMs)
+    const staleUsers = await this.db
+      .select({
+        email: users.email,
+        id: users.id,
+        phone: users.phone,
+      })
+      .from(users)
+      .where(and(eq(users.emailVerified, false), lt(users.createdAt, cutoff)))
+
+    if (staleUsers.length === 0) {
+      return { cutoff, deleted: 0 }
+    }
+
+    const identifiers = staleUsers
+      .flatMap((user) => [user.email, user.phone])
+      .filter((value): value is string => Boolean(value))
+
+    if (identifiers.length > 0) {
+      await this.db.delete(verification).where(inArray(verification.identifier, identifiers))
+    }
+
+    const ids = staleUsers.map((user) => user.id)
+    await this.db.delete(users).where(inArray(users.id, ids))
+
+    return { cutoff, deleted: ids.length }
   }
 
   static findByEmailAndPassword = async (email: string, password: string) => {

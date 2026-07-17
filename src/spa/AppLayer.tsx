@@ -1,5 +1,5 @@
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v8'
-import { type PropsWithChildren } from 'react'
+import { type PropsWithChildren, useLayoutEffect } from 'react'
 
 import ThemeProviders from '@/layout/ThemeProviders'
 import SpaTelemetry from '@/spa/SpaTelemetry'
@@ -10,6 +10,10 @@ import SpaTelemetry from '@/spa/SpaTelemetry'
  * Extracted from the former Next App Router shell for Vite runtime.
  */
 const AppLayer = ({ children }: PropsWithChildren) => {
+  useLayoutEffect(() => {
+    document.getElementById('loading-screen')?.remove()
+  }, [])
+
   return (
     <ThemeProviders>
       <NuqsAdapter>

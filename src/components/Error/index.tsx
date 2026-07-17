@@ -111,7 +111,7 @@ const ErrorCapture = memo<ErrorCaptureProps>(({ reset, error }) => {
           <h2 className="error-page__title">错误</h2>
           <p className="error-page__desc">页面遇到了问题，请稍后重试</p>
           <div className="error-page__actions">
-            <button className="error-page__button" type="button" onClick={() => reset()}>
+            <button className="error-page__button" type="button" onClick={reset}>
               重试
             </button>
             <Link className="error-page__link" href="/">

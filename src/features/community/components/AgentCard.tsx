@@ -132,7 +132,7 @@ const AgentCard = memo<DiscoverAgentItem>(
           overflow: 'hidden',
           position: 'relative',
         }}
-        onClick={() => handleClick()}
+        onClick={handleClick}
       >
         <Flexbox
           horizontal

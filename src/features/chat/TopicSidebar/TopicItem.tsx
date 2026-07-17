@@ -211,18 +211,27 @@ const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) 
       </Block>
 
       <Modal
+        cancelText='取消'
+        centered
         confirmLoading={saving}
+        destroyOnHidden
+        okText='保存'
         open={renameOpen}
         title='重命名话题'
+        width={400}
         onCancel={() => setRenameOpen(false)}
-        onOk={() => handleSubmitRename()}
+        onOk={handleSubmitRename}
       >
-        <Input
-          onChange={(event) => setDraftTitle(event.target.value)}
-          onPressEnter={() => handleSubmitRename()}
-          placeholder='话题名称'
-          value={draftTitle}
-        />
+        <Flexbox gap={12} paddingBlock={8}>
+          <Text type='secondary'>保持简短且易于识别。</Text>
+          <Input
+            autoFocus
+            onChange={(event) => setDraftTitle(event.target.value)}
+            onPressEnter={handleSubmitRename}
+            placeholder='话题名称'
+            value={draftTitle}
+          />
+        </Flexbox>
       </Modal>
     </>
   )

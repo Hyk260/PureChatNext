@@ -84,7 +84,7 @@ export const SignInPasswordStep = ({
             size="large"
             style={{ marginTop: 12 }}
             type="primary"
-            onClick={() => onSendMagicLink()}
+            onClick={onSendMagicLink}
           >
             发送登录链接
           </Button>

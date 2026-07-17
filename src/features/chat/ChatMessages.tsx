@@ -271,7 +271,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
                   icon={Check}
                   size='small'
                   title='保存'
-                  onClick={() => handleSave()}
+                  onClick={handleSave}
                 />
               </Flexbox>
             </Flexbox>

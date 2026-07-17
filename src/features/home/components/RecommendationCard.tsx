@@ -66,7 +66,7 @@ const RecommendationCard = memo<RecommendationCardProps>(({ item }) => {
           loading={loading}
           shadow
           shape='round'
-          onClick={() => handleClick()}
+          onClick={handleClick}
         >
           添加任务
         </Button>

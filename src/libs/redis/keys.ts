@@ -19,10 +19,6 @@ export const RedisKeyNamespace = {
    * AI generation related keys (agent welcome, placeholders, etc.)
    */
   AI_GENERATION: 'aiGeneration',
-  /**
-   * Core LOBEHUB application keys (sessions, cache, etc.)
-   */
-  LOBEHUB: 'lobechat',
 } as const;
 
 /**
@@ -54,11 +50,5 @@ export const RedisKeys = {
      * Full key: aiGeneration:home_brief:{userId}
      */
     homeBrief: (userId: string): string => `home_brief:${userId}`,
-  },
-  /**
-   * Lobechat core scope - for application-level caching
-   */
-  lobechat: {
-    // Add lobechat scope keys here as needed
   },
 } as const;

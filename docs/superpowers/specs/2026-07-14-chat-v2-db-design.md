@@ -36,7 +36,7 @@
 - 消息编辑/删除同步到 DB（可后续；本期至少保证发送后全量同步）
 - 实时协作、分页无限历史（首版可全量拉取单 topic，后续再分页）
 
-## Schema（最小裁剪自 lobe message/topic）
+## Schema（message/topic）
 
 ### `chat_topics`
 

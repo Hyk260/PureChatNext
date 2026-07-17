@@ -1,9 +1,9 @@
-import { getEmailTemplatePreviews } from '@/libs/better-auth/email-templates/preview/server';
+import { getEmailTemplatePreviews } from '@/libs/better-auth/email-templates/preview'
 
-import { EmailTemplatePreviewPanel } from './EmailTemplatePreview';
+import { EmailTemplatePreviewPanel } from './EmailTemplatePreview'
 
 export default function DevEmailTemplatesPage() {
-  const templates = getEmailTemplatePreviews();
+  const templates = getEmailTemplatePreviews()
 
-  return <EmailTemplatePreviewPanel templates={templates} />;
+  return <EmailTemplatePreviewPanel templates={templates} />
 }

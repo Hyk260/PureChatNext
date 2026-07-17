@@ -10,4 +10,7 @@ export {
   type EmailTemplateParams,
   type EmailTemplatePreview,
   type RenderedEmailTemplate,
-} from './preview-catalog';
+} from './preview-catalog'
+
+/** Pure template renderers — safe in SPA (HTML via Vite raw plugin / Next raw-loader). */
+export { getEmailTemplatePreviews, renderEmailTemplate } from './preview'

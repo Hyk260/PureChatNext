@@ -5,7 +5,7 @@
     "dev": "bun scripts/devStartupSequence.mts",
     "dev:next": "next dev -p 3000",
     "dev:spa": "vite",
-    "dev:inspect": "CODE_INSPECTOR=1 next dev -p 3000",
+    "dev:inspect": "CODE_INSPECTOR=1 pnpm run dev:spa",
     "clean": "bash scripts/clean-cache.sh",
     "build": "pnpm run build:spa && pnpm run build:spa:copy && pnpm run build:next",
     "build:spa": "vite build",

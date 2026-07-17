@@ -16,11 +16,11 @@ export const webRoutes: RouteObject[] = [
   {
     children: [
       {
-        element: dynamicElement(() => import('@/routes/(main)/page'), 'Home'),
+        element: dynamicElement(() => import('@/routes/main/page'), 'Home'),
         index: true,
       },
     ],
-    element: dynamicLayout(() => import('@/routes/(main)/_layout'), 'MainLayout'),
+    element: dynamicLayout(() => import('@/routes/main/_layout'), 'MainLayout'),
   },
 
   // —— Chat ——
@@ -42,14 +42,14 @@ export const webRoutes: RouteObject[] = [
         children: [
           {
             element: dynamicElement(
-              () => import('@/routes/resources/(home)/page'),
+              () => import('@/routes/resources/home/page'),
               'Resources > Home',
             ),
             index: true,
           },
         ],
         element: dynamicLayout(
-          () => import('@/routes/resources/(home)/_layout'),
+          () => import('@/routes/resources/home/_layout'),
           'Resources > HomeLayout',
         ),
       },
@@ -57,21 +57,21 @@ export const webRoutes: RouteObject[] = [
         children: [
           {
             element: dynamicElement(
-              () => import('@/routes/resources/library/[id]/page'),
+              () => import('@/routes/resources/library/$id/page'),
               'Resources > Library',
             ),
             index: true,
           },
           {
             element: dynamicElement(
-              () => import('@/routes/resources/library/[id]/[...slug]/page'),
+              () => import('@/routes/resources/library/$id/$slug/page'),
               'Resources > Library > Slug',
             ),
             path: '*',
           },
         ],
         element: dynamicLayout(
-          () => import('@/routes/resources/library/[id]/_layout'),
+          () => import('@/routes/resources/library/$id/_layout'),
           'Resources > LibraryLayout',
         ),
         path: 'library/:id',
@@ -249,7 +249,7 @@ export const webRoutes: RouteObject[] = [
           },
           {
             element: dynamicElement(
-              () => import('@/routes/settings/provider/[id]/page'),
+              () => import('@/routes/settings/provider/$id/page'),
               'Settings > Provider > Detail',
             ),
             path: ':id',

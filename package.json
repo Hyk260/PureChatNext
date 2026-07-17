@@ -61,6 +61,7 @@
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.30",
     "ioredis": "^5.11.1",
     "jose": "^6.1.0",
     "lodash-es": "^4.17.21",

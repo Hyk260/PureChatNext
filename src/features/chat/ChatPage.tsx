@@ -36,6 +36,7 @@ import {
 import ChatInput from '@/features/chat/ChatInput'
 import ChatLayout from '@/features/chat/ChatLayout'
 import ChatMessages from '@/features/chat/ChatMessages'
+import ChatMessagesSkeleton from '@/features/chat/ChatMessagesSkeleton'
 import ParamsPanel from '@/features/chat/ParamsPanel'
 import TopicSidebar from '@/features/chat/TopicSidebar'
 import WideScreenContainer from '@/features/chat/WideScreenContainer'
@@ -96,14 +97,30 @@ const chatTransport = new DefaultChatTransport({
   },
 })
 
+type ChatViewActions = {
+  send: (text: string) => void | Promise<void>
+  stop: () => void
+}
+
 interface ChatViewProps {
   agentId: string
   topicId: string | null
   initialMessages: UIMessage[]
+  onBusyChange: (busy: boolean) => void
+  onCacheMessages: (topicId: string, messages: UIMessage[]) => void
+  onBindActions: (actions: ChatViewActions) => void
   onTopicsRefresh: () => void
 }
 
-const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTopicsRefresh }) => {
+const ChatView = memo<ChatViewProps>(({
+  agentId,
+  topicId,
+  initialMessages,
+  onBusyChange,
+  onCacheMessages,
+  onBindActions,
+  onTopicsRefresh,
+}) => {
   const router = useRouter()
   const selectedModel = useHomeStore((s) => s.selectedModel)
   const selectedProvider = useHomeStore((s) => s.selectedProvider)
@@ -133,6 +150,11 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
   }, [messages])
   const isBusy = status === 'submitted' || status === 'streaming'
   const isStreaming = status === 'streaming'
+
+  useLayoutEffect(() => {
+    onBusyChange(isBusy)
+    return () => onBusyChange(false)
+  }, [isBusy, onBusyChange])
 
   // Debounce PUT /api/chat/topics/[id]/messages while streaming — syncing on every
   // token blocks the main thread and makes the bubble look like it isn't streaming.
@@ -167,6 +189,8 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
       const controller = new AbortController()
       putControllerRef.current = controller
       persistMessages(messages, controller.signal)
+      // Write-through only when idle — avoids parent re-renders on every stream tick.
+      if (!isBusy) onCacheMessages(topicId, messages)
     }
 
     if (isBusy) {
@@ -174,19 +198,22 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
       return () => window.clearTimeout(timer)
     }
     fire()
-  }, [isBusy, messages, persistMessages, topicId])
+  }, [isBusy, messages, onCacheMessages, persistMessages, topicId])
 
   // Flush latest messages on unmount (topic switch / navigate away) so a cancelled
   // debounce window does not drop the tail of a stream. Skip empty snapshots to avoid
   // Strict Mode / pre-handoff unmount racing a PUT [] past a later real save.
+  // Also seed the parent topic cache so the next switch can paint instantly.
   useEffect(() => {
     if (!topicId) return
     return () => {
       putControllerRef.current?.abort()
-      if (messagesRef.current.length === 0) return
-      persistMessages(messagesRef.current)
+      const snapshot = messagesRef.current
+      if (snapshot.length === 0) return
+      onCacheMessages(topicId, snapshot)
+      persistMessages(snapshot)
     }
-  }, [persistMessages, topicId])
+  }, [onCacheMessages, persistMessages, topicId])
 
   const requestBody = useMemo(
     () => ({
@@ -309,22 +336,23 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
     stop()
   }, [stop])
 
+  useLayoutEffect(() => {
+    onBindActions({ send: handleSend, stop: handleStop })
+  }, [handleSend, handleStop, onBindActions])
+
   return (
-    <WideScreenContainer>
-      <Flexbox className={styles.page} gap={16}>
-        <ChatMessages
-          disabled={isBusy}
-          isStreaming={isStreaming}
-          messages={messages}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-        />
-        {error ? (
-          <Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Text>
-        ) : null}
-        <ChatInput isBusy={isBusy} onSend={handleSend} onStop={handleStop} />
-      </Flexbox>
-    </WideScreenContainer>
+    <>
+      <ChatMessages
+        disabled={isBusy}
+        isStreaming={isStreaming}
+        messages={messages}
+        onDelete={handleDelete}
+        onEdit={handleEdit}
+      />
+      {error ? (
+        <Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Text>
+      ) : null}
+    </>
   )
 })
 
@@ -366,7 +394,62 @@ const ChatPage = memo(() => {
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>(EMPTY_MESSAGES)
   // Tracks which topicId the currently-loaded initialMessages belong to.
   // undefined = not yet loaded; null = draft (empty); string = that topic's messages.
-  const [loadedTopicId, setLoadedTopicId] = useState<string | null | undefined>(undefined)
+  const [loadedTopicId, setLoadedTopicId] = useState<string | null | undefined>(() =>
+    isClient && activeTopicId === null ? null : undefined,
+  )
+  const [messagesTopicKey, setMessagesTopicKey] = useState<string | null | undefined>(
+    () => (isClient ? activeTopicId : undefined),
+  )
+  const [isBusy, setIsBusy] = useState(false)
+  // Per-topic message cache (lobe-chat dbMessagesMap pattern). Lets topic switches
+  // paint immediately instead of blanking the shell while fetchMessages resolves.
+  const [messagesCache, setMessagesCache] = useState(() => new Map<string, UIMessage[]>())
+  const chatActionsRef = useRef<ChatViewActions>({
+    send: async () => {},
+    stop: () => {},
+  })
+
+  // Sync draft/cache seed when the active topic changes (React "adjust state on
+  // props change" pattern — avoids an effect that setStates synchronously).
+  if (isClient && activeTopicId !== messagesTopicKey) {
+    setMessagesTopicKey(activeTopicId)
+    if (activeTopicId === null) {
+      setInitialMessages(EMPTY_MESSAGES)
+      setLoadedTopicId(null)
+    } else {
+      const cached = messagesCache.get(activeTopicId)
+      if (cached) {
+        setInitialMessages(cached)
+        setLoadedTopicId(activeTopicId)
+      } else {
+        setLoadedTopicId(undefined)
+      }
+    }
+  }
+
+  const handleCacheMessages = useCallback((id: string, messages: UIMessage[]) => {
+    setMessagesCache((prev) => {
+      const next = new Map(prev)
+      next.set(id, messages)
+      return next
+    })
+  }, [])
+
+  const handleBindActions = useCallback((actions: ChatViewActions) => {
+    chatActionsRef.current = actions
+  }, [])
+
+  const handleBusyChange = useCallback((busy: boolean) => {
+    setIsBusy(busy)
+  }, [])
+
+  const handleInputSend = useCallback(async (text: string) => {
+    await chatActionsRef.current.send(text)
+  }, [])
+
+  const handleInputStop = useCallback(() => {
+    chatActionsRef.current.stop()
+  }, [])
 
   const refreshTopics = useCallback(async () => {
     if (!agentId) return
@@ -439,24 +522,38 @@ const ChatPage = memo(() => {
     }
   }, [agentId, isClient])
 
-  // Fetch messages for the active topic. Draft (activeTopicId === null) is ready
-  // immediately; invalidate loadedTopicId so returning to a prior topic always refetches
-  // (avoids mounting ChatView with stale parent initialMessages after a draft visit).
-  useEffect(() => {
-    if (!isClient) return
+  // Soft-refresh messages for the active topic. Cache-first paint happens above
+  // during render; this effect only hits the network.
+  //
+  // Once this topic is already on screen, do NOT push GET results into
+  // `initialMessages` — a late/stale response would remount-seed older history.
+  // Live ChatView owns the message list; unmount write-through keeps the cache warm.
+  const loadedTopicIdRef = useRef(loadedTopicId)
+  useLayoutEffect(() => {
+    loadedTopicIdRef.current = loadedTopicId
+  }, [loadedTopicId])
 
-    if (activeTopicId === null) {
-      setInitialMessages(EMPTY_MESSAGES)
-      setLoadedTopicId(null)
-      return
-    }
+  useEffect(() => {
+    if (!isClient || activeTopicId === null) return
 
     let cancelled = false
-    setLoadedTopicId(undefined)
 
     fetchMessages(activeTopicId)
       .then((msgs) => {
         if (cancelled) return
+
+        setMessagesCache((prev) => {
+          const existing = prev.get(activeTopicId)
+          // Prefer a longer local snapshot (post-send write-through) over a GET
+          // that raced ahead of the in-flight PUT.
+          if (existing && existing.length > msgs.length) return prev
+          const next = new Map(prev)
+          next.set(activeTopicId, msgs)
+          return next
+        })
+
+        if (loadedTopicIdRef.current === activeTopicId) return
+
         setInitialMessages(msgs)
         setLoadedTopicId(activeTopicId)
       })
@@ -497,6 +594,12 @@ const ChatPage = memo(() => {
     async (id: string) => {
       try {
         await deleteTopic(id)
+        setMessagesCache((prev) => {
+          if (!prev.has(id)) return prev
+          const next = new Map(prev)
+          next.delete(id)
+          return next
+        })
         setTopics((prev) => prev.filter((t) => t.id !== id))
         // Deleting the active topic falls back to the draft view for this agent.
         if (id === activeTopicId) {
@@ -521,7 +624,7 @@ const ChatPage = memo(() => {
   }, [refreshTopics])
 
   const messagesReady = activeTopicId === null ? true : loadedTopicId === activeTopicId
-  const showShell = !isClient || !messagesReady
+  const inputBusy = isBusy || !messagesReady
 
   const topicTitle = useMemo(() => {
     if (!activeTopicId) return DRAFT_TOPIC_TITLE
@@ -543,16 +646,28 @@ const ChatPage = memo(() => {
       right={<ParamsPanel value={params} onChange={handleParamsChange} />}
       title={topicTitle}
     >
-      {showShell ? (
+      {!isClient ? (
         <div className={styles.shell} />
       ) : (
-        <ChatView
-          key={`${agentId}:${activeTopicId ?? 'draft'}`}
-          agentId={agentId}
-          initialMessages={activeTopicId === null ? EMPTY_MESSAGES : initialMessages}
-          topicId={activeTopicId}
-          onTopicsRefresh={handleTopicsRefresh}
-        />
+        <WideScreenContainer>
+          <Flexbox className={styles.page} gap={16}>
+            {messagesReady ? (
+              <ChatView
+                key={`${agentId}:${activeTopicId ?? 'draft'}`}
+                agentId={agentId}
+                initialMessages={activeTopicId === null ? EMPTY_MESSAGES : initialMessages}
+                topicId={activeTopicId}
+                onBindActions={handleBindActions}
+                onBusyChange={handleBusyChange}
+                onCacheMessages={handleCacheMessages}
+                onTopicsRefresh={handleTopicsRefresh}
+              />
+            ) : (
+              <ChatMessagesSkeleton />
+            )}
+            <ChatInput isBusy={inputBusy} onSend={handleInputSend} onStop={handleInputStop} />
+          </Flexbox>
+        </WideScreenContainer>
       )}
     </ChatLayout>
   )

@@ -25,6 +25,7 @@ const AgentSearch = memo(() => {
       } else {
         next.delete('q')
       }
+      next.delete('page')
       const query = next.toString()
       startTransition(() => {
         router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })

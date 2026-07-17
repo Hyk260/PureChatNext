@@ -106,7 +106,7 @@ const HomeUserTrigger = memo(() => {
   const handleMenuClick = useCallback(
     ({ key }: { key: string }) => {
       if (key === 'logout') {
-        void handleSignOut()
+        handleSignOut()
         return
       }
 

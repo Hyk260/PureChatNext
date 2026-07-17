@@ -215,11 +215,11 @@ const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) 
         open={renameOpen}
         title='重命名话题'
         onCancel={() => setRenameOpen(false)}
-        onOk={() => void handleSubmitRename()}
+        onOk={() => handleSubmitRename()}
       >
         <Input
           onChange={(event) => setDraftTitle(event.target.value)}
-          onPressEnter={() => void handleSubmitRename()}
+          onPressEnter={() => handleSubmitRename()}
           placeholder='话题名称'
           value={draftTitle}
         />

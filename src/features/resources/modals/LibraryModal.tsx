@@ -34,7 +34,7 @@ const LibraryModal = memo<LibraryModalProps>(({ onClose, onSubmit, open, title }
       open={open}
       title={title}
       onCancel={onClose}
-      onOk={() => void handleOk()}
+      onOk={() => handleOk()}
     >
       <Input placeholder='名称' value={name} onChange={(e) => setName(e.target.value)} />
       <Input

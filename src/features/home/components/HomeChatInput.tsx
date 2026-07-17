@@ -54,7 +54,7 @@ const HomeChatInput = memo(() => {
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
 
   useEffect(() => {
-    void fetchAgentsList()
+    fetchAgentsList()
   }, [fetchAgentsList])
 
   const handleSend = () => {

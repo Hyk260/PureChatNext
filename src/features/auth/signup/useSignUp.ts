@@ -2,7 +2,7 @@ import { useRouter, useSearchParams } from '@/utils/navigation'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
-import { signUp, checkUserByEmail, reclaimUnverifiedEmail, useAuthConfig } from '@/libs/better-auth/client'
+import { checkUserByEmail, signUp, useAuthConfig } from '@/libs/better-auth/client'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 export interface SignUpFormValues {
@@ -21,6 +21,17 @@ interface SignUpErrorLike {
   message?: string
 }
 
+const redirectToSignIn = (
+  router: ReturnType<typeof useRouter>,
+  searchParams: ReturnType<typeof useSearchParams>,
+  email: string
+) => {
+  const params = new URLSearchParams({ email })
+  const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
+  if (callbackUrl) params.set('callbackUrl', callbackUrl)
+  router.push(`/signin?${params.toString()}`)
+}
+
 export const useSignUp = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -34,47 +45,31 @@ export const useSignUp = () => {
       const email = values.email.trim().toLowerCase()
       const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
 
+      // 已注册：直接去登录（开启邮箱验证时 better-auth 会对已存在邮箱伪成功）
       const existingUser = await checkUserByEmail(email)
       if (existingUser.exists) {
-        const canReclaim =
-          config.enableEmailVerification && existingUser.emailVerified === false
-
-        if (canReclaim) {
-          await reclaimUnverifiedEmail(email)
-        } else {
-          message.info('该邮箱已注册，请前往登录')
-          const params = new URLSearchParams({ email })
-          const callbackUrlParam = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
-          if (callbackUrlParam) params.set('callbackUrl', callbackUrlParam)
-          router.push(`/signin?${params.toString()}`)
-          return
-        }
+        message.info('该邮箱已注册，请前往登录')
+        redirectToSignIn(router, searchParams, email)
+        return
       }
 
       const name = email.split('@')[0] ?? email
 
-      const result = await signUp.email({
+      const { error } = await signUp.email({
         callbackURL: callbackUrl,
         email,
         name,
         password: values.password,
       })
 
-      const error = result?.error
-
       if (error) {
         const signUpError = error as SignUpErrorLike
         const isEmailDuplicate =
-          signUpError.code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' ||
-          (signUpError.code === 'FAILED_TO_CREATE_USER' &&
-            signUpError.details?.cause?.code === '23505')
+          signUpError.code === 'FAILED_TO_CREATE_USER' && signUpError.details?.cause?.code === '23505'
 
         if (isEmailDuplicate) {
           message.info('该邮箱已注册，请前往登录')
-          const params = new URLSearchParams({ email })
-          const safeCallback = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
-          if (safeCallback) params.set('callbackUrl', safeCallback)
-          router.push(`/signin?${params.toString()}`)
+          redirectToSignIn(router, searchParams, email)
           return
         }
 
@@ -87,10 +82,9 @@ export const useSignUp = () => {
         return
       }
 
+      // 仅首次注册成功后进入邮箱验证
       if (config.enableEmailVerification) {
-        router.push(
-          `/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`
-        )
+        router.push(`/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`)
         return
       }
 

@@ -90,6 +90,6 @@ export const htmlToMarkdown = (
     // Release the happy-dom Window so its DOM tree is GC-able immediately, instead
     // of waiting for the function scope to drop. JS evaluation is disabled so the
     // returned promise resolves synchronously in practice — fire and forget.
-    void window.happyDOM.close();
+    window.happyDOM.close();
   }
 };

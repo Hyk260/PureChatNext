@@ -5,7 +5,7 @@ import { apiFetch } from './apiFetch'
 describe('apiFetch', () => {
   it('rejects absolute URLs', () => {
     expect(() => {
-      void apiFetch('http://localhost:3000/api/chat')
+      apiFetch('http://localhost:3000/api/chat')
     }).toThrow(/relative/)
   })
 

@@ -41,7 +41,7 @@ const FileEditor = memo(() => {
   const item = useResourceStore((s) => s.resourceList.find((f) => f.id === currentViewItemId))
 
   const handleClose = () => {
-    void setFileParam(null)
+    setFileParam(null)
     setCurrentViewItemId(undefined)
     setMode('explorer')
   }

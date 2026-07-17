@@ -7,7 +7,6 @@ import { users } from '@/database/schemas/user'
 import { serverDB } from '@/database/core/db-adaptor'
 
 export interface CheckUserResponseData {
-  emailVerified?: boolean
   exists: boolean
   hasPassword?: boolean
 }
@@ -16,7 +15,7 @@ export interface CheckUserResponseData {
  * POST /api/auth/check-user
  * Check if a user exists by email
  * @param req - POST request with { email: string }
- * @returns { exists: boolean, emailVerified?: boolean, hasPassword?: boolean }
+ * @returns { exists: boolean, hasPassword?: boolean }
  */
 export async function POST(req: NextRequest) {
   try {
@@ -27,10 +26,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email is required', exists: false }, { status: 400 })
     }
 
-    // Query database for user with this email
     const [user] = await serverDB
       .select({
-        emailVerified: users.emailVerified,
         id: users.id,
       })
       .from(users)
@@ -49,11 +46,10 @@ export async function POST(req: NextRequest) {
       .from(account)
       .where(and(eq(account.userId, user.id)))
     const hasPassword = accounts.some(
-      (a) => a.providerId === 'credential' && typeof a.password === 'string' && a.password.length > 0
+      (a) => a.providerId === 'credential' && typeof a.password === 'string' && a.password.length > 0,
     )
 
     return NextResponse.json({
-      emailVerified: user.emailVerified,
       exists: true,
       hasPassword,
     })

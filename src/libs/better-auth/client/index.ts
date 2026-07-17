@@ -17,7 +17,6 @@ export {
   useSession,
 } from './auth-client'
 export { checkUserByEmail } from './check-user'
-export { reclaimUnverifiedEmail } from './reclaim-unverified-email'
 export {
   getCachedAuthConfig,
   loadAuthServerConfig,

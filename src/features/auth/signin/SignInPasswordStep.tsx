@@ -110,7 +110,7 @@ export const SignInPasswordStep = ({
               onClick={(event) => {
                 event.preventDefault()
                 if (forgotPasswordLoading) return
-                void onForgotPassword()
+                onForgotPassword()
               }}
             >
               {'忘记密码？'}

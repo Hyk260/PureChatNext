@@ -106,6 +106,7 @@ const AgentCategory = memo(() => {
       } else {
         next.set('category', key)
       }
+      next.delete('page')
       const query = next.toString()
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
     },

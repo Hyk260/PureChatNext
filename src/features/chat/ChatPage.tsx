@@ -145,7 +145,7 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
   const persistMessages = useCallback(
     (body: UIMessage[], signal?: AbortSignal) => {
       if (!topicId) return
-      void putMessages(topicId, body, signal ? { signal } : undefined).catch((error: unknown) => {
+      putMessages(topicId, body, signal ? { signal } : undefined).catch((error: unknown) => {
         if (error instanceof DOMException && error.name === 'AbortError') return
         if (error instanceof Error && error.name === 'AbortError') return
         console.error('[chat] putMessages failed', error)
@@ -258,7 +258,7 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
 
     const pendingTopic = claimPendingTopicSend()
     if (pendingTopic) {
-      void sendWithBodyRef.current(pendingTopic).finally(() => {
+      sendWithBodyRef.current(pendingTopic).finally(() => {
         finishPendingTopicSend()
       })
       return
@@ -267,7 +267,7 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
     const pending = claimPendingChatText()
     if (!pending) return
 
-    void sendOrSolidifyRef.current(pending).finally(() => {
+    sendOrSolidifyRef.current(pending).finally(() => {
       finishPendingChatText(pending)
     })
   }, [])
@@ -306,7 +306,7 @@ const ChatView = memo<ChatViewProps>(({ agentId, topicId, initialMessages, onTop
   )
 
   const handleStop = useCallback(() => {
-    void stop()
+    stop()
   }, [stop])
 
   return (
@@ -384,7 +384,7 @@ const ChatPage = memo(() => {
     if (activeAgent?.identifier === agentFromQuery) return
 
     let cancelled = false
-    void (async () => {
+    ;(async () => {
       try {
         const agent = await fetchAgent(agentFromQuery)
         if (cancelled) return
@@ -416,7 +416,7 @@ const ChatPage = memo(() => {
   }, [activeAgent?.identifier, agentFromQuery, setActiveAgent, setSelectedAgentId, upsertLocalAgent])
 
   useEffect(() => {
-    void fetchAgentsList()
+    fetchAgentsList()
   }, [fetchAgentsList])
 
   // Fetch topic list whenever agentId changes (client-only; server renders []).
@@ -517,7 +517,7 @@ const ChatPage = memo(() => {
   )
 
   const handleTopicsRefresh = useCallback(() => {
-    void refreshTopics()
+    refreshTopics()
   }, [refreshTopics])
 
   const messagesReady = activeTopicId === null ? true : loadedTopicId === activeTopicId

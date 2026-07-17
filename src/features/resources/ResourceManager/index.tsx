@@ -48,7 +48,7 @@ const ResourceManager = memo(() => {
   )
 
   return (
-    <DragUploadZone onUploadFiles={(files) => void handleUploadFiles(files)}>
+    <DragUploadZone onUploadFiles={(files) => handleUploadFiles(files)}>
       <Flexbox className={styles.container} flex={1} height='100%'>
         <Explorer />
         {mode === 'editor' && <FileEditor />}

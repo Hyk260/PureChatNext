@@ -68,7 +68,7 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
   }, [message])
 
   useEffect(() => {
-    void loadAccounts()
+    loadAccounts()
   }, [loadAccounts])
 
   const oauthAccounts = useMemo(
@@ -151,7 +151,7 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
     key: provider,
     label: getProviderLabel(provider),
     onClick: () => {
-      void handleLink(provider)
+      handleLink(provider)
     },
   }))
 

@@ -47,7 +47,7 @@ export const useResourceManagerUrlSync = () => {
     const nextSorter = sorter === 'createdAt' ? null : sorter
     const nextSortType = sortType === SortType.Desc ? null : sortType
 
-    if (sorterParam !== nextSorter) void setSorterParam(nextSorter)
-    if (sortTypeParam !== nextSortType) void setSortTypeParam(nextSortType)
+    if (sorterParam !== nextSorter) setSorterParam(nextSorter)
+    if (sortTypeParam !== nextSortType) setSortTypeParam(nextSortType)
   }, [sorter, sortType, sorterParam, sortTypeParam, setSorterParam, setSortTypeParam])
 }

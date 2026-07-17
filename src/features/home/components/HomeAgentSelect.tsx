@@ -47,7 +47,7 @@ const HomeAgentSelect = memo(() => {
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
 
   useEffect(() => {
-    void fetchAgentsList()
+    fetchAgentsList()
   }, [fetchAgentsList])
 
   const currentAgent = useMemo(

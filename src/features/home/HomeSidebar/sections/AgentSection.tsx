@@ -52,7 +52,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
   const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
 
   useEffect(() => {
-    void fetchAgentsList()
+    fetchAgentsList()
   }, [fetchAgentsList])
 
   const applyAgent = useCallback(

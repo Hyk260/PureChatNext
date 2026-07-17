@@ -34,7 +34,7 @@ const LibraryList = memo(() => {
         <Text fontSize={12} type='secondary'>
           知识库
         </Text>
-        <ActionIcon icon={Plus} onClick={() => void handleCreate()} size='small' title='新建' />
+        <ActionIcon icon={Plus} onClick={() => handleCreate()} size='small' title='新建' />
       </Flexbox>
       {libraries.length === 0 ? (
         <Text fontSize={12} type='secondary'>
@@ -56,7 +56,7 @@ const LibraryList = memo(() => {
                 title='删除'
                 onClick={() => {
                   if (window.confirm('确定删除此知识库？库内文件不会被删除。')) {
-                    void deleteKnowledgeBase(kb.id)
+                    deleteKnowledgeBase(kb.id)
                   }
                 }}
               />

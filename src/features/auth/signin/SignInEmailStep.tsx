@@ -1,14 +1,23 @@
 'use client'
 
-import { BRANDING_NAME } from '@/const/branding'
+import { Badge, Button as AntdButton, Divider, Form } from 'antd'
+import { ChevronRight, Mail } from 'lucide-react'
+import {
+  type CSSProperties,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { Alert, Button, Flexbox, Icon, Input, Skeleton, Text } from '@lobehub/ui'
+
 import AuthIcons from '@/components/AuthIcons'
+import { BRANDING_NAME } from '@/const/branding'
 import AuthAgreement from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
-import { Alert, Button, Flexbox, Icon, Input, Skeleton, Text } from '@lobehub/ui'
-import { Badge, Button as AntdButton, Divider, Form } from 'antd'
-import { ChevronRight, Mail } from 'lucide-react'
-import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react'
 
 import type { FormInstance, InputRef } from 'antd'
 
@@ -18,6 +27,7 @@ interface SignInFormValues {
 }
 
 interface SignInEmailStepProps {
+  /** 是否禁用邮箱密码登录 */
   disableEmailPassword?: boolean
   form: FormInstance<SignInFormValues>
   isSocialOnly?: boolean
@@ -30,11 +40,29 @@ interface SignInEmailStepProps {
 }
 
 const PROVIDER_ICON_STYLE: CSSProperties = { left: 12, position: 'absolute', top: 13 }
+const INPUT_ICON_STYLE: CSSProperties = { marginInline: 6 }
+const EMAIL_INPUT_STYLE: CSSProperties = { padding: 6 }
+const LAST_USED_BADGE_STYLES = {
+  root: { display: 'block', paddingTop: 8, width: '100%' },
+}
 
 const getProviderLabel = (provider: string) => {
   const label = SSO_PROVIDER_LABELS[provider] ?? provider
   return `使用 ${label} 登录`
 }
+
+const withLastUsedBadge = (node: ReactNode, enabled: boolean) =>
+  enabled ? (
+    <Badge
+      color='var(--ant-color-info)'
+      count='上次使用'
+      styles={LAST_USED_BADGE_STYLES}
+    >
+      {node}
+    </Badge>
+  ) : (
+    node
+  )
 
 export const SignInEmailStep = ({
   disableEmailPassword,
@@ -51,19 +79,28 @@ export const SignInEmailStep = ({
   const pendingProviderRef = useRef<string | null>(null)
   const [pendingProvider, setPendingProvider] = useState<string | null>(null)
 
+  const canShowLastUsedBadge = useMemo(
+    () =>
+      oAuthSSOProviders.length > 1 ||
+      (oAuthSSOProviders.length === 1 && !disableEmailPassword),
+    [disableEmailPassword, oAuthSSOProviders.length],
+  )
+
   const handleProviderClick = useCallback(
-    (provider: string) => {
+    async (provider: string) => {
       if (pendingProviderRef.current) return
 
       pendingProviderRef.current = provider
       setPendingProvider(provider)
 
-      void onSocialSignIn(provider).catch(() => {
+      try {
+        await onSocialSignIn(provider)
+      } catch {
         pendingProviderRef.current = null
         setPendingProvider(null)
-      })
+      }
     },
-    [onSocialSignIn]
+    [onSocialSignIn],
   )
 
   useEffect(() => {
@@ -72,7 +109,7 @@ export const SignInEmailStep = ({
 
   const divider = (
     <Divider>
-      <Text fontSize={12} type="secondary">
+      <Text fontSize={12} type='secondary'>
         或继续使用
       </Text>
     </Divider>
@@ -83,55 +120,51 @@ export const SignInEmailStep = ({
       <Flexbox gap={12}>
         {!serverConfigInit && (
           <>
-            <Skeleton.Button active block size="large" />
-            <Skeleton.Button active block size="large" />
+            <Skeleton.Button active block size='large' />
+            <Skeleton.Button active block size='large' />
             {divider}
           </>
         )}
+
         {serverConfigInit && oAuthSSOProviders.length > 0 && (
-          <Flexbox gap={12} width="100%">
+          <Flexbox gap={12} width='100%'>
             {oAuthSSOProviders.map((provider) => {
-              const isProviderLoading = pendingProvider === provider
               const button = (
                 <AntdButton
                   block
                   disabled={pendingProvider !== null}
                   icon={<Icon icon={AuthIcons(provider, 18)} style={PROVIDER_ICON_STYLE} />}
-                  key={provider}
-                  loading={isProviderLoading}
-                  size="large"
-                  onClick={() => handleProviderClick(provider)}
+                  loading={pendingProvider === provider}
+                  size='large'
+                  onClick={() => {
+                    handleProviderClick(provider)
+                  }}
                 >
                   {getProviderLabel(provider)}
                 </AntdButton>
               )
-              const showLastUsed =
-                provider === lastAuthProvider &&
-                (oAuthSSOProviders.length > 1 ||
-                  (oAuthSSOProviders.length === 1 && !disableEmailPassword))
-              return showLastUsed ? (
-                <Badge
-                  color="var(--ant-color-info)"
-                  count="上次使用"
-                  key={provider}
-                  styles={{ root: { display: 'block', paddingTop: 8, width: '100%' } }}
-                >
-                  {button}
-                </Badge>
-              ) : (
-                button
+
+              return (
+                <div key={provider}>
+                  {withLastUsedBadge(
+                    button,
+                    provider === lastAuthProvider && canShowLastUsedBadge,
+                  )}
+                </div>
               )
             })}
             {!disableEmailPassword && divider}
           </Flexbox>
         )}
+
         {serverConfigInit && disableEmailPassword && oAuthSSOProviders.length === 0 && (
-          <Alert showIcon description="未配置可用的第三方登录方式" type="warning" />
+          <Alert showIcon description='未配置可用的第三方登录方式' type='warning' />
         )}
+
         {!disableEmailPassword && (
-          <Form form={form} layout="vertical" onFinish={onCheckUser}>
+          <Form form={form} layout='vertical' onFinish={onCheckUser}>
             <Form.Item
-              name="email"
+              name='email'
               rules={[
                 { message: '请输入邮箱', required: true },
                 { message: '请输入有效的邮箱地址', type: 'email' },
@@ -139,26 +172,17 @@ export const SignInEmailStep = ({
               style={{ marginBottom: 0 }}
             >
               <Input
-                placeholder="请输入邮箱或用户名"
+                placeholder='请输入邮箱或用户名'
+                prefix={<Icon icon={Mail} style={INPUT_ICON_STYLE} />}
                 ref={emailInputRef}
-                size="large"
-                prefix={
-                  <Icon
-                    icon={Mail}
-                    style={{
-                      marginInline: 6,
-                    }}
-                  />
-                }
-                style={{
-                  padding: 6,
-                }}
+                size='large'
+                style={EMAIL_INPUT_STYLE}
                 suffix={
                   <Button
                     icon={ChevronRight}
                     loading={loading}
-                    title="下一步"
-                    variant="filled"
+                    title='下一步'
+                    variant='filled'
                     onClick={() => form.submit()}
                   />
                 }
@@ -166,13 +190,15 @@ export const SignInEmailStep = ({
             </Form.Item>
           </Form>
         )}
+
         {isSocialOnly && (
           <Alert
             showIcon
-            type="info"
-            description="此账户未设置密码，请使用第三方登录或魔法链接登录。"
+            description='此账户未设置密码，请使用第三方登录或魔法链接登录。'
+            type='info'
           />
         )}
+
         <AuthAgreement />
       </Flexbox>
     </AuthCard>

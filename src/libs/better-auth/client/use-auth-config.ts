@@ -54,7 +54,7 @@ export const useAuthConfig = () => {
       return
     }
 
-    void loadAuthServerConfig().then((data) => {
+    loadAuthServerConfig().then((data) => {
       if (!cancelled) setConfig(data)
     })
 

@@ -81,7 +81,7 @@ export const useFetchResources = (params: QueryFileListParams) => {
   const key = JSON.stringify(params)
 
   useEffect(() => {
-    void fetchResources(JSON.parse(key) as QueryFileListParams)
+    fetchResources(JSON.parse(key) as QueryFileListParams)
   }, [fetchResources, key])
 
   return { isLoading, isValidating: isLoading }
@@ -92,7 +92,7 @@ export const useFetchKnowledgeBaseList = () => {
   const knowledgeBases = useResourceStore((s) => s.knowledgeBases)
 
   useEffect(() => {
-    void fetchKnowledgeBases()
+    fetchKnowledgeBases()
   }, [fetchKnowledgeBases])
 
   return { data: knowledgeBases, isLoading: false }
@@ -100,5 +100,5 @@ export const useFetchKnowledgeBaseList = () => {
 
 export const revalidateResources = () => {
   const { queryParams, fetchResources } = useResourceStore.getState()
-  if (queryParams) void fetchResources(queryParams)
+  if (queryParams) fetchResources(queryParams)
 }

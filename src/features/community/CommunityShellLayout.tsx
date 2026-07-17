@@ -14,7 +14,13 @@ const CommunityShellLayout = ({ children }: { children: ReactNode }) => {
       header={<CommunityHeader />}
       sidebar={<CommunitySidebar />}
     >
-      <Flexbox flex={1} padding={24} style={{ overflow: 'auto' }} width='100%'>
+      <Flexbox
+        flex={1}
+        id='community-scroll'
+        padding={24}
+        style={{ overflow: 'auto' }}
+        width='100%'
+      >
         {children}
       </Flexbox>
     </MainShellLayout>

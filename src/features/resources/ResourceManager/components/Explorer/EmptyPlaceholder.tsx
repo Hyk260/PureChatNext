@@ -67,7 +67,7 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
-    if (files.length) void onUpload(files)
+    if (files.length) onUpload(files)
     e.target.value = ''
   }
 

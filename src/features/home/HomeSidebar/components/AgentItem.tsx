@@ -105,7 +105,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         label: isPinned ? '取消置顶' : '置顶',
         onClick: (info) => {
           stopMenuEvent(info)
-          void onPin(agent, !isPinned)
+          onPin(agent, !isPinned)
         },
       },
       {

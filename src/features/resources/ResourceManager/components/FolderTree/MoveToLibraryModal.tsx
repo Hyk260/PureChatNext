@@ -28,7 +28,7 @@ const MoveToLibraryModal = memo<MoveToLibraryModalProps>(({ fileIds, onClose, op
         <div
           key={kb.id}
           style={{ cursor: 'pointer', padding: '8px 0' }}
-          onClick={() => void handleSelect(kb.id)}
+          onClick={() => handleSelect(kb.id)}
         >
           {kb.name}
         </div>

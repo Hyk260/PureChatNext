@@ -30,7 +30,7 @@ export default function SettingsProfilePage() {
 
     let cancelled = false
 
-    void (async () => {
+    ;(async () => {
       try {
         const res = await apiFetch('/api/webapi/user/profile', { credentials: 'include' })
         if (!res.ok) {

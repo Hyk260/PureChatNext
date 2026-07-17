@@ -106,7 +106,7 @@ const Explorer = memo(() => {
         router.push(`/resources/library/${libraryId}/${nextPath}`)
         return
       }
-      void setFileParam(item.id)
+      setFileParam(item.id)
       setCurrentViewItemId(item.id)
       setMode('editor')
     },
@@ -153,7 +153,7 @@ const Explorer = memo(() => {
         title={libraryId ? undefined : CATEGORY_TITLES[category]}
         onDelete={handleBatchDelete}
         onNewFolder={libraryId ? handleNewFolder : undefined}
-        onUpload={(files) => void handleUpload(files)}
+        onUpload={(files) => handleUpload(files)}
       />
       <Flexbox flex={1} style={{ overflow: 'auto' }}>
         {isLoading ? (

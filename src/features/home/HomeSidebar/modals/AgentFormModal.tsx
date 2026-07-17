@@ -66,7 +66,7 @@ const AgentFormModal = memo<AgentFormModalProps>(
         title={isEdit ? '编辑助理' : '新建助理'}
         width={480}
         onCancel={onCancel}
-        onOk={() => void handleOk()}
+        onOk={() => handleOk()}
       >
         <Flexbox gap={12} paddingBlock={8}>
           <Flexbox gap={4}>

@@ -158,7 +158,7 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
 
     // Clear immediately so the input is empty while the stream runs.
     setInput('')
-    void onSend(text)
+    onSend(text)
   }, [input, isBusy, onSend])
 
   const handleStop = useCallback(() => {

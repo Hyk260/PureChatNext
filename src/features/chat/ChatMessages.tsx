@@ -253,7 +253,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
                   }
                   if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
                     event.preventDefault()
-                    void handleSave()
+                    handleSave()
                   }
                 }}
               />
@@ -271,7 +271,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
                   icon={Check}
                   size='small'
                   title='保存'
-                  onClick={() => void handleSave()}
+                  onClick={() => handleSave()}
                 />
               </Flexbox>
             </Flexbox>
@@ -303,7 +303,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
                     items={ACTION_ITEMS}
                     size='small'
                     variant='outlined'
-                    onActionClick={(event) => void handleAction(event)}
+                    onActionClick={(event) => handleAction(event)}
                   />
                 </div>
               )}

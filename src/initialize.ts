@@ -3,7 +3,7 @@
  * Dev-only react-scan toolbar; production Monitor uses `Analytics/ReactScan` + API key.
  */
 if (__DEV__) {
-  void import('react-scan').then(({ scan }) => {
+  import('react-scan').then(({ scan }) => {
     scan({ enabled: false, showToolbar: true })
   })
 }

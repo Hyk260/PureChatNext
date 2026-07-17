@@ -16,12 +16,12 @@ const isActiveRoute = (pathname: string, href: string) => {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-type RouteNavContentProps = {
+export type RouteNavContentProps = {
   onNavigate?: () => void
   pathname: string
 }
 
-function RouteNavContent({ pathname, onNavigate }: RouteNavContentProps) {
+export function RouteNavContent({ pathname, onNavigate }: RouteNavContentProps) {
   return (
     <nav aria-label="前端路由导航" className="-mx-6 -mt-4 flex-1 overflow-y-auto px-3 py-4">
       {FRONTEND_ROUTE_GROUPS.map((group) => (

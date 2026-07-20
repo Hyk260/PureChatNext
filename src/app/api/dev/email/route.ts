@@ -1,4 +1,3 @@
-import { TRPCError } from '@trpc/server';
 import { NextResponse } from 'next/server';
 
 import {
@@ -64,10 +63,6 @@ const success = (action: EmailAction, result: unknown) => {
 };
 
 const getErrorMessage = (error: unknown) => {
-  if (error instanceof TRPCError) {
-    return error.message;
-  }
-
   if (error instanceof Error) {
     return error.message;
   }

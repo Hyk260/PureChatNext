@@ -235,16 +235,14 @@ export const createEmailServiceImpl = (type: EmailImplType) => {
 
 ## 错误处理
 
-服务会针对各种失败场景抛出 `TRPCError`：
+服务会针对各种失败场景抛出普通 `Error`：
 
 ```typescript
 try {
   await emailService.sendMail({...});
 } catch (error) {
-  if (error.code === 'SERVICE_UNAVAILABLE') {
-    // 处理 SMTP 连接问题
-  } else if (error.code === 'PRECONDITION_FAILED') {
-    // 处理配置错误
+  if (error instanceof Error) {
+    // 根据 error.message / error.cause 处理
   }
 }
 ```

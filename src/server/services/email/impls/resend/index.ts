@@ -1,4 +1,3 @@
-import { TRPCError } from '@trpc/server';
 import debug from 'debug';
 import { type CreateEmailOptions } from 'resend';
 import { Resend } from 'resend';
@@ -33,18 +32,11 @@ export class ResendImpl implements EmailServiceImpl {
     const text = payload.text;
 
     if (!from) {
-      throw new TRPCError({
-        code: 'PRECONDITION_FAILED',
-        message:
-          'Missing sender address. Provide payload.from or RESEND_FROM environment variable.',
-      });
+      throw new Error('Missing sender address. Provide payload.from or RESEND_FROM environment variable.');
     }
 
     if (!html && !text) {
-      throw new TRPCError({
-        code: 'PRECONDITION_FAILED',
-        message: 'Resend requires either html or text content in the email payload.',
-      });
+      throw new Error('Resend requires either html or text content in the email payload.');
     }
 
     const attachments = payload.attachments?.map((attachment) => {
@@ -88,35 +80,24 @@ export class ResendImpl implements EmailServiceImpl {
 
       if (error) {
         log.extend('error')('Failed to send email via Resend: %o', error);
-        throw new TRPCError({
-          cause: error,
-          code: 'SERVICE_UNAVAILABLE',
-          message: `Failed to send email via Resend: ${error.message}`,
-        });
+        throw new Error(`Failed to send email via Resend: ${error.message}`, { cause: error });
       }
 
       if (!data?.id) {
         log.extend('error')('Resend sendMail returned no message id: %o', data);
-        throw new TRPCError({
-          code: 'SERVICE_UNAVAILABLE',
-          message: 'Failed to send email via Resend: missing message id',
-        });
+        throw new Error('Failed to send email via Resend: missing message id');
       }
 
       return {
         messageId: data.id,
       };
     } catch (error) {
-      if (error instanceof TRPCError) {
+      if (error instanceof Error) {
         throw error;
       }
 
       log.extend('error')('Unexpected Resend sendMail error: %o', error);
-      throw new TRPCError({
-        cause: error,
-        code: 'SERVICE_UNAVAILABLE',
-        message: `Failed to send email via Resend: ${(error as Error).message}`,
-      });
+      throw new Error(`Failed to send email via Resend: ${String(error)}`, { cause: error });
     }
   }
 }

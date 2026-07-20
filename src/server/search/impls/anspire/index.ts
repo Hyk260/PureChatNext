@@ -3,7 +3,6 @@ import {
   type UniformSearchResponse,
   type UniformSearchResult,
 } from '@pure/types';
-import { TRPCError } from '@trpc/server';
 import debug from 'debug';
 import urlJoin from 'url-join';
 
@@ -81,11 +80,7 @@ export class AnspireImpl implements SearchServiceImpl {
       costTime = Date.now() - startAt;
     } catch (error) {
       log.extend('error')('Anspire fetch error: %o', error);
-      throw new TRPCError({
-        cause: error,
-        code: 'SERVICE_UNAVAILABLE',
-        message: 'Failed to connect to Anspire.',
-      });
+      throw new Error('Failed to connect to Anspire.', { cause: error });
     }
 
     if (!response.ok) {
@@ -94,11 +89,7 @@ export class AnspireImpl implements SearchServiceImpl {
         `Anspire request failed with status ${response.status}: %s`,
         errorBody.length > 200 ? `${errorBody.slice(0, 200)}...` : errorBody,
       );
-      throw new TRPCError({
-        cause: errorBody,
-        code: 'SERVICE_UNAVAILABLE',
-        message: `Anspire request failed: ${response.statusText}`,
-      });
+      throw new Error(`Anspire request failed: ${response.statusText}`, { cause: errorBody });
     }
 
     try {
@@ -128,11 +119,7 @@ export class AnspireImpl implements SearchServiceImpl {
       };
     } catch (error) {
       log.extend('error')('Error parsing Anspire response: %o', error);
-      throw new TRPCError({
-        cause: error,
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to parse Anspire response.',
-      });
+      throw new Error('Failed to parse Anspire response.', { cause: error });
     }
   }
 }

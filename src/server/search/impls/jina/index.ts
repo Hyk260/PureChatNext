@@ -4,7 +4,6 @@ import {
   type UniformSearchResult,
 } from '@pure/types';
 import { getJinaSearchBaseUrl, parseJSONResponse } from '@pure/utils';
-import { TRPCError } from '@trpc/server';
 import debug from 'debug';
 import urlJoin from 'url-join';
 
@@ -57,11 +56,7 @@ export class JinaImpl implements SearchServiceImpl {
       costTime = Date.now() - startAt;
     } catch (error) {
       log.extend('error')('Jina fetch error: %o', error);
-      throw new TRPCError({
-        cause: error,
-        code: 'SERVICE_UNAVAILABLE',
-        message: 'Failed to connect to Jina.',
-      });
+      throw new Error('Failed to connect to Jina.', { cause: error });
     }
 
     if (!response.ok) {
@@ -70,11 +65,7 @@ export class JinaImpl implements SearchServiceImpl {
         `Jina request failed with status ${response.status}: %s`,
         errorBody.length > 200 ? `${errorBody.slice(0, 200)}...` : errorBody,
       );
-      throw new TRPCError({
-        cause: errorBody,
-        code: 'SERVICE_UNAVAILABLE',
-        message: `Jina request failed: ${response.statusText}`,
-      });
+      throw new Error(`Jina request failed: ${response.statusText}`, { cause: errorBody });
     }
 
     try {
@@ -104,11 +95,7 @@ export class JinaImpl implements SearchServiceImpl {
       };
     } catch (error) {
       log.extend('error')('Error parsing Jina response: %o', error);
-      throw new TRPCError({
-        cause: error,
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to parse Jina response.',
-      });
+      throw new Error('Failed to parse Jina response.', { cause: error });
     }
   }
 }

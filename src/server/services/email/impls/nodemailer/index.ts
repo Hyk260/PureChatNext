@@ -1,4 +1,3 @@
-import { TRPCError } from '@trpc/server';
 import debug from 'debug';
 import { type Transporter } from 'nodemailer';
 import nodemailer from 'nodemailer';
@@ -40,11 +39,7 @@ export class NodemailerImpl implements EmailServiceImpl {
       log('Nodemailer transporter created successfully');
     } catch (error) {
       log.extend('error')('Failed to create Nodemailer transporter: %o', error);
-      throw new TRPCError({
-        cause: error,
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to initialize Nodemailer transport',
-      });
+      throw new Error('Failed to initialize Nodemailer transport', { cause: error });
     }
   }
 
@@ -82,11 +77,7 @@ export class NodemailerImpl implements EmailServiceImpl {
       };
     } catch (error) {
       log.extend('error')('Failed to send email: %o', error);
-      throw new TRPCError({
-        cause: error,
-        code: 'SERVICE_UNAVAILABLE',
-        message: `Failed to send email: ${(error as Error).message}`,
-      });
+      throw new Error(`Failed to send email: ${(error as Error).message}`, { cause: error });
     }
   }
 
@@ -101,11 +92,7 @@ export class NodemailerImpl implements EmailServiceImpl {
       return true;
     } catch (error) {
       log.extend('error')('SMTP verification failed: %o', error);
-      throw new TRPCError({
-        cause: error,
-        code: 'SERVICE_UNAVAILABLE',
-        message: 'Failed to verify SMTP connection',
-      });
+      throw new Error('Failed to verify SMTP connection', { cause: error });
     }
   }
 }

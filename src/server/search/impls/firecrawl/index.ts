@@ -3,7 +3,6 @@ import {
   type UniformSearchResponse,
   type UniformSearchResult,
 } from '@pure/types';
-import { TRPCError } from '@trpc/server';
 import debug from 'debug';
 import urlJoin from 'url-join';
 
@@ -75,11 +74,7 @@ export class FirecrawlImpl implements SearchServiceImpl {
       costTime = Date.now() - startAt;
     } catch (error) {
       log.extend('error')('Firecrawl fetch error: %o', error);
-      throw new TRPCError({
-        cause: error,
-        code: 'SERVICE_UNAVAILABLE',
-        message: 'Failed to connect to Firecrawl.',
-      });
+      throw new Error('Failed to connect to Firecrawl.', { cause: error });
     }
 
     if (!response.ok) {
@@ -88,11 +83,7 @@ export class FirecrawlImpl implements SearchServiceImpl {
         `Firecrawl request failed with status ${response.status}: %s`,
         errorBody.length > 200 ? `${errorBody.slice(0, 200)}...` : errorBody,
       );
-      throw new TRPCError({
-        cause: errorBody,
-        code: 'SERVICE_UNAVAILABLE',
-        message: `Firecrawl request failed: ${response.statusText}`,
-      });
+      throw new Error(`Firecrawl request failed: ${response.statusText}`, { cause: errorBody });
     }
 
     try {
@@ -161,11 +152,7 @@ export class FirecrawlImpl implements SearchServiceImpl {
       };
     } catch (error) {
       log.extend('error')('Error parsing Firecrawl response: %o', error);
-      throw new TRPCError({
-        cause: error,
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to parse Firecrawl response.',
-      });
+      throw new Error('Failed to parse Firecrawl response.', { cause: error });
     }
   }
 }

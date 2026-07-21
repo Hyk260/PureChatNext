@@ -14,12 +14,6 @@ vi.mock('@/database/core/db-adaptor', () => ({
   serverDB: {},
 }))
 
-vi.hoisted(() => {
-  const { config: loadEnv } = require('dotenv') as typeof import('dotenv')
-  const { resolve: resolvePath } = require('node:path') as typeof import('node:path')
-  loadEnv({ path: resolvePath(__dirname, '../../../.env.local') })
-})
-
 import { ChatMessageModel } from '@/database/models/chatMessage'
 import { ChatTopicModel } from '@/database/models/chatTopic'
 import * as schema from '@/database/schemas'

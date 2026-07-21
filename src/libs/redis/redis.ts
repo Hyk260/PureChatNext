@@ -18,6 +18,13 @@ const log = debug('redis:debug');
 const REDIS_CONNECT_TIMEOUT_MS = 10_000;
 const REDIS_COMMAND_TIMEOUT_MS = 10_000;
 
+/** ioredis SET 重载过多，按 token 参数调用时使用此签名 */
+type IORedisSetWithArgs<TResult> = (
+  key: RedisKey,
+  value: RedisValue,
+  ...args: Array<string | number>
+) => TResult;
+
 export class IoRedisRedisProvider implements BaseRedisProvider {
   private client: Redis | null = null;
 
@@ -62,9 +69,9 @@ export class IoRedisRedisProvider implements BaseRedisProvider {
 
   async set(key: RedisKey, value: RedisValue, options?: SetOptions): Promise<RedisSetResult> {
     const args = buildIORedisSetArgs(options);
+    const set = this.ensureClient().set as unknown as IORedisSetWithArgs<Promise<RedisSetResult>>;
 
-    // ioredis has many overloads for SET; use a cast to keep async-only usage ergonomic
-    return (this.ensureClient().set as any)(key, value, ...args);
+    return set(key, value, ...args);
   }
 
   async setex(key: RedisKey, seconds: number, value: RedisValue): Promise<'OK'> {
@@ -138,7 +145,8 @@ export class IoRedisRedisProvider implements BaseRedisProvider {
       incr: (key) => (raw.incr(key), pipe),
       set: (key, value, options?) => {
         const args = buildIORedisSetArgs(options);
-        (raw.set as any)(key, value, ...args);
+        const set = raw.set as unknown as IORedisSetWithArgs<unknown>;
+        set(key, value, ...args);
         return pipe;
       },
       setex: (key, seconds, value) => (raw.setex(key, seconds, value), pipe),

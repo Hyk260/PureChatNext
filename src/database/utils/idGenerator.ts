@@ -12,11 +12,20 @@ const prefixes = {
   knowledgeBases: 'kb',
 } as const
 
+/**
+ * Better Auth 用户主键前缀长度。
+ * `user_` + AUTH_USER_ID_SIZE = 32
+ */
+export const AUTH_USER_ID_SIZE = 32 - `${prefixes.user}_`.length
+
 export const idGenerator = (namespace: keyof typeof prefixes, size = 12) => {
   const hash = createNanoId(size)
   const prefix = prefixes[namespace]
   return `${prefix}_${hash()}`
 }
+
+/** `user_` + 27 位 nanoid */
+export const generateAuthUserId = () => idGenerator('user', AUTH_USER_ID_SIZE)
 
 export const randomSlug = (count = 2) => (generate(count) as string[]).join('-')
 

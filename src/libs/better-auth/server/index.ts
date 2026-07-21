@@ -1,6 +1,5 @@
 export { createSecondaryStorage } from './create-secondary-storage'
 export { getAuthServerConfig } from './get-auth-config'
-export { imAccountPlugin } from './plugins/im-account'
 export {
   createVerificationDailyRateLimitStorage,
   VERIFICATION_SEND_PATHS,

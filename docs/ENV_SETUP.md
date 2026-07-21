@@ -65,6 +65,14 @@ NODE_ENV=development
 
 修改后需重启 Next（`pnpm dev:next` 或 `pnpm dev`）。
 
+### CODE_INSPECTOR
+
+本地开发可选。设为 `1` 时，在 Vite SPA（与 Next Turbopack）启用 [code-inspector](https://github.com/zh-lx/code-inspector)：按住 **Alt+Shift** 点击页面元素，在 Cursor 中打开对应源码。
+
+- 默认关闭（降低编译与内存开销）
+- 临时开启推荐：`pnpm dev:inspect`（等价于 `CODE_INSPECTOR=1 pnpm dev`，完整 Next + SPA）
+- 也可写入 `.env.local`：`CODE_INSPECTOR=1` 后重启开发进程
+
 ### NEXT_PUBLIC_SUPABASE_URL
 Supabase 项目的 URL，格式通常是：`https://xxxxx.supabase.co`
 

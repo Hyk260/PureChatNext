@@ -72,7 +72,8 @@ export function sharedRendererPlugins(options: SharedRendererPluginsOptions): Pl
   const { enableCodeInspector, isDev, rootDir, spaEntry } = options
 
   return [
-    (isDev || enableCodeInspector) &&
+    isDev &&
+      enableCodeInspector &&
       codeInspectorPlugin({
         bundler: 'vite',
         editor: 'cursor',

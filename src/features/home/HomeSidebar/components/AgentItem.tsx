@@ -63,6 +63,10 @@ const styles = createStaticStyles(({ css }) => ({
       background: ${cssVar.colorFillSecondary};
     }
   `,
+  pinBadge: css`
+    flex: none;
+    color: ${cssVar.colorTextTertiary};
+  `,
 }))
 
 const stopMenuEvent = (info: MenuInfo) => {
@@ -163,6 +167,11 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
           {agent.title}
         </Text>
       </Flexbox>
+      {isPinned ? (
+        <Center className={styles.pinBadge} flex='none' height={24} title='已置顶' width={20}>
+          <Icon icon={PinIcon} size={14} />
+        </Center>
+      ) : null}
       {canOperate ? (
         <Flexbox
           align='center'
@@ -172,10 +181,6 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
           onClick={(event) => event.stopPropagation()}
           onKeyDown={(event) => event.stopPropagation()}
         >
-          {/*
-            Multiple children avoid DropdownMenu cloning a single element and
-            reading element.ref (removed in React 19).
-          */}
           <DropdownMenu
             items={menuItems}
             nativeButton

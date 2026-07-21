@@ -51,6 +51,9 @@ NODE_ENV=development
 # 推荐：并发 Next（API :3000）+ Vite SPA（UI :5174）
 pnpm dev
 
+# 需要点击元素跳转源码时（启用 code-inspector，仍是完整 Next + SPA）
+pnpm dev:inspect
+
 # 或分终端
 pnpm dev:next
 pnpm dev:spa
@@ -59,7 +62,8 @@ pnpm dev:spa
 浏览器访问 **http://localhost:5174**（SPA）。Next `:3000` 只作 API / BFF，不要当主 UI 入口。
 
 > CORS：`.env.local` 的 `ALLOWED_ORIGINS` 需包含 `http://localhost:5174`（见上文示例）。  
-> 修改 `APP_URL` 后需重启 `dev:next`。
+> 修改 `APP_URL` 后需重启 `dev:next`。  
+> `dev:inspect` / `CODE_INSPECTOR=1`：Alt+Shift 点击页面元素可在 Cursor 中打开对应源码；默认关闭以降低编译开销。
 ## 5. 测试认证功能
 
 1. 打开浏览器访问：`http://localhost:5174/signin`（或首页引导）

@@ -1,5 +1,4 @@
-import { authEnv } from '@/envs/auth';
-
+import { checkProviderEnvs } from '../helpers';
 import { type GenericProviderDefinition } from '../types';
 
 const WECHAT_AUTHORIZATION_URL = 'https://open.weixin.qq.com/connect/qrconnect';
@@ -122,14 +121,7 @@ const provider: GenericProviderDefinition<{
       tokenUrl: WECHAT_TOKEN_URL,
     };
   },
-  checkEnvs: () => {
-    return !!(authEnv.AUTH_WECHAT_ID && authEnv.AUTH_WECHAT_SECRET)
-      ? {
-          AUTH_WECHAT_ID: authEnv.AUTH_WECHAT_ID,
-          AUTH_WECHAT_SECRET: authEnv.AUTH_WECHAT_SECRET,
-        }
-      : false;
-  },
+  checkEnvs: () => checkProviderEnvs(['AUTH_WECHAT_ID', 'AUTH_WECHAT_SECRET']),
   id: 'wechat',
   type: 'generic',
 };

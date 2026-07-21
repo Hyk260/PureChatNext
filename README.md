@@ -161,6 +161,9 @@ pnpm db:migrate
 # 启动开发（并发 Next :3000 + Vite SPA :5174，需本机 bun）
 pnpm dev
 
+# 需要 Alt+Shift 点击元素跳转源码时
+pnpm dev:inspect
+
 # 或分终端
 pnpm dev:next   # API / BFF → http://localhost:3000
 pnpm dev:spa    # UI → http://localhost:5174（/api 代理到 Next）
@@ -291,6 +294,7 @@ PureChatNext/
 
 ```bash
 pnpm dev              # Next :3000 + SPA :5174（UI 请用 5174）
+pnpm dev:inspect      # 同上，并启用 code-inspector（Alt+Shift 点击跳转源码）
 pnpm dev:next         # 仅 Next API / BFF
 pnpm dev:spa          # 仅 Vite SPA
 pnpm build            # build:spa → copy → next build

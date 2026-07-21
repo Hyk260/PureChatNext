@@ -50,11 +50,6 @@ interface SectionActionsProps {
   menuItems: MenuProps['items']
 }
 
-/**
- * High-level `<DropdownMenu><ActionIcon/></DropdownMenu>` clones the child and
- * reads `element.ref`, which React 19 warns about. Use a native button trigger
- * with multiple children so Base UI does not take the cloneElement path.
- */
 const SectionActions = memo<SectionActionsProps>(({ addMenuItems, menuItems }) => {
   return (
     <Flexbox

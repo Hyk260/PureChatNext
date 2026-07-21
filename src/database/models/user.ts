@@ -1,10 +1,11 @@
-import { generateCompactUuid } from '@pure/utils'
+import { createNanoId, generateCompactUuid } from '@pure/utils'
 import { hashPassword } from 'better-auth/crypto'
 import { and, count, eq, inArray, lt } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { account, passkey, session, twoFactor, users, verification , type User, type UserItem, type UserWithoutPassword } from '../schemas'
-import { verifyAccountPassword } from '@/libs/better-auth/server'
+import { generateAuthUserId } from '../utils/idGenerator'
+import { verifyAccountPassword } from '@/libs/better-auth/server/verify-account-password'
 
 import { type ChatDatabase } from '../type'
 
@@ -249,7 +250,8 @@ export class UserModel {
     }
 
     if (normalizedParams.id == null) {
-      normalizedParams.id = crypto.randomUUID()
+      // 与 Better Auth advanced.database.generateId 对齐（本路径绕过 BA）
+      normalizedParams.id = generateAuthUserId()
     }
 
     const [user] = await this.db
@@ -262,7 +264,7 @@ export class UserModel {
       await this.db.insert(account).values({
         accountId: email || user.id,
         createdAt: new Date(),
-        id: crypto.randomUUID(),
+        id: createNanoId(12)(),
         password: await hashPassword(plainPassword),
         providerId: CREDENTIAL_PROVIDER,
         updatedAt: new Date(),

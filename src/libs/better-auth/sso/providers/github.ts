@@ -1,5 +1,4 @@
-import { authEnv } from '@/envs/auth'
-
+import { checkProviderEnvs } from '../helpers'
 import { type BuiltinProviderDefinition } from '../types'
 
 const provider: BuiltinProviderDefinition<
@@ -15,14 +14,7 @@ const provider: BuiltinProviderDefinition<
       clientSecret: env.AUTH_GITHUB_SECRET,
     }
   },
-  checkEnvs: () => {
-    return !!(authEnv.AUTH_GITHUB_ID && authEnv.AUTH_GITHUB_SECRET)
-      ? {
-          AUTH_GITHUB_ID: authEnv.AUTH_GITHUB_ID,
-          AUTH_GITHUB_SECRET: authEnv.AUTH_GITHUB_SECRET,
-        }
-      : false
-  },
+  checkEnvs: () => checkProviderEnvs(['AUTH_GITHUB_ID', 'AUTH_GITHUB_SECRET']),
   id: 'github',
   type: 'builtin',
 }

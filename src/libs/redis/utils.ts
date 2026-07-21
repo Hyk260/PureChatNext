@@ -23,16 +23,15 @@ export const normalizeMsetValues = (values: RedisMSetArgument): Record<string, R
 };
 
 /**
- * Read a JSON-encoded value from Redis with consistent null fallbacks:
+ * 从 Redis 读取 JSON 编码的值，并统一将失败情况回退为 null：
  *
- * - `null` redis client (Redis disabled / not initialized) → `null`
- * - missing key                                            → `null`
- * - malformed JSON                                         → `null`
+ * - redis 客户端为 `null`（未启用 / 未初始化）→ `null`
+ * - key 不存在                                   → `null`
+ * - JSON 解析失败                                → `null`
  *
- * Lets callers reduce the typical 8-line "fetch + parse + try/catch" recipe
- * to a single call. Caller is responsible for resolving the right Redis
- * client (e.g. via `initializeRedisWithPrefix`) — this helper deliberately
- * stays I/O-only.
+ * 将常见的「读取 + 解析 + try/catch」约 8 行写法收成一次调用。
+ * 调用方需自行解析出正确的 Redis 客户端（例如通过 `initializeRedisWithPrefix`）；
+ * 本辅助函数只做 I/O，不做客户端选择。
  */
 export const getJSONFromRedis = async <T>(
   redis: BaseRedisProvider | null,

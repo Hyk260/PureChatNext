@@ -40,7 +40,7 @@ const createMockedProvider = async () => {
       hgetall: vi.fn(),
       exec: vi.fn().mockResolvedValue([]),
     };
-    // Make each command return the pipeline itself for chaining
+    // 让各命令返回 pipeline 自身以支持链式调用
     for (const key of Object.keys(pipeMocks) as (keyof typeof pipeMocks)[]) {
       if (key !== 'exec') {
         pipeMocks[key].mockReturnValue(pipeMocks);
@@ -155,7 +155,7 @@ describe('integrated', (test) => {
       expect(await provider.del(key)).toBe(1);
     } catch (error) {
       if (shouldSkipIntegration(error)) {
-        // Remote Redis unavailable in current environment; treat as skipped.
+        // 当前环境无法连接远程 Redis，视为跳过。
         return;
       }
 

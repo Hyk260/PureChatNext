@@ -1,6 +1,5 @@
-import { generateCompactUuid } from '@pure/utils'
+import { createNanoId, generateCompactUuid } from '@pure/utils'
 import { betterAuth , type BetterAuthOptions } from 'better-auth/minimal'
-import bcrypt from 'bcryptjs'
 import { verifyPassword } from 'better-auth/crypto'
 import { EmailService } from '@/server/services/email'
 import { type EmailPayload } from '@/server/services/email/impls'
@@ -9,6 +8,7 @@ import { admin, emailOTP, genericOAuth, magicLink } from 'better-auth/plugins'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import * as schema from '@/database/schemas'
 import { serverDB } from '@/database/core/db-adaptor'
+import { generateAuthUserId } from '@/database/utils/idGenerator'
 import debug from 'debug'
 
 import {
@@ -237,13 +237,23 @@ export function defineConfig() {
     onAPIError: {
       errorURL: '/auth-error',
     },
+    advanced: {
+      database: {
+        generateId: ({ model }) => {
+          if (model === 'user' || model === 'users') {
+            return generateAuthUserId()
+          }
+          return createNanoId(12)()
+        },
+      },
+    },
     /**
      * 数据库联表查询在 Better-Auth 需要单次查询从多张表获取关联数据时非常有用。
      * /get-session、/get-full-organization 等端点因此特性受益显著，
      * 根据数据库延迟，性能可提升 2 到 3 倍。
      * Ref: https://www.better-auth.com/docs/adapters/drizzle#joins-experimental
      */
-    experimental: { joins: false },
+    experimental: { joins: true },
     /**
      * 为每个新创建的账户运行用户引导流程（邮箱、魔法链接、OAuth/社交登录等）。
      * 使用 Better Auth 数据库钩子可以捕获绕过 /sign-up/* 路由的社交登录流程。
@@ -256,8 +266,8 @@ export function defineConfig() {
           before: async (user) => {
             log('user create before: %O', user)
             // const userData = {
-            //   name: '3320487134',
-            //   email: '3320487134@qq.com',
+            //   name: '123456',
+            //   email: '123456@qq.com',
             //   emailVerified: false,
             //   image: null,
             //   createdAt: new Date(),

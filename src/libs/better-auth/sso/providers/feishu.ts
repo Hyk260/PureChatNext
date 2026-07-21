@@ -1,5 +1,4 @@
-import { authEnv } from '@/envs/auth';
-
+import { checkProviderEnvs } from '../helpers';
 import { type GenericProviderDefinition } from '../types';
 
 const FEISHU_AUTHORIZATION_URL = 'https://accounts.feishu.cn/open-apis/authen/v1/authorize';
@@ -166,14 +165,7 @@ const provider: GenericProviderDefinition<{
       tokenUrl: FEISHU_TOKEN_URL,
     };
   },
-  checkEnvs: () => {
-    return !!(authEnv.AUTH_FEISHU_APP_ID && authEnv.AUTH_FEISHU_APP_SECRET)
-      ? {
-          AUTH_FEISHU_APP_ID: authEnv.AUTH_FEISHU_APP_ID,
-          AUTH_FEISHU_APP_SECRET: authEnv.AUTH_FEISHU_APP_SECRET,
-        }
-      : false;
-  },
+  checkEnvs: () => checkProviderEnvs(['AUTH_FEISHU_APP_ID', 'AUTH_FEISHU_APP_SECRET']),
   id: 'feishu',
   type: 'generic',
 };

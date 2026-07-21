@@ -14,8 +14,8 @@ const createProvider = (config: RedisConfig, prefix?: string): BaseRedisProvider
 
 class RedisManager {
   private static instance: BaseRedisProvider | null = null;
-  // NOTICE: initPromise keeps concurrent initialize() calls sharing the same in-flight setup,
-  // preventing multiple connections from being created in parallel.
+  // NOTICE：initPromise 让并发的 initialize() 共享同一次进行中的初始化，
+  // 避免并行创建多条连接。
   private static initPromise: Promise<BaseRedisProvider | null> | null = null;
 
   static async initialize(config: RedisConfig): Promise<BaseRedisProvider | null> {
@@ -57,14 +57,14 @@ export const resetRedisClient = () => RedisManager.reset();
 export { RedisManager };
 
 /**
- * Create a Redis client with custom prefix
+ * 使用自定义前缀创建 Redis 客户端
  *
- * Unlike initializeRedis, this creates an independent client
- * that doesn't share the singleton instance.
+ * 与 initializeRedis 不同，这里会创建独立客户端，
+ * 不与单例实例共享。
  *
- * @param config - Redis config
- * @param prefix - Custom prefix for all keys (e.g., 'aiGeneration')
- * @returns Redis client or null if Redis is disabled
+ * @param config - Redis 配置
+ * @param prefix - 所有 key 的自定义前缀（例如 'aiGeneration'）
+ * @returns Redis 客户端；若 Redis 未启用则返回 null
  */
 export const createRedisWithPrefix = async (
   config: RedisConfig,
@@ -78,7 +78,7 @@ export const createRedisWithPrefix = async (
 };
 
 /**
- * Manages singleton Redis clients per prefix
+ * 按前缀管理单例 Redis 客户端
  */
 class PrefixedRedisManager {
   private static instances = new Map<string, BaseRedisProvider>();
@@ -126,14 +126,14 @@ class PrefixedRedisManager {
 }
 
 /**
- * Initialize a singleton Redis client with custom prefix
+ * 使用自定义前缀初始化单例 Redis 客户端
  *
- * Unlike createRedisWithPrefix, this reuses the same client for each prefix,
- * avoiding connection leaks when called frequently.
+ * 与 createRedisWithPrefix 不同，同一前缀会复用同一个客户端，
+ * 避免频繁调用时连接泄漏。
  *
- * @param config - Redis config
- * @param prefix - Custom prefix for all keys (e.g., 'aiGeneration')
- * @returns Redis client or null if Redis is disabled
+ * @param config - Redis 配置
+ * @param prefix - 所有 key 的自定义前缀（例如 'aiGeneration'）
+ * @returns Redis 客户端；若 Redis 未启用则返回 null
  */
 export const initializeRedisWithPrefix = (config: RedisConfig, prefix: string) =>
   PrefixedRedisManager.initialize(config, prefix);

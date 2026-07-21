@@ -2,7 +2,6 @@
 
 import { Block, Flexbox } from '@lobehub/ui'
 import { Divider } from 'antd'
-import { useRouter } from '@/utils/navigation'
 import { Fragment, useMemo, useState, type ReactNode } from 'react'
 
 import { type ProfileUser } from '@/features/settings/profile/ProfileContent'
@@ -27,7 +26,6 @@ export function ProfileSettingsContent({
   s3Configured,
   user: initialUser,
 }: ProfileSettingsContentProps) {
-  const router = useRouter()
   const [user, setUser] = useState(initialUser)
 
   const displayName = user.fullName || user.username || user.userId
@@ -45,22 +43,18 @@ export function ProfileSettingsContent({
 
   const handleAvatarUploaded = (avatar: string) => {
     setUser((current) => ({ ...current, avatar }))
-    router.refresh()
   }
 
   const handleFullNameUpdated = (fullName: string | null) => {
     setUser((current) => ({ ...current, fullName }))
-    router.refresh()
   }
 
   const handleUsernameUpdated = (username: string) => {
     setUser((current) => ({ ...current, username }))
-    router.refresh()
   }
 
   const handleInterestsUpdated = (interests: string[]) => {
     setUser((current) => ({ ...current, interests }))
-    router.refresh()
   }
 
   const accountRows: { key: string; node: ReactNode }[] = [
@@ -125,7 +119,7 @@ export function ProfileSettingsContent({
       <SettingHeader title="个人资料" />
 
       <Block gap={16} title="账户" variant="filled">
-        <Flexbox>
+        <Flexbox padding={16}>
           {accountRows.map((row, index) => (
             <Fragment key={row.key}>
               {index > 0 ? <Divider style={{ margin: 0 }} /> : null}

@@ -94,6 +94,7 @@ pnpm db:studio     # Drizzle Studio
 ```bash
 pnpm install          # 安装依赖（包管理仍用 pnpm）
 pnpm dev / bun run dev  # 启动脚本并发 Next + Vite SPA（需本机 bun）
+pnpm dev:inspect      # 同上，并启用 code-inspector（Alt+Shift 点击跳转源码）
 pnpm dev:next         # 仅 Next API / BFF（http://localhost:3000）
 pnpm dev:spa          # 仅 Vite SPA（http://localhost:5174，代理 /api → Next）
 pnpm build            # build:spa → copy → build:next（Vercel 同此；见 vercel.json）

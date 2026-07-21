@@ -1,5 +1,4 @@
-import { authEnv } from '@/envs/auth';
-
+import { checkProviderEnvs } from '../helpers';
 import { type BuiltinProviderDefinition } from '../types';
 
 const provider: BuiltinProviderDefinition<
@@ -17,15 +16,11 @@ const provider: BuiltinProviderDefinition<
       clientSecret: env.AUTH_APPLE_CLIENT_SECRET,
     };
   },
-  checkEnvs: () => {
-    return !!(authEnv.AUTH_APPLE_CLIENT_ID && authEnv.AUTH_APPLE_CLIENT_SECRET)
-      ? {
-          AUTH_APPLE_APP_BUNDLE_IDENTIFIER: authEnv.AUTH_APPLE_APP_BUNDLE_IDENTIFIER,
-          AUTH_APPLE_CLIENT_ID: authEnv.AUTH_APPLE_CLIENT_ID,
-          AUTH_APPLE_CLIENT_SECRET: authEnv.AUTH_APPLE_CLIENT_SECRET,
-        }
-      : false;
-  },
+  checkEnvs: () =>
+    checkProviderEnvs(
+      ['AUTH_APPLE_CLIENT_ID', 'AUTH_APPLE_CLIENT_SECRET'],
+      ['AUTH_APPLE_APP_BUNDLE_IDENTIFIER'],
+    ),
   id: 'apple',
   type: 'builtin',
 };

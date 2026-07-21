@@ -1,5 +1,4 @@
-import { authEnv } from '@/envs/auth';
-
+import { checkProviderEnvs } from '../helpers';
 import { type BuiltinProviderDefinition } from '../types';
 
 const provider: BuiltinProviderDefinition<
@@ -16,14 +15,7 @@ const provider: BuiltinProviderDefinition<
       prompt: 'select_account',
     };
   },
-  checkEnvs: () => {
-    return !!(authEnv.AUTH_GOOGLE_ID && authEnv.AUTH_GOOGLE_SECRET)
-      ? {
-          AUTH_GOOGLE_ID: authEnv.AUTH_GOOGLE_ID,
-          AUTH_GOOGLE_SECRET: authEnv.AUTH_GOOGLE_SECRET,
-        }
-      : false;
-  },
+  checkEnvs: () => checkProviderEnvs(['AUTH_GOOGLE_ID', 'AUTH_GOOGLE_SECRET']),
   id: 'google',
   type: 'builtin',
 };

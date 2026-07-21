@@ -18,7 +18,7 @@ export type RedisSetResult = 'OK' | null | string;
 export type RedisMSetArgument = Record<string, RedisValue> | Map<RedisKey, RedisValue>;
 
 /**
- * Chainable pipeline builder. Commands are buffered and sent in a single round-trip on exec().
+ * 可链式调用的 pipeline 构建器。命令会先缓冲，在 exec() 时一次性发送。
  */
 export interface RedisPipeline {
   decr: (key: RedisKey) => RedisPipeline;

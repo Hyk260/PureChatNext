@@ -1,53 +1,53 @@
 /**
- * Centralized Redis key definitions
+ * 集中管理的 Redis key 定义
  *
- * All Redis keys should be defined here for easy management and consistency.
+ * 所有 Redis key 应在此定义，便于统一管理与保持一致性。
  *
- * Structure:
- * - RedisKeyNamespace: Contains all available prefixes
- * - RedisKeys: Contains key builders organized by namespace/scope
+ * 结构：
+ * - RedisKeyNamespace：所有可用前缀
+ * - RedisKeys：按命名空间/作用域组织的 key 构建器
  */
 
 /**
- * Redis key namespace prefixes
+ * Redis key 命名空间前缀
  *
- * Each prefix creates an isolated keyspace in Redis.
- * When using `createRedisWithPrefix`, pass one of these as the prefix parameter.
+ * 每个前缀在 Redis 中形成独立的 key 空间。
+ * 使用 `createRedisWithPrefix` 时，将其中之一作为 prefix 参数传入。
  */
 export const RedisKeyNamespace = {
   /**
-   * AI generation related keys (agent welcome, placeholders, etc.)
+   * AI 生成相关 key（agent 欢迎语、占位符等）
    */
   AI_GENERATION: 'aiGeneration',
 } as const;
 
 /**
- * Redis key builders organized by namespace/scope
+ * 按命名空间/作用域组织的 Redis key 构建器
  *
- * Usage:
+ * 用法：
  * ```ts
- * // Get full key: agent_welcome:{agentId}
+ * // 得到逻辑 key：agent_welcome:{agentId}
  * const key = RedisKeys.aiGeneration.agentWelcome(agentId);
  *
- * // Use with Redis client (prefix is added by createRedisWithPrefix)
+ * // 配合 Redis 客户端使用（前缀由 createRedisWithPrefix 添加）
  * const redis = await createRedisWithPrefix(config, RedisKeyNamespace.AI_GENERATION);
  * await redis.get(key);
- * // Actual Redis key: aiGeneration:agent_welcome:{agentId}
+ * // 实际 Redis key：aiGeneration:agent_welcome:{agentId}
  * ```
  */
 export const RedisKeys = {
   /**
-   * AI generation scope - for AI-generated content like welcome messages
+   * AI 生成作用域 —— 用于欢迎语等 AI 生成内容
    */
   aiGeneration: {
     /**
-     * Agent welcome message and open questions
-     * Full key: aiGeneration:agent_welcome:{agentId}
+     * Agent 欢迎语与开放问题
+     * 完整 key：aiGeneration:agent_welcome:{agentId}
      */
     agentWelcome: (agentId: string): string => `agent_welcome:${agentId}`,
     /**
-     * Per-user paired { welcome, hint } objects shown on the home page
-     * Full key: aiGeneration:home_brief:{userId}
+     * 首页展示的按用户配对的 { welcome, hint } 对象
+     * 完整 key：aiGeneration:home_brief:{userId}
      */
     homeBrief: (userId: string): string => `home_brief:${userId}`,
   },

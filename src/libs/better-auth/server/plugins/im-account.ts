@@ -5,7 +5,9 @@ import { UserService } from '@/server/services/user'
 
 const log = debug('auth:im')
 
-const imUserService = new UserService()
+function getImUserService() {
+  return new UserService()
+}
 
 function resolveHookUserProfile(user: Record<string, unknown>) {
   const nick =
@@ -51,7 +53,7 @@ export const imAccountPlugin = () => ({
                 }
 
                 const profile = resolveHookUserProfile(user)
-                const { status } = await imUserService.ensureIMAccountForAuthUser(authUserId, profile)
+                const { status } = await getImUserService().ensureIMAccountForAuthUser(authUserId, profile)
 
                 log('IM account ready via user.create: authId=%s status=%s', authUserId, status)
               },
@@ -65,7 +67,7 @@ export const imAccountPlugin = () => ({
 
                 log('session create after: authId=%s', authUserId)
 
-                const { status } = await imUserService.ensureIMAccountForAuthUser(authUserId)
+                const { status } = await getImUserService().ensureIMAccountForAuthUser(authUserId)
                 log('IM account ready via session.create: authId=%s status=%s', authUserId, status)
               },
             },

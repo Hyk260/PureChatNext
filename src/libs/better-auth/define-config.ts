@@ -214,9 +214,13 @@ export function defineConfig() {
     },
     // 会话与 Cookie 缓存
     session: {
+      // 登录 session 有效期（秒）；未活动满期需重新登录
+      expiresIn: 60 * 60 * 24 * 7, // 7 天
+      // 滑动续期：距上次延期满 updateAge 后，getSession 会把 expiresAt 再延 expiresIn
+      updateAge: 60 * 60 * 24, // 1 天
       cookieCache: {
         enabled: true,
-        // Cookie 侧会话缓存时长（秒），减轻 get-session 数据库查询
+        // Cookie 侧会话缓存时长（秒），减轻 get-session 数据库查询（非登录有效期）
         maxAge: 2 * 60,
       },
       // Redis 等二级存储条目缺失时，仍可从数据库恢复会话

@@ -22,9 +22,6 @@ vi.mock('@/libs/better-auth/email-templates/preview', () => ({
 
     return value;
   },
-}));
-
-vi.mock('@/libs/better-auth/email-templates/preview/server', () => ({
   renderEmailTemplate: vi.fn((key: string, params?: { url?: string }) => ({
     html: `<p>Rendered ${key} ${params?.url ?? 'https://localhost:3000/auth/verify?token=preview-token'}</p>`,
     subject: key === 'verification' ? '验证您的邮箱 - PureChat' : 'Subject',

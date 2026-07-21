@@ -79,7 +79,9 @@ const ChatHeader = memo<Props>(({ title }) => {
         key: 'full-width',
         label: '全宽显示',
         onCheckedChange: (checked: boolean) => toggleWideScreen(checked),
-        type: 'switch' as const,
+        // Prefer checkbox over switch: lobehub Switch.Root renders Motion.button
+        // while Base UI defaults nativeButton=false, which warns on click.
+        type: 'checkbox' as const,
       },
     ],
     [toggleWideScreen, wideScreen],

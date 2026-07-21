@@ -2,7 +2,7 @@ import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { chatTopics } from '../schemas/chat'
-import type { ChatDatabase } from '../type'
+import { type ChatDatabase } from '../type'
 
 const DEFAULT_TITLE = '新话题'
 

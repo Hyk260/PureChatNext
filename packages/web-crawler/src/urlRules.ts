@@ -1,4 +1,4 @@
-import type { CrawlUrlRule } from './type';
+import { type CrawlUrlRule } from './type';
 
 export const crawUrlRules: CrawlUrlRule[] = [
   // Sogou links, use search1api

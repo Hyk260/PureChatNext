@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { serverDBEnv } from '@/envs/serverDB';
 
-import type { ChatDatabase } from '../type';
+import { type ChatDatabase } from '../type';
 import * as schema from '../schemas';
 
 export const getDBInstance = (): ChatDatabase => {

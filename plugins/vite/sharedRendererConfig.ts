@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import react from '@vitejs/plugin-react'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
-import type { PluginOption } from 'vite'
+import { type PluginOption } from 'vite'
 
 import { viteRawHtml } from './rawHtml'
 

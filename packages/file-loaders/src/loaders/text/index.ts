@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import debug from 'debug';
 
-import type { DocumentPage, FileLoaderInterface } from '../../types';
+import { type DocumentPage, type FileLoaderInterface } from '../../types';
 import { detectUtf16NoBom } from '../../utils/detectUtf16';
 
 const log = debug('file-loaders:text');

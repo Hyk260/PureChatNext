@@ -13,7 +13,7 @@ import NavItem from '@/components/NavItem'
 
 import { SETTINGS_PROVIDER_IDS, getSettingsProviderMeta } from './const'
 import { useProviderConfigStore } from './store/useProviderConfigStore'
-import type { ProviderId } from './types'
+import { type ProviderId } from './types'
 
 const MENU_WIDTH = 280
 

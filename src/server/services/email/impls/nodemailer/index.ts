@@ -1,6 +1,5 @@
 import debug from 'debug';
-import { type Transporter } from 'nodemailer';
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 
 import { emailEnv } from '@/envs/email';
 

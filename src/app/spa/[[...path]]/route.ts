@@ -1,7 +1,7 @@
 import { analyticsEnv } from '@/envs/analytics'
 import { IS_VERCEL } from '@/envs/app'
 import { renderSpaHtml } from '@/server/spaHtml'
-import type { SPAServerConfig } from '@/types/spaServerConfig'
+import { type SPAServerConfig } from '@/types/spaServerConfig'
 
 import spaHtmlTemplate from '../spaHtmlTemplate.generated'
 

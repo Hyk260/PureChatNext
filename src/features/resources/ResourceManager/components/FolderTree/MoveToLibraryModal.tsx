@@ -3,9 +3,8 @@
 import { Modal } from '@lobehub/ui'
 import { memo } from 'react'
 
-import { useResourceStore } from '@/features/resources/store/resourceStore'
+import { useResourceStore , revalidateResources } from '@/features/resources/store/resourceStore'
 import { resourceService } from '@/services/resource'
-import { revalidateResources } from '@/features/resources/store/resourceStore'
 
 interface MoveToLibraryModalProps {
   fileIds: string[]

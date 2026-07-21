@@ -1,7 +1,6 @@
 'use client'
 
-import { Flexbox, Text } from '@lobehub/ui'
-import { Avatar } from '@lobehub/ui'
+import { Flexbox, Text , Avatar } from '@lobehub/ui'
 import { memo } from 'react'
 
 import { useSession } from '@/libs/better-auth/client'

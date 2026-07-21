@@ -5,12 +5,13 @@ import { persist } from 'zustand/middleware'
 
 import { PURE_AI_AGENT_ID } from '@/const/home/agents'
 import { DEFAULT_HOME_MODEL } from '@/const/home/models'
-import type { ActiveCommunityAgent } from '@/features/community/types'
+import { type ActiveCommunityAgent } from '@/features/community/types'
 
 import {
   DEFAULT_HOME_SIDEBAR_STATE,
   type HomeAgentGroup,
   mergeSidebarExpandedKeys,
+  normalizePersistedSidebarItems,
   normalizeSidebarExpandedKeys,
 } from './sidebarDefaults'
 
@@ -36,6 +37,7 @@ interface HomeStoreState {
   setSelectedAgentId: (agentId: string) => void
   setSelectedModel: (provider: string, model: string) => void
   setSidebarAccordionExpandedKeys: (accordionKeys: string[], expandedKeys: string[]) => void
+  setHiddenSidebarSections: (sections: string[]) => void
   setSidebarExpandedKeys: (keys: string[]) => void
   setSidebarItems: (items: string[]) => void
   toggleHiddenSidebarSection: (key: string) => void
@@ -92,8 +94,9 @@ export const useHomeStore = create<HomeStoreState>()(
             expandedKeys,
           ),
         })),
+      setHiddenSidebarSections: (sections) => set({ hiddenSidebarSections: sections }),
       setSidebarExpandedKeys: (keys) => set({ sidebarExpandedKeys: keys }),
-      setSidebarItems: (items) => set({ sidebarItems: items }),
+      setSidebarItems: (items) => set({ sidebarItems: normalizePersistedSidebarItems(items) }),
       toggleHiddenSidebarSection: (key) => {
         const { hiddenSidebarSections } = get()
         const isHidden = hiddenSidebarSections.includes(key)
@@ -118,7 +121,7 @@ export const useHomeStore = create<HomeStoreState>()(
         }),
     }),
     {
-      migrate: (persistedState) => {
+      migrate: (persistedState, version) => {
         if (!persistedState || typeof persistedState !== 'object') return persistedState
 
         const state = persistedState as Partial<HomeStoreState>
@@ -127,15 +130,23 @@ export const useHomeStore = create<HomeStoreState>()(
           state.sidebarExpandedKeys = normalizeSidebarExpandedKeys(state.sidebarExpandedKeys)
         }
 
+        if (version < 2 || state.sidebarItems) {
+          state.sidebarItems = normalizePersistedSidebarItems(state.sidebarItems)
+        }
+
         return state
       },
       name: 'pure-home-ui',
       onRehydrateStorage: () => (state) => {
-        if (!state?.sidebarExpandedKeys) return
+        if (!state) return
 
-        state.sidebarExpandedKeys = normalizeSidebarExpandedKeys(state.sidebarExpandedKeys)
+        if (state.sidebarExpandedKeys) {
+          state.sidebarExpandedKeys = normalizeSidebarExpandedKeys(state.sidebarExpandedKeys)
+        }
+
+        state.sidebarItems = normalizePersistedSidebarItems(state.sidebarItems)
       },
-      version: 1,
+      version: 2,
     },
   ),
 )

@@ -1,7 +1,6 @@
 'use client'
 
-import type { MenuProps } from '@lobehub/ui'
-import { DropdownMenu, Flexbox, Icon } from '@lobehub/ui'
+import { type MenuProps, DropdownMenu, Flexbox, Icon } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { MoreHorizontalIcon, PlusIcon } from 'lucide-react'
 import { memo } from 'react'

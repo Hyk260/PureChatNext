@@ -8,7 +8,7 @@ import {
   type NewAgent,
 } from '../schemas/agent'
 import { chatTopics } from '../schemas/chat'
-import type { ChatDatabase } from '../type'
+import { type ChatDatabase } from '../type'
 import { randomSlug } from '../utils/idGenerator'
 
 export type AgentCreateInput = {

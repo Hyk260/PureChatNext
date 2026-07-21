@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 import { DEFAULT_PROVIDER_CONFIGS } from '../const'
-import type { ProviderConfig, ProviderConfigs, ProviderId } from '../types'
+import { type ProviderConfig, type ProviderConfigs, type ProviderId } from '../types'
 
 interface ProviderConfigState {
   configs: ProviderConfigs

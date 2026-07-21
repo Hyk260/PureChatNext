@@ -6,7 +6,7 @@ import { App, Divider } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { memo, useCallback, useState } from 'react'
 
-import type { HomeRecommendationItem } from '@/const/home/recommendations'
+import { type HomeRecommendationItem } from '@/const/home/recommendations'
 
 const styles = createStaticStyles(({ css }) => ({
   actionBtnPrimary: css`

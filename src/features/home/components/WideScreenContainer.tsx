@@ -1,7 +1,6 @@
 'use client'
 
-import { type FlexboxProps } from '@lobehub/ui'
-import { Flexbox } from '@lobehub/ui'
+import { type FlexboxProps, Flexbox } from '@lobehub/ui'
 import { createStaticStyles } from 'antd-style'
 import { memo, type ReactNode } from 'react'
 

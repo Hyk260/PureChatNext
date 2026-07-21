@@ -17,8 +17,7 @@ vi.mock('@/database/core/db-adaptor', () => ({
 vi.hoisted(() => {
   const { config: loadEnv } = require('dotenv') as typeof import('dotenv')
   const { resolve: resolvePath } = require('node:path') as typeof import('node:path')
-  loadEnv({ path: resolvePath(__dirname, '../../../../.env.local') })
-  loadEnv({ path: resolvePath(__dirname, '../../../../../.env.local') })
+  loadEnv({ path: resolvePath(__dirname, '../../../.env.local') })
 })
 
 import { ChatMessageModel } from '@/database/models/chatMessage'
@@ -26,10 +25,9 @@ import { ChatTopicModel } from '@/database/models/chatTopic'
 import * as schema from '@/database/schemas'
 import { chatTopics } from '@/database/schemas/chat'
 import { users } from '@/database/schemas/user'
-import type { ChatDatabase } from '@/database/type'
+import { type ChatDatabase } from '@/database/type'
 
-config({ path: resolve(__dirname, '../../../../.env.local') })
-config({ path: resolve(__dirname, '../../../../../.env.local') })
+config({ path: resolve(__dirname, '../../../.env.local') })
 
 const dbUrl = process.env.DATABASE_URL ?? process.env.DATABASE_TEST_URL
 const describeIfDb = dbUrl ? describe : describe.skip
@@ -196,4 +194,40 @@ describeIfDb('ChatMessageModel ownership', () => {
     expect(messages.map((message) => message.id)).toEqual(orderedMessages.map((message) => message.id))
     expect(messages.map((message) => message.parts)).toEqual(orderedMessages.map((message) => message.parts))
   })
+
+  it(
+    'serializes concurrent replaceAll without primary key conflict',
+    async () => {
+      const sharedId = `${TEST_PREFIX}-concurrent-shared`
+      const model = new ChatMessageModel(userAId, db)
+
+      const snapshots = Array.from({ length: 3 }, (_, index) => [
+        {
+          id: sharedId,
+          role: 'user' as const,
+          parts: [{ type: 'text' as const, text: `wave-${index}` }],
+        },
+        {
+          id: `${TEST_PREFIX}-concurrent-tail-${index}`,
+          role: 'assistant' as const,
+          parts: [{ type: 'text' as const, text: `reply-${index}` }],
+        },
+      ])
+
+      await expect(Promise.all(snapshots.map((messages) => model.replaceAll(topicId, messages)))).resolves.toEqual([
+        undefined,
+        undefined,
+        undefined,
+      ])
+
+      const messages = await model.listByTopic(topicId)
+      expect(messages).toHaveLength(2)
+      expect(messages[0]?.id).toBe(sharedId)
+      expect(messages[0]?.parts).toEqual([
+        expect.objectContaining({ type: 'text', text: expect.stringMatching(/^wave-\d+$/) }),
+      ])
+      expect(messages[1]?.id).toMatch(new RegExp(`^${TEST_PREFIX}-concurrent-tail-\\d+$`))
+    },
+    30_000,
+  )
 })

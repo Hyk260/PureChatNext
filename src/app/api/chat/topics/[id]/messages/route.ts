@@ -1,4 +1,4 @@
-import type { UIMessage } from 'ai'
+import { type UIMessage } from 'ai'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 

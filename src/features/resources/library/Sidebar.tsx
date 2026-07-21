@@ -8,10 +8,9 @@ import NavItem from '@/components/NavItem'
 import { DOCUMENT_FOLDER_TYPE } from '@/const/resources/fileTypes'
 import { useFolderPath } from '@/features/resources/hooks/useFolderPath'
 import { useFetchKnowledgeBaseList, useFetchResources, useResourceStore } from '@/features/resources/store/resourceStore'
-import { Flexbox, Text } from '@lobehub/ui'
+import { Flexbox, Text , Icon } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronLeft, FolderIcon } from 'lucide-react'
-import { Icon } from '@lobehub/ui'
 
 const styles = createStaticStyles(({ css }) => ({
   sidebar: css`

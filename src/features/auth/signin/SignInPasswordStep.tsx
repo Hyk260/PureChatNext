@@ -3,12 +3,11 @@
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
 import { Alert, Button, Icon, InputPassword, Text } from '@lobehub/ui'
-import { Form } from 'antd'
+import { Form , type FormInstance, type InputRef } from 'antd'
 import { cssVar } from 'antd-style'
 import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
 
-import type { FormInstance, InputRef } from 'antd'
 
 interface SignInFormValues {
   email: string

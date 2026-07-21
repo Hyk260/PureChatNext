@@ -5,7 +5,7 @@ import { Divider } from 'antd'
 import { useRouter } from '@/utils/navigation'
 import { Fragment, useMemo, useState, type ReactNode } from 'react'
 
-import type { ProfileUser } from '@/features/settings/profile/ProfileContent'
+import { type ProfileUser } from '@/features/settings/profile/ProfileContent'
 
 import { AvatarSetting } from './components/AvatarSetting'
 import { EmailSetting } from './components/EmailSetting'

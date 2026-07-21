@@ -6,7 +6,7 @@ import { createStaticStyles, cssVar } from 'antd-style'
 import { useRouter } from '@/utils/navigation'
 import { memo, useCallback, useEffect, useState } from 'react'
 
-import type { AgentListItem } from '@/const/home/agents'
+import { type AgentListItem } from '@/const/home/agents'
 import { createAgent, deleteAgent, updateAgent } from '@/features/home/agentApi'
 import AgentItem from '@/features/home/HomeSidebar/components/AgentItem'
 import SectionActions from '@/features/home/HomeSidebar/components/SectionActions'

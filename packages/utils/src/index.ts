@@ -1,7 +1,6 @@
 export * from "./apiKey"
 export * from "./apiKeyManager"
 export * from "./jina"
-export * from "./server"
 export * from "./client/fetchEventSource"
 export * from "./uuid"
 export * from "./units"

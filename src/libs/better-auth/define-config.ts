@@ -1,5 +1,5 @@
 import { generateCompactUuid } from '@pure/utils'
-import { betterAuth } from 'better-auth/minimal'
+import { betterAuth , type BetterAuthOptions } from 'better-auth/minimal'
 import bcrypt from 'bcryptjs'
 import { verifyPassword } from 'better-auth/crypto'
 import { EmailService } from '@/server/services/email'
@@ -29,7 +29,6 @@ import { appEnv } from '@/envs/app'
 import { authEnv } from '@/envs/auth'
 import { getAllowedOrigins } from '@/libs/utils/allowed-origins'
 
-import { type BetterAuthOptions } from 'better-auth/minimal'
 
 const enabledSSOProviders = parseSSOProviders(authEnv.AUTH_SSO_PROVIDERS)
 const { socialProviders, genericOAuthProviders } = initBetterAuthSSOProviders()

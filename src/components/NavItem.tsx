@@ -1,7 +1,6 @@
 'use client'
 
-import type { BlockProps, IconProps } from '@lobehub/ui'
-import { Block, Center, Flexbox, Icon, Text } from '@lobehub/ui'
+import { type BlockProps, type IconProps, Block, Center, Flexbox, Icon, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, type ReactNode } from 'react'
 

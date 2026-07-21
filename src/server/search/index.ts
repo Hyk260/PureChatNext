@@ -1,12 +1,11 @@
-import type { SearchParams, SearchQuery } from '@pure/types';
-import type { Crawler, CrawlImplType, CrawlUniformResult } from '@pure/web-crawler';
+import { type SearchParams, type SearchQuery } from '@pure/types';
+import { type Crawler, type CrawlImplType, type CrawlUniformResult } from '@pure/web-crawler';
 import debug from 'debug';
 import pMap from 'p-map';
 
 import { toolsEnv } from '@/envs/tools';
 
-import { type SearchImplType, type SearchServiceImpl } from './impls';
-import { createSearchServiceImpl } from './impls';
+import { type SearchImplType, type SearchServiceImpl, createSearchServiceImpl } from './impls';
 
 const DEFAULT_CRAWL_CONCURRENCY = 3;
 const DEFAULT_CRAWLER_RETRY = 1;

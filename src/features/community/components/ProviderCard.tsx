@@ -6,7 +6,7 @@ import { createStaticStyles, cssVar } from 'antd-style'
 import { GlobeIcon } from 'lucide-react'
 import { memo } from 'react'
 
-import type { DiscoverProviderItem } from '@/features/community/types'
+import { type DiscoverProviderItem } from '@/features/community/types'
 
 const styles = createStaticStyles(({ css }) => ({
   author: css`

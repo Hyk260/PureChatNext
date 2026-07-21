@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import type { PluginOption } from 'vite'
+import { type PluginOption } from 'vite'
 
 /**
  * Mirror Next `raw-loader` for `*.html` imports under `src/` (email templates, etc.).

@@ -1,4 +1,4 @@
-import type { DiscoverModelItem } from '@/features/community/types'
+import { type DiscoverModelItem } from '@/features/community/types'
 
 export const COMMUNITY_MODELS: DiscoverModelItem[] = [
   {

@@ -1,8 +1,8 @@
-import type { UIMessage } from 'ai'
+import { type UIMessage } from 'ai'
 
 import { apiFetch } from '@/utils/apiFetch'
 
-import type { LocalChatTopic } from './types'
+import { type LocalChatTopic } from './types'
 
 type ApiTopic = {
   id: string

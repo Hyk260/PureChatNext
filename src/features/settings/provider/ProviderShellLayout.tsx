@@ -1,7 +1,7 @@
 'use client'
 
 import { Flexbox } from '@lobehub/ui'
-import type { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 
 import ProviderSettingsNav from '@/features/settings/provider/ProviderSettingsNav'
 import SettingsHeader from '@/features/settings/SettingsHeader'

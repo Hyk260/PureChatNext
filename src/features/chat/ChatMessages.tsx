@@ -1,10 +1,9 @@
 'use client'
 
-import type { ActionIconGroupEvent, ActionIconGroupItemType } from '@lobehub/ui'
-import { ActionIcon, ActionIconGroup, Flexbox, Text, copyToClipboard } from '@lobehub/ui'
+import { type ActionIconGroupEvent, type ActionIconGroupItemType, ActionIcon, ActionIconGroup, Flexbox, Text, copyToClipboard } from '@lobehub/ui'
 import { App } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import type { UIMessage } from 'ai'
+import { type UIMessage } from 'ai'
 import { Check, ChevronRight, Copy, Edit, Trash, X } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
 

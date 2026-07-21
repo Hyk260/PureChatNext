@@ -15,7 +15,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-import type { CrawlUniformResult, UniformSearchResponse } from '@pure/types';
+import { type CrawlUniformResult, type UniformSearchResponse } from '@pure/types';
 
 type ActionMode = 'query' | 'webSearch' | 'crawlPages';
 type ResultView = 'summary' | 'json';

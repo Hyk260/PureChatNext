@@ -1,12 +1,11 @@
 'use client'
 
-import type { MenuInfo, MenuProps } from '@lobehub/ui'
-import { Block, DropdownMenu, Flexbox, Icon, Input, Modal, Text } from '@lobehub/ui'
+import { type MenuInfo, type MenuProps, Block, DropdownMenu, Flexbox, Icon, Input, Modal, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { Copy, Link, MoreHorizontal, Pencil, Sparkles, Star, Trash2 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
-import type { LocalChatTopic } from '@/features/chat/types'
+import { type LocalChatTopic } from '@/features/chat/types'
 import { confirmModal } from '@/libs/modal'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -191,10 +190,6 @@ const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) 
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
           >
-            {/*
-              Multiple children avoid DropdownMenu cloning a single element and
-              reading element.ref (removed in React 19).
-            */}
             <DropdownMenu
               items={menuItems}
               nativeButton

@@ -3,7 +3,7 @@
 import { Flexbox, Input, Modal, Text, TextArea } from '@lobehub/ui'
 import { memo, useEffect, useState } from 'react'
 
-import type { AgentListItem } from '@/const/home/agents'
+import { type AgentListItem } from '@/const/home/agents'
 
 export type AgentFormValues = {
   avatar: string

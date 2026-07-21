@@ -1,6 +1,5 @@
 import debug from 'debug';
-import { type CreateEmailOptions } from 'resend';
-import { Resend } from 'resend';
+import { type CreateEmailOptions, Resend } from 'resend';
 
 import { emailEnv } from '@/envs/email';
 

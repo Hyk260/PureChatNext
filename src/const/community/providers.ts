@@ -1,4 +1,4 @@
-import type { DiscoverProviderItem } from '@/features/community/types'
+import { type DiscoverProviderItem } from '@/features/community/types'
 
 export const COMMUNITY_PROVIDERS: DiscoverProviderItem[] = [
   {

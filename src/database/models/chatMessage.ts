@@ -1,10 +1,9 @@
-import type { UIMessage } from 'ai'
+import { type UIMessage } from 'ai'
 import { and, asc, eq, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import type { ChatMessageItem } from '../schemas/chat'
-import { chatMessages, chatTopics } from '../schemas/chat'
-import type { ChatDatabase } from '../type'
+import { type ChatMessageItem, chatMessages, chatTopics } from '../schemas/chat'
+import { type ChatDatabase } from '../type'
 
 import { ChatTopicModel } from './chatTopic'
 
@@ -65,12 +64,19 @@ export class ChatMessageModel {
   }
 
   replaceAll = async (topicId: string, messages: UIMessage[]): Promise<void> => {
-    const topic = await this.topicModel.findById(topicId)
-    if (!topic) {
-      throw new Error('Topic not found')
-    }
-
+    // Lock the topic row so concurrent PUTs (client abort ≠ server cancel) cannot
+    // interleave delete+insert and hit chat_messages_pkey on the same message ids.
     await this.db.transaction(async (tx) => {
+      const [topic] = await tx
+        .select()
+        .from(chatTopics)
+        .where(and(eq(chatTopics.id, topicId), eq(chatTopics.userId, this.userId)))
+        .for('update')
+
+      if (!topic) {
+        throw new Error('Topic not found')
+      }
+
       await tx
         .delete(chatMessages)
         .where(and(eq(chatMessages.topicId, topicId), eq(chatMessages.userId, this.userId)))

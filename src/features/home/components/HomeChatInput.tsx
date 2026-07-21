@@ -1,17 +1,16 @@
 'use client'
 
-import { ActionIcon, Block, Flexbox } from '@lobehub/ui'
+import { Block, Flexbox } from '@lobehub/ui'
 import { App } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { ArrowUp } from 'lucide-react'
-import { useRouter } from '@/utils/navigation'
 import { memo, useEffect, useState } from 'react'
 
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import { setPendingChatText } from '@/features/chat/chatLocalStorage'
-import ModelSelector from '@/features/home/components/ModelSelector'
+import SendArea from '@/features/chat/SendArea'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
+import { useRouter } from '@/utils/navigation'
 
 const styles = createStaticStyles(({ css }) => ({
   input: css`
@@ -30,11 +29,6 @@ const styles = createStaticStyles(({ css }) => ({
       color: ${cssVar.colorTextQuaternary};
     }
   `,
-  send: css`
-    background: ${cssVar.colorText} !important;
-    color: ${cssVar.colorBgContainer} !important;
-    border-radius: 50%;
-  `,
   shell: css`
     border-radius: 20px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
@@ -52,6 +46,7 @@ const HomeChatInput = memo(() => {
 
   const agents = useAgentsStore((s) => s.agents)
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
+  const canSend = Boolean(input.trim()) && !sending
 
   useEffect(() => {
     fetchAgentsList()
@@ -115,17 +110,7 @@ const HomeChatInput = memo(() => {
           <ActionIcon icon={Plus} size='small' title='添加' /> */}
         </Flexbox>
 
-        <Flexbox horizontal align='center' gap={12}>
-          <ModelSelector />
-          <ActionIcon
-            className={styles.send}
-            icon={ArrowUp}
-            loading={sending}
-            size={{ blockSize: 32, size: 16 }}
-            title='发送'
-            onClick={handleSend}
-          />
-        </Flexbox>
+        <SendArea disabled={!canSend} loading={sending} onClick={handleSend} />
       </Flexbox>
     </Block>
   )

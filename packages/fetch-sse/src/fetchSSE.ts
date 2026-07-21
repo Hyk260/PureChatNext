@@ -1,15 +1,14 @@
 // import OpenAI from "openai"
 import { MESSAGE_CANCEL_FLAT } from '@pure/const'
-import type {
-  ChatImageChunk,
-  ChatMessageError,
-  ModelReasoning,
-  ModelUsage,
-  ModelPerformance,
-  ResponseAnimation,
-  ResponseAnimationStyle,
-} from '@pure/types'
-import { ChatErrorType } from '@pure/types'
+import {
+  type ChatImageChunk,
+  type ChatMessageError,
+  type ModelReasoning,
+  type ModelUsage,
+  type ModelPerformance,
+  type ResponseAnimation,
+  type ResponseAnimationStyle,
+ ChatErrorType } from '@pure/types'
 
 import { fetchEventSource, nanoid } from '@pure/utils'
 import { getMessageError } from './parseError'

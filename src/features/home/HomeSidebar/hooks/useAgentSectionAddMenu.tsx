@@ -1,7 +1,6 @@
 'use client'
 
-import type { MenuInfo, MenuProps } from '@lobehub/ui'
-import { Icon } from '@lobehub/ui'
+import { type MenuInfo, type MenuProps, Icon } from '@lobehub/ui'
 import { BotIcon, StoreIcon } from 'lucide-react'
 import { useMemo } from 'react'
 

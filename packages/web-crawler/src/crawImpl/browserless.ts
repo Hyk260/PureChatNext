@@ -1,7 +1,7 @@
 import qs from 'query-string';
 import urlJoin from 'url-join';
 
-import type { CrawlImpl, CrawlSuccessResult } from '../type';
+import { type CrawlImpl, type CrawlSuccessResult } from '../type';
 import { PageNotFoundError, toFetchError } from '../utils/errorType';
 import { htmlToMarkdown } from '../utils/htmlToMarkdown';
 import { createHTTPStatusError } from '../utils/response';

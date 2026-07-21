@@ -3,11 +3,10 @@ import { hashPassword } from 'better-auth/crypto'
 import { and, count, eq, inArray, lt } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import { account, passkey, session, twoFactor, users, verification } from '../schemas'
+import { account, passkey, session, twoFactor, users, verification , type User, type UserItem, type UserWithoutPassword } from '../schemas'
 import { verifyAccountPassword } from '@/libs/better-auth/server'
 
-import type { User, UserItem, UserWithoutPassword } from '../schemas'
-import type { ChatDatabase } from '../type'
+import { type ChatDatabase } from '../type'
 
 const CREDENTIAL_PROVIDER = 'credential'
 

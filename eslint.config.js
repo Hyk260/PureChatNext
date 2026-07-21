@@ -5,16 +5,19 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-    // TypeScript files - enforce consistent type imports
+  // TypeScript: enforce inline type imports — `import { type Foo, Bar } from 'pkg'`
   {
     files: ['**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/consistent-type-imports': [
         2,
         {
-          fixStyle: 'separate-type-imports',
+          fixStyle: 'inline-type-imports',
+          prefer: 'type-imports',
         },
       ],
+      'import/consistent-type-specifier-style': [2, 'prefer-inline'],
+      'import/no-duplicates': [2, { 'prefer-inline': true }],
       '@typescript-eslint/no-unused-vars': 'off',
     },
   },

@@ -1,6 +1,6 @@
 'use client'
 
-import type { IconProps } from '@lobehub/ui'
+import { type IconProps } from '@lobehub/ui'
 import {
   BellIcon,
   Blocks,

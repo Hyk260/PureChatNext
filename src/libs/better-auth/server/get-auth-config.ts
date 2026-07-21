@@ -1,5 +1,5 @@
 import { authEnv } from '@/envs/auth'
-import type { AuthServerConfig } from '@/libs/better-auth/shared'
+import { type AuthServerConfig } from '@/libs/better-auth/shared'
 import { parseSSOProviders } from '@/libs/better-auth/sso'
 
 export type { AuthServerConfig, EmailVerificationMode } from '@/libs/better-auth/shared'

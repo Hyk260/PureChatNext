@@ -1,7 +1,6 @@
 'use client'
 
-import type { IconProps } from '@lobehub/ui'
-import { Flexbox } from '@lobehub/ui'
+import { type IconProps, Flexbox } from '@lobehub/ui'
 import { ProviderIcon } from '@lobehub/ui/icons'
 import { Bot, Brain } from 'lucide-react'
 import Link from '@/utils/link'

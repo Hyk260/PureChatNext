@@ -7,7 +7,7 @@ import { memo, useMemo } from 'react'
 import { SETTINGS_PROVIDER_IDS } from './const'
 import SettingsProviderCard from './SettingsProviderCard'
 import { useProviderConfigStore } from './store/useProviderConfigStore'
-import type { ProviderId } from './types'
+import { type ProviderId } from './types'
 
 const styles = createStaticStyles(({ css }) => ({
   grid: css`

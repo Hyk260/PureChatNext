@@ -8,7 +8,7 @@ import { useRouter } from '@/utils/navigation'
 import { memo, useCallback, useState } from 'react'
 
 import { ASSISTANT_CATEGORY_LABELS } from '@/const/community/agents'
-import type { DiscoverAgentItem } from '@/features/community/types'
+import { type DiscoverAgentItem } from '@/features/community/types'
 import { createAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'

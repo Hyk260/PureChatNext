@@ -16,7 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 
-import type { RenderedEmailTemplate } from '@/libs/better-auth/email-templates/preview'
+import { type RenderedEmailTemplate } from '@/libs/better-auth/email-templates/preview'
 
 import { EmailTemplateComposer } from './EmailTemplateComposer'
 import { EmailTemplatePreviewBlock } from './EmailTemplatePreviewBlock'

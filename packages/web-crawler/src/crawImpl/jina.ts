@@ -1,6 +1,6 @@
 import { getJinaReaderBaseUrl } from '@pure/utils';
 
-import type { CrawlImpl } from '../type';
+import { type CrawlImpl } from '../type';
 import { toFetchError } from '../utils/errorType';
 import { parseJSONResponse } from '../utils/response';
 import { withTimeout } from '../utils/withTimeout';

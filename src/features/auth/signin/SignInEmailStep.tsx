@@ -1,6 +1,6 @@
 'use client'
 
-import { Badge, Button as AntdButton, Divider, Form } from 'antd'
+import { Badge, Button as AntdButton, Divider, Form , type FormInstance, type InputRef } from 'antd'
 import { ChevronRight, Mail } from 'lucide-react'
 import {
   type CSSProperties,
@@ -19,7 +19,6 @@ import AuthAgreement from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
 
-import type { FormInstance, InputRef } from 'antd'
 
 interface SignInFormValues {
   email: string

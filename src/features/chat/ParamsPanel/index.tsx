@@ -7,8 +7,7 @@ import { PanelRightClose } from 'lucide-react'
 import { memo } from 'react'
 
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
-import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
-import type { ChatLlmParams } from '@/features/chat/types'
+import { DEFAULT_CHAT_LLM_PARAMS , type ChatLlmParams } from '@/features/chat/types'
 
 type ParamKey = keyof ChatLlmParams
 

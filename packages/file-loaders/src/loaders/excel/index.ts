@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import debug from 'debug';
 import * as xlsx from 'xlsx';
 
-import type { DocumentPage, FileLoaderInterface } from '../../types';
+import { type DocumentPage, type FileLoaderInterface } from '../../types';
 import { promptTemplate } from './prompt';
 
 const log = debug('file-loaders:excel');

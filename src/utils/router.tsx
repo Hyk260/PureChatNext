@@ -7,8 +7,7 @@ import {
   memo,
   Suspense,
 } from 'react'
-import type { RouteObject } from 'react-router'
-import { createBrowserRouter, Navigate, Outlet } from 'react-router'
+import { type RouteObject, createBrowserRouter, Navigate, Outlet } from 'react-router'
 
 import Loading from '@/components/Loading/BrandTextLoading'
 import AppLayer from '@/spa/AppLayer'

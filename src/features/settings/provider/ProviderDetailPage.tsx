@@ -9,7 +9,7 @@ import { memo, useState } from 'react'
 
 import { getSettingsProviderMeta } from './const'
 import { useProviderConfigStore } from './store/useProviderConfigStore'
-import type { ProviderId } from './types'
+import { type ProviderId } from './types'
 
 const styles = createStaticStyles(({ css }) => ({
   hint: css`

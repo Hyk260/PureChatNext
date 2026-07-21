@@ -1,9 +1,8 @@
 import { and, desc, eq, inArray } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import type { KnowledgeBaseItem, NewKnowledgeBase } from '../schemas/file'
-import { documents, files, knowledgeBaseFiles, knowledgeBases } from '../schemas/file'
-import type { ChatDatabase } from '../type'
+import { type KnowledgeBaseItem, type NewKnowledgeBase, documents, files, knowledgeBaseFiles, knowledgeBases } from '../schemas/file'
+import { type ChatDatabase } from '../type'
 
 export class KnowledgeBaseModel {
   private readonly db: ChatDatabase
@@ -56,7 +55,7 @@ export class KnowledgeBaseModel {
     const documentIds = fileIds.filter((id) => id.startsWith('docs_'))
     const directFileIds = fileIds.filter((id) => !id.startsWith('docs_'))
 
-    let resolvedFileIds = [...directFileIds]
+    const resolvedFileIds = [...directFileIds]
 
     if (documentIds.length > 0) {
       const docsWithFiles = await this.db
@@ -93,7 +92,7 @@ export class KnowledgeBaseModel {
     const documentIds = ids.filter((id) => id.startsWith('docs_'))
     const directFileIds = ids.filter((id) => !id.startsWith('docs_'))
 
-    let resolvedFileIds = [...directFileIds]
+    const resolvedFileIds = [...directFileIds]
 
     if (documentIds.length > 0) {
       const docsWithFiles = await this.db

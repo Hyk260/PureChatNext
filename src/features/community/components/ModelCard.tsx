@@ -5,7 +5,7 @@ import { Block, Flexbox, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
-import type { DiscoverModelItem } from '@/features/community/types'
+import { type DiscoverModelItem } from '@/features/community/types'
 
 const styles = createStaticStyles(({ css }) => ({
   author: css`

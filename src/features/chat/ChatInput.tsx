@@ -1,8 +1,7 @@
 'use client'
 
-import type { MenuProps } from '@lobehub/ui'
 import {
-  ActionIcon,
+  type MenuProps,
   Block,
   DropdownMenuPopup,
   DropdownMenuPortal,
@@ -20,13 +19,12 @@ import {
   GlobeOff,
   LibraryBig,
   Plus,
-  Send,
   Settings2,
-  Square,
 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
-import ModelSelector from '@/features/home/components/ModelSelector'
+import ModelSelector from '@/features/chat/ModelSelector'
+import { SendButton } from '@/features/chat/SendArea'
 
 const styles = createStaticStyles(({ css }) => ({
   input: css`
@@ -87,17 +85,6 @@ const styles = createStaticStyles(({ css }) => ({
     &:disabled {
       cursor: not-allowed;
       opacity: 0.45;
-    }
-  `,
-  send: css`
-    background: ${cssVar.colorText} !important;
-    color: ${cssVar.colorBgContainer} !important;
-    border-radius: 50%;
-
-    &:disabled {
-      background: ${cssVar.colorFillSecondary} !important;
-      color: ${cssVar.colorBgContainer} !important;
-      opacity: 1;
     }
   `,
   shell: css`
@@ -231,24 +218,12 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
           </DropdownMenuRoot>
         </Flexbox>
 
-        {isBusy ? (
-          <ActionIcon
-            className={styles.send}
-            icon={Square}
-            size={{ blockSize: 32, size: 14 }}
-            title='停止'
-            onClick={handleStop}
-          />
-        ) : (
-          <ActionIcon
-            className={styles.send}
-            disabled={!canSend}
-            icon={Send}
-            size={{ blockSize: 32, borderRadius: 50, size: 16 }}
-            title='发送'
-            onClick={handleSend}
-          />
-        )}
+        <SendButton
+          disabled={!canSend}
+          generating={isBusy}
+          onClick={handleSend}
+          onStop={handleStop}
+        />
       </Flexbox>
     </Block>
   )

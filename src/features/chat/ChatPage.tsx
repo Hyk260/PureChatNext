@@ -55,6 +55,16 @@ const getServerSnapshot = () => false
 const EMPTY_MESSAGES: UIMessage[] = []
 const DRAFT_TOPIC_TITLE = '新话题'
 
+/** Stable content fingerprint so hydrate / Strict Mode remounts do not re-PUT identical snapshots. */
+const messagesSignature = (messages: UIMessage[]) =>
+  JSON.stringify(
+    messages.map((message) => ({
+      id: message.id,
+      parts: message.parts,
+      role: message.role,
+    })),
+  )
+
 const buildChatHref = (agentId: string, topicId?: string | null) => {
   const params = new URLSearchParams({ agent: agentId })
   if (topicId) params.set('topic', topicId)
@@ -163,13 +173,21 @@ const ChatView = memo<ChatViewProps>(({
   // past a later PUT that already saved the first user message.
   const putControllerRef = useRef<AbortController | null>(null)
   const skipInitialPutRef = useRef(true)
+  const lastPutSigRef = useRef(messagesSignature(initialMessages))
+  // Survives Strict Mode remount (same fiber); cancelled if setup runs again.
+  const flushTimerRef = useRef<number | null>(null)
 
   const persistMessages = useCallback(
     (body: UIMessage[], signal?: AbortSignal) => {
       if (!topicId) return
+      const signature = messagesSignature(body)
+      if (signature === lastPutSigRef.current) return
+      lastPutSigRef.current = signature
       putMessages(topicId, body, signal ? { signal } : undefined).catch((error: unknown) => {
         if (error instanceof DOMException && error.name === 'AbortError') return
         if (error instanceof Error && error.name === 'AbortError') return
+        // Allow a later retry with the same snapshot after a failed PUT.
+        if (lastPutSigRef.current === signature) lastPutSigRef.current = ''
         console.error('[chat] putMessages failed', error)
       })
     },
@@ -181,6 +199,8 @@ const ChatView = memo<ChatViewProps>(({
 
     if (skipInitialPutRef.current) {
       skipInitialPutRef.current = false
+      // Align fingerprint with whatever useChat hydrated — do not PUT on open.
+      lastPutSigRef.current = messagesSignature(messages)
       return
     }
 
@@ -200,20 +220,38 @@ const ChatView = memo<ChatViewProps>(({
     fire()
   }, [isBusy, messages, onCacheMessages, persistMessages, topicId])
 
-  // Flush latest messages on unmount (topic switch / navigate away) so a cancelled
-  // debounce window does not drop the tail of a stream. Skip empty snapshots to avoid
-  // Strict Mode / pre-handoff unmount racing a PUT [] past a later real save.
-  // Also seed the parent topic cache so the next switch can paint instantly.
+  // Flush latest messages on real unmount (topic switch / navigate away).
+  // Strict Mode runs cleanup→setup on the same fiber; delay the PUT and cancel it
+  // if we remount, otherwise a single topic open would PUT 2–3 times by itself.
   useEffect(() => {
     if (!topicId) return
+
+    if (flushTimerRef.current != null) {
+      window.clearTimeout(flushTimerRef.current)
+      flushTimerRef.current = null
+    }
+
     return () => {
       putControllerRef.current?.abort()
       const snapshot = messagesRef.current
+      const id = topicId
       if (snapshot.length === 0) return
-      onCacheMessages(topicId, snapshot)
-      persistMessages(snapshot)
+
+      onCacheMessages(id, snapshot)
+      flushTimerRef.current = window.setTimeout(() => {
+        flushTimerRef.current = null
+        const signature = messagesSignature(snapshot)
+        if (signature === lastPutSigRef.current) return
+        lastPutSigRef.current = signature
+        putMessages(id, snapshot).catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === 'AbortError') return
+          if (error instanceof Error && error.name === 'AbortError') return
+          if (lastPutSigRef.current === signature) lastPutSigRef.current = ''
+          console.error('[chat] putMessages failed', error)
+        })
+      }, 0)
     }
-  }, [onCacheMessages, persistMessages, topicId])
+  }, [onCacheMessages, topicId])
 
   const requestBody = useMemo(
     () => ({

@@ -1,13 +1,12 @@
 'use client'
 
-import type { MenuInfo, MenuProps } from '@lobehub/ui'
-import { Avatar, Block, Center, DropdownMenu, Flexbox, Icon, Text } from '@lobehub/ui'
+import { type MenuInfo, type MenuProps, Avatar, Block, Center, DropdownMenu, Flexbox, Icon, Text } from '@lobehub/ui'
 import { App } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { MoreHorizontal, Pencil, PinIcon, PinOff, Trash2 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
-import type { AgentListItem } from '@/const/home/agents'
+import { type AgentListItem } from '@/const/home/agents'
 import { confirmModal } from '@/libs/modal'
 
 const styles = createStaticStyles(({ css }) => ({

@@ -1,8 +1,7 @@
 'use client'
 
 import { ActionIcon, Flexbox, Icon, Text } from '@lobehub/ui'
-import type { BreadcrumbProps } from 'antd'
-import { Breadcrumb } from 'antd'
+import { type BreadcrumbProps, Breadcrumb } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronRightIcon, HomeIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useRouter } from '@/utils/navigation'

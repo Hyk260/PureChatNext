@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { AuthServerConfig } from '@/libs/better-auth/shared'
+import { type AuthServerConfig } from '@/libs/better-auth/shared'
 
 const mockConfig: AuthServerConfig = {
   emailVerificationMode: 'link',

@@ -1,15 +1,13 @@
 import { and, eq } from 'drizzle-orm'
 
 import { DOCUMENT_FOLDER_TYPE } from '@/const/resources/fileTypes'
-import type { FileListItem, QueryFileListParams } from '@/types/files'
-import { FilesTabs } from '@/types/files'
+import { type FileListItem, type QueryFileListParams, FilesTabs } from '@/types/files'
 
 import { getServerDB } from '@/database/core/db-adaptor'
 import { DocumentModel } from '@/database/models/document'
 import { FileModel } from '@/database/models/file'
-import type { DocumentItem, FileItem } from '@/database/schemas/file'
-import { documents, files } from '@/database/schemas/file'
-import type { ChatDatabase } from '@/database/type'
+import { type DocumentItem, type FileItem, documents, files } from '@/database/schemas/file'
+import { type ChatDatabase } from '@/database/type'
 import { resolveFileAccessUrl } from '@/server/modules/S3/url'
 
 export interface KnowledgeItem {

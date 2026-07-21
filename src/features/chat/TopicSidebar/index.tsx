@@ -5,7 +5,7 @@ import { MessageSquarePlus } from 'lucide-react'
 import { memo } from 'react'
 
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
-import type { LocalChatTopic } from '@/features/chat/types'
+import { type LocalChatTopic } from '@/features/chat/types'
 import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
 
 import TopicList from './TopicList'

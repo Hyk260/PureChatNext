@@ -1,9 +1,8 @@
 import { Readability } from '@mozilla/readability';
 import { Window } from 'happy-dom';
-import type { TranslatorConfigObject } from 'node-html-markdown';
-import { NodeHtmlMarkdown } from 'node-html-markdown';
+import { type TranslatorConfigObject, NodeHtmlMarkdown } from 'node-html-markdown';
 
-import type { FilterOptions } from '../type';
+import { type FilterOptions } from '../type';
 
 /** Truncate HTML to 1 MB before DOM parsing to prevent CPU spikes on large pages */
 export const MAX_HTML_SIZE = 1024 * 1024;

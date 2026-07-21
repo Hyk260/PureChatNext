@@ -5,8 +5,7 @@ import { usePathname, useSearchParams } from '@/utils/navigation'
 import { memo } from 'react'
 
 import { Flexbox } from '@lobehub/ui'
-import { FileText, ImageIcon, LayoutPanelTopIcon, Mic2, SquarePlay } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { FileText, ImageIcon, LayoutPanelTopIcon, Mic2, SquarePlay , type LucideIcon } from 'lucide-react'
 
 import NavItem from '@/components/NavItem'
 import { FilesTabs } from '@/types/files'

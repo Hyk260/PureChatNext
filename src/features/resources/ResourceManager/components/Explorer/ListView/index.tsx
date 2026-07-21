@@ -8,7 +8,7 @@ import { useShallow } from 'zustand/react/shallow'
 import FileIcon from '@/components/FileIcon'
 import { DOCUMENT_FOLDER_TYPE } from '@/const/resources/fileTypes'
 import { useResourceManagerStore } from '@/features/resources/store'
-import type { FileListItem } from '@/types/files'
+import { type FileListItem } from '@/types/files'
 
 import ListViewHeader from './ListViewHeader'
 

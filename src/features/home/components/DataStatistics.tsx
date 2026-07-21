@@ -5,6 +5,9 @@ import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, type ReactNode } from 'react'
 import useSWR from 'swr'
 
+import { formatShortenNumber } from '@pure/utils/client'
+
+import NeuralNetworkLoading from '@/components/NeuralNetworkLoading'
 import { apiFetch } from '@/utils/apiFetch'
 
 export type UserStats = {
@@ -32,12 +35,6 @@ const styles = createStaticStyles(({ css }) => ({
   `,
 }))
 
-const formatShortenNumber = (value: number): string => {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1).replace(/\.0$/, '')}K`
-  return String(value)
-}
-
 const fetchUserStats = async (): Promise<UserStats> => {
   const res = await apiFetch('/api/user/stats')
   if (!res.ok) throw new Error(`fetchUserStats failed: ${res.status}`)
@@ -58,11 +55,15 @@ const DataStatistics = memo(() => {
     revalidateOnFocus: false,
   })
 
-  const placeholder = '—'
-  const agents = isLoading || data === undefined ? placeholder : formatShortenNumber(data.agents)
-  const topics = isLoading || data === undefined ? placeholder : formatShortenNumber(data.topics)
-  const messages =
-    isLoading || data === undefined ? placeholder : formatShortenNumber(data.messages)
+  const renderCount = (value: number | undefined): ReactNode => {
+    if (isLoading) return <NeuralNetworkLoading size={16} />
+    if (value === undefined) return '—'
+    return formatShortenNumber(value)
+  }
+
+  const agents = renderCount(data?.agents)
+  const topics = renderCount(data?.topics)
+  const messages = renderCount(data?.messages)
 
   return (
     <Flexbox

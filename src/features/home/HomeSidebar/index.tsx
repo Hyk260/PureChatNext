@@ -7,10 +7,8 @@ import { memo } from 'react'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
 import SidebarBody from './SidebarBody'
-import SidebarFooter from './SidebarFooter'
 import SidebarHeader from './SidebarHeader'
 import SidebarNav from './SidebarNav'
-import { SidebarModalProvider } from './SidebarModalProvider'
 
 const styles = createStaticStyles(({ css }) => ({
   scrollArea: css`
@@ -39,22 +37,19 @@ const HomeSidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <SidebarModalProvider>
-      <Flexbox
-        className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')}
-        height='100%'
-        style={{ width: sidebarCollapsed ? 0 : 240 }}
-      >
-        <SidebarHeader />
-        <ScrollShadow className={styles.scrollArea} size={2} style={{ width: 240 }}>
-          <Flexbox gap={1} style={{ minHeight: '100%' }}>
-            <SidebarNav />
-            <SidebarBody />
-          </Flexbox>
-        </ScrollShadow>
-        <SidebarFooter />
-      </Flexbox>
-    </SidebarModalProvider>
+    <Flexbox
+      className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')}
+      height='100%'
+      style={{ width: sidebarCollapsed ? 0 : 240 }}
+    >
+      <SidebarHeader />
+      <ScrollShadow className={styles.scrollArea} size={2} style={{ width: 240 }}>
+        <Flexbox flex={1} gap={1} style={{ minHeight: '100%' }}>
+          <SidebarNav />
+          <SidebarBody />
+        </Flexbox>
+      </ScrollShadow>
+    </Flexbox>
   )
 })
 

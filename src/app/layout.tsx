@@ -5,7 +5,7 @@ import Analytics from '@/components/Analytics'
 
 import { IS_VERCEL } from '@/envs/app'
 
-import type { Metadata } from 'next'
+import { type Metadata } from 'next'
 
 import '@/styles/globals.css'
 import '@/styles/scrollbar.css'

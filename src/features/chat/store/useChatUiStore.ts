@@ -3,8 +3,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
-import type { ChatLlmParams } from '@/features/chat/types'
+import { DEFAULT_CHAT_LLM_PARAMS , type ChatLlmParams } from '@/features/chat/types'
 
 type ChatUiState = {
   leftCollapsed: boolean

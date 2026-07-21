@@ -1,4 +1,4 @@
-import type { CrawlImpl, CrawlSuccessResult } from '../type';
+import { type CrawlImpl, type CrawlSuccessResult } from '../type';
 import { PageNotFoundError, toFetchError } from '../utils/errorType';
 import { createHTTPStatusError, parseJSONResponse } from '../utils/response';
 import { DEFAULT_TIMEOUT, withTimeout } from '../utils/withTimeout';

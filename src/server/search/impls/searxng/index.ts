@@ -1,6 +1,5 @@
-import { type UniformSearchResponse } from '@pure/types';
+import { type UniformSearchResponse, SEARCH_SEARXNG_NOT_CONFIG } from '@pure/types';
 
-import { SEARCH_SEARXNG_NOT_CONFIG } from '@pure/types';
 import { toolsEnv } from '@/envs/tools';
 import { SearXNGClient } from './client';
 

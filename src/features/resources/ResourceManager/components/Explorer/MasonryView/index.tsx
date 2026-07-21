@@ -12,7 +12,7 @@ import {
   useExplorerSelectionSummary,
 } from '@/features/resources/hooks/useExplorerSelection'
 import { useResourceManagerStore } from '@/features/resources/store'
-import type { FileListItem } from '@/types/files'
+import { type FileListItem } from '@/types/files'
 
 const styles = createStaticStyles(({ css }) => ({
   card: css`

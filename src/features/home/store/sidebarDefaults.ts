@@ -1,4 +1,4 @@
-import { DEFAULT_SIDEBAR_ITEMS } from '@/const/home/nav'
+import { DEFAULT_SIDEBAR_ITEMS, normalizeSidebarItems } from '@/const/home/nav'
 
 export interface HomeAgentGroup {
   id: string
@@ -20,6 +20,9 @@ export const DEFAULT_HOME_SIDEBAR_STATE = {
   sidebarExpandedKeys: DEFAULT_SIDEBAR_EXPANDED_KEYS,
   sidebarItems: DEFAULT_SIDEBAR_ITEMS,
 }
+
+export const normalizePersistedSidebarItems = (items: string[] | undefined): string[] =>
+  normalizeSidebarItems(items?.length ? items : DEFAULT_SIDEBAR_ITEMS)
 
 export const normalizeSidebarExpandedKeys = (keys: string[]): string[] =>
   keys.map((key) => (key === 'agent' ? 'agents' : key))

@@ -1,6 +1,6 @@
 import { COMMUNITY_PROVIDERS } from '@/const/community/providers'
 
-import type { ProviderConfigs, ProviderId } from './types'
+import { type ProviderConfigs, type ProviderId } from './types'
 
 export const SETTINGS_PROVIDER_IDS = ['openai', 'deepseek'] as const satisfies readonly ProviderId[]
 

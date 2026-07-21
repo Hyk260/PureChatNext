@@ -1,8 +1,7 @@
 'use client'
 
 import { Flexbox } from '@lobehub/ui'
-import { Spin } from 'antd'
-import { App } from 'antd'
+import { Spin , App } from 'antd'
 import { memo, useCallback, useMemo } from 'react'
 import { useRouter } from '@/utils/navigation'
 import { useQueryState } from 'nuqs'

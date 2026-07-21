@@ -9,8 +9,7 @@ import {
 } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
 
-import type { HomeAgentMode } from '@/features/home/store/useHomeStore'
-import { useHomeStore } from '@/features/home/store/useHomeStore'
+import { type HomeAgentMode, useHomeStore } from '@/features/home/store/useHomeStore'
 
 const styles = createStaticStyles(({ css }) => ({
   activeOption: css`

@@ -2,7 +2,7 @@
 
 import { Text } from '@lobehub/ui'
 import { createStaticStyles } from 'antd-style'
-import type { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 
 interface SettingRowProps {
   action?: ReactNode

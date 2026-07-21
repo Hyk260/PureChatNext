@@ -1,4 +1,4 @@
-import type { CrawlSuccessResult } from '@pure/types'
+import { type CrawlSuccessResult } from '@pure/types'
 
 export type {
   CrawlErrorResult,

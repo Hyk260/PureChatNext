@@ -138,7 +138,7 @@ cd packages/file-loaders && pnpm exec vitest run --silent='passed-only' 'src/loa
 
 ### 代码风格
 
-- ESLint：`eslint.config.js`，强制 `@typescript-eslint/consistent-type-imports`（type import 与 value import 分离）
+- ESLint：`eslint.config.js`，强制内联 type import：`import { type Foo, Bar } from 'pkg'`（`@typescript-eslint/consistent-type-imports` + `import/consistent-type-specifier-style: prefer-inline` + `import/no-duplicates`）
 - 单文件超过 ~800 行时考虑拆分
 - Debug 日志遵循 `.cursor/rules/debug-usage.md` 命名空间（如 `auth:*`、`db:*`）
 - 修改范围：只做任务相关的最小 diff，不重构无关代码
@@ -152,3 +152,6 @@ cd packages/file-loaders && pnpm exec vitest run --silent='passed-only' 'src/loa
 | `docs/DRIZZLE_SETUP.md` | 数据库迁移 |
 | `docs/self-hosting/online-search.zh-CN.md` | 联网搜索与爬虫配置 |
 | `.cursor/rules/debug-usage.md` | debug 日志规范 |
+
+## lobehub （lobechat）
+<!-- /Volumes/MacOs/github/lobe-chat-main/src -->

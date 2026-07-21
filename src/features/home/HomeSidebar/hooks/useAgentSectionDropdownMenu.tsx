@@ -1,12 +1,11 @@
 'use client'
 
-import type { MenuInfo, MenuProps } from '@lobehub/ui'
-import { Icon } from '@lobehub/ui'
+import { type MenuInfo, type MenuProps, Icon } from '@lobehub/ui'
 import { FolderCogIcon, SlidersHorizontalIcon } from 'lucide-react'
 import { useMemo } from 'react'
 
+import { openConfigGroupModal } from '@/features/home/HomeSidebar/modals/ConfigGroupModal'
 import { openCustomizeSidebarModal } from '@/features/home/HomeSidebar/modals/CustomizeSidebarModal'
-import { useSidebarModal } from '@/features/home/HomeSidebar/SidebarModalProvider'
 
 const stopMenuEvent = (info: MenuInfo) => {
   const event = info.domEvent as { stopPropagation?: () => void } | undefined
@@ -15,8 +14,6 @@ const stopMenuEvent = (info: MenuInfo) => {
 
 /** 「⋯」菜单：分类管理 / 自定义侧边栏（创建入口在「+」菜单） */
 export const useAgentSectionDropdownMenu = (): MenuProps['items'] => {
-  const { openConfigGroupModal } = useSidebarModal()
-
   return useMemo(
     () => [
       {
@@ -39,6 +36,6 @@ export const useAgentSectionDropdownMenu = (): MenuProps['items'] => {
         },
       },
     ],
-    [openConfigGroupModal],
+    [],
   )
 }

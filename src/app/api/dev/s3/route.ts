@@ -24,7 +24,7 @@ const getAction = (searchParams: URLSearchParams) => {
 
 /**
  * S3 测试 API（仅开发环境）
- * POST /api/dev/s3-test
+ * POST /api/dev/s3
  * - action=uploadFile      (multipart/form-data, field "file")
  * - action=uploadText      (JSON: { key, content })
  * - action=uploadBuffer    (JSON: { key, content, contentType? })
@@ -102,7 +102,7 @@ export const POST = async (req: Request) => {
 
 /**
  * S3 测试 API（仅开发环境）
- * GET /api/dev/s3-test
+ * GET /api/dev/s3
  * - action=list&prefix=xxx
  * - action=info&key=xxx
  * - action=download&key=xxx          (presigned URL for preview)
@@ -154,7 +154,7 @@ export const GET = async (req: Request) => {
 
 /**
  * S3 测试 API（仅开发环境）
- * DELETE /api/dev/s3-test
+ * DELETE /api/dev/s3
  * - action=deleteOne&key=xxx
  * - action=deleteMany  (JSON body: { keys: string[] })
  */
@@ -196,7 +196,7 @@ export const DELETE = async (req: Request) => {
 
 /**
  * S3 测试 API（仅开发环境）
- * PUT /api/dev/s3-test
+ * PUT /api/dev/s3
  * - action=rename  (JSON body: { oldKey, newKey })
  */
 export const PUT = async (req: Request) => {

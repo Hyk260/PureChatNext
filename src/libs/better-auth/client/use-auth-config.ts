@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-import type { AuthServerConfig } from '@/libs/better-auth/shared'
+import { type AuthServerConfig } from '@/libs/better-auth/shared'
 import { apiFetch } from '@/utils/apiFetch'
 
 const defaultConfig: AuthServerConfig = {

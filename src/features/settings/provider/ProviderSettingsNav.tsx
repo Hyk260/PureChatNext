@@ -95,8 +95,8 @@ const ProviderSettingsNav = memo(() => {
     })
   }, [keyword])
 
-  const enabledIds = filteredIds.filter((id) => configs[id].enabled)
-  const disabledIds = filteredIds.filter((id) => !configs[id].enabled)
+  const enabledIds = filteredIds.filter((id) => configs[id]?.enabled)
+  const disabledIds = filteredIds.filter((id) => !configs[id]?.enabled)
 
   return (
     <Flexbox className={styles.menu} height='100%'>

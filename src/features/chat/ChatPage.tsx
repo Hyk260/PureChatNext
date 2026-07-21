@@ -100,7 +100,7 @@ const chatTransport = new DefaultChatTransport({
     const provider = useHomeStore.getState().selectedProvider
     if (!isSettingsProviderId(provider)) return {}
 
-    const apiKey = useProviderConfigStore.getState().configs[provider].apiKey.trim()
+    const apiKey = useProviderConfigStore.getState().configs[provider]?.apiKey.trim() ?? ''
     if (!apiKey) return {}
 
     return { Authorization: `Bearer ${apiKey}` }
@@ -137,7 +137,7 @@ const ChatView = memo<ChatViewProps>(({
   const activeAgent = useHomeStore((s) => s.activeAgent)
   const providerBaseURL = useProviderConfigStore((s) =>
     isSettingsProviderId(selectedProvider)
-      ? s.configs[selectedProvider].baseURL.trim()
+      ? (s.configs[selectedProvider]?.baseURL.trim() ?? '')
       : '',
   )
 

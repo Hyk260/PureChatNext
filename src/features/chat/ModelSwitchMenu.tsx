@@ -15,10 +15,16 @@ import {
   Text,
 } from '@lobehub/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import { memo, type ReactNode, useMemo, useState } from 'react'
+import { memo, type ReactNode, useEffect, useMemo, useState } from 'react'
 
-import { findHomeModel, HOME_MODELS, type HomeModelItem } from '@/const/home/models'
+import {
+  DEFAULT_HOME_MODEL,
+  findHomeModel,
+  type HomeModelItem,
+} from '@/const/home/models'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
+import { isSettingsProviderId } from '@/features/settings/provider/const'
+import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
 
 const styles = createStaticStyles(({ css }) => ({
   container: css`
@@ -82,18 +88,52 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
     const selectedModel = useHomeStore((s) => s.selectedModel)
     const selectedProvider = useHomeStore((s) => s.selectedProvider)
     const setSelectedModel = useHomeStore((s) => s.setSelectedModel)
+    const configs = useProviderConfigStore((s) => s.configs)
+
+    // Fallback when no provider is enabled yet — still show builtin defaults so chat works.
+    const availableModels = useMemo<HomeModelItem[]>(() => {
+      const enabled: HomeModelItem[] = []
+
+      for (const providerId of Object.keys(configs) as Array<keyof typeof configs>) {
+        const config = configs[providerId]
+        if (!config?.enabled) continue
+
+        for (const model of config.models ?? []) {
+          if (!model.enabled) continue
+          enabled.push({
+            displayName: model.displayName,
+            model: model.id,
+            provider: providerId,
+          })
+        }
+      }
+
+      if (enabled.length > 0) return enabled
+      return [DEFAULT_HOME_MODEL]
+    }, [configs])
 
     const filteredModels = useMemo(() => {
       const query = keyword.trim().toLowerCase()
-      if (!query) return HOME_MODELS
+      if (!query) return availableModels
 
-      return HOME_MODELS.filter(
+      return availableModels.filter(
         (item) =>
           item.displayName.toLowerCase().includes(query) ||
           item.model.toLowerCase().includes(query) ||
           item.provider.toLowerCase().includes(query),
       )
-    }, [keyword])
+    }, [availableModels, keyword])
+
+    // If current selection is no longer available, fall back.
+    useEffect(() => {
+      const stillAvailable = availableModels.some(
+        (item) => item.provider === selectedProvider && item.model === selectedModel,
+      )
+      if (stillAvailable) return
+
+      const fallback = availableModels[0] ?? DEFAULT_HOME_MODEL
+      setSelectedModel(fallback.provider, fallback.model)
+    }, [availableModels, selectedModel, selectedProvider, setSelectedModel])
 
     return (
       <DropdownMenuRoot
@@ -174,9 +214,20 @@ export default ModelSwitchMenu
 export const useCurrentHomeModel = () => {
   const selectedModel = useHomeStore((s) => s.selectedModel)
   const selectedProvider = useHomeStore((s) => s.selectedProvider)
+  const configs = useProviderConfigStore((s) => s.configs)
 
-  return useMemo(
-    () => findHomeModel(selectedProvider, selectedModel),
-    [selectedModel, selectedProvider],
-  )
+  return useMemo(() => {
+    if (isSettingsProviderId(selectedProvider)) {
+      const model = configs[selectedProvider]?.models.find((item) => item.id === selectedModel)
+      if (model) {
+        return {
+          displayName: model.displayName,
+          model: model.id,
+          provider: selectedProvider,
+        } satisfies HomeModelItem
+      }
+    }
+
+    return findHomeModel(selectedProvider, selectedModel)
+  }, [configs, selectedModel, selectedProvider])
 }

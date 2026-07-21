@@ -35,7 +35,7 @@ interface SettingsProviderCardProps {
 const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
   const router = useRouter()
   const meta = getSettingsProviderMeta(id)
-  const enabled = useProviderConfigStore((s) => s.configs[id].enabled)
+  const enabled = useProviderConfigStore((s) => s.configs[id]?.enabled ?? false)
   const setEnabled = useProviderConfigStore((s) => s.setEnabled)
 
   return (

@@ -61,8 +61,8 @@ const ProviderAllPage = memo(() => {
   const configs = useProviderConfigStore((s) => s.configs)
 
   const { enabledIds, disabledIds } = useMemo(() => {
-    const enabled = SETTINGS_PROVIDER_IDS.filter((id) => configs[id].enabled)
-    const disabled = SETTINGS_PROVIDER_IDS.filter((id) => !configs[id].enabled)
+    const enabled = SETTINGS_PROVIDER_IDS.filter((id) => configs[id]?.enabled)
+    const disabled = SETTINGS_PROVIDER_IDS.filter((id) => !configs[id]?.enabled)
     return { disabledIds: disabled, enabledIds: enabled }
   }, [configs])
 

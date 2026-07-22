@@ -27,7 +27,8 @@ PureChatNext/
 │   ├── file-loaders/          # 文档加载（pdf、docx、pptx、excel…）
 │   ├── web-crawler/           # 网页爬虫多实现（naive、firecrawl、tavily…）
 │   ├── ssrf-safe-fetch/       # SSRF 安全 fetch 封装
-│   └── chat-adapter-wechat/   # 微信 iLink + Vercel Chat SDK Adapter
+│   ├── chat-adapter-wechat/   # 微信 iLink + Vercel Chat SDK Adapter
+│   └── chat-adapter-qq/       # QQ 开放平台 + Vercel Chat SDK Adapter
 ├── src/
 │   ├── spa/                   # Vite SPA 入口与 Router（迁移中）
 │   ├── features/              # 业务 UI（供 SPA 路由挂载）
@@ -39,7 +40,7 @@ PureChatNext/
 │   ├── components/            # 通用 React 组件
 │   └── styles/                # 全局样式
 ├── docs/                      # 人类可读文档（快速开始、环境、Drizzle、联网搜索）
-├── scripts/                   # migrate.ts、gateway.ts
+├── scripts/                   # migrate.ts、wechat-gateway.ts、qq-gateway.ts
 └── tests/                     # Vitest setup
 ```
 
@@ -56,7 +57,7 @@ PureChatNext/
 - 定义在 `packages/env/src/`（如 `auth.ts`、`tools.ts`、`serverDB.ts`）
 - 业务代码通过 `import { toolsEnv } from '@/envs/tools'` 访问，**不要**直接散落 `process.env`
 - 新增 env 字段：在对应 env 模块加 zod schema + runtimeEnv 映射
-- 详细说明见 `docs/ENV_SETUP.md`；联网搜索/爬虫见 `docs/self-hosting/online-search.zh-CN.md`
+- 详细说明见 `docs/env-setup.zh-CN.md`；联网搜索/爬虫见 `docs/self-hosting/online-search.zh-CN.md`
 
 ### 搜索与爬虫
 
@@ -78,7 +79,7 @@ pnpm db:migrate    # 执行迁移
 pnpm db:studio     # Drizzle Studio
 ```
 
-- 完整流程见 `docs/DRIZZLE_SETUP.md`
+- 完整流程见 `docs/drizzle-setup.zh-CN.md`
 
 ### API 路由
 
@@ -105,11 +106,11 @@ pnpm lint             # ESLint
 ```
 
 - 本地开发：浏览器访问 **SPA 端口** `http://localhost:5174`（不要依赖线上 Debug Proxy）；Next 在 `3000`
-- 本地 **`APP_URL=http://localhost:5174`**（邮件/OAuth 与 SPA 同源，`/api` 经 Vite 代理）；生产用正式域名。详见 `docs/ENV_SETUP.md` 的 APP_URL 一节
+- 本地 **`APP_URL=http://localhost:5174`**（邮件/OAuth 与 SPA 同源，`/api` 经 Vite 代理）；生产用正式域名。详见 `docs/env-setup.zh-CN.md` 的 APP_URL 一节
 - 生产同域：Vite 产物在 `public/_spa/**`（`next.config` 长缓存）；HTML 由 `src/app/spa/[[...path]]/route.ts` 注入 `__SERVER_CONFIG__`；未匹配 UI 路径经 `rewrites.fallback` → `/spa`
 - Vercel：单项目；`installCommand` / `buildCommand` 见根目录 `vercel.json`；环境变量不变
 - 回滚：`main` 仍为改造前纯 Next App Router，直到 SPA 分支稳定
-- 环境变量：复制 `.env.example` 为 `.env.local`，参考 `docs/QUICK_START.md`
+- 环境变量：复制 `.env.example` 为 `.env.local`，参考 `docs/quick-start.zh-CN.md`
 - SPA 改造进度：`docs/spa-migration-checklist.md`
 - **不要**提交 `.env`、`.env.local` 等含密钥文件；本地 `build:spa:copy` 会改写 `spaHtmlTemplate.generated.ts`，勿提交构建后的 HTML
 
@@ -149,12 +150,21 @@ cd packages/file-loaders && pnpm exec vitest run --silent='passed-only' 'src/loa
 
 | 文档 | 用途 |
 |------|------|
-| `docs/QUICK_START.md` | 快速开始、Supabase 配置 |
-| `docs/ENV_SETUP.md` | 环境变量详解 |
-| `docs/DRIZZLE_SETUP.md` | 数据库迁移 |
+| `docs/quick-start.zh-CN.md` | 快速开始、Supabase 配置 |
+| `docs/env-setup.zh-CN.md` | 环境变量详解 |
+| `docs/drizzle-setup.zh-CN.md` | 数据库迁移 |
 | `docs/self-hosting/online-search.zh-CN.md` | 联网搜索与爬虫配置 |
 | `docs/self-hosting/wechat-channel.zh-CN.md` | 微信 iLink 扫码渠道 |
+| `docs/self-hosting/qq-channel.zh-CN.md` | QQ 开放平台机器人渠道 |
 | `.cursor/rules/debug-usage.md` | debug 日志规范 |
 
-## lobehub （lobechat）
-<!-- /Volumes/MacOs/github/lobe-chat-main/src -->
+## lobehub / lobechat 对照源码
+
+本机（macOS）上有一份可直接读取的 LobeHub / LobeChat 源码，用于对照实现、移植渠道 / Adapter、查协议与平台差异。
+
+- **路径**：`/Volumes/MacOs/github/lobe-chat-main`
+- **触发词**：对话中出现 `lobehub`、`lobechat`、`lobe-chat`、`LobeHub`、`LobeChat` 等关键字时，优先到上述路径查代码与文档，不要只靠记忆或假设
+- **常用子路径**：
+  - `apps/server/src/services/bot/platforms/` — 消息渠道（qq / wechat 等）
+  - `packages/chat-adapter-*` — Chat SDK Adapter 包
+  - `docs/usage/channels/` — 渠道用户文档

@@ -28,7 +28,7 @@
  *
  * ## 前置
  * - 包管理：pnpm；本脚本用 bun 拉起子进程（需本机安装 bun）
- * - 环境变量：根目录 `.env.local`（参考 docs/QUICK_START.md）
+ * - 环境变量：根目录 `.env.local`（参考 docs/quick-start.zh-CN.md）
  *
  * 生产预览请用 `pnpm build && pnpm start`（:3210），不要走本脚本。
  */

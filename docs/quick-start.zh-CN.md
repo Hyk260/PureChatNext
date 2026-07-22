@@ -43,7 +43,7 @@ NODE_ENV=development
 
 ⚠️ **注意**：将上面的 URL 和 KEY 替换为你从 Supabase 获取的实际值。
 
-本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [ENV_SETUP.md · APP_URL](./ENV_SETUP.md#app_url)。
+本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [env-setup.zh-CN.md · APP_URL](./env-setup.zh-CN.md#app_url)。
 
 ## 4. 启动开发服务器
 
@@ -113,6 +113,6 @@ curl -X GET http://localhost:3000/api/auth/me \
 ## 下一步
 
 - 查看 [README.md](./README.md) 了解完整的 API 文档
-- 查看 [ENV_SETUP.md](./ENV_SETUP.md) 了解环境变量详细配置
+- 查看 [env-setup.zh-CN.md](./env-setup.zh-CN.md) 了解环境变量详细配置
 - 开始开发你的应用功能！
 

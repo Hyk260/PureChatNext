@@ -41,6 +41,9 @@ importers:
       '@lobehub/ui':
         specifier: ^5.16.1
         version: 5.16.1(@lobehub/fluent-emoji@2.0.0(@babel/core@7.29.7)(@types/mdast@4.0.4)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(antd@6.4.5(date-fns@4.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(framer-motion@12.41.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(@lobehub/icons@5.10.1)(@types/mdast@4.0.4)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(antd@6.4.5(date-fns@4.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(date-fns@4.1.0)(micromark-util-types@2.0.2)(micromark@4.0.2)(motion@12.41.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(svelte@5.43.4)
+      '@pure/chat-adapter-qq':
+        specifier: workspace:*
+        version: link:packages/chat-adapter-qq
       '@pure/chat-adapter-wechat':
         specifier: workspace:*
         version: link:packages/chat-adapter-wechat
@@ -270,6 +273,25 @@ importers:
       vitest:
         specifier: 3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.24)(@vitest/ui@3.2.4)(happy-dom@20.10.6)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.20.6)(yaml@2.9.0)
+
+  packages/chat-adapter-qq:
+    dependencies:
+      mime:
+        specifier: ^4.1.0
+        version: 4.1.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.30
+        version: 22.20.1
+      chat:
+        specifier: ^4.31.0
+        version: 4.34.0(ai@7.0.19(zod@4.4.3))(zod@4.4.3)
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.20.1)(@vitest/ui@3.2.4)(happy-dom@20.10.6)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0)
 
   packages/chat-adapter-wechat:
     dependencies:
@@ -5928,8 +5950,8 @@ packages:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
     engines: {node: '>=6'}
 
-  deslop-js@0.8.2:
-    resolution: {integrity: sha512-SDr+CGs7RFL/PGLLn6knwJZOMbFChwErFPxRxJD7FnV1ruRiEoVzlmyz1dIGj6wLl0xlGqrdo4YrIzRxCN7doA==}
+  deslop-js@0.8.3:
+    resolution: {integrity: sha512-axNV/iX3Zq9xt0MYesmbBGxneeeY/HrYgXTsaM4+GOrdxXP9JyCfTdC4j8zx09bBML94oSIpFNyn9U1f0oEPqQ==}
 
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
@@ -8184,8 +8206,8 @@ packages:
   oxc-resolver@11.24.2:
     resolution: {integrity: sha512-FY91FiDBj7ls5MsFS9jN3tjz2o0/zsdSsymlakySaBwVJZorHhkWyICLZMKxlu1R9vYo+sd3z1jwb4J8x7bNDw==}
 
-  oxlint-plugin-react-doctor@0.8.2:
-    resolution: {integrity: sha512-Wr9oeAsFjR/zA5v3w7D4YMLI/i0ydh+HVhuLW3V8EPxgcBKPQLyYdoE27BKw0wFw16dCIrjd4rdTicMWXnHDKg==}
+  oxlint-plugin-react-doctor@0.8.3:
+    resolution: {integrity: sha512-S1Gq1H9+BpziApWcZ/sWPNYYy1FMkFmtSEGiqIJ4/Aac76LfkeutPFtSRlkJF1JlcrbYFf7LXcfcxZCJgmVBBQ==}
     engines: {node: ^20.19.0 || >=22.13.0}
 
   oxlint@1.66.0:
@@ -8602,8 +8624,8 @@ packages:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
 
-  react-doctor@0.8.2:
-    resolution: {integrity: sha512-xh4/Pxom8ZcG0DYTBSoiTk1SZCrZoQdsnCNBXqkwLPzi6IsyOd9r4z0zQCPVrQEVaTcDFUjmFYotIJw8A8gtuw==}
+  react-doctor@0.8.3:
+    resolution: {integrity: sha512-FfG7YQKb1yv1UNk2gknZzLAPx6L3RMOhYsYbslr4MSpVMNk5xBHlu9VxjtS0br0DEBWjkZovrf/C1MrchiIzAw==}
     engines: {node: ^20.19.0 || >=22.13.0}
     hasBin: true
 
@@ -14288,7 +14310,7 @@ snapshots:
 
   '@types/concat-stream@2.0.3':
     dependencies:
-      '@types/node': 20.19.24
+      '@types/node': 22.20.1
 
   '@types/cookie@0.6.0': {}
 
@@ -14487,11 +14509,11 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 20.19.24
+      '@types/node': 22.20.1
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 20.19.24
+      '@types/node': 22.20.1
 
   '@typescript-eslint/eslint-plugin@8.46.2(@typescript-eslint/parser@8.46.2(eslint@9.39.0(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.0(jiti@2.7.0))(typescript@5.9.3)':
     dependencies:
@@ -15605,7 +15627,7 @@ snapshots:
 
   buffer-image-size@0.6.4:
     dependencies:
-      '@types/node': 20.19.24
+      '@types/node': 22.20.1
 
   buffer@6.0.3:
     dependencies:
@@ -16145,7 +16167,7 @@ snapshots:
 
   dequal@2.0.3: {}
 
-  deslop-js@0.8.2:
+  deslop-js@0.8.3:
     dependencies:
       '@oxc-project/types': 0.138.0
       fast-glob: 3.3.3
@@ -17089,7 +17111,7 @@ snapshots:
 
   happy-dom@20.10.6:
     dependencies:
-      '@types/node': 20.19.24
+      '@types/node': 22.20.1
       '@types/whatwg-mimetype': 3.0.2
       '@types/ws': 8.18.1
       buffer-image-size: 0.6.4
@@ -18892,7 +18914,7 @@ snapshots:
       '@oxc-resolver/binding-win32-arm64-msvc': 11.24.2
       '@oxc-resolver/binding-win32-x64-msvc': 11.24.2
 
-  oxlint-plugin-react-doctor@0.8.2:
+  oxlint-plugin-react-doctor@0.8.3:
     dependencies:
       '@typescript-eslint/types': 8.64.0
       eslint-scope: 9.1.2
@@ -19355,19 +19377,19 @@ snapshots:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
-  react-doctor@0.8.2(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(eslint@9.39.0(jiti@2.7.0)):
+  react-doctor@0.8.3(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(eslint@9.39.0(jiti@2.7.0)):
     dependencies:
       '@babel/code-frame': 7.29.7
       '@sentry/node': 10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))
       agent-install: 0.0.5
       conf: 15.1.0
       confbox: 0.2.4
-      deslop-js: 0.8.2
+      deslop-js: 0.8.3
       eslint-plugin-react-hooks: 7.1.1(eslint@9.39.0(jiti@2.7.0))
       jiti: 2.7.0
       magicast: 0.5.3
       oxlint: 1.66.0
-      oxlint-plugin-react-doctor: 0.8.2
+      oxlint-plugin-react-doctor: 0.8.3
       prompts: 2.4.2
       typescript: 5.9.3
       vscode-languageserver: 9.0.1
@@ -19494,7 +19516,7 @@ snapshots:
       preact: 10.29.7
       prompts: 2.4.2
       react: 19.2.7
-      react-doctor: 0.8.2(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(eslint@9.39.0(jiti@2.7.0))
+      react-doctor: 0.8.3(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(eslint@9.39.0(jiti@2.7.0))
       react-dom: 19.2.7(react@19.2.7)
       react-grab: 0.1.48(react@19.2.7)
     optionalDependencies:

@@ -13,6 +13,7 @@ import {
   type MessengerPlatformId,
 } from './const'
 import MessengerComingSoonPage from './MessengerComingSoonPage'
+import MessengerQQPage from './MessengerQQPage'
 import MessengerWeChatPage from './MessengerWeChatPage'
 import { PlatformAvatar } from './PlatformAvatar'
 
@@ -59,6 +60,10 @@ const MessengerPage = memo(() => {
 
   if (platform === 'wechat') {
     return <MessengerWeChatPage />
+  }
+
+  if (platform === 'qq') {
+    return <MessengerQQPage />
   }
 
   if (platform && COMING_SOON_IDS.has(platform as MessengerPlatformId)) {

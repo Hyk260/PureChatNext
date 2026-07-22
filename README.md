@@ -173,7 +173,7 @@ pnpm dev:spa    # UI → http://localhost:5174（/api 代理到 Next）
 
 > [!TIP]
 >
-> 完整环境变量说明见 [docs/ENV_SETUP.md](./docs/ENV_SETUP.md) 与 [docs/QUICK_START.md](./docs/QUICK_START.md)
+> 完整环境变量说明见 [docs/env-setup.zh-CN.md](./docs/env-setup.zh-CN.md) 与 [docs/quick-start.zh-CN.md](./docs/quick-start.zh-CN.md)
 
 ### 数据库迁移
 
@@ -184,7 +184,7 @@ pnpm db:migrate     # 执行迁移
 pnpm db:studio      # 打开 Drizzle Studio
 ```
 
-迁移流程详见 [docs/DRIZZLE_SETUP.md](./docs/DRIZZLE_SETUP.md)。
+迁移流程详见 [docs/drizzle-setup.zh-CN.md](./docs/drizzle-setup.zh-CN.md)。
 
 ### 部署到 Vercel
 
@@ -233,7 +233,7 @@ pnpm db:studio      # 打开 Drizzle Studio
 
 > [!NOTE]
 >
-> 完整变量列表见 [.env.example](./.env.example) 与 [docs/ENV_SETUP.md](./docs/ENV_SETUP.md)
+> 完整变量列表见 [.env.example](./.env.example) 与 [docs/env-setup.zh-CN.md](./docs/env-setup.zh-CN.md)
 
 <div align="right">
 
@@ -325,9 +325,9 @@ cd packages/web-crawler && pnpm test
 
 | 文档 | 说明 |
 | --- | --- |
-| [docs/QUICK_START.md](./docs/QUICK_START.md) | 快速开始与 Supabase 配置 |
-| [docs/ENV_SETUP.md](./docs/ENV_SETUP.md) | 环境变量详解 |
-| [docs/DRIZZLE_SETUP.md](./docs/DRIZZLE_SETUP.md) | 数据库迁移流程 |
+| [docs/quick-start.zh-CN.md](./docs/quick-start.zh-CN.md) | 快速开始与 Supabase 配置 |
+| [docs/env-setup.zh-CN.md](./docs/env-setup.zh-CN.md) | 环境变量详解 |
+| [docs/drizzle-setup.zh-CN.md](./docs/drizzle-setup.zh-CN.md) | 数据库迁移流程 |
 | [docs/self-hosting/online-search.zh-CN.md](./docs/self-hosting/online-search.zh-CN.md) | 联网搜索与爬虫配置 |
 | [docs/self-hosting/auth/email.zh-CN.md](./docs/self-hosting/auth/email.zh-CN.md) | 邮件服务与邮箱验证 |
 | [AGENTS.md](./AGENTS.md) | AI Agent 开发约定 |

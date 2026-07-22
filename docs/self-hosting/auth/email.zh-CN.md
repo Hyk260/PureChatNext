@@ -105,7 +105,7 @@ SMTP_FROM=PureChat <noreply@purechat.cn>
 
 `APP_URL` 必须设为生产域名 `https://next.purechat.cn`，否则认证邮件中的链接会指向 `*.vercel.app` 预览域。
 
-本地开发请设 `APP_URL=http://localhost:5174`（与 SPA 同源；`/api` 经 Vite 代理到 Next），不要用 `:3000`。详见 [ENV_SETUP.md · APP_URL](../../ENV_SETUP.md#app_url)。
+本地开发请设 `APP_URL=http://localhost:5174`（与 SPA 同源；`/api` 经 Vite 代理到 Next），不要用 `:3000`。详见 [env-setup.zh-CN.md · APP_URL](../../env-setup.zh-CN.md#app_url)。
 
 变更环境变量后需重新 Deploy。
 

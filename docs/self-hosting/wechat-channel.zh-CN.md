@@ -2,7 +2,7 @@
 
 通过微信 **iLink Bot API** 扫码连接，在微信私聊中与 PureChat 助手对话。个人开发者**不需要**公众号 / 开放平台企业资质。
 
-协议与 Chat SDK Adapter 在 workspace 包 [`@pure/chat-adapter-wechat`](../../packages/chat-adapter-wechat)（对齐 LobeHub `chat-adapter-wechat` + Vercel `chat` SDK）。
+协议与 Chat SDK Adapter 在 workspace 包 [`@pure/chat-adapter-wechat`](../../packages/chat-adapter-wechat)（对齐 LobeHub `chat-adapter-wechat` + Vercel `chat` SDK）。完整协议见 [wechat/protocol-spec.md](./wechat/protocol-spec.md)。
 
 ## 功能范围（MVP）
 

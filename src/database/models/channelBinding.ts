@@ -9,6 +9,7 @@ import {
 import { type ChatDatabase } from '../type'
 
 export const WECHAT_PLATFORM = 'wechat' as const
+export const QQ_PLATFORM = 'qq' as const
 
 export class ChannelBindingModel {
   private readonly db: ChatDatabase
@@ -38,13 +39,14 @@ export class ChannelBindingModel {
     })
   }
 
-  upsertWechat = async (params: {
+  upsert = async (params: {
     agentId: string
     applicationId: string
     credentials: string
+    platform: string
     userId: string
   }): Promise<ChannelBindingItem> => {
-    const existing = await this.findByUserAndPlatform(params.userId, WECHAT_PLATFORM)
+    const existing = await this.findByUserAndPlatform(params.userId, params.platform)
 
     const now = new Date()
 
@@ -56,7 +58,6 @@ export class ChannelBindingModel {
           applicationId: params.applicationId,
           credentials: params.credentials,
           enabled: true,
-          // 重绑时刷新活动时间，避免沿用上次会话的旧时间戳
           lastActiveAt: now,
           needsRebind: false,
           updatedAt: now,
@@ -75,18 +76,28 @@ export class ChannelBindingModel {
         enabled: true,
         lastActiveAt: now,
         needsRebind: false,
-        platform: WECHAT_PLATFORM,
+        platform: params.platform,
         userId: params.userId,
       } satisfies NewChannelBinding)
       .returning()
     return created
   }
 
-  updateAgent = async (userId: string, agentId: string) => {
+  /** @deprecated Prefer upsert({ platform: WECHAT_PLATFORM, ... }) */
+  upsertWechat = async (params: {
+    agentId: string
+    applicationId: string
+    credentials: string
+    userId: string
+  }): Promise<ChannelBindingItem> => {
+    return this.upsert({ ...params, platform: WECHAT_PLATFORM })
+  }
+
+  updateAgent = async (userId: string, platform: string, agentId: string) => {
     const [updated] = await this.db
       .update(channelBindings)
       .set({ agentId, updatedAt: new Date() })
-      .where(and(eq(channelBindings.userId, userId), eq(channelBindings.platform, WECHAT_PLATFORM)))
+      .where(and(eq(channelBindings.userId, userId), eq(channelBindings.platform, platform)))
       .returning()
     return updated ?? null
   }
@@ -105,8 +116,8 @@ export class ChannelBindingModel {
       .where(eq(channelBindings.id, id))
   }
 
-  disconnect = async (userId: string) => {
-    const existing = await this.findByUserAndPlatform(userId, WECHAT_PLATFORM)
+  disconnect = async (userId: string, platform: string) => {
+    const existing = await this.findByUserAndPlatform(userId, platform)
     if (!existing) return null
 
     await this.db.delete(channelBindings).where(eq(channelBindings.id, existing.id))

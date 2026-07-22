@@ -2,7 +2,7 @@ import { waitUntil } from '@vercel/functions'
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { AgentModel } from '@/database/models/agent'
-import { ChannelBindingModel } from '@/database/models/channelBinding'
+import { ChannelBindingModel, WECHAT_PLATFORM } from '@/database/models/channelBinding'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import {
   DEFAULT_DURATION_MS,
@@ -83,7 +83,7 @@ export const DELETE = withAuth(async (_request, { userId }) => {
   if (existing?.applicationId) {
     invalidateWechatChat(existing.applicationId)
   }
-  await model.disconnect(userId)
+  await model.disconnect(userId, WECHAT_PLATFORM)
   return NextResponse.json({ ok: true })
 })
 
@@ -104,12 +104,12 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
   if (!agent) return jsonError('Agent not found', 404)
 
   const model = new ChannelBindingModel()
-  const existing = await model.findByUserAndPlatform(userId, 'wechat')
+  const existing = await model.findByUserAndPlatform(userId, WECHAT_PLATFORM)
   if (existing?.applicationId) {
     invalidateWechatChat(existing.applicationId)
   }
 
-  const updated = await model.updateAgent(userId, agentId)
+  const updated = await model.updateAgent(userId, WECHAT_PLATFORM, agentId)
   if (!updated) return jsonError('WeChat not connected', 404)
 
   return NextResponse.json({

@@ -6,7 +6,7 @@
 
 1. 已安装项目依赖：`pnpm install` 或 `npm install`
 2. 已创建 Supabase 项目
-3. 已配置 `.env.local` 文件（参考 `ENV_SETUP.md`）
+3. 已配置 `.env.local` 文件（参考 `env-setup.zh-CN.md`）
 
 ## 🔧 配置步骤
 

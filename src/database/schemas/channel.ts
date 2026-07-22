@@ -5,7 +5,7 @@ import { timestamptz, timestamps, varchar255 } from './_helpers'
 import { users } from './user'
 
 /**
- * 第三方消息渠道绑定（MVP：微信 iLink）。
+ * 第三方消息渠道绑定（微信 iLink / QQ 开放平台等）。
  * credentials 为加密/服务端-only 文本，勿下发到客户端。
  */
 export const channelBindings = pgTable(

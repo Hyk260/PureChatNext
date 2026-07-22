@@ -1,11 +1,13 @@
+import { appEnv } from '@/envs/app'
+
 /**
  * Shared secret for gateway → webhook forwarding.
  * Prefer WECHAT_WEBHOOK_SECRET; fall back to CRON_SECRET.
  */
 export function resolveWechatWebhookSecret(): string {
   return (
-    process.env.WECHAT_WEBHOOK_SECRET?.trim() ||
-    process.env.CRON_SECRET?.trim() ||
+    appEnv.WECHAT_WEBHOOK_SECRET?.trim() ||
+    appEnv.CRON_SECRET?.trim() ||
     ''
   )
 }

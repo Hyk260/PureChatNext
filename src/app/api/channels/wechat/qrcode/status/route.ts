@@ -1,11 +1,16 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
+import { pollQrStatus } from '@pure/chat-adapter-wechat'
+
 import { withAuth, jsonError } from '@/libs/auth/get-session-user'
-import { pollQrStatus } from '@/libs/channels/wechat'
 
 export const maxDuration = 30
 
-/** GET /api/channels/wechat/qrcode/status?qrcode= — 轮询扫码状态 */
+/**
+ * GET
+ * /api/channels/wechat/qrcode/status?qrcode=
+ * — 轮询扫码状态
+ * */
 export const GET = withAuth(async (request: NextRequest) => {
   const qrcode = request.nextUrl.searchParams.get('qrcode')?.trim()
   if (!qrcode) return jsonError('qrcode is required')

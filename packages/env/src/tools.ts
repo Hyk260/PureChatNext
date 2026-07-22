@@ -1,12 +1,7 @@
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 
-const optionalNumberEnv = (min: number, max: number) => {
-  return z.preprocess(
-    (value) => (value === '' || value === null ? undefined : value),
-    z.coerce.number().int().max(max).min(min).optional()
-  )
-}
+import { optionalNumberEnv } from './helpers'
 
 export const getToolsConfig = () => {
   return createEnv({

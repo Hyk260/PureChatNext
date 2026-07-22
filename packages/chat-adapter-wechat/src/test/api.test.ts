@@ -10,8 +10,8 @@ import {
   resolveAesKey,
   WechatApiClient,
   WechatUploadMediaType,
-} from './api';
-import { MessageItemType, WECHAT_RET_CODES } from './types';
+} from '../api';
+import { MessageItemType, WECHAT_RET_CODES } from '../types';
 
 // ---- helpers ----
 

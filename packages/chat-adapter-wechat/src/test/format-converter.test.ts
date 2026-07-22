@@ -1,7 +1,7 @@
 import { parseMarkdown } from 'chat';
 import { describe, expect, it } from 'vitest';
 
-import { WechatFormatConverter } from './format-converter';
+import { WechatFormatConverter } from '../format-converter';
 
 describe('WechatFormatConverter', () => {
   const converter = new WechatFormatConverter();

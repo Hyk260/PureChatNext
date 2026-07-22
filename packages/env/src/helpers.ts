@@ -3,6 +3,8 @@
  * Boolean truthy values: `'1'` / `'true'` (case-insensitive).
  */
 
+import { z } from 'zod'
+
 export const parseEnvInt = (value?: string, fallback?: number): number | undefined => {
   if (value === undefined || value === '') {
     return fallback
@@ -28,4 +30,12 @@ export const parseEnvBooleanDefaultTrue = (value?: string): boolean => {
   if (value === undefined || value === '') return true
   const normalized = value.trim().toLowerCase()
   return normalized !== '0' && normalized !== 'false'
+}
+
+/** Optional int env with coerce; empty / null → undefined. */
+export const optionalNumberEnv = (min: number, max: number) => {
+  return z.preprocess(
+    (value) => (value === '' || value === null ? undefined : value),
+    z.coerce.number().int().max(max).min(min).optional(),
+  )
 }

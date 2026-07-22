@@ -28,12 +28,10 @@ export class EmailService {
    * 注意：目前仅 Nodemailer 实现支持此方法
    */
   async verify(): Promise<boolean> {
-    // 检查当前实现是否提供 verify 方法
     if ('verify' in this.emailImpl && typeof this.emailImpl.verify === 'function') {
       return this.emailImpl.verify();
     }
 
-    // 未提供 verify 的实现默认视为配置有效
     return true;
   }
 }

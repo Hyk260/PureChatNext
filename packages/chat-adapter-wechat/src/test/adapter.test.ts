@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
-import { createWechatAdapter, downloadMediaFromRawMessage, WechatAdapter } from './adapter';
-import { WechatApiClient, WechatUploadMediaType } from './api';
+import { createWechatAdapter, downloadMediaFromRawMessage, WechatAdapter } from '../adapter';
+import { WechatApiClient, WechatUploadMediaType } from '../api';
 import {
   MessageItemType,
   MessageState,
   MessageType,
   type WechatRawMessage,
-} from './types';
+} from '../types';
 
 // ---- helpers ----
 

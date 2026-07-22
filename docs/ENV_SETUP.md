@@ -95,6 +95,10 @@ Supabase PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数�
 ### NODE_ENV
 运行环境，通常为 `development` 或 `production`。
 
+### 微信 iLink 渠道
+
+见 [docs/self-hosting/wechat-channel.zh-CN.md](./self-hosting/wechat-channel.zh-CN.md)。协议层在 `@pure/chat-adapter-wechat`（Vercel Chat SDK）。关键变量：`KEY_VAULTS_SECRET`（凭证加密）、`REDIS_URL`、`CRON_SECRET` / `WECHAT_WEBHOOK_SECRET`、`APP_URL`、以及服务端 `OPENAI_API_KEY` / `DEEPSEEK_API_KEY`。本地轮询：`pnpm wechat:gateway`。
+
 ## 安全提示
 
 ⚠️ **重要**：

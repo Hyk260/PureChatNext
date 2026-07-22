@@ -10,6 +10,7 @@ const prefixes = {
   user: 'user',
   files: 'file',
   knowledgeBases: 'kb',
+  channels: 'chn',
 } as const
 
 /**

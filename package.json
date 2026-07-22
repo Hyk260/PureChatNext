@@ -14,6 +14,7 @@
     "vercel-build": "pnpm build",
     "start": "next start -p 3210",
     "gateway": "bun scripts/gateway.ts",
+    "wechat:gateway": "bun scripts/wechat-gateway.ts",
     "agents:sync": "bun scripts/fetch-community-agents.ts",
     "db:check": "drizzle-kit check",
     "db:generate": "drizzle-kit generate",
@@ -34,6 +35,7 @@
     "@lobehub/icons": "^5.10.1",
     "@lobehub/ui": "^5.16.1",
     "@pure/file-loaders": "workspace:*",
+    "@pure/chat-adapter-wechat": "workspace:*",
     "@pure/types": "workspace:*",
     "@pure/utils": "workspace:*",
     "@pure/web-crawler": "workspace:*",
@@ -53,6 +55,8 @@
     "axios": "^1.13.1",
     "bcryptjs": "^3.0.3",
     "better-auth": "^1.6.22",
+    "chat": "^4.31.0",
+    "@chat-adapter/state-memory": "^4.0.0",
     "debug": "^4.4.3",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.10",
@@ -85,7 +89,7 @@
     "url-join": "^5.0.0",
     "virtua": "^0.49.2",
     "workflow": "4.0.1-beta.11",
-    "zod": "^4.1.12",
+    "zod": "^4.3.6",
     "zustand": "5.0.4",
     "zustand-utils": "^2.1.1"
   },
@@ -111,6 +115,11 @@
     "vitest": "3.2.4"
   },
   "packageManager": "pnpm@10.33.4",
+  "pnpm": {
+    "overrides": {
+      "zod": "^4.3.6"
+    }
+  },
   "keywords": [
     "nextjs",
     "vercel-ai",

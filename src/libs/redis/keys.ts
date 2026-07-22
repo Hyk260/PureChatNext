@@ -19,7 +19,11 @@ export const RedisKeyNamespace = {
    * AI 生成相关 key（agent 欢迎语、占位符等）
    */
   AI_GENERATION: 'aiGeneration',
-} as const;
+  /**
+   * 微信 iLink 渠道（context_token 等）
+   */
+  WECHAT: 'wechat',
+} as const
 
 /**
  * 按命名空间/作用域组织的 Redis key 构建器
@@ -51,4 +55,14 @@ export const RedisKeys = {
      */
     homeBrief: (userId: string): string => `home_brief:${userId}`,
   },
-} as const;
+  /**
+   * 微信 iLink 渠道
+   */
+  wechat: {
+    /**
+     * 回复所需的 context_token
+     * 完整 key：wechat:ctx:{bindingId}:{fromUserId}
+     */
+    contextToken: (bindingId: string, fromUserId: string): string => `wechat:ctx:${bindingId}:${fromUserId}`,
+  },
+} as const

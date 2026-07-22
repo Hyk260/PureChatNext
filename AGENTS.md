@@ -26,7 +26,8 @@ PureChatNext/
 │   ├── utils/                 # 共享工具（apiKey、jina 等）
 │   ├── file-loaders/          # 文档加载（pdf、docx、pptx、excel…）
 │   ├── web-crawler/           # 网页爬虫多实现（naive、firecrawl、tavily…）
-│   └── ssrf-safe-fetch/       # SSRF 安全 fetch 封装
+│   ├── ssrf-safe-fetch/       # SSRF 安全 fetch 封装
+│   └── chat-adapter-wechat/   # 微信 iLink + Vercel Chat SDK Adapter
 ├── src/
 │   ├── spa/                   # Vite SPA 入口与 Router（迁移中）
 │   ├── features/              # 业务 UI（供 SPA 路由挂载）
@@ -152,6 +153,7 @@ cd packages/file-loaders && pnpm exec vitest run --silent='passed-only' 'src/loa
 | `docs/ENV_SETUP.md` | 环境变量详解 |
 | `docs/DRIZZLE_SETUP.md` | 数据库迁移 |
 | `docs/self-hosting/online-search.zh-CN.md` | 联网搜索与爬虫配置 |
+| `docs/self-hosting/wechat-channel.zh-CN.md` | 微信 iLink 扫码渠道 |
 | `.cursor/rules/debug-usage.md` | debug 日志规范 |
 
 ## lobehub （lobechat）

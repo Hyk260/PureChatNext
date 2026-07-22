@@ -205,10 +205,18 @@ export const webRoutes: RouteObject[] = [
       },
       {
         element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.MessengerPage })),
+          () => import('@/routes/settings/messenger/page'),
           'Settings > Messenger',
         ),
         path: 'messenger',
+      },
+      // 与 lobe-chat `:tab/:sub` 同思路：同一页读 `:platform` 切换列表/详情
+      {
+        element: dynamicElement(
+          () => import('@/routes/settings/messenger/page'),
+          'Settings > Messenger > Platform',
+        ),
+        path: 'messenger/:platform',
       },
       {
         element: dynamicElement(

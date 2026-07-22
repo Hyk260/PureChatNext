@@ -57,6 +57,13 @@
       "when": 1784080507030,
       "tag": "0007_bouncy_network",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784606712541,
+      "tag": "0008_orange_black_queen",
+      "breakpoints": true
     }
   ]
 }

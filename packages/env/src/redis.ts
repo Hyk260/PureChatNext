@@ -16,6 +16,7 @@ declare global {
       REDIS_TLS?: string
       REDIS_URL?: string
       REDIS_USERNAME?: string
+      /** 是否禁用 Redis */
       DISABLE_REDIS?: string
     }
   }
@@ -28,9 +29,9 @@ export const getRedisEnv = () => {
       REDIS_PASSWORD: z.string().optional(),
       REDIS_PREFIX: z.string(),
       REDIS_TLS: z.boolean().default(false),
-      // NOTE: don't use z.string().url() because docker may pass empty string when not set
       REDIS_URL: z.string().optional(),
       REDIS_USERNAME: z.string().optional(),
+      DISABLE_REDIS: z.boolean().default(false),
     },
     runtimeEnv: {
       REDIS_DATABASE: parseEnvInt(process.env.REDIS_DATABASE),
@@ -39,6 +40,7 @@ export const getRedisEnv = () => {
       REDIS_TLS: parseEnvBoolean(process.env.REDIS_TLS),
       REDIS_URL: process.env.REDIS_URL,
       REDIS_USERNAME: process.env.REDIS_USERNAME,
+      DISABLE_REDIS: parseEnvBoolean(process.env.DISABLE_REDIS),
     },
   })
 }

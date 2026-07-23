@@ -1,3 +1,3 @@
-# Markdown Test
+# fixture
 
-This is a test.
+Short markdown sample for file-loader integration tests.

@@ -74,30 +74,25 @@ export const TEXT_READABLE_FILE_TYPES = [
   'sql',
   'patch',
   'diff',
-  'db', // Often text-based, like SQLite journals
+  'db', // often text-adjacent (e.g. SQLite journals)
 ];
 
 /**
- * Extensions that have dedicated parsers in `loadFile`. These are not text but
- * are explicitly supported file types that we know how to extract text from.
+ * Binary formats with dedicated parsers in `loadFile` (not plain text).
  */
 export const SPECIAL_PARSED_FILE_TYPES = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'pptx'];
 
 /**
- * Determine if a file can be read as text based on its extension.
- * @param fileType File extension (without the leading dot)
- * @returns Whether the file is likely text-readable
+ * Whether `fileType` (extension without dot) is likely plain text.
  */
 export function isTextReadableFile(fileType: string): boolean {
   return TEXT_READABLE_FILE_TYPES.includes(fileType.toLowerCase());
 }
 
 /**
- * Whether the agent's `readFile` should be willing to attempt reading this
- * extension at all. True for known text formats and for the special parsed
- * binary formats (pdf/doc/etc.) that have dedicated loaders. Anything else —
- * `.bin`, `.zip`, `.b64`, `.exe`, … — should be hard-rejected before the file
- * is opened, to avoid feeding a binary blob to the LLM.
+ * Whether agent/tool `readFile` should attempt this extension at all.
+ * Includes text types and formats with dedicated loaders; rejects opaque
+ * binaries (`.bin`, `.zip`, `.exe`, …) before opening them for the LLM.
  */
 export function isReadableFileType(fileType: string): boolean {
   const ext = fileType.toLowerCase();

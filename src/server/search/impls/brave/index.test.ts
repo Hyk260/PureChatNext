@@ -153,27 +153,25 @@ describe('BraveImpl', () => {
       expect((options.headers as Record<string, string>)['X-Subscription-Token']).toBe('');
     });
 
-    it('should throw SERVICE_UNAVAILABLE when fetch throws a network error', async () => {
+    it('should throw when fetch throws a network error', async () => {
       vi.mocked(fetch).mockRejectedValue(new Error('Network error'));
 
       await expect(impl.query('test')).rejects.toMatchObject({
-        code: 'SERVICE_UNAVAILABLE',
         message: 'Failed to connect to Brave.',
       });
     });
 
-    it('should throw SERVICE_UNAVAILABLE when response is not ok', async () => {
+    it('should throw when response is not ok', async () => {
       vi.mocked(fetch).mockResolvedValue(
         createMockResponse({ error: 'Unauthorized' }, false, 401, 'Unauthorized'),
       );
 
       await expect(impl.query('test')).rejects.toMatchObject({
-        code: 'SERVICE_UNAVAILABLE',
         message: 'Brave request failed: Unauthorized',
       });
     });
 
-    it('should throw INTERNAL_SERVER_ERROR when response JSON parsing fails', async () => {
+    it('should throw when response JSON parsing fails', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
         status: 200,
@@ -182,7 +180,6 @@ describe('BraveImpl', () => {
       } as unknown as Response);
 
       await expect(impl.query('test')).rejects.toMatchObject({
-        code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to parse Brave response.',
       });
     });

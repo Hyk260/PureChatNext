@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox, ScrollShadow } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -11,10 +11,6 @@ import SidebarHeader from './SidebarHeader'
 import SidebarNav from './SidebarNav'
 
 const styles = createStaticStyles(({ css }) => ({
-  scrollArea: css`
-    flex: 1;
-    min-height: 0;
-  `,
   sidebar: css`
     flex: none;
     width: 240px;
@@ -37,19 +33,13 @@ const HomeSidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flexbox
-      className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')}
-      height='100%'
-      style={{ width: sidebarCollapsed ? 0 : 240 }}
-    >
+    <Flex vertical className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')} style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}>
       <SidebarHeader />
-      <ScrollShadow className={styles.scrollArea} size={2} style={{ width: 240 }}>
-        <Flexbox flex={1} gap={1} style={{ minHeight: '100%' }}>
-          <SidebarNav />
-          <SidebarBody />
-        </Flexbox>
-      </ScrollShadow>
-    </Flexbox>
+      <Flex vertical flex={1} gap={1} style={{ minHeight: 0, width: 240 }}>
+        <SidebarNav />
+        <SidebarBody />
+      </Flex>
+    </Flex>
   )
 })
 

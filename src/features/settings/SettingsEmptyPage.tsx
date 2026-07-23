@@ -1,8 +1,6 @@
 'use client'
 
-import { Flexbox, Text } from '@lobehub/ui'
-import { Divider } from 'antd'
-
+import { Flex, Typography, Divider } from 'antd'
 import { SettingHeader } from '@/features/settings/profile/components/SettingHeader'
 
 interface SettingsEmptyPageProps {
@@ -15,10 +13,10 @@ export function SettingsEmptyPage({
   title,
 }: SettingsEmptyPageProps) {
   return (
-    <Flexbox gap={24} style={{ paddingBlock: '24px 64px', paddingInline: 24 }} width="100%">
+    <Flex vertical gap={24} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: "100%" }}>
       <SettingHeader title={title} />
       {/* <Divider style={{ margin: 0 }} /> */}
-      <Text type="secondary">{description}</Text>
-    </Flexbox>
+      <Typography.Text type="secondary">{description}</Typography.Text>
+    </Flex>
   )
 }

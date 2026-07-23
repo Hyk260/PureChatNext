@@ -1,7 +1,8 @@
 'use client'
 
-import { Flexbox, Icon, Tag, Text } from '@lobehub/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { Flex, Tag, Typography } from 'antd'
+import { Icon } from '@pure/ui'
+import { createStaticStyles, cssVar, cx } from 'antd-style'
 import {
   BadgeDollarSignIcon,
   BriefcaseIcon,
@@ -31,10 +32,6 @@ import {
 import { AssistantCategory } from '@/features/community/types'
 
 const styles = createStaticStyles(({ css }) => ({
-  active: css`
-    background: ${cssVar.colorFillTertiary};
-    color: ${cssVar.colorText};
-  `,
   count: css`
     margin-inline-start: auto;
   `,
@@ -51,11 +48,26 @@ const styles = createStaticStyles(({ css }) => ({
     color: ${cssVar.colorTextSecondary};
     font-size: 14px;
     text-align: left;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease;
 
     &:hover {
       background: ${cssVar.colorFillSecondary};
       color: ${cssVar.colorText};
+    }
+
+    &:focus-visible {
+      outline: 2px solid ${cssVar.colorPrimary};
+      outline-offset: -2px;
+    }
+  `,
+  active: css`
+    && {
+      background: ${cssVar.colorPrimaryBg};
+      color: ${cssVar.colorPrimaryText};
+    }
+
+    &&:hover {
+      background: ${cssVar.colorPrimaryBgHover};
     }
   `,
   root: css`
@@ -114,23 +126,22 @@ const AgentCategory = memo(() => {
   )
 
   return (
-    <Flexbox className={styles.root} gap={4}>
+    <Flex vertical className={styles.root} gap={4}>
       {CATEGORY_KEYS.map((key) => {
         const isActive = selected === key
         return (
           <button
-            className={`${styles.item}${isActive ? ` ${styles.active}` : ''}`}
+            className={cx(styles.item, isActive && styles.active)}
             key={key}
             type='button'
             onClick={() => handleSelect(key)}
           >
             <Icon icon={CATEGORY_ICONS[key]} size={18} />
-            <Text ellipsis>{ASSISTANT_CATEGORY_LABELS[key]}</Text>
+            <Typography.Text ellipsis>{ASSISTANT_CATEGORY_LABELS[key]}</Typography.Text>
             {counts[key] > 0 ? (
               <Tag
                 className={styles.count}
-                size='small'
-                style={{ borderRadius: 12, paddingInline: 6 }}
+                style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
               >
                 {counts[key]}
               </Tag>
@@ -138,7 +149,7 @@ const AgentCategory = memo(() => {
           </button>
         )
       })}
-    </Flexbox>
+    </Flex>
   )
 })
 

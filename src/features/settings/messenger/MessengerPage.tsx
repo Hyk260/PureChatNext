@@ -1,6 +1,8 @@
 'use client'
 
-import { Block, Flexbox, Icon, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
+import { Block, Icon } from '@pure/ui'
+import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronRightIcon } from 'lucide-react'
 import { memo, useEffect } from 'react'
@@ -50,7 +52,16 @@ const isMessengerPlatform = (value: string | undefined): value is MessengerPlatf
 
 const MessengerPage = memo(() => {
   const navigate = useNavigate()
+  const { message } = useApp()
   const { platform } = useParams<{ platform?: string }>()
+
+  // TODO: 第一期所有渠道暂未开放，点击仅提示「敬请期待」。
+  // 后续逐个接入时，把 handleSelectPlatform 内对应分支改回 navigate 跳转即可。
+  const handleSelectPlatform = (item: { id: MessengerPlatformId }) => {
+    // TODO(messenger): 接入该平台详情页后启用跳转
+    // navigate(`/settings/messenger/${item.id}`)
+    message.info('敬请期待')
+  }
 
   useEffect(() => {
     if (platform && !isMessengerPlatform(platform)) {
@@ -71,31 +82,31 @@ const MessengerPage = memo(() => {
   }
 
   return (
-    <Flexbox gap={20} width="100%">
-      <Text type="secondary">{MESSENGER_SUBTITLE}</Text>
+    <Flex vertical gap={20} style={{ width: "100%" }}>
+      <Typography.Text type="secondary">{MESSENGER_SUBTITLE}</Typography.Text>
       <div className={styles.grid}>
         {MESSENGER_PLATFORMS.map((item) => (
           <Block
             className={styles.card}
             key={item.id}
-            onClick={() => navigate(`/settings/messenger/${item.id}`)}
+            onClick={() => handleSelectPlatform(item)}
           >
-            <Flexbox horizontal align="center" gap={16}>
+            <Flex align="center" gap={16}>
               <PlatformAvatar platform={item.id} size={48} />
-              <Flexbox flex={1} gap={2}>
-                <Text strong style={{ fontSize: 15 }}>
+              <Flex vertical flex={1} gap={2}>
+                <Typography.Text strong style={{ fontSize: 15 }}>
                   {item.name}
-                </Text>
-                <Text style={{ fontSize: 13 }} type="secondary">
+                </Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                   {item.description}
-                </Text>
-              </Flexbox>
+                </Typography.Text>
+              </Flex>
               <Icon icon={ChevronRightIcon} />
-            </Flexbox>
+            </Flex>
           </Block>
         ))}
       </div>
-    </Flexbox>
+    </Flex>
   )
 })
 

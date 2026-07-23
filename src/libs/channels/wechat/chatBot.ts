@@ -46,7 +46,6 @@ function registerHandlers(chat: Chat, ctx: WechatChatContext): void {
     })
   }
 
-  // WeChat is 1:1 DM — prefer onDirectMessage; also catch-all like lobe for routing quirks
   chat.onDirectMessage(async (thread, message) => {
     await handler(thread, message)
   })

@@ -1,6 +1,6 @@
 'use client'
 
-import { Modal, Input } from '@lobehub/ui'
+import { Input, Modal } from 'antd'
 import { memo, useState } from 'react'
 
 interface LibraryModalProps {

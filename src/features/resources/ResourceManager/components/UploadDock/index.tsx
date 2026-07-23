@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useState } from 'react'
 
@@ -31,14 +31,14 @@ const UploadDock = memo(() => {
   if (items.length === 0) return null
 
   return (
-    <Flexbox className={styles.dock} gap={8}>
-      <Text strong>上传中</Text>
+    <Flex vertical className={styles.dock} gap={8}>
+      <Typography.Text strong>上传中</Typography.Text>
       {items.map((item) => (
-        <Text key={item.id} fontSize={12}>
+        <Typography.Text key={item.id} style={{ fontSize: 12 }}>
           {item.name} — {item.progress}%
-        </Text>
+        </Typography.Text>
       ))}
-    </Flexbox>
+    </Flex>
   )
 })
 

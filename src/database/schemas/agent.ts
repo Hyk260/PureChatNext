@@ -15,10 +15,7 @@ import { timestamps, varchar255 } from './_helpers'
 import { users } from './user'
 
 /**
- * 助手配置表（裁剪自 LobeHub agents）。
- * - `user_id IS NULL` + `is_builtin`：系统内置（如 Pure AI），全局共享
- * - `user_id` 非空：用户自建
- * `chat_topics.agent_id` / `chat_messages.agent_id` 约定指向本表 `id`（不加 FK）
+ * 助手配置表
  */
 export const agents = pgTable(
   'agents',

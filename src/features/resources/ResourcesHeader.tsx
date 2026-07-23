@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox, Text , Avatar } from '@lobehub/ui'
+import { Avatar, Flex, Typography } from 'antd'
 import { memo } from 'react'
 
 import { useSession } from '@/libs/better-auth/client'
@@ -9,12 +9,12 @@ const ResourcesHeader = memo(() => {
   const { data: session } = useSession()
 
   return (
-    <Flexbox align='center' horizontal justify='space-between' padding={16} width='100%'>
-      <Text fontSize={16} strong>
+    <Flex align='center' justify='space-between' style={{ padding: 16, width: '100%' }}>
+      <Typography.Text strong style={{ fontSize: 16 }}>
         资源
-      </Text>
-      <Avatar avatar={session?.user?.image ?? undefined} size={32} />
-    </Flexbox>
+      </Typography.Text>
+      <Avatar src={session?.user?.image ?? undefined} size={32} />
+    </Flex>
   )
 })
 

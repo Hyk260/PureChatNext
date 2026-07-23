@@ -1,5 +1,5 @@
 /**
- * System files to be filtered out when listing directory contents
+ * Filenames / directories to skip when walking filesystem trees
  */
 export const SYSTEM_FILES_TO_IGNORE = [
   '.DS_Store',

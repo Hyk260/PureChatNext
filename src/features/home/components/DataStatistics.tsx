@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, type ReactNode } from 'react'
 import useSWR from 'swr'
@@ -42,10 +42,10 @@ const fetchUserStats = async (): Promise<UserStats> => {
 }
 
 const StatCard = memo<{ count: ReactNode; title: string }>(({ count, title }) => (
-  <Flexbox className={styles.card} flex={1} gap={2}>
+  <Flex vertical className={styles.card} flex={1} gap={2}>
     <div className={styles.count}>{count}</div>
     <div className={styles.title}>{title}</div>
-  </Flexbox>
+  </Flex>
 ))
 
 StatCard.displayName = 'StatCard'
@@ -66,18 +66,11 @@ const DataStatistics = memo(() => {
   const messages = renderCount(data?.messages)
 
   return (
-    <Flexbox
-      horizontal
-      align='center'
-      gap={4}
-      paddingInline={8}
-      style={{ marginBottom: 8 }}
-      width='100%'
-    >
+    <Flex align='center' gap={4} style={{ paddingInline: 8, marginBottom: 8, width: '100%' }}>
       <StatCard count={agents} title='助理' />
       <StatCard count={topics} title='话题' />
       <StatCard count={messages} title='消息' />
-    </Flexbox>
+    </Flex>
   )
 })
 

@@ -1,7 +1,8 @@
 'use client'
 
-import { ActionIcon, Flexbox } from '@lobehub/ui'
-import { App, Badge } from 'antd'
+import { ActionIcon } from '@pure/ui'
+import { Flex, Badge } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { BellIcon } from 'lucide-react'
 import { memo } from 'react'
@@ -16,7 +17,7 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 const SidebarHeader = memo(() => {
-  const { message } = App.useApp()
+  const { message } = useApp()
 
   return (
     <SideBarHeaderLayout

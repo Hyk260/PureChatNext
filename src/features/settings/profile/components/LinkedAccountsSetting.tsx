@@ -1,14 +1,9 @@
 'use client'
 
 import AuthIcons from '@/components/AuthIcons'
-import {
-  ActionIcon,
-  DropdownMenu,
-  Flexbox,
-  Text,
-  type MenuProps,
-} from '@lobehub/ui'
-import { App, Modal } from 'antd'
+import { ActionIcon, DropdownMenu, type MenuProps } from '@pure/ui'
+import { Flex, Typography, Modal } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { ArrowRight, Plus, Unlink } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -41,7 +36,7 @@ function isBuiltinProvider(provider: string) {
 }
 
 export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps) {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const { config, ready } = useAuthConfig()
   const [accounts, setAccounts] = useState<LinkedAccount[]>([])
   const [loading, setLoading] = useState(true)
@@ -115,6 +110,8 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
     }
 
     Modal.confirm({
+      centered: true,
+      transitionName: '',
       content: `确定要解绑 ${getProviderLabel(account.providerId)} 账户吗？`,
       okButtonProps: { danger: true },
       okText: '解绑',
@@ -157,36 +154,30 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
 
   return (
     <SettingRow label="已关联的账户">
-      <Flexbox gap={8} style={{ width: '100%' }}>
+      <Flex vertical gap={8} style={{ width: '100%' }}>
         {loading ? (
-          <Text type="secondary">加载中…</Text>
+          <Typography.Text type="secondary">加载中…</Typography.Text>
         ) : oauthAccounts.length === 0 ? (
-          <Text type="secondary">暂无关联的第三方账户</Text>
+          <Typography.Text type="secondary">暂无关联的第三方账户</Typography.Text>
         ) : (
           oauthAccounts.map((account) => (
-            <Flexbox
-              align="center"
-              gap={8}
-              horizontal
-              justify="space-between"
-              key={account.id}
-            >
-              <Flexbox align="center" gap={6} horizontal style={{ fontSize: 12, minWidth: 0 }}>
+            <Flex align="center" gap={8} justify="space-between" key={account.id}>
+              <Flex align="center" gap={6} style={{ fontSize: 12, minWidth: 0 }}>
                 {AuthIcons(account.providerId, 16)}
                 <span>{getProviderLabel(account.providerId)}</span>
                 {userEmail ? (
-                  <Text fontSize={11} type="secondary">
+                  <Typography.Text type="secondary" style={{ fontSize: 11 }}>
                     · {userEmail}
-                  </Text>
+                  </Typography.Text>
                 ) : null}
-              </Flexbox>
+              </Flex>
               <ActionIcon
                 disabled={!allowUnlink || unlinkingId === account.id}
                 icon={Unlink}
                 onClick={() => confirmUnlink(account)}
                 size="small"
               />
-            </Flexbox>
+            </Flex>
           ))
         )}
 
@@ -195,23 +186,16 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
             items={linkMenuItems}
             popupProps={{ style: { maxWidth: 200 } }}
           >
-            <Flexbox
-              align="center"
-              gap={6}
-              horizontal
-              style={{
-                cursor: linkingProvider ? 'wait' : 'pointer',
+            <Flex align="center" gap={6} style={{ cursor: linkingProvider ? 'wait' : 'pointer',
                 fontSize: 12,
-                opacity: linkingProvider ? 0.6 : 1,
-              }}
-            >
+                opacity: linkingProvider ? 0.6 : 1, }}>
               <Plus size={14} />
               <span>关联账户</span>
               <ArrowRight size={14} />
-            </Flexbox>
+            </Flex>
           </DropdownMenu>
         ) : null}
-      </Flexbox>
+      </Flex>
     </SettingRow>
   )
 }

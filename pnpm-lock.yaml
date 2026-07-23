@@ -53,6 +53,9 @@ importers:
       '@pure/types':
         specifier: workspace:*
         version: link:packages/types
+      '@pure/ui':
+        specifier: workspace:*
+        version: link:packages/ui
       '@pure/utils':
         specifier: workspace:*
         version: link:packages/utils
@@ -414,6 +417,18 @@ importers:
       zustand:
         specifier: 5.0.4
         version: 5.0.4(@types/react@19.2.2)(immer@11.1.8)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
+
+  packages/ui:
+    dependencies:
+      '@lobehub/ui':
+        specifier: ^5.16.1
+        version: 5.16.1(@lobehub/fluent-emoji@2.0.0(@babel/core@7.29.7)(@types/mdast@4.0.4)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(antd@6.4.5(date-fns@4.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(framer-motion@12.41.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(@lobehub/icons@5.10.1)(@types/mdast@4.0.4)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(antd@6.4.5(date-fns@4.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(date-fns@4.1.0)(micromark-util-types@2.0.2)(micromark@4.0.2)(motion@12.41.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(svelte@5.43.4)
+      lucide-react:
+        specifier: '*'
+        version: 1.23.0(react@19.2.7)
+      react:
+        specifier: '*'
+        version: 19.2.7
 
   packages/utils:
     dependencies:

@@ -410,7 +410,8 @@ function mapToUploadMediaType(type: 'image' | 'file' | 'video' | 'audio'): Wecha
 }
 
 /**
- * WeChat (iLink) adapter for Chat SDK.
+ * WeChat (iLink) adapter for @pure/chat-adapter-wechat (Vercel Chat SDK).
+ * Protocol notes: `docs/self-hosting/wechat/protocol.zh-CN.md`.
  *
  * Handles webhook requests forwarded by the long-polling monitor
  * and message operations via iLink Bot API.
@@ -516,7 +517,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
       sentItems.push({ text_item: { text }, type: MessageItemType.TEXT });
     }
 
-    // Per protocol-spec §6.7, media items are sent as separate sendmessage calls
+    // Per protocol.zh-CN.md §6.7, media items are sent as separate sendmessage calls
     // (one item per request). We collect attachments + files from the postable
     // payload, materialize their bytes, and upload each to the iLink CDN.
     const mediaSpecs = await this.collectMediaSpecs(message);

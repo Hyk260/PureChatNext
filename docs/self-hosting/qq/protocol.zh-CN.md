@@ -1,8 +1,10 @@
 # QQ 开放平台机器人 API 通信协议规范
 
+> **渠道笔记**（`docs/self-hosting/qq/protocol.zh-CN.md`）：供本仓库 `@pure/chat-adapter-qq` 与 `pnpm qq:gateway` 对照。正文描述的是 QQ 开放平台公开协议行为，不是上游产品文档拷贝说明。
+>
 > 适用对象：实现 QQ 开放平台机器人消息收发的 SDK、网关和独立 Bot。
 >
-> 整理依据：QQ 开放平台官方文档（bot.q.qq.com/wiki）v2 API、已有 `chat-adapter-qq` 实现源码、社区 SDK（botpy、botgo、bot-node-sdk）实现经验。
+> 整理依据：QQ 开放平台官方文档（bot.q.qq.com/wiki）v2 API、本仓 `chat-adapter-qq` 实现、社区 SDK（botpy、botgo、bot-node-sdk）实现经验。
 >
 > 说明：文中标注 "工程建议" 的内容来自现有客户端实现经验，用于提高兼容性；它们不是服务端返回字段本身的一部分。
 

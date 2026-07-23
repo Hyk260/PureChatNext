@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Flexbox, Text } from '@lobehub/ui'
+import { Flex, Button, Typography } from 'antd'
 import { cssVar } from 'antd-style'
 import Link from '@/utils/link'
 import { useSearchParams } from '@/utils/navigation'
@@ -55,7 +55,7 @@ const AuthErrorContent = memo(() => {
     <AuthPageContainer>
       <AuthCard
         footer={
-          <Flexbox gap={12} justify='center' wrap='wrap'>
+          <Flex vertical gap={12} justify='center' wrap='wrap'>
             <Link href='/signin'>
               <Button block size='large' type='primary'>
                 返回登录
@@ -66,14 +66,14 @@ const AuthErrorContent = memo(() => {
                 返回首页
               </Button>
             </Link>
-          </Flexbox>
+          </Flex>
         }
         subtitle={description}
         title='登录失败'
       >
-        <Text style={{ fontFamily: cssVar.fontFamilyCode }} type='secondary'>
+        <Typography.Text style={{ fontFamily: cssVar.fontFamilyCode }} type='secondary'>
           ErrorCode: {error || 'UNKNOWN'}
-        </Text>
+        </Typography.Text>
       </AuthCard>
     </AuthPageContainer>
   )

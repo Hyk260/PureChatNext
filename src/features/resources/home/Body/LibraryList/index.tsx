@@ -1,7 +1,8 @@
 'use client'
 
-import { ActionIcon, Button, Flexbox, Text } from '@lobehub/ui'
-import { App } from 'antd'
+import { ActionIcon } from '@pure/ui'
+import { Flex, Typography, Button } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { Plus, Trash2 } from 'lucide-react'
 import Link from '@/utils/link'
 import { usePathname } from '@/utils/navigation'
@@ -12,7 +13,7 @@ import { useFetchKnowledgeBaseList, useResourceStore } from '@/features/resource
 
 const LibraryList = memo(() => {
   const pathname = usePathname()
-  const { message } = App.useApp()
+  const { message } = useApp()
   const { data: libraries } = useFetchKnowledgeBaseList()
   const createKnowledgeBase = useResourceStore((s) => s.createKnowledgeBase)
   const deleteKnowledgeBase = useResourceStore((s) => s.deleteKnowledgeBase)
@@ -29,24 +30,24 @@ const LibraryList = memo(() => {
   }
 
   return (
-    <Flexbox gap={4} paddingInline={8}>
-      <Flexbox align='center' horizontal justify='space-between' paddingInline={4}>
-        <Text fontSize={12} type='secondary'>
+    <Flex vertical gap={4} style={{ paddingInline: 8 }}>
+      <Flex align='center' justify='space-between' style={{ paddingInline: 4 }}>
+        <Typography.Text type='secondary' style={{ fontSize: 12 }}>
           知识库
-        </Text>
+        </Typography.Text>
         <ActionIcon icon={Plus} onClick={handleCreate} size='small' title='新建' />
-      </Flexbox>
+      </Flex>
       {libraries.length === 0 ? (
-        <Text fontSize={12} type='secondary'>
+        <Typography.Text type='secondary' style={{ fontSize: 12 }}>
           暂无知识库
-        </Text>
+        </Typography.Text>
       ) : (
         libraries.map((kb) => {
           const href = `/resources/library/${kb.id}`
           const active = pathname.startsWith(href)
 
           return (
-            <Flexbox key={kb.id} align='center' horizontal justify='space-between'>
+            <Flex key={kb.id} align='center' justify='space-between'>
               <Link href={href} style={{ color: 'inherit', flex: 1, textDecoration: 'none' }}>
                 <NavItem active={active} clickable title={kb.name} />
               </Link>
@@ -60,11 +61,11 @@ const LibraryList = memo(() => {
                   }
                 }}
               />
-            </Flexbox>
+            </Flex>
           )
         })
       )}
-    </Flexbox>
+    </Flex>
   )
 })
 

@@ -1,18 +1,19 @@
+/** Shared WeChat iLink types for @pure/chat-adapter-wechat. */
+
 export interface WechatAdapterConfig {
-  /** Bot's iLink user ID (from QR login) */
+  /** Bot iLink user id from QR login. */
   botId?: string;
-  /** Bot token obtained from iLink QR code authentication */
+  /** Bot token from iLink QR authentication. */
   botToken: string;
 }
 
 export interface WechatThreadId {
-  /** The WeChat user ID (xxx@im.wechat format) */
+  /** WeChat user id (`xxx@im.wechat`). */
   id: string;
-  /** Chat type */
   type: 'single' | 'group';
 }
 
-// ---------- iLink protocol enums ----------
+// --- iLink protocol enums ---
 
 export enum MessageType {
   USER = 1,
@@ -33,7 +34,7 @@ export enum MessageItemType {
   VIDEO = 5,
 }
 
-// ---------- iLink API raw types ----------
+// --- iLink API wire types ---
 
 export interface BaseInfo {
   channel_version: string;
@@ -86,7 +87,7 @@ export interface MessageItem {
   voice_item?: VoiceItem;
 }
 
-/** Raw message from getupdates */
+/** Raw message from `getupdates`. */
 export interface WechatRawMessage {
   client_id: string;
   context_token: string;
@@ -99,7 +100,7 @@ export interface WechatRawMessage {
   to_user_id: string;
 }
 
-/** getupdates response */
+/** `getupdates` response body. */
 export interface WechatGetUpdatesResponse {
   errcode?: number;
   errmsg?: string;
@@ -109,7 +110,7 @@ export interface WechatGetUpdatesResponse {
   ret: number;
 }
 
-/** sendmessage request body */
+/** `sendmessage` request body. */
 export interface WechatSendMessageReq {
   base_info: BaseInfo;
   msg: {
@@ -123,13 +124,13 @@ export interface WechatSendMessageReq {
   };
 }
 
-/** sendmessage response */
+/** `sendmessage` response body. */
 export interface WechatSendMessageResponse {
   errmsg?: string;
   ret: number;
 }
 
-/** getconfig response */
+/** `getconfig` response body. */
 export interface WechatGetConfigResponse {
   errcode?: number;
   errmsg?: string;
@@ -137,19 +138,18 @@ export interface WechatGetConfigResponse {
   typing_ticket?: string;
 }
 
-/** sendtyping request body */
+/** `sendtyping` request body. */
 export interface WechatSendTypingReq {
   base_info: BaseInfo;
   ilink_user_id: string;
-  /** 1 = start, 2 = stop */
+  /** `1` = start, `2` = stop */
   status: 1 | 2;
   typing_ticket: string;
 }
 
-/** iLink API return codes */
+/** iLink API `ret` codes. */
 export const WECHAT_RET_CODES = {
-  /** Success */
   OK: 0,
-  /** Session expired — requires re-authentication via QR code */
+  /** Session expired — re-auth via QR. */
   SESSION_EXPIRED: -14,
 } as const;

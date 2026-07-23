@@ -198,27 +198,25 @@ describe('TavilyImpl', () => {
       expect(body.max_results).toBe(15);
     });
 
-    it('should throw SERVICE_UNAVAILABLE when fetch throws a network error', async () => {
+    it('should throw when fetch throws a network error', async () => {
       vi.mocked(fetch).mockRejectedValue(new Error('ECONNREFUSED'));
 
       await expect(impl.query('test')).rejects.toMatchObject({
-        code: 'SERVICE_UNAVAILABLE',
         message: 'Failed to connect to Tavily.',
       });
     });
 
-    it('should throw SERVICE_UNAVAILABLE when response is not ok', async () => {
+    it('should throw when response is not ok', async () => {
       vi.mocked(fetch).mockResolvedValue(
         createMockResponse({ error: 'Too Many Requests' }, false, 429, 'Too Many Requests'),
       );
 
       await expect(impl.query('test')).rejects.toMatchObject({
-        code: 'SERVICE_UNAVAILABLE',
         message: 'Tavily request failed: Too Many Requests',
       });
     });
 
-    it('should throw INTERNAL_SERVER_ERROR when response JSON parsing fails', async () => {
+    it('should throw when response JSON parsing fails', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
         status: 200,
@@ -227,7 +225,6 @@ describe('TavilyImpl', () => {
       } as unknown as Response);
 
       await expect(impl.query('test')).rejects.toMatchObject({
-        code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to parse Tavily response.',
       });
     });

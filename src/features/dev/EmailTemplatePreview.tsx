@@ -1,13 +1,41 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Tabs } from 'antd';
 import { Mail } from 'lucide-react';
+import Scrollbar  from '@/components/Scrollbar';
 
 import { type EmailTemplatePreview } from '@/libs/better-auth/email-templates/preview';
 
 type Props = {
   templates: EmailTemplatePreview[];
 };
+
+/**
+ * 延迟挂载的 iframe：先让页面（header / Tabs）完成首帧绘制并恢复可交互，
+ * 再在下一帧创建 iframe，避免 srcDoc 解析与首屏编译/排版挤在同一帧造成卡顿。
+ */
+function DeferredIframe({ title, srcDoc }: { title: string; srcDoc: string }) {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  if (!ready) {
+    return <div className="h-[700px] w-full animate-pulse bg-[#f4f4f5]" aria-busy="true" />;
+  }
+
+  return (
+    <iframe
+      title={title}
+      srcDoc={srcDoc}
+      sandbox="allow-same-origin"
+      className="h-[700px] w-full border-0"
+    />
+  );
+}
 
 export function EmailTemplatePreviewPanel({ templates }: Props) {
   const items = templates.map(template => ({
@@ -29,12 +57,7 @@ export function EmailTemplatePreviewPanel({ templates }: Props) {
         </div>
 
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-[#f4f4f5] shadow-sm">
-          <iframe
-            title={`${template.label} preview`}
-            srcDoc={template.html}
-            sandbox="allow-same-origin"
-            className="h-[700px] w-full border-0"
-          />
+          <DeferredIframe title={`${template.label} preview`} srcDoc={template.html} />
         </div>
       </div>
     ),
@@ -42,6 +65,7 @@ export function EmailTemplatePreviewPanel({ templates }: Props) {
 
   return (
     <main className="h-screen overflow-y-auto bg-[#f5f7fb] text-slate-950">
+      <Scrollbar>
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
         <header className="border-b border-slate-200 pb-5">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-sm font-medium text-violet-700 ring-1 ring-violet-200">
@@ -56,8 +80,13 @@ export function EmailTemplatePreviewPanel({ templates }: Props) {
           </p>
         </header>
 
-        <Tabs defaultActiveKey={templates[0]?.key} items={items} />
+        <Tabs
+          defaultActiveKey={templates[0]?.key}
+          items={items}
+          destroyInactiveTabPane
+        />
       </div>
+      </Scrollbar>
     </main>
   );
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { memo, type ReactNode } from 'react'
 
@@ -66,24 +66,24 @@ const ChatLayout = memo<Props>(({ left, right, title, children }) => {
   const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
 
   return (
-    <Flexbox horizontal height='100dvh' width='100%' style={{ overflow: 'hidden' }}>
+    <Flex style={{ height: '100dvh', width: '100%', overflow: 'hidden' }}>
       <aside
         className={cx(styles.left, leftCollapsed && styles.leftCollapsed)}
         style={{ width: leftCollapsed ? 0 : LEFT_WIDTH }}
       >
         <div style={{ height: '100%', width: LEFT_WIDTH }}>{left}</div>
       </aside>
-      <Flexbox className={styles.main} height='100%' style={{ minWidth: 0 }}>
+      <Flex vertical className={styles.main} style={{ height: '100%', minWidth: 0 }}>
         <ChatHeader title={title} />
         <div className={styles.content}>{children}</div>
-      </Flexbox>
+      </Flex>
       <aside
         className={cx(styles.right, rightCollapsed && styles.rightCollapsed)}
         style={{ width: rightCollapsed ? 0 : RIGHT_WIDTH }}
       >
         <div style={{ height: '100%', width: RIGHT_WIDTH }}>{right}</div>
       </aside>
-    </Flexbox>
+    </Flex>
   )
 })
 

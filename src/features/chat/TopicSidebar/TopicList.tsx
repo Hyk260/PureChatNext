@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -23,7 +23,7 @@ type Props = {
 }
 
 const TopicList = memo<Props>(({ topics, activeTopicId, onSelect, onRename, onDelete }) => (
-  <Flexbox gap={1} paddingBlock={1}>
+  <Flex vertical gap={1} style={{ paddingBlock: 1 }}>
     {topics.length > 0 ? (
       topics.map((topic) => (
         <TopicItem
@@ -36,13 +36,13 @@ const TopicList = memo<Props>(({ topics, activeTopicId, onSelect, onRename, onDe
         />
       ))
     ) : (
-      <Flexbox paddingBlock={4} paddingInline={12}>
-        <Text className={styles.empty} fontSize={12}>
+      <Flex vertical style={{ paddingBlock: 4, paddingInline: 12 }}>
+        <Typography.Text className={styles.empty} style={{ fontSize: 12 }}>
           暂无话题
-        </Text>
-      </Flexbox>
+        </Typography.Text>
+      </Flex>
     )}
-  </Flexbox>
+  </Flex>
 ))
 
 TopicList.displayName = 'TopicList'

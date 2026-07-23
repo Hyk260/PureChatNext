@@ -1,0 +1,164 @@
+/* ────────────────────────────────────────────────────────────
+ * 语义化工具类别名（等价于 UnoCSS 的 shortcuts）
+ *
+ * 用 Tailwind v4 的 @utility 指令定义：
+ *   - 支持所有变体（hover:、md:、dark:、focus: …）
+ *   - 会被 Tailwind IntelliSense 识别（hover 预览 + 自动补全）
+ *   - 不要定义与内置同名的 @utility（如 flex-col / truncate），
+ *     否则 @apply 会解析到自身造成循环依赖
+ *
+ * 命名约定：
+ *   flex-{justify}{items}        flex-row 对齐组合
+ *   flex-col-{justify}{items}    flex-col 对齐组合（已含 flex flex-col）
+ *   justify: s=start c=center e=end b=between a=around
+ *   items:   s=start c=center e=end
+ * ──────────────────────────────────────────────────────────── */
+
+/* ── 尺寸 ── */
+@utility wh-full {
+  width: 100%;
+  height: 100%;
+}
+
+@utility wh-screen {
+  @apply w-screen h-screen;
+}
+
+@utility wh-auto {
+  width: auto;
+  height: auto;
+}
+
+/* ── flex-row 对齐组合 ── */
+@utility flex-c {
+  @apply flex justify-center items-center;
+}
+
+@utility flex-sc {
+  @apply flex justify-start items-center;
+}
+
+@utility flex-ac {
+  @apply flex justify-around items-center;
+}
+
+@utility flex-bc {
+  @apply flex justify-between items-center;
+}
+
+@utility flex-ae {
+  @apply flex justify-around items-end;
+}
+
+@utility flex-ss {
+  @apply flex justify-start items-start;
+}
+
+@utility flex-ec {
+  @apply flex justify-end items-center;
+}
+
+@utility flex-ce {
+  @apply flex justify-center items-end;
+}
+
+@utility flex-cs {
+  @apply flex justify-center items-start;
+}
+
+@utility flex-se {
+  @apply flex justify-start items-end;
+}
+
+@utility flex-es {
+  @apply flex justify-end items-start;
+}
+
+@utility flex-ee {
+  @apply flex justify-end items-end;
+}
+
+/* ── flex-col 系列（垂直方向布局常用）──
+ * 注意：不要定义名为 flex-col 的 @utility，会覆盖内置 flex-col 导致循环依赖。
+ *       这里每个变体都显式 @apply flex flex-col 以同时设置 display 与方向。
+ */
+@utility flex-col-c {
+  @apply flex flex-col justify-center items-center;
+}
+
+@utility flex-col-ss {
+  @apply flex flex-col justify-start items-start;
+}
+
+@utility flex-col-sc {
+  @apply flex flex-col justify-start items-center;
+}
+
+@utility flex-col-se {
+  @apply flex flex-col justify-start items-end;
+}
+
+@utility flex-col-ec {
+  @apply flex flex-col justify-end items-center;
+}
+
+@utility flex-col-ee {
+  @apply flex flex-col justify-end items-end;
+}
+
+@utility flex-col-bc {
+  @apply flex flex-col justify-between items-center;
+}
+
+@utility flex-col-bs {
+  @apply flex flex-col justify-between items-start;
+}
+
+@utility flex-col-be {
+  @apply flex flex-col justify-between items-end;
+}
+
+@utility flex-col-ac {
+  @apply flex flex-col justify-around items-center;
+}
+
+/* ── grid 常用 ── */
+@utility grid-c {
+  @apply grid place-items-center;
+}
+
+@utility grid-sc {
+  @apply grid place-items-start;
+}
+
+@utility grid-ec {
+  @apply grid place-items-end;
+}
+
+/* ── 定位 / 填充 ── */
+@utility absolute-fill {
+  @apply absolute inset-0;
+}
+
+@utility fixed-fill {
+  @apply fixed inset-0;
+}
+
+/* 绝对定位居中（常用于弹窗 / 蒙层内容） */
+@utility abs-center {
+  @apply absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2;
+}
+
+/* ── 文本 / 滚动 ── */
+@utility text-break {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

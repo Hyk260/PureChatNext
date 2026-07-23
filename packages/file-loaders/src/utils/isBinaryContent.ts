@@ -2,7 +2,9 @@ import { open } from 'node:fs/promises';
 
 import { detectUtf16NoBom } from './detectUtf16';
 
+/** Leading bytes sampled when sniffing a file on disk. */
 const SNIFF_BYTES = 8192;
+/** Share of control / replacement chars that marks a buffer as binary. */
 const NON_PRINTABLE_THRESHOLD = 0.3;
 
 export interface BinarySniffResult {
@@ -17,17 +19,15 @@ const hasUtf16Bom = (buf: Buffer): boolean =>
   buf.length >= 2 && ((buf[0] === 0xff && buf[1] === 0xfe) || (buf[0] === 0xfe && buf[1] === 0xff));
 
 /**
- * Heuristically determine if a buffer looks like binary data.
+ * Heuristic binary sniff for @pure/file-loaders.
  *
  * - UTF-8 / UTF-16 BOM → text
- * - UTF-16 detected without BOM (Windows-style exports) → text, decoded for
- *   the printable-ratio check
- * - Any null byte (and not UTF-16) → binary
- * - More than 30% of decoded chars are control or U+FFFD replacement → binary
+ * - UTF-16 without BOM (common Windows exports) → text (printable-ratio on decode)
+ * - Null byte outside UTF-16 → binary
+ * - >30% control / U+FFFD chars after decode → binary
  *
- * Note: this only catches truly binary content. Text-encoded blobs (e.g., a
- * single 27KB line of base64) will pass this check — the extension whitelist
- * and the post-load char cap are what stop those.
+ * Encoded blobs (e.g. long base64 lines) still look textual here; extension
+ * allowlists and post-load size caps handle those cases.
  */
 export const sniffBinaryBuffer = (buffer: Buffer): BinarySniffResult => {
   if (buffer.length === 0) return { isBinary: false };
@@ -76,9 +76,7 @@ const checkPrintableRatio = (text: string, sampledBytes: number): BinarySniffRes
   return { isBinary: false };
 };
 
-/**
- * Read up to the leading 8KB of a file and run the binary heuristic on it.
- */
+/** Sniff the first 8KB of a file on disk. */
 export const sniffBinaryFile = async (filePath: string): Promise<BinarySniffResult> => {
   const fd = await open(filePath, 'r');
   try {

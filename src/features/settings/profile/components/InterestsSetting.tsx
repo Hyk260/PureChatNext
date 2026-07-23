@@ -1,7 +1,8 @@
 'use client'
 
-import { Block, Flexbox, Icon, Input, Text } from '@lobehub/ui'
-import { App } from 'antd'
+import { Block, Icon } from '@pure/ui'
+import { Flex, Typography, Input } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { cssVar } from 'antd-style'
 import { BriefcaseIcon } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
@@ -22,7 +23,7 @@ interface InterestsSettingProps {
 }
 
 export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps) {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const [customInput, setCustomInput] = useState('')
   const [showCustomInput, setShowCustomInput] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -72,8 +73,8 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
 
   return (
     <SettingRow label="兴趣领域">
-      <Flexbox gap={12} style={{ opacity: saving ? 0.7 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
-        <Flexbox align="center" gap={8} horizontal wrap="wrap">
+      <Flex vertical gap={12} style={{ opacity: saving ? 0.7 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
+        <Flex align="center" gap={8} wrap="wrap">
           {INTEREST_AREAS.map((item) => {
             const isSelected = normalizedInterests.includes(item.key)
             return (
@@ -95,9 +96,9 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
                 variant="outlined"
               >
                 <Icon color={cssVar.colorTextSecondary} icon={item.icon} size={14} />
-                <Text fontSize={13} weight={500}>
+                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>
                   {item.label}
-                </Text>
+                </Typography.Text>
               </Block>
             )
           })}
@@ -115,9 +116,9 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
                 }}
                 variant="outlined"
               >
-                <Text fontSize={13} weight={500}>
+                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>
                   {interest}
-                </Text>
+                </Typography.Text>
               </Block>
             ))}
           <Block
@@ -134,11 +135,11 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
             variant="outlined"
           >
             <Icon color={cssVar.colorTextSecondary} icon={BriefcaseIcon} size={14} />
-            <Text fontSize={13} weight={500}>
+            <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>
               其他领域
-            </Text>
+            </Typography.Text>
           </Block>
-        </Flexbox>
+        </Flex>
         {showCustomInput ? (
           <Input
             onChange={(event) => setCustomInput(event.target.value)}
@@ -149,7 +150,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
             value={customInput}
           />
         ) : null}
-      </Flexbox>
+      </Flex>
     </SettingRow>
   )
 }

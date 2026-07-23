@@ -1,6 +1,6 @@
 'use client'
 
-import { ModelIcon } from '@lobehub/icons'
+import { Flex, Input, Tag, Typography } from 'antd'
 import {
   DropdownMenuItem,
   DropdownMenuPopup,
@@ -8,12 +8,9 @@ import {
   DropdownMenuPositioner,
   DropdownMenuRoot,
   DropdownMenuTrigger,
-  Flexbox,
-  SearchBar,
+  ModelIcon,
   stopPropagation,
-  Tag,
-  Text,
-} from '@lobehub/ui'
+} from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { memo, type ReactNode, useEffect, useMemo, useState } from 'react'
 
@@ -59,7 +56,6 @@ const styles = createStaticStyles(({ css }) => ({
   toolbar: css`
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
   `,
-  /** Aligns with lobe `ModelSwitchPanel` DropdownMenuTrigger */
   trigger: css`
     display: inline-flex;
     outline: none;
@@ -79,7 +75,7 @@ export interface ModelSwitchMenuProps {
 }
 
 /**
- * Shared model dropdown shell — mirrors lobe `ModelSwitchPanel`.
+ * Shared model dropdown shell.
  */
 const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
   ({ children, openOnHover = true, placement = 'topLeft' }) => {
@@ -149,15 +145,8 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
         <DropdownMenuPortal>
           <DropdownMenuPositioner hoverTrigger={openOnHover} placement={placement}>
             <DropdownMenuPopup className={styles.container} onKeyDown={stopPropagation}>
-              <Flexbox
-                horizontal
-                align='center'
-                className={styles.toolbar}
-                gap={4}
-                paddingBlock={8}
-                paddingInline={8}
-              >
-                <SearchBar
+              <Flex align='center' className={styles.toolbar} gap={4} style={{ paddingBlock: 8, paddingInline: 8 }}>
+                <Input.Search
                   allowClear
                   placeholder='搜索模型...'
                   size='small'
@@ -167,7 +156,7 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
                   onChange={(event) => setKeyword(event.target.value)}
                   onKeyDown={stopPropagation}
                 />
-              </Flexbox>
+              </Flex>
 
               <div className={styles.list}>
                 {filteredModels.length === 0 ? (
@@ -183,17 +172,17 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
                         className={cx(styles.menuItem, active && styles.itemActive)}
                         onClick={() => setSelectedModel(item.provider, item.model)}
                       >
-                        <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0 }}>
+                        <Flex align='center' gap={8} style={{ minWidth: 0 }}>
                           <ModelIcon model={item.model} size={20} />
-                          <Text ellipsis fontSize={13} style={{ flex: 1, minWidth: 0 }}>
+                          <Typography.Text ellipsis style={{ fontSize: 13, flex: 1, minWidth: 0 }}>
                             {item.displayName}
-                          </Text>
+                          </Typography.Text>
                           {isProModel(item) ? (
-                            <Tag color='gold' size='small'>
+                            <Tag color='gold' style={{ fontSize: 12 }}>
                               Pro
                             </Tag>
                           ) : null}
-                        </Flexbox>
+                        </Flex>
                       </DropdownMenuItem>
                     )
                   })

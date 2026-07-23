@@ -1,4 +1,4 @@
-import { Github } from '@lobehub/ui/icons'
+import { Github } from '@pure/ui/icons'
 import { User } from 'lucide-react'
 import { type ReactNode } from 'react'
 

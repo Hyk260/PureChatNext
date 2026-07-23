@@ -1,8 +1,7 @@
 'use client'
 
-import { ProviderCombine } from '@lobehub/icons'
-import { Block, Flexbox, Text } from '@lobehub/ui'
-import { Switch } from 'antd'
+import { Block, ProviderCombine } from '@pure/ui'
+import { Flex, Typography, Switch } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { useRouter } from '@/utils/navigation'
 import { memo } from 'react'
@@ -47,7 +46,7 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
       width='100%'
       onClick={() => router.push(`/settings/provider/${id}`)}
     >
-      <Flexbox horizontal align='flex-start' justify='space-between' width='100%'>
+      <Flex align='flex-start' justify='space-between' style={{ width: '100%' }}>
         <ProviderCombine provider={id} size={28} style={{ flex: 'none' }} />
         <Switch
           checked={enabled}
@@ -58,19 +57,15 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
           }}
           onClick={(_, event) => event.stopPropagation()}
         />
-      </Flexbox>
-      <Flexbox gap={6}>
-        <Text weight={600}>{meta.name}</Text>
+      </Flex>
+      <Flex vertical gap={6}>
+        <Typography.Text style={{ fontWeight: 600 }}>{meta.name}</Typography.Text>
         {meta.description ? (
-          <Text
-            className={styles.desc}
-            ellipsis={{ rows: 2 }}
-            fontSize={13}
-          >
+          <Typography.Paragraph className={styles.desc} ellipsis={{ rows: 2 }} style={{ marginBottom: 0, fontSize: 13 }}>
             {meta.description}
-          </Text>
+          </Typography.Paragraph>
         ) : null}
-      </Flexbox>
+      </Flex>
     </Block>
   )
 })

@@ -1,22 +1,27 @@
 'use client'
 
-import { Button, Flexbox, Text } from '@lobehub/ui'
-import { useModalContext } from '@lobehub/ui/base-ui'
-import { Alert, QRCode, Spin } from 'antd'
+import { Flex, Typography, Button, Alert, QRCode, Spin } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
-import { createModal } from '@/libs/modal'
+import { modal } from '@/components/AntdStaticMethods'
 
 import { PlatformAvatar } from './PlatformAvatar'
 import { fetchWechatQrCode, pollWechatQrStatus } from './wechatApi'
 
 const QR_POLL_INTERVAL_MS = 2000
+// 正常状态（wait / scaned）续轮间隔：iLink 是「等待状态变化」的长轮询，
+// scaned 只会发给正在挂起的那次请求；续轮间隔过大会有空窗漏掉 scaned。
+// 长轮询本身已提供节奏，这里用小间隔保持几乎持续挂起。
+const QR_RESCHEDULE_MS = 300
 const QR_SIZE = 240
+// 加载/二维码/状态文字的合计占位高度，用于各状态保持一致高度避免跳动
+// qrWrap: QR_SIZE(240) + padding(14*2) + border(1*2) = 270；+ gap(16) + 状态行(~22) ≈ 308
+const QR_PLACEHOLDER_HEIGHT = QR_SIZE + 28 + 2 + 16 + 22
 
 const styles = createStaticStyles(({ css }) => ({
-  // 对齐 lobe LinkModal/Telegram：二维码中间叠平台 Logo
+  // 二维码中间叠平台 Logo
   qrIconOverlay: css`
     pointer-events: none;
 
@@ -49,11 +54,11 @@ export type WechatAuthCredentials = {
 }
 
 interface QrCodeContentProps {
+  close: () => void
   onAuthenticated: (credentials: WechatAuthCredentials) => void
 }
 
-const QrCodeContent = memo<QrCodeContentProps>(({ onAuthenticated }) => {
-  const { close } = useModalContext()
+const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
   const [qrImgUrl, setQrImgUrl] = useState<string>()
   const [status, setStatus] = useState<string>('')
   const [error, setError] = useState<string>()
@@ -109,7 +114,8 @@ const QrCodeContent = memo<QrCodeContentProps>(({ onAuthenticated }) => {
             return
           }
 
-          timerRef.current = setTimeout(poll, QR_POLL_INTERVAL_MS)
+          // wait / scaned：小间隔续轮，保持长轮询几乎持续挂起，避免漏掉 scaned
+          timerRef.current = setTimeout(poll, QR_RESCHEDULE_MS)
         } catch (err) {
           if (err instanceof DOMException && err.name === 'AbortError') return
           if (pollingRef.current) {
@@ -118,7 +124,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ onAuthenticated }) => {
         }
       }
 
-      timerRef.current = setTimeout(poll, QR_POLL_INTERVAL_MS)
+      timerRef.current = setTimeout(poll, QR_RESCHEDULE_MS)
     },
     [close, stopPolling]
   )
@@ -170,8 +176,19 @@ const QrCodeContent = memo<QrCodeContentProps>(({ onAuthenticated }) => {
   const statusText = status === 'wait' ? '请使用微信扫一扫' : status === 'scaned' ? '已扫码，请在手机上确认' : ''
 
   return (
-    <Flexbox align='center' gap={16} style={{ paddingBlock: 16 }}>
-      {loading && <Spin size='large' />}
+    <Flex vertical align='center' gap={16} style={{ paddingBlock: 16 }}>
+      {loading && (
+        // 预留与「二维码盒子 + 状态文字」等高的占位，避免加载完成时高度突变跳动
+        <div
+          style={{
+            height: QR_PLACEHOLDER_HEIGHT,
+            display: 'grid',
+            placeItems: 'center',
+          }}
+        >
+          <Spin size='large' />
+        </div>
+      )}
       {qrImgUrl && !error && (
         <div className={styles.qrWrap}>
           <QRCode bordered={false} size={QR_SIZE} value={qrImgUrl} />
@@ -180,29 +197,40 @@ const QrCodeContent = memo<QrCodeContentProps>(({ onAuthenticated }) => {
           </div>
         </div>
       )}
-      {statusText && !error && <Text type='secondary'>{statusText}</Text>}
+      {statusText && !error && <Typography.Text type='secondary'>{statusText}</Typography.Text>}
       {error && (
-        <>
-          <Alert showIcon message={error} type='warning' />
-          <Button icon={RefreshCw} onClick={() => void handleRefresh()}>
+        <div
+          style={{
+            minHeight: QR_PLACEHOLDER_HEIGHT,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 16,
+          }}
+        >
+          <Alert showIcon title={error} type='warning' />
+          <Button icon={<RefreshCw size={16} />} onClick={() => void handleRefresh()}>
             刷新二维码
           </Button>
-        </>
+        </div>
       )}
-    </Flexbox>
+    </Flex>
   )
 })
 
 QrCodeContent.displayName = 'QrCodeContent'
 
 const openQrCodeAuthModal = (onAuthenticated: (credentials: WechatAuthCredentials) => void) => {
-  return createModal({
-    content: <QrCodeContent onAuthenticated={onAuthenticated} />,
+  const instance = modal.info({
+    content: <QrCodeContent close={() => instance.destroy()} onAuthenticated={onAuthenticated} />,
     footer: null,
+    icon: null,
     maskClosable: true,
     title: '微信扫码连接',
     width: 460,
   })
+  return instance
 }
 
 interface QrCodeAuthProps {
@@ -218,7 +246,7 @@ const QrCodeAuth = memo<QrCodeAuthProps>(({ buttonLabel = '连接', disabled, on
   }
 
   return (
-    <Button disabled={disabled} icon={LinkIcon} type='primary' onClick={handleOpen}>
+    <Button disabled={disabled} icon={<LinkIcon size={16} />} type='primary' onClick={handleOpen}>
       {buttonLabel}
     </Button>
   )

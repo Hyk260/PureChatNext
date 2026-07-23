@@ -1,10 +1,12 @@
 'use client'
 
-import { ActionIcon, Avatar, Block, Flexbox, Popover, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
+import { ActionIcon, Avatar, Block, Popover } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronsUpDownIcon } from 'lucide-react'
 import { memo, useEffect, useMemo, useState } from 'react'
 
+import Scrollbar from '@/components/Scrollbar'
 import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
@@ -52,7 +54,7 @@ const HomeAgentSelect = memo(() => {
 
   const currentAgent = useMemo(
     () => agents.find((agent) => agent.id === selectedAgentId) ?? agents[0] ?? DEFAULT_PURE_AI_META,
-    [agents, selectedAgentId],
+    [agents, selectedAgentId]
   )
 
   const selectAgent = (agentId: string) => {
@@ -68,45 +70,44 @@ const HomeAgentSelect = memo(() => {
   }
 
   const listContent = (
-    <Flexbox gap={2} padding={4} style={{ width: 360 }}>
-      {agents.map((agent) => {
-        const active = agent.id === selectedAgentId
+    <Scrollbar
+      style={{ width: 360, height: 'auto' }}
+      maxHeight={8 * 56 + 7 * 2 + 8}
+      viewStyle={{ padding: 4 }}
+    >
+      <Flex vertical gap={2}>
+        {agents.map((agent) => {
+          const active = agent.id === selectedAgentId
 
-        return (
-          <Flexbox
-            key={agent.id}
-            horizontal
-            align='center'
-            className={[styles.item, active ? styles.itemActive : ''].join(' ')}
-            gap={12}
-            padding={8}
-            onClick={() => selectAgent(agent.id)}
-          >
-            <Avatar
-              avatar={agent.avatar}
-              background={agent.backgroundColor ?? undefined}
-              shape='square'
-              size={32}
-            />
-            <Flexbox flex={1} gap={2} style={{ overflow: 'hidden' }}>
-              <Text ellipsis fontSize={14} weight={500}>
-                {agent.title}
-              </Text>
-              {agent.description ? (
-                <Text ellipsis fontSize={12} type='secondary'>
-                  {agent.description}
-                </Text>
-              ) : null}
-            </Flexbox>
-          </Flexbox>
-        )
-      })}
-    </Flexbox>
+          return (
+            <Flex
+              key={agent.id}
+              align='center'
+              className={[styles.item, active ? styles.itemActive : ''].join(' ')}
+              gap={12}
+              onClick={() => selectAgent(agent.id)}
+              style={{ padding: 8 }}
+            >
+              <Avatar shape='square' size={32} avatar={agent.avatar} background={agent.backgroundColor ?? undefined} />
+              <Flex vertical flex={1} gap={2} style={{ overflow: 'hidden' }}>
+                <Typography.Text ellipsis style={{ fontSize: 14, fontWeight: 500 }}>
+                  {agent.title}
+                </Typography.Text>
+                {agent.description ? (
+                  <Typography.Text ellipsis type='secondary' style={{ fontSize: 12 }}>
+                    {agent.description}
+                  </Typography.Text>
+                ) : null}
+              </Flex>
+            </Flex>
+          )
+        })}
+      </Flex>
+    </Scrollbar>
   )
 
   return (
     <Popover
-      classNames={{ trigger: styles.trigger }}
       content={listContent}
       open={open}
       placement='bottomLeft'
@@ -118,20 +119,19 @@ const HomeAgentSelect = memo(() => {
         clickable
         horizontal
         align='center'
+        className={styles.trigger}
         gap={8}
         padding={4}
         style={{ marginInlineStart: -4, width: 'fit-content' }}
         variant='borderless'
       >
         <Avatar
-          avatar={currentAgent.avatar}
-          background={currentAgent.backgroundColor ?? undefined}
           shape='square'
           size={32}
+          avatar={currentAgent.avatar}
+          background={currentAgent.backgroundColor ?? undefined}
         />
-        <Text fontSize={16} weight={600}>
-          {currentAgent.title}
-        </Text>
+        <Typography.Text style={{ fontSize: 16, fontWeight: 600 }}>{currentAgent.title}</Typography.Text>
         <ActionIcon
           className={`${styles.chevron} home-agent-chevron`}
           color={cssVar.colorTextDescription}

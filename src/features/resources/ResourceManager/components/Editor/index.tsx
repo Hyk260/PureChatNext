@@ -1,6 +1,7 @@
 'use client'
 
-import { ActionIcon, Flexbox, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
+import { ActionIcon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { X } from 'lucide-react'
 import { memo } from 'react'
@@ -52,25 +53,25 @@ const FileEditor = memo(() => {
   const isPdf = item.fileType.includes('pdf')
 
   return (
-    <Flexbox className={styles.overlay} height='100%'>
-      <Flexbox align='center' className={styles.header} horizontal justify='space-between'>
-        <Flexbox align='center' gap={8} horizontal>
+    <Flex vertical className={styles.overlay} style={{ height: '100%' }}>
+      <Flex align='center' className={styles.header} justify='space-between'>
+        <Flex align='center' gap={8}>
           <FileIcon fileType={item.fileType} />
-          <Text strong>{item.name}</Text>
-        </Flexbox>
+          <Typography.Text strong>{item.name}</Typography.Text>
+        </Flex>
         <ActionIcon icon={X} onClick={handleClose} title='关闭' />
-      </Flexbox>
-      <Flexbox align='center' className={styles.preview} justify='center'>
+      </Flex>
+      <Flex vertical align='center' className={styles.preview} justify='center'>
         {isImage && item.url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img alt={item.name} src={item.url} style={{ maxHeight: '100%', maxWidth: '100%' }} />
         ) : isPdf && item.url ? (
           <iframe src={item.url} style={{ border: 'none', height: '100%', width: '100%' }} title={item.name} />
         ) : (
-          <Text type='secondary'>暂不支持预览此文件类型</Text>
+          <Typography.Text type='secondary'>暂不支持预览此文件类型</Typography.Text>
         )}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

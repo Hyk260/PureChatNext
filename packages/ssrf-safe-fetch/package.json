@@ -2,7 +2,7 @@
   "name": "@pure/ssrf-safe-fetch",
   "version": "1.0.0",
   "private": true,
-  "description": "SSRF-safe fetch implementation with browser/node conditional exports",
+  "description": "PureChatNext SSRF-safe fetch (Node + browser conditional exports)",
   "exports": {
     ".": {
       "browser": "./index.browser.ts",

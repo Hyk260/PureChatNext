@@ -1,8 +1,8 @@
 import { vi } from 'vitest';
 
 /**
- * Create a mock Response object for crawler tests.
- * Uses `vi.fn()` for `json`, `text`, and `clone` so individual tests can override them.
+ * Mock `Response` helper for @pure/web-crawler tests.
+ * `json` / `text` / `clone` are `vi.fn()` so suites can stub per case.
  */
 export const createMockResponse = (
   body: any,

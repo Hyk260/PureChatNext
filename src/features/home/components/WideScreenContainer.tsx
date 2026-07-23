@@ -1,6 +1,6 @@
 'use client'
 
-import { type FlexboxProps, Flexbox } from '@lobehub/ui'
+import { Flex, type FlexProps } from 'antd'
 import { createStaticStyles } from 'antd-style'
 import { memo, type ReactNode } from 'react'
 
@@ -13,22 +13,22 @@ const styles = createStaticStyles(({ css }) => ({
   `,
 }))
 
-interface WideScreenContainerProps extends FlexboxProps {
+interface WideScreenContainerProps extends FlexProps {
   children: ReactNode
 }
 
-const WideScreenContainer = memo<WideScreenContainerProps>(({ children, ...rest }) => {
+const WideScreenContainer = memo<WideScreenContainerProps>(({ children, style, ...rest }) => {
   return (
-    <Flexbox width='100%'>
-      <Flexbox
+    <Flex vertical style={{ width: '100%' }}>
+      <Flex
+        vertical
         className={styles.container}
-        paddingInline={16}
-        width={`min(${CONVERSATION_MIN_WIDTH}px, 100%)`}
         {...rest}
+        style={{ paddingInline: 16, width: `min(${CONVERSATION_MIN_WIDTH}px, 100%)`, ...style }}
       >
         {children}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

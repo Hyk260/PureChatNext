@@ -1,12 +1,12 @@
 'use client'
 
-import { ActionIcon, EditableText, SortableList } from '@lobehub/ui'
-import { confirmModal } from '@/libs/modal'
-import { App } from 'antd'
+import { EditableText, SortableList } from '@pure/ui'
+import { ActionIcon } from '@pure/ui'
 import { createStaticStyles } from 'antd-style'
 import { PencilLine, Trash } from 'lucide-react'
 import { memo, useCallback, useRef, useState } from 'react'
 
+import { useApp } from '@/components/AntdStaticMethods'
 import { type HomeAgentGroup } from '@/features/home/store/sidebarDefaults'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
@@ -28,7 +28,7 @@ interface GroupItemProps extends HomeAgentGroup {
 }
 
 const GroupItem = memo<GroupItemProps>(({ canRemove, id, name }) => {
-  const { message } = App.useApp()
+  const { message, modal } = useApp()
   const [editing, setEditing] = useState(false)
   const draftRef = useRef(name)
   const committedRef = useRef(false)
@@ -87,7 +87,7 @@ const GroupItem = memo<GroupItemProps>(({ canRemove, id, name }) => {
             onClick={() => {
               if (!canRemove) return
 
-              confirmModal({
+              modal.confirm({
                 cancelText: '取消',
                 content: '删除后，该分类下的助理将移至默认分类。',
                 okButtonProps: { danger: true },

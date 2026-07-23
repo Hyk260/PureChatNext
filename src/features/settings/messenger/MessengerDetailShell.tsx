@@ -1,6 +1,7 @@
 'use client'
 
-import { Block, Flexbox, Icon, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
+import { Block, Icon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowLeftIcon } from 'lucide-react'
 import { memo, type ReactNode } from 'react'
@@ -52,7 +53,7 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
     const navigate = useNavigate()
 
     return (
-      <Flexbox gap={20} width="100%">
+      <Flex vertical gap={20} style={{ width: "100%" }}>
         <span
           className={styles.backButton}
           role="button"
@@ -63,28 +64,28 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
           }}
         >
           <Icon icon={ArrowLeftIcon} size="small" />
-          <Text strong style={{ fontSize: 20 }}>
+          <Typography.Text strong style={{ fontSize: 20 }}>
             {platformMeta.name}
-          </Text>
+          </Typography.Text>
         </span>
 
         <Block className={styles.card}>
-          <Flexbox horizontal align="center" gap={16}>
+          <Flex align="center" gap={16}>
             <PlatformAvatar platform={platform} size={48} />
-            <Flexbox flex={1} gap={2}>
-              <Text strong style={{ fontSize: 15 }}>
+            <Flex vertical flex={1} gap={2}>
+              <Typography.Text strong style={{ fontSize: 15 }}>
                 {platformMeta.name}
-              </Text>
-              <Text style={{ fontSize: 13 }} type="secondary">
+              </Typography.Text>
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                 {platformMeta.description}
-              </Text>
-            </Flexbox>
+              </Typography.Text>
+            </Flex>
             {headerAction}
-          </Flexbox>
+          </Flex>
         </Block>
 
         {children}
-      </Flexbox>
+      </Flex>
     )
   },
 )

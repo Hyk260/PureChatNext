@@ -1,6 +1,6 @@
 'use client'
 
-import { Grid } from '@lobehub/ui'
+import { Grid } from '@pure/ui'
 import { memo } from 'react'
 
 import { type DiscoverAgentItem } from '@/features/community/types'

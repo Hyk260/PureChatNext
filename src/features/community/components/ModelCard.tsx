@@ -1,7 +1,7 @@
 'use client'
 
-import { ModelIcon, ProviderIcon } from '@lobehub/icons'
-import { Block, Flexbox, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
+import { Block, ModelIcon, ProviderIcon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -41,63 +41,33 @@ const ModelCard = memo<DiscoverModelItem>(
           position: 'relative',
         }}
       >
-        <Flexbox
-          horizontal
-          align='flex-start'
-          gap={16}
-          justify='space-between'
-          padding={16}
-          width='100%'
-        >
-          <Flexbox
-            horizontal
-            gap={12}
-            title={identifier}
-            style={{
-              overflow: 'hidden',
-            }}
-          >
+        <Flex align='flex-start' gap={16} justify='space-between' style={{ padding: 16, width: '100%' }}>
+          <Flex gap={12} title={identifier} style={{ overflow: 'hidden', }}>
             <ModelIcon model={identifier} size={40} style={{ flex: 'none' }} type='avatar' />
-            <Flexbox
-              flex={1}
-              gap={2}
-              style={{
-                overflow: 'hidden',
-              }}
-            >
-              <Text ellipsis as='h2' className={styles.title}>
+            <Flex vertical flex={1} gap={2} style={{ overflow: 'hidden', }}>
+              <Typography.Text ellipsis className={styles.title}>
                 {displayName}
-              </Text>
+              </Typography.Text>
               <div className={styles.author}>{identifier}</div>
-            </Flexbox>
-          </Flexbox>
-        </Flexbox>
-        <Flexbox flex={1} gap={12} paddingInline={16}>
+            </Flex>
+          </Flex>
+        </Flex>
+        <Flex vertical flex={1} gap={12} style={{ paddingInline: 16 }}>
           {description ? (
-            <Text
-              as='p'
-              className={styles.desc}
-              ellipsis={{
+            <Typography.Paragraph className={styles.desc} ellipsis={{
                 rows: 3,
-              }}
-            >
+              }} style={{ marginBottom: 0 }}>
               {description}
-            </Text>
+            </Typography.Paragraph>
           ) : null}
-        </Flexbox>
-        <Flexbox
-          horizontal
-          align='center'
-          className={styles.footer}
-          justify='space-between'
-          padding={16}
-        >
-          <Flexbox horizontal align='center' gap={6}>
+        </Flex>
+        <Flex align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>
+          <Flex align='center' gap={6}>
             {providers.slice(0, 6).map((item) => (
               <ProviderIcon key={item} provider={item} size={14} type='mono' />
             ))}
-          </Flexbox>
-        </Flexbox>
+          </Flex>
+        </Flex>
       </Block>
     )
   },

@@ -1,6 +1,6 @@
 {
   "name": "pure-chat-next",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "scripts": {
     "dev": "bun scripts/devStartupSequence.mts",
     "dev:next": "next dev -p 3000",
@@ -40,6 +40,7 @@
     "@pure/chat-adapter-wechat": "workspace:*",
     "@pure/file-loaders": "workspace:*",
     "@pure/types": "workspace:*",
+    "@pure/ui": "workspace:*",
     "@pure/utils": "workspace:*",
     "@pure/web-crawler": "workspace:*",
     "@supabase/ssr": "^0.7.0",

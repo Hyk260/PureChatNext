@@ -1,7 +1,8 @@
 'use client'
 
-import { AccordionItem, Flexbox, Text } from '@lobehub/ui'
-import { App } from 'antd'
+import { AccordionItem } from '@pure/ui'
+import { Flex, Skeleton, Typography } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { useRouter } from '@/utils/navigation'
 import { memo, useCallback, useEffect, useState } from 'react'
@@ -12,15 +13,20 @@ import AgentItem from '@/features/home/HomeSidebar/components/AgentItem'
 import SectionActions from '@/features/home/HomeSidebar/components/SectionActions'
 import { useAgentSectionAddMenu } from '@/features/home/HomeSidebar/hooks/useAgentSectionAddMenu'
 import { useAgentSectionDropdownMenu } from '@/features/home/HomeSidebar/hooks/useAgentSectionDropdownMenu'
-import AgentFormModal, {
-  type AgentFormValues,
-} from '@/features/home/HomeSidebar/modals/AgentFormModal'
+import AgentFormModal, { type AgentFormValues } from '@/features/home/HomeSidebar/modals/AgentFormModal'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
 const styles = createStaticStyles(({ css }) => ({
   empty: css`
     color: ${cssVar.colorTextQuaternary};
+  `,
+  skeletonRow: css`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding-inline: 4px;
   `,
 }))
 
@@ -29,7 +35,7 @@ interface AgentSectionProps {
 }
 
 const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const router = useRouter()
 
   const [createOpen, setCreateOpen] = useState(false)
@@ -44,6 +50,8 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
 
   const agents = useAgentsStore((s) => s.agents)
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
+  const loaded = useAgentsStore((s) => s.loaded)
+  const loading = useAgentsStore((s) => s.loading)
   const upsertLocal = useAgentsStore((s) => s.upsertLocal)
   const removeLocal = useAgentsStore((s) => s.removeLocal)
 
@@ -66,7 +74,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
       })
       router.push(`/chat?agent=${encodeURIComponent(agent.id)}`)
     },
-    [router, setActiveAgent, setSelectedAgentId],
+    [router, setActiveAgent, setSelectedAgentId]
   )
 
   const handleCreate = async (values: AgentFormValues) => {
@@ -137,13 +145,20 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
         paddingBlock={4}
         paddingInline='8px 4px'
         title={
-          <Text ellipsis fontSize={12} type='secondary' weight={500}>
+          <Typography.Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
             助理
-          </Text>
+          </Typography.Text>
         }
       >
-        <Flexbox gap={1} paddingBlock={1}>
-          {agents.length > 0 ? (
+        <Flex vertical gap={1} style={{ paddingBlock: 1 }}>
+          {!loaded && loading ? (
+            Array.from({ length: 6 }).map((_, index) => (
+              <div className={styles.skeletonRow} key={index}>
+                <Skeleton.Avatar active size={28} />
+                <Skeleton active paragraph={{ rows: 1 }} title={false} style={{ flex: 1 }} />
+              </div>
+            ))
+          ) : agents.length > 0 ? (
             agents.map((agent) => (
               <AgentItem
                 key={agent.id}
@@ -155,13 +170,13 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
               />
             ))
           ) : (
-            <Flexbox paddingBlock={4} paddingInline={12}>
-              <Text className={styles.empty} fontSize={12}>
+            <Flex vertical style={{ paddingBlock: 4, paddingInline: 12 }}>
+              <Typography.Text className={styles.empty} style={{ fontSize: 12 }}>
                 暂无内容
-              </Text>
-            </Flexbox>
+              </Typography.Text>
+            </Flex>
           )}
-        </Flexbox>
+        </Flex>
       </AccordionItem>
 
       <AgentFormModal

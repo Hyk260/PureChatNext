@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Flexbox, Text } from '@lobehub/ui'
+import { Flex, Typography, Button } from 'antd'
 import { MessageSquarePlus } from 'lucide-react'
 import { memo } from 'react'
 
@@ -24,27 +24,34 @@ const TopicSidebar = memo<Props>(
     const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
     const toggleLeftCollapsed = useChatUiStore((s) => s.toggleLeftCollapsed)
 
+    const breadcrumb = [
+      {
+        href: '/chat',
+        title: '话题',
+      },
+    ]
+
     return (
-      <Flexbox gap={8} height='100%' style={{ overflow: 'hidden', width: 240 }}>
+      <Flex vertical gap={8} style={{ height: '100%', overflow: 'hidden', width: 240 }}>
         <SideBarHeaderLayout
-          breadcrumb={[
-            {
-              href: '/chat',
-              title: '话题',
-            },
-          ]}
+          breadcrumb={breadcrumb}
           collapsed={leftCollapsed}
           homeHref='/'
           showHomeIcon
           onToggleCollapsed={toggleLeftCollapsed}
         />
-        <Flexbox flex={1} gap={8} paddingInline={12} style={{ minHeight: 0, overflowX: 'hidden', overflowY: 'auto' }}>
-          <Button block icon={MessageSquarePlus} onClick={onNewTopic}>
+        <Flex
+          vertical
+          flex={1}
+          gap={8}
+          style={{ paddingInline: 12, minHeight: 0, overflowX: 'hidden', overflowY: 'auto' }}
+        >
+          <Button block icon={<MessageSquarePlus size={16} />} onClick={onNewTopic}>
             开启新话题
           </Button>
-          <Text fontSize={12} type='secondary' weight={500}>
+          <Typography.Text type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
             列表
-          </Text>
+          </Typography.Text>
           <TopicList
             activeTopicId={activeTopicId}
             onDelete={onDeleteTopic}
@@ -52,10 +59,10 @@ const TopicSidebar = memo<Props>(
             onSelect={onSelectTopic}
             topics={topics}
           />
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
     )
-  },
+  }
 )
 
 TopicSidebar.displayName = 'TopicSidebar'

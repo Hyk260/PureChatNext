@@ -1,7 +1,7 @@
 'use client'
 
-import { type IconProps, Flexbox } from '@lobehub/ui'
-import { ProviderIcon } from '@lobehub/ui/icons'
+import { Flex } from 'antd'
+import { type IconProps, ProviderIconLucide } from '@pure/ui'
 import { Bot, Brain } from 'lucide-react'
 import Link from '@/utils/link'
 import { usePathname } from '@/utils/navigation'
@@ -22,7 +22,7 @@ interface NavItemConfig {
 const NAV_ITEMS: NavItemConfig[] = [
   {
     href: '/community/provider',
-    icon: ProviderIcon,
+    icon: ProviderIconLucide,
     key: DiscoverTab.Provider,
     title: '模型服务商',
   },
@@ -67,7 +67,7 @@ const CommunitySidebarHeader = memo(() => {
         homeHref='/'
         showHomeIcon
       />
-      <Flexbox gap={1} paddingInline={4}>
+      <Flex vertical gap={1} style={{ paddingInline: 4 }}>
         {NAV_ITEMS.map((item) => (
           <Link
             key={item.key}
@@ -77,7 +77,7 @@ const CommunitySidebarHeader = memo(() => {
             <NavItem active={activeTab === item.key} clickable icon={item.icon} title={item.title} />
           </Link>
         ))}
-      </Flexbox>
+      </Flex>
     </>
   )
 })

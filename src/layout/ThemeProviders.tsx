@@ -1,6 +1,6 @@
 'use client'
 
-import { ConfigProvider, ThemeProvider } from '@lobehub/ui'
+import { ConfigProvider, ThemeProvider } from '@pure/ui'
 import { StyleProvider } from 'antd-style'
 import { LazyMotion, domAnimation } from 'motion/react'
 import * as m from 'motion/react-m'
@@ -8,7 +8,6 @@ import { type PropsWithChildren } from 'react'
 
 import AntdStaticMethods from '@/components/AntdStaticMethods'
 import { useSystemAppearance } from '@/hooks/useSystemAppearance'
-import { ModalHost } from '@/libs/modal'
 
 /**
  * Client theme stack shared by Vite SPA AppLayer (and legacy Next root if needed).
@@ -30,7 +29,6 @@ const ThemeProviders = ({ children }: PropsWithChildren) => {
         <LazyMotion features={domAnimation}>
           <ConfigProvider motion={m}>
             {children}
-            <ModalHost />
           </ConfigProvider>
         </LazyMotion>
       </ThemeProvider>

@@ -6,18 +6,17 @@ import { describe, expect, it } from 'vitest';
 
 import { loadFile } from '../src';
 
-const getFixturePath = (filename: string) => path.join(__dirname, 'fixtures', filename);
+const fixturePath = (filename: string) => path.join(__dirname, 'fixtures', filename);
 
-const TEXT_FILES = ['test.txt', 'test.csv', 'test.md'];
+const TEXT_FIXTURES = ['test.txt', 'test.csv', 'test.md'];
 
-describe('loadFile Integration Tests', () => {
-  describe('Text Handling (.txt, .csv, .md, etc.)', () => {
-    const testPureTextFile = (fileName: string) => {
-      it(`should load content from a ${fileName} file using filePath`, async () => {
-        const filePath = getFixturePath(fileName);
+describe('loadFile integration (@pure/file-loaders)', () => {
+  describe('plain text fixtures', () => {
+    const assertTextFixture = (fileName: string) => {
+      it(`loads ${fileName} from disk`, async () => {
+        const filePath = fixturePath(fileName);
         const expectedContent = fs.readFileSync(filePath, 'utf8');
 
-        // Pass filePath directly to loadFile
         const docs = await loadFile(filePath);
 
         expect(docs.content).toEqual(expectedContent);
@@ -33,16 +32,15 @@ describe('loadFile Integration Tests', () => {
       });
     };
 
-    TEXT_FILES.forEach((file) => {
-      testPureTextFile(file);
+    TEXT_FIXTURES.forEach((file) => {
+      assertTextFixture(file);
     });
   });
 
-  describe('PDF Handling', () => {
-    it(`should load content from a pdf file using filePath`, async () => {
-      const filePath = getFixturePath('test.pdf');
+  describe('PDF fixtures', () => {
+    it('loads test.pdf from disk', async () => {
+      const filePath = fixturePath('test.pdf');
 
-      // Pass filePath directly to loadFile
       const docs = await loadFile(filePath);
 
       expect(docs.content).toContain('123');

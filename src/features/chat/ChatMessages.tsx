@@ -1,7 +1,8 @@
 'use client'
 
-import { type ActionIconGroupEvent, type ActionIconGroupItemType, ActionIcon, ActionIconGroup, Flexbox, Text, copyToClipboard } from '@lobehub/ui'
-import { App } from 'antd'
+import { type ActionIconGroupEvent, type ActionIconGroupItemType, ActionIconGroup, copyToClipboard, ActionIcon } from '@pure/ui'
+import { Flex, Typography } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { type UIMessage } from 'ai'
 import { Check, ChevronRight, Copy, Edit, Trash, X } from 'lucide-react'
@@ -189,7 +190,7 @@ interface ChatMessageItemProps {
 
 const ChatMessageItem = memo<ChatMessageItemProps>(
   ({ message, disabled, isStreaming, onDelete, onEdit }) => {
-    const { message: antdMessage } = App.useApp()
+    const { message: antdMessage } = useApp()
     const [editing, setEditing] = useState(false)
     const [draft, setDraft] = useState('')
     const text = getMessageText(message)
@@ -239,7 +240,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
       <div className={styles.row} data-role={message.role}>
         <div className={cx(styles.bubble, isUser ? styles.user : styles.assistant)}>
           {editing ? (
-            <Flexbox gap={8}>
+            <Flex vertical gap={8}>
               <textarea
                 autoFocus
                 className={styles.editArea}
@@ -256,7 +257,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
                   }
                 }}
               />
-              <Flexbox className={styles.editActions} horizontal gap={8} justify='flex-end'>
+              <Flex className={styles.editActions} gap={8} justify='flex-end'>
                 <ActionIcon
                   icon={X}
                   size='small'
@@ -272,8 +273,8 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
                   title='保存'
                   onClick={handleSave}
                 />
-              </Flexbox>
-            </Flexbox>
+              </Flex>
+            </Flex>
           ) : (
             <>
               {!isUser && reasoning ? (
@@ -287,7 +288,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
                   text={text}
                 />
               ) : isStreaming ? (
-                <Text type='secondary'>…</Text>
+                <Typography.Text type='secondary'>…</Typography.Text>
               ) : null}
 
               {!disabled && (
@@ -352,14 +353,14 @@ const ChatMessages = memo<ChatMessagesProps>(
 
     if (messages.length === 0) {
       return (
-        <Flexbox ref={ref} className={styles.list} align='center' justify='center'>
-          <Text className={styles.empty}>开始对话吧</Text>
-        </Flexbox>
+        <Flex vertical ref={ref} className={styles.list} align='center' justify='center'>
+          <Typography.Text className={styles.empty}>开始对话吧</Typography.Text>
+        </Flex>
       )
     }
 
     return (
-      <Flexbox ref={ref} className={styles.list} gap={16} onScroll={handleScroll}>
+      <Flex vertical ref={ref} className={styles.list} gap={16} onScroll={handleScroll}>
         {messages.map((message, index) => {
           const streamingThis =
             isStreaming && index === messages.length - 1 && message.role === 'assistant'
@@ -375,7 +376,7 @@ const ChatMessages = memo<ChatMessagesProps>(
             />
           )
         })}
-      </Flexbox>
+      </Flex>
     )
   },
 )

@@ -1,6 +1,6 @@
 'use client'
 
-import { Discord, QQ, Slack, Telegram, WeChat } from '@lobehub/ui/icons'
+import { Discord, QQ, Slack, Telegram, WeChat } from '@pure/ui/icons'
 import { type ReactNode } from 'react'
 
 import { type MessengerPlatformId } from './const'

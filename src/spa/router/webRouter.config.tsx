@@ -210,7 +210,7 @@ export const webRoutes: RouteObject[] = [
         ),
         path: 'messenger',
       },
-      // 与 lobe-chat `:tab/:sub` 同思路：同一页读 `:platform` 切换列表/详情
+      // 同一页读 `:platform` 切换列表/详情（嵌套路由参数）
       {
         element: dynamicElement(
           () => import('@/routes/settings/messenger/page'),

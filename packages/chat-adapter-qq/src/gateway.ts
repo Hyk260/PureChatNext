@@ -1,22 +1,21 @@
-import type { QQApiClient } from './api';
-import type {
-  QQGatewayHelloData,
-  QQGatewayPayload,
-  QQGatewayReadyData,
-  QQGatewayUrlResponse,
+import { type QQApiClient } from './api';
+import {
+  QQ_INTENTS,
+  QQ_WS_OP_CODES,
+  type QQGatewayHelloData,
+  type QQGatewayPayload,
+  type QQGatewayReadyData,
+  type QQGatewayUrlResponse,
 } from './types';
-import { QQ_INTENTS, QQ_WS_OP_CODES } from './types';
 
 export type GatewayLogger = (...args: any[]) => void;
 
-// Default no-op logger
 const noop: GatewayLogger = () => {};
 
 const RECONNECT_BASE_DELAY_MS = 1000;
 const RECONNECT_MAX_DELAY_MS = 60_000;
 const MAX_RECONNECT_ATTEMPTS = 10;
 
-// Heartbeat interval bounds — sanitize values from gateway to avoid unbounded timers
 const HEARTBEAT_MIN_INTERVAL_MS = 1_000;
 const HEARTBEAT_MAX_INTERVAL_MS = 300_000;
 const HEARTBEAT_DEFAULT_INTERVAL_MS = 45_000;
@@ -48,10 +47,11 @@ export interface QQGatewayOptions {
 }
 
 /**
- * Manages a persistent WebSocket connection to the QQ Bot Gateway.
+ * Persistent WebSocket client for the QQ Bot Gateway (@pure/chat-adapter-qq).
  *
- * Lifecycle: connect → Hello → Identify → Ready → heartbeat loop + event dispatch.
- * Supports resume on disconnect using stored session_id + seq.
+ * Lifecycle: connect → Hello → Identify → Ready → heartbeat + dispatch.
+ * Resume uses stored `session_id` + seq after disconnect.
+ * Protocol notes: `docs/self-hosting/qq/protocol.zh-CN.md`.
  */
 export class QQGatewayConnection {
   private readonly api: QQApiClient;

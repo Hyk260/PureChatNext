@@ -1,7 +1,7 @@
 'use client'
 
+import { Flex, Typography } from 'antd'
 import { useChat } from '@ai-sdk/react'
-import { Flexbox, Text } from '@lobehub/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { DefaultChatTransport, type UIMessage } from 'ai'
 import { useRouter, useSearchParams } from '@/utils/navigation'
@@ -388,7 +388,7 @@ const ChatView = memo<ChatViewProps>(({
         onEdit={handleEdit}
       />
       {error ? (
-        <Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Text>
+        <Typography.Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Typography.Text>
       ) : null}
     </>
   )
@@ -439,7 +439,7 @@ const ChatPage = memo(() => {
     () => (isClient ? activeTopicId : undefined),
   )
   const [isBusy, setIsBusy] = useState(false)
-  // Per-topic message cache (lobe-chat dbMessagesMap pattern). Lets topic switches
+  // Per-topic message cache. Lets topic switches
   // paint immediately instead of blanking the shell while fetchMessages resolves.
   const [messagesCache, setMessagesCache] = useState(() => new Map<string, UIMessage[]>())
   const chatActionsRef = useRef<ChatViewActions>({
@@ -688,7 +688,7 @@ const ChatPage = memo(() => {
         <div className={styles.shell} />
       ) : (
         <WideScreenContainer>
-          <Flexbox className={styles.page} gap={16}>
+          <Flex vertical className={styles.page} gap={16}>
             {messagesReady ? (
               <ChatView
                 key={`${agentId}:${activeTopicId ?? 'draft'}`}
@@ -704,7 +704,7 @@ const ChatPage = memo(() => {
               <ChatMessagesSkeleton />
             )}
             <ChatInput isBusy={inputBusy} onSend={handleInputSend} onStop={handleInputStop} />
-          </Flexbox>
+          </Flex>
         </WideScreenContainer>
       )}
     </ChatLayout>

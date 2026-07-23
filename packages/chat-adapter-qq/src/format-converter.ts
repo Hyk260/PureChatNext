@@ -1,21 +1,14 @@
-import type { Root } from 'chat';
-import { BaseFormatConverter, parseMarkdown, stringifyMarkdown } from 'chat';
+import { BaseFormatConverter, parseMarkdown, stringifyMarkdown, type Root } from 'chat';
 
+/** Markdown ↔ text for QQ Bot messages (@pure/chat-adapter-qq). */
 export class QQFormatConverter extends BaseFormatConverter {
-  /**
-   * Convert mdast AST to QQ-compatible text.
-   * QQ supports basic text messages, we convert markdown to plain text for now.
-   */
+  /** mdast → outbound text (QQ has limited Markdown; stringify for now). */
   fromAst(ast: Root): string {
     return stringifyMarkdown(ast);
   }
 
-  /**
-   * Convert QQ message text to mdast AST.
-   * Clean up QQ @mention markers before parsing.
-   */
+  /** Inbound QQ text → mdast (strip @mention / channel markers first). */
   toAst(text: string): Root {
-    // Clean QQ @mention markers (e.g., <@!user_id>, <@user_id>)
     const cleaned = text
       .replaceAll(/<@!?\d+>/g, '')
       .replaceAll('<@everyone>', '')
@@ -25,9 +18,7 @@ export class QQFormatConverter extends BaseFormatConverter {
     return parseMarkdown(cleaned);
   }
 
-  /**
-   * Clean @mention markers from text
-   */
+  /** Strip QQ @mention / channel markers from plain text. */
   cleanMentions(text: string): string {
     return text
       .replaceAll(/<@!?\d+>/g, '')

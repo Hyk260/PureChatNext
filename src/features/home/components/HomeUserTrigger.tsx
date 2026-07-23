@@ -1,7 +1,8 @@
 'use client'
 
-import { Avatar, Block, Button, Flexbox, Icon, Popover, Text } from '@lobehub/ui'
-import { App } from 'antd'
+import { Avatar, Button, Flex, Typography } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
+import { Block, Icon, Popover } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronDownIcon, LogOut, Settings2 } from 'lucide-react'
 import Link from '@/utils/link'
@@ -33,27 +34,27 @@ interface UserInfoSectionProps {
 }
 
 const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name }) => (
-  <Flexbox horizontal align='center' gap={12} paddingBlock={12} paddingInline={12}>
-    <Flexbox horizontal align='center' gap={10}>
-      <Avatar avatar={avatar} background={cssVar.colorFill} size={36} />
-      <Flexbox flex={1}>
-        <Text style={{ lineHeight: 1.4 }} weight='bold'>
+  <Flex align='center' gap={12} style={{ paddingBlock: 12, paddingInline: 12 }}>
+    <Flex align='center' gap={10}>
+      <Avatar size={36} src={avatar} style={{ background: cssVar.colorFill }} />
+      <Flex vertical flex={1}>
+        <Typography.Text style={{ lineHeight: 1.4, fontWeight: 'bold' }}>
           {name}
-        </Text>
+        </Typography.Text>
         {email ? (
-          <Text fontSize={12} style={{ lineHeight: 1.4 }} type='secondary'>
+          <Typography.Text type='secondary' style={{ fontSize: 12, lineHeight: 1.4 }}>
             {email}
-          </Text>
+          </Typography.Text>
         ) : null}
-      </Flexbox>
-    </Flexbox>
-  </Flexbox>
+      </Flex>
+    </Flex>
+  </Flex>
 ))
 
 UserInfoSection.displayName = 'UserInfoSection'
 
 const HomeUserTrigger = memo(() => {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const { data: session } = useSession()
   const [open, setOpen] = useState(false)
 
@@ -116,7 +117,7 @@ const HomeUserTrigger = memo(() => {
   )
 
   const menuContent = session?.user ? (
-    <Flexbox gap={2} style={{ minWidth: 300 }}>
+    <Flex vertical gap={2} style={{ minWidth: 300 }}>
       <UserInfoSection
         avatar={avatar}
         email={session.user.email}
@@ -125,18 +126,18 @@ const HomeUserTrigger = memo(() => {
       <DataStatistics />
       <Menu items={settingsItems} onClick={handleMenuClick} />
       <Menu items={logoutItems} onClick={handleMenuClick} />
-    </Flexbox>
+    </Flex>
   ) : (
-    <Flexbox gap={2} style={{ minWidth: 300 }}>
+    <Flex vertical gap={2} style={{ minWidth: 300 }}>
       <UserInfoSection avatar={avatar} name='访客' />
-      <Flexbox paddingBlock={12} paddingInline={16} width='100%'>
+      <Flex vertical style={{ paddingBlock: 12, paddingInline: 16, width: '100%' }}>
         <Link href='/signin' style={{ color: 'inherit', textDecoration: 'none' }}>
           <Button block type='primary' onClick={() => setOpen(false)}>
             登录或注册
           </Button>
         </Link>
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 
   return (
@@ -167,13 +168,13 @@ const HomeUserTrigger = memo(() => {
           paddingInlineStart: 2,
         }}
       >
-        <Avatar avatar={avatar} shape='square' size={28} />
-        <Flexbox horizontal align='center' gap={4} style={{ overflow: 'hidden' }}>
-          <Text ellipsis style={{ flex: 1 }} weight={500}>
+        <Avatar shape='square' size={28} src={avatar} />
+        <Flex align='center' gap={4} style={{ overflow: 'hidden' }}>
+          <Typography.Text ellipsis style={{ flex: 1, fontWeight: 500 }}>
             {displayName}
-          </Text>
+          </Typography.Text>
           <Icon color={cssVar.colorTextDescription} icon={ChevronDownIcon} />
-        </Flexbox>
+        </Flex>
       </Block>
     </Popover>
   )

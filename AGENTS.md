@@ -13,7 +13,6 @@
 - 测试：Vitest（根目录 + 各 package 独立配置）
 - 日志：`debug` 包，命名空间约定见 `.cursor/rules/debug-usage.md`
 
-**不包含**（避免误导）：独立前端仓库 / 独立域名、tRPC 改造、react-i18next、Electron / 多端入口、LobeHub Debug Proxy。  
 脚本运行可用本机 `bun`（`dev` / `build` 链路）；包管理仍仅用 `pnpm`。
 
 ## 项目结构
@@ -27,6 +26,7 @@ PureChatNext/
 │   ├── file-loaders/          # 文档加载（pdf、docx、pptx、excel…）
 │   ├── web-crawler/           # 网页爬虫多实现（naive、firecrawl、tavily…）
 │   ├── ssrf-safe-fetch/       # SSRF 安全 fetch 封装
+│   ├── ui/                    # UI 原语（暂桥接 @lobehub/ui，逐步自研替换）
 │   ├── chat-adapter-wechat/   # 微信 iLink + Vercel Chat SDK Adapter
 │   └── chat-adapter-qq/       # QQ 开放平台 + Vercel Chat SDK Adapter
 ├── src/
@@ -157,14 +157,3 @@ cd packages/file-loaders && pnpm exec vitest run --silent='passed-only' 'src/loa
 | `docs/self-hosting/wechat-channel.zh-CN.md` | 微信 iLink 扫码渠道 |
 | `docs/self-hosting/qq-channel.zh-CN.md` | QQ 开放平台机器人渠道 |
 | `.cursor/rules/debug-usage.md` | debug 日志规范 |
-
-## lobehub / lobechat 对照源码
-
-本机（macOS）上有一份可直接读取的 LobeHub / LobeChat 源码，用于对照实现、移植渠道 / Adapter、查协议与平台差异。
-
-- **路径**：`/Volumes/MacOs/github/lobe-chat-main`
-- **触发词**：对话中出现 `lobehub`、`lobechat`、`lobe-chat`、`LobeHub`、`LobeChat` 等关键字时，优先到上述路径查代码与文档，不要只靠记忆或假设
-- **常用子路径**：
-  - `apps/server/src/services/bot/platforms/` — 消息渠道（qq / wechat 等）
-  - `packages/chat-adapter-*` — Chat SDK Adapter 包
-  - `docs/usage/channels/` — 渠道用户文档

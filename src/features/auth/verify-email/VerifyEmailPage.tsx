@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@lobehub/ui'
+import { Button } from 'antd'
 import { ChevronLeft } from 'lucide-react'
 import Link from '@/utils/link'
 import { useSearchParams } from '@/utils/navigation'
@@ -34,19 +34,17 @@ const VerifyEmailPageContent = () => {
   const email = searchParams.get('email')
   const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
 
+  const VerifyEmailFooter = (
+    <Link href='/signin'>
+      <Button block icon={<ChevronLeft />} size='large'>
+        返回登录
+      </Button>
+    </Link>
+  )
+
   return (
     <AuthPageContainer>
-      <AuthCard
-        footer={
-          <Link href="/signin">
-            <Button block icon={ChevronLeft} size="large">
-              返回登录
-            </Button>
-          </Link>
-        }
-        subtitle={<VerifyEmailDescription email={email} />}
-        title="验证您的邮箱"
-      >
+      <AuthCard footer={VerifyEmailFooter} subtitle={<VerifyEmailDescription email={email} />} title='验证您的邮箱'>
         <VerifyEmailContent callbackUrl={callbackUrl} email={email} />
       </AuthCard>
     </AuthPageContainer>

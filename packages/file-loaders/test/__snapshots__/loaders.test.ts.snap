@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`loadFile Integration Tests > PDF Handling > should load content from a pdf file using filePath 1`] = `
+exports[`loadFile integration (@pure/file-loaders) > PDF fixtures > loads test.pdf from disk 1`] = `
 {
   "content": "<page pageNumber="1">
 123
@@ -43,7 +43,7 @@ exports[`loadFile Integration Tests > PDF Handling > should load content from a 
 }
 `;
 
-exports[`loadFile Integration Tests > Text Handling (.txt, .csv, .md, etc.) > should load content from a test.csv file using filePath 1`] = `
+exports[`loadFile integration (@pure/file-loaders) > plain text fixtures > loads test.csv from disk 1`] = `
 {
   "content": "ID,Name,Value
 1,Alpha,100
@@ -75,11 +75,11 @@ exports[`loadFile Integration Tests > Text Handling (.txt, .csv, .md, etc.) > sh
 }
 `;
 
-exports[`loadFile Integration Tests > Text Handling (.txt, .csv, .md, etc.) > should load content from a test.md file using filePath 1`] = `
+exports[`loadFile integration (@pure/file-loaders) > plain text fixtures > loads test.md from disk 1`] = `
 {
-  "content": "# Markdown Test
+  "content": "# fixture
 
-This is a test.
+Short markdown sample for file-loader integration tests.
 ",
   "fileType": "md",
   "filename": "test.md",
@@ -88,24 +88,24 @@ This is a test.
   },
   "pages": [
     {
-      "charCount": 33,
+      "charCount": 68,
       "lineCount": 4,
       "metadata": {
         "lineNumberEnd": 4,
         "lineNumberStart": 1,
       },
-      "pageContent": "# Markdown Test
+      "pageContent": "# fixture
 
-This is a test.
+Short markdown sample for file-loader integration tests.
 ",
     },
   ],
-  "totalCharCount": 33,
+  "totalCharCount": 68,
   "totalLineCount": 4,
 }
 `;
 
-exports[`loadFile Integration Tests > Text Handling (.txt, .csv, .md, etc.) > should load content from a test.txt file using filePath 1`] = `
+exports[`loadFile integration (@pure/file-loaders) > plain text fixtures > loads test.txt from disk 1`] = `
 {
   "content": "This is line 1.
 This is line 2.

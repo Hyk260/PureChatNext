@@ -18,17 +18,12 @@ const timeRangeMapping = {
   year: 'py',
 };
 
-/**
- * Brave implementation of the search service
- * Primarily used for web crawling
- */
 export class BraveImpl implements SearchServiceImpl {
   private get apiKey(): string | undefined {
     return process.env.BRAVE_API_KEY;
   }
 
   private get baseUrl(): string {
-    // Assuming the base URL is consistent with the crawl endpoint
     return 'https://api.search.brave.com/res/v1';
   }
 

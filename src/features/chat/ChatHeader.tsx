@@ -1,6 +1,8 @@
 'use client'
 
-import { ActionIcon, DropdownMenu, Flexbox, Icon, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
+import { DropdownMenu } from '@pure/ui'
+import { ActionIcon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Maximize2, MoreHorizontal, PanelLeftOpen, PanelRightOpen } from 'lucide-react'
 import { memo, useMemo } from 'react'
@@ -79,7 +81,7 @@ const ChatHeader = memo<Props>(({ title }) => {
         key: 'full-width',
         label: '全宽显示',
         onCheckedChange: (checked: boolean) => toggleWideScreen(checked),
-        // Prefer checkbox over switch: lobehub Switch.Root renders Motion.button
+        // Prefer checkbox over switch: Switch.Root renders Motion.button
         // while Base UI defaults nativeButton=false, which warns on click.
         type: 'checkbox' as const,
       },
@@ -88,8 +90,8 @@ const ChatHeader = memo<Props>(({ title }) => {
   )
 
   return (
-    <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
-      <Flexbox horizontal align='center' flex={1} gap={4} style={{ minWidth: 0, overflow: 'hidden' }}>
+    <Flex align='center' className={styles.header} justify='space-between'>
+      <Flex align='center' flex={1} gap={4} style={{ minWidth: 0, overflow: 'hidden' }}>
         {leftCollapsed ? (
           <ActionIcon
             icon={PanelLeftOpen}
@@ -98,25 +100,21 @@ const ChatHeader = memo<Props>(({ title }) => {
             onClick={toggleLeftCollapsed}
           />
         ) : null}
-        <Text className={styles.title} ellipsis>
+        <Typography.Text className={styles.title} ellipsis>
           {title}
-        </Text>
-        {/*
-          Multiple children avoid DropdownMenu cloning a single ActionIcon and
-          reading element.ref (removed in React 19).
-        */}
+        </Typography.Text>
         <DropdownMenu
           items={menuItems}
           nativeButton
           placement='bottomLeft'
           triggerProps={{ className: styles.menuTrigger, title: '更多' }}
         >
-          <Icon icon={MoreHorizontal} size='small' />
+          <MoreHorizontal size={16} />
           <span className={styles.srOnly}>更多</span>
         </DropdownMenu>
-      </Flexbox>
+      </Flex>
 
-      <Flexbox horizontal align='center' flex='none' gap={2}>
+      <Flex align='center' flex='none' gap={2}>
         {rightCollapsed ? (
           <ActionIcon
             icon={PanelRightOpen}
@@ -125,8 +123,8 @@ const ChatHeader = memo<Props>(({ title }) => {
             onClick={toggleRightCollapsed}
           />
         ) : null}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

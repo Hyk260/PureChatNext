@@ -1,17 +1,13 @@
 import { BaseFormatConverter, parseMarkdown, stringifyMarkdown, type Root } from 'chat';
 
+/** Markdown ↔ plain text for WeChat iLink (no Markdown rendering on the client). */
 export class WechatFormatConverter extends BaseFormatConverter {
-  /**
-   * Convert mdast AST to WeChat-compatible text.
-   * WeChat does not support Markdown; convert to plain text.
-   */
+  /** mdast → WeChat-safe text (stringify; client shows plain text). */
   fromAst(ast: Root): string {
     return stringifyMarkdown(ast);
   }
 
-  /**
-   * Convert WeChat message text to mdast AST.
-   */
+  /** Inbound WeChat text → mdast. */
   toAst(text: string): Root {
     return parseMarkdown(text.trim());
   }

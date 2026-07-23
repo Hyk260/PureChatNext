@@ -1,35 +1,35 @@
 /* eslint-disable react/display-name */
 'use client';
 
-import { type FlexboxProps, Flexbox, Text } from '@lobehub/ui';
+import { Flex, type FlexProps, Typography } from 'antd'
 import { type ReactNode, memo } from 'react';
 
-export interface AuthCardProps extends Omit<FlexboxProps, 'title'> {
+export interface AuthCardProps extends Omit<FlexProps, 'title'> {
   footer?: ReactNode;
   subtitle?: ReactNode;
   title?: ReactNode;
 }
 
-export const AuthCard = memo<AuthCardProps>(({ children, title, subtitle, footer, ...rest }) => {
+export const AuthCard = memo<AuthCardProps>(({ children, title, subtitle, footer, style, ...rest }) => {
   return (
-    <Flexbox width={'min(100%,440px)'} {...rest}>
-      <Flexbox gap={16}>
+    <Flex vertical {...rest} style={{ width: 'min(100%,440px)', ...style }}>
+      <Flex vertical gap={16}>
         {title && (
-          <Text fontSize={28} style={{ lineHeight: 1.4 }} weight={'bold'}>
+          <Typography.Text style={{ fontSize: 28, lineHeight: 1.4, fontWeight: 'bold' }}>
             {title}
-          </Text>
+          </Typography.Text>
         )}
         {subtitle && (
-          <Text fontSize={18} style={{ lineHeight: 1.4 }} type={'secondary'} weight={500}>
+          <Typography.Text type={'secondary'} style={{ fontSize: 18, lineHeight: 1.4, fontWeight: 500 }}>
             {subtitle}
-          </Text>
+          </Typography.Text>
         )}
-      </Flexbox>
-      <Flexbox gap={12} paddingBlock="32px">
+      </Flex>
+      <Flex vertical gap={12} style={{ paddingBlock: '32px' }}>
         {children}
-      </Flexbox>
+      </Flex>
       {footer}
-    </Flexbox>
+    </Flex>
   );
 });
 

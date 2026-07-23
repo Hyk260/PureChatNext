@@ -1,6 +1,6 @@
 'use client'
 
-import { Modal } from '@lobehub/ui'
+import { Modal } from 'antd'
 import { memo } from 'react'
 
 import { useResourceStore , revalidateResources } from '@/features/resources/store/resourceStore'

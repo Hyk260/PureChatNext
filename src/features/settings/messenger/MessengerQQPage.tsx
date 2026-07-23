@@ -1,7 +1,7 @@
 'use client'
 
-import { Button, Flexbox, Text } from '@lobehub/ui'
-import { Alert, App, Input, Radio, Select, Spin } from 'antd'
+import { Flex, Typography, Button, Alert, Input, Radio, Select, Spin } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { Trash2Icon } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
 
@@ -36,7 +36,7 @@ const DISCONNECTED_STATUS: QQStatus = {
 }
 
 const MessengerQQPage = memo(() => {
-  const { message, modal } = App.useApp()
+  const { message, modal } = useApp()
   const platformMeta = getMessengerPlatform('qq')!
   const [loading, setLoading] = useState(true)
   const [binding, setBinding] = useState(false)
@@ -139,9 +139,9 @@ const MessengerQQPage = memo(() => {
   if (loading) {
     return (
       <MessengerDetailShell platform="qq" platformMeta={platformMeta}>
-        <Flexbox align="center" justify="center" style={{ minHeight: 160 }}>
+        <Flex vertical align="center" justify="center" style={{ minHeight: 160 }}>
           <Spin />
-        </Flexbox>
+        </Flex>
       </MessengerDetailShell>
     )
   }
@@ -154,58 +154,58 @@ const MessengerQQPage = memo(() => {
       连接
     </Button>
   ) : (
-    <Button danger disabled={binding} icon={Trash2Icon} onClick={handleDisconnect}>
+    <Button danger disabled={binding} icon={<Trash2Icon />} onClick={handleDisconnect}>
       断开
     </Button>
   )
 
   return (
     <MessengerDetailShell headerAction={headerAction} platform="qq" platformMeta={platformMeta}>
-      <Flexbox gap={12}>
-        <Text strong style={{ fontSize: 15 }}>
+      <Flex vertical gap={12}>
+        <Typography.Text strong style={{ fontSize: 15 }}>
           连接 QQ
-        </Text>
+        </Typography.Text>
 
-        <Flexbox gap={8}>
-          <Text type="secondary" style={{ fontSize: 13 }}>
+        <Flex vertical gap={8}>
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
             绑定助手
-          </Text>
+          </Typography.Text>
           <Select
             options={agents}
             style={{ maxWidth: 360 }}
             value={agentId}
             onChange={(v) => void handleAgentChange(v)}
           />
-        </Flexbox>
+        </Flex>
 
         {showConnect ? (
           <>
-            <Flexbox gap={8}>
-              <Text type="secondary" style={{ fontSize: 13 }}>
+            <Flex vertical gap={8}>
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                 App ID
-              </Text>
+              </Typography.Text>
               <Input
                 placeholder="来自 q.qq.com 开发设置"
                 style={{ maxWidth: 420 }}
                 value={appId}
                 onChange={(e) => setAppId(e.target.value)}
               />
-            </Flexbox>
-            <Flexbox gap={8}>
-              <Text type="secondary" style={{ fontSize: 13 }}>
+            </Flex>
+            <Flex vertical gap={8}>
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                 App Secret
-              </Text>
+              </Typography.Text>
               <Input.Password
                 placeholder="请妥善保管，不会回显已保存的密钥"
                 style={{ maxWidth: 420 }}
                 value={appSecret}
                 onChange={(e) => setAppSecret(e.target.value)}
               />
-            </Flexbox>
-            <Flexbox gap={8}>
-              <Text type="secondary" style={{ fontSize: 13 }}>
+            </Flex>
+            <Flex vertical gap={8}>
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                 连接模式
-              </Text>
+              </Typography.Text>
               <Radio.Group
                 value={connectionMode}
                 onChange={(e) => setConnectionMode(e.target.value as QQConnectionMode)}
@@ -213,45 +213,45 @@ const MessengerQQPage = memo(() => {
                 <Radio.Button value="websocket">WebSocket（推荐）</Radio.Button>
                 <Radio.Button value="webhook">Webhook</Radio.Button>
               </Radio.Group>
-            </Flexbox>
-            <Text type="secondary" style={{ fontSize: 13 }}>
+            </Flex>
+            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
               {connectionMode === 'websocket'
                 ? '保存后请运行 pnpm qq:gateway 维护 WebSocket 连接。'
                 : '保存后将显示回调地址，请粘贴到 QQ 开放平台「回调配置」。'}
-            </Text>
+            </Typography.Text>
           </>
         ) : (
           <>
             <Alert
               showIcon
               type="success"
-              message="已连接 QQ"
+              title="已连接 QQ"
               description={
                 status?.lastActiveAt
                   ? `最近活动：${formatActiveAt(status.lastActiveAt)} · 模式：${status.connectionMode ?? 'websocket'}`
-                  : `模式：${status.connectionMode ?? 'websocket'}。在 QQ 私聊或群内 @ 机器人即可对话。`
+                  : `模式：${status?.connectionMode ?? 'websocket'}。在 QQ 私聊或群内 @ 机器人即可对话。`
               }
             />
             {status?.connectionMode === 'webhook' && status.webhookUrl && (
               <Alert
                 showIcon
                 type="info"
-                message="Webhook 回调地址"
+                title="Webhook 回调地址"
                 description={
-                  <Text copyable style={{ fontSize: 13 }}>
+                  <Typography.Text copyable style={{ fontSize: 13 }}>
                     {status.webhookUrl}
-                  </Text>
+                  </Typography.Text>
                 }
               />
             )}
             {status?.connectionMode === 'websocket' && (
-              <Text type="secondary" style={{ fontSize: 13 }}>
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                 自托管请保持运行：pnpm qq:gateway
-              </Text>
+              </Typography.Text>
             )}
           </>
         )}
-      </Flexbox>
+      </Flex>
 
       <MessengerCommandList />
     </MessengerDetailShell>

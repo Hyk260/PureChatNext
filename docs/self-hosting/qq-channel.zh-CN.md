@@ -2,7 +2,7 @@
 
 通过 **QQ 开放平台机器人**（App ID / App Secret）连接，在 QQ 私聊、群聊 @、频道中与 PureChat 助手对话。
 
-协议与 Chat SDK Adapter 在 workspace 包 [`@pure/chat-adapter-qq`](../../packages/chat-adapter-qq)（对齐 LobeHub `chat-adapter-qq` + Vercel `chat` SDK）。完整协议见 [qq/protocol-spec.md](./qq/protocol-spec.md)。
+协议与 Chat SDK Adapter 在 workspace 包 [`@pure/chat-adapter-qq`](../../packages/chat-adapter-qq)（配合 Vercel `chat` SDK）。平台能力与接口以 [QQ 开放平台 / 机器人文档](https://bot.q.qq.com/wiki/) 为准；本仓整理见 [qq/protocol.zh-CN.md](./qq/protocol.zh-CN.md)。
 
 ## 功能范围（MVP）
 

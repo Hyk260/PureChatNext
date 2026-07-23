@@ -2,12 +2,11 @@
 
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
-import { Alert, Button, Icon, InputPassword, Text } from '@lobehub/ui'
-import { Form , type FormInstance, type InputRef } from 'antd'
+import { Icon } from '@pure/ui'
+import { Alert, Typography, Button, Form, Input, type FormInstance, type InputRef } from 'antd'
 import { cssVar } from 'antd-style'
 import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
-
 
 interface SignInFormValues {
   email: string
@@ -58,13 +57,13 @@ export const SignInPasswordStep = ({
     return (
       <AuthCard
         footer={
-          <Button icon={ChevronLeft} size="large" style={{ marginTop: 12 }} onClick={onBack}>
+          <Button icon={<ChevronLeft />} size="large" style={{ marginTop: 12 }} onClick={onBack}>
             返回修改邮箱
           </Button>
         }
         subtitle="请输入密码以继续"
       >
-        <Text fontSize={20}>{email}</Text>
+        <Typography.Text style={{ fontSize: 20 }}>{email}</Typography.Text>
         <Alert
           showIcon
           style={{ marginTop: 12 }}
@@ -96,7 +95,7 @@ export const SignInPasswordStep = ({
     <AuthCard
       footer={
         <>
-          <Text fontSize={13} type="secondary">
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
             <a
               aria-disabled={forgotPasswordLoading}
               style={{
@@ -114,22 +113,22 @@ export const SignInPasswordStep = ({
             >
               {'忘记密码？'}
             </a>
-          </Text>
-          <Button icon={ChevronLeft} size="large" style={{ marginTop: 12 }} onClick={onBack}>
+          </Typography.Text>
+          <Button icon={<ChevronLeft />} size="large" style={{ marginTop: 12 }} onClick={onBack}>
             返回修改邮箱
           </Button>
         </>
       }
       subtitle="请输入密码以继续"
     >
-      <Text fontSize={20}>{email}</Text>
+      <Typography.Text style={{ fontSize: 20 }}>{email}</Typography.Text>
       <Form form={form} layout="vertical" onFinish={onSignIn}>
         <Form.Item
           name="password"
           rules={[{ message: '请输入密码', required: true }]}
           style={{ marginBottom: 0 }}
         >
-          <InputPassword
+          <Input.Password
             placeholder="请输入密码"
             ref={passwordInputRef}
             size="large"
@@ -146,7 +145,7 @@ export const SignInPasswordStep = ({
             }}
             suffix={
               <Button
-                icon={ChevronRight}
+                icon={<ChevronRight />}
                 loading={loading}
                 style={{ color: cssVar.colorPrimary }}
                 title="登录"

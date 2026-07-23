@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { type ExtractedFile, extractFiles, parseString } from './parser-utils';
+import { type ExtractedFile, extractFiles, parseString } from '../src/utils/parser-utils';
 
 describe('parser-utils', () => {
   describe('parseString', () => {
@@ -27,7 +27,7 @@ describe('parser-utils', () => {
     it('should reject on invalid input type', async () => {
       // @ts-expect-error intentional wrong type
       await expect(extractFiles(123, () => true)).rejects.toThrow(
-        '[OfficeParser]: Invalid input type',
+        '[file-loaders]: Expected a Buffer or a readable file path',
       );
     });
 
@@ -40,7 +40,7 @@ describe('parser-utils', () => {
         },
       }));
 
-      const { extractFiles: mockedExtractFiles } = await import('./parser-utils');
+      const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils');
 
       await expect(mockedExtractFiles(Buffer.from('corrupted'), () => true)).rejects.toThrow();
     });
@@ -107,7 +107,7 @@ describe('parser-utils', () => {
       }));
 
       // Re-import module to use mocked yauzl
-      const { extractFiles: mockedExtractFiles } = await import('./parser-utils');
+      const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils');
 
       const files: ExtractedFile[] = await mockedExtractFiles(Buffer.from('zip'), (name) =>
         name.endsWith('.txt'),
@@ -160,7 +160,7 @@ describe('parser-utils', () => {
         },
       }));
 
-      const { extractFiles: mockedExtractFiles } = await import('./parser-utils');
+      const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils');
 
       const files = await mockedExtractFiles('/tmp/file.zip', (name) => name === 'keep.txt');
       expect(files).toEqual([{ path: 'keep.txt', content: 'A' }]);
@@ -192,7 +192,7 @@ describe('parser-utils', () => {
         },
       }));
 
-      const { extractFiles: mockedExtractFiles } = await import('./parser-utils');
+      const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils');
 
       await expect(mockedExtractFiles(Buffer.from('zip'), () => true)).rejects.toThrow(
         'Failed to open stream',
@@ -225,7 +225,7 @@ describe('parser-utils', () => {
         },
       }));
 
-      const { extractFiles: mockedExtractFiles } = await import('./parser-utils');
+      const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils');
 
       await expect(mockedExtractFiles(Buffer.from('zip'), () => true)).rejects.toThrow(
         'Could not open read stream',
@@ -270,7 +270,7 @@ describe('parser-utils', () => {
         },
       }));
 
-      const { extractFiles: mockedExtractFiles } = await import('./parser-utils');
+      const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils');
 
       await expect(mockedExtractFiles(Buffer.from('zip'), () => true)).rejects.toThrow(
         'Stream error',
@@ -300,7 +300,7 @@ describe('parser-utils', () => {
         },
       }));
 
-      const { extractFiles: mockedExtractFiles } = await import('./parser-utils');
+      const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils');
 
       await expect(mockedExtractFiles(Buffer.from('zip'), () => true)).rejects.toThrow(
         'Zipfile error',

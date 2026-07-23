@@ -8,7 +8,7 @@ import EntryComponent, { message, modal, notification } from './index';
 // 模拟 App.useApp 方法返回的对象
 const mockUseApp = {
   message: { success: vi.fn() },
-  modal: { confirm: vi.fn() },
+  modal: { confirm: vi.fn(), info: vi.fn(), success: vi.fn(), error: vi.fn(), warning: vi.fn() },
   notification: { open: vi.fn() },
 };
 
@@ -32,8 +32,18 @@ describe('EntryComponent', () => {
 
     // 验证是否赋值的对象与模拟的对象匹配
     expect(message).toEqual(mockUseApp.message);
-    expect(modal).toEqual(mockUseApp.modal);
     expect(notification).toEqual(mockUseApp.notification);
+  });
+
+  it('should apply global modal defaults (centered + no zoom transition)', () => {
+    render(<EntryComponent />);
+
+    modal.confirm({ content: 'x' });
+    expect(mockUseApp.modal.confirm).toHaveBeenCalledWith({
+      centered: true,
+      transitionName: '',
+      content: 'x',
+    });
   });
 
   it('should render without crashing', () => {

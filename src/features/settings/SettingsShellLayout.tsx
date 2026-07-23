@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { usePathname } from '@/utils/navigation'
 import { type ReactNode } from 'react'
 
@@ -18,20 +18,20 @@ const SettingsShellLayout = ({ children }: { children: ReactNode }) => {
       header={isProviderRoute ? undefined : <SettingsHeader />}
       sidebar={<SettingsSidebar />}
     >
-      <Flexbox
+      <Flex
+        vertical
         flex={1}
-        height="100%"
         style={{
+          height: '100%',
           marginInline: isProviderRoute ? 0 : 'auto',
           maxWidth: isProviderRoute ? 'none' : 1024,
           minHeight: 0,
           overflow: isProviderRoute ? 'hidden' : 'auto',
           width: '100%',
         }}
-        width="100%"
       >
         {children}
-      </Flexbox>
+      </Flex>
     </MainShellLayout>
   )
 }

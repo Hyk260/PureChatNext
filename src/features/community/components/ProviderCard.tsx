@@ -1,7 +1,7 @@
 'use client'
 
-import { ModelTag, ProviderCombine } from '@lobehub/icons'
-import { ActionIcon, Block, Flexbox, MaskShadow, stopPropagation, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
+import { Block, MaskShadow, ModelTag, ProviderCombine, stopPropagation, ActionIcon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { GlobeIcon } from 'lucide-react'
 import { memo } from 'react'
@@ -37,48 +37,27 @@ const ProviderCard = memo<DiscoverProviderItem>(
           position: 'relative',
         }}
       >
-        <Flexbox
-          horizontal
-          align='flex-start'
-          gap={16}
-          justify='space-between'
-          padding={16}
-          width='100%'
-        >
-          <Flexbox
-            title={identifier}
-            style={{
-              overflow: 'hidden',
-            }}
-          >
+        <Flex align='flex-start' gap={16} justify='space-between' style={{ padding: 16, width: '100%' }}>
+          <Flex vertical title={identifier} style={{ overflow: 'hidden', }}>
             <ProviderCombine provider={identifier} size={28} style={{ flex: 'none' }} />
             <div className={styles.author}>@{name}</div>
-          </Flexbox>
-          <Flexbox horizontal align='center'>
+          </Flex>
+          <Flex align='center'>
             <a href={url} rel='noopener noreferrer' target='_blank' onClick={stopPropagation}>
               <ActionIcon color={cssVar.colorTextDescription} icon={GlobeIcon} />
             </a>
-          </Flexbox>
-        </Flexbox>
-        <Flexbox flex={1} gap={12} paddingInline={16}>
+          </Flex>
+        </Flex>
+        <Flex vertical flex={1} gap={12} style={{ paddingInline: 16 }}>
           {description ? (
-            <Text
-              className={styles.desc}
-              ellipsis={{
+            <Typography.Paragraph className={styles.desc} ellipsis={{
                 rows: 3,
-              }}
-            >
+              }} style={{ marginBottom: 0 }}>
               {description}
-            </Text>
+            </Typography.Paragraph>
           ) : null}
-        </Flexbox>
-        <Flexbox
-          horizontal
-          align='center'
-          className={styles.footer}
-          justify='space-between'
-          padding={16}
-        >
+        </Flex>
+        <Flex align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>
           <MaskShadow horizontal gap={6} position='right' size={10} width='100%'>
             {models
               .slice(0, 6)
@@ -87,7 +66,7 @@ const ProviderCard = memo<DiscoverProviderItem>(
                 <ModelTag key={tag} model={tag} style={{ margin: 0 }} />
               ))}
           </MaskShadow>
-        </Flexbox>
+        </Flex>
       </Block>
     )
   },

@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@lobehub/ui'
+import { Button } from 'antd'
 import { ChevronLeft } from 'lucide-react'
 import Link from '@/utils/link'
 import { Suspense } from 'react'
@@ -16,7 +16,7 @@ const ResetPasswordPageContent = () => {
       <AuthCard
         footer={
           <Link href="/signin">
-            <Button block icon={ChevronLeft} size="large">
+            <Button block icon={<ChevronLeft />} size="large">
               返回登录
             </Button>
           </Link>

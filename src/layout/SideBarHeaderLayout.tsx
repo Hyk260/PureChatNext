@@ -1,7 +1,7 @@
 'use client'
 
-import { ActionIcon, Flexbox, Icon, Text } from '@lobehub/ui'
-import { type BreadcrumbProps, Breadcrumb } from 'antd'
+import { ActionIcon, Icon } from '@pure/ui'
+import { Flex, Typography, type BreadcrumbProps, Breadcrumb } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronRightIcon, HomeIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useRouter } from '@/utils/navigation'
@@ -98,36 +98,29 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     }))
 
     const leftContent = left ? (
-      <Flexbox horizontal align='center' flex={1} gap={2} style={{ overflow: 'hidden' }}>
+      <Flex align='center' flex={1} gap={2} style={{ overflow: 'hidden' }}>
         {typeof left === 'string' ? (
-          <Text ellipsis fontSize={16} weight={500}>
+          <Typography.Text ellipsis style={{ fontSize: 16, fontWeight: 500 }}>
             {left}
-          </Text>
+          </Typography.Text>
         ) : (
           left
         )}
-      </Flexbox>
+      </Flex>
     ) : (
-      <Flexbox flex={1} paddingInline={6}>
+      <Flex vertical flex={1} style={{ paddingInline: 6 }}>
         <Breadcrumb
           className={styles.breadcrumb}
           separator={<Icon color={cssVar.colorTextDescription} icon={ChevronRightIcon} size={12} />}
           items={breadcrumbItems}
         />
-      </Flexbox>
+      </Flex>
     )
 
     return (
-      <Flexbox
-        horizontal
-        align='center'
-        className={styles.container}
-        flex='none'
-        justify='space-between'
-        padding='8px 6px'
-      >
+      <Flex align='center' className={styles.container} flex='none' justify='space-between' style={{ padding: '8px 6px' }}>
         {leftContent}
-        <Flexbox horizontal align='center' flex='none' gap={2} justify='flex-end'>
+        <Flex align='center' flex='none' gap={2} justify='flex-end'>
           {right}
           {showTogglePanelButton ? (
             <ActionIcon
@@ -141,8 +134,8 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
               }}
             />
           ) : null}
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
     )
   },
 )

@@ -4,13 +4,11 @@ const HEURISTIC_THRESHOLD = 0.3;
 export type Utf16Variant = 'utf-16le' | 'utf-16be';
 
 /**
- * Detect UTF-16 without BOM by sampling and counting ASCII-shaped code-unit
- * pairs. ASCII chars in UTF-16 produce a 0x00 byte at the high half: at
- * odd index for LE, at even index for BE.
+ * Guess BOM-less UTF-16 by counting ASCII-shaped code-unit pairs.
+ * LE places the 0x00 high byte on odd indices; BE on even.
  *
- * Used both by `TextLoader` (to pick the right decoder) and by the binary
- * sniffer (so a UTF-16 text file without BOM isn't mistaken for binary
- * because of its alternating null bytes).
+ * Shared by the text loader (decoder choice) and the binary sniffer
+ * (so alternating nulls are not mistaken for binary).
  */
 export const detectUtf16NoBom = (buffer: Buffer): Utf16Variant | null => {
   const sample = buffer.subarray(0, Math.min(HEURISTIC_SAMPLE_BYTES, buffer.length));

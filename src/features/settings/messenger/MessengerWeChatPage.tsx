@@ -1,7 +1,7 @@
 'use client'
 
-import { Button, Flexbox, Text } from '@lobehub/ui'
-import { Alert, App, Select, Spin } from 'antd'
+import { Flex, Typography, Button, Alert, Select, Spin } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { Trash2Icon } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
 
@@ -39,7 +39,7 @@ const DISCONNECTED_STATUS: WechatStatus = {
 }
 
 const MessengerWeChatPage = memo(() => {
-  const { message, modal } = App.useApp()
+  const { message, modal } = useApp()
   const platformMeta = getMessengerPlatform('wechat')!
   const [loading, setLoading] = useState(true)
   const [binding, setBinding] = useState(false)
@@ -136,6 +136,7 @@ const MessengerWeChatPage = memo(() => {
       centered: true,
       content: '断开后需重新扫码才能在微信中对话。',
       okText: '断开',
+      cancelText: '取消',
       okType: 'danger',
       onOk: async () => {
         await unbindWechat()
@@ -155,9 +156,9 @@ const MessengerWeChatPage = memo(() => {
   if (loading) {
     return (
       <MessengerDetailShell platform="wechat" platformMeta={platformMeta}>
-        <Flexbox align="center" justify="center" style={{ minHeight: 160 }}>
+        <Flex vertical align="center" justify="center" style={{ minHeight: 160 }}>
           <Spin />
-        </Flexbox>
+        </Flex>
       </MessengerDetailShell>
     )
   }
@@ -166,11 +167,11 @@ const MessengerWeChatPage = memo(() => {
   const needsRebind = Boolean(status?.needsRebind) || (connected && status?.enabled === false)
   const showConnect = !connected || needsRebind
 
-  // 对齐 lobe Telegram：未连接「连接」，已连接「断开」
+  // 未连接显示「连接」，已连接显示「断开」
   const headerAction = showConnect ? (
     <QrCodeAuth disabled={binding} onAuthenticated={(c) => void handleAuthenticated(c)} />
   ) : (
-    <Button danger disabled={binding} icon={Trash2Icon} onClick={handleDisconnect}>
+    <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>
       断开
     </Button>
   )
@@ -181,41 +182,41 @@ const MessengerWeChatPage = memo(() => {
       platform="wechat"
       platformMeta={platformMeta}
     >
-      <Flexbox gap={8}>
-        <Text strong style={{ fontSize: 15 }}>
+      <Flex vertical gap={8}>
+        <Typography.Text strong style={{ fontSize: 15 }}>
           连接微信
-        </Text>
+        </Typography.Text>
 
-        <Flexbox gap={8}>
-          <Text type="secondary" style={{ fontSize: 13 }}>
+        <Flex vertical gap={8}>
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
             绑定助手
-          </Text>
+          </Typography.Text>
           <Select
             options={agents}
             style={{ maxWidth: 360 }}
             value={agentId}
             onChange={(v) => void handleAgentChange(v)}
           />
-        </Flexbox>
+        </Flex>
 
         {needsRebind && (
           <Alert
             showIcon
             type="warning"
-            message="微信会话已过期或需要重新连接"
+            title="微信会话已过期或需要重新连接"
             description="请再次扫码绑定。"
           />
         )}
 
         {showConnect ? (
-          <Text type="secondary" style={{ fontSize: 13 }}>
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
             打开手机微信 → 右上角「+」→ 扫一扫，扫描二维码并确认。
-          </Text>
+          </Typography.Text>
         ) : (
           <Alert
             showIcon
             type="success"
-            message="已连接微信"
+            title="已连接微信"
             description={
               status?.lastActiveAt
                 ? `最近活动：${formatActiveAt(status.lastActiveAt)}`
@@ -223,7 +224,7 @@ const MessengerWeChatPage = memo(() => {
             }
           />
         )}
-      </Flexbox>
+      </Flex>
 
       <MessengerCommandList />
     </MessengerDetailShell>

@@ -1,6 +1,6 @@
 'use client'
 
-import { Badge, Button as AntdButton, Divider, Form , type FormInstance, type InputRef } from 'antd'
+import { Alert, Flex, Typography, Badge, Button, Divider, Form, Input, Skeleton, type FormInstance, type InputRef } from 'antd'
 import { ChevronRight, Mail } from 'lucide-react'
 import {
   type CSSProperties,
@@ -11,14 +11,12 @@ import {
   useRef,
   useState,
 } from 'react'
-import { Alert, Button, Flexbox, Icon, Input, Skeleton, Text } from '@lobehub/ui'
-
+import { Icon } from '@pure/ui'
 import AuthIcons from '@/components/AuthIcons'
 import { BRANDING_NAME } from '@/const/branding'
 import AuthAgreement from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
-
 
 interface SignInFormValues {
   email: string
@@ -108,15 +106,15 @@ export const SignInEmailStep = ({
 
   const divider = (
     <Divider>
-      <Text fontSize={12} type='secondary'>
+      <Typography.Text type='secondary' style={{ fontSize: 12 }}>
         或继续使用
-      </Text>
+      </Typography.Text>
     </Divider>
   )
 
   return (
     <AuthCard title={`登录或注册你的 ${BRANDING_NAME} 账号`}>
-      <Flexbox gap={12}>
+      <Flex vertical gap={12}>
         {!serverConfigInit && (
           <>
             <Skeleton.Button active block size='large' />
@@ -126,10 +124,10 @@ export const SignInEmailStep = ({
         )}
 
         {serverConfigInit && oAuthSSOProviders.length > 0 && (
-          <Flexbox gap={12} width='100%'>
+          <Flex vertical gap={12} style={{ width: '100%' }}>
             {oAuthSSOProviders.map((provider) => {
               const button = (
-                <AntdButton
+                <Button
                   block
                   disabled={pendingProvider !== null}
                   icon={<Icon icon={AuthIcons(provider, 18)} style={PROVIDER_ICON_STYLE} />}
@@ -140,7 +138,7 @@ export const SignInEmailStep = ({
                   }}
                 >
                   {getProviderLabel(provider)}
-                </AntdButton>
+                </Button>
               )
 
               return (
@@ -153,11 +151,11 @@ export const SignInEmailStep = ({
               )
             })}
             {!disableEmailPassword && divider}
-          </Flexbox>
+          </Flex>
         )}
 
         {serverConfigInit && disableEmailPassword && oAuthSSOProviders.length === 0 && (
-          <Alert showIcon description='未配置可用的第三方登录方式' type='warning' />
+          <Alert showIcon message='未配置可用的第三方登录方式' type='warning' />
         )}
 
         {!disableEmailPassword && (
@@ -178,7 +176,7 @@ export const SignInEmailStep = ({
                 style={EMAIL_INPUT_STYLE}
                 suffix={
                   <Button
-                    icon={ChevronRight}
+                    icon={<ChevronRight />}
                     loading={loading}
                     title='下一步'
                     variant='filled'
@@ -193,13 +191,13 @@ export const SignInEmailStep = ({
         {isSocialOnly && (
           <Alert
             showIcon
-            description='此账户未设置密码，请使用第三方登录或魔法链接登录。'
+            message='此账户未设置密码，请使用第三方登录或魔法链接登录。'
             type='info'
           />
         )}
 
         <AuthAgreement />
-      </Flexbox>
+      </Flex>
     </AuthCard>
   )
 }

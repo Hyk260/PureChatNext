@@ -1,11 +1,12 @@
 'use client'
 
-import { Button, Flexbox, Icon } from '@lobehub/ui'
+import { Flex, Button } from 'antd'
+import { Icon } from '@pure/ui'
 import { cssVar } from 'antd-style'
 import { type LucideIcon, ChevronDownIcon } from 'lucide-react'
 import { type ComponentProps, memo } from 'react'
 
-interface ActionIconWithChevronProps extends ComponentProps<typeof Button> {
+interface ActionIconWithChevronProps extends Omit<ComponentProps<typeof Button>, 'icon'> {
   icon: LucideIcon
 }
 
@@ -20,10 +21,10 @@ const ActionIconWithChevron = memo<ActionIconWithChevronProps>(
         title={title}
         type='text'
       >
-        <Flexbox align='center' gap={4} horizontal>
+        <Flex align='center' gap={4}>
           <Icon color={cssVar.colorIcon} icon={icon} size={18} />
           <Icon color={cssVar.colorIcon} icon={ChevronDownIcon} size={14} />
-        </Flexbox>
+        </Flex>
       </Button>
     )
   },

@@ -1,7 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
-import { Skeleton } from 'antd'
+import { Flex, Skeleton } from 'antd'
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 
@@ -56,9 +55,9 @@ export default function SettingsProfilePage() {
 
   if (isPending) {
     return (
-      <Flexbox padding={24}>
+      <Flex vertical style={{ padding: 24 }}>
         <Skeleton active paragraph={{ rows: 8 }} />
-      </Flexbox>
+      </Flex>
     )
   }
 
@@ -68,17 +67,17 @@ export default function SettingsProfilePage() {
 
   if (loadError === 'failed') {
     return (
-      <Flexbox padding={24}>
+      <Flex vertical style={{ padding: 24 }}>
         加载个人资料失败，请刷新重试。
-      </Flexbox>
+      </Flex>
     )
   }
 
   if (!payload) {
     return (
-      <Flexbox padding={24}>
+      <Flex vertical style={{ padding: 24 }}>
         <Skeleton active paragraph={{ rows: 8 }} />
-      </Flexbox>
+      </Flex>
     )
   }
 

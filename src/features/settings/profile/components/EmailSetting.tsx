@@ -1,7 +1,7 @@
 'use client'
 
-import { Button, Input, Text } from '@lobehub/ui'
-import { App, Form, Modal } from 'antd'
+import { Typography, Input, Button, Form, Modal } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { useState } from 'react'
 
 import { changeEmail } from '@/libs/better-auth/client'
@@ -17,7 +17,7 @@ interface ChangeEmailFormValues {
 }
 
 export function EmailSetting({ email }: EmailSettingProps) {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [form] = Form.useForm<ChangeEmailFormValues>()
@@ -51,29 +51,28 @@ export function EmailSetting({ email }: EmailSettingProps) {
       <SettingRow
         action={
           email ? (
-            <Text
-              onClick={() => setOpen(true)}
-              style={{ cursor: 'pointer', fontSize: 13 }}
-            >
+            <Typography.Text onClick={() => setOpen(true)} style={{ cursor: 'pointer', fontSize: 13 }}>
               修改邮箱
-            </Text>
+            </Typography.Text>
           ) : null
         }
         label="邮箱"
       >
-        <Text type={email ? undefined : 'secondary'}>{email || '未绑定邮箱'}</Text>
+        <Typography.Text type={email ? undefined : 'secondary'}>{email || '未绑定邮箱'}</Typography.Text>
       </SettingRow>
 
       <Modal
+        centered
+        transitionName=''
         destroyOnHidden
         footer={null}
         onCancel={() => setOpen(false)}
         open={open}
         title="修改邮箱"
       >
-        <Text style={{ display: 'block', marginBottom: 16 }} type="secondary">
+        <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
           验证邮件将发送到新邮箱地址，验证完成后邮箱才会更新。
-        </Text>
+        </Typography.Text>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             label="新邮箱"

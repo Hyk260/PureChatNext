@@ -1,7 +1,8 @@
 'use client'
 
-import { ActionIcon, Button, DropdownMenu, Flexbox, Icon, Text } from '@lobehub/ui'
-import { App } from 'antd'
+import { DropdownMenu } from '@pure/ui'
+import { ActionIcon, Icon } from '@pure/ui'
+import { Flex, Typography, Button } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
   ArrowDownAZ,
@@ -19,7 +20,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { useResourceManagerStore } from '@/features/resources/store'
-import { confirmModal } from '@/libs/modal'
+import { useApp } from '@/components/AntdStaticMethods'
 
 import ActionIconWithChevron from '../ToolBar/ActionIconWithChevron'
 import SearchInput from './SearchInput'
@@ -39,7 +40,7 @@ interface ExplorerHeaderProps {
 }
 
 const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFolder, title }) => {
-  const { message } = App.useApp()
+  const { message, modal } = useApp()
   const { selectedFileIds, setSorter, setViewMode, sorter, viewMode } = useResourceManagerStore(
     useShallow((s) => ({
       selectedFileIds: s.selectedFileIds,
@@ -127,8 +128,8 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
   )
 
   return (
-    <Flexbox align='center' className={styles.header} horizontal justify='space-between'>
-      <Flexbox align='center' gap={8} horizontal style={{ overflow: 'hidden' }}>
+    <Flex align='center' className={styles.header} justify='space-between'>
+      <Flex align='center' gap={8} style={{ overflow: 'hidden' }}>
         {sidebarCollapsed ? (
           <ActionIcon
             icon={PanelLeftOpen}
@@ -138,13 +139,13 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
           />
         ) : null}
         {hasSelected ? (
-          <Flexbox align='center' gap={8} horizontal>
+          <Flex align='center' gap={8}>
             <ActionIcon
               icon={Trash2Icon}
               title='删除'
               onClick={() => {
                 if (!onDelete) return
-                confirmModal({
+                modal.confirm({
                   cancelText: '取消',
                   content: `确定删除选中的 ${selectCount} 个文件吗？删除后将无法恢复。`,
                   okButtonProps: { danger: true },
@@ -157,12 +158,12 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
                 })
               }}
             />
-          </Flexbox>
+          </Flex>
         ) : (
-          <Text style={{ marginInlineStart: 8 }}>{title ?? '资源'}</Text>
+          <Typography.Text style={{ marginInlineStart: 8 }}>{title ?? '资源'}</Typography.Text>
         )}
-      </Flexbox>
-      <Flexbox align='center' gap={4} horizontal>
+      </Flex>
+      <Flex align='center' gap={4}>
         <SearchInput />
         <DropdownMenu items={sortMenuItems} nativeButton>
           <ActionIconWithChevron icon={ArrowDownAZ} title={currentSortLabel} />
@@ -170,13 +171,13 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
         <DropdownMenu items={viewMenuItems} nativeButton placement='bottomRight'>
           <ActionIconWithChevron icon={currentViewIcon} title={currentViewLabel} />
         </DropdownMenu>
-        <Flexbox style={{ marginInlineStart: 8 }}>
+        <Flex vertical style={{ marginInlineStart: 8 }}>
           <DropdownMenu items={addMenuItems} nativeButton placement='bottomRight'>
-            <Button icon={Plus} type='primary'>
+            <Button icon={<Plus />} type='primary'>
               添加
             </Button>
           </DropdownMenu>
-        </Flexbox>
+        </Flex>
         <input
           ref={fileInputRef}
           hidden
@@ -188,8 +189,8 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
             e.target.value = ''
           }}
         />
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

@@ -58,7 +58,7 @@ const examples = {
     from: '',
     html: '<p>这是一封来自 <strong>EmailService</strong> 测试台的邮件。</p>',
     replyTo: '',
-    subject: 'PureChatNext EmailService 测试',
+    subject: 'EmailService 测试',
     text: '这是一封来自 EmailService 测试台的邮件。',
     to: 'recipient@example.com',
   },

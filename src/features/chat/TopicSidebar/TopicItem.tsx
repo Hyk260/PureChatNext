@@ -1,17 +1,22 @@
 'use client'
 
-import { type MenuInfo, type MenuProps, Block, DropdownMenu, Flexbox, Icon, Input, Modal, Text } from '@lobehub/ui'
+import { Flex, Typography, Input, Modal } from 'antd'
+import { type MenuInfo, type MenuProps, DropdownMenu, Icon } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { Copy, Link, MoreHorizontal, Pencil, Sparkles, Star, Trash2 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import { type LocalChatTopic } from '@/features/chat/types'
-import { confirmModal } from '@/libs/modal'
+import { useApp } from '@/components/AntdStaticMethods'
 
 const styles = createStaticStyles(({ css }) => ({
   item: css`
     cursor: pointer;
     user-select: none;
+
+    padding-block: 8px;
+    padding-inline: 10px;
+    border-radius: ${cssVar.borderRadius};
 
     & .topic-actions {
       opacity: 0;
@@ -24,6 +29,9 @@ const styles = createStaticStyles(({ css }) => ({
       opacity: 1;
       pointer-events: auto;
     }
+  `,
+  itemActive: css`
+    background: ${cssVar.colorFillTertiary};
   `,
   srOnly: css`
     position: absolute;
@@ -78,6 +86,7 @@ type Props = {
 }
 
 const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) => {
+  const { modal } = useApp()
   const [menuOpen, setMenuOpen] = useState(false)
   const [renameOpen, setRenameOpen] = useState(false)
   const [draftTitle, setDraftTitle] = useState(topic.title)
@@ -145,7 +154,8 @@ const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) 
         label: '删除',
         onClick: (info) => {
           stopMenuEvent(info)
-          confirmModal({
+          modal.confirm({
+            transitionName: '',
             cancelText: '取消',
             content: '话题下的所有消息将一并删除。',
             okButtonProps: { danger: true },
@@ -156,37 +166,30 @@ const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) 
         },
       },
     ],
-    [handleOpenRename, onDelete, topic.id],
+    [handleOpenRename, modal, onDelete, topic.id]
   )
 
   return (
     <>
-      <Block
-        className={styles.item}
-        paddingBlock={8}
-        paddingInline={10}
-        variant={active ? 'filled' : 'borderless'}
-        onClick={() => onSelect(topic.id)}
-      >
-        <Flexbox align='center' gap={4} horizontal>
-          <Text
-            color={active ? cssVar.colorText : cssVar.colorTextSecondary}
+      <Flex className={cx(styles.item, active && styles.itemActive)} onClick={() => onSelect(topic.id)}>
+        <Flex align='center' gap={4} style={{ width: '100%' }}>
+          <Typography.Text
+            title={topic.title}
             style={{
+              color: active ? cssVar.colorText : cssVar.colorTextSecondary,
               flex: 1,
               minWidth: 0,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
             }}
-            title={topic.title}
           >
             {topic.title}
-          </Text>
-          <Flexbox
+          </Typography.Text>
+          <Flex
             align='center'
             className={cx('topic-actions')}
             data-open={menuOpen || undefined}
-            horizontal
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
           >
@@ -201,9 +204,9 @@ const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) 
               <Icon icon={MoreHorizontal} size='small' />
               <span className={styles.srOnly}>更多</span>
             </DropdownMenu>
-          </Flexbox>
-        </Flexbox>
-      </Block>
+          </Flex>
+        </Flex>
+      </Flex>
 
       <Modal
         cancelText='取消'
@@ -217,8 +220,8 @@ const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) 
         onCancel={() => setRenameOpen(false)}
         onOk={handleSubmitRename}
       >
-        <Flexbox gap={12} paddingBlock={8}>
-          <Text type='secondary'>保持简短且易于识别。</Text>
+        <Flex vertical gap={12} style={{ paddingBlock: 8 }}>
+          <Typography.Text type='secondary'>保持简短且易于识别。</Typography.Text>
           <Input
             autoFocus
             onChange={(event) => setDraftTitle(event.target.value)}
@@ -226,7 +229,7 @@ const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) 
             placeholder='话题名称'
             value={draftTitle}
           />
-        </Flexbox>
+        </Flex>
       </Modal>
     </>
   )

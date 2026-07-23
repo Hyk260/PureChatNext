@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { memo, useMemo } from 'react'
 
 import {
@@ -36,20 +36,20 @@ const AgentPage = memo(() => {
   )
 
   return (
-    <Flexbox horizontal gap={24} width='100%'>
+    <Flex gap={24} style={{ width: '100%' }}>
       <AgentCategory />
-      <Flexbox flex={1} gap={16} style={{ minWidth: 0 }}>
+      <Flex vertical flex={1} gap={16} style={{ minWidth: 0 }}>
         <AgentSearch />
-        <Flexbox gap={32} width='100%'>
+        <Flex vertical gap={32} style={{ width: '100%' }}>
           <AgentList data={pageData} />
           <AgentPagination
             currentPage={currentPage}
             pageSize={PAGE_SIZE}
             total={total}
           />
-        </Flexbox>
-      </Flexbox>
-    </Flexbox>
+        </Flex>
+      </Flex>
+    </Flex>
   )
 })
 

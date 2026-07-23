@@ -11,17 +11,12 @@ import { type ExaResponse, type ExaSearchParameters } from './type';
 
 const log = debug('search:Exa');
 
-/**
- * Exa implementation of the search service
- * Primarily used for web crawling
- */
 export class ExaImpl implements SearchServiceImpl {
   private get apiKey(): string | undefined {
     return process.env.EXA_API_KEY;
   }
 
   private get baseUrl(): string {
-    // Assuming the base URL is consistent with the crawl endpoint
     return 'https://api.exa.ai';
   }
 

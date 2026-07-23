@@ -1,9 +1,8 @@
 'use client'
 
 import { CheckCircleFilled } from '@ant-design/icons'
-import { ModelIcon } from '@lobehub/icons'
-import { Alert, Button, Flexbox, Highlighter } from '@lobehub/ui'
-import { Select } from 'antd'
+import { Highlighter, ModelIcon } from '@pure/ui'
+import { Alert, Flex, Button, Select } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useEffect, useMemo, useState } from 'react'
 
@@ -105,16 +104,16 @@ const Checker = memo<CheckerProps>(({ provider }) => {
   }
 
   return (
-    <Flexbox gap={8} width='100%'>
-      <Flexbox horizontal gap={8} width='100%'>
+    <Flex vertical gap={8} style={{ width: '100%' }}>
+      <Flex gap={8} style={{ width: '100%' }}>
         <Select
           className={styles.popup}
           options={sortedModelIds.map((id) => ({
             label: (
-              <Flexbox horizontal align='center' gap={6}>
+              <Flex align='center' gap={6}>
                 <ModelIcon model={id} size={20} />
                 {id}
-              </Flexbox>
+              </Flex>
             ),
             value: id,
           }))}
@@ -146,16 +145,16 @@ const Checker = memo<CheckerProps>(({ provider }) => {
         >
           {pass ? '检查通过' : '检查'}
         </Button>
-      </Flexbox>
+      </Flex>
 
       {error ? (
         <Alert
           showIcon
           type='error'
-          title={error.message}
-          extra={
+          message={error.message}
+          action={
             error.body ? (
-              <Flexbox paddingBlock={8} paddingInline={16}>
+              <Flex vertical style={{ paddingBlock: 8, paddingInline: 16 }}>
                 <Highlighter
                   actionIconSize='small'
                   language='json'
@@ -164,12 +163,12 @@ const Checker = memo<CheckerProps>(({ provider }) => {
                 >
                   {JSON.stringify(error.body, null, 2)}
                 </Highlighter>
-              </Flexbox>
+              </Flex>
             ) : undefined
           }
         />
       ) : null}
-    </Flexbox>
+    </Flex>
   )
 })
 

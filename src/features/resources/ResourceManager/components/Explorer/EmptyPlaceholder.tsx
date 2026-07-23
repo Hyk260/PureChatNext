@@ -1,6 +1,8 @@
 'use client'
 
-import { Center, FileTypeIcon, Flexbox, Icon, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
+import { Center, FileTypeIcon } from '@pure/ui'
+import { Icon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowUpIcon } from 'lucide-react'
 import { memo, useRef, type ChangeEvent } from 'react'
@@ -73,16 +75,12 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
 
   return (
     <Center gap={24} height='100%' style={{ paddingBottom: 100 }} width='100%'>
-      <Flexbox justify='center' style={{ textAlign: 'center' }}>
-        <Text as='h4'>把文件或文件夹拖到这里</Text>
-        <Text type='secondary'>或者</Text>
-      </Flexbox>
-      <Flexbox gap={12} horizontal>
-        <Flexbox
-          className={styles.card}
-          padding={16}
-          onClick={() => fileInputRef.current?.click()}
-        >
+      <Flex vertical justify='center' style={{ textAlign: 'center' }}>
+        <Typography.Text>把文件或文件夹拖到这里</Typography.Text>
+        <Typography.Text type='secondary'>或者</Typography.Text>
+      </Flex>
+      <Flex gap={12}>
+        <Flex vertical className={styles.card} onClick={() => fileInputRef.current?.click()} style={{ padding: 16 }}>
           <span className={styles.actionTitle}>上传文件</span>
           <div className={styles.glow} style={{ background: cssVar.gold }} />
           <FileTypeIcon
@@ -91,12 +89,8 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
             icon={<Icon color='#fff' icon={ArrowUpIcon} />}
             size={ICON_SIZE}
           />
-        </Flexbox>
-        <Flexbox
-          className={styles.card}
-          padding={16}
-          onClick={() => folderInputRef.current?.click()}
-        >
+        </Flex>
+        <Flex vertical className={styles.card} onClick={() => folderInputRef.current?.click()} style={{ padding: 16 }}>
           <span className={styles.actionTitle}>上传文件夹</span>
           <div className={styles.glow} style={{ background: cssVar.geekblue }} />
           <FileTypeIcon
@@ -106,8 +100,8 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
             size={ICON_SIZE}
             type='folder'
           />
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
       <input
         ref={fileInputRef}
         hidden

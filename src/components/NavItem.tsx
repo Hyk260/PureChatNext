@@ -1,6 +1,8 @@
 'use client'
 
-import { type BlockProps, type IconProps, Block, Center, Flexbox, Icon, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
+import { Center } from '@pure/ui'
+import { type BlockProps, Block, Icon, type IconProps } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, type ReactNode } from 'react'
 
@@ -44,16 +46,11 @@ const NavItem = memo<NavItemProps>(
             <Icon color={iconColor} icon={icon} size={iconSize} />
           </Center>
         ) : null}
-        <Flexbox flex={1} style={{ overflow: 'hidden' }}>
-          <Text
-            color={textColor}
-            ellipsis
-            style={{ flex: 1, minWidth: 0 }}
-            title={typeof title === 'string' ? title : undefined}
-          >
+        <Flex vertical flex={1} style={{ overflow: 'hidden' }}>
+          <Typography.Text ellipsis title={typeof title === 'string' ? title : undefined} style={{ color: textColor, flex: 1, minWidth: 0 }}>
             {title}
-          </Text>
-        </Flexbox>
+          </Typography.Text>
+        </Flex>
       </Block>
     )
   },

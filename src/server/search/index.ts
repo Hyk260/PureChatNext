@@ -26,10 +26,6 @@ const getMemorySnapshot = () => {
   return `rss=${(rss / 1024 / 1024).toFixed(1)}MB heap=${(heapUsed / 1024 / 1024).toFixed(1)}MB`;
 };
 
-/**
- * 搜索服务类
- * 使用不同的实现来处理不同的搜索操作
- */
 export class SearchService {
   private searchImpList: SearchServiceImpl[];
 

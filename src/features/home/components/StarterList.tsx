@@ -1,7 +1,7 @@
 'use client'
 
-import { ModelIcon } from '@lobehub/icons'
-import { Button, Flexbox } from '@lobehub/ui'
+import { Flex, Button } from 'antd'
+import { ModelIcon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -29,7 +29,7 @@ const StarterList = memo(() => {
   const setSelectedModel = useHomeStore((s) => s.setSelectedModel)
 
   return (
-    <Flexbox horizontal className={styles.container} gap={8}>
+    <Flex className={styles.container} gap={8}>
       {STARTER_MODELS.map((item) => (
         <Button
           key={`${item.provider}:${item.model}`}
@@ -40,7 +40,7 @@ const StarterList = memo(() => {
           {item.label}
         </Button>
       ))}
-    </Flexbox>
+    </Flex>
   )
 })
 

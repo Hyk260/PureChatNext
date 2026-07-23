@@ -1,7 +1,8 @@
 'use client'
 
-import { Block, Flexbox } from '@lobehub/ui'
-import { App } from 'antd'
+import { Block } from '@pure/ui'
+import { Flex } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useEffect, useState } from 'react'
 
@@ -36,7 +37,7 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 const HomeChatInput = memo(() => {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const router = useRouter()
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -104,14 +105,14 @@ const HomeChatInput = memo(() => {
         }}
       />
 
-      <Flexbox horizontal align='center' justify='space-between' style={{ marginTop: 12 }}>
-        <Flexbox horizontal align='center' gap={8}>
+      <Flex align='center' justify='flex-end' style={{ marginTop: 12 }}>
+        <Flex align='center' gap={8}>
           {/* <AgentModeButton />
           <ActionIcon icon={Plus} size='small' title='添加' /> */}
-        </Flexbox>
+        </Flex>
 
         <SendArea disabled={!canSend} loading={sending} onClick={handleSend} />
-      </Flexbox>
+      </Flex>
     </Block>
   )
 })

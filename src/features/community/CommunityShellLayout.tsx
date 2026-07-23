@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { type ReactNode } from 'react'
 
 import MainShellLayout from '@/layout/MainShellLayout'
@@ -14,15 +14,9 @@ const CommunityShellLayout = ({ children }: { children: ReactNode }) => {
       header={<CommunityHeader />}
       sidebar={<CommunitySidebar />}
     >
-      <Flexbox
-        flex={1}
-        id='community-scroll'
-        padding={24}
-        style={{ overflow: 'auto' }}
-        width='100%'
-      >
+      <Flex vertical flex={1} id='community-scroll' style={{ padding: 24, overflow: 'auto', width: '100%' }}>
         {children}
-      </Flexbox>
+      </Flex>
     </MainShellLayout>
   )
 }

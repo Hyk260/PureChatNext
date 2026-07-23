@@ -1,7 +1,7 @@
 'use client'
 
-import { Block, Button, Flexbox, Text } from '@lobehub/ui'
-import { Input } from 'antd'
+import { Block } from '@pure/ui'
+import { Flex, Typography, Button, Input } from 'antd'
 import { RefreshCw } from 'lucide-react'
 
 import Loading from '@/components/Loading/BrandTextLoading'
@@ -56,16 +56,16 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
   } = useVerifyEmail({ callbackUrl, email, mode })
 
   return (
-    <Flexbox gap={16}>
+    <Flex vertical gap={16}>
       <Block padding={24}>
-        <Text align="center">
+        <Typography.Text style={{ textAlign: 'center' }}>
           验证码将在 {expirationText} 后过期；如未收到，请检查垃圾邮件文件夹。
-        </Text>
+        </Typography.Text>
       </Block>
 
-      <Flexbox align="center" justify="center">
+      <Flex vertical align="center" justify="center">
         <Input.OTP length={6} size="large" value={otp} onChange={setOtp} />
-      </Flexbox>
+      </Flex>
 
       <Button block loading={verifying} onClick={handleVerify} size="large" type="primary">
         验证邮箱
@@ -81,7 +81,7 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
       >
         重新发送验证码
       </Button>
-    </Flexbox>
+    </Flex>
   )
 }
 
@@ -89,9 +89,9 @@ const VerifyEmailLinkContent = ({ email, callbackUrl, mode }: VerifyEmailModeCon
   const { handleResend, resending } = useVerifyEmail({ callbackUrl, email, mode })
 
   return (
-    <Flexbox gap={16}>
+    <Flex vertical gap={16}>
       <Block padding={24}>
-        <Text align="center">如果没有收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送。</Text>
+        <Typography.Text style={{ textAlign: 'center' }}>如果没有收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送。</Typography.Text>
       </Block>
 
       <Button
@@ -103,6 +103,6 @@ const VerifyEmailLinkContent = ({ email, callbackUrl, mode }: VerifyEmailModeCon
       >
         重新发送验证邮件
       </Button>
-    </Flexbox>
+    </Flex>
   )
 }

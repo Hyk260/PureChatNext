@@ -6,7 +6,7 @@ describe('applyUrlRules', () => {
   // @gru-agent github file rules 不要改
   it('github file rules', () => {
     const result = applyUrlRules(
-      'https://github.com/lobehub/chat-plugin-web-crawler/blob/main/api/v1/_utils.ts',
+      'https://github.com/example/web-crawler/blob/main/api/v1/_utils.ts',
       [
         {
           filterOptions: {
@@ -23,7 +23,7 @@ describe('applyUrlRules', () => {
         enableReadability: false,
       },
       transformedUrl:
-        'https://github.com/lobehub/chat-plugin-web-crawler/raw/refs/heads/main/api/v1/_utils.ts',
+        'https://github.com/example/web-crawler/raw/refs/heads/main/api/v1/_utils.ts',
     });
   });
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { memo } from 'react'
 
 import HomeAgentSelect from '@/features/home/components/HomeAgentSelect'
@@ -11,19 +11,19 @@ import HomeWelcomeText from '@/features/home/components/HomeWelcomeText'
 
 const HomeContent = memo(() => {
   return (
-    <Flexbox gap={40}>
-      <Flexbox gap={24}>
-        <Flexbox gap={8}>
+    <Flex vertical gap={40}>
+      <Flex vertical gap={24}>
+        <Flex vertical gap={8}>
           <HomeAgentSelect />
           <HomeWelcomeText />
-        </Flexbox>
-        <Flexbox gap={16} style={{ marginBottom: 16 }}>
+        </Flex>
+        <Flex vertical gap={16} style={{ marginBottom: 16 }}>
           <HomeChatInput />
           {/* <StarterList /> */}
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
       {/* <RecommendationList /> */}
-    </Flexbox>
+    </Flex>
   )
 })
 

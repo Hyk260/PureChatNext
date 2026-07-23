@@ -1,15 +1,13 @@
 import { TimeoutError } from './errorType';
 
+/** Default crawl timeout (ms); override with `CRAWLER_TIMEOUT`. */
 export const DEFAULT_TIMEOUT = process.env.CRAWLER_TIMEOUT
   ? Number(process.env.CRAWLER_TIMEOUT)
   : 10_000;
 
 /**
- * Wraps a factory function with a timeout and abort support.
- * The factory receives an AbortSignal that is aborted on timeout,
- * allowing the underlying request (e.g. fetch) to be properly cancelled.
- * @param fn Factory function that receives an AbortSignal and returns a Promise
- * @param ms Timeout in milliseconds
+ * Run `fn(signal)` with a wall-clock timeout (@pure/web-crawler).
+ * Aborts the signal on timeout so underlying `fetch` can cancel.
  */
 export const withTimeout = <T>(
   fn: (signal: AbortSignal) => Promise<T>,

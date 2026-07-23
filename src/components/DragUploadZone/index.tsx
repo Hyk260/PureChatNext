@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useCallback, useRef, useState, type DragEvent, type ReactNode } from 'react'
 
@@ -84,9 +84,9 @@ const DragUploadZone = memo<DragUploadZoneProps>(({ children, disabled, onUpload
       onDrop={handleDrop}
     >
       {children}
-      <Flexbox align='center' className={[styles.overlay, active ? 'active' : ''].join(' ')} justify='center'>
+      <Flex vertical align='center' className={[styles.overlay, active ? 'active' : ''].join(' ')} justify='center'>
         释放以上传文件
-      </Flexbox>
+      </Flex>
     </div>
   )
 })

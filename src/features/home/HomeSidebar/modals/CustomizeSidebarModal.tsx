@@ -1,15 +1,7 @@
 'use client'
 
-import {
-  ActionIcon,
-  Button,
-  Flexbox,
-  Icon,
-  SortableList,
-  Text,
-  Tooltip,
-} from '@lobehub/ui'
-import { type ModalInstance, useModalContext } from '@lobehub/ui/base-ui'
+import { Button, Flex, Tooltip, Typography } from 'antd'
+import { ActionIcon, Icon, SortableList } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowDownToLine, Eye, EyeOff, PinIcon, RotateCcw } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
@@ -23,7 +15,7 @@ import {
 } from '@/const/home/nav'
 import { DEFAULT_HIDDEN_SIDEBAR_SECTIONS } from '@/features/home/store/sidebarDefaults'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
-import { createModal } from '@/libs/modal'
+import { modal } from '@/components/AntdStaticMethods'
 
 const styles = createStaticStyles(({ css }) => ({
   accordionGroup: css`
@@ -81,11 +73,11 @@ const SidebarSortableItemRow = memo<SidebarSortableItemProps>(({ hiddenSections,
       justify='space-between'
       style={{ opacity: isHidden ? 0.5 : undefined }}
     >
-      <Flexbox horizontal align='center' gap={8}>
+      <Flex align='center' gap={8}>
         <SortableList.DragHandle />
         {section.icon ? <Icon icon={section.icon} size={18} /> : null}
-        <Text>{section.title}</Text>
-      </Flexbox>
+        <Typography.Text>{section.title}</Typography.Text>
+      </Flex>
       {section.alwaysVisible ? (
         <Tooltip title='固定显示'>
           <ActionIcon icon={PinIcon} size='small' style={{ cursor: 'default', opacity: 0.45 }} />
@@ -106,14 +98,14 @@ const SidebarSortableItemRow = memo<SidebarSortableItemProps>(({ hiddenSections,
 SidebarSortableItemRow.displayName = 'SidebarSortableItemRow'
 
 const BoundSpacerItem = memo(() => (
-  <Flexbox horizontal align='center' className={styles.item} gap={8}>
+  <Flex align='center' className={styles.item} gap={8}>
     <Icon icon={ArrowDownToLine} size={14} style={{ color: cssVar.colorTextQuaternary }} />
     <div className={styles.spacerLine} />
-    <Text style={{ fontSize: 12 }} type='secondary'>
+    <Typography.Text type='secondary' style={{ fontSize: 12 }}>
       下方条目锚定到底部
-    </Text>
+    </Typography.Text>
     <div className={styles.spacerLine} />
-  </Flexbox>
+  </Flex>
 ))
 
 BoundSpacerItem.displayName = 'BoundSpacerItem'
@@ -138,8 +130,11 @@ const splitSidebarItems = (items: string[]) => {
   return { bottomItems, innerItems }
 }
 
-const CustomizeSidebarContent = memo(() => {
-  const { close } = useModalContext()
+interface CustomizeSidebarContentProps {
+  close: () => void
+}
+
+const CustomizeSidebarContent = memo<CustomizeSidebarContentProps>(({ close }) => {
   const storeItems = useHomeStore((s) => s.sidebarItems)
   const storeHiddenSections = useHomeStore((s) => s.hiddenSidebarSections)
   const setSidebarItems = useHomeStore((s) => s.setSidebarItems)
@@ -192,9 +187,9 @@ const CustomizeSidebarContent = memo(() => {
 
   return (
     <>
-      <Flexbox gap={2}>
+      <Flex vertical gap={2}>
         <div className={styles.accordionGroup}>
-          <Flexbox gap={2}>
+          <Flex vertical gap={2}>
             <SortableList
               items={innerItems}
               renderItem={(item: SidebarSortableItem) => (
@@ -208,7 +203,7 @@ const CustomizeSidebarContent = memo(() => {
               onChange={handleInnerChange}
             />
             <BoundSpacerItem />
-          </Flexbox>
+          </Flex>
         </div>
 
         <SortableList
@@ -223,7 +218,7 @@ const CustomizeSidebarContent = memo(() => {
           )}
           onChange={handleBottomChange}
         />
-      </Flexbox>
+      </Flex>
 
       <div className={styles.footer}>
         <Button block icon={<Icon icon={RotateCcw} size={14} />} onClick={handleResetDefault}>
@@ -239,11 +234,14 @@ const CustomizeSidebarContent = memo(() => {
 
 CustomizeSidebarContent.displayName = 'CustomizeSidebarContent'
 
-export const openCustomizeSidebarModal = (): ModalInstance =>
-  createModal({
-    content: <CustomizeSidebarContent />,
+export const openCustomizeSidebarModal = () => {
+  const instance = modal.info({
+    content: <CustomizeSidebarContent close={() => instance.destroy()} />,
     footer: null,
+    icon: null,
     maskClosable: true,
     title: '自定义侧边栏',
     width: 360,
   })
+  return instance
+}

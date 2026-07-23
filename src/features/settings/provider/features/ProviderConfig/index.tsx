@@ -1,8 +1,7 @@
 'use client'
 
-import { ProviderCombine } from '@lobehub/icons'
-import { Flexbox, Input, Text } from '@lobehub/ui'
-import { Switch } from 'antd'
+import { ProviderCombine } from '@pure/ui'
+import { Flex, Typography, Input, Switch } from 'antd'
 import { cssVar } from 'antd-style'
 import { Eye, EyeOff } from 'lucide-react'
 import { memo, useState } from 'react'
@@ -29,39 +28,30 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
   const baseURL = config?.baseURL ?? ''
 
   return (
-    <Flexbox gap={8} width='100%'>
-      <Flexbox
-        horizontal
-        align='center'
-        justify='space-between'
-        paddingBlock={8}
-        width='100%'
-      >
+    <Flex vertical gap={8} style={{ width: '100%' }}>
+      <Flex align='center' justify='space-between' style={{ paddingBlock: 8, width: '100%' }}>
         <ProviderCombine provider={id} size={32} />
         <Switch checked={enabled} onChange={(checked) => setEnabled(id, checked)} />
-      </Flexbox>
+      </Flex>
 
       <div className={styles.row}>
-        <Flexbox className={styles.rowLabel} gap={4}>
-          <Text weight={500}>API Key</Text>
-          <Text fontSize={12} type='secondary'>
-            请填写你的 {meta.name} API Key
-          </Text>
-        </Flexbox>
+        <Flex vertical className={styles.rowLabel} gap={4}>
+          <Typography.Text style={{ fontWeight: 500 }}>API Key</Typography.Text>
+          <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+            请填写你的 {meta.name} API Key1
+          </Typography.Text>
+        </Flex>
         <div className={styles.rowBody}>
           <Input
             placeholder={`${meta.name} API Key`}
             suffix={
-              <Flexbox
-                style={{ cursor: 'pointer' }}
-                onClick={() => setShowApiKey((prev) => !prev)}
-              >
+              <Flex vertical onClick={() => setShowApiKey((prev) => !prev)} style={{ cursor: 'pointer' }}>
                 {showApiKey ? (
                   <EyeOff color={cssVar.colorTextDescription} size={16} />
                 ) : (
                   <Eye color={cssVar.colorTextDescription} size={16} />
                 )}
-              </Flexbox>
+              </Flex>
             }
             type={showApiKey ? 'text' : 'password'}
             value={apiKey}
@@ -71,12 +61,12 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
       </div>
 
       <div className={styles.row}>
-        <Flexbox className={styles.rowLabel} gap={4}>
-          <Text weight={500}>API 代理地址</Text>
-          <Text fontSize={12} type='secondary'>
+        <Flex vertical className={styles.rowLabel} gap={4}>
+          <Typography.Text style={{ fontWeight: 500 }}>API 代理地址</Typography.Text>
+          <Typography.Text type='secondary' style={{ fontSize: 12 }}>
             必须包含 http(s)://
-          </Text>
-        </Flexbox>
+          </Typography.Text>
+        </Flex>
         <div className={styles.rowBody}>
           <Input
             placeholder={PROVIDER_DEFAULT_BASE_URLS[id]}
@@ -87,21 +77,21 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
       </div>
 
       <div className={styles.row}>
-        <Flexbox className={styles.rowLabel} gap={4}>
-          <Text weight={500}>连通性检查</Text>
-          <Text fontSize={12} type='secondary'>
+        <Flex vertical className={styles.rowLabel} gap={4}>
+          <Typography.Text style={{ fontWeight: 500 }}>连通性检查</Typography.Text>
+          <Typography.Text type='secondary' style={{ fontSize: 12 }}>
             测试 API Key 与代理地址是否正确填写
-          </Text>
-        </Flexbox>
+          </Typography.Text>
+        </Flex>
         <div className={styles.rowBody}>
           <Checker provider={id} />
         </div>
       </div>
 
-      <Text className={styles.hint} style={{ marginBlockStart: 8 }}>
+      <Typography.Text className={styles.hint} style={{ marginBlockStart: 8 }}>
         API Key 仅保存在本地浏览器存储中，不会上传到服务器。
-      </Text>
-    </Flexbox>
+      </Typography.Text>
+    </Flex>
   )
 })
 

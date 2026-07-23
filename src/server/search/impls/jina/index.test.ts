@@ -3,14 +3,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { JinaImpl } from './index';
 
-const createMockResponse = (body: object, ok = true, status = 200, statusText = 'OK') =>
-  ({
+const createMockResponse = (body: object, ok = true, status = 200, statusText = 'OK') => {
+  const self = {
     ok,
     status,
     statusText,
     json: vi.fn().mockResolvedValue(body),
     text: vi.fn().mockResolvedValue(JSON.stringify(body)),
-  }) as unknown as Response;
+    clone: vi.fn(),
+  };
+  self.clone.mockReturnValue({
+    ...self,
+    json: vi.fn().mockResolvedValue(body),
+    text: vi.fn().mockResolvedValue(JSON.stringify(body)),
+  });
+  return self as unknown as Response;
+};
 
 describe('JinaImpl', () => {
   let impl: JinaImpl;

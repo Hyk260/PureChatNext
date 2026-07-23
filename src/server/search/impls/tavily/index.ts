@@ -11,17 +11,12 @@ import { type TavilyResponse, type TavilySearchParameters } from './type';
 
 const log = debug('search:Tavily');
 
-/**
- * Tavily implementation of the search service
- * Primarily used for web crawling
- */
 export class TavilyImpl implements SearchServiceImpl {
   private get apiKey(): string | undefined {
     return process.env.TAVILY_API_KEY;
   }
 
   private get baseUrl(): string {
-    // Assuming the base URL is consistent with the crawl endpoint
     return 'https://api.tavily.com';
   }
 

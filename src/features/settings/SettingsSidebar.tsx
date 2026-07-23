@@ -1,6 +1,7 @@
 'use client'
 
-import { Accordion, AccordionItem, Flexbox, ScrollShadow, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
+import { Accordion, AccordionItem, ScrollShadow } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import Link from '@/utils/link'
 import { usePathname } from '@/utils/navigation'
@@ -10,11 +11,7 @@ import NavItem from '@/components/NavItem'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
 
-import {
-  SettingsGroupKey,
-  SettingsTab,
-  useSettingsCategory,
-} from './useSettingsCategory'
+import { SettingsGroupKey, SettingsTab, useSettingsCategory } from './useSettingsCategory'
 
 const styles = createStaticStyles(({ css }) => ({
   sidebar: css`
@@ -53,67 +50,52 @@ const SettingsSidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flexbox
+    <Flex
+      vertical
       className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')}
-      height="100%"
-      style={{ width: sidebarCollapsed ? 0 : 240 }}
+      style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}
     >
-      <ScrollShadow size={2} style={{ height: '100%', width: 240 }}>
-        <Flexbox gap={1} height="100%" paddingBlock={4}>
-          <SideBarHeaderLayout
-            breadcrumb={[
-              {
-                href: '/settings/profile',
-                title: '设置',
-              },
-            ]}
-            homeHref="/"
-            showHomeIcon
-          />
-          <Flexbox paddingInline={4}>
-            <Accordion
-              defaultExpandedKeys={[
-                SettingsGroupKey.General,
-                SettingsGroupKey.Agent,
-                SettingsGroupKey.System,
-              ]}
-              gap={8}
-            >
-              {categoryGroups.map((group) => (
-                <AccordionItem
-                  itemKey={group.key}
-                  key={group.key}
-                  paddingBlock={4}
-                  paddingInline="8px 4px"
-                  title={
-                    <Text ellipsis fontSize={12} type="secondary" weight={500}>
-                      {group.title}
-                    </Text>
-                  }
-                >
-                  <Flexbox gap={1} paddingBlock={1}>
-                    {group.items.map((item) => (
-                      <Link
-                        href={item.href}
-                        key={item.key}
-                        style={{ color: 'inherit', textDecoration: 'none' }}
-                      >
-                        <NavItem
-                          active={activeTab === item.key}
-                          clickable
-                          icon={item.icon}
-                          title={item.label}
-                        />
-                      </Link>
-                    ))}
-                  </Flexbox>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </Flexbox>
-        </Flexbox>
-      </ScrollShadow>
-    </Flexbox>
+      <Flex vertical gap={1} style={{ height: '100%', paddingBlock: 4 }}>
+        <SideBarHeaderLayout
+          breadcrumb={[
+            {
+              href: '/settings/profile',
+              title: '设置',
+            },
+          ]}
+          homeHref='/'
+          showHomeIcon
+        />
+        <Flex vertical style={{ paddingInline: 4 }}>
+          <Accordion
+            defaultExpandedKeys={[SettingsGroupKey.General, SettingsGroupKey.Agent, SettingsGroupKey.System]}
+            gap={8}
+          >
+            {categoryGroups.map((group) => (
+              <AccordionItem
+                itemKey={group.key}
+                key={group.key}
+                paddingBlock={4}
+                paddingInline='8px 4px'
+                title={
+                  <Typography.Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+                    {group.title}
+                  </Typography.Text>
+                }
+              >
+                <Flex vertical gap={1} style={{ paddingBlock: 1 }}>
+                  {group.items.map((item) => (
+                    <Link href={item.href} key={item.key} style={{ color: 'inherit', textDecoration: 'none' }}>
+                      <NavItem active={activeTab === item.key} clickable icon={item.icon} title={item.label} />
+                    </Link>
+                  ))}
+                </Flex>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </Flex>
+      </Flex>
+    </Flex>
   )
 })
 

@@ -1,7 +1,7 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
-import { Spin , App } from 'antd'
+import { Flex, Spin } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { memo, useCallback, useMemo } from 'react'
 import { useRouter } from '@/utils/navigation'
 import { useQueryState } from 'nuqs'
@@ -38,7 +38,7 @@ import MasonryView from './MasonryView'
 const Explorer = memo(() => {
   useResourceManagerUrlSync()
   const router = useRouter()
-  const { message } = App.useApp()
+  const { message } = useApp()
   const [, setFileParam] = useQueryState('file')
   const { currentFolderSlug, libraryId, folderPath } = useFolderPath()
 
@@ -147,18 +147,18 @@ const Explorer = memo(() => {
   }, [clearSelection, message, resourceList, selectedFileIds])
 
   return (
-    <Flexbox flex={1} height='100%' width='100%'>
+    <Flex vertical flex={1} style={{ height: '100%', width: '100%' }}>
       <ExplorerHeader
         title={libraryId ? undefined : CATEGORY_TITLES[category]}
         onDelete={handleBatchDelete}
         onNewFolder={libraryId ? handleNewFolder : undefined}
         onUpload={(files) => handleUpload(files)}
       />
-      <Flexbox flex={1} style={{ overflow: 'auto' }}>
+      <Flex vertical flex={1} style={{ overflow: 'auto' }}>
         {isLoading ? (
-          <Flexbox align='center' flex={1} justify='center'>
+          <Flex vertical align='center' flex={1} justify='center'>
             <Spin />
-          </Flexbox>
+          </Flex>
         ) : resourceList.length === 0 ? (
           <EmptyPlaceholder onUpload={handleUpload} />
         ) : viewMode === 'masonry' ? (
@@ -166,8 +166,8 @@ const Explorer = memo(() => {
         ) : (
           <ListView items={resourceList} onOpen={handleOpen} />
         )}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

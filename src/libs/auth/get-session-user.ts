@@ -35,7 +35,7 @@ type AuthedRouteHandler<P extends Record<string, string>> = (
 ) => Response | Promise<Response>
 
 /**
- * App Router 鉴权包装器（对齐 Lobe `checkAuth`）。
+ * App Router 鉴权包装器。
  * 校验 Better Auth session 后注入 `userId`；未登录返回 401 JSON。
  */
 export function withAuth<P extends Record<string, string> = Record<string, string>>(

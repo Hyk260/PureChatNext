@@ -1,7 +1,8 @@
 'use client'
 
-import { Block, Flexbox, Icon, Text } from '@lobehub/ui'
-import { Divider } from 'antd'
+import { Block } from '@pure/ui'
+import { Icon } from '@pure/ui'
+import { Flex, Typography, Divider } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
   BotIcon,
@@ -43,36 +44,33 @@ const COMMAND_ICONS: Record<MessengerCommandItem['icon'], LucideIcon> = {
 
 const MessengerCommandList = memo(() => {
   return (
-    <Flexbox gap={8} width="100%">
-      <Text strong style={{ fontSize: 15 }}>
+    <Flex vertical gap={8} style={{ width: "100%" }}>
+      <Typography.Text strong style={{ fontSize: 15 }}>
         指令
-      </Text>
-      <Text style={{ fontSize: 13 }} type="secondary">
+      </Typography.Text>
+      <Typography.Text type="secondary" style={{ fontSize: 13 }}>
         在与机器人的私信中发送以下指令。
-      </Text>
+      </Typography.Text>
 
       <Block className={styles.list} variant="outlined">
         {WECHAT_COMMANDS.map((item, index) => (
           <Fragment key={item.command}>
             {index > 0 && <Divider style={{ margin: 0 }} />}
-            <Flexbox align="center" gap={12} horizontal paddingBlock={14} paddingInline={16}>
-              <Flexbox align="center" className={styles.icon} horizontal justify="center">
+            <Flex align="center" gap={12} style={{ paddingBlock: 14, paddingInline: 16 }}>
+              <Flex align="center" className={styles.icon} justify="center">
                 <Icon icon={COMMAND_ICONS[item.icon]} size={18} />
-              </Flexbox>
-              <Text code fontSize={14} strong>
+              </Flex>
+              <Typography.Text code strong style={{ fontSize: 14 }}>
                 {item.command}
-              </Text>
-              <Text
-                style={{ flex: 1, fontSize: 13, textAlign: 'end' }}
-                type="secondary"
-              >
+              </Typography.Text>
+              <Typography.Text type="secondary" style={{ flex: 1, fontSize: 13, textAlign: 'end' }}>
                 {item.description}
-              </Text>
-            </Flexbox>
+              </Typography.Text>
+            </Flex>
           </Fragment>
         ))}
       </Block>
-    </Flexbox>
+    </Flex>
   )
 })
 

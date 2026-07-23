@@ -1,8 +1,7 @@
 'use client'
 
-import { ModelIcon } from '@lobehub/icons'
-import { Flexbox, Text } from '@lobehub/ui'
-import { Switch } from 'antd'
+import { ModelIcon } from '@pure/ui'
+import { Flex, Typography, Switch } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -43,30 +42,23 @@ const ModelItem = memo<ModelItemProps>(({ model, provider }) => {
   const toggleModelEnabled = useProviderConfigStore((s) => s.toggleModelEnabled)
 
   return (
-    <Flexbox
-      horizontal
-      align='center'
-      className={styles.container}
-      gap={12}
-      justify='space-between'
-      width='100%'
-    >
-      <Flexbox horizontal align='center' className={styles.desc} gap={12}>
+    <Flex align='center' className={styles.container} gap={12} justify='space-between' style={{ width: '100%' }}>
+      <Flex align='center' className={styles.desc} gap={12}>
         <ModelIcon model={model.id} size={28} />
-        <Flexbox gap={2} style={{ minWidth: 0 }}>
-          <Text ellipsis weight={500}>
+        <Flex vertical gap={2} style={{ minWidth: 0 }}>
+          <Typography.Text ellipsis style={{ fontWeight: 500 }}>
             {model.displayName}
-          </Text>
+          </Typography.Text>
           <div className={styles.id}>{model.id}</div>
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
 
       <Switch
         checked={model.enabled}
         size='small'
         onChange={(next) => toggleModelEnabled(provider, model.id, next)}
       />
-    </Flexbox>
+    </Flex>
   )
 })
 

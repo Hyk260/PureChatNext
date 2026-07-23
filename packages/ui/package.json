@@ -1,0 +1,35 @@
+{
+  "name": "@pure/ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UI primitives",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./ActionIcon": "./src/ActionIcon/index.ts",
+    "./ActionIconGroup": "./src/ActionIconGroup/index.ts",
+    "./Accordion": "./src/Accordion/index.ts",
+    "./Avatar": "./src/Avatar/index.ts",
+    "./Block": "./src/Block/index.tsx",
+    "./DropdownMenu": "./src/DropdownMenu/index.ts",
+    "./Icon": "./src/Icon/index.tsx",
+    "./Layout": "./src/Layout/index.ts",
+    "./Markdown": "./src/Markdown/index.ts",
+    "./Popover": "./src/Popover/index.ts",
+    "./SortableList": "./src/SortableList/index.ts",
+    "./ThemeProvider": "./src/ThemeProvider/index.ts",
+    "./icons": "./src/icons/index.ts",
+    "./utils": "./src/utils/index.ts"
+  },
+  "main": "./src/index.ts",
+  "peerDependencies": {
+    "@lobehub/icons": "*",
+    "antd": "*",
+    "antd-style": "*",
+    "lucide-react": "*",
+    "react": "*"
+  },
+  "dependencies": {
+    "@lobehub/ui": "^5.16.1"
+  }
+}

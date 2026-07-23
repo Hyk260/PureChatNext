@@ -13,7 +13,10 @@ import {
   type WechatSendMessageResponse,
 } from './types';
 
-/** iLink CDN media types — see protocol-spec §8.2. */
+/**
+ * iLink CDN media types.
+ * @see docs/self-hosting/wechat/protocol.zh-CN.md §8.2
+ */
 export enum WechatUploadMediaType {
   IMAGE = 1,
   VIDEO = 2,
@@ -158,7 +161,7 @@ export class WechatApiClient {
   /**
    * Send a single MessageItem (text or media) via iLink Bot API.
    *
-   * Per protocol-spec §6.7, the stable public pattern is one MessageItem per
+   * Per protocol.zh-CN.md §6.7, the stable public pattern is one MessageItem per
    * request — text + media messages are sent as separate calls. Callers should
    * generate fresh `client_id`s per call; this method allocates one internally.
    */
@@ -193,13 +196,13 @@ export class WechatApiClient {
   /**
    * Upload outbound media to the iLink CDN.
    *
-   * Implements the 3-step flow from protocol-spec §8.2:
+   * Implements the 3-step flow from protocol.zh-CN.md §8.2:
    *   1. `getuploadurl` — request `upload_param` with media metadata + AES key
    *   2. Local AES-128-ECB + PKCS7 encrypt
    *   3. POST ciphertext to CDN; read `x-encrypted-param` response header
    *
    * The returned `aesKey` is base64-of-hex-string (the format openclaw uses for
-   * outbound `media.aes_key`, see protocol-spec §8.4 format B). Plug the result
+   * outbound `media.aes_key`, see protocol.zh-CN.md §8.4 format B). Plug the result
    * directly into `image_item.media` / `file_item.media` / `video_item.media`.
    */
   async uploadCdnMedia(
@@ -263,7 +266,7 @@ export class WechatApiClient {
     }
 
     // Outbound media.aes_key encoding follows openclaw: base64 of the 32-char hex string
-    // (protocol-spec §8.4 format B). Inbound code accepts both formats.
+    // (protocol.zh-CN.md §8.4 format B). Inbound code accepts both formats.
     const aesKey = Buffer.from(aesKeyHex, 'ascii').toString('base64');
 
     return { aesKey, cipherSize, encryptQueryParam, rawSize };
@@ -305,7 +308,7 @@ export class WechatApiClient {
   /**
    * Download and decrypt media from WeChat CDN.
    *
-   * Flow per protocol-spec §8.3:
+   * Flow per protocol.zh-CN.md §8.3:
    *   GET CDN_BASE_URL/download?encrypted_query_param=... → AES-128-ECB decrypt
    *
    * Per §8.5: when AES key is missing, try downloading as plaintext.
@@ -329,7 +332,7 @@ export class WechatApiClient {
 
     const raw = Buffer.from(await response.arrayBuffer());
 
-    // Per protocol-spec §8.5: when AES key is missing, return as plaintext
+    // Per protocol.zh-CN.md §8.5: when AES key is missing, return as plaintext
     let key: Buffer;
     try {
       key = resolveAesKey(imageAeskey, media.aes_key);
@@ -430,7 +433,7 @@ function chunkText(text: string, limit: number): string[] {
 }
 
 // ============================================================================
-// CDN Media Crypto (protocol-spec §8.3–8.4)
+// CDN Media Crypto (protocol.zh-CN.md §8.3–8.4)
 // ============================================================================
 
 /**
@@ -454,7 +457,7 @@ function encryptAesEcb(plaintext: Buffer, key: Buffer): Buffer {
 /**
  * Resolve the 16-byte AES key from the two possible sources and encodings.
  *
- * Priority per protocol-spec §8.4:
+ * Priority per protocol.zh-CN.md §8.4:
  *  1. `image_item.aeskey` — 32-char hex string → hex decode to 16 bytes
  *  2. `media.aes_key` — base64 encoded, two possible formats:
  *     - Format A: base64(raw 16 bytes) → decoded length = 16

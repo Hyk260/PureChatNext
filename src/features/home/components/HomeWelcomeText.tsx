@@ -1,6 +1,6 @@
 'use client'
 
-import { Text } from '@lobehub/ui'
+import { Typography } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -15,9 +15,9 @@ const styles = createStaticStyles(({ css }) => ({
 
 const HomeWelcomeText = memo(() => {
   return (
-    <Text className={styles.text} fontSize={16}>
+    <Typography.Text className={styles.text} style={{ fontSize: 16 }}>
       继续前行吧 听候差遣
-    </Text>
+    </Typography.Text>
   )
 })
 

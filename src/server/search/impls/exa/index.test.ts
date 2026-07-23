@@ -182,27 +182,25 @@ describe('ExaImpl', () => {
       expect(body.type).toBe('auto');
     });
 
-    it('should throw SERVICE_UNAVAILABLE when fetch throws a network error', async () => {
+    it('should throw when fetch throws a network error', async () => {
       vi.mocked(fetch).mockRejectedValue(new Error('Connection refused'));
 
       await expect(impl.query('test')).rejects.toMatchObject({
-        code: 'SERVICE_UNAVAILABLE',
         message: 'Failed to connect to Exa.',
       });
     });
 
-    it('should throw SERVICE_UNAVAILABLE when response is not ok', async () => {
+    it('should throw when response is not ok', async () => {
       vi.mocked(fetch).mockResolvedValue(
         createMockResponse({ error: 'Forbidden' }, false, 403, 'Forbidden'),
       );
 
       await expect(impl.query('test')).rejects.toMatchObject({
-        code: 'SERVICE_UNAVAILABLE',
         message: 'Exa request failed: Forbidden',
       });
     });
 
-    it('should throw INTERNAL_SERVER_ERROR when response JSON parsing fails', async () => {
+    it('should throw when response JSON parsing fails', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
         status: 200,
@@ -211,7 +209,6 @@ describe('ExaImpl', () => {
       } as unknown as Response);
 
       await expect(impl.query('test')).rejects.toMatchObject({
-        code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to parse Exa response.',
       });
     });

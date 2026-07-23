@@ -2,7 +2,7 @@
 
 通过微信 **iLink Bot API** 扫码连接，在微信私聊中与 PureChat 助手对话。个人开发者**不需要**公众号 / 开放平台企业资质。
 
-协议与 Chat SDK Adapter 在 workspace 包 [`@pure/chat-adapter-wechat`](../../packages/chat-adapter-wechat)（对齐 LobeHub `chat-adapter-wechat` + Vercel `chat` SDK）。完整协议见 [wechat/protocol-spec.md](./wechat/protocol-spec.md)。
+协议与 Chat SDK Adapter 在 workspace 包 [`@pure/chat-adapter-wechat`](../../packages/chat-adapter-wechat)（配合 Vercel `chat` SDK）。通道基于微信 **iLink Bot API**（扫码长轮询）；具体字段与限制以微信侧公开文档 / 接口约定为准；本仓整理见 [wechat/protocol.zh-CN.md](./wechat/protocol.zh-CN.md)。
 
 ## 功能范围（MVP）
 
@@ -107,7 +107,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 - **工程**：MVP 约 7–11 人天（已实现基础能力）
 - **微信 API**：无按次计费
 - **运行**：每条消息 ≈ 一次 LLM 调用 + 通道固定成本（Cron/常驻进程 Active CPU、Redis）
-- **运维**：重绑、过期、通道稳定性 —— 与 LobeHub 将微信标为付费能力的原因类似
+- **运维**：重绑、会话过期、长轮询 / Cron 稳定性需要持续投入
 
 ## API 一览
 

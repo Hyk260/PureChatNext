@@ -43,7 +43,7 @@ export const ASSISTANT_CATEGORY_LABELS: Record<AssistantCategory, string> = {
   [AssistantCategory.Translation]: '翻译',
 }
 
-/** LobeHub agents-index snapshot（`pnpm agents:sync` 更新） */
+/** 社区助手快照（`pnpm agents:sync` 更新） */
 export const COMMUNITY_AGENTS: DiscoverAgentItem[] = COMMUNITY_AGENTS_DATA
 
 export const getAssistantCategoryCounts = (

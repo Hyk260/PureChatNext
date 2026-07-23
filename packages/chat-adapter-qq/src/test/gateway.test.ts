@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { QQGatewayOptions } from './gateway';
-import { QQGatewayConnection } from './gateway';
-import { QQ_WS_OP_CODES } from './types';
+import type { QQGatewayOptions } from '../gateway';
+import { QQGatewayConnection } from '../gateway';
+import { QQ_WS_OP_CODES } from '../types';
 
 // ---- Mock WebSocket ----
 

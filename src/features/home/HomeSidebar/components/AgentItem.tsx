@@ -1,13 +1,13 @@
 'use client'
 
-import { type MenuInfo, type MenuProps, Avatar, Block, Center, DropdownMenu, Flexbox, Icon, Text } from '@lobehub/ui'
-import { App } from 'antd'
+import { Flex, Typography } from 'antd'
+import { Avatar, type MenuInfo, type MenuProps, Center, DropdownMenu, Block, Icon } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { MoreHorizontal, Pencil, PinIcon, PinOff, Trash2 } from 'lucide-react'
-import { memo, useCallback, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { type AgentListItem } from '@/const/home/agents'
-import { confirmModal } from '@/libs/modal'
+import { useApp } from '@/components/AntdStaticMethods'
 
 const styles = createStaticStyles(({ css }) => ({
   agentItem: css`
@@ -15,15 +15,12 @@ const styles = createStaticStyles(({ css }) => ({
     user-select: none;
 
     & .agent-actions {
-      opacity: 0;
-      transition: opacity 0.15s;
-      pointer-events: none;
+      display: none;
     }
 
     &:hover .agent-actions,
     & .agent-actions[data-open='true'] {
-      opacity: 1;
-      pointer-events: auto;
+      display: flex;
     }
   `,
   srOnly: css`
@@ -83,10 +80,22 @@ interface AgentItemProps {
 }
 
 const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSelect }) => {
-  const { message } = App.useApp()
+  const { message, modal } = useApp()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [actionsMounted, setActionsMounted] = useState(false)
   const canOperate = !agent.isBuiltin
   const isPinned = Boolean(agent.pinned)
+
+  const handleMenuOpenChange = useCallback((next: boolean) => {
+    setMenuOpen(next)
+    if (next) setActionsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (menuOpen || !actionsMounted) return
+    const timer = setTimeout(() => setActionsMounted(false), 200)
+    return () => clearTimeout(timer)
+  }, [menuOpen, actionsMounted])
 
   const handleConfirmDelete = useCallback(async () => {
     try {
@@ -111,15 +120,15 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
           onPin(agent, !isPinned)
         },
       },
-      {
-        icon: <Icon icon={Pencil} />,
-        key: 'rename',
-        label: '重命名',
-        onClick: (info) => {
-          stopMenuEvent(info)
-          onEdit(agent)
-        },
-      },
+      // {
+      //   icon: <Icon icon={Pencil} />,
+      //   key: 'rename',
+      //   label: '重命名',
+      //   onClick: (info) => {
+      //     stopMenuEvent(info)
+      //     onEdit(agent)
+      //   },
+      // },
       { type: 'divider' },
       {
         danger: true,
@@ -128,7 +137,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         label: '删除',
         onClick: (info) => {
           stopMenuEvent(info)
-          confirmModal({
+          modal.confirm({
             cancelText: '取消',
             content: '删除后不可恢复。若仍有话题将无法删除。',
             okButtonProps: { danger: true },
@@ -139,7 +148,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         },
       },
     ],
-    [agent, handleConfirmDelete, isPinned, onEdit, onPin],
+    [agent, handleConfirmDelete, isPinned, modal, onPin]
   )
 
   return (
@@ -158,26 +167,29 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
       <Center flex='none' height={28} width={28}>
         <Avatar avatar={agent.avatar} background={agent.backgroundColor ?? undefined} size={28} />
       </Center>
-      <Flexbox flex={1} style={{ minWidth: 0, overflow: 'hidden' }}>
-        <Text
-          color={cssVar.colorTextSecondary}
-          style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+      <Flex vertical flex={1} style={{ minWidth: 0, overflow: 'hidden' }}>
+        <Typography.Text
           title={agent.title}
+          style={{
+            color: cssVar.colorTextSecondary,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
         >
           {agent.title}
-        </Text>
-      </Flexbox>
+        </Typography.Text>
+      </Flex>
       {isPinned ? (
         <Center className={styles.pinBadge} flex='none' height={24} title='已置顶' width={20}>
           <Icon icon={PinIcon} size={14} />
         </Center>
       ) : null}
       {canOperate ? (
-        <Flexbox
+        <Flex
           align='center'
           className={cx('agent-actions')}
-          data-open={menuOpen || undefined}
-          horizontal
+          data-open={menuOpen || actionsMounted || undefined}
           onClick={(event) => event.stopPropagation()}
           onKeyDown={(event) => event.stopPropagation()}
         >
@@ -187,12 +199,12 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
             open={menuOpen}
             placement='bottomLeft'
             triggerProps={{ className: styles.trigger, title: '更多' }}
-            onOpenChange={setMenuOpen}
+            onOpenChange={handleMenuOpenChange}
           >
             <Icon icon={MoreHorizontal} size='small' />
             <span className={styles.srOnly}>更多</span>
           </DropdownMenu>
-        </Flexbox>
+        </Flex>
       ) : null}
     </Block>
   )

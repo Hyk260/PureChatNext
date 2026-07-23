@@ -1,7 +1,7 @@
 'use client'
 
-import { Flexbox, Text } from '@lobehub/ui'
-import { App, Tabs } from 'antd'
+import { Flex, Typography, Tabs } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useMemo, useState } from 'react'
 
@@ -28,7 +28,7 @@ interface ModelListProps {
 }
 
 const ModelList = memo<ModelListProps>(({ id }) => {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const config = useProviderConfigStore((s) => s.configs[id])
   const mergeRemoteModels = useProviderConfigStore((s) => s.mergeRemoteModels)
 
@@ -40,7 +40,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
 
   const filteredModels = useMemo(() => {
     const query = keyword.trim().toLowerCase()
-    // All current providers only expose chat models; tab keeps LobeHub UX parity.
+    // All current providers only expose chat models; keep a single tab for now.
     const list = models
 
     if (!query) return list
@@ -102,7 +102,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   }
 
   return (
-    <Flexbox gap={8} width='100%'>
+    <Flex vertical gap={8} style={{ width: '100%' }}>
       <ModelTitle
         loading={loading}
         searchKeyword={keyword}
@@ -123,7 +123,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
       {filteredModels.length === 0 ? (
         <EmptyModels loading={loading} onFetch={() => void fetchRemoteModels()} />
       ) : (
-        <Flexbox gap={4} width='100%'>
+        <Flex vertical gap={4} style={{ width: '100%' }}>
           {enabledModels.length > 0 ? (
             <>
               <div className={styles.sectionLabel}>已启用</div>
@@ -136,16 +136,16 @@ const ModelList = memo<ModelListProps>(({ id }) => {
           {disabledModels.length > 0 ? (
             <>
               <div className={styles.sectionLabel}>
-                <Text type='secondary'>未启用</Text>
+                <Typography.Text type='secondary'>未启用</Typography.Text>
               </div>
               {disabledModels.map((model) => (
                 <ModelItem key={model.id} model={model} provider={id} />
               ))}
             </>
           ) : null}
-        </Flexbox>
+        </Flex>
       )}
-    </Flexbox>
+    </Flex>
   )
 })
 

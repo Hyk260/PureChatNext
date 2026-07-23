@@ -1,7 +1,7 @@
 'use client'
 
-import { Flexbox, Input } from '@lobehub/ui'
-import { App, type InputRef } from 'antd'
+import { Input, Flex, type InputRef } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { Loader2 } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 
@@ -14,7 +14,7 @@ interface FullNameSettingProps {
 }
 
 export function FullNameSetting({ fullName, onUpdated }: FullNameSettingProps) {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const [saving, setSaving] = useState(false)
   const inputRef = useRef<InputRef>(null)
 
@@ -39,7 +39,7 @@ export function FullNameSetting({ fullName, onUpdated }: FullNameSettingProps) {
 
   return (
     <SettingRow label="全名">
-      <Flexbox align="center" gap={8} horizontal style={{ minWidth: 0, width: '100%' }}>
+      <Flex align="center" gap={8} style={{ minWidth: 0, width: '100%' }}>
         {saving ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : null}
         <Input
           defaultValue={fullName || ''}
@@ -52,7 +52,7 @@ export function FullNameSetting({ fullName, onUpdated }: FullNameSettingProps) {
           style={{ flex: 1, maxWidth: 320 }}
           variant="filled"
         />
-      </Flexbox>
+      </Flex>
     </SettingRow>
   )
 }

@@ -1,7 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
-import { Skeleton } from 'antd'
+import { Flex, Skeleton } from 'antd'
 import { type ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router'
 
@@ -25,9 +24,9 @@ export default function RequireAuth({ children, fallback }: RequireAuthProps) {
   if (isPending) {
     return (
       fallback ?? (
-        <Flexbox height="100%" padding={24}>
+        <Flex vertical style={{ height: "100%", padding: 24 }}>
           <Skeleton active paragraph={{ rows: 6 }} />
-        </Flexbox>
+        </Flex>
       )
     )
   }

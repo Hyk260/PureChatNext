@@ -7,7 +7,7 @@ export const ChatErrorType = {
   SupervisorDecisionFailed: "SupervisorDecisionFailed",
   InvalidUserKey: "InvalidUserKey",
   CreateMessageError: "CreateMessageError",
-  LobeHubModelDeprecated: "LobeHubModelDeprecated",
+  ModelDeprecated: "ModelDeprecated",
   NoOpenAIAPIKey: "NoOpenAIAPIKey",
   OllamaServiceUnavailable: "OllamaServiceUnavailable",
   PluginFailToTransformArguments: "PluginFailToTransformArguments",

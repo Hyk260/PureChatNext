@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon } from '@lobehub/ui'
+import { ActionIcon } from '@pure/ui'
 import { Input } from 'antd'
 import { SearchIcon, XIcon } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'

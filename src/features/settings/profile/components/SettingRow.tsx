@@ -1,6 +1,6 @@
 'use client'
 
-import { Text } from '@lobehub/ui'
+import { Typography } from 'antd'
 import { createStaticStyles } from 'antd-style'
 import { type ReactNode } from 'react'
 
@@ -52,7 +52,7 @@ const styles = createStaticStyles(({ css, responsive }) => ({
 export function SettingRow({ action, children, label, labelSlot }: SettingRowProps) {
   return (
     <div className={styles.row}>
-      <div className={styles.label}>{labelSlot ?? (label ? <Text strong>{label}</Text> : null)}</div>
+      <div className={styles.label}>{labelSlot ?? (label ? <Typography.Text strong>{label}</Typography.Text> : null)}</div>
       <div className={styles.body}>
         {children}
         {action ? <div className={styles.action}>{action}</div> : null}

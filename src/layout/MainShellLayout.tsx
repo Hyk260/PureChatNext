@@ -1,13 +1,15 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { type ReactNode } from 'react'
+
+import Scrollbar from '@/components/Scrollbar'
 
 const styles = createStaticStyles(({ css }) => ({
   main: css`
     position: relative;
-    overflow: auto;
+    min-width: 0;
     background: ${cssVar.colorBgContainer};
   `,
   shell: css`
@@ -24,15 +26,15 @@ interface MainShellLayoutProps {
 
 const MainShellLayout = ({ children, header, sidebar }: MainShellLayoutProps) => {
   return (
-    <Flexbox className={styles.shell} horizontal height='100%' width='100%'>
+    <Flex className={styles.shell} style={{ height: '100%', width: '100%' }}>
       {sidebar}
-      <Flexbox className={styles.main} flex={1} height='100%' style={{ minHeight: 0 }}>
+      <Flex vertical className={styles.main} flex={1} style={{ height: '100%', minHeight: 0 }}>
         {header}
-        <Flexbox flex={1} height='100%' style={{ minHeight: 0, overflow: 'auto' }} width='100%'>
+        <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }}>
           {children}
-        </Flexbox>
-      </Flexbox>
-    </Flexbox>
+        </Scrollbar>
+      </Flex>
+    </Flex>
   )
 }
 

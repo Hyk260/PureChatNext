@@ -1,7 +1,7 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
-import { App, Drawer } from 'antd'
+import { Flex, Drawer } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { Route } from 'lucide-react'
 import { memo, useState } from 'react'
 
@@ -14,12 +14,12 @@ import { usePathname } from '@/utils/navigation'
 
 const SidebarNav = memo(() => {
   const pathname = usePathname()
-  const { message } = App.useApp()
+  const { message } = useApp()
   const [routeNavOpen, setRouteNavOpen] = useState(false)
 
   return (
     <>
-      <Flexbox gap={1} paddingInline={4}>
+      <Flex vertical gap={1} style={{ paddingInline: 4 }}>
         {HOME_TOP_NAV.map((item) => {
           const active = item.key === 'home' && pathname === '/'
 
@@ -62,7 +62,7 @@ const SidebarNav = memo(() => {
             onItemClick={() => setRouteNavOpen(true)}
           />
         ) : null}
-      </Flexbox>
+      </Flex>
       {isDev ? (
         <Drawer
           onClose={() => setRouteNavOpen(false)}

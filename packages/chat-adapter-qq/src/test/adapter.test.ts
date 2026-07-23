@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createQQAdapter, QQAdapter } from './adapter';
-import type { QQAttachment, QQRawMessage, QQWebhookPayload } from './types';
-import { QQ_EVENT_TYPES, QQ_OP_CODES } from './types';
+import { createQQAdapter, QQAdapter } from '../adapter';
+import type { QQAttachment, QQRawMessage, QQWebhookPayload } from '../types';
+import { QQ_EVENT_TYPES, QQ_OP_CODES } from '../types';
 
 // ---- helpers ----
 
@@ -155,7 +155,7 @@ describe('QQAdapter', () => {
     });
 
     it('should handle webhook verification (op: 13)', async () => {
-      vi.spyOn(await import('./crypto'), 'signWebhookResponse').mockReturnValue('mock_sig');
+      vi.spyOn(await import('../crypto'), 'signWebhookResponse').mockReturnValue('mock_sig');
       const body: QQWebhookPayload = {
         d: { event_ts: '12345', plain_token: 'tok' },
         id: 'v1',

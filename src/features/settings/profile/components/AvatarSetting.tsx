@@ -1,6 +1,7 @@
 'use client'
 
-import { App, Spin } from 'antd'
+import { Spin } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { Loader2, Pencil } from 'lucide-react'
 import { useRef, useState, type ChangeEvent } from 'react'
 
@@ -21,7 +22,7 @@ export function AvatarSetting({
   onUploaded,
   s3Configured,
 }: AvatarSettingProps) {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
 

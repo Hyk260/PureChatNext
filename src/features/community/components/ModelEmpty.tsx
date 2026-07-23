@@ -1,23 +1,24 @@
 'use client'
 
-import { Center, Empty } from '@lobehub/ui'
-import { Brain } from 'lucide-react'
+import { Center } from '@pure/ui'
+import { Empty, Typography } from 'antd'
 import { memo } from 'react'
 
 const ModelEmpty = memo(() => {
   return (
     <Center height='100%' style={{ minHeight: '50vh' }} width='100%'>
       <Empty
-        description='模型列表即将上线，敬请期待'
-        icon={Brain}
-        title='暂无模型'
-        type='page'
-        descriptionProps={{
-          fontSize: 14,
-        }}
-        style={{
-          maxWidth: 400,
-        }}
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+        description={
+          <>
+            <Typography.Text strong>暂无模型</Typography.Text>
+            <br />
+            <Typography.Text type='secondary' style={{ fontSize: 14 }}>
+              模型列表即将上线，敬请期待
+            </Typography.Text>
+          </>
+        }
+        style={{ maxWidth: 400 }}
       />
     </Center>
   )

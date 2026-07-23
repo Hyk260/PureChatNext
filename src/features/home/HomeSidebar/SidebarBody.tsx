@@ -1,7 +1,9 @@
 'use client'
 
-import { Accordion, Flexbox } from '@lobehub/ui'
-import { App } from 'antd'
+import { Accordion } from '@pure/ui'
+import { Flex } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
+import Scrollbar from '@/components/Scrollbar'
 import { memo, useCallback, useMemo, type Key, type ReactElement } from 'react'
 
 import NavItem from '@/components/NavItem'
@@ -19,12 +21,12 @@ import { usePathname } from '@/utils/navigation'
 
 const sectionComponents = {
   agents: AgentSection,
-  recents: RecentsSection,
+  // recents: RecentsSection,
 } as const
 
 const SidebarBody = memo(() => {
   const pathname = usePathname()
-  const { message } = App.useApp()
+  const { message } = useApp()
   const hiddenSidebarSections = useHomeStore((s) => s.hiddenSidebarSections)
   const sidebarExpandedKeys = useHomeStore((s) => s.sidebarExpandedKeys)
   const sidebarItems = useHomeStore((s) => s.sidebarItems)
@@ -74,66 +76,88 @@ const SidebarBody = memo(() => {
     [message, pathname],
   )
 
-  const content = useMemo(() => {
-    const elements: ReactElement[] = []
-    let accGroup: { element: ReactElement; key: string }[] = []
+  const buildContent = useCallback(
+    (keys: string[]): ReactElement[] => {
+      const elements: ReactElement[] = []
+      let accGroup: { element: ReactElement; key: string }[] = []
 
-    const flushAccordion = () => {
-      if (accGroup.length === 0) return
+      const flushAccordion = () => {
+        if (accGroup.length === 0) return
 
-      const accordionKeys = accGroup.map((item) => item.key)
-      const expandedKeys = pickAccordionExpandedKeys(sidebarExpandedKeys, accordionKeys)
+        const accordionKeys = accGroup.map((item) => item.key)
+        const expandedKeys = pickAccordionExpandedKeys(sidebarExpandedKeys, accordionKeys)
 
-      elements.push(
-        <Accordion
-          expandedKeys={expandedKeys}
-          gap={8}
-          key={`acc-${elements.length}`}
-          onExpandedChange={(keys) => handleAccordionExpandedChange(accordionKeys, keys)}
-        >
-          {accGroup.map((item) => item.element)}
-        </Accordion>,
-      )
-      accGroup = []
-    }
-
-    for (const key of visibleKeys) {
-      if (key === SIDEBAR_SPACER_ID) {
-        flushAccordion()
         elements.push(
-          <div
-            aria-hidden
-            data-sidebar-bottom-spacer
-            key={`spacer-${elements.length}`}
-            style={{ flex: '1 1 0', minHeight: 0 }}
-          />,
+          <Accordion
+            expandedKeys={expandedKeys}
+            gap={8}
+            key={`acc-${elements.length}`}
+            onExpandedChange={(keys) => handleAccordionExpandedChange(accordionKeys, keys)}
+          >
+            {accGroup.map((item) => item.element)}
+          </Accordion>,
         )
-        continue
+        accGroup = []
       }
 
-      if (SIDEBAR_ACCORDION_KEYS.has(key)) {
-        const Section = sectionComponents[key as keyof typeof sectionComponents]
-        if (Section) {
-          accGroup.push({ element: <Section itemKey={key} key={key} />, key })
+      for (const key of keys) {
+        if (key === SIDEBAR_SPACER_ID) continue
+
+        if (SIDEBAR_ACCORDION_KEYS.has(key)) {
+          const Section = sectionComponents[key as keyof typeof sectionComponents]
+          if (Section) {
+            accGroup.push({ element: <Section itemKey={key} key={key} />, key })
+          }
+          continue
         }
-        continue
+
+        flushAccordion()
+        const link = renderNavLink(key)
+        if (link) elements.push(link)
       }
 
       flushAccordion()
-      const link = renderNavLink(key)
-      if (link) elements.push(link)
-    }
+      return elements
+    },
+    [handleAccordionExpandedChange, renderNavLink, sidebarExpandedKeys],
+  )
 
-    flushAccordion()
-    return elements
-  }, [handleAccordionExpandedChange, renderNavLink, sidebarExpandedKeys, visibleKeys])
+  const topKeys = useMemo(
+    () => {
+      const idx = visibleKeys.indexOf(SIDEBAR_SPACER_ID)
+      return idx === -1 ? visibleKeys : visibleKeys.slice(0, idx)
+    },
+    [visibleKeys],
+  )
+  const bottomKeys = useMemo(
+    () => {
+      const idx = visibleKeys.indexOf(SIDEBAR_SPACER_ID)
+      return idx === -1 ? [] : visibleKeys.slice(idx + 1)
+    },
+    [visibleKeys],
+  )
 
-  if (content.length === 0) return null
+  const topContent = useMemo(() => buildContent(topKeys), [buildContent, topKeys])
+  const bottomContent = useMemo(() => buildContent(bottomKeys), [buildContent, bottomKeys])
+
+  if (topContent.length === 0 && bottomContent.length === 0) return null
 
   return (
-    <Flexbox flex={1} gap={1} paddingInline={4} style={{ minHeight: 0 }}>
-      {content}
-    </Flexbox>
+    <Flex vertical flex={1} gap={1} style={{ minHeight: 0 }}>
+      <Scrollbar
+        style={{ flex: 1, minHeight: 0, width: '100%' }}
+        viewStyle={{ paddingInline: '4px 8px' }}
+      >
+        <Flex vertical flex={1} gap={1} style={{ minHeight: '100%' }}>
+          {topContent}
+        </Flex>
+      </Scrollbar>
+      {bottomContent.length > 0 ? (
+        <Flex vertical gap={1} style={{ flex: 'none', paddingInline: '4px 8px' }}>
+          {bottomContent}
+        </Flex>
+      ) : null}
+    </Flex>
   )
 })
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { createStaticStyles } from 'antd-style'
 import { type ReactNode } from 'react'
 
@@ -19,12 +19,12 @@ const ResourcesShellLayout = ({
   innerSidebar?: ReactNode
 }) => {
   return (
-    <Flexbox className={styles.shell} horizontal height='100%' width='100%'>
+    <Flex className={styles.shell} style={{ height: '100%', width: '100%' }}>
       {innerSidebar}
-      <Flexbox flex={1} height='100%' style={{ overflow: 'hidden' }}>
+      <Flex vertical flex={1} style={{ height: '100%', overflow: 'hidden' }}>
         {children}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 }
 

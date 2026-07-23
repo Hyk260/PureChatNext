@@ -4,6 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>验证您的邮箱</title>
+  <style>
+    /* 小屏（如 iPhone 16 Pro，CSS 视口 ~402px）缩小验证码盒子，避免换行 */
+    @media (max-width: 420px) {
+      .otp-box { padding: 20px 28px !important; }
+      .otp-code {
+        font-size: 28px !important;
+        letter-spacing: 8px !important;
+      }
+      .otp-card { padding: 24px !important; }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5; color: #1a1a1a;">
   <!-- Container -->
@@ -18,7 +29,7 @@
     </div>
 
     <!-- Card -->
-    <div style="background: #ffffff; border-radius: 20px; padding: 40px; box-shadow: 0 8px 30px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.02);">
+    <div class="otp-card" style="background: #ffffff; border-radius: 20px; padding: 40px; box-shadow: 0 8px 30px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.02);">
 
       <!-- Header -->
       <div style="text-align: center; margin-bottom: 32px;">
@@ -40,8 +51,8 @@
 
         <!-- OTP Code Box -->
         <div style="text-align: center; margin: 36px 0;">
-          <div style="display: inline-block; background-color: #000000; padding: 24px 48px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-            <div style="font-size: 36px; font-weight: 700; letter-spacing: 12px; color: #ffffff; font-family: 'Courier New', Courier, monospace;">
+          <div class="otp-box" style="display: inline-block; background-color: #000000; padding: 24px 48px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div class="otp-code" style="font-size: 36px; font-weight: 700; letter-spacing: 12px; color: #ffffff; font-family: 'Courier New', Courier, monospace; white-space: nowrap;">
               {{otp}}
             </div>
           </div>

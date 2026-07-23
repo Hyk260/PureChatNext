@@ -1,17 +1,8 @@
 'use client'
 
-import {
-  type MenuProps,
-  Block,
-  DropdownMenuPopup,
-  DropdownMenuPortal,
-  DropdownMenuPositioner,
-  DropdownMenuRoot,
-  DropdownMenuTrigger,
-  Flexbox,
-  Icon,
-  renderDropdownMenuItems,
-} from '@lobehub/ui'
+import { Flex } from 'antd'
+import { type MenuProps, DropdownMenuPopup, DropdownMenuPortal, DropdownMenuPositioner, DropdownMenuRoot, DropdownMenuTrigger, renderDropdownMenuItems } from '@pure/ui'
+import { Block, Icon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
   Check,
@@ -197,8 +188,8 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
         }}
       />
 
-      <Flexbox horizontal align='center' justify='space-between' style={{ marginTop: 8 }}>
-        <Flexbox horizontal align='center' gap={4}>
+      <Flex align='center' justify='space-between' style={{ marginTop: 8 }}>
+        <Flex align='center' gap={4}>
           <ModelSelector />
           {/*
             Compound DropdownMenu + native button trigger (multiple children).
@@ -216,7 +207,7 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
               </DropdownMenuPositioner>
             </DropdownMenuPortal>
           </DropdownMenuRoot>
-        </Flexbox>
+        </Flex>
 
         <SendButton
           disabled={!canSend}
@@ -224,7 +215,7 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
           onClick={handleSend}
           onStop={handleStop}
         />
-      </Flexbox>
+      </Flex>
     </Block>
   )
 })

@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { memo, type ReactNode } from 'react'
 
@@ -34,16 +34,11 @@ const WideScreenContainer = memo<Props>(({ children, className, maxWidth = CONVE
   const wideScreen = useChatUiStore((s) => s.wideScreen)
 
   return (
-    <Flexbox className={styles.wrapper}>
-      <Flexbox
-        className={cx(styles.container, className)}
-        height='100%'
-        paddingInline={16}
-        style={{ width: wideScreen ? '100%' : `min(${maxWidth}px, 100%)` }}
-      >
+    <Flex vertical className={styles.wrapper}>
+      <Flex vertical className={cx(styles.container, className)} style={{ height: '100%', paddingInline: 16, width: wideScreen ? '100%' : `min(${maxWidth}px, 100%)` }}>
         {children}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

@@ -1,7 +1,7 @@
 'use client'
 
-import { Block, Flexbox } from '@lobehub/ui'
-import { Divider } from 'antd'
+import { Block } from '@pure/ui'
+import { Flex, Divider } from 'antd'
 import { Fragment, useMemo, useState, type ReactNode } from 'react'
 
 import { type ProfileUser } from '@/features/settings/profile/ProfileContent'
@@ -115,23 +115,23 @@ export function ProfileSettingsContent({
   ]
 
   return (
-    <Flexbox gap={24} style={{ paddingBlock: '24px 64px', paddingInline: 24 }} width="100%">
+    <Flex vertical gap={24} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: "100%" }}>
       <SettingHeader title="个人资料" />
 
       <Block gap={16} title="账户" variant="filled">
-        <Flexbox padding={16}>
+        <Flex vertical style={{ padding: 16 }}>
           {accountRows.map((row, index) => (
             <Fragment key={row.key}>
               {index > 0 ? <Divider style={{ margin: 0 }} /> : null}
               {row.node}
             </Fragment>
           ))}
-        </Flexbox>
+        </Flex>
       </Block>
 
       {!s3Configured ? (
         <p className="text-xs text-muted-foreground">头像上传需配置 S3 环境变量</p>
       ) : null}
-    </Flexbox>
+    </Flex>
   )
 }

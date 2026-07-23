@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
 import { createStaticStyles } from 'antd-style'
 import { memo, useMemo } from 'react'
 
@@ -34,15 +34,15 @@ const ProviderSection = memo<{
   ids: readonly ProviderId[]
   title: string
 }>(({ ids, title }) => (
-  <Flexbox gap={16}>
-    <Flexbox horizontal align='center' gap={8}>
-      <Text fontSize={18} weight={600}>
+  <Flex vertical gap={16}>
+    <Flex align='center' gap={8}>
+      <Typography.Text style={{ fontSize: 18, fontWeight: 600 }}>
         {title}
-      </Text>
-      <Text fontSize={14} type='secondary'>
+      </Typography.Text>
+      <Typography.Text type='secondary' style={{ fontSize: 14 }}>
         {ids.length}
-      </Text>
-    </Flexbox>
+      </Typography.Text>
+    </Flex>
     {ids.length > 0 ? (
       <div className={styles.grid}>
         {ids.map((id) => (
@@ -50,9 +50,9 @@ const ProviderSection = memo<{
         ))}
       </div>
     ) : (
-      <Text type='secondary'>暂无服务商</Text>
+      <Typography.Text type='secondary'>暂无服务商</Typography.Text>
     )}
-  </Flexbox>
+  </Flex>
 ))
 
 ProviderSection.displayName = 'ProviderSection'
@@ -67,10 +67,10 @@ const ProviderAllPage = memo(() => {
   }, [configs])
 
   return (
-    <Flexbox className={styles.page} gap={32} width='100%'>
+    <Flex vertical className={styles.page} gap={32} style={{ width: '100%' }}>
       <ProviderSection ids={enabledIds} title='已启用服务商' />
       <ProviderSection ids={disabledIds} title='未启用服务商' />
-    </Flexbox>
+    </Flex>
   )
 })
 

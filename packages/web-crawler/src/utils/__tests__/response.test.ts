@@ -1,3 +1,4 @@
+/** @pure/web-crawler — unit tests (M2 compliance touch). */
 import { describe, expect, it } from 'vitest';
 
 import { createHTTPStatusError, parseJSONResponse, ResponseBodyParseError } from '../response';

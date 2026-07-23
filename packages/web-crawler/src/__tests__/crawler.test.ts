@@ -1,3 +1,4 @@
+/** @pure/web-crawler — unit tests (M2 compliance touch). */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Crawler } from '../crawler';

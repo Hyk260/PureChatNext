@@ -1,8 +1,8 @@
 'use client'
 
-import { Github } from '@lobehub/icons'
-import { Block, Button, Flexbox, Tag, Text } from '@lobehub/ui'
-import { App, Divider } from 'antd'
+import { Block, Github } from '@pure/ui'
+import { Flex, Typography, Button, Divider, Tag } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { memo, useCallback, useState } from 'react'
 
@@ -32,7 +32,7 @@ interface RecommendationCardProps {
 }
 
 const RecommendationCard = memo<RecommendationCardProps>(({ item }) => {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const [loading, setLoading] = useState(false)
 
   const handleClick = useCallback(async () => {
@@ -47,30 +47,29 @@ const RecommendationCard = memo<RecommendationCardProps>(({ item }) => {
 
   return (
     <Block className={styles.card} gap={12} padding={12} variant='outlined'>
-      <Flexbox horizontal align='center' gap={8} style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+      <Flex align='center' gap={8} style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
         <Github size={18} type='mono' />
-        <Text ellipsis fontSize={16} weight={500}>
+        <Typography.Text ellipsis style={{ fontSize: 16, fontWeight: 500 }}>
           {item.title}
-        </Text>
-      </Flexbox>
+        </Typography.Text>
+      </Flex>
       <Divider dashed style={{ marginBlock: 0 }} />
-      <Text className={styles.description} fontSize={13}>
+      <Typography.Text className={styles.description} style={{ fontSize: 13 }}>
         {item.description}
-      </Text>
-      <Flexbox horizontal align='center' gap={8} justify='space-between' wrap='wrap'>
-        <Tag size='small' variant='outlined'>
+      </Typography.Text>
+      <Flex align='center' gap={8} justify='space-between' wrap='wrap'>
+        <Tag bordered style={{ fontSize: 12 }}>
           {item.tag}
         </Tag>
         <Button
           className={cx(styles.actionBtnPrimary)}
           loading={loading}
-          shadow
           shape='round'
           onClick={handleClick}
         >
           添加任务
         </Button>
-      </Flexbox>
+      </Flex>
     </Block>
   )
 })

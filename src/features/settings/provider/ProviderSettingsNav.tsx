@@ -1,8 +1,7 @@
 'use client'
 
-import { ProviderIcon } from '@lobehub/icons'
-import { Flexbox, Icon, ScrollShadow, Text } from '@lobehub/ui'
-import { Input } from 'antd'
+import { Icon, ProviderIcon, ScrollShadow } from '@pure/ui'
+import { Flex, Typography, Input } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LayoutGrid, Search } from 'lucide-react'
 import Link from '@/utils/link'
@@ -58,10 +57,10 @@ const ProviderNavItem = memo<{ id: ProviderId; active: boolean }>(({ id, active 
         active={active}
         clickable
         title={
-          <Flexbox horizontal align='center' gap={8}>
+          <Flex align='center' gap={8}>
             <ProviderIcon provider={id} size={18} type='color' />
             <span>{meta.name}</span>
-          </Flexbox>
+          </Flex>
         }
       />
     </Link>
@@ -99,7 +98,7 @@ const ProviderSettingsNav = memo(() => {
   const disabledIds = filteredIds.filter((id) => !configs[id]?.enabled)
 
   return (
-    <Flexbox className={styles.menu} height='100%'>
+    <Flex vertical className={styles.menu} style={{ height: '100%' }}>
       <div className={styles.searchBar}>
         <Input
           allowClear
@@ -118,7 +117,7 @@ const ProviderSettingsNav = memo(() => {
         />
       </div>
       <ScrollShadow size={2} style={{ flex: 1, minHeight: 0, width: '100%' }}>
-        <Flexbox gap={4} paddingBlock='0 32px' paddingInline={4}>
+        <Flex vertical gap={4} style={{ paddingBlock: '0 32px', paddingInline: 4 }}>
           <Link
             href='/settings/provider/all'
             style={{ color: 'inherit', textDecoration: 'none' }}
@@ -126,48 +125,40 @@ const ProviderSettingsNav = memo(() => {
             <NavItem active={isAllActive} clickable icon={LayoutGrid} title='全部' />
           </Link>
           <div className={styles.groupTitle}>
-            <Text fontSize={12} type='secondary' weight={500}>
+            <Typography.Text type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
               已启用
-            </Text>
+            </Typography.Text>
           </div>
-          <Flexbox gap={1}>
+          <Flex vertical gap={1}>
             {enabledIds.length > 0 ? (
               enabledIds.map((id) => (
                 <ProviderNavItem active={activeId === id} id={id} key={id} />
               ))
             ) : (
-              <Text
-                fontSize={12}
-                type='secondary'
-                style={{ paddingBlock: 4, paddingInline: 12 }}
-              >
+              <Typography.Text type='secondary' style={{ fontSize: 12, paddingBlock: 4, paddingInline: 12 }}>
                 暂无
-              </Text>
+              </Typography.Text>
             )}
-          </Flexbox>
+          </Flex>
           <div className={styles.groupTitle}>
-            <Text fontSize={12} type='secondary' weight={500}>
+            <Typography.Text type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
               未启用
-            </Text>
+            </Typography.Text>
           </div>
-          <Flexbox gap={1}>
+          <Flex vertical gap={1}>
             {disabledIds.length > 0 ? (
               disabledIds.map((id) => (
                 <ProviderNavItem active={activeId === id} id={id} key={id} />
               ))
             ) : (
-              <Text
-                fontSize={12}
-                type='secondary'
-                style={{ paddingBlock: 4, paddingInline: 12 }}
-              >
+              <Typography.Text type='secondary' style={{ fontSize: 12, paddingBlock: 4, paddingInline: 12 }}>
                 暂无
-              </Text>
+              </Typography.Text>
             )}
-          </Flexbox>
-        </Flexbox>
+          </Flex>
+        </Flex>
       </ScrollShadow>
-    </Flexbox>
+    </Flex>
   )
 })
 

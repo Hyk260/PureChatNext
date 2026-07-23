@@ -1,7 +1,6 @@
 'use client'
 
-import { ModelIcon } from '@lobehub/icons'
-import { Center } from '@lobehub/ui'
+import { Center, ModelIcon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -11,7 +10,6 @@ const styles = createStaticStyles(({ css }) => ({
   icon: css`
     transition: scale 400ms cubic-bezier(0.215, 0.61, 0.355, 1);
   `,
-  /** Aligns with lobe ChatInput `Model` trigger */
   model: css`
     cursor: pointer;
     border-radius: 24px;
@@ -27,7 +25,7 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 /**
- * Icon model switcher — mirrors lobe agent chat `leftActions: ['model']`.
+ * Icon model switcher for agent chat.
  */
 const ModelSelector = memo(() => {
   const current = useCurrentHomeModel()

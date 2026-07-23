@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox, Input, Modal, Text, TextArea } from '@lobehub/ui'
+import { Flex, Typography, Input, Modal } from 'antd'
 import { memo, useEffect, useState } from 'react'
 
 import { type AgentListItem } from '@/const/home/agents'
@@ -60,39 +60,42 @@ const AgentFormModal = memo<AgentFormModalProps>(
     return (
       <Modal
         confirmLoading={confirmLoading}
+        centered
         destroyOnHidden
         okText={isEdit ? '保存' : '创建'}
         open={open}
+        cancelText='取消'
+        cl
         title={isEdit ? '编辑助理' : '新建助理'}
         width={480}
         onCancel={onCancel}
         onOk={handleOk}
       >
-        <Flexbox gap={12} paddingBlock={8}>
-          <Flexbox gap={4}>
-            <Text fontSize={12} type='secondary'>
+        <Flex vertical gap={12} style={{ paddingBlock: 8 }}>
+          <Flex vertical gap={4}>
+            <Typography.Text type='secondary' style={{ fontSize: 12 }}>
               名称
-            </Text>
+            </Typography.Text>
             <Input
               placeholder='助理名称'
               value={values.title}
               onChange={(event) => setValues((prev) => ({ ...prev, title: event.target.value }))}
             />
-          </Flexbox>
-          <Flexbox gap={4}>
-            <Text fontSize={12} type='secondary'>
+          </Flex>
+          <Flex vertical gap={4}>
+            <Typography.Text type='secondary' style={{ fontSize: 12 }}>
               头像（emoji 或 URL）
-            </Text>
+            </Typography.Text>
             <Input
               placeholder='✨'
               value={values.avatar}
               onChange={(event) => setValues((prev) => ({ ...prev, avatar: event.target.value }))}
             />
-          </Flexbox>
-          <Flexbox gap={4}>
-            <Text fontSize={12} type='secondary'>
+          </Flex>
+          <Flex vertical gap={4}>
+            <Typography.Text type='secondary' style={{ fontSize: 12 }}>
               描述
-            </Text>
+            </Typography.Text>
             <Input
               placeholder='简短描述'
               value={values.description}
@@ -100,12 +103,12 @@ const AgentFormModal = memo<AgentFormModalProps>(
                 setValues((prev) => ({ ...prev, description: event.target.value }))
               }
             />
-          </Flexbox>
-          <Flexbox gap={4}>
-            <Text fontSize={12} type='secondary'>
+          </Flex>
+          <Flex vertical gap={4}>
+            <Typography.Text type='secondary' style={{ fontSize: 12 }}>
               系统提示词
-            </Text>
-            <TextArea
+            </Typography.Text>
+            <Input.TextArea
               placeholder='系统提示词'
               rows={6}
               value={values.systemRole}
@@ -113,8 +116,8 @@ const AgentFormModal = memo<AgentFormModalProps>(
                 setValues((prev) => ({ ...prev, systemRole: event.target.value }))
               }
             />
-          </Flexbox>
-        </Flexbox>
+          </Flex>
+        </Flex>
       </Modal>
     )
   },

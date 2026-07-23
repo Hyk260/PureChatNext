@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox, Text } from '@lobehub/ui'
+import { Flex, Typography } from 'antd'
 import { memo } from 'react'
 
 import { getMessengerPlatform, type MessengerPlatformId } from './const'
@@ -16,14 +16,14 @@ const MessengerComingSoonPage = memo<MessengerComingSoonPageProps>(({ platform }
 
   return (
     <MessengerDetailShell platform={meta.id} platformMeta={meta}>
-      <Flexbox gap={8}>
-        <Text strong style={{ fontSize: 15 }}>
+      <Flex vertical gap={8}>
+        <Typography.Text strong style={{ fontSize: 15 }}>
           连接 {meta.name}
-        </Text>
+        </Typography.Text>
         <div className={messengerDetailStyles.emptyRow}>
           即将推出，其它平台敬请期待。
         </div>
-      </Flexbox>
+      </Flex>
     </MessengerDetailShell>
   )
 })

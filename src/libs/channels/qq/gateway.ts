@@ -12,7 +12,7 @@ import { resolveQQWebhookSecret } from './webhookAuth'
 
 const log = debug('channel:qq:gateway')
 
-/** Default WS session window before refresh (align with LobeHub ~8h). */
+/** Default WS session window before refresh (~8h). */
 export const DEFAULT_QQ_GATEWAY_DURATION_MS = 8 * 60 * 60 * 1000
 
 function resolveAppBaseUrl(): string {

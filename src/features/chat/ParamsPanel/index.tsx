@@ -1,8 +1,8 @@
 'use client'
 
-import { ActionIcon, Flexbox, Text } from '@lobehub/ui'
+import { ActionIcon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { Slider, Switch } from 'antd'
+import { Flex, Typography, Slider, Switch } from 'antd'
 import { PanelRightClose } from 'lucide-react'
 import { memo } from 'react'
 
@@ -36,28 +36,28 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
   const toggleRightCollapsed = useChatUiStore((s) => s.toggleRightCollapsed)
 
   return (
-    <Flexbox height='100%' style={{ overflow: 'hidden', width: 320 }}>
-      <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
-        <Text style={{ marginInlineStart: 8 }} weight={500}>
+    <Flex vertical style={{ height: '100%', overflow: 'hidden', width: 320 }}>
+      <Flex align='center' className={styles.header} justify='space-between'>
+        <Typography.Text style={{ marginInlineStart: 8, fontWeight: 500 }}>
           高级设置
-        </Text>
+        </Typography.Text>
         <ActionIcon
           icon={PanelRightClose}
           size='small'
           title='折叠参数栏'
           onClick={toggleRightCollapsed}
         />
-      </Flexbox>
-      <Flexbox gap={16} padding={16} style={{ minHeight: 0, overflow: 'auto' }}>
+      </Flex>
+      <Flex vertical gap={16} style={{ padding: 16, minHeight: 0, overflow: 'auto' }}>
         {ROWS.map((row) => {
           const enabled = value[row.key] !== null
           const display = value[row.key] ?? DEFAULT_CHAT_LLM_PARAMS[row.key]!
 
           return (
-            <Flexbox key={row.key} gap={8}>
-              <Flexbox horizontal align='center' justify='space-between'>
-                <Flexbox horizontal align='center' gap={8}>
-                  <Text>{row.label}</Text>
+            <Flex vertical key={row.key} gap={8}>
+              <Flex align='center' justify='space-between'>
+                <Flex align='center' gap={8}>
+                  <Typography.Text>{row.label}</Typography.Text>
                   <Switch
                     checked={enabled}
                     size='small'
@@ -67,9 +67,9 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
                       })
                     }
                   />
-                </Flexbox>
-                <Text type='secondary'>{enabled ? Number(display).toFixed(1) : '—'}</Text>
-              </Flexbox>
+                </Flex>
+                <Typography.Text type='secondary'>{enabled ? Number(display).toFixed(1) : '—'}</Typography.Text>
+              </Flex>
               <Slider
                 disabled={!enabled}
                 max={row.max}
@@ -78,11 +78,11 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
                 value={Number(display)}
                 onChange={(v) => onChange({ [row.key]: v })}
               />
-            </Flexbox>
+            </Flex>
           )
         })}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

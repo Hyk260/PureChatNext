@@ -1,7 +1,7 @@
 'use client'
 
-import { Button, Flexbox, Text } from '@lobehub/ui'
-import { App } from 'antd'
+import { Flex, Typography, Button } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { RefreshCw } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
@@ -29,7 +29,7 @@ const shuffleRecommendations = (items: HomeRecommendationItem[]) => {
 }
 
 const RecommendationList = memo(() => {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const [items, setItems] = useState(HOME_RECOMMENDATIONS)
 
   const handleRefresh = useCallback(() => {
@@ -38,22 +38,22 @@ const RecommendationList = memo(() => {
   }, [message])
 
   return (
-    <Flexbox gap={12}>
-      <Flexbox horizontal align='center' gap={8} justify='space-between'>
-        <Text className={styles.subtitle} fontSize={12}>
+    <Flex vertical gap={12}>
+      <Flex align='center' gap={8} justify='space-between'>
+        <Typography.Text className={styles.subtitle} style={{ fontSize: 12 }}>
           为你推荐的一些功能
-        </Text>
+        </Typography.Text>
         <Button icon={<RefreshCw size={12} />} size='small' type='text' onClick={handleRefresh}>
           换一批
         </Button>
-      </Flexbox>
+      </Flex>
 
-      <Flexbox gap={8}>
+      <Flex vertical gap={8}>
         {items.map((item) => (
           <RecommendationCard key={item.id} item={item} />
         ))}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

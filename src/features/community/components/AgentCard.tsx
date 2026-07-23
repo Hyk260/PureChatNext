@@ -1,7 +1,8 @@
 'use client'
 
-import { Avatar, Block, Flexbox, Icon, Tag, Text } from '@lobehub/ui'
-import { App } from 'antd'
+import { Flex, Tag, Typography } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
+import { Avatar, Block, Icon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { BookTextIcon, ClockIcon, CoinsIcon, GitForkIcon, PuzzleIcon } from 'lucide-react'
 import { useRouter } from '@/utils/navigation'
@@ -68,7 +69,7 @@ const AgentCard = memo<DiscoverAgentItem>(
     title,
     tokenUsage,
   }) => {
-    const { message } = App.useApp()
+    const { message } = useApp()
     const router = useRouter()
     const [adding, setAdding] = useState(false)
     const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
@@ -134,36 +135,29 @@ const AgentCard = memo<DiscoverAgentItem>(
         }}
         onClick={handleClick}
       >
-        <Flexbox
-          horizontal
-          align='flex-start'
-          gap={16}
-          justify='space-between'
-          padding={16}
-          width='100%'
-        >
-          <Flexbox horizontal gap={12} style={{ overflow: 'hidden' }} title={identifier}>
+        <Flex align='flex-start' gap={16} justify='space-between' style={{ padding: 16, width: '100%' }}>
+          <Flex gap={12} title={identifier} style={{ overflow: 'hidden' }}>
             <Avatar
-              avatar={avatar}
-              background={backgroundColor || 'transparent'}
               shape='square'
               size={40}
+              avatar={avatar}
+              background={backgroundColor || 'transparent'}
               style={{ flex: 'none' }}
             />
-            <Flexbox flex={1} gap={2} style={{ overflow: 'hidden' }}>
-              <Text as='h2' className={styles.title} ellipsis>
+            <Flex vertical flex={1} gap={2} style={{ overflow: 'hidden' }}>
+              <Typography.Text className={styles.title} ellipsis>
                 {title}
-              </Text>
+              </Typography.Text>
               {/* <div className={styles.author}>{author}</div> */}
-            </Flexbox>
-          </Flexbox>
-        </Flexbox>
+            </Flex>
+          </Flex>
+        </Flex>
 
-        <Flexbox flex={1} gap={12} paddingInline={16}>
-          <Text as='p' className={styles.desc} ellipsis={{ rows: 3 }}>
+        <Flex vertical flex={1} gap={12} style={{ paddingInline: 16 }}>
+          <Typography.Paragraph className={styles.desc} ellipsis={{ rows: 3 }} style={{ marginBottom: 0 }}>
             {description}
-          </Text>
-          <Flexbox horizontal align='center' gap={4}>
+          </Typography.Paragraph>
+          <Flex align='center' gap={4}>
             {typeof tokenUsage === 'number' ? (
               <Tag className={styles.token} icon={<Icon icon={CoinsIcon} size={12} />}>
                 {formatNumber(tokenUsage)}
@@ -184,22 +178,16 @@ const AgentCard = memo<DiscoverAgentItem>(
                 {knowledgeCount}
               </Tag>
             ) : null}
-          </Flexbox>
-        </Flexbox>
+          </Flex>
+        </Flex>
 
-        <Flexbox
-          horizontal
-          align='center'
-          className={styles.footer}
-          justify='space-between'
-          padding={16}
-        >
-          <Flexbox horizontal align='center' className={styles.secondaryDesc} gap={4}>
+        <Flex align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>
+          <Flex align='center' className={styles.secondaryDesc} gap={4}>
             <Icon icon={ClockIcon} size={14} />
             <span>{formatDate(createdAt)}</span>
-          </Flexbox>
+          </Flex>
           <span className={styles.secondaryDesc}>{ASSISTANT_CATEGORY_LABELS[category]}</span>
-        </Flexbox>
+        </Flex>
       </Block>
     )
   },

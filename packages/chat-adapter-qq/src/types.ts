@@ -1,10 +1,12 @@
+/** Shared QQ Bot OpenAPI / Gateway types for @pure/chat-adapter-qq. */
+
 export interface QQAdapterConfig {
   appId: string;
   clientSecret: string;
 }
 
 export interface QQThreadId {
-  /** For guild channels, the guild_id is needed for some operations */
+  /** Guild id when the thread is a guild channel. */
   guildId?: string;
   id: string;
   type: 'group' | 'guild' | 'c2c' | 'dms';
@@ -91,9 +93,8 @@ export interface QQSendMessageParams {
     content: string;
   };
   /**
-   * Rich-media payload used together with `msg_type: 7 (MEDIA)`. The
-   * `file_info` token comes from the upload step (see
-   * `QQApiClient.uploadGroupRichMedia` / `uploadC2CRichMedia`).
+   * Rich-media body for `msg_type: 7 (MEDIA)`.
+   * `file_info` comes from the upload helpers on `QQApiClient`.
    */
   media?: {
     file_info: string;
@@ -131,7 +132,7 @@ export const QQ_OP_CODES = {
   VERIFY: 13,
 } as const;
 
-// ---- WebSocket Gateway OP Codes ----
+// --- WebSocket Gateway OP codes ---
 
 export const QQ_WS_OP_CODES = {
   DISPATCH: 0,
@@ -144,7 +145,7 @@ export const QQ_WS_OP_CODES = {
   HEARTBEAT_ACK: 11,
 } as const;
 
-// ---- WebSocket Gateway Intents ----
+// --- WebSocket Gateway intents ---
 
 export const QQ_INTENTS = {
   AUDIO_ACTION: 1 << 29,
@@ -160,7 +161,7 @@ export const QQ_INTENTS = {
   PUBLIC_GUILD_MESSAGES: 1 << 30,
 } as const;
 
-// ---- WebSocket Gateway Types ----
+// --- WebSocket Gateway payload shapes ---
 
 export interface QQGatewayPayload {
   d: any;

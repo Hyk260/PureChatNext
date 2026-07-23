@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
 import { memo, type ReactNode } from 'react'
 
 import ModelLabel from '@/features/chat/ModelLabel'
@@ -10,13 +10,12 @@ import SendButton, { type SendButtonProps } from './SendButton'
 export interface SendAreaProps extends SendButtonProps {
   /** Extra nodes rendered before the model label */
   prefix?: ReactNode
-  /** Home SendArea uses modelLabel (lobe `rightActions: ['modelLabel']`) */
   showModelLabel?: boolean
 }
 
 /**
  * Right-side action strip for chat inputs.
- * Layout mirrors lobe-chat `ChatInput/SendArea` + home `rightActions: ['modelLabel']`.
+ * Layout: ChatInput send area with model label on the right.
  */
 const SendArea = memo<SendAreaProps>(
   ({
@@ -31,7 +30,7 @@ const SendArea = memo<SendAreaProps>(
     onStop,
   }) => {
     return (
-      <Flexbox horizontal align='center' flex='none' gap={12}>
+      <Flex align='center' flex='none' gap={12}>
         {prefix}
         {showModelLabel ? <ModelLabel /> : null}
         <SendButton
@@ -43,7 +42,7 @@ const SendArea = memo<SendAreaProps>(
           onClick={onClick}
           onStop={onStop}
         />
-      </Flexbox>
+      </Flex>
     )
   },
 )

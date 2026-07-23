@@ -4,17 +4,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ssrfSafeFetch } from './index';
 
-// Mock node-fetch to avoid actual network requests
+/** @pure/ssrf-safe-fetch — Node SSRF-safe fetch unit tests. */
+
 vi.mock('node-fetch', () => ({
   default: vi.fn(),
 }));
 
 const mockFetch = fetch as any;
 
-// Mock console.error to avoid noise in test output
 vi.spyOn(console, 'error').mockImplementation(() => {});
 
-describe('ssrfSafeFetch', () => {
+describe('ssrfSafeFetch (@pure/ssrf-safe-fetch)', () => {
   const createMockResponse = (
     options: {
       arrayBuffer?: ArrayBuffer;

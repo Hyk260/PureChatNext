@@ -1,19 +1,19 @@
 'use client'
 
-import { type MarkdownProps, Markdown } from '@lobehub/ui'
+import { type MarkdownProps, Markdown } from '@pure/ui'
 import { useDeferredValue, useMemo } from 'react'
 
 /**
  * Streaming strategy:
  * - While generating, render plain text (live `text`) so tokens paint immediately.
- *   Enabling `@lobehub/ui` Streamdown (`enableStream` + `animated`) under high-frequency
+ *   Enabling Markdown Streamdown (`enableStream` + `animated`) under high-frequency
  *   parent updates nests setStates → "Maximum update depth exceeded".
  * - When idle, render full Markdown with Streamdown off and deferred content.
  */
 const STATIC_COMPONENT_PROPS = {
   // Keep shiki-stream off — animated highlight also loops under parent updates
   highlight: { animated: false, fullFeatured: true },
-  // Avoid @lobehub/ui Image preview's deprecated antd `rootClassName`
+  // Avoid Image preview's deprecated antd `rootClassName`
   img: { preview: false },
 } as const
 

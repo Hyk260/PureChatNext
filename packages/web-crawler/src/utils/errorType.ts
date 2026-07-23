@@ -1,9 +1,12 @@
+/** Typed crawl/fetch errors for @pure/web-crawler. */
+
 export class PageNotFoundError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'PageNotFoundError';
   }
 }
+
 export class NetworkConnectionError extends Error {
   constructor() {
     super('Network connection error');
@@ -18,24 +21,13 @@ export class TimeoutError extends Error {
   }
 }
 
-/**
- * Check if an error is a Node.js fetch network failure.
- * Node.js undici throws TypeError with message "fetch failed" on network errors.
- */
+/** True when undici/Node reports a network-level `fetch failed` TypeError. */
 export const isFetchNetworkError = (error: unknown): boolean =>
   error instanceof TypeError && (error as Error).message === 'fetch failed';
 
 /**
- * Normalize a fetch error into a typed error for consistent handling.
- * Converts network failures to `NetworkConnectionError`, passes through `TimeoutError`,
- * and returns any other error unchanged. Callers should `throw` the returned value.
- *
- * @example
- * ```ts
- * } catch (e) {
- *   throw toFetchError(e);
- * }
- * ```
+ * Map a raw fetch error to a typed error for callers to rethrow.
+ * Network failures → `NetworkConnectionError`; `TimeoutError` passes through.
  */
 export const toFetchError = (error: unknown): Error => {
   if (isFetchNetworkError(error)) {

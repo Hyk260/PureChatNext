@@ -14,17 +14,16 @@ import { type JinaResponse, type JinaSearchParameters } from './type';
 
 const log = debug('search:Jina');
 
-/**
- * Jina implementation of the search service
- * Primarily used for web crawling
- */
 export class JinaImpl implements SearchServiceImpl {
   private get apiKey(): string | undefined {
     return process.env.JINA_READER_API_KEY || process.env.JINA_API_KEY;
   }
 
   private get baseUrl(): string {
-    return getJinaSearchBaseUrl(toolsEnv.JINA_USE_CN_DOMAINS === 'true');
+    // Prefer live process.env so tests / runtime toggles apply (toolsEnv is load-time).
+    const useCn =
+      process.env.JINA_USE_CN_DOMAINS === 'true' || toolsEnv.JINA_USE_CN_DOMAINS === 'true';
+    return getJinaSearchBaseUrl(useCn);
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {

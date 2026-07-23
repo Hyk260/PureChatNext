@@ -1,6 +1,7 @@
 'use client'
 
-import { Flexbox, ScrollShadow } from '@lobehub/ui'
+import { Flex } from 'antd'
+import { ScrollShadow } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -31,17 +32,13 @@ const CommunitySidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flexbox
-      className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')}
-      height='100%'
-      style={{ width: sidebarCollapsed ? 0 : 240 }}
-    >
+    <Flex vertical className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')} style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}>
       <ScrollShadow size={2} style={{ height: '100%', width: 240 }}>
-        <Flexbox gap={1} height='100%' paddingBlock={4}>
+        <Flex vertical gap={1} style={{ height: '100%', paddingBlock: 4 }}>
           <CommunitySidebarHeader />
-        </Flexbox>
+        </Flex>
       </ScrollShadow>
-    </Flexbox>
+    </Flex>
   )
 })
 

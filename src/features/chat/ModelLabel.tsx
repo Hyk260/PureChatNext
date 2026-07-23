@@ -1,6 +1,7 @@
 'use client'
 
-import { Center, Flexbox } from '@lobehub/ui'
+import { Flex } from 'antd'
+import { Center } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronDownIcon } from 'lucide-react'
 import { memo } from 'react'
@@ -21,7 +22,6 @@ const styles = createStaticStyles(({ css }) => ({
     text-overflow: ellipsis;
     white-space: nowrap;
   `,
-  /** Aligns with lobe ChatInput `ModelLabel` trigger */
   trigger: css`
     cursor: pointer;
     border-radius: 6px;
@@ -33,7 +33,7 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 /**
- * Text model switcher used in SendArea — mirrors lobe home `rightActions: ['modelLabel']`.
+ * Text model switcher used in SendArea.
  */
 const ModelLabel = memo(() => {
   const current = useCurrentHomeModel()
@@ -41,10 +41,10 @@ const ModelLabel = memo(() => {
   return (
     <ModelSwitchMenu openOnHover={false}>
       <Center horizontal className={styles.trigger} height={28} paddingInline={6}>
-        <Flexbox horizontal align='center' gap={2}>
+        <Flex align='center' gap={2}>
           <span className={styles.name}>{current.displayName}</span>
           <ChevronDownIcon className={styles.chevron} size={12} />
-        </Flexbox>
+        </Flex>
       </Center>
     </ModelSwitchMenu>
   )

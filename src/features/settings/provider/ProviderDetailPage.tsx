@@ -1,7 +1,6 @@
 'use client'
 
-import { Flexbox } from '@lobehub/ui'
-import { App } from 'antd'
+import { Flex, App } from 'antd'
 import { memo } from 'react'
 
 import { providerDetailStyles as styles } from './styles'
@@ -15,10 +14,10 @@ interface ProviderDetailPageProps {
 
 const ProviderDetailPage = memo<ProviderDetailPageProps>(({ id }) => (
   <App>
-    <Flexbox className={styles.page} gap={24} width='100%'>
+    <Flex vertical className={styles.page} gap={24} style={{ width: '100%' }}>
       <ProviderConfig id={id} />
       <ModelList id={id} />
-    </Flexbox>
+    </Flex>
   </App>
 ))
 

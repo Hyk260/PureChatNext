@@ -1,14 +1,14 @@
 'use client'
 
-import { Button, Flexbox, SortableList } from '@lobehub/ui'
-import { type ModalInstance } from '@lobehub/ui/base-ui'
+import { Flex, Button } from 'antd'
+import { SortableList } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Plus } from 'lucide-react'
 import { memo } from 'react'
 
 import { type HomeAgentGroup } from '@/features/home/store/sidebarDefaults'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
-import { createModal } from '@/libs/modal'
+import { modal } from '@/components/AntdStaticMethods'
 
 import GroupItem from './GroupItem'
 
@@ -31,7 +31,7 @@ const ConfigGroupContent = memo(() => {
   const updateAgentGroupSort = useHomeStore((s) => s.updateAgentGroupSort)
 
   return (
-    <Flexbox>
+    <Flex vertical>
       <SortableList
         items={agentGroups}
         renderItem={(item: HomeAgentGroup) => (
@@ -48,19 +48,20 @@ const ConfigGroupContent = memo(() => {
         )}
         onChange={(items: HomeAgentGroup[]) => updateAgentGroupSort(items)}
       />
-      <Button block icon={Plus} onClick={() => addAgentGroup(`分类 ${agentGroups.length + 1}`)}>
+      <Button block icon={<Plus />} onClick={() => addAgentGroup(`分类 ${agentGroups.length + 1}`)}>
         新建分类
       </Button>
-    </Flexbox>
+    </Flex>
   )
 })
 
 ConfigGroupContent.displayName = 'ConfigGroupContent'
 
-export const openConfigGroupModal = (): ModalInstance =>
-  createModal({
+export const openConfigGroupModal = () =>
+  modal.info({
     content: <ConfigGroupContent />,
     footer: null,
+    icon: null,
     maskClosable: true,
     title: '分类管理',
     width: 400,

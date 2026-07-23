@@ -49,7 +49,7 @@ const examples = {
     urls: 'https://example.com\nhttps://nextjs.org',
   },
   query: 'Next.js 16 App Router',
-  webSearch: 'PureChatNext web search',
+  webSearch: 'web search',
 };
 
 const actionOptions: Array<{

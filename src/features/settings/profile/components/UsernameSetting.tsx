@@ -1,7 +1,7 @@
 'use client'
 
-import { Button, Flexbox, Input, Text } from '@lobehub/ui'
-import { App, type InputRef } from 'antd'
+import { Flex, Typography, Button, Input, type InputRef } from 'antd'
+import { useApp } from '@/components/AntdStaticMethods'
 import { Loader2 } from 'lucide-react'
 import { type ChangeEvent, useCallback, useRef, useState } from 'react'
 
@@ -17,7 +17,7 @@ interface UsernameSettingProps {
 const USERNAME_REGEX = /^\w+$/
 
 export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
-  const { message } = App.useApp()
+  const { message } = useApp()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [dirty, setDirty] = useState(false)
@@ -104,12 +104,12 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
 
   return (
     <SettingRow label="用户名">
-      <Flexbox align="center" gap={8} horizontal style={{ minWidth: 0, width: '100%' }}>
+      <Flex align="center" gap={8} style={{ minWidth: 0, width: '100%' }}>
         {saving ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : null}
         {error ? (
-          <Text style={{ fontSize: 12, whiteSpace: 'nowrap' }} type="danger">
+          <Typography.Text type="danger" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
             {error}
-          </Text>
+          </Typography.Text>
         ) : null}
         {dirty && !saving ? (
           <Button
@@ -142,7 +142,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
           style={{ flex: 1, maxWidth: 320 }}
           variant="filled"
         />
-      </Flexbox>
+      </Flex>
     </SettingRow>
   )
 }

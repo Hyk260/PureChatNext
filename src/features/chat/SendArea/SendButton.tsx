@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@lobehub/ui'
+import { Button } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { type CSSProperties, type MouseEventHandler, memo } from 'react'
 
@@ -13,7 +13,7 @@ const iconStyles = createStaticStyles(({ css }) => ({
   `,
 }))
 
-/** Aligns with `@lobehub/editor` SendButton icon */
+/** Send button idle icon */
 const SendIcon = ({ size = '1em' }: { size?: number | string }) => (
   <svg
     className={cx('anticon', iconStyles.icon)}
@@ -28,7 +28,7 @@ const SendIcon = ({ size = '1em' }: { size?: number | string }) => (
   </svg>
 )
 
-/** Aligns with `@lobehub/editor` SendButton stop icon */
+/** Send button stop icon */
 const StopIcon = ({ size = '1.5em' }: { size?: number | string }) => (
   <svg
     className={cx('anticon', iconStyles.icon)}

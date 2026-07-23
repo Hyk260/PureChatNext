@@ -1,6 +1,6 @@
 'use client'
 
-import { SearchBar } from '@lobehub/ui'
+import { Input } from 'antd'
 import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
 import { memo, useCallback, useEffect, useState, useTransition } from 'react'
 
@@ -35,7 +35,7 @@ const AgentSearch = memo(() => {
   )
 
   return (
-    <SearchBar
+    <Input.Search
       allowClear
       placeholder='搜索名称、描述或关键词...'
       value={value}

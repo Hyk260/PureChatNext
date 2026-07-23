@@ -1,4 +1,4 @@
-import { type SearXNGSearchResponse } from '../client';
+import { type SearXNGSearchResponse } from '../client'
 
 export const hetongxue: SearXNGSearchResponse = {
   answers: [
@@ -242,14 +242,7 @@ export const hetongxue: SearXNGSearchResponse = {
         '老师好我叫何同学 · 今年WWDC最有用的十個新功能 · 這是我見過最精緻的電子產品...何同學工作室5月開箱 · 【何同學】它不是電腦。M4 iPad Pro深度體驗 · 新iPad Pro現場上手！',
       engine: 'google',
       engines: ['google'],
-      parsed_url: [
-        'https',
-        'www.youtube.com',
-        '/channel/UCP5Kd0smdWe9H_bDH-73c6Q/videos',
-        '',
-        '',
-        '',
-      ],
+      parsed_url: ['https', 'www.youtube.com', '/channel/UCP5Kd0smdWe9H_bDH-73c6Q/videos', '', '', ''],
       positions: [2],
       score: 0.5,
       template: 'default.html',
@@ -344,14 +337,7 @@ export const hetongxue: SearXNGSearchResponse = {
         '哔哩哔哩老师好我叫何同学的个人空间，提供老师好我叫何同学分享的视频、音频、文章、动态、收藏等内容，关注老师好我叫何同学账号，第一时间了解UP主动态。.',
       engine: 'duckduckgo',
       engines: ['duckduckgo'],
-      parsed_url: [
-        'https',
-        'space.bilibili.com',
-        '/163637592/channel/collectiondetail',
-        '',
-        'sid=2159893',
-        '',
-      ],
+      parsed_url: ['https', 'space.bilibili.com', '/163637592/channel/collectiondetail', '', 'sid=2159893', ''],
       positions: [17],
       score: 0.058_823_529_411_764_705,
       template: 'default.html',
@@ -476,14 +462,7 @@ export const hetongxue: SearXNGSearchResponse = {
         'August 5, 2020 - 同为B站科技区UP主，何同学的视频内容和大部分同类型UP主不一样。科技区相当一部分视频是严肃专业的测评，但作为B站最著名的科技UP主之一，何同学却从未发过一个纯粹意义上的专业测评。他上初中开始看手机测评，“...',
       engine: 'brave',
       engines: ['brave'],
-      parsed_url: [
-        'https',
-        'tech.sina.cn',
-        '/i/gn/2020-08-05/detail-iivhvpwx9366000.d.html',
-        '',
-        '',
-        '',
-      ],
+      parsed_url: ['https', 'tech.sina.cn', '/i/gn/2020-08-05/detail-iivhvpwx9366000.d.html', '', '', ''],
       positions: [9],
       publishedDate: '2020-08-05T00:00:00',
       score: 0.111_111_111_111_111_1,
@@ -498,14 +477,7 @@ export const hetongxue: SearXNGSearchResponse = {
         '何同学的视频相比其他，更多的是心意和新意。他每一个镜 头的运用、转场真的是能够看出用心的，其实对我比较印象 深刻的还是 何同学有着与他身份不相符的能力。',
       engine: 'brave',
       engines: ['brave'],
-      parsed_url: [
-        'https',
-        'wizardforcel.gitbooks.io',
-        '/jiuliaozhengqian/content/022.html',
-        '',
-        '',
-        '',
-      ],
+      parsed_url: ['https', 'wizardforcel.gitbooks.io', '/jiuliaozhengqian/content/022.html', '', '', ''],
       positions: [11],
       publishedDate: null,
       score: 0.090_909_090_909_090_91,
@@ -589,14 +561,7 @@ export const hetongxue: SearXNGSearchResponse = {
         '6月1日，"珠峰杯"第四届中国大学生韩国语短视频大赛颁奖典礼在浙江杭州举行。亚洲学院2021级朝鲜语专业本科生何柔亿、2022级朝鲜语专业本科生屈京京两位同学在本次大赛中提交的作品《交流，和而不同之路》在本次比赛中荣获全国优秀奖。 何柔亿、屈京京同学在颁奖典礼现场',
       engine: 'duckduckgo',
       engines: ['duckduckgo'],
-      parsed_url: [
-        'https',
-        'chaoyu.bisu.edu.cn',
-        '/art/2024/6/8/art_10721_331167.html',
-        '',
-        '',
-        '',
-      ],
+      parsed_url: ['https', 'chaoyu.bisu.edu.cn', '/art/2024/6/8/art_10721_331167.html', '', '', ''],
       positions: [25],
       score: 0.04,
       template: 'default.html',
@@ -665,4 +630,4 @@ export const hetongxue: SearXNGSearchResponse = {
   ],
   suggestions: [],
   unresponsive_engines: [],
-};
+}

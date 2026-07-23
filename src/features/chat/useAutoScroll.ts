@@ -34,7 +34,7 @@ interface UseAutoScrollReturn<T extends HTMLElement> {
  * - Token updates: instant follow via scrollTop (avoids interrupting smooth animations)
  */
 export function useAutoScroll<T extends HTMLElement = HTMLDivElement>(
-  options: UseAutoScrollOptions = {},
+  options: UseAutoScrollOptions = {}
 ): UseAutoScrollReturn<T> {
   const { deps = [], enabled = true, threshold = 80 } = options
 

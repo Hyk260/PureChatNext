@@ -1,7 +1,4 @@
-import {
-  AssistantCategory,
-  type DiscoverAgentItem,
-} from '@/features/community/types'
+import { AssistantCategory, type DiscoverAgentItem } from '@/features/community/types'
 
 import { COMMUNITY_AGENTS_DATA } from './agents.data'
 
@@ -47,11 +44,12 @@ export const ASSISTANT_CATEGORY_LABELS: Record<AssistantCategory, string> = {
 export const COMMUNITY_AGENTS: DiscoverAgentItem[] = COMMUNITY_AGENTS_DATA
 
 export const getAssistantCategoryCounts = (
-  agents: DiscoverAgentItem[] = COMMUNITY_AGENTS,
+  agents: DiscoverAgentItem[] = COMMUNITY_AGENTS
 ): Record<AssistantCategory, number> => {
-  const counts = Object.fromEntries(
-    Object.values(AssistantCategory).map((key) => [key, 0]),
-  ) as Record<AssistantCategory, number>
+  const counts = Object.fromEntries(Object.values(AssistantCategory).map((key) => [key, 0])) as Record<
+    AssistantCategory,
+    number
+  >
 
   for (const agent of agents) {
     counts[agent.category] += 1
@@ -63,21 +61,18 @@ export const getAssistantCategoryCounts = (
 
 export const filterCommunityAgents = (
   agents: DiscoverAgentItem[],
-  options: { category?: string | null; q?: string | null },
+  options: { category?: string | null; q?: string | null }
 ): DiscoverAgentItem[] => {
   const category = options.category ?? AssistantCategory.All
   const query = options.q?.trim().toLowerCase() ?? ''
 
   return agents.filter((agent) => {
-    const matchCategory =
-      category === AssistantCategory.All || agent.category === category
+    const matchCategory = category === AssistantCategory.All || agent.category === category
     if (!matchCategory) return false
 
     if (!query) return true
 
-    const haystack = [agent.title, agent.description, agent.author, agent.identifier]
-      .join(' ')
-      .toLowerCase()
+    const haystack = [agent.title, agent.description, agent.author, agent.identifier].join(' ').toLowerCase()
     return haystack.includes(query)
   })
 }

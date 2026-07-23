@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       waitUntil(
         pollBinding(binding, { durationMs: DEFAULT_DURATION_MS }).catch((error) => {
           logger.error({ bindingId: binding.id, error }, 'wechat-gateway poll failed')
-        }),
+        })
       )
     }
 

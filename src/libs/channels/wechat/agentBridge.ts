@@ -32,9 +32,7 @@ export async function generateWechatAgentReply(params: {
   const apiKey = resolveProviderApiKey(provider, undefined, undefined)
 
   if (!apiKey) {
-    throw new Error(
-      `No API key for provider "${provider}". Set OPENAI_API_KEY or DEEPSEEK_API_KEY for WeChat replies.`,
-    )
+    throw new Error(`No API key for provider "${provider}". Set OPENAI_API_KEY or DEEPSEEK_API_KEY for WeChat replies.`)
   }
 
   const languageModel = createProviderLanguageModel(provider, modelId, apiKey, undefined)

@@ -8,12 +8,7 @@ import { ChevronRightIcon } from 'lucide-react'
 import { memo, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
-import {
-  MESSENGER_PLATFORMS,
-  MESSENGER_SUBTITLE,
-  getMessengerPlatform,
-  type MessengerPlatformId,
-} from './const'
+import { MESSENGER_PLATFORMS, MESSENGER_SUBTITLE, getMessengerPlatform, type MessengerPlatformId } from './const'
 import MessengerComingSoonPage from './MessengerComingSoonPage'
 import MessengerQQPage from './MessengerQQPage'
 import MessengerWeChatPage from './MessengerWeChatPage'
@@ -82,22 +77,18 @@ const MessengerPage = memo(() => {
   }
 
   return (
-    <Flex vertical gap={20} style={{ width: "100%" }}>
-      <Typography.Text type="secondary">{MESSENGER_SUBTITLE}</Typography.Text>
+    <Flex vertical gap={20} style={{ width: '100%' }}>
+      <Typography.Text type='secondary'>{MESSENGER_SUBTITLE}</Typography.Text>
       <div className={styles.grid}>
         {MESSENGER_PLATFORMS.map((item) => (
-          <Block
-            className={styles.card}
-            key={item.id}
-            onClick={() => handleSelectPlatform(item)}
-          >
-            <Flex align="center" gap={16}>
+          <Block className={styles.card} key={item.id} onClick={() => handleSelectPlatform(item)}>
+            <Flex align='center' gap={16}>
               <PlatformAvatar platform={item.id} size={48} />
               <Flex vertical flex={1} gap={2}>
                 <Typography.Text strong style={{ fontSize: 15 }}>
                   {item.name}
                 </Typography.Text>
-                <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                <Typography.Text type='secondary' style={{ fontSize: 13 }}>
                   {item.description}
                 </Typography.Text>
               </Flex>

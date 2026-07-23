@@ -89,10 +89,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
 
   const handleCancel = useCallback(() => {
     if (inputRef.current?.input) {
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        'value',
-      )?.set
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
       nativeInputValueSetter?.call(inputRef.current.input, username || '')
       inputRef.current.input.dispatchEvent(new Event('input', { bubbles: true }))
     }
@@ -103,11 +100,11 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
   }, [username])
 
   return (
-    <SettingRow label="用户名">
-      <Flex align="center" gap={8} style={{ minWidth: 0, width: '100%' }}>
-        {saving ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : null}
+    <SettingRow label='用户名'>
+      <Flex align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
+        {saving ? <Loader2 className='h-4 w-4 shrink-0 animate-spin' /> : null}
         {error ? (
-          <Typography.Text type="danger" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+          <Typography.Text type='danger' style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
             {error}
           </Typography.Text>
         ) : null}
@@ -117,8 +114,8 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
               event.preventDefault()
               handleCancel()
             }}
-            size="small"
-            variant="outlined"
+            size='small'
+            variant='outlined'
           >
             取消
           </Button>
@@ -136,11 +133,11 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
             }
           }}
           onPressEnter={handleSave}
-          placeholder="字母、数字或下划线"
+          placeholder='字母、数字或下划线'
           ref={inputRef}
           status={error ? 'error' : undefined}
           style={{ flex: 1, maxWidth: 320 }}
-          variant="filled"
+          variant='filled'
         />
       </Flex>
     </SettingRow>

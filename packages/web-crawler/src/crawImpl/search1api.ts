@@ -1,24 +1,24 @@
-import { type CrawlImpl, type CrawlSuccessResult } from '../type';
-import { PageNotFoundError, toFetchError } from '../utils/errorType';
-import { createHTTPStatusError, parseJSONResponse } from '../utils/response';
-import { DEFAULT_TIMEOUT, withTimeout } from '../utils/withTimeout';
+import { type CrawlImpl, type CrawlSuccessResult } from '../type'
+import { PageNotFoundError, toFetchError } from '../utils/errorType'
+import { createHTTPStatusError, parseJSONResponse } from '../utils/response'
+import { DEFAULT_TIMEOUT, withTimeout } from '../utils/withTimeout'
 
 interface Search1ApiResponse {
   crawlParameters: {
-    url: string;
-  };
+    url: string
+  }
   results: {
-    content?: string;
-    link?: string;
-    title?: string;
-  };
+    content?: string
+    link?: string
+    title?: string
+  }
 }
 
 export const search1api: CrawlImpl = async (url) => {
   // Get API key from environment variable
-  const apiKey = process.env.SEARCH1API_CRAWL_API_KEY || process.env.SEARCH1API_API_KEY;
+  const apiKey = process.env.SEARCH1API_CRAWL_API_KEY || process.env.SEARCH1API_API_KEY
 
-  let res: Response;
+  let res: Response
 
   try {
     res = await withTimeout(
@@ -28,31 +28,31 @@ export const search1api: CrawlImpl = async (url) => {
             url,
           }),
           headers: {
-            'Authorization': !apiKey ? '' : `Bearer ${apiKey}`,
+            Authorization: !apiKey ? '' : `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
           method: 'POST',
           signal,
         }),
-      DEFAULT_TIMEOUT,
-    );
+      DEFAULT_TIMEOUT
+    )
   } catch (e) {
-    throw toFetchError(e);
+    throw toFetchError(e)
   }
 
   if (!res.ok) {
     if (res.status === 404) {
-      throw new PageNotFoundError(res.statusText);
+      throw new PageNotFoundError(res.statusText)
     }
 
-    throw await createHTTPStatusError(res, 'Search1API');
+    throw await createHTTPStatusError(res, 'Search1API')
   }
 
-  const data = await parseJSONResponse<Search1ApiResponse>(res, 'Search1API');
+  const data = await parseJSONResponse<Search1ApiResponse>(res, 'Search1API')
 
   // Check if content is empty or too short
   if (!data.results?.content || data.results.content.length < 100) {
-    return;
+    return
   }
 
   return {
@@ -64,5 +64,5 @@ export const search1api: CrawlImpl = async (url) => {
     siteName: new URL(url).hostname,
     title: data.results?.title,
     url: data.results?.link || url,
-  } satisfies CrawlSuccessResult;
-};
+  } satisfies CrawlSuccessResult
+}

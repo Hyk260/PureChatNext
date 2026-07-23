@@ -20,9 +20,7 @@ const MessengerComingSoonPage = memo<MessengerComingSoonPageProps>(({ platform }
         <Typography.Text strong style={{ fontSize: 15 }}>
           连接 {meta.name}
         </Typography.Text>
-        <div className={messengerDetailStyles.emptyRow}>
-          即将推出，其它平台敬请期待。
-        </div>
+        <div className={messengerDetailStyles.emptyRow}>即将推出，其它平台敬请期待。</div>
       </Flex>
     </MessengerDetailShell>
   )

@@ -8,10 +8,7 @@ const enableCodeInspector = process.env.CODE_INSPECTOR === '1'
 const nextConfig: NextConfig = {
   ...(isVercel && {
     outputFileTracingExcludes: {
-      '*': [
-        'node_modules/.pnpm/@napi-rs+canvas-*-musl*',
-        'node_modules/.pnpm/@img+sharp-libvips-*musl*',
-      ],
+      '*': ['node_modules/.pnpm/@napi-rs+canvas-*-musl*', 'node_modules/.pnpm/@img+sharp-libvips-*musl*'],
     },
   }),
   compress: isProd,
@@ -20,14 +17,7 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   experimental: {
-    optimizePackageImports: [
-      '@ant-design/icons',
-      '@lobehub/icons',
-      '@lobehub/ui',
-      'antd',
-      'lodash-es',
-      'lucide-react',
-    ],
+    optimizePackageImports: ['@ant-design/icons', '@lobehub/icons', '@lobehub/ui', 'antd', 'lodash-es', 'lucide-react'],
     webVitalsAttribution: ['CLS', 'LCP'],
   },
   logging: {

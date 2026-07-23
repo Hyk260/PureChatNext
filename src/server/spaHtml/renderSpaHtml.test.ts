@@ -13,8 +13,7 @@ describe('serializeForHtml', () => {
 
 describe('renderSpaHtml', () => {
   it('replaces the SPA_SERVER_CONFIG placeholder', async () => {
-    const template =
-      '<!doctype html><html><head><!--SPA_SERVER_CONFIG--></head><body></body></html>'
+    const template = '<!doctype html><html><head><!--SPA_SERVER_CONFIG--></head><body></body></html>'
     const res = renderSpaHtml(template, {
       serverConfig: { renderedAt: '2026-01-01T00:00:00.000Z' },
     })

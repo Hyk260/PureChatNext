@@ -56,8 +56,10 @@ export const useAgentsStore = create<AgentsStoreState>((set, get) => ({
 }))
 
 export const resolveAgentMeta = (id: string): AgentListItem => {
-  return useAgentsStore.getState().findById(id) ?? {
-    ...DEFAULT_PURE_AI_META,
-    id: id || PURE_AI_AGENT_ID,
-  }
+  return (
+    useAgentsStore.getState().findById(id) ?? {
+      ...DEFAULT_PURE_AI_META,
+      id: id || PURE_AI_AGENT_ID,
+    }
+  )
 }

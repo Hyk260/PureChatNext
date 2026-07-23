@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { DEFAULT_CHAT_LLM_PARAMS , type ChatLlmParams } from '@/features/chat/types'
+import { DEFAULT_CHAT_LLM_PARAMS, type ChatLlmParams } from '@/features/chat/types'
 
 type ChatUiState = {
   leftCollapsed: boolean
@@ -48,6 +48,6 @@ export const useChatUiStore = create<ChatUiState>()(
           },
         })),
     }),
-    { name: 'purechat:chat:v2:ui', version: 1 },
-  ),
+    { name: 'purechat:chat:v2:ui', version: 1 }
+  )
 )

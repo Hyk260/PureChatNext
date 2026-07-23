@@ -17,20 +17,20 @@ export const getClientIP = (headers: Headers): string => {
     'fastly-client-ip', // Fastly CDN
     'x-forwarded', // General forward
     'x-original-forwarded-for', // Original forwarded
-  ];
+  ]
 
   for (const header of ipHeaders) {
-    const value = headers.get(header);
-    if (!value) continue;
+    const value = headers.get(header)
+    if (!value) continue
 
     // Handle cases where multiple IPs may be present (e.g., x-forwarded-for)
     if (header.toLowerCase() === 'x-forwarded-for') {
-      const firstIP = value.split(',')[0].trim();
-      if (firstIP) return firstIP;
+      const firstIP = value.split(',')[0].trim()
+      if (firstIP) return firstIP
     }
 
-    return value.trim();
+    return value.trim()
   }
 
-  return '';
-};
+  return ''
+}

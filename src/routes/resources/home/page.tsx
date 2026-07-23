@@ -5,7 +5,7 @@ import ResourceHomePage from '@/features/resources/pages/ResourceHomePage'
 
 export default function Page() {
   return (
-    <Suspense fallback={<Loading debugId="Resources" />}>
+    <Suspense fallback={<Loading debugId='Resources' />}>
       <ResourceHomePage />
     </Suspense>
   )

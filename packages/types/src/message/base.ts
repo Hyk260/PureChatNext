@@ -1,4 +1,4 @@
-import { type ErrorType } from "../fetch"
+import { type ErrorType } from '../fetch'
 
 export interface ChatMessageError {
   body?: unknown

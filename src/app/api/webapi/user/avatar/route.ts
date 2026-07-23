@@ -18,12 +18,7 @@ const EXT_BY_TYPE: Record<string, string> = {
 }
 
 function isS3Configured() {
-  return Boolean(
-    fileEnv.S3_ACCESS_KEY_ID &&
-      fileEnv.S3_SECRET_ACCESS_KEY &&
-      fileEnv.S3_ENDPOINT &&
-      fileEnv.S3_BUCKET,
-  )
+  return Boolean(fileEnv.S3_ACCESS_KEY_ID && fileEnv.S3_SECRET_ACCESS_KEY && fileEnv.S3_ENDPOINT && fileEnv.S3_BUCKET)
 }
 
 function buildPublicS3Url(key: string) {
@@ -59,10 +54,7 @@ async function deletePreviousAvatars(fileS3: FileS3, userId: string, keepKey: st
  */
 export const POST = withAuth(async (req, { userId }) => {
   if (!isS3Configured()) {
-    return NextResponse.json(
-      { error: 'Avatar upload requires S3 configuration' },
-      { status: 503 },
-    )
+    return NextResponse.json({ error: 'Avatar upload requires S3 configuration' }, { status: 503 })
   }
 
   const formData = await req.formData()

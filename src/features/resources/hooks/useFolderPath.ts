@@ -3,10 +3,7 @@
 import { useParams, usePathname } from '@/utils/navigation'
 
 /** Next catch-all `slug` is string[]; react-router splat is `params['*']`. */
-function resolveSlugParts(params: {
-  slug?: string | string[]
-  '*'?: string
-}): string[] {
+function resolveSlugParts(params: { slug?: string | string[]; '*'?: string }): string[] {
   if (Array.isArray(params.slug)) return params.slug
   if (typeof params.slug === 'string' && params.slug) {
     return params.slug.split('/').filter(Boolean)

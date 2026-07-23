@@ -8,8 +8,7 @@ import { writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const AGENTS_INDEX_URL =
-  'https://registry.npmmirror.com/@lobehub/agents-index/v1/files/public'
+const AGENTS_INDEX_URL = 'https://registry.npmmirror.com/@lobehub/agents-index/v1/files/public'
 const LOCALE = 'zh-CN'
 const PER_CATEGORY = 30
 const CONCURRENCY = 10
@@ -77,7 +76,7 @@ const isBusinessCategory = (value: string | undefined): value is BusinessCategor
 async function mapPool<T, R>(
   items: T[],
   concurrency: number,
-  mapper: (item: T, index: number) => Promise<R>,
+  mapper: (item: T, index: number) => Promise<R>
 ): Promise<R[]> {
   const results = new Array<R>(items.length)
   let next = 0
@@ -114,9 +113,7 @@ async function fetchSystemRole(identifier: string): Promise<string> {
 
 async function main() {
   console.log('[agents:sync] fetching index…')
-  const index = await fetchJson<{ agents: IndexAgent[] }>(
-    `${AGENTS_INDEX_URL}/index.${LOCALE}.json`,
-  )
+  const index = await fetchJson<{ agents: IndexAgent[] }>(`${AGENTS_INDEX_URL}/index.${LOCALE}.json`)
   const agents = index.agents ?? []
   console.log(`[agents:sync] index size: ${agents.length}`)
 
@@ -124,9 +121,7 @@ async function main() {
   const counts: Record<string, number> = {}
 
   for (const category of BUSINESS_CATEGORIES) {
-    const group = agents
-      .filter((agent) => agent.meta?.category === category)
-      .slice(0, PER_CATEGORY)
+    const group = agents.filter((agent) => agent.meta?.category === category).slice(0, PER_CATEGORY)
     counts[category] = group.length
     selected.push(...group)
   }

@@ -38,19 +38,19 @@ export function FullNameSetting({ fullName, onUpdated }: FullNameSettingProps) {
   }, [fullName, message, onUpdated])
 
   return (
-    <SettingRow label="全名">
-      <Flex align="center" gap={8} style={{ minWidth: 0, width: '100%' }}>
-        {saving ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : null}
+    <SettingRow label='全名'>
+      <Flex align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
+        {saving ? <Loader2 className='h-4 w-4 shrink-0 animate-spin' /> : null}
         <Input
           defaultValue={fullName || ''}
           disabled={saving}
           key={fullName}
           onBlur={handleSave}
           onPressEnter={handleSave}
-          placeholder="全名"
+          placeholder='全名'
           ref={inputRef}
           style={{ flex: 1, maxWidth: 320 }}
-          variant="filled"
+          variant='filled'
         />
       </Flex>
     </SettingRow>

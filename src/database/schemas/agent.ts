@@ -1,14 +1,5 @@
 import { isNotNull, isNull } from 'drizzle-orm'
-import {
-  boolean,
-  index,
-  integer,
-  jsonb,
-  pgTable,
-  text,
-  uniqueIndex,
-  varchar,
-} from 'drizzle-orm/pg-core'
+import { boolean, index, integer, jsonb, pgTable, text, uniqueIndex, varchar } from 'drizzle-orm/pg-core'
 
 import { idGenerator, randomSlug } from '../utils/idGenerator'
 import { timestamps, varchar255 } from './_helpers'
@@ -42,16 +33,12 @@ export const agents = pgTable(
     ...timestamps,
   },
   (t) => [
-    uniqueIndex('agents_slug_builtin_unique')
-      .on(t.slug)
-      .where(isNull(t.userId)),
-    uniqueIndex('agents_slug_user_id_unique')
-      .on(t.userId, t.slug)
-      .where(isNotNull(t.userId)),
+    uniqueIndex('agents_slug_builtin_unique').on(t.slug).where(isNull(t.userId)),
+    uniqueIndex('agents_slug_user_id_unique').on(t.userId, t.slug).where(isNotNull(t.userId)),
     index('agents_user_id_idx').on(t.userId),
     index('agents_is_builtin_idx').on(t.isBuiltin),
     index('agents_list_order_idx').on(t.isBuiltin.desc(), t.pinned.desc(), t.sort, t.updatedAt.desc()),
-  ],
+  ]
 )
 
 export type NewAgent = typeof agents.$inferInsert
@@ -68,10 +55,9 @@ export const PURE_AI_AGENT_SEED: NewAgent = {
   pinned: true,
   slug: 'inbox',
   sort: 0,
-  systemRole: [
-    '你是 Pure AI，一位友好、清晰、务实的助手。',
-    '回答保持结构清楚、可执行；不确定时主动说明假设。',
-  ].join('\n'),
+  systemRole: ['你是 Pure AI，一位友好、清晰、务实的助手。', '回答保持结构清楚、可执行；不确定时主动说明假设。'].join(
+    '\n'
+  ),
   title: 'Pure AI',
   userId: null,
 }

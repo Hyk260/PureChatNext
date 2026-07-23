@@ -1,11 +1,7 @@
 import debug from 'debug'
 
 import { UserModel } from '@/database/models/user'
-import {
-  registerAccount,
-  type RegisterAccountParams,
-  type RegisterAccountResult,
-} from '@/libs/utils/register'
+import { registerAccount, type RegisterAccountParams, type RegisterAccountResult } from '@/libs/utils/register'
 import { FileS3 } from '@/server/modules/S3'
 
 const log = debug('service:user')
@@ -31,7 +27,7 @@ export class UserService {
    */
   ensureIMAccountForAuthUser = async (
     authUserId: string,
-    profile: EnsureIMAccountProfile = {},
+    profile: EnsureIMAccountProfile = {}
   ): Promise<RegisterAccountResult> => {
     const user = await UserModel.findById(authUserId)
     if (!user?.userId) {

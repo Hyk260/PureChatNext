@@ -29,13 +29,7 @@ const LibraryModal = memo<LibraryModalProps>(({ onClose, onSubmit, open, title }
   }
 
   return (
-    <Modal
-      confirmLoading={loading}
-      open={open}
-      title={title}
-      onCancel={onClose}
-      onOk={handleOk}
-    >
+    <Modal confirmLoading={loading} open={open} title={title} onCancel={onClose} onOk={handleOk}>
       <Input placeholder='名称' value={name} onChange={(e) => setName(e.target.value)} />
       <Input
         placeholder='描述（可选）'

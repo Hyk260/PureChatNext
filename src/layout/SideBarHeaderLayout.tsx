@@ -118,7 +118,13 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     )
 
     return (
-      <Flex align='center' className={styles.container} flex='none' justify='space-between' style={{ padding: '8px 6px' }}>
+      <Flex
+        align='center'
+        className={styles.container}
+        flex='none'
+        justify='space-between'
+        style={{ padding: '8px 6px' }}
+      >
         {leftContent}
         <Flex align='center' flex='none' gap={2} justify='flex-end'>
           {right}
@@ -137,7 +143,7 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
         </Flex>
       </Flex>
     )
-  },
+  }
 )
 
 SideBarHeaderLayout.displayName = 'SideBarHeaderLayout'

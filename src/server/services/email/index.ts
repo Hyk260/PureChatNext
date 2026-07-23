@@ -1,26 +1,32 @@
-import { emailEnv } from '@/envs/email';
+import { emailEnv } from '@/envs/email'
 
-import { type EmailPayload, type EmailResponse, type EmailServiceImpl, createEmailServiceImpl, EmailImplType } from './impls';
+import {
+  type EmailPayload,
+  type EmailResponse,
+  type EmailServiceImpl,
+  createEmailServiceImpl,
+  EmailImplType,
+} from './impls'
 
 /**
  * 邮件服务类
  * 支持多种邮件提供商的发送能力
  */
 export class EmailService {
-  private emailImpl: EmailServiceImpl;
+  private emailImpl: EmailServiceImpl
 
   constructor(implType?: EmailImplType) {
-    const envImplType = typeof window === 'undefined' ? (emailEnv.EMAIL_SERVICE_PROVIDER) : undefined;
-    const resolvedImplType = implType ?? envImplType ?? EmailImplType.Nodemailer;
+    const envImplType = typeof window === 'undefined' ? emailEnv.EMAIL_SERVICE_PROVIDER : undefined
+    const resolvedImplType = implType ?? envImplType ?? EmailImplType.Nodemailer
 
-    this.emailImpl = createEmailServiceImpl(resolvedImplType as EmailImplType);
+    this.emailImpl = createEmailServiceImpl(resolvedImplType as EmailImplType)
   }
 
   /**
    * 发送邮件
    */
   async sendMail(payload: EmailPayload): Promise<EmailResponse> {
-    return this.emailImpl.sendMail(payload);
+    return this.emailImpl.sendMail(payload)
   }
 
   /**
@@ -29,12 +35,12 @@ export class EmailService {
    */
   async verify(): Promise<boolean> {
     if ('verify' in this.emailImpl && typeof this.emailImpl.verify === 'function') {
-      return this.emailImpl.verify();
+      return this.emailImpl.verify()
     }
 
-    return true;
+    return true
   }
 }
 
-export type { EmailPayload, EmailResponse } from './impls';
-export { EmailImplType } from './impls';
+export type { EmailPayload, EmailResponse } from './impls'
+export { EmailImplType } from './impls'

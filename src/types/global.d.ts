@@ -1,4 +1,4 @@
-import 'antd-style';
+import 'antd-style'
 
 declare global {
   /** Vite define: true in dev SPA builds */
@@ -6,4 +6,3 @@ declare global {
 }
 
 export {}
-

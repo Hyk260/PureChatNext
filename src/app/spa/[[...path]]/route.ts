@@ -13,9 +13,7 @@ function buildServerConfig(): SPAServerConfig {
     enableVercelAnalytics: analyticsEnv.ENABLE_VERCEL_ANALYTICS,
     debugVercelAnalytics: analyticsEnv.DEBUG_VERCEL_ANALYTICS,
     enableSpeedInsights: IS_VERCEL,
-    ...(analyticsEnv.REACT_SCAN_MONITOR_API_KEY
-      ? { reactScanApiKey: analyticsEnv.REACT_SCAN_MONITOR_API_KEY }
-      : {}),
+    ...(analyticsEnv.REACT_SCAN_MONITOR_API_KEY ? { reactScanApiKey: analyticsEnv.REACT_SCAN_MONITOR_API_KEY } : {}),
   }
 }
 

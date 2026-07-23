@@ -1,0 +1,12 @@
+node_modules
+.next
+dist
+public/_spa
+coverage
+.agents
+.cursor
+.vercel
+.worktrees
+packages/*/node_modules
+packages/*/dist
+pnpm-lock.yaml

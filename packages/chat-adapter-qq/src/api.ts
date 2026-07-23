@@ -4,28 +4,28 @@ import {
   type QQGatewayUrlResponse,
   type QQSendMessageParams,
   type QQSendMessageResponse,
-} from './types';
+} from './types'
 
 /** QQ OpenAPI client for @pure/chat-adapter-qq. See `docs/self-hosting/qq/protocol.zh-CN.md`. */
 
-const AUTH_URL = 'https://bots.qq.com/app/getAppAccessToken';
-const API_BASE_URL = 'https://api.sgroup.qq.com';
-const MAX_TEXT_LENGTH = 2000;
+const AUTH_URL = 'https://bots.qq.com/app/getAppAccessToken'
+const API_BASE_URL = 'https://api.sgroup.qq.com'
+const MAX_TEXT_LENGTH = 2000
 
 export class QQApiClient {
-  private readonly appId: string;
-  private readonly clientSecret: string;
-  private cachedToken?: string;
-  private tokenExpiresAt = 0;
+  private readonly appId: string
+  private readonly clientSecret: string
+  private cachedToken?: string
+  private tokenExpiresAt = 0
 
   constructor(appId: string, clientSecret: string) {
-    this.appId = appId;
-    this.clientSecret = clientSecret;
+    this.appId = appId
+    this.clientSecret = clientSecret
   }
 
   async getAccessToken(): Promise<string> {
     if (this.cachedToken && Date.now() < this.tokenExpiresAt) {
-      return this.cachedToken;
+      return this.cachedToken
     }
 
     const response = await fetch(AUTH_URL, {
@@ -35,52 +35,52 @@ export class QQApiClient {
       }),
       headers: { 'Content-Type': 'application/json' },
       method: 'POST',
-    });
+    })
 
     if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`QQ auth failed: ${response.status} ${text}`);
+      const text = await response.text()
+      throw new Error(`QQ auth failed: ${response.status} ${text}`)
     }
 
-    const data = (await response.json()) as QQAccessTokenResponse;
+    const data = (await response.json()) as QQAccessTokenResponse
 
-    this.cachedToken = data.access_token;
+    this.cachedToken = data.access_token
     // Refresh 5 minutes before expiration
-    this.tokenExpiresAt = Date.now() + (data.expires_in - 300) * 1000;
+    this.tokenExpiresAt = Date.now() + (data.expires_in - 300) * 1000
 
-    return this.cachedToken;
+    return this.cachedToken
   }
 
   private async call<T>(method: string, path: string, body?: Record<string, unknown>): Promise<T> {
-    const token = await this.getAccessToken();
-    const url = `${API_BASE_URL}${path}`;
+    const token = await this.getAccessToken()
+    const url = `${API_BASE_URL}${path}`
 
     const init: RequestInit = {
       headers: {
-        'Authorization': `QQBot ${token}`,
+        Authorization: `QQBot ${token}`,
         'Content-Type': 'application/json',
       },
       method,
-    };
-
-    if (body && method !== 'GET' && method !== 'DELETE') {
-      init.body = JSON.stringify(body);
     }
 
-    const response = await fetch(url, init);
+    if (body && method !== 'GET' && method !== 'DELETE') {
+      init.body = JSON.stringify(body)
+    }
+
+    const response = await fetch(url, init)
 
     if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`QQ API ${method} ${path} failed: ${response.status} ${text}`);
+      const text = await response.text()
+      throw new Error(`QQ API ${method} ${path} failed: ${response.status} ${text}`)
     }
 
     // Some endpoints return empty response
-    const contentType = response.headers.get('content-type');
+    const contentType = response.headers.get('content-type')
     if (contentType?.includes('application/json')) {
-      return response.json() as Promise<T>;
+      return response.json() as Promise<T>
     }
 
-    return {} as T;
+    return {} as T
   }
 
   /**
@@ -89,24 +89,24 @@ export class QQApiClient {
   async sendGroupMessage(
     groupOpenId: string,
     content: string,
-    options?: { eventId?: string; msgId?: string; msgSeq?: number },
+    options?: { eventId?: string; msgId?: string; msgSeq?: number }
   ): Promise<QQSendMessageResponse> {
     const params: QQSendMessageParams = {
       content: this.truncateText(content),
       msg_type: QQ_MSG_TYPE.TEXT,
-    };
+    }
 
     if (options?.msgId) {
-      params.msg_id = options.msgId;
+      params.msg_id = options.msgId
     }
     if (options?.eventId) {
-      params.event_id = options.eventId;
+      params.event_id = options.eventId
     }
     if (options?.msgSeq !== undefined) {
-      params.msg_seq = options.msgSeq;
+      params.msg_seq = options.msgSeq
     }
 
-    return this.call<QQSendMessageResponse>('POST', `/v2/groups/${groupOpenId}/messages`, params);
+    return this.call<QQSendMessageResponse>('POST', `/v2/groups/${groupOpenId}/messages`, params)
   }
 
   /**
@@ -115,21 +115,21 @@ export class QQApiClient {
   async sendGuildMessage(
     channelId: string,
     content: string,
-    options?: { eventId?: string; msgId?: string },
+    options?: { eventId?: string; msgId?: string }
   ): Promise<QQSendMessageResponse> {
     const params: QQSendMessageParams = {
       content: this.truncateText(content),
       msg_type: QQ_MSG_TYPE.TEXT,
-    };
+    }
 
     if (options?.msgId) {
-      params.msg_id = options.msgId;
+      params.msg_id = options.msgId
     }
     if (options?.eventId) {
-      params.event_id = options.eventId;
+      params.event_id = options.eventId
     }
 
-    return this.call<QQSendMessageResponse>('POST', `/channels/${channelId}/messages`, params);
+    return this.call<QQSendMessageResponse>('POST', `/channels/${channelId}/messages`, params)
   }
 
   /**
@@ -138,24 +138,24 @@ export class QQApiClient {
   async sendC2CMessage(
     openId: string,
     content: string,
-    options?: { eventId?: string; msgId?: string; msgSeq?: number },
+    options?: { eventId?: string; msgId?: string; msgSeq?: number }
   ): Promise<QQSendMessageResponse> {
     const params: QQSendMessageParams = {
       content: this.truncateText(content),
       msg_type: QQ_MSG_TYPE.TEXT,
-    };
+    }
 
     if (options?.msgId) {
-      params.msg_id = options.msgId;
+      params.msg_id = options.msgId
     }
     if (options?.eventId) {
-      params.event_id = options.eventId;
+      params.event_id = options.eventId
     }
     if (options?.msgSeq !== undefined) {
-      params.msg_seq = options.msgSeq;
+      params.msg_seq = options.msgSeq
     }
 
-    return this.call<QQSendMessageResponse>('POST', `/v2/users/${openId}/messages`, params);
+    return this.call<QQSendMessageResponse>('POST', `/v2/users/${openId}/messages`, params)
   }
 
   /**
@@ -164,21 +164,21 @@ export class QQApiClient {
   async sendDmsMessage(
     guildId: string,
     content: string,
-    options?: { eventId?: string; msgId?: string },
+    options?: { eventId?: string; msgId?: string }
   ): Promise<QQSendMessageResponse> {
     const params: QQSendMessageParams = {
       content: this.truncateText(content),
       msg_type: QQ_MSG_TYPE.TEXT,
-    };
+    }
 
     if (options?.msgId) {
-      params.msg_id = options.msgId;
+      params.msg_id = options.msgId
     }
     if (options?.eventId) {
-      params.event_id = options.eventId;
+      params.event_id = options.eventId
     }
 
-    return this.call<QQSendMessageResponse>('POST', `/dms/${guildId}/messages`, params);
+    return this.call<QQSendMessageResponse>('POST', `/dms/${guildId}/messages`, params)
   }
 
   // ==================== Rich media (openplatform) ====================
@@ -196,13 +196,13 @@ export class QQApiClient {
   async uploadGroupRichMedia(
     groupOpenId: string,
     fileType: 1 | 2 | 3 | 4,
-    url: string,
+    url: string
   ): Promise<{ file_info: string; ttl?: number }> {
-    return this.call<{ file_info: string; ttl?: number }>(
-      'POST',
-      `/v2/groups/${groupOpenId}/files`,
-      { file_type: fileType, srv_send_msg: false, url },
-    );
+    return this.call<{ file_info: string; ttl?: number }>('POST', `/v2/groups/${groupOpenId}/files`, {
+      file_type: fileType,
+      srv_send_msg: false,
+      url,
+    })
   }
 
   /**
@@ -212,13 +212,13 @@ export class QQApiClient {
   async uploadC2CRichMedia(
     openId: string,
     fileType: 1 | 2 | 3 | 4,
-    url: string,
+    url: string
   ): Promise<{ file_info: string; ttl?: number }> {
     return this.call<{ file_info: string; ttl?: number }>('POST', `/v2/users/${openId}/files`, {
       file_type: fileType,
       srv_send_msg: false,
       url,
-    });
+    })
   }
 
   /**
@@ -230,41 +230,41 @@ export class QQApiClient {
   async sendGroupMedia(
     groupOpenId: string,
     fileInfo: string,
-    options?: { eventId?: string; msgId?: string; msgSeq?: number },
+    options?: { eventId?: string; msgId?: string; msgSeq?: number }
   ): Promise<QQSendMessageResponse> {
     const params: QQSendMessageParams = {
       content: ' ',
       media: { file_info: fileInfo },
       msg_type: QQ_MSG_TYPE.MEDIA,
-    };
-    if (options?.msgId) params.msg_id = options.msgId;
-    if (options?.eventId) params.event_id = options.eventId;
-    if (options?.msgSeq !== undefined) params.msg_seq = options.msgSeq;
-    return this.call<QQSendMessageResponse>('POST', `/v2/groups/${groupOpenId}/messages`, params);
+    }
+    if (options?.msgId) params.msg_id = options.msgId
+    if (options?.eventId) params.event_id = options.eventId
+    if (options?.msgSeq !== undefined) params.msg_seq = options.msgSeq
+    return this.call<QQSendMessageResponse>('POST', `/v2/groups/${groupOpenId}/messages`, params)
   }
 
   /** C2C counterpart of `sendGroupMedia`. */
   async sendC2CMedia(
     openId: string,
     fileInfo: string,
-    options?: { eventId?: string; msgId?: string; msgSeq?: number },
+    options?: { eventId?: string; msgId?: string; msgSeq?: number }
   ): Promise<QQSendMessageResponse> {
     const params: QQSendMessageParams = {
       content: ' ',
       media: { file_info: fileInfo },
       msg_type: QQ_MSG_TYPE.MEDIA,
-    };
-    if (options?.msgId) params.msg_id = options.msgId;
-    if (options?.eventId) params.event_id = options.eventId;
-    if (options?.msgSeq !== undefined) params.msg_seq = options.msgSeq;
-    return this.call<QQSendMessageResponse>('POST', `/v2/users/${openId}/messages`, params);
+    }
+    if (options?.msgId) params.msg_id = options.msgId
+    if (options?.eventId) params.event_id = options.eventId
+    if (options?.msgSeq !== undefined) params.msg_seq = options.msgSeq
+    return this.call<QQSendMessageResponse>('POST', `/v2/users/${openId}/messages`, params)
   }
 
   /**
    * Get the WebSocket gateway URL for establishing a persistent connection.
    */
   async getGatewayUrl(): Promise<QQGatewayUrlResponse> {
-    return this.call<QQGatewayUrlResponse>('GET', '/gateway');
+    return this.call<QQGatewayUrlResponse>('GET', '/gateway')
   }
 
   /**
@@ -272,20 +272,17 @@ export class QQApiClient {
    */
   async getBotInfo(): Promise<{ avatar: string; id: string; username: string } | null> {
     try {
-      const data = await this.call<{ avatar: string; id: string; username: string }>(
-        'GET',
-        '/users/@me',
-      );
-      return data;
+      const data = await this.call<{ avatar: string; id: string; username: string }>('GET', '/users/@me')
+      return data
     } catch {
-      return null;
+      return null
     }
   }
 
   private truncateText(text: string): string {
     if (text.length > MAX_TEXT_LENGTH) {
-      return text.slice(0, MAX_TEXT_LENGTH - 3) + '...';
+      return text.slice(0, MAX_TEXT_LENGTH - 3) + '...'
     }
-    return text;
+    return text
   }
 }

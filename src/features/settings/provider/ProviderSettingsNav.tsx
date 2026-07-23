@@ -49,10 +49,7 @@ const ProviderNavItem = memo<{ id: ProviderId; active: boolean }>(({ id, active 
   const meta = getSettingsProviderMeta(id)
 
   return (
-    <Link
-      href={`/settings/provider/${id}`}
-      style={{ color: 'inherit', textDecoration: 'none' }}
-    >
+    <Link href={`/settings/provider/${id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
       <NavItem
         active={active}
         clickable
@@ -87,10 +84,7 @@ const ProviderSettingsNav = memo(() => {
 
     return SETTINGS_PROVIDER_IDS.filter((id) => {
       const meta = getSettingsProviderMeta(id)
-      return (
-        meta.name.toLowerCase().includes(q) ||
-        meta.identifier.toLowerCase().includes(q)
-      )
+      return meta.name.toLowerCase().includes(q) || meta.identifier.toLowerCase().includes(q)
     })
   }, [keyword])
 
@@ -103,14 +97,7 @@ const ProviderSettingsNav = memo(() => {
         <Input
           allowClear
           placeholder='搜索服务商'
-          prefix={
-            <Icon
-              color={cssVar.colorTextDescription}
-              icon={Search}
-              size={14}
-              style={{ marginInlineEnd: 4 }}
-            />
-          }
+          prefix={<Icon color={cssVar.colorTextDescription} icon={Search} size={14} style={{ marginInlineEnd: 4 }} />}
           value={keyword}
           variant='borderless'
           onChange={(e) => setKeyword(e.target.value)}
@@ -118,10 +105,7 @@ const ProviderSettingsNav = memo(() => {
       </div>
       <ScrollShadow size={2} style={{ flex: 1, minHeight: 0, width: '100%' }}>
         <Flex vertical gap={4} style={{ paddingBlock: '0 32px', paddingInline: 4 }}>
-          <Link
-            href='/settings/provider/all'
-            style={{ color: 'inherit', textDecoration: 'none' }}
-          >
+          <Link href='/settings/provider/all' style={{ color: 'inherit', textDecoration: 'none' }}>
             <NavItem active={isAllActive} clickable icon={LayoutGrid} title='全部' />
           </Link>
           <div className={styles.groupTitle}>
@@ -131,9 +115,7 @@ const ProviderSettingsNav = memo(() => {
           </div>
           <Flex vertical gap={1}>
             {enabledIds.length > 0 ? (
-              enabledIds.map((id) => (
-                <ProviderNavItem active={activeId === id} id={id} key={id} />
-              ))
+              enabledIds.map((id) => <ProviderNavItem active={activeId === id} id={id} key={id} />)
             ) : (
               <Typography.Text type='secondary' style={{ fontSize: 12, paddingBlock: 4, paddingInline: 12 }}>
                 暂无
@@ -147,9 +129,7 @@ const ProviderSettingsNav = memo(() => {
           </div>
           <Flex vertical gap={1}>
             {disabledIds.length > 0 ? (
-              disabledIds.map((id) => (
-                <ProviderNavItem active={activeId === id} id={id} key={id} />
-              ))
+              disabledIds.map((id) => <ProviderNavItem active={activeId === id} id={id} key={id} />)
             ) : (
               <Typography.Text type='secondary' style={{ fontSize: 12, paddingBlock: 4, paddingInline: 12 }}>
                 暂无

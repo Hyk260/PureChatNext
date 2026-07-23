@@ -82,11 +82,7 @@ const Checker = memo<CheckerProps>(({ provider }) => {
         setPass(false)
         setError({
           body: json.error?.body ?? json,
-          message:
-            json.error?.message ||
-            json.cause ||
-            json.message ||
-            '连通性检查失败',
+          message: json.error?.message || json.cause || json.message || '连通性检查失败',
         })
         return
       }
@@ -127,11 +123,7 @@ const Checker = memo<CheckerProps>(({ provider }) => {
           }}
         />
         <Button
-          icon={
-            pass ? (
-              <CheckCircleFilled style={{ color: cssVar.colorSuccess }} />
-            ) : undefined
-          }
+          icon={pass ? <CheckCircleFilled style={{ color: cssVar.colorSuccess }} /> : undefined}
           loading={loading}
           style={
             pass
@@ -155,12 +147,7 @@ const Checker = memo<CheckerProps>(({ provider }) => {
           action={
             error.body ? (
               <Flex vertical style={{ paddingBlock: 8, paddingInline: 16 }}>
-                <Highlighter
-                  actionIconSize='small'
-                  language='json'
-                  variant='borderless'
-                  wrap
-                >
+                <Highlighter actionIconSize='small' language='json' variant='borderless' wrap>
                   {JSON.stringify(error.body, null, 2)}
                 </Highlighter>
               </Flex>

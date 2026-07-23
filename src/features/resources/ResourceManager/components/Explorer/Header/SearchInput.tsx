@@ -49,7 +49,7 @@ const SearchInput = memo(() => {
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') handleCollapse()
     },
-    [handleCollapse],
+    [handleCollapse]
   )
 
   return (
@@ -70,19 +70,13 @@ const SearchInput = memo(() => {
           size='small'
           style={{ width: 200 }}
           value={localQuery}
-          suffix={
-            localQuery ? (
-              <XIcon size={14} style={{ cursor: 'pointer' }} onClick={handleCollapse} />
-            ) : undefined
-          }
+          suffix={localQuery ? <XIcon size={14} style={{ cursor: 'pointer' }} onClick={handleCollapse} /> : undefined}
           onBlur={handleBlur}
           onChange={(e) => setLocalQuery(e.target.value)}
           onKeyDown={handleKeyDown}
         />
       </div>
-      {showIcon && (
-        <ActionIcon icon={SearchIcon} style={{ marginRight: 4 }} onClick={handleExpand} />
-      )}
+      {showIcon && <ActionIcon icon={SearchIcon} style={{ marginRight: 4 }} onClick={handleExpand} />}
     </>
   )
 })

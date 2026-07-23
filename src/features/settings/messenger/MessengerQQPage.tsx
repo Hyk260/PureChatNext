@@ -10,14 +10,7 @@ import { fetchAgents } from '@/features/home/agentApi'
 import { getMessengerPlatform } from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
-import {
-  bindQQ,
-  fetchQQStatus,
-  type QQConnectionMode,
-  type QQStatus,
-  unbindQQ,
-  updateQQAgent,
-} from './qqApi'
+import { bindQQ, fetchQQStatus, type QQConnectionMode, type QQStatus, unbindQQ, updateQQAgent } from './qqApi'
 
 function formatActiveAt(value: string) {
   return new Date(value).toLocaleString('zh-CN', {
@@ -112,7 +105,7 @@ const MessengerQQPage = memo(() => {
         message.error(error instanceof Error ? error.message : '更新失败')
       }
     },
-    [message, refreshStatus, status],
+    [message, refreshStatus, status]
   )
 
   const handleDisconnect = useCallback(() => {
@@ -138,8 +131,8 @@ const MessengerQQPage = memo(() => {
 
   if (loading) {
     return (
-      <MessengerDetailShell platform="qq" platformMeta={platformMeta}>
-        <Flex vertical align="center" justify="center" style={{ minHeight: 160 }}>
+      <MessengerDetailShell platform='qq' platformMeta={platformMeta}>
+        <Flex vertical align='center' justify='center' style={{ minHeight: 160 }}>
           <Spin />
         </Flex>
       </MessengerDetailShell>
@@ -150,7 +143,7 @@ const MessengerQQPage = memo(() => {
   const showConnect = !connected
 
   const headerAction = showConnect ? (
-    <Button loading={binding} type="primary" onClick={() => void handleBind()}>
+    <Button loading={binding} type='primary' onClick={() => void handleBind()}>
       连接
     </Button>
   ) : (
@@ -160,14 +153,14 @@ const MessengerQQPage = memo(() => {
   )
 
   return (
-    <MessengerDetailShell headerAction={headerAction} platform="qq" platformMeta={platformMeta}>
+    <MessengerDetailShell headerAction={headerAction} platform='qq' platformMeta={platformMeta}>
       <Flex vertical gap={12}>
         <Typography.Text strong style={{ fontSize: 15 }}>
           连接 QQ
         </Typography.Text>
 
         <Flex vertical gap={8}>
-          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+          <Typography.Text type='secondary' style={{ fontSize: 13 }}>
             绑定助手
           </Typography.Text>
           <Select
@@ -181,40 +174,40 @@ const MessengerQQPage = memo(() => {
         {showConnect ? (
           <>
             <Flex vertical gap={8}>
-              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              <Typography.Text type='secondary' style={{ fontSize: 13 }}>
                 App ID
               </Typography.Text>
               <Input
-                placeholder="来自 q.qq.com 开发设置"
+                placeholder='来自 q.qq.com 开发设置'
                 style={{ maxWidth: 420 }}
                 value={appId}
                 onChange={(e) => setAppId(e.target.value)}
               />
             </Flex>
             <Flex vertical gap={8}>
-              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              <Typography.Text type='secondary' style={{ fontSize: 13 }}>
                 App Secret
               </Typography.Text>
               <Input.Password
-                placeholder="请妥善保管，不会回显已保存的密钥"
+                placeholder='请妥善保管，不会回显已保存的密钥'
                 style={{ maxWidth: 420 }}
                 value={appSecret}
                 onChange={(e) => setAppSecret(e.target.value)}
               />
             </Flex>
             <Flex vertical gap={8}>
-              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              <Typography.Text type='secondary' style={{ fontSize: 13 }}>
                 连接模式
               </Typography.Text>
               <Radio.Group
                 value={connectionMode}
                 onChange={(e) => setConnectionMode(e.target.value as QQConnectionMode)}
               >
-                <Radio.Button value="websocket">WebSocket（推荐）</Radio.Button>
-                <Radio.Button value="webhook">Webhook</Radio.Button>
+                <Radio.Button value='websocket'>WebSocket（推荐）</Radio.Button>
+                <Radio.Button value='webhook'>Webhook</Radio.Button>
               </Radio.Group>
             </Flex>
-            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+            <Typography.Text type='secondary' style={{ fontSize: 13 }}>
               {connectionMode === 'websocket'
                 ? '保存后请运行 pnpm qq:gateway 维护 WebSocket 连接。'
                 : '保存后将显示回调地址，请粘贴到 QQ 开放平台「回调配置」。'}
@@ -224,8 +217,8 @@ const MessengerQQPage = memo(() => {
           <>
             <Alert
               showIcon
-              type="success"
-              title="已连接 QQ"
+              type='success'
+              title='已连接 QQ'
               description={
                 status?.lastActiveAt
                   ? `最近活动：${formatActiveAt(status.lastActiveAt)} · 模式：${status.connectionMode ?? 'websocket'}`
@@ -235,8 +228,8 @@ const MessengerQQPage = memo(() => {
             {status?.connectionMode === 'webhook' && status.webhookUrl && (
               <Alert
                 showIcon
-                type="info"
-                title="Webhook 回调地址"
+                type='info'
+                title='Webhook 回调地址'
                 description={
                   <Typography.Text copyable style={{ fontSize: 13 }}>
                     {status.webhookUrl}
@@ -245,7 +238,7 @@ const MessengerQQPage = memo(() => {
               />
             )}
             {status?.connectionMode === 'websocket' && (
-              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              <Typography.Text type='secondary' style={{ fontSize: 13 }}>
                 自托管请保持运行：pnpm qq:gateway
               </Typography.Text>
             )}

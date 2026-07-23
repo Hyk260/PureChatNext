@@ -1,15 +1,15 @@
-import { createEnv } from '@t3-oss/env-core';
-import { z } from 'zod';
+import { createEnv } from '@t3-oss/env-core'
+import { z } from 'zod'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface ProcessEnv {
-      IM_SDK_APPID?: string;
-      IM_SDK_KEY?: string;
-      IM_ADMIN_ISTRATOR?: string;
-      IM_SERVER_BASE_URL?: string;
-      IM_REQUEST_TIMEOUT?: string;
+      IM_SDK_APPID?: string
+      IM_SDK_KEY?: string
+      IM_ADMIN_ISTRATOR?: string
+      IM_SERVER_BASE_URL?: string
+      IM_REQUEST_TIMEOUT?: string
     }
   }
 }
@@ -30,7 +30,7 @@ export const getIMConfig = () => {
       IM_SERVER_BASE_URL: process.env.IM_SERVER_BASE_URL,
       IM_REQUEST_TIMEOUT: process.env.IM_REQUEST_TIMEOUT,
     },
-  });
-};
+  })
+}
 
-export const imEnv = getIMConfig();
+export const imEnv = getIMConfig()

@@ -36,7 +36,7 @@ const MessageMarkdown = ({ text, className, isStreaming = false }: MessageMarkdo
       fullFeaturedCodeBlock: true,
       variant: 'chat',
     }),
-    [],
+    []
   )
 
   // Live text during stream — Markdown/Streamdown is too heavy and can loop.

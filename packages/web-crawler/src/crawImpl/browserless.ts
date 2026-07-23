@@ -1,40 +1,39 @@
-import qs from 'query-string';
-import urlJoin from 'url-join';
+import qs from 'query-string'
+import urlJoin from 'url-join'
 
-import { type CrawlImpl, type CrawlSuccessResult } from '../type';
-import { PageNotFoundError, toFetchError } from '../utils/errorType';
-import { htmlToMarkdown } from '../utils/htmlToMarkdown';
-import { createHTTPStatusError } from '../utils/response';
-import { DEFAULT_TIMEOUT, withTimeout } from '../utils/withTimeout';
+import { type CrawlImpl, type CrawlSuccessResult } from '../type'
+import { PageNotFoundError, toFetchError } from '../utils/errorType'
+import { htmlToMarkdown } from '../utils/htmlToMarkdown'
+import { createHTTPStatusError } from '../utils/response'
+import { DEFAULT_TIMEOUT, withTimeout } from '../utils/withTimeout'
 
-const BASE_URL = process.env.BROWSERLESS_URL ?? 'https://chrome.browserless.io';
+const BASE_URL = process.env.BROWSERLESS_URL ?? 'https://chrome.browserless.io'
 // Allowed file types: html, css, js, json, xml, webmanifest, txt, md
-const REJECT_REQUEST_PATTERN =
-  '.*\\.(?!(html|css|js|json|xml|webmanifest|txt|md)(\\?|#|$))[\\w-]+(?:[\\?#].*)?$';
-const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN;
+const REJECT_REQUEST_PATTERN = '.*\\.(?!(html|css|js|json|xml|webmanifest|txt|md)(\\?|#|$))[\\w-]+(?:[\\?#].*)?$'
+const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN
 
-const BROWSERLESS_BLOCK_ADS = process.env.BROWSERLESS_BLOCK_ADS === '1';
-const BROWSERLESS_STEALTH_MODE = process.env.BROWSERLESS_STEALTH_MODE === '1';
+const BROWSERLESS_BLOCK_ADS = process.env.BROWSERLESS_BLOCK_ADS === '1'
+const BROWSERLESS_STEALTH_MODE = process.env.BROWSERLESS_STEALTH_MODE === '1'
 
 class BrowserlessInitError extends Error {
   constructor() {
-    super('`BROWSERLESS_URL` or `BROWSERLESS_TOKEN` are required');
-    this.name = 'BrowserlessInitError';
+    super('`BROWSERLESS_URL` or `BROWSERLESS_TOKEN` are required')
+    this.name = 'BrowserlessInitError'
   }
 }
 
 export const browserless: CrawlImpl = async (url, { filterOptions }) => {
   if (!process.env.BROWSERLESS_URL && !process.env.BROWSERLESS_TOKEN) {
-    throw new BrowserlessInitError();
+    throw new BrowserlessInitError()
   }
 
   const input = {
     gotoOptions: { waitUntil: 'networkidle2' },
     rejectRequestPattern: [REJECT_REQUEST_PATTERN],
     url,
-  };
+  }
 
-  let res: Response;
+  let res: Response
 
   try {
     res = await withTimeout(
@@ -55,24 +54,24 @@ export const browserless: CrawlImpl = async (url, { filterOptions }) => {
             },
             method: 'POST',
             signal,
-          },
+          }
         ),
-      DEFAULT_TIMEOUT,
-    );
+      DEFAULT_TIMEOUT
+    )
   } catch (e) {
-    throw toFetchError(e);
+    throw toFetchError(e)
   }
 
   if (!res.ok) {
     if (res.status === 404) {
-      throw new PageNotFoundError(res.statusText);
+      throw new PageNotFoundError(res.statusText)
     }
 
-    throw await createHTTPStatusError(res, 'Browserless');
+    throw await createHTTPStatusError(res, 'Browserless')
   }
 
-  const html = await res.text();
-  const result = htmlToMarkdown(html, { filterOptions, url });
+  const html = await res.text()
+  const result = htmlToMarkdown(html, { filterOptions, url })
 
   if (
     !!result.content &&
@@ -89,8 +88,8 @@ export const browserless: CrawlImpl = async (url, { filterOptions }) => {
       siteName: result?.siteName,
       title: result?.title,
       url,
-    } satisfies CrawlSuccessResult;
+    } satisfies CrawlSuccessResult
   }
 
-  return;
-};
+  return
+}

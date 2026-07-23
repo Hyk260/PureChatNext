@@ -15,11 +15,7 @@ function memoryKey(bindingId: string, fromUserId: string) {
   return `${bindingId}:${fromUserId}`
 }
 
-export async function setContextToken(
-  bindingId: string,
-  fromUserId: string,
-  contextToken: string,
-): Promise<void> {
+export async function setContextToken(bindingId: string, fromUserId: string, contextToken: string): Promise<void> {
   const key = RedisKeys.wechat.contextToken(bindingId, fromUserId)
   const redis = await getWechatRedis()
 
@@ -34,10 +30,7 @@ export async function setContextToken(
   })
 }
 
-export async function getContextToken(
-  bindingId: string,
-  fromUserId: string,
-): Promise<string | null> {
+export async function getContextToken(bindingId: string, fromUserId: string): Promise<string | null> {
   const key = RedisKeys.wechat.contextToken(bindingId, fromUserId)
   const redis = await getWechatRedis()
 

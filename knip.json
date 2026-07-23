@@ -1,0 +1,26 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema/knip.json",
+  "workspaces": {
+    "packages/*": {
+      "entry": ["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}", "test/**/*.{ts,tsx}", "__tests__/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "test/**/*.{ts,tsx}", "__tests__/**/*.{ts,tsx}"]
+    }
+  },
+  "entry": [
+    "src/spa/entry.web.tsx",
+    "src/spa/router/webRouter.config.tsx",
+    "src/app/api/**/route.ts",
+    "scripts/**/*.{ts,mts,mjs,js}",
+    "next.config.ts",
+    "vite.config.ts",
+    "drizzle.config.ts",
+    "vitest.config.ts",
+    "eslint.config.js",
+    "stylelint.config.mjs",
+    "remark.config.mjs"
+  ],
+  "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}", "scripts/**/*.{ts,mts,mjs}"],
+  "ignore": ["src/app/spa/spaHtmlTemplate.generated.ts", "scripts/lib/**"],
+  "ignoreBinaries": ["bun", "drizzle-kit", "vite", "next", "tsx", "vitest", "pino-pretty"],
+  "ignoreDependencies": ["react-scan", "@testing-library/react", "raw-loader", "code-inspector-plugin"]
+}

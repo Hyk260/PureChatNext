@@ -27,7 +27,7 @@ const ActionIconWithChevron = memo<ActionIconWithChevronProps>(
         </Flex>
       </Button>
     )
-  },
+  }
 )
 
 ActionIconWithChevron.displayName = 'ActionIconWithChevron'

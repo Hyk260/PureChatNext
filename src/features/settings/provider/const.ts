@@ -1,12 +1,7 @@
 import { COMMUNITY_PROVIDERS } from '@/const/community/providers'
 import { HOME_MODELS } from '@/const/home/models'
 
-import {
-  type ProviderConfig,
-  type ProviderConfigs,
-  type ProviderId,
-  type ProviderModelItem,
-} from './types'
+import { type ProviderConfig, type ProviderConfigs, type ProviderId, type ProviderModelItem } from './types'
 
 export const SETTINGS_PROVIDER_IDS = ['openai', 'deepseek'] as const satisfies readonly ProviderId[]
 
@@ -51,9 +46,7 @@ export const DEFAULT_PROVIDER_CONFIGS: ProviderConfigs = {
   openai: createDefaultProviderConfig('openai'),
 }
 
-export const SETTINGS_PROVIDERS = COMMUNITY_PROVIDERS.filter((provider) =>
-  isSettingsProviderId(provider.identifier),
-)
+export const SETTINGS_PROVIDERS = COMMUNITY_PROVIDERS.filter((provider) => isSettingsProviderId(provider.identifier))
 
 export const getSettingsProviderMeta = (id: ProviderId) => {
   const meta = SETTINGS_PROVIDERS.find((provider) => provider.identifier === id)

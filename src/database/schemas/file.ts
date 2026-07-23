@@ -31,7 +31,7 @@ export const globalFiles = pgTable(
     createdAt: createdAt(),
     accessedAt: accessedAt(),
   },
-  (t) => [index('global_files_creator_idx').on(t.creator)],
+  (t) => [index('global_files_creator_idx').on(t.creator)]
 )
 
 export type NewGlobalFile = typeof globalFiles.$inferInsert
@@ -58,7 +58,7 @@ export const knowledgeBases = pgTable(
   (t) => [
     uniqueIndex('knowledge_bases_client_id_user_id_unique').on(t.clientId, t.userId),
     index('knowledge_bases_user_id_idx').on(t.userId),
-  ],
+  ]
 )
 
 export type NewKnowledgeBase = typeof knowledgeBases.$inferInsert
@@ -105,7 +105,7 @@ export const documents = pgTable(
     index('documents_knowledge_base_id_idx').on(table.knowledgeBaseId),
     uniqueIndex('documents_client_id_user_id_unique').on(table.clientId, table.userId),
     uniqueIndex('documents_slug_user_id_unique').on(table.slug, table.userId),
-  ],
+  ]
 )
 
 export type NewDocument = typeof documents.$inferInsert
@@ -140,7 +140,7 @@ export const files = pgTable(
     userIdIdx: index('files_user_id_idx').on(table.userId),
     parentIdIdx: index('files_parent_id_idx').on(table.parentId),
     clientIdUnique: uniqueIndex('files_client_id_user_id_unique').on(table.clientId, table.userId),
-  }),
+  })
 )
 
 export type NewFile = typeof files.$inferInsert
@@ -165,5 +165,5 @@ export const knowledgeBaseFiles = pgTable(
     index('knowledge_base_files_kb_id_idx').on(t.knowledgeBaseId),
     index('knowledge_base_files_user_id_idx').on(t.userId),
     index('knowledge_base_files_file_id_idx').on(t.fileId),
-  ],
+  ]
 )

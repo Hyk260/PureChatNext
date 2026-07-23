@@ -29,9 +29,7 @@ export type ResourceManagerMode = 'editor' | 'explorer' | 'page'
 
 const ResourceManager = memo(() => {
   useInitFileCheck()
-  const { libraryId, mode } = useResourceManagerStore(
-    useShallow((s) => ({ libraryId: s.libraryId, mode: s.mode })),
-  )
+  const { libraryId, mode } = useResourceManagerStore(useShallow((s) => ({ libraryId: s.libraryId, mode: s.mode })))
   const { currentFolderSlug } = useFolderPath()
 
   const handleUploadFiles = useCallback(
@@ -44,7 +42,7 @@ const ResourceManager = memo(() => {
       }
       revalidateResources()
     },
-    [currentFolderSlug, libraryId],
+    [currentFolderSlug, libraryId]
   )
 
   return (

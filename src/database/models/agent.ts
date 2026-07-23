@@ -1,12 +1,7 @@
 import { and, asc, desc, eq, isNull, or, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import {
-  agents,
-  PURE_AI_AGENT_SEED,
-  type AgentItem,
-  type NewAgent,
-} from '../schemas/agent'
+import { agents, PURE_AI_AGENT_SEED, type AgentItem, type NewAgent } from '../schemas/agent'
 import { chatTopics } from '../schemas/chat'
 import { type ChatDatabase } from '../type'
 import { randomSlug } from '../utils/idGenerator'
@@ -47,7 +42,7 @@ export type AgentUpdateInput = Partial<
 export class AgentDeleteError extends Error {
   constructor(
     message: string,
-    public readonly code: 'builtin' | 'not_found' | 'has_topics',
+    public readonly code: 'builtin' | 'not_found' | 'has_topics'
   ) {
     super(message)
     this.name = 'AgentDeleteError'
@@ -63,8 +58,7 @@ export class AgentModel {
     this.db = db
   }
 
-  private visibleWhere = () =>
-    or(isNull(agents.userId), eq(agents.userId, this.userId))
+  private visibleWhere = () => or(isNull(agents.userId), eq(agents.userId, this.userId))
 
   ensureBuiltin = async () => {
     await this.db.insert(agents).values(PURE_AI_AGENT_SEED).onConflictDoNothing({
@@ -76,12 +70,7 @@ export class AgentModel {
     await this.ensureBuiltin()
     return this.db.query.agents.findMany({
       where: this.visibleWhere(),
-      orderBy: [
-        desc(agents.isBuiltin),
-        desc(agents.pinned),
-        asc(agents.sort),
-        desc(agents.updatedAt),
-      ],
+      orderBy: [desc(agents.isBuiltin), desc(agents.pinned), asc(agents.sort), desc(agents.updatedAt)],
     })
   }
 
@@ -95,10 +84,7 @@ export class AgentModel {
     // 同一用户从市场重复添加时复用已有行
     if (params.marketIdentifier) {
       const existing = await this.db.query.agents.findFirst({
-        where: and(
-          eq(agents.userId, this.userId),
-          eq(agents.marketIdentifier, params.marketIdentifier),
-        ),
+        where: and(eq(agents.userId, this.userId), eq(agents.marketIdentifier, params.marketIdentifier)),
       })
       if (existing) return existing
     }
@@ -190,8 +176,6 @@ export class AgentModel {
       throw new AgentDeleteError('Agent has topics', 'has_topics')
     }
 
-    await this.db
-      .delete(agents)
-      .where(and(eq(agents.id, id), eq(agents.userId, this.userId)))
+    await this.db.delete(agents).where(and(eq(agents.id, id), eq(agents.userId, this.userId)))
   }
 }

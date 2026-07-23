@@ -5,14 +5,14 @@
  * @returns Array of enabled provider names
  */
 export const parseSSOProviders = (providersEnv?: string): string[] => {
-  const providers = providersEnv?.trim();
+  const providers = providersEnv?.trim()
 
   if (!providers) {
-    return [];
+    return []
   }
 
   return providers
     .split(/[,，]/)
     .map((p) => p.trim())
-    .filter(Boolean);
-};
+    .filter(Boolean)
+}

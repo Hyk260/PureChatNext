@@ -52,60 +52,53 @@ interface ColumnResizeHandleProps {
   onResize: (width: number) => void
 }
 
-const ColumnResizeHandle = memo<ColumnResizeHandleProps>(
-  ({ currentWidth, minWidth, maxWidth, onResize }) => {
-    const [isDragging, setIsDragging] = useState(false)
-    const startXRef = useRef(0)
-    const startWidthRef = useRef(0)
+const ColumnResizeHandle = memo<ColumnResizeHandleProps>(({ currentWidth, minWidth, maxWidth, onResize }) => {
+  const [isDragging, setIsDragging] = useState(false)
+  const startXRef = useRef(0)
+  const startWidthRef = useRef(0)
 
-    const handleMouseMove = useCallback(
-      (e: MouseEvent) => {
-        const delta = e.clientX - startXRef.current
-        const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + delta))
-        onResize(newWidth)
-      },
-      [minWidth, maxWidth, onResize],
-    )
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      const delta = e.clientX - startXRef.current
+      const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + delta))
+      onResize(newWidth)
+    },
+    [minWidth, maxWidth, onResize]
+  )
 
-    const handleMouseUp = useCallback(() => {
-      setIsDragging(false)
-    }, [])
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+  }, [])
 
-    const handleMouseDown = useCallback(
-      (e: ReactMouseEvent<HTMLDivElement>) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setIsDragging(true)
-        startXRef.current = e.clientX
-        startWidthRef.current = currentWidth
-      },
-      [currentWidth],
-    )
+  const handleMouseDown = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setIsDragging(true)
+      startXRef.current = e.clientX
+      startWidthRef.current = currentWidth
+    },
+    [currentWidth]
+  )
 
-    useEffect(() => {
-      if (!isDragging) return
+  useEffect(() => {
+    if (!isDragging) return
 
-      document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mouseup', handleMouseUp)
-      document.body.style.userSelect = 'none'
-      document.body.style.cursor = 'col-resize'
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    document.body.style.userSelect = 'none'
+    document.body.style.cursor = 'col-resize'
 
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove)
-        document.removeEventListener('mouseup', handleMouseUp)
-        document.body.style.userSelect = ''
-        document.body.style.cursor = ''
-      }
-    }, [isDragging, handleMouseMove, handleMouseUp])
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp])
 
-    return (
-      <div
-        className={`${styles.handle} ${isDragging ? styles.handleDragging : ''}`}
-        onMouseDown={handleMouseDown}
-      />
-    )
-  },
-)
+  return <div className={`${styles.handle} ${isDragging ? styles.handleDragging : ''}`} onMouseDown={handleMouseDown} />
+})
 
 ColumnResizeHandle.displayName = 'ColumnResizeHandle'
 

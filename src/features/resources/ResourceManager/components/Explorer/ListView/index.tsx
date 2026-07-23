@@ -76,7 +76,7 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
       columnWidths: s.columnWidths,
       selectedFileIds: s.selectedFileIds,
       toggleSelectFile: s.toggleSelectFile,
-    })),
+    }))
   )
   const selected = selectedFileIds.includes(item.id)
   const isFolder = item.fileType === DOCUMENT_FOLDER_TYPE
@@ -86,7 +86,7 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
       e.stopPropagation()
       toggleSelectFile(item.id)
     },
-    [item.id, toggleSelectFile],
+    [item.id, toggleSelectFile]
   )
 
   const handleCheckboxPointerDown = useCallback((e: PointerEvent) => {
@@ -94,13 +94,14 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
   }, [])
 
   return (
-    <Flex align='center' className={[
-        styles.container,
-        index % 2 === 0 ? styles.evenRow : '',
-        selected ? styles.selected : '',
-      ]
+    <Flex
+      align='center'
+      className={[styles.container, index % 2 === 0 ? styles.evenRow : '', selected ? styles.selected : '']
         .filter(Boolean)
-        .join(' ')} onClick={() => onOpen(item)} style={{ height: 48, paddingInline: 8 }}>
+        .join(' ')}
+      onClick={() => onOpen(item)}
+      style={{ height: 48, paddingInline: 8 }}
+    >
       <Center
         height={40}
         style={{ cursor: 'pointer', paddingInline: 4 }}
@@ -109,11 +110,18 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
       >
         <Checkbox checked={selected} style={{ pointerEvents: 'none' }} />
       </Center>
-      <Flex align='center' className={styles.item} gap={8} style={{ flexShrink: 0,
+      <Flex
+        align='center'
+        className={styles.item}
+        gap={8}
+        style={{
+          flexShrink: 0,
           maxWidth: columnWidths.name,
           minWidth: columnWidths.name,
           paddingInline: 8,
-          width: columnWidths.name, }}>
+          width: columnWidths.name,
+        }}
+      >
         <FileIcon fileType={item.fileType} />
         <Typography.Text ellipsis style={{ color: cssVar.colorText, flex: 1, minWidth: 0 }}>
           {item.name}

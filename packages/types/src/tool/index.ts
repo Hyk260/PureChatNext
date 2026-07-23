@@ -1,2 +1,2 @@
 export * from './crawler'
-export * from './search';
+export * from './search'

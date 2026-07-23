@@ -8,10 +8,7 @@ import { describe, expect, it } from 'vitest'
  * Lightweight route smoke — asserts the SPA router config source lists
  * expected paths without importing the full React tree (avoids UI/emoji deps).
  */
-const configPath = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  'webRouter.config.tsx',
-)
+const configPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'webRouter.config.tsx')
 const source = readFileSync(configPath, 'utf-8')
 
 describe('webRouter.config smoke', () => {

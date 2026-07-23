@@ -61,7 +61,11 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
       <Flex vertical gap={6}>
         <Typography.Text style={{ fontWeight: 600 }}>{meta.name}</Typography.Text>
         {meta.description ? (
-          <Typography.Paragraph className={styles.desc} ellipsis={{ rows: 2 }} style={{ marginBottom: 0, fontSize: 13 }}>
+          <Typography.Paragraph
+            className={styles.desc}
+            ellipsis={{ rows: 2 }}
+            style={{ marginBottom: 0, fontSize: 13 }}
+          >
             {meta.description}
           </Typography.Paragraph>
         ) : null}

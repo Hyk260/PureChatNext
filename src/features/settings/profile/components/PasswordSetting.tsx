@@ -58,11 +58,11 @@ export function PasswordSetting({ email, hasCredentialAccount }: PasswordSetting
   return (
     <SettingRow
       action={
-        <Button loading={loading} onClick={handleReset} size="small">
+        <Button loading={loading} onClick={handleReset} size='small'>
           重置密码
         </Button>
       }
-      label="密码"
+      label='密码'
     />
   )
 }

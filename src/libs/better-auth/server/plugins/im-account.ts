@@ -11,11 +11,9 @@ function getImUserService() {
 
 function resolveHookUserProfile(user: Record<string, unknown>) {
   const nick =
-    (typeof user.name === 'string' ? user.name : '') ||
-    (typeof user.username === 'string' ? user.username : '')
+    (typeof user.name === 'string' ? user.name : '') || (typeof user.username === 'string' ? user.username : '')
   const avatar =
-    (typeof user.image === 'string' ? user.image : '') ||
-    (typeof user.avatar === 'string' ? user.avatar : '')
+    (typeof user.image === 'string' ? user.image : '') || (typeof user.avatar === 'string' ? user.avatar : '')
 
   return { avatar, nick }
 }
@@ -33,9 +31,7 @@ export const imAccountPlugin = () => ({
                 log('user create before: authId=%s', user.id)
 
                 const userId =
-                  typeof user.userId === 'string' && user.userId.trim() !== ''
-                    ? user.userId
-                    : generateCompactUuid()
+                  typeof user.userId === 'string' && user.userId.trim() !== '' ? user.userId : generateCompactUuid()
 
                 return {
                   data: {

@@ -1,28 +1,24 @@
-import {
-  type SearchParams,
-  type UniformSearchResponse,
-  type UniformSearchResult,
-} from '@pure/types';
-import debug from 'debug';
-import urlJoin from 'url-join';
+import { type SearchParams, type UniformSearchResponse, type UniformSearchResult } from '@pure/types'
+import debug from 'debug'
+import urlJoin from 'url-join'
 
-import { type SearchServiceImpl } from '../type';
-import { type TavilyResponse, type TavilySearchParameters } from './type';
+import { type SearchServiceImpl } from '../type'
+import { type TavilyResponse, type TavilySearchParameters } from './type'
 
-const log = debug('search:Tavily');
+const log = debug('search:Tavily')
 
 export class TavilyImpl implements SearchServiceImpl {
   private get apiKey(): string | undefined {
-    return process.env.TAVILY_API_KEY;
+    return process.env.TAVILY_API_KEY
   }
 
   private get baseUrl(): string {
-    return 'https://api.tavily.com';
+    return 'https://api.tavily.com'
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
-    log('Starting Tavily query with query: "%s", params: %o', query, params);
-    const endpoint = urlJoin(this.baseUrl, '/search');
+    log('Starting Tavily query with query: "%s", params: %o', query, params)
+    const endpoint = urlJoin(this.baseUrl, '/search')
 
     const defaultQueryParams: TavilySearchParameters = {
       include_answer: false,
@@ -32,77 +28,72 @@ export class TavilyImpl implements SearchServiceImpl {
       max_results: 15,
       query,
       search_depth: process.env.TAVILY_SEARCH_DEPTH || 'basic', // basic or advanced
-    };
+    }
 
     const body: TavilySearchParameters = {
       ...defaultQueryParams,
-      time_range:
-        params?.searchTimeRange && params.searchTimeRange !== 'anytime'
-          ? params.searchTimeRange
-          : undefined,
+      time_range: params?.searchTimeRange && params.searchTimeRange !== 'anytime' ? params.searchTimeRange : undefined,
       // Tavily only supports news and general types
       topic: params?.searchCategories?.find((cat) => ['news', 'general'].includes(cat)),
-    };
+    }
 
-    log('Constructed request body: %o', body);
+    log('Constructed request body: %o', body)
 
-    let response: Response;
-    const startAt = Date.now();
-    let costTime: number;
+    let response: Response
+    const startAt = Date.now()
+    let costTime: number
     try {
-      log('Sending request to endpoint: %s', endpoint);
+      log('Sending request to endpoint: %s', endpoint)
       response = await fetch(endpoint, {
         body: JSON.stringify(body),
         headers: {
-          'Authorization': this.apiKey ? `Bearer ${this.apiKey}` : '',
+          Authorization: this.apiKey ? `Bearer ${this.apiKey}` : '',
           'Content-Type': 'application/json',
         },
         method: 'POST',
-      });
-      log('Received response with status: %d', response.status);
-      costTime = Date.now() - startAt;
+      })
+      log('Received response with status: %d', response.status)
+      costTime = Date.now() - startAt
     } catch (error) {
-      log.extend('error')('Tavily fetch error: %o', error);
-      throw new Error('Failed to connect to Tavily.', { cause: error });
+      log.extend('error')('Tavily fetch error: %o', error)
+      throw new Error('Failed to connect to Tavily.', { cause: error })
     }
 
     if (!response.ok) {
-      const errorBody = await response.text();
+      const errorBody = await response.text()
       log.extend('error')(
         `Tavily request failed with status ${response.status}: %s`,
-        errorBody.length > 200 ? `${errorBody.slice(0, 200)}...` : errorBody,
-      );
-      throw new Error(`Tavily request failed: ${response.statusText}`, { cause: errorBody });
+        errorBody.length > 200 ? `${errorBody.slice(0, 200)}...` : errorBody
+      )
+      throw new Error(`Tavily request failed: ${response.statusText}`, { cause: errorBody })
     }
 
     try {
-      const tavilyResponse = (await response.json()) as TavilyResponse;
+      const tavilyResponse = (await response.json()) as TavilyResponse
 
-      log('Parsed Tavily response: %o', tavilyResponse);
+      log('Parsed Tavily response: %o', tavilyResponse)
 
-      const mappedResults = (tavilyResponse.results || []).map(
-        (result): UniformSearchResult => ({
-          category: body.topic || 'general', // Default category
-          content: result.content || '', // Prioritize content, fallback to snippet
-          engines: ['tavily'], // Use 'tavily' as the engine name
-          parsedUrl: result.url ? new URL(result.url).hostname : '', // Basic URL parsing
-          score: result.score || 0, // Default score to 0 if undefined
-          title: result.title || '',
-          url: result.url,
-        }),
-      );
+      const mappedResults = (tavilyResponse.results || []).map((result): UniformSearchResult => ({
+        category: body.topic || 'general', // Default category
+        content: result.content || '', // Prioritize content, fallback to snippet
+        engines: ['tavily'], // Use 'tavily' as the engine name
+        parsedUrl: result.url ? new URL(result.url).hostname : '', // Basic URL parsing
+        score: result.score || 0, // Default score to 0 if undefined
+        title: result.title || '',
+        url: result.url,
+      }))
 
-      log('Mapped %d results to SearchResult format', mappedResults.length);
+      log('Mapped %d results to SearchResult format', mappedResults.length)
 
       return {
         costTime,
         query,
         resultNumbers: mappedResults.length,
         results: mappedResults,
-      };
+      }
     } catch (error) {
-      log.extend('error')('Error parsing Tavily response: %o', error);
-      throw new Error('Failed to parse Tavily response.', { cause: error });
+      log.extend('error')('Error parsing Tavily response: %o', error)
+      throw new Error('Failed to parse Tavily response.', { cause: error })
     }
   }
 }

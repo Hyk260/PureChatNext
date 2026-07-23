@@ -1,9 +1,5 @@
 export { ActionIcon, type ActionIconProps, type ActionIconSize } from './ActionIcon'
-export {
-  ActionIconGroup,
-  type ActionIconGroupEvent,
-  type ActionIconGroupItemType,
-} from './ActionIconGroup'
+export { ActionIconGroup, type ActionIconGroupEvent, type ActionIconGroupItemType } from './ActionIconGroup'
 export { Accordion, AccordionItem } from './Accordion'
 export { Avatar, type AvatarGroupProps, type AvatarProps } from './Avatar'
 export { Block, type BlockProps, type BlockVariant } from './Block'
@@ -25,20 +21,6 @@ export { FileTypeIcon, Highlighter, Markdown, type MarkdownProps } from './Markd
 export { EditableText, SortableList } from './SortableList'
 export { ConfigProvider, ThemeProvider } from './ThemeProvider'
 export { copyToClipboard, stopPropagation } from './utils'
-export {
-  Icon,
-  calcIconSize,
-  type IconProps,
-  type IconSize,
-  type IconSizeConfig,
-  type IconSizeType,
-} from './Icon'
+export { Icon, calcIconSize, type IconProps, type IconSize, type IconSizeConfig, type IconSizeType } from './Icon'
 
-export {
-  Github,
-  ModelIcon,
-  ModelTag,
-  ProviderCombine,
-  ProviderIcon,
-  ProviderIconLucide,
-} from './icons'
+export { Github, ModelIcon, ModelTag, ProviderCombine, ProviderIcon, ProviderIconLucide } from './icons'

@@ -1,36 +1,36 @@
-import { generateUserSig } from "./signature";
-import { imEnv } from "@/envs/im";
+import { generateUserSig } from './signature'
+import { imEnv } from '@/envs/im'
 
-const { IM_SDK_APPID: sdkAppId, IM_ADMIN_ISTRATOR: administrator } = imEnv;
+const { IM_SDK_APPID: sdkAppId, IM_ADMIN_ISTRATOR: administrator } = imEnv
 
-let cachedSig = "";
-let cacheExpiration = 0;
+let cachedSig = ''
+let cacheExpiration = 0
 
 interface URLParams {
-  sdkappid: string;
-  identifier: string;
-  usersig: string;
-  random: number;
-  contenttype: string;
+  sdkappid: string
+  identifier: string
+  usersig: string
+  random: number
+  contenttype: string
 }
 
 export function generateRandomInt32(): number {
-  return Math.floor(Math.random() * 0x100000000);
+  return Math.floor(Math.random() * 0x100000000)
 }
 
 export function getUserSig(): string {
-  const now = Date.now();
+  const now = Date.now()
   if (cachedSig && cacheExpiration > now) {
-    return cachedSig;
+    return cachedSig
   }
-  cachedSig = generateUserSig({ identifier: administrator });
-  cacheExpiration = now + 60 * 60 * 1000;
-  return cachedSig;
+  cachedSig = generateUserSig({ identifier: administrator })
+  cacheExpiration = now + 60 * 60 * 1000
+  return cachedSig
 }
 
 export function buildURL(baseURL: string): string {
   if (!sdkAppId || !administrator) {
-    throw new Error("sdkAppId or administrator is not defined");
+    throw new Error('sdkAppId or administrator is not defined')
   }
 
   const params: URLParams = {
@@ -38,13 +38,13 @@ export function buildURL(baseURL: string): string {
     identifier: administrator,
     usersig: getUserSig(),
     random: generateRandomInt32(),
-    contenttype: "json",
-  };
+    contenttype: 'json',
+  }
 
-  const encode = (value: string | number) => encodeURIComponent(value);
+  const encode = (value: string | number) => encodeURIComponent(value)
   const query = Object.entries(params)
     .map(([key, value]) => `${encode(key)}=${encode(value)}`)
-    .join("&");
+    .join('&')
 
-  return `${baseURL}?${query}`;
+  return `${baseURL}?${query}`
 }

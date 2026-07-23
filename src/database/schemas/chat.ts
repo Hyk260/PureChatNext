@@ -24,7 +24,7 @@ export const chatTopics = pgTable(
   (t) => [
     index('chat_topics_user_id_agent_id_idx').on(t.userId, t.agentId),
     index('chat_topics_user_id_updated_at_idx').on(t.userId, t.updatedAt.desc()),
-  ],
+  ]
 )
 
 export type NewChatTopic = typeof chatTopics.$inferInsert
@@ -52,7 +52,7 @@ export const chatMessages = pgTable(
   (t) => [
     index('chat_messages_topic_id_created_at_idx').on(t.topicId, t.createdAt),
     index('chat_messages_user_id_topic_id_idx').on(t.userId, t.topicId),
-  ],
+  ]
 )
 
 export type NewChatMessage = typeof chatMessages.$inferInsert

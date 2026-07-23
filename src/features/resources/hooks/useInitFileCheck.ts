@@ -14,7 +14,7 @@ export const useInitFileCheck = () => {
       mode: s.mode,
       setCurrentViewItemId: s.setCurrentViewItemId,
       setMode: s.setMode,
-    })),
+    }))
   )
 
   useEffect(() => {

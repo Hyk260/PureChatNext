@@ -6,8 +6,7 @@ export type MessengerPlatformMeta = {
   name: string
 }
 
-export const MESSENGER_SUBTITLE =
-  '将你的账号连接到 PureChat 机器人。选择由哪个 Agent 接收消息，可随时从此处切换。'
+export const MESSENGER_SUBTITLE = '将你的账号连接到 PureChat 机器人。选择由哪个 Agent 接收消息，可随时从此处切换。'
 
 export const MESSENGER_PLATFORMS: readonly MessengerPlatformMeta[] = [
   {

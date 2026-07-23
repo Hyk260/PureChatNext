@@ -25,12 +25,7 @@ function serializeUser(user: UserItem): ProfileUser {
 }
 
 function isS3Configured() {
-  return Boolean(
-    fileEnv.S3_ACCESS_KEY_ID &&
-      fileEnv.S3_SECRET_ACCESS_KEY &&
-      fileEnv.S3_ENDPOINT &&
-      fileEnv.S3_BUCKET,
-  )
+  return Boolean(fileEnv.S3_ACCESS_KEY_ID && fileEnv.S3_SECRET_ACCESS_KEY && fileEnv.S3_ENDPOINT && fileEnv.S3_BUCKET)
 }
 
 /** GET /api/webapi/user/profile — SPA / client settings profile bootstrap */

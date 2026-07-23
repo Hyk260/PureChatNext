@@ -41,7 +41,7 @@ for (const dir of copyDirs) {
 writeFileSync(
   generatedTemplate,
   `/* 由 scripts/copySpaBuild.mjs 自动生成 — 请勿手改；本地 diff 可丢弃（仓库保留 stub） */\nexport default ${JSON.stringify(indexHtml)}\n`,
-  'utf-8',
+  'utf-8'
 )
 
 console.log(`✅ Wrote SPA HTML template: ${generatedTemplate}`)

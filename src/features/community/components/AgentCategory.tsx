@@ -48,7 +48,9 @@ const styles = createStaticStyles(({ css }) => ({
     color: ${cssVar.colorTextSecondary};
     font-size: 14px;
     text-align: left;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
 
     &:hover {
       background: ${cssVar.colorFillSecondary};
@@ -98,10 +100,7 @@ const CATEGORY_ICONS: Record<AssistantCategory, LucideIcon> = {
   [AssistantCategory.Translation]: LanguagesIcon,
 }
 
-const CATEGORY_KEYS: AssistantCategory[] = [
-  AssistantCategory.All,
-  ...ASSISTANT_BUSINESS_CATEGORIES,
-]
+const CATEGORY_KEYS: AssistantCategory[] = [AssistantCategory.All, ...ASSISTANT_BUSINESS_CATEGORIES]
 
 const AgentCategory = memo(() => {
   const router = useRouter()
@@ -122,7 +121,7 @@ const AgentCategory = memo(() => {
       const query = next.toString()
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   )
 
   return (

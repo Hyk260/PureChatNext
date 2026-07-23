@@ -7,7 +7,7 @@ import { PanelRightClose } from 'lucide-react'
 import { memo } from 'react'
 
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
-import { DEFAULT_CHAT_LLM_PARAMS , type ChatLlmParams } from '@/features/chat/types'
+import { DEFAULT_CHAT_LLM_PARAMS, type ChatLlmParams } from '@/features/chat/types'
 
 type ParamKey = keyof ChatLlmParams
 
@@ -38,15 +38,8 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
   return (
     <Flex vertical style={{ height: '100%', overflow: 'hidden', width: 320 }}>
       <Flex align='center' className={styles.header} justify='space-between'>
-        <Typography.Text style={{ marginInlineStart: 8, fontWeight: 500 }}>
-          高级设置
-        </Typography.Text>
-        <ActionIcon
-          icon={PanelRightClose}
-          size='small'
-          title='折叠参数栏'
-          onClick={toggleRightCollapsed}
-        />
+        <Typography.Text style={{ marginInlineStart: 8, fontWeight: 500 }}>高级设置</Typography.Text>
+        <ActionIcon icon={PanelRightClose} size='small' title='折叠参数栏' onClick={toggleRightCollapsed} />
       </Flex>
       <Flex vertical gap={16} style={{ padding: 16, minHeight: 0, overflow: 'auto' }}>
         {ROWS.map((row) => {

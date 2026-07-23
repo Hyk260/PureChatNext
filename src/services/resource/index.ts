@@ -51,8 +51,7 @@ export const resourceService = {
     return res.json()
   },
 
-  deleteFile: (id: string) =>
-    fetchJson<{ success: boolean }>(`/api/resources/files/${id}`, { method: 'DELETE' }),
+  deleteFile: (id: string) => fetchJson<{ success: boolean }>(`/api/resources/files/${id}`, { method: 'DELETE' }),
 
   batchDelete: (items: Array<{ id: string; sourceType: 'file' | 'document' }>) =>
     fetchJson<{ deleted: number }>(`/api/resources/files/batch`, {
@@ -103,6 +102,6 @@ export const resourceService = {
 
   getFolderBreadcrumb: (slugPath: string) =>
     fetchJson<Array<{ id: string; slug: string | null; title: string | null }>>(
-      `/api/resources/documents/breadcrumb?slugPath=${encodeURIComponent(slugPath)}`,
+      `/api/resources/documents/breadcrumb?slugPath=${encodeURIComponent(slugPath)}`
     ),
 }

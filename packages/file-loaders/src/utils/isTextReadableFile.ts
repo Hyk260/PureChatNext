@@ -75,18 +75,18 @@ export const TEXT_READABLE_FILE_TYPES = [
   'patch',
   'diff',
   'db', // often text-adjacent (e.g. SQLite journals)
-];
+]
 
 /**
  * Binary formats with dedicated parsers in `loadFile` (not plain text).
  */
-export const SPECIAL_PARSED_FILE_TYPES = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'pptx'];
+export const SPECIAL_PARSED_FILE_TYPES = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'pptx']
 
 /**
  * Whether `fileType` (extension without dot) is likely plain text.
  */
 export function isTextReadableFile(fileType: string): boolean {
-  return TEXT_READABLE_FILE_TYPES.includes(fileType.toLowerCase());
+  return TEXT_READABLE_FILE_TYPES.includes(fileType.toLowerCase())
 }
 
 /**
@@ -95,6 +95,6 @@ export function isTextReadableFile(fileType: string): boolean {
  * binaries (`.bin`, `.zip`, `.exe`, …) before opening them for the LLM.
  */
 export function isReadableFileType(fileType: string): boolean {
-  const ext = fileType.toLowerCase();
-  return TEXT_READABLE_FILE_TYPES.includes(ext) || SPECIAL_PARSED_FILE_TYPES.includes(ext);
+  const ext = fileType.toLowerCase()
+  return TEXT_READABLE_FILE_TYPES.includes(ext) || SPECIAL_PARSED_FILE_TYPES.includes(ext)
 }

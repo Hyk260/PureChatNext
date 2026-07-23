@@ -47,7 +47,7 @@ const DragUploadZone = memo<DragUploadZoneProps>(({ children, disabled, onUpload
       dragCounter.current += 1
       setActive(true)
     },
-    [disabled],
+    [disabled]
   )
 
   const handleDragLeave = useCallback((e: DragEvent) => {
@@ -72,7 +72,7 @@ const DragUploadZone = memo<DragUploadZoneProps>(({ children, disabled, onUpload
       const files = Array.from(e.dataTransfer.files)
       if (files.length > 0) onUploadFiles(files)
     },
-    [disabled, onUploadFiles],
+    [disabled, onUploadFiles]
   )
 
   return (

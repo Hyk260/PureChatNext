@@ -2,12 +2,12 @@
  * 文件从 https://github.com/Azure/fetch-event-source/blob/45ac3cfffd30b05b79fbf95c21e67d4ef59aa56a/src/fetch.ts 复制
  * 并调整了一些代码
  */
-import { type EventSourceMessage } from "./parse";
-import { getBytes, getLines, getMessages } from "./parse"
+import { type EventSourceMessage } from './parse'
+import { getBytes, getLines, getMessages } from './parse'
 
-export const EventStreamContentType = "text/event-stream"
+export const EventStreamContentType = 'text/event-stream'
 
-const LastEventId = "last-event-id"
+const LastEventId = 'last-event-id'
 
 export interface FetchEventSourceInit extends RequestInit {
   /**

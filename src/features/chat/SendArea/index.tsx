@@ -18,17 +18,7 @@ export interface SendAreaProps extends SendButtonProps {
  * Layout: ChatInput send area with model label on the right.
  */
 const SendArea = memo<SendAreaProps>(
-  ({
-    prefix,
-    showModelLabel = true,
-    disabled,
-    generating,
-    loading,
-    shape,
-    size,
-    onClick,
-    onStop,
-  }) => {
+  ({ prefix, showModelLabel = true, disabled, generating, loading, shape, size, onClick, onStop }) => {
     return (
       <Flex align='center' flex='none' gap={12}>
         {prefix}
@@ -44,7 +34,7 @@ const SendArea = memo<SendAreaProps>(
         />
       </Flex>
     )
-  },
+  }
 )
 
 SendArea.displayName = 'SendArea'

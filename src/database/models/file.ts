@@ -22,7 +22,7 @@ export class FileModel {
       id?: string
       knowledgeBaseId?: string
     },
-    insertToGlobalFiles = false,
+    insertToGlobalFiles = false
   ): Promise<{ id: string }> => {
     return this.db.transaction(async (tx) => {
       if (insertToGlobalFiles && params.fileHash) {
@@ -79,16 +79,11 @@ export class FileModel {
       if (!file) return null
 
       await tx.delete(knowledgeBaseFiles).where(eq(knowledgeBaseFiles.fileId, id))
-      await tx
-        .delete(documents)
-        .where(and(eq(documents.fileId, id), eq(documents.userId, this.userId)))
+      await tx.delete(documents).where(and(eq(documents.fileId, id), eq(documents.userId, this.userId)))
       await tx.delete(files).where(and(eq(files.id, id), this.ownership()))
 
       if (file.fileHash) {
-        const remaining = await tx
-          .select({ count: count() })
-          .from(files)
-          .where(eq(files.fileHash, file.fileHash))
+        const remaining = await tx.select({ count: count() }).from(files).where(eq(files.fileHash, file.fileHash))
         if ((remaining[0]?.count ?? 0) === 0) {
           await tx.delete(globalFiles).where(eq(globalFiles.hashId, file.fileHash))
         }
@@ -125,10 +120,7 @@ export class FileModel {
     if (category && category !== FilesTabs.All && category !== FilesTabs.Home) {
       const prefix = this.getFileTypePrefix(category as FilesTabs)
       if (Array.isArray(prefix)) {
-        whereClause = and(
-          whereClause,
-          or(...prefix.map((p) => ilike(files.fileType, `${p}%`))),
-        )
+        whereClause = and(whereClause, or(...prefix.map((p) => ilike(files.fileType, `${p}%`))))
       } else {
         whereClause = and(whereClause, ilike(files.fileType, `${prefix}%`))
       }
@@ -144,12 +136,7 @@ export class FileModel {
       const kbFileIds = await this.db
         .select({ fileId: knowledgeBaseFiles.fileId })
         .from(knowledgeBaseFiles)
-        .where(
-          and(
-            eq(knowledgeBaseFiles.knowledgeBaseId, knowledgeBaseId),
-            eq(knowledgeBaseFiles.userId, this.userId),
-          ),
-        )
+        .where(and(eq(knowledgeBaseFiles.knowledgeBaseId, knowledgeBaseId), eq(knowledgeBaseFiles.userId, this.userId)))
       const ids = kbFileIds.map((r) => r.fileId)
       if (ids.length === 0 && !showFilesInKnowledgeBase) {
         return []
@@ -170,13 +157,7 @@ export class FileModel {
       orderByClause = sortFn(sortableFields[sorter as keyof typeof sortableFields])
     }
 
-    return this.db
-      .select()
-      .from(files)
-      .where(whereClause)
-      .orderBy(orderByClause)
-      .limit(limit)
-      .offset(offset)
+    return this.db.select().from(files).where(whereClause).orderBy(orderByClause).limit(limit).offset(offset)
   }
 
   private getFileTypePrefix = (category: FilesTabs) => {

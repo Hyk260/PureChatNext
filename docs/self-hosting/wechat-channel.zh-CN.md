@@ -41,15 +41,15 @@ adapter.postMessage → iLink sendmessage
 
 ## 环境变量
 
-| 变量 | 说明 |
-|------|------|
-| `DATABASE_URL` | 必填，存 `channel_bindings` |
-| `APP_URL` | Gateway 转发 webhook 的基址（本地可用 SPA `http://localhost:5174`，经 Vite 代理 `/api`） |
-| `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` | **服务端**回复用（浏览器里的 provider key 不可用） |
-| `REDIS_URL` | 强烈建议：缓存 `context_token`（多实例 / Vercel 必需） |
-| `KEY_VAULTS_SECRET` | 建议：AES 加密凭证；未设置则明文 base64 存库（仅服务端可读） |
-| `CRON_SECRET` | Vercel Cron 与 webhook 转发鉴权（`Authorization: Bearer …`） |
-| `WECHAT_WEBHOOK_SECRET` | 可选；优先于 `CRON_SECRET` 用于 webhook；未设置则回退 `CRON_SECRET` |
+| 变量                                  | 说明                                                                                     |
+| ------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                        | 必填，存 `channel_bindings`                                                              |
+| `APP_URL`                             | Gateway 转发 webhook 的基址（本地可用 SPA `http://localhost:5174`，经 Vite 代理 `/api`） |
+| `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` | **服务端**回复用（浏览器里的 provider key 不可用）                                       |
+| `REDIS_URL`                           | 强烈建议：缓存 `context_token`（多实例 / Vercel 必需）                                   |
+| `KEY_VAULTS_SECRET`                   | 建议：AES 加密凭证；未设置则明文 base64 存库（仅服务端可读）                             |
+| `CRON_SECRET`                         | Vercel Cron 与 webhook 转发鉴权（`Authorization: Bearer …`）                             |
+| `WECHAT_WEBHOOK_SECRET`               | 可选；优先于 `CRON_SECRET` 用于 webhook；未设置则回退 `CRON_SECRET`                      |
 
 本地示例见根目录 `.env.example`。
 
@@ -81,7 +81,7 @@ pnpm wechat:gateway
 { "path": "/api/cron/wechat-gateway", "schedule": "*/5 * * * *" }
 ```
 
-Cron 鉴权：`Authorization: Bearer $CRON_SECRET`。  
+Cron 鉴权：`Authorization: Bearer $CRON_SECRET`。\
 函数内用 `waitUntil` 启动约 8 分钟长轮询窗口；需 **Pro**（`maxDuration=300`）并配置 `REDIS_URL`。
 
 手动触发：
@@ -93,14 +93,14 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 
 ## 已知限制
 
-| 项 | 说明 |
-|----|------|
-| 延迟 | 长轮询间隔可达数十秒 |
-| 会话过期 | iLink 返回 `-14` 后需重扫；空闲过久也可能掉线 |
-| 文本上限 | 单条约 2000 字，超长自动切分 |
+| 项          | 说明                                          |
+| ----------- | --------------------------------------------- |
+| 延迟        | 长轮询间隔可达数十秒                          |
+| 会话过期    | iLink 返回 `-14` 后需重扫；空闲过久也可能掉线 |
+| 文本上限    | 单条约 2000 字，超长自动切分                  |
 | 无 Markdown | 微信侧按纯文本发送（`WechatFormatConverter`） |
-| 游标不落库 | 进程重启可能重复/漏消息 |
-| Hobby 套餐 | Vercel Hobby 函数时长不够撑长轮询 |
+| 游标不落库  | 进程重启可能重复/漏消息                       |
+| Hobby 套餐  | Vercel Hobby 函数时长不够撑长轮询             |
 
 ## 成本粗估
 
@@ -111,19 +111,19 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 
 ## API 一览
 
-| 方法 | 路径 | 鉴权 |
-|------|------|------|
-| POST | `/api/channels/wechat/qrcode` | session |
-| GET | `/api/channels/wechat/qrcode/status?qrcode=` | session |
-| POST / PATCH / DELETE | `/api/channels/wechat/bind` | session |
-| GET | `/api/channels/wechat/status` | session |
-| POST | `/api/channels/wechat/webhook/[applicationId]` | `WECHAT_WEBHOOK_SECRET` 或 `CRON_SECRET` |
-| GET | `/api/cron/wechat-gateway` | `CRON_SECRET` |
+| 方法                  | 路径                                           | 鉴权                                     |
+| --------------------- | ---------------------------------------------- | ---------------------------------------- |
+| POST                  | `/api/channels/wechat/qrcode`                  | session                                  |
+| GET                   | `/api/channels/wechat/qrcode/status?qrcode=`   | session                                  |
+| POST / PATCH / DELETE | `/api/channels/wechat/bind`                    | session                                  |
+| GET                   | `/api/channels/wechat/status`                  | session                                  |
+| POST                  | `/api/channels/wechat/webhook/[applicationId]` | `WECHAT_WEBHOOK_SECRET` 或 `CRON_SECRET` |
+| GET                   | `/api/cron/wechat-gateway`                     | `CRON_SECRET`                            |
 
 ## 包结构
 
-| 位置 | 职责 |
-|------|------|
-| `packages/chat-adapter-wechat` | iLink HTTP / CDN / QR、`WechatAdapter`、format-converter |
-| `src/libs/channels/wechat` | 凭证加解密、context_token、poller、Chat 缓存（`@chat-adapter/state-memory`）、AgentBridge |
-| `src/app/api/channels/wechat/*` | 扫码 / 绑定 / webhook / 状态 |
+| 位置                            | 职责                                                                                       |
+| ------------------------------- | ------------------------------------------------------------------------------------------ |
+| `packages/chat-adapter-wechat`  | iLink HTTP / CDN / QR、`WechatAdapter`、format-converter                                   |
+| `src/libs/channels/wechat`      | 凭证加解密、context\_token、poller、Chat 缓存（`@chat-adapter/state-memory`）、AgentBridge |
+| `src/app/api/channels/wechat/*` | 扫码 / 绑定 / webhook / 状态                                                               |

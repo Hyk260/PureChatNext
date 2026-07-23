@@ -9,7 +9,7 @@ interface SettingHeaderProps {
 export function SettingHeader({ extra, title }: SettingHeaderProps) {
   return (
     <Flex vertical gap={24} style={{ paddingTop: 12 }}>
-      <Flex align="center" justify="space-between">
+      <Flex align='center' justify='space-between'>
         <Typography.Text strong style={{ fontSize: 24 }}>
           {title}
         </Typography.Text>

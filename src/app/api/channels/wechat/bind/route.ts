@@ -63,7 +63,7 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
   waitUntil(
     pollBinding(binding, { durationMs: DEFAULT_DURATION_MS }).catch(() => {
       /* logged inside poller */
-    }),
+    })
   )
 
   return NextResponse.json({

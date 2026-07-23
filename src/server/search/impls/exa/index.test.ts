@@ -1,7 +1,7 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ExaImpl } from './index';
+import { ExaImpl } from './index'
 
 const createMockResponse = (body: object, ok = true, status = 200, statusText = 'OK') =>
   ({
@@ -10,27 +10,27 @@ const createMockResponse = (body: object, ok = true, status = 200, statusText = 
     statusText,
     json: vi.fn().mockResolvedValue(body),
     text: vi.fn().mockResolvedValue(JSON.stringify(body)),
-  }) as unknown as Response;
+  }) as unknown as Response
 
 const makeExaResponse = (results: object[]) => ({
   requestId: 'req-123',
   resolvedSearchType: 'auto',
   results,
-});
+})
 
 describe('ExaImpl', () => {
-  let impl: ExaImpl;
+  let impl: ExaImpl
 
   beforeEach(() => {
-    impl = new ExaImpl();
-    vi.stubGlobal('fetch', vi.fn());
-    process.env.EXA_API_KEY = 'test-exa-api-key';
-  });
+    impl = new ExaImpl()
+    vi.stubGlobal('fetch', vi.fn())
+    process.env.EXA_API_KEY = 'test-exa-api-key'
+  })
 
   afterEach(() => {
-    vi.unstubAllGlobals();
-    delete process.env.EXA_API_KEY;
-  });
+    vi.unstubAllGlobals()
+    delete process.env.EXA_API_KEY
+  })
 
   describe('query', () => {
     it('should return mapped results for a successful query', async () => {
@@ -50,15 +50,15 @@ describe('ExaImpl', () => {
           text: 'Another content text',
           score: 0.85,
         },
-      ];
+      ]
 
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse(exaResults)));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse(exaResults)))
 
-      const result = await impl.query('test query');
+      const result = await impl.query('test query')
 
-      expect(result.query).toBe('test query');
-      expect(result.resultNumbers).toBe(2);
-      expect(result.results).toHaveLength(2);
+      expect(result.query).toBe('test query')
+      expect(result.resultNumbers).toBe(2)
+      expect(result.results).toHaveLength(2)
       expect(result.results[0]).toMatchObject({
         title: 'Example Title',
         url: 'https://example.com/page',
@@ -67,138 +67,136 @@ describe('ExaImpl', () => {
         category: 'general',
         score: 0.95,
         parsedUrl: 'example.com',
-      });
-    });
+      })
+    })
 
     it('should return empty results when results array is empty', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])))
 
-      const result = await impl.query('empty query');
+      const result = await impl.query('empty query')
 
-      expect(result.resultNumbers).toBe(0);
-      expect(result.results).toHaveLength(0);
-    });
+      expect(result.resultNumbers).toBe(0)
+      expect(result.results).toHaveLength(0)
+    })
 
     it('should handle missing results field gracefully', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse({ requestId: 'req-123' }));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse({ requestId: 'req-123' }))
 
-      const result = await impl.query('test');
+      const result = await impl.query('test')
 
-      expect(result.resultNumbers).toBe(0);
-      expect(result.results).toHaveLength(0);
-    });
+      expect(result.resultNumbers).toBe(0)
+      expect(result.results).toHaveLength(0)
+    })
 
     it('should set date range for day time range', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])))
 
-      await impl.query('test', { searchTimeRange: 'day' });
+      await impl.query('test', { searchTimeRange: 'day' })
 
-      const fetchCall = vi.mocked(fetch).mock.calls[0];
-      const options = fetchCall[1] as RequestInit;
-      const body = JSON.parse(options.body as string);
+      const fetchCall = vi.mocked(fetch).mock.calls[0]
+      const options = fetchCall[1] as RequestInit
+      const body = JSON.parse(options.body as string)
 
-      expect(body.startPublishedDate).toBeDefined();
-      expect(body.endPublishedDate).toBeDefined();
-    });
+      expect(body.startPublishedDate).toBeDefined()
+      expect(body.endPublishedDate).toBeDefined()
+    })
 
     it('should set date range for week time range', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])))
 
-      await impl.query('test', { searchTimeRange: 'week' });
+      await impl.query('test', { searchTimeRange: 'week' })
 
-      const body = JSON.parse((vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string);
-      expect(body.startPublishedDate).toBeDefined();
-      expect(body.endPublishedDate).toBeDefined();
-    });
+      const body = JSON.parse((vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string)
+      expect(body.startPublishedDate).toBeDefined()
+      expect(body.endPublishedDate).toBeDefined()
+    })
 
     it('should not set date range for anytime', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])))
 
-      await impl.query('test', { searchTimeRange: 'anytime' });
+      await impl.query('test', { searchTimeRange: 'anytime' })
 
-      const body = JSON.parse((vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string);
-      expect(body.startPublishedDate).toBeUndefined();
-      expect(body.endPublishedDate).toBeUndefined();
-    });
+      const body = JSON.parse((vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string)
+      expect(body.startPublishedDate).toBeUndefined()
+      expect(body.endPublishedDate).toBeUndefined()
+    })
 
     it('should filter category to news only', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])))
 
-      await impl.query('test', { searchCategories: ['news', 'general'] });
+      await impl.query('test', { searchCategories: ['news', 'general'] })
 
-      const body = JSON.parse((vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string);
-      expect(body.category).toBe('news');
-    });
+      const body = JSON.parse((vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string)
+      expect(body.category).toBe('news')
+    })
 
     it('should not include category for non-news categories', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])))
 
-      await impl.query('test', { searchCategories: ['general'] });
+      await impl.query('test', { searchCategories: ['general'] })
 
-      const body = JSON.parse((vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string);
-      expect(body.category).toBeUndefined();
-    });
+      const body = JSON.parse((vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string)
+      expect(body.category).toBeUndefined()
+    })
 
     it('should include API key in request headers', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])))
 
-      await impl.query('test');
+      await impl.query('test')
 
-      const fetchCall = vi.mocked(fetch).mock.calls[0];
-      const options = fetchCall[1] as RequestInit;
-      expect((options.headers as Record<string, string>)['x-api-key']).toBe('test-exa-api-key');
-    });
+      const fetchCall = vi.mocked(fetch).mock.calls[0]
+      const options = fetchCall[1] as RequestInit
+      expect((options.headers as Record<string, string>)['x-api-key']).toBe('test-exa-api-key')
+    })
 
     it('should use empty string for API key when not set', async () => {
-      delete process.env.EXA_API_KEY;
+      delete process.env.EXA_API_KEY
 
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])))
 
-      await impl.query('test');
+      await impl.query('test')
 
-      const fetchCall = vi.mocked(fetch).mock.calls[0];
-      const options = fetchCall[1] as RequestInit;
-      expect((options.headers as Record<string, string>)['x-api-key']).toBe('');
-    });
+      const fetchCall = vi.mocked(fetch).mock.calls[0]
+      const options = fetchCall[1] as RequestInit
+      expect((options.headers as Record<string, string>)['x-api-key']).toBe('')
+    })
 
     it('should use POST method', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])))
 
-      await impl.query('test');
+      await impl.query('test')
 
-      const fetchCall = vi.mocked(fetch).mock.calls[0];
-      const options = fetchCall[1] as RequestInit;
-      expect(options.method).toBe('POST');
-    });
+      const fetchCall = vi.mocked(fetch).mock.calls[0]
+      const options = fetchCall[1] as RequestInit
+      expect(options.method).toBe('POST')
+    })
 
     it('should include query in request body', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])))
 
-      await impl.query('my search query');
+      await impl.query('my search query')
 
-      const body = JSON.parse((vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string);
-      expect(body.query).toBe('my search query');
-      expect(body.numResults).toBe(10);
-      expect(body.type).toBe('auto');
-    });
+      const body = JSON.parse((vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string)
+      expect(body.query).toBe('my search query')
+      expect(body.numResults).toBe(10)
+      expect(body.type).toBe('auto')
+    })
 
     it('should throw when fetch throws a network error', async () => {
-      vi.mocked(fetch).mockRejectedValue(new Error('Connection refused'));
+      vi.mocked(fetch).mockRejectedValue(new Error('Connection refused'))
 
       await expect(impl.query('test')).rejects.toMatchObject({
         message: 'Failed to connect to Exa.',
-      });
-    });
+      })
+    })
 
     it('should throw when response is not ok', async () => {
-      vi.mocked(fetch).mockResolvedValue(
-        createMockResponse({ error: 'Forbidden' }, false, 403, 'Forbidden'),
-      );
+      vi.mocked(fetch).mockResolvedValue(createMockResponse({ error: 'Forbidden' }, false, 403, 'Forbidden'))
 
       await expect(impl.query('test')).rejects.toMatchObject({
         message: 'Exa request failed: Forbidden',
-      });
-    });
+      })
+    })
 
     it('should throw when response JSON parsing fails', async () => {
       vi.mocked(fetch).mockResolvedValue({
@@ -206,12 +204,12 @@ describe('ExaImpl', () => {
         status: 200,
         json: vi.fn().mockRejectedValue(new Error('JSON parse error')),
         text: vi.fn().mockResolvedValue('not json'),
-      } as unknown as Response);
+      } as unknown as Response)
 
       await expect(impl.query('test')).rejects.toMatchObject({
         message: 'Failed to parse Exa response.',
-      });
-    });
+      })
+    })
 
     it('should use score 0 when result score is undefined', async () => {
       const exaResults = [
@@ -221,14 +219,14 @@ describe('ExaImpl', () => {
           title: 'Test',
           text: 'Content',
         },
-      ];
+      ]
 
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse(exaResults)));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse(exaResults)))
 
-      const result = await impl.query('test');
+      const result = await impl.query('test')
 
-      expect(result.results[0].score).toBe(0);
-    });
+      expect(result.results[0].score).toBe(0)
+    })
 
     it('should use category from body for result category when news', async () => {
       const exaResults = [
@@ -239,23 +237,23 @@ describe('ExaImpl', () => {
           text: 'News content',
           score: 0.9,
         },
-      ];
+      ]
 
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse(exaResults)));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse(exaResults)))
 
-      const result = await impl.query('test', { searchCategories: ['news'] });
+      const result = await impl.query('test', { searchCategories: ['news'] })
 
-      expect(result.results[0].category).toBe('news');
-    });
+      expect(result.results[0].category).toBe('news')
+    })
 
     it('should include costTime in the response', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse([])))
 
-      const result = await impl.query('test');
+      const result = await impl.query('test')
 
-      expect(typeof result.costTime).toBe('number');
-      expect(result.costTime).toBeGreaterThanOrEqual(0);
-    });
+      expect(typeof result.costTime).toBe('number')
+      expect(result.costTime).toBeGreaterThanOrEqual(0)
+    })
 
     it('should use empty content when text is missing', async () => {
       const exaResults = [
@@ -266,13 +264,13 @@ describe('ExaImpl', () => {
           text: '',
           score: 0.9,
         },
-      ];
+      ]
 
-      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse(exaResults)));
+      vi.mocked(fetch).mockResolvedValueOnce(createMockResponse(makeExaResponse(exaResults)))
 
-      const result = await impl.query('test');
+      const result = await impl.query('test')
 
-      expect(result.results[0].content).toBe('');
-    });
-  });
-});
+      expect(result.results[0].content).toBe('')
+    })
+  })
+})

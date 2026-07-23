@@ -1,20 +1,20 @@
-import "server-only";
+import 'server-only'
 
-import { type ChatDatabase } from '../type';
-import { getDBInstance } from './web-server';
+import { type ChatDatabase } from '../type'
+import { getDBInstance } from './web-server'
 
-let cachedDB: ChatDatabase | null = null;
+let cachedDB: ChatDatabase | null = null
 
 export const getServerDB = (): ChatDatabase => {
-  if (cachedDB) return cachedDB;
+  if (cachedDB) return cachedDB
 
   try {
-    cachedDB = getDBInstance();
-    return cachedDB;
+    cachedDB = getDBInstance()
+    return cachedDB
   } catch (error) {
-    console.error('❌ 数据库连接失败:', error);
-    throw error;
+    console.error('❌ 数据库连接失败:', error)
+    throw error
   }
-};
+}
 
-export const serverDB = getDBInstance();
+export const serverDB = getDBInstance()

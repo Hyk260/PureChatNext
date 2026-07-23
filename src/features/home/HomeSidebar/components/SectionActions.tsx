@@ -55,20 +55,12 @@ interface SectionActionsProps {
 const SectionActions = memo<SectionActionsProps>(({ addMenuItems, menuItems }) => {
   return (
     <Flex gap={2} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
-      <DropdownMenu
-        items={menuItems}
-        nativeButton
-        triggerProps={{ className: styles.trigger, title: '更多' }}
-      >
+      <DropdownMenu items={menuItems} nativeButton triggerProps={{ className: styles.trigger, title: '更多' }}>
         <Icon icon={MoreHorizontalIcon} size='small' />
         <span className={styles.srOnly}>更多</span>
       </DropdownMenu>
       {addMenuItems ? (
-        <DropdownMenu
-          items={addMenuItems}
-          nativeButton
-          triggerProps={{ className: styles.trigger, title: '添加' }}
-        >
+        <DropdownMenu items={addMenuItems} nativeButton triggerProps={{ className: styles.trigger, title: '添加' }}>
           <Icon icon={PlusIcon} size='small' />
           <span className={styles.srOnly}>添加</span>
         </DropdownMenu>

@@ -11,7 +11,7 @@ const batchSchema = z.object({
       z.object({
         id: z.string().min(1),
         sourceType: z.enum(['file', 'document']),
-      }),
+      })
     )
     .min(1),
 })

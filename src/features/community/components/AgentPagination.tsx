@@ -48,7 +48,7 @@ const AgentPagination = memo<AgentPaginationProps>(({ currentPage, pageSize, tot
       const scrollableElement = document?.querySelector(`#${SCROLL_PARENT_ID}`)
       scrollableElement?.scrollTo({ behavior: 'smooth', top: 0 })
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   )
 
   if (total <= pageSize) return null

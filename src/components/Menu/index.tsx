@@ -1,4 +1,4 @@
-import { type MenuProps as AntdMenuProps , ConfigProvider, Menu as AntdMenu } from 'antd'
+import { type MenuProps as AntdMenuProps, ConfigProvider, Menu as AntdMenu } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { memo } from 'react'
 

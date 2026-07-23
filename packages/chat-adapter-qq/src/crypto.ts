@@ -1,4 +1,4 @@
-import { createPrivateKey, sign } from 'node:crypto';
+import { createPrivateKey, sign } from 'node:crypto'
 
 /**
  * PKCS#8 DER prefix for an Ed25519 private key seed.
@@ -10,7 +10,7 @@ import { createPrivateKey, sign } from 'node:crypto';
  *     OCTET STRING { OCTET STRING { <32-byte seed> } }
  *   }
  */
-const ED25519_PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex');
+const ED25519_PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex')
 
 /**
  * Ed25519 sign for QQ Bot webhook URL verification.
@@ -21,22 +21,18 @@ const ED25519_PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'he
  * 3. Sign `eventTs + plainToken`
  * 4. Return hex signature
  */
-export function signWebhookResponse(
-  eventTs: string,
-  plainToken: string,
-  clientSecret: string,
-): string {
-  let seedStr = clientSecret;
+export function signWebhookResponse(eventTs: string, plainToken: string, clientSecret: string): string {
+  let seedStr = clientSecret
   while (seedStr.length < 32) {
-    seedStr = seedStr.repeat(2);
+    seedStr = seedStr.repeat(2)
   }
-  const seed = Buffer.from(seedStr.slice(0, 32), 'utf8');
+  const seed = Buffer.from(seedStr.slice(0, 32), 'utf8')
 
-  const pkcs8Der = Buffer.concat([ED25519_PKCS8_PREFIX, seed]);
-  const privateKey = createPrivateKey({ format: 'der', key: pkcs8Der, type: 'pkcs8' });
+  const pkcs8Der = Buffer.concat([ED25519_PKCS8_PREFIX, seed])
+  const privateKey = createPrivateKey({ format: 'der', key: pkcs8Der, type: 'pkcs8' })
 
-  const message = Buffer.from(eventTs + plainToken);
-  const signature = sign(null, message, privateKey);
+  const message = Buffer.from(eventTs + plainToken)
+  const signature = sign(null, message, privateKey)
 
-  return signature.toString('hex');
+  return signature.toString('hex')
 }

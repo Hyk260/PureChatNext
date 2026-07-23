@@ -3,26 +3,14 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import {
-  createDefaultProviderConfig,
-  DEFAULT_PROVIDER_CONFIGS,
-  LEGACY_PROVIDER_DEFAULT_BASE_URLS,
-} from '../const'
-import {
-  type ProviderConfig,
-  type ProviderConfigs,
-  type ProviderId,
-  type ProviderModelItem,
-} from '../types'
+import { createDefaultProviderConfig, DEFAULT_PROVIDER_CONFIGS, LEGACY_PROVIDER_DEFAULT_BASE_URLS } from '../const'
+import { type ProviderConfig, type ProviderConfigs, type ProviderId, type ProviderModelItem } from '../types'
 
 interface ProviderConfigState {
   configs: ProviderConfigs
   getConfig: (id: ProviderId) => ProviderConfig
   getEnabledModels: () => Array<{ displayName: string; model: string; provider: ProviderId }>
-  mergeRemoteModels: (
-    id: ProviderId,
-    remote: Array<{ displayName?: string; id: string }>,
-  ) => void
+  mergeRemoteModels: (id: ProviderId, remote: Array<{ displayName?: string; id: string }>) => void
   patchConfig: (id: ProviderId, patch: Partial<ProviderConfig>) => void
   setCheckModel: (id: ProviderId, checkModel: string) => void
   setEnabled: (id: ProviderId, enabled: boolean) => void
@@ -32,7 +20,7 @@ interface ProviderConfigState {
 
 const mergeProviderConfig = (
   id: ProviderId,
-  partial?: Partial<ProviderConfig> & { baseURL?: string },
+  partial?: Partial<ProviderConfig> & { baseURL?: string }
 ): ProviderConfig => {
   const defaults = createDefaultProviderConfig(id)
   if (!partial) return defaults
@@ -41,17 +29,14 @@ const mergeProviderConfig = (
   const rawBaseURL = typeof partial.baseURL === 'string' ? partial.baseURL : defaults.baseURL
   const baseURL = rawBaseURL.trim() === legacyDefault ? '' : rawBaseURL
 
-  const models =
-    Array.isArray(partial.models) && partial.models.length > 0 ? partial.models : defaults.models
+  const models = Array.isArray(partial.models) && partial.models.length > 0 ? partial.models : defaults.models
 
   return {
     ...defaults,
     ...partial,
     baseURL,
     checkModel:
-      typeof partial.checkModel === 'string' && partial.checkModel.trim()
-        ? partial.checkModel
-        : defaults.checkModel,
+      typeof partial.checkModel === 'string' && partial.checkModel.trim() ? partial.checkModel : defaults.checkModel,
     models,
   }
 }
@@ -170,9 +155,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
               ...state.configs,
               [id]: {
                 ...current,
-                models: current.models.map((model) =>
-                  model.id === modelId ? { ...model, enabled } : model,
-                ),
+                models: current.models.map((model) => (model.id === modelId ? { ...model, enabled } : model)),
               },
             },
           }
@@ -199,6 +182,6 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
       name: 'purechat:provider:v1',
       partialize: (state) => ({ configs: state.configs }),
       version: 2,
-    },
-  ),
+    }
+  )
 )

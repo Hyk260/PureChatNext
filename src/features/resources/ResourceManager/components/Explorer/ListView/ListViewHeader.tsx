@@ -40,7 +40,7 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
     useShallow((s) => ({
       columnWidths: s.columnWidths,
       updateColumnWidth: s.updateColumnWidth,
-    })),
+    }))
   )
   const { handleSelectAll } = useExplorerSelectionActions(data)
   const { allSelected, indeterminate, selectedCount } = useExplorerSelectionSummary({ data })
@@ -50,7 +50,7 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
       e.stopPropagation()
       handleSelectAll(!allSelected)
     },
-    [allSelected, handleSelectAll],
+    [allSelected, handleSelectAll]
   )
 
   const handleHeaderCheckboxPointerDown = useCallback((e: PointerEvent) => {
@@ -65,19 +65,22 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
         onClick={handleHeaderCheckboxClick}
         onPointerDown={handleHeaderCheckboxPointerDown}
       >
-        <Checkbox
-          checked={allSelected}
-          indeterminate={indeterminate}
-          style={{ pointerEvents: 'none' }}
-        />
+        <Checkbox checked={allSelected} indeterminate={indeterminate} style={{ pointerEvents: 'none' }} />
       </Center>
-      <Flex vertical className={styles.headerItem} justify='center' style={{ flexShrink: 0,
+      <Flex
+        vertical
+        className={styles.headerItem}
+        justify='center'
+        style={{
+          flexShrink: 0,
           maxWidth: columnWidths.name,
           minWidth: columnWidths.name,
           paddingInline: 20,
           paddingInlineEnd: 16,
           position: 'relative',
-          width: columnWidths.name, }}>
+          width: columnWidths.name,
+        }}
+      >
         {selectedCount > 0 ? `已选 ${selectedCount} 项` : '名称'}
         <ColumnResizeHandle
           currentWidth={columnWidths.name}
@@ -86,7 +89,12 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
           onResize={(width) => updateColumnWidth('name', width)}
         />
       </Flex>
-      <Flex vertical className={styles.headerItem} justify='center' style={{ flexShrink: 0, paddingInlineEnd: 16, position: 'relative', width: columnWidths.date }}>
+      <Flex
+        vertical
+        className={styles.headerItem}
+        justify='center'
+        style={{ flexShrink: 0, paddingInlineEnd: 16, position: 'relative', width: columnWidths.date }}
+      >
         创建时间
         <ColumnResizeHandle
           currentWidth={columnWidths.date}
@@ -95,7 +103,12 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
           onResize={(width) => updateColumnWidth('date', width)}
         />
       </Flex>
-      <Flex vertical className={styles.headerItem} justify='center' style={{ flexShrink: 0, paddingInlineEnd: 16, position: 'relative', width: columnWidths.size }}>
+      <Flex
+        vertical
+        className={styles.headerItem}
+        justify='center'
+        style={{ flexShrink: 0, paddingInlineEnd: 16, position: 'relative', width: columnWidths.size }}
+      >
         大小
         <ColumnResizeHandle
           currentWidth={columnWidths.size}

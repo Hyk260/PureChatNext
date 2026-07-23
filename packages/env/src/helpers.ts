@@ -36,6 +36,6 @@ export const parseEnvBooleanDefaultTrue = (value?: string): boolean => {
 export const optionalNumberEnv = (min: number, max: number) => {
   return z.preprocess(
     (value) => (value === '' || value === null ? undefined : value),
-    z.coerce.number().int().max(max).min(min).optional(),
+    z.coerce.number().int().max(max).min(min).optional()
   )
 }

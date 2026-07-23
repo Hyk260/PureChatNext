@@ -70,7 +70,7 @@ const GroupItem = memo<GroupItemProps>(({ canRemove, id, name }) => {
 
       setEditing(false)
     },
-    [id, message, name, updateAgentGroupName],
+    [id, message, name, updateAgentGroupName]
   )
 
   return (

@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       .from(account)
       .where(and(eq(account.userId, user.id)))
     const hasPassword = accounts.some(
-      (a) => a.providerId === 'credential' && typeof a.password === 'string' && a.password.length > 0,
+      (a) => a.providerId === 'credential' && typeof a.password === 'string' && a.password.length > 0
     )
 
     return NextResponse.json({

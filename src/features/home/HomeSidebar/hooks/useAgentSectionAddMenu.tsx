@@ -37,6 +37,6 @@ export const useAgentSectionAddMenu = (options: {
         },
       },
     ],
-    [onAddFromMarket, onCreateAgent],
+    [onAddFromMarket, onCreateAgent]
   )
 }

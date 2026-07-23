@@ -1,5 +1,5 @@
 import { createNanoId, generateCompactUuid } from '@pure/utils'
-import { betterAuth , type BetterAuthOptions } from 'better-auth/minimal'
+import { betterAuth, type BetterAuthOptions } from 'better-auth/minimal'
 import { verifyPassword } from 'better-auth/crypto'
 import { EmailService } from '@/server/services/email'
 import { type EmailPayload } from '@/server/services/email/impls'
@@ -28,7 +28,6 @@ const log = debug('better-auth:define-config')
 import { appEnv } from '@/envs/app'
 import { authEnv } from '@/envs/auth'
 import { getAllowedOrigins } from '@/libs/utils/allowed-origins'
-
 
 const enabledSSOProviders = parseSSOProviders(authEnv.AUTH_SSO_PROVIDERS)
 const { socialProviders, genericOAuthProviders } = initBetterAuthSSOProviders()

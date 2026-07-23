@@ -19,9 +19,7 @@ async function main() {
   for (;;) {
     try {
       const result = await pollAllEnabledBindings({ durationMs: DEFAULT_DURATION_MS })
-      console.log(
-        `[wechat-gateway] window done polled=${result.polled} sessionExpired=${result.sessionExpired}`,
-      )
+      console.log(`[wechat-gateway] window done polled=${result.polled} sessionExpired=${result.sessionExpired}`)
     } catch (error) {
       console.error('[wechat-gateway] error:', error)
     }

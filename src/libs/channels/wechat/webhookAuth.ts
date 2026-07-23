@@ -5,11 +5,7 @@ import { appEnv } from '@/envs/app'
  * Prefer WECHAT_WEBHOOK_SECRET; fall back to CRON_SECRET.
  */
 export function resolveWechatWebhookSecret(): string {
-  return (
-    appEnv.WECHAT_WEBHOOK_SECRET?.trim() ||
-    appEnv.CRON_SECRET?.trim() ||
-    ''
-  )
+  return appEnv.WECHAT_WEBHOOK_SECRET?.trim() || appEnv.CRON_SECRET?.trim() || ''
 }
 
 export function authorizeWechatWebhook(request: Request): boolean {

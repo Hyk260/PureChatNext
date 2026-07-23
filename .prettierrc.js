@@ -5,7 +5,7 @@
  * @type {import("prettier").Config}
  */
 const config = {
-  trailingComma: "es5",
+  trailingComma: 'es5',
   /** 是否使用制表符 */
   useTabs: false,
   /** Tab 键的空格数 */
@@ -13,9 +13,9 @@ const config = {
   /** 每一行的宽度 */
   printWidth: 120,
   /** 是否换行 */
-  proseWrap: "preserve",
+  proseWrap: 'preserve',
   /** 箭头函数的参数无论有几个，都要括号包裹 */
-  arrowParens: "always",
+  arrowParens: 'always',
   /** 是否加分号 */
   semi: false,
   /** 是否采用单引号 */
@@ -23,7 +23,7 @@ const config = {
   /** 是否使用单引号 */
   jsxSingleQuote: true,
   /** 换行符的使用 */
-  endOfLine: "auto",
-};
+  endOfLine: 'auto',
+}
 
-export default config;
+export default config

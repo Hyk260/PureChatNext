@@ -1,9 +1,9 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { searchService } from '@/server/search';
+import { searchService } from '@/server/search'
 
-import { GET, POST } from './route';
+import { GET, POST } from './route'
 
 vi.mock('@/server/search', () => ({
   searchService: {
@@ -11,7 +11,7 @@ vi.mock('@/server/search', () => ({
     query: vi.fn(),
     webSearch: vi.fn(),
   },
-}));
+}))
 
 const postJson = (body: unknown) => {
   return POST(
@@ -19,22 +19,22 @@ const postJson = (body: unknown) => {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
       method: 'POST',
-    }),
-  );
-};
+    })
+  )
+}
 
 describe('/api/dev/web-search', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
   it('returns available actions from GET', async () => {
-    const response = await GET();
-    const payload = await response.json();
+    const response = await GET()
+    const payload = await response.json()
 
-    expect(response.status).toBe(200);
-    expect(payload.actions).toEqual(['query', 'webSearch', 'crawlPages']);
-  });
+    expect(response.status).toBe(200)
+    expect(payload.actions).toEqual(['query', 'webSearch', 'crawlPages'])
+  })
 
   it('dispatches query action to searchService.query', async () => {
     const result = {
@@ -42,8 +42,8 @@ describe('/api/dev/web-search', () => {
       query: 'nextjs',
       resultNumbers: 0,
       results: [],
-    };
-    vi.mocked(searchService.query).mockResolvedValue(result);
+    }
+    vi.mocked(searchService.query).mockResolvedValue(result)
 
     const response = await postJson({
       action: 'query',
@@ -53,17 +53,17 @@ describe('/api/dev/web-search', () => {
         searchTimeRange: 'day',
       },
       query: ' nextjs ',
-    });
-    const payload = await response.json();
+    })
+    const payload = await response.json()
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(200)
     expect(searchService.query).toHaveBeenCalledWith('nextjs', {
       searchCategories: ['general'],
       searchEngines: ['google'],
       searchTimeRange: 'day',
-    });
-    expect(payload).toEqual({ action: 'query', result, success: true });
-  });
+    })
+    expect(payload).toEqual({ action: 'query', result, success: true })
+  })
 
   it('dispatches webSearch action to searchService.webSearch', async () => {
     const result = {
@@ -80,8 +80,8 @@ describe('/api/dev/web-search', () => {
           url: 'https://purechat.dev',
         },
       ],
-    };
-    vi.mocked(searchService.webSearch).mockResolvedValue(result);
+    }
+    vi.mocked(searchService.webSearch).mockResolvedValue(result)
 
     const response = await postJson({
       action: 'webSearch',
@@ -89,18 +89,18 @@ describe('/api/dev/web-search', () => {
       searchCategories: ['general'],
       searchEngines: ['searxng'],
       searchTimeRange: 'week',
-    });
-    const payload = await response.json();
+    })
+    const payload = await response.json()
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(200)
     expect(searchService.webSearch).toHaveBeenCalledWith({
       query: 'pure chat',
       searchCategories: ['general'],
       searchEngines: ['searxng'],
       searchTimeRange: 'week',
-    });
-    expect(payload).toEqual({ action: 'webSearch', result, success: true });
-  });
+    })
+    expect(payload).toEqual({ action: 'webSearch', result, success: true })
+  })
 
   it('dispatches crawlPages action to searchService.crawlPages', async () => {
     const result = {
@@ -111,48 +111,48 @@ describe('/api/dev/web-search', () => {
           originalUrl: 'https://example.com',
         },
       ],
-    };
-    vi.mocked(searchService.crawlPages).mockResolvedValue(result);
+    }
+    vi.mocked(searchService.crawlPages).mockResolvedValue(result)
 
     const response = await postJson({
       action: 'crawlPages',
       impls: ['naive'],
       urls: ['https://example.com'],
-    });
-    const payload = await response.json();
+    })
+    const payload = await response.json()
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(200)
     expect(searchService.crawlPages).toHaveBeenCalledWith({
       impls: ['naive'],
       urls: ['https://example.com'],
-    });
-    expect(payload).toEqual({ action: 'crawlPages', result, success: true });
-  });
+    })
+    expect(payload).toEqual({ action: 'crawlPages', result, success: true })
+  })
 
   it('returns 400 for invalid action', async () => {
-    const response = await postJson({ action: 'missing' });
-    const payload = await response.json();
+    const response = await postJson({ action: 'missing' })
+    const payload = await response.json()
 
-    expect(response.status).toBe(400);
-    expect(payload.success).toBe(false);
-    expect(payload.error).toContain('Invalid action');
-  });
+    expect(response.status).toBe(400)
+    expect(payload.success).toBe(false)
+    expect(payload.error).toContain('Invalid action')
+  })
 
   it('returns 400 for missing query', async () => {
-    const response = await postJson({ action: 'webSearch', query: ' ' });
-    const payload = await response.json();
+    const response = await postJson({ action: 'webSearch', query: ' ' })
+    const payload = await response.json()
 
-    expect(response.status).toBe(400);
-    expect(payload).toEqual({ error: 'Missing or invalid "query" field', success: false });
-  });
+    expect(response.status).toBe(400)
+    expect(payload).toEqual({ error: 'Missing or invalid "query" field', success: false })
+  })
 
   it('returns 400 for empty urls', async () => {
-    const response = await postJson({ action: 'crawlPages', urls: [] });
-    const payload = await response.json();
+    const response = await postJson({ action: 'crawlPages', urls: [] })
+    const payload = await response.json()
 
-    expect(response.status).toBe(400);
-    expect(payload).toEqual({ error: 'Missing or invalid "urls" field', success: false });
-  });
+    expect(response.status).toBe(400)
+    expect(payload).toEqual({ error: 'Missing or invalid "urls" field', success: false })
+  })
 
   it('returns 400 for invalid JSON', async () => {
     const response = await POST(
@@ -160,21 +160,21 @@ describe('/api/dev/web-search', () => {
         body: '{',
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
-      }),
-    );
-    const payload = await response.json();
+      })
+    )
+    const payload = await response.json()
 
-    expect(response.status).toBe(400);
-    expect(payload).toEqual({ error: 'Invalid JSON body', success: false });
-  });
+    expect(response.status).toBe(400)
+    expect(payload).toEqual({ error: 'Invalid JSON body', success: false })
+  })
 
   it('returns 500 when service throws', async () => {
-    vi.mocked(searchService.webSearch).mockRejectedValue(new Error('provider down'));
+    vi.mocked(searchService.webSearch).mockRejectedValue(new Error('provider down'))
 
-    const response = await postJson({ action: 'webSearch', query: 'test' });
-    const payload = await response.json();
+    const response = await postJson({ action: 'webSearch', query: 'test' })
+    const payload = await response.json()
 
-    expect(response.status).toBe(500);
-    expect(payload).toEqual({ error: 'provider down', success: false });
-  });
-});
+    expect(response.status).toBe(500)
+    expect(payload).toEqual({ error: 'provider down', success: false })
+  })
+})

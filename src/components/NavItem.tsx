@@ -47,13 +47,17 @@ const NavItem = memo<NavItemProps>(
           </Center>
         ) : null}
         <Flex vertical flex={1} style={{ overflow: 'hidden' }}>
-          <Typography.Text ellipsis title={typeof title === 'string' ? title : undefined} style={{ color: textColor, flex: 1, minWidth: 0 }}>
+          <Typography.Text
+            ellipsis
+            title={typeof title === 'string' ? title : undefined}
+            style={{ color: textColor, flex: 1, minWidth: 0 }}
+          >
             {title}
           </Typography.Text>
         </Flex>
       </Block>
     )
-  },
+  }
 )
 
 NavItem.displayName = 'NavItem'

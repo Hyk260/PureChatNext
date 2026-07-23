@@ -36,9 +36,7 @@ const ProviderSection = memo<{
 }>(({ ids, title }) => (
   <Flex vertical gap={16}>
     <Flex align='center' gap={8}>
-      <Typography.Text style={{ fontSize: 18, fontWeight: 600 }}>
-        {title}
-      </Typography.Text>
+      <Typography.Text style={{ fontSize: 18, fontWeight: 600 }}>{title}</Typography.Text>
       <Typography.Text type='secondary' style={{ fontSize: 14 }}>
         {ids.length}
       </Typography.Text>

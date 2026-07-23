@@ -17,9 +17,9 @@ EmailService
 ### 基础示例
 
 ```typescript
-import { EmailService } from '@/server/services/email';
+import { EmailService } from '@/server/services/email'
 
-const emailService = new EmailService();
+const emailService = new EmailService()
 
 // 发送一封简单的文本邮件
 await emailService.sendMail({
@@ -28,7 +28,7 @@ await emailService.sendMail({
   subject: '欢迎来到 PureChat',
   text: '感谢注册！',
   html: '<p>感谢注册！</p>',
-});
+})
 ```
 
 ### 多个收件人
@@ -39,7 +39,7 @@ await emailService.sendMail({
   to: ['user1@example.com', 'user2@example.com'],
   subject: '团队更新',
   text: '查看我们的最新更新',
-});
+})
 ```
 
 ### 带附件
@@ -56,7 +56,7 @@ await emailService.sendMail({
       path: '/path/to/invoice.pdf',
     },
   ],
-});
+})
 ```
 
 ### 设置回复地址
@@ -68,7 +68,7 @@ await emailService.sendMail({
   to: 'user@example.com',
   subject: '联系我们',
   text: '回复此邮件获取支持。',
-});
+})
 ```
 
 ## 配置
@@ -110,10 +110,10 @@ EMAIL_SERVICE_PROVIDER=resend
 你也可以使用知名的邮件服务（Gmail、SendGrid 等）：
 
 ```typescript
-import { EmailImplType, EmailService } from '@/server/services/email';
-import { NodemailerImpl } from '@/server/services/email/impls/nodemailer';
+import { EmailImplType, EmailService } from '@/server/services/email'
+import { NodemailerImpl } from '@/server/services/email/impls/nodemailer'
 
-const emailService = new EmailService(EmailImplType.Nodemailer);
+const emailService = new EmailService(EmailImplType.Nodemailer)
 // 在构造函数中配置服务名称
 ```
 
@@ -132,15 +132,15 @@ console.log('Preview URL:', result.previewUrl);
 发送邮件前，验证你的 SMTP 配置：
 
 ```typescript
-import { EmailService } from '@/server/services/email';
+import { EmailService } from '@/server/services/email'
 
-const emailService = new EmailService();
+const emailService = new EmailService()
 
 try {
-  await emailService.verify();
-  console.log('SMTP 连接验证通过 ✓');
+  await emailService.verify()
+  console.log('SMTP 连接验证通过 ✓')
 } catch (error) {
-  console.error('SMTP 验证失败:', error);
+  console.error('SMTP 验证失败:', error)
 }
 ```
 
@@ -149,15 +149,15 @@ try {
 邮件验证集成示例：
 
 ```typescript
-import { betterAuth } from 'better-auth';
+import { betterAuth } from 'better-auth'
 
-import { EmailService } from '@/server/services/email';
+import { EmailService } from '@/server/services/email'
 
 export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     sendResetPasswordEmail: async ({ user, url }) => {
-      const emailService = new EmailService();
+      const emailService = new EmailService()
 
       await emailService.sendMail({
         from: 'noreply@purechat.com',
@@ -169,13 +169,13 @@ export const auth = betterAuth({
           <p>点击下方链接重置你的密码：</p>
           <a href="${url}">重置密码</a>
         `,
-      });
+      })
     },
   },
   emailVerification: {
     enabled: true,
     sendVerificationEmail: async ({ user, url }) => {
-      const emailService = new EmailService();
+      const emailService = new EmailService()
 
       await emailService.sendMail({
         from: 'noreply@purechat.com',
@@ -187,10 +187,10 @@ export const auth = betterAuth({
           <p>点击下方链接验证你的邮箱地址：</p>
           <a href="${url}">验证邮箱</a>
         `,
-      });
+      })
     },
   },
-});
+})
 ```
 
 ## 添加新的提供商
@@ -200,7 +200,7 @@ export const auth = betterAuth({
 1. 在 `impls/[provider-name]/index.ts` 中创建提供商实现：
 
 ```typescript
-import { EmailPayload, EmailResponse, EmailServiceImpl } from '../type';
+import { EmailPayload, EmailResponse, EmailServiceImpl } from '../type'
 
 export class ResendImpl implements EmailServiceImpl {
   async sendMail(payload: EmailPayload): Promise<EmailResponse> {
@@ -224,13 +224,13 @@ export enum EmailImplType {
 export const createEmailServiceImpl = (type: EmailImplType) => {
   switch (type) {
     case EmailImplType.Nodemailer:
-      return new NodemailerImpl();
+      return new NodemailerImpl()
     case EmailImplType.Resend:
-      return new ResendImpl();
+      return new ResendImpl()
     default:
-      return new NodemailerImpl();
+      return new NodemailerImpl()
   }
-};
+}
 ```
 
 ## 错误处理

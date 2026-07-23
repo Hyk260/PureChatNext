@@ -1,17 +1,18 @@
 'use client'
 
 import { Flex } from 'antd'
-import { type MenuProps, DropdownMenuPopup, DropdownMenuPortal, DropdownMenuPositioner, DropdownMenuRoot, DropdownMenuTrigger, renderDropdownMenuItems } from '@pure/ui'
+import {
+  type MenuProps,
+  DropdownMenuPopup,
+  DropdownMenuPortal,
+  DropdownMenuPositioner,
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+  renderDropdownMenuItems,
+} from '@pure/ui'
 import { Block, Icon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import {
-  Check,
-  ChevronRight,
-  GlobeOff,
-  LibraryBig,
-  Plus,
-  Settings2,
-} from 'lucide-react'
+import { Check, ChevronRight, GlobeOff, LibraryBig, Plus, Settings2 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import ModelSelector from '@/features/chat/ModelSelector'
@@ -161,13 +162,10 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
         label: <MenuLabel active label='高级参数' />,
       },
     ],
-    [],
+    []
   )
 
-  const plusMenuContent = useMemo(
-    () => renderDropdownMenuItems(plusMenuItems),
-    [plusMenuItems],
-  )
+  const plusMenuContent = useMemo(() => renderDropdownMenuItems(plusMenuItems), [plusMenuItems])
 
   const canSend = Boolean(input.trim()) && !isBusy
 
@@ -209,12 +207,7 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
           </DropdownMenuRoot>
         </Flex>
 
-        <SendButton
-          disabled={!canSend}
-          generating={isBusy}
-          onClick={handleSend}
-          onStop={handleStop}
-        />
+        <SendButton disabled={!canSend} generating={isBusy} onClick={handleSend} onStop={handleStop} />
       </Flex>
     </Block>
   )

@@ -36,7 +36,7 @@ export function ProfileSettingsContent({
       user.email?.[0]?.toUpperCase() ||
       user.userId[0]?.toUpperCase() ||
       '?',
-    [user.email, user.fullName, user.userId, user.username],
+    [user.email, user.fullName, user.userId, user.username]
   )
 
   const showPasswordSetting = hasCredentialAccount && Boolean(user.email)
@@ -72,35 +72,21 @@ export function ProfileSettingsContent({
     },
     {
       key: 'fullName',
-      node: (
-        <FullNameSetting fullName={user.fullName ?? null} onUpdated={handleFullNameUpdated} />
-      ),
+      node: <FullNameSetting fullName={user.fullName ?? null} onUpdated={handleFullNameUpdated} />,
     },
     {
       key: 'username',
-      node: (
-        <UsernameSetting onUpdated={handleUsernameUpdated} username={user.username ?? null} />
-      ),
+      node: <UsernameSetting onUpdated={handleUsernameUpdated} username={user.username ?? null} />,
     },
     {
       key: 'interests',
-      node: (
-        <InterestsSetting
-          interests={user.interests ?? []}
-          onUpdated={handleInterestsUpdated}
-        />
-      ),
+      node: <InterestsSetting interests={user.interests ?? []} onUpdated={handleInterestsUpdated} />,
     },
     ...(showPasswordSetting
       ? [
           {
             key: 'password',
-            node: (
-              <PasswordSetting
-                email={user.email ?? null}
-                hasCredentialAccount={hasCredentialAccount}
-              />
-            ),
+            node: <PasswordSetting email={user.email ?? null} hasCredentialAccount={hasCredentialAccount} />,
           },
         ]
       : []),
@@ -115,10 +101,10 @@ export function ProfileSettingsContent({
   ]
 
   return (
-    <Flex vertical gap={24} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: "100%" }}>
-      <SettingHeader title="个人资料" />
+    <Flex vertical gap={24} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: '100%' }}>
+      <SettingHeader title='个人资料' />
 
-      <Block gap={16} title="账户" variant="filled">
+      <Block gap={16} title='账户' variant='filled'>
         <Flex vertical style={{ padding: 16 }}>
           {accountRows.map((row, index) => (
             <Fragment key={row.key}>
@@ -129,9 +115,7 @@ export function ProfileSettingsContent({
         </Flex>
       </Block>
 
-      {!s3Configured ? (
-        <p className="text-xs text-muted-foreground">头像上传需配置 S3 环境变量</p>
-      ) : null}
+      {!s3Configured ? <p className='text-xs text-muted-foreground'>头像上传需配置 S3 环境变量</p> : null}
     </Flex>
   )
 }

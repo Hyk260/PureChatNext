@@ -93,7 +93,7 @@ export const useSignIn = () => {
       if (enableEmailVerification && result.emailVerified === false) {
         message.info('请先完成邮箱验证')
         router.push(
-          `/verify-email?email=${encodeURIComponent(normalizedEmail)}&callbackUrl=${encodeURIComponent(callbackUrl)}`,
+          `/verify-email?email=${encodeURIComponent(normalizedEmail)}&callbackUrl=${encodeURIComponent(callbackUrl)}`
         )
         return
       }
@@ -136,13 +136,13 @@ export const useSignIn = () => {
             console.error('Sign in error:', ctx.error)
             if (ctx.error.status === 403) {
               router.push(
-                `/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`,
+                `/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`
               )
             }
           },
           // SPA in-app navigation — do not rely on Next server redirect
           onSuccess: () => router.push(callbackUrl),
-        },
+        }
       )
 
       if (result.error && result.error.status !== 403) {

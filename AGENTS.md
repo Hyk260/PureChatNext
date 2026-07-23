@@ -106,7 +106,7 @@ pnpm lint             # ESLint
 ```
 
 - 本地开发：浏览器访问 **SPA 端口** `http://localhost:5174`（不要依赖线上 Debug Proxy）；Next 在 `3000`
-- 本地 **`APP_URL=http://localhost:5174`**（邮件/OAuth 与 SPA 同源，`/api` 经 Vite 代理）；生产用正式域名。详见 `docs/env-setup.zh-CN.md` 的 APP_URL 一节
+- 本地 **`APP_URL=http://localhost:5174`**（邮件/OAuth 与 SPA 同源，`/api` 经 Vite 代理）；生产用正式域名。详见 `docs/env-setup.zh-CN.md` 的 APP\_URL 一节
 - 生产同域：Vite 产物在 `public/_spa/**`（`next.config` 长缓存）；HTML 由 `src/app/spa/[[...path]]/route.ts` 注入 `__SERVER_CONFIG__`；未匹配 UI 路径经 `rewrites.fallback` → `/spa`
 - Vercel：单项目；`installCommand` / `buildCommand` 见根目录 `vercel.json`；环境变量不变
 - 回滚：`main` 仍为改造前纯 Next App Router，直到 SPA 分支稳定
@@ -148,12 +148,12 @@ cd packages/file-loaders && pnpm exec vitest run --silent='passed-only' 'src/loa
 
 ## 延伸阅读
 
-| 文档 | 用途 |
-|------|------|
-| `docs/quick-start.zh-CN.md` | 快速开始、Supabase 配置 |
-| `docs/env-setup.zh-CN.md` | 环境变量详解 |
-| `docs/drizzle-setup.zh-CN.md` | 数据库迁移 |
-| `docs/self-hosting/online-search.zh-CN.md` | 联网搜索与爬虫配置 |
-| `docs/self-hosting/wechat-channel.zh-CN.md` | 微信 iLink 扫码渠道 |
-| `docs/self-hosting/qq-channel.zh-CN.md` | QQ 开放平台机器人渠道 |
-| `.cursor/rules/debug-usage.md` | debug 日志规范 |
+| 文档                                        | 用途                    |
+| ------------------------------------------- | ----------------------- |
+| `docs/quick-start.zh-CN.md`                 | 快速开始、Supabase 配置 |
+| `docs/env-setup.zh-CN.md`                   | 环境变量详解            |
+| `docs/drizzle-setup.zh-CN.md`               | 数据库迁移              |
+| `docs/self-hosting/online-search.zh-CN.md`  | 联网搜索与爬虫配置      |
+| `docs/self-hosting/wechat-channel.zh-CN.md` | 微信 iLink 扫码渠道     |
+| `docs/self-hosting/qq-channel.zh-CN.md`     | QQ 开放平台机器人渠道   |
+| `.cursor/rules/debug-usage.md`              | debug 日志规范          |

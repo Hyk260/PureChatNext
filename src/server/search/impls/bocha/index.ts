@@ -1,22 +1,18 @@
-import {
-  type SearchParams,
-  type UniformSearchResponse,
-  type UniformSearchResult,
-} from '@pure/types';
-import debug from 'debug';
-import urlJoin from 'url-join';
+import { type SearchParams, type UniformSearchResponse, type UniformSearchResult } from '@pure/types'
+import debug from 'debug'
+import urlJoin from 'url-join'
 
-import { type SearchServiceImpl } from '../type';
-import { type BochaResponse, type BochaSearchParameters } from './type';
+import { type SearchServiceImpl } from '../type'
+import { type BochaResponse, type BochaSearchParameters } from './type'
 
-const log = debug('search:Bocha');
+const log = debug('search:Bocha')
 
 const timeRangeMapping = {
   day: 'oneDay',
   month: 'oneMonth',
   week: 'oneWeek',
   year: 'oneYear',
-};
+}
 
 /**
  * Bocha implementation of the search service
@@ -24,23 +20,23 @@ const timeRangeMapping = {
  */
 export class BochaImpl implements SearchServiceImpl {
   private get apiKey(): string | undefined {
-    return process.env.BOCHA_API_KEY;
+    return process.env.BOCHA_API_KEY
   }
 
   private get baseUrl(): string {
     // Assuming the base URL is consistent with the crawl endpoint
-    return 'https://api.bochaai.com/v1';
+    return 'https://api.bochaai.com/v1'
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
-    log('Starting Bocha query with query: "%s", params: %o', query, params);
-    const endpoint = urlJoin(this.baseUrl, '/web-search');
+    log('Starting Bocha query with query: "%s", params: %o', query, params)
+    const endpoint = urlJoin(this.baseUrl, '/web-search')
 
     const defaultQueryParams: BochaSearchParameters = {
       count: 15,
       query,
       summary: true,
-    };
+    }
 
     const body: BochaSearchParameters = {
       ...defaultQueryParams,
@@ -48,67 +44,65 @@ export class BochaImpl implements SearchServiceImpl {
         params?.searchTimeRange && params.searchTimeRange !== 'anytime'
           ? (timeRangeMapping[params.searchTimeRange as keyof typeof timeRangeMapping] ?? undefined)
           : undefined,
-    };
+    }
 
-    log('Constructed request body: %o', body);
+    log('Constructed request body: %o', body)
 
-    let response: Response;
-    const startAt = Date.now();
-    let costTime: number;
+    let response: Response
+    const startAt = Date.now()
+    let costTime: number
     try {
-      log('Sending request to endpoint: %s', endpoint);
+      log('Sending request to endpoint: %s', endpoint)
       response = await fetch(endpoint, {
         body: JSON.stringify(body),
         headers: {
-          'Authorization': this.apiKey ? `Bearer ${this.apiKey}` : '',
+          Authorization: this.apiKey ? `Bearer ${this.apiKey}` : '',
           'Content-Type': 'application/json',
         },
         method: 'POST',
-      });
-      log('Received response with status: %d', response.status);
-      costTime = Date.now() - startAt;
+      })
+      log('Received response with status: %d', response.status)
+      costTime = Date.now() - startAt
     } catch (error) {
-      log.extend('error')('Bocha fetch error: %o', error);
-      throw new Error('Failed to connect to Bocha.', { cause: error });
+      log.extend('error')('Bocha fetch error: %o', error)
+      throw new Error('Failed to connect to Bocha.', { cause: error })
     }
 
     if (!response.ok) {
-      const errorBody = await response.text();
+      const errorBody = await response.text()
       log.extend('error')(
         `Bocha request failed with status ${response.status}: %s`,
-        errorBody.length > 200 ? `${errorBody.slice(0, 200)}...` : errorBody,
-      );
-      throw new Error(`Bocha request failed: ${response.statusText}`, { cause: errorBody });
+        errorBody.length > 200 ? `${errorBody.slice(0, 200)}...` : errorBody
+      )
+      throw new Error(`Bocha request failed: ${response.statusText}`, { cause: errorBody })
     }
 
     try {
-      const bochaResponse = (await response.json()) as BochaResponse;
+      const bochaResponse = (await response.json()) as BochaResponse
 
-      log('Parsed Bocha response: %o', bochaResponse);
+      log('Parsed Bocha response: %o', bochaResponse)
 
-      const mappedResults = (bochaResponse.data.webPages.value || []).map(
-        (result): UniformSearchResult => ({
-          category: 'general', // Default category
-          content: result.summary || result.snippet || '', // Prioritize content, fallback to snippet
-          engines: ['bocha'], // Use 'bocha' as the engine name
-          parsedUrl: result.url ? new URL(result.url).hostname : '', // Basic URL parsing
-          score: 1, // Default score to 1
-          title: result.name || '',
-          url: result.url,
-        }),
-      );
+      const mappedResults = (bochaResponse.data.webPages.value || []).map((result): UniformSearchResult => ({
+        category: 'general', // Default category
+        content: result.summary || result.snippet || '', // Prioritize content, fallback to snippet
+        engines: ['bocha'], // Use 'bocha' as the engine name
+        parsedUrl: result.url ? new URL(result.url).hostname : '', // Basic URL parsing
+        score: 1, // Default score to 1
+        title: result.name || '',
+        url: result.url,
+      }))
 
-      log('Mapped %d results to SearchResult format', mappedResults.length);
+      log('Mapped %d results to SearchResult format', mappedResults.length)
 
       return {
         costTime,
         query,
         resultNumbers: mappedResults.length,
         results: mappedResults,
-      };
+      }
     } catch (error) {
-      log.extend('error')('Error parsing Bocha response: %o', error);
-      throw new Error('Failed to parse Bocha response.', { cause: error });
+      log.extend('error')('Error parsing Bocha response: %o', error)
+      throw new Error('Failed to parse Bocha response.', { cause: error })
     }
   }
 }

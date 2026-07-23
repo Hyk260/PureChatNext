@@ -13,7 +13,7 @@ const ResourceHomePage = () => {
   const searchParams = useSearchParams()
   const categoryParam = (searchParams.get('category') as FilesTabs) || FilesTabs.All
   const { setCategory, setLibraryId } = useResourceManagerStore(
-    useShallow((s) => ({ setCategory: s.setCategory, setLibraryId: s.setLibraryId })),
+    useShallow((s) => ({ setCategory: s.setCategory, setLibraryId: s.setLibraryId }))
   )
 
   useEffect(() => {

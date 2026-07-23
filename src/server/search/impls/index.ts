@@ -1,15 +1,15 @@
-import { AnspireImpl } from './anspire';
-import { BochaImpl } from './bocha';
-import { BraveImpl } from './brave';
-import { ExaImpl } from './exa';
-import { FirecrawlImpl } from './firecrawl';
-import { GoogleImpl } from './google';
-import { JinaImpl } from './jina';
-import { KagiImpl } from './kagi';
-import { Search1APIImpl } from './search1api';
-import { SearXNGImpl } from './searxng';
-import { TavilyImpl } from './tavily';
-import { type SearchServiceImpl } from './type';
+import { AnspireImpl } from './anspire'
+import { BochaImpl } from './bocha'
+import { BraveImpl } from './brave'
+import { ExaImpl } from './exa'
+import { FirecrawlImpl } from './firecrawl'
+import { GoogleImpl } from './google'
+import { JinaImpl } from './jina'
+import { KagiImpl } from './kagi'
+import { Search1APIImpl } from './search1api'
+import { SearXNGImpl } from './searxng'
+import { TavilyImpl } from './tavily'
+import { type SearchServiceImpl } from './type'
 
 /**
  * Available search service implementations
@@ -31,54 +31,52 @@ export enum SearchImplType {
 /**
  * Create a search service implementation instance
  */
-export const createSearchServiceImpl = (
-  type: SearchImplType = SearchImplType.SearXNG,
-): SearchServiceImpl => {
+export const createSearchServiceImpl = (type: SearchImplType = SearchImplType.SearXNG): SearchServiceImpl => {
   switch (type) {
     case SearchImplType.Anspire: {
-      return new AnspireImpl();
+      return new AnspireImpl()
     }
 
     case SearchImplType.Bocha: {
-      return new BochaImpl();
+      return new BochaImpl()
     }
 
     case SearchImplType.Brave: {
-      return new BraveImpl();
+      return new BraveImpl()
     }
 
     case SearchImplType.Exa: {
-      return new ExaImpl();
+      return new ExaImpl()
     }
 
     case SearchImplType.Firecrawl: {
-      return new FirecrawlImpl();
+      return new FirecrawlImpl()
     }
 
     case SearchImplType.Google: {
-      return new GoogleImpl();
+      return new GoogleImpl()
     }
 
     case SearchImplType.Jina: {
-      return new JinaImpl();
+      return new JinaImpl()
     }
 
     case SearchImplType.Kagi: {
-      return new KagiImpl();
+      return new KagiImpl()
     }
 
     case SearchImplType.SearXNG: {
-      return new SearXNGImpl();
+      return new SearXNGImpl()
     }
 
     case SearchImplType.Tavily: {
-      return new TavilyImpl();
+      return new TavilyImpl()
     }
 
     default: {
-      return new Search1APIImpl();
+      return new Search1APIImpl()
     }
   }
-};
+}
 
-export type { SearchServiceImpl } from './type';
+export type { SearchServiceImpl } from './type'

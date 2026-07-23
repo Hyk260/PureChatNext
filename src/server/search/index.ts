@@ -1,52 +1,50 @@
-import { type SearchParams, type SearchQuery } from '@pure/types';
-import { type Crawler, type CrawlImplType, type CrawlUniformResult } from '@pure/web-crawler';
-import debug from 'debug';
-import pMap from 'p-map';
+import { type SearchParams, type SearchQuery } from '@pure/types'
+import { type Crawler, type CrawlImplType, type CrawlUniformResult } from '@pure/web-crawler'
+import debug from 'debug'
+import pMap from 'p-map'
 
-import { toolsEnv } from '@/envs/tools';
+import { toolsEnv } from '@/envs/tools'
 
-import { type SearchImplType, type SearchServiceImpl, createSearchServiceImpl } from './impls';
+import { type SearchImplType, type SearchServiceImpl, createSearchServiceImpl } from './impls'
 
-const DEFAULT_CRAWL_CONCURRENCY = 3;
-const DEFAULT_CRAWLER_RETRY = 1;
-const log = debug('web-browsing:search-service');
+const DEFAULT_CRAWL_CONCURRENCY = 3
+const DEFAULT_CRAWLER_RETRY = 1
+const log = debug('web-browsing:search-service')
 
 const parseImplEnv = (envString: string = '') => {
-  const envValue = envString.replaceAll('，', ',').trim();
-  return envValue.split(',').filter(Boolean);
-};
+  const envValue = envString.replaceAll('，', ',').trim()
+  return envValue.split(',').filter(Boolean)
+}
 
 const getMemorySnapshot = () => {
   if (typeof process === 'undefined' || typeof process.memoryUsage !== 'function') {
-    return 'non-node';
+    return 'non-node'
   }
 
-  const { heapUsed, rss } = process.memoryUsage();
+  const { heapUsed, rss } = process.memoryUsage()
 
-  return `rss=${(rss / 1024 / 1024).toFixed(1)}MB heap=${(heapUsed / 1024 / 1024).toFixed(1)}MB`;
-};
+  return `rss=${(rss / 1024 / 1024).toFixed(1)}MB heap=${(heapUsed / 1024 / 1024).toFixed(1)}MB`
+}
 
 export class SearchService {
-  private searchImpList: SearchServiceImpl[];
+  private searchImpList: SearchServiceImpl[]
 
   private get crawlerImpls() {
-    return parseImplEnv(toolsEnv.CRAWLER_IMPLS);
+    return parseImplEnv(toolsEnv.CRAWLER_IMPLS)
   }
 
   private get crawlConcurrency() {
-    return toolsEnv.CRAWL_CONCURRENCY ?? DEFAULT_CRAWL_CONCURRENCY;
+    return toolsEnv.CRAWL_CONCURRENCY ?? DEFAULT_CRAWL_CONCURRENCY
   }
 
   private get crawlerRetry() {
-    return toolsEnv.CRAWLER_RETRY ?? DEFAULT_CRAWLER_RETRY;
+    return toolsEnv.CRAWLER_RETRY ?? DEFAULT_CRAWLER_RETRY
   }
 
   constructor() {
-    const impls = this.searchImpls;
+    const impls = this.searchImpls
     this.searchImpList =
-      impls.length > 0
-        ? impls.map((impl) => createSearchServiceImpl(impl))
-        : [createSearchServiceImpl()];
+      impls.length > 0 ? impls.map((impl) => createSearchServiceImpl(impl)) : [createSearchServiceImpl()]
   }
 
   async crawlPages(input: { impls?: CrawlImplType[]; urls: string[] }) {
@@ -56,54 +54,50 @@ export class SearchService {
           'crawlPages:start urls=%d impls=%s mem=%s',
           input.urls.length,
           (input.impls || this.crawlerImpls).join(',') || '-',
-          getMemorySnapshot(),
-        );
+          getMemorySnapshot()
+        )
       }
     } catch {}
 
-    const { Crawler } = await import('@pure/web-crawler');
-    const crawler = new Crawler({ impls: this.crawlerImpls });
+    const { Crawler } = await import('@pure/web-crawler')
+    const crawler = new Crawler({ impls: this.crawlerImpls })
 
     const results = await pMap(
       input.urls,
       async (url) => {
-        return await this.crawlWithRetry(crawler, url, input.impls);
+        return await this.crawlWithRetry(crawler, url, input.impls)
       },
-      { concurrency: this.crawlConcurrency },
-    );
+      { concurrency: this.crawlConcurrency }
+    )
 
-    return { results };
+    return { results }
   }
 
-  private async crawlWithRetry(
-    crawler: Crawler,
-    url: string,
-    impls?: CrawlImplType[],
-  ): Promise<CrawlUniformResult> {
-    const maxAttempts = this.crawlerRetry + 1;
-    let lastResult: CrawlUniformResult | undefined;
-    let lastError: Error | undefined;
+  private async crawlWithRetry(crawler: Crawler, url: string, impls?: CrawlImplType[]): Promise<CrawlUniformResult> {
+    const maxAttempts = this.crawlerRetry + 1
+    let lastResult: CrawlUniformResult | undefined
+    let lastError: Error | undefined
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const result = await crawler.crawl({ impls, url });
+        const result = await crawler.crawl({ impls, url })
         try {
           if (log.enabled) {
-            log('crawlWithRetry:result crawler=%s mem=%s', result.crawler, getMemorySnapshot());
+            log('crawlWithRetry:result crawler=%s mem=%s', result.crawler, getMemorySnapshot())
           }
         } catch {}
-        lastResult = result;
+        lastResult = result
 
         if (!this.isFailedCrawlResult(result)) {
-          return result;
+          return result
         }
       } catch (error) {
-        lastError = error as Error;
+        lastError = error as Error
       }
     }
 
     if (lastResult) {
-      return lastResult;
+      return lastResult
     }
 
     return {
@@ -114,7 +108,7 @@ export class SearchService {
         errorType: lastError?.name || 'UnknownError',
       },
       originalUrl: url,
-    };
+    }
   }
 
   /**
@@ -122,11 +116,11 @@ export class SearchService {
    * 而失败的结果则包含 `errorType`/`errorMessage`。
    */
   private isFailedCrawlResult(result: CrawlUniformResult): boolean {
-    return !('contentType' in result.data);
+    return !('contentType' in result.data)
   }
 
   private get searchImpls() {
-    return parseImplEnv(toolsEnv.SEARCH_PROVIDERS) as SearchImplType[];
+    return parseImplEnv(toolsEnv.SEARCH_PROVIDERS) as SearchImplType[]
   }
 
   /**
@@ -134,16 +128,16 @@ export class SearchService {
    */
   private async queryWithImpl(impl: SearchServiceImpl, query: string, params?: SearchParams) {
     try {
-      return await impl.query(query, params);
+      return await impl.query(query, params)
     } catch (e) {
-      console.error('[SearchService] query failed:', (e as Error).message);
+      console.error('[SearchService] query failed:', (e as Error).message)
       return {
         costTime: 0,
         errorDetail: (e as Error).message,
         query,
         resultNumbers: 0,
         results: [],
-      };
+      }
     }
   }
 
@@ -151,7 +145,7 @@ export class SearchService {
    * 查询搜索结果（使用第一个提供者）
    */
   async query(query: string, params?: SearchParams) {
-    return this.queryWithImpl(this.searchImpList[0], query, params);
+    return this.queryWithImpl(this.searchImpList[0], query, params)
   }
 
   async webSearch({ query, searchCategories, searchEngines, searchTimeRange }: SearchQuery) {
@@ -163,19 +157,15 @@ export class SearchService {
           query.length,
           searchCategories?.length || 0,
           searchEngines?.length || 0,
-          getMemorySnapshot(),
-        );
+          getMemorySnapshot()
+        )
       }
     } catch {}
 
     for (const impl of this.searchImpList) {
       try {
         if (log.enabled) {
-          log(
-            'webSearch:impl impl=%s mem=%s',
-            impl.constructor.name || 'UnknownSearchImpl',
-            getMemorySnapshot(),
-          );
+          log('webSearch:impl impl=%s mem=%s', impl.constructor.name || 'UnknownSearchImpl', getMemorySnapshot())
         }
       } catch {}
 
@@ -183,7 +173,7 @@ export class SearchService {
         searchCategories,
         searchEngines,
         searchTimeRange,
-      });
+      })
 
       // 第一次重试：如果没有结果，移除搜索引擎限制
       if (data.results.length === 0 && searchEngines && searchEngines?.length > 0) {
@@ -191,23 +181,23 @@ export class SearchService {
           searchCategories,
           searchEngines: undefined,
           searchTimeRange,
-        });
+        })
       }
 
       // 第二次重试：如果仍然没有结果，移除所有限制
       if (data.results.length === 0) {
-        data = await this.queryWithImpl(impl, query);
+        data = await this.queryWithImpl(impl, query)
       }
 
       // 如果此提供者返回了结果，直接使用
       if (data.results.length > 0) {
-        return data;
+        return data
       }
     }
 
     // 所有提供者均已尝试完毕，返回空结果
-    return { costTime: 0, query, resultNumbers: 0, results: [] };
+    return { costTime: 0, query, resultNumbers: 0, results: [] }
   }
 }
 
-export const searchService = new SearchService();
+export const searchService = new SearchService()

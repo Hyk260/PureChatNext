@@ -48,7 +48,7 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
       setViewMode: s.setViewMode,
       sorter: s.sorter,
       viewMode: s.viewMode,
-    })),
+    }))
   )
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
   const toggleSidebarCollapsed = useHomeStore((s) => s.toggleSidebarCollapsed)
@@ -66,7 +66,7 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
       },
       { icon: HardDriveIcon, key: 'size' as const, label: '大小' },
     ],
-    [],
+    []
   )
 
   const sortMenuItems = useMemo(
@@ -78,11 +78,10 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
         label: option.label,
         onClick: () => setSorter(option.key),
       })),
-    [setSorter, sortOptions, sorter],
+    [setSorter, sortOptions, sorter]
   )
 
-  const currentSortLabel =
-    sortOptions.find((option) => option.key === sorter)?.label ?? '创建时间'
+  const currentSortLabel = sortOptions.find((option) => option.key === sorter)?.label ?? '创建时间'
 
   const viewMenuItems = useMemo(
     () => [
@@ -101,7 +100,7 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
         onClick: () => setViewMode('masonry'),
       },
     ],
-    [setViewMode, viewMode],
+    [setViewMode, viewMode]
   )
 
   const currentViewIcon = viewMode === 'list' ? ListIcon : Grid3x3Icon
@@ -124,19 +123,14 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
           ]
         : []),
     ],
-    [onNewFolder],
+    [onNewFolder]
   )
 
   return (
     <Flex align='center' className={styles.header} justify='space-between'>
       <Flex align='center' gap={8} style={{ overflow: 'hidden' }}>
         {sidebarCollapsed ? (
-          <ActionIcon
-            icon={PanelLeftOpen}
-            size='small'
-            title='展开侧栏'
-            onClick={toggleSidebarCollapsed}
-          />
+          <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
         ) : null}
         {hasSelected ? (
           <Flex align='center' gap={8}>

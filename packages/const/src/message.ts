@@ -1,1 +1,1 @@
-export const MESSAGE_CANCEL_FLAT = "canceled"
+export const MESSAGE_CANCEL_FLAT = 'canceled'

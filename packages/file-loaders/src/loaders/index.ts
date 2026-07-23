@@ -1,8 +1,8 @@
-import { type FileLoaderInterface, type SupportedFileType } from '../types';
-import { TextLoader } from './text';
+import { type FileLoaderInterface, type SupportedFileType } from '../types'
+import { TextLoader } from './text'
 
 // Lazy loader factory type - returns a Promise that resolves to the loader class
-type LazyLoaderFactory = () => Promise<new () => FileLoaderInterface>;
+type LazyLoaderFactory = () => Promise<new () => FileLoaderInterface>
 
 // Loader configuration map using lazy imports for HEAVY formats only.
 // pdf/doc/docx/excel/pptx pull in multi-MB parsers (pdfjs-dist, mammoth, xlsx, …)
@@ -16,40 +16,40 @@ type LazyLoaderFactory = () => Promise<new () => FileLoaderInterface>;
 // readFile of .md / .json / .ts / etc. See for the regression.
 const lazyFileLoaders: Record<Exclude<SupportedFileType, 'txt'>, LazyLoaderFactory> = {
   doc: async () => {
-    const { DocLoader } = await import('./doc');
-    return DocLoader;
+    const { DocLoader } = await import('./doc')
+    return DocLoader
   },
   docx: async () => {
-    const { DocxLoader } = await import('./docx');
-    return DocxLoader;
+    const { DocxLoader } = await import('./docx')
+    return DocxLoader
   },
   excel: async () => {
-    const { ExcelLoader } = await import('./excel');
-    return ExcelLoader;
+    const { ExcelLoader } = await import('./excel')
+    return ExcelLoader
   },
   pdf: async () => {
     // Polyfill DOMMatrix for Node.js environment before importing pdfjs-dist
     // pdfjs-dist 5.x uses DOMMatrix at module initialization which doesn't exist in Node.js
     if (typeof globalThis.DOMMatrix === 'undefined') {
       try {
-        const canvas = await import('@napi-rs/canvas');
+        const canvas = await import('@napi-rs/canvas')
         // globalThis.DOMMatrix = canvas.DOMMatrix;
-        globalThis.DOMPoint = canvas.DOMPoint;
-        globalThis.DOMRect = canvas.DOMRect;
+        globalThis.DOMPoint = canvas.DOMPoint
+        globalThis.DOMRect = canvas.DOMRect
         // globalThis.Path2D = canvas.Path2D;
       } catch (e) {
-        console.error('Error importing @napi-rs/canvas:', e);
+        console.error('Error importing @napi-rs/canvas:', e)
         // @napi-rs/canvas not available, pdfjs-dist may fail if DOMMatrix is needed
       }
     }
-    const { PdfLoader } = await import('./pdf');
-    return PdfLoader;
+    const { PdfLoader } = await import('./pdf')
+    return PdfLoader
   },
   pptx: async () => {
-    const { PptxLoader } = await import('./pptx');
-    return PptxLoader;
+    const { PptxLoader } = await import('./pptx')
+    return PptxLoader
   },
-};
+}
 
 /**
  * Get a file loader class for the specified file type.
@@ -57,16 +57,14 @@ const lazyFileLoaders: Record<Exclude<SupportedFileType, 'txt'>, LazyLoaderFacto
  * TextLoader is returned synchronously (statically imported) for `txt` and as the
  * fallback for unknown types.
  */
-export const getFileLoader = async (
-  fileType: SupportedFileType | string,
-): Promise<new () => FileLoaderInterface> => {
-  if (fileType === 'txt') return TextLoader;
-  const loaderFactory = lazyFileLoaders[fileType as Exclude<SupportedFileType, 'txt'>];
-  if (!loaderFactory) return TextLoader;
-  return loaderFactory();
-};
+export const getFileLoader = async (fileType: SupportedFileType | string): Promise<new () => FileLoaderInterface> => {
+  if (fileType === 'txt') return TextLoader
+  const loaderFactory = lazyFileLoaders[fileType as Exclude<SupportedFileType, 'txt'>]
+  if (!loaderFactory) return TextLoader
+  return loaderFactory()
+}
 
 // For backward compatibility - but prefer using getFileLoader for lazy loading
 // This is kept to avoid breaking existing imports, but it will trigger immediate loading
 // of all loaders. Consider migrating to getFileLoader.
-export { lazyFileLoaders as fileLoaderFactories };
+export { lazyFileLoaders as fileLoaderFactories }

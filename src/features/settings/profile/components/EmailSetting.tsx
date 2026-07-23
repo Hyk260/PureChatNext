@@ -56,7 +56,7 @@ export function EmailSetting({ email }: EmailSettingProps) {
             </Typography.Text>
           ) : null
         }
-        label="邮箱"
+        label='邮箱'
       >
         <Typography.Text type={email ? undefined : 'secondary'}>{email || '未绑定邮箱'}</Typography.Text>
       </SettingRow>
@@ -68,26 +68,26 @@ export function EmailSetting({ email }: EmailSettingProps) {
         footer={null}
         onCancel={() => setOpen(false)}
         open={open}
-        title="修改邮箱"
+        title='修改邮箱'
       >
-        <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+        <Typography.Text type='secondary' style={{ display: 'block', marginBottom: 16 }}>
           验证邮件将发送到新邮箱地址，验证完成后邮箱才会更新。
         </Typography.Text>
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+        <Form form={form} layout='vertical' onFinish={handleSubmit}>
           <Form.Item
-            label="新邮箱"
-            name="newEmail"
+            label='新邮箱'
+            name='newEmail'
             rules={[
               { required: true, message: '请输入新邮箱' },
               { type: 'email', message: '请输入有效的邮箱地址' },
             ]}
           >
-            <Input placeholder="new@example.com" type="email" />
+            <Input placeholder='new@example.com' type='email' />
           </Form.Item>
-          <Form.Item className="mb-0">
-            <div className="flex justify-end gap-2">
+          <Form.Item className='mb-0'>
+            <div className='flex justify-end gap-2'>
               <Button onClick={() => setOpen(false)}>取消</Button>
-              <Button htmlType="submit" loading={loading} type="primary">
+              <Button htmlType='submit' loading={loading} type='primary'>
                 确认
               </Button>
             </div>

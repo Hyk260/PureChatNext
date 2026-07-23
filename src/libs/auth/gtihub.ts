@@ -1,8 +1,8 @@
-import debug from 'debug';
+import debug from 'debug'
 
-import { authEnv } from '@/envs/auth';
+import { authEnv } from '@/envs/auth'
 
-const log = debug('auth:github');
+const log = debug('auth:github')
 
 export type ClientType = 'web' | 'app'
 
@@ -96,8 +96,8 @@ export default class GitHubAPI {
     const { clientId, clientSecret } = getGitHubSecretKey(client)
 
     if (!clientId || !clientSecret) {
-      log('invalid client config: %s', client);
-      return null;
+      log('invalid client config: %s', client)
+      return null
     }
 
     return {
@@ -169,11 +169,11 @@ export default class GitHubAPI {
 
   private static handleError(context: string, error: unknown): void {
     if (error instanceof GitHubAPIError) {
-      log('%s: %s (status=%d, code=%s)', context, error.message, error.status, error.code);
+      log('%s: %s (status=%d, code=%s)', context, error.message, error.status, error.code)
     } else if (error instanceof Error) {
-      log('%s: %s', context, error.message);
+      log('%s: %s', context, error.message)
     } else {
-      log('%s: unknown error', context);
+      log('%s: unknown error', context)
     }
   }
 

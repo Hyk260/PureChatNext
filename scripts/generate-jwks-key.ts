@@ -8,44 +8,44 @@
  *
  * 将输出的单行 JSON 字符串设置为环境变量 JWKS_KEY
  */
-import { exportJWK, generateKeyPair } from 'jose';
-import crypto from 'node:crypto';
+import { exportJWK, generateKeyPair } from 'jose'
+import crypto from 'node:crypto'
 
 function generateKeyId() {
-  return crypto.randomBytes(8).toString('hex');
+  return crypto.randomBytes(8).toString('hex')
 }
 
 async function generateJwks() {
   try {
-    console.error('正在生成 RSA 密钥对...');
+    console.error('正在生成 RSA 密钥对...')
 
     const { privateKey } = await generateKeyPair('RS256', {
       extractable: true,
-    });
+    })
 
-    const jwk = await exportJWK(privateKey);
+    const jwk = await exportJWK(privateKey)
 
-    jwk.use = 'sig';
-    jwk.kid = generateKeyId();
-    jwk.alg = 'RS256';
+    jwk.use = 'sig'
+    jwk.kid = generateKeyId()
+    jwk.alg = 'RS256'
 
-    const jwks = { keys: [jwk] };
-    const jwksString = JSON.stringify(jwks);
+    const jwks = { keys: [jwk] }
+    const jwksString = JSON.stringify(jwks)
 
-    console.log(jwksString);
+    console.log(jwksString)
 
-    console.error('\n✅ JWKS 已生成');
-    console.error('请将上面输出的 JSON 字符串直接设置为环境变量 JWKS_KEY');
-    console.error('例如在 .env.local 文件中添加:');
-    console.error('\n> 环境变量配置行 (可直接复制):');
-    console.error(`JWKS_KEY='${jwksString}'`);
-    console.error('\n⚠️ 重要: 请妥善保管此密钥，它用于签署所有用户 JWT');
+    console.error('\n✅ JWKS 已生成')
+    console.error('请将上面输出的 JSON 字符串直接设置为环境变量 JWKS_KEY')
+    console.error('例如在 .env.local 文件中添加:')
+    console.error('\n> 环境变量配置行 (可直接复制):')
+    console.error(`JWKS_KEY='${jwksString}'`)
+    console.error('\n⚠️ 重要: 请妥善保管此密钥，它用于签署所有用户 JWT')
 
-    return jwks;
+    return jwks
   } catch (error) {
-    console.error('❌ 生成 JWKS 时出错:', error);
-    process.exit(1);
+    console.error('❌ 生成 JWKS 时出错:', error)
+    process.exit(1)
   }
 }
 
-generateJwks();
+generateJwks()

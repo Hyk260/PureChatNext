@@ -1,7 +1,7 @@
-import { createEnv } from '@t3-oss/env-core';
-import { z } from 'zod';
+import { createEnv } from '@t3-oss/env-core'
+import { z } from 'zod'
 
-import { parseEnvBoolean } from './helpers';
+import { parseEnvBoolean } from './helpers'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -33,7 +33,7 @@ export const getAnalyticsConfig = () => {
       // React Scan Monitor
       REACT_SCAN_MONITOR_API_KEY: process.env.REACT_SCAN_MONITOR_API_KEY,
     },
-  });
-};
+  })
+}
 
-export const analyticsEnv = getAnalyticsConfig();
+export const analyticsEnv = getAnalyticsConfig()

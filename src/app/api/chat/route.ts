@@ -35,7 +35,7 @@ const resolveModel = (
   provider: string | undefined,
   model: string | undefined,
   apiKey: string | undefined,
-  baseURL: string | undefined,
+  baseURL: string | undefined
 ) => {
   const resolvedProvider = provider ?? 'deepseek'
   const resolvedModel = model ?? 'deepseek-v4-flash'
@@ -86,8 +86,7 @@ export async function POST(request: Request) {
   // Fail fast with a JSON error so the client can surface it (streamText would
   // otherwise return 200 with a broken stream when the env key is missing).
   if (!apiKey) {
-    const envKey =
-      resolvedProvider === 'openai' ? process.env.OPENAI_API_KEY : process.env.DEEPSEEK_API_KEY
+    const envKey = resolvedProvider === 'openai' ? process.env.OPENAI_API_KEY : process.env.DEEPSEEK_API_KEY
     if (!envKey?.trim()) {
       return new ChatSDKError('bad_request:api', `Missing API key for provider "${resolvedProvider}"`).toResponse()
     }

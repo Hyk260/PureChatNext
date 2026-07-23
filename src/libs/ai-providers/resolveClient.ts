@@ -9,8 +9,7 @@ export const PROVIDER_RUNTIME_DEFAULT_BASE_URLS: Record<SupportedProviderId, str
   openai: 'https://api.openai.com/v1',
 }
 
-export const isSupportedProviderId = (id: string): id is SupportedProviderId =>
-  id === 'openai' || id === 'deepseek'
+export const isSupportedProviderId = (id: string): id is SupportedProviderId => id === 'openai' || id === 'deepseek'
 
 export const resolveApiKeyFromHeader = (request: Request) => {
   const authHeader = request.headers.get('authorization')
@@ -23,13 +22,12 @@ export const resolveApiKeyFromHeader = (request: Request) => {
 export const resolveProviderApiKey = (
   provider: SupportedProviderId,
   headerKey: string | undefined,
-  bodyKey: string | undefined,
+  bodyKey: string | undefined
 ) => {
   const fromRequest = headerKey?.trim() || bodyKey?.trim()
   if (fromRequest) return fromRequest
 
-  const envKey =
-    provider === 'openai' ? process.env.OPENAI_API_KEY : process.env.DEEPSEEK_API_KEY
+  const envKey = provider === 'openai' ? process.env.OPENAI_API_KEY : process.env.DEEPSEEK_API_KEY
   return envKey?.trim() || undefined
 }
 
@@ -40,16 +38,14 @@ export const resolveOptionalBaseURL = (baseURL: string | undefined) => {
   return trimmed || undefined
 }
 
-export const resolveModelsListBaseURL = (
-  provider: SupportedProviderId,
-  baseURL: string | undefined,
-) => resolveOptionalBaseURL(baseURL) ?? PROVIDER_RUNTIME_DEFAULT_BASE_URLS[provider]
+export const resolveModelsListBaseURL = (provider: SupportedProviderId, baseURL: string | undefined) =>
+  resolveOptionalBaseURL(baseURL) ?? PROVIDER_RUNTIME_DEFAULT_BASE_URLS[provider]
 
 export const createProviderLanguageModel = (
   provider: SupportedProviderId,
   model: string,
   apiKey: string | undefined,
-  baseURL: string | undefined,
+  baseURL: string | undefined
 ): LanguageModel => {
   const options: { apiKey?: string; baseURL?: string } = {}
   if (apiKey) options.apiKey = apiKey
@@ -89,9 +85,7 @@ export const fetchOpenAICompatibleModels = async (params: {
 
   if (!response.ok) {
     const text = await response.text().catch(() => '')
-    throw new Error(
-      `Failed to list models (${response.status})${text ? `: ${text.slice(0, 400)}` : ''}`,
-    )
+    throw new Error(`Failed to list models (${response.status})${text ? `: ${text.slice(0, 400)}` : ''}`)
   }
 
   const json = (await response.json()) as {

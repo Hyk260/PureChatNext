@@ -53,30 +53,30 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
     const navigate = useNavigate()
 
     return (
-      <Flex vertical gap={20} style={{ width: "100%" }}>
+      <Flex vertical gap={20} style={{ width: '100%' }}>
         <span
           className={styles.backButton}
-          role="button"
+          role='button'
           tabIndex={0}
           onClick={() => navigate('/settings/messenger')}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') navigate('/settings/messenger')
           }}
         >
-          <Icon icon={ArrowLeftIcon} size="small" />
+          <Icon icon={ArrowLeftIcon} size='small' />
           <Typography.Text strong style={{ fontSize: 20 }}>
             {platformMeta.name}
           </Typography.Text>
         </span>
 
         <Block className={styles.card}>
-          <Flex align="center" gap={16}>
+          <Flex align='center' gap={16}>
             <PlatformAvatar platform={platform} size={48} />
             <Flex vertical flex={1} gap={2}>
               <Typography.Text strong style={{ fontSize: 15 }}>
                 {platformMeta.name}
               </Typography.Text>
-              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              <Typography.Text type='secondary' style={{ fontSize: 13 }}>
                 {platformMeta.description}
               </Typography.Text>
             </Flex>
@@ -87,7 +87,7 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
         {children}
       </Flex>
     )
-  },
+  }
 )
 
 MessengerDetailShell.displayName = 'MessengerDetailShell'

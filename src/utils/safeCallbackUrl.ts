@@ -2,10 +2,7 @@
  * Resolve post-login redirect targets without open redirects.
  * Only same-app relative paths (`/...`) are allowed.
  */
-export function resolveCallbackUrl(
-  raw: string | null | undefined,
-  fallback = '/',
-): string {
+export function resolveCallbackUrl(raw: string | null | undefined, fallback = '/'): string {
   if (!raw) return fallback
 
   const value = raw.trim()

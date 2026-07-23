@@ -7,11 +7,7 @@ import Scrollbar from '@/components/Scrollbar'
 import { memo, useCallback, useMemo, type Key, type ReactElement } from 'react'
 
 import NavItem from '@/components/NavItem'
-import {
-  findSidebarSection,
-  SIDEBAR_ACCORDION_KEYS,
-  SIDEBAR_SPACER_ID,
-} from '@/const/home/nav'
+import { findSidebarSection, SIDEBAR_ACCORDION_KEYS, SIDEBAR_SPACER_ID } from '@/const/home/nav'
 import AgentSection from '@/features/home/HomeSidebar/sections/AgentSection'
 import RecentsSection from '@/features/home/HomeSidebar/sections/RecentsSection'
 import { pickAccordionExpandedKeys } from '@/features/home/store/sidebarDefaults'
@@ -35,19 +31,16 @@ const SidebarBody = memo(() => {
   const visibleKeys = useMemo(
     () =>
       sidebarItems.filter(
-        (key) =>
-          key === SIDEBAR_SPACER_ID ||
-          key === 'agents' ||
-          !hiddenSidebarSections.includes(key),
+        (key) => key === SIDEBAR_SPACER_ID || key === 'agents' || !hiddenSidebarSections.includes(key)
       ),
-    [hiddenSidebarSections, sidebarItems],
+    [hiddenSidebarSections, sidebarItems]
   )
 
   const handleAccordionExpandedChange = useCallback(
     (accordionKeys: string[], expandedKeys: Key[]) => {
       setSidebarAccordionExpandedKeys(accordionKeys, expandedKeys.map(String))
     },
-    [setSidebarAccordionExpandedKeys],
+    [setSidebarAccordionExpandedKeys]
   )
 
   const renderNavLink = useCallback(
@@ -73,7 +66,7 @@ const SidebarBody = memo(() => {
         </Link>
       )
     },
-    [message, pathname],
+    [message, pathname]
   )
 
   const buildContent = useCallback(
@@ -95,7 +88,7 @@ const SidebarBody = memo(() => {
             onExpandedChange={(keys) => handleAccordionExpandedChange(accordionKeys, keys)}
           >
             {accGroup.map((item) => item.element)}
-          </Accordion>,
+          </Accordion>
         )
         accGroup = []
       }
@@ -119,23 +112,17 @@ const SidebarBody = memo(() => {
       flushAccordion()
       return elements
     },
-    [handleAccordionExpandedChange, renderNavLink, sidebarExpandedKeys],
+    [handleAccordionExpandedChange, renderNavLink, sidebarExpandedKeys]
   )
 
-  const topKeys = useMemo(
-    () => {
-      const idx = visibleKeys.indexOf(SIDEBAR_SPACER_ID)
-      return idx === -1 ? visibleKeys : visibleKeys.slice(0, idx)
-    },
-    [visibleKeys],
-  )
-  const bottomKeys = useMemo(
-    () => {
-      const idx = visibleKeys.indexOf(SIDEBAR_SPACER_ID)
-      return idx === -1 ? [] : visibleKeys.slice(idx + 1)
-    },
-    [visibleKeys],
-  )
+  const topKeys = useMemo(() => {
+    const idx = visibleKeys.indexOf(SIDEBAR_SPACER_ID)
+    return idx === -1 ? visibleKeys : visibleKeys.slice(0, idx)
+  }, [visibleKeys])
+  const bottomKeys = useMemo(() => {
+    const idx = visibleKeys.indexOf(SIDEBAR_SPACER_ID)
+    return idx === -1 ? [] : visibleKeys.slice(idx + 1)
+  }, [visibleKeys])
 
   const topContent = useMemo(() => buildContent(topKeys), [buildContent, topKeys])
   const bottomContent = useMemo(() => buildContent(bottomKeys), [buildContent, bottomKeys])
@@ -144,10 +131,7 @@ const SidebarBody = memo(() => {
 
   return (
     <Flex vertical flex={1} gap={1} style={{ minHeight: 0 }}>
-      <Scrollbar
-        style={{ flex: 1, minHeight: 0, width: '100%' }}
-        viewStyle={{ paddingInline: '4px 8px' }}
-      >
+      <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }} viewStyle={{ paddingInline: '4px 8px' }}>
         <Flex vertical flex={1} gap={1} style={{ minHeight: '100%' }}>
           {topContent}
         </Flex>

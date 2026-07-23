@@ -6,8 +6,8 @@ import { SettingHeader } from '@/features/settings/profile/components/SettingHea
 
 export default function Page() {
   return (
-    <Flex vertical gap={20} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: "100%" }}>
-      <SettingHeader title="聊天平台" />
+    <Flex vertical gap={20} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: '100%' }}>
+      <SettingHeader title='聊天平台' />
       <MessengerPage />
     </Flex>
   )

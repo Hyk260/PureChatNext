@@ -46,19 +46,13 @@ const CommunityHeader = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
   const toggleSidebarCollapsed = useHomeStore((s) => s.toggleSidebarCollapsed)
 
-  const displayName =
-    session?.user?.name ?? session?.user?.email?.split('@')[0] ?? '访客'
+  const displayName = session?.user?.name ?? session?.user?.email?.split('@')[0] ?? '访客'
 
   return (
     <Flex align='center' className={styles.header} justify='space-between'>
       <Flex align='center' flex={1} gap={8} style={{ overflow: 'hidden' }}>
         {sidebarCollapsed ? (
-          <ActionIcon
-            icon={PanelLeftOpen}
-            size='small'
-            title='展开侧栏'
-            onClick={toggleSidebarCollapsed}
-          />
+          <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
         ) : null}
         <Typography.Text ellipsis strong style={{ fontSize: 16 }}>
           {title}

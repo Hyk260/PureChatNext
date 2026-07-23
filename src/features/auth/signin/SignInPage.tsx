@@ -33,7 +33,7 @@ const SignInContent = () => {
   if (!serverConfigInit) {
     return (
       <AuthPageContainer>
-        <Loading debugId="SigninConfig" />
+        <Loading debugId='SigninConfig' />
       </AuthPageContainer>
     )
   }

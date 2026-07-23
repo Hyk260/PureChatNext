@@ -46,9 +46,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
     if (!query) return list
 
     return list.filter(
-      (model) =>
-        model.displayName.toLowerCase().includes(query) ||
-        model.id.toLowerCase().includes(query),
+      (model) => model.displayName.toLowerCase().includes(query) || model.id.toLowerCase().includes(query)
     )
   }, [keyword, models])
 

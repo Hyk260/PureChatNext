@@ -32,7 +32,11 @@ const CommunitySidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flex vertical className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')} style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}>
+    <Flex
+      vertical
+      className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')}
+      style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}
+    >
       <ScrollShadow size={2} style={{ height: '100%', width: 240 }}>
         <Flex vertical gap={1} style={{ height: '100%', paddingBlock: 4 }}>
           <CommunitySidebarHeader />

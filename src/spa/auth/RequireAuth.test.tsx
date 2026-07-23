@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 
 vi.mock('antd', () => ({
-  Skeleton: () => <div data-testid="auth-skeleton" />,
+  Skeleton: () => <div data-testid='auth-skeleton' />,
   Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))
 
@@ -26,11 +26,11 @@ function renderAt(path: string) {
               <div>chat-ok</div>
             </RequireAuth>
           }
-          path="/chat"
+          path='/chat'
         />
-        <Route element={<div>signin-page</div>} path="/signin" />
+        <Route element={<div>signin-page</div>} path='/signin' />
       </Routes>
-    </MemoryRouter>,
+    </MemoryRouter>
   )
 }
 

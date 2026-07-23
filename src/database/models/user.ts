@@ -3,7 +3,17 @@ import { hashPassword } from 'better-auth/crypto'
 import { and, count, eq, inArray, lt } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import { account, passkey, session, twoFactor, users, verification , type User, type UserItem, type UserWithoutPassword } from '../schemas'
+import {
+  account,
+  passkey,
+  session,
+  twoFactor,
+  users,
+  verification,
+  type User,
+  type UserItem,
+  type UserWithoutPassword,
+} from '../schemas'
 import { generateAuthUserId } from '../utils/idGenerator'
 import { verifyAccountPassword } from '@/libs/better-auth/server/verify-account-password'
 
@@ -90,10 +100,7 @@ export class UserModel {
   }
 
   /** 按 Better Auth 主键 id 更新资料字段（全名、兴趣等） */
-  static updateProfileById = async (
-    id: string,
-    value: { fullName?: string | null; interests?: string[] },
-  ) => {
+  static updateProfileById = async (id: string, value: { fullName?: string | null; interests?: string[] }) => {
     return this.db
       .update(users)
       .set({ ...value, updatedAt: new Date() })

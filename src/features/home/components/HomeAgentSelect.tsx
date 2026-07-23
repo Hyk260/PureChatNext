@@ -70,11 +70,7 @@ const HomeAgentSelect = memo(() => {
   }
 
   const listContent = (
-    <Scrollbar
-      style={{ width: 360, height: 'auto' }}
-      maxHeight={8 * 56 + 7 * 2 + 8}
-      viewStyle={{ padding: 4 }}
-    >
+    <Scrollbar style={{ width: 360, height: 'auto' }} maxHeight={8 * 56 + 7 * 2 + 8} viewStyle={{ padding: 4 }}>
       <Flex vertical gap={2}>
         {agents.map((agent) => {
           const active = agent.id === selectedAgentId

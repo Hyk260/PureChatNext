@@ -30,9 +30,7 @@ const MainShellLayout = ({ children, header, sidebar }: MainShellLayoutProps) =>
       {sidebar}
       <Flex vertical className={styles.main} flex={1} style={{ height: '100%', minHeight: 0 }}>
         {header}
-        <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }}>
-          {children}
-        </Scrollbar>
+        <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }}>{children}</Scrollbar>
       </Flex>
     </Flex>
   )

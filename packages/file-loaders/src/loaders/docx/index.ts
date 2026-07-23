@@ -1,11 +1,11 @@
-import fs from 'node:fs/promises';
+import fs from 'node:fs/promises'
 
-import debug from 'debug';
-import mammoth from 'mammoth';
+import debug from 'debug'
+import mammoth from 'mammoth'
 
-import { type DocumentPage, type FileLoaderInterface } from '../../types';
+import { type DocumentPage, type FileLoaderInterface } from '../../types'
 
-const log = debug('file-loaders:docx');
+const log = debug('file-loaders:docx')
 
 /**
  * Loads Word documents (.docx) using mammoth library.
@@ -13,23 +13,23 @@ const log = debug('file-loaders:docx');
  */
 export class DocxLoader implements FileLoaderInterface {
   async loadPages(filePath: string): Promise<DocumentPage[]> {
-    log('Loading DOCX file:', filePath);
+    log('Loading DOCX file:', filePath)
     try {
       // Read file as buffer
-      const buffer = await fs.readFile(filePath);
-      log('File buffer read, size:', buffer.length);
+      const buffer = await fs.readFile(filePath)
+      log('File buffer read, size:', buffer.length)
 
       // Extract text using mammoth
-      const result = await mammoth.extractRawText({ buffer });
-      const pageContent = result.value;
-      log('Text extracted, length:', pageContent.length);
+      const result = await mammoth.extractRawText({ buffer })
+      const pageContent = result.value
+      log('Text extracted, length:', pageContent.length)
 
       // Count lines and characters
-      const lines = pageContent.split('\n');
-      const lineCount = lines.length;
-      const charCount = pageContent.length;
+      const lines = pageContent.split('\n')
+      const lineCount = lines.length
+      const charCount = pageContent.length
 
-      log('DOCX document processed, lines:', lineCount, 'chars:', charCount);
+      log('DOCX document processed, lines:', lineCount, 'chars:', charCount)
 
       // Create single page with extracted content
       const page: DocumentPage = {
@@ -39,23 +39,23 @@ export class DocxLoader implements FileLoaderInterface {
           pageNumber: 1,
         },
         pageContent,
-      };
+      }
 
       // Handle warnings if any
       if (result.messages.length > 0) {
-        const warnings = result.messages.filter((msg) => msg.type === 'warning');
+        const warnings = result.messages.filter((msg) => msg.type === 'warning')
         if (warnings.length > 0) {
-          log('Extraction warnings:', warnings.length);
-          warnings.forEach((warning) => log('Warning:', warning.message));
+          log('Extraction warnings:', warnings.length)
+          warnings.forEach((warning) => log('Warning:', warning.message))
         }
       }
 
-      log('DOCX loading completed');
-      return [page];
+      log('DOCX loading completed')
+      return [page]
     } catch (e) {
-      const error = e as Error;
-      log('Error encountered while loading DOCX file');
-      console.error(`Error loading DOCX file ${filePath}: ${error.message}`);
+      const error = e as Error
+      log('Error encountered while loading DOCX file')
+      console.error(`Error loading DOCX file ${filePath}: ${error.message}`)
 
       const errorPage: DocumentPage = {
         charCount: 0,
@@ -64,9 +64,9 @@ export class DocxLoader implements FileLoaderInterface {
           error: `Failed to load DOCX file: ${error.message}`,
         },
         pageContent: '',
-      };
-      log('Created error page for failed DOCX loading');
-      return [errorPage];
+      }
+      log('Created error page for failed DOCX loading')
+      return [errorPage]
     }
   }
 
@@ -77,9 +77,9 @@ export class DocxLoader implements FileLoaderInterface {
    * @returns Aggregated content as a string.
    */
   async aggregateContent(pages: DocumentPage[]): Promise<string> {
-    log('Aggregating content from', pages.length, 'DOCX pages');
-    const result = pages.map((page) => page.pageContent).join('\n\n');
-    log('DOCX content aggregated successfully, length:', result.length);
-    return result;
+    log('Aggregating content from', pages.length, 'DOCX pages')
+    const result = pages.map((page) => page.pageContent).join('\n\n')
+    log('DOCX content aggregated successfully, length:', result.length)
+    return result
   }
 }

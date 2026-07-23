@@ -52,18 +52,11 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api', 'Unsupported provider').toResponse()
   }
 
-  const apiKey = resolveProviderApiKey(
-    provider,
-    resolveApiKeyFromHeader(request),
-    body.apiKey,
-  )
+  const apiKey = resolveProviderApiKey(provider, resolveApiKeyFromHeader(request), body.apiKey)
   const baseURL = resolveModelsListBaseURL(provider, body.baseURL)
 
   if (!apiKey) {
-    return new ChatSDKError(
-      'bad_request:api',
-      `Missing API key for provider "${provider}"`,
-    ).toResponse()
+    return new ChatSDKError('bad_request:api', `Missing API key for provider "${provider}"`).toResponse()
   }
 
   log('list models provider=%o baseURL=%o', provider, baseURL)

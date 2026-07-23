@@ -98,18 +98,13 @@ export class KnowledgeRepo {
       slug: item.slug,
       sourceType: item.sourceType,
       updatedAt: item.updatedAt,
-      url:
-        item.sourceType === 'file' && item.url
-          ? resolveFileAccessUrl(item.id, item.url)
-          : (item.url ?? ''),
+      url: item.sourceType === 'file' && item.url ? resolveFileAccessUrl(item.id, item.url) : (item.url ?? ''),
     }
   }
 
   async deleteMany(items: Array<{ id: string; sourceType: 'file' | 'document' }>): Promise<void> {
     const fileIds = items.filter((item) => item.sourceType === 'file').map((item) => item.id)
-    const documentIds = items
-      .filter((item) => item.sourceType === 'document')
-      .map((item) => item.id)
+    const documentIds = items.filter((item) => item.sourceType === 'document').map((item) => item.id)
 
     await Promise.all([
       fileIds.length > 0 ? this.fileModel.deleteMany(fileIds) : Promise.resolve(),

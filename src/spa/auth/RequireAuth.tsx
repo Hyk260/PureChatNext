@@ -24,7 +24,7 @@ export default function RequireAuth({ children, fallback }: RequireAuthProps) {
   if (isPending) {
     return (
       fallback ?? (
-        <Flex vertical style={{ height: "100%", padding: 24 }}>
+        <Flex vertical style={{ height: '100%', padding: 24 }}>
           <Skeleton active paragraph={{ rows: 6 }} />
         </Flex>
       )
@@ -34,12 +34,7 @@ export default function RequireAuth({ children, fallback }: RequireAuthProps) {
   if (!session?.user) {
     const raw = `${location.pathname}${location.search}`
     const callbackUrl = resolveCallbackUrl(raw, '/chat')
-    return (
-      <Navigate
-        replace
-        to={`/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-      />
-    )
+    return <Navigate replace to={`/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`} />
   }
 
   return children

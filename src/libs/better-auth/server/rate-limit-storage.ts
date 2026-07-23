@@ -1,7 +1,4 @@
-import {
-  VERIFICATION_DAILY_IP_MAX,
-  VERIFICATION_DAILY_IP_WINDOW_SECONDS,
-} from '@/libs/better-auth/shared'
+import { VERIFICATION_DAILY_IP_MAX, VERIFICATION_DAILY_IP_WINDOW_SECONDS } from '@/libs/better-auth/shared'
 
 type RateLimitRecord = {
   count: number
@@ -29,10 +26,7 @@ type ConsumeDecision = {
 const VERIFICATION_DAILY_RATE_LIMIT_PATH = '__verification_daily__'
 
 /** 计入同一 IP 日限的验证类邮件发送端点 */
-export const VERIFICATION_SEND_PATHS = new Set([
-  '/send-verification-email',
-  '/email-otp/send-verification-otp',
-])
+export const VERIFICATION_SEND_PATHS = new Set(['/send-verification-email', '/email-otp/send-verification-otp'])
 
 const VERIFICATION_DAILY_IP_RATE_LIMIT: RateLimitRule = {
   max: VERIFICATION_DAILY_IP_MAX,
@@ -47,11 +41,7 @@ function getRetryAfter(lastRequest: number, window: number) {
   return Math.ceil((lastRequest + windowInMs - Date.now()) / 1000)
 }
 
-function decideConsume(
-  data: RateLimitRecord | undefined,
-  rule: RateLimitRule,
-  now: number,
-): ConsumeDecision {
+function decideConsume(data: RateLimitRecord | undefined, rule: RateLimitRule, now: number): ConsumeDecision {
   const windowInMs = rule.window * 1000
 
   if (!data) {
@@ -180,11 +170,7 @@ export function createVerificationDailyRateLimitStorage() {
       const now = Date.now()
       const dailyKey = `${parsed.ip}|${VERIFICATION_DAILY_RATE_LIMIT_PATH}`
 
-      const dailyDecision = decideConsume(
-        readRecord(dailyKey, now),
-        VERIFICATION_DAILY_IP_RATE_LIMIT,
-        now,
-      )
+      const dailyDecision = decideConsume(readRecord(dailyKey, now), VERIFICATION_DAILY_IP_RATE_LIMIT, now)
       if (!dailyDecision.allowed) {
         return {
           allowed: false,

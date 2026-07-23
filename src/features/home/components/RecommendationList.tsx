@@ -6,10 +6,7 @@ import { createStaticStyles, cssVar } from 'antd-style'
 import { RefreshCw } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
 
-import {
-  HOME_RECOMMENDATIONS,
-  type HomeRecommendationItem,
-} from '@/const/home/recommendations'
+import { HOME_RECOMMENDATIONS, type HomeRecommendationItem } from '@/const/home/recommendations'
 
 import RecommendationCard from './RecommendationCard'
 

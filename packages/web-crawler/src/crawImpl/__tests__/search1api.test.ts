@@ -1,55 +1,49 @@
 /** @pure/web-crawler — unit tests (M2 compliance touch). */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createMockResponse } from '../../test-utils';
-import { NetworkConnectionError, PageNotFoundError, TimeoutError } from '../../utils/errorType';
-import * as withTimeoutModule from '../../utils/withTimeout';
-import { search1api } from '../search1api';
+import { createMockResponse } from '../../test-utils'
+import { NetworkConnectionError, PageNotFoundError, TimeoutError } from '../../utils/errorType'
+import * as withTimeoutModule from '../../utils/withTimeout'
+import { search1api } from '../search1api'
 
 describe('search1api crawler', () => {
   // Mock fetch function
-  const mockFetch = vi.fn();
-  global.fetch = mockFetch;
+  const mockFetch = vi.fn()
+  global.fetch = mockFetch
 
   // Original env
-  let originalEnv: NodeJS.ProcessEnv;
+  let originalEnv: NodeJS.ProcessEnv
 
   beforeEach(() => {
-    vi.resetAllMocks();
-    originalEnv = { ...process.env };
-    process.env.SEARCH1API_API_KEY = 'test-api-key';
+    vi.resetAllMocks()
+    originalEnv = { ...process.env }
+    process.env.SEARCH1API_API_KEY = 'test-api-key'
 
     // Mock withTimeout to call the factory function directly (bypassing real timeout)
-    vi.spyOn(withTimeoutModule, 'withTimeout').mockImplementation((fn) =>
-      fn(new AbortController().signal),
-    );
-  });
+    vi.spyOn(withTimeoutModule, 'withTimeout').mockImplementation((fn) => fn(new AbortController().signal))
+  })
 
   afterEach(() => {
-    process.env = originalEnv;
-  });
+    process.env = originalEnv
+  })
 
   it('should throw NetworkConnectionError when fetch fails', async () => {
-    mockFetch.mockRejectedValue(new TypeError('fetch failed'));
+    mockFetch.mockRejectedValue(new TypeError('fetch failed'))
 
-    await expect(search1api('https://example.com', { filterOptions: {} })).rejects.toThrow(
-      NetworkConnectionError,
-    );
-  });
+    await expect(search1api('https://example.com', { filterOptions: {} })).rejects.toThrow(NetworkConnectionError)
+  })
 
   it('should throw TimeoutError when request times out', async () => {
     // Restore original withTimeout implementation for this test
-    vi.spyOn(withTimeoutModule, 'withTimeout').mockRestore();
+    vi.spyOn(withTimeoutModule, 'withTimeout').mockRestore()
 
     // Mock withTimeout to throw TimeoutError
     vi.spyOn(withTimeoutModule, 'withTimeout').mockImplementation(() => {
-      throw new TimeoutError('Request timeout after 10000ms');
-    });
+      throw new TimeoutError('Request timeout after 10000ms')
+    })
 
-    await expect(search1api('https://example.com', { filterOptions: {} })).rejects.toThrow(
-      TimeoutError,
-    );
-  });
+    await expect(search1api('https://example.com', { filterOptions: {} })).rejects.toThrow(TimeoutError)
+  })
 
   it('should throw PageNotFoundError when status is 404', async () => {
     mockFetch.mockResolvedValue(
@@ -57,13 +51,11 @@ describe('search1api crawler', () => {
         ok: false,
         status: 404,
         statusText: 'Not Found',
-      }),
-    );
+      })
+    )
 
-    await expect(search1api('https://example.com', { filterOptions: {} })).rejects.toThrow(
-      PageNotFoundError,
-    );
-  });
+    await expect(search1api('https://example.com', { filterOptions: {} })).rejects.toThrow(PageNotFoundError)
+  })
 
   it('should throw error for other failed responses', async () => {
     mockFetch.mockResolvedValue(
@@ -71,13 +63,13 @@ describe('search1api crawler', () => {
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
-      }),
-    );
+      })
+    )
 
     await expect(search1api('https://example.com', { filterOptions: {} })).rejects.toThrow(
-      'Search1API request failed with status 500: Internal Server Error',
-    );
-  });
+      'Search1API request failed with status 500: Internal Server Error'
+    )
+  })
 
   it('should return undefined when content is too short', async () => {
     mockFetch.mockResolvedValue(
@@ -90,16 +82,16 @@ describe('search1api crawler', () => {
             content: 'Short', // Less than 100 characters
           },
         },
-        { ok: true },
-      ),
-    );
+        { ok: true }
+      )
+    )
 
-    const result = await search1api('https://example.com', { filterOptions: {} });
-    expect(result).toBeUndefined();
-  });
+    const result = await search1api('https://example.com', { filterOptions: {} })
+    expect(result).toBeUndefined()
+  })
 
   it('should return crawl result on successful fetch', async () => {
-    const mockContent = 'This is a test content that is longer than 100 characters. '.repeat(3);
+    const mockContent = 'This is a test content that is longer than 100 characters. '.repeat(3)
 
     mockFetch.mockResolvedValue(
       createMockResponse(
@@ -111,23 +103,23 @@ describe('search1api crawler', () => {
             content: mockContent,
           },
         },
-        { ok: true },
-      ),
-    );
+        { ok: true }
+      )
+    )
 
-    const result = await search1api('https://example.com', { filterOptions: {} });
+    const result = await search1api('https://example.com', { filterOptions: {} })
 
     expect(mockFetch).toHaveBeenCalledWith('https://api.search1api.com/crawl', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer test-api-key',
+        Authorization: 'Bearer test-api-key',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         url: 'https://example.com',
       }),
       signal: expect.any(AbortSignal),
-    });
+    })
 
     expect(result).toEqual({
       content: mockContent,
@@ -137,22 +129,22 @@ describe('search1api crawler', () => {
       length: mockContent.length,
       siteName: 'example.com',
       url: 'https://example.com',
-    });
-  });
+    })
+  })
 
   it('should handle JSON parse errors', async () => {
-    mockFetch.mockResolvedValue(createMockResponse('invalid json', { ok: true }));
+    mockFetch.mockResolvedValue(createMockResponse('invalid json', { ok: true }))
     // Override json to reject for this specific test
-    const response = createMockResponse('invalid json', { ok: true });
-    response.json = () => Promise.reject(new Error('Invalid JSON'));
+    const response = createMockResponse('invalid json', { ok: true })
+    response.json = () => Promise.reject(new Error('Invalid JSON'))
     // clone should also return a response whose text() works for error reporting
     response.clone = () => {
-      const cloned = createMockResponse('invalid json', { ok: true });
-      cloned.json = () => Promise.reject(new Error('Invalid JSON'));
-      return cloned;
-    };
-    mockFetch.mockResolvedValue(response);
+      const cloned = createMockResponse('invalid json', { ok: true })
+      cloned.json = () => Promise.reject(new Error('Invalid JSON'))
+      return cloned
+    }
+    mockFetch.mockResolvedValue(response)
 
-    await expect(search1api('https://example.com', { filterOptions: {} })).rejects.toThrow();
-  });
-});
+    await expect(search1api('https://example.com', { filterOptions: {} })).rejects.toThrow()
+  })
+})

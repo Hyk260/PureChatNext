@@ -62,7 +62,7 @@ export default function SettingsProfilePage() {
   }
 
   if (!session?.user || loadError === 'unauthorized') {
-    return <Navigate replace to="/signin?callbackUrl=/settings/profile" />
+    return <Navigate replace to='/signin?callbackUrl=/settings/profile' />
   }
 
   if (loadError === 'failed') {

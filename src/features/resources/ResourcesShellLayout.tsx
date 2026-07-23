@@ -11,13 +11,7 @@ const styles = createStaticStyles(({ css }) => ({
   `,
 }))
 
-const ResourcesShellLayout = ({
-  children,
-  innerSidebar,
-}: {
-  children: ReactNode
-  innerSidebar?: ReactNode
-}) => {
+const ResourcesShellLayout = ({ children, innerSidebar }: { children: ReactNode; innerSidebar?: ReactNode }) => {
   return (
     <Flex className={styles.shell} style={{ height: '100%', width: '100%' }}>
       {innerSidebar}

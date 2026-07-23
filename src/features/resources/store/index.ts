@@ -98,5 +98,5 @@ export const useResourceManagerStore = create<ResourceManagerState>()(
     clearSelection: () => set({ selectAllState: 'none', selectedFileIds: [] }),
     clearSelectAllState: () => set({ selectAllState: 'none', selectedFileIds: [] }),
     selectAllLoadedResources: (ids) => set({ selectAllState: 'loaded', selectedFileIds: ids }),
-  })),
+  }))
 )

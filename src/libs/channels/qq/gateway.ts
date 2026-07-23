@@ -41,15 +41,11 @@ export async function runQQGatewayForBinding(
     durationMs?: number
     signal?: AbortSignal
     waitUntil?: (task: Promise<unknown>) => void
-  },
+  }
 ): Promise<void> {
   const credentials = decryptCredentials(binding.credentials)
   if (credentials.connectionMode !== 'websocket') {
-    log(
-      'skip non-websocket binding appId=%s mode=%s',
-      binding.applicationId,
-      credentials.connectionMode,
-    )
+    log('skip non-websocket binding appId=%s mode=%s', binding.applicationId, credentials.connectionMode)
     return
   }
 
@@ -76,22 +72,11 @@ export async function runQQGatewayForBinding(
   await chat.initialize()
 
   const webhookUrl = buildWebhookUrl(binding.applicationId)
-  log(
-    'starting gateway appId=%s webhook=%s durationMs=%d',
-    binding.applicationId,
-    webhookUrl,
-    durationMs,
-  )
+  log('starting gateway appId=%s webhook=%s durationMs=%d', binding.applicationId, webhookUrl, durationMs)
 
   // startGatewayListener resolves on READY; keep the process alive for the window
   // so the WS stays up (adapter also auto-closes after durationMs).
-  await adapter.startGatewayListener(
-    { waitUntil },
-    durationMs,
-    abortSignal,
-    webhookUrl,
-    buildWebhookHeaders(),
-  )
+  await adapter.startGatewayListener({ waitUntil }, durationMs, abortSignal, webhookUrl, buildWebhookHeaders())
 
   await sleep(durationMs, abortSignal)
 
@@ -112,7 +97,7 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
         clearTimeout(timer)
         resolve()
       },
-      { once: true },
+      { once: true }
     )
   })
 }
@@ -149,7 +134,7 @@ export async function runAllQQWebSocketGateways(options?: {
       } catch (error) {
         log('gateway failed appId=%s: %O', binding.applicationId, error)
       }
-    }),
+    })
   )
 
   return { skipped, started }

@@ -1,5 +1,5 @@
-import { join, resolve } from 'node:path';
-import { defineConfig } from 'vitest/config';
+import { join, resolve } from 'node:path'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -14,4 +14,4 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: join(__dirname, './tests/setup.ts'),
   },
-});
+})

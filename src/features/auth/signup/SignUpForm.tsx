@@ -20,7 +20,7 @@ export const SignUpForm = () => {
   const { ready: configReady } = useAuthConfig()
 
   if (!configReady) {
-    return <Loading debugId="SignupConfig" />
+    return <Loading debugId='SignupConfig' />
   }
 
   return <SignUpFormContent />
@@ -48,25 +48,24 @@ const SignUpFormContent = () => {
 
   const footer = (
     <Typography.Text>
-      已有账号？{' '}
-      <Link href={signinHref}>去登录</Link>
+      已有账号？ <Link href={signinHref}>去登录</Link>
     </Typography.Text>
   )
 
   return (
     <AuthCard footer={footer} title={`创建 ${BRANDING_NAME} 账号`}>
-      <Form form={form} layout="vertical" onFinish={onSubmit}>
+      <Form form={form} layout='vertical' onFinish={onSubmit}>
         <Form.Item
-          name="email"
+          name='email'
           rules={[
             { message: '请输入邮箱', required: true },
             { message: '请输入有效的邮箱地址', type: 'email' },
           ]}
         >
           <Input
-            placeholder="请输入邮箱地址"
+            placeholder='请输入邮箱地址'
             ref={emailInputRef}
-            size="large"
+            size='large'
             prefix={
               <Icon
                 icon={Mail}
@@ -79,7 +78,7 @@ const SignUpFormContent = () => {
         </Form.Item>
 
         <Form.Item
-          name="password"
+          name='password'
           rules={[
             { message: '请输入密码', required: true },
             { message: '密码至少 8 个字符', min: 8 },
@@ -97,9 +96,9 @@ const SignUpFormContent = () => {
           ]}
         >
           <Input.Password
-            placeholder="请输入密码"
+            placeholder='请输入密码'
             ref={passwordInputRef}
-            size="large"
+            size='large'
             prefix={
               <Icon
                 icon={Lock}
@@ -113,7 +112,7 @@ const SignUpFormContent = () => {
 
         <Form.Item
           dependencies={['password']}
-          name="confirmPassword"
+          name='confirmPassword'
           rules={[
             { message: '请确认密码', required: true },
             ({ getFieldValue }) => ({
@@ -127,8 +126,8 @@ const SignUpFormContent = () => {
           ]}
         >
           <Input.Password
-            placeholder="请确认密码"
-            size="large"
+            placeholder='请确认密码'
+            size='large'
             prefix={
               <Icon
                 icon={Lock}
@@ -141,7 +140,7 @@ const SignUpFormContent = () => {
         </Form.Item>
 
         <Form.Item>
-          <Button block htmlType="submit" loading={loading} size="large" type="primary">
+          <Button block htmlType='submit' loading={loading} size='large' type='primary'>
             注册
           </Button>
         </Form.Item>

@@ -19,6 +19,7 @@ DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:
 ```
 
 **获取连接字符串的方法：**
+
 1. 登录 Supabase 控制台
 2. 进入项目设置 → Database
 3. 在 Connection string 部分选择 URI 模式
@@ -67,21 +68,21 @@ pnpm db:studio
 项目已定义 User 表，位于 `src/database/schema`：
 
 ```typescript
-export const user = pgTable("User", {
-  id: uuid("id").primaryKey().notNull().defaultRandom(),
-  email: varchar("email", { length: 64 }).notNull(),
-  password: varchar("password", { length: 64 }),
-});
+export const user = pgTable('User', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  email: varchar('email', { length: 64 }).notNull(),
+  password: varchar('password', { length: 64 }),
+})
 ```
 
 ## 📝 常用命令
 
-| 命令 | 说明 |
-|------|------|
-| `pnpm db:check` | 检查 Drizzle 配置是否正确 | 
-| `pnpm db:generate` | 根据 schemas 生成迁移文件 |
-| `pnpm db:migrate` | 运行迁移，将更改应用到数据库 |
-| `pnpm db:studio` | 打开 Drizzle Studio 可视化工具 |
+| 命令               | 说明                           |
+| ------------------ | ------------------------------ |
+| `pnpm db:check`    | 检查 Drizzle 配置是否正确      |
+| `pnpm db:generate` | 根据 schemas 生成迁移文件      |
+| `pnpm db:migrate`  | 运行迁移，将更改应用到数据库   |
+| `pnpm db:studio`   | 打开 Drizzle Studio 可视化工具 |
 
 ## 🛠️ 修改 Schema 并更新数据库
 
@@ -98,12 +99,14 @@ export const user = pgTable("User", {
 
 ## 🔍 故障排除
 
-### 错误：缺少 DATABASE_URL 环境变量
+### 错误：缺少 DATABASE\_URL 环境变量
+
 - 检查 `.env.local` 文件是否存在
 - 确认 `DATABASE_URL` 已正确配置
 - 重启开发服务器
 
 ### 错误：连接数据库失败
+
 - 检查 Supabase 项目是否正常运行
 - 验证数据库密码是否正确
 - 确认网络连接是否正常
@@ -155,4 +158,3 @@ VALUES ('<SHA256>', <when>);
 - 检查迁移文件是否已存在冲突
 - 查看 Supabase 日志获取详细错误信息
 - 确认数据库用户有足够权限执行 DDL 操作
-

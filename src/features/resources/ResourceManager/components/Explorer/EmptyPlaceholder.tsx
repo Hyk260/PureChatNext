@@ -102,13 +102,7 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
           />
         </Flex>
       </Flex>
-      <input
-        ref={fileInputRef}
-        hidden
-        multiple
-        type='file'
-        onChange={handleFileChange}
-      />
+      <input ref={fileInputRef} hidden multiple type='file' onChange={handleFileChange} />
       <input
         ref={folderInputRef}
         hidden

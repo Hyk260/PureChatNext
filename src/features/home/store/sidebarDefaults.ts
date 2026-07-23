@@ -6,9 +6,7 @@ export interface HomeAgentGroup {
   sort: number
 }
 
-export const DEFAULT_AGENT_GROUPS: HomeAgentGroup[] = [
-  { id: 'default', name: '默认', sort: 0 },
-]
+export const DEFAULT_AGENT_GROUPS: HomeAgentGroup[] = [{ id: 'default', name: '默认', sort: 0 }]
 
 export const DEFAULT_SIDEBAR_EXPANDED_KEYS = ['recents', 'agents']
 
@@ -30,7 +28,7 @@ export const normalizeSidebarExpandedKeys = (keys: string[]): string[] =>
 export const mergeSidebarExpandedKeys = (
   currentKeys: string[],
   accordionKeys: string[],
-  expandedKeys: string[],
+  expandedKeys: string[]
 ): string[] => {
   const nextExpandedKeys = new Set(expandedKeys.map(String))
   const accordionKeySet = new Set(accordionKeys)
@@ -43,7 +41,5 @@ export const mergeSidebarExpandedKeys = (
   return nextKeys
 }
 
-export const pickAccordionExpandedKeys = (
-  sidebarExpandedKeys: string[],
-  accordionKeys: string[],
-): string[] => accordionKeys.filter((key) => sidebarExpandedKeys.includes(key))
+export const pickAccordionExpandedKeys = (sidebarExpandedKeys: string[], accordionKeys: string[]): string[] =>
+  accordionKeys.filter((key) => sidebarExpandedKeys.includes(key))

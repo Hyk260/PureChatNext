@@ -43,14 +43,14 @@ adapter.postMessage → QQApiClient（被动回复带 msg_id）
 
 ## 环境变量
 
-| 变量 | 说明 |
-|------|------|
-| `DATABASE_URL` | 必填，存 `channel_bindings` |
-| `APP_URL` | 拼 webhook 回调 URL；WS gateway 转发基址 |
-| `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` | **服务端**回复用 |
-| `KEY_VAULTS_SECRET` | 建议：AES 加密凭证；未设置则明文 base64 |
-| `CRON_SECRET` | 内部 WS→webhook 转发鉴权（`Authorization: Bearer …`） |
-| `QQ_WEBHOOK_SECRET` | 可选；优先于 `CRON_SECRET` 用于内部转发 |
+| 变量                                  | 说明                                                  |
+| ------------------------------------- | ----------------------------------------------------- |
+| `DATABASE_URL`                        | 必填，存 `channel_bindings`                           |
+| `APP_URL`                             | 拼 webhook 回调 URL；WS gateway 转发基址              |
+| `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` | **服务端**回复用                                      |
+| `KEY_VAULTS_SECRET`                   | 建议：AES 加密凭证；未设置则明文 base64               |
+| `CRON_SECRET`                         | 内部 WS→webhook 转发鉴权（`Authorization: Bearer …`） |
+| `QQ_WEBHOOK_SECRET`                   | 可选；优先于 `CRON_SECRET` 用于内部转发               |
 
 凭证（App Secret）按绑定加密存储，**无**全局 `QQ_APP_SECRET`。本地示例见根目录 `.env.example`。
 
@@ -77,26 +77,26 @@ Webhook 模式无需 gateway；生产可直接让 QQ 回调 Vercel / 自托管 H
 
 ## 已知限制
 
-| 项 | 说明 |
-|----|------|
-| 被动回复窗口 | 群约 5 分钟 / 单聊约 60 分钟内须带入站 `msg_id` |
-| 主动消息 | 2025-04 后主动推送基本下线 |
-| 无编辑 / 反应 / typing | QQ Bot API 不支持 |
-| 文本上限 | 单条约 2000 字；发出前剥 Markdown |
-| 群聊 | 通常需 @机器人 才有事件 |
+| 项                     | 说明                                            |
+| ---------------------- | ----------------------------------------------- |
+| 被动回复窗口           | 群约 5 分钟 / 单聊约 60 分钟内须带入站 `msg_id` |
+| 主动消息               | 2025-04 后主动推送基本下线                      |
+| 无编辑 / 反应 / typing | QQ Bot API 不支持                               |
+| 文本上限               | 单条约 2000 字；发出前剥 Markdown               |
+| 群聊                   | 通常需 @机器人 才有事件                         |
 
 ## API 一览
 
-| 方法 | 路径 | 鉴权 |
-|------|------|------|
-| POST / PATCH / DELETE | `/api/channels/qq/bind` | session |
-| GET | `/api/channels/qq/status` | session |
-| POST | `/api/channels/qq/webhook/[applicationId]` | QQ Ed25519（公网）或 Bearer（内部转发） |
+| 方法                  | 路径                                       | 鉴权                                    |
+| --------------------- | ------------------------------------------ | --------------------------------------- |
+| POST / PATCH / DELETE | `/api/channels/qq/bind`                    | session                                 |
+| GET                   | `/api/channels/qq/status`                  | session                                 |
+| POST                  | `/api/channels/qq/webhook/[applicationId]` | QQ Ed25519（公网）或 Bearer（内部转发） |
 
 ## 包结构
 
-| 位置 | 职责 |
-|------|------|
-| `packages/chat-adapter-qq` | REST / WS Gateway / Ed25519、`QQAdapter`、format-converter |
-| `src/libs/channels/qq` | 凭证加解密、Chat 缓存、AgentBridge、WS gateway 转发 |
-| `src/app/api/channels/qq/*` | 绑定 / 状态 / webhook |
+| 位置                        | 职责                                                       |
+| --------------------------- | ---------------------------------------------------------- |
+| `packages/chat-adapter-qq`  | REST / WS Gateway / Ed25519、`QQAdapter`、format-converter |
+| `src/libs/channels/qq`      | 凭证加解密、Chat 缓存、AgentBridge、WS gateway 转发        |
+| `src/app/api/channels/qq/*` | 绑定 / 状态 / webhook                                      |

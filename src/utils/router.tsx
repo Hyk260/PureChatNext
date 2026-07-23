@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  type ComponentType,
-  type ReactElement,
-  lazy,
-  memo,
-  Suspense,
-} from 'react'
+import { type ComponentType, type ReactElement, lazy, memo, Suspense } from 'react'
 import { type RouteObject, createBrowserRouter, Navigate, Outlet } from 'react-router'
 
 import Loading from '@/components/Loading/BrandTextLoading'
@@ -24,9 +18,7 @@ async function importModule<T>(importFn: () => Promise<T>): Promise<T> {
 
 function resolveLazyModule(module: RouteModule): { default: RouteComponent } {
   if (module == null) {
-    throw new Error(
-      'Dynamic import resolved to undefined. This usually means a chunk failed to load.',
-    )
+    throw new Error('Dynamic import resolved to undefined. This usually means a chunk failed to load.')
   }
   if (typeof module === 'function') {
     return { default: module }
@@ -40,10 +32,7 @@ function resolveLazyModule(module: RouteModule): { default: RouteComponent } {
 /**
  * Lazy page element for router config (Suspense + BrandTextLoading).
  */
-export function dynamicElement(
-  importFn: () => Promise<RouteModule>,
-  debugId?: string,
-): ReactElement {
+export function dynamicElement(importFn: () => Promise<RouteModule>, debugId?: string): ReactElement {
   const LazyComponent = lazy(async () => {
     const mod = await importModule(importFn)
     return resolveLazyModule(mod)
@@ -59,10 +48,7 @@ export function dynamicElement(
 /**
  * Lazy layout element — renders `<Outlet />` as children for nested routes.
  */
-export function dynamicLayout(
-  importFn: () => Promise<RouteModule>,
-  debugId?: string,
-): ReactElement {
+export function dynamicLayout(importFn: () => Promise<RouteModule>, debugId?: string): ReactElement {
   const LazyComponent = lazy(async () => {
     const mod = await importModule(importFn)
     return resolveLazyModule(mod)
@@ -96,10 +82,7 @@ RouterRoot.displayName = 'RouterRoot'
 /**
  * Data router with AppLayer (Theme / nuqs) inside RouterProvider context.
  */
-export function createAppRouter(
-  routes: RouteObject[],
-  options?: CreateAppRouterOptions,
-) {
+export function createAppRouter(routes: RouteObject[], options?: CreateAppRouterOptions) {
   return createBrowserRouter(
     [
       {
@@ -108,6 +91,6 @@ export function createAppRouter(
         path: '/',
       },
     ],
-    { basename: options?.basename },
+    { basename: options?.basename }
   )
 }

@@ -10,10 +10,7 @@
  */
 import 'dotenv/config'
 
-import {
-  DEFAULT_QQ_GATEWAY_DURATION_MS,
-  runAllQQWebSocketGateways,
-} from '../src/libs/channels/qq'
+import { DEFAULT_QQ_GATEWAY_DURATION_MS, runAllQQWebSocketGateways } from '../src/libs/channels/qq'
 
 const LOOP_GAP_MS = 5_000
 
@@ -27,9 +24,7 @@ async function main() {
         durationMs: DEFAULT_QQ_GATEWAY_DURATION_MS,
         signal: controller.signal,
       })
-      console.log(
-        `[qq-gateway] window done started=${result.started} skipped=${result.skipped}`,
-      )
+      console.log(`[qq-gateway] window done started=${result.started} skipped=${result.skipped}`)
     } catch (error) {
       console.error('[qq-gateway] error:', error)
     }

@@ -24,53 +24,55 @@ const styles = createStaticStyles(({ css }) => ({
   `,
 }))
 
-const ProviderCard = memo<DiscoverProviderItem>(
-  ({ url, name, description, identifier, models }) => {
-    return (
-      <Block
-        data-testid='provider-item'
-        height='100%'
-        variant='outlined'
-        width='100%'
-        style={{
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-      >
-        <Flex align='flex-start' gap={16} justify='space-between' style={{ padding: 16, width: '100%' }}>
-          <Flex vertical title={identifier} style={{ overflow: 'hidden', }}>
-            <ProviderCombine provider={identifier} size={28} style={{ flex: 'none' }} />
-            <div className={styles.author}>@{name}</div>
-          </Flex>
-          <Flex align='center'>
-            <a href={url} rel='noopener noreferrer' target='_blank' onClick={stopPropagation}>
-              <ActionIcon color={cssVar.colorTextDescription} icon={GlobeIcon} />
-            </a>
-          </Flex>
+const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, identifier, models }) => {
+  return (
+    <Block
+      data-testid='provider-item'
+      height='100%'
+      variant='outlined'
+      width='100%'
+      style={{
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      <Flex align='flex-start' gap={16} justify='space-between' style={{ padding: 16, width: '100%' }}>
+        <Flex vertical title={identifier} style={{ overflow: 'hidden' }}>
+          <ProviderCombine provider={identifier} size={28} style={{ flex: 'none' }} />
+          <div className={styles.author}>@{name}</div>
         </Flex>
-        <Flex vertical flex={1} gap={12} style={{ paddingInline: 16 }}>
-          {description ? (
-            <Typography.Paragraph className={styles.desc} ellipsis={{
-                rows: 3,
-              }} style={{ marginBottom: 0 }}>
-              {description}
-            </Typography.Paragraph>
-          ) : null}
+        <Flex align='center'>
+          <a href={url} rel='noopener noreferrer' target='_blank' onClick={stopPropagation}>
+            <ActionIcon color={cssVar.colorTextDescription} icon={GlobeIcon} />
+          </a>
         </Flex>
-        <Flex align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>
-          <MaskShadow horizontal gap={6} position='right' size={10} width='100%'>
-            {models
-              .slice(0, 6)
-              .filter(Boolean)
-              .map((tag) => (
-                <ModelTag key={tag} model={tag} style={{ margin: 0 }} />
-              ))}
-          </MaskShadow>
-        </Flex>
-      </Block>
-    )
-  },
-)
+      </Flex>
+      <Flex vertical flex={1} gap={12} style={{ paddingInline: 16 }}>
+        {description ? (
+          <Typography.Paragraph
+            className={styles.desc}
+            ellipsis={{
+              rows: 3,
+            }}
+            style={{ marginBottom: 0 }}
+          >
+            {description}
+          </Typography.Paragraph>
+        ) : null}
+      </Flex>
+      <Flex align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>
+        <MaskShadow horizontal gap={6} position='right' size={10} width='100%'>
+          {models
+            .slice(0, 6)
+            .filter(Boolean)
+            .map((tag) => (
+              <ModelTag key={tag} model={tag} style={{ margin: 0 }} />
+            ))}
+        </MaskShadow>
+      </Flex>
+    </Block>
+  )
+})
 
 ProviderCard.displayName = 'ProviderCard'
 

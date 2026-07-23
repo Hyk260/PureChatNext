@@ -117,7 +117,7 @@ export const Block = memo<BlockProps>(
           isClickable && VARIANT_HOVER_CLASS[variant],
           glass && styles.glass,
           shadow && styles.shadow,
-          className,
+          className
         )}
         style={mergedStyle}
         vertical={!horizontal}
@@ -127,7 +127,7 @@ export const Block = memo<BlockProps>(
         {children}
       </Flex>
     )
-  },
+  }
 )
 
 Block.displayName = 'Block'

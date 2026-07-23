@@ -1,5 +1,4 @@
-const isNumber = (value: unknown): value is number =>
-  typeof value === 'number' && !Number.isNaN(value)
+const isNumber = (value: unknown): value is number => typeof value === 'number' && !Number.isNaN(value)
 
 /**
  * Format large numbers as K / M / B / T; smaller values get thousand separators.

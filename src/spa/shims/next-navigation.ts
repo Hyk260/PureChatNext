@@ -29,7 +29,7 @@ export function useRouter() {
     prefetch: async (_href: string) => {},
     push: (
       href: string | { pathname?: string; query?: Record<string, string>; hash?: string },
-      _opts?: NavigateOptions,
+      _opts?: NavigateOptions
     ) => {
       navigate(toHref(href))
     },
@@ -38,7 +38,7 @@ export function useRouter() {
     },
     replace: (
       href: string | { pathname?: string; query?: Record<string, string>; hash?: string },
-      _opts?: NavigateOptions,
+      _opts?: NavigateOptions
     ) => {
       navigate(toHref(href), { replace: true })
     },

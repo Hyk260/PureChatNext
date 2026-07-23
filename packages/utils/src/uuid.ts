@@ -1,6 +1,6 @@
-import { customAlphabet } from "nanoid/non-secure"
+import { customAlphabet } from 'nanoid/non-secure'
 
-export const alphabet = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+export const alphabet = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 export const createNanoId = (size = 8) => customAlphabet(alphabet, size)
 

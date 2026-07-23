@@ -36,5 +36,5 @@ const url = [
       pureText: false,
     },
   },
-];
+]
 ```

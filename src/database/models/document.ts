@@ -40,7 +40,7 @@ export class DocumentModel {
 
   update = async (
     id: string,
-    data: Partial<Pick<DocumentItem, 'title' | 'filename' | 'parentId' | 'knowledgeBaseId'>>,
+    data: Partial<Pick<DocumentItem, 'title' | 'filename' | 'parentId' | 'knowledgeBaseId'>>
   ) => {
     const [item] = await this.db
       .update(documents)
@@ -54,11 +54,7 @@ export class DocumentModel {
     return this.db.delete(documents).where(and(eq(documents.id, id), this.ownership()))
   }
 
-  createFolder = async (params: {
-    knowledgeBaseId?: string
-    name: string
-    parentId?: string | null
-  }) => {
+  createFolder = async (params: { knowledgeBaseId?: string; name: string; parentId?: string | null }) => {
     return this.create({
       content: '',
       fileType: DOCUMENT_FOLDER_TYPE,
@@ -83,7 +79,7 @@ export class DocumentModel {
           this.ownership(),
           eq(documents.fileType, DOCUMENT_FOLDER_TYPE),
           eq(documents.slug, slug),
-          parentId ? eq(documents.parentId, parentId) : isNull(documents.parentId),
+          parentId ? eq(documents.parentId, parentId) : isNull(documents.parentId)
         ),
       })
       if (!folder) break
@@ -95,16 +91,7 @@ export class DocumentModel {
   }
 
   query = async (params: QueryFileListParams = {}) => {
-    const {
-      category,
-      q,
-      sortType,
-      sorter,
-      knowledgeBaseId,
-      parentId,
-      limit = 50,
-      offset = 0,
-    } = params
+    const { category, q, sortType, sorter, knowledgeBaseId, parentId, limit = 50, offset = 0 } = params
 
     const conditions = [this.ownership()]
 
@@ -156,7 +143,7 @@ export class DocumentModel {
         this.ownership(),
         eq(documents.knowledgeBaseId, knowledgeBaseId),
         eq(documents.fileType, DOCUMENT_FOLDER_TYPE),
-        parentId ? eq(documents.parentId, parentId) : isNull(documents.parentId),
+        parentId ? eq(documents.parentId, parentId) : isNull(documents.parentId)
       ),
       orderBy: [desc(documents.updatedAt)],
     })

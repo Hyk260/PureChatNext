@@ -15,11 +15,7 @@ const SpaTelemetry = () => {
   const { pathname, search } = useLocation()
   const params = useParams()
 
-  if (
-    !config?.enableVercelAnalytics &&
-    !config?.enableSpeedInsights &&
-    !config?.reactScanApiKey
-  ) {
+  if (!config?.enableVercelAnalytics && !config?.enableSpeedInsights && !config?.reactScanApiKey) {
     return null
   }
 

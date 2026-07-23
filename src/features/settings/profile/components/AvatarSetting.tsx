@@ -15,13 +15,7 @@ interface AvatarSettingProps {
   onUploaded: (avatar: string) => void
 }
 
-export function AvatarSetting({
-  avatar,
-  displayName,
-  initials,
-  onUploaded,
-  s3Configured,
-}: AvatarSettingProps) {
+export function AvatarSetting({ avatar, displayName, initials, onUploaded, s3Configured }: AvatarSettingProps) {
   const { message } = useApp()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -63,27 +57,23 @@ export function AvatarSetting({
 
   const avatarContent = (
     <button
-      className="group relative shrink-0 cursor-pointer overflow-hidden rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
+      className='group relative shrink-0 cursor-pointer overflow-hidden rounded-lg disabled:cursor-not-allowed disabled:opacity-50'
       disabled={!s3Configured || uploading}
       onClick={() => inputRef.current?.click()}
       title={s3Configured ? '点击上传头像' : '头像上传需配置 S3'}
-      type="button"
+      type='button'
     >
       {avatar ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          alt={displayName}
-          className="h-10 w-10 rounded-lg object-cover"
-          src={avatar}
-        />
+        <img alt={displayName} className='h-10 w-10 rounded-lg object-cover' src={avatar} />
       ) : (
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-sm font-semibold text-primary">
+        <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-sm font-semibold text-primary'>
           {initials}
         </div>
       )}
       {s3Configured ? (
-        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
-          <Pencil className="h-4 w-4 text-white" />
+        <div className='absolute inset-0 flex items-center justify-center rounded-lg bg-black/45 opacity-0 transition-opacity group-hover:opacity-100'>
+          <Pencil className='h-4 w-4 text-white' />
         </div>
       ) : null}
     </button>
@@ -92,18 +82,18 @@ export function AvatarSetting({
   return (
     <SettingRow
       action={
-        <Spin indicator={<Loader2 className="h-4 w-4 animate-spin" />} spinning={uploading}>
+        <Spin indicator={<Loader2 className='h-4 w-4 animate-spin' />} spinning={uploading}>
           {avatarContent}
         </Spin>
       }
-      label="头像"
+      label='头像'
     >
       <input
-        accept="image/jpeg,image/png,image/webp,image/gif"
-        className="hidden"
+        accept='image/jpeg,image/png,image/webp,image/gif'
+        className='hidden'
         onChange={handleFileChange}
         ref={inputRef}
-        type="file"
+        type='file'
       />
     </SettingRow>
   )

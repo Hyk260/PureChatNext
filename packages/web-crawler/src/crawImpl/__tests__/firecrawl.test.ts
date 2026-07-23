@@ -1,32 +1,30 @@
 /** @pure/web-crawler — unit tests (M2 compliance touch). */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createMockResponse } from '../../test-utils';
-import { NetworkConnectionError, PageNotFoundError, TimeoutError } from '../../utils/errorType';
-import { firecrawl } from '../firecrawl';
+import { createMockResponse } from '../../test-utils'
+import { NetworkConnectionError, PageNotFoundError, TimeoutError } from '../../utils/errorType'
+import { firecrawl } from '../firecrawl'
 
 // Mock dependencies
 vi.mock('../../utils/withTimeout', () => ({
   DEFAULT_TIMEOUT: 30000,
   withTimeout: vi.fn(),
-}));
+}))
 
 describe('firecrawl crawler', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    delete process.env.FIRECRAWL_API_KEY;
-    delete process.env.FIRECRAWL_URL;
-  });
+    vi.clearAllMocks()
+    delete process.env.FIRECRAWL_API_KEY
+    delete process.env.FIRECRAWL_URL
+  })
 
   it('should successfully crawl content with API key', async () => {
-    process.env.FIRECRAWL_API_KEY = 'test-api-key';
+    process.env.FIRECRAWL_API_KEY = 'test-api-key'
 
     const mockResponse = createMockResponse({
       success: true,
       data: {
-        markdown: 'This is a test markdown content with enough length to pass validation. '.repeat(
-          3,
-        ),
+        markdown: 'This is a test markdown content with enough length to pass validation. '.repeat(3),
         metadata: {
           title: 'Test Article',
           description: 'Test description',
@@ -37,26 +35,25 @@ describe('firecrawl crawler', () => {
           robots: 'index',
         },
       },
-    });
+    })
 
-    const { withTimeout } = await import('../../utils/withTimeout');
-    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any);
+    const { withTimeout } = await import('../../utils/withTimeout')
+    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any)
 
-    const result = await firecrawl('https://example.com', { filterOptions: {} });
+    const result = await firecrawl('https://example.com', { filterOptions: {} })
 
     expect(result).toEqual({
       content: 'This is a test markdown content with enough length to pass validation. '.repeat(3),
       contentType: 'text',
       description: 'Test description',
-      length: 'This is a test markdown content with enough length to pass validation. '.repeat(3)
-        .length,
+      length: 'This is a test markdown content with enough length to pass validation. '.repeat(3).length,
       siteName: 'example.com',
       title: 'Test Article',
       url: 'https://example.com',
-    });
+    })
 
-    expect(withTimeout).toHaveBeenCalledWith(expect.any(Function), 30000);
-  });
+    expect(withTimeout).toHaveBeenCalledWith(expect.any(Function), 30000)
+  })
 
   it('should handle missing API key', async () => {
     const mockResponse = createMockResponse({
@@ -73,18 +70,18 @@ describe('firecrawl crawler', () => {
           robots: 'index',
         },
       },
-    });
+    })
 
-    const { withTimeout } = await import('../../utils/withTimeout');
-    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any);
+    const { withTimeout } = await import('../../utils/withTimeout')
+    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any)
 
-    await firecrawl('https://example.com', { filterOptions: {} });
+    await firecrawl('https://example.com', { filterOptions: {} })
 
-    expect(withTimeout).toHaveBeenCalledWith(expect.any(Function), 30000);
-  });
+    expect(withTimeout).toHaveBeenCalledWith(expect.any(Function), 30000)
+  })
 
   it('should return undefined for short content', async () => {
-    process.env.FIRECRAWL_API_KEY = 'test-api-key';
+    process.env.FIRECRAWL_API_KEY = 'test-api-key'
 
     const mockResponse = createMockResponse({
       success: true,
@@ -100,18 +97,18 @@ describe('firecrawl crawler', () => {
           robots: 'index',
         },
       },
-    });
+    })
 
-    const { withTimeout } = await import('../../utils/withTimeout');
-    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any);
+    const { withTimeout } = await import('../../utils/withTimeout')
+    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any)
 
-    const result = await firecrawl('https://example.com', { filterOptions: {} });
+    const result = await firecrawl('https://example.com', { filterOptions: {} })
 
-    expect(result).toBeUndefined();
-  });
+    expect(result).toBeUndefined()
+  })
 
   it('should return undefined when markdown is missing', async () => {
-    process.env.FIRECRAWL_API_KEY = 'test-api-key';
+    process.env.FIRECRAWL_API_KEY = 'test-api-key'
 
     const mockResponse = createMockResponse({
       success: true,
@@ -127,108 +124,100 @@ describe('firecrawl crawler', () => {
           robots: 'index',
         },
       },
-    });
+    })
 
-    const { withTimeout } = await import('../../utils/withTimeout');
-    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any);
+    const { withTimeout } = await import('../../utils/withTimeout')
+    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any)
 
-    const result = await firecrawl('https://example.com', { filterOptions: {} });
+    const result = await firecrawl('https://example.com', { filterOptions: {} })
 
-    expect(result).toBeUndefined();
-  });
+    expect(result).toBeUndefined()
+  })
 
   it('should throw PageNotFoundError for 404 status', async () => {
-    process.env.FIRECRAWL_API_KEY = 'test-api-key';
+    process.env.FIRECRAWL_API_KEY = 'test-api-key'
 
     const mockResponse = createMockResponse('Not Found', {
       ok: false,
       status: 404,
       statusText: 'Not Found',
-    });
+    })
 
-    const { withTimeout } = await import('../../utils/withTimeout');
-    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any);
+    const { withTimeout } = await import('../../utils/withTimeout')
+    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any)
 
-    await expect(firecrawl('https://example.com', { filterOptions: {} })).rejects.toThrow(
-      PageNotFoundError,
-    );
-  });
+    await expect(firecrawl('https://example.com', { filterOptions: {} })).rejects.toThrow(PageNotFoundError)
+  })
 
   it('should throw error for other HTTP errors', async () => {
-    process.env.FIRECRAWL_API_KEY = 'test-api-key';
+    process.env.FIRECRAWL_API_KEY = 'test-api-key'
 
     const mockResponse = createMockResponse('', {
       ok: false,
       status: 500,
       statusText: 'Internal Server Error',
-    });
+    })
 
-    const { withTimeout } = await import('../../utils/withTimeout');
-    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any);
+    const { withTimeout } = await import('../../utils/withTimeout')
+    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any)
 
     await expect(firecrawl('https://example.com', { filterOptions: {} })).rejects.toThrow(
-      'Firecrawl request failed with status 500: Internal Server Error',
-    );
-  });
+      'Firecrawl request failed with status 500: Internal Server Error'
+    )
+  })
 
   it('should throw NetworkConnectionError for fetch failures', async () => {
-    process.env.FIRECRAWL_API_KEY = 'test-api-key';
+    process.env.FIRECRAWL_API_KEY = 'test-api-key'
 
-    const { withTimeout } = await import('../../utils/withTimeout');
-    vi.mocked(withTimeout).mockRejectedValue(new TypeError('fetch failed'));
+    const { withTimeout } = await import('../../utils/withTimeout')
+    vi.mocked(withTimeout).mockRejectedValue(new TypeError('fetch failed'))
 
-    await expect(firecrawl('https://example.com', { filterOptions: {} })).rejects.toThrow(
-      NetworkConnectionError,
-    );
-  });
+    await expect(firecrawl('https://example.com', { filterOptions: {} })).rejects.toThrow(NetworkConnectionError)
+  })
 
   it('should throw TimeoutError when request times out', async () => {
-    process.env.FIRECRAWL_API_KEY = 'test-api-key';
+    process.env.FIRECRAWL_API_KEY = 'test-api-key'
 
-    const timeoutError = new TimeoutError('Request timeout');
+    const timeoutError = new TimeoutError('Request timeout')
 
-    const { withTimeout } = await import('../../utils/withTimeout');
-    vi.mocked(withTimeout).mockRejectedValue(timeoutError);
+    const { withTimeout } = await import('../../utils/withTimeout')
+    vi.mocked(withTimeout).mockRejectedValue(timeoutError)
 
-    await expect(firecrawl('https://example.com', { filterOptions: {} })).rejects.toThrow(
-      TimeoutError,
-    );
-  });
+    await expect(firecrawl('https://example.com', { filterOptions: {} })).rejects.toThrow(TimeoutError)
+  })
 
   it('should rethrow unknown errors', async () => {
-    process.env.FIRECRAWL_API_KEY = 'test-api-key';
+    process.env.FIRECRAWL_API_KEY = 'test-api-key'
 
-    const unknownError = new Error('Unknown error');
+    const unknownError = new Error('Unknown error')
 
-    const { withTimeout } = await import('../../utils/withTimeout');
-    vi.mocked(withTimeout).mockRejectedValue(unknownError);
+    const { withTimeout } = await import('../../utils/withTimeout')
+    vi.mocked(withTimeout).mockRejectedValue(unknownError)
 
-    await expect(firecrawl('https://example.com', { filterOptions: {} })).rejects.toThrow(
-      'Unknown error',
-    );
-  });
+    await expect(firecrawl('https://example.com', { filterOptions: {} })).rejects.toThrow('Unknown error')
+  })
 
   it('should throw ResponseBodyParseError when JSON parsing fails', async () => {
-    process.env.FIRECRAWL_API_KEY = 'test-api-key';
+    process.env.FIRECRAWL_API_KEY = 'test-api-key'
 
-    const mockResponse = createMockResponse('not json', { ok: true });
-    mockResponse.json = vi.fn().mockRejectedValue(new Error('Invalid JSON'));
+    const mockResponse = createMockResponse('not json', { ok: true })
+    mockResponse.json = vi.fn().mockRejectedValue(new Error('Invalid JSON'))
     mockResponse.clone.mockReturnValue({
       ...mockResponse,
       json: vi.fn().mockRejectedValue(new Error('Invalid JSON')),
       text: vi.fn().mockResolvedValue('not json'),
-    });
+    })
 
-    const { withTimeout } = await import('../../utils/withTimeout');
-    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any);
+    const { withTimeout } = await import('../../utils/withTimeout')
+    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any)
 
     await expect(firecrawl('https://example.com', { filterOptions: {} })).rejects.toThrow(
-      'Firecrawl returned non-JSON response: not json',
-    );
-  });
+      'Firecrawl returned non-JSON response: not json'
+    )
+  })
 
   it('should handle metadata with all optional fields', async () => {
-    process.env.FIRECRAWL_API_KEY = 'test-api-key';
+    process.env.FIRECRAWL_API_KEY = 'test-api-key'
 
     const mockResponse = createMockResponse({
       success: true,
@@ -250,12 +239,12 @@ describe('firecrawl crawler', () => {
           sourceURL: 'https://example.com',
         },
       },
-    });
+    })
 
-    const { withTimeout } = await import('../../utils/withTimeout');
-    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any);
+    const { withTimeout } = await import('../../utils/withTimeout')
+    vi.mocked(withTimeout).mockResolvedValue(mockResponse as any)
 
-    const result = await firecrawl('https://example.com', { filterOptions: {} });
+    const result = await firecrawl('https://example.com', { filterOptions: {} })
 
     expect(result).toEqual({
       content: 'Complete test content with all metadata fields provided. '.repeat(3),
@@ -265,6 +254,6 @@ describe('firecrawl crawler', () => {
       siteName: 'example.com',
       title: 'Complete Test Article',
       url: 'https://example.com',
-    });
-  });
-});
+    })
+  })
+})

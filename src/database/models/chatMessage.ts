@@ -77,9 +77,7 @@ export class ChatMessageModel {
         throw new Error('Topic not found')
       }
 
-      await tx
-        .delete(chatMessages)
-        .where(and(eq(chatMessages.topicId, topicId), eq(chatMessages.userId, this.userId)))
+      await tx.delete(chatMessages).where(and(eq(chatMessages.topicId, topicId), eq(chatMessages.userId, this.userId)))
 
       if (messages.length > 0) {
         const base = Date.now()
@@ -100,7 +98,7 @@ export class ChatMessageModel {
               createdAt: timestamp,
               updatedAt: timestamp,
             }
-          }),
+          })
         )
       }
 

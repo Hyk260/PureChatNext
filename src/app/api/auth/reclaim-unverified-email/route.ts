@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     if (!email || !email.includes('@')) {
       return NextResponse.json(
         { error: 'Email is required', reclaimed: false } satisfies ReclaimUnverifiedEmailResponse,
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -38,10 +38,9 @@ export async function POST(req: NextRequest) {
       .limit(1)
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found', reclaimed: false } satisfies ReclaimUnverifiedEmailResponse,
-        { status: 404 },
-      )
+      return NextResponse.json({ error: 'User not found', reclaimed: false } satisfies ReclaimUnverifiedEmailResponse, {
+        status: 404,
+      })
     }
 
     if (user.emailVerified) {
@@ -50,7 +49,7 @@ export async function POST(req: NextRequest) {
           error: 'Email is already verified',
           reclaimed: false,
         } satisfies ReclaimUnverifiedEmailResponse,
-        { status: 409 },
+        { status: 409 }
       )
     }
 
@@ -61,7 +60,7 @@ export async function POST(req: NextRequest) {
     logger.error(error, 'Reclaim unverified email error:')
     return NextResponse.json(
       { error: 'Internal server error', reclaimed: false } satisfies ReclaimUnverifiedEmailResponse,
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

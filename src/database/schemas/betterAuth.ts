@@ -1,18 +1,10 @@
-import { relations } from 'drizzle-orm';
-import {
-  boolean,
-  index,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-} from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm'
+import { boolean, index, integer, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
-import { users } from './user';
+import { users } from './user'
 
 // Drizzle 适配器通过 model 名称（单数）查找表定义，需要保留单数别名
-export { users as user };
+export { users as user }
 
 /** Better Auth 登录会话表，存储用户登录后的 session 令牌与元数据 */
 export const session = pgTable(
@@ -41,8 +33,8 @@ export const session = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (table) => [index('auth_session_userId_idx').on(table.userId)],
-);
+  (table) => [index('auth_session_userId_idx').on(table.userId)]
+)
 
 /** Better Auth 账户关联表，存储 OAuth 第三方账号或邮箱密码登录凭据 */
 export const account = pgTable(
@@ -79,8 +71,8 @@ export const account = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (table) => [index('account_userId_idx').on(table.userId)],
-);
+  (table) => [index('account_userId_idx').on(table.userId)]
+)
 
 /** Better Auth 验证表，存储邮箱验证、Magic Link、OTP 等一次性验证记录 */
 export const verification = pgTable(
@@ -102,8 +94,8 @@ export const verification = pgTable(
     // 验证码或 Magic Link token 的实际值
     value: text('value').notNull(),
   },
-  (table) => [index('verification_identifier_idx').on(table.identifier)],
-);
+  (table) => [index('verification_identifier_idx').on(table.identifier)]
+)
 
 /** Better Auth 双因素认证表，存储用户的 TOTP 密钥与备用恢复码 */
 export const twoFactor = pgTable(
@@ -120,11 +112,8 @@ export const twoFactor = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (table) => [
-    index('two_factor_secret_idx').on(table.secret),
-    index('two_factor_user_id_idx').on(table.userId),
-  ],
-);
+  (table) => [index('two_factor_secret_idx').on(table.secret), index('two_factor_user_id_idx').on(table.userId)]
+)
 
 /** Better Auth Passkey 表，存储 WebAuthn/FIDO2 无密码登录凭据 */
 export const passkey = pgTable(
@@ -158,40 +147,40 @@ export const passkey = pgTable(
   (table) => [
     uniqueIndex('passkey_credential_id_unique').on(table.credentialID),
     index('passkey_user_id_idx').on(table.userId),
-  ],
-);
+  ]
+)
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(account),
   passkeys: many(passkey),
   sessions: many(session),
   twoFactors: many(twoFactor),
-}));
+}))
 
 export const sessionRelations = relations(session, ({ one }) => ({
   users: one(users, {
     fields: [session.userId],
     references: [users.id],
   }),
-}));
+}))
 
 export const accountRelations = relations(account, ({ one }) => ({
   users: one(users, {
     fields: [account.userId],
     references: [users.id],
   }),
-}));
+}))
 
 export const twoFactorRelations = relations(twoFactor, ({ one }) => ({
   users: one(users, {
     fields: [twoFactor.userId],
     references: [users.id],
   }),
-}));
+}))
 
 export const passkeysRelations = relations(passkey, ({ one }) => ({
   users: one(users, {
     fields: [passkey.userId],
     references: [users.id],
   }),
-}));
+}))

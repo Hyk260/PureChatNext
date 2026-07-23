@@ -1,1 +1,1 @@
-export { default as BrandTextLoading } from './BrandTextLoading';
+export { default as BrandTextLoading } from './BrandTextLoading'

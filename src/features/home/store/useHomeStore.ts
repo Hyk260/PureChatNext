@@ -84,15 +84,10 @@ export const useHomeStore = create<HomeStoreState>()(
       setActiveAgent: (agent) => set({ activeAgent: agent }),
       setAgentMode: (mode) => set({ agentMode: mode }),
       setSelectedAgentId: (agentId) => set({ selectedAgentId: agentId }),
-      setSelectedModel: (provider, model) =>
-        set({ selectedProvider: provider, selectedModel: model }),
+      setSelectedModel: (provider, model) => set({ selectedProvider: provider, selectedModel: model }),
       setSidebarAccordionExpandedKeys: (accordionKeys, expandedKeys) =>
         set((state) => ({
-          sidebarExpandedKeys: mergeSidebarExpandedKeys(
-            state.sidebarExpandedKeys,
-            accordionKeys,
-            expandedKeys,
-          ),
+          sidebarExpandedKeys: mergeSidebarExpandedKeys(state.sidebarExpandedKeys, accordionKeys, expandedKeys),
         })),
       setHiddenSidebarSections: (sections) => set({ hiddenSidebarSections: sections }),
       setSidebarExpandedKeys: (keys) => set({ sidebarExpandedKeys: keys }),
@@ -107,13 +102,10 @@ export const useHomeStore = create<HomeStoreState>()(
             : [...hiddenSidebarSections, key],
         })
       },
-      toggleSidebarCollapsed: () =>
-        set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      toggleSidebarCollapsed: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       updateAgentGroupName: (groupId, name) =>
         set((state) => ({
-          agentGroups: state.agentGroups.map((group) =>
-            group.id === groupId ? { ...group, name } : group,
-          ),
+          agentGroups: state.agentGroups.map((group) => (group.id === groupId ? { ...group, name } : group)),
         })),
       updateAgentGroupSort: (groups) =>
         set({
@@ -147,6 +139,6 @@ export const useHomeStore = create<HomeStoreState>()(
         state.sidebarItems = normalizePersistedSidebarItems(state.sidebarItems)
       },
       version: 2,
-    },
-  ),
+    }
+  )
 )

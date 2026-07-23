@@ -32,9 +32,7 @@ export async function generateQQAgentReply(params: {
   const apiKey = resolveProviderApiKey(provider, undefined, undefined)
 
   if (!apiKey) {
-    throw new Error(
-      `No API key for provider "${provider}". Set OPENAI_API_KEY or DEEPSEEK_API_KEY for QQ replies.`,
-    )
+    throw new Error(`No API key for provider "${provider}". Set OPENAI_API_KEY or DEEPSEEK_API_KEY for QQ replies.`)
   }
 
   const languageModel = createProviderLanguageModel(provider, modelId, apiKey, undefined)

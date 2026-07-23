@@ -54,7 +54,7 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
     useShallow((s) => ({
       selectedFileIds: s.selectedFileIds,
       toggleSelectFile: s.toggleSelectFile,
-    })),
+    }))
   )
   const selected = selectedFileIds.includes(item.id)
   const isFolder = item.fileType === DOCUMENT_FOLDER_TYPE
@@ -65,7 +65,7 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
       e.stopPropagation()
       toggleSelectFile(item.id)
     },
-    [item.id, toggleSelectFile],
+    [item.id, toggleSelectFile]
   )
 
   const handleCheckboxPointerDown = useCallback((e: PointerEvent) => {
@@ -127,7 +127,7 @@ const MasonryHeader = memo<MasonryHeaderProps>(({ data }) => {
       e.stopPropagation()
       handleSelectAll(!allSelected)
     },
-    [allSelected, handleSelectAll],
+    [allSelected, handleSelectAll]
   )
 
   const handleHeaderCheckboxPointerDown = useCallback((e: PointerEvent) => {
@@ -142,11 +142,7 @@ const MasonryHeader = memo<MasonryHeaderProps>(({ data }) => {
         onClick={handleHeaderCheckboxClick}
         onPointerDown={handleHeaderCheckboxPointerDown}
       >
-        <Checkbox
-          checked={allSelected}
-          indeterminate={indeterminate}
-          style={{ pointerEvents: 'none' }}
-        />
+        <Checkbox checked={allSelected} indeterminate={indeterminate} style={{ pointerEvents: 'none' }} />
       </Center>
       <span>{selectedCount > 0 ? `已选 ${selectedCount} 项` : `共 ${data.length} 项`}</span>
     </Flex>

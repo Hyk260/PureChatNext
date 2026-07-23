@@ -1,6 +1,12 @@
 'use client'
 
-import { type ActionIconGroupEvent, type ActionIconGroupItemType, ActionIconGroup, copyToClipboard, ActionIcon } from '@pure/ui'
+import {
+  type ActionIconGroupEvent,
+  type ActionIconGroupItemType,
+  ActionIconGroup,
+  copyToClipboard,
+  ActionIcon,
+} from '@pure/ui'
 import { Flex, Typography } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
@@ -161,16 +167,9 @@ const ReasoningBlock = memo<ReasoningBlockProps>(({ text, isStreaming = false })
   }, [isStreaming])
 
   return (
-    <details
-      className={styles.reasoning}
-      open={open}
-      onToggle={(event) => setOpen(event.currentTarget.open)}
-    >
+    <details className={styles.reasoning} open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary className={styles.reasoningSummary}>
-        <ChevronRight
-          className={cx(styles.reasoningChevron, open && styles.reasoningChevronOpen)}
-          size={14}
-        />
+        <ChevronRight className={cx(styles.reasoningChevron, open && styles.reasoningChevronOpen)} size={14} />
         {isStreaming ? '思考中…' : '思考过程'}
       </summary>
       <div className={styles.reasoningBody}>{text}</div>
@@ -221,7 +220,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
           }
         }
       },
-      [antdMessage, disabled, message.id, onDelete, text],
+      [antdMessage, disabled, message.id, onDelete, text]
     )
 
     const handleSave = useCallback(async () => {
@@ -267,19 +266,12 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
                     setDraft(text)
                   }}
                 />
-                <ActionIcon
-                  icon={Check}
-                  size='small'
-                  title='保存'
-                  onClick={handleSave}
-                />
+                <ActionIcon icon={Check} size='small' title='保存' onClick={handleSave} />
               </Flex>
             </Flex>
           ) : (
             <>
-              {!isUser && reasoning ? (
-                <ReasoningBlock isStreaming={isStreaming} text={reasoning} />
-              ) : null}
+              {!isUser && reasoning ? <ReasoningBlock isStreaming={isStreaming} text={reasoning} /> : null}
 
               {text ? (
                 <MessageMarkdown
@@ -296,7 +288,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
                   className={cx(
                     styles.actions,
                     isUser ? styles.actionsUser : styles.actionsAssistant,
-                    'chat-msg-actions',
+                    'chat-msg-actions'
                   )}
                 >
                   <ActionIconGroup
@@ -322,7 +314,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
     prev.isStreaming === next.isStreaming &&
     prev.message === next.message &&
     prev.onDelete === next.onDelete &&
-    prev.onEdit === next.onEdit,
+    prev.onEdit === next.onEdit
 )
 
 ChatMessageItem.displayName = 'ChatMessageItem'
@@ -335,51 +327,48 @@ interface ChatMessagesProps {
   onEdit: (id: string, text: string) => void | Promise<void>
 }
 
-const ChatMessages = memo<ChatMessagesProps>(
-  ({ messages, disabled, isStreaming = false, onDelete, onEdit }) => {
-    const lastMessage = messages.at(-1)
-    const lastText = lastMessage ? getMessageText(lastMessage) : ''
-    const lastReasoning = lastMessage ? getMessageReasoning(lastMessage) : ''
+const ChatMessages = memo<ChatMessagesProps>(({ messages, disabled, isStreaming = false, onDelete, onEdit }) => {
+  const lastMessage = messages.at(-1)
+  const lastText = lastMessage ? getMessageText(lastMessage) : ''
+  const lastReasoning = lastMessage ? getMessageReasoning(lastMessage) : ''
 
-    const { ref, handleScroll, resetScrollLock } = useAutoScroll<HTMLDivElement>({
-      deps: [messages.length, lastText, lastReasoning],
-      enabled: isStreaming || disabled === true,
-    })
+  const { ref, handleScroll, resetScrollLock } = useAutoScroll<HTMLDivElement>({
+    deps: [messages.length, lastText, lastReasoning],
+    enabled: isStreaming || disabled === true,
+  })
 
-    // Unlock follow when a new user turn starts
-    useEffect(() => {
-      if (isStreaming) resetScrollLock()
-    }, [isStreaming, resetScrollLock])
+  // Unlock follow when a new user turn starts
+  useEffect(() => {
+    if (isStreaming) resetScrollLock()
+  }, [isStreaming, resetScrollLock])
 
-    if (messages.length === 0) {
-      return (
-        <Flex vertical ref={ref} className={styles.list} align='center' justify='center'>
-          <Typography.Text className={styles.empty}>开始对话吧</Typography.Text>
-        </Flex>
-      )
-    }
-
+  if (messages.length === 0) {
     return (
-      <Flex vertical ref={ref} className={styles.list} gap={16} onScroll={handleScroll}>
-        {messages.map((message, index) => {
-          const streamingThis =
-            isStreaming && index === messages.length - 1 && message.role === 'assistant'
-
-          return (
-            <ChatMessageItem
-              key={message.id}
-              disabled={disabled}
-              isStreaming={streamingThis}
-              message={message}
-              onDelete={onDelete}
-              onEdit={onEdit}
-            />
-          )
-        })}
+      <Flex vertical ref={ref} className={styles.list} align='center' justify='center'>
+        <Typography.Text className={styles.empty}>开始对话吧</Typography.Text>
       </Flex>
     )
-  },
-)
+  }
+
+  return (
+    <Flex vertical ref={ref} className={styles.list} gap={16} onScroll={handleScroll}>
+      {messages.map((message, index) => {
+        const streamingThis = isStreaming && index === messages.length - 1 && message.role === 'assistant'
+
+        return (
+          <ChatMessageItem
+            key={message.id}
+            disabled={disabled}
+            isStreaming={streamingThis}
+            message={message}
+            onDelete={onDelete}
+            onEdit={onEdit}
+          />
+        )
+      })}
+    </Flex>
+  )
+})
 
 ChatMessages.displayName = 'ChatMessages'
 

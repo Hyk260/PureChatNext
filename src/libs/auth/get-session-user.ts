@@ -31,16 +31,14 @@ type RouteContext<P extends Record<string, string>> = {
 
 type AuthedRouteHandler<P extends Record<string, string>> = (
   request: NextRequest,
-  context: AuthRouteContext<P>,
+  context: AuthRouteContext<P>
 ) => Response | Promise<Response>
 
 /**
  * App Router 鉴权包装器。
  * 校验 Better Auth session 后注入 `userId`；未登录返回 401 JSON。
  */
-export function withAuth<P extends Record<string, string> = Record<string, string>>(
-  handler: AuthedRouteHandler<P>,
-) {
+export function withAuth<P extends Record<string, string> = Record<string, string>>(handler: AuthedRouteHandler<P>) {
   return async (request: NextRequest, context?: RouteContext<P>) => {
     const userId = await getAuthenticatedUserId()
     if (!userId) return unauthorizedResponse()

@@ -3,11 +3,7 @@
 import { Flex, Tooltip } from 'antd'
 import { Icon, Popover } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import {
-  ChevronDownIcon,
-  InfinityIcon,
-  MessageCircleIcon,
-} from 'lucide-react'
+import { ChevronDownIcon, InfinityIcon, MessageCircleIcon } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
 
 import { type HomeAgentMode, useHomeStore } from '@/features/home/store/useHomeStore'
@@ -78,12 +74,17 @@ const AgentModeButton = memo(() => {
       setAgentMode(mode)
       setOpen(false)
     },
-    [setAgentMode],
+    [setAgentMode]
   )
 
   const popoverContent = (
     <Flex vertical gap={4} style={{ maxWidth: 320, minWidth: 280 }}>
-      <Flex align='center' className={cx(styles.option, currentMode === 'agent' && styles.activeOption)} gap={12} onClick={() => handleSelect('agent')}>
+      <Flex
+        align='center'
+        className={cx(styles.option, currentMode === 'agent' && styles.activeOption)}
+        gap={12}
+        onClick={() => handleSelect('agent')}
+      >
         <Flex vertical align='center' className={styles.optionIcon} justify='center' style={{ height: 32, width: 32 }}>
           <Icon icon={InfinityIcon} size={16} />
         </Flex>
@@ -93,7 +94,12 @@ const AgentModeButton = memo(() => {
         </Flex>
       </Flex>
 
-      <Flex align='center' className={cx(styles.option, currentMode === 'chat' && styles.activeOption)} gap={12} onClick={() => handleSelect('chat')}>
+      <Flex
+        align='center'
+        className={cx(styles.option, currentMode === 'chat' && styles.activeOption)}
+        gap={12}
+        onClick={() => handleSelect('chat')}
+      >
         <Flex vertical align='center' className={styles.optionIcon} justify='center' style={{ height: 32, width: 32 }}>
           <Icon icon={MessageCircleIcon} size={16} />
         </Flex>

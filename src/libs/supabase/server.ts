@@ -1,6 +1,6 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
-import { getServerDBConfig } from '@/envs/serverDB';
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { getServerDBConfig } from '@/envs/serverDB'
 
 /**
  * Get Supabase environment variables with validation
@@ -10,7 +10,7 @@ function getSupabaseEnv() {
 
   if (!url || !key) {
     throw new Error(
-      "Missing Supabase environment variables. Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set."
+      'Missing Supabase environment variables. Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.'
     )
   }
 
@@ -39,8 +39,8 @@ export async function createClient() {
           // The "setAll" method was called from a Server Component.
           // This can be ignored if you have middleware refreshing user sessions.
           // Log in development for debugging
-          if (process.env.NODE_ENV === "development") {
-            console.warn("Failed to set cookies in Server Component:", error)
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Failed to set cookies in Server Component:', error)
           }
         }
       },

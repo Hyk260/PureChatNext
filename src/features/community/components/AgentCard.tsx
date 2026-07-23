@@ -190,7 +190,7 @@ const AgentCard = memo<DiscoverAgentItem>(
         </Flex>
       </Block>
     )
-  },
+  }
 )
 
 AgentCard.displayName = 'AgentCard'

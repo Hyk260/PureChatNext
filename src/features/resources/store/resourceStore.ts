@@ -72,7 +72,7 @@ export const useResourceStore = create<ResourceStoreState>()(
       get().removeResourcesOptimistically(items.map((item) => item.id))
       await resourceService.batchDelete(items)
     },
-  })),
+  }))
 )
 
 export const useFetchResources = (params: QueryFileListParams) => {

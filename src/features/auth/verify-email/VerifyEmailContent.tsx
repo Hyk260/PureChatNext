@@ -18,26 +18,14 @@ export const VerifyEmailContent = ({ email, callbackUrl }: VerifyEmailContentPro
   const { config, ready: configReady } = useAuthConfig()
 
   if (!configReady) {
-    return <Loading debugId="VerifyEmailConfig" />
+    return <Loading debugId='VerifyEmailConfig' />
   }
 
   if (config.emailVerificationMode === 'otp') {
-    return (
-      <VerifyEmailOtpContent
-        callbackUrl={callbackUrl}
-        email={email}
-        mode={config.emailVerificationMode}
-      />
-    )
+    return <VerifyEmailOtpContent callbackUrl={callbackUrl} email={email} mode={config.emailVerificationMode} />
   }
 
-  return (
-    <VerifyEmailLinkContent
-      callbackUrl={callbackUrl}
-      email={email}
-      mode={config.emailVerificationMode}
-    />
-  )
+  return <VerifyEmailLinkContent callbackUrl={callbackUrl} email={email} mode={config.emailVerificationMode} />
 }
 
 interface VerifyEmailModeContentProps extends VerifyEmailContentProps {
@@ -45,15 +33,11 @@ interface VerifyEmailModeContentProps extends VerifyEmailContentProps {
 }
 
 const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeContentProps) => {
-  const {
-    expirationText,
-    handleResend,
-    handleVerify,
-    otp,
-    resending,
-    setOtp,
-    verifying,
-  } = useVerifyEmail({ callbackUrl, email, mode })
+  const { expirationText, handleResend, handleVerify, otp, resending, setOtp, verifying } = useVerifyEmail({
+    callbackUrl,
+    email,
+    mode,
+  })
 
   return (
     <Flex vertical gap={16}>
@@ -63,11 +47,11 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
         </Typography.Text>
       </Block>
 
-      <Flex vertical align="center" justify="center">
-        <Input.OTP length={6} size="large" value={otp} onChange={setOtp} />
+      <Flex vertical align='center' justify='center'>
+        <Input.OTP length={6} size='large' value={otp} onChange={setOtp} />
       </Flex>
 
-      <Button block loading={verifying} onClick={handleVerify} size="large" type="primary">
+      <Button block loading={verifying} onClick={handleVerify} size='large' type='primary'>
         验证邮箱
       </Button>
 
@@ -76,8 +60,8 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
         icon={<RefreshCw size={16} />}
         loading={resending}
         onClick={handleResend}
-        size="large"
-        type="default"
+        size='large'
+        type='default'
       >
         重新发送验证码
       </Button>
@@ -91,16 +75,12 @@ const VerifyEmailLinkContent = ({ email, callbackUrl, mode }: VerifyEmailModeCon
   return (
     <Flex vertical gap={16}>
       <Block padding={24}>
-        <Typography.Text style={{ textAlign: 'center' }}>如果没有收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送。</Typography.Text>
+        <Typography.Text style={{ textAlign: 'center' }}>
+          如果没有收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送。
+        </Typography.Text>
       </Block>
 
-      <Button
-        icon={<RefreshCw size={16} />}
-        loading={resending}
-        onClick={handleResend}
-        size="large"
-        type="default"
-      >
+      <Button icon={<RefreshCw size={16} />} loading={resending} onClick={handleResend} size='large' type='default'>
         重新发送验证邮件
       </Button>
     </Flex>

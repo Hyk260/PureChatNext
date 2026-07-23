@@ -19,8 +19,8 @@ export const headersToRecord = (headersInit?: HeadersInit): Record<string, strin
   } else {
     Object.assign(record, headersInit)
   }
-  delete record["host"]
-  delete record["connection"]
-  delete record["content-length"]
+  delete record['host']
+  delete record['connection']
+  delete record['content-length']
   return record
 }

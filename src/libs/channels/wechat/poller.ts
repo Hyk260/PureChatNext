@@ -40,7 +40,7 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
         clearTimeout(timer)
         reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))
       },
-      { once: true },
+      { once: true }
     )
   })
 }
@@ -52,10 +52,7 @@ function resolveAppBaseUrl(): string {
   return 'http://localhost:3000'
 }
 
-async function forwardToWebhook(
-  binding: ChannelBindingItem,
-  msg: WechatRawMessage,
-): Promise<void> {
+async function forwardToWebhook(binding: ChannelBindingItem, msg: WechatRawMessage): Promise<void> {
   const webhookUrl = `${resolveAppBaseUrl()}/api/channels/wechat/webhook/${encodeURIComponent(binding.applicationId)}`
   const secret = resolveWechatWebhookSecret()
   const headers: Record<string, string> = {
@@ -77,10 +74,7 @@ async function forwardToWebhook(
   }
 }
 
-async function handleInboundMessage(
-  binding: ChannelBindingItem,
-  msg: WechatRawMessage,
-): Promise<void> {
+async function handleInboundMessage(binding: ChannelBindingItem, msg: WechatRawMessage): Promise<void> {
   if (msg.message_type === MessageType.BOT) return
   if (msg.message_state !== MessageState.FINISH && msg.message_state !== MessageState.NEW) return
 
@@ -101,10 +95,7 @@ async function handleInboundMessage(
   }
 }
 
-async function processUpdates(
-  binding: ChannelBindingItem,
-  msgs: WechatRawMessage[] | undefined,
-): Promise<void> {
+async function processUpdates(binding: ChannelBindingItem, msgs: WechatRawMessage[] | undefined): Promise<void> {
   if (!msgs?.length) return
   for (const msg of msgs) {
     await handleInboundMessage(binding, msg)
@@ -117,7 +108,7 @@ async function processUpdates(
  */
 export async function pollBinding(
   binding: ChannelBindingItem,
-  options: PollBindingOptions = {},
+  options: PollBindingOptions = {}
 ): Promise<{ sessionExpired: boolean }> {
   const durationMs = options.durationMs ?? DEFAULT_DURATION_MS
   const signal = options.signal
@@ -134,9 +125,7 @@ export async function pollBinding(
     const probeAbort = new AbortController()
     const timer = setTimeout(() => probeAbort.abort(), READY_PROBE_TIMEOUT_MS)
     try {
-      const combined = signal
-        ? AbortSignal.any([signal, probeAbort.signal])
-        : probeAbort.signal
+      const combined = signal ? AbortSignal.any([signal, probeAbort.signal]) : probeAbort.signal
       const response = await api.getUpdates(undefined, combined)
       cursor = response.get_updates_buf || undefined
       await processUpdates(binding, response.msgs)
@@ -201,7 +190,7 @@ export async function pollAllEnabledBindings(options: PollBindingOptions = {}): 
       })
       waitUntil(task)
       await task
-    }),
+    })
   )
 
   return { polled: bindings.length, sessionExpired }

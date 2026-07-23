@@ -36,14 +36,8 @@ export async function fetchWechatQrCode(): Promise<WechatQrCode> {
   return res.json() as Promise<WechatQrCode>
 }
 
-export async function pollWechatQrStatus(
-  qrcode: string,
-  signal?: AbortSignal,
-): Promise<WechatQrStatus> {
-  const res = await apiFetch(
-    `/api/channels/wechat/qrcode/status?qrcode=${encodeURIComponent(qrcode)}`,
-    { signal },
-  )
+export async function pollWechatQrStatus(qrcode: string, signal?: AbortSignal): Promise<WechatQrStatus> {
+  const res = await apiFetch(`/api/channels/wechat/qrcode/status?qrcode=${encodeURIComponent(qrcode)}`, { signal })
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string }
     throw new Error(body.error || `poll failed: ${res.status}`)

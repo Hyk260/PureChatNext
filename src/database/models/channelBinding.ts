@@ -1,11 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import {
-  channelBindings,
-  type ChannelBindingItem,
-  type NewChannelBinding,
-} from '../schemas/channel'
+import { channelBindings, type ChannelBindingItem, type NewChannelBinding } from '../schemas/channel'
 import { type ChatDatabase } from '../type'
 
 export const WECHAT_PLATFORM = 'wechat' as const
@@ -32,10 +28,7 @@ export class ChannelBindingModel {
 
   findByApplicationId = async (platform: string, applicationId: string) => {
     return this.db.query.channelBindings.findFirst({
-      where: and(
-        eq(channelBindings.platform, platform),
-        eq(channelBindings.applicationId, applicationId),
-      ),
+      where: and(eq(channelBindings.platform, platform), eq(channelBindings.applicationId, applicationId)),
     })
   }
 

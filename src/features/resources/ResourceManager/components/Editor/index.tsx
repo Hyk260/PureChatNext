@@ -37,7 +37,7 @@ const FileEditor = memo(() => {
       currentViewItemId: s.currentViewItemId,
       setCurrentViewItemId: s.setCurrentViewItemId,
       setMode: s.setMode,
-    })),
+    }))
   )
   const item = useResourceStore((s) => s.resourceList.find((f) => f.id === currentViewItemId))
 

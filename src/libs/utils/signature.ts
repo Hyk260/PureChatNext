@@ -1,25 +1,25 @@
-import TLSSigAPIv2 from "tls-sig-api-v2";
-import { imEnv } from "@/envs/im";
+import TLSSigAPIv2 from 'tls-sig-api-v2'
+import { imEnv } from '@/envs/im'
 
-import debug from "debug";
+import debug from 'debug'
 
-const log = debug("utils:Signature");
+const log = debug('utils:Signature')
 
-export const generateUserSig = ({ identifier = "" }) => {
-  const { IM_SDK_APPID: appId, IM_SDK_KEY: appKey } = imEnv;
+export const generateUserSig = ({ identifier = '' }) => {
+  const { IM_SDK_APPID: appId, IM_SDK_KEY: appKey } = imEnv
 
   if (!appId || !appKey) {
-    throw new Error("appId or appKey is not defined");
+    throw new Error('appId or appKey is not defined')
   }
 
-  const EXPIRETIME = 86400 * 7;
+  const EXPIRETIME = 86400 * 7
 
-  const api = new TLSSigAPIv2.Api(appId, appKey);
+  const api = new TLSSigAPIv2.Api(appId, appKey)
 
-  log('生成 userId: %s, 的 userSig', identifier);
+  log('生成 userId: %s, 的 userSig', identifier)
 
-  return api.genSig(identifier, EXPIRETIME);
-};
+  return api.genSig(identifier, EXPIRETIME)
+}
 
 /*
  *  用于生成测试用的 UserSig，UserSig 是腾讯云为其云服务设计的一种安全保护签名。

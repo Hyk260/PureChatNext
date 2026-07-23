@@ -21,5 +21,5 @@ if (!rootEl) {
 createRoot(rootEl).render(
   <StrictMode>
     <RouterProvider router={router} />
-  </StrictMode>,
+  </StrictMode>
 )

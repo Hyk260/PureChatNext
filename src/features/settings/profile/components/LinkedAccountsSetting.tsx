@@ -7,10 +7,7 @@ import { useApp } from '@/components/AntdStaticMethods'
 import { ArrowRight, Plus, Unlink } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import {
-  BUILTIN_BETTER_AUTH_PROVIDERS,
-  SSO_PROVIDER_LABELS,
-} from '@/libs/better-auth/shared'
+import { BUILTIN_BETTER_AUTH_PROVIDERS, SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
 import { linkSocial, listAccounts, oauth2, unlinkAccount, useAuthConfig } from '@/libs/better-auth/client'
 
 import { SettingRow } from './SettingRow'
@@ -66,15 +63,9 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
     loadAccounts()
   }, [loadAccounts])
 
-  const oauthAccounts = useMemo(
-    () => accounts.filter((account) => account.providerId !== 'credential'),
-    [accounts],
-  )
+  const oauthAccounts = useMemo(() => accounts.filter((account) => account.providerId !== 'credential'), [accounts])
 
-  const linkedProviderIds = useMemo(
-    () => new Set(oauthAccounts.map((account) => account.providerId)),
-    [oauthAccounts],
-  )
+  const linkedProviderIds = useMemo(() => new Set(oauthAccounts.map((account) => account.providerId)), [oauthAccounts])
 
   const availableProviders = useMemo(() => {
     if (!ready) return []
@@ -82,8 +73,7 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
     return config.oAuthSSOProviders.filter((provider) => !linkedProviderIds.has(provider))
   }, [config.oAuthSSOProviders, linkedProviderIds, ready])
 
-  const allowUnlink =
-    oauthAccounts.length > 1 || accounts.some((item) => item.providerId === 'credential')
+  const allowUnlink = oauthAccounts.length > 1 || accounts.some((item) => item.providerId === 'credential')
 
   const handleLink = async (provider: string) => {
     setLinkingProvider(provider)
@@ -153,20 +143,20 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
   }))
 
   return (
-    <SettingRow label="已关联的账户">
+    <SettingRow label='已关联的账户'>
       <Flex vertical gap={8} style={{ width: '100%' }}>
         {loading ? (
-          <Typography.Text type="secondary">加载中…</Typography.Text>
+          <Typography.Text type='secondary'>加载中…</Typography.Text>
         ) : oauthAccounts.length === 0 ? (
-          <Typography.Text type="secondary">暂无关联的第三方账户</Typography.Text>
+          <Typography.Text type='secondary'>暂无关联的第三方账户</Typography.Text>
         ) : (
           oauthAccounts.map((account) => (
-            <Flex align="center" gap={8} justify="space-between" key={account.id}>
-              <Flex align="center" gap={6} style={{ fontSize: 12, minWidth: 0 }}>
+            <Flex align='center' gap={8} justify='space-between' key={account.id}>
+              <Flex align='center' gap={6} style={{ fontSize: 12, minWidth: 0 }}>
                 {AuthIcons(account.providerId, 16)}
                 <span>{getProviderLabel(account.providerId)}</span>
                 {userEmail ? (
-                  <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                  <Typography.Text type='secondary' style={{ fontSize: 11 }}>
                     · {userEmail}
                   </Typography.Text>
                 ) : null}
@@ -175,20 +165,19 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
                 disabled={!allowUnlink || unlinkingId === account.id}
                 icon={Unlink}
                 onClick={() => confirmUnlink(account)}
-                size="small"
+                size='small'
               />
             </Flex>
           ))
         )}
 
         {availableProviders.length > 0 ? (
-          <DropdownMenu
-            items={linkMenuItems}
-            popupProps={{ style: { maxWidth: 200 } }}
-          >
-            <Flex align="center" gap={6} style={{ cursor: linkingProvider ? 'wait' : 'pointer',
-                fontSize: 12,
-                opacity: linkingProvider ? 0.6 : 1, }}>
+          <DropdownMenu items={linkMenuItems} popupProps={{ style: { maxWidth: 200 } }}>
+            <Flex
+              align='center'
+              gap={6}
+              style={{ cursor: linkingProvider ? 'wait' : 'pointer', fontSize: 12, opacity: linkingProvider ? 0.6 : 1 }}
+            >
               <Plus size={14} />
               <span>关联账户</span>
               <ArrowRight size={14} />

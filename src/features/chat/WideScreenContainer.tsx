@@ -35,7 +35,11 @@ const WideScreenContainer = memo<Props>(({ children, className, maxWidth = CONVE
 
   return (
     <Flex vertical className={styles.wrapper}>
-      <Flex vertical className={cx(styles.container, className)} style={{ height: '100%', paddingInline: 16, width: wideScreen ? '100%' : `min(${maxWidth}px, 100%)` }}>
+      <Flex
+        vertical
+        className={cx(styles.container, className)}
+        style={{ height: '100%', paddingInline: 16, width: wideScreen ? '100%' : `min(${maxWidth}px, 100%)` }}
+      >
         {children}
       </Flex>
     </Flex>

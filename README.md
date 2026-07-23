@@ -53,7 +53,7 @@
 
 PureChat（PureChatNext）是一个面向自托管场景的 AI 聊天 Web 应用。架构为 **Vite SPA（react-router）+ Next.js BFF**：业务 UI 走 SPA，Next 保留 API / auth / 生产 SPA HTML 壳，同域部署。
 
-> [!IMPORTANT]
+> \[!IMPORTANT]
 >
 > **收藏项目**，你将从 GitHub 上无延迟地接收所有发布通知～ ⭐️
 
@@ -169,9 +169,9 @@ pnpm dev:next   # API / BFF → http://localhost:3000
 pnpm dev:spa    # UI → http://localhost:5174（/api 代理到 Next）
 ```
 
-本地请打开 **[http://localhost:5174](http://localhost:5174)**（SPA 端口）；不要依赖 Next `:3000` 上的业务页。
+本地请打开 **<http://localhost:5174>**（SPA 端口）；不要依赖 Next `:3000` 上的业务页。
 
-> [!TIP]
+> \[!TIP]
 >
 > 完整环境变量说明见 [docs/env-setup.zh-CN.md](./docs/env-setup.zh-CN.md) 与 [docs/quick-start.zh-CN.md](./docs/quick-start.zh-CN.md)
 
@@ -190,10 +190,10 @@ pnpm db:studio      # 打开 Drizzle Studio
 
 仍为**单项目**部署（Framework：Next.js）。仓库已含 `vercel.json`：
 
-| 设置 | 值 |
-| --- | --- |
-| Install Command | `pnpm install` |
-| Build Command | `pnpm build`（`build:spa` → copy → `next build`） |
+| 设置            | 值                                                |
+| --------------- | ------------------------------------------------- |
+| Install Command | `pnpm install`                                    |
+| Build Command   | `pnpm build`（`build:spa` → copy → `next build`） |
 
 环境变量与改造前相同，无需为 SPA 单独加一套。
 
@@ -215,23 +215,23 @@ pnpm db:studio      # 打开 Drizzle Studio
 
 本项目通过 `packages/env` 集中管理环境变量校验。常用配置如下：
 
-| 环境变量 | 类型 | 描述 | 示例 |
-| --- | --- | --- | --- |
-| `DATABASE_URL` | 必选 | PostgreSQL 连接字符串 | `postgresql://user:pass@host:5432/db` |
-| `KEY_VAULTS_SECRET` | 必选 | 敏感信息加密密钥 | `openssl rand -base64 32` |
-| `OPENAI_API_KEY` | 推荐 | OpenAI API 密钥 | `sk-xxxxxx` |
-| `OPENAI_PROXY_URL` | 可选 | OpenAI 代理地址 | `https://api.openai.com/v1` |
-| `DEEPSEEK_API_KEY` | 可选 | DeepSeek API 密钥 | `sk-xxxxxx` |
-| `APP_URL` | 推荐 | 应用对外地址（本地用 SPA） | 本地 `http://localhost:5174`；生产正式域名 |
-| `AUTH_SSO_PROVIDERS` | 可选 | 启用的 OAuth 提供商 | `github,wechat` |
-| `AUTH_EMAIL_VERIFICATION` | 可选 | 启用邮箱验证 | `1` |
-| `AUTH_EMAIL_VERIFICATION_MODE` | 可选 | 注册验证方式：`otp`（默认）或 `link` | `otp` |
-| `AUTH_ENABLE_MAGIC_LINK` | 可选 | 启用魔法链接登录 | `1` |
-| `SEARCH_PROVIDERS` | 可选 | 搜索引擎链 | `searxng,brave` |
-| `CRAWLER_IMPLS` | 可选 | 爬虫实现链 | `naive,firecrawl` |
-| `ALLOWED_ORIGINS` | 可选 | CORS 允许源 | `http://localhost:3000,http://localhost:5174` |
+| 环境变量                       | 类型 | 描述                                 | 示例                                          |
+| ------------------------------ | ---- | ------------------------------------ | --------------------------------------------- |
+| `DATABASE_URL`                 | 必选 | PostgreSQL 连接字符串                | `postgresql://user:pass@host:5432/db`         |
+| `KEY_VAULTS_SECRET`            | 必选 | 敏感信息加密密钥                     | `openssl rand -base64 32`                     |
+| `OPENAI_API_KEY`               | 推荐 | OpenAI API 密钥                      | `sk-xxxxxx`                                   |
+| `OPENAI_PROXY_URL`             | 可选 | OpenAI 代理地址                      | `https://api.openai.com/v1`                   |
+| `DEEPSEEK_API_KEY`             | 可选 | DeepSeek API 密钥                    | `sk-xxxxxx`                                   |
+| `APP_URL`                      | 推荐 | 应用对外地址（本地用 SPA）           | 本地 `http://localhost:5174`；生产正式域名    |
+| `AUTH_SSO_PROVIDERS`           | 可选 | 启用的 OAuth 提供商                  | `github,wechat`                               |
+| `AUTH_EMAIL_VERIFICATION`      | 可选 | 启用邮箱验证                         | `1`                                           |
+| `AUTH_EMAIL_VERIFICATION_MODE` | 可选 | 注册验证方式：`otp`（默认）或 `link` | `otp`                                         |
+| `AUTH_ENABLE_MAGIC_LINK`       | 可选 | 启用魔法链接登录                     | `1`                                           |
+| `SEARCH_PROVIDERS`             | 可选 | 搜索引擎链                           | `searxng,brave`                               |
+| `CRAWLER_IMPLS`                | 可选 | 爬虫实现链                           | `naive,firecrawl`                             |
+| `ALLOWED_ORIGINS`              | 可选 | CORS 允许源                          | `http://localhost:3000,http://localhost:5174` |
 
-> [!NOTE]
+> \[!NOTE]
 >
 > 完整变量列表见 [.env.example](./.env.example) 与 [docs/env-setup.zh-CN.md](./docs/env-setup.zh-CN.md)
 
@@ -243,14 +243,14 @@ pnpm db:studio      # 打开 Drizzle Studio
 
 ## 📦 工作区包
 
-| 包名 | 路径 | 描述 |
-| --- | --- | --- |
-| `@pure/env` | `packages/env` | 环境变量 Zod 校验与模块划分 |
-| `@pure/types` | `packages/types` | 共享 TypeScript 类型 |
-| `@pure/utils` | `packages/utils` | 通用工具函数 |
-| `@pure/file-loaders` | `packages/file-loaders` | 文档加载（PDF、DOCX、PPTX、Excel 等） |
-| `@pure/web-crawler` | `packages/web-crawler` | 网页爬虫多实现（naive、firecrawl、tavily 等） |
-| `@pure/ssrf-safe-fetch` | `packages/ssrf-safe-fetch` | SSRF 安全的 fetch 封装 |
+| 包名                    | 路径                       | 描述                                          |
+| ----------------------- | -------------------------- | --------------------------------------------- |
+| `@pure/env`             | `packages/env`             | 环境变量 Zod 校验与模块划分                   |
+| `@pure/types`           | `packages/types`           | 共享 TypeScript 类型                          |
+| `@pure/utils`           | `packages/utils`           | 通用工具函数                                  |
+| `@pure/file-loaders`    | `packages/file-loaders`    | 文档加载（PDF、DOCX、PPTX、Excel 等）         |
+| `@pure/web-crawler`     | `packages/web-crawler`     | 网页爬虫多实现（naive、firecrawl、tavily 等） |
+| `@pure/ssrf-safe-fetch` | `packages/ssrf-safe-fetch` | SSRF 安全的 fetch 封装                        |
 
 <div align="right">
 
@@ -323,14 +323,14 @@ cd packages/web-crawler && pnpm test
 
 ## 📚 文档
 
-| 文档 | 说明 |
-| --- | --- |
-| [docs/quick-start.zh-CN.md](./docs/quick-start.zh-CN.md) | 快速开始与 Supabase 配置 |
-| [docs/env-setup.zh-CN.md](./docs/env-setup.zh-CN.md) | 环境变量详解 |
-| [docs/drizzle-setup.zh-CN.md](./docs/drizzle-setup.zh-CN.md) | 数据库迁移流程 |
-| [docs/self-hosting/online-search.zh-CN.md](./docs/self-hosting/online-search.zh-CN.md) | 联网搜索与爬虫配置 |
-| [docs/self-hosting/auth/email.zh-CN.md](./docs/self-hosting/auth/email.zh-CN.md) | 邮件服务与邮箱验证 |
-| [AGENTS.md](./AGENTS.md) | AI Agent 开发约定 |
+| 文档                                                                                   | 说明                     |
+| -------------------------------------------------------------------------------------- | ------------------------ |
+| [docs/quick-start.zh-CN.md](./docs/quick-start.zh-CN.md)                               | 快速开始与 Supabase 配置 |
+| [docs/env-setup.zh-CN.md](./docs/env-setup.zh-CN.md)                                   | 环境变量详解             |
+| [docs/drizzle-setup.zh-CN.md](./docs/drizzle-setup.zh-CN.md)                           | 数据库迁移流程           |
+| [docs/self-hosting/online-search.zh-CN.md](./docs/self-hosting/online-search.zh-CN.md) | 联网搜索与爬虫配置       |
+| [docs/self-hosting/auth/email.zh-CN.md](./docs/self-hosting/auth/email.zh-CN.md)       | 邮件服务与邮箱验证       |
+| [AGENTS.md](./AGENTS.md)                                                               | AI Agent 开发约定        |
 
 <div align="right">
 

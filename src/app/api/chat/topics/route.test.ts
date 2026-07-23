@@ -10,7 +10,9 @@ vi.mock('@/libs/auth/get-session-user', () => {
     jsonError: (message: string, status = 400) => Response.json({ error: message }, { status }),
     unauthorizedResponse: () => Response.json({ error: 'Unauthorized' }, { status: 401 }),
     withAuth:
-      (handler: (request: NextRequest, context: { params: Promise<Record<string, string>>; userId: string }) => unknown) =>
+      (
+        handler: (request: NextRequest, context: { params: Promise<Record<string, string>>; userId: string }) => unknown
+      ) =>
       async (request: NextRequest, context?: { params?: Promise<Record<string, string>> }) => {
         const userId = await getAuthenticatedUserId()
         if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -55,7 +57,7 @@ describe('/api/chat/topics', () => {
         body: JSON.stringify({ agentId: 'agent-1' }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
-      }),
+      })
     )
     const payload = await response.json()
 
@@ -80,7 +82,7 @@ describe('/api/chat/topics', () => {
       () =>
         ({
           listByAgent: vi.fn().mockResolvedValue(topics),
-        }) as unknown as ChatTopicModel,
+        }) as unknown as ChatTopicModel
     )
 
     const response = await GET(new NextRequest('http://localhost/api/chat/topics?agentId=agent-1'))

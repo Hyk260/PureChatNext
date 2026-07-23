@@ -1,36 +1,70 @@
-# general
-.DS_Store
-.editorconfig
-.idea
-.vscode
-.history
-.temp
-.env.local
-.husky
-.npmrc
-.gitkeep
-LICENSE
-
-# TypeScript
-*.d.ts
-
-# dependencies
-node_modules
-*.log
+# Lock files & manifests
+pnpm-lock.yaml
 *.lock
 package-lock.json
+bun.lockb
 
-# production
+# Build outputs
+.next
 dist
-lib
-logs
+out
+build
+public/_spa
+src/app/spa/spaHtmlTemplate.generated.ts
+*.tsbuildinfo
+next-env.d.ts
 
-# ignore files
-.*ignore
+# Snapshots & generated
+*.snap
+*.sql
+src/database/migrations/**
 
-# image
-*.webp
-*.gif
-*.png
-*.jpg
-*.svg
+# AI / editor tooling
+.agents
+.cursor
+.vercel
+.worktrees
+.claude
+.mcp.json
+
+# Test / coverage
+coverage
+.eslintcache
+.stylelintcache
+
+# Assets & binaries (no prettier parser)
+**/*.ico
+**/*.svg
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.webp
+**/*.pdf
+**/*.epub
+**/*.csv
+**/*.txt
+**/*.sh
+**/*.mp4
+**/*.webm
+**/*.woff
+**/*.woff2
+**/*.ttf
+**/*.otf
+
+# Dotfiles / config without parser
+LICENSE
+.gitignore
+.env
+.env.*
+.nvmrc
+.prettierignore
+.remarkignore
+.dockerignore
+.vercel
+.cursorignore
+.cursorindexingignore
+
+# Docs already covered by remark
+docs/**
+README*.md

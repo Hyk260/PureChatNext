@@ -100,21 +100,21 @@ const ErrorCapture = memo<ErrorCaptureProps>(({ reset, error }) => {
           }
         }
       `}</style>
-      <div className="error-page">
-        <h1 aria-hidden className="error-page__bg">
+      <div className='error-page'>
+        <h1 aria-hidden className='error-page__bg'>
           ERROR
         </h1>
-        <div className="error-page__content">
+        <div className='error-page__content'>
           <div style={{ fontSize: '4rem', lineHeight: 1 }} aria-hidden>
             🤧
           </div>
-          <h2 className="error-page__title">错误</h2>
-          <p className="error-page__desc">页面遇到了问题，请稍后重试</p>
-          <div className="error-page__actions">
-            <button className="error-page__button" type="button" onClick={reset}>
+          <h2 className='error-page__title'>错误</h2>
+          <p className='error-page__desc'>页面遇到了问题，请稍后重试</p>
+          <div className='error-page__actions'>
+            <button className='error-page__button' type='button' onClick={reset}>
               重试
             </button>
-            <Link className="error-page__link" href="/">
+            <Link className='error-page__link' href='/'>
               返回首页
             </Link>
           </div>

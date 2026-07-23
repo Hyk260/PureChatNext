@@ -31,22 +31,13 @@ export const HOME_SIDEBAR_SECTIONS: HomeSidebarSection[] = [
   { href: '/resources', icon: Layers, key: 'resources', title: '资源' },
 ]
 
-export const DEFAULT_SIDEBAR_ITEMS: string[] = [
-  'recents',
-  'agents',
-  SIDEBAR_SPACER_ID,
-  'community',
-  'resources',
-]
+export const DEFAULT_SIDEBAR_ITEMS: string[] = ['recents', 'agents', SIDEBAR_SPACER_ID, 'community', 'resources']
 
 export const SIDEBAR_ACCORDION_KEYS = new Set(['recents', 'agents'])
 
-const DEFAULT_BOTTOM_KEYS = new Set(
-  DEFAULT_SIDEBAR_ITEMS.slice(DEFAULT_SIDEBAR_ITEMS.indexOf(SIDEBAR_SPACER_ID) + 1),
-)
+const DEFAULT_BOTTOM_KEYS = new Set(DEFAULT_SIDEBAR_ITEMS.slice(DEFAULT_SIDEBAR_ITEMS.indexOf(SIDEBAR_SPACER_ID) + 1))
 
-export const findSidebarSection = (key: string) =>
-  HOME_SIDEBAR_SECTIONS.find((section) => section.key === key)
+export const findSidebarSection = (key: string) => HOME_SIDEBAR_SECTIONS.find((section) => section.key === key)
 
 /** Keep spacer immediately after the accordion block; backfill missing defaults. */
 export const normalizeSidebarItems = (order: string[]): string[] => {
@@ -75,11 +66,7 @@ export const normalizeSidebarItems = (order: string[]): string[] => {
     insertAt = bottomIdx === -1 ? withoutSpacer.length : bottomIdx
   }
 
-  const withSpacer = [
-    ...withoutSpacer.slice(0, insertAt),
-    SIDEBAR_SPACER_ID,
-    ...withoutSpacer.slice(insertAt),
-  ]
+  const withSpacer = [...withoutSpacer.slice(0, insertAt), SIDEBAR_SPACER_ID, ...withoutSpacer.slice(insertAt)]
 
   if (missingTop.length === 0 && missingBottom.length === 0) return withSpacer
 

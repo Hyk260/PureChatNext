@@ -1,9 +1,9 @@
 /** @pure/chat-adapter-qq — QQ Bot adapter for Vercel Chat SDK. */
-export { createQQAdapter, QQAdapter } from './adapter';
-export { QQApiClient } from './api';
-export { signWebhookResponse } from './crypto';
-export { QQFormatConverter } from './format-converter';
-export { QQGatewayConnection, type GatewayLogger, type QQGatewayOptions } from './gateway';
+export { createQQAdapter, QQAdapter } from './adapter'
+export { QQApiClient } from './api'
+export { signWebhookResponse } from './crypto'
+export { QQFormatConverter } from './format-converter'
+export { QQGatewayConnection, type GatewayLogger, type QQGatewayOptions } from './gateway'
 export {
   QQ_EVENT_TYPES,
   QQ_INTENTS,
@@ -26,4 +26,4 @@ export {
   type QQWebhookEventData,
   type QQWebhookPayload,
   type QQWebhookVerifyData,
-} from './types';
+} from './types'

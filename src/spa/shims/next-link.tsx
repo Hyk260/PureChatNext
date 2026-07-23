@@ -1,13 +1,7 @@
 /**
  * Vite-only shim for `next/link` → react-router `Link`.
  */
-import {
-  type AnchorHTMLAttributes,
-  type CSSProperties,
-  type MouseEvent,
-  type ReactNode,
-  forwardRef,
-} from 'react'
+import { type AnchorHTMLAttributes, type CSSProperties, type MouseEvent, type ReactNode, forwardRef } from 'react'
 import { Link as RouterLink } from 'react-router'
 
 type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
@@ -23,7 +17,7 @@ type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
 
 const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
   { href, replace, prefetch: _prefetch, scroll: _scroll, ...rest },
-  ref,
+  ref
 ) {
   return <RouterLink ref={ref} replace={replace} to={href} {...rest} />
 })

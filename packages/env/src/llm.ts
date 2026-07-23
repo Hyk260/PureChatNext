@@ -1,7 +1,7 @@
-import { createEnv } from '@t3-oss/env-core';
-import { z } from 'zod';
+import { createEnv } from '@t3-oss/env-core'
+import { z } from 'zod'
 
-import { parseEnvBooleanDefaultTrue } from './helpers';
+import { parseEnvBooleanDefaultTrue } from './helpers'
 
 export const getLLMConfig = () => {
   return createEnv({
@@ -23,7 +23,7 @@ export const getLLMConfig = () => {
       ENABLED_DEEPSEEK: !!process.env.DEEPSEEK_API_KEY,
       DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
     },
-  });
-};
+  })
+}
 
-export const llmEnv = getLLMConfig();
+export const llmEnv = getLLMConfig()

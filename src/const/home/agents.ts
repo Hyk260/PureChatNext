@@ -23,9 +23,8 @@ export const DEFAULT_PURE_AI_META: AgentListItem = {
   isBuiltin: true,
   pinned: true,
   slug: 'inbox',
-  systemRole: [
-    '你是 Pure AI，一位友好、清晰、务实的助手。',
-    '回答保持结构清楚、可执行；不确定时主动说明假设。',
-  ].join('\n'),
+  systemRole: ['你是 Pure AI，一位友好、清晰、务实的助手。', '回答保持结构清楚、可执行；不确定时主动说明假设。'].join(
+    '\n'
+  ),
   title: 'Pure AI',
 }

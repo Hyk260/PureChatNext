@@ -9,7 +9,7 @@ export default function Page() {
   const { id } = useParams<{ id: string }>()
 
   if (!id || !isSettingsProviderId(id)) {
-    return <Navigate replace to="/settings/provider/all" />
+    return <Navigate replace to='/settings/provider/all' />
   }
 
   return <ProviderDetailPage id={id} />

@@ -25,12 +25,9 @@ export const GET = withAuth(async (request, { userId }) => {
     console.error('[resources/items] GET failed:', error)
     return NextResponse.json(
       {
-        error:
-          pgCode === '42P01'
-            ? 'Database tables not migrated. Run: pnpm db:migrate'
-            : 'Internal Server Error',
+        error: pgCode === '42P01' ? 'Database tables not migrated. Run: pnpm db:migrate' : 'Internal Server Error',
       },
-      { status: 500 },
+      { status: 500 }
     )
   }
 })

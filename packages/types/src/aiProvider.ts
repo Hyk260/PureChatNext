@@ -1,4 +1,4 @@
-export type ResponseAnimationStyle = "smooth" | "fadeIn" | "none"
+export type ResponseAnimationStyle = 'smooth' | 'fadeIn' | 'none'
 
 export type ResponseAnimation =
   | {

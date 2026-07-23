@@ -1,100 +1,93 @@
-import {
-  type SearchParams,
-  type UniformSearchResponse,
-  type UniformSearchResult,
-} from '@pure/types';
-import { getJinaSearchBaseUrl, parseJSONResponse } from '@pure/utils';
-import debug from 'debug';
-import urlJoin from 'url-join';
+import { type SearchParams, type UniformSearchResponse, type UniformSearchResult } from '@pure/types'
+import { getJinaSearchBaseUrl, parseJSONResponse } from '@pure/utils'
+import debug from 'debug'
+import urlJoin from 'url-join'
 
-import { toolsEnv } from '@/envs/tools';
+import { toolsEnv } from '@/envs/tools'
 
-import { type SearchServiceImpl } from '../type';
-import { type JinaResponse, type JinaSearchParameters } from './type';
+import { type SearchServiceImpl } from '../type'
+import { type JinaResponse, type JinaSearchParameters } from './type'
 
-const log = debug('search:Jina');
+const log = debug('search:Jina')
 
 export class JinaImpl implements SearchServiceImpl {
   private get apiKey(): string | undefined {
-    return process.env.JINA_READER_API_KEY || process.env.JINA_API_KEY;
+    return process.env.JINA_READER_API_KEY || process.env.JINA_API_KEY
   }
 
   private get baseUrl(): string {
     // Prefer live process.env so tests / runtime toggles apply (toolsEnv is load-time).
-    const useCn =
-      process.env.JINA_USE_CN_DOMAINS === 'true' || toolsEnv.JINA_USE_CN_DOMAINS === 'true';
-    return getJinaSearchBaseUrl(useCn);
+    const useCn = process.env.JINA_USE_CN_DOMAINS === 'true' || toolsEnv.JINA_USE_CN_DOMAINS === 'true'
+    return getJinaSearchBaseUrl(useCn)
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
-    log('Starting Jina query with query: "%s", params: %o', query, params);
-    const endpoint = urlJoin(this.baseUrl, '/');
+    log('Starting Jina query with query: "%s", params: %o', query, params)
+    const endpoint = urlJoin(this.baseUrl, '/')
 
     const body: JinaSearchParameters = {
       q: query,
-    };
+    }
 
-    log('Constructed request body: %o', body);
+    log('Constructed request body: %o', body)
 
-    let response: Response;
-    const startAt = Date.now();
-    let costTime: number;
+    let response: Response
+    const startAt = Date.now()
+    let costTime: number
     try {
-      log('Sending request to endpoint: %s', endpoint);
+      log('Sending request to endpoint: %s', endpoint)
       response = await fetch(endpoint, {
         body: JSON.stringify(body),
         headers: {
-          'Accept': 'application/json',
-          'Authorization': this.apiKey ? `Bearer ${this.apiKey}` : '',
+          Accept: 'application/json',
+          Authorization: this.apiKey ? `Bearer ${this.apiKey}` : '',
           'Content-Type': 'application/json',
           'X-Respond-With': 'no-content',
         },
         method: 'POST',
-      });
-      log('Received response with status: %d', response.status);
-      costTime = Date.now() - startAt;
+      })
+      log('Received response with status: %d', response.status)
+      costTime = Date.now() - startAt
     } catch (error) {
-      log.extend('error')('Jina fetch error: %o', error);
-      throw new Error('Failed to connect to Jina.', { cause: error });
+      log.extend('error')('Jina fetch error: %o', error)
+      throw new Error('Failed to connect to Jina.', { cause: error })
     }
 
     if (!response.ok) {
-      const errorBody = await response.text();
+      const errorBody = await response.text()
       log.extend('error')(
         `Jina request failed with status ${response.status}: %s`,
-        errorBody.length > 200 ? `${errorBody.slice(0, 200)}...` : errorBody,
-      );
-      throw new Error(`Jina request failed: ${response.statusText}`, { cause: errorBody });
+        errorBody.length > 200 ? `${errorBody.slice(0, 200)}...` : errorBody
+      )
+      throw new Error(`Jina request failed: ${response.statusText}`, { cause: errorBody })
     }
 
     try {
-      const jinaResponse = await parseJSONResponse<JinaResponse>(response, 'Jina');
+      const jinaResponse = await parseJSONResponse<JinaResponse>(response, 'Jina')
 
-      log('Parsed Jina response: %o', jinaResponse);
+      log('Parsed Jina response: %o', jinaResponse)
 
-      const mappedResults = (jinaResponse.data || []).map(
-        (result): UniformSearchResult => ({
-          category: 'general', // Default category
-          content: result.description || '', // Prioritize content, fallback to snippet
-          engines: ['jina'], // Use 'jina' as the engine name
-          parsedUrl: result.url ? new URL(result.url).hostname : '', // Basic URL parsing
-          score: 1, // Default score to 1
-          title: result.title || '',
-          url: result.url,
-        }),
-      );
+      const mappedResults = (jinaResponse.data || []).map((result): UniformSearchResult => ({
+        category: 'general', // Default category
+        content: result.description || '', // Prioritize content, fallback to snippet
+        engines: ['jina'], // Use 'jina' as the engine name
+        parsedUrl: result.url ? new URL(result.url).hostname : '', // Basic URL parsing
+        score: 1, // Default score to 1
+        title: result.title || '',
+        url: result.url,
+      }))
 
-      log('Mapped %d results to SearchResult format', mappedResults.length);
+      log('Mapped %d results to SearchResult format', mappedResults.length)
 
       return {
         costTime,
         query,
         resultNumbers: mappedResults.length,
         results: mappedResults,
-      };
+      }
     } catch (error) {
-      log.extend('error')('Error parsing Jina response: %o', error);
-      throw new Error('Failed to parse Jina response.', { cause: error });
+      log.extend('error')('Error parsing Jina response: %o', error)
+      throw new Error('Failed to parse Jina response.', { cause: error })
     }
   }
 }

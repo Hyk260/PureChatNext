@@ -1,15 +1,15 @@
 :root {
-  --color-scrollbar-thumb: rgba(0, 0, 0, 0.15);
-  --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.2);
-  --color-scrollbar-thumb-right: rgba(0, 0, 0, 0.18);
-  --color-scrollbar-thumb-right-hover: rgba(0, 0, 0, 0.25);
+  --color-scrollbar-thumb: rgb(0 0 0 / 15%);
+  --color-scrollbar-thumb-hover: rgb(0 0 0 / 20%);
+  --color-scrollbar-thumb-right: rgb(0 0 0 / 18%);
+  --color-scrollbar-thumb-right-hover: rgb(0 0 0 / 25%);
 }
 
-[data-theme="dark"] {
-  --color-scrollbar-thumb: rgba(255, 255, 255, 0.15);
-  --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
-  --color-scrollbar-thumb-right: rgba(255, 255, 255, 0.18);
-  --color-scrollbar-thumb-right-hover: rgba(255, 255, 255, 0.25);
+[data-theme='dark'] {
+  --color-scrollbar-thumb: rgb(255 255 255 / 15%);
+  --color-scrollbar-thumb-hover: rgb(255 255 255 / 20%);
+  --color-scrollbar-thumb-right: rgb(255 255 255 / 18%);
+  --color-scrollbar-thumb-right-hover: rgb(255 255 255 / 25%);
 }
 
 ::-webkit-scrollbar {
@@ -23,7 +23,7 @@
 
 ::-webkit-scrollbar-thumb {
   border-radius: 10px;
-  background: var(--color-scrollbar-thumb, rgba(0, 0, 0, 0.15));
+  background: var(--color-scrollbar-thumb, rgb(0 0 0 / 15%));
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -32,9 +32,9 @@
 
 pre::-webkit-scrollbar-thumb {
   border-radius: 0;
-  background: rgba(0, 0, 0, 0.08);
+  background: rgb(0 0 0 / 8%);
 }
 
-pre::-webkit-scrollbar-thumb:hover  {
-  background: rgba(0, 0, 0, 0.15);
+pre::-webkit-scrollbar-thumb:hover {
+  background: rgb(0 0 0 / 15%);
 }

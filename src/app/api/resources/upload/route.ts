@@ -9,12 +9,7 @@ import { FileS3 } from '@/server/modules/S3'
 import { buildPublicS3Url, resolveFileAccessUrl } from '@/server/modules/S3/url'
 
 function isS3Configured() {
-  return Boolean(
-    fileEnv.S3_ACCESS_KEY_ID &&
-      fileEnv.S3_SECRET_ACCESS_KEY &&
-      fileEnv.S3_ENDPOINT &&
-      fileEnv.S3_BUCKET,
-  )
+  return Boolean(fileEnv.S3_ACCESS_KEY_ID && fileEnv.S3_SECRET_ACCESS_KEY && fileEnv.S3_ENDPOINT && fileEnv.S3_BUCKET)
 }
 
 export const POST = withAuth(async (request, { userId }) => {
@@ -51,7 +46,7 @@ export const POST = withAuth(async (request, { userId }) => {
         size: file.size,
         url,
       },
-      true,
+      true
     )
 
     const created = await model.findById(result.id)

@@ -2,12 +2,7 @@ import { useRouter, useSearchParams } from '@/utils/navigation'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
-import {
-  checkUserByEmail,
-  reclaimUnverifiedEmail,
-  signUp,
-  useAuthConfig,
-} from '@/libs/better-auth/client'
+import { checkUserByEmail, reclaimUnverifiedEmail, signUp, useAuthConfig } from '@/libs/better-auth/client'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 export interface SignUpFormValues {
@@ -29,7 +24,7 @@ interface SignUpErrorLike {
 const redirectToSignIn = (
   router: ReturnType<typeof useRouter>,
   searchParams: ReturnType<typeof useSearchParams>,
-  email: string,
+  email: string
 ) => {
   const params = new URLSearchParams({ email })
   const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
@@ -75,8 +70,7 @@ export const useSignUp = () => {
         const signUpError = error as SignUpErrorLike
         const isEmailDuplicate =
           signUpError.code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' ||
-          (signUpError.code === 'FAILED_TO_CREATE_USER' &&
-            signUpError.details?.cause?.code === '23505')
+          (signUpError.code === 'FAILED_TO_CREATE_USER' && signUpError.details?.cause?.code === '23505')
 
         if (isEmailDuplicate) {
           message.info('该邮箱已注册，请前往登录')
@@ -94,9 +88,7 @@ export const useSignUp = () => {
       }
 
       if (config.enableEmailVerification) {
-        router.push(
-          `/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`,
-        )
+        router.push(`/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`)
         return
       }
 

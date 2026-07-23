@@ -63,7 +63,7 @@ export const fetchMessages = async (topicId: string): Promise<UIMessage[]> => {
 export const putMessages = async (
   topicId: string,
   messages: UIMessage[],
-  init?: { signal?: AbortSignal },
+  init?: { signal?: AbortSignal }
 ): Promise<void> => {
   const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(topicId)}/messages`, {
     body: JSON.stringify({ messages }),

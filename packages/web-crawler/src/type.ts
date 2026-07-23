@@ -1,10 +1,6 @@
 import { type CrawlSuccessResult } from '@pure/types'
 
-export type {
-  CrawlErrorResult,
-  CrawlSuccessResult,
-  CrawlUniformResult,
-} from '@pure/types'
+export type { CrawlErrorResult, CrawlSuccessResult, CrawlUniformResult } from '@pure/types'
 
 export interface FilterOptions {
   // Whether to enable Readability
@@ -19,7 +15,7 @@ type CrawlImplParams<T> = T & {
 
 export type CrawlImpl<Params = object> = (
   url: string,
-  params: CrawlImplParams<Params>,
+  params: CrawlImplParams<Params>
 ) => Promise<CrawlSuccessResult | undefined>
 
 export interface CrawlUrlRule {

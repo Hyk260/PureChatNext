@@ -20,16 +20,14 @@ const ThemeProviders = ({ children }: PropsWithChildren) => {
     <StyleProvider ssrInline={false} speedy>
       <ThemeProvider
         appearance={appearance}
-        defaultAppearance="light"
-        defaultThemeMode="light"
+        defaultAppearance='light'
+        defaultThemeMode='light'
         style={{ height: '100%' }}
         theme={{ cssVar: { key: 'pure-vars' } }}
       >
         <AntdStaticMethods />
         <LazyMotion features={domAnimation}>
-          <ConfigProvider motion={m}>
-            {children}
-          </ConfigProvider>
+          <ConfigProvider motion={m}>{children}</ConfigProvider>
         </LazyMotion>
       </ThemeProvider>
     </StyleProvider>

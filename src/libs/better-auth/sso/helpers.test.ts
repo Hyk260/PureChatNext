@@ -49,10 +49,7 @@ describe('checkProviderEnvs', () => {
     authEnvMock.AUTH_APPLE_APP_BUNDLE_IDENTIFIER = 'com.example.app'
 
     expect(
-      checkProviderEnvs(
-        ['AUTH_APPLE_CLIENT_ID', 'AUTH_APPLE_CLIENT_SECRET'],
-        ['AUTH_APPLE_APP_BUNDLE_IDENTIFIER'],
-      ),
+      checkProviderEnvs(['AUTH_APPLE_CLIENT_ID', 'AUTH_APPLE_CLIENT_SECRET'], ['AUTH_APPLE_APP_BUNDLE_IDENTIFIER'])
     ).toEqual({
       AUTH_APPLE_APP_BUNDLE_IDENTIFIER: 'com.example.app',
       AUTH_APPLE_CLIENT_ID: 'id',
@@ -65,10 +62,7 @@ describe('checkProviderEnvs', () => {
     authEnvMock.AUTH_APPLE_CLIENT_SECRET = 'secret'
 
     expect(
-      checkProviderEnvs(
-        ['AUTH_APPLE_CLIENT_ID', 'AUTH_APPLE_CLIENT_SECRET'],
-        ['AUTH_APPLE_APP_BUNDLE_IDENTIFIER'],
-      ),
+      checkProviderEnvs(['AUTH_APPLE_CLIENT_ID', 'AUTH_APPLE_CLIENT_SECRET'], ['AUTH_APPLE_APP_BUNDLE_IDENTIFIER'])
     ).toEqual({
       AUTH_APPLE_APP_BUNDLE_IDENTIFIER: undefined,
       AUTH_APPLE_CLIENT_ID: 'id',

@@ -3,10 +3,7 @@
 import { Flex } from 'antd'
 import { memo, useMemo } from 'react'
 
-import {
-  COMMUNITY_AGENTS,
-  filterCommunityAgents,
-} from '@/const/community/agents'
+import { COMMUNITY_AGENTS, filterCommunityAgents } from '@/const/community/agents'
 import { useSearchParams } from '@/utils/navigation'
 
 import AgentCategory from './components/AgentCategory'
@@ -22,17 +19,14 @@ const AgentPage = memo(() => {
   const q = searchParams.get('q')
   const pageParam = Number(searchParams.get('page')) || 1
 
-  const data = useMemo(
-    () => filterCommunityAgents(COMMUNITY_AGENTS, { category, q }),
-    [category, q],
-  )
+  const data = useMemo(() => filterCommunityAgents(COMMUNITY_AGENTS, { category, q }), [category, q])
 
   const total = data.length
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const currentPage = Math.min(Math.max(1, pageParam), totalPages)
   const pageData = useMemo(
     () => data.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [currentPage, data],
+    [currentPage, data]
   )
 
   return (
@@ -42,11 +36,7 @@ const AgentPage = memo(() => {
         <AgentSearch />
         <Flex vertical gap={32} style={{ width: '100%' }}>
           <AgentList data={pageData} />
-          <AgentPagination
-            currentPage={currentPage}
-            pageSize={PAGE_SIZE}
-            total={total}
-          />
+          <AgentPagination currentPage={currentPage} pageSize={PAGE_SIZE} total={total} />
         </Flex>
       </Flex>
     </Flex>

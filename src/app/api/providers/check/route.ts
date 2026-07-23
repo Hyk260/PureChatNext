@@ -46,18 +46,11 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api', 'Missing model').toResponse()
   }
 
-  const apiKey = resolveProviderApiKey(
-    provider,
-    resolveApiKeyFromHeader(request),
-    body.apiKey,
-  )
+  const apiKey = resolveProviderApiKey(provider, resolveApiKeyFromHeader(request), body.apiKey)
   const baseURL = resolveOptionalBaseURL(body.baseURL)
 
   if (!apiKey) {
-    return new ChatSDKError(
-      'bad_request:api',
-      `Missing API key for provider "${provider}"`,
-    ).toResponse()
+    return new ChatSDKError('bad_request:api', `Missing API key for provider "${provider}"`).toResponse()
   }
 
   const languageModel = createProviderLanguageModel(provider, model, apiKey, baseURL)
@@ -79,7 +72,7 @@ export async function POST(request: Request) {
             type: 'ConnectionCheckFailed',
           },
         },
-        { status: 502 },
+        { status: 502 }
       )
     }
 
@@ -101,7 +94,7 @@ export async function POST(request: Request) {
           type: 'ConnectionCheckFailed',
         },
       },
-      { status: 502 },
+      { status: 502 }
     )
   }
 }

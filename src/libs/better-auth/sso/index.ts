@@ -1,18 +1,18 @@
-import { type GenericOAuthConfig } from 'better-auth/plugins';
-import { type SocialProviders } from 'better-auth/social-providers';
+import { type GenericOAuthConfig } from 'better-auth/plugins'
+import { type SocialProviders } from 'better-auth/social-providers'
 
-import { appEnv } from '@/envs/app';
-import { authEnv } from '@/envs/auth';
-import { BUILTIN_BETTER_AUTH_PROVIDERS } from '@/libs/better-auth/shared';
+import { appEnv } from '@/envs/app'
+import { authEnv } from '@/envs/auth'
+import { BUILTIN_BETTER_AUTH_PROVIDERS } from '@/libs/better-auth/shared'
 
-import { parseSSOProviders } from './parse-providers';
+import { parseSSOProviders } from './parse-providers'
 // import Apple from './providers/apple';
-import Feishu from './providers/feishu';
-import Github from './providers/github';
-import Google from './providers/google';
-import Wechat from './providers/wechat';
+import Feishu from './providers/feishu'
+import Github from './providers/github'
+import Google from './providers/google'
+import Wechat from './providers/wechat'
 
-export { parseSSOProviders } from './parse-providers';
+export { parseSSOProviders } from './parse-providers'
 
 const providerDefinitions = [
   // Apple,
@@ -20,78 +20,76 @@ const providerDefinitions = [
   Github,
   Feishu,
   Wechat,
-] as const;
+] as const
 
-const builtInProviderIds = new Set(BUILTIN_BETTER_AUTH_PROVIDERS);
+const builtInProviderIds = new Set(BUILTIN_BETTER_AUTH_PROVIDERS)
 
 for (const definition of providerDefinitions) {
   if (definition.type === 'builtin' && !builtInProviderIds.has(definition.id)) {
     throw new Error(
-      `[Better-Auth] Built-in provider "${definition.id}" is not registered in BUILTIN_BETTER_AUTH_PROVIDERS (src/libs/better-auth/shared/constants.ts). Please update the constant to keep them in sync.`,
-    );
+      `[Better-Auth] Built-in provider "${definition.id}" is not registered in BUILTIN_BETTER_AUTH_PROVIDERS (src/libs/better-auth/shared/constants.ts). Please update the constant to keep them in sync.`
+    )
   }
 }
 
-const providerRegistry = new Map<string, (typeof providerDefinitions)[number]>();
+const providerRegistry = new Map<string, (typeof providerDefinitions)[number]>()
 
 for (const definition of providerDefinitions) {
-  providerRegistry.set(definition.id, definition);
-  definition.aliases?.forEach((alias) => providerRegistry.set(alias, definition));
+  providerRegistry.set(definition.id, definition)
+  definition.aliases?.forEach((alias) => providerRegistry.set(alias, definition))
 }
 
 export const initBetterAuthSSOProviders = () => {
-  const enabledProviders = parseSSOProviders(authEnv.AUTH_SSO_PROVIDERS);
+  const enabledProviders = parseSSOProviders(authEnv.AUTH_SSO_PROVIDERS)
 
-  const socialProviders: SocialProviders = {};
-  const genericOAuthProviders: GenericOAuthConfig[] = [];
+  const socialProviders: SocialProviders = {}
+  const genericOAuthProviders: GenericOAuthConfig[] = []
 
   for (const rawProvider of enabledProviders) {
-    const definition = providerRegistry.get(rawProvider);
+    const definition = providerRegistry.get(rawProvider)
 
     if (!definition) {
-      throw new Error(`[Better-Auth] Unknown SSO provider: ${rawProvider}`);
+      throw new Error(`[Better-Auth] Unknown SSO provider: ${rawProvider}`)
     }
 
     /**
      * Providers expose checkEnvs predicates so we can fail fast when credentials are missing instead
      * of encountering harder-to-trace errors later in the Better-Auth pipeline.
      */
-    const env = definition.checkEnvs();
+    const env = definition.checkEnvs()
     if (!env) {
-      throw new Error(
-        `[Better-Auth] ${rawProvider} SSO provider environment variables are not set correctly!`,
-      );
+      throw new Error(`[Better-Auth] ${rawProvider} SSO provider environment variables are not set correctly!`)
     }
 
     if (definition.type === 'builtin') {
-      const providerId = definition.id;
+      const providerId = definition.id
       if (socialProviders[providerId]) {
-        throw new Error(`[Better-Auth] Duplicate SSO provider: ${providerId}`);
+        throw new Error(`[Better-Auth] Duplicate SSO provider: ${providerId}`)
       }
 
       // @ts-expect-error - build expects specific env type, but we use union definition type
-      const config = definition.build(env);
+      const config = definition.build(env)
       if (config) {
         // @ts-expect-error hard to type
-        socialProviders[providerId] = config;
+        socialProviders[providerId] = config
       }
 
-      continue;
+      continue
     }
 
     // @ts-expect-error - build expects specific env type, but we use union definition type
-    const config = definition.build(env);
+    const config = definition.build(env)
 
     if (config) {
       // the generic oidc callback url is /api/auth/oauth2/callback/{providerId}
       // different from builtin providers' /api/auth/callback/{providerId}
-      config.redirectURI = `${appEnv.APP_URL}/api/auth/callback/${definition.id}`;
-      genericOAuthProviders.push(config);
+      config.redirectURI = `${appEnv.APP_URL}/api/auth/callback/${definition.id}`
+      genericOAuthProviders.push(config)
     }
   }
 
   return {
     genericOAuthProviders,
     socialProviders,
-  };
-};
+  }
+}

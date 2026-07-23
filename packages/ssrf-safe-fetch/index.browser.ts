@@ -5,10 +5,10 @@
 
 /** Per-call SSRF overrides (ignored in browser; kept for API parity with Node). */
 export interface SSRFOptions {
-  allowIPAddressList?: string[];
-  allowPrivateIPAddress?: boolean;
+  allowIPAddressList?: string[]
+  allowPrivateIPAddress?: boolean
   /** Server-only body cap; ignored in browser. */
-  maxContentLength?: number;
+  maxContentLength?: number
 }
 
 /**
@@ -18,7 +18,7 @@ export interface SSRFOptions {
 export const ssrfSafeFetch = async (
   url: string,
   options?: RequestInit,
-  _ssrfOptions?: SSRFOptions,
+  _ssrfOptions?: SSRFOptions
 ): Promise<Response> => {
-  return fetch(url, options);
-};
+  return fetch(url, options)
+}

@@ -75,15 +75,13 @@
       }
     </style>
     <script>
-      (function () {
+      ;(function () {
         var theme = 'system'
         try {
           theme = localStorage.getItem('theme') || 'system'
         } catch (_) {}
         var systemTheme =
-          window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'dark'
-            : 'light'
+          window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
         var resolvedTheme = theme === 'system' ? systemTheme : theme
         if (resolvedTheme === 'dark' || resolvedTheme === 'light') {
           document.documentElement.setAttribute('data-theme', resolvedTheme)

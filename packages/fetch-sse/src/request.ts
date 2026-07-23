@@ -7,7 +7,7 @@ export const getRequestBody = async (body?: BodyInit | null): Promise<string | A
   if (!body) {
     return undefined
   }
-  if (typeof body === "string") {
+  if (typeof body === 'string') {
     return body
   }
   if (body instanceof ArrayBuffer) {
@@ -20,6 +20,6 @@ export const getRequestBody = async (body?: BodyInit | null): Promise<string | A
     return await body.arrayBuffer()
   }
 
-  console.warn("不支持的 IPC 代理请求体类型:", typeof body)
-  throw new Error("不支持的 IPC 代理请求体类型")
+  console.warn('不支持的 IPC 代理请求体类型:', typeof body)
+  throw new Error('不支持的 IPC 代理请求体类型')
 }

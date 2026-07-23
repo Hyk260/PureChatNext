@@ -1,4 +1,4 @@
-import { NextResponse , type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { UserModel } from '@/database/models/user'
 import { logger } from '@/libs/logger'
 

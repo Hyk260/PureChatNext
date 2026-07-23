@@ -90,7 +90,7 @@ export function sharedRendererDefine(isDev: boolean) {
   const nextPublicDefine = Object.fromEntries(
     Object.entries(process.env)
       .filter(([key]) => key.toUpperCase().startsWith('NEXT_PUBLIC_'))
-      .map(([key, value]) => [`process.env.${key}`, JSON.stringify(value)]),
+      .map(([key, value]) => [`process.env.${key}`, JSON.stringify(value)])
   )
 
   return {

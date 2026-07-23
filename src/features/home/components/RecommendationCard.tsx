@@ -61,12 +61,7 @@ const RecommendationCard = memo<RecommendationCardProps>(({ item }) => {
         <Tag bordered style={{ fontSize: 12 }}>
           {item.tag}
         </Tag>
-        <Button
-          className={cx(styles.actionBtnPrimary)}
-          loading={loading}
-          shape='round'
-          onClick={handleClick}
-        >
+        <Button className={cx(styles.actionBtnPrimary)} loading={loading} shape='round' onClick={handleClick}>
           添加任务
         </Button>
       </Flex>

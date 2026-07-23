@@ -15,12 +15,11 @@ export const useExplorerSelectionSummary = ({ data }: ExplorerSelectionOptions) 
     useShallow((s) => ({
       selectAllState: s.selectAllState,
       selectedFileIds: s.selectedFileIds,
-    })),
+    }))
   )
 
   const selectedCount = selectedFileIds.length
-  const allLoadedSelected =
-    data.length > 0 && data.every((item) => selectedFileIds.includes(item.id))
+  const allLoadedSelected = data.length > 0 && data.every((item) => selectedFileIds.includes(item.id))
   const allSelected = allLoadedSelected
   const indeterminate = selectedCount > 0 && !allLoadedSelected
 
@@ -34,19 +33,17 @@ export const useExplorerSelectionSummary = ({ data }: ExplorerSelectionOptions) 
 }
 
 export const useExplorerSelectionActions = (data: FileListItem[]) => {
-  const { clearSelectAllState, selectAllLoadedResources, selectedFileIds } =
-    useResourceManagerStore(
-      useShallow((s) => ({
-        clearSelectAllState: s.clearSelectAllState,
-        selectAllLoadedResources: s.selectAllLoadedResources,
-        selectedFileIds: s.selectedFileIds,
-      })),
-    )
+  const { clearSelectAllState, selectAllLoadedResources, selectedFileIds } = useResourceManagerStore(
+    useShallow((s) => ({
+      clearSelectAllState: s.clearSelectAllState,
+      selectAllLoadedResources: s.selectAllLoadedResources,
+      selectedFileIds: s.selectedFileIds,
+    }))
+  )
 
   const handleSelectAll = useCallback(
     (checked?: boolean) => {
-      const allLoadedSelected =
-        data.length > 0 && data.every((item) => selectedFileIds.includes(item.id))
+      const allLoadedSelected = data.length > 0 && data.every((item) => selectedFileIds.includes(item.id))
 
       if (checked === false || allLoadedSelected) {
         clearSelectAllState()
@@ -55,26 +52,26 @@ export const useExplorerSelectionActions = (data: FileListItem[]) => {
 
       selectAllLoadedResources(data.map((item) => item.id))
     },
-    [clearSelectAllState, data, selectAllLoadedResources, selectedFileIds],
+    [clearSelectAllState, data, selectAllLoadedResources, selectedFileIds]
   )
 
-  const toggleItemSelection = useCallback(
-    (id: string, checked: boolean) => {
-      const { clearSelectAllState: clear, selectedFileIds: current, setSelectedFileIds } =
-        useResourceManagerStore.getState()
+  const toggleItemSelection = useCallback((id: string, checked: boolean) => {
+    const {
+      clearSelectAllState: clear,
+      selectedFileIds: current,
+      setSelectedFileIds,
+    } = useResourceManagerStore.getState()
 
-      clear()
+    clear()
 
-      if (checked) {
-        if (current.includes(id)) return
-        setSelectedFileIds([...current, id])
-        return
-      }
+    if (checked) {
+      if (current.includes(id)) return
+      setSelectedFileIds([...current, id])
+      return
+    }
 
-      setSelectedFileIds(current.filter((item) => item !== id))
-    },
-    [],
-  )
+    setSelectedFileIds(current.filter((item) => item !== id))
+  }, [])
 
   return { handleSelectAll, toggleItemSelection }
 }

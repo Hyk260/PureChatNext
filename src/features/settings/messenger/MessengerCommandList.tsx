@@ -4,14 +4,7 @@ import { Block } from '@pure/ui'
 import { Icon } from '@pure/ui'
 import { Flex, Typography, Divider } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
-import {
-  BotIcon,
-  CircleStopIcon,
-  HelpCircleIcon,
-  MegaphoneIcon,
-  SquarePlusIcon,
-  type LucideIcon,
-} from 'lucide-react'
+import { BotIcon, CircleStopIcon, HelpCircleIcon, MegaphoneIcon, SquarePlusIcon, type LucideIcon } from 'lucide-react'
 import { Fragment, memo } from 'react'
 
 import { WECHAT_COMMANDS, type MessengerCommandItem } from './const'
@@ -44,26 +37,26 @@ const COMMAND_ICONS: Record<MessengerCommandItem['icon'], LucideIcon> = {
 
 const MessengerCommandList = memo(() => {
   return (
-    <Flex vertical gap={8} style={{ width: "100%" }}>
+    <Flex vertical gap={8} style={{ width: '100%' }}>
       <Typography.Text strong style={{ fontSize: 15 }}>
         指令
       </Typography.Text>
-      <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+      <Typography.Text type='secondary' style={{ fontSize: 13 }}>
         在与机器人的私信中发送以下指令。
       </Typography.Text>
 
-      <Block className={styles.list} variant="outlined">
+      <Block className={styles.list} variant='outlined'>
         {WECHAT_COMMANDS.map((item, index) => (
           <Fragment key={item.command}>
             {index > 0 && <Divider style={{ margin: 0 }} />}
-            <Flex align="center" gap={12} style={{ paddingBlock: 14, paddingInline: 16 }}>
-              <Flex align="center" className={styles.icon} justify="center">
+            <Flex align='center' gap={12} style={{ paddingBlock: 14, paddingInline: 16 }}>
+              <Flex align='center' className={styles.icon} justify='center'>
                 <Icon icon={COMMAND_ICONS[item.icon]} size={18} />
               </Flex>
               <Typography.Text code strong style={{ fontSize: 14 }}>
                 {item.command}
               </Typography.Text>
-              <Typography.Text type="secondary" style={{ flex: 1, fontSize: 13, textAlign: 'end' }}>
+              <Typography.Text type='secondary' style={{ flex: 1, fontSize: 13, textAlign: 'end' }}>
                 {item.description}
               </Typography.Text>
             </Flex>

@@ -11,11 +11,7 @@ import { DOCUMENT_FOLDER_TYPE } from '@/const/resources/fileTypes'
 import { useFolderPath } from '@/features/resources/hooks/useFolderPath'
 import { useResourceManagerUrlSync } from '@/features/resources/hooks/useResourceManagerUrlSync'
 import { useResourceManagerStore } from '@/features/resources/store'
-import {
-  revalidateResources,
-  useFetchResources,
-  useResourceStore,
-} from '@/features/resources/store/resourceStore'
+import { revalidateResources, useFetchResources, useResourceStore } from '@/features/resources/store/resourceStore'
 import { resourceService } from '@/services/resource'
 import { FilesTabs, type FileListItem } from '@/types/files'
 
@@ -63,7 +59,7 @@ const Explorer = memo(() => {
       sortType: s.sortType,
       sorter: s.sorter,
       viewMode: s.viewMode,
-    })),
+    }))
   )
 
   const queryParams = useMemo(
@@ -76,26 +72,29 @@ const Explorer = memo(() => {
       sortType,
       sorter,
     }),
-    [category, libraryId, currentFolderSlug, searchQuery, sortType, sorter],
+    [category, libraryId, currentFolderSlug, searchQuery, sortType, sorter]
   )
 
   const { isLoading } = useFetchResources(queryParams)
   const resourceList = useResourceStore((s) => s.resourceList)
 
-  const handleUpload = useCallback(async (files: File[]) => {
-    for (const file of files) {
-      try {
-        await resourceService.uploadFile(file, {
-          knowledgeBaseId: libraryId,
-          parentId: currentFolderSlug ?? undefined,
-        })
-      } catch (err) {
-        message.error(err instanceof Error ? err.message : '上传失败')
+  const handleUpload = useCallback(
+    async (files: File[]) => {
+      for (const file of files) {
+        try {
+          await resourceService.uploadFile(file, {
+            knowledgeBaseId: libraryId,
+            parentId: currentFolderSlug ?? undefined,
+          })
+        } catch (err) {
+          message.error(err instanceof Error ? err.message : '上传失败')
+        }
       }
-    }
-    revalidateResources()
-    message.success('上传完成')
-  }, [currentFolderSlug, libraryId, message])
+      revalidateResources()
+      message.success('上传完成')
+    },
+    [currentFolderSlug, libraryId, message]
+  )
 
   const handleOpen = useCallback(
     (item: FileListItem) => {
@@ -109,7 +108,7 @@ const Explorer = memo(() => {
       setCurrentViewItemId(item.id)
       setMode('editor')
     },
-    [folderPath, libraryId, router, setCurrentViewItemId, setFileParam, setMode],
+    [folderPath, libraryId, router, setCurrentViewItemId, setFileParam, setMode]
   )
 
   const handleNewFolder = useCallback(async () => {

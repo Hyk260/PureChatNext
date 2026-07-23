@@ -1,10 +1,10 @@
-import { BaseFormatConverter, parseMarkdown, stringifyMarkdown, type Root } from 'chat';
+import { BaseFormatConverter, parseMarkdown, stringifyMarkdown, type Root } from 'chat'
 
 /** Markdown ↔ text for QQ Bot messages (@pure/chat-adapter-qq). */
 export class QQFormatConverter extends BaseFormatConverter {
   /** mdast → outbound text (QQ has limited Markdown; stringify for now). */
   fromAst(ast: Root): string {
-    return stringifyMarkdown(ast);
+    return stringifyMarkdown(ast)
   }
 
   /** Inbound QQ text → mdast (strip @mention / channel markers first). */
@@ -13,9 +13,9 @@ export class QQFormatConverter extends BaseFormatConverter {
       .replaceAll(/<@!?\d+>/g, '')
       .replaceAll('<@everyone>', '')
       .replaceAll(/<#\d+>/g, '')
-      .trim();
+      .trim()
 
-    return parseMarkdown(cleaned);
+    return parseMarkdown(cleaned)
   }
 
   /** Strip QQ @mention / channel markers from plain text. */
@@ -24,6 +24,6 @@ export class QQFormatConverter extends BaseFormatConverter {
       .replaceAll(/<@!?\d+>/g, '')
       .replaceAll('<@everyone>', '')
       .replaceAll(/<#\d+>/g, '')
-      .trim();
+      .trim()
   }
 }

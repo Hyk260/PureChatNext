@@ -1,7 +1,14 @@
 import { and, desc, eq, inArray } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import { type KnowledgeBaseItem, type NewKnowledgeBase, documents, files, knowledgeBaseFiles, knowledgeBases } from '../schemas/file'
+import {
+  type KnowledgeBaseItem,
+  type NewKnowledgeBase,
+  documents,
+  files,
+  knowledgeBaseFiles,
+  knowledgeBases,
+} from '../schemas/file'
 import { type ChatDatabase } from '../type'
 
 export class KnowledgeBaseModel {
@@ -63,9 +70,7 @@ export class KnowledgeBaseModel {
         .from(documents)
         .where(and(inArray(documents.id, documentIds), eq(documents.userId, this.userId)))
 
-      resolvedFileIds.push(
-        ...docsWithFiles.map((d) => d.fileId).filter((id): id is string => Boolean(id)),
-      )
+      resolvedFileIds.push(...docsWithFiles.map((d) => d.fileId).filter((id): id is string => Boolean(id)))
 
       await this.db
         .update(documents)
@@ -82,7 +87,7 @@ export class KnowledgeBaseModel {
           fileId,
           knowledgeBaseId,
           userId: this.userId,
-        })),
+        }))
       )
       .onConflictDoNothing()
       .returning()
@@ -100,9 +105,7 @@ export class KnowledgeBaseModel {
         .from(documents)
         .where(and(inArray(documents.id, documentIds), eq(documents.userId, this.userId)))
 
-      resolvedFileIds.push(
-        ...docsWithFiles.map((d) => d.fileId).filter((id): id is string => Boolean(id)),
-      )
+      resolvedFileIds.push(...docsWithFiles.map((d) => d.fileId).filter((id): id is string => Boolean(id)))
 
       await this.db
         .update(documents)
@@ -111,8 +114,8 @@ export class KnowledgeBaseModel {
           and(
             inArray(documents.id, documentIds),
             eq(documents.userId, this.userId),
-            eq(documents.knowledgeBaseId, knowledgeBaseId),
-          ),
+            eq(documents.knowledgeBaseId, knowledgeBaseId)
+          )
         )
     }
 
@@ -123,8 +126,8 @@ export class KnowledgeBaseModel {
       .where(
         and(
           eq(knowledgeBaseFiles.knowledgeBaseId, knowledgeBaseId),
-          inArray(knowledgeBaseFiles.fileId, resolvedFileIds),
-        ),
+          inArray(knowledgeBaseFiles.fileId, resolvedFileIds)
+        )
       )
   }
 }

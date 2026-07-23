@@ -41,7 +41,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
         setSaving(false)
       }
     },
-    [message, onUpdated],
+    [message, onUpdated]
   )
 
   const toggleInterest = useCallback(
@@ -52,7 +52,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
         : [...normalizedInterests, key]
       await saveInterests(updated)
     },
-    [normalizedInterests, saveInterests, saving],
+    [normalizedInterests, saveInterests, saving]
   )
 
   const removeCustomInterest = useCallback(
@@ -60,7 +60,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
       if (saving) return
       await saveInterests(normalizedInterests.filter((item) => item !== interest))
     },
-    [normalizedInterests, saveInterests, saving],
+    [normalizedInterests, saveInterests, saving]
   )
 
   const handleAddCustom = useCallback(async () => {
@@ -72,9 +72,9 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
   }, [customInput, normalizedInterests, saveInterests, saving])
 
   return (
-    <SettingRow label="兴趣领域">
+    <SettingRow label='兴趣领域'>
       <Flex vertical gap={12} style={{ opacity: saving ? 0.7 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
-        <Flex align="center" gap={8} wrap="wrap">
+        <Flex align='center' gap={8} wrap='wrap'>
           {INTEREST_AREAS.map((item) => {
             const isSelected = normalizedInterests.includes(item.key)
             return (
@@ -93,12 +93,10 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
                       }
                     : undefined
                 }
-                variant="outlined"
+                variant='outlined'
               >
                 <Icon color={cssVar.colorTextSecondary} icon={item.icon} size={14} />
-                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>
-                  {item.label}
-                </Typography.Text>
+                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>{item.label}</Typography.Text>
               </Block>
             )
           })}
@@ -114,11 +112,9 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
                   background: cssVar.colorFillSecondary,
                   borderColor: cssVar.colorFillSecondary,
                 }}
-                variant="outlined"
+                variant='outlined'
               >
-                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>
-                  {interest}
-                </Typography.Text>
+                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>{interest}</Typography.Text>
               </Block>
             ))}
           <Block
@@ -132,20 +128,18 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
                 ? { background: cssVar.colorFillSecondary, borderColor: cssVar.colorFillSecondary }
                 : undefined
             }
-            variant="outlined"
+            variant='outlined'
           >
             <Icon color={cssVar.colorTextSecondary} icon={BriefcaseIcon} size={14} />
-            <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>
-              其他领域
-            </Typography.Text>
+            <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>其他领域</Typography.Text>
           </Block>
         </Flex>
         {showCustomInput ? (
           <Input
             onChange={(event) => setCustomInput(event.target.value)}
             onPressEnter={handleAddCustom}
-            placeholder="输入自定义兴趣后按回车"
-            size="small"
+            placeholder='输入自定义兴趣后按回车'
+            size='small'
             style={{ width: 200 }}
             value={customInput}
           />

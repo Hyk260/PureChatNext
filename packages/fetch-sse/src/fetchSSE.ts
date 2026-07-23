@@ -8,7 +8,8 @@ import {
   type ModelPerformance,
   type ResponseAnimation,
   type ResponseAnimationStyle,
- ChatErrorType } from '@pure/types'
+  ChatErrorType,
+} from '@pure/types'
 
 import { fetchEventSource, nanoid } from '@pure/utils'
 import { getMessageError } from './parseError'

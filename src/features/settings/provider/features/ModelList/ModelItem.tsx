@@ -53,11 +53,7 @@ const ModelItem = memo<ModelItemProps>(({ model, provider }) => {
         </Flex>
       </Flex>
 
-      <Switch
-        checked={model.enabled}
-        size='small'
-        onChange={(next) => toggleModelEnabled(provider, model.id, next)}
-      />
+      <Switch checked={model.enabled} size='small' onChange={(next) => toggleModelEnabled(provider, model.id, next)} />
     </Flex>
   )
 })

@@ -1,10 +1,6 @@
 import { type RouteObject } from 'react-router'
 
-import {
-  dynamicElement,
-  dynamicLayout,
-  redirectElement,
-} from '@/utils/router'
+import { dynamicElement, dynamicLayout, redirectElement } from '@/utils/router'
 
 /**
  * Web SPA route tree (react-router).
@@ -41,39 +37,27 @@ export const webRoutes: RouteObject[] = [
       {
         children: [
           {
-            element: dynamicElement(
-              () => import('@/routes/resources/home/page'),
-              'Resources > Home',
-            ),
+            element: dynamicElement(() => import('@/routes/resources/home/page'), 'Resources > Home'),
             index: true,
           },
         ],
-        element: dynamicLayout(
-          () => import('@/routes/resources/home/_layout'),
-          'Resources > HomeLayout',
-        ),
+        element: dynamicLayout(() => import('@/routes/resources/home/_layout'), 'Resources > HomeLayout'),
       },
       {
         children: [
           {
-            element: dynamicElement(
-              () => import('@/routes/resources/library/$id/page'),
-              'Resources > Library',
-            ),
+            element: dynamicElement(() => import('@/routes/resources/library/$id/page'), 'Resources > Library'),
             index: true,
           },
           {
             element: dynamicElement(
               () => import('@/routes/resources/library/$id/$slug/page'),
-              'Resources > Library > Slug',
+              'Resources > Library > Slug'
             ),
             path: '*',
           },
         ],
-        element: dynamicLayout(
-          () => import('@/routes/resources/library/$id/_layout'),
-          'Resources > LibraryLayout',
-        ),
+        element: dynamicLayout(() => import('@/routes/resources/library/$id/_layout'), 'Resources > LibraryLayout'),
         path: 'library/:id',
       },
     ],
@@ -127,146 +111,128 @@ export const webRoutes: RouteObject[] = [
         index: true,
       },
       {
-        element: dynamicElement(
-          () => import('@/routes/settings/profile/page'),
-          'Settings > Profile',
-        ),
+        element: dynamicElement(() => import('@/routes/settings/profile/page'), 'Settings > Profile'),
         path: 'profile',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.AppearancePage })),
-          'Settings > Appearance',
+          'Settings > Appearance'
         ),
         path: 'appearance',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.LanguagePage })),
-          'Settings > Language',
+          'Settings > Language'
         ),
         path: 'language',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.HotkeyPage })),
-          'Settings > Hotkey',
+          'Settings > Hotkey'
         ),
         path: 'hotkey',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.NotificationPage })),
-          'Settings > Notification',
+          'Settings > Notification'
         ),
         path: 'notification',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.StatsPage })),
-          'Settings > Stats',
+          'Settings > Stats'
         ),
         path: 'stats',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.AdvancedPage })),
-          'Settings > Advanced',
+          'Settings > Advanced'
         ),
         path: 'advanced',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.StoragePage })),
-          'Settings > Storage',
+          'Settings > Storage'
         ),
         path: 'storage',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.MemoryPage })),
-          'Settings > Memory',
+          'Settings > Memory'
         ),
         path: 'memory',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.CredsPage })),
-          'Settings > Creds',
+          'Settings > Creds'
         ),
         path: 'creds',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.AboutPage })),
-          'Settings > About',
+          'Settings > About'
         ),
         path: 'about',
       },
       {
-        element: dynamicElement(
-          () => import('@/routes/settings/messenger/page'),
-          'Settings > Messenger',
-        ),
+        element: dynamicElement(() => import('@/routes/settings/messenger/page'), 'Settings > Messenger'),
         path: 'messenger',
       },
       // 同一页读 `:platform` 切换列表/详情（嵌套路由参数）
       {
-        element: dynamicElement(
-          () => import('@/routes/settings/messenger/page'),
-          'Settings > Messenger > Platform',
-        ),
+        element: dynamicElement(() => import('@/routes/settings/messenger/page'), 'Settings > Messenger > Platform'),
         path: 'messenger/:platform',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.ConnectorPage })),
-          'Settings > Connector',
+          'Settings > Connector'
         ),
         path: 'connector',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.SkillPage })),
-          'Settings > Skill',
+          'Settings > Skill'
         ),
         path: 'skill',
       },
       {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.ServiceModelPage })),
-          'Settings > ServiceModel',
+          'Settings > ServiceModel'
         ),
         path: 'service-model',
       },
       {
         children: [
           {
-            element: dynamicElement(
-              () => import('@/routes/settings/provider/page'),
-              'Settings > Provider',
-            ),
+            element: dynamicElement(() => import('@/routes/settings/provider/page'), 'Settings > Provider'),
             index: true,
           },
           {
-            element: dynamicElement(
-              () => import('@/routes/settings/provider/all/page'),
-              'Settings > Provider > All',
-            ),
+            element: dynamicElement(() => import('@/routes/settings/provider/all/page'), 'Settings > Provider > All'),
             path: 'all',
           },
           {
             element: dynamicElement(
               () => import('@/routes/settings/provider/$id/page'),
-              'Settings > Provider > Detail',
+              'Settings > Provider > Detail'
             ),
             path: ':id',
           },
         ],
-        element: dynamicLayout(
-          () => import('@/routes/settings/provider/_layout'),
-          'Settings > ProviderLayout',
-        ),
+        element: dynamicLayout(() => import('@/routes/settings/provider/_layout'), 'Settings > ProviderLayout'),
         path: 'provider',
       },
     ],
@@ -282,24 +248,15 @@ export const webRoutes: RouteObject[] = [
         index: true,
       },
       {
-        element: dynamicElement(
-          () => import('@/routes/community/agent/page'),
-          'Community > Agent',
-        ),
+        element: dynamicElement(() => import('@/routes/community/agent/page'), 'Community > Agent'),
         path: 'agent',
       },
       {
-        element: dynamicElement(
-          () => import('@/routes/community/model/page'),
-          'Community > Model',
-        ),
+        element: dynamicElement(() => import('@/routes/community/model/page'), 'Community > Model'),
         path: 'model',
       },
       {
-        element: dynamicElement(
-          () => import('@/routes/community/provider/page'),
-          'Community > Provider',
-        ),
+        element: dynamicElement(() => import('@/routes/community/provider/page'), 'Community > Provider'),
         path: 'provider',
       },
     ],
@@ -313,24 +270,15 @@ export const webRoutes: RouteObject[] = [
         {
           children: [
             {
-              element: dynamicElement(
-                () => import('@/features/dev/WebSearchPage'),
-                'Dev > WebSearch',
-              ),
+              element: dynamicElement(() => import('@/features/dev/WebSearchPage'), 'Dev > WebSearch'),
               path: 'web-search',
             },
             {
-              element: dynamicElement(
-                () => import('@/features/dev/EmailServicePage'),
-                'Dev > EmailService',
-              ),
+              element: dynamicElement(() => import('@/features/dev/EmailServicePage'), 'Dev > EmailService'),
               path: 'email-service',
             },
             {
-              element: dynamicElement(
-                () => import('@/features/dev/EmailTemplatesPage'),
-                'Dev > EmailTemplates',
-              ),
+              element: dynamicElement(() => import('@/features/dev/EmailTemplatesPage'), 'Dev > EmailTemplates'),
               path: 'email-templates',
             },
             {
@@ -338,17 +286,11 @@ export const webRoutes: RouteObject[] = [
               path: 's3',
             },
             {
-              element: dynamicElement(
-                () => import('@/features/dev/ReadFilePage'),
-                'Dev > ReadFile',
-              ),
+              element: dynamicElement(() => import('@/features/dev/ReadFilePage'), 'Dev > ReadFile'),
               path: 'read-file',
             },
             {
-              element: dynamicElement(
-                () => import('@/features/dev/DeleteUserPage'),
-                'Dev > DeleteUser',
-              ),
+              element: dynamicElement(() => import('@/features/dev/DeleteUserPage'), 'Dev > DeleteUser'),
               path: 'delete-user',
             },
           ],

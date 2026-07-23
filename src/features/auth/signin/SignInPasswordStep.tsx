@@ -57,31 +57,31 @@ export const SignInPasswordStep = ({
     return (
       <AuthCard
         footer={
-          <Button icon={<ChevronLeft />} size="large" style={{ marginTop: 12 }} onClick={onBack}>
+          <Button icon={<ChevronLeft />} size='large' style={{ marginTop: 12 }} onClick={onBack}>
             返回修改邮箱
           </Button>
         }
-        subtitle="请输入密码以继续"
+        subtitle='请输入密码以继续'
       >
         <Typography.Text style={{ fontSize: 20 }}>{email}</Typography.Text>
         <Alert
           showIcon
           style={{ marginTop: 12 }}
-          type="info"
+          type='info'
           description={
             enableMagicLink
               ? `请返回上一步，或使用 ${providerHint} / 魔法链接登录。`
               : `请返回上一步，使用 ${providerHint} 登录。`
           }
-          message="此账户未设置密码"
+          message='此账户未设置密码'
         />
         {enableMagicLink && onSendMagicLink && (
           <Button
             block
             loading={loading}
-            size="large"
+            size='large'
             style={{ marginTop: 12 }}
-            type="primary"
+            type='primary'
             onClick={onSendMagicLink}
           >
             发送登录链接
@@ -95,7 +95,7 @@ export const SignInPasswordStep = ({
     <AuthCard
       footer={
         <>
-          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+          <Typography.Text type='secondary' style={{ fontSize: 13 }}>
             <a
               aria-disabled={forgotPasswordLoading}
               style={{
@@ -114,24 +114,20 @@ export const SignInPasswordStep = ({
               {'忘记密码？'}
             </a>
           </Typography.Text>
-          <Button icon={<ChevronLeft />} size="large" style={{ marginTop: 12 }} onClick={onBack}>
+          <Button icon={<ChevronLeft />} size='large' style={{ marginTop: 12 }} onClick={onBack}>
             返回修改邮箱
           </Button>
         </>
       }
-      subtitle="请输入密码以继续"
+      subtitle='请输入密码以继续'
     >
       <Typography.Text style={{ fontSize: 20 }}>{email}</Typography.Text>
-      <Form form={form} layout="vertical" onFinish={onSignIn}>
-        <Form.Item
-          name="password"
-          rules={[{ message: '请输入密码', required: true }]}
-          style={{ marginBottom: 0 }}
-        >
+      <Form form={form} layout='vertical' onFinish={onSignIn}>
+        <Form.Item name='password' rules={[{ message: '请输入密码', required: true }]} style={{ marginBottom: 0 }}>
           <Input.Password
-            placeholder="请输入密码"
+            placeholder='请输入密码'
             ref={passwordInputRef}
-            size="large"
+            size='large'
             prefix={
               <Icon
                 icon={Lock}
@@ -148,8 +144,8 @@ export const SignInPasswordStep = ({
                 icon={<ChevronRight />}
                 loading={loading}
                 style={{ color: cssVar.colorPrimary }}
-                title="登录"
-                variant="filled"
+                title='登录'
+                variant='filled'
                 onClick={() => form.submit()}
               />
             }

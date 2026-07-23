@@ -6,34 +6,34 @@ export interface EmailPayload {
    * Email attachments
    */
   attachments?: Array<{
-    content?: Buffer | string;
-    filename?: string;
-    path?: string;
-  }>;
+    content?: Buffer | string
+    filename?: string
+    path?: string
+  }>
   /**
    * Sender address (defaults to SMTP_USER if not provided)
    */
-  from?: string;
+  from?: string
   /**
    * HTML body of the email
    */
-  html?: string;
+  html?: string
   /**
    * Reply-To address
    */
-  replyTo?: string;
+  replyTo?: string
   /**
    * Subject line
    */
-  subject: string;
+  subject: string
   /**
    * Plain text body of the email
    */
-  text?: string;
+  text?: string
   /**
    * Recipient address(es)
    */
-  to: string | string[];
+  to: string | string[]
 }
 
 /**
@@ -43,11 +43,11 @@ export interface EmailResponse {
   /**
    * Message ID assigned by the email service
    */
-  messageId: string;
+  messageId: string
   /**
    * Preview URL for test emails (e.g., Ethereal)
    */
-  previewUrl?: string;
+  previewUrl?: string
 }
 
 /**
@@ -57,5 +57,5 @@ export interface EmailServiceImpl {
   /**
    * Send an email
    */
-  sendMail: (payload: EmailPayload) => Promise<EmailResponse>;
+  sendMail: (payload: EmailPayload) => Promise<EmailResponse>
 }

@@ -84,11 +84,7 @@ const SidebarSortableItemRow = memo<SidebarSortableItemProps>(({ hiddenSections,
         </Tooltip>
       ) : (
         <Tooltip title={isHidden ? '已隐藏' : '显示中'}>
-          <ActionIcon
-            icon={isHidden ? EyeOff : Eye}
-            size='small'
-            onClick={() => onToggle(item.id)}
-          />
+          <ActionIcon icon={isHidden ? EyeOff : Eye} size='small' onClick={() => onToggle(item.id)} />
         </Tooltip>
       )}
     </SortableList.Item>

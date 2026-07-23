@@ -1,34 +1,30 @@
-import {
-  type SearchParams,
-  type UniformSearchResponse,
-  type UniformSearchResult,
-} from '@pure/types';
-import debug from 'debug';
-import urlJoin from 'url-join';
+import { type SearchParams, type UniformSearchResponse, type UniformSearchResult } from '@pure/types'
+import debug from 'debug'
+import urlJoin from 'url-join'
 
-import { type SearchServiceImpl } from '../type';
-import { type Search1ApiRawResponse, type TimeRange } from './type';
+import { type SearchServiceImpl } from '../type'
+import { type Search1ApiRawResponse, type TimeRange } from './type'
 
 const timeRangeMapping: Record<string, TimeRange | undefined> = {
   day: 'day',
   month: 'month',
   week: 'month', // Search1API doesn't support 'week', map to closest
   year: 'year',
-};
-
-interface Search1APIQueryParams {
-  crawl_results?: 0 | 1;
-  exclude_sites?: string[];
-  image?: boolean;
-  include_sites?: string[];
-  language?: string;
-  max_results: number;
-  query: string;
-  search_service?: string;
-  time_range?: string;
 }
 
-const log = debug('search:search1api');
+interface Search1APIQueryParams {
+  crawl_results?: 0 | 1
+  exclude_sites?: string[]
+  image?: boolean
+  include_sites?: string[]
+  language?: string
+  max_results: number
+  query: string
+  search_service?: string
+  time_range?: string
+}
+
+const log = debug('search:search1api')
 
 /**
  * Search1API implementation of the search service
@@ -36,26 +32,26 @@ const log = debug('search:search1api');
  */
 export class Search1APIImpl implements SearchServiceImpl {
   private get apiKey(): string | undefined {
-    return process.env.SEARCH1API_SEARCH_API_KEY || process.env.SEARCH1API_API_KEY;
+    return process.env.SEARCH1API_SEARCH_API_KEY || process.env.SEARCH1API_API_KEY
   }
 
   private get baseUrl(): string {
     // Assuming the base URL is consistent with the crawl endpoint
-    return 'https://api.search1api.com';
+    return 'https://api.search1api.com'
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
-    log('Starting Search1API query with query: "%s", params: %o', query, params);
-    const endpoint = urlJoin(this.baseUrl, '/search');
+    log('Starting Search1API query with query: "%s", params: %o', query, params)
+    const endpoint = urlJoin(this.baseUrl, '/search')
 
-    const { searchEngines } = params;
+    const { searchEngines } = params
 
     const defaultQueryParams: Search1APIQueryParams = {
       crawl_results: 0, // Default is no crawling
       image: false,
       max_results: 15, // Default max results
       query,
-    };
+    }
 
     let body: Search1APIQueryParams[] = [
       {
@@ -65,7 +61,7 @@ export class Search1APIImpl implements SearchServiceImpl {
             ? timeRangeMapping[params.searchTimeRange]
             : undefined,
       },
-    ];
+    ]
 
     if (searchEngines && searchEngines.length > 0) {
       body = searchEngines.map((searchEngine) => ({
@@ -77,76 +73,74 @@ export class Search1APIImpl implements SearchServiceImpl {
           params?.searchTimeRange && params.searchTimeRange !== 'anytime'
             ? timeRangeMapping[params.searchTimeRange]
             : undefined,
-      }));
+      }))
     }
 
     // Note: Other SearchParams like searchCategories, searchEngines (beyond the first one)
     // and Search1API specific params like include_sites, exclude_sites, language
     // are not currently mapped.
 
-    log('Constructed request body: %o', body);
+    log('Constructed request body: %o', body)
 
-    let response: Response;
-    const startAt = Date.now();
-    let costTime: number;
+    let response: Response
+    const startAt = Date.now()
+    let costTime: number
     try {
-      log('Sending request to endpoint: %s', endpoint);
+      log('Sending request to endpoint: %s', endpoint)
       response = await fetch(endpoint, {
         body: JSON.stringify(body),
         headers: {
-          'Authorization': this.apiKey ? `Bearer ${this.apiKey}` : '',
+          Authorization: this.apiKey ? `Bearer ${this.apiKey}` : '',
           'Content-Type': 'application/json',
         },
         method: 'POST',
-      });
-      log('Received response with status: %d', response.status);
-      costTime = Date.now() - startAt;
+      })
+      log('Received response with status: %d', response.status)
+      costTime = Date.now() - startAt
     } catch (error) {
-      log.extend('error')('Search1API fetch error: %o', error);
-      throw new Error('Failed to connect to Search1API.', { cause: error });
+      log.extend('error')('Search1API fetch error: %o', error)
+      throw new Error('Failed to connect to Search1API.', { cause: error })
     }
 
     if (!response.ok) {
-      const errorBody = await response.text();
+      const errorBody = await response.text()
       log.extend('error')(
         `Search1API request failed with status ${response.status}: %s`,
-        errorBody.length > 200 ? `${errorBody.slice(0, 200)}...` : errorBody,
-      );
-      throw new Error(`Search1API request failed: ${response.statusText}`, { cause: errorBody });
+        errorBody.length > 200 ? `${errorBody.slice(0, 200)}...` : errorBody
+      )
+      throw new Error(`Search1API request failed: ${response.statusText}`, { cause: errorBody })
     }
 
     try {
-      const rawResponse = (await response.json()) as Search1ApiRawResponse;
+      const rawResponse = (await response.json()) as Search1ApiRawResponse
 
-      log('Parsed Search1API response: %o', rawResponse);
+      log('Parsed Search1API response: %o', rawResponse)
 
       const mappedResults = (rawResponse.results || []).flatMap((item) => {
-        if (!item.success || !item.data) return [];
-        const { results = [], searchParameters } = item.data;
-        return results.map(
-          (result): UniformSearchResult => ({
-            category: 'general',
-            content: result.content || result.snippet || '',
-            engines: [searchParameters?.search_service || ''],
-            parsedUrl: result.link ? new URL(result.link).hostname : '',
-            score: 1,
-            title: result.title || '',
-            url: result.link,
-          }),
-        );
-      });
+        if (!item.success || !item.data) return []
+        const { results = [], searchParameters } = item.data
+        return results.map((result): UniformSearchResult => ({
+          category: 'general',
+          content: result.content || result.snippet || '',
+          engines: [searchParameters?.search_service || ''],
+          parsedUrl: result.link ? new URL(result.link).hostname : '',
+          score: 1,
+          title: result.title || '',
+          url: result.link,
+        }))
+      })
 
-      log('Mapped %d results to SearchResult format', mappedResults.length);
+      log('Mapped %d results to SearchResult format', mappedResults.length)
 
       return {
         costTime,
         query,
         resultNumbers: mappedResults.length,
         results: mappedResults,
-      };
+      }
     } catch (error) {
-      log.extend('error')('Error parsing Search1API response: %o', error);
-      throw new Error('Failed to parse Search1API response.', { cause: error });
+      log.extend('error')('Error parsing Search1API response: %o', error)
+      throw new Error('Failed to parse Search1API response.', { cause: error })
     }
   }
 }

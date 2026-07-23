@@ -1,5 +1,5 @@
-import { createEnv } from '@t3-oss/env-core';
-import { z } from 'zod';
+import { createEnv } from '@t3-oss/env-core'
+import { z } from 'zod'
 
 export const getServerDBConfig = () => {
   return createEnv({
@@ -25,7 +25,7 @@ export const getServerDBConfig = () => {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     },
-  });
-};
+  })
+}
 
-export const serverDBEnv = getServerDBConfig();
+export const serverDBEnv = getServerDBConfig()

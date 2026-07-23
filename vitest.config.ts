@@ -42,11 +42,7 @@ export default defineConfig({
     alias,
     coverage: {
       all: false,
-      exclude: [
-        ...coverageConfigDefaults.exclude,
-        '__mocks__/**',
-        '**/packages/**',
-      ],
+      exclude: [...coverageConfigDefaults.exclude, '__mocks__/**', '**/packages/**'],
       provider: 'v8',
       reporter: ['text', 'json', 'lcov', 'text-summary'],
       reportsDirectory: './coverage/app',

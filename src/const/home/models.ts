@@ -20,7 +20,7 @@ export const HOME_MODELS: HomeModelItem[] = COMMUNITY_PROVIDERS.flatMap((provide
     displayName: MODEL_DISPLAY_NAMES[model] ?? model,
     model,
     provider: provider.identifier,
-  })),
+  }))
 )
 
 export const DEFAULT_HOME_MODEL: HomeModelItem = {

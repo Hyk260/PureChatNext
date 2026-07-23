@@ -131,13 +131,13 @@ export function getMessages(onId: (id: string) => void, onMessage?: (msg: EventS
       const value = decoder.decode(line.subarray(valueOffset))
 
       switch (field) {
-        case "data":
-          message.data = message.data ? message.data + "\n" + value : value
+        case 'data':
+          message.data = message.data ? message.data + '\n' + value : value
           break
-        case "event":
+        case 'event':
           message.event = value
           break
-        case "id":
+        case 'id':
           onId((message.id = value))
           break
       }
@@ -158,9 +158,9 @@ function newMessage(): EventSourceMessage {
   // retry 应初始化为 undefined，以便我们始终向 js 引擎返回一致的形状：
   // https://mathiasbynens.be/notes/shapes-ics#takeaways
   return {
-    data: "",
-    event: "",
-    id: "",
+    data: '',
+    event: '',
+    id: '',
     retry: undefined,
   }
 }

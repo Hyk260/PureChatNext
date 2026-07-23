@@ -13,4 +13,4 @@ export const SYSTEM_FILES_TO_IGNORE = [
   '.Spotlight-V100',
   '.fseventsd',
   '.Trashes',
-];
+]

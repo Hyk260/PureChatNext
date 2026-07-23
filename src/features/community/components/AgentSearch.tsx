@@ -31,7 +31,7 @@ const AgentSearch = memo(() => {
         router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
       })
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   )
 
   return (

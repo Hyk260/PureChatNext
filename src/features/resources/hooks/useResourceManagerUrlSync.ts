@@ -21,7 +21,7 @@ export const useResourceManagerUrlSync = () => {
       setSorter: s.setSorter,
       sortType: s.sortType,
       sorter: s.sorter,
-    })),
+    }))
   )
 
   const skipUrlSyncRef = useRef(true)

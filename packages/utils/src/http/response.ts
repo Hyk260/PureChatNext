@@ -5,9 +5,7 @@ const normalizeBodySnippet = (body: string) => body.replaceAll(/\s+/g, ' ').trim
 export class ResponseBodyParseError extends Error {
   constructor(provider: string, bodySnippet?: string) {
     super(
-      bodySnippet
-        ? `${provider} returned non-JSON response: ${bodySnippet}`
-        : `${provider} returned non-JSON response`,
+      bodySnippet ? `${provider} returned non-JSON response: ${bodySnippet}` : `${provider} returned non-JSON response`
     )
     this.name = 'ResponseBodyParseError'
   }
@@ -35,15 +33,12 @@ export const parseJSONResponse = async <T>(response: Response, provider: string)
   }
 }
 
-export const createHTTPStatusError = async (
-  response: Response,
-  provider: string,
-): Promise<Error> => {
+export const createHTTPStatusError = async (response: Response, provider: string): Promise<Error> => {
   const bodySnippet = await getBodySnippet(response)
 
   return new Error(
     bodySnippet
       ? `${provider} request failed with status ${response.status}: ${response.statusText}. Response: ${bodySnippet}`
-      : `${provider} request failed with status ${response.status}: ${response.statusText}`,
+      : `${provider} request failed with status ${response.status}: ${response.statusText}`
   )
 }

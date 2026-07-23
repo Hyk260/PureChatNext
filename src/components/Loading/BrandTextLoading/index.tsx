@@ -1,18 +1,18 @@
-import { BRANDING_NAME } from '@/const/branding';
+import { BRANDING_NAME } from '@/const/branding'
 
-import styles from './index.module.css';
+import styles from './index.module.css'
 
 interface BrandTextLoadingProps {
-  debugId: string;
+  debugId: string
 }
 
 const BrandTextLoading = ({ debugId }: BrandTextLoadingProps) => {
-  const showDebug = process.env.NODE_ENV === 'development' && debugId;
+  const showDebug = process.env.NODE_ENV === 'development' && debugId
 
   return (
     <div className={styles.container}>
-      <div aria-label="Loading" className={styles.brand} role="status">
-        <span aria-hidden="true" className={styles.spinner} />
+      <div aria-label='Loading' className={styles.brand} role='status'>
+        <span aria-hidden='true' className={styles.spinner} />
         <span className={styles.text}>{BRANDING_NAME}</span>
       </div>
       {showDebug && (
@@ -27,7 +27,7 @@ const BrandTextLoading = ({ debugId }: BrandTextLoadingProps) => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default BrandTextLoading;
+export default BrandTextLoading

@@ -33,7 +33,7 @@ export const channelBindings = pgTable(
     uniqueIndex('channel_bindings_user_platform_unique').on(t.userId, t.platform),
     uniqueIndex('channel_bindings_platform_app_unique').on(t.platform, t.applicationId),
     index('channel_bindings_enabled_idx').on(t.enabled, t.platform),
-  ],
+  ]
 )
 
 export type ChannelBindingItem = typeof channelBindings.$inferSelect

@@ -8,7 +8,11 @@ import { memo } from 'react'
 import NavItem from '@/components/NavItem'
 import { DOCUMENT_FOLDER_TYPE } from '@/const/resources/fileTypes'
 import { useFolderPath } from '@/features/resources/hooks/useFolderPath'
-import { useFetchKnowledgeBaseList, useFetchResources, useResourceStore } from '@/features/resources/store/resourceStore'
+import {
+  useFetchKnowledgeBaseList,
+  useFetchResources,
+  useResourceStore,
+} from '@/features/resources/store/resourceStore'
 import { Icon } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronLeft, FolderIcon } from 'lucide-react'
@@ -38,9 +42,7 @@ const LibraryHierarchy = memo(() => {
   }
 
   useFetchResources(queryParams)
-  const folders = useResourceStore((s) =>
-    s.resourceList.filter((item) => item.fileType === DOCUMENT_FOLDER_TYPE),
-  )
+  const folders = useResourceStore((s) => s.resourceList.filter((item) => item.fileType === DOCUMENT_FOLDER_TYPE))
 
   if (folders.length === 0) {
     return (
@@ -60,12 +62,7 @@ const LibraryHierarchy = memo(() => {
 
         return (
           <Link key={folder.id} href={href} style={{ color: 'inherit', textDecoration: 'none' }}>
-            <NavItem
-              active={active}
-              clickable
-              icon={FolderIcon}
-              title={folder.name}
-            />
+            <NavItem active={active} clickable icon={FolderIcon} title={folder.name} />
           </Link>
         )
       })}
@@ -86,12 +83,7 @@ const LibrarySidebar = memo(() => {
   return (
     <Flex vertical className={styles.sidebar} style={{ height: '100%' }}>
       <Flex align='center' className={styles.header} gap={8}>
-        <Icon
-          icon={ChevronLeft}
-          size={16}
-          style={{ cursor: 'pointer' }}
-          onClick={() => router.push('/resources')}
-        />
+        <Icon icon={ChevronLeft} size={16} style={{ cursor: 'pointer' }} onClick={() => router.push('/resources')} />
         <Typography.Text ellipsis strong>
           {kb?.name ?? '知识库'}
         </Typography.Text>

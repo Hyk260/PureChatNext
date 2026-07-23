@@ -1,14 +1,14 @@
-import { ssrfSafeFetch } from '@pure/ssrf-safe-fetch';
+import { ssrfSafeFetch } from '@pure/ssrf-safe-fetch'
 
-import { type CrawlImpl, type CrawlSuccessResult } from '../type';
-import { PageNotFoundError, toFetchError } from '../utils/errorType';
-import { htmlToMarkdown, MAX_HTML_SIZE } from '../utils/htmlToMarkdown';
-import { createHTTPStatusError } from '../utils/response';
-import { DEFAULT_TIMEOUT, withTimeout } from '../utils/withTimeout';
+import { type CrawlImpl, type CrawlSuccessResult } from '../type'
+import { PageNotFoundError, toFetchError } from '../utils/errorType'
+import { htmlToMarkdown, MAX_HTML_SIZE } from '../utils/htmlToMarkdown'
+import { createHTTPStatusError } from '../utils/response'
+import { DEFAULT_TIMEOUT, withTimeout } from '../utils/withTimeout'
 
 const mixinHeaders = {
   // Accepted content types
-  'Accept':
+  Accept:
     'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
   // Accepted encoding methods
   'Accept-Encoding': 'gzip, deflate, br',
@@ -17,9 +17,9 @@ const mixinHeaders = {
   // Cache control
   'Cache-Control': 'max-age=0',
   // Connection type
-  'Connection': 'keep-alive',
+  Connection: 'keep-alive',
   // Indicates which site the request is from
-  'Referer': 'https://www.google.com/',
+  Referer: 'https://www.google.com/',
   // Upgrade insecure requests
   'Upgrade-Insecure-Requests': '1',
   // Simulate real browser User-Agent
@@ -33,10 +33,10 @@ const mixinHeaders = {
   'sec-fetch-mode': 'navigate',
   'sec-fetch-site': 'none',
   'sec-fetch-user': '?1',
-};
+}
 
 export const naive: CrawlImpl = async (url, { filterOptions }) => {
-  let res: Response;
+  let res: Response
 
   try {
     res = await withTimeout(
@@ -47,32 +47,32 @@ export const naive: CrawlImpl = async (url, { filterOptions }) => {
             headers: mixinHeaders,
             signal,
           },
-          { maxContentLength: MAX_HTML_SIZE },
+          { maxContentLength: MAX_HTML_SIZE }
         ),
-      DEFAULT_TIMEOUT,
-    );
+      DEFAULT_TIMEOUT
+    )
   } catch (e) {
-    throw toFetchError(e);
+    throw toFetchError(e)
   }
 
   if (res.status === 404) {
-    throw new PageNotFoundError(res.statusText);
+    throw new PageNotFoundError(res.statusText)
   }
 
   if (!res.ok) {
-    throw await createHTTPStatusError(res, 'Naive');
+    throw await createHTTPStatusError(res, 'Naive')
   }
 
-  const type = res.headers.get('content-type');
+  const type = res.headers.get('content-type')
 
   if (type?.includes('application/json')) {
-    let content: string;
+    let content: string
 
     try {
-      const json = await res.clone().json();
-      content = JSON.stringify(json, null, 2);
+      const json = await res.clone().json()
+      content = JSON.stringify(json, null, 2)
     } catch {
-      content = await res.text();
+      content = await res.text()
     }
 
     return {
@@ -80,22 +80,22 @@ export const naive: CrawlImpl = async (url, { filterOptions }) => {
       contentType: 'json',
       length: content.length,
       url,
-    } satisfies CrawlSuccessResult;
+    } satisfies CrawlSuccessResult
   }
 
   try {
-    const html = await res.text();
+    const html = await res.text()
 
-    const result = htmlToMarkdown(html, { filterOptions, url });
+    const result = htmlToMarkdown(html, { filterOptions, url })
 
     // if the content is empty or too short, just return
     if (!result.content || result.content.length < 100) {
-      return;
+      return
     }
 
     // It's blocked by Cloudflare.
     if (result.title === 'Just a moment...') {
-      return;
+      return
     }
 
     // just return
@@ -107,10 +107,10 @@ export const naive: CrawlImpl = async (url, { filterOptions }) => {
       siteName: result?.siteName,
       title: result?.title,
       url,
-    } satisfies CrawlSuccessResult;
+    } satisfies CrawlSuccessResult
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
 
-  return;
-};
+  return
+}

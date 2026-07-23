@@ -1,21 +1,21 @@
-import { type CrawlImplType, crawlImpls } from './crawImpl';
-import { type CrawlUniformResult, type CrawlUrlRule } from './type';
-import { crawUrlRules } from './urlRules';
-import { applyUrlRules } from './utils/appUrlRules';
+import { type CrawlImplType, crawlImpls } from './crawImpl'
+import { type CrawlUniformResult, type CrawlUrlRule } from './type'
+import { crawUrlRules } from './urlRules'
+import { applyUrlRules } from './utils/appUrlRules'
 
-const defaultImpls = ['jina', 'naive', 'search1api', 'browserless'] as CrawlImplType[];
+const defaultImpls = ['jina', 'naive', 'search1api', 'browserless'] as CrawlImplType[]
 
 interface CrawlOptions {
-  impls?: string[];
+  impls?: string[]
 }
 
 export class Crawler {
-  impls: CrawlImplType[];
+  impls: CrawlImplType[]
 
   constructor(options: CrawlOptions = {}) {
     this.impls = !!options.impls?.length
       ? (options.impls.filter((impl) => Object.keys(crawlImpls).includes(impl)) as CrawlImplType[])
-      : defaultImpls;
+      : defaultImpls
   }
 
   /**
@@ -27,39 +27,35 @@ export class Crawler {
     impls: userImpls,
     filterOptions: userFilterOptions,
   }: {
-    filterOptions?: CrawlUrlRule['filterOptions'];
-    impls?: CrawlImplType[];
-    url: string;
+    filterOptions?: CrawlUrlRule['filterOptions']
+    impls?: CrawlImplType[]
+    url: string
   }): Promise<CrawlUniformResult> {
     // Apply URL rules
-    const {
-      transformedUrl,
-      filterOptions: ruleFilterOptions,
-      impls: ruleImpls,
-    } = applyUrlRules(url, crawUrlRules);
+    const { transformedUrl, filterOptions: ruleFilterOptions, impls: ruleImpls } = applyUrlRules(url, crawUrlRules)
 
     // Merge user-provided filter options and rule filter options, user options take priority
     const mergedFilterOptions = {
       ...ruleFilterOptions,
       ...userFilterOptions,
-    };
+    }
 
-    let finalCrawler: string | undefined;
-    let finalError: Error | undefined;
+    let finalCrawler: string | undefined
+    let finalError: Error | undefined
 
     const filteredRuleImpls = ruleImpls
       ? (ruleImpls.filter((impl) => this.impls.includes(impl as CrawlImplType)) as CrawlImplType[])
-      : undefined;
-    const systemImpls = (filteredRuleImpls?.length ? filteredRuleImpls : this.impls) as CrawlImplType[];
+      : undefined
+    const systemImpls = (filteredRuleImpls?.length ? filteredRuleImpls : this.impls) as CrawlImplType[]
 
     const finalImpls = userImpls
       ? (userImpls.filter((impl) => Object.keys(crawlImpls).includes(impl)) as CrawlImplType[])
-      : systemImpls;
+      : systemImpls
 
     // Try each implementation in the built-in order
     for (const impl of finalImpls) {
       try {
-        const res = await crawlImpls[impl](transformedUrl, { filterOptions: mergedFilterOptions });
+        const res = await crawlImpls[impl](transformedUrl, { filterOptions: mergedFilterOptions })
 
         if (res && res.content && res.content.length > 100) {
           return {
@@ -67,21 +63,21 @@ export class Crawler {
             data: res,
             originalUrl: url,
             transformedUrl: transformedUrl !== url ? transformedUrl : undefined,
-          };
+          }
         }
 
-        finalError = new Error(`${impl} returned empty or short content`);
-        finalError.name = 'EmptyCrawlResultError';
-        finalCrawler = impl;
+        finalError = new Error(`${impl} returned empty or short content`)
+        finalError.name = 'EmptyCrawlResultError'
+        finalCrawler = impl
       } catch (error) {
-        console.error(error);
-        finalError = error as Error;
-        finalCrawler = impl;
+        console.error(error)
+        finalError = error as Error
+        finalCrawler = impl
       }
     }
 
-    const errorType = finalError?.name || 'UnknownError';
-    const errorMessage = finalError?.message;
+    const errorType = finalError?.name || 'UnknownError'
+    const errorMessage = finalError?.message
 
     return {
       crawler: finalCrawler || finalImpls.at(-1) || 'unknown',
@@ -92,6 +88,6 @@ export class Crawler {
       },
       originalUrl: url,
       transformedUrl: transformedUrl !== url ? transformedUrl : undefined,
-    };
+    }
   }
 }

@@ -103,13 +103,7 @@ const loadEnv = () => {
   loadDotenv({ path: '.env.local', override: true })
 }
 
-const createDevProcessHandle = ({
-  isWindows,
-  pid,
-}: {
-  isWindows: boolean
-  pid?: number
-}): DevProcessHandle => ({
+const createDevProcessHandle = ({ isWindows, pid }: { isWindows: boolean; pid?: number }): DevProcessHandle => ({
   directPid: pid,
   groupPid: isWindows ? undefined : pid,
   isWindows,
@@ -160,9 +154,7 @@ const waitForNextReady = async () => {
     await wait(NEXT_READY_RETRY_MS)
   }
 
-  throw new Error(
-    `Next server was not ready within ${NEXT_READY_TIMEOUT_MS / 1000}s on ${NEXT_HOST}:${nextPort}`,
-  )
+  throw new Error(`Next server was not ready within ${NEXT_READY_TIMEOUT_MS / 1000}s on ${NEXT_HOST}:${nextPort}`)
 }
 
 const terminateChildren = () => {
@@ -181,8 +173,7 @@ const clearForceKillTimer = () => {
   forceKillTimer = undefined
 }
 
-const hasChildSettled = (child?: ChildProcess) =>
-  !child || child.exitCode !== null || child.signalCode !== null
+const hasChildSettled = (child?: ChildProcess) => !child || child.exitCode !== null || child.signalCode !== null
 
 const clearForceKillTimerWhenChildrenSettle = () => {
   if (!shuttingDown) return
@@ -212,9 +203,7 @@ const watchChildExit = (child: ChildProcess, name: 'next' | 'vite') => {
       return
     }
 
-    console.error(
-      `❌ ${name} exited unexpectedly (code: ${code ?? 'null'}, signal: ${signal ?? 'null'})`,
-    )
+    console.error(`❌ ${name} exited unexpectedly (code: ${code ?? 'null'}, signal: ${signal ?? 'null'})`)
     shutdownAll('SIGTERM')
   })
 }

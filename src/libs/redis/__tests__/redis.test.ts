@@ -1,13 +1,13 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { type RedisConfig } from '../types';
+import { type RedisConfig } from '../types'
 
 const buildRedisConfig = (): RedisConfig | null => {
-  const url = process.env.REDIS_URL;
+  const url = process.env.REDIS_URL
 
-  if (!url) return null;
+  if (!url) return null
 
-  const database = Number.parseInt(process.env.REDIS_DATABASE ?? '', 10);
+  const database = Number.parseInt(process.env.REDIS_DATABASE ?? '', 10)
 
   return {
     database: Number.isNaN(database) ? undefined : database,
@@ -17,13 +17,13 @@ const buildRedisConfig = (): RedisConfig | null => {
     tls: process.env.REDIS_TLS === 'true',
     url,
     username: process.env.REDIS_USERNAME,
-  };
-};
+  }
+}
 
-const loadRedisProvider = async () => (await import('../redis')).IoRedisRedisProvider;
+const loadRedisProvider = async () => (await import('../redis')).IoRedisRedisProvider
 
 const createMockedProvider = async () => {
-  const instances: Array<{ options: Record<PropertyKey, unknown>; url: string }> = [];
+  const instances: Array<{ options: Record<PropertyKey, unknown>; url: string }> = []
 
   const createPipelineMock = () => {
     const pipeMocks = {
@@ -39,17 +39,17 @@ const createMockedProvider = async () => {
       hdel: vi.fn(),
       hgetall: vi.fn(),
       exec: vi.fn().mockResolvedValue([]),
-    };
+    }
     // 让各命令返回 pipeline 自身以支持链式调用
     for (const key of Object.keys(pipeMocks) as (keyof typeof pipeMocks)[]) {
       if (key !== 'exec') {
-        pipeMocks[key].mockReturnValue(pipeMocks);
+        pipeMocks[key].mockReturnValue(pipeMocks)
       }
     }
-    return pipeMocks;
-  };
+    return pipeMocks
+  }
 
-  const pipelineMocks = createPipelineMock();
+  const pipelineMocks = createPipelineMock()
 
   const mocks = {
     connect: vi.fn().mockResolvedValue(undefined),
@@ -72,105 +72,103 @@ const createMockedProvider = async () => {
     hgetall: vi.fn().mockResolvedValue({ a: '1' }),
     eval: vi.fn().mockResolvedValue(null),
     pipeline: vi.fn().mockReturnValue(pipelineMocks),
-  };
+  }
 
-  vi.resetModules();
+  vi.resetModules()
   vi.doMock('ioredis', () => {
     class FakeRedis {
       constructor(
         public url: string,
-        public options: Record<PropertyKey, unknown>,
+        public options: Record<PropertyKey, unknown>
       ) {
-        instances.push({ options, url });
+        instances.push({ options, url })
       }
-      connect = mocks.connect;
-      ping = mocks.ping;
-      quit = mocks.quit;
-      get = mocks.get;
-      set = mocks.set;
-      setex = mocks.setex;
-      del = mocks.del;
-      exists = mocks.exists;
-      expire = mocks.expire;
-      ttl = mocks.ttl;
-      incr = mocks.incr;
-      decr = mocks.decr;
-      mget = mocks.mget;
-      mset = mocks.mset;
-      hget = mocks.hget;
-      hset = mocks.hset;
-      hdel = mocks.hdel;
-      hgetall = mocks.hgetall;
-      eval = mocks.eval;
-      pipeline = mocks.pipeline;
+      connect = mocks.connect
+      ping = mocks.ping
+      quit = mocks.quit
+      get = mocks.get
+      set = mocks.set
+      setex = mocks.setex
+      del = mocks.del
+      exists = mocks.exists
+      expire = mocks.expire
+      ttl = mocks.ttl
+      incr = mocks.incr
+      decr = mocks.decr
+      mget = mocks.mget
+      mset = mocks.mset
+      hget = mocks.hget
+      hset = mocks.hset
+      hdel = mocks.hdel
+      hgetall = mocks.hgetall
+      eval = mocks.eval
+      pipeline = mocks.pipeline
     }
 
-    return { default: FakeRedis };
-  });
+    return { default: FakeRedis }
+  })
 
-  const IoRedisRedisProvider = await loadRedisProvider();
+  const IoRedisRedisProvider = await loadRedisProvider()
   const provider = new IoRedisRedisProvider({
     enabled: true,
     prefix: 'mock',
     tls: false,
     url: 'redis://localhost:6379',
-  });
+  })
 
-  await provider.initialize();
+  await provider.initialize()
 
-  return { instances, mocks, provider };
-};
+  return { instances, mocks, provider }
+}
 
 const shouldSkipIntegration = (error: unknown) =>
   error instanceof Error &&
-  ['ENOTFOUND', 'ECONNREFUSED', 'EAI_AGAIN', 'Connection is closed'].some((msg) =>
-    error.message.includes(msg),
-  );
+  ['ENOTFOUND', 'ECONNREFUSED', 'EAI_AGAIN', 'Connection is closed'].some((msg) => error.message.includes(msg))
 
 afterEach(() => {
-  vi.clearAllMocks();
-  vi.resetModules();
-  vi.unmock('ioredis');
-});
+  vi.clearAllMocks()
+  vi.resetModules()
+  vi.unmock('ioredis')
+})
 
 describe('integrated', (test) => {
-  const config = buildRedisConfig();
+  const config = buildRedisConfig()
   if (!config) {
-    test.skip('REDIS_URL not provided; skip integrated ioredis tests');
-    return;
+    test.skip('REDIS_URL not provided; skip integrated ioredis tests')
+    return
   }
 
   it('set -> get -> del roundtrip', async () => {
-    vi.unmock('ioredis');
-    vi.resetModules();
+    vi.unmock('ioredis')
+    vi.resetModules()
 
-    const IoRedisRedisProvider = await loadRedisProvider();
-    const provider = new IoRedisRedisProvider(config);
+    const IoRedisRedisProvider = await loadRedisProvider()
+    const provider = new IoRedisRedisProvider(config)
     try {
-      await provider.initialize();
+      await provider.initialize()
 
-      const key = `redis:test:${Date.now()}`;
-      await provider.set(key, 'value', { ex: 60 });
-      expect(await provider.get(key)).toBe('value');
-      expect(await provider.del(key)).toBe(1);
+      const key = `redis:test:${Date.now()}`
+      await provider.set(key, 'value', { ex: 60 })
+      expect(await provider.get(key)).toBe('value')
+      expect(await provider.del(key)).toBe(1)
     } catch (error) {
       if (shouldSkipIntegration(error)) {
         // 当前环境无法连接远程 Redis，视为跳过。
-        return;
+        return
       }
 
-      throw error;
+      throw error
     } finally {
-      await provider.disconnect();
+      await provider.disconnect()
     }
-  });
-});
+  })
+})
 
 describe('mocked', () => {
   it('sets bounded ioredis connection and command timeouts', async () => {
-    const { instances, provider } = await createMockedProvider();
+    const { instances, provider } = await createMockedProvider()
 
-    expect(instances).toHaveLength(1);
+    expect(instances).toHaveLength(1)
     expect(instances[0]).toMatchObject({
       options: {
         commandTimeout: 10_000,
@@ -178,78 +176,78 @@ describe('mocked', () => {
         maxRetriesPerRequest: 2,
       },
       url: 'redis://localhost:6379',
-    });
+    })
 
-    await provider.disconnect();
-  });
+    await provider.disconnect()
+  })
 
   it('normalizes set options into ioredis arguments', async () => {
-    const { mocks, provider } = await createMockedProvider();
-    await provider.set('key', 'value', { ex: 10, nx: true, get: true });
+    const { mocks, provider } = await createMockedProvider()
+    await provider.set('key', 'value', { ex: 10, nx: true, get: true })
 
-    expect(mocks.set).toHaveBeenCalledWith('key', 'value', 'EX', 10, 'NX', 'GET');
-    await provider.disconnect();
-  });
+    expect(mocks.set).toHaveBeenCalledWith('key', 'value', 'EX', 10, 'NX', 'GET')
+    await provider.disconnect()
+  })
 
   it('forwards eval to ioredis', async () => {
-    const { mocks, provider } = await createMockedProvider();
-    mocks.eval.mockResolvedValue(1);
+    const { mocks, provider } = await createMockedProvider()
+    mocks.eval.mockResolvedValue(1)
 
-    const result = await provider.eval('return redis.call("GET", KEYS[1])', 1, 'my-key');
+    const result = await provider.eval('return redis.call("GET", KEYS[1])', 1, 'my-key')
 
-    expect(mocks.eval).toHaveBeenCalledWith('return redis.call("GET", KEYS[1])', 1, 'my-key');
-    expect(result).toBe(1);
-    await provider.disconnect();
-  });
+    expect(mocks.eval).toHaveBeenCalledWith('return redis.call("GET", KEYS[1])', 1, 'my-key')
+    expect(result).toBe(1)
+    await provider.disconnect()
+  })
 
   it('pipeline chains commands and executes in one round-trip', async () => {
-    const { mocks, provider } = await createMockedProvider();
-    const pipeMock = mocks.pipeline();
+    const { mocks, provider } = await createMockedProvider()
+    const pipeMock = mocks.pipeline()
 
     pipeMock.exec.mockResolvedValue([
       [null, 2],
       [null, 1],
       [null, 3],
       [null, 1],
-    ]);
+    ])
 
-    const pipe = provider.pipeline();
-    pipe.incr('key1').expire('key1', 100).incr('key2').expire('key2', 200);
-    const results = await pipe.exec();
+    const pipe = provider.pipeline()
+    pipe.incr('key1').expire('key1', 100).incr('key2').expire('key2', 200)
+    const results = await pipe.exec()
 
-    expect(mocks.pipeline).toHaveBeenCalled();
-    expect(pipeMock.incr).toHaveBeenCalledWith('key1');
-    expect(pipeMock.expire).toHaveBeenCalledWith('key1', 100);
-    expect(pipeMock.incr).toHaveBeenCalledWith('key2');
-    expect(pipeMock.expire).toHaveBeenCalledWith('key2', 200);
-    expect(results).toHaveLength(4);
-    await provider.disconnect();
-  });
+    expect(mocks.pipeline).toHaveBeenCalled()
+    expect(pipeMock.incr).toHaveBeenCalledWith('key1')
+    expect(pipeMock.expire).toHaveBeenCalledWith('key1', 100)
+    expect(pipeMock.incr).toHaveBeenCalledWith('key2')
+    expect(pipeMock.expire).toHaveBeenCalledWith('key2', 200)
+    expect(results).toHaveLength(4)
+    await provider.disconnect()
+  })
 
   it('pipeline set converts SetOptions to ioredis token args', async () => {
-    const { mocks, provider } = await createMockedProvider();
-    const pipeMock = mocks.pipeline();
+    const { mocks, provider } = await createMockedProvider()
+    const pipeMock = mocks.pipeline()
 
-    pipeMock.exec.mockResolvedValue([[null, 'OK']]);
+    pipeMock.exec.mockResolvedValue([[null, 'OK']])
 
-    const pipe = provider.pipeline();
-    pipe.set('key', 'value', { ex: 60, nx: true });
-    await pipe.exec();
+    const pipe = provider.pipeline()
+    pipe.set('key', 'value', { ex: 60, nx: true })
+    await pipe.exec()
 
-    expect(pipeMock.set).toHaveBeenCalledWith('key', 'value', 'EX', 60, 'NX');
-    await provider.disconnect();
-  });
+    expect(pipeMock.set).toHaveBeenCalledWith('key', 'value', 'EX', 60, 'NX')
+    await provider.disconnect()
+  })
 
   it('supports buffer keys for hashes and strings', async () => {
-    const { mocks, provider } = await createMockedProvider();
+    const { mocks, provider } = await createMockedProvider()
 
-    const bufKey = Buffer.from('buffer-key');
-    await provider.hset(bufKey, 'field', 'value');
-    await provider.get(bufKey);
+    const bufKey = Buffer.from('buffer-key')
+    await provider.hset(bufKey, 'field', 'value')
+    await provider.get(bufKey)
 
-    expect(mocks.hset).toHaveBeenCalledWith(bufKey, 'field', 'value');
-    expect(mocks.get).toHaveBeenCalledWith(bufKey);
+    expect(mocks.hset).toHaveBeenCalledWith(bufKey, 'field', 'value')
+    expect(mocks.get).toHaveBeenCalledWith(bufKey)
 
-    await provider.disconnect();
-  });
-});
+    await provider.disconnect()
+  })
+})

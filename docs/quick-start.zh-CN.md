@@ -10,7 +10,7 @@ pnpm install
 
 ### 2.1 创建 Supabase 项目
 
-1. 访问 [https://supabase.com](https://supabase.com)
+1. 访问 <https://supabase.com>
 2. 注册/登录账号
 3. 创建新项目
 4. 等待项目创建完成（通常需要 1-2 分钟）
@@ -43,7 +43,7 @@ NODE_ENV=development
 
 ⚠️ **注意**：将上面的 URL 和 KEY 替换为你从 Supabase 获取的实际值。
 
-本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [env-setup.zh-CN.md · APP_URL](./env-setup.zh-CN.md#app_url)。
+本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [env-setup.zh-CN.md · APP\_URL](./env-setup.zh-CN.md#app_url)。
 
 ## 4. 启动开发服务器
 
@@ -61,9 +61,10 @@ pnpm dev:spa
 
 浏览器访问 **http://localhost:5174**（SPA）。Next `:3000` 只作 API / BFF，不要当主 UI 入口。
 
-> CORS：`.env.local` 的 `ALLOWED_ORIGINS` 需包含 `http://localhost:5174`（见上文示例）。  
-> 修改 `APP_URL` 后需重启 `dev:next`。  
+> CORS：`.env.local` 的 `ALLOWED_ORIGINS` 需包含 `http://localhost:5174`（见上文示例）。\
+> 修改 `APP_URL` 后需重启 `dev:next`。\
 > `dev:inspect` / `CODE_INSPECTOR=1`：Alt+Shift 点击页面元素可在 Cursor 中打开对应源码；默认关闭以降低编译开销。
+
 ## 5. 测试认证功能
 
 1. 打开浏览器访问：`http://localhost:5174/signin`（或首页引导）
@@ -77,6 +78,7 @@ pnpm dev:spa
 你也可以使用 Postman、curl 或其他工具测试 API：
 
 ### 注册用户
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
@@ -84,6 +86,7 @@ curl -X POST http://localhost:3000/api/auth/register \
 ```
 
 ### 登录
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -91,6 +94,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 ```
 
 ### 获取当前用户（需要 token）
+
 ```bash
 curl -X GET http://localhost:3000/api/auth/me \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
@@ -99,15 +103,19 @@ curl -X GET http://localhost:3000/api/auth/me \
 ## 常见问题
 
 ### Q: 登录时提示 "Invalid login credentials"
+
 **A**: 检查邮箱和密码是否正确，或先使用注册接口创建账号。
 
 ### Q: 提示 "Missing Supabase environment variables"
+
 **A**: 确保已创建 `.env.local` 文件，并且环境变量名称正确。
 
 ### Q: CORS 错误
+
 **A**: 检查 `.env.local` 中的 `ALLOWED_ORIGINS` 是否包含你的前端地址。
 
 ### Q: Token 过期
+
 **A**: Token 会自动刷新，如果仍然失败，需要重新登录。
 
 ## 下一步
@@ -115,4 +123,3 @@ curl -X GET http://localhost:3000/api/auth/me \
 - 查看 [README.md](./README.md) 了解完整的 API 文档
 - 查看 [env-setup.zh-CN.md](./env-setup.zh-CN.md) 了解环境变量详细配置
 - 开始开发你的应用功能！
-

@@ -1,13 +1,12 @@
-import { Analytics } from '@vercel/analytics/react';
-import { memo } from 'react';
+import { Analytics } from '@vercel/analytics/react'
+import { memo } from 'react'
 
 interface VercelAnalyticsProps {
-  debug?: boolean;
+  debug?: boolean
 }
 
-const VercelAnalytics = memo<VercelAnalyticsProps>(({ debug }) => <Analytics debug={debug} />);
+const VercelAnalytics = memo<VercelAnalyticsProps>(({ debug }) => <Analytics debug={debug} />)
 
-VercelAnalytics.displayName = 'VercelAnalytics';
+VercelAnalytics.displayName = 'VercelAnalytics'
 
-export default VercelAnalytics;
- 
+export default VercelAnalytics

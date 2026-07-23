@@ -15,7 +15,7 @@ const NotFound = () => {
           <br />
           请检查 URL 是否正确
         </p>
-        <Link className={styles.link} href="/">
+        <Link className={styles.link} href='/'>
           返回首页
         </Link>
       </div>

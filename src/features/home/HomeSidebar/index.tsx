@@ -33,7 +33,11 @@ const HomeSidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flex vertical className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')} style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}>
+    <Flex
+      vertical
+      className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')}
+      style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}
+    >
       <SidebarHeader />
       <Flex vertical flex={1} gap={1} style={{ minHeight: 0, width: 240 }}>
         <SidebarNav />

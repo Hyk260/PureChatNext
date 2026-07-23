@@ -1,56 +1,56 @@
-import { getJinaReaderBaseUrl } from '@pure/utils';
+import { getJinaReaderBaseUrl } from '@pure/utils'
 
-import { type CrawlImpl } from '../type';
-import { toFetchError } from '../utils/errorType';
-import { parseJSONResponse } from '../utils/response';
-import { withTimeout } from '../utils/withTimeout';
+import { type CrawlImpl } from '../type'
+import { toFetchError } from '../utils/errorType'
+import { parseJSONResponse } from '../utils/response'
+import { withTimeout } from '../utils/withTimeout'
 
-const JINA_TIMEOUT = 15_000;
+const JINA_TIMEOUT = 15_000
 
-const jinaUseCnDomains = () => process.env.JINA_USE_CN_DOMAINS?.trim().toLowerCase() === 'true';
+const jinaUseCnDomains = () => process.env.JINA_USE_CN_DOMAINS?.trim().toLowerCase() === 'true'
 
 export const jina: CrawlImpl<{ apiKey?: string }> = async (url, params) => {
-  const token = params.apiKey ?? process.env.JINA_READER_API_KEY ?? process.env.JINA_API_KEY;
-  let res: Response;
+  const token = params.apiKey ?? process.env.JINA_READER_API_KEY ?? process.env.JINA_API_KEY
+  let res: Response
 
   try {
     res = await withTimeout(
       (signal) =>
         fetch(`${getJinaReaderBaseUrl(jinaUseCnDomains())}/${url}`, {
           headers: {
-            'Accept': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : '',
+            Accept: 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
             'x-send-from': 'PureChat Community',
           },
           signal,
         }),
-      JINA_TIMEOUT,
-    );
+      JINA_TIMEOUT
+    )
   } catch (e) {
-    throw toFetchError(e);
+    throw toFetchError(e)
   }
 
   if (!res.ok) {
-    return;
+    return
   }
 
   const json = await parseJSONResponse<{
-    code: number;
+    code: number
     data: {
-      content: string;
-      description?: string;
-      siteName?: string;
-      title?: string;
-    };
-  }>(res, 'Jina');
+      content: string
+      description?: string
+      siteName?: string
+      title?: string
+    }
+  }>(res, 'Jina')
 
   if (json.code !== 200) {
-    return;
+    return
   }
 
-  const result = json.data;
+  const result = json.data
   if (!result?.content || result.content.length < 100) {
-    return;
+    return
   }
 
   return {
@@ -61,5 +61,5 @@ export const jina: CrawlImpl<{ apiKey?: string }> = async (url, params) => {
     siteName: result?.siteName,
     title: result?.title,
     url,
-  };
-};
+  }
+}

@@ -1,16 +1,20 @@
 'use client'
 
-import { Alert, Flex, Typography, Badge, Button, Divider, Form, Input, Skeleton, type FormInstance, type InputRef } from 'antd'
-import { ChevronRight, Mail } from 'lucide-react'
 import {
-  type CSSProperties,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+  Alert,
+  Flex,
+  Typography,
+  Badge,
+  Button,
+  Divider,
+  Form,
+  Input,
+  Skeleton,
+  type FormInstance,
+  type InputRef,
+} from 'antd'
+import { ChevronRight, Mail } from 'lucide-react'
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@pure/ui'
 import AuthIcons from '@/components/AuthIcons'
 import { BRANDING_NAME } from '@/const/branding'
@@ -50,11 +54,7 @@ const getProviderLabel = (provider: string) => {
 
 const withLastUsedBadge = (node: ReactNode, enabled: boolean) =>
   enabled ? (
-    <Badge
-      color='var(--ant-color-info)'
-      count='上次使用'
-      styles={LAST_USED_BADGE_STYLES}
-    >
+    <Badge color='var(--ant-color-info)' count='上次使用' styles={LAST_USED_BADGE_STYLES}>
       {node}
     </Badge>
   ) : (
@@ -77,10 +77,8 @@ export const SignInEmailStep = ({
   const [pendingProvider, setPendingProvider] = useState<string | null>(null)
 
   const canShowLastUsedBadge = useMemo(
-    () =>
-      oAuthSSOProviders.length > 1 ||
-      (oAuthSSOProviders.length === 1 && !disableEmailPassword),
-    [disableEmailPassword, oAuthSSOProviders.length],
+    () => oAuthSSOProviders.length > 1 || (oAuthSSOProviders.length === 1 && !disableEmailPassword),
+    [disableEmailPassword, oAuthSSOProviders.length]
   )
 
   const handleProviderClick = useCallback(
@@ -97,7 +95,7 @@ export const SignInEmailStep = ({
         setPendingProvider(null)
       }
     },
-    [onSocialSignIn],
+    [onSocialSignIn]
   )
 
   useEffect(() => {
@@ -143,10 +141,7 @@ export const SignInEmailStep = ({
 
               return (
                 <div key={provider}>
-                  {withLastUsedBadge(
-                    button,
-                    provider === lastAuthProvider && canShowLastUsedBadge,
-                  )}
+                  {withLastUsedBadge(button, provider === lastAuthProvider && canShowLastUsedBadge)}
                 </div>
               )
             })}
@@ -188,13 +183,7 @@ export const SignInEmailStep = ({
           </Form>
         )}
 
-        {isSocialOnly && (
-          <Alert
-            showIcon
-            message='此账户未设置密码，请使用第三方登录或魔法链接登录。'
-            type='info'
-          />
-        )}
+        {isSocialOnly && <Alert showIcon message='此账户未设置密码，请使用第三方登录或魔法链接登录。' type='info' />}
 
         <AuthAgreement />
       </Flex>

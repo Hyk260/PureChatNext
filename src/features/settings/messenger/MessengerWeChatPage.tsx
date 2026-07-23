@@ -11,13 +11,7 @@ import { getMessengerPlatform } from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import QrCodeAuth, { type WechatAuthCredentials } from './QrCodeAuth'
-import {
-  bindWechat,
-  fetchWechatStatus,
-  unbindWechat,
-  updateWechatAgent,
-  type WechatStatus,
-} from './wechatApi'
+import { bindWechat, fetchWechatStatus, unbindWechat, updateWechatAgent, type WechatStatus } from './wechatApi'
 
 const STATUS_POLL_MS = 8_000
 
@@ -113,7 +107,7 @@ const MessengerWeChatPage = memo(() => {
         setBinding(false)
       }
     },
-    [agentId, message, refreshStatus],
+    [agentId, message, refreshStatus]
   )
 
   const handleAgentChange = useCallback(
@@ -128,7 +122,7 @@ const MessengerWeChatPage = memo(() => {
         message.error(error instanceof Error ? error.message : '更新失败')
       }
     },
-    [message, refreshStatus, status],
+    [message, refreshStatus, status]
   )
 
   const handleDisconnect = useCallback(() => {
@@ -155,8 +149,8 @@ const MessengerWeChatPage = memo(() => {
 
   if (loading) {
     return (
-      <MessengerDetailShell platform="wechat" platformMeta={platformMeta}>
-        <Flex vertical align="center" justify="center" style={{ minHeight: 160 }}>
+      <MessengerDetailShell platform='wechat' platformMeta={platformMeta}>
+        <Flex vertical align='center' justify='center' style={{ minHeight: 160 }}>
           <Spin />
         </Flex>
       </MessengerDetailShell>
@@ -177,18 +171,14 @@ const MessengerWeChatPage = memo(() => {
   )
 
   return (
-    <MessengerDetailShell
-      headerAction={headerAction}
-      platform="wechat"
-      platformMeta={platformMeta}
-    >
+    <MessengerDetailShell headerAction={headerAction} platform='wechat' platformMeta={platformMeta}>
       <Flex vertical gap={8}>
         <Typography.Text strong style={{ fontSize: 15 }}>
           连接微信
         </Typography.Text>
 
         <Flex vertical gap={8}>
-          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+          <Typography.Text type='secondary' style={{ fontSize: 13 }}>
             绑定助手
           </Typography.Text>
           <Select
@@ -200,27 +190,20 @@ const MessengerWeChatPage = memo(() => {
         </Flex>
 
         {needsRebind && (
-          <Alert
-            showIcon
-            type="warning"
-            title="微信会话已过期或需要重新连接"
-            description="请再次扫码绑定。"
-          />
+          <Alert showIcon type='warning' title='微信会话已过期或需要重新连接' description='请再次扫码绑定。' />
         )}
 
         {showConnect ? (
-          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+          <Typography.Text type='secondary' style={{ fontSize: 13 }}>
             打开手机微信 → 右上角「+」→ 扫一扫，扫描二维码并确认。
           </Typography.Text>
         ) : (
           <Alert
             showIcon
-            type="success"
-            title="已连接微信"
+            type='success'
+            title='已连接微信'
             description={
-              status?.lastActiveAt
-                ? `最近活动：${formatActiveAt(status.lastActiveAt)}`
-                : '打开微信私聊机器人即可对话。'
+              status?.lastActiveAt ? `最近活动：${formatActiveAt(status.lastActiveAt)}` : '打开微信私聊机器人即可对话。'
             }
           />
         )}

@@ -38,9 +38,7 @@ const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name }) => 
     <Flex align='center' gap={10}>
       <Avatar size={36} src={avatar} style={{ background: cssVar.colorFill }} />
       <Flex vertical flex={1}>
-        <Typography.Text style={{ lineHeight: 1.4, fontWeight: 'bold' }}>
-          {name}
-        </Typography.Text>
+        <Typography.Text style={{ lineHeight: 1.4, fontWeight: 'bold' }}>{name}</Typography.Text>
         {email ? (
           <Typography.Text type='secondary' style={{ fontSize: 12, lineHeight: 1.4 }}>
             {email}
@@ -58,8 +56,7 @@ const HomeUserTrigger = memo(() => {
   const { data: session } = useSession()
   const [open, setOpen] = useState(false)
 
-  const displayName =
-    session?.user?.name ?? session?.user?.email?.split('@')[0] ?? '访客'
+  const displayName = session?.user?.name ?? session?.user?.email?.split('@')[0] ?? '访客'
 
   const avatarFallback = session?.user ? displayName.slice(0, 2).toUpperCase() : '?'
   const avatar = session?.user?.image || avatarFallback
@@ -86,7 +83,7 @@ const HomeUserTrigger = memo(() => {
             },
           ]
         : [],
-    [session?.user],
+    [session?.user]
   )
 
   const logoutItems = useMemo(
@@ -101,7 +98,7 @@ const HomeUserTrigger = memo(() => {
             },
           ]
         : [],
-    [session?.user],
+    [session?.user]
   )
 
   const handleMenuClick = useCallback(
@@ -113,16 +110,12 @@ const HomeUserTrigger = memo(() => {
 
       setOpen(false)
     },
-    [handleSignOut],
+    [handleSignOut]
   )
 
   const menuContent = session?.user ? (
     <Flex vertical gap={2} style={{ minWidth: 300 }}>
-      <UserInfoSection
-        avatar={avatar}
-        email={session.user.email}
-        name={displayName}
-      />
+      <UserInfoSection avatar={avatar} email={session.user.email} name={displayName} />
       <DataStatistics />
       <Menu items={settingsItems} onClick={handleMenuClick} />
       <Menu items={logoutItems} onClick={handleMenuClick} />

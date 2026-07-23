@@ -1,10 +1,9 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server'
 
 /**
  * 登出接口
  * POST /api/auth/logout
  */
 export async function POST(request: NextRequest) {
-  return NextResponse.json({ message: 'Logout successful' });
+  return NextResponse.json({ message: 'Logout successful' })
 }
-

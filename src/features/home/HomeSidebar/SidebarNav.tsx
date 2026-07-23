@@ -46,22 +46,12 @@ const SidebarNav = memo(() => {
           }
 
           return (
-            <Link
-              key={item.key}
-              href={item.href}
-              style={{ color: 'inherit', textDecoration: 'none' }}
-            >
+            <Link key={item.key} href={item.href} style={{ color: 'inherit', textDecoration: 'none' }}>
               <NavItem active={active} clickable icon={item.icon} title={item.title} />
             </Link>
           )
         })}
-        {isDev ? (
-          <NavItem
-            icon={Route}
-            title='dev测试路由'
-            onItemClick={() => setRouteNavOpen(true)}
-          />
-        ) : null}
+        {isDev ? <NavItem icon={Route} title='dev测试路由' onItemClick={() => setRouteNavOpen(true)} /> : null}
       </Flex>
       {isDev ? (
         <Drawer
@@ -71,17 +61,12 @@ const SidebarNav = memo(() => {
           size={224}
           title={
             <div>
-              <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
-                页面导航
-              </p>
+              <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>页面导航</p>
               <p className='mt-1 text-base font-semibold'>PureChat 路由</p>
             </div>
           }
         >
-          <RouteNavContent
-            pathname={pathname}
-            onNavigate={() => setRouteNavOpen(false)}
-          />
+          <RouteNavContent pathname={pathname} onNavigate={() => setRouteNavOpen(false)} />
         </Drawer>
       ) : null}
     </>

@@ -86,19 +86,14 @@ const ChatHeader = memo<Props>(({ title }) => {
         type: 'checkbox' as const,
       },
     ],
-    [toggleWideScreen, wideScreen],
+    [toggleWideScreen, wideScreen]
   )
 
   return (
     <Flex align='center' className={styles.header} justify='space-between'>
       <Flex align='center' flex={1} gap={4} style={{ minWidth: 0, overflow: 'hidden' }}>
         {leftCollapsed ? (
-          <ActionIcon
-            icon={PanelLeftOpen}
-            size='small'
-            title='展开话题栏'
-            onClick={toggleLeftCollapsed}
-          />
+          <ActionIcon icon={PanelLeftOpen} size='small' title='展开话题栏' onClick={toggleLeftCollapsed} />
         ) : null}
         <Typography.Text className={styles.title} ellipsis>
           {title}
@@ -116,12 +111,7 @@ const ChatHeader = memo<Props>(({ title }) => {
 
       <Flex align='center' flex='none' gap={2}>
         {rightCollapsed ? (
-          <ActionIcon
-            icon={PanelRightOpen}
-            size='small'
-            title='展开参数栏'
-            onClick={toggleRightCollapsed}
-          />
+          <ActionIcon icon={PanelRightOpen} size='small' title='展开参数栏' onClick={toggleRightCollapsed} />
         ) : null}
       </Flex>
     </Flex>

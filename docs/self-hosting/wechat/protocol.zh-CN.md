@@ -215,11 +215,11 @@ base64   = "MzA1NDE5ODk2"
 JavaScript 示例：
 
 ```ts
-import crypto from 'node:crypto';
+import crypto from 'node:crypto'
 
 function randomWechatUin(): string {
-  const value = crypto.randomBytes(4).readUInt32BE(0);
-  return Buffer.from(String(value), 'utf8').toString('base64');
+  const value = crypto.randomBytes(4).readUInt32BE(0)
+  return Buffer.from(String(value), 'utf8').toString('base64')
 }
 ```
 
@@ -1014,11 +1014,11 @@ curl 'https://ilinkai.weixin.qq.com/ilink/bot/getuploadurl' \
 加密算法固定为 `AES-128-ECB`，使用 PKCS7 padding。
 
 ```ts
-import { createCipheriv } from 'node:crypto';
+import { createCipheriv } from 'node:crypto'
 
 function encryptAesEcb(plaintext: Buffer, key: Buffer): Buffer {
-  const cipher = createCipheriv('aes-128-ecb', key, null);
-  return Buffer.concat([cipher.update(plaintext), cipher.final()]);
+  const cipher = createCipheriv('aes-128-ecb', key, null)
+  return Buffer.concat([cipher.update(plaintext), cipher.final()])
 }
 ```
 
@@ -1109,11 +1109,11 @@ curl 'https://novac2c.cdn.weixin.qq.com/c2c/download?encrypted_query_param=AAFFc
 解密示例：
 
 ```ts
-import { createDecipheriv } from 'node:crypto';
+import { createDecipheriv } from 'node:crypto'
 
 function decryptAesEcb(ciphertext: Buffer, key: Buffer): Buffer {
-  const decipher = createDecipheriv('aes-128-ecb', key, null);
-  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  const decipher = createDecipheriv('aes-128-ecb', key, null)
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()])
 }
 ```
 

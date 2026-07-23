@@ -24,13 +24,8 @@ const SettingsHeader = memo(() => {
   if (!sidebarCollapsed) return null
 
   return (
-    <Flex align="center" className={styles.header}>
-      <ActionIcon
-        icon={PanelLeftOpen}
-        onClick={toggleSidebarCollapsed}
-        size="small"
-        title="展开侧栏"
-      />
+    <Flex align='center' className={styles.header}>
+      <ActionIcon icon={PanelLeftOpen} onClick={toggleSidebarCollapsed} size='small' title='展开侧栏' />
     </Flex>
   )
 })

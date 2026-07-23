@@ -1,6 +1,6 @@
 'use client'
 
-import { ConfigProvider, ThemeProvider } from '@pure/ui'
+import { ConfigProvider, ThemeProvider } from '@pure/ui/ThemeProvider'
 import { StyleProvider } from 'antd-style'
 import { LazyMotion, domAnimation } from 'motion/react'
 import * as m from 'motion/react-m'

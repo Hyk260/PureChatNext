@@ -85,6 +85,7 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       emptyOutDir: true,
       reportCompressedSize: false,
+      chunkSizeWarningLimit: 1000,
       rolldownOptions: {
         input: path.resolve(rootDir, 'index.html'),
         output: createSharedRolldownOutput({ strictExecutionOrder: true }),

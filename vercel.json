@@ -3,14 +3,5 @@
   "framework": "nextjs",
   "installCommand": "pnpm install",
   "buildCommand": "pnpm build",
-  "crons": [
-    {
-      "path": "/api/cron/cleanup-unverified-users",
-      "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/cron/wechat-gateway",
-      "schedule": "*/5 * * * *"
-    }
-  ]
+  "crons": []
 }

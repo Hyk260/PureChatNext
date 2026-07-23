@@ -14,6 +14,15 @@ const isNodePackage = (id: string, packageName: string) => {
 function sharedManualChunks(id: string): string | undefined {
   if (!id.includes('node_modules')) return
 
+  // antd：从 eager 主入口拆出，独立可缓存 vendor chunk。
+  // antd 本就被 ThemeProviders eager 引用，拆出后主入口骨架降至 ~65kB，
+  // 且 antd 版本稳定时跨部署可复用缓存。
+  if (isNodePackage(id, 'antd')) return 'vendor-antd'
+
+  // 注意：shiki / mermaid / katex / @lobehub/ui Markdown 仅被 chat 懒加载路由使用，
+  // 不可用 codeSplitting.groups 手动命名分包 —— rolldown 会将命名 chunk 全部
+  // modulepreload（eager），导致首屏额外加载 ~2.3MB。保持 rolldown 默认拆分即可懒加载。
+
   if (
     isNodePackage(id, 'react') ||
     isNodePackage(id, 'react-dom') ||

@@ -4,7 +4,6 @@ import { Block } from '@pure/ui'
 import { Flex, Typography, Button, Input } from 'antd'
 import { RefreshCw } from 'lucide-react'
 
-import Loading from '@/components/Loading/BrandTextLoading'
 import { useAuthConfig } from '@/libs/better-auth/client'
 
 import { useVerifyEmail } from './useVerifyEmail'
@@ -15,11 +14,7 @@ interface VerifyEmailContentProps {
 }
 
 export const VerifyEmailContent = ({ email, callbackUrl }: VerifyEmailContentProps) => {
-  const { config, ready: configReady } = useAuthConfig()
-
-  if (!configReady) {
-    return <Loading debugId='VerifyEmailConfig' />
-  }
+  const { config } = useAuthConfig()
 
   if (config.emailVerificationMode === 'otp') {
     return <VerifyEmailOtpContent callbackUrl={callbackUrl} email={email} mode={config.emailVerificationMode} />

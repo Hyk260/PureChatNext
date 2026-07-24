@@ -10,19 +10,10 @@ import Link from '@/utils/link'
 import { useSearchParams } from '@/utils/navigation'
 import { useEffect, useRef } from 'react'
 
-import Loading from '@/components/Loading/BrandTextLoading'
-
-import { useAuthConfig } from '@/libs/better-auth/client'
-
 import { useSignUp, type SignUpFormValues } from './useSignUp'
 
+// configReady 由 SignUpPage 在外层保证，此处直接渲染表单内容
 export const SignUpForm = () => {
-  const { ready: configReady } = useAuthConfig()
-
-  if (!configReady) {
-    return <Loading debugId='SignupConfig' />
-  }
-
   return <SignUpFormContent />
 }
 

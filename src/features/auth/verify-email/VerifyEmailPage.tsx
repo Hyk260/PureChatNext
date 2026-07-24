@@ -6,6 +6,7 @@ import Link from '@/utils/link'
 import { useSearchParams } from '@/utils/navigation'
 import { Suspense } from 'react'
 
+import Loading from '@/components/Loading/BrandTextLoading'
 import { AuthPageContainer } from '@/components/AuthPageContainer'
 import AuthCard from '@/features/AuthCard'
 import { useAuthConfig } from '@/libs/better-auth/client'
@@ -33,6 +34,11 @@ const VerifyEmailPageContent = () => {
   const searchParams = useSearchParams()
   const email = searchParams.get('email')
   const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
+  const { ready: configReady } = useAuthConfig()
+
+  if (!configReady) {
+    return <Loading debugId='VerifyEmailConfig' />
+  }
 
   const VerifyEmailFooter = (
     <Link href='/signin'>

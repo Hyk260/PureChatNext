@@ -305,10 +305,6 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
       </div>
     )
   },
-  // Compare message by reference. AI SDK mutates the live streaming message
-  // in place before replaceMessage snapshots it — content-based compare via
-  // getMessageText(prev) already sees the new text, so memo would skip and
-  // leave the bubble stuck on "…".
   (prev, next) =>
     prev.disabled === next.disabled &&
     prev.isStreaming === next.isStreaming &&

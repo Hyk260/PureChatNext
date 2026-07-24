@@ -31,11 +31,7 @@ const SignInContent = () => {
   } = useSignIn()
 
   if (!serverConfigInit) {
-    return (
-      <AuthPageContainer>
-        <Loading debugId='SigninConfig' />
-      </AuthPageContainer>
-    )
+    return <Loading debugId='SigninConfig' />
   }
 
   return (

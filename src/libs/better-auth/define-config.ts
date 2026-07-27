@@ -6,9 +6,9 @@ import { type EmailPayload } from '@/server/services/email/impls'
 // import { imAccountPlugin } from '@/libs/better-auth/server/plugins/im-account'
 import { admin, emailOTP, genericOAuth, magicLink } from 'better-auth/plugins'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import * as schema from '@/database/schemas'
-import { serverDB } from '@/database/core/db-adaptor'
-import { generateAuthUserId } from '@/database/utils/idGenerator'
+import * as schema from '@pure/database/schemas'
+import { serverDB } from '@pure/database/core/db-adaptor'
+import { generateAuthUserId } from '@pure/database/utils/idGenerator'
 import debug from 'debug'
 
 import {

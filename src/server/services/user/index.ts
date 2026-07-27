@@ -1,6 +1,6 @@
 import debug from 'debug'
 
-import { UserModel } from '@/database/models/user'
+import { UserModel } from '@pure/database/models/user'
 import { registerAccount, type RegisterAccountParams, type RegisterAccountResult } from '@/libs/utils/register'
 import { FileS3 } from '@/server/modules/S3'
 

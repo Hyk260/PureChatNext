@@ -1,7 +1,7 @@
 import { waitUntil } from '@vercel/functions'
 import { type NextRequest, NextResponse } from 'next/server'
 
-import { ChannelBindingModel, QQ_PLATFORM } from '@/database/models/channelBinding'
+import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { getOrCreateQQChat } from '@/libs/channels/qq/chatBot'
 import { decryptCredentials } from '@/libs/channels/qq/encrypt'
 import { authorizeQQInternalWebhook } from '@/libs/channels/qq/webhookAuth'

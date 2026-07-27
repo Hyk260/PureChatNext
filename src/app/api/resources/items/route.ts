@@ -1,7 +1,8 @@
+import { KnowledgeRepo } from '@pure/database/repositories/knowledge'
 import { NextResponse } from 'next/server'
 
-import { KnowledgeRepo } from '@/database/repositories/knowledge'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
+import { resolveFileAccessUrl } from '@/server/modules/S3/url'
 import { QueryFileListSchema } from '@/types/files'
 
 export const GET = withAuth(async (request, { userId }) => {
@@ -18,7 +19,13 @@ export const GET = withAuth(async (request, { userId }) => {
 
     return NextResponse.json({
       hasMore,
-      items: sliced.map((item) => repo.toFileListItem(item)),
+      items: sliced.map((item) => {
+        const fileListItem = repo.toFileListItem(item)
+        if (item.sourceType === 'file' && item.url) {
+          fileListItem.url = resolveFileAccessUrl(item.id, item.url)
+        }
+        return fileListItem
+      }),
     })
   } catch (error) {
     const pgCode = (error as { cause?: { code?: string } })?.cause?.code

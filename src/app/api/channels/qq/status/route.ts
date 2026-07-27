@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { ChannelBindingModel, QQ_PLATFORM } from '@/database/models/channelBinding'
+import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { appEnv } from '@/envs/app'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials } from '@/libs/channels/qq'

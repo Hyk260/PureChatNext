@@ -9,7 +9,7 @@ import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
-vi.mock('@/database/core/db-adaptor', () => ({
+vi.mock('@pure/database/core/db-adaptor', () => ({
   getServerDB: vi.fn(),
   serverDB: {},
 }))
@@ -17,18 +17,18 @@ vi.mock('@/database/core/db-adaptor', () => ({
 vi.hoisted(() => {
   const { config: loadEnv } = require('dotenv') as typeof import('dotenv')
   const { resolve: resolvePath } = require('node:path') as typeof import('node:path')
-  loadEnv({ path: resolvePath(__dirname, '../../../.env.local') })
+  loadEnv({ path: resolvePath(__dirname, '../../../../.env.local') })
 })
 
-import { type AgentDeleteError, AgentModel } from '@/database/models/agent'
-import { ChatTopicModel } from '@/database/models/chatTopic'
-import * as schema from '@/database/schemas'
-import { agents, PURE_AI_AGENT_ID } from '@/database/schemas/agent'
-import { chatTopics } from '@/database/schemas/chat'
-import { users } from '@/database/schemas/user'
-import { type ChatDatabase } from '@/database/type'
+import { type AgentDeleteError, AgentModel } from '@pure/database/models/agent'
+import { ChatTopicModel } from '@pure/database/models/chatTopic'
+import * as schema from '@pure/database/schemas'
+import { agents, PURE_AI_AGENT_ID } from '@pure/database/schemas/agent'
+import { chatTopics } from '@pure/database/schemas/chat'
+import { users } from '@pure/database/schemas/user'
+import { type ChatDatabase } from '@pure/database/type'
 
-config({ path: resolve(__dirname, '../../../.env.local') })
+config({ path: resolve(__dirname, '../../../../.env.local') })
 
 const dbUrl = process.env.DATABASE_URL ?? process.env.DATABASE_TEST_URL
 const describeIfDb = dbUrl ? describe : describe.skip

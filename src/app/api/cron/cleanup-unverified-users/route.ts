@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { UNVERIFIED_USER_TTL_MS } from '@/const/auth'
-import { UserModel } from '@/database/models/user'
+import { UserModel } from '@pure/database/models/user'
 import { logger } from '@/libs/logger'
 
 /**

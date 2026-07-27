@@ -1,7 +1,7 @@
 import { waitUntil } from '@vercel/functions'
 import { type NextRequest, NextResponse } from 'next/server'
 
-import { ChannelBindingModel, WECHAT_PLATFORM } from '@/database/models/channelBinding'
+import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { DEFAULT_DURATION_MS, pollBinding } from '@/libs/channels/wechat'
 import { logger } from '@/libs/logger'
 

@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { UserModel } from '@/database/models/user'
+import { UserModel } from '@pure/database/models/user'
 import { logger } from '@/libs/logger'
 
-import { type User } from '@/database/schemas/user'
+import { type User } from '@pure/database/schemas/user'
 
 /**
  * 注册接口

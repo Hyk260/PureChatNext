@@ -1,11 +1,11 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { UserModel } from '@/database/models/user'
+import { UserModel } from '@pure/database/models/user'
 
 import { GET, POST } from './route'
 
-vi.mock('@/database/models/user', () => ({
+vi.mock('@pure/database/models/user', () => ({
   UserModel: {
     deleteUserByEmail: vi.fn(),
     getUserDeletionPreview: vi.fn(),

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { ChannelBindingModel, WECHAT_PLATFORM } from '@/database/models/channelBinding'
+import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { withAuth } from '@/libs/auth/get-session-user'
 
 /** GET /api/channels/wechat/status — 当前用户微信连接状态（不含凭证） */

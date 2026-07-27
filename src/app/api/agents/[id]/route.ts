@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { AgentDeleteError, AgentModel } from '@/database/models/agent'
+import { AgentDeleteError, AgentModel } from '@pure/database/models/agent'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const updateSchema = z.object({

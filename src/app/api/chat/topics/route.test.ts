@@ -25,11 +25,11 @@ vi.mock('@/libs/auth/get-session-user', () => {
   }
 })
 
-vi.mock('@/database/models/chatTopic', () => ({
+vi.mock('@pure/database/models/chatTopic', () => ({
   ChatTopicModel: vi.fn(),
 }))
 
-import { ChatTopicModel } from '@/database/models/chatTopic'
+import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 
 import { GET, POST } from './route'

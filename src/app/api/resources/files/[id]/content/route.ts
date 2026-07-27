@@ -1,4 +1,4 @@
-import { FileModel } from '@/database/models/file'
+import { FileModel } from '@pure/database/models/file'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'
 import { extractS3KeyFromUrl } from '@/server/modules/S3/url'

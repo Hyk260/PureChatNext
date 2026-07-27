@@ -13,7 +13,7 @@ import {
   UserX,
 } from 'lucide-react'
 
-import { type UserDeletionPreviewUser, type UserRelatedCounts } from '@/database/models/user'
+import { type UserDeletionPreviewUser, type UserRelatedCounts } from '@pure/database/models/user'
 
 type LookupResult =
   | {

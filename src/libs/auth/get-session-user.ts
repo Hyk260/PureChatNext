@@ -2,7 +2,7 @@ import { headers } from 'next/headers'
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { auth } from '@/auth'
-import { UserModel } from '@/database/models/user'
+import { UserModel } from '@pure/database/models/user'
 
 export async function getAuthenticatedUserId() {
   const session = await auth.api.getSession({ headers: await headers() })

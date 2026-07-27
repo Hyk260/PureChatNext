@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { UserModel } from '@/database/models/user'
+import { UserModel } from '@pure/database/models/user'
 import { generateUserSig } from '@/libs/utils/signature'
 import { signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
 
-import { type UserWithoutPassword } from '@/database/schemas/user'
+import { type UserWithoutPassword } from '@pure/database/schemas/user'
 
 /**
  * 登录接口

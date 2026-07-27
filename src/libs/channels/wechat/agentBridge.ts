@@ -2,7 +2,7 @@ import { generateText } from 'ai'
 import { type Message, type Thread } from 'chat'
 import debug from 'debug'
 
-import { AgentModel } from '@/database/models/agent'
+import { AgentModel } from '@pure/database/models/agent'
 import {
   createProviderLanguageModel,
   isSupportedProviderId,

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
-import { UserModel } from '@/database/models/user'
+import { UserModel } from '@pure/database/models/user'
 import { verifyAuth } from '@/libs/auth/middleware'
 
 /**

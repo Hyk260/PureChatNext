@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm'
 import { type NextRequest, NextResponse } from 'next/server'
 
-import { serverDB } from '@/database/core/db-adaptor'
-import { UserModel } from '@/database/models/user'
-import { users } from '@/database/schemas/user'
+import { serverDB } from '@pure/database/core/db-adaptor'
+import { UserModel } from '@pure/database/models/user'
+import { users } from '@pure/database/schemas/user'
 import { logger } from '@/libs/logger'
 
 export interface ReclaimUnverifiedEmailResponse {

@@ -13,7 +13,7 @@ export default {
     url: connectionString,
   },
   dialect: 'postgresql',
-  out: './src/database/migrations',
-  schema: './src/database/schemas',
+  out: './packages/database/src/migrations',
+  schema: './packages/database/src/schemas',
   strict: true,
 } satisfies Config

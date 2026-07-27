@@ -1,5 +1,5 @@
 import { createNanoId, generateCompactUuid } from '@pure/utils'
-import { hashPassword } from 'better-auth/crypto'
+import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { and, count, eq, inArray, lt } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
@@ -15,9 +15,13 @@ import {
   type UserWithoutPassword,
 } from '../schemas'
 import { generateAuthUserId } from '../utils/idGenerator'
-import { verifyAccountPassword } from '@/libs/better-auth/server/verify-account-password'
 
 import { type ChatDatabase } from '../type'
+
+async function verifyAccountPassword(hash: string, password: string): Promise<boolean> {
+  if (!hash) return false
+  return verifyPassword({ hash, password })
+}
 
 const CREDENTIAL_PROVIDER = 'credential'
 

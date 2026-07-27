@@ -1,14 +1,11 @@
+import { type FileListItem, type QueryFileListParams, FilesTabs } from '@pure/types'
 import { and, eq } from 'drizzle-orm'
 
-import { DOCUMENT_FOLDER_TYPE } from '@/const/resources/fileTypes'
-import { type FileListItem, type QueryFileListParams, FilesTabs } from '@/types/files'
-
-import { getServerDB } from '@/database/core/db-adaptor'
-import { DocumentModel } from '@/database/models/document'
-import { FileModel } from '@/database/models/file'
-import { type DocumentItem, type FileItem, documents, files } from '@/database/schemas/file'
-import { type ChatDatabase } from '@/database/type'
-import { resolveFileAccessUrl } from '@/server/modules/S3/url'
+import { getServerDB } from '../../core/db-adaptor'
+import { DocumentModel } from '../../models/document'
+import { FileModel } from '../../models/file'
+import { DOCUMENT_FOLDER_TYPE, type DocumentItem, type FileItem, documents, files } from '../../schemas/file'
+import { type ChatDatabase } from '../../type'
 
 export interface KnowledgeItem {
   content?: string | null
@@ -98,7 +95,7 @@ export class KnowledgeRepo {
       slug: item.slug,
       sourceType: item.sourceType,
       updatedAt: item.updatedAt,
-      url: item.sourceType === 'file' && item.url ? resolveFileAccessUrl(item.id, item.url) : (item.url ?? ''),
+      url: item.url ?? '',
     }
   }
 

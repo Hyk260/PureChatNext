@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { KnowledgeRepo } from '@/database/repositories/knowledge'
+import { KnowledgeRepo } from '@pure/database/repositories/knowledge'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const batchSchema = z.object({

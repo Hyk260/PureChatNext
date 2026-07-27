@@ -37,13 +37,13 @@ pnpm db:check
 
 ### 步骤 1: 生成迁移文件
 
-根据 `src/database/schemas/user.ts` 中的定义生成数据库迁移文件：
+根据 `packages/database/src/schemas/user.ts` 中的定义生成数据库迁移文件：
 
 ```bash
 pnpm db:generate
 ```
 
-这将在 `src/database/migrations` 目录下创建新的迁移文件。
+这将在 `packages/database/src/migrations` 目录下创建新的迁移文件。
 
 ### 步骤 2: 运行迁移
 
@@ -65,7 +65,7 @@ pnpm db:studio
 
 ## 📊 当前 Schema
 
-项目已定义 User 表，位于 `src/database/schema`：
+项目已定义 User 表，位于 `packages/database/src/schema`：
 
 ```typescript
 export const user = pgTable('User', {
@@ -86,7 +86,7 @@ export const user = pgTable('User', {
 
 ## 🛠️ 修改 Schema 并更新数据库
 
-1. 编辑 `src/database/schemas` 文件
+1. 编辑 `packages/database/src/schemas` 文件
 2. 运行 `pnpm db:generate` 生成新的迁移文件
 3. 运行 `pnpm db:migrate` 应用更改
 
@@ -128,14 +128,14 @@ Drizzle 判定逻辑：取 `__drizzle_migrations` 中 `created_at` 最大的一�
 
 **修复步骤（已有表、需对齐记录时）：**
 
-1. 确认 `src/database/migrations/meta/_journal.json` 包含所有已应用的 `.sql` 条目
+1. 确认 `packages/database/src/migrations/meta/_journal.json` 包含所有已应用的 `.sql` 条目
 2. 计算对应 `.sql` 文件的 SHA256 哈希（Drizzle 写入 `hash` 字段的值）：
 
 ```bash
 node -e "
 const { createHash } = require('crypto');
 const fs = require('fs');
-const sql = fs.readFileSync('src/database/migrations/0000_xxx.sql', 'utf8');
+const sql = fs.readFileSync('packages/database/src/migrations/0000_xxx.sql', 'utf8');
 console.log(createHash('sha256').update(sql).digest('hex'));
 "
 ```

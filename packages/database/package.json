@@ -1,0 +1,32 @@
+{
+  "name": "@pure/database",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/type.ts",
+  "types": "./src/type.ts",
+  "exports": {
+    "./*": "./src/*.ts",
+    "./schemas": "./src/schemas/index.ts",
+    "./repositories/knowledge": "./src/repositories/knowledge/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage --silent='passed-only'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pure/env": "workspace:*",
+    "@pure/types": "workspace:*",
+    "@pure/utils": "workspace:*",
+    "ai": "7.0.19",
+    "better-auth": "^1.6.22",
+    "drizzle-orm": "^0.45.2",
+    "postgres": "^3.4.7",
+    "random-words": "^2.0.1",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "vitest": "^3.2.4"
+  }
+}

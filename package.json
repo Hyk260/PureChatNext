@@ -49,6 +49,7 @@
     "@lobehub/ui": "^5.16.1",
     "@pure/chat-adapter-qq": "workspace:*",
     "@pure/chat-adapter-wechat": "workspace:*",
+    "@pure/database": "workspace:*",
     "@pure/file-loaders": "workspace:*",
     "@pure/types": "workspace:*",
     "@pure/ui": "workspace:*",

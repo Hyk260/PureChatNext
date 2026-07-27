@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 
-import { AgentModel } from '@/database/models/agent'
-import { ChatMessageModel } from '@/database/models/chatMessage'
-import { ChatTopicModel } from '@/database/models/chatTopic'
+import { AgentModel } from '@pure/database/models/agent'
+import { ChatMessageModel } from '@pure/database/models/chatMessage'
+import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import { withAuth } from '@/libs/auth/get-session-user'
 
 export const GET = withAuth(async (_request, { userId }) => {

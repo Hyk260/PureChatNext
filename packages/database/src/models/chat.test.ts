@@ -9,19 +9,19 @@ import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
-vi.mock('@/database/core/db-adaptor', () => ({
+vi.mock('@pure/database/core/db-adaptor', () => ({
   getServerDB: vi.fn(),
   serverDB: {},
 }))
 
-import { ChatMessageModel } from '@/database/models/chatMessage'
-import { ChatTopicModel } from '@/database/models/chatTopic'
-import * as schema from '@/database/schemas'
-import { chatTopics } from '@/database/schemas/chat'
-import { users } from '@/database/schemas/user'
-import { type ChatDatabase } from '@/database/type'
+import { ChatMessageModel } from '@pure/database/models/chatMessage'
+import { ChatTopicModel } from '@pure/database/models/chatTopic'
+import * as schema from '@pure/database/schemas'
+import { chatTopics } from '@pure/database/schemas/chat'
+import { users } from '@pure/database/schemas/user'
+import { type ChatDatabase } from '@pure/database/type'
 
-config({ path: resolve(__dirname, '../../../.env.local') })
+config({ path: resolve(__dirname, '../../../../.env.local') })
 
 const dbUrl = process.env.DATABASE_URL ?? process.env.DATABASE_TEST_URL
 const describeIfDb = dbUrl ? describe : describe.skip

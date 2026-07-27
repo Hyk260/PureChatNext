@@ -17,7 +17,7 @@ next-env.d.ts
 # Snapshots & generated
 *.snap
 *.sql
-src/database/migrations/**
+packages/database/src/migrations/**
 
 # AI / editor tooling
 .agents

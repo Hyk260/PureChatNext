@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { UserModel } from '@/database/models/user'
+import { UserModel } from '@pure/database/models/user'
 
 type DeleteUserAction = 'lookup' | 'delete'
 

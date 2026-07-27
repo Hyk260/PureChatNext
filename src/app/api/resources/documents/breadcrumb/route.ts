@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { DocumentModel } from '@/database/models/document'
+import { DocumentModel } from '@pure/database/models/document'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 export const GET = withAuth(async (request, { userId }) => {

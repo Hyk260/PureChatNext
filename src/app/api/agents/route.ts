@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { AgentModel } from '@/database/models/agent'
+import { AgentModel } from '@pure/database/models/agent'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const createSchema = z.object({

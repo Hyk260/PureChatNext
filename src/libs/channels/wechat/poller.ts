@@ -7,8 +7,8 @@ import {
 } from '@pure/chat-adapter-wechat'
 import debug from 'debug'
 
-import { ChannelBindingModel, WECHAT_PLATFORM } from '@/database/models/channelBinding'
-import { type ChannelBindingItem } from '@/database/schemas/channel'
+import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
+import { type ChannelBindingItem } from '@pure/database/schemas/channel'
 import { appEnv } from '@/envs/app'
 
 import { setContextToken } from './contextToken'

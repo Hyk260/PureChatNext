@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { ChatTopicModel } from '@/database/models/chatTopic'
+import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const updateSchema = z.object({

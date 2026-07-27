@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 
 import { NextResponse } from 'next/server'
 
-import { FileModel } from '@/database/models/file'
+import { FileModel } from '@pure/database/models/file'
 import { fileEnv } from '@/envs/file'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'

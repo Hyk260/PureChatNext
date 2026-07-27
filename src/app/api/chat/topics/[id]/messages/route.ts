@@ -2,8 +2,8 @@ import { type UIMessage } from 'ai'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { ChatMessageModel } from '@/database/models/chatMessage'
-import { ChatTopicModel } from '@/database/models/chatTopic'
+import { ChatMessageModel } from '@pure/database/models/chatMessage'
+import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const uiMessageSchema = z.object({

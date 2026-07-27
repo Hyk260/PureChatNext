@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { KnowledgeBaseModel } from '@/database/models/knowledgeBase'
+import { KnowledgeBaseModel } from '@pure/database/models/knowledgeBase'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const updateSchema = z.object({

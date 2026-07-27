@@ -3,8 +3,8 @@ import { createQQAdapter } from '@pure/chat-adapter-qq'
 import { Chat } from 'chat'
 import debug from 'debug'
 
-import { ChannelBindingModel, QQ_PLATFORM } from '@/database/models/channelBinding'
-import { type ChannelBindingItem } from '@/database/schemas/channel'
+import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
+import { type ChannelBindingItem } from '@pure/database/schemas/channel'
 import { appEnv } from '@/envs/app'
 
 import { decryptCredentials, type QQCredentials } from './encrypt'

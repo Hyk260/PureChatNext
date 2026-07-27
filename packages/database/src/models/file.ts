@@ -1,6 +1,6 @@
 import { and, asc, count, desc, eq, ilike, inArray, isNull, or } from 'drizzle-orm'
 
-import { type QueryFileListParams, FilesTabs, SortType } from '@/types/files'
+import { type QueryFileListParams, FilesTabs, SortType } from '@pure/types'
 
 import { getServerDB } from '../core/db-adaptor'
 import { type NewFile, type FileItem, documents, files, globalFiles, knowledgeBaseFiles } from '../schemas/file'

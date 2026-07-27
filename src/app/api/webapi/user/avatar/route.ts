@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { appEnv } from '@/envs/app'
 import { fileEnv } from '@/envs/file'
-import { UserModel } from '@/database/models/user'
+import { UserModel } from '@pure/database/models/user'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'
 

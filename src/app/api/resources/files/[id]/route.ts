@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { FileModel } from '@/database/models/file'
+import { FileModel } from '@pure/database/models/file'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { resolveFileAccessUrl } from '@/server/modules/S3/url'
 

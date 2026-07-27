@@ -20,8 +20,9 @@
 ```plaintext
 PureChatNext/
 ├── packages/                  # @pure/* 工作区包
+│   ├── database/              # Drizzle schema、models、migrations（@pure/database）
 │   ├── env/                   # 环境变量校验（auth、tools、serverDB 等）
-│   ├── types/                 # 共享类型（search、crawler 等）
+│   ├── types/                 # 共享类型（search、crawler、files 等）
 │   ├── utils/                 # 共享工具（apiKey、jina 等）
 │   ├── file-loaders/          # 文档加载（pdf、docx、pptx、excel…）
 │   ├── web-crawler/           # 网页爬虫多实现（naive、firecrawl、tavily…）
@@ -34,7 +35,6 @@ PureChatNext/
 │   ├── features/              # 业务 UI（供 SPA 路由挂载）
 │   ├── app/                   # Next：API / auth / 生产 SPA 壳；历史 page 逐步退役
 │   │   └── api/               # REST API（auth、chat、rest-api、read-file…）
-│   ├── database/              # Drizzle schema、models、migrations
 │   ├── server/                # 服务端业务（search 搜索聚合等）
 │   ├── libs/                  # better-auth、工具、中间件
 │   ├── components/            # 通用 React 组件
@@ -68,8 +68,8 @@ PureChatNext/
 
 ### 数据库（Drizzle）
 
-- Schema：`src/database/schemas/`
-- Model 层：`src/database/models/`
+- Schema：`packages/database/src/schemas/`（`@pure/database/schemas`）
+- Model 层：`packages/database/src/models/`（`@pure/database/models/*`）
 - 常用命令：
 
 ```bash

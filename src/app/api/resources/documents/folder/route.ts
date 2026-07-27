@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { DocumentModel } from '@/database/models/document'
+import { DocumentModel } from '@pure/database/models/document'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const schema = z.object({

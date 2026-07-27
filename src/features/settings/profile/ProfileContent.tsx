@@ -4,7 +4,7 @@ import Link from '@/utils/link'
 import { useRouter } from '@/utils/navigation'
 import { type ReactNode, useState } from 'react'
 
-import { type UserWithoutPassword } from '@/database/schemas'
+import { type UserWithoutPassword } from '@pure/database/schemas'
 import { signOut } from '@/libs/better-auth/client'
 
 type DateKeys = 'accessedAt' | 'banExpires' | 'createdAt' | 'emailVerifiedAt' | 'lastActiveAt' | 'updatedAt'

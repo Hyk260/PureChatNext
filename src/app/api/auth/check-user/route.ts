@@ -1,9 +1,9 @@
 import { and, eq } from 'drizzle-orm'
 import { type NextRequest, NextResponse } from 'next/server'
 
-import { account } from '@/database/schemas/betterAuth'
-import { users } from '@/database/schemas/user'
-import { serverDB } from '@/database/core/db-adaptor'
+import { account } from '@pure/database/schemas/betterAuth'
+import { users } from '@pure/database/schemas/user'
+import { serverDB } from '@pure/database/core/db-adaptor'
 
 export interface CheckUserResponseData {
   emailVerified?: boolean

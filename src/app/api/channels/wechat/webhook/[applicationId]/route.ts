@@ -1,7 +1,7 @@
 import { waitUntil } from '@vercel/functions'
 import { type NextRequest, NextResponse } from 'next/server'
 
-import { ChannelBindingModel, WECHAT_PLATFORM } from '@/database/models/channelBinding'
+import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { getOrCreateWechatChat } from '@/libs/channels/wechat/chatBot'
 import { decryptCredentials } from '@/libs/channels/wechat/encrypt'
 import { authorizeWechatWebhook } from '@/libs/channels/wechat/webhookAuth'

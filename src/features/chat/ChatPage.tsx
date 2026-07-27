@@ -24,7 +24,7 @@ import ChatMessagesSkeleton from '@/features/chat/ChatMessagesSkeleton'
 import ParamsPanel from '@/features/chat/ParamsPanel'
 import TopicSidebar from '@/features/chat/TopicSidebar'
 import WideScreenContainer from '@/features/chat/WideScreenContainer'
-import { withMessageText } from '@/features/chat/messageText'
+import { getMessageText, withMessageText } from '@/features/chat/messageText'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { DEFAULT_CHAT_LLM_PARAMS, type ChatLlmParams, type LocalChatTopic } from '@/features/chat/types'
 import { fetchAgent } from '@/features/home/agentApi'
@@ -347,6 +347,33 @@ const ChatView = memo<ChatViewProps>(
       stop()
     }, [stop])
 
+    const agents = useAgentsStore((s) => s.agents)
+    const agentMeta = useMemo(
+      () => {
+        const a = agents.find((x) => x.id === agentId)
+        return a
+          ? { avatar: a.avatar, title: a.title }
+          : { avatar: DEFAULT_PURE_AI_META.avatar, title: DEFAULT_PURE_AI_META.title }
+      },
+      [agents, agentId]
+    )
+
+    const handleRegenerate = useCallback(
+      async (id: string) => {
+        const idx = messagesRef.current.findIndex((m) => m.id === id)
+        if (idx < 0) return
+        const prevUser = messagesRef.current
+          .slice(0, idx)
+          .reverse()
+          .find((m) => m.role === 'user')
+        if (!prevUser) return
+        clearError()
+        setMessages((prev) => prev.filter((m) => m.id !== id))
+        await sendMessage({ text: getMessageText(prevUser), messageId: prevUser.id }, { body: requestBody })
+      },
+      [clearError, requestBody, sendMessage, setMessages]
+    )
+
     useLayoutEffect(() => {
       onBindActions({ send: handleSend, stop: handleStop })
     }, [handleSend, handleStop, onBindActions])
@@ -354,11 +381,13 @@ const ChatView = memo<ChatViewProps>(
     return (
       <>
         <ChatMessages
+          agentMeta={agentMeta}
           disabled={isBusy}
           isStreaming={isStreaming}
           messages={messages}
           onDelete={handleDelete}
           onEdit={handleEdit}
+          onRegenerate={handleRegenerate}
         />
         {error ? (
           <Typography.Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Typography.Text>

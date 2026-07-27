@@ -18,8 +18,6 @@ const log = debug('redis:debug')
 const REDIS_CONNECT_TIMEOUT_MS = 10_000
 const REDIS_COMMAND_TIMEOUT_MS = 10_000
 
-type IORedisSetWithArgs<TResult> = (key: RedisKey, value: RedisValue, ...args: Array<string | number>) => TResult
-
 export class IoRedisRedisProvider implements BaseRedisProvider {
   private client: Redis | null = null
 
@@ -64,9 +62,8 @@ export class IoRedisRedisProvider implements BaseRedisProvider {
 
   async set(key: RedisKey, value: RedisValue, options?: SetOptions): Promise<RedisSetResult> {
     const args = buildIORedisSetArgs(options)
-    const set = this.ensureClient().set as unknown as IORedisSetWithArgs<Promise<RedisSetResult>>
 
-    return set(key, value, ...args)
+    return this.ensureClient().call('set', key, value, ...args) as Promise<RedisSetResult>
   }
 
   async setex(key: RedisKey, seconds: number, value: RedisValue): Promise<'OK'> {
@@ -140,8 +137,7 @@ export class IoRedisRedisProvider implements BaseRedisProvider {
       incr: (key) => (raw.incr(key), pipe),
       set: (key, value, options?) => {
         const args = buildIORedisSetArgs(options)
-        const set = raw.set as unknown as IORedisSetWithArgs<unknown>
-        set(key, value, ...args)
+        raw.call('set', key, value, ...args)
         return pipe
       },
       setex: (key, seconds, value) => (raw.setex(key, seconds, value), pipe),

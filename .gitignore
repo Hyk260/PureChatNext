@@ -109,3 +109,6 @@ CLAUDE.*.md
 .firecrawl/
 
 .worktrees/
+
+# Private notes / personal reference (contains credentials, subscription tokens, etc.)
+docs/private/

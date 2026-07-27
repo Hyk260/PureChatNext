@@ -1,9 +1,10 @@
 import { streamText } from 'ai'
-import 'dotenv/config'
+
+import './lib/load-env'
 
 async function main() {
   const result = streamText({
-    model: 'openai/gpt-4.1',
+    model: 'openai/gpt-5.5',
     prompt: '创造一个新的节日，并描述它的传统。',
   })
 
@@ -11,7 +12,6 @@ async function main() {
     process.stdout.write(textPart)
   }
 
-  console.log()
   console.log('Token usage:', await result.usage)
   console.log('Finish reason:', await result.finishReason)
 }

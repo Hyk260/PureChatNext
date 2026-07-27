@@ -27,6 +27,7 @@ const createMockedProvider = async () => {
 
   const createPipelineMock = () => {
     const pipeMocks = {
+      call: vi.fn(),
       incr: vi.fn(),
       expire: vi.fn(),
       get: vi.fn(),
@@ -55,6 +56,7 @@ const createMockedProvider = async () => {
     connect: vi.fn().mockResolvedValue(undefined),
     ping: vi.fn().mockResolvedValue('PONG'),
     quit: vi.fn().mockResolvedValue(undefined),
+    call: vi.fn().mockResolvedValue('OK'),
     get: vi.fn().mockResolvedValue('mock-value'),
     set: vi.fn().mockResolvedValue('OK'),
     setex: vi.fn().mockResolvedValue('OK'),
@@ -86,6 +88,7 @@ const createMockedProvider = async () => {
       connect = mocks.connect
       ping = mocks.ping
       quit = mocks.quit
+      call = mocks.call
       get = mocks.get
       set = mocks.set
       setex = mocks.setex
@@ -185,7 +188,7 @@ describe('mocked', () => {
     const { mocks, provider } = await createMockedProvider()
     await provider.set('key', 'value', { ex: 10, nx: true, get: true })
 
-    expect(mocks.set).toHaveBeenCalledWith('key', 'value', 'EX', 10, 'NX', 'GET')
+    expect(mocks.call).toHaveBeenCalledWith('set', 'key', 'value', 'EX', 10, 'NX', 'GET')
     await provider.disconnect()
   })
 
@@ -234,7 +237,7 @@ describe('mocked', () => {
     pipe.set('key', 'value', { ex: 60, nx: true })
     await pipe.exec()
 
-    expect(pipeMock.set).toHaveBeenCalledWith('key', 'value', 'EX', 60, 'NX')
+    expect(pipeMock.call).toHaveBeenCalledWith('set', 'key', 'value', 'EX', 60, 'NX')
     await provider.disconnect()
   })
 

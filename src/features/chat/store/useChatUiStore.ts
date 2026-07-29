@@ -3,7 +3,13 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { DEFAULT_CHAT_LLM_PARAMS, type ChatLlmParams } from '@/features/chat/types'
+import {
+  DEFAULT_CHAT_LLM_PARAMS,
+  type ChatLlmParams,
+  type TopicGroupMode,
+  type TopicPageSize,
+  type TopicSortBy,
+} from '@/features/chat/types'
 
 type ChatUiState = {
   leftCollapsed: boolean
@@ -12,6 +18,10 @@ type ChatUiState = {
   wideScreen: boolean
   /** agentId → params */
   paramsByAgent: Record<string, ChatLlmParams>
+  /** agentId → topic grouping preference */
+  topicGroupModeByAgent: Record<string, TopicGroupMode>
+  topicPageSize: TopicPageSize
+  topicSortBy: TopicSortBy
   toggleLeftCollapsed: () => void
   toggleRightCollapsed: () => void
   toggleWideScreen: (value?: boolean) => void
@@ -19,6 +29,9 @@ type ChatUiState = {
   setRightCollapsed: (v: boolean) => void
   getParams: (agentId: string) => ChatLlmParams
   setParams: (agentId: string, patch: Partial<ChatLlmParams>) => void
+  setTopicGroupMode: (agentId: string, mode: TopicGroupMode) => void
+  setTopicPageSize: (pageSize: TopicPageSize) => void
+  setTopicSortBy: (sortBy: TopicSortBy) => void
 }
 
 export const useChatUiStore = create<ChatUiState>()(
@@ -28,6 +41,9 @@ export const useChatUiStore = create<ChatUiState>()(
       rightCollapsed: false,
       wideScreen: false,
       paramsByAgent: {},
+      topicGroupModeByAgent: {},
+      topicPageSize: 40,
+      topicSortBy: 'updatedAt',
       toggleLeftCollapsed: () => set((s) => ({ leftCollapsed: !s.leftCollapsed })),
       toggleRightCollapsed: () => set((s) => ({ rightCollapsed: !s.rightCollapsed })),
       toggleWideScreen: (value) =>
@@ -47,7 +63,13 @@ export const useChatUiStore = create<ChatUiState>()(
             },
           },
         })),
+      setTopicGroupMode: (agentId, mode) =>
+        set((s) => ({
+          topicGroupModeByAgent: { ...s.topicGroupModeByAgent, [agentId]: mode },
+        })),
+      setTopicPageSize: (topicPageSize) => set({ topicPageSize }),
+      setTopicSortBy: (topicSortBy) => set({ topicSortBy }),
     }),
-    { name: 'purechat:chat:v2:ui', version: 1 }
+    { name: 'purechat:chat:v2:ui', version: 3 }
   )
 )

@@ -2,7 +2,6 @@
 
 > 状态：已锁定（V1）  
 > 受众：PureChatNext 实现侧  
-> 对照基线：LobeHub 开源仓（本仓库）架构与挂点  
 > 本期范围：**仅需求与规格**；业务代码在 PureChatNext 项目落地
 
 ---
@@ -13,7 +12,7 @@ PureChatNext 需要一套面向注册用户的 **免费积分制度**：用户�
 
 V1 目标：
 
-1. 新增品牌服务商 **PureHub**（对照 LobeHub Cloud 的 `lobehub`），上游为 **Vercel AI Gateway**。
+1. 新增品牌服务商 **PureHub**，上游为 **Vercel AI Gateway**。
 2. 在 `packages/model-bank` 补齐 / 核对 **purehub / openai / deepseek** 模型价格。
 3. 使用 PureHub 模型成功产生 usage 后，按定价扣除用户积分。
 4. 每月发放 **500,000** 免费积分；**暂不开发充值 / 订阅付费**。
@@ -25,7 +24,7 @@ V1 目标：
 
 | 术语 | 定义 |
 | --- | --- |
-| **Credits（积分）** | 产品统一计量单位。换算：`1 USD = 1_000_000 credits`（对齐 LobeHub `CREDITS_PER_DOLLAR`）。 |
+| **Credits（积分）** | 产品统一计量单位。换算：`1 USD = 1_000_000 credits`。 |
 | **PureHub** | PureChat 官方品牌服务商，`id = purehub`。服务端持有上游 Key，终端用户不可见、不可改。 |
 | **Vercel AI Gateway** | PureHub V1 上游。Base URL：`https://ai-gateway.vercel.sh/v1`，OpenAI Chat Completions 兼容。 |
 | **计费周期（period）** | 自然月，标识为 `YYYY-MM`（时区见 §6.1）。 |
@@ -56,10 +55,12 @@ V1 目标：
 | 用户免费额度 | **500,000 credits / 自然月**，到期清零不累积 |
 | 充值 / 订阅付费 | **V1 不做** |
 | 积分换算 | `1 USD = 1_000_000 credits`（约 **$0.50 / 用户 / 月**） |
-| 品牌服务商 | `purehub`，对照 `lobehub` |
+| 品牌服务商 | `purehub` |
 | model-bank 本期 | `purehub` 新建；`openai` / `deepseek` 核对可用 |
 | 第三方服务商 | 架构预留，V1 不实现内置第三方品牌包 |
 | 重置时区 | **Asia/Shanghai（UTC+8）每月 1 日 00:00**（实现时写死，禁止混用 UTC） |
+| Gateway 档位 | **付费 Credits**（保留 §6.3 全量模型）；详见 [purehub-gateway-ops.md](./purehub-gateway-ops.md) |
+| 微信/QQ 渠道 | V1 **不扣**用户免费积分 |
 
 ---
 
@@ -104,7 +105,7 @@ flowchart TB
 
 ## 6. PureHub 服务商规格
 
-### 6.1 Provider 元数据（对照 LobeHub）
+### 6.1 Provider 元数据
 
 | 字段 | 值 |
 | --- | --- |
@@ -118,8 +119,6 @@ flowchart TB
 | `description` | PureChat 官方通过 PureHub 接入模型，用量以 Credits 计量 |
 | Runtime | OpenAI Compatible → Gateway `baseURL` |
 | 鉴权 | 服务端环境变量 `AI_GATEWAY_API_KEY`（或 `PUREHUB_API_KEY` 别名），**不对终端用户暴露** |
-
-对照 LobeHub 空壳：`packages/model-bank/src/modelProviders/lobehub.ts`。
 
 ### 6.2 模型 ID 约定
 
@@ -158,7 +157,7 @@ curl -s "https://ai-gateway.vercel.sh/v1/models" \
 - 核对上表 Gateway id 是否存在；不存在则替换为目录中最接近的正式 id，并同步更新映射表与文档。
 - 若某模型不在 Gateway Free Tier，属 **运营商成本** 问题，与用户 50 万积分无关；可降级替换为 Free Tier 目录模型，但须保持「10 个、三档、多厂商」结构。
 
-**套餐卡展示（`planCardModels`，对齐 LobeHub 风格）：**
+**套餐卡展示（`planCardModels`）：**
 
 ```ts
 ['deepseek-v4-pro', 'claude-sonnet-4-6', 'gemini-3.1-pro-preview', 'gpt-5.5']
@@ -194,7 +193,7 @@ curl -s "https://ai-gateway.vercel.sh/v1/models" \
 | `openai` | 已有 pricing；实现时核对最新官方价，**缺价模型不得用于展示成本 / 不得作为 PureHub 映射源** |
 | `deepseek` | 已有 **CNY** 官方价；保留 CNY；`computeChatCost` 经 `USD_TO_CNY` 换算为 USD 再乘 credits |
 
-### 7.2 Pricing Schema（沿用 LobeHub）
+### 7.2 Pricing Schema
 
 对照：`packages/model-bank/src/types/aiModel.ts`
 
@@ -221,7 +220,7 @@ totalCostUSD = computeChatCost(pricing, usage).totalCost   // 已换算为 USD
 totalCredits = round(totalCostUSD * CREDITS_PER_DOLLAR)     // CREDITS_PER_DOLLAR = 1_000_000
 ```
 
-对齐：`packages/model-runtime/src/core/usageConverters/utils/computeChatCost.ts`、`packages/const/src/currency.ts`。
+相关实现：`packages/const/src/currency.ts`。
 
 ### 7.4 PureHub 定价初稿参考表（USD / 百万 tokens）
 
@@ -236,9 +235,9 @@ totalCredits = round(totalCostUSD * CREDITS_PER_DOLLAR)     // CREDITS_PER_DOLLA
 | `claude-haiku-4-5` | 1 | 5 | 0.1 | 轻量 |
 | `gemini-3.1-pro-preview` | 2 | 12 | 0.2 | 对齐 gemini-3.1-pro 量级 |
 | `gemini-3-flash` | 0.5 | 3 | 0.05 | 轻量 |
-| `deepseek-v4-pro` | ≈ 0.42 | ≈ 0.84 | ≈ 0.0035 | 由 CNY 3/6/0.025 ÷ 7.12 换算近似；**PureHub 卡片应直接写 Gateway USD 价** |
-| `deepseek-v4-flash` | ≈ 0.14 | ≈ 0.28 | ≈ 0.0028 | 由 CNY 1/2/0.02 ÷ 7.12 换算近似 |
-| `glm-5.2` | 以 Gateway 为准 | 以 Gateway 为准 | — | 国产价变动快，禁止硬编码过期 CNY 后二次换算到 PureHub |
+| `deepseek-v4-pro` | 0.435 | 0.87 | 0.0036 | Gateway 实测（2026-07-27） |
+| `deepseek-v4-flash` | 0.14 | 0.28 | 0.028 | Gateway 实测 |
+| `glm-5.2` | 1.4 | 4.4 | 0.26 | Gateway 实测 |
 
 ### 7.5 openai / deepseek（自配服务商）定价要求
 
@@ -380,24 +379,28 @@ V1 **不实现**新的内置第三方品牌包，但实现 PureHub 时必须遵�
 
 ---
 
-## 10. 实现映射表（LobeHub → PureChatNext）
+## 10. PureChatNext 实现映射表
 
-| 能力 | LobeHub 对照路径 | PureChatNext 建议 |
-| --- | --- | --- |
-| Provider 卡片 | `packages/model-bank/src/modelProviders/lobehub.ts` | `modelProviders/purehub.ts` |
-| 模型 + 定价 | `packages/model-bank/src/aiModels/*.ts` | `aiModels/purehub.ts` + 核对 `openai.ts` / `deepseek.ts` |
-| Provider 枚举 | `packages/model-bank/src/const/modelProvider.ts` | 增加 `PureHub = 'purehub'` |
-| 商业模型加载 | `packages/business/model-bank/src/model-config.ts` | PureHub 可用静态 model-bank，或同等 loader |
-| Runtime | `packages/model-runtime/src/providers/lobehub/` | `providers/purehub/`（OpenAI Compatible + id 映射） |
-| Runtime 注册 | `packages/model-runtime/src/runtimeMap.ts` | 注册 `purehub` |
-| 扣费钩子 | `packages/business-server/src/model-runtime.ts` → `getBusinessModelRuntimeHooks` | 实现真正的 before/onFinal |
-| 成本计算 | `packages/model-runtime/.../computeChatCost.ts` | 直接复用 |
-| 货币常量 | `packages/const/src/currency.ts` | 保持 `CREDITS_PER_DOLLAR = 1_000_000` |
-| 错误类型 | `packages/types/src/fetch.ts` | `FreePlanLimit` 等 |
-| 积分 UI stub | `src/business/client/BusinessSettingPages/Credits.tsx` | 实现只读余额页（无购买） |
-| i18n | `packages/locales/src/default/subscription.ts` | 裁剪充值文案，保留额度 / 重置 |
-| Env | `packages/env/src/llm.ts` | Gateway / PureHub 相关键 |
-| Server 组装 | `apps/server/src/modules/ModelRuntime/index.ts` | 合并 hooks |
+> 模型目录与定价统一放在 [`packages/model-bank`](../../packages/model-bank)；**不**移植完整 `model-runtime` / `business-server`。本仓 Runtime 仍为 AI SDK 直连。
+>
+> 运营商决策与模型校验见 [purehub-gateway-ops.md](./purehub-gateway-ops.md)。
+
+| 能力 | PureChatNext 落地路径 |
+| --- | --- |
+| Provider 卡片 | [`packages/model-bank/src/modelProviders/`](../../packages/model-bank/src/modelProviders/) |
+| 模型 + 定价 | [`packages/model-bank/src/aiModels/`](../../packages/model-bank/src/aiModels/)（purehub USD / openai USD / deepseek CNY） |
+| Provider 枚举 | [`packages/model-bank/src/const/modelProvider.ts`](../../packages/model-bank/src/const/modelProvider.ts) |
+| 成本计算 | [`packages/model-bank/src/computeChatCost.ts`](../../packages/model-bank/src/computeChatCost.ts) |
+| 货币常量 | [`packages/const/src/currency.ts`](../../packages/const/src/currency.ts) |
+| Runtime（OpenAI Compatible → Gateway） | [`src/libs/ai-providers/resolveClient.ts`](../../src/libs/ai-providers/resolveClient.ts) + chat 路由内 `purehub` 分支 |
+| beforeChat / onChatFinal | [`src/app/api/chat/route.ts`](../../src/app/api/chat/route.ts) |
+| CreditsLedger | [`packages/database/src/models/credits.ts`](../../packages/database/src/models/credits.ts) |
+| Schema | [`packages/database/src/schemas/credits.ts`](../../packages/database/src/schemas/credits.ts) |
+| Env | [`packages/env/src/llm.ts`](../../packages/env/src/llm.ts) |
+| 错误类型 | [`packages/types/src/fetch.ts`](../../packages/types/src/fetch.ts) + [`src/libs/errors.ts`](../../src/libs/errors.ts) |
+| 积分 UI（只读，无购买） | `/settings/credits` |
+| Provider UI | settings provider `purehub`（无 API Key 表单） |
+| 渠道 Agent | **V1 不扣**用户免费积分 |
 
 ---
 
@@ -461,16 +464,17 @@ V1 **不实现**新的内置第三方品牌包，但实现 PureHub 时必须遵�
 - Workspace 共享池与成员预算
 - 图片 / 视频计费（chargeBefore/After）
 - 推荐奖励积分
-- PureHub 模型远程配置下发（对照 LobeHub `loadLobeHubModels`）
+- PureHub 模型远程配置下发
 
 ### 12.4 参考链接
 
 - Vercel AI Gateway：https://vercel.com/docs/ai-gateway
 - Gateway 定价：https://vercel.com/docs/ai-gateway/pricing
 - Gateway Models：https://vercel.com/ai-gateway/models
+- 运营商决策与校验：[purehub-gateway-ops.md](./purehub-gateway-ops.md)
 - 本仓货币常量：`packages/const/src/currency.ts`
-- 本仓成本计算：`packages/model-runtime/src/core/usageConverters/utils/computeChatCost.ts`
-- 本仓 LobeHub Provider：`packages/model-bank/src/modelProviders/lobehub.ts`
+- 本仓成本计算：`packages/model-bank/src/computeChatCost.ts`
+- 本仓模型 + 定价：`packages/model-bank/src/aiModels/`
 
 ---
 
@@ -479,3 +483,5 @@ V1 **不实现**新的内置第三方品牌包，但实现 PureHub 时必须遵�
 | 日期 | 版本 | 说明 |
 | --- | --- | --- |
 | 2026-07-27 | v1.0 | 初稿锁定：Gateway 上游、50 万月度积分、10 模型、不做充值 |
+| 2026-07-27 | v1.1 | 锁定付费 Gateway；校验 10 模型；§10 改为本仓轻量映射 |
+| 2026-07-27 | v1.2 | 模型目录与定价迁入 `packages/model-bank`（purehub / openai / deepseek） |

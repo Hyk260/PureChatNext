@@ -1,7 +1,7 @@
 'use client'
 
-import { Avatar, Flex, Typography } from 'antd'
-import { ActionIcon } from '@pure/ui'
+import { Avatar, Flex } from 'antd'
+import { ActionIcon, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { PanelLeftOpen } from 'lucide-react'
 import Link from '@/utils/link'
@@ -54,9 +54,9 @@ const CommunityHeader = memo(() => {
         {sidebarCollapsed ? (
           <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
         ) : null}
-        <Typography.Text ellipsis strong style={{ fontSize: 16 }}>
+        <Text ellipsis strong style={{ fontSize: 16 }}>
           {title}
-        </Typography.Text>
+        </Text>
       </Flex>
 
       {/* <Flex align='center' gap={8}>

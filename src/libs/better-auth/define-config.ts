@@ -279,9 +279,19 @@ export function defineConfig() {
             //   id: '',
             // }
           },
-          // 写入后：导入 IM 账号（含 GitHub 等 OAuth 首次登录创建的用户）
+          // 写入后：懒发放积分由 CreditsModel.ensurePeriod 在首次 PureHub 请求时完成；
+          // 此处保留 hook 供后续扩展（如显式 grant）。
           after: async (user) => {
             log('user create after: %O', user)
+            try {
+              const { CreditsModel } = await import('@pure/database/models/credits')
+              const { getShanghaiBillingPeriod } = await import('@/server/purehub/period')
+              if (user?.id) {
+                await new CreditsModel().ensurePeriod(user.id, getShanghaiBillingPeriod())
+              }
+            } catch (error) {
+              log('credits grant on signup failed: %O', error)
+            }
           },
         },
       },

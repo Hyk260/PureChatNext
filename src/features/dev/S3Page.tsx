@@ -20,6 +20,7 @@ import {
   Upload,
   X,
 } from 'lucide-react'
+import { formatDateTime, formatSize } from '@pure/utils/client'
 
 // —— Types ——
 
@@ -56,18 +57,6 @@ type Toast = {
 }
 
 // —— Helpers ——
-
-const formatSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B'
-  const units = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  return `${(bytes / 1024 ** i).toFixed(i > 0 ? 1 : 0)} ${units[i]}`
-}
-
-const formatDate = (dateStr: string): string => {
-  const d = new Date(dateStr)
-  return d.toLocaleString()
-}
 
 const IMAGE_EXTENSIONS = new Set(['avif', 'bmp', 'gif', 'jpeg', 'jpg', 'png', 'svg', 'webp'])
 
@@ -946,7 +935,7 @@ export default function S3TestPage() {
                             {formatSize(file.Size)}
                           </td>
                           <td className='hidden whitespace-nowrap px-4 py-2.5 text-xs text-slate-500 lg:table-cell'>
-                            {formatDate(file.LastModified)}
+                            {formatDateTime(file.LastModified)}
                           </td>
                           <td className='px-4 py-2.5 text-right'>
                             <div className='flex items-center justify-end gap-1'>
@@ -1104,7 +1093,7 @@ function ListResult({ data }: { data: FileInfo[] }) {
                   <td className='max-w-[300px] truncate px-3 py-2 font-mono text-xs text-slate-900'>{file.Key}</td>
                   <td className='whitespace-nowrap px-3 py-2 text-xs text-slate-500'>{formatSize(file.Size)}</td>
                   <td className='hidden whitespace-nowrap px-3 py-2 text-xs text-slate-500 sm:table-cell'>
-                    {formatDate(file.LastModified)}
+                    {formatDateTime(file.LastModified)}
                   </td>
                 </tr>
               ))}

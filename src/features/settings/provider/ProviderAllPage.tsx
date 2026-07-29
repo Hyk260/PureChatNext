@@ -1,6 +1,7 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
+import { Flex } from 'antd'
+import { Text } from '@pure/ui'
 import { createStaticStyles } from 'antd-style'
 import { memo, useMemo } from 'react'
 
@@ -36,10 +37,10 @@ const ProviderSection = memo<{
 }>(({ ids, title }) => (
   <Flex vertical gap={16}>
     <Flex align='center' gap={8}>
-      <Typography.Text style={{ fontSize: 18, fontWeight: 600 }}>{title}</Typography.Text>
-      <Typography.Text type='secondary' style={{ fontSize: 14 }}>
+      <Text style={{ fontSize: 18, fontWeight: 600 }}>{title}</Text>
+      <Text type='secondary' style={{ fontSize: 14 }}>
         {ids.length}
-      </Typography.Text>
+      </Text>
     </Flex>
     {ids.length > 0 ? (
       <div className={styles.grid}>
@@ -48,7 +49,7 @@ const ProviderSection = memo<{
         ))}
       </div>
     ) : (
-      <Typography.Text type='secondary'>暂无服务商</Typography.Text>
+      <Text type='secondary'>暂无服务商</Text>
     )}
   </Flex>
 ))

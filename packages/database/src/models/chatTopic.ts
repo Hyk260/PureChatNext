@@ -6,6 +6,14 @@ import { type ChatDatabase } from '../type'
 
 const DEFAULT_TITLE = '新话题'
 
+export type ChatTopicUpdate = {
+  favorite?: boolean
+  projectName?: string | null
+  title?: string
+}
+
+export type TopicDeleteScope = 'all' | 'unfavorited'
+
 export class ChatTopicModel {
   private readonly db: ChatDatabase
   private readonly userId: string
@@ -41,9 +49,13 @@ export class ChatTopicModel {
   }
 
   updateTitle = async (id: string, title: string) => {
+    return this.update(id, { title })
+  }
+
+  update = async (id: string, patch: ChatTopicUpdate) => {
     const [item] = await this.db
       .update(chatTopics)
-      .set({ title, updatedAt: new Date() })
+      .set({ ...patch, updatedAt: new Date() })
       .where(and(eq(chatTopics.id, id), this.ownership()))
       .returning()
     return item
@@ -51,6 +63,16 @@ export class ChatTopicModel {
 
   delete = async (id: string) => {
     return this.db.delete(chatTopics).where(and(eq(chatTopics.id, id), this.ownership()))
+  }
+
+  deleteByAgent = async (agentId: string, scope: TopicDeleteScope) => {
+    const filters = [this.ownership(), eq(chatTopics.agentId, agentId)]
+    if (scope === 'unfavorited') filters.push(eq(chatTopics.favorite, false))
+
+    return this.db
+      .delete(chatTopics)
+      .where(and(...filters))
+      .returning({ id: chatTopics.id })
   }
 
   findById = async (id: string) => {

@@ -9,6 +9,11 @@ const createSchema = z.object({
   title: z.string().min(1).optional(),
 })
 
+const deleteSchema = z.object({
+  agentId: z.string().min(1),
+  scope: z.enum(['all', 'unfavorited']),
+})
+
 export const GET = withAuth(async (request, { userId }) => {
   const agentId = request.nextUrl.searchParams.get('agentId')
   if (!agentId) return jsonError('agentId is required')
@@ -24,4 +29,15 @@ export const POST = withAuth(async (request, { userId }) => {
 
   const item = await new ChatTopicModel(userId).create(parsed.data)
   return NextResponse.json(item)
+})
+
+export const DELETE = withAuth(async (request, { userId }) => {
+  const parsed = deleteSchema.safeParse({
+    agentId: request.nextUrl.searchParams.get('agentId'),
+    scope: request.nextUrl.searchParams.get('scope'),
+  })
+  if (!parsed.success) return jsonError(parsed.error.message)
+
+  const deleted = await new ChatTopicModel(userId).deleteByAgent(parsed.data.agentId, parsed.data.scope)
+  return NextResponse.json({ deletedIds: deleted.map((item) => item.id) })
 })

@@ -32,7 +32,7 @@ vi.mock('@pure/database/models/chatTopic', () => ({
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 
-import { GET, POST } from './route'
+import { DELETE, GET, POST } from './route'
 
 describe('/api/chat/topics', () => {
   beforeEach(() => {
@@ -90,5 +90,31 @@ describe('/api/chat/topics', () => {
 
     expect(response.status).toBe(200)
     expect(payload).toEqual(topics)
+  })
+
+  it('bulk deletes unfavorited topics for the authenticated user and agent', async () => {
+    vi.mocked(getAuthenticatedUserId).mockResolvedValue('user-1')
+    const deleteByAgent = vi.fn().mockResolvedValue([{ id: 'topic-1' }, { id: 'topic-2' }])
+    vi.mocked(ChatTopicModel).mockImplementation(() => ({ deleteByAgent }) as unknown as ChatTopicModel)
+
+    const response = await DELETE(
+      new NextRequest('http://localhost/api/chat/topics?agentId=agent-1&scope=unfavorited', {
+        method: 'DELETE',
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(deleteByAgent).toHaveBeenCalledWith('agent-1', 'unfavorited')
+    await expect(response.json()).resolves.toEqual({ deletedIds: ['topic-1', 'topic-2'] })
+  })
+
+  it('rejects an invalid bulk delete scope', async () => {
+    vi.mocked(getAuthenticatedUserId).mockResolvedValue('user-1')
+
+    const response = await DELETE(
+      new NextRequest('http://localhost/api/chat/topics?agentId=agent-1&scope=invalid', { method: 'DELETE' })
+    )
+
+    expect(response.status).toBe(400)
   })
 })

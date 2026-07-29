@@ -17,6 +17,8 @@ import {
 
 const BAR_SIZE = 6
 const BAR_GAP = 2
+/** 亚像素取整常导致 scrollHeight 比 clientHeight 大 1px，用阈值避免误显滚动条 */
+const OVERFLOW_THRESHOLD = 1
 
 const styles = createStaticStyles(({ css }) => ({
   root: css`
@@ -42,7 +44,7 @@ const styles = createStaticStyles(({ css }) => ({
     }
   `,
   view: css`
-    min-height: 100%;
+    box-sizing: border-box;
   `,
   bar: css`
     position: absolute;
@@ -176,21 +178,22 @@ const Scrollbar = memo(
         if (!wrap) return
 
         const { clientHeight, clientWidth, scrollHeight, scrollWidth, scrollTop, scrollLeft } = wrap
-        const vRatio = clientHeight / scrollHeight || 1
-        const hRatio = clientWidth / scrollWidth || 1
+        const vOverflow = scrollHeight - clientHeight
+        const hOverflow = scrollWidth - clientWidth
+        const vVisible = vOverflow > OVERFLOW_THRESHOLD
+        const hVisible = hOverflow > OVERFLOW_THRESHOLD
+        const vRatio = vVisible ? clientHeight / scrollHeight : 1
+        const hRatio = hVisible ? clientWidth / scrollWidth : 1
 
         const vTrack = Math.max(clientHeight - BAR_GAP * 2, 0)
         const hTrack = Math.max(clientWidth - BAR_GAP * 2, 0)
-        const vSize = Math.max(vRatio * vTrack, vRatio < 1 ? minSize : 0)
-        const hSize = Math.max(hRatio * hTrack, hRatio < 1 ? minSize : 0)
+        const vSize = Math.max(vRatio * vTrack, vVisible ? minSize : 0)
+        const hSize = Math.max(hRatio * hTrack, hVisible ? minSize : 0)
 
-        const vMax = Math.max(scrollHeight - clientHeight, 0)
-        const hMax = Math.max(scrollWidth - clientWidth, 0)
-        const vMove = vMax > 0 ? (scrollTop / vMax) * Math.max(vTrack - vSize, 0) : 0
-        const hMove = hMax > 0 ? (scrollLeft / hMax) * Math.max(hTrack - hSize, 0) : 0
-
-        const vVisible = vRatio < 1
-        const hVisible = hRatio < 1
+        const vMax = Math.max(vOverflow, 0)
+        const hMax = Math.max(hOverflow, 0)
+        const vMove = vVisible ? (scrollTop / vMax) * Math.max(vTrack - vSize, 0) : 0
+        const hMove = hVisible ? (scrollLeft / hMax) * Math.max(hTrack - hSize, 0) : 0
 
         const last = lastRef.current
         if (last.v.size !== vSize || last.v.move !== vMove || last.v.visible !== vVisible) {

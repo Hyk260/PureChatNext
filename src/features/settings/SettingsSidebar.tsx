@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
-import { Accordion, AccordionItem, ScrollShadow } from '@pure/ui'
+import { Flex } from 'antd'
+import { Accordion, AccordionItem, ScrollShadow, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import Link from '@/utils/link'
 import { usePathname } from '@/utils/navigation'
@@ -78,9 +78,9 @@ const SettingsSidebar = memo(() => {
                 paddingBlock={4}
                 paddingInline='8px 4px'
                 title={
-                  <Typography.Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+                  <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
                     {group.title}
-                  </Typography.Text>
+                  </Text>
                 }
               >
                 <Flex vertical gap={1} style={{ paddingBlock: 1 }}>

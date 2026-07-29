@@ -20,10 +20,10 @@ const BUILTIN_FALLBACK: Record<SupportedProviderId, Array<{ displayName: string;
     { displayName: 'DeepSeek V4 Pro', id: 'deepseek-v4-pro' },
   ],
   openai: [
-    { displayName: 'GPT-4o', id: 'gpt-4o' },
-    { displayName: 'GPT-4o Mini', id: 'gpt-4o-mini' },
-    { displayName: 'OpenAI o1', id: 'o1' },
-    { displayName: 'OpenAI o3-mini', id: 'o3-mini' },
+    { displayName: 'GPT-5.6 Sol', id: 'gpt-5.6-sol' },
+    { displayName: 'GPT-5.5', id: 'gpt-5.5' },
+    { displayName: 'GPT-5.4 mini', id: 'gpt-5.4-mini' },
+    { displayName: 'GPT-5.4 nano', id: 'gpt-5.4-nano' },
   ],
 }
 

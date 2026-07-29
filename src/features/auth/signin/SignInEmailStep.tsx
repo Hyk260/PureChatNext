@@ -1,21 +1,9 @@
 'use client'
 
-import {
-  Alert,
-  Flex,
-  Typography,
-  Badge,
-  Button,
-  Divider,
-  Form,
-  Input,
-  Skeleton,
-  type FormInstance,
-  type InputRef,
-} from 'antd'
+import { Alert, Flex, Badge, Button, Divider, Form, Input, Skeleton, type FormInstance, type InputRef } from 'antd'
 import { ChevronRight, Mail } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Icon } from '@pure/ui'
+import { Icon, Text } from '@pure/ui'
 import AuthIcons from '@/components/AuthIcons'
 import { BRANDING_NAME } from '@/const/branding'
 import AuthAgreement from '@/features/AuthAgreement'
@@ -104,9 +92,9 @@ export const SignInEmailStep = ({
 
   const divider = (
     <Divider>
-      <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+      <Text type='secondary' style={{ fontSize: 12 }}>
         或继续使用
-      </Typography.Text>
+      </Text>
     </Divider>
   )
 

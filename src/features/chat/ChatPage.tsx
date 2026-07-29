@@ -1,14 +1,24 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
+import { Flex } from 'antd'
+import { Text } from '@pure/ui'
 import { useChat } from '@ai-sdk/react'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { DefaultChatTransport, type UIMessage } from 'ai'
 import { useRouter, useSearchParams } from '@/utils/navigation'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 
-import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
-import { createTopic, deleteTopic, fetchMessages, fetchTopics, putMessages, renameTopic } from '@/features/chat/chatApi'
+import { useApp } from '@/components/AntdStaticMethods'
+import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID, type AgentListItem } from '@/const/home/agents'
+import {
+  createTopic,
+  deleteTopic,
+  deleteTopics as deleteTopicsApi,
+  fetchMessages,
+  fetchTopics,
+  putMessages,
+  updateTopic,
+} from '@/features/chat/chatApi'
 import {
   claimPendingChatText,
   claimPendingTopicSend,
@@ -26,7 +36,13 @@ import TopicSidebar from '@/features/chat/TopicSidebar'
 import WideScreenContainer from '@/features/chat/WideScreenContainer'
 import { getMessageText, withMessageText } from '@/features/chat/messageText'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
-import { DEFAULT_CHAT_LLM_PARAMS, type ChatLlmParams, type LocalChatTopic } from '@/features/chat/types'
+import {
+  DEFAULT_CHAT_LLM_PARAMS,
+  type ChatLlmParams,
+  type LocalChatTopic,
+  type TopicDeleteScope,
+  type TopicUpdate,
+} from '@/features/chat/types'
 import { fetchAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
@@ -82,7 +98,7 @@ const chatTransport = new DefaultChatTransport({
   credentials: 'include',
   headers: (): Record<string, string> => {
     const provider = useHomeStore.getState().selectedProvider
-    if (!isSettingsProviderId(provider)) return {}
+    if (!isSettingsProviderId(provider) || provider === 'purehub') return {}
 
     const apiKey = useProviderConfigStore.getState().configs[provider]?.apiKey.trim() ?? ''
     if (!apiKey) return {}
@@ -113,7 +129,9 @@ const ChatView = memo<ChatViewProps>(
     const selectedProvider = useHomeStore((s) => s.selectedProvider)
     const activeAgent = useHomeStore((s) => s.activeAgent)
     const providerBaseURL = useProviderConfigStore((s) =>
-      isSettingsProviderId(selectedProvider) ? (s.configs[selectedProvider]?.baseURL.trim() ?? '') : ''
+      isSettingsProviderId(selectedProvider) && selectedProvider !== 'purehub'
+        ? (s.configs[selectedProvider]?.baseURL.trim() ?? '')
+        : ''
     )
 
     const chatId = `purechat-${agentId}-${topicId ?? 'draft'}`
@@ -258,6 +276,7 @@ const ChatView = memo<ChatViewProps>(
         if (!topicId) {
           try {
             const topic = await createTopic(agentId, truncateTitle(text))
+            onCacheMessages(topic.id, EMPTY_MESSAGES)
             onTopicsRefresh()
             setPendingTopicSend(text)
             // Must go through the SPA router — raw history.replaceState does not
@@ -271,7 +290,7 @@ const ChatView = memo<ChatViewProps>(
 
         await sendWithBody(text)
       },
-      [agentId, onTopicsRefresh, router, sendWithBody, topicId]
+      [agentId, onCacheMessages, onTopicsRefresh, router, sendWithBody, topicId]
     )
 
     const handleSend = useCallback(
@@ -390,7 +409,7 @@ const ChatView = memo<ChatViewProps>(
           onRegenerate={handleRegenerate}
         />
         {error ? (
-          <Typography.Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Typography.Text>
+          <Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Text>
         ) : null}
       </>
     )
@@ -404,6 +423,7 @@ const ChatPage = memo(() => {
   const isClient = useSyncExternalStore(subscribeNoop, getClientSnapshot, getServerSnapshot)
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { message } = useApp()
 
   const agentFromQuery = searchParams.get('agent')
   const topicFromQuery = searchParams.get('topic')
@@ -426,12 +446,14 @@ const ChatPage = memo(() => {
 
   const upsertLocalAgent = useAgentsStore((s) => s.upsertLocal)
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
+  const agents = useAgentsStore((s) => s.agents)
 
   const paramsByAgent = useChatUiStore((s) => s.paramsByAgent)
   const setParams = useChatUiStore((s) => s.setParams)
   const params: ChatLlmParams = paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS
 
   const [topics, setTopics] = useState<LocalChatTopic[]>([])
+  const [topicsLoadedAgentId, setTopicsLoadedAgentId] = useState<string | null>(null)
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>(EMPTY_MESSAGES)
   // Tracks which topicId the currently-loaded initialMessages belong to.
   // undefined = not yet loaded; null = draft (empty); string = that topic's messages.
@@ -497,6 +519,7 @@ const ChatPage = memo(() => {
     try {
       const items = await fetchTopics(agentId)
       setTopics(items)
+      setTopicsLoadedAgentId(agentId)
     } catch (error) {
       console.error('[chat] refreshTopics failed', error)
     }
@@ -556,6 +579,10 @@ const ChatPage = memo(() => {
       })
       .catch((error) => {
         console.error('[chat] refreshTopics failed', error)
+        if (!cancelled) setTopics([])
+      })
+      .finally(() => {
+        if (!cancelled) setTopicsLoadedAgentId(agentId)
       })
 
     return () => {
@@ -614,6 +641,25 @@ const ChatPage = memo(() => {
     pushChatHref(agentId)
   }, [activeTopicId, agentId, pushChatHref])
 
+  const handleAgentSelect = useCallback(
+    (agent: AgentListItem) => {
+      setSelectedAgentId(agent.id)
+      setActiveAgent({
+        avatar: agent.avatar,
+        identifier: agent.id,
+        systemRole: agent.systemRole,
+        title: agent.title,
+      })
+      if (agent.id === agentId && activeTopicId === null) return
+      if (agent.id !== agentId) {
+        setTopics([])
+        setTopicsLoadedAgentId(null)
+      }
+      pushChatHref(agent.id)
+    },
+    [activeTopicId, agentId, pushChatHref, setActiveAgent, setSelectedAgentId]
+  )
+
   const handleSelectTopic = useCallback(
     (id: string) => {
       if (id === activeTopicId) return
@@ -622,14 +668,33 @@ const ChatPage = memo(() => {
     [activeTopicId, agentId, pushChatHref]
   )
 
-  const handleRenameTopic = useCallback(async (id: string, title: string) => {
-    try {
-      const updated = await renameTopic(id, title)
-      setTopics((prev) => prev.map((t) => (t.id === id ? updated : t)))
-    } catch (error) {
-      console.error('[chat] renameTopic failed', error)
-    }
-  }, [])
+  const handleUpdateTopic = useCallback(
+    async (id: string, patch: TopicUpdate, errorText: string) => {
+      try {
+        const updated = await updateTopic(id, patch)
+        setTopics((prev) => prev.map((topic) => (topic.id === id ? updated : topic)))
+      } catch (error) {
+        console.error('[chat] updateTopic failed', error)
+        message.error(errorText)
+      }
+    },
+    [message]
+  )
+
+  const handleRenameTopic = useCallback(
+    (id: string, title: string) => handleUpdateTopic(id, { title }, '重命名失败'),
+    [handleUpdateTopic]
+  )
+
+  const handleFavoriteTopic = useCallback(
+    (id: string, favorite: boolean) => handleUpdateTopic(id, { favorite }, favorite ? '收藏失败' : '取消收藏失败'),
+    [handleUpdateTopic]
+  )
+
+  const handleProjectChange = useCallback(
+    (id: string, projectName: string | null) => handleUpdateTopic(id, { projectName }, '移动到项目失败'),
+    [handleUpdateTopic]
+  )
 
   const handleDeleteTopic = useCallback(
     async (id: string) => {
@@ -653,6 +718,29 @@ const ChatPage = memo(() => {
     [activeTopicId, agentId, pushChatHref]
   )
 
+  const handleDeleteTopics = useCallback(
+    async (scope: TopicDeleteScope) => {
+      try {
+        const deletedIds = await deleteTopicsApi(agentId, scope)
+        const deleted = new Set(deletedIds)
+        setMessagesCache((prev) => {
+          if (deleted.size === 0) return prev
+          const next = new Map(prev)
+          for (const id of deleted) next.delete(id)
+          return next
+        })
+        setTopics((prev) => prev.filter((topic) => !deleted.has(topic.id)))
+        if (activeTopicId && deleted.has(activeTopicId)) pushChatHref(agentId)
+        message.success(`已删除 ${deletedIds.length} 个话题`)
+      } catch (error) {
+        console.error('[chat] deleteTopics failed', error)
+        message.error('批量删除话题失败')
+        throw error
+      }
+    },
+    [activeTopicId, agentId, message, pushChatHref]
+  )
+
   const handleParamsChange = useCallback(
     (patch: Partial<ChatLlmParams>) => {
       setParams(agentId, patch)
@@ -666,6 +754,7 @@ const ChatPage = memo(() => {
 
   const messagesReady = activeTopicId === null ? true : loadedTopicId === activeTopicId
   const inputBusy = isBusy || !messagesReady
+  const topicsLoading = topicsLoadedAgentId !== agentId
 
   const topicTitle = useMemo(() => {
     if (!activeTopicId) return DRAFT_TOPIC_TITLE
@@ -677,11 +766,18 @@ const ChatPage = memo(() => {
       left={
         <TopicSidebar
           activeTopicId={activeTopicId}
+          agents={agents}
+          currentAgentId={agentId}
+          loading={topicsLoading}
           topics={topics}
+          onAgentSelect={handleAgentSelect}
+          onFavoriteTopic={handleFavoriteTopic}
           onNewTopic={handleNewTopic}
+          onProjectChange={handleProjectChange}
           onSelectTopic={handleSelectTopic}
           onRenameTopic={handleRenameTopic}
           onDeleteTopic={handleDeleteTopic}
+          onDeleteTopics={handleDeleteTopics}
         />
       }
       right={<ParamsPanel value={params} onChange={handleParamsChange} />}

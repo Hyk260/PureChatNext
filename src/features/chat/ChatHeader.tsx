@@ -1,8 +1,7 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
-import { DropdownMenu } from '@pure/ui'
-import { ActionIcon } from '@pure/ui'
+import { Flex } from 'antd'
+import { ActionIcon, DropdownMenu, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Maximize2, MoreHorizontal, PanelLeftOpen, PanelRightOpen } from 'lucide-react'
 import { memo, useMemo } from 'react'
@@ -95,9 +94,9 @@ const ChatHeader = memo<Props>(({ title }) => {
         {leftCollapsed ? (
           <ActionIcon icon={PanelLeftOpen} size='small' title='展开话题栏' onClick={toggleLeftCollapsed} />
         ) : null}
-        <Typography.Text className={styles.title} ellipsis>
+        <Text className={styles.title} ellipsis>
           {title}
-        </Typography.Text>
+        </Text>
         <DropdownMenu
           items={menuItems}
           nativeButton

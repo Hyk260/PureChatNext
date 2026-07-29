@@ -2,6 +2,7 @@
 
 import Link from '@/utils/link'
 import { useRouter } from '@/utils/navigation'
+import { formatDateTime } from '@pure/utils/client'
 import { type ReactNode, useState } from 'react'
 
 import { type UserWithoutPassword } from '@pure/database/schemas'
@@ -15,18 +16,6 @@ export type ProfileUser = {
 
 interface ProfileContentProps {
   user: ProfileUser
-}
-
-function formatDate(value: string | null) {
-  if (!value) return '-'
-
-  return new Date(value).toLocaleString('zh-CN', {
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
 }
 
 function StatusBadge({
@@ -159,8 +148,8 @@ export function ProfileContent({ user }: ProfileContentProps) {
           </SectionCard>
 
           <SectionCard title='时间'>
-            <InfoRow label='注册时间' value={formatDate(user.createdAt ?? null)} />
-            <InfoRow label='最近活跃' value={formatDate(user.lastActiveAt ?? null)} />
+            <InfoRow label='注册时间' value={formatDateTime(user.createdAt ?? null)} />
+            <InfoRow label='最近活跃' value={formatDateTime(user.lastActiveAt ?? null)} />
           </SectionCard>
         </div>
 

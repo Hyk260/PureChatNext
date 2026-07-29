@@ -1,0 +1,208 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { type UIMessage } from 'ai'
+import React from 'react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { setPendingTopicSend } from '@/features/chat/chatLocalStorage'
+
+const mocks = vi.hoisted(() => {
+  const navigation = {
+    listeners: new Set<() => void>(),
+    query: 'agent=agt_inbox',
+  }
+
+  return {
+    createTopic: vi.fn(),
+    fetchAgents: vi.fn(),
+    fetchMessages: vi.fn(),
+    fetchTopics: vi.fn(),
+    navigation,
+    sendMessage: vi.fn().mockResolvedValue(undefined),
+  }
+})
+
+vi.mock('@/utils/navigation', () => ({
+  useRouter: () => ({
+    push: (href: string) => {
+      mocks.navigation.query = href.split('?')[1] ?? ''
+      mocks.navigation.listeners.forEach((listener) => listener())
+    },
+    replace: (href: string) => {
+      mocks.navigation.query = href.split('?')[1] ?? ''
+      mocks.navigation.listeners.forEach((listener) => listener())
+    },
+  }),
+  useSearchParams: () => {
+    const query = React.useSyncExternalStore(
+      (listener) => {
+        mocks.navigation.listeners.add(listener)
+        return () => mocks.navigation.listeners.delete(listener)
+      },
+      () => mocks.navigation.query,
+      () => mocks.navigation.query
+    )
+
+    return React.useMemo(() => new URLSearchParams(query), [query])
+  },
+}))
+
+vi.mock('@ai-sdk/react', () => ({
+  useChat: ({ messages = [] }: { messages?: UIMessage[] }) => ({
+    clearError: vi.fn(),
+    error: undefined,
+    messages,
+    sendMessage: mocks.sendMessage,
+    setMessages: vi.fn(),
+    status: 'ready',
+    stop: vi.fn(),
+  }),
+}))
+
+vi.mock('ai', () => ({
+  DefaultChatTransport: class {},
+}))
+
+vi.mock('antd', () => ({
+  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+}))
+
+vi.mock('@pure/ui', () => ({
+  Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
+}))
+
+vi.mock('antd-style', () => ({
+  createStaticStyles: () => new Proxy({}, { get: (_, key) => String(key) }),
+  cssVar: new Proxy({}, { get: (_, key) => String(key) }),
+}))
+
+vi.mock('@/components/AntdStaticMethods', () => ({
+  useApp: () => ({ message: { error: vi.fn(), success: vi.fn() } }),
+}))
+
+vi.mock('@/features/chat/chatApi', () => ({
+  createTopic: mocks.createTopic,
+  deleteTopic: vi.fn(),
+  deleteTopics: vi.fn(),
+  fetchMessages: mocks.fetchMessages,
+  fetchTopics: mocks.fetchTopics,
+  putMessages: vi.fn().mockResolvedValue(undefined),
+  updateTopic: vi.fn(),
+}))
+
+vi.mock('@/features/chat/ChatInput', () => ({
+  default: ({ onSend }: { onSend: (text: string) => void }) => (
+    <button type='button' onClick={() => onSend('hello')}>
+      send
+    </button>
+  ),
+}))
+
+vi.mock('@/features/chat/ChatLayout', () => ({
+  default: ({ children }: { children?: React.ReactNode }) => <main>{children}</main>,
+}))
+
+vi.mock('@/features/chat/ChatMessages', () => ({
+  default: ({ messages }: { messages: UIMessage[] }) => <div data-testid='messages'>{messages.length}</div>,
+}))
+
+vi.mock('@/features/chat/ChatMessagesSkeleton', () => ({
+  default: () => <div data-testid='messages-skeleton' />,
+}))
+
+vi.mock('@/features/chat/ParamsPanel', () => ({ default: () => null }))
+vi.mock('@/features/chat/TopicSidebar', () => ({ default: () => null }))
+vi.mock('@/features/chat/WideScreenContainer', () => ({
+  default: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+}))
+
+vi.mock('@/features/chat/store/useChatUiStore', () => ({
+  useChatUiStore: (selector: (state: unknown) => unknown) =>
+    selector({
+      paramsByAgent: {},
+      setParams: vi.fn(),
+    }),
+}))
+
+vi.mock('@/features/home/agentApi', () => ({ fetchAgent: vi.fn() }))
+
+vi.mock('@/features/home/store/useAgentsStore', () => ({
+  useAgentsStore: (selector: (state: unknown) => unknown) =>
+    selector({ agents: [], fetchAgents: mocks.fetchAgents, upsertLocal: vi.fn() }),
+}))
+
+vi.mock('@/features/home/store/useHomeStore', () => {
+  const state = {
+    activeAgent: { identifier: 'agt_inbox', systemRole: '', title: 'Inbox' },
+    selectedAgentId: 'agt_inbox',
+    selectedModel: 'test-model',
+    selectedProvider: 'purehub',
+    setActiveAgent: vi.fn(),
+    setSelectedAgentId: vi.fn(),
+  }
+  const useHomeStore = Object.assign((selector: (value: typeof state) => unknown) => selector(state), {
+    getState: () => state,
+  })
+
+  return { useHomeStore }
+})
+
+vi.mock('@/features/settings/provider/const', () => ({
+  isSettingsProviderId: () => true,
+}))
+
+vi.mock('@/features/settings/provider/store/useProviderConfigStore', () => {
+  const state = { configs: { purehub: { apiKey: '', baseURL: '' } } }
+  const useProviderConfigStore = Object.assign(
+    (selector: (value: typeof state) => unknown) => selector(state),
+    { getState: () => state }
+  )
+
+  return { useProviderConfigStore }
+})
+
+import ChatPage from '@/features/chat/ChatPage'
+
+const createdTopic = {
+  agentId: 'agt_inbox',
+  createdAt: 1,
+  favorite: false,
+  id: 'topic-new',
+  projectName: null,
+  title: 'hello',
+  updatedAt: 1,
+}
+
+describe('ChatPage message loading state', () => {
+  beforeEach(() => {
+    mocks.navigation.query = 'agent=agt_inbox'
+    mocks.navigation.listeners.clear()
+    mocks.createTopic.mockReset().mockResolvedValue(createdTopic)
+    mocks.fetchMessages.mockReset().mockReturnValue(new Promise(() => {}))
+    mocks.fetchTopics.mockReset().mockResolvedValue([])
+    mocks.fetchAgents.mockReset()
+    mocks.sendMessage.mockClear()
+    setPendingTopicSend('')
+  })
+
+  it('opens a newly-created topic without showing a message skeleton', async () => {
+    render(<ChatPage />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'send' }))
+
+    await waitFor(() => {
+      expect(mocks.navigation.query).toBe('agent=agt_inbox&topic=topic-new')
+      expect(screen.queryByTestId('messages-skeleton')).toBeNull()
+      expect(screen.getByTestId('messages').textContent).toBe('0')
+    })
+    await waitFor(() => expect(mocks.sendMessage).toHaveBeenCalledWith({ text: 'hello' }, expect.any(Object)))
+  })
+
+  it('keeps the message skeleton for an uncached existing topic', async () => {
+    mocks.navigation.query = 'agent=agt_inbox&topic=topic-existing'
+
+    render(<ChatPage />)
+
+    expect(await screen.findByTestId('messages-skeleton')).toBeTruthy()
+    expect(screen.queryByTestId('messages')).toBeNull()
+  })
+})

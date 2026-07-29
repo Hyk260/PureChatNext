@@ -1,4 +1,4 @@
-import { index, jsonb, pgTable, text, varchar } from 'drizzle-orm/pg-core'
+import { boolean, index, jsonb, pgTable, text, varchar } from 'drizzle-orm/pg-core'
 
 import { idGenerator } from '../utils/idGenerator'
 import { timestamps } from './_helpers'
@@ -18,6 +18,8 @@ export const chatTopics = pgTable(
       .notNull(),
     /** 对应 `agents.id` */
     agentId: text('agent_id').notNull(),
+    favorite: boolean('favorite').notNull().default(false),
+    projectName: text('project_name'),
     title: text('title').notNull(),
     ...timestamps,
   },

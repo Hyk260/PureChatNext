@@ -1,4 +1,4 @@
-export type ProviderId = 'openai' | 'deepseek'
+export type ProviderId = 'openai' | 'deepseek' | 'purehub'
 
 export type ProviderModelSource = 'builtin' | 'remote'
 

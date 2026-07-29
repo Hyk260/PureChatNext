@@ -1,6 +1,7 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
+import { Flex } from 'antd'
+import { Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useState } from 'react'
 
@@ -32,11 +33,11 @@ const UploadDock = memo(() => {
 
   return (
     <Flex vertical className={styles.dock} gap={8}>
-      <Typography.Text strong>上传中</Typography.Text>
+      <Text strong>上传中</Text>
       {items.map((item) => (
-        <Typography.Text key={item.id} style={{ fontSize: 12 }}>
+        <Text key={item.id} style={{ fontSize: 12 }}>
           {item.name} — {item.progress}%
-        </Typography.Text>
+        </Text>
       ))}
     </Flex>
   )

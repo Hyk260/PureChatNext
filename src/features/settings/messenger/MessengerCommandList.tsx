@@ -1,8 +1,7 @@
 'use client'
 
-import { Block } from '@pure/ui'
-import { Icon } from '@pure/ui'
-import { Flex, Typography, Divider } from 'antd'
+import { Block, Icon, Text } from '@pure/ui'
+import { Flex, Divider } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { BotIcon, CircleStopIcon, HelpCircleIcon, MegaphoneIcon, SquarePlusIcon, type LucideIcon } from 'lucide-react'
 import { Fragment, memo } from 'react'
@@ -38,12 +37,12 @@ const COMMAND_ICONS: Record<MessengerCommandItem['icon'], LucideIcon> = {
 const MessengerCommandList = memo(() => {
   return (
     <Flex vertical gap={8} style={{ width: '100%' }}>
-      <Typography.Text strong style={{ fontSize: 15 }}>
+      <Text strong style={{ fontSize: 15 }}>
         指令
-      </Typography.Text>
-      <Typography.Text type='secondary' style={{ fontSize: 13 }}>
+      </Text>
+      <Text type='secondary' style={{ fontSize: 13 }}>
         在与机器人的私信中发送以下指令。
-      </Typography.Text>
+      </Text>
 
       <Block className={styles.list} variant='outlined'>
         {WECHAT_COMMANDS.map((item, index) => (
@@ -53,12 +52,12 @@ const MessengerCommandList = memo(() => {
               <Flex align='center' className={styles.icon} justify='center'>
                 <Icon icon={COMMAND_ICONS[item.icon]} size={18} />
               </Flex>
-              <Typography.Text code strong style={{ fontSize: 14 }}>
+              <Text code strong style={{ fontSize: 14 }}>
                 {item.command}
-              </Typography.Text>
-              <Typography.Text type='secondary' style={{ flex: 1, fontSize: 13, textAlign: 'end' }}>
+              </Text>
+              <Text type='secondary' style={{ flex: 1, fontSize: 13, textAlign: 'end' }}>
                 {item.description}
-              </Typography.Text>
+              </Text>
             </Flex>
           </Fragment>
         ))}

@@ -4,11 +4,17 @@
  */
 export {
   DropdownMenu,
+  DropdownMenuGroup,
+  DropdownMenuGroupLabel,
   DropdownMenuItem,
+  DropdownMenuItemIcon,
+  DropdownMenuItemLabel,
   DropdownMenuPopup,
   DropdownMenuPortal,
   DropdownMenuPositioner,
   DropdownMenuRoot,
+  DropdownMenuSubmenuRoot,
+  DropdownMenuSubmenuTrigger,
   DropdownMenuTrigger,
   renderDropdownMenuItems,
   type MenuInfo,

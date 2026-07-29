@@ -1,9 +1,20 @@
 'use client'
 
-import { Flex, Typography, Input, Modal } from 'antd'
-import { type MenuInfo, type MenuProps, DropdownMenu, Icon } from '@pure/ui'
+import { Flex, Input, Modal } from 'antd'
+import { type MenuInfo, type MenuProps, DropdownMenu, Icon, Text } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import { Copy, Link, MoreHorizontal, Pencil, Sparkles, Star, Trash2 } from 'lucide-react'
+import {
+  Check,
+  Copy,
+  FolderInput,
+  FolderPlus,
+  Link,
+  MoreHorizontal,
+  Pencil,
+  Sparkles,
+  Star,
+  Trash2,
+} from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import { type LocalChatTopic } from '@/features/chat/types'
@@ -79,161 +90,261 @@ const stopMenuEvent = (info: MenuInfo) => {
 
 type Props = {
   active: boolean
+  projectNames: string[]
   topic: LocalChatTopic
   onSelect: (topicId: string) => void
   onRename: (id: string, title: string) => void | Promise<void>
   onDelete: (id: string) => void | Promise<void>
+  onFavorite: (id: string, favorite: boolean) => void | Promise<void>
+  onProjectChange: (id: string, projectName: string | null) => void | Promise<void>
 }
 
-const TopicItem = memo<Props>(({ active, topic, onSelect, onRename, onDelete }) => {
-  const { modal } = useApp()
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [renameOpen, setRenameOpen] = useState(false)
-  const [draftTitle, setDraftTitle] = useState(topic.title)
-  const [saving, setSaving] = useState(false)
+const TopicItem = memo<Props>(
+  ({ active, projectNames, topic, onSelect, onRename, onDelete, onFavorite, onProjectChange }) => {
+    const { modal } = useApp()
+    const [menuOpen, setMenuOpen] = useState(false)
+    const [renameOpen, setRenameOpen] = useState(false)
+    const [projectOpen, setProjectOpen] = useState(false)
+    const [draftTitle, setDraftTitle] = useState(topic.title)
+    const [draftProject, setDraftProject] = useState('')
+    const [saving, setSaving] = useState(false)
 
-  const handleOpenRename = useCallback(() => {
-    setDraftTitle(topic.title)
-    setRenameOpen(true)
-  }, [topic.title])
+    const handleOpenRename = useCallback(() => {
+      setDraftTitle(topic.title)
+      setRenameOpen(true)
+    }, [topic.title])
 
-  const handleSubmitRename = async () => {
-    const next = draftTitle.trim()
-    if (!next || saving) return
+    const handleSubmitRename = async () => {
+      const next = draftTitle.trim()
+      if (!next || saving) return
 
-    setSaving(true)
-    try {
-      await onRename(topic.id, next)
-      setRenameOpen(false)
-    } finally {
-      setSaving(false)
+      setSaving(true)
+      try {
+        await onRename(topic.id, next)
+        setRenameOpen(false)
+      } finally {
+        setSaving(false)
+      }
     }
-  }
 
-  const menuItems = useMemo<MenuProps['items']>(
-    () => [
-      {
-        icon: <Icon icon={Star} />,
-        key: 'favorite',
-        label: '收藏',
-        onClick: stopMenuEvent,
-      },
-      {
-        icon: <Icon icon={Sparkles} />,
-        key: 'smart-rename',
-        label: '智能重命名',
-        onClick: stopMenuEvent,
-      },
-      {
-        icon: <Icon icon={Pencil} />,
-        key: 'rename',
-        label: '重命名',
-        onClick: (info) => {
-          stopMenuEvent(info)
-          handleOpenRename()
-        },
-      },
-      { type: 'divider' },
-      {
-        icon: <Icon icon={Copy} />,
-        key: 'copy',
-        label: '复制',
-        onClick: stopMenuEvent,
-      },
-      {
-        icon: <Icon icon={Link} />,
-        key: 'copy-link',
-        label: '复制链接',
-        onClick: stopMenuEvent,
-      },
-      { type: 'divider' },
-      {
-        danger: true,
-        icon: <Icon icon={Trash2} />,
-        key: 'delete',
-        label: '删除',
-        onClick: (info) => {
-          stopMenuEvent(info)
-          modal.confirm({
-            transitionName: '',
-            cancelText: '取消',
-            content: '话题下的所有消息将一并删除。',
-            okButtonProps: { danger: true },
-            okText: '删除',
-            onOk: () => onDelete(topic.id),
-            title: '删除该话题？',
-          })
-        },
-      },
-    ],
-    [handleOpenRename, modal, onDelete, topic.id]
-  )
+    const handleOpenProject = useCallback(() => {
+      setDraftProject('')
+      setProjectOpen(true)
+    }, [])
 
-  return (
-    <>
-      <Flex className={cx(styles.item, active && styles.itemActive)} onClick={() => onSelect(topic.id)}>
-        <Flex align='center' gap={4} style={{ width: '100%' }}>
-          <Typography.Text
-            title={topic.title}
-            style={{
-              color: active ? cssVar.colorText : cssVar.colorTextSecondary,
-              flex: 1,
-              minWidth: 0,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {topic.title}
-          </Typography.Text>
-          <Flex
-            align='center'
-            className={cx('topic-actions')}
-            data-open={menuOpen || undefined}
-            onClick={(event) => event.stopPropagation()}
-            onKeyDown={(event) => event.stopPropagation()}
-          >
-            <DropdownMenu
-              items={menuItems}
-              nativeButton
-              open={menuOpen}
-              placement='bottomLeft'
-              triggerProps={{ className: styles.trigger, title: '更多' }}
-              onOpenChange={setMenuOpen}
+    const handleSubmitProject = async () => {
+      const next = draftProject.trim()
+      if (!next || saving) return
+
+      setSaving(true)
+      try {
+        await onProjectChange(topic.id, next)
+        setProjectOpen(false)
+      } finally {
+        setSaving(false)
+      }
+    }
+
+    const menuItems = useMemo<MenuProps['items']>(
+      () => [
+        {
+          icon: <Icon icon={Star} />,
+          key: 'favorite',
+          label: topic.favorite ? '取消收藏' : '收藏',
+          onClick: (info) => {
+            stopMenuEvent(info)
+            void onFavorite(topic.id, !topic.favorite)
+          },
+        },
+        {
+          children: [
+            ...projectNames.map((projectName) => ({
+              icon: topic.projectName === projectName ? <Icon icon={Check} /> : <span />,
+              key: `project-${projectName}`,
+              label: projectName,
+              onClick: (info: MenuInfo) => {
+                stopMenuEvent(info)
+                void onProjectChange(topic.id, projectName)
+              },
+            })),
+            ...(projectNames.length > 0 ? [{ type: 'divider' as const }] : []),
+            {
+              icon: topic.projectName === null ? <Icon icon={Check} /> : <span />,
+              key: 'project-none',
+              label: '无项目',
+              onClick: (info: MenuInfo) => {
+                stopMenuEvent(info)
+                void onProjectChange(topic.id, null)
+              },
+            },
+            {
+              icon: <Icon icon={FolderPlus} />,
+              key: 'project-new',
+              label: '新建项目标签…',
+              onClick: (info: MenuInfo) => {
+                stopMenuEvent(info)
+                handleOpenProject()
+              },
+            },
+          ],
+          icon: <Icon icon={FolderInput} />,
+          key: 'project',
+          label: '移动到项目',
+        },
+        { type: 'divider' },
+        {
+          icon: <Icon icon={Sparkles} />,
+          key: 'smart-rename',
+          label: '智能重命名',
+          onClick: stopMenuEvent,
+        },
+        {
+          icon: <Icon icon={Pencil} />,
+          key: 'rename',
+          label: '重命名',
+          onClick: (info) => {
+            stopMenuEvent(info)
+            handleOpenRename()
+          },
+        },
+        { type: 'divider' },
+        {
+          icon: <Icon icon={Copy} />,
+          key: 'copy',
+          label: '复制',
+          onClick: stopMenuEvent,
+        },
+        {
+          icon: <Icon icon={Link} />,
+          key: 'copy-link',
+          label: '复制链接',
+          onClick: stopMenuEvent,
+        },
+        { type: 'divider' },
+        {
+          danger: true,
+          icon: <Icon icon={Trash2} />,
+          key: 'delete',
+          label: '删除',
+          onClick: (info) => {
+            stopMenuEvent(info)
+            modal.confirm({
+              transitionName: '',
+              cancelText: '取消',
+              content: '话题下的所有消息将一并删除。',
+              okButtonProps: { danger: true },
+              okText: '删除',
+              onOk: () => onDelete(topic.id),
+              title: '删除该话题？',
+            })
+          },
+        },
+      ],
+      [
+        handleOpenProject,
+        handleOpenRename,
+        modal,
+        onDelete,
+        onFavorite,
+        onProjectChange,
+        projectNames,
+        topic.favorite,
+        topic.id,
+        topic.projectName,
+      ]
+    )
+
+    return (
+      <>
+        <Flex className={cx(styles.item, active && styles.itemActive)} onClick={() => onSelect(topic.id)}>
+          <Flex align='center' gap={4} style={{ width: '100%' }}>
+            <Text
+              title={topic.title}
+              style={{
+                color: active ? cssVar.colorText : cssVar.colorTextSecondary,
+                flex: 1,
+                minWidth: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
             >
-              <Icon icon={MoreHorizontal} size='small' />
-              <span className={styles.srOnly}>更多</span>
-            </DropdownMenu>
+              {topic.title}
+            </Text>
+            {topic.favorite ? <Icon color={cssVar.colorWarning} icon={Star} size={14} /> : null}
+            <Flex
+              align='center'
+              className={cx('topic-actions')}
+              data-open={menuOpen || undefined}
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+            >
+              <DropdownMenu
+                items={menuItems}
+                nativeButton
+                open={menuOpen}
+                placement='bottomLeft'
+                triggerProps={{ className: styles.trigger, title: '更多' }}
+                onOpenChange={setMenuOpen}
+              >
+                <Icon icon={MoreHorizontal} size='small' />
+                <span className={styles.srOnly}>更多</span>
+              </DropdownMenu>
+            </Flex>
           </Flex>
         </Flex>
-      </Flex>
 
-      <Modal
-        cancelText='取消'
-        centered
-        confirmLoading={saving}
-        destroyOnHidden
-        okText='保存'
-        open={renameOpen}
-        title='重命名话题'
-        width={400}
-        onCancel={() => setRenameOpen(false)}
-        onOk={handleSubmitRename}
-      >
-        <Flex vertical gap={12} style={{ paddingBlock: 8 }}>
-          <Typography.Text type='secondary'>保持简短且易于识别。</Typography.Text>
-          <Input
-            autoFocus
-            onChange={(event) => setDraftTitle(event.target.value)}
-            onPressEnter={handleSubmitRename}
-            placeholder='话题名称'
-            value={draftTitle}
-          />
-        </Flex>
-      </Modal>
-    </>
-  )
-})
+        <Modal
+          cancelText='取消'
+          centered
+          confirmLoading={saving}
+          destroyOnHidden
+          okText='保存'
+          open={renameOpen}
+          title='重命名话题'
+          width={400}
+          onCancel={() => setRenameOpen(false)}
+          onOk={handleSubmitRename}
+        >
+          <Flex vertical gap={12} style={{ paddingBlock: 8 }}>
+            <Text type='secondary'>保持简短且易于识别。</Text>
+            <Input
+              autoFocus
+              onChange={(event) => setDraftTitle(event.target.value)}
+              onPressEnter={handleSubmitRename}
+              placeholder='话题名称'
+              value={draftTitle}
+            />
+          </Flex>
+        </Modal>
+
+        <Modal
+          cancelText='取消'
+          centered
+          confirmLoading={saving}
+          destroyOnHidden
+          okText='创建并移动'
+          open={projectOpen}
+          title='新建项目标签'
+          width={400}
+          onCancel={() => setProjectOpen(false)}
+          onOk={handleSubmitProject}
+        >
+          <Flex vertical gap={12} style={{ paddingBlock: 8 }}>
+            <Text type='secondary'>相同名称的话题会整理到同一项目分组。</Text>
+            <Input
+              autoFocus
+              onChange={(event) => setDraftProject(event.target.value)}
+              onPressEnter={handleSubmitProject}
+              placeholder='项目名称'
+              value={draftProject}
+            />
+          </Flex>
+        </Modal>
+      </>
+    )
+  }
+)
 
 TopicItem.displayName = 'TopicItem'
 

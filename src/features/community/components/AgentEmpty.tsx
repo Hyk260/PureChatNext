@@ -1,7 +1,7 @@
 'use client'
 
-import { Center } from '@pure/ui'
-import { Empty, Typography } from 'antd'
+import { Center, Text } from '@pure/ui'
+import { Empty } from 'antd'
 import { memo } from 'react'
 
 const AgentEmpty = memo(() => {
@@ -11,11 +11,11 @@ const AgentEmpty = memo(() => {
         image={Empty.PRESENTED_IMAGE_SIMPLE}
         description={
           <>
-            <Typography.Text strong>暂无匹配助理</Typography.Text>
+            <Text strong>暂无匹配助理</Text>
             <br />
-            <Typography.Text type='secondary' style={{ fontSize: 14 }}>
+            <Text type='secondary' style={{ fontSize: 14 }}>
               试试调整分类或搜索关键词
-            </Typography.Text>
+            </Text>
           </>
         }
         style={{ maxWidth: 400 }}

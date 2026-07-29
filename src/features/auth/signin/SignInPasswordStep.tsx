@@ -2,8 +2,8 @@
 
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
-import { Icon } from '@pure/ui'
-import { Alert, Typography, Button, Form, Input, type FormInstance, type InputRef } from 'antd'
+import { Icon, Text } from '@pure/ui'
+import { Alert, Button, Form, Input, type FormInstance, type InputRef } from 'antd'
 import { cssVar } from 'antd-style'
 import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
@@ -63,7 +63,7 @@ export const SignInPasswordStep = ({
         }
         subtitle='请输入密码以继续'
       >
-        <Typography.Text style={{ fontSize: 20 }}>{email}</Typography.Text>
+        <Text style={{ fontSize: 20 }}>{email}</Text>
         <Alert
           showIcon
           style={{ marginTop: 12 }}
@@ -95,7 +95,7 @@ export const SignInPasswordStep = ({
     <AuthCard
       footer={
         <>
-          <Typography.Text type='secondary' style={{ fontSize: 13 }}>
+          <Text type='secondary' style={{ fontSize: 13 }}>
             <a
               aria-disabled={forgotPasswordLoading}
               style={{
@@ -113,7 +113,7 @@ export const SignInPasswordStep = ({
             >
               {'忘记密码？'}
             </a>
-          </Typography.Text>
+          </Text>
           <Button icon={<ChevronLeft />} size='large' style={{ marginTop: 12 }} onClick={onBack}>
             返回修改邮箱
           </Button>
@@ -121,7 +121,7 @@ export const SignInPasswordStep = ({
       }
       subtitle='请输入密码以继续'
     >
-      <Typography.Text style={{ fontSize: 20 }}>{email}</Typography.Text>
+      <Text style={{ fontSize: 20 }}>{email}</Text>
       <Form form={form} layout='vertical' onFinish={onSignIn}>
         <Form.Item name='password' rules={[{ message: '请输入密码', required: true }]} style={{ marginBottom: 0 }}>
           <Input.Password

@@ -1,6 +1,6 @@
 'use client'
 
-import { Typography } from 'antd'
+import { Text } from '@pure/ui'
 import { createStaticStyles } from 'antd-style'
 import { type ReactNode } from 'react'
 
@@ -53,7 +53,7 @@ export function SettingRow({ action, children, label, labelSlot }: SettingRowPro
   return (
     <div className={styles.row}>
       <div className={styles.label}>
-        {labelSlot ?? (label ? <Typography.Text strong>{label}</Typography.Text> : null)}
+        {labelSlot ?? (label ? <Text strong>{label}</Text> : null)}
       </div>
       <div className={styles.body}>
         {children}

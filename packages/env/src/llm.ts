@@ -13,6 +13,13 @@ export const getLLMConfig = () => {
 
       ENABLED_DEEPSEEK: z.boolean(),
       DEEPSEEK_API_KEY: z.string().optional(),
+
+      /** PureHub / Vercel AI Gateway */
+      PUREHUB_ENABLED: z.boolean(),
+      AI_GATEWAY_API_KEY: z.string().optional(),
+      /** 可选别名；优先 AI_GATEWAY_API_KEY */
+      PUREHUB_API_KEY: z.string().optional(),
+      AI_GATEWAY_BASE_URL: z.string().optional(),
     },
     runtimeEnv: {
       API_KEY_SELECT_MODE: process.env.API_KEY_SELECT_MODE,
@@ -22,8 +29,19 @@ export const getLLMConfig = () => {
       // Deepseek
       ENABLED_DEEPSEEK: !!process.env.DEEPSEEK_API_KEY,
       DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
+      // PureHub
+      PUREHUB_ENABLED: parseEnvBooleanDefaultTrue(process.env.PUREHUB_ENABLED),
+      AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
+      PUREHUB_API_KEY: process.env.PUREHUB_API_KEY,
+      AI_GATEWAY_BASE_URL: process.env.AI_GATEWAY_BASE_URL,
     },
   })
 }
 
 export const llmEnv = getLLMConfig()
+
+export const resolveAiGatewayApiKey = () =>
+  llmEnv.AI_GATEWAY_API_KEY?.trim() || llmEnv.PUREHUB_API_KEY?.trim() || undefined
+
+export const resolveAiGatewayBaseURL = () =>
+  llmEnv.AI_GATEWAY_BASE_URL?.trim() || 'https://ai-gateway.vercel.sh/v1'

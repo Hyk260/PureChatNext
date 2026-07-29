@@ -1,7 +1,8 @@
 'use client'
 
-import { Checkbox, Flex, Typography } from 'antd'
-import { Block, Center, Grid } from '@pure/ui'
+import { Checkbox, Flex } from 'antd'
+import { Block, Center, Grid, Text } from '@pure/ui'
+import { formatDate } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useCallback, type MouseEvent, type PointerEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
@@ -103,10 +104,10 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
             <FileIcon fileType={item.fileType} size={40} />
           </Flex>
         )}
-        <Typography.Text ellipsis>{item.name}</Typography.Text>
-        <Typography.Text type='secondary' style={{ fontSize: 12 }}>
-          {isFolder ? '文件夹' : new Date(item.updatedAt).toLocaleDateString()}
-        </Typography.Text>
+        <Text ellipsis>{item.name}</Text>
+        <Text type='secondary' style={{ fontSize: 12 }}>
+          {isFolder ? '文件夹' : formatDate(item.updatedAt)}
+        </Text>
       </Flex>
     </Block>
   )

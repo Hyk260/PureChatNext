@@ -12,6 +12,7 @@ import {
   Trash2,
   UserX,
 } from 'lucide-react'
+import { formatDateTime } from '@pure/utils/client'
 
 import { type UserDeletionPreviewUser, type UserRelatedCounts } from '@pure/database/models/user'
 
@@ -67,10 +68,6 @@ const relatedTableLabels: Array<{ key: keyof UserRelatedCounts; label: string }>
   { key: 'passkeys', label: 'passkey' },
   { key: 'verifications', label: 'verifications' },
 ]
-
-const formatDate = (value: Date | string) => {
-  return new Date(value).toLocaleString()
-}
 
 const isLookupResult = (value: LookupResult | DeleteResult): value is LookupResult => {
   return 'relatedCounts' in value || ('found' in value && value.found === false)
@@ -258,7 +255,7 @@ export default function DeleteUserDevPage() {
               </div>
               <div>
                 <dt className='text-slate-500'>创建时间</dt>
-                <dd>{formatDate(previewUser.createdAt)}</dd>
+                <dd>{formatDateTime(previewUser.createdAt)}</dd>
               </div>
             </dl>
 

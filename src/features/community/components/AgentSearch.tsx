@@ -1,10 +1,14 @@
 'use client'
 
-import { Input } from 'antd'
+import { SearchBar } from '@pure/ui'
 import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
 import { memo, useCallback, useEffect, useState, useTransition } from 'react'
 
-const AgentSearch = memo(() => {
+export interface AgentSearchProps {
+  placeholder?: string
+}
+
+const AgentSearch = memo<AgentSearchProps>(({ placeholder = '搜索名称、描述或关键词...' }) => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -35,18 +39,12 @@ const AgentSearch = memo(() => {
   )
 
   return (
-    <Input.Search
-      allowClear
-      placeholder='搜索名称、描述或关键词...'
+    <SearchBar
+      placeholder={placeholder}
       value={value}
-      onChange={(event) => {
-        const next = event.target.value
+      onInputChange={(next) => {
         setValue(next)
         commitQuery(next)
-      }}
-      onClear={() => {
-        setValue('')
-        commitQuery('')
       }}
     />
   )

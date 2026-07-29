@@ -23,4 +23,12 @@ export {
 export { getMessageText, withMessageText } from './messageText'
 export { useChatUiStore } from './store/useChatUiStore'
 export { DEFAULT_CHAT_LLM_PARAMS } from './types'
-export type { ChatLlmParams, LocalChatTopic } from './types'
+export type {
+  ChatLlmParams,
+  LocalChatTopic,
+  TopicDeleteScope,
+  TopicGroupMode,
+  TopicPageSize,
+  TopicSortBy,
+  TopicUpdate,
+} from './types'

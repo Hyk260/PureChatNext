@@ -17,8 +17,11 @@
     "./Layout": "./src/Layout/index.ts",
     "./Markdown": "./src/Markdown/index.ts",
     "./Popover": "./src/Popover/index.ts",
+    "./SearchBar": "./src/SearchBar/index.ts",
     "./SortableList": "./src/SortableList/index.ts",
+    "./Text": "./src/Text/index.ts",
     "./ThemeProvider": "./src/ThemeProvider/index.ts",
+    "./Tooltip": "./src/Tooltip/index.ts",
     "./icons": "./src/icons/index.ts",
     "./utils": "./src/utils/index.ts"
   },

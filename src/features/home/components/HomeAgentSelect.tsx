@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
-import { ActionIcon, Avatar, Block, Popover } from '@pure/ui'
+import { Flex } from 'antd'
+import { ActionIcon, Avatar, Block, Popover, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronsUpDownIcon } from 'lucide-react'
 import { memo, useEffect, useMemo, useState } from 'react'
@@ -86,13 +86,13 @@ const HomeAgentSelect = memo(() => {
             >
               <Avatar shape='square' size={32} avatar={agent.avatar} background={agent.backgroundColor ?? undefined} />
               <Flex vertical flex={1} gap={2} style={{ overflow: 'hidden' }}>
-                <Typography.Text ellipsis style={{ fontSize: 14, fontWeight: 500 }}>
+                <Text ellipsis style={{ fontSize: 14, fontWeight: 500 }}>
                   {agent.title}
-                </Typography.Text>
+                </Text>
                 {agent.description ? (
-                  <Typography.Text ellipsis type='secondary' style={{ fontSize: 12 }}>
+                  <Text ellipsis type='secondary' style={{ fontSize: 12 }}>
                     {agent.description}
-                  </Typography.Text>
+                  </Text>
                 ) : null}
               </Flex>
             </Flex>
@@ -127,7 +127,7 @@ const HomeAgentSelect = memo(() => {
           avatar={currentAgent.avatar}
           background={currentAgent.backgroundColor ?? undefined}
         />
-        <Typography.Text style={{ fontSize: 16, fontWeight: 600 }}>{currentAgent.title}</Typography.Text>
+        <Text style={{ fontSize: 16, fontWeight: 600 }}>{currentAgent.title}</Text>
         <ActionIcon
           className={`${styles.chevron} home-agent-chevron`}
           color={cssVar.colorTextDescription}

@@ -7,6 +7,7 @@ import {
   Brain,
   BrainCircuit,
   ChartColumnBigIcon,
+  Coins,
   Database,
   EllipsisIcon,
   Info,
@@ -32,6 +33,7 @@ export enum SettingsTab {
   Advanced = 'advanced',
   Appearance = 'appearance',
   Connector = 'connector',
+  Credits = 'credits',
   Creds = 'creds',
   Hotkey = 'hotkey',
   Language = 'language',
@@ -44,6 +46,7 @@ export enum SettingsTab {
   Skill = 'skill',
   Stats = 'stats',
   Storage = 'storage',
+  Usage = 'usage',
 }
 
 export interface SettingsCategoryItem {
@@ -93,6 +96,18 @@ export function useSettingsCategory(): SettingsCategoryGroup[] {
             icon: ChartColumnBigIcon,
             key: SettingsTab.Stats,
             label: '数据统计',
+          },
+          {
+            href: tabHref(SettingsTab.Credits),
+            icon: Coins,
+            key: SettingsTab.Credits,
+            label: '免费积分',
+          },
+          {
+            href: tabHref(SettingsTab.Usage),
+            icon: ChartColumnBigIcon,
+            key: SettingsTab.Usage,
+            label: '用量',
           },
           {
             href: tabHref(SettingsTab.Appearance),

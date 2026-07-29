@@ -1,7 +1,7 @@
 'use client'
 
-import { ActionIcon } from '@pure/ui'
-import { Flex, Typography, Button } from 'antd'
+import { ActionIcon, Text } from '@pure/ui'
+import { Flex, Button } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Plus, Trash2 } from 'lucide-react'
 import Link from '@/utils/link'
@@ -32,15 +32,15 @@ const LibraryList = memo(() => {
   return (
     <Flex vertical gap={4} style={{ paddingInline: 8 }}>
       <Flex align='center' justify='space-between' style={{ paddingInline: 4 }}>
-        <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+        <Text type='secondary' style={{ fontSize: 12 }}>
           知识库
-        </Typography.Text>
+        </Text>
         <ActionIcon icon={Plus} onClick={handleCreate} size='small' title='新建' />
       </Flex>
       {libraries.length === 0 ? (
-        <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+        <Text type='secondary' style={{ fontSize: 12 }}>
           暂无知识库
-        </Typography.Text>
+        </Text>
       ) : (
         libraries.map((kb) => {
           const href = `/resources/library/${kb.id}`

@@ -150,6 +150,14 @@ export const webRoutes: RouteObject[] = [
         path: 'stats',
       },
       {
+        element: dynamicElement(() => import('@/routes/settings/credits/page'), 'Settings > Credits'),
+        path: 'credits',
+      },
+      {
+        element: dynamicElement(() => import('@/routes/settings/usage/page'), 'Settings > Usage'),
+        path: 'usage',
+      },
+      {
         element: dynamicElement(
           () => import('@/routes/settings/empty').then((m) => ({ default: m.AdvancedPage })),
           'Settings > Advanced'

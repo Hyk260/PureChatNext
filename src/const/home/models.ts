@@ -1,4 +1,9 @@
-import { COMMUNITY_PROVIDERS } from '@/const/community/providers'
+import {
+  AI_MODELS_BY_PROVIDER,
+  ModelProvider,
+  PUREHUB_DEFAULT_MODEL,
+  getAiModel,
+} from '@pure/model-bank'
 
 export interface HomeModelItem {
   displayName: string
@@ -6,27 +11,24 @@ export interface HomeModelItem {
   provider: string
 }
 
-const MODEL_DISPLAY_NAMES: Record<string, string> = {
-  'deepseek-v4-flash': 'DeepSeek V4 Flash',
-  'deepseek-v4-pro': 'DeepSeek V4 Pro',
-  'gpt-4o': 'GPT-4o',
-  'gpt-4o-mini': 'GPT-4o Mini',
-  o1: 'OpenAI o1',
-  'o3-mini': 'OpenAI o3-mini',
-}
-
-export const HOME_MODELS: HomeModelItem[] = COMMUNITY_PROVIDERS.flatMap((provider) =>
-  provider.models.map((model) => ({
-    displayName: MODEL_DISPLAY_NAMES[model] ?? model,
-    model,
-    provider: provider.identifier,
-  }))
+export const HOME_MODELS: HomeModelItem[] = (
+  Object.entries(AI_MODELS_BY_PROVIDER) as Array<
+    [keyof typeof AI_MODELS_BY_PROVIDER, (typeof AI_MODELS_BY_PROVIDER)[keyof typeof AI_MODELS_BY_PROVIDER]]
+  >
+).flatMap(([provider, models]) =>
+  models
+    .filter((model) => model.enabled !== false)
+    .map((model) => ({
+      displayName: model.displayName,
+      model: model.id,
+      provider,
+    }))
 )
 
 export const DEFAULT_HOME_MODEL: HomeModelItem = {
-  displayName: 'DeepSeek V4 Pro',
-  model: 'deepseek-v4-pro',
-  provider: 'deepseek',
+  displayName: getAiModel(ModelProvider.PureHub, PUREHUB_DEFAULT_MODEL)?.displayName ?? 'GPT-5.4 Mini',
+  model: PUREHUB_DEFAULT_MODEL,
+  provider: ModelProvider.PureHub,
 }
 
 export const findHomeModel = (provider: string, model: string) =>

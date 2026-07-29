@@ -1,7 +1,7 @@
 'use client'
 
-import { ActionIcon, Icon } from '@pure/ui'
-import { Flex, Typography, type BreadcrumbProps, Breadcrumb } from 'antd'
+import { ActionIcon, Icon, Text } from '@pure/ui'
+import { Flex, type BreadcrumbProps, Breadcrumb } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronRightIcon, HomeIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useRouter } from '@/utils/navigation'
@@ -100,9 +100,9 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     const leftContent = left ? (
       <Flex align='center' flex={1} gap={2} style={{ overflow: 'hidden' }}>
         {typeof left === 'string' ? (
-          <Typography.Text ellipsis style={{ fontSize: 16, fontWeight: 500 }}>
+          <Text ellipsis style={{ fontSize: 16, fontWeight: 500 }}>
             {left}
-          </Typography.Text>
+          </Text>
         ) : (
           left
         )}

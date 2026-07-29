@@ -1,8 +1,7 @@
 'use client'
 
-import { DropdownMenu } from '@pure/ui'
-import { ActionIcon, Icon } from '@pure/ui'
-import { Flex, Typography, Button } from 'antd'
+import { ActionIcon, DropdownMenu, Icon, Text } from '@pure/ui'
+import { Flex, Button } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
   ArrowDownAZ,
@@ -154,7 +153,7 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
             />
           </Flex>
         ) : (
-          <Typography.Text style={{ marginInlineStart: 8 }}>{title ?? '资源'}</Typography.Text>
+          <Text style={{ marginInlineStart: 8 }}>{title ?? '资源'}</Text>
         )}
       </Flex>
       <Flex align='center' gap={4}>

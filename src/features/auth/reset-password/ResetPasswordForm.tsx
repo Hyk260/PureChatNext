@@ -1,7 +1,7 @@
 'use client'
 
-import { Block, Icon } from '@pure/ui'
-import { Typography, Button, Form, Input } from 'antd'
+import { Block, Icon, Text } from '@pure/ui'
+import { Button, Form, Input } from 'antd'
 import { Lock } from 'lucide-react'
 
 import { useResetPassword, type ResetPasswordFormValues } from './useResetPassword'
@@ -13,9 +13,9 @@ export const ResetPasswordForm = () => {
   if (!token) {
     return (
       <Block padding={24}>
-        <Typography.Text style={{ textAlign: 'center', fontSize: 16 }}>
+        <Text style={{ textAlign: 'center', fontSize: 16 }}>
           重置链接无效或已过期。请返回登录页重新申请密码重置邮件。
-        </Typography.Text>
+        </Text>
       </Block>
     )
   }

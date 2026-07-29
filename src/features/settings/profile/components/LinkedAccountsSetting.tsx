@@ -1,8 +1,8 @@
 'use client'
 
 import AuthIcons from '@/components/AuthIcons'
-import { ActionIcon, DropdownMenu, type MenuProps } from '@pure/ui'
-import { Flex, Typography, Modal } from 'antd'
+import { ActionIcon, DropdownMenu, type MenuProps, Text } from '@pure/ui'
+import { Flex, Modal } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { ArrowRight, Plus, Unlink } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -146,9 +146,9 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
     <SettingRow label='已关联的账户'>
       <Flex vertical gap={8} style={{ width: '100%' }}>
         {loading ? (
-          <Typography.Text type='secondary'>加载中…</Typography.Text>
+          <Text type='secondary'>加载中…</Text>
         ) : oauthAccounts.length === 0 ? (
-          <Typography.Text type='secondary'>暂无关联的第三方账户</Typography.Text>
+          <Text type='secondary'>暂无关联的第三方账户</Text>
         ) : (
           oauthAccounts.map((account) => (
             <Flex align='center' gap={8} justify='space-between' key={account.id}>
@@ -156,9 +156,9 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
                 {AuthIcons(account.providerId, 16)}
                 <span>{getProviderLabel(account.providerId)}</span>
                 {userEmail ? (
-                  <Typography.Text type='secondary' style={{ fontSize: 11 }}>
+                  <Text type='secondary' style={{ fontSize: 11 }}>
                     · {userEmail}
-                  </Typography.Text>
+                  </Text>
                 ) : null}
               </Flex>
               <ActionIcon

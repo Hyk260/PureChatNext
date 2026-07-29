@@ -1,6 +1,7 @@
 'use client'
 
-import { Flex, Typography, Button, Alert, QRCode, Spin } from 'antd'
+import { Flex, Button, Alert, QRCode, Spin } from 'antd'
+import { Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
@@ -197,7 +198,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
           </div>
         </div>
       )}
-      {statusText && !error && <Typography.Text type='secondary'>{statusText}</Typography.Text>}
+      {statusText && !error && <Text type='secondary'>{statusText}</Text>}
       {error && (
         <div
           style={{

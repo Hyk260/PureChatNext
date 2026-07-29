@@ -1,8 +1,9 @@
 'use client'
 
-import { Flex, Tag, Typography } from 'antd'
+import { Flex } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
-import { Avatar, Block, Icon } from '@pure/ui'
+import { Avatar, Block, Icon, Tag, Text } from '@pure/ui'
+import { formatDate } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { BookTextIcon, ClockIcon, CoinsIcon, GitForkIcon, PuzzleIcon } from 'lucide-react'
 import { useRouter } from '@/utils/navigation'
@@ -46,12 +47,6 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 const formatNumber = (value: number) => value.toLocaleString('en-US')
-
-const formatDate = (value: string) => {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('zh-CN', { day: 'numeric', month: 'short', year: 'numeric' })
-}
 
 const AgentCard = memo<DiscoverAgentItem>(
   ({
@@ -145,36 +140,36 @@ const AgentCard = memo<DiscoverAgentItem>(
               style={{ flex: 'none' }}
             />
             <Flex vertical flex={1} gap={2} style={{ overflow: 'hidden' }}>
-              <Typography.Text className={styles.title} ellipsis>
+              <Text className={styles.title} ellipsis>
                 {title}
-              </Typography.Text>
+              </Text>
               {/* <div className={styles.author}>{author}</div> */}
             </Flex>
           </Flex>
         </Flex>
 
         <Flex vertical flex={1} gap={12} style={{ paddingInline: 16 }}>
-          <Typography.Paragraph className={styles.desc} ellipsis={{ rows: 3 }} style={{ marginBottom: 0 }}>
+          <Text as='p' className={styles.desc} ellipsis={{ rows: 3 }} style={{ marginBottom: 0 }}>
             {description}
-          </Typography.Paragraph>
+          </Text>
           <Flex align='center' gap={4}>
             {typeof tokenUsage === 'number' ? (
-              <Tag className={styles.token} icon={<Icon icon={CoinsIcon} size={12} />}>
+              <Tag className={styles.token} icon={<Icon icon={CoinsIcon} size={12} />} size='small'>
                 {formatNumber(tokenUsage)}
               </Tag>
             ) : null}
             {forkCount ? (
-              <Tag className={styles.token} icon={<Icon icon={GitForkIcon} size={12} />}>
+              <Tag className={styles.token} icon={<Icon icon={GitForkIcon} size={12} />} size='small'>
                 {formatNumber(forkCount)}
               </Tag>
             ) : null}
             {pluginCount ? (
-              <Tag className={styles.token} icon={<Icon icon={PuzzleIcon} size={12} />}>
+              <Tag className={styles.token} icon={<Icon icon={PuzzleIcon} size={12} />} size='small'>
                 {pluginCount}
               </Tag>
             ) : null}
             {knowledgeCount ? (
-              <Tag className={styles.token} icon={<Icon icon={BookTextIcon} size={12} />}>
+              <Tag className={styles.token} icon={<Icon icon={BookTextIcon} size={12} />} size='small'>
                 {knowledgeCount}
               </Tag>
             ) : null}
@@ -184,7 +179,7 @@ const AgentCard = memo<DiscoverAgentItem>(
         <Flex align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>
           <Flex align='center' className={styles.secondaryDesc} gap={4}>
             <Icon icon={ClockIcon} size={14} />
-            <span>{formatDate(createdAt)}</span>
+            <span>{formatDate(createdAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
           </Flex>
           <span className={styles.secondaryDesc}>{ASSISTANT_CATEGORY_LABELS[category]}</span>
         </Flex>

@@ -1,7 +1,7 @@
 'use client'
 
-import { Block, Icon } from '@pure/ui'
-import { Flex, Typography, Input } from 'antd'
+import { Block, Icon, Text } from '@pure/ui'
+import { Flex, Input } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { cssVar } from 'antd-style'
 import { BriefcaseIcon } from 'lucide-react'
@@ -96,7 +96,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
                 variant='outlined'
               >
                 <Icon color={cssVar.colorTextSecondary} icon={item.icon} size={14} />
-                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>{item.label}</Typography.Text>
+                <Text style={{ fontSize: 13, fontWeight: 500 }}>{item.label}</Text>
               </Block>
             )
           })}
@@ -114,7 +114,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
                 }}
                 variant='outlined'
               >
-                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>{interest}</Typography.Text>
+                <Text style={{ fontSize: 13, fontWeight: 500 }}>{interest}</Text>
               </Block>
             ))}
           <Block
@@ -131,7 +131,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
             variant='outlined'
           >
             <Icon color={cssVar.colorTextSecondary} icon={BriefcaseIcon} size={14} />
-            <Typography.Text style={{ fontSize: 13, fontWeight: 500 }}>其他领域</Typography.Text>
+            <Text style={{ fontSize: 13, fontWeight: 500 }}>其他领域</Text>
           </Block>
         </Flex>
         {showCustomInput ? (

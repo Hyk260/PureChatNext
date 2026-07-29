@@ -1,6 +1,8 @@
 'use client'
 
-import { Flex, Typography, Tabs } from 'antd'
+import { Flex, Tabs } from 'antd'
+import { DEFAULT_MODEL_PROVIDER_LIST, getAiModel } from '@pure/model-bank'
+import { Text } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useMemo, useState } from 'react'
@@ -36,24 +38,29 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   const [tab, setTab] = useState<ModelTab>('all')
   const [loading, setLoading] = useState(false)
 
+  const showModelFetcher =
+    DEFAULT_MODEL_PROVIDER_LIST.find((provider) => provider.id === id)?.settings?.showModelFetcher !== false
+
   const models = useMemo(() => config?.models ?? [], [config?.models])
 
   const filteredModels = useMemo(() => {
     const query = keyword.trim().toLowerCase()
     // All current providers only expose chat models; keep a single tab for now.
-    const list = models
+    const list = models.filter((model) => getAiModel(id, model.id)?.enabled !== false)
 
     if (!query) return list
 
     return list.filter(
       (model) => model.displayName.toLowerCase().includes(query) || model.id.toLowerCase().includes(query)
     )
-  }, [keyword, models])
+  }, [id, keyword, models])
 
   const enabledModels = filteredModels.filter((model) => model.enabled)
   const disabledModels = filteredModels.filter((model) => !model.enabled)
 
   const fetchRemoteModels = async () => {
+    if (!showModelFetcher) return
+
     setLoading(true)
     try {
       const apiKey = config?.apiKey.trim() ?? ''
@@ -99,13 +106,16 @@ const ModelList = memo<ModelListProps>(({ id }) => {
     }
   }
 
+  const handleFetch = showModelFetcher ? () => void fetchRemoteModels() : undefined
+
   return (
     <Flex vertical gap={8} style={{ width: '100%' }}>
       <ModelTitle
         loading={loading}
         searchKeyword={keyword}
+        showModelFetcher={showModelFetcher}
         total={models.length}
-        onFetch={() => void fetchRemoteModels()}
+        onFetch={handleFetch}
         onKeywordChange={setKeyword}
       />
 
@@ -119,7 +129,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
       />
 
       {filteredModels.length === 0 ? (
-        <EmptyModels loading={loading} onFetch={() => void fetchRemoteModels()} />
+        <EmptyModels loading={loading} onFetch={handleFetch} />
       ) : (
         <Flex vertical gap={4} style={{ width: '100%' }}>
           {enabledModels.length > 0 ? (
@@ -134,7 +144,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
           {disabledModels.length > 0 ? (
             <>
               <div className={styles.sectionLabel}>
-                <Typography.Text type='secondary'>未启用</Typography.Text>
+                <Text type='secondary'>未启用</Text>
               </div>
               {disabledModels.map((model) => (
                 <ModelItem key={model.id} model={model} provider={id} />

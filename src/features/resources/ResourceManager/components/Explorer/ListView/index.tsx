@@ -1,7 +1,8 @@
 'use client'
 
-import { Checkbox, Flex, Typography } from 'antd'
-import { Center } from '@pure/ui'
+import { Checkbox, Flex } from 'antd'
+import { Center, Text } from '@pure/ui'
+import { formatDateTime, formatSize } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useCallback, type MouseEvent, type PointerEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
@@ -48,21 +49,6 @@ const styles = createStaticStyles(({ css }) => ({
     }
   `,
 }))
-
-const formatSize = (bytes: number) => {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-const formatDate = (date: Date) =>
-  new Date(date).toLocaleString(undefined, {
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
 
 interface ListItemProps {
   index: number
@@ -123,12 +109,12 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
         }}
       >
         <FileIcon fileType={item.fileType} />
-        <Typography.Text ellipsis style={{ color: cssVar.colorText, flex: 1, minWidth: 0 }}>
+        <Text ellipsis style={{ color: cssVar.colorText, flex: 1, minWidth: 0 }}>
           {item.name}
-        </Typography.Text>
+        </Text>
       </Flex>
       <Flex vertical className={styles.item} style={{ flexShrink: 0, width: columnWidths.date }}>
-        {formatDate(item.createdAt)}
+        {formatDateTime(item.createdAt)}
       </Flex>
       <Flex vertical className={styles.item} style={{ flexShrink: 0, width: columnWidths.size }}>
         {isFolder ? '-' : formatSize(item.size)}

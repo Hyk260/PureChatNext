@@ -1,6 +1,8 @@
 'use client'
 
-import { Flex, Typography, Button, Alert, Input, Radio, Select, Spin } from 'antd'
+import { Flex, Button, Alert, Input, Radio, Select, Spin } from 'antd'
+import { copyToClipboard, Text } from '@pure/ui'
+import { formatDateTime } from '@pure/utils/client'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Trash2Icon } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
@@ -12,17 +14,8 @@ import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { bindQQ, fetchQQStatus, type QQConnectionMode, type QQStatus, unbindQQ, updateQQAgent } from './qqApi'
 
-function formatActiveAt(value: string) {
-  return new Date(value).toLocaleString('zh-CN', {
-    day: '2-digit',
-    hour: '2-digit',
-    hour12: false,
-    minute: '2-digit',
-    month: '2-digit',
-    second: '2-digit',
-    year: 'numeric',
-  })
-}
+const formatActiveAt = (value: string) =>
+  formatDateTime(value, { hour12: false, second: '2-digit' })
 
 const DISCONNECTED_STATUS: QQStatus = {
   connected: false,
@@ -155,14 +148,14 @@ const MessengerQQPage = memo(() => {
   return (
     <MessengerDetailShell headerAction={headerAction} platform='qq' platformMeta={platformMeta}>
       <Flex vertical gap={12}>
-        <Typography.Text strong style={{ fontSize: 15 }}>
+        <Text strong style={{ fontSize: 15 }}>
           连接 QQ
-        </Typography.Text>
+        </Text>
 
         <Flex vertical gap={8}>
-          <Typography.Text type='secondary' style={{ fontSize: 13 }}>
+          <Text type='secondary' style={{ fontSize: 13 }}>
             绑定助手
-          </Typography.Text>
+          </Text>
           <Select
             options={agents}
             style={{ maxWidth: 360 }}
@@ -174,9 +167,9 @@ const MessengerQQPage = memo(() => {
         {showConnect ? (
           <>
             <Flex vertical gap={8}>
-              <Typography.Text type='secondary' style={{ fontSize: 13 }}>
+              <Text type='secondary' style={{ fontSize: 13 }}>
                 App ID
-              </Typography.Text>
+              </Text>
               <Input
                 placeholder='来自 q.qq.com 开发设置'
                 style={{ maxWidth: 420 }}
@@ -185,9 +178,9 @@ const MessengerQQPage = memo(() => {
               />
             </Flex>
             <Flex vertical gap={8}>
-              <Typography.Text type='secondary' style={{ fontSize: 13 }}>
+              <Text type='secondary' style={{ fontSize: 13 }}>
                 App Secret
-              </Typography.Text>
+              </Text>
               <Input.Password
                 placeholder='请妥善保管，不会回显已保存的密钥'
                 style={{ maxWidth: 420 }}
@@ -196,9 +189,9 @@ const MessengerQQPage = memo(() => {
               />
             </Flex>
             <Flex vertical gap={8}>
-              <Typography.Text type='secondary' style={{ fontSize: 13 }}>
+              <Text type='secondary' style={{ fontSize: 13 }}>
                 连接模式
-              </Typography.Text>
+              </Text>
               <Radio.Group
                 value={connectionMode}
                 onChange={(e) => setConnectionMode(e.target.value as QQConnectionMode)}
@@ -207,11 +200,11 @@ const MessengerQQPage = memo(() => {
                 <Radio.Button value='webhook'>Webhook</Radio.Button>
               </Radio.Group>
             </Flex>
-            <Typography.Text type='secondary' style={{ fontSize: 13 }}>
+            <Text type='secondary' style={{ fontSize: 13 }}>
               {connectionMode === 'websocket'
                 ? '保存后请运行 pnpm qq:gateway 维护 WebSocket 连接。'
                 : '保存后将显示回调地址，请粘贴到 QQ 开放平台「回调配置」。'}
-            </Typography.Text>
+            </Text>
           </>
         ) : (
           <>
@@ -231,16 +224,23 @@ const MessengerQQPage = memo(() => {
                 type='info'
                 title='Webhook 回调地址'
                 description={
-                  <Typography.Text copyable style={{ fontSize: 13 }}>
+                  <Text
+                    style={{ cursor: 'copy', fontSize: 13 }}
+                    title='点击复制'
+                    onClick={async () => {
+                      await copyToClipboard(status.webhookUrl!)
+                      message.success('已复制 Webhook 回调地址')
+                    }}
+                  >
                     {status.webhookUrl}
-                  </Typography.Text>
+                  </Text>
                 }
               />
             )}
             {status?.connectionMode === 'websocket' && (
-              <Typography.Text type='secondary' style={{ fontSize: 13 }}>
+              <Text type='secondary' style={{ fontSize: 13 }}>
                 自托管请保持运行：pnpm qq:gateway
-              </Typography.Text>
+              </Text>
             )}
           </>
         )}

@@ -1,6 +1,7 @@
 'use client'
 
-import { Flex, Typography, Button } from 'antd'
+import { Flex, Button } from 'antd'
+import { Text } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { RefreshCw } from 'lucide-react'
@@ -37,9 +38,9 @@ const RecommendationList = memo(() => {
   return (
     <Flex vertical gap={12}>
       <Flex align='center' gap={8} justify='space-between'>
-        <Typography.Text className={styles.subtitle} style={{ fontSize: 12 }}>
+        <Text className={styles.subtitle} style={{ fontSize: 12 }}>
           为你推荐的一些功能
-        </Typography.Text>
+        </Text>
         <Button icon={<RefreshCw size={12} />} size='small' type='text' onClick={handleRefresh}>
           换一批
         </Button>

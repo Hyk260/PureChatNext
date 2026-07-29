@@ -19,7 +19,7 @@ const ModelList = memo<ModelListProps>(({ data = [], rows = 3 }) => {
   return (
     <Grid rows={rows} width='100%'>
       {data.map((item) => (
-        <ModelCard key={item.identifier} {...item} />
+        <ModelCard key={item.id} {...item} />
       ))}
     </Grid>
   )

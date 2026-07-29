@@ -28,7 +28,7 @@ export async function generateQQAgentReply(params: {
 
   const providerRaw = agent.provider ?? 'deepseek'
   const provider = isSupportedProviderId(providerRaw) ? providerRaw : 'deepseek'
-  const modelId = agent.model ?? (provider === 'openai' ? 'gpt-4o-mini' : 'deepseek-v4-flash')
+  const modelId = agent.model ?? (provider === 'openai' ? 'gpt-5.4-mini' : 'deepseek-v4-flash')
   const apiKey = resolveProviderApiKey(provider, undefined, undefined)
 
   if (!apiKey) {

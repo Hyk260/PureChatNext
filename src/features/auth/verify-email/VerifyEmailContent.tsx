@@ -1,7 +1,7 @@
 'use client'
 
-import { Block } from '@pure/ui'
-import { Flex, Typography, Button, Input } from 'antd'
+import { Block, Text } from '@pure/ui'
+import { Flex, Button, Input } from 'antd'
 import { RefreshCw } from 'lucide-react'
 
 import { useAuthConfig } from '@/libs/better-auth/client'
@@ -37,9 +37,9 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
   return (
     <Flex vertical gap={16}>
       <Block padding={24}>
-        <Typography.Text style={{ textAlign: 'center' }}>
+        <Text style={{ textAlign: 'center' }}>
           验证码将在 {expirationText} 后过期；如未收到，请检查垃圾邮件文件夹。
-        </Typography.Text>
+        </Text>
       </Block>
 
       <Flex vertical align='center' justify='center'>
@@ -70,9 +70,9 @@ const VerifyEmailLinkContent = ({ email, callbackUrl, mode }: VerifyEmailModeCon
   return (
     <Flex vertical gap={16}>
       <Block padding={24}>
-        <Typography.Text style={{ textAlign: 'center' }}>
+        <Text style={{ textAlign: 'center' }}>
           如果没有收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送。
-        </Typography.Text>
+        </Text>
       </Block>
 
       <Button icon={<RefreshCw size={16} />} loading={resending} onClick={handleResend} size='large' type='default'>

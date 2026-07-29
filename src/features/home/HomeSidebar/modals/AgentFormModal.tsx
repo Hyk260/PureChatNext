@@ -1,6 +1,7 @@
 'use client'
 
-import { Flex, Typography, Input, Modal } from 'antd'
+import { Flex, Input, Modal } from 'antd'
+import { Text } from '@pure/ui'
 import { memo, useEffect, useState } from 'react'
 
 import { type AgentListItem } from '@/const/home/agents'
@@ -71,9 +72,9 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
     >
       <Flex vertical gap={12} style={{ paddingBlock: 8 }}>
         <Flex vertical gap={4}>
-          <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+          <Text type='secondary' style={{ fontSize: 12 }}>
             名称
-          </Typography.Text>
+          </Text>
           <Input
             placeholder='助理名称'
             value={values.title}
@@ -81,9 +82,9 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
           />
         </Flex>
         <Flex vertical gap={4}>
-          <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+          <Text type='secondary' style={{ fontSize: 12 }}>
             头像（emoji 或 URL）
-          </Typography.Text>
+          </Text>
           <Input
             placeholder='✨'
             value={values.avatar}
@@ -91,9 +92,9 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
           />
         </Flex>
         <Flex vertical gap={4}>
-          <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+          <Text type='secondary' style={{ fontSize: 12 }}>
             描述
-          </Typography.Text>
+          </Text>
           <Input
             placeholder='简短描述'
             value={values.description}
@@ -101,9 +102,9 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
           />
         </Flex>
         <Flex vertical gap={4}>
-          <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+          <Text type='secondary' style={{ fontSize: 12 }}>
             系统提示词
-          </Typography.Text>
+          </Text>
           <Input.TextArea
             placeholder='系统提示词'
             rows={6}

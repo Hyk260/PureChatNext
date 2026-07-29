@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { me, logout } from '@/libs/utils/api-client'
+import { formatDateTime } from '@pure/utils/client'
 import { useRouter } from '@/utils/navigation'
 
 interface UserData {
@@ -63,15 +64,6 @@ export default function ProtectedPage() {
     { label: '角色', value: user.role || '普通用户' },
   ]
 
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-
   const handleLogout = async () => {
     await logout()
     router.push('/login')
@@ -124,11 +116,11 @@ export default function ProtectedPage() {
           <div className='mt-5 space-y-1.5 rounded-xl border border-white/5 bg-white/1 px-5 py-3'>
             <p className='text-[11px]'>
               <span className='text-zinc-500'>注册时间</span>
-              <span className='float-right text-zinc-500'>{formatDate(user.createdAt)}</span>
+              <span className='float-right text-zinc-500'>{formatDateTime(user.createdAt)}</span>
             </p>
             <p className='text-[11px]'>
               <span className='text-zinc-500'>最近访问</span>
-              <span className='float-right text-zinc-500'>{formatDate(user.accessedAt)}</span>
+              <span className='float-right text-zinc-500'>{formatDateTime(user.accessedAt)}</span>
             </p>
           </div>
 

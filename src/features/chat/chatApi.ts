@@ -2,11 +2,14 @@ import { type UIMessage } from 'ai'
 
 import { apiFetch } from '@/utils/apiFetch'
 
-import { type LocalChatTopic } from './types'
+import { type LocalChatTopic, type TopicDeleteScope, type TopicUpdate } from './types'
 
 type ApiTopic = {
   id: string
   agentId: string
+  createdAt: string
+  favorite: boolean
+  projectName: string | null
   title: string
   updatedAt: string
 }
@@ -14,6 +17,9 @@ type ApiTopic = {
 const toLocalTopic = (t: ApiTopic): LocalChatTopic => ({
   id: t.id,
   agentId: t.agentId,
+  createdAt: new Date(t.createdAt).getTime(),
+  favorite: Boolean(t.favorite),
+  projectName: t.projectName ?? null,
   title: t.title,
   updatedAt: new Date(t.updatedAt).getTime(),
 })
@@ -37,20 +43,31 @@ export const createTopic = async (agentId: string, title?: string): Promise<Loca
   return toLocalTopic((await res.json()) as ApiTopic)
 }
 
-export const renameTopic = async (id: string, title: string): Promise<LocalChatTopic> => {
+export const updateTopic = async (id: string, patch: TopicUpdate): Promise<LocalChatTopic> => {
   const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}`, {
-    body: JSON.stringify({ title }),
+    body: JSON.stringify(patch),
     headers: { 'Content-Type': 'application/json' },
     method: 'PATCH',
   })
-  if (!res.ok) throw new Error(`renameTopic failed: ${res.status}`)
+  if (!res.ok) throw new Error(`updateTopic failed: ${res.status}`)
 
   return toLocalTopic((await res.json()) as ApiTopic)
 }
 
+export const renameTopic = async (id: string, title: string): Promise<LocalChatTopic> => updateTopic(id, { title })
+
 export const deleteTopic = async (id: string): Promise<void> => {
   const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}`, { method: 'DELETE' })
   if (!res.ok) throw new Error(`deleteTopic failed: ${res.status}`)
+}
+
+export const deleteTopics = async (agentId: string, scope: TopicDeleteScope): Promise<string[]> => {
+  const params = new URLSearchParams({ agentId, scope })
+  const res = await apiFetch(`/api/chat/topics?${params.toString()}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(`deleteTopics failed: ${res.status}`)
+
+  const payload = (await res.json()) as { deletedIds: string[] }
+  return payload.deletedIds
 }
 
 export const fetchMessages = async (topicId: string): Promise<UIMessage[]> => {

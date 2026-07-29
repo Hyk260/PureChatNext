@@ -1,6 +1,6 @@
 'use client'
 
-import { Typography } from 'antd'
+import { Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -15,9 +15,9 @@ const styles = createStaticStyles(({ css }) => ({
 
 const HomeWelcomeText = memo(() => {
   return (
-    <Typography.Text className={styles.text} style={{ fontSize: 16 }}>
+    <Text className={styles.text} style={{ fontSize: 16 }}>
       继续前行吧 听候差遣
-    </Typography.Text>
+    </Text>
   )
 })
 

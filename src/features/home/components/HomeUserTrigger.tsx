@@ -1,8 +1,8 @@
 'use client'
 
-import { Avatar, Button, Flex, Typography } from 'antd'
+import { Avatar, Button, Flex } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
-import { Block, Icon, Popover } from '@pure/ui'
+import { Block, Icon, Popover, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronDownIcon, LogOut, Settings2 } from 'lucide-react'
 import Link from '@/utils/link'
@@ -12,6 +12,7 @@ import Menu from '@/components/Menu'
 import { signOut, useSession } from '@/libs/better-auth/client'
 
 import DataStatistics from './DataStatistics'
+import FreeCreditsSummary from './FreeCreditsSummary'
 
 const styles = createStaticStyles(({ css }) => ({
   popover: css`
@@ -31,18 +32,39 @@ interface UserInfoSectionProps {
   avatar: string
   email?: string | null
   name: string
+  planLabel?: string
 }
 
-const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name }) => (
+const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planLabel }) => (
   <Flex align='center' gap={12} style={{ paddingBlock: 12, paddingInline: 12 }}>
     <Flex align='center' gap={10}>
       <Avatar size={36} src={avatar} style={{ background: cssVar.colorFill }} />
       <Flex vertical flex={1}>
-        <Typography.Text style={{ lineHeight: 1.4, fontWeight: 'bold' }}>{name}</Typography.Text>
+        <Flex align='center' gap={8}>
+          <Text as='span' style={{ lineHeight: 1.4 }} weight='bold'>
+            {name}
+          </Text>
+          {planLabel ? (
+            <Text
+              as='span'
+              fontSize={12}
+              noWrap
+              type='secondary'
+              style={{
+                background: cssVar.colorFillTertiary,
+                borderRadius: 999,
+                lineHeight: '22px',
+                paddingInline: 8,
+              }}
+            >
+              {planLabel}
+            </Text>
+          ) : null}
+        </Flex>
         {email ? (
-          <Typography.Text type='secondary' style={{ fontSize: 12, lineHeight: 1.4 }}>
+          <Text as='span' fontSize={12} type='secondary' style={{ lineHeight: 1.4 }}>
             {email}
-          </Typography.Text>
+          </Text>
         ) : null}
       </Flex>
     </Flex>
@@ -115,8 +137,9 @@ const HomeUserTrigger = memo(() => {
 
   const menuContent = session?.user ? (
     <Flex vertical gap={2} style={{ minWidth: 300 }}>
-      <UserInfoSection avatar={avatar} email={session.user.email} name={displayName} />
+      <UserInfoSection avatar={avatar} email={session.user.email} name={displayName} planLabel='免费版' />
       <DataStatistics />
+      <FreeCreditsSummary onClick={() => setOpen(false)} />
       <Menu items={settingsItems} onClick={handleMenuClick} />
       <Menu items={logoutItems} onClick={handleMenuClick} />
     </Flex>
@@ -163,9 +186,9 @@ const HomeUserTrigger = memo(() => {
       >
         <Avatar shape='square' size={28} src={avatar} />
         <Flex align='center' gap={4} style={{ overflow: 'hidden' }}>
-          <Typography.Text ellipsis style={{ flex: 1, fontWeight: 500 }}>
+          <Text as='span' ellipsis style={{ flex: 1 }} weight={500}>
             {displayName}
-          </Typography.Text>
+          </Text>
           <Icon color={cssVar.colorTextDescription} icon={ChevronDownIcon} />
         </Flex>
       </Block>

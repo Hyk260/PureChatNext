@@ -1,7 +1,7 @@
 'use client'
 
-import { Icon, ProviderIcon, ScrollShadow } from '@pure/ui'
-import { Flex, Typography, Input } from 'antd'
+import { Icon, ProviderIcon, ScrollShadow, Text } from '@pure/ui'
+import { Flex, Input } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LayoutGrid, Search } from 'lucide-react'
 import Link from '@/utils/link'
@@ -109,31 +109,31 @@ const ProviderSettingsNav = memo(() => {
             <NavItem active={isAllActive} clickable icon={LayoutGrid} title='全部' />
           </Link>
           <div className={styles.groupTitle}>
-            <Typography.Text type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+            <Text type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
               已启用
-            </Typography.Text>
+            </Text>
           </div>
           <Flex vertical gap={1}>
             {enabledIds.length > 0 ? (
               enabledIds.map((id) => <ProviderNavItem active={activeId === id} id={id} key={id} />)
             ) : (
-              <Typography.Text type='secondary' style={{ fontSize: 12, paddingBlock: 4, paddingInline: 12 }}>
+              <Text type='secondary' style={{ fontSize: 12, paddingBlock: 4, paddingInline: 12 }}>
                 暂无
-              </Typography.Text>
+              </Text>
             )}
           </Flex>
           <div className={styles.groupTitle}>
-            <Typography.Text type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+            <Text type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
               未启用
-            </Typography.Text>
+            </Text>
           </div>
           <Flex vertical gap={1}>
             {disabledIds.length > 0 ? (
               disabledIds.map((id) => <ProviderNavItem active={activeId === id} id={id} key={id} />)
             ) : (
-              <Typography.Text type='secondary' style={{ fontSize: 12, paddingBlock: 4, paddingInline: 12 }}>
+              <Text type='secondary' style={{ fontSize: 12, paddingBlock: 4, paddingInline: 12 }}>
                 暂无
-              </Typography.Text>
+              </Text>
             )}
           </Flex>
         </Flex>

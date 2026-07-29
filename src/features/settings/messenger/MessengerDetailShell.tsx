@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
-import { Block, Icon } from '@pure/ui'
+import { Flex } from 'antd'
+import { Block, Icon, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowLeftIcon } from 'lucide-react'
 import { memo, type ReactNode } from 'react'
@@ -64,21 +64,21 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
           }}
         >
           <Icon icon={ArrowLeftIcon} size='small' />
-          <Typography.Text strong style={{ fontSize: 20 }}>
+          <Text strong style={{ fontSize: 20 }}>
             {platformMeta.name}
-          </Typography.Text>
+          </Text>
         </span>
 
         <Block className={styles.card}>
           <Flex align='center' gap={16}>
             <PlatformAvatar platform={platform} size={48} />
             <Flex vertical flex={1} gap={2}>
-              <Typography.Text strong style={{ fontSize: 15 }}>
+              <Text strong style={{ fontSize: 15 }}>
                 {platformMeta.name}
-              </Typography.Text>
-              <Typography.Text type='secondary' style={{ fontSize: 13 }}>
+              </Text>
+              <Text type='secondary' style={{ fontSize: 13 }}>
                 {platformMeta.description}
-              </Typography.Text>
+              </Text>
             </Flex>
             {headerAction}
           </Flex>

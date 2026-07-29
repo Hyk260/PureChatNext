@@ -3,8 +3,8 @@
 import { BRANDING_NAME } from '@/const/branding'
 import AuthAgreement from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
-import { Icon } from '@pure/ui'
-import { Typography, Button, Form, Input, type InputRef } from 'antd'
+import { Icon, Text } from '@pure/ui'
+import { Button, Form, Input, type InputRef } from 'antd'
 import { Lock, Mail } from 'lucide-react'
 import Link from '@/utils/link'
 import { useSearchParams } from '@/utils/navigation'
@@ -38,9 +38,9 @@ const SignUpFormContent = () => {
   const signinHref = `/signin?${searchParams.toString()}`
 
   const footer = (
-    <Typography.Text>
+    <Text>
       已有账号？ <Link href={signinHref}>去登录</Link>
-    </Typography.Text>
+    </Text>
   )
 
   return (

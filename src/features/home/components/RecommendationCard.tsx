@@ -1,7 +1,7 @@
 'use client'
 
-import { Block, Github } from '@pure/ui'
-import { Flex, Typography, Button, Divider, Tag } from 'antd'
+import { Block, Github, Tag, Text } from '@pure/ui'
+import { Flex, Button, Divider } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { memo, useCallback, useState } from 'react'
@@ -49,16 +49,16 @@ const RecommendationCard = memo<RecommendationCardProps>(({ item }) => {
     <Block className={styles.card} gap={12} padding={12} variant='outlined'>
       <Flex align='center' gap={8} style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
         <Github size={18} type='mono' />
-        <Typography.Text ellipsis style={{ fontSize: 16, fontWeight: 500 }}>
+        <Text ellipsis style={{ fontSize: 16, fontWeight: 500 }}>
           {item.title}
-        </Typography.Text>
+        </Text>
       </Flex>
       <Divider dashed style={{ marginBlock: 0 }} />
-      <Typography.Text className={styles.description} style={{ fontSize: 13 }}>
+      <Text className={styles.description} style={{ fontSize: 13 }}>
         {item.description}
-      </Typography.Text>
+      </Text>
       <Flex align='center' gap={8} justify='space-between' wrap='wrap'>
-        <Tag bordered style={{ fontSize: 12 }}>
+        <Tag size='small' style={{ fontSize: 12 }}>
           {item.tag}
         </Tag>
         <Button className={cx(styles.actionBtnPrimary)} loading={loading} shape='round' onClick={handleClick}>

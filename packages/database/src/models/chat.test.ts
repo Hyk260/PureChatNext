@@ -90,6 +90,24 @@ describeIfDb('ChatTopicModel ownership', () => {
     expect(topic?.title).toBe('A 的话题')
   })
 
+  it('persists favorite and project changes for the owner only', async () => {
+    const topicModelA = new ChatTopicModel(userAId, db)
+    const updated = await topicModelA.update(topicId, { favorite: true, projectName: 'PureChat' })
+
+    expect(updated?.favorite).toBe(true)
+    expect(updated?.projectName).toBe('PureChat')
+
+    const blocked = await new ChatTopicModel(userBId, db).update(topicId, {
+      favorite: false,
+      projectName: 'Other',
+    })
+    expect(blocked).toBeUndefined()
+
+    const topic = await topicModelA.findById(topicId)
+    expect(topic?.favorite).toBe(true)
+    expect(topic?.projectName).toBe('PureChat')
+  })
+
   it('has no effect when another user delete', async () => {
     await new ChatTopicModel(userBId, db).delete(topicId)
 
@@ -103,6 +121,21 @@ describeIfDb('ChatTopicModel ownership', () => {
 
     const otherTopics = await new ChatTopicModel(userBId, db).listByAgent(TEST_AGENT_ID)
     expect(otherTopics).toEqual([])
+  })
+
+  it('bulk deletes by agent while preserving favorites when requested', async () => {
+    const agentId = `${TEST_AGENT_ID}-bulk`
+    const model = new ChatTopicModel(userAId, db)
+    const favorite = await model.create({ agentId, title: 'Favorite' })
+    const regular = await model.create({ agentId, title: 'Regular' })
+    await model.update(favorite.id, { favorite: true })
+
+    const deletedRegular = await model.deleteByAgent(agentId, 'unfavorited')
+    expect(deletedRegular.map((item) => item.id)).toEqual([regular.id])
+    expect(await model.findById(favorite.id)).toBeDefined()
+
+    const deletedRest = await model.deleteByAgent(agentId, 'all')
+    expect(deletedRest.map((item) => item.id)).toEqual([favorite.id])
   })
 })
 

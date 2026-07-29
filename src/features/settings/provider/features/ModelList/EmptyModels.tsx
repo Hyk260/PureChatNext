@@ -1,6 +1,7 @@
 'use client'
 
-import { Button, Empty, Flex, Typography } from 'antd'
+import { Button, Empty, Flex } from 'antd'
+import { Text } from '@pure/ui'
 import { memo } from 'react'
 
 interface EmptyModelsProps {
@@ -11,7 +12,7 @@ interface EmptyModelsProps {
 const EmptyModels = memo<EmptyModelsProps>(({ loading, onFetch }) => (
   <Flex vertical align='center' gap={12} style={{ paddingBlock: 32, width: '100%' }}>
     <Empty
-      description={<Typography.Text type='secondary'>暂无模型</Typography.Text>}
+      description={<Text type='secondary'>暂无模型</Text>}
       image={Empty.PRESENTED_IMAGE_SIMPLE}
     />
     {onFetch ? (

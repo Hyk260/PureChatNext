@@ -1,7 +1,23 @@
-export type ErrorType = 'bad_request' | 'unauthorized' | 'forbidden' | 'not_found' | 'rate_limit' | 'offline'
+export type ErrorType =
+  | 'bad_request'
+  | 'unauthorized'
+  | 'forbidden'
+  | 'not_found'
+  | 'rate_limit'
+  | 'offline'
+  | 'free_plan_limit'
 
 export type Surface =
-  'chat' | 'auth' | 'api' | 'stream' | 'database' | 'history' | 'vote' | 'document' | 'suggestions' | 'activate_gateway'
+  | 'chat'
+  | 'auth'
+  | 'api'
+  | 'stream'
+  | 'database'
+  | 'history'
+  | 'vote'
+  | 'document'
+  | 'suggestions'
+  | 'activate_gateway'
 
 export type ErrorCode = `${ErrorType}:${Surface}`
 
@@ -56,7 +72,15 @@ export class ChatSDKError extends Error {
       )
     }
 
-    return Response.json({ code, message, cause }, { status: statusCode })
+    return Response.json(
+      {
+        cause,
+        code,
+        errorType: this.type === 'free_plan_limit' ? 'FreePlanLimit' : undefined,
+        message,
+      },
+      { status: statusCode }
+    )
   }
 }
 
@@ -79,6 +103,8 @@ export function getMessageByErrorCode(errorCode: ErrorCode): string {
 
     case 'rate_limit:chat':
       return 'You have exceeded your maximum number of messages for the day. Please try again later.'
+    case 'free_plan_limit:chat':
+      return '免费积分已用尽。请等待下月重置，或自行配置模型 API Key 继续使用。'
     case 'not_found:chat':
       return 'The requested chat was not found. Please check the chat ID and try again.'
     case 'forbidden:chat':
@@ -113,6 +139,7 @@ function getStatusCodeByType(type: ErrorType) {
     case 'not_found':
       return 404
     case 'rate_limit':
+    case 'free_plan_limit':
       return 429
     case 'offline':
       return 503

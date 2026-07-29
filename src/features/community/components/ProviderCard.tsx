@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
-import { Block, MaskShadow, ModelTag, ProviderCombine, stopPropagation, ActionIcon } from '@pure/ui'
+import { Flex } from 'antd'
+import { Block, MaskShadow, ModelTag, ProviderCombine, stopPropagation, ActionIcon, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { GlobeIcon } from 'lucide-react'
 import { memo } from 'react'
@@ -49,7 +49,7 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
       </Flex>
       <Flex vertical flex={1} gap={12} style={{ paddingInline: 16 }}>
         {description ? (
-          <Typography.Paragraph
+          <Text as='p'
             className={styles.desc}
             ellipsis={{
               rows: 3,
@@ -57,7 +57,7 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
             style={{ marginBottom: 0 }}
           >
             {description}
-          </Typography.Paragraph>
+          </Text>
         ) : null}
       </Flex>
       <Flex align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>

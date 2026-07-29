@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex, Tag, Typography } from 'antd'
-import { Icon } from '@pure/ui'
+import { Flex } from 'antd'
+import { Icon, Tag, Text } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import {
   BadgeDollarSignIcon,
@@ -136,10 +136,11 @@ const AgentCategory = memo(() => {
             onClick={() => handleSelect(key)}
           >
             <Icon icon={CATEGORY_ICONS[key]} size={18} />
-            <Typography.Text ellipsis>{ASSISTANT_CATEGORY_LABELS[key]}</Typography.Text>
+            <Text ellipsis>{ASSISTANT_CATEGORY_LABELS[key]}</Text>
             {counts[key] > 0 ? (
               <Tag
                 className={styles.count}
+                size='small'
                 style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
               >
                 {counts[key]}

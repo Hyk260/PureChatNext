@@ -1,7 +1,7 @@
 'use client'
 
-import { Block, ProviderCombine } from '@pure/ui'
-import { Flex, Typography, Switch } from 'antd'
+import { Block, ProviderCombine, Text } from '@pure/ui'
+import { Flex, Switch } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { useRouter } from '@/utils/navigation'
 import { memo } from 'react'
@@ -59,15 +59,15 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
         />
       </Flex>
       <Flex vertical gap={6}>
-        <Typography.Text style={{ fontWeight: 600 }}>{meta.name}</Typography.Text>
+        <Text style={{ fontWeight: 600 }}>{meta.name}</Text>
         {meta.description ? (
-          <Typography.Paragraph
+          <Text as='p'
             className={styles.desc}
             ellipsis={{ rows: 2 }}
             style={{ marginBottom: 0, fontSize: 13 }}
           >
             {meta.description}
-          </Typography.Paragraph>
+          </Text>
         ) : null}
       </Flex>
     </Block>

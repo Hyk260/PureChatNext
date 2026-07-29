@@ -1,7 +1,7 @@
 'use client'
 
-import { Button, Flex, Tooltip, Typography } from 'antd'
-import { ActionIcon, Icon, SortableList } from '@pure/ui'
+import { Button, Flex } from 'antd'
+import { ActionIcon, Icon, SortableList, Text, Tooltip } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowDownToLine, Eye, EyeOff, PinIcon, RotateCcw } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
@@ -76,7 +76,7 @@ const SidebarSortableItemRow = memo<SidebarSortableItemProps>(({ hiddenSections,
       <Flex align='center' gap={8}>
         <SortableList.DragHandle />
         {section.icon ? <Icon icon={section.icon} size={18} /> : null}
-        <Typography.Text>{section.title}</Typography.Text>
+        <Text>{section.title}</Text>
       </Flex>
       {section.alwaysVisible ? (
         <Tooltip title='固定显示'>
@@ -97,9 +97,9 @@ const BoundSpacerItem = memo(() => (
   <Flex align='center' className={styles.item} gap={8}>
     <Icon icon={ArrowDownToLine} size={14} style={{ color: cssVar.colorTextQuaternary }} />
     <div className={styles.spacerLine} />
-    <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+    <Text type='secondary' style={{ fontSize: 12 }}>
       下方条目锚定到底部
-    </Typography.Text>
+    </Text>
     <div className={styles.spacerLine} />
   </Flex>
 ))

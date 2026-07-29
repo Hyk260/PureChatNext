@@ -1,6 +1,7 @@
 'use client'
 
-import { Typography, Input, Button, Form, Modal } from 'antd'
+import { Input, Button, Form, Modal } from 'antd'
+import { Text } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { useState } from 'react'
 
@@ -51,14 +52,14 @@ export function EmailSetting({ email }: EmailSettingProps) {
       <SettingRow
         action={
           email ? (
-            <Typography.Text onClick={() => setOpen(true)} style={{ cursor: 'pointer', fontSize: 13 }}>
+            <Text onClick={() => setOpen(true)} style={{ cursor: 'pointer', fontSize: 13 }}>
               修改邮箱
-            </Typography.Text>
+            </Text>
           ) : null
         }
         label='邮箱'
       >
-        <Typography.Text type={email ? undefined : 'secondary'}>{email || '未绑定邮箱'}</Typography.Text>
+        <Text type={email ? undefined : 'secondary'}>{email || '未绑定邮箱'}</Text>
       </SettingRow>
 
       <Modal
@@ -70,9 +71,9 @@ export function EmailSetting({ email }: EmailSettingProps) {
         open={open}
         title='修改邮箱'
       >
-        <Typography.Text type='secondary' style={{ display: 'block', marginBottom: 16 }}>
+        <Text type='secondary' style={{ display: 'block', marginBottom: 16 }}>
           验证邮件将发送到新邮箱地址，验证完成后邮箱才会更新。
-        </Typography.Text>
+        </Text>
         <Form form={form} layout='vertical' onFinish={handleSubmit}>
           <Form.Item
             label='新邮箱'

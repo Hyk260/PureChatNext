@@ -4,7 +4,7 @@ import './lib/load-env'
 
 async function main() {
   const result = streamText({
-    model: 'openai/gpt-5.5',
+    model: 'stepfun/step-3.7-flash',
     prompt: '创造一个新的节日，并描述它的传统。',
   })
 

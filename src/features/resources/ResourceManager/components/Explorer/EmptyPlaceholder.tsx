@@ -1,8 +1,7 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
-import { Center, FileTypeIcon } from '@pure/ui'
-import { Icon } from '@pure/ui'
+import { Flex } from 'antd'
+import { Center, FileTypeIcon, Icon, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowUpIcon } from 'lucide-react'
 import { memo, useRef, type ChangeEvent } from 'react'
@@ -76,8 +75,8 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
   return (
     <Center gap={24} height='100%' style={{ paddingBottom: 100 }} width='100%'>
       <Flex vertical justify='center' style={{ textAlign: 'center' }}>
-        <Typography.Text>把文件或文件夹拖到这里</Typography.Text>
-        <Typography.Text type='secondary'>或者</Typography.Text>
+        <Text>把文件或文件夹拖到这里</Text>
+        <Text type='secondary'>或者</Text>
       </Flex>
       <Flex gap={12}>
         <Flex vertical className={styles.card} onClick={() => fileInputRef.current?.click()} style={{ padding: 16 }}>

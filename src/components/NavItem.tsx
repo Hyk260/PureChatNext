@@ -1,8 +1,7 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
-import { Center } from '@pure/ui'
-import { type BlockProps, Block, Icon, type IconProps } from '@pure/ui'
+import { Flex } from 'antd'
+import { type BlockProps, Block, Center, Icon, type IconProps, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, type ReactNode } from 'react'
 
@@ -47,13 +46,13 @@ const NavItem = memo<NavItemProps>(
           </Center>
         ) : null}
         <Flex vertical flex={1} style={{ overflow: 'hidden' }}>
-          <Typography.Text
+          <Text
             ellipsis
             title={typeof title === 'string' ? title : undefined}
             style={{ color: textColor, flex: 1, minWidth: 0 }}
           >
             {title}
-          </Typography.Text>
+          </Text>
         </Flex>
       </Block>
     )

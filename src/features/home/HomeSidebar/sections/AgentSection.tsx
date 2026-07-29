@@ -1,7 +1,7 @@
 'use client'
 
-import { AccordionItem } from '@pure/ui'
-import { Flex, Skeleton, Typography } from 'antd'
+import { AccordionItem, Text } from '@pure/ui'
+import { Flex, Skeleton } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { useRouter } from '@/utils/navigation'
@@ -145,9 +145,9 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
         paddingBlock={4}
         paddingInline='8px 4px'
         title={
-          <Typography.Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+          <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
             助理
-          </Typography.Text>
+          </Text>
         }
       >
         <Flex vertical gap={1} style={{ paddingBlock: 1 }}>
@@ -171,9 +171,9 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
             ))
           ) : (
             <Flex vertical style={{ paddingBlock: 4, paddingInline: 12 }}>
-              <Typography.Text className={styles.empty} style={{ fontSize: 12 }}>
+              <Text className={styles.empty} style={{ fontSize: 12 }}>
                 暂无内容
-              </Typography.Text>
+              </Text>
             </Flex>
           )}
         </Flex>

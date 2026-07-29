@@ -6,11 +6,17 @@ export { Block, type BlockProps, type BlockVariant } from './Block'
 export { Center, Grid, MaskShadow, ScrollShadow } from './Layout'
 export {
   DropdownMenu,
+  DropdownMenuGroup,
+  DropdownMenuGroupLabel,
   DropdownMenuItem,
+  DropdownMenuItemIcon,
+  DropdownMenuItemLabel,
   DropdownMenuPopup,
   DropdownMenuPortal,
   DropdownMenuPositioner,
   DropdownMenuRoot,
+  DropdownMenuSubmenuRoot,
+  DropdownMenuSubmenuTrigger,
   DropdownMenuTrigger,
   renderDropdownMenuItems,
   type MenuInfo,
@@ -20,6 +26,10 @@ export { Popover, type PopoverPlacement, type PopoverProps, type PopoverTrigger 
 export { FileTypeIcon, Highlighter, Markdown, type MarkdownProps } from './Markdown'
 export { EditableText, SortableList } from './SortableList'
 export { ConfigProvider, ThemeProvider } from './ThemeProvider'
+export { SearchBar, type SearchBarProps } from './SearchBar'
+export { Text, type TextProps } from './Text'
+export { Tag, type TagProps } from './Tag'
+export { Tooltip, type TooltipPlacement, type TooltipProps } from './Tooltip'
 export { copyToClipboard, stopPropagation } from './utils'
 export { Icon, calcIconSize, type IconProps, type IconSize, type IconSizeConfig, type IconSizeType } from './Icon'
 

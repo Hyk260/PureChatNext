@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
-import { Avatar, type MenuInfo, type MenuProps, Center, DropdownMenu, Block, Icon } from '@pure/ui'
+import { Flex } from 'antd'
+import { Avatar, type MenuInfo, type MenuProps, Center, DropdownMenu, Block, Icon, Text } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { MoreHorizontal, Pencil, PinIcon, PinOff, Trash2 } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
@@ -168,7 +168,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         <Avatar avatar={agent.avatar} background={agent.backgroundColor ?? undefined} size={28} />
       </Center>
       <Flex vertical flex={1} style={{ minWidth: 0, overflow: 'hidden' }}>
-        <Typography.Text
+        <Text
           title={agent.title}
           style={{
             color: cssVar.colorTextSecondary,
@@ -178,7 +178,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
           }}
         >
           {agent.title}
-        </Typography.Text>
+        </Text>
       </Flex>
       {isPinned ? (
         <Center className={styles.pinBadge} flex='none' height={24} title='已置顶' width={20}>

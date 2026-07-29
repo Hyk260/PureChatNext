@@ -1,17 +1,7 @@
 'use client'
 
-import {
-  Accordion,
-  AccordionItem,
-  ActionIcon,
-  Avatar,
-  Block,
-  copyToClipboard,
-  DropdownMenu,
-  Icon,
-  ModelIcon,
-} from '@pure/ui'
-import { Flex, Typography } from 'antd'
+import { Accordion, AccordionItem, ActionIcon, Avatar, Block, copyToClipboard, DropdownMenu, Icon, ModelIcon, Text } from '@pure/ui'
+import { Flex } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { type UIMessage } from 'ai'
@@ -355,7 +345,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
                   text={text}
                 />
               ) : isStreaming ? (
-                <Typography.Text type='secondary'>…</Typography.Text>
+                <Text type='secondary'>…</Text>
               ) : null}
 
               {!isUser && model ? (
@@ -432,7 +422,7 @@ const ChatMessages = memo<ChatMessagesProps>(
     if (messages.length === 0) {
       return (
         <Flex vertical ref={ref} className={styles.list} align='center' justify='center'>
-          <Typography.Text className={styles.empty}>开始对话吧</Typography.Text>
+          <Text className={styles.empty}>开始对话吧</Text>
         </Flex>
       )
     }

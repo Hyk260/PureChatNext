@@ -6,26 +6,26 @@ export interface StarterModelItem extends HomeModelItem {
 
 export const STARTER_MODELS: StarterModelItem[] = [
   {
-    displayName: 'Claude Fable 5',
-    label: 'Claude Fable 5',
-    model: 'gpt-4o',
+    displayName: 'GPT-5.6 Sol',
+    label: 'GPT-5.6 Sol',
+    model: 'gpt-5.6-sol',
     provider: 'openai',
   },
   {
-    displayName: 'Claude Sonnet 5',
-    label: 'Claude Sonnet 5',
-    model: 'gpt-4o-mini',
+    displayName: 'GPT-5.4 mini',
+    label: 'GPT-5.4 mini',
+    model: 'gpt-5.4-mini',
     provider: 'openai',
   },
   {
-    displayName: 'Nano Banana 2 Lite',
-    label: 'Nano Banana 2 Lite',
+    displayName: 'DeepSeek V4 Flash',
+    label: 'DeepSeek V4 Flash',
     model: 'deepseek-v4-flash',
     provider: 'deepseek',
   },
   {
-    displayName: 'Seedance 2.0',
-    label: 'Seedance 2.0',
+    displayName: 'DeepSeek V4 Pro',
+    label: 'DeepSeek V4 Pro',
     model: 'deepseek-v4-pro',
     provider: 'deepseek',
   },

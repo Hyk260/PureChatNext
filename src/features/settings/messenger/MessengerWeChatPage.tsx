@@ -1,6 +1,8 @@
 'use client'
 
-import { Flex, Typography, Button, Alert, Select, Spin } from 'antd'
+import { Flex, Button, Alert, Select, Spin } from 'antd'
+import { Text } from '@pure/ui'
+import { formatDateTime } from '@pure/utils/client'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Trash2Icon } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
@@ -15,17 +17,8 @@ import { bindWechat, fetchWechatStatus, unbindWechat, updateWechatAgent, type We
 
 const STATUS_POLL_MS = 8_000
 
-function formatActiveAt(value: string) {
-  return new Date(value).toLocaleString('zh-CN', {
-    day: '2-digit',
-    hour: '2-digit',
-    hour12: false,
-    minute: '2-digit',
-    month: '2-digit',
-    second: '2-digit',
-    year: 'numeric',
-  })
-}
+const formatActiveAt = (value: string) =>
+  formatDateTime(value, { hour12: false, second: '2-digit' })
 
 const DISCONNECTED_STATUS: WechatStatus = {
   connected: false,
@@ -173,14 +166,14 @@ const MessengerWeChatPage = memo(() => {
   return (
     <MessengerDetailShell headerAction={headerAction} platform='wechat' platformMeta={platformMeta}>
       <Flex vertical gap={8}>
-        <Typography.Text strong style={{ fontSize: 15 }}>
+        <Text strong style={{ fontSize: 15 }}>
           连接微信
-        </Typography.Text>
+        </Text>
 
         <Flex vertical gap={8}>
-          <Typography.Text type='secondary' style={{ fontSize: 13 }}>
+          <Text type='secondary' style={{ fontSize: 13 }}>
             绑定助手
-          </Typography.Text>
+          </Text>
           <Select
             options={agents}
             style={{ maxWidth: 360 }}
@@ -194,9 +187,9 @@ const MessengerWeChatPage = memo(() => {
         )}
 
         {showConnect ? (
-          <Typography.Text type='secondary' style={{ fontSize: 13 }}>
+          <Text type='secondary' style={{ fontSize: 13 }}>
             打开手机微信 → 右上角「+」→ 扫一扫，扫描二维码并确认。
-          </Typography.Text>
+          </Text>
         ) : (
           <Alert
             showIcon

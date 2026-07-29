@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
-import { AccordionItem } from '@pure/ui'
+import { Flex } from 'antd'
+import { AccordionItem, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -28,15 +28,15 @@ const RecentsSection = memo<RecentsSectionProps>(({ itemKey }) => {
       paddingBlock={4}
       paddingInline='8px 4px'
       title={
-        <Typography.Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+        <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
           最近
-        </Typography.Text>
+        </Text>
       }
     >
       <Flex vertical style={{ paddingBlock: 4, paddingInline: 12 }}>
-        <Typography.Text className={styles.empty} style={{ fontSize: 12 }}>
+        <Text className={styles.empty} style={{ fontSize: 12 }}>
           暂无内容
-        </Typography.Text>
+        </Text>
       </Flex>
     </AccordionItem>
   )

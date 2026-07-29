@@ -1,5 +1,6 @@
 'use client'
 
+import { getAiModel } from '@pure/model-bank'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
@@ -18,7 +19,7 @@ interface ProviderConfigState {
   toggleModelEnabled: (id: ProviderId, modelId: string, enabled: boolean) => void
 }
 
-const mergeProviderConfig = (
+export const mergeProviderConfig = (
   id: ProviderId,
   partial?: Partial<ProviderConfig> & { baseURL?: string }
 ): ProviderConfig => {
@@ -29,7 +30,23 @@ const mergeProviderConfig = (
   const rawBaseURL = typeof partial.baseURL === 'string' ? partial.baseURL : defaults.baseURL
   const baseURL = rawBaseURL.trim() === legacyDefault ? '' : rawBaseURL
 
-  const models = Array.isArray(partial.models) && partial.models.length > 0 ? partial.models : defaults.models
+  const catalogById = new Map(defaults.models.map((model) => [model.id, model]))
+  const persistedModels =
+    Array.isArray(partial.models) && partial.models.length > 0 ? partial.models : defaults.models
+
+  // Reconcile with model-bank: catalog `enabled: false` stays off after persist hydrate.
+  const models = persistedModels.map((model) => {
+    const catalog = catalogById.get(model.id)
+    if (catalog && !catalog.enabled) {
+      return { ...model, displayName: catalog.displayName, enabled: false }
+    }
+    return model
+  })
+
+  const knownIds = new Set(models.map((model) => model.id))
+  for (const builtin of defaults.models) {
+    if (!knownIds.has(builtin.id)) models.push(builtin)
+  }
 
   return {
     ...defaults,
@@ -56,6 +73,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
 
           for (const model of config.models) {
             if (!model.enabled) continue
+            if (getAiModel(providerId, model.id)?.enabled === false) continue
             result.push({
               displayName: model.displayName,
               model: model.id,
@@ -173,6 +191,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
         const next: ProviderConfigs = {
           deepseek: mergeProviderConfig('deepseek', configs.deepseek),
           openai: mergeProviderConfig('openai', configs.openai),
+          purehub: mergeProviderConfig('purehub', configs.purehub),
         }
 
         // version < 2 also needs empty baseURL migration (handled in mergeProviderConfig).
@@ -181,7 +200,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
       },
       name: 'purechat:provider:v1',
       partialize: (state) => ({ configs: state.configs }),
-      version: 2,
+      version: 5,
     }
   )
 )

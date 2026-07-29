@@ -94,7 +94,7 @@ const HomeChatInput = memo(() => {
     <Block className={styles.shell} padding={16} variant='outlined'>
       <textarea
         className={styles.input}
-        placeholder='提问、创建或开始任务。使用 @ 分配任务给其他智能体。'
+        placeholder='随心输入'
         value={input}
         onChange={(event) => setInput(event.target.value)}
         onKeyDown={(event) => {

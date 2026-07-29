@@ -1,7 +1,7 @@
 'use client'
 
-import { ModelIcon } from '@pure/ui'
-import { Flex, Typography, Switch } from 'antd'
+import { ModelIcon, Text } from '@pure/ui'
+import { Flex, Switch } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -46,9 +46,9 @@ const ModelItem = memo<ModelItemProps>(({ model, provider }) => {
       <Flex align='center' className={styles.desc} gap={12}>
         <ModelIcon model={model.id} size={28} />
         <Flex vertical gap={2} style={{ minWidth: 0 }}>
-          <Typography.Text ellipsis style={{ fontWeight: 500 }}>
+          <Text ellipsis style={{ fontWeight: 500 }}>
             {model.displayName}
-          </Typography.Text>
+          </Text>
           <div className={styles.id}>{model.id}</div>
         </Flex>
       </Flex>

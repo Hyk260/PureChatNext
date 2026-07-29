@@ -1,6 +1,7 @@
 'use client'
 
-import { Flex, Typography, Button, Input, type InputRef } from 'antd'
+import { Flex, Button, Input, type InputRef } from 'antd'
+import { Text } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Loader2 } from 'lucide-react'
 import { type ChangeEvent, useCallback, useRef, useState } from 'react'
@@ -104,9 +105,9 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
       <Flex align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
         {saving ? <Loader2 className='h-4 w-4 shrink-0 animate-spin' /> : null}
         {error ? (
-          <Typography.Text type='danger' style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+          <Text type='danger' style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
             {error}
-          </Typography.Text>
+          </Text>
         ) : null}
         {dirty && !saving ? (
           <Button

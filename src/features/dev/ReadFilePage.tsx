@@ -15,6 +15,7 @@ import {
   UploadCloud,
   X,
 } from 'lucide-react'
+import { formatSize } from '@pure/utils/client'
 
 import { type DocumentPage, type FileDocument } from '@pure/file-loaders'
 
@@ -42,18 +43,6 @@ This sample checks the multipart upload path.
 - Line and character counts
 - Page/chunk rendering
 `
-
-const formatBytes = (bytes: number) => {
-  if (bytes === 0) {
-    return '0 B'
-  }
-
-  const units = ['B', 'KB', 'MB', 'GB']
-  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
-  const value = bytes / 1024 ** exponent
-
-  return `${value.toFixed(value >= 10 || exponent === 0 ? 0 : 1)} ${units[exponent]}`
-}
 
 const summarizeValue = (value: unknown) => {
   if (value === undefined || value === null || value === '') {
@@ -313,7 +302,7 @@ export default function ReadFileTestPage() {
                       <div className='min-w-0 flex-1'>
                         <div className='truncate text-sm font-medium text-slate-900'>{file.name}</div>
                         <div className='mt-1 text-xs text-slate-500'>
-                          {formatBytes(file.size)} · {file.type || 'unknown MIME'}
+                          {formatSize(file.size)} · {file.type || 'unknown MIME'}
                         </div>
                       </div>
                       <button

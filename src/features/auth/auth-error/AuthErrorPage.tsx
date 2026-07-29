@@ -1,6 +1,7 @@
 'use client'
 
-import { Flex, Button, Typography } from 'antd'
+import { Flex, Button } from 'antd'
+import { Text } from '@pure/ui'
 import { cssVar } from 'antd-style'
 import Link from '@/utils/link'
 import { useSearchParams } from '@/utils/navigation'
@@ -71,9 +72,9 @@ const AuthErrorContent = memo(() => {
         subtitle={description}
         title='登录失败'
       >
-        <Typography.Text style={{ fontFamily: cssVar.fontFamilyCode }} type='secondary'>
+        <Text style={{ fontFamily: cssVar.fontFamilyCode }} type='secondary'>
           ErrorCode: {error || 'UNKNOWN'}
-        </Typography.Text>
+        </Text>
       </AuthCard>
     </AuthPageContainer>
   )

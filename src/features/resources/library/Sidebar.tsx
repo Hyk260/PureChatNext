@@ -1,6 +1,6 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
+import { Flex } from 'antd'
 import Link from '@/utils/link'
 import { useParams, usePathname, useRouter } from '@/utils/navigation'
 import { memo } from 'react'
@@ -9,11 +9,8 @@ import NavItem from '@/components/NavItem'
 import { DOCUMENT_FOLDER_TYPE } from '@/const/resources/fileTypes'
 import { useFolderPath } from '@/features/resources/hooks/useFolderPath'
 import {
-  useFetchKnowledgeBaseList,
-  useFetchResources,
-  useResourceStore,
-} from '@/features/resources/store/resourceStore'
-import { Icon } from '@pure/ui'
+  useFetchKnowledgeBaseList, useFetchResources, useResourceStore, } from '@/features/resources/store/resourceStore'
+import { Icon, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronLeft, FolderIcon } from 'lucide-react'
 
@@ -47,9 +44,9 @@ const LibraryHierarchy = memo(() => {
   if (folders.length === 0) {
     return (
       <Flex vertical style={{ padding: 12 }}>
-        <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+        <Text type='secondary' style={{ fontSize: 12 }}>
           暂无文件夹
-        </Typography.Text>
+        </Text>
       </Flex>
     )
   }
@@ -84,9 +81,9 @@ const LibrarySidebar = memo(() => {
     <Flex vertical className={styles.sidebar} style={{ height: '100%' }}>
       <Flex align='center' className={styles.header} gap={8}>
         <Icon icon={ChevronLeft} size={16} style={{ cursor: 'pointer' }} onClick={() => router.push('/resources')} />
-        <Typography.Text ellipsis strong>
+        <Text ellipsis strong>
           {kb?.name ?? '知识库'}
-        </Typography.Text>
+        </Text>
       </Flex>
       <Flex vertical flex={1} style={{ paddingBlock: 8, overflow: 'auto' }}>
         <LibraryHierarchy />

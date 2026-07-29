@@ -32,12 +32,23 @@ export interface DiscoverProviderItem {
   url: string
 }
 
+export type DiscoverModelType = 'chat' | 'image'
+
+export interface DiscoverModelAbilities {
+  functionCall?: boolean
+  vision?: boolean
+}
+
 export interface DiscoverModelItem {
+  abilities?: DiscoverModelAbilities
+  contextWindowTokens?: number
   description: string
   displayName: string
   id: string
   identifier: string
   providers: string[]
+  releasedAt?: string
+  type: DiscoverModelType
 }
 
 export interface DiscoverAgentItem {

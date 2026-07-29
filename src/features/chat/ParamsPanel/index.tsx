@@ -1,8 +1,8 @@
 'use client'
 
-import { ActionIcon } from '@pure/ui'
+import { ActionIcon, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { Flex, Typography, Slider, Switch } from 'antd'
+import { Flex, Slider, Switch } from 'antd'
 import { PanelRightClose } from 'lucide-react'
 import { memo } from 'react'
 
@@ -38,7 +38,7 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
   return (
     <Flex vertical style={{ height: '100%', overflow: 'hidden', width: 320 }}>
       <Flex align='center' className={styles.header} justify='space-between'>
-        <Typography.Text style={{ marginInlineStart: 8, fontWeight: 500 }}>高级设置</Typography.Text>
+        <Text style={{ marginInlineStart: 8, fontWeight: 500 }}>高级设置</Text>
         <ActionIcon icon={PanelRightClose} size='small' title='折叠参数栏' onClick={toggleRightCollapsed} />
       </Flex>
       <Flex vertical gap={16} style={{ padding: 16, minHeight: 0, overflow: 'auto' }}>
@@ -50,7 +50,7 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
             <Flex vertical key={row.key} gap={8}>
               <Flex align='center' justify='space-between'>
                 <Flex align='center' gap={8}>
-                  <Typography.Text>{row.label}</Typography.Text>
+                  <Text>{row.label}</Text>
                   <Switch
                     checked={enabled}
                     size='small'
@@ -61,7 +61,7 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
                     }
                   />
                 </Flex>
-                <Typography.Text type='secondary'>{enabled ? Number(display).toFixed(1) : '—'}</Typography.Text>
+                <Text type='secondary'>{enabled ? Number(display).toFixed(1) : '—'}</Text>
               </Flex>
               <Slider
                 disabled={!enabled}

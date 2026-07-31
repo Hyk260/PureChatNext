@@ -1,12 +1,12 @@
 'use client'
 
-import { Flex } from 'antd'
-import { Avatar, type MenuInfo, type MenuProps, Center, DropdownMenu, Block, Icon, Text } from '@pure/ui'
+import { Avatar, Center, confirmModal, DropdownMenu, Block, Icon, Text, Flexbox } from '@pure/ui'
+import type { MenuInfo, MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { MoreHorizontal, Pencil, PinIcon, PinOff, Trash2 } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { type AgentListItem } from '@/const/home/agents'
+import type { AgentListItem } from '@/const/home/agents'
 import { useApp } from '@/components/AntdStaticMethods'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -80,7 +80,7 @@ interface AgentItemProps {
 }
 
 const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSelect }) => {
-  const { message, modal } = useApp()
+  const { message } = useApp()
   const [menuOpen, setMenuOpen] = useState(false)
   const [actionsMounted, setActionsMounted] = useState(false)
   const canOperate = !agent.isBuiltin
@@ -137,7 +137,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         label: '删除',
         onClick: (info) => {
           stopMenuEvent(info)
-          modal.confirm({
+          confirmModal({
             cancelText: '取消',
             content: '删除后不可恢复。若仍有话题将无法删除。',
             okButtonProps: { danger: true },
@@ -148,7 +148,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         },
       },
     ],
-    [agent, handleConfirmDelete, isPinned, modal, onPin]
+    [agent, handleConfirmDelete, isPinned, onPin]
   )
 
   return (
@@ -167,7 +167,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
       <Center flex='none' height={28} width={28}>
         <Avatar avatar={agent.avatar} background={agent.backgroundColor ?? undefined} size={28} />
       </Center>
-      <Flex vertical flex={1} style={{ minWidth: 0, overflow: 'hidden' }}>
+      <Flexbox flex={1} style={{ minWidth: 0, overflow: 'hidden' }}>
         <Text
           title={agent.title}
           style={{
@@ -179,14 +179,15 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         >
           {agent.title}
         </Text>
-      </Flex>
+      </Flexbox>
       {isPinned ? (
         <Center className={styles.pinBadge} flex='none' height={24} title='已置顶' width={20}>
           <Icon icon={PinIcon} size={14} />
         </Center>
       ) : null}
       {canOperate ? (
-        <Flex
+        <Flexbox
+          horizontal
           align='center'
           className={cx('agent-actions')}
           data-open={menuOpen || actionsMounted || undefined}
@@ -204,7 +205,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
             <Icon icon={MoreHorizontal} size='small' />
             <span className={styles.srOnly}>更多</span>
           </DropdownMenu>
-        </Flex>
+        </Flexbox>
       ) : null}
     </Block>
   )

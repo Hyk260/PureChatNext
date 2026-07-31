@@ -1,4 +1,5 @@
-import { AssistantCategory, type DiscoverAgentItem } from '@/features/community/types'
+import { AssistantCategory } from '@/features/community/types'
+import type { DiscoverAgentItem } from '@/features/community/types'
 
 import { COMMUNITY_AGENTS_DATA } from './agents.data'
 

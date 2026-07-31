@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { verifyRefreshToken, signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
 import debug from 'debug'
 

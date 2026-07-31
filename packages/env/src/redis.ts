@@ -1,5 +1,5 @@
 import { createEnv } from '@t3-oss/env-core'
-import { type RedisConfig } from '@pure/types'
+import type { RedisConfig } from '@pure/types'
 import { z } from 'zod'
 
 import { parseEnvBoolean, parseEnvInt } from './helpers'

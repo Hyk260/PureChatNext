@@ -1,16 +1,17 @@
 'use client'
 
-import { Flex } from 'antd'
 import {
-  type MenuProps,
   DropdownMenuPopup,
   DropdownMenuPortal,
   DropdownMenuPositioner,
   DropdownMenuRoot,
   DropdownMenuTrigger,
   renderDropdownMenuItems,
+  Block,
+  Icon,
+  Flexbox,
 } from '@pure/ui'
-import { Block, Icon } from '@pure/ui'
+import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Check, ChevronRight, GlobeOff, LibraryBig, Plus, Settings2 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
@@ -186,8 +187,8 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
         }}
       />
 
-      <Flex align='center' justify='space-between' style={{ marginTop: 8 }}>
-        <Flex align='center' gap={4}>
+      <Flexbox horizontal align='center' justify='space-between' style={{ marginTop: 8 }}>
+        <Flexbox horizontal align='center' gap={4}>
           <ModelSelector />
           {/*
             Compound DropdownMenu + native button trigger (multiple children).
@@ -205,10 +206,10 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
               </DropdownMenuPositioner>
             </DropdownMenuPortal>
           </DropdownMenuRoot>
-        </Flex>
+        </Flexbox>
 
         <SendButton disabled={!canSend} generating={isBusy} onClick={handleSend} onStop={handleStop} />
-      </Flex>
+      </Flexbox>
     </Block>
   )
 })

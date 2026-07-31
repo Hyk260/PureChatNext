@@ -43,5 +43,4 @@ export const llmEnv = getLLMConfig()
 export const resolveAiGatewayApiKey = () =>
   llmEnv.AI_GATEWAY_API_KEY?.trim() || llmEnv.PUREHUB_API_KEY?.trim() || undefined
 
-export const resolveAiGatewayBaseURL = () =>
-  llmEnv.AI_GATEWAY_BASE_URL?.trim() || 'https://ai-gateway.vercel.sh/v1'
+export const resolveAiGatewayBaseURL = () => llmEnv.AI_GATEWAY_BASE_URL?.trim() || 'https://ai-gateway.vercel.sh/v1'

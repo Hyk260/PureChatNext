@@ -2,13 +2,8 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createDeepSeek } from '@ai-sdk/deepseek'
 import { PUREHUB_PROVIDER_ID } from '@pure/const'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
-import {
-  convertToModelMessages,
-  createUIMessageStreamResponse,
-  streamText,
-  toUIMessageStream,
-  type UIMessage,
-} from 'ai'
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream } from 'ai'
+import type { UIMessage } from 'ai'
 import debug from 'debug'
 import { createNanoId } from '@pure/utils'
 
@@ -28,6 +23,8 @@ import {
   isPureHubRestrictedModelError,
   PUREHUB_MODEL_UNAVAILABLE_MESSAGE,
 } from '@/server/purehub/gatewayError'
+
+import { createMessageMetadata } from './messageMetadata'
 
 export const maxDuration = 30
 
@@ -210,6 +207,7 @@ export async function POST(request: Request) {
 
       return createUIMessageStreamResponse({
         stream: toUIMessageStream({
+          messageMetadata: createMessageMetadata(resolvedDisplayModel, PUREHUB_PROVIDER_ID),
           onError: getPureHubStreamErrorMessage,
           sendReasoning: true,
           stream: result.stream,
@@ -257,6 +255,7 @@ export async function POST(request: Request) {
 
     return createUIMessageStreamResponse({
       stream: toUIMessageStream({
+        messageMetadata: createMessageMetadata(model?.trim() || 'deepseek-v4-flash', resolvedProvider),
         sendReasoning: true,
         stream: result.stream,
       }),

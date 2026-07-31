@@ -1,5 +1,3 @@
-import { BRANDING_NAME } from '@/const/branding'
-
 import styles from './index.module.css'
 
 interface BrandTextLoadingProps {
@@ -13,7 +11,6 @@ const BrandTextLoading = ({ debugId }: BrandTextLoadingProps) => {
     <div className={styles.container}>
       <div aria-label='Loading' className={styles.brand} role='status'>
         <span aria-hidden='true' className={styles.spinner} />
-        <span className={styles.text}>{BRANDING_NAME}</span>
       </div>
       {showDebug && (
         <div className={styles.debug}>

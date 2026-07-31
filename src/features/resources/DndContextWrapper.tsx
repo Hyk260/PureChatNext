@@ -1,6 +1,7 @@
 'use client'
 
-import { type PropsWithChildren, memo } from 'react'
+import { memo } from 'react'
+import type { PropsWithChildren } from 'react'
 
 const DndContextWrapper = memo(({ children }: PropsWithChildren) => {
   return children

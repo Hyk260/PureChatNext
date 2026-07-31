@@ -1,15 +1,14 @@
 'use client'
 
-import { Button, Flex } from 'antd'
-import { ActionIcon, Text } from '@pure/ui'
-import { ArrowLeft, MessageSquarePlus } from 'lucide-react'
+import { ActionIcon, Button, Text, Flexbox } from '@pure/ui'
+import { ChevronLeft, MessageSquarePlus } from 'lucide-react'
 import { useRouter } from '@/utils/navigation'
 import { memo, useCallback, useMemo } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
-import { type AgentListItem } from '@/const/home/agents'
+import type { AgentListItem } from '@/const/home/agents'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
-import { type LocalChatTopic, type TopicDeleteScope, type TopicGroupMode } from '@/features/chat/types'
+import type { LocalChatTopic, TopicDeleteScope, TopicGroupMode } from '@/features/chat/types'
 import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
 
 import AgentSwitcher from './AgentSwitcher'
@@ -19,11 +18,14 @@ import TopicList from './TopicList'
 
 type Props = {
   agents: AgentListItem[]
+  autoRenameDisabled: boolean
+  autoRenamingTopicId: string | null
   currentAgentId: string
   loading: boolean
   topics: LocalChatTopic[]
   activeTopicId: string | null
   onAgentSelect: (agent: AgentListItem) => void
+  onAutoRenameTopic: (id: string) => void | Promise<void>
   onNewTopic: () => void
   onSelectTopic: (topicId: string) => void
   onRenameTopic: (id: string, title: string) => void | Promise<void>
@@ -36,11 +38,14 @@ type Props = {
 const TopicSidebar = memo<Props>(
   ({
     agents,
+    autoRenameDisabled,
+    autoRenamingTopicId,
     currentAgentId,
     loading,
     topics,
     activeTopicId,
     onAgentSelect,
+    onAutoRenameTopic,
     onNewTopic,
     onSelectTopic,
     onRenameTopic,
@@ -72,37 +77,43 @@ const TopicSidebar = memo<Props>(
     const unfavoritedCount = useMemo(() => topics.filter((topic) => !topic.favorite).length, [topics])
 
     return (
-      <Flex vertical gap={8} style={{ height: '100%', overflow: 'hidden', width: 240 }}>
+      <Flexbox gap={8} style={{ height: '100%', overflow: 'hidden', width: 240 }}>
         <SideBarHeaderLayout
           collapsed={leftCollapsed}
           left={
-            <Flex align='center' flex={1} gap={2} style={{ minWidth: 0 }}>
-              <ActionIcon icon={ArrowLeft} size='small' title='返回首页' onClick={() => router.push('/')} />
+            <Flexbox horizontal align='center' flex={1} gap={2} style={{ minWidth: 0 }}>
+              <ActionIcon icon={ChevronLeft} size='small' title='返回首页' onClick={() => router.push('/')} />
               <AgentSwitcher agents={agents} currentAgentId={currentAgentId} onSelect={onAgentSelect} />
-            </Flex>
+            </Flexbox>
           }
           showHomeIcon={false}
           onToggleCollapsed={toggleLeftCollapsed}
         />
-        <Flex vertical flex={1} gap={8} style={{ minHeight: 0 }}>
+        <Flexbox flex={1} gap={8} style={{ minHeight: 0 }}>
           <div style={{ paddingInline: 12 }}>
-            <Button block icon={<MessageSquarePlus size={16} />} onClick={onNewTopic}>
+            <Button block color='default' variant='filled' icon={<MessageSquarePlus size={16} />} onClick={onNewTopic}>
               开启新话题
             </Button>
           </div>
           <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }} viewStyle={{ paddingInline: 12 }}>
-            <Flex vertical gap={8}>
-              <Flex align='center' justify='space-between' gap={4} style={{ minHeight: 28, paddingInline: 8 }}>
-                <Flex align='center' gap={5}>
+            <Flexbox gap={8}>
+              <Flexbox
+                horizontal
+                align='center'
+                justify='space-between'
+                gap={4}
+                style={{ minHeight: 28, paddingInline: 8 }}
+              >
+                <Flexbox horizontal align='center' gap={5}>
                   话题
                   {topics.length ? (
                     <Text type='secondary' style={{ fontSize: 11 }}>
                       {topics.length}
                     </Text>
                   ) : null}
-                </Flex>
+                </Flexbox>
 
-                <Flex align='center' gap={2}>
+                <Flexbox horizontal align='center' gap={2}>
                   <TopicFilter
                     groupMode={groupMode}
                     sortBy={sortBy}
@@ -117,15 +128,18 @@ const TopicSidebar = memo<Props>(
                     onDelete={onDeleteTopics}
                     onPageSizeChange={setPageSize}
                   />
-                </Flex>
-              </Flex>
+                </Flexbox>
+              </Flexbox>
               <TopicList
                 activeTopicId={activeTopicId}
+                autoRenameDisabled={autoRenameDisabled}
+                autoRenamingTopicId={autoRenamingTopicId}
                 groupMode={groupMode}
                 loading={loading}
                 pageSize={pageSize}
                 projectNames={projectNames}
                 sortBy={sortBy}
+                onAutoRename={onAutoRenameTopic}
                 onDelete={onDeleteTopic}
                 onFavorite={onFavoriteTopic}
                 onProjectChange={onProjectChange}
@@ -133,10 +147,10 @@ const TopicSidebar = memo<Props>(
                 onSelect={onSelectTopic}
                 topics={topics}
               />
-            </Flex>
+            </Flexbox>
           </Scrollbar>
-        </Flex>
-      </Flex>
+        </Flexbox>
+      </Flexbox>
     )
   }
 )

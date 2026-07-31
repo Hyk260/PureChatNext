@@ -1,8 +1,9 @@
 'use client'
 
-import { Flex } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import { memo, type ReactNode } from 'react'
+import { Flexbox } from '@pure/ui'
+import { memo } from 'react'
+import type { ReactNode } from 'react'
 
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 
@@ -22,27 +23,35 @@ const styles = createStaticStyles(({ css }) => ({
     height: 100%;
     min-height: 0;
   `,
+  wrapperCompact: css`
+    flex: none;
+    height: auto;
+  `,
 }))
 
 type Props = {
   children: ReactNode
   className?: string
+  fill?: boolean
   maxWidth?: number
 }
 
-const WideScreenContainer = memo<Props>(({ children, className, maxWidth = CONVERSATION_MAX_WIDTH }) => {
+const WideScreenContainer = memo<Props>(({ children, className, fill = true, maxWidth = CONVERSATION_MAX_WIDTH }) => {
   const wideScreen = useChatUiStore((s) => s.wideScreen)
 
   return (
-    <Flex vertical className={styles.wrapper}>
-      <Flex
-        vertical
+    <Flexbox className={cx(styles.wrapper, !fill && styles.wrapperCompact)}>
+      <Flexbox
         className={cx(styles.container, className)}
-        style={{ height: '100%', paddingInline: 16, width: wideScreen ? '100%' : `min(${maxWidth}px, 100%)` }}
+        style={{
+          height: fill ? '100%' : 'auto',
+          paddingInline: 16,
+          width: wideScreen ? '100%' : `min(${maxWidth}px, 100%)`,
+        }}
       >
         {children}
-      </Flex>
-    </Flex>
+      </Flexbox>
+    </Flexbox>
   )
 })
 

@@ -1,7 +1,8 @@
 import debug from 'debug'
 
 import { UserModel } from '@pure/database/models/user'
-import { registerAccount, type RegisterAccountParams, type RegisterAccountResult } from '@/libs/utils/register'
+import { registerAccount } from '@/libs/utils/register'
+import type { RegisterAccountParams, RegisterAccountResult } from '@/libs/utils/register'
 import { FileS3 } from '@/server/modules/S3'
 
 const log = debug('service:user')

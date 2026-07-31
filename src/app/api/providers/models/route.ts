@@ -6,8 +6,8 @@ import {
   resolveApiKeyFromHeader,
   resolveModelsListBaseURL,
   resolveProviderApiKey,
-  type SupportedProviderId,
 } from '@/libs/ai-providers/resolveClient'
+import type { SupportedProviderId } from '@/libs/ai-providers/resolveClient'
 import { ChatSDKError } from '@/libs/errors'
 
 export const maxDuration = 30

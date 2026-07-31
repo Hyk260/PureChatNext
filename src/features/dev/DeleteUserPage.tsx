@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { formatDateTime } from '@pure/utils/client'
 
-import { type UserDeletionPreviewUser, type UserRelatedCounts } from '@pure/database/models/user'
+import type { UserDeletionPreviewUser, UserRelatedCounts } from '@pure/database/models/user'
 
 type LookupResult =
   | {

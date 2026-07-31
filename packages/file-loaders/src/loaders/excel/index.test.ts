@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { type FileLoaderInterface } from '../../types'
+import type { FileLoaderInterface } from '../../types'
 import { ExcelLoader } from './index'
 
 // Ensure you have placed a test.xlsx file in the fixtures directory

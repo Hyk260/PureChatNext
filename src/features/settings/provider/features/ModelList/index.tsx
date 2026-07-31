@@ -1,14 +1,13 @@
 'use client'
 
-import { Flex, Tabs } from 'antd'
 import { DEFAULT_MODEL_PROVIDER_LIST, getAiModel } from '@pure/model-bank'
-import { Text } from '@pure/ui'
+import { Flexbox, Tabs, Text } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useMemo, useState } from 'react'
 
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
-import { type ProviderId } from '../../types'
+import type { ProviderId } from '../../types'
 import EmptyModels from './EmptyModels'
 import ModelItem from './ModelItem'
 import ModelTitle from './ModelTitle'
@@ -109,7 +108,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   const handleFetch = showModelFetcher ? () => void fetchRemoteModels() : undefined
 
   return (
-    <Flex vertical gap={8} style={{ width: '100%' }}>
+    <Flexbox gap={8} width='100%'>
       <ModelTitle
         loading={loading}
         searchKeyword={keyword}
@@ -131,7 +130,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
       {filteredModels.length === 0 ? (
         <EmptyModels loading={loading} onFetch={handleFetch} />
       ) : (
-        <Flex vertical gap={4} style={{ width: '100%' }}>
+        <Flexbox gap={4} width='100%'>
           {enabledModels.length > 0 ? (
             <>
               <div className={styles.sectionLabel}>已启用</div>
@@ -151,9 +150,9 @@ const ModelList = memo<ModelListProps>(({ id }) => {
               ))}
             </>
           ) : null}
-        </Flex>
+        </Flexbox>
       )}
-    </Flex>
+    </Flexbox>
   )
 })
 

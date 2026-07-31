@@ -1,7 +1,8 @@
 'use client'
 
-import { Flex, Skeleton } from 'antd'
-import { type ReactNode } from 'react'
+import { Flexbox } from '@pure/ui'
+import { Skeleton } from 'antd'
+import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router'
 
 import { useSession } from '@/libs/better-auth/client'
@@ -24,9 +25,9 @@ export default function RequireAuth({ children, fallback }: RequireAuthProps) {
   if (isPending) {
     return (
       fallback ?? (
-        <Flex vertical style={{ height: '100%', padding: 24 }}>
+        <Flexbox style={{ height: '100%', padding: 24 }}>
           <Skeleton active paragraph={{ rows: 6 }} />
-        </Flex>
+        </Flexbox>
       )
     )
   }

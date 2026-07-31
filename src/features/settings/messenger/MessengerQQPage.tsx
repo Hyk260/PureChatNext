@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex, Button, Alert, Input, Radio, Select, Spin } from 'antd'
-import { copyToClipboard, Text } from '@pure/ui'
+import { Alert, Input, Radio, Select, Spin } from 'antd'
+import { Button, confirmModal, Text, copyToClipboard, Flexbox } from '@pure/ui'
 import { formatDateTime } from '@pure/utils/client'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Trash2Icon } from 'lucide-react'
@@ -12,17 +12,17 @@ import { fetchAgents } from '@/features/home/agentApi'
 import { getMessengerPlatform } from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
-import { bindQQ, fetchQQStatus, type QQConnectionMode, type QQStatus, unbindQQ, updateQQAgent } from './qqApi'
+import { bindQQ, fetchQQStatus, unbindQQ, updateQQAgent } from './qqApi'
+import type { QQConnectionMode, QQStatus } from './qqApi'
 
-const formatActiveAt = (value: string) =>
-  formatDateTime(value, { hour12: false, second: '2-digit' })
+const formatActiveAt = (value: string) => formatDateTime(value, { hour12: false, second: '2-digit' })
 
 const DISCONNECTED_STATUS: QQStatus = {
   connected: false,
 }
 
 const MessengerQQPage = memo(() => {
-  const { message, modal } = useApp()
+  const { message } = useApp()
   const platformMeta = getMessengerPlatform('qq')!
   const [loading, setLoading] = useState(true)
   const [binding, setBinding] = useState(false)
@@ -102,11 +102,10 @@ const MessengerQQPage = memo(() => {
   )
 
   const handleDisconnect = useCallback(() => {
-    modal.confirm({
-      centered: true,
+    confirmModal({
       content: '断开后需重新填写 App ID / Secret 才能在 QQ 中对话。',
       okText: '断开',
-      okType: 'danger',
+      okButtonProps: { danger: true },
       onOk: async () => {
         await unbindQQ()
         setStatus(DISCONNECTED_STATUS)
@@ -120,14 +119,14 @@ const MessengerQQPage = memo(() => {
       },
       title: '断开 QQ 连接？',
     })
-  }, [message, modal, refreshStatus])
+  }, [message, refreshStatus])
 
   if (loading) {
     return (
       <MessengerDetailShell platform='qq' platformMeta={platformMeta}>
-        <Flex vertical align='center' justify='center' style={{ minHeight: 160 }}>
+        <Flexbox align='center' justify='center' style={{ minHeight: 160 }}>
           <Spin />
-        </Flex>
+        </Flexbox>
       </MessengerDetailShell>
     )
   }
@@ -147,12 +146,12 @@ const MessengerQQPage = memo(() => {
 
   return (
     <MessengerDetailShell headerAction={headerAction} platform='qq' platformMeta={platformMeta}>
-      <Flex vertical gap={12}>
+      <Flexbox gap={12}>
         <Text strong style={{ fontSize: 15 }}>
           连接 QQ
         </Text>
 
-        <Flex vertical gap={8}>
+        <Flexbox gap={8}>
           <Text type='secondary' style={{ fontSize: 13 }}>
             绑定助手
           </Text>
@@ -162,11 +161,11 @@ const MessengerQQPage = memo(() => {
             value={agentId}
             onChange={(v) => void handleAgentChange(v)}
           />
-        </Flex>
+        </Flexbox>
 
         {showConnect ? (
           <>
-            <Flex vertical gap={8}>
+            <Flexbox gap={8}>
               <Text type='secondary' style={{ fontSize: 13 }}>
                 App ID
               </Text>
@@ -176,8 +175,8 @@ const MessengerQQPage = memo(() => {
                 value={appId}
                 onChange={(e) => setAppId(e.target.value)}
               />
-            </Flex>
-            <Flex vertical gap={8}>
+            </Flexbox>
+            <Flexbox gap={8}>
               <Text type='secondary' style={{ fontSize: 13 }}>
                 App Secret
               </Text>
@@ -187,8 +186,8 @@ const MessengerQQPage = memo(() => {
                 value={appSecret}
                 onChange={(e) => setAppSecret(e.target.value)}
               />
-            </Flex>
-            <Flex vertical gap={8}>
+            </Flexbox>
+            <Flexbox gap={8}>
               <Text type='secondary' style={{ fontSize: 13 }}>
                 连接模式
               </Text>
@@ -199,7 +198,7 @@ const MessengerQQPage = memo(() => {
                 <Radio.Button value='websocket'>WebSocket（推荐）</Radio.Button>
                 <Radio.Button value='webhook'>Webhook</Radio.Button>
               </Radio.Group>
-            </Flex>
+            </Flexbox>
             <Text type='secondary' style={{ fontSize: 13 }}>
               {connectionMode === 'websocket'
                 ? '保存后请运行 pnpm qq:gateway 维护 WebSocket 连接。'
@@ -244,7 +243,7 @@ const MessengerQQPage = memo(() => {
             )}
           </>
         )}
-      </Flex>
+      </Flexbox>
 
       <MessengerCommandList />
     </MessengerDetailShell>

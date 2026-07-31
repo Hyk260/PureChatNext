@@ -1,7 +1,6 @@
 'use client'
 
-import { Block } from '@pure/ui'
-import { Flex } from 'antd'
+import { Block, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useEffect, useState } from 'react'
@@ -105,14 +104,14 @@ const HomeChatInput = memo(() => {
         }}
       />
 
-      <Flex align='center' justify='flex-end' style={{ marginTop: 12 }}>
-        <Flex align='center' gap={8}>
+      <Flexbox horizontal align='center' justify='flex-end' style={{ marginTop: 12 }}>
+        <Flexbox horizontal align='center' gap={8}>
           {/* <AgentModeButton />
           <ActionIcon icon={Plus} size='small' title='添加' /> */}
-        </Flex>
+        </Flexbox>
 
         <SendArea disabled={!canSend} loading={sending} onClick={handleSend} />
-      </Flex>
+      </Flexbox>
     </Block>
   )
 })

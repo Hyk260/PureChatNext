@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { message } from '@/components/AntdStaticMethods'
 import { emailOtp, sendVerificationEmail } from '@/libs/better-auth/client'
 import { formatExpirationText } from '@/libs/better-auth/email-templates/utils/format-expiration-text'
-import { OTP_EXPIRES_IN, type EmailVerificationMode } from '@/libs/better-auth/shared'
+import { OTP_EXPIRES_IN } from '@/libs/better-auth/shared'
+import type { EmailVerificationMode } from '@/libs/better-auth/shared'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 interface UseVerifyEmailParams {

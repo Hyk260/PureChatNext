@@ -1,7 +1,6 @@
 'use client'
 
-import { Button, Flex } from 'antd'
-import { ActionIcon, Icon, SortableList, Text, Tooltip } from '@pure/ui'
+import { ActionIcon, Button, Icon, Text, Tooltip, SortableList, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowDownToLine, Eye, EyeOff, PinIcon, RotateCcw } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
@@ -73,11 +72,11 @@ const SidebarSortableItemRow = memo<SidebarSortableItemProps>(({ hiddenSections,
       justify='space-between'
       style={{ opacity: isHidden ? 0.5 : undefined }}
     >
-      <Flex align='center' gap={8}>
+      <Flexbox horizontal align='center' gap={8}>
         <SortableList.DragHandle />
         {section.icon ? <Icon icon={section.icon} size={18} /> : null}
         <Text>{section.title}</Text>
-      </Flex>
+      </Flexbox>
       {section.alwaysVisible ? (
         <Tooltip title='固定显示'>
           <ActionIcon icon={PinIcon} size='small' style={{ cursor: 'default', opacity: 0.45 }} />
@@ -94,14 +93,14 @@ const SidebarSortableItemRow = memo<SidebarSortableItemProps>(({ hiddenSections,
 SidebarSortableItemRow.displayName = 'SidebarSortableItemRow'
 
 const BoundSpacerItem = memo(() => (
-  <Flex align='center' className={styles.item} gap={8}>
+  <Flexbox horizontal align='center' className={styles.item} gap={8}>
     <Icon icon={ArrowDownToLine} size={14} style={{ color: cssVar.colorTextQuaternary }} />
     <div className={styles.spacerLine} />
     <Text type='secondary' style={{ fontSize: 12 }}>
       下方条目锚定到底部
     </Text>
     <div className={styles.spacerLine} />
-  </Flex>
+  </Flexbox>
 ))
 
 BoundSpacerItem.displayName = 'BoundSpacerItem'
@@ -183,9 +182,9 @@ const CustomizeSidebarContent = memo<CustomizeSidebarContentProps>(({ close }) =
 
   return (
     <>
-      <Flex vertical gap={2}>
+      <Flexbox gap={2}>
         <div className={styles.accordionGroup}>
-          <Flex vertical gap={2}>
+          <Flexbox gap={2}>
             <SortableList
               items={innerItems}
               renderItem={(item: SidebarSortableItem) => (
@@ -199,7 +198,7 @@ const CustomizeSidebarContent = memo<CustomizeSidebarContentProps>(({ close }) =
               onChange={handleInnerChange}
             />
             <BoundSpacerItem />
-          </Flex>
+          </Flexbox>
         </div>
 
         <SortableList
@@ -214,7 +213,7 @@ const CustomizeSidebarContent = memo<CustomizeSidebarContentProps>(({ close }) =
           )}
           onChange={handleBottomChange}
         />
-      </Flex>
+      </Flexbox>
 
       <div className={styles.footer}>
         <Button block icon={<Icon icon={RotateCcw} size={14} />} onClick={handleResetDefault}>

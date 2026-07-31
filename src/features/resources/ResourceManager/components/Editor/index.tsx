@@ -1,7 +1,6 @@
 'use client'
 
-import { Flex } from 'antd'
-import { ActionIcon, Text } from '@pure/ui'
+import { ActionIcon, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { X } from 'lucide-react'
 import { memo } from 'react'
@@ -53,15 +52,15 @@ const FileEditor = memo(() => {
   const isPdf = item.fileType.includes('pdf')
 
   return (
-    <Flex vertical className={styles.overlay} style={{ height: '100%' }}>
-      <Flex align='center' className={styles.header} justify='space-between'>
-        <Flex align='center' gap={8}>
+    <Flexbox className={styles.overlay} style={{ height: '100%' }}>
+      <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
+        <Flexbox horizontal align='center' gap={8}>
           <FileIcon fileType={item.fileType} />
           <Text strong>{item.name}</Text>
-        </Flex>
+        </Flexbox>
         <ActionIcon icon={X} onClick={handleClose} title='关闭' />
-      </Flex>
-      <Flex vertical align='center' className={styles.preview} justify='center'>
+      </Flexbox>
+      <Flexbox align='center' className={styles.preview} justify='center'>
         {isImage && item.url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img alt={item.name} src={item.url} style={{ maxHeight: '100%', maxWidth: '100%' }} />
@@ -70,8 +69,8 @@ const FileEditor = memo(() => {
         ) : (
           <Text type='secondary'>暂不支持预览此文件类型</Text>
         )}
-      </Flex>
-    </Flex>
+      </Flexbox>
+    </Flexbox>
   )
 })
 

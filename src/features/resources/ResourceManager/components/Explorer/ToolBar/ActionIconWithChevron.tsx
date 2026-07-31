@@ -1,10 +1,11 @@
 'use client'
 
-import { Flex, Button } from 'antd'
-import { Icon } from '@pure/ui'
+import { Button, Icon, Flexbox } from '@pure/ui'
 import { cssVar } from 'antd-style'
-import { type LucideIcon, ChevronDownIcon } from 'lucide-react'
-import { type ComponentProps, memo } from 'react'
+import { ChevronDownIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { memo } from 'react'
+import type { ComponentProps } from 'react'
 
 interface ActionIconWithChevronProps extends Omit<ComponentProps<typeof Button>, 'icon'> {
   icon: LucideIcon
@@ -21,10 +22,10 @@ const ActionIconWithChevron = memo<ActionIconWithChevronProps>(
         title={title}
         type='text'
       >
-        <Flex align='center' gap={4}>
+        <Flexbox horizontal align='center' gap={4}>
           <Icon color={cssVar.colorIcon} icon={icon} size={18} />
           <Icon color={cssVar.colorIcon} icon={ChevronDownIcon} size={14} />
-        </Flex>
+        </Flexbox>
       </Button>
     )
   }

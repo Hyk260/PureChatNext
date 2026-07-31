@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MESSAGE_CANCEL_FLAT } from '@pure/const'
-import { type ChatMessageError } from '@pure/types'
+import type { ChatMessageError } from '@pure/types'
 
-import { type FetchEventSourceInit } from '@pure/utils/fetchEventSource'
+import type { FetchEventSourceInit } from '@pure/utils/fetchEventSource'
 import { fetchEventSource } from '@pure/utils/fetchEventSource' // mocked by vi.mock below
 
 import { fetchSSE } from '../fetchSSE'

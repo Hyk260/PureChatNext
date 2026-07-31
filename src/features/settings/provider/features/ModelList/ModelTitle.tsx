@@ -1,8 +1,7 @@
 'use client'
 
-import { Button, Flex } from 'antd'
-import { SearchBar, Text } from '@pure/ui'
-import { cssVar } from 'antd-style'
+import { Button, Flexbox, SearchBar, Text } from '@pure/ui'
+import { createStaticStyles, cssVar } from 'antd-style'
 import { LucideRefreshCcwDot } from 'lucide-react'
 import { memo } from 'react'
 
@@ -15,10 +14,28 @@ interface ModelTitleProps {
   total: number
 }
 
+const styles = createStaticStyles(({ css }) => ({
+  actions: css`
+    @media (max-width: 768px) {
+      width: 100%;
+
+      > div:first-child {
+        flex: 1;
+        width: auto !important;
+      }
+    }
+  `,
+  header: css`
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  `,
+}))
+
 const ModelTitle = memo<ModelTitleProps>(
   ({ total, searchKeyword, onKeywordChange, loading, onFetch, showModelFetcher = true }) => (
-    <Flex
-      vertical
+    <Flexbox
       gap={12}
       style={{
         background: cssVar.colorBgContainer,
@@ -29,17 +46,17 @@ const ModelTitle = memo<ModelTitleProps>(
         zIndex: 15,
       }}
     >
-      <Flex align='center' justify='space-between' style={{ width: '100%' }}>
-        <Flex align='center' gap={8}>
+      <Flexbox horizontal align='center' className={styles.header} justify='space-between' width='100%'>
+        <Flexbox horizontal align='center' gap={8}>
           <Text strong style={{ fontSize: 16 }}>
             模型列表
           </Text>
           <Text type='secondary' style={{ fontSize: 12 }}>
             共 {total} 个模型可用
           </Text>
-        </Flex>
+        </Flexbox>
 
-        <Flex align='center' gap={8}>
+        <Flexbox horizontal align='center' className={styles.actions} gap={8}>
           <SearchBar
             placeholder='搜索模型...'
             style={{ width: 180 }}
@@ -51,9 +68,9 @@ const ModelTitle = memo<ModelTitleProps>(
               获取模型列表
             </Button>
           ) : null}
-        </Flex>
-      </Flex>
-    </Flex>
+        </Flexbox>
+      </Flexbox>
+    </Flexbox>
   )
 )
 

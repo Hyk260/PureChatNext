@@ -1,4 +1,4 @@
-import { type AgentListItem } from '@/const/home/agents'
+import type { AgentListItem } from '@/const/home/agents'
 import { apiFetch } from '@/utils/apiFetch'
 
 export type ApiAgent = {

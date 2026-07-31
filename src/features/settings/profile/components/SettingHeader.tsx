@@ -1,6 +1,6 @@
-import { Flex, Divider } from 'antd'
-import { Text } from '@pure/ui'
-import { type ReactNode } from 'react'
+import { Divider } from 'antd'
+import { Text, Flexbox } from '@pure/ui'
+import type { ReactNode } from 'react'
 
 interface SettingHeaderProps {
   extra?: ReactNode
@@ -9,14 +9,14 @@ interface SettingHeaderProps {
 
 export function SettingHeader({ extra, title }: SettingHeaderProps) {
   return (
-    <Flex vertical gap={24} style={{ paddingTop: 12 }}>
-      <Flex align='center' justify='space-between'>
+    <Flexbox gap={24} style={{ paddingTop: 12 }}>
+      <Flexbox horizontal align='center' justify='space-between'>
         <Text strong style={{ fontSize: 24 }}>
           {title}
         </Text>
         {extra}
-      </Flex>
+      </Flexbox>
       <Divider style={{ margin: 0 }} />
-    </Flex>
+    </Flexbox>
   )
 }

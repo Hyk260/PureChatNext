@@ -1,8 +1,8 @@
 'use client'
 
 import AuthIcons from '@/components/AuthIcons'
-import { ActionIcon, DropdownMenu, type MenuProps, Text } from '@pure/ui'
-import { Flex, Modal } from 'antd'
+import { ActionIcon, confirmModal, DropdownMenu, Text, Flexbox } from '@pure/ui'
+import type { MenuProps } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { ArrowRight, Plus, Unlink } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -99,9 +99,7 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
       return
     }
 
-    Modal.confirm({
-      centered: true,
-      transitionName: '',
+    confirmModal({
       content: `确定要解绑 ${getProviderLabel(account.providerId)} 账户吗？`,
       okButtonProps: { danger: true },
       okText: '解绑',
@@ -144,15 +142,15 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
 
   return (
     <SettingRow label='已关联的账户'>
-      <Flex vertical gap={8} style={{ width: '100%' }}>
+      <Flexbox gap={8} style={{ width: '100%' }}>
         {loading ? (
           <Text type='secondary'>加载中…</Text>
         ) : oauthAccounts.length === 0 ? (
           <Text type='secondary'>暂无关联的第三方账户</Text>
         ) : (
           oauthAccounts.map((account) => (
-            <Flex align='center' gap={8} justify='space-between' key={account.id}>
-              <Flex align='center' gap={6} style={{ fontSize: 12, minWidth: 0 }}>
+            <Flexbox horizontal align='center' gap={8} justify='space-between' key={account.id}>
+              <Flexbox horizontal align='center' gap={6} style={{ fontSize: 12, minWidth: 0 }}>
                 {AuthIcons(account.providerId, 16)}
                 <span>{getProviderLabel(account.providerId)}</span>
                 {userEmail ? (
@@ -160,20 +158,21 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
                     · {userEmail}
                   </Text>
                 ) : null}
-              </Flex>
+              </Flexbox>
               <ActionIcon
                 disabled={!allowUnlink || unlinkingId === account.id}
                 icon={Unlink}
                 onClick={() => confirmUnlink(account)}
                 size='small'
               />
-            </Flex>
+            </Flexbox>
           ))
         )}
 
         {availableProviders.length > 0 ? (
           <DropdownMenu items={linkMenuItems} popupProps={{ style: { maxWidth: 200 } }}>
-            <Flex
+            <Flexbox
+              horizontal
               align='center'
               gap={6}
               style={{ cursor: linkingProvider ? 'wait' : 'pointer', fontSize: 12, opacity: linkingProvider ? 0.6 : 1 }}
@@ -181,10 +180,10 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
               <Plus size={14} />
               <span>关联账户</span>
               <ArrowRight size={14} />
-            </Flex>
+            </Flexbox>
           </DropdownMenu>
         ) : null}
-      </Flex>
+      </Flexbox>
     </SettingRow>
   )
 }

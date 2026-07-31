@@ -1,4 +1,4 @@
-import { type AiModelCard } from '../types/aiModel'
+import type { AiModelCard } from '../types/aiModel'
 
 export const deepseekChatModels: AiModelCard[] = [
   {

@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex } from 'antd'
-import { getAiModel, type ModelProviderId } from '@pure/model-bank'
+import { getAiModel } from '@pure/model-bank'
+import type { ModelProviderId } from '@pure/model-bank'
 import {
   ActionIcon,
   DropdownMenuGroup,
@@ -19,6 +19,7 @@ import {
   ProviderIcon,
   Tag,
   Text,
+  Flexbox,
 } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { Check, LucideArrowRight, LucideBolt } from 'lucide-react'
@@ -28,7 +29,8 @@ import { useNavigate } from 'react-router'
 import ModelFeatureTags from '@/features/community/components/ModelFeatureTags'
 
 import ModelDetailPanel from './ModelDetailPanel'
-import { type ListItem, menuKey, type ModelWithProviders } from './types'
+import { menuKey } from './types'
+import type { ListItem, ModelWithProviders } from './types'
 
 const styles = createStaticStyles(({ css }) => ({
   detailPopup: css`
@@ -86,7 +88,7 @@ const ModelRowContent = memo<ModelRowContentProps>(({ displayName, model, provid
   const card = getAiModel(provider as ModelProviderId, model)
 
   return (
-    <Flex align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
+    <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
       <ModelIcon model={model} size={20} />
       <Text ellipsis style={{ fontSize: 13, flex: 1, minWidth: 0 }}>
         {displayName}
@@ -99,7 +101,7 @@ const ModelRowContent = memo<ModelRowContentProps>(({ displayName, model, provid
       <div style={{ flexShrink: 0, maxWidth: 120 }}>
         <ModelFeatureTags abilities={card?.abilities} contextWindowTokens={card?.contextWindowTokens} />
       </div>
-    </Flex>
+    </Flexbox>
   )
 })
 
@@ -114,37 +116,35 @@ interface ModelRowProps {
   subscribeScroll?: (cb: () => void) => () => void
 }
 
-const ModelRow = memo<ModelRowProps>(
-  ({ active, detailProvider, displayName, model, onSelect, subscribeScroll }) => {
-    const [detailOpen, setDetailOpen] = useState(false)
+const ModelRow = memo<ModelRowProps>(({ active, detailProvider, displayName, model, onSelect, subscribeScroll }) => {
+  const [detailOpen, setDetailOpen] = useState(false)
 
-    useEffect(() => subscribeScroll?.(() => setDetailOpen(false)), [subscribeScroll])
+  useEffect(() => subscribeScroll?.(() => setDetailOpen(false)), [subscribeScroll])
 
-    return (
-      <div className={styles.rowWrap}>
-        <DropdownMenuSubmenuRoot open={detailOpen} onOpenChange={setDetailOpen}>
-          <DropdownMenuSubmenuTrigger
-            className={cx(styles.rowTrigger, active && styles.itemActive)}
-            onClick={(event) => {
-              event.preventDefault()
-              setDetailOpen(false)
-              onSelect()
-            }}
-          >
-            <ModelRowContent displayName={displayName} model={model} provider={detailProvider} />
-          </DropdownMenuSubmenuTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuPositioner anchor={null} placement='right' sideOffset={12}>
-              <DropdownMenuPopup className={styles.detailPopup}>
-                <ModelDetailPanel model={model} provider={detailProvider} />
-              </DropdownMenuPopup>
-            </DropdownMenuPositioner>
-          </DropdownMenuPortal>
-        </DropdownMenuSubmenuRoot>
-      </div>
-    )
-  }
-)
+  return (
+    <div className={styles.rowWrap}>
+      <DropdownMenuSubmenuRoot open={detailOpen} onOpenChange={setDetailOpen}>
+        <DropdownMenuSubmenuTrigger
+          className={cx(styles.rowTrigger, active && styles.itemActive)}
+          onClick={(event) => {
+            event.preventDefault()
+            setDetailOpen(false)
+            onSelect()
+          }}
+        >
+          <ModelRowContent displayName={displayName} model={model} provider={detailProvider} />
+        </DropdownMenuSubmenuTrigger>
+        <DropdownMenuPortal>
+          <DropdownMenuPositioner anchor={null} placement='right' sideOffset={12}>
+            <DropdownMenuPopup className={styles.detailPopup}>
+              <ModelDetailPanel model={model} provider={detailProvider} />
+            </DropdownMenuPopup>
+          </DropdownMenuPositioner>
+        </DropdownMenuPortal>
+      </DropdownMenuSubmenuRoot>
+    </div>
+  )
+})
 
 ModelRow.displayName = 'ModelRow'
 
@@ -180,11 +180,7 @@ const MultiProviderModelRow = memo<MultiProviderModelRowProps>(
               onSelect(defaultProvider.id, data.model)
             }}
           >
-            <ModelRowContent
-              displayName={data.displayName}
-              model={data.model}
-              provider={detailProvider}
-            />
+            <ModelRowContent displayName={data.displayName} model={data.model} provider={detailProvider} />
           </DropdownMenuSubmenuTrigger>
           <DropdownMenuPortal>
             <DropdownMenuPositioner anchor={null} placement='right' sideOffset={12}>
@@ -194,9 +190,7 @@ const MultiProviderModelRow = memo<MultiProviderModelRowProps>(
                   <DropdownMenuGroupLabel>使用此模型来自</DropdownMenuGroupLabel>
                   {data.providers.map((provider) => {
                     const key = menuKey(provider.id, data.model)
-                    const isProviderActive = isActive
-                      ? activeKey === key
-                      : provider.id === defaultProvider.id
+                    const isProviderActive = isActive ? activeKey === key : provider.id === defaultProvider.id
 
                     return (
                       <DropdownMenuItem
@@ -207,16 +201,14 @@ const MultiProviderModelRow = memo<MultiProviderModelRowProps>(
                           onSelect(provider.id, data.model)
                         }}
                       >
-                        <DropdownMenuItemIcon>
-                          {isProviderActive ? <Check size={16} /> : null}
-                        </DropdownMenuItemIcon>
+                        <DropdownMenuItemIcon>{isProviderActive ? <Check size={16} /> : null}</DropdownMenuItemIcon>
                         <DropdownMenuItemLabel>
-                          <Flex align='center' gap={8}>
+                          <Flexbox horizontal align='center' gap={8}>
                             <ProviderIcon provider={provider.id} size={20} type='color' />
                             <Text ellipsis style={{ fontSize: 13 }}>
                               {provider.name}
                             </Text>
-                          </Flex>
+                          </Flexbox>
                         </DropdownMenuItemLabel>
                       </DropdownMenuItem>
                     )
@@ -256,7 +248,8 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
           switch (item.type) {
             case 'no-provider': {
               return (
-                <Flex
+                <Flexbox
+                  horizontal
                   key='no-provider'
                   align='center'
                   className={styles.menuItem}
@@ -269,25 +262,26 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
                 >
                   前往配置服务商
                   <Icon icon={LucideArrowRight} size={14} />
-                </Flex>
+                </Flexbox>
               )
             }
 
             case 'group-header': {
               return (
-                <Flex
+                <Flexbox
+                  horizontal
                   key={`header-${item.provider.id}`}
                   align='center'
                   className={styles.groupHeader}
                   justify='space-between'
                   style={{ paddingBlock: '12px 4px', paddingInline: '12px 8px' }}
                 >
-                  <Flex align='center' gap={8} style={{ minWidth: 0 }}>
+                  <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0 }}>
                     <ProviderIcon provider={item.provider.id} size={18} type='color' />
                     <Text ellipsis style={{ fontSize: 12 }}>
                       {item.provider.name}
                     </Text>
-                  </Flex>
+                  </Flexbox>
                   <ActionIcon
                     icon={LucideBolt}
                     size='small'
@@ -299,13 +293,14 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
                       navigate(`/settings/provider/${item.provider.id}`)
                     }}
                   />
-                </Flex>
+                </Flexbox>
               )
             }
 
             case 'empty-model': {
               return (
-                <Flex
+                <Flexbox
+                  horizontal
                   key={`empty-${item.provider.id}`}
                   align='center'
                   className={styles.menuItem}
@@ -318,7 +313,7 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
                 >
                   暂无启用模型
                   <Icon icon={LucideArrowRight} size={14} />
-                </Flex>
+                </Flexbox>
               )
             }
 

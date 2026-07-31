@@ -1,11 +1,13 @@
-import { type FileListItem, type QueryFileListParams, FilesTabs } from '@pure/types'
+import { FilesTabs } from '@pure/types'
+import type { FileListItem, QueryFileListParams } from '@pure/types'
 import { and, eq } from 'drizzle-orm'
 
 import { getServerDB } from '../../core/db-adaptor'
 import { DocumentModel } from '../../models/document'
 import { FileModel } from '../../models/file'
-import { DOCUMENT_FOLDER_TYPE, type DocumentItem, type FileItem, documents, files } from '../../schemas/file'
-import { type ChatDatabase } from '../../type'
+import { DOCUMENT_FOLDER_TYPE, documents, files } from '../../schemas/file'
+import type { DocumentItem, FileItem } from '../../schemas/file'
+import type { ChatDatabase } from '../../type'
 
 export interface KnowledgeItem {
   content?: string | null

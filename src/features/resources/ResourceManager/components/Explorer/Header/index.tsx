@@ -1,7 +1,6 @@
 'use client'
 
-import { ActionIcon, DropdownMenu, Icon, Text } from '@pure/ui'
-import { Flex, Button } from 'antd'
+import { ActionIcon, Button, confirmModal, DropdownMenu, Icon, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
   ArrowDownAZ,
@@ -39,7 +38,7 @@ interface ExplorerHeaderProps {
 }
 
 const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFolder, title }) => {
-  const { message, modal } = useApp()
+  const { message } = useApp()
   const { selectedFileIds, setSorter, setViewMode, sorter, viewMode } = useResourceManagerStore(
     useShallow((s) => ({
       selectedFileIds: s.selectedFileIds,
@@ -126,19 +125,19 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
   )
 
   return (
-    <Flex align='center' className={styles.header} justify='space-between'>
-      <Flex align='center' gap={8} style={{ overflow: 'hidden' }}>
+    <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
+      <Flexbox horizontal align='center' gap={8} style={{ overflow: 'hidden' }}>
         {sidebarCollapsed ? (
           <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
         ) : null}
         {hasSelected ? (
-          <Flex align='center' gap={8}>
+          <Flexbox horizontal align='center' gap={8}>
             <ActionIcon
               icon={Trash2Icon}
               title='删除'
               onClick={() => {
                 if (!onDelete) return
-                modal.confirm({
+                confirmModal({
                   cancelText: '取消',
                   content: `确定删除选中的 ${selectCount} 个文件吗？删除后将无法恢复。`,
                   okButtonProps: { danger: true },
@@ -151,12 +150,12 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
                 })
               }}
             />
-          </Flex>
+          </Flexbox>
         ) : (
           <Text style={{ marginInlineStart: 8 }}>{title ?? '资源'}</Text>
         )}
-      </Flex>
-      <Flex align='center' gap={4}>
+      </Flexbox>
+      <Flexbox horizontal align='center' gap={4}>
         <SearchInput />
         <DropdownMenu items={sortMenuItems} nativeButton>
           <ActionIconWithChevron icon={ArrowDownAZ} title={currentSortLabel} />
@@ -164,13 +163,13 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
         <DropdownMenu items={viewMenuItems} nativeButton placement='bottomRight'>
           <ActionIconWithChevron icon={currentViewIcon} title={currentViewLabel} />
         </DropdownMenu>
-        <Flex vertical style={{ marginInlineStart: 8 }}>
+        <Flexbox style={{ marginInlineStart: 8 }}>
           <DropdownMenu items={addMenuItems} nativeButton placement='bottomRight'>
             <Button icon={<Plus />} type='primary'>
               添加
             </Button>
           </DropdownMenu>
-        </Flex>
+        </Flexbox>
         <input
           ref={fileInputRef}
           hidden
@@ -182,8 +181,8 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
             e.target.value = ''
           }}
         />
-      </Flex>
-    </Flex>
+      </Flexbox>
+    </Flexbox>
   )
 })
 

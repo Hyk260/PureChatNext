@@ -1,12 +1,11 @@
 'use client'
 
-import { Flex } from 'antd'
-import { Block, MaskShadow, ModelTag, ProviderCombine, stopPropagation, ActionIcon, Text } from '@pure/ui'
+import { Block, MaskShadow, ModelTag, ProviderCombine, stopPropagation, ActionIcon, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { GlobeIcon } from 'lucide-react'
 import { memo } from 'react'
 
-import { type DiscoverProviderItem } from '@/features/community/types'
+import type { DiscoverProviderItem } from '@/features/community/types'
 
 const styles = createStaticStyles(({ css }) => ({
   author: css`
@@ -36,20 +35,21 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
         position: 'relative',
       }}
     >
-      <Flex align='flex-start' gap={16} justify='space-between' style={{ padding: 16, width: '100%' }}>
-        <Flex vertical title={identifier} style={{ overflow: 'hidden' }}>
+      <Flexbox horizontal align='flex-start' gap={16} justify='space-between' style={{ padding: 16, width: '100%' }}>
+        <Flexbox title={identifier} style={{ overflow: 'hidden' }}>
           <ProviderCombine provider={identifier} size={28} style={{ flex: 'none' }} />
           <div className={styles.author}>@{name}</div>
-        </Flex>
-        <Flex align='center'>
+        </Flexbox>
+        <Flexbox horizontal align='center'>
           <a href={url} rel='noopener noreferrer' target='_blank' onClick={stopPropagation}>
             <ActionIcon color={cssVar.colorTextDescription} icon={GlobeIcon} />
           </a>
-        </Flex>
-      </Flex>
-      <Flex vertical flex={1} gap={12} style={{ paddingInline: 16 }}>
+        </Flexbox>
+      </Flexbox>
+      <Flexbox flex={1} gap={12} style={{ paddingInline: 16 }}>
         {description ? (
-          <Text as='p'
+          <Text
+            as='p'
             className={styles.desc}
             ellipsis={{
               rows: 3,
@@ -59,8 +59,8 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
             {description}
           </Text>
         ) : null}
-      </Flex>
-      <Flex align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>
+      </Flexbox>
+      <Flexbox horizontal align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>
         <MaskShadow horizontal gap={6} position='right' size={10} width='100%'>
           {models
             .slice(0, 6)
@@ -69,7 +69,7 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
               <ModelTag key={tag} model={tag} style={{ margin: 0 }} />
             ))}
         </MaskShadow>
-      </Flex>
+      </Flexbox>
     </Block>
   )
 })

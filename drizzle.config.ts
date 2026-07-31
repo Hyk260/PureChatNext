@@ -1,4 +1,4 @@
-import { type Config } from 'drizzle-kit'
+import type { Config } from 'drizzle-kit'
 
 import './scripts/lib/load-env'
 

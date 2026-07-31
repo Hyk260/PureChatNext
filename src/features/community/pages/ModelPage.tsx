@@ -1,8 +1,8 @@
 'use client'
 
-import { Flex } from 'antd'
 import { memo, useMemo } from 'react'
 
+import { Flexbox } from '@pure/ui'
 import AgentPagination from '@/features/community/components/AgentPagination'
 import AgentSearch from '@/features/community/components/AgentSearch'
 import ModelCategory from '@/features/community/components/ModelCategory'
@@ -29,16 +29,16 @@ const ModelPage = memo(() => {
   )
 
   return (
-    <Flex gap={24} style={{ width: '100%' }}>
+    <Flexbox horizontal gap={24} style={{ width: '100%' }}>
       <ModelCategory />
-      <Flex vertical flex={1} gap={16} style={{ minWidth: 0 }}>
+      <Flexbox flex={1} gap={16} style={{ minWidth: 0 }}>
         <AgentSearch placeholder='搜索名称介绍或关键词...' />
-        <Flex vertical gap={32} style={{ width: '100%' }}>
+        <Flexbox gap={32} style={{ width: '100%' }}>
           <ModelList data={pageData} />
           <AgentPagination currentPage={currentPage} pageSize={PAGE_SIZE} total={total} />
-        </Flex>
-      </Flex>
-    </Flex>
+        </Flexbox>
+      </Flexbox>
+    </Flexbox>
   )
 })
 

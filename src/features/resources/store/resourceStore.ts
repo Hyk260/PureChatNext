@@ -4,8 +4,8 @@ import { useEffect } from 'react'
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
-import { type FileListItem, type QueryFileListParams } from '@/types/files'
-import { type KnowledgeBaseListItem } from '@/types/resource'
+import type { FileListItem, QueryFileListParams } from '@/types/files'
+import type { KnowledgeBaseListItem } from '@/types/resource'
 
 import { resourceService } from '@/services/resource'
 

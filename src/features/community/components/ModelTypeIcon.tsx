@@ -5,7 +5,7 @@ import { cssVar } from 'antd-style'
 import { ImageIcon, MessageSquareTextIcon } from 'lucide-react'
 import { memo } from 'react'
 
-import { type DiscoverModelType } from '@/features/community/types'
+import type { DiscoverModelType } from '@/features/community/types'
 
 const TYPE_META: Record<DiscoverModelType, { icon: typeof MessageSquareTextIcon; label: string }> = {
   chat: { icon: MessageSquareTextIcon, label: 'Chat Model' },

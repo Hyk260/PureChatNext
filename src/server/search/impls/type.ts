@@ -1,4 +1,4 @@
-import { type SearchParams, type UniformSearchResponse } from '@pure/types'
+import type { SearchParams, UniformSearchResponse } from '@pure/types'
 
 /**
  * Search service implementation interface

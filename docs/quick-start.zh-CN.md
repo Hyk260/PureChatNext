@@ -45,6 +45,42 @@ NODE_ENV=development
 
 本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [env-setup.zh-CN.md · APP\_URL](./env-setup.zh-CN.md#app_url)。
 
+### 3.1 可选：使用本地 PostgreSQL
+
+不使用 Supabase 托管数据库时，可连接外置 SSD 上的本地 PostgreSQL：
+
+```env
+DATABASE_DRIVER=node
+DATABASE_URL=postgresql://purechat:<本地密码>@127.0.0.1:5432/purechat
+```
+
+```bash
+pnpm db:local:start
+pnpm db:local:status
+pnpm db:migrate
+```
+
+完整说明见 [本地 PostgreSQL 管理](./self-hosting/postgresql-local.zh-CN.md)。
+
+### 3.2 可选：启动本地 Redis
+
+需要 Better Auth 次级存储、微信渠道上下文或本地缓存时，可启用 Redis：
+
+```env
+REDIS_URL=redis://127.0.0.1:6379
+REDIS_PREFIX=purechat
+DISABLE_REDIS=0
+```
+
+连接外置 SSD 后启动并检查状态：
+
+```bash
+pnpm redis:start
+pnpm redis:status
+```
+
+完整说明见 [本地 Redis 管理](./self-hosting/redis-local.zh-CN.md)。
+
 ## 4. 启动开发服务器
 
 ```bash

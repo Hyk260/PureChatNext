@@ -1,12 +1,11 @@
 'use client'
 
-import { Flex, Button } from 'antd'
-import { SortableList } from '@pure/ui'
+import { Button, SortableList, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Plus } from 'lucide-react'
 import { memo } from 'react'
 
-import { type HomeAgentGroup } from '@/features/home/store/sidebarDefaults'
+import type { HomeAgentGroup } from '@/features/home/store/sidebarDefaults'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { modal } from '@/components/AntdStaticMethods'
 
@@ -31,7 +30,7 @@ const ConfigGroupContent = memo(() => {
   const updateAgentGroupSort = useHomeStore((s) => s.updateAgentGroupSort)
 
   return (
-    <Flex vertical>
+    <Flexbox>
       <SortableList
         items={agentGroups}
         renderItem={(item: HomeAgentGroup) => (
@@ -51,7 +50,7 @@ const ConfigGroupContent = memo(() => {
       <Button block icon={<Plus />} onClick={() => addAgentGroup(`分类 ${agentGroups.length + 1}`)}>
         新建分类
       </Button>
-    </Flex>
+    </Flexbox>
   )
 })
 

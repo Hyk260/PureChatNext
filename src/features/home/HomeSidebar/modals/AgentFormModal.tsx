@@ -1,10 +1,10 @@
 'use client'
 
-import { Flex, Input, Modal } from 'antd'
-import { Text } from '@pure/ui'
+import { Input } from 'antd'
+import { Text, Modal, Flexbox } from '@pure/ui'
 import { memo, useEffect, useState } from 'react'
 
-import { type AgentListItem } from '@/const/home/agents'
+import type { AgentListItem } from '@/const/home/agents'
 
 export type AgentFormValues = {
   avatar: string
@@ -60,7 +60,6 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
   return (
     <Modal
       confirmLoading={confirmLoading}
-      centered
       destroyOnHidden
       okText={isEdit ? '保存' : '创建'}
       open={open}
@@ -70,8 +69,8 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
       onCancel={onCancel}
       onOk={handleOk}
     >
-      <Flex vertical gap={12} style={{ paddingBlock: 8 }}>
-        <Flex vertical gap={4}>
+      <Flexbox gap={12} style={{ paddingBlock: 8 }}>
+        <Flexbox gap={4}>
           <Text type='secondary' style={{ fontSize: 12 }}>
             名称
           </Text>
@@ -80,8 +79,8 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
             value={values.title}
             onChange={(event) => setValues((prev) => ({ ...prev, title: event.target.value }))}
           />
-        </Flex>
-        <Flex vertical gap={4}>
+        </Flexbox>
+        <Flexbox gap={4}>
           <Text type='secondary' style={{ fontSize: 12 }}>
             头像（emoji 或 URL）
           </Text>
@@ -90,8 +89,8 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
             value={values.avatar}
             onChange={(event) => setValues((prev) => ({ ...prev, avatar: event.target.value }))}
           />
-        </Flex>
-        <Flex vertical gap={4}>
+        </Flexbox>
+        <Flexbox gap={4}>
           <Text type='secondary' style={{ fontSize: 12 }}>
             描述
           </Text>
@@ -100,8 +99,8 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
             value={values.description}
             onChange={(event) => setValues((prev) => ({ ...prev, description: event.target.value }))}
           />
-        </Flex>
-        <Flex vertical gap={4}>
+        </Flexbox>
+        <Flexbox gap={4}>
           <Text type='secondary' style={{ fontSize: 12 }}>
             系统提示词
           </Text>
@@ -111,8 +110,8 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
             value={values.systemRole}
             onChange={(event) => setValues((prev) => ({ ...prev, systemRole: event.target.value }))}
           />
-        </Flex>
-      </Flex>
+        </Flexbox>
+      </Flexbox>
     </Modal>
   )
 })

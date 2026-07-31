@@ -3,14 +3,16 @@
 import { BRANDING_NAME } from '@/const/branding'
 import AuthAgreement from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
-import { Icon, Text } from '@pure/ui'
-import { Button, Form, Input, type InputRef } from 'antd'
+import { Button, Icon, Text } from '@pure/ui'
+import { Form, Input } from 'antd'
+import type { InputRef } from 'antd'
 import { Lock, Mail } from 'lucide-react'
 import Link from '@/utils/link'
 import { useSearchParams } from '@/utils/navigation'
 import { useEffect, useRef } from 'react'
 
-import { useSignUp, type SignUpFormValues } from './useSignUp'
+import { useSignUp } from './useSignUp'
+import type { SignUpFormValues } from './useSignUp'
 
 // configReady 由 SignUpPage 在外层保证，此处直接渲染表单内容
 export const SignUpForm = () => {

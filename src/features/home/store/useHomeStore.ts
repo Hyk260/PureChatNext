@@ -5,15 +5,15 @@ import { persist } from 'zustand/middleware'
 
 import { PURE_AI_AGENT_ID } from '@/const/home/agents'
 import { DEFAULT_HOME_MODEL } from '@/const/home/models'
-import { type ActiveCommunityAgent } from '@/features/community/types'
+import type { ActiveCommunityAgent } from '@/features/community/types'
 
 import {
   DEFAULT_HOME_SIDEBAR_STATE,
-  type HomeAgentGroup,
   mergeSidebarExpandedKeys,
   normalizePersistedSidebarItems,
   normalizeSidebarExpandedKeys,
 } from './sidebarDefaults'
+import type { HomeAgentGroup } from './sidebarDefaults'
 
 export type HomeAgentMode = 'agent' | 'chat'
 

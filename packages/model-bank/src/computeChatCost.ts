@@ -1,6 +1,6 @@
 import { CREDITS_PER_DOLLAR } from '@pure/const'
 
-import { type ModelTokenPricing } from './types/aiModel'
+import type { ModelTokenPricing } from './types/aiModel'
 
 /** CNY → USD 粗算汇率（仅自配 deepseek 成本展示；PureHub 禁止走此路径）。 */
 export const USD_TO_CNY = 7.12
@@ -35,8 +35,7 @@ export const computeChatCost = (pricing: ModelTokenPricing, usage: ChatTokenUsag
 
   const billableInput = Math.max(0, input - cacheRead)
 
-  let totalNative =
-    (billableInput / 1_000_000) * pricing.textInput + (output / 1_000_000) * pricing.textOutput
+  let totalNative = (billableInput / 1_000_000) * pricing.textInput + (output / 1_000_000) * pricing.textOutput
 
   if (pricing.textInputCacheRead != null && cacheRead > 0) {
     totalNative += (cacheRead / 1_000_000) * pricing.textInputCacheRead

@@ -1,10 +1,12 @@
 'use client'
 
-import { Flex, Button, Input, type InputRef } from 'antd'
-import { Text } from '@pure/ui'
+import { Input } from 'antd'
+import type { InputRef } from 'antd'
+import { Button, Text, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Loader2 } from 'lucide-react'
-import { type ChangeEvent, useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import type { ChangeEvent } from 'react'
 
 import { updateUser } from '@/libs/better-auth/client'
 
@@ -102,7 +104,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
 
   return (
     <SettingRow label='用户名'>
-      <Flex align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
+      <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
         {saving ? <Loader2 className='h-4 w-4 shrink-0 animate-spin' /> : null}
         {error ? (
           <Text type='danger' style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
@@ -140,7 +142,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
           style={{ flex: 1, maxWidth: 320 }}
           variant='filled'
         />
-      </Flex>
+      </Flexbox>
     </SettingRow>
   )
 }

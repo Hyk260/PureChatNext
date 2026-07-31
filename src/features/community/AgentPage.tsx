@@ -1,8 +1,8 @@
 'use client'
 
-import { Flex } from 'antd'
 import { memo, useMemo } from 'react'
 
+import { Flexbox } from '@pure/ui'
 import { COMMUNITY_AGENTS, filterCommunityAgents } from '@/const/community/agents'
 import { useSearchParams } from '@/utils/navigation'
 
@@ -30,16 +30,16 @@ const AgentPage = memo(() => {
   )
 
   return (
-    <Flex gap={24} style={{ width: '100%' }}>
+    <Flexbox horizontal gap={24} style={{ width: '100%' }}>
       <AgentCategory />
-      <Flex vertical flex={1} gap={16} style={{ minWidth: 0 }}>
+      <Flexbox flex={1} gap={16} style={{ minWidth: 0 }}>
         <AgentSearch />
-        <Flex vertical gap={32} style={{ width: '100%' }}>
+        <Flexbox gap={32} style={{ width: '100%' }}>
           <AgentList data={pageData} />
           <AgentPagination currentPage={currentPage} pageSize={PAGE_SIZE} total={total} />
-        </Flex>
-      </Flex>
-    </Flex>
+        </Flexbox>
+      </Flexbox>
+    </Flexbox>
   )
 })
 

@@ -1,9 +1,10 @@
-import { type UniformSearchResponse, SEARCH_SEARXNG_NOT_CONFIG } from '@pure/types'
+import { SEARCH_SEARXNG_NOT_CONFIG } from '@pure/types'
+import type { UniformSearchResponse } from '@pure/types'
 
 import { toolsEnv } from '@/envs/tools'
 import { SearXNGClient } from './client'
 
-import { type SearchServiceImpl } from '../type'
+import type { SearchServiceImpl } from '../type'
 
 /**
  * SearXNG implementation of the search service

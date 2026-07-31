@@ -1,7 +1,6 @@
 'use client'
 
-import { Button, Empty, Flex } from 'antd'
-import { Text } from '@pure/ui'
+import { Button, Empty, Flexbox, Text } from '@pure/ui'
 import { memo } from 'react'
 
 interface EmptyModelsProps {
@@ -10,17 +9,14 @@ interface EmptyModelsProps {
 }
 
 const EmptyModels = memo<EmptyModelsProps>(({ loading, onFetch }) => (
-  <Flex vertical align='center' gap={12} style={{ paddingBlock: 32, width: '100%' }}>
-    <Empty
-      description={<Text type='secondary'>暂无模型</Text>}
-      image={Empty.PRESENTED_IMAGE_SIMPLE}
-    />
+  <Flexbox align='center' gap={12} style={{ paddingBlock: 32 }} width='100%'>
+    <Empty description={<Text type='secondary'>暂无模型</Text>} />
     {onFetch ? (
       <Button loading={loading} onClick={onFetch}>
         获取模型列表
       </Button>
     ) : null}
-  </Flex>
+  </Flexbox>
 ))
 
 EmptyModels.displayName = 'EmptyModels'

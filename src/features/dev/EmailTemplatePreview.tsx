@@ -5,7 +5,7 @@ import { Tabs } from 'antd'
 import { Mail } from 'lucide-react'
 import Scrollbar from '@/components/Scrollbar'
 
-import { type EmailTemplatePreview } from '@/libs/better-auth/email-templates/preview'
+import type { EmailTemplatePreview } from '@/libs/better-auth/email-templates/preview'
 
 type Props = {
   templates: EmailTemplatePreview[]

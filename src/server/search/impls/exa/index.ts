@@ -1,9 +1,9 @@
-import { type SearchParams, type UniformSearchResponse, type UniformSearchResult } from '@pure/types'
+import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@pure/types'
 import debug from 'debug'
 import urlJoin from 'url-join'
 
-import { type SearchServiceImpl } from '../type'
-import { type ExaResponse, type ExaSearchParameters } from './type'
+import type { SearchServiceImpl } from '../type'
+import type { ExaResponse, ExaSearchParameters } from './type'
 
 const log = debug('search:Exa')
 

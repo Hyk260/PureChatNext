@@ -1,6 +1,6 @@
 import { createDeepSeek } from '@ai-sdk/deepseek'
 import { createOpenAI } from '@ai-sdk/openai'
-import { type LanguageModel } from 'ai'
+import type { LanguageModel } from 'ai'
 
 export type SupportedProviderId = 'openai' | 'deepseek'
 

@@ -1,11 +1,11 @@
 'use client'
 
-import { Button, Modal } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { useState } from 'react'
 
 import { requestPasswordReset } from '@/libs/better-auth/client'
 
+import { Button, confirmModal } from '@pure/ui'
 import { SettingRow } from './SettingRow'
 
 interface PasswordSettingProps {
@@ -20,9 +20,7 @@ export function PasswordSetting({ email, hasCredentialAccount }: PasswordSetting
   const handleReset = () => {
     if (!email) return
 
-    Modal.confirm({
-      centered: true,
-      transitionName: '',
+    confirmModal({
       content: `我们将向 ${email} 发送密码重置链接，请查收邮件后完成重置。`,
       okText: '发送邮件',
       cancelText: '取消',

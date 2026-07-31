@@ -3,8 +3,9 @@ import { and, asc, count, desc, eq, gte, ilike, lte, or, sql, sum } from 'drizzl
 import { createNanoId } from '@pure/utils'
 
 import { getServerDB } from '../core/db-adaptor'
-import { creditLedger, userCredits, type UserCreditsItem } from '../schemas/credits'
-import { type ChatDatabase } from '../type'
+import { creditLedger, userCredits } from '../schemas/credits'
+import type { UserCreditsItem } from '../schemas/credits'
+import type { ChatDatabase } from '../type'
 
 export type CreditsBalance = {
   grant: number
@@ -29,13 +30,13 @@ export type ChargeChatUsageInput = {
 export type UsageSortBy = 'createdAt' | 'credits' | 'durationMs' | 'totalTokens'
 
 export type UsageQuery = {
-  endAt: Date
+  endAt?: Date
   model?: string
   page: number
   pageSize: number
   sortBy: UsageSortBy
   sortOrder: 'asc' | 'desc'
-  startAt: Date
+  startAt?: Date
   userId: string
 }
 
@@ -124,9 +125,7 @@ export class CreditsModel {
   async assertCanChat(userId: string, period: string, minReserve = MIN_RESERVE_CREDITS): Promise<CreditsBalance> {
     const balance = await this.getBalance(userId, period)
     if (balance.remaining <= 0 || balance.remaining < minReserve) {
-      throw new FreePlanLimitError(
-        '免费积分已用尽。请等待下月重置，或自行配置模型 API Key 继续使用。'
-      )
+      throw new FreePlanLimitError('免费积分已用尽。请等待下月重置，或自行配置模型 API Key 继续使用。')
     }
     return balance
   }
@@ -200,16 +199,13 @@ export class CreditsModel {
   }
 
   async getUsage(query: UsageQuery) {
-    const filters = [
-      eq(creditLedger.userId, query.userId),
-      eq(creditLedger.reason, 'chat_usage'),
-      gte(creditLedger.createdAt, query.startAt),
-      lte(creditLedger.createdAt, query.endAt),
-    ]
+    const scopeFilters = [eq(creditLedger.userId, query.userId), eq(creditLedger.reason, 'chat_usage')]
+    if (query.startAt && query.endAt) {
+      scopeFilters.push(gte(creditLedger.createdAt, query.startAt), lte(creditLedger.createdAt, query.endAt))
+    }
+    const filters = [...scopeFilters]
     if (query.model) {
-      filters.push(
-        or(ilike(creditLedger.model, `%${query.model}%`), ilike(creditLedger.provider, `%${query.model}%`))!
-      )
+      filters.push(or(ilike(creditLedger.model, `%${query.model}%`), ilike(creditLedger.provider, `%${query.model}%`))!)
     }
     const where = and(...filters)
     const totalTokens = sql<number>`coalesce(${creditLedger.inputTokens}, 0) + coalesce(${creditLedger.outputTokens}, 0)`
@@ -222,10 +218,7 @@ export class CreditsModel {
             ? totalTokens
             : creditLedger.createdAt
     const orderBy = query.sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn)
-    // SELECT / GROUP BY / ORDER BY 必须是同一表达式，否则 PG 报 42803
-    const dayExpr = sql<string>`to_char(${creditLedger.createdAt} at time zone 'Asia/Shanghai', 'YYYY-MM-DD')`
-
-    const [items, [summary], daily, modelRows] = await Promise.all([
+    const [items, [summary], modelRows] = await Promise.all([
       this.db
         .select({
           cachedInputTokens: creditLedger.cachedInputTokens,
@@ -249,30 +242,13 @@ export class CreditsModel {
         .from(creditLedger)
         .where(where),
       this.db
-        .select({
-          credits: sum(creditLedger.credits),
-          day: dayExpr,
-        })
-        .from(creditLedger)
-        .where(where)
-        .groupBy(dayExpr)
-        .orderBy(dayExpr),
-      this.db
         .selectDistinct({ model: creditLedger.model })
         .from(creditLedger)
-        .where(
-          and(
-            eq(creditLedger.userId, query.userId),
-            eq(creditLedger.reason, 'chat_usage'),
-            gte(creditLedger.createdAt, query.startAt),
-            lte(creditLedger.createdAt, query.endAt)
-          )
-        )
+        .where(and(...scopeFilters))
         .orderBy(creditLedger.model),
     ])
 
     return {
-      daily: daily.map((item) => ({ credits: Number(item.credits ?? 0), day: item.day })),
       items,
       models: modelRows.flatMap(({ model }) => (model ? [model] : [])),
       page: query.page,

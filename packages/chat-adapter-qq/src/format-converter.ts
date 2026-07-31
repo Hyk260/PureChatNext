@@ -1,4 +1,5 @@
-import { BaseFormatConverter, parseMarkdown, stringifyMarkdown, type Root } from 'chat'
+import { BaseFormatConverter, parseMarkdown, stringifyMarkdown } from 'chat'
+import type { Root } from 'chat'
 
 /** Markdown ↔ text for QQ Bot messages (@pure/chat-adapter-qq). */
 export class QQFormatConverter extends BaseFormatConverter {

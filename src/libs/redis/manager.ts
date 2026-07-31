@@ -1,5 +1,5 @@
 import { IoRedisRedisProvider } from './redis'
-import { type BaseRedisProvider, type RedisConfig } from './types'
+import type { BaseRedisProvider, RedisConfig } from './types'
 import { redisEnv } from '@/envs/redis'
 
 export const isRedisDisabledByEnv = () => redisEnv.DISABLE_REDIS

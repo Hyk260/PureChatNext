@@ -3,10 +3,11 @@
 import Link from '@/utils/link'
 import { usePathname } from '@/utils/navigation'
 import { useState } from 'react'
-import { Button, Drawer } from 'antd'
+import { Drawer } from 'antd'
 import { Menu } from 'lucide-react'
 
 import { FRONTEND_ROUTE_GROUPS } from '@/const/frontend-routes'
+import { Button } from '@pure/ui'
 
 const isActiveRoute = (pathname: string, href: string) => {
   if (href === '/') {

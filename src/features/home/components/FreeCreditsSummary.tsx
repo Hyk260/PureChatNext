@@ -1,11 +1,11 @@
 'use client'
 
-import { Flex, Progress } from 'antd'
+import { Progress } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 import useSWR from 'swr'
 
-import { Text } from '@pure/ui'
+import { Text, Flexbox } from '@pure/ui'
 
 import Link from '@/utils/link'
 import { apiFetch } from '@/utils/apiFetch'
@@ -55,17 +55,21 @@ const FreeCreditsSummary = memo<{ onClick?: () => void }>(({ onClick }) => {
   })
 
   const percent = data ? Math.min(100, Math.round((data.used / Math.max(1, data.grant)) * 100)) : 0
-  const value = isLoading ? '加载中' : data ? `${formatMillions(data.used)} / ${formatMillions(data.grant)}` : '暂不可用'
+  const value = isLoading
+    ? '加载中'
+    : data
+      ? `${formatMillions(data.used)} / ${formatMillions(data.grant)}`
+      : '暂不可用'
 
   return (
     <Link className={styles.link} href='/settings/credits' onClick={onClick}>
-      <Flex align='center' className={styles.row} justify='space-between'>
+      <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
         <Text type='secondary'>免费积分</Text>
-        <Flex align='center' gap={10}>
+        <Flexbox horizontal align='center' gap={10}>
           <Text className={styles.value}>{value}</Text>
           <Progress percent={percent} showInfo={false} size={16} strokeWidth={12} type='circle' />
-        </Flex>
-      </Flex>
+        </Flexbox>
+      </Flexbox>
     </Link>
   )
 })

@@ -19,7 +19,7 @@ import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import * as schema from '@pure/database/schemas'
 import { chatTopics } from '@pure/database/schemas/chat'
 import { users } from '@pure/database/schemas/user'
-import { type ChatDatabase } from '@pure/database/type'
+import type { ChatDatabase } from '@pure/database/type'
 
 config({ path: resolve(__dirname, '../../../../.env.local') })
 
@@ -220,6 +220,33 @@ describeIfDb('ChatMessageModel ownership', () => {
     const messages = await new ChatMessageModel(userAId, db).listByTopic(topicId)
     expect(messages.map((message) => message.id)).toEqual(orderedMessages.map((message) => message.id))
     expect(messages.map((message) => message.parts)).toEqual(orderedMessages.map((message) => message.parts))
+  })
+
+  it('persists assistant message metadata', async () => {
+    const metadata = {
+      model: 'deepseek-reasoner',
+      performance: { tps: 20.25, ttft: 1100 },
+      provider: 'deepseek',
+      usage: {
+        outputReasoningTokens: 40,
+        outputTextTokens: 60,
+        totalInputTokens: 100,
+        totalOutputTokens: 100,
+        totalTokens: 200,
+      },
+    }
+
+    await new ChatMessageModel(userAId, db).replaceAll(topicId, [
+      {
+        id: `${TEST_PREFIX}-metadata`,
+        metadata,
+        parts: [{ text: 'with usage', type: 'text' }],
+        role: 'assistant',
+      },
+    ])
+
+    const messages = await new ChatMessageModel(userAId, db).listByTopic(topicId)
+    expect(messages[0]?.metadata).toEqual(metadata)
   })
 
   it('serializes concurrent replaceAll without primary key conflict', async () => {

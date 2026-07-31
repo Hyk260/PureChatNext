@@ -1,8 +1,10 @@
 'use client'
 
-import { Flex, type FlexProps } from 'antd'
 import { createStaticStyles } from 'antd-style'
-import { memo, type ReactNode } from 'react'
+import { Flexbox } from '@pure/ui'
+import type { FlexboxProps } from '@pure/ui'
+import { memo } from 'react'
+import type { ReactNode } from 'react'
 
 const CONVERSATION_MIN_WIDTH = 960
 
@@ -13,22 +15,21 @@ const styles = createStaticStyles(({ css }) => ({
   `,
 }))
 
-interface WideScreenContainerProps extends FlexProps {
+interface WideScreenContainerProps extends FlexboxProps {
   children: ReactNode
 }
 
 const WideScreenContainer = memo<WideScreenContainerProps>(({ children, style, ...rest }) => {
   return (
-    <Flex vertical style={{ width: '100%' }}>
-      <Flex
-        vertical
+    <Flexbox style={{ width: '100%' }}>
+      <Flexbox
         className={styles.container}
         {...rest}
         style={{ paddingInline: 16, width: `min(${CONVERSATION_MIN_WIDTH}px, 100%)`, ...style }}
       >
         {children}
-      </Flex>
-    </Flex>
+      </Flexbox>
+    </Flexbox>
   )
 })
 

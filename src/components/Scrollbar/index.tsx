@@ -1,19 +1,8 @@
 'use client'
 
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import {
-  forwardRef,
-  memo,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-  type CSSProperties,
-  type MouseEvent as ReactMouseEvent,
-  type ReactNode,
-  type UIEvent,
-} from 'react'
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import type { CSSProperties, MouseEvent as ReactMouseEvent, ReactNode, UIEvent } from 'react'
 
 const BAR_SIZE = 6
 const BAR_GAP = 2

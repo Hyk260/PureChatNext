@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import HomeSidebar from '@/features/home/HomeSidebar'
 import MainShellLayout from '@/layout/MainShellLayout'

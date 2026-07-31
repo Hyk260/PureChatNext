@@ -2,8 +2,9 @@
 
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
-import { Icon, Text } from '@pure/ui'
-import { Alert, Button, Form, Input, type FormInstance, type InputRef } from 'antd'
+import { Button, Icon, Text } from '@pure/ui'
+import { Alert, Form, Input } from 'antd'
+import type { FormInstance, InputRef } from 'antd'
 import { cssVar } from 'antd-style'
 import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'

@@ -1,7 +1,6 @@
 'use client'
 
-import { Flex } from 'antd'
-import { ActionIcon, Avatar, Block, Popover, Text } from '@pure/ui'
+import { ActionIcon, Avatar, Block, Popover, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronsUpDownIcon } from 'lucide-react'
 import { memo, useEffect, useMemo, useState } from 'react'
@@ -71,12 +70,13 @@ const HomeAgentSelect = memo(() => {
 
   const listContent = (
     <Scrollbar style={{ width: 360, height: 'auto' }} maxHeight={8 * 56 + 7 * 2 + 8} viewStyle={{ padding: 4 }}>
-      <Flex vertical gap={2}>
+      <Flexbox gap={2}>
         {agents.map((agent) => {
           const active = agent.id === selectedAgentId
 
           return (
-            <Flex
+            <Flexbox
+              horizontal
               key={agent.id}
               align='center'
               className={[styles.item, active ? styles.itemActive : ''].join(' ')}
@@ -85,7 +85,7 @@ const HomeAgentSelect = memo(() => {
               style={{ padding: 8 }}
             >
               <Avatar shape='square' size={32} avatar={agent.avatar} background={agent.backgroundColor ?? undefined} />
-              <Flex vertical flex={1} gap={2} style={{ overflow: 'hidden' }}>
+              <Flexbox flex={1} gap={2} style={{ overflow: 'hidden' }}>
                 <Text ellipsis style={{ fontSize: 14, fontWeight: 500 }}>
                   {agent.title}
                 </Text>
@@ -94,11 +94,11 @@ const HomeAgentSelect = memo(() => {
                     {agent.description}
                   </Text>
                 ) : null}
-              </Flex>
-            </Flex>
+              </Flexbox>
+            </Flexbox>
           )
         })}
-      </Flex>
+      </Flexbox>
     </Scrollbar>
   )
 

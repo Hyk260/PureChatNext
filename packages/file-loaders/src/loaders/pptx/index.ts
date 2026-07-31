@@ -2,8 +2,9 @@ import path from 'node:path'
 
 import debug from 'debug'
 
-import { type DocumentPage, type FileLoaderInterface } from '../../types'
-import { type ExtractedFile, extractFiles, parseString } from '../../utils/parser-utils'
+import type { DocumentPage, FileLoaderInterface } from '../../types'
+import { extractFiles, parseString } from '../../utils/parser-utils'
+import type { ExtractedFile } from '../../utils/parser-utils'
 
 const log = debug('file-loaders:pptx')
 

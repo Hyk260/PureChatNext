@@ -1,8 +1,8 @@
 'use client'
 
-import { Flex } from 'antd'
-import { type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
+import { Flexbox } from '@pure/ui'
 import MainShellLayout from '@/layout/MainShellLayout'
 
 import CommunityHeader from './CommunityHeader'
@@ -11,9 +11,9 @@ import CommunitySidebar from './CommunitySidebar'
 const CommunityShellLayout = ({ children }: { children: ReactNode }) => {
   return (
     <MainShellLayout header={<CommunityHeader />} sidebar={<CommunitySidebar />}>
-      <Flex vertical flex={1} id='community-scroll' style={{ padding: 24, overflow: 'auto', width: '100%' }}>
+      <Flexbox flex={1} id='community-scroll' style={{ padding: 24, overflow: 'auto', width: '100%' }}>
         {children}
-      </Flex>
+      </Flexbox>
     </MainShellLayout>
   )
 }

@@ -5,7 +5,7 @@ vi.mock('server-only', () => ({}))
 vi.mock('../core/db-adaptor', () => ({ getServerDB: vi.fn() }))
 
 import { CreditsModel } from './credits'
-import { type ChatDatabase } from '../type'
+import type { ChatDatabase } from '../type'
 
 type InsertedValue = Record<string, unknown>
 
@@ -24,7 +24,8 @@ const createChargeDb = (options?: { duplicate?: boolean }) => {
       return chain
     }),
     select: vi.fn(() => {
-      const result = selectIndex++ === 0 ? (options?.duplicate ? [{ id: 'existing' }] : []) : [{ grant: 500_000, used: 1_000 }]
+      const result =
+        selectIndex++ === 0 ? (options?.duplicate ? [{ id: 'existing' }] : []) : [{ grant: 500_000, used: 1_000 }]
       const chain: Record<string, unknown> = {}
       chain.from = vi.fn(() => chain)
       chain.where = vi.fn(() => chain)

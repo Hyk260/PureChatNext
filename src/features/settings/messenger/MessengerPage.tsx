@@ -1,14 +1,14 @@
 'use client'
 
-import { Flex } from 'antd'
-import { Block, Icon, Text } from '@pure/ui'
+import { Block, Icon, Text, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronRightIcon } from 'lucide-react'
 import { memo, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
-import { MESSENGER_PLATFORMS, MESSENGER_SUBTITLE, getMessengerPlatform, type MessengerPlatformId } from './const'
+import { MESSENGER_PLATFORMS, MESSENGER_SUBTITLE, getMessengerPlatform } from './const'
+import type { MessengerPlatformId } from './const'
 import MessengerComingSoonPage from './MessengerComingSoonPage'
 import MessengerQQPage from './MessengerQQPage'
 import MessengerWeChatPage from './MessengerWeChatPage'
@@ -77,27 +77,27 @@ const MessengerPage = memo(() => {
   }
 
   return (
-    <Flex vertical gap={20} style={{ width: '100%' }}>
+    <Flexbox gap={20} style={{ width: '100%' }}>
       <Text type='secondary'>{MESSENGER_SUBTITLE}</Text>
       <div className={styles.grid}>
         {MESSENGER_PLATFORMS.map((item) => (
           <Block className={styles.card} key={item.id} onClick={() => handleSelectPlatform(item)}>
-            <Flex align='center' gap={16}>
+            <Flexbox horizontal align='center' gap={16}>
               <PlatformAvatar platform={item.id} size={48} />
-              <Flex vertical flex={1} gap={2}>
+              <Flexbox flex={1} gap={2}>
                 <Text strong style={{ fontSize: 15 }}>
                   {item.name}
                 </Text>
                 <Text type='secondary' style={{ fontSize: 13 }}>
                   {item.description}
                 </Text>
-              </Flex>
+              </Flexbox>
               <Icon icon={ChevronRightIcon} />
-            </Flex>
+            </Flexbox>
           </Block>
         ))}
       </div>
-    </Flex>
+    </Flexbox>
   )
 })
 

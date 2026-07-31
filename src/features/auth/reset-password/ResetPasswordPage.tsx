@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from 'antd'
 import { ChevronLeft } from 'lucide-react'
 import Link from '@/utils/link'
 import { Suspense } from 'react'
@@ -8,6 +7,7 @@ import { Suspense } from 'react'
 import { AuthPageContainer } from '@/components/AuthPageContainer'
 import AuthCard from '@/features/AuthCard'
 
+import { Button } from '@pure/ui'
 import { ResetPasswordForm } from './ResetPasswordForm'
 
 const ResetPasswordPageContent = () => {

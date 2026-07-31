@@ -1,4 +1,4 @@
-import { type DocumentPage } from '../../types'
+import type { DocumentPage } from '../../types'
 
 export const promptTemplate = (pages: DocumentPage[]) => {
   return pages

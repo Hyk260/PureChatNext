@@ -1,20 +1,17 @@
 'use client'
 
-import { Flex } from 'antd'
-import { Text } from '@pure/ui'
+import { Flexbox, Grid, Tag, Text } from '@pure/ui'
 import { createStaticStyles } from 'antd-style'
 import { memo, useMemo } from 'react'
 
 import { SETTINGS_PROVIDER_IDS } from './const'
 import SettingsProviderCard from './SettingsProviderCard'
 import { useProviderConfigStore } from './store/useProviderConfigStore'
-import { type ProviderId } from './types'
+import type { ProviderId } from './types'
 
 const styles = createStaticStyles(({ css }) => ({
   grid: css`
-    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
 
     @media (max-width: 1200px) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -28,6 +25,11 @@ const styles = createStaticStyles(({ css }) => ({
     width: 100%;
     padding-block: 24px 64px;
     padding-inline: 24px;
+
+    @media (max-width: 768px) {
+      padding-block: 20px 48px;
+      padding-inline: 16px;
+    }
   `,
 }))
 
@@ -35,23 +37,21 @@ const ProviderSection = memo<{
   ids: readonly ProviderId[]
   title: string
 }>(({ ids, title }) => (
-  <Flex vertical gap={16}>
-    <Flex align='center' gap={8}>
+  <Flexbox gap={16}>
+    <Flexbox horizontal align='center' gap={8}>
       <Text style={{ fontSize: 18, fontWeight: 600 }}>{title}</Text>
-      <Text type='secondary' style={{ fontSize: 14 }}>
-        {ids.length}
-      </Text>
-    </Flex>
+      <Tag>{ids.length}</Tag>
+    </Flexbox>
     {ids.length > 0 ? (
-      <div className={styles.grid}>
+      <Grid className={styles.grid} gap={16} rows={3}>
         {ids.map((id) => (
           <SettingsProviderCard id={id} key={id} />
         ))}
-      </div>
+      </Grid>
     ) : (
       <Text type='secondary'>暂无服务商</Text>
     )}
-  </Flex>
+  </Flexbox>
 ))
 
 ProviderSection.displayName = 'ProviderSection'
@@ -66,10 +66,10 @@ const ProviderAllPage = memo(() => {
   }, [configs])
 
   return (
-    <Flex vertical className={styles.page} gap={32} style={{ width: '100%' }}>
+    <Flexbox className={styles.page} gap={32} width='100%'>
       <ProviderSection ids={enabledIds} title='已启用服务商' />
       <ProviderSection ids={disabledIds} title='未启用服务商' />
-    </Flex>
+    </Flexbox>
   )
 })
 

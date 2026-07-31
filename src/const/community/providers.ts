@@ -1,11 +1,6 @@
-import {
-  deepseekChatModels,
-  DEFAULT_MODEL_PROVIDER_LIST,
-  openaiChatModels,
-  purehubChatModels,
-} from '@pure/model-bank'
+import { deepseekChatModels, DEFAULT_MODEL_PROVIDER_LIST, openaiChatModels, purehubChatModels } from '@pure/model-bank'
 
-import { type DiscoverProviderItem } from '@/features/community/types'
+import type { DiscoverProviderItem } from '@/features/community/types'
 
 const modelsByProvider = {
   deepseek: deepseekChatModels,

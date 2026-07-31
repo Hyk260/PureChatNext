@@ -1,7 +1,6 @@
 'use client'
 
-import { Icon, ProviderIcon, ScrollShadow, Text } from '@pure/ui'
-import { Flex, Input } from 'antd'
+import { Accordion, AccordionItem, Flexbox, Icon, ProviderIcon, ScrollShadow, SearchBar, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LayoutGrid, Search } from 'lucide-react'
 import Link from '@/utils/link'
@@ -12,23 +11,23 @@ import NavItem from '@/components/NavItem'
 
 import { SETTINGS_PROVIDER_IDS, getSettingsProviderMeta } from './const'
 import { useProviderConfigStore } from './store/useProviderConfigStore'
-import { type ProviderId } from './types'
+import type { ProviderId } from './types'
 
 const MENU_WIDTH = 280
 
 const styles = createStaticStyles(({ css }) => ({
-  groupTitle: css`
-    padding-block: 8px 4px;
-    padding-inline: 12px;
-  `,
   menu: css`
     flex: none;
     width: ${MENU_WIDTH}px;
     min-width: ${MENU_WIDTH}px;
-    height: 100%;
+    height: 100vh;
     overflow: hidden;
     background: ${cssVar.colorBgContainer};
     border-inline-end: 1px solid ${cssVar.colorBorderSecondary};
+
+    @media (max-width: 768px) {
+      display: none;
+    }
   `,
   searchBar: css`
     position: sticky;
@@ -38,14 +37,17 @@ const styles = createStaticStyles(({ css }) => ({
     padding: 8px;
     background: ${cssVar.colorBgContainer};
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
-
-    .ant-input-affix-wrapper {
-      border-radius: 8px;
-    }
+  `,
+  status: css`
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-radius: 50%;
+    background: ${cssVar.colorSuccess};
   `,
 }))
 
-const ProviderNavItem = memo<{ id: ProviderId; active: boolean }>(({ id, active }) => {
+const ProviderNavItem = memo<{ id: ProviderId; active: boolean; enabled: boolean }>(({ id, active, enabled }) => {
   const meta = getSettingsProviderMeta(id)
 
   return (
@@ -54,10 +56,13 @@ const ProviderNavItem = memo<{ id: ProviderId; active: boolean }>(({ id, active 
         active={active}
         clickable
         title={
-          <Flex align='center' gap={8}>
+          <Flexbox horizontal align='center' gap={8} width='100%'>
             <ProviderIcon provider={id} size={18} type='color' />
-            <span>{meta.name}</span>
-          </Flex>
+            <Text ellipsis style={{ flex: 1, minWidth: 0 }}>
+              {meta.name}
+            </Text>
+            {enabled ? <span className={styles.status} /> : null}
+          </Flexbox>
         }
       />
     </Link>
@@ -92,53 +97,68 @@ const ProviderSettingsNav = memo(() => {
   const disabledIds = filteredIds.filter((id) => !configs[id]?.enabled)
 
   return (
-    <Flex vertical className={styles.menu} style={{ height: '100%' }}>
+    <Flexbox className={styles.menu} height='100vh'>
       <div className={styles.searchBar}>
-        <Input
+        <SearchBar
           allowClear
           placeholder='搜索服务商'
           prefix={<Icon color={cssVar.colorTextDescription} icon={Search} size={14} style={{ marginInlineEnd: 4 }} />}
+          style={{ width: '100%' }}
           value={keyword}
           variant='borderless'
-          onChange={(e) => setKeyword(e.target.value)}
+          onInputChange={setKeyword}
         />
       </div>
       <ScrollShadow size={2} style={{ flex: 1, minHeight: 0, width: '100%' }}>
-        <Flex vertical gap={4} style={{ paddingBlock: '0 32px', paddingInline: 4 }}>
+        <Flexbox gap={4} paddingInline={4} style={{ paddingBlock: '0 32px' }}>
           <Link href='/settings/provider/all' style={{ color: 'inherit', textDecoration: 'none' }}>
             <NavItem active={isAllActive} clickable icon={LayoutGrid} title='全部' />
           </Link>
-          <div className={styles.groupTitle}>
-            <Text type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
-              已启用
-            </Text>
-          </div>
-          <Flex vertical gap={1}>
-            {enabledIds.length > 0 ? (
-              enabledIds.map((id) => <ProviderNavItem active={activeId === id} id={id} key={id} />)
-            ) : (
-              <Text type='secondary' style={{ fontSize: 12, paddingBlock: 4, paddingInline: 12 }}>
-                暂无
-              </Text>
-            )}
-          </Flex>
-          <div className={styles.groupTitle}>
-            <Text type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
-              未启用
-            </Text>
-          </div>
-          <Flex vertical gap={1}>
-            {disabledIds.length > 0 ? (
-              disabledIds.map((id) => <ProviderNavItem active={activeId === id} id={id} key={id} />)
-            ) : (
-              <Text type='secondary' style={{ fontSize: 12, paddingBlock: 4, paddingInline: 12 }}>
-                暂无
-              </Text>
-            )}
-          </Flex>
-        </Flex>
+          <Accordion defaultExpandedKeys={['enabled', 'disabled']} gap={4}>
+            <AccordionItem
+              itemKey='enabled'
+              paddingBlock={4}
+              paddingInline='8px 4px'
+              title={
+                <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+                  已启用 · {enabledIds.length}
+                </Text>
+              }
+            >
+              <Flexbox gap={1} paddingBlock={1}>
+                {enabledIds.length > 0 ? (
+                  enabledIds.map((id) => <ProviderNavItem active={activeId === id} enabled id={id} key={id} />)
+                ) : (
+                  <Text type='secondary' style={{ fontSize: 12, paddingBlock: 6, paddingInline: 12 }}>
+                    暂无
+                  </Text>
+                )}
+              </Flexbox>
+            </AccordionItem>
+            <AccordionItem
+              itemKey='disabled'
+              paddingBlock={4}
+              paddingInline='8px 4px'
+              title={
+                <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+                  未启用 · {disabledIds.length}
+                </Text>
+              }
+            >
+              <Flexbox gap={1} paddingBlock={1}>
+                {disabledIds.length > 0 ? (
+                  disabledIds.map((id) => <ProviderNavItem active={activeId === id} enabled={false} id={id} key={id} />)
+                ) : (
+                  <Text type='secondary' style={{ fontSize: 12, paddingBlock: 6, paddingInline: 12 }}>
+                    暂无
+                  </Text>
+                )}
+              </Flexbox>
+            </AccordionItem>
+          </Accordion>
+        </Flexbox>
       </ScrollShadow>
-    </Flex>
+    </Flexbox>
   )
 })
 

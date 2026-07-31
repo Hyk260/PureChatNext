@@ -1,5 +1,5 @@
 import { codeInspectorPlugin } from 'code-inspector-plugin'
-import { type NextConfig } from 'next'
+import type { NextConfig } from 'next'
 
 const isProd = process.env.NODE_ENV === 'production'
 const isVercel = !!process.env.VERCEL_ENV

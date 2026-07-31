@@ -2,9 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 
+vi.mock('@pure/ui', () => ({
+  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+}))
+
 vi.mock('antd', () => ({
   Skeleton: () => <div data-testid='auth-skeleton' />,
-  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))
 
 vi.mock('@/libs/better-auth/client', () => ({

@@ -1,4 +1,4 @@
-import { type IconProps } from '@pure/ui'
+import type { IconProps } from '@pure/ui'
 import { Home, Layers, Search, Users } from 'lucide-react'
 
 export interface HomeNavItem {

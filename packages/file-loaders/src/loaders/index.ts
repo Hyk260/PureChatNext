@@ -1,4 +1,4 @@
-import { type FileLoaderInterface, type SupportedFileType } from '../types'
+import type { FileLoaderInterface, SupportedFileType } from '../types'
 import { TextLoader } from './text'
 
 // Lazy loader factory type - returns a Promise that resolves to the loader class

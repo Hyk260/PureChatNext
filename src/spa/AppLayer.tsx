@@ -1,5 +1,6 @@
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v8'
-import { type PropsWithChildren, useLayoutEffect } from 'react'
+import { useLayoutEffect } from 'react'
+import type { PropsWithChildren } from 'react'
 
 import ThemeProviders from '@/layout/ThemeProviders'
 import SpaTelemetry from '@/spa/SpaTelemetry'

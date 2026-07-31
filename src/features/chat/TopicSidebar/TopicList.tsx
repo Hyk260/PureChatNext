@@ -1,17 +1,12 @@
 'use client'
 
-import { Flex, Skeleton } from 'antd'
-import { Accordion, AccordionItem, Icon, Text } from '@pure/ui'
+import { Skeleton } from 'antd'
+import { Accordion, AccordionItem, Icon, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Folder, Star } from 'lucide-react'
 import { memo, useMemo, useState } from 'react'
 
-import {
-  type LocalChatTopic,
-  type TopicGroupMode,
-  type TopicPageSize,
-  type TopicSortBy,
-} from '@/features/chat/types'
+import type { LocalChatTopic, TopicGroupMode, TopicPageSize, TopicSortBy } from '@/features/chat/types'
 
 import TopicItem from './TopicItem'
 import { organizeTopics } from './topicGrouping'
@@ -32,6 +27,8 @@ const SKELETON_WIDTHS = [128, 164, 112, 148, 136, 156]
 
 type Props = {
   topics: LocalChatTopic[]
+  autoRenameDisabled: boolean
+  autoRenamingTopicId: string | null
   groupMode: TopicGroupMode
   loading: boolean
   pageSize: TopicPageSize
@@ -39,6 +36,7 @@ type Props = {
   sortBy: TopicSortBy
   activeTopicId: string | null
   onSelect: (topicId: string) => void
+  onAutoRename: (id: string) => void | Promise<void>
   onRename: (id: string, title: string) => void | Promise<void>
   onDelete: (id: string) => void | Promise<void>
   onFavorite: (id: string, favorite: boolean) => void | Promise<void>
@@ -48,6 +46,8 @@ type Props = {
 const TopicList = memo<Props>(
   ({
     topics,
+    autoRenameDisabled,
+    autoRenamingTopicId,
     groupMode,
     loading,
     pageSize,
@@ -55,6 +55,7 @@ const TopicList = memo<Props>(
     sortBy,
     activeTopicId,
     onSelect,
+    onAutoRename,
     onRename,
     onDelete,
     onFavorite,
@@ -69,9 +70,12 @@ const TopicList = memo<Props>(
     const renderTopic = (topic: LocalChatTopic) => (
       <TopicItem
         active={activeTopicId === topic.id}
+        autoRenameDisabled={autoRenameDisabled}
+        autoRenaming={autoRenamingTopicId === topic.id}
         key={topic.id}
         projectNames={projectNames}
         topic={topic}
+        onAutoRename={onAutoRename}
         onDelete={onDelete}
         onFavorite={onFavorite}
         onProjectChange={onProjectChange}
@@ -82,32 +86,28 @@ const TopicList = memo<Props>(
 
     if (loading) {
       return (
-        <Flex vertical gap={1}>
+        <Flexbox gap={1}>
           {SKELETON_WIDTHS.map((width) => (
             <div className={styles.skeletonRow} key={width}>
               <Skeleton.Input active size='small' style={{ height: 16, width }} />
             </div>
           ))}
-        </Flex>
+        </Flexbox>
       )
     }
 
     if (topics.length === 0) {
       return (
-        <Flex vertical style={{ paddingBlock: 4, paddingInline: 12 }}>
+        <Flexbox style={{ paddingBlock: 4, paddingInline: 12 }}>
           <Text className={styles.empty} style={{ fontSize: 12 }}>
             暂无话题
           </Text>
-        </Flex>
+        </Flexbox>
       )
     }
 
     if (groupMode === 'flat') {
-      return (
-        <Flex vertical gap={1}>
-          {groups[0]?.topics.map(renderTopic)}
-        </Flex>
-      )
+      return <Flexbox gap={1}>{groups[0]?.topics.map(renderTopic)}</Flexbox>
     }
 
     const groupIds = groups.map((group) => group.id)
@@ -120,7 +120,7 @@ const TopicList = memo<Props>(
             paddingBlock={4}
             paddingInline='8px 4px'
             title={
-              <Flex align='center' gap={6} style={{ minWidth: 0 }}>
+              <Flexbox horizontal align='center' gap={6} style={{ minWidth: 0 }}>
                 {group.id === 'favorite' ? (
                   <Icon color={cssVar.colorWarning} icon={Star} size={14} />
                 ) : groupMode === 'byProject' ? (
@@ -129,12 +129,12 @@ const TopicList = memo<Props>(
                 <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
                   {group.title}
                 </Text>
-              </Flex>
+              </Flexbox>
             }
           >
-            <Flex vertical gap={1} style={{ paddingBlock: 1 }}>
+            <Flexbox gap={1} style={{ paddingBlock: 1 }}>
               {group.topics.map(renderTopic)}
-            </Flex>
+            </Flexbox>
           </AccordionItem>
         ))}
       </Accordion>

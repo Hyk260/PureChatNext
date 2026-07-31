@@ -1,19 +1,18 @@
-import {
-  Message,
-  parseMarkdown,
-  type Adapter,
-  type AdapterPostableMessage,
-  type Attachment,
-  type Author,
-  type ChatInstance,
-  type EmojiValue,
-  type FetchOptions,
-  type FetchResult,
-  type FormattedContent,
-  type Logger,
-  type RawMessage,
-  type ThreadInfo,
-  type WebhookOptions,
+import { Message, parseMarkdown } from 'chat'
+import type {
+  Adapter,
+  AdapterPostableMessage,
+  Attachment,
+  Author,
+  ChatInstance,
+  EmojiValue,
+  FetchOptions,
+  FetchResult,
+  FormattedContent,
+  Logger,
+  RawMessage,
+  ThreadInfo,
+  WebhookOptions,
 } from 'chat'
 import mime from 'mime'
 
@@ -21,15 +20,14 @@ import { QQApiClient } from './api'
 import { signWebhookResponse } from './crypto'
 import { QQFormatConverter } from './format-converter'
 import { QQGatewayConnection } from './gateway'
-import {
-  QQ_EVENT_TYPES,
-  QQ_OP_CODES,
-  type QQAdapterConfig,
-  type QQAttachment,
-  type QQRawMessage,
-  type QQThreadId,
-  type QQWebhookEventData,
-  type QQWebhookPayload,
+import { QQ_EVENT_TYPES, QQ_OP_CODES } from './types'
+import type {
+  QQAdapterConfig,
+  QQAttachment,
+  QQRawMessage,
+  QQThreadId,
+  QQWebhookEventData,
+  QQWebhookPayload,
 } from './types'
 
 /** Inbound msg_id (+ seq) for passive replies within QQ's reply window. */

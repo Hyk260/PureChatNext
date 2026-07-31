@@ -1,7 +1,6 @@
 'use client'
 
-import { Flex } from 'antd'
-import { ActionIcon } from '@pure/ui'
+import { ActionIcon, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { PanelLeftOpen } from 'lucide-react'
 import { memo } from 'react'
@@ -24,9 +23,9 @@ const SettingsHeader = memo(() => {
   if (!sidebarCollapsed) return null
 
   return (
-    <Flex align='center' className={styles.header}>
+    <Flexbox horizontal align='center' className={styles.header}>
       <ActionIcon icon={PanelLeftOpen} onClick={toggleSidebarCollapsed} size='small' title='展开侧栏' />
-    </Flex>
+    </Flexbox>
   )
 })
 

@@ -1,9 +1,6 @@
 import fetch from 'node-fetch'
-import {
-  type RequestFilteringAgentOptions,
-  RequestFilteringHttpAgent,
-  RequestFilteringHttpsAgent,
-} from 'request-filtering-agent'
+import { RequestFilteringHttpAgent, RequestFilteringHttpsAgent } from 'request-filtering-agent'
+import type { RequestFilteringAgentOptions } from 'request-filtering-agent'
 
 /**
  * Options for per-call SSRF configuration overrides

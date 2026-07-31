@@ -1,23 +1,8 @@
 export type ErrorType =
-  | 'bad_request'
-  | 'unauthorized'
-  | 'forbidden'
-  | 'not_found'
-  | 'rate_limit'
-  | 'offline'
-  | 'free_plan_limit'
+  'bad_request' | 'unauthorized' | 'forbidden' | 'not_found' | 'rate_limit' | 'offline' | 'free_plan_limit'
 
 export type Surface =
-  | 'chat'
-  | 'auth'
-  | 'api'
-  | 'stream'
-  | 'database'
-  | 'history'
-  | 'vote'
-  | 'document'
-  | 'suggestions'
-  | 'activate_gateway'
+  'chat' | 'auth' | 'api' | 'stream' | 'database' | 'history' | 'vote' | 'document' | 'suggestions' | 'activate_gateway'
 
 export type ErrorCode = `${ErrorType}:${Surface}`
 

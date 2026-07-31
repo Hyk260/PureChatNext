@@ -1,6 +1,6 @@
 'use client'
 
-import { type IconProps } from '@pure/ui'
+import type { IconProps } from '@pure/ui'
 import {
   BellIcon,
   Blocks,

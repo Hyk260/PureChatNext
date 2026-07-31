@@ -4,8 +4,13 @@ import { getAiModel } from '@pure/model-bank'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { createDefaultProviderConfig, DEFAULT_PROVIDER_CONFIGS, LEGACY_PROVIDER_DEFAULT_BASE_URLS } from '../const'
-import { type ProviderConfig, type ProviderConfigs, type ProviderId, type ProviderModelItem } from '../types'
+import {
+  createDefaultProviderConfig,
+  DEFAULT_PROVIDER_CONFIGS,
+  isServerManagedProvider,
+  LEGACY_PROVIDER_DEFAULT_BASE_URLS,
+} from '../const'
+import type { ProviderConfig, ProviderConfigs, ProviderId, ProviderModelItem } from '../types'
 
 interface ProviderConfigState {
   configs: ProviderConfigs
@@ -31,8 +36,7 @@ export const mergeProviderConfig = (
   const baseURL = rawBaseURL.trim() === legacyDefault ? '' : rawBaseURL
 
   const catalogById = new Map(defaults.models.map((model) => [model.id, model]))
-  const persistedModels =
-    Array.isArray(partial.models) && partial.models.length > 0 ? partial.models : defaults.models
+  const persistedModels = Array.isArray(partial.models) && partial.models.length > 0 ? partial.models : defaults.models
 
   // Reconcile with model-bank: catalog `enabled: false` stays off after persist hydrate.
   const models = persistedModels.map((model) => {
@@ -54,6 +58,8 @@ export const mergeProviderConfig = (
     baseURL,
     checkModel:
       typeof partial.checkModel === 'string' && partial.checkModel.trim() ? partial.checkModel : defaults.checkModel,
+    // PureHub 等官方托管服务商默认启用且不可关闭。
+    enabled: isServerManagedProvider(id) ? true : (partial.enabled ?? defaults.enabled),
     models,
   }
 }
@@ -132,6 +138,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
             [id]: {
               ...(state.configs[id] ?? createDefaultProviderConfig(id)),
               ...patch,
+              ...(isServerManagedProvider(id) ? { enabled: true } : null),
             },
           },
         })),
@@ -145,7 +152,8 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
             },
           },
         })),
-      setEnabled: (id, enabled) =>
+      setEnabled: (id, enabled) => {
+        if (isServerManagedProvider(id)) return
         set((state) => ({
           configs: {
             ...state.configs,
@@ -154,7 +162,8 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
               enabled,
             },
           },
-        })),
+        }))
+      },
       setModels: (id, models) =>
         set((state) => ({
           configs: {
@@ -200,7 +209,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
       },
       name: 'purechat:provider:v1',
       partialize: (state) => ({ configs: state.configs }),
-      version: 5,
+      version: 6,
     }
   )
 )

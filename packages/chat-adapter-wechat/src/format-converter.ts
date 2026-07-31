@@ -1,4 +1,5 @@
-import { BaseFormatConverter, parseMarkdown, stringifyMarkdown, type Root } from 'chat'
+import { BaseFormatConverter, parseMarkdown, stringifyMarkdown } from 'chat'
+import type { Root } from 'chat'
 
 /** Markdown ↔ plain text for WeChat iLink (no Markdown rendering on the client). */
 export class WechatFormatConverter extends BaseFormatConverter {

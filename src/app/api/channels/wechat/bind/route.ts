@@ -1,16 +1,12 @@
 import { waitUntil } from '@vercel/functions'
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
-import {
-  DEFAULT_DURATION_MS,
-  encryptCredentials,
-  invalidateWechatChat,
-  pollBinding,
-  type WechatCredentials,
-} from '@/libs/channels/wechat'
+import { DEFAULT_DURATION_MS, encryptCredentials, invalidateWechatChat, pollBinding } from '@/libs/channels/wechat'
+import type { WechatCredentials } from '@/libs/channels/wechat'
 
 export const maxDuration = 300
 

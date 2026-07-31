@@ -1,15 +1,15 @@
 import debug from 'debug'
-import { type Redis } from 'ioredis'
+import type { Redis } from 'ioredis'
 
-import {
-  type BaseRedisProvider,
-  type RedisConfig,
-  type RedisKey,
-  type RedisMSetArgument,
-  type RedisPipeline,
-  type RedisSetResult,
-  type RedisValue,
-  type SetOptions,
+import type {
+  BaseRedisProvider,
+  RedisConfig,
+  RedisKey,
+  RedisMSetArgument,
+  RedisPipeline,
+  RedisSetResult,
+  RedisValue,
+  SetOptions,
 } from './types'
 import { buildIORedisSetArgs, normalizeMsetValues } from './utils'
 

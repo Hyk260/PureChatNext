@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 
 import { ModelProvider } from '@pure/model-bank'
 
-import { type EnabledProviderGroup, type GroupMode, type ListItem, type ModelWithProviders } from './types'
+import type { EnabledProviderGroup, GroupMode, ListItem, ModelWithProviders } from './types'
 
 const providerPriority = (id: string) => (id === ModelProvider.PureHub ? 0 : 1)
 
@@ -18,9 +18,7 @@ export const buildListItems = (
   const keyword = searchKeyword.trim().toLowerCase()
   const matchesSearch = (text: string) => !keyword || text.toLowerCase().includes(keyword)
 
-  const sortedProviders = [...enabledProviders].sort(
-    (a, b) => providerPriority(a.id) - providerPriority(b.id)
-  )
+  const sortedProviders = [...enabledProviders].sort((a, b) => providerPriority(a.id) - providerPriority(b.id))
 
   if (groupMode === 'byModel') {
     const modelMap = new Map<string, ModelWithProviders>()

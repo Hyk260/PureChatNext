@@ -1,6 +1,7 @@
 import { createWechatAdapter } from '@pure/chat-adapter-wechat'
 import { createMemoryState } from '@chat-adapter/state-memory'
-import { Chat, type Message, type Thread } from 'chat'
+import { Chat } from 'chat'
+import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
 import { handleWechatMention } from './agentBridge'

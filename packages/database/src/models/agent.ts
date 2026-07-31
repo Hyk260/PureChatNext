@@ -1,9 +1,10 @@
 import { and, asc, desc, eq, isNull, or, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import { agents, PURE_AI_AGENT_SEED, type AgentItem, type NewAgent } from '../schemas/agent'
+import { agents, PURE_AI_AGENT_SEED } from '../schemas/agent'
+import type { AgentItem, NewAgent } from '../schemas/agent'
 import { chatTopics } from '../schemas/chat'
-import { type ChatDatabase } from '../type'
+import type { ChatDatabase } from '../type'
 import { randomSlug } from '../utils/idGenerator'
 
 export type AgentCreateInput = {

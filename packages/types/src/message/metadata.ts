@@ -33,3 +33,15 @@ export interface ModelPerformance {
   tps?: number
   ttft?: number
 }
+
+export interface MessageReasoningMetadata {
+  duration?: number
+}
+
+export interface ChatMessageMetadata {
+  model?: string
+  performance?: ModelPerformance
+  provider?: string
+  reasoning?: MessageReasoningMetadata
+  usage?: ModelUsage
+}

@@ -1,7 +1,7 @@
 'use client'
 
-import { Avatar, Flex } from 'antd'
-import { ActionIcon } from '@pure/ui'
+import { Avatar } from 'antd'
+import { ActionIcon, Flexbox } from '@pure/ui'
 import { createStaticStyles } from 'antd-style'
 import { PanelLeftOpen } from 'lucide-react'
 import Link from '@/utils/link'
@@ -24,14 +24,19 @@ const NavHeader = memo(() => {
   const displayName = session?.user?.name ?? session?.user?.email?.split('@')[0] ?? '访客'
 
   return (
-    <Flex align='center' className={styles.header} justify='space-between' style={{ height: 44, padding: 8 }}>
-      <Flex align='center' gap={2}>
+    <Flexbox
+      horizontal
+      align='center'
+      className={styles.header}
+      justify='space-between'
+      style={{ height: 44, padding: 8 }}
+    >
+      <Flexbox horizontal align='center' gap={2}>
         {sidebarCollapsed ? (
           <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
         ) : null}
-      </Flex>
-      {/*
-      <Flex align='center' gap={8}>
+      </Flexbox>
+      {/* <Flexbox horizontal align='center' gap={8}>
         {session?.user ? (
           <Link href='/settings/profile' style={{ color: 'inherit', textDecoration: 'none' }}>
             <Avatar shape='circle' size={28}>{displayName.slice(0, 1).toUpperCase()}</Avatar>
@@ -41,8 +46,8 @@ const NavHeader = memo(() => {
             <Avatar shape='circle' size={28}>?</Avatar>
           </Link>
         )}
-      </Flex> */}
-    </Flex>
+      </Flexbox> */}
+    </Flexbox>
   )
 })
 

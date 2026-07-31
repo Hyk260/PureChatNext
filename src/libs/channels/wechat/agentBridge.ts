@@ -1,5 +1,5 @@
 import { generateText } from 'ai'
-import { type Message, type Thread } from 'chat'
+import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
 import { AgentModel } from '@pure/database/models/agent'

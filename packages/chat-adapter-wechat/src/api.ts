@@ -1,16 +1,13 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto'
 
-import {
-  MessageItemType,
-  MessageState,
-  MessageType,
-  WECHAT_RET_CODES,
-  type BaseInfo,
-  type CDNMedia,
-  type MessageItem,
-  type WechatGetConfigResponse,
-  type WechatGetUpdatesResponse,
-  type WechatSendMessageResponse,
+import { MessageItemType, MessageState, MessageType, WECHAT_RET_CODES } from './types'
+import type {
+  BaseInfo,
+  CDNMedia,
+  MessageItem,
+  WechatGetConfigResponse,
+  WechatGetUpdatesResponse,
+  WechatSendMessageResponse,
 } from './types'
 
 /**

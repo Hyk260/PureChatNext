@@ -1,4 +1,4 @@
-import { type UIMessage } from 'ai'
+import type { UIMessage } from 'ai'
 
 export const getMessageText = (message: UIMessage): string =>
   message.parts

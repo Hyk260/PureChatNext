@@ -1,6 +1,6 @@
 import { Github } from '@pure/ui/icons'
 import { User } from 'lucide-react'
-import { type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 const WechatIcon = ({ size = 18 }: { size?: number }) => (
   <svg fill='#07C160' height={size} viewBox='0 0 24 24' width={size}>

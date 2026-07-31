@@ -3,7 +3,8 @@
 import { Spin } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Loader2, Pencil } from 'lucide-react'
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useRef, useState } from 'react'
+import type { ChangeEvent } from 'react'
 
 import { SettingRow } from './SettingRow'
 

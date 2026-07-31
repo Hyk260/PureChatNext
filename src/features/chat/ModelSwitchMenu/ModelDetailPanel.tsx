@@ -1,19 +1,12 @@
 'use client'
 
-import { Flex } from 'antd'
 import { CREDITS_PER_DOLLAR } from '@pure/const'
-import { getAiModel, type ModelProviderId, type ModelTokenPricing } from '@pure/model-bank'
-import { Icon, Tag, Text } from '@pure/ui'
+import { getAiModel } from '@pure/model-bank'
+import type { ModelProviderId, ModelTokenPricing } from '@pure/model-bank'
+import { Icon, Tag, Text, Flexbox } from '@pure/ui'
 import { formatTokenNumber } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
-import {
-  ArrowDownToDot,
-  ArrowUpFromDot,
-  AtomIcon,
-  CircleFadingArrowUp,
-  Eye,
-  Wrench,
-} from 'lucide-react'
+import { ArrowDownToDot, ArrowUpFromDot, AtomIcon, CircleFadingArrowUp, Eye, Wrench } from 'lucide-react'
 import { memo, useMemo } from 'react'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -94,12 +87,10 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
     abilities?.functionCall || abilities?.vision || abilities?.reasoning || abilities?.structuredOutput
   )
   const contextLabel =
-    typeof card.contextWindowTokens === 'number'
-      ? `${formatTokenNumber(card.contextWindowTokens)} tokens`
-      : null
+    typeof card.contextWindowTokens === 'number' ? `${formatTokenNumber(card.contextWindowTokens)} tokens` : null
 
   return (
-    <Flex vertical className={styles.container} gap={4}>
+    <Flexbox className={styles.container} gap={4}>
       {description ? (
         <Text as='p' className={styles.description} fontSize={12} type='secondary'>
           {description}
@@ -107,24 +98,24 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
       ) : null}
 
       {contextLabel ? (
-        <Flex align='center' className={styles.row} justify='space-between'>
-          <Flex align='center' gap={8}>
+        <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
+          <Flexbox horizontal align='center' gap={8}>
             <div className={styles.bar} style={{ background: '#1677ff' }} />
             <span className={styles.sectionTitle}>上下文长度</span>
-          </Flex>
+          </Flexbox>
           <Text fontSize={13} weight={500}>
             {contextLabel}
           </Text>
-        </Flex>
+        </Flexbox>
       ) : null}
 
       {hasAbilities ? (
-        <Flex align='center' className={styles.row} justify='space-between'>
-          <Flex align='center' gap={8}>
+        <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
+          <Flexbox horizontal align='center' gap={8}>
             <div className={styles.bar} style={{ background: '#722ed1' }} />
             <span className={styles.sectionTitle}>能力</span>
-          </Flex>
-          <Flex gap={4}>
+          </Flexbox>
+          <Flexbox horizontal gap={4}>
             {abilities?.functionCall ? (
               <Tag className={styles.tag} color='blue' size='small'>
                 <Icon icon={Wrench} size={12} />
@@ -145,47 +136,47 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
                 JSON
               </Tag>
             ) : null} */}
-          </Flex>
-        </Flex>
+          </Flexbox>
+        </Flexbox>
       ) : null}
 
       {pricing ? (
-        <Flex vertical gap={2}>
-          <Flex align='center' className={styles.row} justify='space-between'>
-            <Flex align='center' gap={8}>
+        <Flexbox gap={2}>
+          <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
+            <Flexbox horizontal align='center' gap={8}>
               <div className={styles.bar} style={{ background: '#fa8c16' }} />
               <span className={styles.sectionTitle}>价格</span>
-            </Flex>
+            </Flexbox>
             <Text fontSize={11} type='secondary'>
               {priceUnitLabel(pricing.currency)}
             </Text>
-          </Flex>
-          <Flex align='center' className={styles.row} justify='space-between'>
-            <Flex align='center' gap={6}>
+          </Flexbox>
+          <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
+            <Flexbox horizontal align='center' gap={6}>
               <Icon icon={ArrowUpFromDot} size={12} />
               <span>输入</span>
-            </Flex>
+            </Flexbox>
             <span>{formatPriceValue(pricing, pricing.textInput)}</span>
-          </Flex>
-          <Flex align='center' className={styles.row} justify='space-between'>
-            <Flex align='center' gap={6}>
+          </Flexbox>
+          <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
+            <Flexbox horizontal align='center' gap={6}>
               <Icon icon={ArrowDownToDot} size={12} />
               <span>输出</span>
-            </Flex>
+            </Flexbox>
             <span>{formatPriceValue(pricing, pricing.textOutput)}</span>
-          </Flex>
+          </Flexbox>
           {typeof pricing.textInputCacheRead === 'number' ? (
-            <Flex align='center' className={styles.row} justify='space-between'>
-              <Flex align='center' gap={6}>
+            <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
+              <Flexbox horizontal align='center' gap={6}>
                 <Icon icon={CircleFadingArrowUp} size={12} />
                 <span>输入（缓存读取）</span>
-              </Flex>
+              </Flexbox>
               <span>{formatPriceValue(pricing, pricing.textInputCacheRead)}</span>
-            </Flex>
+            </Flexbox>
           ) : null}
-        </Flex>
+        </Flexbox>
       ) : null}
-    </Flex>
+    </Flexbox>
   )
 })
 

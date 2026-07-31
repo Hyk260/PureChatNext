@@ -1,7 +1,7 @@
 'use client'
 
-import { Block, Icon, Text } from '@pure/ui'
-import { Flex, Input } from 'antd'
+import { Block, Icon, Text, Flexbox } from '@pure/ui'
+import { Input } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { cssVar } from 'antd-style'
 import { BriefcaseIcon } from 'lucide-react'
@@ -11,8 +11,8 @@ import {
   INTEREST_AREAS,
   normalizeInterestsForStorage,
   resolveInterestAreaKey,
-  type InterestAreaKey,
 } from '@/features/settings/const/interests'
+import type { InterestAreaKey } from '@/features/settings/const/interests'
 
 import { patchUserProfile } from './patchUserProfile'
 import { SettingRow } from './SettingRow'
@@ -73,8 +73,8 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
 
   return (
     <SettingRow label='兴趣领域'>
-      <Flex vertical gap={12} style={{ opacity: saving ? 0.7 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
-        <Flex align='center' gap={8} wrap='wrap'>
+      <Flexbox gap={12} style={{ opacity: saving ? 0.7 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
+        <Flexbox horizontal align='center' gap={8} wrap='wrap'>
           {INTEREST_AREAS.map((item) => {
             const isSelected = normalizedInterests.includes(item.key)
             return (
@@ -133,7 +133,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
             <Icon color={cssVar.colorTextSecondary} icon={BriefcaseIcon} size={14} />
             <Text style={{ fontSize: 13, fontWeight: 500 }}>其他领域</Text>
           </Block>
-        </Flex>
+        </Flexbox>
         {showCustomInput ? (
           <Input
             onChange={(event) => setCustomInput(event.target.value)}
@@ -144,7 +144,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
             value={customInput}
           />
         ) : null}
-      </Flex>
+      </Flexbox>
     </SettingRow>
   )
 }

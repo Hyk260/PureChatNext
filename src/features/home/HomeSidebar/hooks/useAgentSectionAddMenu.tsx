@@ -1,7 +1,7 @@
 'use client'
 
-import { type MenuInfo, type MenuProps } from '@pure/ui'
 import { Icon } from '@pure/ui'
+import type { MenuInfo, MenuProps } from '@pure/ui'
 import { BotIcon, StoreIcon } from 'lucide-react'
 import { useMemo } from 'react'
 

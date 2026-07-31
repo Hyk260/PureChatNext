@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildListItems } from './useBuildListItems'
-import { type EnabledProviderGroup } from './types'
+import type { EnabledProviderGroup } from './types'
 
 const providers: EnabledProviderGroup[] = [
   {
@@ -36,8 +36,7 @@ describe('buildListItems', () => {
     const items = buildListItems(providers, 'byModel')
     const mini = items.find(
       (item) =>
-        (item.type === 'model-item-multiple' || item.type === 'model-item-single') &&
-        item.data.model === 'gpt-5.4-mini'
+        (item.type === 'model-item-multiple' || item.type === 'model-item-single') && item.data.model === 'gpt-5.4-mini'
     )
 
     expect(mini?.type).toBe('model-item-multiple')
@@ -47,10 +46,14 @@ describe('buildListItems', () => {
 
   it('groups by provider with headers', () => {
     const items = buildListItems(providers, 'byProvider')
-    expect(items.filter((item) => item.type === 'group-header').map((item) => {
-      if (item.type !== 'group-header') return ''
-      return item.provider.id
-    })).toEqual(['purehub', 'openai', 'deepseek'])
+    expect(
+      items
+        .filter((item) => item.type === 'group-header')
+        .map((item) => {
+          if (item.type !== 'group-header') return ''
+          return item.provider.id
+        })
+    ).toEqual(['purehub', 'openai', 'deepseek'])
   })
 
   it('filters by search keyword', () => {
@@ -58,7 +61,9 @@ describe('buildListItems', () => {
     expect(
       items
         .filter((item) => item.type === 'model-item-multiple' || item.type === 'model-item-single')
-        .map((item) => (item.type === 'model-item-multiple' || item.type === 'model-item-single' ? item.data.model : ''))
+        .map((item) =>
+          item.type === 'model-item-multiple' || item.type === 'model-item-single' ? item.data.model : ''
+        )
     ).toEqual(['deepseek-v4-flash'])
   })
 })

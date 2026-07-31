@@ -1,10 +1,11 @@
 'use client'
 
-import { Checkbox, Flex } from 'antd'
-import { Block, Center, Grid, Text } from '@pure/ui'
+import { Checkbox } from 'antd'
+import { Block, Center, Grid, Text, Flexbox } from '@pure/ui'
 import { formatDate } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo, useCallback, type MouseEvent, type PointerEvent } from 'react'
+import { memo, useCallback } from 'react'
+import type { MouseEvent, PointerEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import FileIcon from '@/components/FileIcon'
@@ -14,7 +15,7 @@ import {
   useExplorerSelectionSummary,
 } from '@/features/resources/hooks/useExplorerSelection'
 import { useResourceManagerStore } from '@/features/resources/store'
-import { type FileListItem } from '@/types/files'
+import type { FileListItem } from '@/types/files'
 
 const styles = createStaticStyles(({ css }) => ({
   card: css`
@@ -80,8 +81,8 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
       variant='outlined'
       onClick={() => onOpen(item)}
     >
-      <Flex vertical gap={8}>
-        <Flex align='center' justify='space-between'>
+      <Flexbox gap={8}>
+        <Flexbox horizontal align='center' justify='space-between'>
           <Center
             height={24}
             style={{ cursor: 'pointer', paddingInline: 2 }}
@@ -91,7 +92,7 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
             <Checkbox checked={selected} style={{ pointerEvents: 'none' }} />
           </Center>
           <FileIcon fileType={item.fileType} size={16} />
-        </Flex>
+        </Flexbox>
         {isImage && item.url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -100,15 +101,15 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
             style={{ borderRadius: 8, height: 120, objectFit: 'cover', width: '100%' }}
           />
         ) : (
-          <Flex vertical align='center' justify='center' style={{ height: 120 }}>
+          <Flexbox align='center' justify='center' style={{ height: 120 }}>
             <FileIcon fileType={item.fileType} size={40} />
-          </Flex>
+          </Flexbox>
         )}
         <Text ellipsis>{item.name}</Text>
         <Text type='secondary' style={{ fontSize: 12 }}>
           {isFolder ? '文件夹' : formatDate(item.updatedAt)}
         </Text>
-      </Flex>
+      </Flexbox>
     </Block>
   )
 })
@@ -136,7 +137,7 @@ const MasonryHeader = memo<MasonryHeaderProps>(({ data }) => {
   }, [])
 
   return (
-    <Flex align='center' className={styles.toolbar} gap={8}>
+    <Flexbox horizontal align='center' className={styles.toolbar} gap={8}>
       <Center
         height={24}
         style={{ cursor: 'pointer', paddingInline: 2 }}
@@ -146,7 +147,7 @@ const MasonryHeader = memo<MasonryHeaderProps>(({ data }) => {
         <Checkbox checked={allSelected} indeterminate={indeterminate} style={{ pointerEvents: 'none' }} />
       </Center>
       <span>{selectedCount > 0 ? `已选 ${selectedCount} 项` : `共 ${data.length} 项`}</span>
-    </Flex>
+    </Flexbox>
   )
 })
 
@@ -159,14 +160,14 @@ interface MasonryViewProps {
 
 const MasonryView = memo<MasonryViewProps>(({ items, onOpen }) => {
   return (
-    <Flex vertical style={{ height: '100%', width: '100%' }}>
+    <Flexbox style={{ height: '100%', width: '100%' }}>
       <MasonryHeader data={items} />
       <Grid gap={12} padding={16} rows={4} width='100%'>
         {items.map((item) => (
           <MasonryCard key={item.id} item={item} onOpen={onOpen} />
         ))}
       </Grid>
-    </Flex>
+    </Flexbox>
   )
 })
 

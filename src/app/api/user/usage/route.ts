@@ -1,6 +1,10 @@
-import { CreditsModel, type UsageSortBy } from '@pure/database/models/credits'
-import { NextResponse, type NextRequest } from 'next/server'
+import { CreditsModel } from '@pure/database/models/credits'
+import type { UsageSortBy } from '@pure/database/models/credits'
+import { FileModel } from '@pure/database/models/file'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
+import { fileStorageLimitBytes } from '@/envs/file'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { getShanghaiBillingPeriod } from '@/server/purehub'
 
@@ -25,26 +29,24 @@ const parsePositiveInt = (value: string | null, fallback: number, maximum: numbe
 export const GET = withAuth(async (request: NextRequest, { userId }) => {
   const params = request.nextUrl.searchParams
   const period = getShanghaiBillingPeriod()
-  const defaultStart = `${period}-01`
-  const defaultEnd = new Date(Date.UTC(Number(period.slice(0, 4)), Number(period.slice(5, 7)), 0))
-    .toISOString()
-    .slice(0, 10)
-  const startDate = params.get('startDate') ?? defaultStart
-  const endDate = params.get('endDate') ?? defaultEnd
+  const startDate = params.get('startDate')
+  const endDate = params.get('endDate')
   const page = parsePositiveInt(params.get('page'), 1, 1_000_000)
-  const pageSize = parsePositiveInt(params.get('pageSize'), 20, 100)
+  const pageSize = parsePositiveInt(params.get('pageSize'), 10, 100)
   const sortBy = (params.get('sortBy') ?? 'createdAt') as UsageSortBy
   const sortOrder = params.get('sortOrder') ?? 'desc'
-  const type = params.get('type') ?? 'chat'
+  const type = params.get('type') ?? 'all'
   const model = params.get('model')?.trim() || undefined
-  const dateSpan = isValidDate(startDate) && isValidDate(endDate)
-    ? (Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / 86_400_000
-    : Number.POSITIVE_INFINITY
+  const hasCompleteDateRange = startDate !== null && endDate !== null
+  const dateSpan =
+    hasCompleteDateRange && isValidDate(startDate) && isValidDate(endDate)
+      ? (Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / 86_400_000
+      : 0
 
   if (
-    !isValidDate(startDate) ||
-    !isValidDate(endDate) ||
-    startDate > endDate ||
+    (startDate === null) !== (endDate === null) ||
+    (hasCompleteDateRange && (!isValidDate(startDate) || !isValidDate(endDate))) ||
+    (hasCompleteDateRange && startDate > endDate) ||
     dateSpan > 366 ||
     page === null ||
     pageSize === null ||
@@ -57,23 +59,29 @@ export const GET = withAuth(async (request: NextRequest, { userId }) => {
   }
 
   const modelInstance = new CreditsModel()
-  const [balance, usage] = await Promise.all([
+  const fileModel = new FileModel(userId)
+  const [balance, usage, usedBytes] = await Promise.all([
     modelInstance.getBalance(userId, period),
     modelInstance.getUsage({
-      endAt: new Date(`${endDate}T23:59:59.999+08:00`),
+      ...(hasCompleteDateRange
+        ? {
+            endAt: new Date(`${endDate}T23:59:59.999+08:00`),
+            startAt: new Date(`${startDate}T00:00:00+08:00`),
+          }
+        : {}),
       model,
       page,
       pageSize,
       sortBy,
       sortOrder: sortOrder as 'asc' | 'desc',
-      startAt: new Date(`${startDate}T00:00:00+08:00`),
       userId,
     }),
+    fileModel.getStorageUsage(),
   ])
 
   return NextResponse.json({
     balance,
-    dateRange: { endDate, startDate },
+    storage: { limitBytes: fileStorageLimitBytes, usedBytes },
     ...usage,
   })
 })

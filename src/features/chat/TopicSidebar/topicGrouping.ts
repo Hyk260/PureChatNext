@@ -1,4 +1,4 @@
-import { type LocalChatTopic, type TopicGroupMode, type TopicSortBy } from '@/features/chat/types'
+import type { LocalChatTopic, TopicGroupMode, TopicSortBy } from '@/features/chat/types'
 
 export type TopicGroup = {
   id: string

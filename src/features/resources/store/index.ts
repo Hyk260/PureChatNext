@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
-import { type ResourceManagerMode } from '@/features/resources/ResourceManager'
+import type { ResourceManagerMode } from '@/features/resources/ResourceManager'
 import {
   FILE_DATE_WIDTH,
   FILE_NAME_DEFAULT_WIDTH,

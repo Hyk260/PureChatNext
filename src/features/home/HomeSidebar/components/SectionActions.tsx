@@ -1,8 +1,7 @@
 'use client'
 
-import { Flex } from 'antd'
-import { type MenuProps, DropdownMenu } from '@pure/ui'
-import { Icon } from '@pure/ui'
+import { DropdownMenu, Icon, Flexbox } from '@pure/ui'
+import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { MoreHorizontalIcon, PlusIcon } from 'lucide-react'
 import { memo } from 'react'
@@ -54,7 +53,12 @@ interface SectionActionsProps {
 
 const SectionActions = memo<SectionActionsProps>(({ addMenuItems, menuItems }) => {
   return (
-    <Flex gap={2} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
+    <Flexbox
+      horizontal
+      gap={2}
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
       <DropdownMenu items={menuItems} nativeButton triggerProps={{ className: styles.trigger, title: '更多' }}>
         <Icon icon={MoreHorizontalIcon} size='small' />
         <span className={styles.srOnly}>更多</span>
@@ -65,7 +69,7 @@ const SectionActions = memo<SectionActionsProps>(({ addMenuItems, menuItems }) =
           <span className={styles.srOnly}>添加</span>
         </DropdownMenu>
       ) : null}
-    </Flex>
+    </Flexbox>
   )
 })
 

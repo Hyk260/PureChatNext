@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { type NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { GET, POST } from './route'

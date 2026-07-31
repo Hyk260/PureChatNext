@@ -1,8 +1,9 @@
 import { and, eq } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import { channelBindings, type ChannelBindingItem, type NewChannelBinding } from '../schemas/channel'
-import { type ChatDatabase } from '../type'
+import { channelBindings } from '../schemas/channel'
+import type { ChannelBindingItem, NewChannelBinding } from '../schemas/channel'
+import type { ChatDatabase } from '../type'
 
 export const WECHAT_PLATFORM = 'wechat' as const
 export const QQ_PLATFORM = 'qq' as const

@@ -1,8 +1,9 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { API_METHODS } from './handlers'
 import debug from 'debug'
 
-import { type ApiMethodName } from './types'
+import type { ApiMethodName } from './types'
 
 const log = debug('route:rest-api')
 

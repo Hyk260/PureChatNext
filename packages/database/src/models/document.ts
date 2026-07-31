@@ -1,10 +1,12 @@
 import { and, asc, count, desc, eq, ilike, inArray, isNull, or } from 'drizzle-orm'
 
-import { type QueryFileListParams, FilesTabs, SortType } from '@pure/types'
+import { FilesTabs, SortType } from '@pure/types'
+import type { QueryFileListParams } from '@pure/types'
 
 import { getServerDB } from '../core/db-adaptor'
-import { DOCUMENT_FOLDER_TYPE, type DocumentItem, type NewDocument, documents } from '../schemas/file'
-import { type ChatDatabase } from '../type'
+import { DOCUMENT_FOLDER_TYPE, documents } from '../schemas/file'
+import type { DocumentItem, NewDocument } from '../schemas/file'
+import type { ChatDatabase } from '../type'
 
 export class DocumentModel {
   private readonly db: ChatDatabase

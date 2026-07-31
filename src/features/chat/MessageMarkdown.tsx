@@ -1,6 +1,7 @@
 'use client'
 
-import { type MarkdownProps, Markdown } from '@pure/ui'
+import { Markdown } from '@pure/ui'
+import type { MarkdownProps } from '@pure/ui'
 import { useDeferredValue, useMemo } from 'react'
 
 /**

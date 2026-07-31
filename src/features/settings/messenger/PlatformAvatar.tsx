@@ -1,9 +1,9 @@
 'use client'
 
 import { Discord, QQ, Slack, Telegram, WeChat } from '@pure/ui/icons'
-import { type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
-import { type MessengerPlatformId } from './const'
+import type { MessengerPlatformId } from './const'
 
 export const PlatformAvatar = ({ platform, size }: { platform: MessengerPlatformId; size: number }): ReactNode => {
   if (platform === 'telegram') return <Telegram.Avatar size={size} />

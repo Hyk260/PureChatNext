@@ -40,7 +40,7 @@ for (const dir of copyDirs) {
 // index.html 不放入 public，由 `src/app/spa/[[...path]]/route.ts` 注入配置后下发。
 writeFileSync(
   generatedTemplate,
-  `/* 由 scripts/copySpaBuild.mjs 自动生成 — 请勿手改；本地 diff 可丢弃（仓库保留 stub） */\nexport default ${JSON.stringify(indexHtml)}\n`,
+  `/* 由 scripts/copy-spa-build.mjs 自动生成 — 请勿手改；本地 diff 可丢弃（仓库保留 stub） */\nexport default ${JSON.stringify(indexHtml)}\n`,
   'utf-8'
 )
 

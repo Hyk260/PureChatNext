@@ -1,11 +1,12 @@
-import { type ReactNode, Suspense } from 'react'
+import { Suspense } from 'react'
+import type { ReactNode } from 'react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
 import Analytics from '@/components/Analytics'
 
 import { IS_VERCEL } from '@/envs/app'
 
-import { type Metadata } from 'next'
+import type { Metadata } from 'next'
 
 import '@/styles/globals.css'
 import '@/styles/scrollbar.css'

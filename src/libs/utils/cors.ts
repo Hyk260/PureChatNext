@@ -1,5 +1,6 @@
 import debug from 'debug'
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { verifyAuth } from '@/libs/auth/middleware'
 import { getAllowedOrigins } from '@/libs/utils/allowed-origins'
 

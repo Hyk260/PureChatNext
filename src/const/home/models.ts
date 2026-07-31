@@ -1,9 +1,4 @@
-import {
-  AI_MODELS_BY_PROVIDER,
-  ModelProvider,
-  PUREHUB_DEFAULT_MODEL,
-  getAiModel,
-} from '@pure/model-bank'
+import { AI_MODELS_BY_PROVIDER, ModelProvider, PUREHUB_DEFAULT_MODEL, getAiModel } from '@pure/model-bank'
 
 export interface HomeModelItem {
   displayName: string

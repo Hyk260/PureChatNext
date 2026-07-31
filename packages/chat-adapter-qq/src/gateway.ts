@@ -1,12 +1,6 @@
-import { type QQApiClient } from './api'
-import {
-  QQ_INTENTS,
-  QQ_WS_OP_CODES,
-  type QQGatewayHelloData,
-  type QQGatewayPayload,
-  type QQGatewayReadyData,
-  type QQGatewayUrlResponse,
-} from './types'
+import type { QQApiClient } from './api'
+import { QQ_INTENTS, QQ_WS_OP_CODES } from './types'
+import type { QQGatewayHelloData, QQGatewayPayload, QQGatewayReadyData, QQGatewayUrlResponse } from './types'
 
 export type GatewayLogger = (...args: any[]) => void
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { type LocalChatTopic } from '@/features/chat/types'
+import type { LocalChatTopic } from '@/features/chat/types'
 
 import { organizeTopics } from './topicGrouping'
 

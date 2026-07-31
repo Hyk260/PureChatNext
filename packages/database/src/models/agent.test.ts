@@ -20,13 +20,14 @@ vi.hoisted(() => {
   loadEnv({ path: resolvePath(__dirname, '../../../../.env.local') })
 })
 
-import { type AgentDeleteError, AgentModel } from '@pure/database/models/agent'
+import { AgentModel } from '@pure/database/models/agent'
+import type { AgentDeleteError } from '@pure/database/models/agent'
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import * as schema from '@pure/database/schemas'
 import { agents, PURE_AI_AGENT_ID } from '@pure/database/schemas/agent'
 import { chatTopics } from '@pure/database/schemas/chat'
 import { users } from '@pure/database/schemas/user'
-import { type ChatDatabase } from '@pure/database/type'
+import type { ChatDatabase } from '@pure/database/type'
 
 config({ path: resolve(__dirname, '../../../../.env.local') })
 

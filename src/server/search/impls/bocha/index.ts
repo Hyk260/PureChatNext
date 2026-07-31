@@ -1,9 +1,9 @@
-import { type SearchParams, type UniformSearchResponse, type UniformSearchResult } from '@pure/types'
+import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@pure/types'
 import debug from 'debug'
 import urlJoin from 'url-join'
 
-import { type SearchServiceImpl } from '../type'
-import { type BochaResponse, type BochaSearchParameters } from './type'
+import type { SearchServiceImpl } from '../type'
+import type { BochaResponse, BochaSearchParameters } from './type'
 
 const log = debug('search:Bocha')
 

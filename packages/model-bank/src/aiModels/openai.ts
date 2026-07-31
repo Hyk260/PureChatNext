@@ -1,4 +1,4 @@
-import { type AiModelCard } from '../types/aiModel'
+import type { AiModelCard } from '../types/aiModel'
 
 /**
  * OpenAI 自配服务商模型 + USD 官方价量级（用于用量展示 / 成本估算，不扣 PureChat 积分）。
@@ -33,8 +33,7 @@ export const openaiChatModels: AiModelCard[] = [
   {
     id: 'gpt-5.6-sol',
     displayName: 'GPT-5.6 Sol',
-    description:
-      'GPT-5.6 Sol 是 OpenAI 面向复杂推理、编程与长程智能体任务的前沿模型；gpt-5.6 别名会路由到 Sol。',
+    description: 'GPT-5.6 Sol 是 OpenAI 面向复杂推理、编程与长程智能体任务的前沿模型；gpt-5.6 别名会路由到 Sol。',
     enabled: true,
     family: 'gpt',
     generation: 'gpt-5.6',
@@ -341,8 +340,7 @@ export const openaiChatModels: AiModelCard[] = [
   {
     id: 'gpt-5.2-pro',
     displayName: 'GPT-5.2 pro',
-    description:
-      'GPT-5.2 Pro：更智能、更精准的 GPT-5.2 变体（仅限 Responses API），适用于复杂问题和多轮推理。',
+    description: 'GPT-5.2 Pro：更智能、更精准的 GPT-5.2 变体（仅限 Responses API），适用于复杂问题和多轮推理。',
     family: 'gpt',
     generation: 'gpt-5.2',
     contextWindowTokens: 400_000,

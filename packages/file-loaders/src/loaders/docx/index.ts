@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import debug from 'debug'
 import mammoth from 'mammoth'
 
-import { type DocumentPage, type FileLoaderInterface } from '../../types'
+import type { DocumentPage, FileLoaderInterface } from '../../types'
 
 const log = debug('file-loaders:docx')
 

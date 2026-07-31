@@ -17,8 +17,4 @@ export {
   type ModelTokenPricing as PureHubPricing,
 } from '@pure/model-bank'
 
-export {
-  formatResetCountdown,
-  getNextShanghaiResetAt,
-  getShanghaiBillingPeriod,
-} from './period'
+export { formatResetCountdown, getNextShanghaiResetAt, getShanghaiBillingPeriod } from './period'

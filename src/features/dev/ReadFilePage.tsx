@@ -1,6 +1,7 @@
 'use client'
 
-import { type ChangeEvent, type DragEvent, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
+import type { ChangeEvent, DragEvent } from 'react'
 import {
   AlertCircle,
   CheckCircle2,
@@ -17,7 +18,7 @@ import {
 } from 'lucide-react'
 import { formatSize } from '@pure/utils/client'
 
-import { type DocumentPage, type FileDocument } from '@pure/file-loaders'
+import type { DocumentPage, FileDocument } from '@pure/file-loaders'
 
 type RequestMode = 'file' | 'url'
 type ResultView = 'content' | 'pages' | 'json'

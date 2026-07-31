@@ -1,11 +1,13 @@
 'use client'
 
-import { ActionIcon, Icon, Text } from '@pure/ui'
-import { Flex, type BreadcrumbProps, Breadcrumb } from 'antd'
+import { ActionIcon, Icon, Text, Flexbox } from '@pure/ui'
+import { Breadcrumb } from 'antd'
+import type { BreadcrumbProps } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronRightIcon, HomeIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useRouter } from '@/utils/navigation'
-import { memo, type MouseEvent, type ReactNode } from 'react'
+import { memo } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
@@ -98,7 +100,7 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     }))
 
     const leftContent = left ? (
-      <Flex align='center' flex={1} gap={2} style={{ overflow: 'hidden' }}>
+      <Flexbox horizontal align='center' flex={1} gap={2} style={{ overflow: 'hidden' }}>
         {typeof left === 'string' ? (
           <Text ellipsis style={{ fontSize: 16, fontWeight: 500 }}>
             {left}
@@ -106,19 +108,20 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
         ) : (
           left
         )}
-      </Flex>
+      </Flexbox>
     ) : (
-      <Flex vertical flex={1} style={{ paddingInline: 6 }}>
+      <Flexbox flex={1} style={{ paddingInline: 6 }}>
         <Breadcrumb
           className={styles.breadcrumb}
           separator={<Icon color={cssVar.colorTextDescription} icon={ChevronRightIcon} size={12} />}
           items={breadcrumbItems}
         />
-      </Flex>
+      </Flexbox>
     )
 
     return (
-      <Flex
+      <Flexbox
+        horizontal
         align='center'
         className={styles.container}
         flex='none'
@@ -126,7 +129,7 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
         style={{ padding: '8px 6px' }}
       >
         {leftContent}
-        <Flex align='center' flex='none' gap={2} justify='flex-end'>
+        <Flexbox horizontal align='center' flex='none' gap={2} justify='flex-end'>
           {right}
           {showTogglePanelButton ? (
             <ActionIcon
@@ -140,8 +143,8 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
               }}
             />
           ) : null}
-        </Flex>
-      </Flex>
+        </Flexbox>
+      </Flexbox>
     )
   }
 )

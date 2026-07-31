@@ -1,6 +1,5 @@
 'use client'
 
-import { Flex } from 'antd'
 import Link from '@/utils/link'
 import { useParams, usePathname, useRouter } from '@/utils/navigation'
 import { memo } from 'react'
@@ -9,8 +8,11 @@ import NavItem from '@/components/NavItem'
 import { DOCUMENT_FOLDER_TYPE } from '@/const/resources/fileTypes'
 import { useFolderPath } from '@/features/resources/hooks/useFolderPath'
 import {
-  useFetchKnowledgeBaseList, useFetchResources, useResourceStore, } from '@/features/resources/store/resourceStore'
-import { Icon, Text } from '@pure/ui'
+  useFetchKnowledgeBaseList,
+  useFetchResources,
+  useResourceStore,
+} from '@/features/resources/store/resourceStore'
+import { Icon, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronLeft, FolderIcon } from 'lucide-react'
 
@@ -43,16 +45,16 @@ const LibraryHierarchy = memo(() => {
 
   if (folders.length === 0) {
     return (
-      <Flex vertical style={{ padding: 12 }}>
+      <Flexbox style={{ padding: 12 }}>
         <Text type='secondary' style={{ fontSize: 12 }}>
           暂无文件夹
         </Text>
-      </Flex>
+      </Flexbox>
     )
   }
 
   return (
-    <Flex vertical gap={1} style={{ paddingInline: 8 }}>
+    <Flexbox gap={1} style={{ paddingInline: 8 }}>
       {folders.map((folder) => {
         const href = `/resources/library/${libraryId}/${folder.slug ?? folder.id}`
         const active = pathname === href || pathname.startsWith(`${href}/`)
@@ -63,7 +65,7 @@ const LibraryHierarchy = memo(() => {
           </Link>
         )
       })}
-    </Flex>
+    </Flexbox>
   )
 })
 
@@ -78,17 +80,17 @@ const LibrarySidebar = memo(() => {
   useFetchKnowledgeBaseList()
 
   return (
-    <Flex vertical className={styles.sidebar} style={{ height: '100%' }}>
-      <Flex align='center' className={styles.header} gap={8}>
+    <Flexbox className={styles.sidebar} style={{ height: '100%' }}>
+      <Flexbox horizontal align='center' className={styles.header} gap={8}>
         <Icon icon={ChevronLeft} size={16} style={{ cursor: 'pointer' }} onClick={() => router.push('/resources')} />
         <Text ellipsis strong>
           {kb?.name ?? '知识库'}
         </Text>
-      </Flex>
-      <Flex vertical flex={1} style={{ paddingBlock: 8, overflow: 'auto' }}>
+      </Flexbox>
+      <Flexbox flex={1} style={{ paddingBlock: 8, overflow: 'auto' }}>
         <LibraryHierarchy />
-      </Flex>
-    </Flex>
+      </Flexbox>
+    </Flexbox>
   )
 })
 

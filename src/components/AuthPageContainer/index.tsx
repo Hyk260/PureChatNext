@@ -1,6 +1,6 @@
 'use client'
 
-import { type PropsWithChildren } from 'react'
+import type { PropsWithChildren } from 'react'
 
 export const AuthPageContainer = ({ children }: PropsWithChildren) => {
   return (

@@ -1,10 +1,10 @@
 'use client'
 
-import { Flex } from 'antd'
-import { Center, FileTypeIcon, Icon, Text } from '@pure/ui'
+import { Center, FileTypeIcon, Icon, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowUpIcon } from 'lucide-react'
-import { memo, useRef, type ChangeEvent } from 'react'
+import { memo, useRef } from 'react'
+import type { ChangeEvent } from 'react'
 
 const ICON_SIZE = 80
 
@@ -74,12 +74,12 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
 
   return (
     <Center gap={24} height='100%' style={{ paddingBottom: 100 }} width='100%'>
-      <Flex vertical justify='center' style={{ textAlign: 'center' }}>
+      <Flexbox justify='center' style={{ textAlign: 'center' }}>
         <Text>把文件或文件夹拖到这里</Text>
         <Text type='secondary'>或者</Text>
-      </Flex>
-      <Flex gap={12}>
-        <Flex vertical className={styles.card} onClick={() => fileInputRef.current?.click()} style={{ padding: 16 }}>
+      </Flexbox>
+      <Flexbox horizontal gap={12}>
+        <Flexbox className={styles.card} onClick={() => fileInputRef.current?.click()} style={{ padding: 16 }}>
           <span className={styles.actionTitle}>上传文件</span>
           <div className={styles.glow} style={{ background: cssVar.gold }} />
           <FileTypeIcon
@@ -88,8 +88,8 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
             icon={<Icon color='#fff' icon={ArrowUpIcon} />}
             size={ICON_SIZE}
           />
-        </Flex>
-        <Flex vertical className={styles.card} onClick={() => folderInputRef.current?.click()} style={{ padding: 16 }}>
+        </Flexbox>
+        <Flexbox className={styles.card} onClick={() => folderInputRef.current?.click()} style={{ padding: 16 }}>
           <span className={styles.actionTitle}>上传文件夹</span>
           <div className={styles.glow} style={{ background: cssVar.geekblue }} />
           <FileTypeIcon
@@ -99,8 +99,8 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
             size={ICON_SIZE}
             type='folder'
           />
-        </Flex>
-      </Flex>
+        </Flexbox>
+      </Flexbox>
       <input ref={fileInputRef} hidden multiple type='file' onChange={handleFileChange} />
       <input
         ref={folderInputRef}

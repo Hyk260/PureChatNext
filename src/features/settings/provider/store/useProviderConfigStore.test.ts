@@ -26,7 +26,12 @@ describe('PureHub provider config migration', () => {
     expect(config.models.find((model) => model.id === 'gpt-5-nano')?.enabled).toBe(false)
   })
 
-  it('bumps persisted provider settings to version 5', () => {
-    expect(useProviderConfigStore.persist.getOptions().version).toBe(5)
+  it('keeps PureHub enabled even when persisted as disabled', () => {
+    const config = mergeProviderConfig('purehub', { enabled: false })
+    expect(config.enabled).toBe(true)
+  })
+
+  it('bumps persisted provider settings to version 6', () => {
+    expect(useProviderConfigStore.persist.getOptions().version).toBe(6)
   })
 })

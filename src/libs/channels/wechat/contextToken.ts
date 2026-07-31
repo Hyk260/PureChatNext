@@ -1,6 +1,6 @@
 import { getRedisConfig } from '@/envs/redis'
 import { initializeRedis, RedisKeys } from '@/libs/redis'
-import { type BaseRedisProvider } from '@/libs/redis/types'
+import type { BaseRedisProvider } from '@/libs/redis/types'
 
 const CONTEXT_TOKEN_TTL_SEC = 24 * 60 * 60
 

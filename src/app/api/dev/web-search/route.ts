@@ -1,4 +1,4 @@
-import { type CrawlImplType } from '@pure/web-crawler'
+import type { CrawlImplType } from '@pure/web-crawler'
 
 import { NextResponse } from 'next/server'
 

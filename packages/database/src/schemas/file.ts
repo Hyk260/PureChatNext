@@ -1,15 +1,5 @@
-import {
-  type AnyPgColumn,
-  boolean,
-  index,
-  integer,
-  jsonb,
-  pgTable,
-  primaryKey,
-  text,
-  uniqueIndex,
-  varchar,
-} from 'drizzle-orm/pg-core'
+import { boolean, index, integer, jsonb, pgTable, primaryKey, text, uniqueIndex, varchar } from 'drizzle-orm/pg-core'
+import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 
 import { idGenerator, randomSlug } from '../utils/idGenerator'
 import { accessedAt, createdAt, timestamps } from './_helpers'

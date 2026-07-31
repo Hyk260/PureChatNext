@@ -4,10 +4,11 @@ import { Chat } from 'chat'
 import debug from 'debug'
 
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
-import { type ChannelBindingItem } from '@pure/database/schemas/channel'
+import type { ChannelBindingItem } from '@pure/database/schemas/channel'
 import { appEnv } from '@/envs/app'
 
-import { decryptCredentials, type QQCredentials } from './encrypt'
+import { decryptCredentials } from './encrypt'
+import type { QQCredentials } from './encrypt'
 import { resolveQQWebhookSecret } from './webhookAuth'
 
 const log = debug('channel:qq:gateway')

@@ -1,20 +1,25 @@
 'use client'
 
-import { Avatar, Button, Flex } from 'antd'
+import { Avatar } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
-import { Block, Icon, Popover, Text } from '@pure/ui'
+import { Block, Button, Icon, Menu, Popover, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronDownIcon, LogOut, Settings2 } from 'lucide-react'
 import Link from '@/utils/link'
 import { memo, useCallback, useMemo, useState } from 'react'
 
-import Menu from '@/components/Menu'
 import { signOut, useSession } from '@/libs/better-auth/client'
 
 import DataStatistics from './DataStatistics'
 import FreeCreditsSummary from './FreeCreditsSummary'
 
 const styles = createStaticStyles(({ css }) => ({
+  divider: css`
+    height: 1px;
+    margin-block: 4px;
+    margin-inline: 12px;
+    background: ${cssVar.colorSplit};
+  `,
   popover: css`
     inset-block-start: 8px !important;
     inset-inline-start: 8px !important;
@@ -36,11 +41,11 @@ interface UserInfoSectionProps {
 }
 
 const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planLabel }) => (
-  <Flex align='center' gap={12} style={{ paddingBlock: 12, paddingInline: 12 }}>
-    <Flex align='center' gap={10}>
+  <Flexbox horizontal align='center' gap={12} style={{ paddingBlock: 12, paddingInline: 12 }}>
+    <Flexbox horizontal align='center' gap={10}>
       <Avatar size={36} src={avatar} style={{ background: cssVar.colorFill }} />
-      <Flex vertical flex={1}>
-        <Flex align='center' gap={8}>
+      <Flexbox flex={1}>
+        <Flexbox horizontal align='center' gap={8}>
           <Text as='span' style={{ lineHeight: 1.4 }} weight='bold'>
             {name}
           </Text>
@@ -60,15 +65,15 @@ const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planL
               {planLabel}
             </Text>
           ) : null}
-        </Flex>
+        </Flexbox>
         {email ? (
           <Text as='span' fontSize={12} type='secondary' style={{ lineHeight: 1.4 }}>
             {email}
           </Text>
         ) : null}
-      </Flex>
-    </Flex>
-  </Flex>
+      </Flexbox>
+    </Flexbox>
+  </Flexbox>
 ))
 
 UserInfoSection.displayName = 'UserInfoSection'
@@ -89,11 +94,10 @@ const HomeUserTrigger = memo(() => {
     message.success('已退出登录')
   }, [message])
 
-  const settingsItems = useMemo(
+  const menuItems = useMemo(
     () =>
       session?.user
         ? [
-            { type: 'divider' as const },
             {
               icon: <Icon icon={Settings2} />,
               key: 'setting',
@@ -103,17 +107,9 @@ const HomeUserTrigger = memo(() => {
                 </Link>
               ),
             },
-          ]
-        : [],
-    [session?.user]
-  )
-
-  const logoutItems = useMemo(
-    () =>
-      session?.user
-        ? [
-            { type: 'divider' as const },
+            // { type: 'divider' as const },
             {
+              danger: true,
               icon: <Icon icon={LogOut} />,
               key: 'logout',
               label: <span>退出登录</span>,
@@ -136,24 +132,24 @@ const HomeUserTrigger = memo(() => {
   )
 
   const menuContent = session?.user ? (
-    <Flex vertical gap={2} style={{ minWidth: 300 }}>
+    <Flexbox gap={2} style={{ minWidth: 300 }}>
       <UserInfoSection avatar={avatar} email={session.user.email} name={displayName} planLabel='免费版' />
       <DataStatistics />
       <FreeCreditsSummary onClick={() => setOpen(false)} />
-      <Menu items={settingsItems} onClick={handleMenuClick} />
-      <Menu items={logoutItems} onClick={handleMenuClick} />
-    </Flex>
+      <div className={styles.divider} />
+      <Menu compact items={menuItems} onClick={handleMenuClick} />
+    </Flexbox>
   ) : (
-    <Flex vertical gap={2} style={{ minWidth: 300 }}>
+    <Flexbox gap={2} style={{ minWidth: 300 }}>
       <UserInfoSection avatar={avatar} name='访客' />
-      <Flex vertical style={{ paddingBlock: 12, paddingInline: 16, width: '100%' }}>
+      <Flexbox style={{ paddingBlock: 12, paddingInline: 16, width: '100%' }}>
         <Link href='/signin' style={{ color: 'inherit', textDecoration: 'none' }}>
           <Button block type='primary' onClick={() => setOpen(false)}>
             登录或注册
           </Button>
         </Link>
-      </Flex>
-    </Flex>
+      </Flexbox>
+    </Flexbox>
   )
 
   return (
@@ -185,12 +181,12 @@ const HomeUserTrigger = memo(() => {
         }}
       >
         <Avatar shape='square' size={28} src={avatar} />
-        <Flex align='center' gap={4} style={{ overflow: 'hidden' }}>
+        <Flexbox horizontal align='center' gap={4} style={{ overflow: 'hidden' }}>
           <Text as='span' ellipsis style={{ flex: 1 }} weight={500}>
             {displayName}
           </Text>
           <Icon color={cssVar.colorTextDescription} icon={ChevronDownIcon} />
-        </Flex>
+        </Flexbox>
       </Block>
     </Popover>
   )

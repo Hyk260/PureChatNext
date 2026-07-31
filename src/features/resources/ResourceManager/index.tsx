@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
+import { Flexbox } from '@pure/ui'
 import { memo, useCallback } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -47,11 +47,11 @@ const ResourceManager = memo(() => {
 
   return (
     <DragUploadZone onUploadFiles={(files) => handleUploadFiles(files)}>
-      <Flex vertical className={styles.container} flex={1} style={{ height: '100%' }}>
+      <Flexbox className={styles.container} flex={1} style={{ height: '100%' }}>
         <Explorer />
         {mode === 'editor' && <FileEditor />}
         <UploadDock />
-      </Flex>
+      </Flexbox>
     </DragUploadZone>
   )
 })

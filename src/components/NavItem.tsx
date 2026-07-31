@@ -1,9 +1,10 @@
 'use client'
 
-import { Flex } from 'antd'
-import { type BlockProps, Block, Center, Icon, type IconProps, Text } from '@pure/ui'
+import { Block, Center, Icon, Text, Flexbox } from '@pure/ui'
+import type { BlockProps, IconProps } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo, type ReactNode } from 'react'
+import { memo } from 'react'
+import type { ReactNode } from 'react'
 
 const styles = createStaticStyles(({ css }) => ({
   container: css`
@@ -45,7 +46,7 @@ const NavItem = memo<NavItemProps>(
             <Icon color={iconColor} icon={icon} size={iconSize} />
           </Center>
         ) : null}
-        <Flex vertical flex={1} style={{ overflow: 'hidden' }}>
+        <Flexbox flex={1} style={{ overflow: 'hidden' }}>
           <Text
             ellipsis
             title={typeof title === 'string' ? title : undefined}
@@ -53,7 +54,7 @@ const NavItem = memo<NavItemProps>(
           >
             {title}
           </Text>
-        </Flex>
+        </Flexbox>
       </Block>
     )
   }

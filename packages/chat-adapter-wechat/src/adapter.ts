@@ -1,34 +1,26 @@
-import {
-  Message,
-  parseMarkdown,
-  type Adapter,
-  type AdapterPostableMessage,
-  type Attachment,
-  type Author,
-  type ChatInstance,
-  type EmojiValue,
-  type FetchOptions,
-  type FetchResult,
-  type FileUpload,
-  type FormattedContent,
-  type Logger,
-  type RawMessage,
-  type ThreadInfo,
-  type WebhookOptions,
+import { Message, parseMarkdown } from 'chat'
+import type {
+  Adapter,
+  AdapterPostableMessage,
+  Attachment,
+  Author,
+  ChatInstance,
+  EmojiValue,
+  FetchOptions,
+  FetchResult,
+  FileUpload,
+  FormattedContent,
+  Logger,
+  RawMessage,
+  ThreadInfo,
+  WebhookOptions,
 } from 'chat'
 import mime from 'mime'
 
 import { WechatApiClient, WechatUploadMediaType } from './api'
 import { WechatFormatConverter } from './format-converter'
-import {
-  MessageItemType,
-  MessageState,
-  MessageType,
-  type MessageItem,
-  type WechatAdapterConfig,
-  type WechatRawMessage,
-  type WechatThreadId,
-} from './types'
+import { MessageItemType, MessageState, MessageType } from './types'
+import type { MessageItem, WechatAdapterConfig, WechatRawMessage, WechatThreadId } from './types'
 
 /**
  * Extract text content from a WechatRawMessage's item_list.

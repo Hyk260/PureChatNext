@@ -1,11 +1,11 @@
 # Drizzle ORM 配置和运行指南
 
-本指南将帮助您配置和使用 Drizzle ORM 连接 Supabase 数据库，并创建 User 表。
+本指南介绍如何使用 Drizzle ORM 连接 PostgreSQL（Supabase 或本地实例）并管理数据库迁移。
 
 ## 📋 前置要求
 
 1. 已安装项目依赖：`pnpm install` 或 `npm install`
-2. 已创建 Supabase 项目
+2. 已准备 Supabase 项目或本地 PostgreSQL 17
 3. 已配置 `.env.local` 文件（参考 `env-setup.zh-CN.md`）
 
 ## 🔧 配置步骤
@@ -17,6 +17,15 @@
 ```env
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
 ```
+
+本地实例使用：
+
+```env
+DATABASE_DRIVER=node
+DATABASE_URL=postgresql://purechat:[LOCAL-PASSWORD]@127.0.0.1:5432/purechat
+```
+
+本地实例启动方式见 [本地 PostgreSQL 管理](./self-hosting/postgresql-local.zh-CN.md)。
 
 **获取连接字符串的方法：**
 
@@ -47,7 +56,7 @@ pnpm db:generate
 
 ### 步骤 2: 运行迁移
 
-将迁移应用到 Supabase 数据库：
+将迁移应用到当前 `DATABASE_URL` 指向的数据库：
 
 ```bash
 pnpm db:migrate

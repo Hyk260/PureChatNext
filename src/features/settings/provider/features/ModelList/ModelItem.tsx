@@ -1,12 +1,11 @@
 'use client'
 
-import { ModelIcon, Text } from '@pure/ui'
-import { Flex, Switch } from 'antd'
+import { Flexbox, ModelIcon, Switch, Tag, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
-import { type ProviderId, type ProviderModelItem } from '../../types'
+import type { ProviderId, ProviderModelItem } from '../../types'
 
 const styles = createStaticStyles(({ css }) => ({
   container: css`
@@ -31,6 +30,9 @@ const styles = createStaticStyles(({ css }) => ({
     color: ${cssVar.colorTextDescription};
     font-size: 12px;
   `,
+  meta: css`
+    min-width: 0;
+  `,
 }))
 
 interface ModelItemProps {
@@ -42,19 +44,24 @@ const ModelItem = memo<ModelItemProps>(({ model, provider }) => {
   const toggleModelEnabled = useProviderConfigStore((s) => s.toggleModelEnabled)
 
   return (
-    <Flex align='center' className={styles.container} gap={12} justify='space-between' style={{ width: '100%' }}>
-      <Flex align='center' className={styles.desc} gap={12}>
-        <ModelIcon model={model.id} size={28} />
-        <Flex vertical gap={2} style={{ minWidth: 0 }}>
+    <Flexbox horizontal align='center' className={styles.container} gap={16} justify='space-between' width='100%'>
+      <Flexbox horizontal align='center' className={styles.desc} gap={12}>
+        <ModelIcon model={model.id} size={32} />
+        <Flexbox className={styles.meta} gap={4}>
           <Text ellipsis style={{ fontWeight: 500 }}>
             {model.displayName}
           </Text>
-          <div className={styles.id}>{model.id}</div>
-        </Flex>
-      </Flex>
+          <Tag className={styles.id}>{model.id}</Tag>
+        </Flexbox>
+      </Flexbox>
 
-      <Switch checked={model.enabled} size='small' onChange={(next) => toggleModelEnabled(provider, model.id, next)} />
-    </Flex>
+      <Switch
+        aria-label={`${model.enabled ? '停用' : '启用'} ${model.displayName}`}
+        checked={model.enabled}
+        size='small'
+        onChange={(next) => toggleModelEnabled(provider, model.id, next)}
+      />
+    </Flexbox>
   )
 })
 

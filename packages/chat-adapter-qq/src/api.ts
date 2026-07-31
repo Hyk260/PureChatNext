@@ -1,10 +1,5 @@
-import {
-  QQ_MSG_TYPE,
-  type QQAccessTokenResponse,
-  type QQGatewayUrlResponse,
-  type QQSendMessageParams,
-  type QQSendMessageResponse,
-} from './types'
+import { QQ_MSG_TYPE } from './types'
+import type { QQAccessTokenResponse, QQGatewayUrlResponse, QQSendMessageParams, QQSendMessageResponse } from './types'
 
 /** QQ OpenAPI client for @pure/chat-adapter-qq. See `docs/self-hosting/qq/protocol.zh-CN.md`. */
 

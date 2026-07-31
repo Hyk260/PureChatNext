@@ -1,16 +1,31 @@
 import { createHash } from 'node:crypto'
 
+import debug from 'debug'
 import { NextResponse } from 'next/server'
 
-import { FileModel } from '@pure/database/models/file'
-import { fileEnv } from '@/envs/file'
+import { FileModel, FileStorageQuotaExceededError } from '@pure/database/models/file'
+import { fileEnv, fileStorageLimitBytes } from '@/envs/file'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'
 import { buildPublicS3Url, resolveFileAccessUrl } from '@/server/modules/S3/url'
 
+const log = debug('file:upload')
+
 function isS3Configured() {
   return Boolean(fileEnv.S3_ACCESS_KEY_ID && fileEnv.S3_SECRET_ACCESS_KEY && fileEnv.S3_ENDPOINT && fileEnv.S3_BUCKET)
 }
+
+const quotaExceededResponse = (usedBytes: number, requestedBytes: number) =>
+  NextResponse.json(
+    {
+      code: 'FILE_STORAGE_QUOTA_EXCEEDED',
+      error: '文件存储空间不足',
+      limitBytes: fileStorageLimitBytes,
+      requestedBytes,
+      usedBytes,
+    },
+    { status: 413 }
+  )
 
 export const POST = withAuth(async (request, { userId }) => {
   if (!isS3Configured()) {
@@ -26,17 +41,32 @@ export const POST = withAuth(async (request, { userId }) => {
     return jsonError('Missing or invalid file field')
   }
 
+  const model = new FileModel(userId)
+  let usedBytes: number
+  try {
+    usedBytes = await model.getStorageUsage()
+  } catch (error) {
+    log('storage usage query failed: %O', error)
+    return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+  }
+
+  if (usedBytes + file.size > fileStorageLimitBytes) {
+    return quotaExceededResponse(usedBytes, file.size)
+  }
+
   const buffer = Buffer.from(await file.arrayBuffer())
   const fileHash = createHash('sha256').update(buffer).digest('hex')
   const key = `resources/${userId}/${Date.now()}-${file.name}`
   const fileS3 = new FileS3()
-
-  await fileS3.uploadMedia(key, buffer)
-
   const url = buildPublicS3Url(key)
-  const model = new FileModel(userId)
+  let uploaded = false
+  let committed = false
+
   try {
-    const result = await model.create(
+    await fileS3.uploadMedia(key, buffer)
+    uploaded = true
+
+    const result = await model.createWithinStorageLimit(
       {
         fileHash,
         fileType: file.type || 'application/octet-stream',
@@ -46,8 +76,10 @@ export const POST = withAuth(async (request, { userId }) => {
         size: file.size,
         url,
       },
+      fileStorageLimitBytes,
       true
     )
+    committed = true
 
     const created = await model.findById(result.id)
     if (!created) {
@@ -59,7 +91,19 @@ export const POST = withAuth(async (request, { userId }) => {
       url: resolveFileAccessUrl(created.id, created.url),
     })
   } catch (error) {
-    console.error('[resources/upload] POST failed:', error)
+    if (uploaded && !committed) {
+      try {
+        await fileS3.deleteFile(key)
+      } catch (cleanupError) {
+        log('orphan cleanup failed for %s: %O', key, cleanupError)
+      }
+    }
+
+    if (error instanceof FileStorageQuotaExceededError) {
+      return quotaExceededResponse(error.usedBytes, error.requestedBytes)
+    }
+
+    log('POST failed: %O', error)
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
   }
 })

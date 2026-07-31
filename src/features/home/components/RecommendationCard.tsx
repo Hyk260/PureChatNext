@@ -1,12 +1,12 @@
 'use client'
 
-import { Block, Github, Tag, Text } from '@pure/ui'
-import { Flex, Button, Divider } from 'antd'
+import { Block, Button, Tag, Text, Github, Flexbox } from '@pure/ui'
+import { Divider } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { memo, useCallback, useState } from 'react'
 
-import { type HomeRecommendationItem } from '@/const/home/recommendations'
+import type { HomeRecommendationItem } from '@/const/home/recommendations'
 
 const styles = createStaticStyles(({ css }) => ({
   actionBtnPrimary: css`
@@ -47,24 +47,24 @@ const RecommendationCard = memo<RecommendationCardProps>(({ item }) => {
 
   return (
     <Block className={styles.card} gap={12} padding={12} variant='outlined'>
-      <Flex align='center' gap={8} style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+      <Flexbox horizontal align='center' gap={8} style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
         <Github size={18} type='mono' />
         <Text ellipsis style={{ fontSize: 16, fontWeight: 500 }}>
           {item.title}
         </Text>
-      </Flex>
+      </Flexbox>
       <Divider dashed style={{ marginBlock: 0 }} />
       <Text className={styles.description} style={{ fontSize: 13 }}>
         {item.description}
       </Text>
-      <Flex align='center' gap={8} justify='space-between' wrap='wrap'>
+      <Flexbox horizontal align='center' gap={8} justify='space-between' wrap='wrap'>
         <Tag size='small' style={{ fontSize: 12 }}>
           {item.tag}
         </Tag>
         <Button className={cx(styles.actionBtnPrimary)} loading={loading} shape='round' onClick={handleClick}>
           添加任务
         </Button>
-      </Flex>
+      </Flexbox>
     </Block>
   )
 })

@@ -1,7 +1,6 @@
 'use client'
 
-import { Flex, Button } from 'antd'
-import { Text } from '@pure/ui'
+import { Button, Text, Flexbox } from '@pure/ui'
 import { cssVar } from 'antd-style'
 import Link from '@/utils/link'
 import { useSearchParams } from '@/utils/navigation'
@@ -56,7 +55,7 @@ const AuthErrorContent = memo(() => {
     <AuthPageContainer>
       <AuthCard
         footer={
-          <Flex vertical gap={12} justify='center' wrap='wrap'>
+          <Flexbox gap={12} justify='center' wrap='wrap'>
             <Link href='/signin'>
               <Button block size='large' type='primary'>
                 返回登录
@@ -67,7 +66,7 @@ const AuthErrorContent = memo(() => {
                 返回首页
               </Button>
             </Link>
-          </Flex>
+          </Flexbox>
         }
         subtitle={description}
         title='登录失败'

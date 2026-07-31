@@ -4,7 +4,7 @@ import path from 'node:path'
 import debug from 'debug'
 
 import { getFileLoader } from './loaders'
-import { type DocumentPage, type FileDocument, type FileMetadata, type SupportedFileType } from './types'
+import type { DocumentPage, FileDocument, FileMetadata, SupportedFileType } from './types'
 import { isTextReadableFile } from './utils/isTextReadableFile'
 
 const log = debug('file-loaders:loadFile')

@@ -1,16 +1,17 @@
 'use client'
 
-import { Checkbox, Flex } from 'antd'
-import { Center, Text } from '@pure/ui'
+import { Checkbox } from 'antd'
+import { Center, Text, Flexbox } from '@pure/ui'
 import { formatDateTime, formatSize } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo, useCallback, type MouseEvent, type PointerEvent } from 'react'
+import { memo, useCallback } from 'react'
+import type { MouseEvent, PointerEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import FileIcon from '@/components/FileIcon'
 import { DOCUMENT_FOLDER_TYPE } from '@/const/resources/fileTypes'
 import { useResourceManagerStore } from '@/features/resources/store'
-import { type FileListItem } from '@/types/files'
+import type { FileListItem } from '@/types/files'
 
 import ListViewHeader from './ListViewHeader'
 
@@ -80,7 +81,8 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
   }, [])
 
   return (
-    <Flex
+    <Flexbox
+      horizontal
       align='center'
       className={[styles.container, index % 2 === 0 ? styles.evenRow : '', selected ? styles.selected : '']
         .filter(Boolean)
@@ -96,7 +98,8 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
       >
         <Checkbox checked={selected} style={{ pointerEvents: 'none' }} />
       </Center>
-      <Flex
+      <Flexbox
+        horizontal
         align='center'
         className={styles.item}
         gap={8}
@@ -112,14 +115,14 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
         <Text ellipsis style={{ color: cssVar.colorText, flex: 1, minWidth: 0 }}>
           {item.name}
         </Text>
-      </Flex>
-      <Flex vertical className={styles.item} style={{ flexShrink: 0, width: columnWidths.date }}>
+      </Flexbox>
+      <Flexbox className={styles.item} style={{ flexShrink: 0, width: columnWidths.date }}>
         {formatDateTime(item.createdAt)}
-      </Flex>
-      <Flex vertical className={styles.item} style={{ flexShrink: 0, width: columnWidths.size }}>
+      </Flexbox>
+      <Flexbox className={styles.item} style={{ flexShrink: 0, width: columnWidths.size }}>
         {isFolder ? '-' : formatSize(item.size)}
-      </Flex>
-    </Flex>
+      </Flexbox>
+    </Flexbox>
   )
 })
 
@@ -132,16 +135,16 @@ interface ListViewProps {
 
 const ListView = memo<ListViewProps>(({ items, onOpen }) => {
   return (
-    <Flex vertical style={{ height: '100%', width: '100%' }}>
+    <Flexbox style={{ height: '100%', width: '100%' }}>
       <div className={styles.scrollContainer}>
         <ListViewHeader data={items} />
-        <Flex vertical style={{ width: '100%' }}>
+        <Flexbox style={{ width: '100%' }}>
           {items.map((item, index) => (
             <ListItem key={item.id} index={index} item={item} onOpen={onOpen} />
           ))}
-        </Flex>
+        </Flexbox>
       </div>
-    </Flex>
+    </Flexbox>
   )
 })
 

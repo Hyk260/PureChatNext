@@ -5,23 +5,23 @@ import nextTs from 'eslint-config-next/typescript'
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Enforce: `import { type Foo, Bar } from 'pkg'`（含 packages/**）
+  // Enforce: `import type { Foo }` + `import { Bar }` from 'pkg'（含 packages/**）
   {
     files: ['**/*.{ts,tsx}'],
     rules: {
-      // Prefer type-only imports; autofix to inline `type` specifier
+      // Prefer type-only imports; autofix to top-level `import type`
       '@typescript-eslint/consistent-type-imports': [
         'error',
         {
           disallowTypeAnnotations: false,
-          fixStyle: 'inline-type-imports',
+          fixStyle: 'separate-type-imports',
           prefer: 'type-imports',
         },
       ],
-      // Disallow top-level `import type { Foo }` — use `import { type Foo }`
-      'import/consistent-type-specifier-style': ['error', 'prefer-inline'],
-      // Merge `import type` + value import from the same module
-      'import/no-duplicates': ['error', { 'prefer-inline': true }],
+      // Disallow inline `import { type Foo }` — use top-level `import type { Foo }`
+      'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
+      // Allow coexisting `import type` + value import from the same module
+      'import/no-duplicates': 'error',
       '@typescript-eslint/no-unused-vars': 'off',
     },
   },

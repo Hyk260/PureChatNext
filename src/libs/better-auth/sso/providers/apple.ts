@@ -1,5 +1,5 @@
 import { checkProviderEnvs } from '../helpers'
-import { type BuiltinProviderDefinition } from '../types'
+import type { BuiltinProviderDefinition } from '../types'
 
 const provider: BuiltinProviderDefinition<
   {

@@ -1,9 +1,11 @@
 'use client'
 
-import { Alert, Flex, Badge, Button, Divider, Form, Input, Skeleton, type FormInstance, type InputRef } from 'antd'
+import { Alert, Badge, Divider, Form, Input, Skeleton } from 'antd'
+import type { FormInstance, InputRef } from 'antd'
 import { ChevronRight, Mail } from 'lucide-react'
-import { type CSSProperties, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Icon, Text } from '@pure/ui'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+import { Button, Icon, Text, Flexbox } from '@pure/ui'
 import AuthIcons from '@/components/AuthIcons'
 import { BRANDING_NAME } from '@/const/branding'
 import AuthAgreement from '@/features/AuthAgreement'
@@ -100,7 +102,7 @@ export const SignInEmailStep = ({
 
   return (
     <AuthCard title={`登录或注册你的 ${BRANDING_NAME} 账号`}>
-      <Flex vertical gap={12}>
+      <Flexbox gap={12}>
         {!serverConfigInit && (
           <>
             <Skeleton.Button active block size='large' />
@@ -110,11 +112,13 @@ export const SignInEmailStep = ({
         )}
 
         {serverConfigInit && oAuthSSOProviders.length > 0 && (
-          <Flex vertical gap={12} style={{ width: '100%' }}>
+          <Flexbox gap={12} style={{ width: '100%' }}>
             {oAuthSSOProviders.map((provider) => {
               const button = (
                 <Button
                   block
+                  color="default" 
+                  variant="filled"
                   disabled={pendingProvider !== null}
                   icon={<Icon icon={AuthIcons(provider, 18)} style={PROVIDER_ICON_STYLE} />}
                   loading={pendingProvider === provider}
@@ -134,7 +138,7 @@ export const SignInEmailStep = ({
               )
             })}
             {!disableEmailPassword && divider}
-          </Flex>
+          </Flexbox>
         )}
 
         {serverConfigInit && disableEmailPassword && oAuthSSOProviders.length === 0 && (
@@ -159,7 +163,7 @@ export const SignInEmailStep = ({
                 style={EMAIL_INPUT_STYLE}
                 suffix={
                   <Button
-                    icon={<ChevronRight />}
+                    icon={ChevronRight}
                     loading={loading}
                     title='下一步'
                     variant='filled'
@@ -174,7 +178,7 @@ export const SignInEmailStep = ({
         {isSocialOnly && <Alert showIcon message='此账户未设置密码，请使用第三方登录或魔法链接登录。' type='info' />}
 
         <AuthAgreement />
-      </Flex>
+      </Flexbox>
     </AuthCard>
   )
 }

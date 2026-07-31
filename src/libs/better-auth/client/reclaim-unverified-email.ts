@@ -1,4 +1,4 @@
-import { type ReclaimUnverifiedEmailResponse } from '@/app/api/auth/reclaim-unverified-email/route'
+import type { ReclaimUnverifiedEmailResponse } from '@/app/api/auth/reclaim-unverified-email/route'
 import { apiFetch } from '@/utils/apiFetch'
 
 export async function reclaimUnverifiedEmail(email: string): Promise<ReclaimUnverifiedEmailResponse> {

@@ -1,12 +1,12 @@
 'use client'
 
-import { Flex } from 'antd'
-import { Icon, Popover, Tooltip } from '@pure/ui'
+import { Icon, Popover, Tooltip, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { ChevronDownIcon, InfinityIcon, MessageCircleIcon } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
 
-import { type HomeAgentMode, useHomeStore } from '@/features/home/store/useHomeStore'
+import { useHomeStore } from '@/features/home/store/useHomeStore'
+import type { HomeAgentMode } from '@/features/home/store/useHomeStore'
 
 const styles = createStaticStyles(({ css }) => ({
   activeOption: css`
@@ -78,37 +78,39 @@ const AgentModeButton = memo(() => {
   )
 
   const popoverContent = (
-    <Flex vertical gap={4} style={{ maxWidth: 320, minWidth: 280 }}>
-      <Flex
+    <Flexbox gap={4} style={{ maxWidth: 320, minWidth: 280 }}>
+      <Flexbox
+        horizontal
         align='center'
         className={cx(styles.option, currentMode === 'agent' && styles.activeOption)}
         gap={12}
         onClick={() => handleSelect('agent')}
       >
-        <Flex vertical align='center' className={styles.optionIcon} justify='center' style={{ height: 32, width: 32 }}>
+        <Flexbox align='center' className={styles.optionIcon} justify='center' style={{ height: 32, width: 32 }}>
           <Icon icon={InfinityIcon} size={16} />
-        </Flex>
-        <Flex vertical flex={1}>
+        </Flexbox>
+        <Flexbox flex={1}>
           <div className={styles.optionTitle}>智能</div>
           <div className={styles.optionDesc}>工具、联网、文件与环境</div>
-        </Flex>
-      </Flex>
+        </Flexbox>
+      </Flexbox>
 
-      <Flex
+      <Flexbox
+        horizontal
         align='center'
         className={cx(styles.option, currentMode === 'chat' && styles.activeOption)}
         gap={12}
         onClick={() => handleSelect('chat')}
       >
-        <Flex vertical align='center' className={styles.optionIcon} justify='center' style={{ height: 32, width: 32 }}>
+        <Flexbox align='center' className={styles.optionIcon} justify='center' style={{ height: 32, width: 32 }}>
           <Icon icon={MessageCircleIcon} size={16} />
-        </Flex>
-        <Flex vertical flex={1}>
+        </Flexbox>
+        <Flexbox flex={1}>
           <div className={styles.optionTitle}>对话</div>
           <div className={styles.optionDesc}>快速问答与日常聊天</div>
-        </Flex>
-      </Flex>
-    </Flex>
+        </Flexbox>
+      </Flexbox>
+    </Flexbox>
   )
 
   const button = (

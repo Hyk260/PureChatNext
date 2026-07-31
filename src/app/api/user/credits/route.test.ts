@@ -6,8 +6,7 @@ const getBalance = vi.fn()
 
 vi.mock('@/libs/auth/get-session-user', () => ({
   withAuth:
-    (handler: (request: NextRequest, context: { userId: string }) => Promise<Response>) =>
-    (request: NextRequest) =>
+    (handler: (request: NextRequest, context: { userId: string }) => Promise<Response>) => (request: NextRequest) =>
       handler(request, { userId: 'user-1' }),
 }))
 

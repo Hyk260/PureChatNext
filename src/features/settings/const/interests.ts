@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   BabyIcon,
   CameraIcon,
   ChartNetworkIcon,
@@ -18,6 +17,7 @@ import {
   TargetIcon,
   UsersIcon,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 export const INTEREST_AREA_KEYS = [
   'writing',

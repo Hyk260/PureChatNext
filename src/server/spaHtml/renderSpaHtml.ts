@@ -1,4 +1,4 @@
-import { type SPAServerConfig } from '@/types/spaServerConfig'
+import type { SPAServerConfig } from '@/types/spaServerConfig'
 
 import { serializeForHtml } from './serializeForHtml'
 

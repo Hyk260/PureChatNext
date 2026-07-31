@@ -1,4 +1,4 @@
-import { type CheckUserResponseData } from '@/app/api/auth/check-user/route'
+import type { CheckUserResponseData } from '@/app/api/auth/check-user/route'
 import { apiFetch } from '@/utils/apiFetch'
 
 export async function checkUserByEmail(email: string): Promise<CheckUserResponseData & { error?: string }> {

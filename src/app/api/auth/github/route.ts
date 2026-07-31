@@ -1,6 +1,8 @@
 import debug from 'debug'
-import { NextResponse, type NextRequest } from 'next/server'
-import { getGitHubSecretKey, type ClientType } from '@/libs/auth/gtihub'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { getGitHubSecretKey } from '@/libs/auth/gtihub'
+import type { ClientType } from '@/libs/auth/gtihub'
 
 const log = debug('auth:github')
 

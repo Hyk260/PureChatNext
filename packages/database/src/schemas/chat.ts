@@ -1,5 +1,7 @@
 import { boolean, index, jsonb, pgTable, text, varchar } from 'drizzle-orm/pg-core'
 
+import type { ChatMessageMetadata } from '@pure/types'
+
 import { idGenerator } from '../utils/idGenerator'
 import { timestamps } from './_helpers'
 import { users } from './user'
@@ -47,6 +49,7 @@ export const chatMessages = pgTable(
     role: varchar('role', { length: 32 }).notNull(),
     content: text('content'),
     parts: jsonb('parts').$type<unknown[]>(),
+    metadata: jsonb('metadata').$type<ChatMessageMetadata>(),
     model: text('model'),
     provider: text('provider'),
     ...timestamps,

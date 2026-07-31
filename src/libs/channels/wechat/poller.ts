@@ -1,14 +1,9 @@
-import {
-  MessageState,
-  MessageType,
-  WECHAT_RET_CODES,
-  WechatApiClient,
-  type WechatRawMessage,
-} from '@pure/chat-adapter-wechat'
+import { MessageState, MessageType, WECHAT_RET_CODES, WechatApiClient } from '@pure/chat-adapter-wechat'
+import type { WechatRawMessage } from '@pure/chat-adapter-wechat'
 import debug from 'debug'
 
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
-import { type ChannelBindingItem } from '@pure/database/schemas/channel'
+import type { ChannelBindingItem } from '@pure/database/schemas/channel'
 import { appEnv } from '@/envs/app'
 
 import { setContextToken } from './contextToken'

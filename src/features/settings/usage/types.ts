@@ -13,12 +13,11 @@ export type UsageItem = {
 
 export type UsageResponse = {
   balance: { grant: number; period: string; remaining: number; used: number }
-  daily: { credits: number; day: string }[]
-  dateRange: { endDate: string; startDate: string }
   items: UsageItem[]
   models: string[]
   page: number
   pageSize: number
   total: number
   totalCredits: number
+  storage: { limitBytes: number; usedBytes: number }
 }

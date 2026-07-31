@@ -1,10 +1,11 @@
 'use client'
 
-import { Flex, Skeleton } from 'antd'
+import { Flexbox } from '@pure/ui'
+import { Skeleton } from 'antd'
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 
-import { type ProfileUser } from '@/features/settings/profile/ProfileContent'
+import type { ProfileUser } from '@/features/settings/profile/ProfileContent'
 import { ProfileSettingsContent } from '@/features/settings/profile/ProfileSettingsContent'
 import { useSession } from '@/libs/better-auth/client'
 import { apiFetch } from '@/utils/apiFetch'
@@ -55,9 +56,9 @@ export default function SettingsProfilePage() {
 
   if (isPending) {
     return (
-      <Flex vertical style={{ padding: 24 }}>
+      <Flexbox style={{ padding: 24 }}>
         <Skeleton active paragraph={{ rows: 8 }} />
-      </Flex>
+      </Flexbox>
     )
   }
 
@@ -66,18 +67,14 @@ export default function SettingsProfilePage() {
   }
 
   if (loadError === 'failed') {
-    return (
-      <Flex vertical style={{ padding: 24 }}>
-        加载个人资料失败，请刷新重试。
-      </Flex>
-    )
+    return <Flexbox style={{ padding: 24 }}>加载个人资料失败，请刷新重试。</Flexbox>
   }
 
   if (!payload) {
     return (
-      <Flex vertical style={{ padding: 24 }}>
+      <Flexbox style={{ padding: 24 }}>
         <Skeleton active paragraph={{ rows: 8 }} />
-      </Flex>
+      </Flexbox>
     )
   }
 

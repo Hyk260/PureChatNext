@@ -1,12 +1,11 @@
 'use client'
 
-import { Flex } from 'antd'
-import { ActionIcon, SearchBar, stopPropagation, Tooltip } from '@pure/ui'
+import { ActionIcon, SearchBar, stopPropagation, Tooltip, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { Boxes, Brain } from 'lucide-react'
 import { memo } from 'react'
 
-import { type GroupMode } from './types'
+import type { GroupMode } from './types'
 
 const styles = createStaticStyles(({ css }) => ({
   modeBtn: css`
@@ -35,7 +34,7 @@ export interface ToolbarProps {
 }
 
 const Toolbar = memo<ToolbarProps>(({ groupMode, keyword, onGroupModeChange, onKeywordChange }) => (
-  <Flex align='center' className={styles.toolbar} gap={4} style={{ paddingBlock: 8, paddingInline: 8 }}>
+  <Flexbox horizontal align='center' className={styles.toolbar} gap={4} style={{ paddingBlock: 8, paddingInline: 8 }}>
     <SearchBar
       placeholder='搜索模型...'
       size='small'
@@ -45,7 +44,7 @@ const Toolbar = memo<ToolbarProps>(({ groupMode, keyword, onGroupModeChange, onK
       onInputChange={onKeywordChange}
       onKeyDown={stopPropagation}
     />
-    <Flex gap={2} style={{ flexShrink: 0 }}>
+    <Flexbox horizontal gap={2} style={{ flexShrink: 0 }}>
       <Tooltip title='按模型'>
         <ActionIcon
           className={cx(styles.modeBtn, groupMode === 'byModel' && styles.modeBtnActive)}
@@ -70,8 +69,8 @@ const Toolbar = memo<ToolbarProps>(({ groupMode, keyword, onGroupModeChange, onK
           }}
         />
       </Tooltip>
-    </Flex>
-  </Flex>
+    </Flexbox>
+  </Flexbox>
 ))
 
 Toolbar.displayName = 'ModelSwitchToolbar'

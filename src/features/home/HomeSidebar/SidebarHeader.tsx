@@ -1,7 +1,7 @@
 'use client'
 
-import { ActionIcon } from '@pure/ui'
-import { Flex, Badge } from 'antd'
+import { ActionIcon, Flexbox } from '@pure/ui'
+import { Badge } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { BellIcon } from 'lucide-react'

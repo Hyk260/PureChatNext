@@ -41,7 +41,9 @@ PureChatNext/
 │   ├── components/            # 通用 React 组件
 │   └── styles/                # 全局样式
 ├── docs/                      # 人类可读文档（快速开始、环境、Drizzle、联网搜索）
-├── scripts/                   # migrate.ts、wechat-gateway.ts、qq-gateway.ts
+├── scripts/                   # 项目脚本（文件名统一使用 kebab-case）
+│   ├── copy-spa-build.mjs     # SPA 构建产物复制脚本
+│   └── shell/                 # Shell 脚本（kebab-case）
 └── tests/                     # Vitest setup
 ```
 
@@ -142,7 +144,7 @@ cd packages/file-loaders && pnpm exec vitest run --silent='passed-only' 'src/loa
 
 ### 代码风格
 
-- ESLint：`eslint.config.js`，强制内联 type import：`import { type Foo, Bar } from 'pkg'`（`@typescript-eslint/consistent-type-imports` + `import/consistent-type-specifier-style: prefer-inline` + `import/no-duplicates`）
+- ESLint：`eslint.config.js`，强制顶层 type import：`import type { Foo }` + `import { Bar } from 'pkg'`（`@typescript-eslint/consistent-type-imports` + `import/consistent-type-specifier-style: prefer-top-level` + `import/no-duplicates`）
 - 单文件超过 ~800 行时考虑拆分
 - Debug 日志遵循 `.cursor/rules/debug-usage.md` 命名空间（如 `auth:*`、`db:*`）
 - 修改范围：只做任务相关的最小 diff，不重构无关代码

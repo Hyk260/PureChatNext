@@ -1,15 +1,9 @@
 import { and, desc, eq, inArray } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import {
-  type KnowledgeBaseItem,
-  type NewKnowledgeBase,
-  documents,
-  files,
-  knowledgeBaseFiles,
-  knowledgeBases,
-} from '../schemas/file'
-import { type ChatDatabase } from '../type'
+import { documents, files, knowledgeBaseFiles, knowledgeBases } from '../schemas/file'
+import type { KnowledgeBaseItem, NewKnowledgeBase } from '../schemas/file'
+import type { ChatDatabase } from '../type'
 
 export class KnowledgeBaseModel {
   private readonly db: ChatDatabase

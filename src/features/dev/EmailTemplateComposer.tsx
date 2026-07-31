@@ -2,13 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import {
-  EMAIL_TEMPLATE_CATALOG,
-  EMAIL_TEMPLATE_PREVIEW_MOCK,
-  type EmailTemplateKey,
-  type EmailTemplateParamField,
-  type EmailTemplateParams,
-  type RenderedEmailTemplate,
+import { EMAIL_TEMPLATE_CATALOG, EMAIL_TEMPLATE_PREVIEW_MOCK } from '@/libs/better-auth/email-templates/preview'
+import type {
+  EmailTemplateKey,
+  EmailTemplateParamField,
+  EmailTemplateParams,
+  RenderedEmailTemplate,
 } from '@/libs/better-auth/email-templates/preview'
 
 type Props = {

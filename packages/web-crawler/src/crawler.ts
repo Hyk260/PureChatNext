@@ -1,5 +1,6 @@
-import { type CrawlImplType, crawlImpls } from './crawImpl'
-import { type CrawlUniformResult, type CrawlUrlRule } from './type'
+import { crawlImpls } from './crawImpl'
+import type { CrawlImplType } from './crawImpl'
+import type { CrawlUniformResult, CrawlUrlRule } from './type'
 import { crawUrlRules } from './urlRules'
 import { applyUrlRules } from './utils/appUrlRules'
 

@@ -1,12 +1,18 @@
 'use client'
 
-import { Flex, type FlexProps } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import { type CSSProperties, memo } from 'react'
+import { memo } from 'react'
+import type { CSSProperties } from 'react'
+
+import { Flexbox } from '../Flexbox'
+import type { FlexboxProps } from '../Flexbox'
 
 export type BlockVariant = 'filled' | 'outlined' | 'borderless'
 
-export type BlockProps = Omit<FlexProps, 'vertical'> & {
+export type BlockProps = Omit<
+  FlexboxProps,
+  'height' | 'horizontal' | 'padding' | 'paddingBlock' | 'paddingInline' | 'width'
+> & {
   clickable?: boolean
   glass?: boolean
   height?: number | string
@@ -109,7 +115,7 @@ export const Block = memo<BlockProps>(
     }
 
     return (
-      <Flex
+      <Flexbox
         className={cx(
           styles.root,
           VARIANT_CLASS[variant],
@@ -119,13 +125,13 @@ export const Block = memo<BlockProps>(
           shadow && styles.shadow,
           className
         )}
+        horizontal={horizontal}
         style={mergedStyle}
-        vertical={!horizontal}
         onClick={onClick}
         {...rest}
       >
         {children}
-      </Flex>
+      </Flexbox>
     )
   }
 )

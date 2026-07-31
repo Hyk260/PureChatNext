@@ -1,4 +1,5 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { UNVERIFIED_USER_TTL_MS } from '@/const/auth'
 import { UserModel } from '@pure/database/models/user'

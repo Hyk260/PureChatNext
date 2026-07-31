@@ -20,8 +20,6 @@ describe('PureHub Gateway error mapping', () => {
   })
 
   it('does not expose unexpected upstream error details', () => {
-    expect(getPureHubStreamErrorMessage(new Error('provider secret response'))).toBe(
-      '模型生成失败，请稍后重试。'
-    )
+    expect(getPureHubStreamErrorMessage(new Error('provider secret response'))).toBe('模型生成失败，请稍后重试。')
   })
 })

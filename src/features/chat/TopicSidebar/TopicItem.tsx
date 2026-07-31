@@ -1,14 +1,17 @@
 'use client'
 
-import { Flex, Input, Modal } from 'antd'
-import { type MenuInfo, type MenuProps, DropdownMenu, Icon, Text } from '@pure/ui'
+import { Input } from 'antd'
+import { confirmModal, DropdownMenu, Icon, Modal, Text, Flexbox } from '@pure/ui'
+import type { MenuInfo, MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import {
   Check,
   Copy,
   FolderInput,
   FolderPlus,
+  Hash,
   Link,
+  Loader2,
   MoreHorizontal,
   Pencil,
   Sparkles,
@@ -17,8 +20,7 @@ import {
 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
-import { type LocalChatTopic } from '@/features/chat/types'
-import { useApp } from '@/components/AntdStaticMethods'
+import type { LocalChatTopic } from '@/features/chat/types'
 
 const styles = createStaticStyles(({ css }) => ({
   item: css`
@@ -90,8 +92,11 @@ const stopMenuEvent = (info: MenuInfo) => {
 
 type Props = {
   active: boolean
+  autoRenameDisabled: boolean
+  autoRenaming: boolean
   projectNames: string[]
   topic: LocalChatTopic
+  onAutoRename: (id: string) => void | Promise<void>
   onSelect: (topicId: string) => void
   onRename: (id: string, title: string) => void | Promise<void>
   onDelete: (id: string) => void | Promise<void>
@@ -100,8 +105,19 @@ type Props = {
 }
 
 const TopicItem = memo<Props>(
-  ({ active, projectNames, topic, onSelect, onRename, onDelete, onFavorite, onProjectChange }) => {
-    const { modal } = useApp()
+  ({
+    active,
+    autoRenameDisabled,
+    autoRenaming,
+    projectNames,
+    topic,
+    onAutoRename,
+    onSelect,
+    onRename,
+    onDelete,
+    onFavorite,
+    onProjectChange,
+  }) => {
     const [menuOpen, setMenuOpen] = useState(false)
     const [renameOpen, setRenameOpen] = useState(false)
     const [projectOpen, setProjectOpen] = useState(false)
@@ -193,10 +209,15 @@ const TopicItem = memo<Props>(
         },
         { type: 'divider' },
         {
+          disabled: autoRenameDisabled,
           icon: <Icon icon={Sparkles} />,
           key: 'smart-rename',
-          label: '智能重命名',
-          onClick: stopMenuEvent,
+          label: autoRenaming ? '正在智能重命名…' : '智能重命名',
+          onClick: (info) => {
+            stopMenuEvent(info)
+            if (autoRenameDisabled) return
+            void onAutoRename(topic.id)
+          },
         },
         {
           icon: <Icon icon={Pencil} />,
@@ -228,8 +249,7 @@ const TopicItem = memo<Props>(
           label: '删除',
           onClick: (info) => {
             stopMenuEvent(info)
-            modal.confirm({
-              transitionName: '',
+            confirmModal({
               cancelText: '取消',
               content: '话题下的所有消息将一并删除。',
               okButtonProps: { danger: true },
@@ -241,9 +261,11 @@ const TopicItem = memo<Props>(
         },
       ],
       [
+        autoRenameDisabled,
+        autoRenaming,
         handleOpenProject,
         handleOpenRename,
-        modal,
+        onAutoRename,
         onDelete,
         onFavorite,
         onProjectChange,
@@ -256,8 +278,16 @@ const TopicItem = memo<Props>(
 
     return (
       <>
-        <Flex className={cx(styles.item, active && styles.itemActive)} onClick={() => onSelect(topic.id)}>
-          <Flex align='center' gap={4} style={{ width: '100%' }}>
+        <Flexbox horizontal className={cx(styles.item, active && styles.itemActive)} onClick={() => onSelect(topic.id)}>
+          <Flexbox horizontal align='center' gap={4} style={{ width: '100%' }}>
+            <Icon
+              aria-label={autoRenaming ? '正在智能重命名' : '话题'}
+              color={autoRenaming ? cssVar.colorWarning : cssVar.colorTextTertiary}
+              icon={autoRenaming ? Loader2 : Hash}
+              size={14}
+              spin={autoRenaming}
+              style={{ flex: 'none' }}
+            />
             <Text
               title={topic.title}
               style={{
@@ -271,8 +301,9 @@ const TopicItem = memo<Props>(
             >
               {topic.title}
             </Text>
-            {topic.favorite ? <Icon color={cssVar.colorWarning} icon={Star} size={14} /> : null}
-            <Flex
+            {/* {topic.favorite ? <Icon color={cssVar.colorWarning} icon={Star} size={14} /> : null} */}
+            <Flexbox
+              horizontal
               align='center'
               className={cx('topic-actions')}
               data-open={menuOpen || undefined}
@@ -290,13 +321,12 @@ const TopicItem = memo<Props>(
                 <Icon icon={MoreHorizontal} size='small' />
                 <span className={styles.srOnly}>更多</span>
               </DropdownMenu>
-            </Flex>
-          </Flex>
-        </Flex>
+            </Flexbox>
+          </Flexbox>
+        </Flexbox>
 
         <Modal
           cancelText='取消'
-          centered
           confirmLoading={saving}
           destroyOnHidden
           okText='保存'
@@ -306,7 +336,7 @@ const TopicItem = memo<Props>(
           onCancel={() => setRenameOpen(false)}
           onOk={handleSubmitRename}
         >
-          <Flex vertical gap={12} style={{ paddingBlock: 8 }}>
+          <Flexbox gap={12} style={{ paddingBlock: 8 }}>
             <Text type='secondary'>保持简短且易于识别。</Text>
             <Input
               autoFocus
@@ -315,12 +345,11 @@ const TopicItem = memo<Props>(
               placeholder='话题名称'
               value={draftTitle}
             />
-          </Flex>
+          </Flexbox>
         </Modal>
 
         <Modal
           cancelText='取消'
-          centered
           confirmLoading={saving}
           destroyOnHidden
           okText='创建并移动'
@@ -330,7 +359,7 @@ const TopicItem = memo<Props>(
           onCancel={() => setProjectOpen(false)}
           onOk={handleSubmitProject}
         >
-          <Flex vertical gap={12} style={{ paddingBlock: 8 }}>
+          <Flexbox gap={12} style={{ paddingBlock: 8 }}>
             <Text type='secondary'>相同名称的话题会整理到同一项目分组。</Text>
             <Input
               autoFocus
@@ -339,7 +368,7 @@ const TopicItem = memo<Props>(
               placeholder='项目名称'
               value={draftProject}
             />
-          </Flex>
+          </Flexbox>
         </Modal>
       </>
     )

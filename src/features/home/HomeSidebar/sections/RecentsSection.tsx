@@ -1,7 +1,6 @@
 'use client'
 
-import { Flex } from 'antd'
-import { AccordionItem, Text } from '@pure/ui'
+import { AccordionItem, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
@@ -33,11 +32,11 @@ const RecentsSection = memo<RecentsSectionProps>(({ itemKey }) => {
         </Text>
       }
     >
-      <Flex vertical style={{ paddingBlock: 4, paddingInline: 12 }}>
+      <Flexbox style={{ paddingBlock: 4, paddingInline: 12 }}>
         <Text className={styles.empty} style={{ fontSize: 12 }}>
           暂无内容
         </Text>
-      </Flex>
+      </Flexbox>
     </AccordionItem>
   )
 })

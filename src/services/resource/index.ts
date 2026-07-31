@@ -1,5 +1,5 @@
-import { type FileListItem, type PaginatedFileList, type QueryFileListParams } from '@/types/files'
-import { type KnowledgeBaseListItem } from '@/types/resource'
+import type { FileListItem, PaginatedFileList, QueryFileListParams } from '@/types/files'
+import type { KnowledgeBaseListItem } from '@/types/resource'
 import { apiFetch } from '@/utils/apiFetch'
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {

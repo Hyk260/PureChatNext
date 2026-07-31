@@ -1,16 +1,18 @@
 'use client'
 
-import { Flex } from 'antd'
-import { Text } from '@pure/ui'
+import { Text, Flexbox } from '@pure/ui'
 import { useChat } from '@ai-sdk/react'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { DefaultChatTransport, type UIMessage } from 'ai'
+import { DefaultChatTransport } from 'ai'
+import type { UIMessage } from 'ai'
 import { useRouter, useSearchParams } from '@/utils/navigation'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
-import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID, type AgentListItem } from '@/const/home/agents'
+import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
+import type { AgentListItem } from '@/const/home/agents'
 import {
+  autoRenameTopic,
   createTopic,
   deleteTopic,
   deleteTopics as deleteTopicsApi,
@@ -36,13 +38,8 @@ import TopicSidebar from '@/features/chat/TopicSidebar'
 import WideScreenContainer from '@/features/chat/WideScreenContainer'
 import { getMessageText, withMessageText } from '@/features/chat/messageText'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
-import {
-  DEFAULT_CHAT_LLM_PARAMS,
-  type ChatLlmParams,
-  type LocalChatTopic,
-  type TopicDeleteScope,
-  type TopicUpdate,
-} from '@/features/chat/types'
+import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
+import type { ChatLlmParams, LocalChatTopic, TopicDeleteScope, TopicUpdate } from '@/features/chat/types'
 import { fetchAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
@@ -60,6 +57,7 @@ const messagesSignature = (messages: UIMessage[]) =>
   JSON.stringify(
     messages.map((message) => ({
       id: message.id,
+      metadata: message.metadata,
       parts: message.parts,
       role: message.role,
     }))
@@ -85,7 +83,7 @@ const styles = createStaticStyles(({ css }) => ({
     width: 100%;
     height: 100%;
     min-height: 0;
-    padding-block: 16px 24px;
+    padding-block-end: 8px;
   `,
   shell: css`
     width: 100%;
@@ -367,15 +365,12 @@ const ChatView = memo<ChatViewProps>(
     }, [stop])
 
     const agents = useAgentsStore((s) => s.agents)
-    const agentMeta = useMemo(
-      () => {
-        const a = agents.find((x) => x.id === agentId)
-        return a
-          ? { avatar: a.avatar, title: a.title }
-          : { avatar: DEFAULT_PURE_AI_META.avatar, title: DEFAULT_PURE_AI_META.title }
-      },
-      [agents, agentId]
-    )
+    const agentMeta = useMemo(() => {
+      const a = agents.find((x) => x.id === agentId)
+      return a
+        ? { avatar: a.avatar, title: a.title }
+        : { avatar: DEFAULT_PURE_AI_META.avatar, title: DEFAULT_PURE_AI_META.title }
+    }, [agents, agentId])
 
     const handleRegenerate = useCallback(
       async (id: string) => {
@@ -408,9 +403,7 @@ const ChatView = memo<ChatViewProps>(
           onEdit={handleEdit}
           onRegenerate={handleRegenerate}
         />
-        {error ? (
-          <Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Text>
-        ) : null}
+        {error ? <Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Text> : null}
       </>
     )
   }
@@ -439,8 +432,13 @@ const ChatPage = memo(() => {
 
   const activeAgent = useHomeStore((s) => s.activeAgent)
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
+  const selectedModel = useHomeStore((s) => s.selectedModel)
+  const selectedProvider = useHomeStore((s) => s.selectedProvider)
   const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
+  const providerConfig = useProviderConfigStore((s) =>
+    isSettingsProviderId(selectedProvider) ? s.configs[selectedProvider] : undefined
+  )
 
   const agentId = agentFromQuery ?? activeAgent?.identifier ?? selectedAgentId ?? PURE_AI_AGENT_ID
 
@@ -464,9 +462,11 @@ const ChatPage = memo(() => {
     isClient ? activeTopicId : undefined
   )
   const [isBusy, setIsBusy] = useState(false)
+  const [autoRenamingTopicId, setAutoRenamingTopicId] = useState<string | null>(null)
   // Per-topic message cache. Lets topic switches
   // paint immediately instead of blanking the shell while fetchMessages resolves.
   const [messagesCache, setMessagesCache] = useState(() => new Map<string, UIMessage[]>())
+  const autoRenamingTopicIdRef = useRef<string | null>(null)
   const chatActionsRef = useRef<ChatViewActions>({
     send: async () => {},
     stop: () => {},
@@ -691,6 +691,35 @@ const ChatPage = memo(() => {
     [handleUpdateTopic]
   )
 
+  const handleAutoRenameTopic = useCallback(
+    async (id: string) => {
+      if (isBusy || autoRenamingTopicIdRef.current) return
+
+      autoRenamingTopicIdRef.current = id
+      setAutoRenamingTopicId(id)
+      try {
+        const cachedMessages = messagesCache.get(id)
+        if (cachedMessages) await putMessages(id, cachedMessages)
+
+        const updated = await autoRenameTopic(id, {
+          ...(selectedProvider !== 'purehub' && providerConfig?.apiKey ? { apiKey: providerConfig.apiKey } : {}),
+          ...(selectedProvider !== 'purehub' && providerConfig?.baseURL ? { baseURL: providerConfig.baseURL } : {}),
+          model: selectedModel,
+          provider: selectedProvider,
+        })
+        setTopics((prev) => prev.map((topic) => (topic.id === id ? updated : topic)))
+        message.success('已智能重命名')
+      } catch (error) {
+        console.error('[chat] auto rename topic failed', error)
+        message.error('智能重命名失败')
+      } finally {
+        if (autoRenamingTopicIdRef.current === id) autoRenamingTopicIdRef.current = null
+        setAutoRenamingTopicId((currentId) => (currentId === id ? null : currentId))
+      }
+    },
+    [isBusy, message, messagesCache, providerConfig, selectedModel, selectedProvider]
+  )
+
   const handleProjectChange = useCallback(
     (id: string, projectName: string | null) => handleUpdateTopic(id, { projectName }, '移动到项目失败'),
     [handleUpdateTopic]
@@ -760,17 +789,25 @@ const ChatPage = memo(() => {
     if (!activeTopicId) return DRAFT_TOPIC_TITLE
     return topics.find((topic) => topic.id === activeTopicId)?.title ?? DRAFT_TOPIC_TITLE
   }, [activeTopicId, topics])
+  const activeTopic = useMemo(
+    () => (activeTopicId ? (topics.find((topic) => topic.id === activeTopicId) ?? null) : null),
+    [activeTopicId, topics]
+  )
 
   return (
     <ChatLayout
+      busy={isBusy}
       left={
         <TopicSidebar
           activeTopicId={activeTopicId}
           agents={agents}
+          autoRenameDisabled={isBusy || autoRenamingTopicId !== null}
+          autoRenamingTopicId={autoRenamingTopicId}
           currentAgentId={agentId}
           loading={topicsLoading}
           topics={topics}
           onAgentSelect={handleAgentSelect}
+          onAutoRenameTopic={handleAutoRenameTopic}
           onFavoriteTopic={handleFavoriteTopic}
           onNewTopic={handleNewTopic}
           onProjectChange={handleProjectChange}
@@ -780,31 +817,39 @@ const ChatPage = memo(() => {
           onDeleteTopics={handleDeleteTopics}
         />
       }
+      topic={activeTopic}
       right={<ParamsPanel value={params} onChange={handleParamsChange} />}
       title={topicTitle}
+      autoRenamingTopicId={autoRenamingTopicId}
+      onAutoRenameTopic={handleAutoRenameTopic}
+      onDeleteTopic={handleDeleteTopic}
+      onFavoriteTopic={handleFavoriteTopic}
+      onRenameTopic={handleRenameTopic}
     >
       {!isClient ? (
         <div className={styles.shell} />
       ) : (
-        <WideScreenContainer>
-          <Flex vertical className={styles.page} gap={16}>
-            {messagesReady ? (
-              <ChatView
-                key={`${agentId}:${activeTopicId ?? 'draft'}`}
-                agentId={agentId}
-                initialMessages={activeTopicId === null ? EMPTY_MESSAGES : initialMessages}
-                topicId={activeTopicId}
-                onBindActions={handleBindActions}
-                onBusyChange={handleBusyChange}
-                onCacheMessages={handleCacheMessages}
-                onTopicsRefresh={handleTopicsRefresh}
-              />
-            ) : (
+        <Flexbox className={styles.page} gap={16}>
+          {messagesReady ? (
+            <ChatView
+              key={`${agentId}:${activeTopicId ?? 'draft'}`}
+              agentId={agentId}
+              initialMessages={activeTopicId === null ? EMPTY_MESSAGES : initialMessages}
+              topicId={activeTopicId}
+              onBindActions={handleBindActions}
+              onBusyChange={handleBusyChange}
+              onCacheMessages={handleCacheMessages}
+              onTopicsRefresh={handleTopicsRefresh}
+            />
+          ) : (
+            <WideScreenContainer>
               <ChatMessagesSkeleton />
-            )}
+            </WideScreenContainer>
+          )}
+          <WideScreenContainer fill={false}>
             <ChatInput isBusy={inputBusy} onSend={handleInputSend} onStop={handleInputStop} />
-          </Flex>
-        </WideScreenContainer>
+          </WideScreenContainer>
+        </Flexbox>
       )}
     </ChatLayout>
   )

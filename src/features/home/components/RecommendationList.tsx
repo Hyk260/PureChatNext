@@ -1,13 +1,13 @@
 'use client'
 
-import { Flex, Button } from 'antd'
-import { Text } from '@pure/ui'
+import { Button, Text, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { RefreshCw } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
 
-import { HOME_RECOMMENDATIONS, type HomeRecommendationItem } from '@/const/home/recommendations'
+import { HOME_RECOMMENDATIONS } from '@/const/home/recommendations'
+import type { HomeRecommendationItem } from '@/const/home/recommendations'
 
 import RecommendationCard from './RecommendationCard'
 
@@ -36,22 +36,22 @@ const RecommendationList = memo(() => {
   }, [message])
 
   return (
-    <Flex vertical gap={12}>
-      <Flex align='center' gap={8} justify='space-between'>
+    <Flexbox gap={12}>
+      <Flexbox horizontal align='center' gap={8} justify='space-between'>
         <Text className={styles.subtitle} style={{ fontSize: 12 }}>
           为你推荐的一些功能
         </Text>
         <Button icon={<RefreshCw size={12} />} size='small' type='text' onClick={handleRefresh}>
           换一批
         </Button>
-      </Flex>
+      </Flexbox>
 
-      <Flex vertical gap={8}>
+      <Flexbox gap={8}>
         {items.map((item) => (
           <RecommendationCard key={item.id} item={item} />
         ))}
-      </Flex>
-    </Flex>
+      </Flexbox>
+    </Flexbox>
   )
 })
 

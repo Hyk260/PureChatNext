@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { type ChatDatabase } from '../type'
+import type { ChatDatabase } from '../type'
 import { getDBInstance } from './web-server'
 
 let cachedDB: ChatDatabase | null = null

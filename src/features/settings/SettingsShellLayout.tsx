@@ -1,8 +1,8 @@
 'use client'
 
-import { Flex } from 'antd'
 import { usePathname } from '@/utils/navigation'
-import { type ReactNode } from 'react'
+import { Flexbox } from '@pure/ui'
+import type { ReactNode } from 'react'
 
 import MainShellLayout from '@/layout/MainShellLayout'
 
@@ -15,8 +15,7 @@ const SettingsShellLayout = ({ children }: { children: ReactNode }) => {
 
   return (
     <MainShellLayout header={isProviderRoute ? undefined : <SettingsHeader />} sidebar={<SettingsSidebar />}>
-      <Flex
-        vertical
+      <Flexbox
         flex={1}
         style={{
           height: '100%',
@@ -28,7 +27,7 @@ const SettingsShellLayout = ({ children }: { children: ReactNode }) => {
         }}
       >
         {children}
-      </Flex>
+      </Flexbox>
     </MainShellLayout>
   )
 }

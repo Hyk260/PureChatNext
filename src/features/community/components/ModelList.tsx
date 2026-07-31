@@ -3,7 +3,7 @@
 import { Grid } from '@pure/ui'
 import { memo } from 'react'
 
-import { type DiscoverModelItem } from '@/features/community/types'
+import type { DiscoverModelItem } from '@/features/community/types'
 
 import ModelCard from './ModelCard'
 import ModelEmpty from './ModelEmpty'

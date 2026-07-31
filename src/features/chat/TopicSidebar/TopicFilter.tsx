@@ -1,10 +1,11 @@
 'use client'
 
-import { ActionIcon, type MenuProps, DropdownMenu, Icon } from '@pure/ui'
+import { ActionIcon, DropdownMenu, Icon } from '@pure/ui'
+import type { MenuProps } from '@pure/ui'
 import { Check, ListFilter } from 'lucide-react'
 import { memo, useMemo, useState } from 'react'
 
-import { type TopicGroupMode, type TopicSortBy } from '@/features/chat/types'
+import type { TopicGroupMode, TopicSortBy } from '@/features/chat/types'
 
 type Props = {
   groupMode: TopicGroupMode

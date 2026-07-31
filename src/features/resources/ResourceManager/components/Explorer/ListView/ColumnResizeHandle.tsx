@@ -1,7 +1,8 @@
 'use client'
 
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo, useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import type { MouseEvent as ReactMouseEvent } from 'react'
 
 const styles = createStaticStyles(({ css }) => ({
   handle: css`

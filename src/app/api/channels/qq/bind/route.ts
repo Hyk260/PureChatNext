@@ -1,16 +1,12 @@
 import { QQApiClient } from '@pure/chat-adapter-qq'
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
-import {
-  decryptCredentials,
-  encryptCredentials,
-  invalidateQQChat,
-  type QQConnectionMode,
-  type QQCredentials,
-} from '@/libs/channels/qq'
+import { decryptCredentials, encryptCredentials, invalidateQQChat } from '@/libs/channels/qq'
+import type { QQConnectionMode, QQCredentials } from '@/libs/channels/qq'
 
 function parseConnectionMode(value: unknown): QQConnectionMode {
   return value === 'webhook' ? 'webhook' : 'websocket'

@@ -4,7 +4,7 @@
  * 用于生成用户 JWT 签名所需的 RS256 RSA 密钥对
  *
  * 使用方法:
- * node scripts/generate-jwks-key.mjs
+ * bun scripts/generate-jwks-key.ts
  *
  * 将输出的单行 JSON 字符串设置为环境变量 JWKS_KEY
  */

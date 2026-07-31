@@ -1,25 +1,38 @@
 'use client'
 
-import { Accordion, AccordionItem, ActionIcon, Avatar, Block, copyToClipboard, DropdownMenu, Icon, ModelIcon, Text } from '@pure/ui'
-import { Flex } from 'antd'
+import {
+  Accordion,
+  AccordionItem,
+  ActionIcon,
+  Avatar,
+  Block,
+  copyToClipboard,
+  DropdownMenu,
+  Icon,
+  Text,
+  Flexbox,
+} from '@pure/ui'
+import type { ChatMessageMetadata } from '@pure/types'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import { type UIMessage } from 'ai'
-import { AtomIcon, Check, Copy, Edit, Loader2Icon, MoreHorizontal, RefreshCw, Trash, X } from 'lucide-react'
+import type { UIMessage } from 'ai'
+import { AtomIcon, Copy, Edit, Loader2Icon, MoreHorizontal, RefreshCw, Trash } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
+import Scrollbar from '@/components/Scrollbar'
+import type { ScrollbarRef } from '@/components/Scrollbar'
+import { PulseDots } from '@/components/Loading'
+import MessageEditorModal from '@/features/chat/MessageEditorModal'
+import MessageUsage from '@/features/chat/MessageUsage'
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
 import { getMessageReasoning, getMessageText } from '@/features/chat/messageText'
+import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
+import { CONVERSATION_MAX_WIDTH } from '@/features/chat/WideScreenContainer'
 
 export interface AgentMeta {
   avatar: string
   title: string
-}
-
-type MessageMetadata = {
-  model?: string
-  provider?: string
 }
 
 const styles = createStaticStyles(({ css }) => ({
@@ -43,28 +56,13 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   bubble: css`
     position: relative;
-
-    &:hover .chat-msg-actions,
-    &:focus-within .chat-msg-actions {
-      opacity: 1;
-      pointer-events: auto;
-    }
   `,
-  editActions: css`
-    margin-top: 8px;
-  `,
-  editArea: css`
-    width: 100%;
-    min-height: 88px;
-    padding: 8px 10px;
-    border: 1px solid ${cssVar.colorBorder};
-    border-radius: 12px;
-    outline: none;
-    resize: vertical;
-    background: ${cssVar.colorBgContainer};
-    color: ${cssVar.colorText};
-    font-size: 15px;
-    line-height: 1.6;
+  content: css`
+    box-sizing: border-box;
+    min-height: 100%;
+    margin-inline: auto;
+    padding: 16px 16px 28px;
+    transition: width 0.25s ${cssVar.motionEaseInOut};
   `,
   empty: css`
     color: ${cssVar.colorTextQuaternary};
@@ -77,10 +75,9 @@ const styles = createStaticStyles(({ css }) => ({
     margin-block-end: 6px;
   `,
   list: css`
-    overflow-y: auto;
     flex: 1;
+    min-height: 0;
     width: 100%;
-    padding-block: 16px 28px;
   `,
   markdown: css`
     font-size: 15px;
@@ -90,14 +87,6 @@ const styles = createStaticStyles(({ css }) => ({
     pre {
       margin-block: 8px;
     }
-  `,
-  meta: css`
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-block-start: 8px;
-    color: ${cssVar.colorTextQuaternary};
-    font-size: 12px;
   `,
   moreTrigger: css`
     cursor: pointer;
@@ -127,6 +116,12 @@ const styles = createStaticStyles(({ css }) => ({
     flex-direction: column;
     width: 100%;
     margin-block-end: 8px;
+
+    &:hover .chat-msg-actions,
+    &:focus-within .chat-msg-actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
   `,
   thinkingBody: css`
     color: ${cssVar.colorTextDescription};
@@ -159,36 +154,32 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 interface ThinkingProps {
-  duration: number | null
-  isStreaming?: boolean
+  duration?: number
+  thinking?: boolean
   text: string
 }
 
-const Thinking = memo<ThinkingProps>(({ text, isStreaming = false, duration }) => {
-  const [open, setOpen] = useState(isStreaming)
+const Thinking = memo<ThinkingProps>(({ text, thinking = false, duration }) => {
+  const [open, setOpen] = useState(thinking)
 
   useEffect(() => {
-    setOpen(isStreaming)
-  }, [isStreaming])
+    setOpen(thinking)
+  }, [thinking])
 
-  const label = isStreaming
+  const label = thinking
     ? '深度思考中…'
-    : duration !== null
-      ? `已深度思考（用时 ${duration.toFixed(1)} 秒）`
+    : duration !== undefined
+      ? `已深度思考（用时 ${(duration / 1000).toFixed(1)} 秒）`
       : '已深度思考'
 
   return (
-    <Accordion
-      expandedKeys={open ? ['thinking'] : []}
-      gap={8}
-      onExpandedChange={(keys) => setOpen(keys.length > 0)}
-    >
+    <Accordion expandedKeys={open ? ['thinking'] : []} gap={8} onExpandedChange={(keys) => setOpen(keys.length > 0)}>
       <AccordionItem
         itemKey='thinking'
         paddingBlock={4}
         paddingInline={4}
         title={
-          <Flex align='center' gap={6}>
+          <Flexbox horizontal align='center' gap={6}>
             <Block
               align='center'
               flex='none'
@@ -202,13 +193,13 @@ const Thinking = memo<ThinkingProps>(({ text, isStreaming = false, duration }) =
             >
               <Icon
                 color={cssVar.colorTextDescription}
-                icon={isStreaming ? Loader2Icon : AtomIcon}
+                icon={thinking ? Loader2Icon : AtomIcon}
                 size={14}
-                spin={isStreaming}
+                spin={thinking}
               />
             </Block>
             <span className={styles.thinkingLabel}>{label}</span>
-          </Flex>
+          </Flexbox>
         }
       >
         <div className={styles.thinkingBody}>{text}</div>
@@ -233,25 +224,12 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
   ({ message, agentMeta, disabled, isStreaming, onDelete, onEdit, onRegenerate }) => {
     const { message: antdMessage } = useApp()
     const [editing, setEditing] = useState(false)
-    const [draft, setDraft] = useState('')
     const text = getMessageText(message)
     const reasoning = getMessageReasoning(message)
     const isUser = message.role === 'user'
-    const metadata = message.metadata as MessageMetadata | undefined
-    const model = metadata?.model
-
-    // Track reasoning duration for the purple "已深度思考 (用时 X 秒)" label.
-    const reasoningStartRef = useRef<number | null>(null)
-    const [reasoningDuration, setReasoningDuration] = useState<number | null>(null)
-
-    useEffect(() => {
-      if (reasoning && reasoningStartRef.current === null) {
-        reasoningStartRef.current = Date.now()
-      }
-      if (!isStreaming && reasoning && reasoningStartRef.current !== null && reasoningDuration === null) {
-        setReasoningDuration((Date.now() - reasoningStartRef.current) / 1000)
-      }
-    }, [reasoning, isStreaming, reasoningDuration])
+    const metadata = message.metadata as ChatMessageMetadata | undefined
+    const isReasoning =
+      isStreaming && message.parts.some((part) => part.type === 'reasoning' && part.state === 'streaming')
 
     const handleCopy = useCallback(async () => {
       await copyToClipboard(text)
@@ -259,9 +237,8 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
     }, [antdMessage, text])
 
     const handleEdit = useCallback(() => {
-      setDraft(text)
       setEditing(true)
-    }, [text])
+    }, [])
 
     const handleDelete = useCallback(() => {
       onDelete(message.id)
@@ -271,21 +248,11 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
       onRegenerate(message.id)
     }, [message.id, onRegenerate])
 
-    const handleSave = useCallback(async () => {
-      const next = draft.trim()
-      if (!next || next === text) {
-        setEditing(false)
-        return
-      }
-      await onEdit(message.id, next)
-      setEditing(false)
-    }, [draft, message.id, onEdit, text])
-
     const moreMenuItems = [
       { icon: Edit, key: 'edit', label: '编辑', onClick: handleEdit },
       { icon: Copy, key: 'copy', label: '复制', onClick: handleCopy },
       { type: 'divider' as const },
-      { icon: RefreshCw, key: 'regenerate', label: '重新生成', onClick: handleRegenerate },
+      // { icon: RefreshCw, key: 'regenerate', label: '重新生成', onClick: handleRegenerate },
       { danger: true, icon: Trash, key: 'delete', label: '删除', onClick: handleDelete },
     ]
 
@@ -300,84 +267,48 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
           </div>
         ) : null}
 
-        <div className={cx(styles.bubble, isUser ? styles.user : styles.assistant)}>
-          {editing ? (
-            <Flex vertical gap={8}>
-              <textarea
-                autoFocus
-                className={styles.editArea}
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Escape') {
-                    setEditing(false)
-                    setDraft(text)
-                  }
-                  if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                    event.preventDefault()
-                    handleSave()
-                  }
-                }}
-              />
-              <Flex className={styles.editActions} gap={8} justify='flex-end'>
-                <ActionIcon
-                  icon={X}
-                  size='small'
-                  title='取消'
-                  onClick={() => {
-                    setEditing(false)
-                    setDraft(text)
-                  }}
-                />
-                <ActionIcon icon={Check} size='small' title='保存' onClick={handleSave} />
-              </Flex>
-            </Flex>
-          ) : (
-            <>
-              {!isUser && reasoning ? (
-                <Thinking duration={reasoningDuration} isStreaming={isStreaming} text={reasoning} />
-              ) : null}
+        <div className={cx(styles.bubble, isUser ? styles.user : styles.assistant)} data-message-content>
+          {!isUser && reasoning ? (
+            <Thinking duration={metadata?.reasoning?.duration} text={reasoning} thinking={isReasoning} />
+          ) : null}
 
-              {text ? (
-                <MessageMarkdown
-                  className={cx(styles.markdown, isUser && styles.userMarkdown)}
-                  isStreaming={isStreaming}
-                  text={text}
-                />
-              ) : isStreaming ? (
-                <Text type='secondary'>…</Text>
-              ) : null}
-
-              {!isUser && model ? (
-                <div className={styles.meta}>
-                  <ModelIcon model={model} size={14} type='mono' />
-                  <span>{model}</span>
-                </div>
-              ) : null}
-
-              {!disabled && (
-                <div
-                  className={cx(
-                    styles.actions,
-                    isUser ? styles.actionsUser : styles.actionsAssistant,
-                    'chat-msg-actions'
-                  )}
-                >
-                  <Flex align='center' gap={2}>
-                    <ActionIcon icon={RefreshCw} size='small' title='重新生成' onClick={handleRegenerate} />
-                    <ActionIcon icon={Edit} size='small' title='编辑' onClick={handleEdit} />
-                    <ActionIcon icon={Copy} size='small' title='复制' onClick={handleCopy} />
-                    <DropdownMenu items={moreMenuItems} placement='bottomLeft'>
-                      <button className={styles.moreTrigger} title='更多' type='button'>
-                        <MoreHorizontal size={16} />
-                      </button>
-                    </DropdownMenu>
-                  </Flex>
-                </div>
-              )}
-            </>
-          )}
+          {text ? (
+            <MessageMarkdown
+              className={cx(styles.markdown, isUser && styles.userMarkdown)}
+              isStreaming={isStreaming}
+              text={text}
+            />
+          ) : isStreaming && !reasoning ? (
+            <PulseDots />
+          ) : null}
         </div>
+
+        {!isUser && metadata ? <MessageUsage metadata={metadata} /> : null}
+
+        {!disabled ? (
+          <div
+            className={cx(styles.actions, isUser ? styles.actionsUser : styles.actionsAssistant, 'chat-msg-actions')}
+            data-message-actions
+          >
+            <Flexbox horizontal align='center' gap={2}>
+              {/* <ActionIcon icon={RefreshCw} size='small' title='重新生成' onClick={handleRegenerate} /> */}
+              <ActionIcon icon={Edit} size='small' title='编辑' onClick={handleEdit} />
+              <ActionIcon icon={Copy} size='small' title='复制' onClick={handleCopy} />
+              <DropdownMenu items={moreMenuItems} placement={isUser ? 'bottomRight' : 'bottomLeft'}>
+                <button className={styles.moreTrigger} title='更多' type='button'>
+                  <MoreHorizontal size={16} />
+                </button>
+              </DropdownMenu>
+            </Flexbox>
+          </div>
+        ) : null}
+        <MessageEditorModal
+          isUser={isUser}
+          open={editing}
+          value={text}
+          onCancel={() => setEditing(false)}
+          onSubmit={(next) => onEdit(message.id, next)}
+        />
       </div>
     )
   },
@@ -405,13 +336,17 @@ interface ChatMessagesProps {
 
 const ChatMessages = memo<ChatMessagesProps>(
   ({ messages, agentMeta, disabled, isStreaming = false, onDelete, onEdit, onRegenerate }) => {
+    const scrollbarRef = useRef<ScrollbarRef>(null)
+    const wideScreen = useChatUiStore((state) => state.wideScreen)
     const lastMessage = messages.at(-1)
     const lastText = lastMessage ? getMessageText(lastMessage) : ''
     const lastReasoning = lastMessage ? getMessageReasoning(lastMessage) : ''
 
-    const { ref, handleScroll, resetScrollLock } = useAutoScroll<HTMLDivElement>({
+    const getScrollElement = useCallback(() => scrollbarRef.current?.wrapRef ?? null, [])
+    const { handleScroll, resetScrollLock } = useAutoScroll<HTMLDivElement>({
       deps: [messages.length, lastText, lastReasoning],
       enabled: isStreaming || disabled === true,
+      getScrollElement,
     })
 
     // Unlock follow when a new user turn starts
@@ -421,32 +356,49 @@ const ChatMessages = memo<ChatMessagesProps>(
 
     if (messages.length === 0) {
       return (
-        <Flex vertical ref={ref} className={styles.list} align='center' justify='center'>
-          <Text className={styles.empty}>开始对话吧</Text>
-        </Flex>
+        <Scrollbar
+          ref={scrollbarRef}
+          className={styles.list}
+          viewStyle={{ height: '100%', minHeight: '100%' }}
+          onScroll={handleScroll}
+        >
+          <Flexbox
+            align='center'
+            className={styles.content}
+            justify='center'
+            style={{ width: wideScreen ? '100%' : `min(${CONVERSATION_MAX_WIDTH}px, 100%)` }}
+          >
+            <Text className={styles.empty}>开始对话吧</Text>
+          </Flexbox>
+        </Scrollbar>
       )
     }
 
     return (
-      <Flex vertical ref={ref} className={styles.list} gap={16} onScroll={handleScroll}>
-        {messages.map((message, index) => {
-          const streamingThis =
-            isStreaming && index === messages.length - 1 && message.role === 'assistant'
+      <Scrollbar ref={scrollbarRef} className={styles.list} viewStyle={{ minHeight: '100%' }} onScroll={handleScroll}>
+        <Flexbox
+          className={styles.content}
+          gap={16}
+          style={{ width: wideScreen ? '100%' : `min(${CONVERSATION_MAX_WIDTH}px, 100%)` }}
+        >
+          {messages.map((message, index) => {
+            const streamingThis = isStreaming && index === messages.length - 1 && message.role === 'assistant'
 
-          return (
-            <ChatMessageItem
-              agentMeta={agentMeta}
-              disabled={disabled}
-              isStreaming={streamingThis}
-              key={message.id}
-              message={message}
-              onDelete={onDelete}
-              onEdit={onEdit}
-              onRegenerate={onRegenerate}
-            />
-          )
-        })}
-      </Flex>
+            return (
+              <ChatMessageItem
+                agentMeta={agentMeta}
+                disabled={disabled}
+                isStreaming={streamingThis}
+                key={message.id}
+                message={message}
+                onDelete={onDelete}
+                onEdit={onEdit}
+                onRegenerate={onRegenerate}
+              />
+            )
+          })}
+        </Flexbox>
+      </Scrollbar>
     )
   }
 )

@@ -11,8 +11,9 @@ import {
   resolvePureHubDisplayId,
   resolvePureHubGatewayId,
 } from './purehub'
-import { ModelProvider, type ModelProviderId } from '../const/modelProvider'
-import { type AiModelCard } from '../types/aiModel'
+import { ModelProvider } from '../const/modelProvider'
+import type { ModelProviderId } from '../const/modelProvider'
+import type { AiModelCard } from '../types/aiModel'
 
 export const AI_MODELS_BY_PROVIDER: Record<ModelProviderId, AiModelCard[]> = {
   [ModelProvider.PureHub]: purehubChatModels,
@@ -20,8 +21,7 @@ export const AI_MODELS_BY_PROVIDER: Record<ModelProviderId, AiModelCard[]> = {
   [ModelProvider.DeepSeek]: deepseekChatModels,
 }
 
-export const getProviderChatModels = (provider: ModelProviderId): AiModelCard[] =>
-  AI_MODELS_BY_PROVIDER[provider] ?? []
+export const getProviderChatModels = (provider: ModelProviderId): AiModelCard[] => AI_MODELS_BY_PROVIDER[provider] ?? []
 
 export const getAiModel = (provider: ModelProviderId, modelId: string): AiModelCard | undefined => {
   switch (provider) {

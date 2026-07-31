@@ -1,13 +1,13 @@
 'use client'
 
-import { Flex } from 'antd'
-import { Block, Icon, Text } from '@pure/ui'
+import { Block, Icon, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowLeftIcon } from 'lucide-react'
-import { memo, type ReactNode } from 'react'
+import { memo } from 'react'
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 
-import { type MessengerPlatformId, type MessengerPlatformMeta } from './const'
+import type { MessengerPlatformId, MessengerPlatformMeta } from './const'
 import { PlatformAvatar } from './PlatformAvatar'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -53,7 +53,7 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
     const navigate = useNavigate()
 
     return (
-      <Flex vertical gap={20} style={{ width: '100%' }}>
+      <Flexbox gap={20} style={{ width: '100%' }}>
         <span
           className={styles.backButton}
           role='button'
@@ -70,22 +70,22 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
         </span>
 
         <Block className={styles.card}>
-          <Flex align='center' gap={16}>
+          <Flexbox horizontal align='center' gap={16}>
             <PlatformAvatar platform={platform} size={48} />
-            <Flex vertical flex={1} gap={2}>
+            <Flexbox flex={1} gap={2}>
               <Text strong style={{ fontSize: 15 }}>
                 {platformMeta.name}
               </Text>
               <Text type='secondary' style={{ fontSize: 13 }}>
                 {platformMeta.description}
               </Text>
-            </Flex>
+            </Flexbox>
             {headerAction}
-          </Flex>
+          </Flexbox>
         </Block>
 
         {children}
-      </Flex>
+      </Flexbox>
     )
   }
 )

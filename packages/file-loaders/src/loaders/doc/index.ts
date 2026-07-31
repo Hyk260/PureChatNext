@@ -1,7 +1,7 @@
 import debug from 'debug'
 import WordExtractor from 'word-extractor'
 
-import { type DocumentPage, type FileLoaderInterface } from '../../types'
+import type { DocumentPage, FileLoaderInterface } from '../../types'
 
 const log = debug('file-loaders:doc')
 

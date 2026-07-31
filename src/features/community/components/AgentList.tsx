@@ -3,7 +3,7 @@
 import { Grid } from '@pure/ui'
 import { memo } from 'react'
 
-import { type DiscoverAgentItem } from '@/features/community/types'
+import type { DiscoverAgentItem } from '@/features/community/types'
 
 import AgentCard from './AgentCard'
 import AgentEmpty from './AgentEmpty'

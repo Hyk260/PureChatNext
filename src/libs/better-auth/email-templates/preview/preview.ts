@@ -4,13 +4,12 @@ import { getResetPasswordEmailTemplate } from '../reset-password'
 import { getVerificationEmailTemplate } from '../verification'
 import { getVerificationOTPEmailTemplate } from '../verification-otp'
 
-import {
-  EMAIL_TEMPLATE_CATALOG,
-  EMAIL_TEMPLATE_PREVIEW_MOCK,
-  type EmailTemplateKey,
-  type EmailTemplateParams,
-  type EmailTemplatePreview,
-  type RenderedEmailTemplate,
+import { EMAIL_TEMPLATE_CATALOG, EMAIL_TEMPLATE_PREVIEW_MOCK } from './preview-catalog'
+import type {
+  EmailTemplateKey,
+  EmailTemplateParams,
+  EmailTemplatePreview,
+  RenderedEmailTemplate,
 } from './preview-catalog'
 
 const resolveTemplateParams = (params: EmailTemplateParams = {}) => {

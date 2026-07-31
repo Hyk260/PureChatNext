@@ -1,19 +1,20 @@
 'use client'
 
-import { AccordionItem, Text } from '@pure/ui'
-import { Flex, Skeleton } from 'antd'
+import { AccordionItem, Text, Flexbox } from '@pure/ui'
+import { Skeleton } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { useRouter } from '@/utils/navigation'
 import { memo, useCallback, useEffect, useState } from 'react'
 
-import { type AgentListItem } from '@/const/home/agents'
+import type { AgentListItem } from '@/const/home/agents'
 import { createAgent, deleteAgent, updateAgent } from '@/features/home/agentApi'
 import AgentItem from '@/features/home/HomeSidebar/components/AgentItem'
 import SectionActions from '@/features/home/HomeSidebar/components/SectionActions'
 import { useAgentSectionAddMenu } from '@/features/home/HomeSidebar/hooks/useAgentSectionAddMenu'
 import { useAgentSectionDropdownMenu } from '@/features/home/HomeSidebar/hooks/useAgentSectionDropdownMenu'
-import AgentFormModal, { type AgentFormValues } from '@/features/home/HomeSidebar/modals/AgentFormModal'
+import AgentFormModal from '@/features/home/HomeSidebar/modals/AgentFormModal'
+import type { AgentFormValues } from '@/features/home/HomeSidebar/modals/AgentFormModal'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
@@ -120,7 +121,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
   const handlePin = async (agent: AgentListItem, pinned: boolean) => {
     try {
       await updateAgent(agent.id, { pinned })
-      await fetchAgentsList()
+      await fetchAgentsList({ force: true })
       message.success(pinned ? '已置顶' : '已取消置顶')
     } catch (error) {
       console.error('[agents] pin failed:', error)
@@ -150,7 +151,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
           </Text>
         }
       >
-        <Flex vertical gap={1} style={{ paddingBlock: 1 }}>
+        <Flexbox gap={1} style={{ paddingBlock: 1 }}>
           {!loaded && loading ? (
             Array.from({ length: 6 }).map((_, index) => (
               <div className={styles.skeletonRow} key={index}>
@@ -170,13 +171,13 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
               />
             ))
           ) : (
-            <Flex vertical style={{ paddingBlock: 4, paddingInline: 12 }}>
+            <Flexbox style={{ paddingBlock: 4, paddingInline: 12 }}>
               <Text className={styles.empty} style={{ fontSize: 12 }}>
                 暂无内容
               </Text>
-            </Flex>
+            </Flexbox>
           )}
-        </Flex>
+        </Flexbox>
       </AccordionItem>
 
       <AgentFormModal

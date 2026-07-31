@@ -9,7 +9,7 @@ declare global {
     interface ProcessEnv {
       /**
        * RS256 RSA key pair in JWKS JSON format for signing/verifying user JWTs.
-       * Generate with: node scripts/generate-jwks-key.mjs
+       * Generate with: bun scripts/generate-jwks-key.ts
        */
       JWKS_KEY?: string
       JWT_ACCESS_EXPIRATION?: string

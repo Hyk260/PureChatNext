@@ -85,6 +85,13 @@
       "when": 1785218866948,
       "tag": "0011_huge_rafael_vega",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785288780015,
+      "tag": "0012_chat_message_metadata",
+      "breakpoints": true
     }
   ]
 }

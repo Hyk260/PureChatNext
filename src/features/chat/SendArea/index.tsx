@@ -1,11 +1,13 @@
 'use client'
 
-import { Flex } from 'antd'
-import { memo, type ReactNode } from 'react'
+import { memo } from 'react'
+import type { ReactNode } from 'react'
 
+import { Flexbox } from '@pure/ui'
 import ModelLabel from '@/features/chat/ModelLabel'
 
-import SendButton, { type SendButtonProps } from './SendButton'
+import SendButton from './SendButton'
+import type { SendButtonProps } from './SendButton'
 
 export interface SendAreaProps extends SendButtonProps {
   /** Extra nodes rendered before the model label */
@@ -20,7 +22,7 @@ export interface SendAreaProps extends SendButtonProps {
 const SendArea = memo<SendAreaProps>(
   ({ prefix, showModelLabel = true, disabled, generating, loading, shape, size, onClick, onStop }) => {
     return (
-      <Flex align='center' flex='none' gap={12}>
+      <Flexbox horizontal align='center' flex='none' gap={12}>
         {prefix}
         {showModelLabel ? <ModelLabel /> : null}
         <SendButton
@@ -32,7 +34,7 @@ const SendArea = memo<SendAreaProps>(
           onClick={onClick}
           onStop={onStop}
         />
-      </Flex>
+      </Flexbox>
     )
   }
 )

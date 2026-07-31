@@ -1,4 +1,4 @@
-import { type ModelProviderCard } from '../types/aiModel'
+import type { ModelProviderCard } from '../types/aiModel'
 import { ModelProvider } from '../const/modelProvider'
 
 export const deepseekProviderCard: ModelProviderCard = {

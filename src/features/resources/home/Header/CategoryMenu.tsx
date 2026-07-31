@@ -1,11 +1,12 @@
 'use client'
 
-import { Flex } from 'antd'
 import Link from '@/utils/link'
+import { Flexbox } from '@pure/ui'
 import { usePathname, useSearchParams } from '@/utils/navigation'
 import { memo } from 'react'
 
-import { FileText, ImageIcon, LayoutPanelTopIcon, Mic2, SquarePlay, type LucideIcon } from 'lucide-react'
+import { FileText, ImageIcon, LayoutPanelTopIcon, Mic2, SquarePlay } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 import NavItem from '@/components/NavItem'
 import { FilesTabs } from '@/types/files'
@@ -26,7 +27,7 @@ const CategoryMenu = memo(() => {
   if (!pathname.startsWith('/resources') || pathname.includes('/library/')) return null
 
   return (
-    <Flex vertical gap={1} style={{ paddingInline: 8 }}>
+    <Flexbox gap={1} style={{ paddingInline: 8 }}>
       {CATEGORIES.map((item) => {
         const href = item.key === FilesTabs.All ? '/resources' : `/resources?category=${item.key}`
         const active = category === item.key
@@ -37,7 +38,7 @@ const CategoryMenu = memo(() => {
           </Link>
         )
       })}
-    </Flex>
+    </Flexbox>
   )
 })
 

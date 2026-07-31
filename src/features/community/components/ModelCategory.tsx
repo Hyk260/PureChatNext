@@ -1,7 +1,6 @@
 'use client'
 
-import { Flex } from 'antd'
-import { Icon, ProviderIcon, Tag, Text } from '@pure/ui'
+import { Icon, ProviderIcon, Tag, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { LayoutPanelTop } from 'lucide-react'
 import { memo, useCallback, useMemo } from 'react'
@@ -86,7 +85,7 @@ const ModelCategory = memo(() => {
   )
 
   return (
-    <Flex vertical className={styles.root} gap={4}>
+    <Flexbox className={styles.root} gap={4}>
       <button
         className={cx(styles.item, selected === ALL_KEY && styles.active)}
         type='button'
@@ -128,7 +127,7 @@ const ModelCategory = memo(() => {
           </button>
         )
       })}
-    </Flex>
+    </Flexbox>
   )
 })
 

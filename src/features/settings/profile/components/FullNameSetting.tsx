@@ -1,6 +1,8 @@
 'use client'
 
-import { Input, Flex, type InputRef } from 'antd'
+import { Flexbox } from '@pure/ui'
+import { Input } from 'antd'
+import type { InputRef } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Loader2 } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
@@ -39,7 +41,7 @@ export function FullNameSetting({ fullName, onUpdated }: FullNameSettingProps) {
 
   return (
     <SettingRow label='全名'>
-      <Flex align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
+      <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
         {saving ? <Loader2 className='h-4 w-4 shrink-0 animate-spin' /> : null}
         <Input
           defaultValue={fullName || ''}
@@ -52,7 +54,7 @@ export function FullNameSetting({ fullName, onUpdated }: FullNameSettingProps) {
           style={{ flex: 1, maxWidth: 320 }}
           variant='filled'
         />
-      </Flex>
+      </Flexbox>
     </SettingRow>
   )
 }

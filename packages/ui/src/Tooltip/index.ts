@@ -5,4 +5,9 @@
  * lobehub Tooltip 基于 Base UI，API 与 antd Tooltip 基本兼容（`title` / `placement` /
  * `open` / `onOpenChange` 等）。
  */
-export { Tooltip, type TooltipPlacement, type TooltipProps } from '@lobehub/ui'
+import { Tooltip } from '@lobehub/ui'
+import type { TooltipProps } from '@lobehub/ui'
+
+export type TooltipPlacement = NonNullable<TooltipProps['placement']>
+
+export { Tooltip, type TooltipProps }

@@ -1,6 +1,7 @@
 'use client'
 
-import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 
 interface UseAutoScrollOptions {
   /**
@@ -12,6 +13,8 @@ interface UseAutoScrollOptions {
    * @default true
    */
   enabled?: boolean
+  /** Resolve an externally-owned scroll element (for example Scrollbar.wrapRef). */
+  getScrollElement?: () => HTMLElement | null
   /**
    * Distance threshold from bottom to consider "near bottom" (px)
    * @default 80
@@ -36,7 +39,7 @@ interface UseAutoScrollReturn<T extends HTMLElement> {
 export function useAutoScroll<T extends HTMLElement = HTMLDivElement>(
   options: UseAutoScrollOptions = {}
 ): UseAutoScrollReturn<T> {
-  const { deps = [], enabled = true, threshold = 80 } = options
+  const { deps = [], enabled = true, getScrollElement, threshold = 80 } = options
 
   const ref = useRef<T | null>(null)
   const [userHasScrolled, setUserHasScrolled] = useState(false)
@@ -45,44 +48,56 @@ export function useAutoScroll<T extends HTMLElement = HTMLDivElement>(
   const prevEnabledRef = useRef(enabled)
   const depsKey = deps.map(String).join('|')
 
-  const setScrollLock = useCallback((locked: boolean) => {
-    if (userHasScrolledRef.current === locked) return
-    userHasScrolledRef.current = locked
-    setUserHasScrolled(locked)
-  }, [])
+  const getContainer = useCallback(
+    () => (getScrollElement?.() as T | null | undefined) ?? ref.current,
+    [getScrollElement]
+  )
 
-  const scrollToBottom = useCallback((smooth: boolean) => {
-    const container = ref.current
-    if (!container) return
+  const setScrollLock = useCallback(
+    (locked: boolean) => {
+      if (userHasScrolledRef.current === locked) return
+      userHasScrolledRef.current = locked
+      setUserHasScrolled(locked)
+    },
+    [setUserHasScrolled]
+  )
 
-    isAutoScrollingRef.current = true
+  const scrollToBottom = useCallback(
+    (smooth: boolean) => {
+      const container = getContainer()
+      if (!container) return
 
-    if (smooth) {
-      container.scrollTo({ behavior: 'smooth', top: container.scrollHeight })
-      window.setTimeout(() => {
-        isAutoScrollingRef.current = false
-      }, 320)
-      return
-    }
+      isAutoScrollingRef.current = true
 
-    requestAnimationFrame(() => {
-      if (!ref.current) return
-      ref.current.scrollTop = ref.current.scrollHeight
+      if (smooth) {
+        container.scrollTo({ behavior: 'smooth', top: container.scrollHeight })
+        window.setTimeout(() => {
+          isAutoScrollingRef.current = false
+        }, 320)
+        return
+      }
+
       requestAnimationFrame(() => {
-        isAutoScrollingRef.current = false
+        const nextContainer = getContainer()
+        if (!nextContainer) return
+        nextContainer.scrollTop = nextContainer.scrollHeight
+        requestAnimationFrame(() => {
+          isAutoScrollingRef.current = false
+        })
       })
-    })
-  }, [])
+    },
+    [getContainer]
+  )
 
   const handleScroll = useCallback(() => {
     if (isAutoScrollingRef.current) return
 
-    const container = ref.current
+    const container = getContainer()
     if (!container) return
 
     const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight
     setScrollLock(distanceToBottom > threshold)
-  }, [setScrollLock, threshold])
+  }, [getContainer, setScrollLock, threshold])
 
   const resetScrollLock = useCallback(() => {
     setScrollLock(false)
@@ -94,10 +109,12 @@ export function useAutoScroll<T extends HTMLElement = HTMLDivElement>(
     prevEnabledRef.current = enabled
 
     if (justEnabled) {
-      setScrollLock(false)
+      userHasScrolledRef.current = false
+      const frame = requestAnimationFrame(() => setUserHasScrolled(false))
       scrollToBottom(true)
+      return () => cancelAnimationFrame(frame)
     }
-  }, [enabled, scrollToBottom, setScrollLock])
+  }, [enabled, scrollToBottom, setUserHasScrolled])
 
   // Follow content growth while enabled
   useEffect(() => {

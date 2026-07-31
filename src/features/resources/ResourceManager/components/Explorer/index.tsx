@@ -1,6 +1,7 @@
 'use client'
 
-import { Flex, Spin } from 'antd'
+import { Flexbox } from '@pure/ui'
+import { Spin } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { memo, useCallback, useMemo } from 'react'
 import { useRouter } from '@/utils/navigation'
@@ -13,7 +14,8 @@ import { useResourceManagerUrlSync } from '@/features/resources/hooks/useResourc
 import { useResourceManagerStore } from '@/features/resources/store'
 import { revalidateResources, useFetchResources, useResourceStore } from '@/features/resources/store/resourceStore'
 import { resourceService } from '@/services/resource'
-import { FilesTabs, type FileListItem } from '@/types/files'
+import { FilesTabs } from '@/types/files'
+import type { FileListItem } from '@/types/files'
 
 const CATEGORY_TITLES: Record<FilesTabs, string> = {
   [FilesTabs.All]: '全部',
@@ -146,18 +148,18 @@ const Explorer = memo(() => {
   }, [clearSelection, message, resourceList, selectedFileIds])
 
   return (
-    <Flex vertical flex={1} style={{ height: '100%', width: '100%' }}>
+    <Flexbox flex={1} style={{ height: '100%', width: '100%' }}>
       <ExplorerHeader
         title={libraryId ? undefined : CATEGORY_TITLES[category]}
         onDelete={handleBatchDelete}
         onNewFolder={libraryId ? handleNewFolder : undefined}
         onUpload={(files) => handleUpload(files)}
       />
-      <Flex vertical flex={1} style={{ overflow: 'auto' }}>
+      <Flexbox flex={1} style={{ overflow: 'auto' }}>
         {isLoading ? (
-          <Flex vertical align='center' flex={1} justify='center'>
+          <Flexbox align='center' flex={1} justify='center'>
             <Spin />
-          </Flex>
+          </Flexbox>
         ) : resourceList.length === 0 ? (
           <EmptyPlaceholder onUpload={handleUpload} />
         ) : viewMode === 'masonry' ? (
@@ -165,8 +167,8 @@ const Explorer = memo(() => {
         ) : (
           <ListView items={resourceList} onOpen={handleOpen} />
         )}
-      </Flex>
-    </Flex>
+      </Flexbox>
+    </Flexbox>
   )
 })
 

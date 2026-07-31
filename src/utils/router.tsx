@@ -1,7 +1,9 @@
 'use client'
 
-import { type ComponentType, type ReactElement, lazy, memo, Suspense } from 'react'
-import { type RouteObject, createBrowserRouter, Navigate, Outlet } from 'react-router'
+import { lazy, memo, Suspense } from 'react'
+import type { ComponentType, ReactElement } from 'react'
+import { createBrowserRouter, Navigate, Outlet } from 'react-router'
+import type { RouteObject } from 'react-router'
 
 import Loading from '@/components/Loading/BrandTextLoading'
 import AppLayer from '@/spa/AppLayer'

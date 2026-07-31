@@ -1,4 +1,4 @@
-import { type FileListItem, type QueryFileListParams } from './files'
+import type { FileListItem, QueryFileListParams } from './files'
 
 export type ResourceItem = FileListItem
 

@@ -1,7 +1,8 @@
 'use client'
 
-import { type LucideIcon, type LucideProps } from 'lucide-react'
-import { type CSSProperties, type FC, type HTMLAttributes, type ReactNode, isValidElement, memo } from 'react'
+import type { LucideIcon, LucideProps } from 'lucide-react'
+import { isValidElement, memo } from 'react'
+import type { CSSProperties, FC, HTMLAttributes, ReactNode } from 'react'
 
 export type IconSizeType = 'large' | 'middle' | 'small'
 
@@ -26,6 +27,17 @@ const SIZE_MAP: Record<IconSizeType, number> = {
 }
 
 const DEFAULT_STROKE = 2
+const SPIN_KEYFRAMES_ID = 'pure-ui-icon-spin-keyframes'
+
+function ensureSpinKeyframes() {
+  if (typeof document === 'undefined') return
+  if (document.getElementById(SPIN_KEYFRAMES_ID)) return
+
+  const style = document.createElement('style')
+  style.id = SPIN_KEYFRAMES_ID
+  style.textContent = '@keyframes pure-ui-icon-spin{to{transform:rotate(360deg)}}'
+  document.head.appendChild(style)
+}
 
 export function calcIconSize(iconSize?: IconSize): {
   size: number | string
@@ -52,6 +64,8 @@ export function calcIconSize(iconSize?: IconSize): {
 /** Renders a Lucide component ref or a prebuilt icon node. Prefer bare lucide for static icons. */
 export const Icon = memo<IconProps>(({ icon, size: iconSize, color, className, style, spin, ...rest }) => {
   if (!icon) return null
+
+  if (spin) ensureSpinKeyframes()
 
   const { size, strokeWidth } = calcIconSize(iconSize)
   const mergedStyle: CSSProperties = {

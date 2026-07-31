@@ -1,8 +1,15 @@
-import { type UIMessage } from 'ai'
+import type { UIMessage } from 'ai'
 
 import { apiFetch } from '@/utils/apiFetch'
 
-import { type LocalChatTopic, type TopicDeleteScope, type TopicUpdate } from './types'
+import type { LocalChatTopic, TopicDeleteScope, TopicUpdate } from './types'
+
+export type AutoRenameTopicConfig = {
+  apiKey?: string
+  baseURL?: string
+  model: string
+  provider: string
+}
 
 type ApiTopic = {
   id: string
@@ -24,12 +31,26 @@ const toLocalTopic = (t: ApiTopic): LocalChatTopic => ({
   updatedAt: new Date(t.updatedAt).getTime(),
 })
 
-export const fetchTopics = async (agentId: string): Promise<LocalChatTopic[]> => {
-  const res = await apiFetch(`/api/chat/topics?agentId=${encodeURIComponent(agentId)}`)
-  if (!res.ok) throw new Error(`fetchTopics failed: ${res.status}`)
+/** Share one GET across Strict Mode remounts for the same agentId. */
+const topicsInflight = new Map<string, Promise<LocalChatTopic[]>>()
 
-  const items = (await res.json()) as ApiTopic[]
-  return items.map(toLocalTopic)
+export const fetchTopics = async (agentId: string): Promise<LocalChatTopic[]> => {
+  const existing = topicsInflight.get(agentId)
+  if (existing) return existing
+
+  const request = (async () => {
+    const res = await apiFetch(`/api/chat/topics?agentId=${encodeURIComponent(agentId)}`)
+    if (!res.ok) throw new Error(`fetchTopics failed: ${res.status}`)
+
+    const items = (await res.json()) as ApiTopic[]
+    return items.map(toLocalTopic)
+  })()
+
+  topicsInflight.set(agentId, request)
+  void request.finally(() => {
+    if (topicsInflight.get(agentId) === request) topicsInflight.delete(agentId)
+  })
+  return request
 }
 
 export const createTopic = async (agentId: string, title?: string): Promise<LocalChatTopic> => {
@@ -55,6 +76,27 @@ export const updateTopic = async (id: string, patch: TopicUpdate): Promise<Local
 }
 
 export const renameTopic = async (id: string, title: string): Promise<LocalChatTopic> => updateTopic(id, { title })
+
+export const autoRenameTopic = async (
+  id: string,
+  { apiKey, baseURL, model, provider }: AutoRenameTopicConfig
+): Promise<LocalChatTopic> => {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (apiKey?.trim()) headers.Authorization = `Bearer ${apiKey.trim()}`
+
+  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}/auto-rename`, {
+    body: JSON.stringify({
+      ...(baseURL?.trim() ? { baseURL: baseURL.trim() } : {}),
+      model,
+      provider,
+    }),
+    headers,
+    method: 'POST',
+  })
+  if (!res.ok) throw new Error(`autoRenameTopic failed: ${res.status}`)
+
+  return toLocalTopic((await res.json()) as ApiTopic)
+}
 
 export const deleteTopic = async (id: string): Promise<void> => {
   const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}`, { method: 'DELETE' })

@@ -1,10 +1,4 @@
-import {
-  type BaseRedisProvider,
-  type RedisKey,
-  type RedisMSetArgument,
-  type RedisValue,
-  type SetOptions,
-} from './types'
+import type { BaseRedisProvider, RedisKey, RedisMSetArgument, RedisValue, SetOptions } from './types'
 
 export const normalizeRedisKey = (key: RedisKey) => (typeof key === 'string' ? key : key.toString())
 

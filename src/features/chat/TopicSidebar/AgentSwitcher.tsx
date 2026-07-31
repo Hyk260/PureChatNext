@@ -1,13 +1,13 @@
 'use client'
 
-import { Flex } from 'antd'
-import { ActionIcon, Avatar, Block, Icon, Popover, Text } from '@pure/ui'
+import { ActionIcon, Avatar, Block, Icon, Popover, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { ChevronsUpDownIcon, PinIcon } from 'lucide-react'
 import { memo, useMemo, useState } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
-import { DEFAULT_PURE_AI_META, type AgentListItem } from '@/const/home/agents'
+import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
+import type { AgentListItem } from '@/const/home/agents'
 
 const styles = createStaticStyles(({ css }) => ({
   item: css`
@@ -45,11 +45,12 @@ const AgentSwitcher = memo<Props>(({ agents, currentAgentId, onSelect }) => {
 
   const content = (
     <Scrollbar maxHeight={420} style={{ height: 'auto', width: 240 }} viewStyle={{ padding: 4 }}>
-      <Flex vertical gap={2}>
+      <Flexbox gap={2}>
         {agents.map((agent) => {
           const active = agent.id === currentAgentId
           return (
-            <Flex
+            <Flexbox
+              horizontal
               align='center'
               className={cx(styles.item, active && styles.itemActive)}
               gap={8}
@@ -73,10 +74,10 @@ const AgentSwitcher = memo<Props>(({ agents, currentAgentId, onSelect }) => {
                 {agent.title}
               </Text>
               {agent.pinned ? <Icon color={cssVar.colorTextTertiary} icon={PinIcon} size={14} /> : null}
-            </Flex>
+            </Flexbox>
           )
         })}
-      </Flex>
+      </Flexbox>
     </Scrollbar>
   )
 

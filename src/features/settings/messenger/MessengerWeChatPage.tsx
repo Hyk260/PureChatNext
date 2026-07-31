@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex, Button, Alert, Select, Spin } from 'antd'
-import { Text } from '@pure/ui'
+import { Alert, Select, Spin } from 'antd'
+import { Button, confirmModal, Text, Flexbox } from '@pure/ui'
 import { formatDateTime } from '@pure/utils/client'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Trash2Icon } from 'lucide-react'
@@ -12,13 +12,14 @@ import { fetchAgents } from '@/features/home/agentApi'
 import { getMessengerPlatform } from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
-import QrCodeAuth, { type WechatAuthCredentials } from './QrCodeAuth'
-import { bindWechat, fetchWechatStatus, unbindWechat, updateWechatAgent, type WechatStatus } from './wechatApi'
+import QrCodeAuth from './QrCodeAuth'
+import type { WechatAuthCredentials } from './QrCodeAuth'
+import { bindWechat, fetchWechatStatus, unbindWechat, updateWechatAgent } from './wechatApi'
+import type { WechatStatus } from './wechatApi'
 
 const STATUS_POLL_MS = 8_000
 
-const formatActiveAt = (value: string) =>
-  formatDateTime(value, { hour12: false, second: '2-digit' })
+const formatActiveAt = (value: string) => formatDateTime(value, { hour12: false, second: '2-digit' })
 
 const DISCONNECTED_STATUS: WechatStatus = {
   connected: false,
@@ -26,7 +27,7 @@ const DISCONNECTED_STATUS: WechatStatus = {
 }
 
 const MessengerWeChatPage = memo(() => {
-  const { message, modal } = useApp()
+  const { message } = useApp()
   const platformMeta = getMessengerPlatform('wechat')!
   const [loading, setLoading] = useState(true)
   const [binding, setBinding] = useState(false)
@@ -119,12 +120,11 @@ const MessengerWeChatPage = memo(() => {
   )
 
   const handleDisconnect = useCallback(() => {
-    modal.confirm({
-      centered: true,
+    confirmModal({
       content: '断开后需重新扫码才能在微信中对话。',
       okText: '断开',
       cancelText: '取消',
-      okType: 'danger',
+      okButtonProps: { danger: true },
       onOk: async () => {
         await unbindWechat()
         // 先乐观更新，避免仍显示「已连接」
@@ -138,14 +138,14 @@ const MessengerWeChatPage = memo(() => {
       },
       title: '断开微信连接？',
     })
-  }, [message, modal, refreshStatus])
+  }, [message, refreshStatus])
 
   if (loading) {
     return (
       <MessengerDetailShell platform='wechat' platformMeta={platformMeta}>
-        <Flex vertical align='center' justify='center' style={{ minHeight: 160 }}>
+        <Flexbox align='center' justify='center' style={{ minHeight: 160 }}>
           <Spin />
-        </Flex>
+        </Flexbox>
       </MessengerDetailShell>
     )
   }
@@ -165,12 +165,12 @@ const MessengerWeChatPage = memo(() => {
 
   return (
     <MessengerDetailShell headerAction={headerAction} platform='wechat' platformMeta={platformMeta}>
-      <Flex vertical gap={8}>
+      <Flexbox gap={8}>
         <Text strong style={{ fontSize: 15 }}>
           连接微信
         </Text>
 
-        <Flex vertical gap={8}>
+        <Flexbox gap={8}>
           <Text type='secondary' style={{ fontSize: 13 }}>
             绑定助手
           </Text>
@@ -180,7 +180,7 @@ const MessengerWeChatPage = memo(() => {
             value={agentId}
             onChange={(v) => void handleAgentChange(v)}
           />
-        </Flex>
+        </Flexbox>
 
         {needsRebind && (
           <Alert showIcon type='warning' title='微信会话已过期或需要重新连接' description='请再次扫码绑定。' />
@@ -200,7 +200,7 @@ const MessengerWeChatPage = memo(() => {
             }
           />
         )}
-      </Flex>
+      </Flexbox>
 
       <MessengerCommandList />
     </MessengerDetailShell>

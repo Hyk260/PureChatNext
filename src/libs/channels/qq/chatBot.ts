@@ -1,6 +1,7 @@
 import { createQQAdapter } from '@pure/chat-adapter-qq'
 import { createMemoryState } from '@chat-adapter/state-memory'
-import { Chat, type Message, type Thread } from 'chat'
+import { Chat } from 'chat'
+import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
 import { handleQQMention } from './agentBridge'

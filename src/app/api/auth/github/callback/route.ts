@@ -1,7 +1,9 @@
 import debug from 'debug'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-import GitHubAPI, { type ClientType } from '@/libs/auth/gtihub'
+import GitHubAPI from '@/libs/auth/gtihub'
+import type { ClientType } from '@/libs/auth/gtihub'
 import { signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
 import { generateUserSig } from '@/libs/utils/signature'
 import { registerAccount } from '@/libs/utils/register'

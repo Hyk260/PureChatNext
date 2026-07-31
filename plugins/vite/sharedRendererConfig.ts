@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import react from '@vitejs/plugin-react'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
-import { type PluginOption } from 'vite'
+import type { PluginOption } from 'vite'
 
 import { viteRawHtml } from './rawHtml'
 
@@ -10,6 +10,8 @@ const isNodePackage = (id: string, packageName: string) => {
   const normalized = id.replaceAll('\\', '/')
   return normalized.includes(`/node_modules/${packageName}/`)
 }
+
+const maxVendorChunkSize = 700 * 1024
 
 function sharedManualChunks(id: string): string | undefined {
   if (!id.includes('node_modules')) return
@@ -50,6 +52,8 @@ function sharedManualChunks(id: string): string | undefined {
 
 const sharedChunkFileNames = (chunkInfo: { name: string }) => {
   const { name } = chunkInfo
+  if (name.startsWith('vendor-lobehub-ui')) return 'vendor/lobehub-ui-[hash].js'
+  if (name.startsWith('vendor-shared')) return 'vendor/shared-[hash].js'
   if (name.startsWith('vendor-')) return 'vendor/[name]-[hash].js'
   return 'assets/[name]-[hash].js'
 }
@@ -64,7 +68,26 @@ export const createSharedRolldownOutput = (options: SharedRolldownOutputOptions 
   codeSplitting: {
     groups: [
       {
+        // The @lobehub/ui root barrel eagerly imports every CSS-bearing component.
+        // Keep route-specific modules separate and cap each resulting vendor chunk.
+        entriesAware: true,
+        includeDependenciesRecursively: false,
+        maxSize: maxVendorChunkSize,
+        name: 'vendor-lobehub-ui',
+        priority: 10,
+        test: (moduleId: string) => isNodePackage(moduleId, '@lobehub/ui'),
+      },
+      {
+        maxSize: maxVendorChunkSize,
         name: (moduleId: string) => sharedManualChunks(moduleId) ?? null,
+      },
+      {
+        entriesAware: true,
+        includeDependenciesRecursively: false,
+        maxSize: maxVendorChunkSize,
+        minSize: maxVendorChunkSize,
+        name: 'vendor-shared',
+        test: (moduleId: string) => moduleId.includes('node_modules'),
       },
     ],
   },

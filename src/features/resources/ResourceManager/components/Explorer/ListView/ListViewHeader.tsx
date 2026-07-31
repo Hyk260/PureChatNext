@@ -1,9 +1,10 @@
 'use client'
 
-import { Checkbox, Flex } from 'antd'
-import { Center } from '@pure/ui'
+import { Checkbox } from 'antd'
+import { Center, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo, useCallback, type MouseEvent, type PointerEvent } from 'react'
+import { memo, useCallback } from 'react'
+import type { MouseEvent, PointerEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
@@ -11,7 +12,7 @@ import {
   useExplorerSelectionSummary,
 } from '@/features/resources/hooks/useExplorerSelection'
 import { useResourceManagerStore } from '@/features/resources/store'
-import { type FileListItem } from '@/types/files'
+import type { FileListItem } from '@/types/files'
 
 import ColumnResizeHandle from './ColumnResizeHandle'
 
@@ -58,7 +59,7 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
   }, [])
 
   return (
-    <Flex align='center' className={styles.header} style={{ paddingInline: 8 }}>
+    <Flexbox horizontal align='center' className={styles.header} style={{ paddingInline: 8 }}>
       <Center
         height={40}
         style={{ cursor: 'pointer', paddingInline: 4 }}
@@ -67,8 +68,7 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
       >
         <Checkbox checked={allSelected} indeterminate={indeterminate} style={{ pointerEvents: 'none' }} />
       </Center>
-      <Flex
-        vertical
+      <Flexbox
         className={styles.headerItem}
         justify='center'
         style={{
@@ -88,9 +88,8 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
           minWidth={200}
           onResize={(width) => updateColumnWidth('name', width)}
         />
-      </Flex>
-      <Flex
-        vertical
+      </Flexbox>
+      <Flexbox
         className={styles.headerItem}
         justify='center'
         style={{ flexShrink: 0, paddingInlineEnd: 16, position: 'relative', width: columnWidths.date }}
@@ -102,9 +101,8 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
           minWidth={120}
           onResize={(width) => updateColumnWidth('date', width)}
         />
-      </Flex>
-      <Flex
-        vertical
+      </Flexbox>
+      <Flexbox
         className={styles.headerItem}
         justify='center'
         style={{ flexShrink: 0, paddingInlineEnd: 16, position: 'relative', width: columnWidths.size }}
@@ -116,8 +114,8 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
           minWidth={80}
           onResize={(width) => updateColumnWidth('size', width)}
         />
-      </Flex>
-    </Flex>
+      </Flexbox>
+    </Flexbox>
   )
 })
 

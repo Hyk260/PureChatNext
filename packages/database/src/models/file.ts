@@ -1,10 +1,26 @@
-import { and, asc, count, desc, eq, ilike, inArray, isNull, or } from 'drizzle-orm'
+import { and, asc, count, desc, eq, ilike, inArray, isNull, or, sum } from 'drizzle-orm'
 
-import { type QueryFileListParams, FilesTabs, SortType } from '@pure/types'
+import { FilesTabs, SortType } from '@pure/types'
+import type { QueryFileListParams } from '@pure/types'
 
 import { getServerDB } from '../core/db-adaptor'
-import { type NewFile, type FileItem, documents, files, globalFiles, knowledgeBaseFiles } from '../schemas/file'
-import { type ChatDatabase } from '../type'
+import { documents, files, globalFiles, knowledgeBaseFiles } from '../schemas/file'
+import type { NewFile, FileItem } from '../schemas/file'
+import { users } from '../schemas/user'
+import type { ChatDatabase, Transaction } from '../type'
+
+export class FileStorageQuotaExceededError extends Error {
+  readonly code = 'FILE_STORAGE_QUOTA_EXCEEDED' as const
+
+  constructor(
+    readonly usedBytes: number,
+    readonly limitBytes: number,
+    readonly requestedBytes: number
+  ) {
+    super('File storage quota exceeded')
+    this.name = 'FileStorageQuotaExceededError'
+  }
+}
 
 export class FileModel {
   private readonly db: ChatDatabase
@@ -17,6 +33,44 @@ export class FileModel {
 
   private ownership = () => eq(files.userId, this.userId)
 
+  private createInTransaction = async (
+    tx: Transaction,
+    params: Omit<NewFile, 'id' | 'userId'> & {
+      id?: string
+      knowledgeBaseId?: string
+    },
+    insertToGlobalFiles: boolean
+  ): Promise<{ id: string }> => {
+    if (insertToGlobalFiles && params.fileHash) {
+      await tx
+        .insert(globalFiles)
+        .values({
+          creator: this.userId,
+          fileType: params.fileType,
+          hashId: params.fileHash,
+          metadata: params.metadata,
+          size: params.size,
+          url: params.url,
+        })
+        .onConflictDoNothing()
+    }
+
+    const [item] = await tx
+      .insert(files)
+      .values({ ...params, userId: this.userId })
+      .returning()
+
+    if (params.knowledgeBaseId) {
+      await tx.insert(knowledgeBaseFiles).values({
+        fileId: item!.id,
+        knowledgeBaseId: params.knowledgeBaseId,
+        userId: this.userId,
+      })
+    }
+
+    return { id: item!.id }
+  }
+
   create = async (
     params: Omit<NewFile, 'id' | 'userId'> & {
       id?: string
@@ -24,35 +78,39 @@ export class FileModel {
     },
     insertToGlobalFiles = false
   ): Promise<{ id: string }> => {
+    return this.db.transaction((tx) => this.createInTransaction(tx, params, insertToGlobalFiles))
+  }
+
+  getStorageUsage = async (): Promise<number> => {
+    const [result] = await this.db
+      .select({ usedBytes: sum(files.size) })
+      .from(files)
+      .where(this.ownership())
+    return Number(result?.usedBytes ?? 0)
+  }
+
+  createWithinStorageLimit = async (
+    params: Omit<NewFile, 'id' | 'userId'> & {
+      id?: string
+      knowledgeBaseId?: string
+    },
+    limitBytes: number,
+    insertToGlobalFiles = false
+  ): Promise<{ id: string }> => {
     return this.db.transaction(async (tx) => {
-      if (insertToGlobalFiles && params.fileHash) {
-        await tx
-          .insert(globalFiles)
-          .values({
-            creator: this.userId,
-            fileType: params.fileType,
-            hashId: params.fileHash,
-            metadata: params.metadata,
-            size: params.size,
-            url: params.url,
-          })
-          .onConflictDoNothing()
+      await tx.select({ id: users.id }).from(users).where(eq(users.id, this.userId)).for('update')
+
+      const [result] = await tx
+        .select({ usedBytes: sum(files.size) })
+        .from(files)
+        .where(this.ownership())
+      const usedBytes = Number(result?.usedBytes ?? 0)
+
+      if (usedBytes + params.size > limitBytes) {
+        throw new FileStorageQuotaExceededError(usedBytes, limitBytes, params.size)
       }
 
-      const [item] = await tx
-        .insert(files)
-        .values({ ...params, userId: this.userId })
-        .returning()
-
-      if (params.knowledgeBaseId) {
-        await tx.insert(knowledgeBaseFiles).values({
-          fileId: item!.id,
-          knowledgeBaseId: params.knowledgeBaseId,
-          userId: this.userId,
-        })
-      }
-
-      return { id: item!.id }
+      return this.createInTransaction(tx, params, insertToGlobalFiles)
     })
   }
 

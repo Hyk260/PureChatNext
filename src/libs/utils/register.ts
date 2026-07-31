@@ -2,7 +2,7 @@ import debug from 'debug'
 
 import { accountCheck, accountImport } from '@/app/api/rest-api/handlers'
 
-import { type AccountImportParams } from '@/app/api/rest-api/types'
+import type { AccountImportParams } from '@/app/api/rest-api/types'
 
 const log = debug('auth:im')
 

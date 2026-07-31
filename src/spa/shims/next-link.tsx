@@ -1,7 +1,8 @@
 /**
  * Vite-only shim for `next/link` → react-router `Link`.
  */
-import { type AnchorHTMLAttributes, type CSSProperties, type MouseEvent, type ReactNode, forwardRef } from 'react'
+import { forwardRef } from 'react'
+import type { AnchorHTMLAttributes, CSSProperties, MouseEvent, ReactNode } from 'react'
 import { Link as RouterLink } from 'react-router'
 
 type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {

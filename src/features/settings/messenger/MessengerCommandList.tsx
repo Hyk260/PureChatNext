@@ -1,12 +1,14 @@
 'use client'
 
-import { Block, Icon, Text } from '@pure/ui'
-import { Flex, Divider } from 'antd'
+import { Block, Icon, Text, Flexbox } from '@pure/ui'
+import { Divider } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { BotIcon, CircleStopIcon, HelpCircleIcon, MegaphoneIcon, SquarePlusIcon, type LucideIcon } from 'lucide-react'
+import { BotIcon, CircleStopIcon, HelpCircleIcon, MegaphoneIcon, SquarePlusIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Fragment, memo } from 'react'
 
-import { WECHAT_COMMANDS, type MessengerCommandItem } from './const'
+import { WECHAT_COMMANDS } from './const'
+import type { MessengerCommandItem } from './const'
 
 const styles = createStaticStyles(({ css }) => ({
   icon: css`
@@ -36,7 +38,7 @@ const COMMAND_ICONS: Record<MessengerCommandItem['icon'], LucideIcon> = {
 
 const MessengerCommandList = memo(() => {
   return (
-    <Flex vertical gap={8} style={{ width: '100%' }}>
+    <Flexbox gap={8} style={{ width: '100%' }}>
       <Text strong style={{ fontSize: 15 }}>
         指令
       </Text>
@@ -48,21 +50,21 @@ const MessengerCommandList = memo(() => {
         {WECHAT_COMMANDS.map((item, index) => (
           <Fragment key={item.command}>
             {index > 0 && <Divider style={{ margin: 0 }} />}
-            <Flex align='center' gap={12} style={{ paddingBlock: 14, paddingInline: 16 }}>
-              <Flex align='center' className={styles.icon} justify='center'>
+            <Flexbox horizontal align='center' gap={12} style={{ paddingBlock: 14, paddingInline: 16 }}>
+              <Flexbox horizontal align='center' className={styles.icon} justify='center'>
                 <Icon icon={COMMAND_ICONS[item.icon]} size={18} />
-              </Flex>
+              </Flexbox>
               <Text code strong style={{ fontSize: 14 }}>
                 {item.command}
               </Text>
               <Text type='secondary' style={{ flex: 1, fontSize: 13, textAlign: 'end' }}>
                 {item.description}
               </Text>
-            </Flex>
+            </Flexbox>
           </Fragment>
         ))}
       </Block>
-    </Flex>
+    </Flexbox>
   )
 })
 

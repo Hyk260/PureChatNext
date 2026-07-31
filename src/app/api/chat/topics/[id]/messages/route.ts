@@ -1,4 +1,4 @@
-import { type UIMessage } from 'ai'
+import type { UIMessage } from 'ai'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -8,11 +8,31 @@ import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const uiMessageSchema = z.object({
   id: z.string().min(1),
+  metadata: z
+    .object({
+      model: z.string().min(1).max(256).optional(),
+      performance: z
+        .object({
+          duration: z.number().finite().optional(),
+          latency: z.number().finite().optional(),
+          tps: z.number().finite().optional(),
+          ttft: z.number().finite().optional(),
+        })
+        .optional(),
+      provider: z.string().min(1).max(128).optional(),
+      reasoning: z
+        .object({
+          duration: z.number().finite().nonnegative().optional(),
+        })
+        .optional(),
+      usage: z.record(z.string(), z.number().finite()).optional(),
+    })
+    .optional(),
   role: z.enum(['user', 'assistant', 'system']),
   parts: z.array(z.unknown()),
 })
 
-const replaceMessagesSchema = z.object({
+export const replaceMessagesSchema = z.object({
   messages: z.array(uiMessageSchema),
 })
 

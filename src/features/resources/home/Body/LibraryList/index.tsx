@@ -1,7 +1,6 @@
 'use client'
 
-import { ActionIcon, Text } from '@pure/ui'
-import { Flex, Button } from 'antd'
+import { ActionIcon, Button, confirmModal, Text, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Plus, Trash2 } from 'lucide-react'
 import Link from '@/utils/link'
@@ -30,13 +29,13 @@ const LibraryList = memo(() => {
   }
 
   return (
-    <Flex vertical gap={4} style={{ paddingInline: 8 }}>
-      <Flex align='center' justify='space-between' style={{ paddingInline: 4 }}>
+    <Flexbox gap={4} style={{ paddingInline: 8 }}>
+      <Flexbox horizontal align='center' justify='space-between' style={{ paddingInline: 4 }}>
         <Text type='secondary' style={{ fontSize: 12 }}>
           知识库
         </Text>
         <ActionIcon icon={Plus} onClick={handleCreate} size='small' title='新建' />
-      </Flex>
+      </Flexbox>
       {libraries.length === 0 ? (
         <Text type='secondary' style={{ fontSize: 12 }}>
           暂无知识库
@@ -47,7 +46,7 @@ const LibraryList = memo(() => {
           const active = pathname.startsWith(href)
 
           return (
-            <Flex key={kb.id} align='center' justify='space-between'>
+            <Flexbox horizontal key={kb.id} align='center' justify='space-between'>
               <Link href={href} style={{ color: 'inherit', flex: 1, textDecoration: 'none' }}>
                 <NavItem active={active} clickable title={kb.name} />
               </Link>
@@ -55,17 +54,22 @@ const LibraryList = memo(() => {
                 icon={Trash2}
                 size='small'
                 title='删除'
-                onClick={() => {
-                  if (window.confirm('确定删除此知识库？库内文件不会被删除。')) {
-                    deleteKnowledgeBase(kb.id)
-                  }
-                }}
+                onClick={() =>
+                  confirmModal({
+                    cancelText: '取消',
+                    content: '库内文件不会被删除。',
+                    okButtonProps: { danger: true },
+                    okText: '删除',
+                    onOk: () => deleteKnowledgeBase(kb.id),
+                    title: '删除此知识库？',
+                  })
+                }
               />
-            </Flex>
+            </Flexbox>
           )
         })
       )}
-    </Flex>
+    </Flexbox>
   )
 })
 

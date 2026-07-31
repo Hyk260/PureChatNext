@@ -1,42 +1,151 @@
 'use client'
 
-import { Button, Card, DatePicker, Empty, Flex, Input, Progress, Select, Skeleton, Table, type TableProps } from 'antd'
-import { Tag, Text } from '@pure/ui'
-import { MessageSquareText, RotateCcw, Search } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react'
+import { DatePicker, Pagination, Progress, Table } from 'antd'
+import type { TableProps } from 'antd'
+import { Block, Button, Empty, Grid, ModelIcon, SearchBar, Select, Skeleton, Tag, Text, Flexbox } from '@pure/ui'
+import { formatSize } from '@pure/utils/client'
+import { createStaticStyles, cssVar } from 'antd-style'
+import { MessageSquareText, RotateCcw } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { ComponentProps } from 'react'
 
-import { SettingHeader } from '@/features/settings/profile/components/SettingHeader'
-
-import { UsageChart } from './UsageChart'
-import { type UsageItem, type UsageResponse } from './types'
+import type { UsageItem, UsageResponse } from './types'
 
 const { RangePicker } = DatePicker
 type PickerValue = Exclude<NonNullable<ComponentProps<typeof RangePicker>['value']>[number], null | undefined>
 type DateRange = [PickerValue, PickerValue]
+
 const numberFormat = new Intl.NumberFormat('zh-CN')
 const dateTimeFormat = new Intl.DateTimeFormat('zh-CN', {
-  day: '2-digit',
+  day: 'numeric',
   hour: '2-digit',
   hour12: false,
   minute: '2-digit',
-  month: '2-digit',
+  month: 'numeric',
   second: '2-digit',
   timeZone: 'Asia/Shanghai',
-  year: 'numeric',
 })
-const formatDuration = (value: number | null) => (value == null ? '--' : `${(value / 1000).toFixed(2)}s`)
 
-const fillDays = (start: string, end: string, values: UsageResponse['daily']) => {
-  const byDay = new Map(values.map((item) => [item.day, item.credits]))
-  const days: UsageResponse['daily'] = []
-  const cursor = new Date(`${start}T00:00:00Z`)
-  const last = new Date(`${end}T00:00:00Z`)
-  while (cursor <= last) {
-    const day = cursor.toISOString().slice(0, 10)
-    days.push({ credits: byDay.get(day) ?? 0, day })
-    cursor.setUTCDate(cursor.getUTCDate() + 1)
-  }
-  return days
+const formatDuration = (value: number | null) => (value == null ? '--' : `${(value / 1000).toFixed(2)}s`)
+const formatDateTime = (value: string) => dateTimeFormat.format(new Date(value)).replace('日', '')
+const getPercentage = (used: number, limit: number) => Math.round((used / Math.max(1, limit)) * 100)
+
+const styles = createStaticStyles(({ css }) => ({
+  details: css`
+    overflow: hidden;
+  `,
+  error: css`
+    padding: 12px 16px;
+    border-bottom: 1px solid ${cssVar.colorBorderSecondary};
+  `,
+  metric: css`
+    min-width: 0;
+    padding: 16px;
+
+    & + & {
+      border-inline-start: 1px solid ${cssVar.colorBorderSecondary};
+    }
+
+    @media (width <= 640px) {
+      & + & {
+        border-block-start: 1px solid ${cssVar.colorBorderSecondary};
+        border-inline-start: 0;
+      }
+    }
+  `,
+  metricGrid: css`
+    width: 100%;
+  `,
+  metricLabel: css`
+    color: ${cssVar.colorTextSecondary};
+    font-size: 15px;
+  `,
+  metricValue: css`
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  `,
+  model: css`
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+  `,
+  page: css`
+    width: 100%;
+    padding: 24px 24px 64px;
+  `,
+  pagination: css`
+    padding: 12px 16px;
+    border-top: 1px solid ${cssVar.colorBorderSecondary};
+
+    @media (width <= 640px) {
+      align-items: flex-start !important;
+      flex-direction: column;
+
+      .ant-pagination-options {
+        display: none;
+      }
+    }
+  `,
+  section: css`
+    padding: 16px;
+  `,
+  sectionTitle: css`
+    font-size: 18px;
+    font-weight: 600;
+  `,
+  table: css`
+    .ant-table-thead > tr > th {
+      padding-block: 11px;
+      font-weight: 600;
+      background: ${cssVar.colorBgContainer};
+    }
+
+    .ant-table-tbody > tr > td {
+      padding-block: 9px;
+    }
+  `,
+  title: css`
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+  `,
+  toolbar: css`
+    padding: 12px 16px;
+    border-bottom: 1px solid ${cssVar.colorBorderSecondary};
+  `,
+}))
+
+type UsageMetricProps = {
+  label: string
+  limit: number
+  used: number
+  value: string
+}
+
+const UsageMetric = ({ label, limit, used, value }: UsageMetricProps) => {
+  const percentage = getPercentage(used, limit)
+
+  return (
+    <Flexbox horizontal align='center' className={styles.metric} justify='space-between'>
+      <Flexbox gap={5}>
+        <Text className={styles.metricLabel}>{label}</Text>
+        <Text className={styles.metricValue}>
+          {value} ({percentage}%)
+        </Text>
+      </Flexbox>
+      <Progress
+        percent={Math.min(100, percentage)}
+        showInfo={false}
+        size={42}
+        strokeColor={cssVar.colorSuccess}
+        strokeWidth={8}
+        trailColor={cssVar.colorFillSecondary}
+        type='circle'
+      />
+    </Flexbox>
+  )
 }
 
 export function UsageSettingsContent() {
@@ -48,7 +157,7 @@ export function UsageSettingsContent() {
   const [type, setType] = useState('all')
   const [range, setRange] = useState<DateRange | null>(null)
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(10)
   const [sortBy, setSortBy] = useState('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
@@ -81,90 +190,222 @@ export function UsageSettingsContent() {
     setType('all')
     setRange(null)
     setPage(1)
-    setPageSize(20)
+    setPageSize(10)
     setSortBy('createdAt')
     setSortOrder('desc')
   }
 
+  const activeSortOrder = useCallback(
+    (key: string) => (sortBy === key ? (sortOrder === 'asc' ? 'ascend' : 'descend') : null),
+    [sortBy, sortOrder]
+  )
+
   const columns = useMemo<TableProps<UsageItem>['columns']>(
     () => [
-      { dataIndex: 'createdAt', key: 'createdAt', render: (value: string) => dateTimeFormat.format(new Date(value)).replaceAll('/', '-'), sorter: true, title: '创建时间', width: 180 },
-      { key: 'type', render: () => <MessageSquareText color='var(--ant-color-primary)' size={18} />, title: '类型', width: 80 },
-      { key: 'trigger', render: () => '聊天消息', title: '触发方式', width: 110 },
-      { dataIndex: 'model', key: 'model', render: (value: string | null) => value || '--', title: '模型', width: 210 },
+      {
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        render: formatDateTime,
+        sortOrder: activeSortOrder('createdAt'),
+        sorter: true,
+        title: '时间',
+        width: 160,
+      },
+      {
+        key: 'type',
+        render: () => <MessageSquareText color={cssVar.colorPrimary} size={18} />,
+        title: '类型',
+        width: 72,
+      },
+      { key: 'trigger', render: () => '聊天消息', title: '触发方式', width: 105 },
+      {
+        dataIndex: 'model',
+        key: 'model',
+        render: (value: string | null) =>
+          value ? (
+            <span className={styles.model}>
+              <ModelIcon model={value} size={20} />
+              <span>{value}</span>
+            </span>
+          ) : (
+            '--'
+          ),
+        title: '模型',
+        width: 210,
+      },
       {
         key: 'totalTokens',
         render: (_value, record) =>
-          record.inputTokens == null && record.outputTokens == null ? '--' : (
-            <Flex align='center' gap={6} wrap='wrap'>
-              <Tag color='green' size='small'>{numberFormat.format(record.totalTokens)}</Tag>
-              <Text type='secondary'>= ↓ {numberFormat.format(record.inputTokens ?? 0)} + ↑ {numberFormat.format(record.outputTokens ?? 0)}</Text>
-            </Flex>
+          record.inputTokens == null && record.outputTokens == null ? (
+            '--'
+          ) : (
+            <Flexbox horizontal align='center' gap={6} wrap='wrap'>
+              <Tag color={record.totalTokens >= 50_000 ? 'orange' : 'green'} size='small'>
+                {numberFormat.format(record.totalTokens)}
+              </Tag>
+              <Text type='secondary'>
+                = ↓ {numberFormat.format(record.inputTokens ?? 0)} + ↑ {numberFormat.format(record.outputTokens ?? 0)}
+              </Text>
+            </Flexbox>
           ),
+        sortOrder: activeSortOrder('totalTokens'),
         sorter: true,
         title: 'Token 使用量',
         width: 270,
       },
-      { dataIndex: 'credits', key: 'credits', render: (value: number) => numberFormat.format(value), sorter: true, title: '消耗积分', width: 120 },
-      { dataIndex: 'durationMs', key: 'durationMs', render: formatDuration, sorter: true, title: '耗时', width: 90 },
+      {
+        dataIndex: 'credits',
+        key: 'credits',
+        render: (value: number) => numberFormat.format(value),
+        sortOrder: activeSortOrder('credits'),
+        sorter: true,
+        title: '消耗积分',
+        width: 115,
+      },
+      {
+        dataIndex: 'durationMs',
+        key: 'durationMs',
+        render: formatDuration,
+        sortOrder: activeSortOrder('durationMs'),
+        sorter: true,
+        title: '耗时',
+        width: 85,
+      },
     ],
-    []
+    [activeSortOrder]
   )
 
-  const daily = data ? fillDays(data.dateRange.startDate, data.dateRange.endDate, data.daily) : []
-  const percent = data ? Math.min(100, (data.balance.used / Math.max(1, data.balance.grant)) * 100) : 0
+  const total = data?.total ?? 0
+  const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1
+  const rangeEnd = Math.min(page * pageSize, total)
 
   return (
-    <Flex vertical gap={32} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: '100%' }}>
-      <SettingHeader title='用量' />
-      <Flex vertical gap={12}>
-        <Text style={{ fontSize: 20, fontWeight: 600 }}>积分</Text>
-        <Card styles={{ body: { padding: 22 } }}>
-          {loading && !data ? <Skeleton active /> : error && !data ? (
-            <Empty description={error}><Button onClick={() => void load()}>重试</Button></Empty>
-          ) : data ? (
-            <Flex vertical gap={18}>
-              <Text style={{ alignSelf: 'flex-end', fontSize: 18, fontWeight: 600 }}>
-                {numberFormat.format(data.balance.used)} / {numberFormat.format(data.balance.grant)} 已使用
-              </Text>
-              <Progress percent={percent} showInfo={false} />
-              <Text type='secondary'>○ 免费积分&nbsp; <Text strong>{numberFormat.format(data.balance.used)}</Text> / {numberFormat.format(data.balance.grant)}</Text>
-              <UsageChart data={daily} />
-            </Flex>
-          ) : null}
-        </Card>
-      </Flex>
+    <Flexbox className={styles.page} gap={40}>
+      <Text className={styles.title}>用量</Text>
 
-      <Flex vertical gap={12}>
-        <Text style={{ fontSize: 20, fontWeight: 600 }}>明细</Text>
-        <Card styles={{ body: { padding: 0 } }}>
-          <Flex gap={10} style={{ padding: 16 }} wrap='wrap'>
-            <Input allowClear onChange={(event) => setModel(event.target.value)} onPressEnter={() => { setModelQuery(model.trim()); setPage(1) }} placeholder='搜索模型' prefix={<Search size={16} />} style={{ flex: '1 1 220px' }} value={model} />
-            <Select onChange={(value) => { setType(value); setPage(1) }} options={[{ label: '全部类型', value: 'all' }, { label: '聊天消息', value: 'chat' }]} style={{ flex: '0 1 180px' }} value={type} />
-            <RangePicker onChange={(value) => { setRange(value?.[0] && value[1] ? [value[0], value[1]] : null); setPage(1) }} style={{ flex: '1 1 280px' }} value={range} />
-            <Button icon={<RotateCcw size={16} />} onClick={reset}>重置</Button>
-          </Flex>
-          {error && data ? <Flex align='center' gap={12} style={{ padding: 16 }}><Text type='danger'>{error}</Text><Button size='small' onClick={() => void load()}>重试</Button></Flex> : null}
+      <Block className={styles.section} gap={16} variant='filled'>
+        <Text className={styles.sectionTitle}>总览</Text>
+        {loading && !data ? (
+          <Block padding={16} variant='outlined'>
+            <Skeleton active paragraph={{ rows: 2 }} />
+          </Block>
+        ) : error && !data ? (
+          <Block variant='outlined'>
+            <Empty action={<Button onClick={() => void load()}>重试</Button>} description={error} />
+          </Block>
+        ) : data ? (
+          <Block padding={0} variant='outlined'>
+            <Grid className={styles.metricGrid} gap={0} maxItemWidth={300} rows={2}>
+              <UsageMetric
+                label='积分'
+                limit={data.balance.grant}
+                used={data.balance.used}
+                value={`${numberFormat.format(data.balance.used)} / ${numberFormat.format(data.balance.grant)}`}
+              />
+              <UsageMetric
+                label='文件使用量'
+                limit={data.storage.limitBytes}
+                used={data.storage.usedBytes}
+                value={`${formatSize(data.storage.usedBytes)} / ${formatSize(data.storage.limitBytes)}`}
+              />
+            </Grid>
+          </Block>
+        ) : null}
+      </Block>
+
+      <Block className={styles.section} gap={16} variant='filled'>
+        <Text className={styles.sectionTitle}>明细</Text>
+        <Block className={styles.details} padding={0} variant='outlined'>
+          <Flexbox horizontal className={styles.toolbar} gap={10} wrap='wrap'>
+            <SearchBar
+              loading={loading}
+              placeholder='搜索模型'
+              style={{ flex: '1 1 260px' }}
+              value={model}
+              onInputChange={(value) => {
+                setModel(value)
+                if (!value) {
+                  setModelQuery('')
+                  setPage(1)
+                }
+              }}
+              onSearch={(value) => {
+                setModelQuery(value.trim())
+                setPage(1)
+              }}
+            />
+            <Select
+              options={[
+                { label: '全部类型', value: 'all' },
+                { label: '聊天消息', value: 'chat' },
+              ]}
+              style={{ flex: '0 1 180px' }}
+              value={type}
+              onChange={(value) => {
+                setType(String(value))
+                setPage(1)
+              }}
+            />
+            <RangePicker
+              placeholder={['开始日期', '结束日期']}
+              style={{ flex: '1 1 280px' }}
+              value={range}
+              onChange={(value) => {
+                setRange(value?.[0] && value[1] ? [value[0], value[1]] : null)
+                setPage(1)
+              }}
+            />
+            <Button icon={RotateCcw} onClick={reset}>
+              重置
+            </Button>
+          </Flexbox>
+
+          {error && data ? (
+            <Flexbox horizontal align='center' className={styles.error} gap={12}>
+              <Text type='danger'>{error}</Text>
+              <Button size='small' onClick={() => void load()}>
+                重试
+              </Button>
+            </Flexbox>
+          ) : null}
+
           <Table<UsageItem>
+            className={styles.table}
             columns={columns}
             dataSource={data?.items ?? []}
             loading={loading}
-            locale={{ emptyText: <Empty description='暂无用量明细' image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
-            onChange={(pagination, _filters, sorter) => {
-              setPage(pagination.current ?? 1)
-              setPageSize(pagination.pageSize ?? 20)
+            locale={{ emptyText: <Empty description='暂无用量明细' /> }}
+            pagination={false}
+            rowKey='id'
+            scroll={{ x: 1017 }}
+            onChange={(_pagination, _filters, sorter) => {
               const current = Array.isArray(sorter) ? sorter[0] : sorter
               if (current?.columnKey && current.order) {
                 setSortBy(String(current.columnKey))
                 setSortOrder(current.order === 'ascend' ? 'asc' : 'desc')
+                setPage(1)
               }
             }}
-            pagination={{ current: page, pageSize, showSizeChanger: true, total: data?.total ?? 0 }}
-            rowKey='id'
-            scroll={{ x: 1060 }}
           />
-        </Card>
-      </Flex>
-    </Flex>
+
+          <Flexbox horizontal align='center' className={styles.pagination} gap={16} justify='space-between'>
+            <Text type='secondary'>
+              第 {rangeStart}-{rangeEnd} 条，共 {total} 条
+            </Text>
+            <Pagination
+              current={page}
+              pageSize={pageSize}
+              pageSizeOptions={[10, 20, 50, 100]}
+              showSizeChanger
+              total={total}
+              onChange={(nextPage, nextPageSize) => {
+                setPage(nextPageSize === pageSize ? nextPage : 1)
+                setPageSize(nextPageSize)
+              }}
+            />
+          </Flexbox>
+        </Block>
+      </Block>
+    </Flexbox>
   )
 }

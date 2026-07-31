@@ -8,6 +8,7 @@ export const getFileConfig = () => {
     clientPrefix: 'NEXT_PUBLIC_',
     client: {},
     server: {
+      FILE_STORAGE_LIMIT_MB: z.number().int().positive(),
       S3_ACCESS_KEY_ID: z.string().optional(),
       S3_BUCKET: z.string().optional(),
       S3_ENABLE_PATH_STYLE: z.boolean(),
@@ -18,6 +19,10 @@ export const getFileConfig = () => {
       S3_SET_ACL: z.boolean(),
     },
     runtimeEnv: {
+      FILE_STORAGE_LIMIT_MB:
+        process.env.FILE_STORAGE_LIMIT_MB === undefined || process.env.FILE_STORAGE_LIMIT_MB === ''
+          ? 15
+          : Number(process.env.FILE_STORAGE_LIMIT_MB),
       // S3
       S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID,
       S3_BUCKET: process.env.S3_BUCKET,
@@ -32,3 +37,5 @@ export const getFileConfig = () => {
 }
 
 export const fileEnv = getFileConfig()
+
+export const fileStorageLimitBytes = fileEnv.FILE_STORAGE_LIMIT_MB * 1024 * 1024

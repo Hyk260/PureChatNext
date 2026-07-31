@@ -1,13 +1,12 @@
 'use client'
 
-import { Flex } from 'antd'
-import { Icon, Tag, Tooltip } from '@pure/ui'
+import { Icon, Tag, Tooltip, Flexbox } from '@pure/ui'
 import { formatTokenNumber } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { EyeIcon, WrenchIcon } from 'lucide-react'
 import { memo } from 'react'
 
-import { type DiscoverModelAbilities } from '@/features/community/types'
+import type { DiscoverModelAbilities } from '@/features/community/types'
 
 const styles = createStaticStyles(({ css }) => ({
   tag: css`
@@ -46,7 +45,7 @@ const ModelFeatureTags = memo<ModelFeatureTagsProps>(({ abilities, contextWindow
   if (!showFunctionCall && !showVision && !showTokens) return null
 
   return (
-    <Flex gap={2} justify='flex-end' style={{ width: '100%' }}>
+    <Flexbox horizontal gap={2} justify='flex-end' style={{ width: '100%' }}>
       {showTokens ? (
         <Tooltip title={`该模型单个会话最多支持 ${contextWindowTokens!.toLocaleString('en-US')} Tokens`}>
           <Tag className={styles.token} size='small'>
@@ -68,7 +67,7 @@ const ModelFeatureTags = memo<ModelFeatureTagsProps>(({ abilities, contextWindow
           </Tag>
         </Tooltip>
       ) : null}
-    </Flex>
+    </Flexbox>
   )
 })
 

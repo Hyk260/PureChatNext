@@ -3,7 +3,7 @@
 import { Grid } from '@pure/ui'
 import { memo } from 'react'
 
-import { type DiscoverProviderItem } from '@/features/community/types'
+import type { DiscoverProviderItem } from '@/features/community/types'
 
 import ProviderCard from './ProviderCard'
 import ProviderEmpty from './ProviderEmpty'

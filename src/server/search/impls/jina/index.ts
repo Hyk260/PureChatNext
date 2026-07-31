@@ -1,12 +1,12 @@
-import { type SearchParams, type UniformSearchResponse, type UniformSearchResult } from '@pure/types'
+import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@pure/types'
 import { getJinaSearchBaseUrl, parseJSONResponse } from '@pure/utils'
 import debug from 'debug'
 import urlJoin from 'url-join'
 
 import { toolsEnv } from '@/envs/tools'
 
-import { type SearchServiceImpl } from '../type'
-import { type JinaResponse, type JinaSearchParameters } from './type'
+import type { SearchServiceImpl } from '../type'
+import type { JinaResponse, JinaSearchParameters } from './type'
 
 const log = debug('search:Jina')
 

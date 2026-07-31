@@ -1,13 +1,12 @@
 'use client'
 
 import { CheckCircleFilled } from '@ant-design/icons'
-import { Highlighter, ModelIcon } from '@pure/ui'
-import { Alert, Flex, Button, Select } from 'antd'
+import { Alert, Button, Flexbox, Highlighter, ModelIcon, Select } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useEffect, useMemo, useState } from 'react'
 
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
-import { type ProviderId } from '../../types'
+import type { ProviderId } from '../../types'
 
 const styles = createStaticStyles(({ css }) => ({
   popup: css`
@@ -100,16 +99,16 @@ const Checker = memo<CheckerProps>(({ provider }) => {
   }
 
   return (
-    <Flex vertical gap={8} style={{ width: '100%' }}>
-      <Flex gap={8} style={{ width: '100%' }}>
+    <Flexbox gap={8} width='100%'>
+      <Flexbox horizontal gap={8} width='100%'>
         <Select
           className={styles.popup}
           options={sortedModelIds.map((id) => ({
             label: (
-              <Flex align='center' gap={6}>
+              <Flexbox horizontal align='center' gap={6}>
                 <ModelIcon model={id} size={20} />
                 {id}
-              </Flex>
+              </Flexbox>
             ),
             value: id,
           }))}
@@ -137,7 +136,7 @@ const Checker = memo<CheckerProps>(({ provider }) => {
         >
           {pass ? '检查通过' : '检查'}
         </Button>
-      </Flex>
+      </Flexbox>
 
       {error ? (
         <Alert
@@ -146,16 +145,16 @@ const Checker = memo<CheckerProps>(({ provider }) => {
           message={error.message}
           action={
             error.body ? (
-              <Flex vertical style={{ paddingBlock: 8, paddingInline: 16 }}>
+              <Flexbox style={{ paddingBlock: 8, paddingInline: 16 }}>
                 <Highlighter actionIconSize='small' language='json' variant='borderless' wrap>
                   {JSON.stringify(error.body, null, 2)}
                 </Highlighter>
-              </Flex>
+              </Flexbox>
             ) : undefined
           }
         />
       ) : null}
-    </Flex>
+    </Flexbox>
   )
 })
 

@@ -1,8 +1,9 @@
 'use client'
 
-import { Button } from 'antd'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import { type CSSProperties, type MouseEventHandler, memo } from 'react'
+import { memo } from 'react'
+import type { CSSProperties, MouseEventHandler } from 'react'
+import { Button } from '@pure/ui'
 
 const prefixCls = 'ant'
 

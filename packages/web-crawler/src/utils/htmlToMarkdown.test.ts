@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { type FilterOptions } from '../type'
+import type { FilterOptions } from '../type'
 import { htmlToMarkdown } from './htmlToMarkdown'
 
 interface TestItem {

@@ -6,7 +6,7 @@ import {
   purehubProviderCard,
 } from '@pure/model-bank'
 
-import { type ProviderConfig, type ProviderConfigs, type ProviderId, type ProviderModelItem } from './types'
+import type { ProviderConfig, ProviderConfigs, ProviderId, ProviderModelItem } from './types'
 
 export const SETTINGS_PROVIDER_IDS = [
   ModelProvider.PureHub,

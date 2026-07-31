@@ -1,4 +1,4 @@
-import { type AiModelCard } from '../types/aiModel'
+import type { AiModelCard } from '../types/aiModel'
 
 /**
  * PureHub 模型 + Gateway USD 定价。
@@ -709,17 +709,10 @@ export const purehubChatModels: AiModelCard[] = [
 
 export const PUREHUB_DEFAULT_MODEL = 'gpt-5.4-mini'
 
-export const PUREHUB_PLAN_CARD_MODELS = [
-  'gpt-5.2',
-  'qwen3.5-plus',
-  'kimi-k2.5',
-  'grok-4.1-fast-reasoning',
-] as const
+export const PUREHUB_PLAN_CARD_MODELS = ['gpt-5.2', 'qwen3.5-plus', 'kimi-k2.5', 'grok-4.1-fast-reasoning'] as const
 
 const byId = new Map(purehubChatModels.map((m) => [m.id, m]))
-const byGatewayId = new Map(
-  purehubChatModels.filter((m) => m.gatewayId).map((m) => [m.gatewayId!, m])
-)
+const byGatewayId = new Map(purehubChatModels.filter((m) => m.gatewayId).map((m) => [m.gatewayId!, m]))
 
 /** 面向用户和新请求的可用模型；完整目录仍保留暂时禁用模型。 */
 export const purehubEnabledChatModels = purehubChatModels.filter((model) => model.enabled !== false)
@@ -730,11 +723,9 @@ export const getPureHubModel = (displayId: string) => byId.get(displayId)
 
 export const getEnabledPureHubModel = (displayId: string) => enabledById.get(displayId)
 
-export const resolvePureHubGatewayId = (displayId: string): string | undefined =>
-  byId.get(displayId)?.gatewayId
+export const resolvePureHubGatewayId = (displayId: string): string | undefined => byId.get(displayId)?.gatewayId
 
-export const resolvePureHubDisplayId = (gatewayId: string): string | undefined =>
-  byGatewayId.get(gatewayId)?.id
+export const resolvePureHubDisplayId = (gatewayId: string): string | undefined => byGatewayId.get(gatewayId)?.id
 
 /** 缺价模型禁止上线 */
 export const assertPureHubPricingComplete = () => {

@@ -1,7 +1,6 @@
 'use client'
 
-import { Flex } from 'antd'
-import { Icon, Tag, Text } from '@pure/ui'
+import { Icon, Tag, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import {
   BadgeDollarSignIcon,
@@ -19,8 +18,8 @@ import {
   PencilIcon,
   PrinterIcon,
   TerminalSquareIcon,
-  type LucideIcon,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
 import { memo, useCallback, useMemo } from 'react'
 
@@ -125,7 +124,7 @@ const AgentCategory = memo(() => {
   )
 
   return (
-    <Flex vertical className={styles.root} gap={4}>
+    <Flexbox className={styles.root} gap={4}>
       {CATEGORY_KEYS.map((key) => {
         const isActive = selected === key
         return (
@@ -149,7 +148,7 @@ const AgentCategory = memo(() => {
           </button>
         )
       })}
-    </Flex>
+    </Flexbox>
   )
 })
 

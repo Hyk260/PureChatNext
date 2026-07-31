@@ -1,9 +1,10 @@
 import debug from 'debug'
-import { type CreateEmailOptions, Resend } from 'resend'
+import { Resend } from 'resend'
+import type { CreateEmailOptions } from 'resend'
 
 import { emailEnv } from '@/envs/email'
 
-import { type EmailPayload, type EmailResponse, type EmailServiceImpl } from '../type'
+import type { EmailPayload, EmailResponse, EmailServiceImpl } from '../type'
 
 const log = debug('email:Resend')
 

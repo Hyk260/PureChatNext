@@ -1,5 +1,6 @@
 import { waitUntil } from '@vercel/functions'
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { getOrCreateQQChat } from '@/libs/channels/qq/chatBot'

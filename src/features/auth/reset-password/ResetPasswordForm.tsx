@@ -1,10 +1,11 @@
 'use client'
 
-import { Block, Icon, Text } from '@pure/ui'
-import { Button, Form, Input } from 'antd'
+import { Block, Button, Icon, Text } from '@pure/ui'
+import { Form, Input } from 'antd'
 import { Lock } from 'lucide-react'
 
-import { useResetPassword, type ResetPasswordFormValues } from './useResetPassword'
+import { useResetPassword } from './useResetPassword'
+import type { ResetPasswordFormValues } from './useResetPassword'
 
 export const ResetPasswordForm = () => {
   const [form] = Form.useForm<ResetPasswordFormValues>()

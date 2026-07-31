@@ -139,7 +139,7 @@ PureChat（PureChatNext）是一个面向自托管场景的 AI 聊天 Web 应用
 
 - [Node.js](https://nodejs.org/) ≥ 20（见 `.nvmrc`）
 - [pnpm](https://pnpm.io/) ≥ 10（见 `packageManager` 字段）
-- PostgreSQL 数据库（推荐 [Supabase](https://supabase.com)）
+- PostgreSQL 17 数据库（可使用 [Supabase](https://supabase.com) 或项目提供的本地实例）
 
 ### 本地开发
 
@@ -155,8 +155,16 @@ pnpm install
 cp .env.example .env.local
 # 编辑 .env.local，填入 DATABASE_URL、OPENAI_API_KEY 等
 
+# 可选：连接外置 SSD 后启动本地 PostgreSQL
+pnpm db:local:start
+pnpm db:local:status
+
 # 执行数据库迁移
 pnpm db:migrate
+
+# 可选：连接外置 SSD 后启动本地 Redis
+pnpm redis:start
+pnpm redis:status
 
 # 启动开发（并发 Next :3000 + Vite SPA :5174，需本机 bun）
 pnpm dev
@@ -218,6 +226,7 @@ pnpm db:studio      # 打开 Drizzle Studio
 | 环境变量                       | 类型 | 描述                                 | 示例                                          |
 | ------------------------------ | ---- | ------------------------------------ | --------------------------------------------- |
 | `DATABASE_URL`                 | 必选 | PostgreSQL 连接字符串                | `postgresql://user:pass@host:5432/db`         |
+| `DATABASE_DRIVER`              | 必选 | `neon` 强制 SSL；本地 PostgreSQL 用 `node` | `node`                                  |
 | `KEY_VAULTS_SECRET`            | 必选 | 敏感信息加密密钥                     | `openssl rand -base64 32`                     |
 | `OPENAI_API_KEY`               | 推荐 | OpenAI API 密钥                      | `sk-xxxxxx`                                   |
 | `OPENAI_PROXY_URL`             | 可选 | OpenAI 代理地址                      | `https://api.openai.com/v1`                   |
@@ -281,7 +290,9 @@ PureChatNext/
 │   ├── libs/                  # Better Auth、工具库
 │   └── components/            # 通用 React 组件
 ├── docs/                      # 文档
-└── scripts/                   # migrate、copySpaBuild、dev 编排等
+└── scripts/                   # 项目脚本（文件名统一使用 kebab-case）
+    ├── copy-spa-build.mjs     # SPA 构建产物复制脚本
+    └── shell/                 # Shell 脚本（kebab-case）
 ```
 
 <div align="right">
@@ -301,8 +312,16 @@ pnpm build            # build:spa → copy → next build
 pnpm start            # 生产启动（端口 3210）
 pnpm lint             # ESLint 检查
 pnpm gateway          # 运行 gateway 脚本
+pnpm local:services:stop # 关机/拔盘前停止 PostgreSQL 与 Redis
+pnpm db:local:start   # 启动本地 PostgreSQL
+pnpm db:local:status  # 检查本地 PostgreSQL 状态
+pnpm db:local:restart # 重启本地 PostgreSQL
+pnpm db:local:stop    # 停止本地 PostgreSQL
 pnpm db:migrate       # 执行数据库迁移
 pnpm db:studio        # Drizzle Studio
+pnpm redis:start      # 启动本地 Redis
+pnpm redis:status     # 检查本地 Redis 状态
+pnpm redis:stop       # 停止本地 Redis
 ```
 
 测试（Vitest）：
@@ -328,6 +347,8 @@ cd packages/web-crawler && pnpm test
 | [docs/quick-start.zh-CN.md](./docs/quick-start.zh-CN.md)                               | 快速开始与 Supabase 配置 |
 | [docs/env-setup.zh-CN.md](./docs/env-setup.zh-CN.md)                                   | 环境变量详解             |
 | [docs/drizzle-setup.zh-CN.md](./docs/drizzle-setup.zh-CN.md)                           | 数据库迁移流程           |
+| [docs/self-hosting/postgresql-local.zh-CN.md](./docs/self-hosting/postgresql-local.zh-CN.md) | 本地 PostgreSQL 管理 |
+| [docs/self-hosting/redis-local.zh-CN.md](./docs/self-hosting/redis-local.zh-CN.md)     | 本地 Redis 管理          |
 | [docs/self-hosting/online-search.zh-CN.md](./docs/self-hosting/online-search.zh-CN.md) | 联网搜索与爬虫配置       |
 | [docs/self-hosting/auth/email.zh-CN.md](./docs/self-hosting/auth/email.zh-CN.md)       | 邮件服务与邮箱验证       |
 | [AGENTS.md](./AGENTS.md)                                                               | AI Agent 开发约定        |

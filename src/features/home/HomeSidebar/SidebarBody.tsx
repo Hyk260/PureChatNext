@@ -1,10 +1,10 @@
 'use client'
 
-import { Accordion } from '@pure/ui'
-import { Flex } from 'antd'
+import { Accordion, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import Scrollbar from '@/components/Scrollbar'
-import { memo, useCallback, useMemo, type Key, type ReactElement } from 'react'
+import { memo, useCallback, useMemo } from 'react'
+import type { Key, ReactElement } from 'react'
 
 import NavItem from '@/components/NavItem'
 import { findSidebarSection, SIDEBAR_ACCORDION_KEYS, SIDEBAR_SPACER_ID } from '@/const/home/nav'
@@ -130,18 +130,18 @@ const SidebarBody = memo(() => {
   if (topContent.length === 0 && bottomContent.length === 0) return null
 
   return (
-    <Flex vertical flex={1} gap={1} style={{ minHeight: 0 }}>
+    <Flexbox flex={1} gap={1} style={{ minHeight: 0 }}>
       <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }} viewStyle={{ paddingInline: '4px 8px' }}>
-        <Flex vertical flex={1} gap={1} style={{ minHeight: '100%' }}>
+        <Flexbox flex={1} gap={1} style={{ minHeight: '100%' }}>
           {topContent}
-        </Flex>
+        </Flexbox>
       </Scrollbar>
       {bottomContent.length > 0 ? (
-        <Flex vertical gap={1} style={{ flex: 'none', paddingInline: '4px 8px' }}>
+        <Flexbox gap={1} style={{ flex: 'none', paddingInline: '4px 8px' }}>
           {bottomContent}
-        </Flex>
+        </Flexbox>
       ) : null}
-    </Flex>
+    </Flexbox>
   )
 })
 

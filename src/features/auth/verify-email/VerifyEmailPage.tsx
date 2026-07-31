@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from 'antd'
 import { ChevronLeft } from 'lucide-react'
 import Link from '@/utils/link'
 import { useSearchParams } from '@/utils/navigation'
@@ -12,6 +11,7 @@ import AuthCard from '@/features/AuthCard'
 import { useAuthConfig } from '@/libs/better-auth/client'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
+import { Button } from '@pure/ui'
 import { VerifyEmailContent } from './VerifyEmailContent'
 
 const VerifyEmailDescription = ({ email }: { email: string | null }) => {

@@ -1,4 +1,4 @@
-import { type GenericOAuthConfig } from 'better-auth/plugins'
+import type { GenericOAuthConfig } from 'better-auth/plugins'
 
 import { authEnv } from '@/envs/auth'
 

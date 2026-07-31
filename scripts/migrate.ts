@@ -11,10 +11,7 @@ import { createMigrationClient } from './lib/db'
 
 const log = debug('db:migrate')
 
-const migrationsFolder = path.join(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../packages/database/src/migrations'
-)
+const migrationsFolder = path.join(path.dirname(fileURLToPath(import.meta.url)), '../packages/database/src/migrations')
 
 async function runMigrate() {
   const { connection, db } = createMigrationClient()

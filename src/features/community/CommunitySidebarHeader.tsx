@@ -1,7 +1,7 @@
 'use client'
 
-import { Flex } from 'antd'
-import { type IconProps, ProviderIconLucide } from '@pure/ui'
+import { ProviderIconLucide, Flexbox } from '@pure/ui'
+import type { IconProps } from '@pure/ui'
 import { Bot, Brain } from 'lucide-react'
 import Link from '@/utils/link'
 import { usePathname } from '@/utils/navigation'
@@ -67,13 +67,13 @@ const CommunitySidebarHeader = memo(() => {
         homeHref='/'
         showHomeIcon
       />
-      <Flex vertical gap={1} style={{ paddingInline: 4 }}>
+      <Flexbox gap={1} style={{ paddingInline: 4 }}>
         {NAV_ITEMS.map((item) => (
           <Link key={item.key} href={item.href} style={{ color: 'inherit', textDecoration: 'none' }}>
             <NavItem active={activeTab === item.key} clickable icon={item.icon} title={item.title} />
           </Link>
         ))}
-      </Flex>
+      </Flexbox>
     </>
   )
 })

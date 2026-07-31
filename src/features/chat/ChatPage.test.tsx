@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { type UIMessage } from 'ai'
+import type { UIMessage } from 'ai'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => {
   }
 
   return {
+    autoRenameTopic: vi.fn(),
     createTopic: vi.fn(),
     fetchAgents: vi.fn(),
     fetchMessages: vi.fn(),
@@ -62,11 +63,8 @@ vi.mock('ai', () => ({
   DefaultChatTransport: class {},
 }))
 
-vi.mock('antd', () => ({
-  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-}))
-
 vi.mock('@pure/ui', () => ({
+  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }))
 
@@ -80,6 +78,7 @@ vi.mock('@/components/AntdStaticMethods', () => ({
 }))
 
 vi.mock('@/features/chat/chatApi', () => ({
+  autoRenameTopic: mocks.autoRenameTopic,
   createTopic: mocks.createTopic,
   deleteTopic: vi.fn(),
   deleteTopics: vi.fn(),
@@ -98,7 +97,23 @@ vi.mock('@/features/chat/ChatInput', () => ({
 }))
 
 vi.mock('@/features/chat/ChatLayout', () => ({
-  default: ({ children }: { children?: React.ReactNode }) => <main>{children}</main>,
+  default: ({
+    autoRenamingTopicId,
+    children,
+    onAutoRenameTopic,
+  }: {
+    autoRenamingTopicId: string | null
+    children?: React.ReactNode
+    onAutoRenameTopic: (id: string) => void
+  }) => (
+    <main>
+      <span data-testid='auto-renaming-topic-id'>{autoRenamingTopicId ?? 'none'}</span>
+      <button type='button' onClick={() => onAutoRenameTopic('topic-rename')}>
+        auto rename
+      </button>
+      {children}
+    </main>
+  ),
 }))
 
 vi.mock('@/features/chat/ChatMessages', () => ({
@@ -152,10 +167,9 @@ vi.mock('@/features/settings/provider/const', () => ({
 
 vi.mock('@/features/settings/provider/store/useProviderConfigStore', () => {
   const state = { configs: { purehub: { apiKey: '', baseURL: '' } } }
-  const useProviderConfigStore = Object.assign(
-    (selector: (value: typeof state) => unknown) => selector(state),
-    { getState: () => state }
-  )
+  const useProviderConfigStore = Object.assign((selector: (value: typeof state) => unknown) => selector(state), {
+    getState: () => state,
+  })
 
   return { useProviderConfigStore }
 })
@@ -176,6 +190,7 @@ describe('ChatPage message loading state', () => {
   beforeEach(() => {
     mocks.navigation.query = 'agent=agt_inbox'
     mocks.navigation.listeners.clear()
+    mocks.autoRenameTopic.mockReset()
     mocks.createTopic.mockReset().mockResolvedValue(createdTopic)
     mocks.fetchMessages.mockReset().mockReturnValue(new Promise(() => {}))
     mocks.fetchTopics.mockReset().mockResolvedValue([])
@@ -204,5 +219,41 @@ describe('ChatPage message loading state', () => {
 
     expect(await screen.findByTestId('messages-skeleton')).toBeTruthy()
     expect(screen.queryByTestId('messages')).toBeNull()
+  })
+
+  it('clears the shared auto rename state after success', async () => {
+    let resolveRename: (topic: typeof createdTopic) => void = () => {}
+    mocks.autoRenameTopic.mockReturnValue(
+      new Promise((resolve) => {
+        resolveRename = resolve
+      })
+    )
+    render(<ChatPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'auto rename' }))
+    fireEvent.click(screen.getByRole('button', { name: 'auto rename' }))
+    expect(mocks.autoRenameTopic).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('auto-renaming-topic-id').textContent).toBe('topic-rename')
+
+    resolveRename({ ...createdTopic, id: 'topic-rename', title: '智能标题' })
+    await waitFor(() => expect(screen.getByTestId('auto-renaming-topic-id').textContent).toBe('none'))
+  })
+
+  it('clears the shared auto rename state after failure', async () => {
+    let rejectRename: (error: Error) => void = () => {}
+    mocks.autoRenameTopic.mockReturnValue(
+      new Promise((_resolve, reject) => {
+        rejectRename = reject
+      })
+    )
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    render(<ChatPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'auto rename' }))
+    expect(screen.getByTestId('auto-renaming-topic-id').textContent).toBe('topic-rename')
+
+    rejectRename(new Error('rename failed'))
+    await waitFor(() => expect(screen.getByTestId('auto-renaming-topic-id').textContent).toBe('none'))
+    consoleError.mockRestore()
   })
 })

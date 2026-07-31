@@ -1,10 +1,11 @@
 'use client'
 
 import { ConfigProvider, ThemeProvider } from '@pure/ui/ThemeProvider'
+import { ModalHost } from '@pure/ui/ModalHost'
 import { StyleProvider } from 'antd-style'
 import { LazyMotion, domAnimation } from 'motion/react'
 import * as m from 'motion/react-m'
-import { type PropsWithChildren } from 'react'
+import type { PropsWithChildren } from 'react'
 
 import AntdStaticMethods from '@/components/AntdStaticMethods'
 import { useSystemAppearance } from '@/hooks/useSystemAppearance'
@@ -27,7 +28,10 @@ const ThemeProviders = ({ children }: PropsWithChildren) => {
       >
         <AntdStaticMethods />
         <LazyMotion features={domAnimation}>
-          <ConfigProvider motion={m}>{children}</ConfigProvider>
+          <ConfigProvider motion={m}>
+            <ModalHost />
+            {children}
+          </ConfigProvider>
         </LazyMotion>
       </ThemeProvider>
     </StyleProvider>

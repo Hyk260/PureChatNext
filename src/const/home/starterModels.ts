@@ -1,4 +1,4 @@
-import { type HomeModelItem } from '@/const/home/models'
+import type { HomeModelItem } from '@/const/home/models'
 
 export interface StarterModelItem extends HomeModelItem {
   label: string

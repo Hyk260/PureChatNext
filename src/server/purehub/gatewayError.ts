@@ -1,7 +1,6 @@
 import { APICallError } from 'ai'
 
-export const PUREHUB_MODEL_UNAVAILABLE_MESSAGE =
-  '该模型在 PureHub 免费套餐中暂不可用，请切换到其他模型。'
+export const PUREHUB_MODEL_UNAVAILABLE_MESSAGE = '该模型在 PureHub 免费套餐中暂不可用，请切换到其他模型。'
 
 const safeStringify = (value: unknown) => {
   try {
@@ -14,9 +13,7 @@ const safeStringify = (value: unknown) => {
 const getErrorDetails = (error: unknown) => {
   if (APICallError.isInstance(error)) {
     return {
-      message: [error.name, error.message, error.responseBody, safeStringify(error.data)]
-        .filter(Boolean)
-        .join(' '),
+      message: [error.name, error.message, error.responseBody, safeStringify(error.data)].filter(Boolean).join(' '),
       statusCode: error.statusCode,
     }
   }

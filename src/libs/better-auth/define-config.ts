@@ -1,8 +1,9 @@
 import { createNanoId, generateCompactUuid } from '@pure/utils'
-import { betterAuth, type BetterAuthOptions } from 'better-auth/minimal'
+import { betterAuth } from 'better-auth/minimal'
+import type { BetterAuthOptions } from 'better-auth/minimal'
 import { verifyPassword } from 'better-auth/crypto'
 import { EmailService } from '@/server/services/email'
-import { type EmailPayload } from '@/server/services/email/impls'
+import type { EmailPayload } from '@/server/services/email/impls'
 // import { imAccountPlugin } from '@/libs/better-auth/server/plugins/im-account'
 import { admin, emailOTP, genericOAuth, magicLink } from 'better-auth/plugins'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
@@ -231,6 +232,7 @@ export function defineConfig() {
       // 实验性联表查询需传入完整 schema 关系
       schema,
     }),
+    // Redis
     secondaryStorage: createSecondaryStorage(),
     // API 错误时重定向到自定义页面
     onAPIError: {

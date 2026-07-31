@@ -1,13 +1,13 @@
 import { http } from '@/libs/utils/rest-api'
 import { generateRandomInt32 } from '@/libs/utils/buildURL'
 
-import {
-  type AccountCheckItem,
-  type AccountCheckResult,
-  type AccountImportParams,
-  type AddGroupMemberParams,
-  type ImportResult,
-  type SendMsgParams,
+import type {
+  AccountCheckItem,
+  AccountCheckResult,
+  AccountImportParams,
+  AddGroupMemberParams,
+  ImportResult,
+  SendMsgParams,
 } from './types'
 
 /**

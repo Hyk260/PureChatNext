@@ -1,16 +1,11 @@
-import {
-  AI_MODELS_BY_PROVIDER,
-  DEFAULT_MODEL_PROVIDER_LIST,
-  type ModelProviderId,
-} from '@pure/model-bank'
+import { AI_MODELS_BY_PROVIDER, DEFAULT_MODEL_PROVIDER_LIST } from '@pure/model-bank'
+import type { ModelProviderId } from '@pure/model-bank'
 
-import { type DiscoverModelItem } from '@/features/community/types'
+import type { DiscoverModelItem } from '@/features/community/types'
 
 /** 社区模型列表，字段来自 `@pure/model-bank`。 */
 export const COMMUNITY_MODELS: DiscoverModelItem[] = (
-  Object.entries(AI_MODELS_BY_PROVIDER) as Array<
-    [ModelProviderId, (typeof AI_MODELS_BY_PROVIDER)[ModelProviderId]]
-  >
+  Object.entries(AI_MODELS_BY_PROVIDER) as Array<[ModelProviderId, (typeof AI_MODELS_BY_PROVIDER)[ModelProviderId]]>
 ).flatMap(([provider, models]) =>
   models
     .filter((model) => model.enabled !== false)
@@ -33,9 +28,7 @@ export const COMMUNITY_MODELS: DiscoverModelItem[] = (
     }))
 )
 
-export const getModelProviderCounts = (
-  models: DiscoverModelItem[] = COMMUNITY_MODELS
-): Record<string, number> => {
+export const getModelProviderCounts = (models: DiscoverModelItem[] = COMMUNITY_MODELS): Record<string, number> => {
   const counts: Record<string, number> = { all: models.length }
 
   for (const provider of DEFAULT_MODEL_PROVIDER_LIST) {

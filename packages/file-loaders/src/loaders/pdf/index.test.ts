@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { type FileLoaderInterface } from '../../types'
+import type { FileLoaderInterface } from '../../types'
 import { PdfLoader } from './index'
 
 // Ensure you have placed a test.pdf file in the fixtures directory

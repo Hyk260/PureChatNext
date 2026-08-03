@@ -6,7 +6,7 @@
     "dev:next": "next dev -p 3000",
     "dev:spa": "vite",
     "dev:inspect": "CODE_INSPECTOR=1 pnpm run dev",
-    "clean": "bash scripts/shell/clean-cache.sh",
+    "clean": "bun scripts/clean-cache.mts",
     "build": "pnpm run build:spa && pnpm run build:spa:copy && pnpm run build:next",
     "build:spa": "vite build",
     "build:spa:copy": "node scripts/copy-spa-build.mjs",

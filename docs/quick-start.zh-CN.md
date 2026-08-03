@@ -45,41 +45,49 @@ NODE_ENV=development
 
 本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [env-setup.zh-CN.md · APP\_URL](./env-setup.zh-CN.md#app_url)。
 
-### 3.1 可选：使用本地 PostgreSQL
+### 3.1 可选：本地依赖（Docker）
 
-不使用 Supabase 托管数据库时，可连接外置 SSD 上的本地 PostgreSQL：
-
-```env
-DATABASE_DRIVER=node
-DATABASE_URL=postgresql://purechat:<本地密码>@127.0.0.1:5432/purechat
-```
+不使用云托管服务时，可用 Docker Compose 一次启动 PostgreSQL、Redis、RustFS（S3）和 SearXNG（需已安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/)）：
 
 ```bash
-pnpm db:local:start
-pnpm db:local:status
+# 一次性：复制 compose 侧环境变量
+cp docker-compose/dev/.env.example docker-compose/dev/.env
+
+# 启动全部本地依赖并等待健康检查
+pnpm dev:docker
 pnpm db:migrate
 ```
 
-完整说明见 [本地 PostgreSQL 管理](./self-hosting/postgresql-local.zh-CN.md)。
-
-### 3.2 可选：启动本地 Redis
-
-需要 Better Auth 次级存储、微信渠道上下文或本地缓存时，可启用 Redis：
+在 `.env.local` 中对齐连接信息（与 `docker-compose/dev/.env` 一致）：
 
 ```env
+DATABASE_DRIVER=node
+DATABASE_URL=postgresql://purechat:purechat@127.0.0.1:5432/purechat
+
 REDIS_URL=redis://127.0.0.1:6379
 REDIS_PREFIX=purechat
 DISABLE_REDIS=0
+
+S3_ACCESS_KEY_ID=purechat
+S3_SECRET_ACCESS_KEY=purechat_secret
+S3_BUCKET=purechat
+S3_ENDPOINT=http://localhost:9000
+S3_ENABLE_PATH_STYLE=1
+S3_SET_ACL=0
+
+SEARCH_PROVIDERS=searxng
+SEARXNG_URL=http://localhost:8180
 ```
 
-连接外置 SSD 后启动并检查状态：
+常用命令：
 
 ```bash
-pnpm redis:start
-pnpm redis:status
+pnpm dev:docker        # 启动
+pnpm dev:docker:down   # 停止（保留数据卷）
+pnpm dev:docker:reset  # 清空卷后重建并执行 db:migrate
 ```
 
-完整说明见 [本地 Redis 管理](./self-hosting/redis-local.zh-CN.md)。
+服务说明见 [本地 PostgreSQL](./self-hosting/postgresql-local.zh-CN.md)、[本地 Redis](./self-hosting/redis-local.zh-CN.md)、[联网搜索](./self-hosting/online-search.zh-CN.md)。
 
 ## 4. 启动开发服务器
 

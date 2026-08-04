@@ -1,0 +1,122 @@
+name: purechat
+
+services:
+  network-service:
+    image: alpine
+    container_name: purechat-network
+    restart: unless-stopped
+    ports:
+      - '${RUSTFS_PORT:-9000}:9000'
+      - '9001:9001'
+    command: tail -f /dev/null
+    networks:
+      - purechat-network
+    env_file:
+      - .env
+
+  postgresql:
+    image: postgres:17-alpine
+    container_name: purechat-postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - purechat-network
+    env_file:
+      - .env
+
+  redis:
+    image: redis:7-alpine
+    container_name: purechat-redis
+    ports:
+      - '6379:6379'
+    command: redis-server --save 60 1000 --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - purechat-network
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: purechat-rustfs
+    network_mode: 'service:network-service'
+    depends_on:
+      - network-service
+    environment:
+      RUSTFS_CONSOLE_ENABLE: 'true'
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
+    volumes:
+      - rustfs_data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:9000/health >/dev/null 2>&1 || exit 1']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    command: ['--access-key', '${RUSTFS_ACCESS_KEY}', '--secret-key', '${RUSTFS_SECRET_KEY}', '/data']
+    env_file:
+      - .env
+
+  rustfs-init:
+    image: minio/mc:latest
+    container_name: purechat-rustfs-init
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    volumes:
+      - ./bucket.config.json:/bucket.config.json:ro
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        set -eux
+        mc alias set rustfs "http://network-service:9000" "$${RUSTFS_ACCESS_KEY}" "$${RUSTFS_SECRET_KEY}"
+        mc mb "rustfs/$${RUSTFS_BUCKET}" --ignore-existing
+        mc anonymous set-json /bucket.config.json "rustfs/$${RUSTFS_BUCKET}"
+    restart: 'no'
+    networks:
+      - purechat-network
+    env_file:
+      - .env
+
+  searxng:
+    image: searxng/searxng
+    container_name: purechat-searxng
+    ports:
+      - '8180:8080'
+    volumes:
+      - ./searxng-settings.yml:/etc/searxng/settings.yml:ro
+    environment:
+      SEARXNG_SETTINGS_FILE: /etc/searxng/settings.yml
+    restart: unless-stopped
+    networks:
+      - purechat-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rustfs_data:
+    driver: local
+
+networks:
+  purechat-network:
+    driver: bridge

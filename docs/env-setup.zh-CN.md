@@ -17,9 +17,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 # postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
 
-# 本地 PostgreSQL 改用：
+# 本地 Docker PostgreSQL（pnpm dev:docker）改用：
 # DATABASE_DRIVER=node
-# DATABASE_URL=postgresql://purechat:[LOCAL-PASSWORD]@127.0.0.1:5432/purechat
+# DATABASE_URL=postgresql://purechat:purechat@127.0.0.1:5432/purechat
+# 密码需与 docker-compose/dev/.env 中 POSTGRES_PASSWORD 一致
 
 # 应用对外地址（本地统一 SPA 端口）
 APP_URL=http://localhost:5174
@@ -99,7 +100,7 @@ Supabase 的匿名/公开密钥，用于客户端访问。
 PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操作。
 
 - Supabase：`postgresql://postgres:[密码]@db.[项目引用].supabase.co:5432/postgres`
-- 本地：`postgresql://purechat:[密码]@127.0.0.1:5432/purechat`
+- 本地 Docker：`postgresql://purechat:purechat@127.0.0.1:5432/purechat`（默认与 `docker-compose/dev/.env.example` 一致）
 - Supabase 支持直接连接（5432）或连接池（6543）；本地实例使用 5432
 
 ### DATABASE\_DRIVER
@@ -109,7 +110,7 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 - 云托管 PostgreSQL（Supabase、Neon 等）：`DATABASE_DRIVER=neon`
 - 本机或明确无需 SSL 的 PostgreSQL：`DATABASE_DRIVER=node`
 
-本地实例的目录、启停和基础配置见 [本地 PostgreSQL 管理](./self-hosting/postgresql-local.zh-CN.md)。
+本地 Docker 启停与连接说明见 [本地 PostgreSQL 管理](./self-hosting/postgresql-local.zh-CN.md)。
 
 ### NODE\_ENV
 

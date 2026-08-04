@@ -203,6 +203,13 @@ SearXNG 实例的 URL 地址，这是启用联网搜索功能的必要配置。�
 SEARXNG_URL=https://searxng-instance.com
 ```
 
+本地开发可用 `pnpm dev:docker` 启动项目自带的 SearXNG（已开启 `json` 输出）：
+
+```shell
+SEARCH_PROVIDERS=searxng
+SEARXNG_URL=http://localhost:8180
+```
+
 这个 URL 应该指向一个可用的 SearXNG 实例。您可以选择自行部署 SearXNG，或使用公共可用的 SearXNG 实例。
 
 您可以在 [SearXNG 实例列表](https://searx.space/) 中找到公开可用的 SearXNG 实例。选择一个响应速度快、可靠性高的实例，然后将其 URL 配置到 `.env` 中。

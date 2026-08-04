@@ -155,16 +155,10 @@ pnpm install
 cp .env.example .env.local
 # 编辑 .env.local，填入 DATABASE_URL、OPENAI_API_KEY 等
 
-# 可选：连接外置 SSD 后启动本地 PostgreSQL
-pnpm db:local:start
-pnpm db:local:status
-
-# 执行数据库迁移
+# 可选：Docker 启动本地依赖（PostgreSQL / Redis / RustFS / SearXNG）
+cp docker-compose/dev/.env.example docker-compose/dev/.env
+pnpm dev:docker
 pnpm db:migrate
-
-# 可选：连接外置 SSD 后启动本地 Redis
-pnpm redis:start
-pnpm redis:status
 
 # 启动开发（并发 Next :3000 + Vite SPA :5174，需本机 bun）
 pnpm dev
@@ -312,16 +306,11 @@ pnpm build            # build:spa → copy → next build
 pnpm start            # 生产启动（端口 3210）
 pnpm lint             # ESLint 检查
 pnpm gateway          # 运行 gateway 脚本
-pnpm local:services:stop # 关机/拔盘前停止 PostgreSQL 与 Redis
-pnpm db:local:start   # 启动本地 PostgreSQL
-pnpm db:local:status  # 检查本地 PostgreSQL 状态
-pnpm db:local:restart # 重启本地 PostgreSQL
-pnpm db:local:stop    # 停止本地 PostgreSQL
+pnpm dev:docker       # 启动本地 Docker 依赖（PG / Redis / RustFS / SearXNG）
+pnpm dev:docker:down  # 停止本地 Docker 依赖（保留数据卷）
+pnpm dev:docker:reset # 清空卷后重建并执行 db:migrate
 pnpm db:migrate       # 执行数据库迁移
 pnpm db:studio        # Drizzle Studio
-pnpm redis:start      # 启动本地 Redis
-pnpm redis:status     # 检查本地 Redis 状态
-pnpm redis:stop       # 停止本地 Redis
 ```
 
 测试（Vitest）：

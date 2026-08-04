@@ -51,11 +51,25 @@ function readJournalMigrations(migrationsFolder: string): MigrationFileMeta[] {
 }
 
 async function getLastDbMigration(connection: postgres.Sql): Promise<DbMigrationRecord | null> {
-  const rows = await connection<
-    DbMigrationRecord[]
-  >`SELECT hash, created_at FROM drizzle.__drizzle_migrations ORDER BY created_at DESC LIMIT 1`
+  try {
+    const rows = await connection<
+      DbMigrationRecord[]
+    >`SELECT hash, created_at FROM drizzle.__drizzle_migrations ORDER BY created_at DESC LIMIT 1`
 
-  return rows[0] ?? null
+    return rows[0] ?? null
+  } catch (error) {
+    // Fresh databases have no drizzle schema/table yet; treat as "no migrations applied".
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: string }).code === '42P01'
+    ) {
+      return null
+    }
+
+    throw error
+  }
 }
 
 async function tableExists(connection: postgres.Sql, tableName: string): Promise<boolean> {

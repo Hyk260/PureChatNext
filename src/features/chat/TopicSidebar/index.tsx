@@ -3,12 +3,12 @@
 import { ActionIcon, Button, Text, Flexbox } from '@pure/ui'
 import { ChevronLeft, MessageSquarePlus } from 'lucide-react'
 import { useRouter } from '@/utils/navigation'
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useMemo } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
 import type { AgentListItem } from '@/const/home/agents'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
-import type { LocalChatTopic, TopicDeleteScope, TopicGroupMode } from '@/features/chat/types'
+import type { LocalChatTopic, TopicDeleteScope } from '@/features/chat/types'
 import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
 
 import AgentSwitcher from './AgentSwitcher'
@@ -57,7 +57,7 @@ const TopicSidebar = memo<Props>(
     const router = useRouter()
     const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
     const toggleLeftCollapsed = useChatUiStore((s) => s.toggleLeftCollapsed)
-    const groupMode = useChatUiStore((s) => s.topicGroupModeByAgent[currentAgentId] ?? 'byTime')
+    const groupMode = useChatUiStore((s) => s.topicGroupMode)
     const pageSize = useChatUiStore((s) => s.topicPageSize)
     const sortBy = useChatUiStore((s) => s.topicSortBy)
     const setGroupMode = useChatUiStore((s) => s.setTopicGroupMode)
@@ -69,10 +69,6 @@ const TopicSidebar = memo<Props>(
           a.localeCompare(b, 'zh-CN')
         ),
       [topics]
-    )
-    const handleGroupModeChange = useCallback(
-      (mode: TopicGroupMode) => setGroupMode(currentAgentId, mode),
-      [currentAgentId, setGroupMode]
     )
     const unfavoritedCount = useMemo(() => topics.filter((topic) => !topic.favorite).length, [topics])
 
@@ -117,7 +113,7 @@ const TopicSidebar = memo<Props>(
                   <TopicFilter
                     groupMode={groupMode}
                     sortBy={sortBy}
-                    onGroupModeChange={handleGroupModeChange}
+                    onGroupModeChange={setGroupMode}
                     onSortByChange={setSortBy}
                   />
                   <TopicActions

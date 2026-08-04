@@ -25,9 +25,12 @@ const styles = createStaticStyles(({ css }) => ({
     background: ${cssVar.colorFillTertiary};
   `,
   count: css`
+    display: flex;
+    align-items: center;
+    min-height: 20px;
     font-size: 16px;
     font-weight: bold;
-    line-height: 1.2;
+    line-height: 20px;
   `,
   title: css`
     font-size: 12px;

@@ -2,7 +2,7 @@
 
 import { ActionIcon, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { X } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { memo } from 'react'
 import { useQueryState } from 'nuqs'
 import { useShallow } from 'zustand/react/shallow'
@@ -10,6 +10,8 @@ import { useShallow } from 'zustand/react/shallow'
 import FileIcon from '@/components/FileIcon'
 import { useResourceManagerStore } from '@/features/resources/store'
 import { useResourceStore } from '@/features/resources/store/resourceStore'
+
+import FileContent from './FileContent'
 
 const styles = createStaticStyles(({ css }) => ({
   overlay: css`
@@ -19,13 +21,23 @@ const styles = createStaticStyles(({ css }) => ({
     background: ${cssVar.colorBgContainer};
   `,
   header: css`
-    padding: 12px 16px;
+    flex: none;
+    min-height: 56px;
+    padding: 8px 16px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
+  `,
+  headerTitle: css`
+    min-width: 0;
+  `,
+  name: css`
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   `,
   preview: css`
     flex: 1;
-    overflow: auto;
-    padding: 24px;
+    min-height: 0;
+    overflow: hidden;
   `,
 }))
 
@@ -40,35 +52,27 @@ const FileEditor = memo(() => {
   )
   const item = useResourceStore((s) => s.resourceList.find((f) => f.id === currentViewItemId))
 
-  const handleClose = () => {
-    setFileParam(null)
+  const handleBack = () => {
+    void setFileParam(null)
     setCurrentViewItemId(undefined)
     setMode('explorer')
   }
 
   if (!item) return null
 
-  const isImage = item.fileType.startsWith('image/')
-  const isPdf = item.fileType.includes('pdf')
-
   return (
     <Flexbox className={styles.overlay} style={{ height: '100%' }}>
-      <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
-        <Flexbox horizontal align='center' gap={8}>
+      <Flexbox horizontal align='center' className={styles.header} gap={12}>
+        <ActionIcon icon={ArrowLeft} onClick={handleBack} title='返回' />
+        <Flexbox horizontal align='center' className={styles.headerTitle} flex={1} gap={8}>
           <FileIcon fileType={item.fileType} />
-          <Text strong>{item.name}</Text>
+          <Text strong className={styles.name} title={item.name}>
+            {item.name}
+          </Text>
         </Flexbox>
-        <ActionIcon icon={X} onClick={handleClose} title='关闭' />
       </Flexbox>
-      <Flexbox align='center' className={styles.preview} justify='center'>
-        {isImage && item.url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img alt={item.name} src={item.url} style={{ maxHeight: '100%', maxWidth: '100%' }} />
-        ) : isPdf && item.url ? (
-          <iframe src={item.url} style={{ border: 'none', height: '100%', width: '100%' }} title={item.name} />
-        ) : (
-          <Text type='secondary'>暂不支持预览此文件类型</Text>
-        )}
+      <Flexbox className={styles.preview}>
+        <FileContent key={item.id} item={item} />
       </Flexbox>
     </Flexbox>
   )

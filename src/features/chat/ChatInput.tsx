@@ -18,6 +18,7 @@ import { memo, useCallback, useMemo, useState } from 'react'
 
 import ModelSelector from '@/features/chat/ModelSelector'
 import { SendButton } from '@/features/chat/SendArea'
+import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 
 const styles = createStaticStyles(({ css }) => ({
   input: css`
@@ -131,6 +132,8 @@ MenuLabel.displayName = 'MenuLabel'
 const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
   const [input, setInput] = useState('')
   const [plusOpen, setPlusOpen] = useState(false)
+  const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
+  const toggleRightCollapsed = useChatUiStore((s) => s.toggleRightCollapsed)
 
   const handleSend = useCallback(() => {
     const text = input.trim()
@@ -144,6 +147,11 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
   const handleStop = useCallback(() => {
     onStop?.()
   }, [onStop])
+
+  const handleToggleParams = useCallback(() => {
+    toggleRightCollapsed()
+    setPlusOpen(false)
+  }, [toggleRightCollapsed])
 
   const plusMenuItems = useMemo<MenuProps['items']>(
     () => [
@@ -160,10 +168,11 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
       {
         icon: Settings2,
         key: 'params',
-        label: <MenuLabel active label='高级参数' />,
+        label: <MenuLabel active={!rightCollapsed} label='高级参数' />,
+        onClick: handleToggleParams,
       },
     ],
-    []
+    [handleToggleParams, rightCollapsed]
   )
 
   const plusMenuContent = useMemo(() => renderDropdownMenuItems(plusMenuItems), [plusMenuItems])

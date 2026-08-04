@@ -1,6 +1,8 @@
 import type { IconProps } from '@pure/ui'
 import { Home, Layers, Search, Users } from 'lucide-react'
 
+import { isDev } from '@/libs/constants'
+
 export interface HomeNavItem {
   href?: string
   icon: IconProps['icon']
@@ -24,14 +26,28 @@ export interface HomeSidebarSection {
   title: string
 }
 
+/** Dev-only until resources ships. */
+const RESOURCES_SECTION: HomeSidebarSection = {
+  href: '/resources',
+  icon: Layers,
+  key: 'resources',
+  title: '资源',
+}
+
 export const HOME_SIDEBAR_SECTIONS: HomeSidebarSection[] = [
   { key: 'recents', title: '最近' },
   { alwaysVisible: true, key: 'agents', title: '助理' },
   { href: '/community', icon: Users, key: 'community', title: '社区' },
-  { href: '/resources', icon: Layers, key: 'resources', title: '资源' },
+  ...(isDev ? [RESOURCES_SECTION] : []),
 ]
 
-export const DEFAULT_SIDEBAR_ITEMS: string[] = ['recents', 'agents', SIDEBAR_SPACER_ID, 'community', 'resources']
+export const DEFAULT_SIDEBAR_ITEMS: string[] = [
+  'recents',
+  'agents',
+  SIDEBAR_SPACER_ID,
+  'community',
+  ...(isDev ? ['resources'] : []),
+]
 
 export const SIDEBAR_ACCORDION_KEYS = new Set(['recents', 'agents'])
 

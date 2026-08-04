@@ -59,10 +59,10 @@ const SectionActions = memo<SectionActionsProps>(({ addMenuItems, menuItems }) =
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
-      <DropdownMenu items={menuItems} nativeButton triggerProps={{ className: styles.trigger, title: '更多' }}>
+      {/* <DropdownMenu items={menuItems} nativeButton triggerProps={{ className: styles.trigger, title: '更多' }}>
         <Icon icon={MoreHorizontalIcon} size='small' />
         <span className={styles.srOnly}>更多</span>
-      </DropdownMenu>
+      </DropdownMenu> */}
       {addMenuItems ? (
         <DropdownMenu items={addMenuItems} nativeButton triggerProps={{ className: styles.trigger, title: '添加' }}>
           <Icon icon={PlusIcon} size='small' />

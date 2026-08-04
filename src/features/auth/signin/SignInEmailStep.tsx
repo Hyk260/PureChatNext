@@ -177,7 +177,7 @@ export const SignInEmailStep = ({
 
         {isSocialOnly && <Alert showIcon message='此账户未设置密码，请使用第三方登录或魔法链接登录。' type='info' />}
 
-        <AuthAgreement />
+        {/* <AuthAgreement /> */}
       </Flexbox>
     </AuthCard>
   )

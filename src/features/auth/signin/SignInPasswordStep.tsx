@@ -115,7 +115,7 @@ export const SignInPasswordStep = ({
               {'忘记密码？'}
             </a>
           </Text>
-          <Button icon={<ChevronLeft />} size='large' style={{ marginTop: 12 }} onClick={onBack}>
+          <Button variant='filled' icon={<ChevronLeft />} size='large' style={{ marginTop: 12 }} onClick={onBack}>
             返回修改邮箱
           </Button>
         </>

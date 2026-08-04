@@ -13,8 +13,8 @@ type ChatUiState = {
   wideScreen: boolean
   /** agentId → params */
   paramsByAgent: Record<string, ChatLlmParams>
-  /** agentId → topic grouping preference */
-  topicGroupModeByAgent: Record<string, TopicGroupMode>
+  /** Shared across all agents */
+  topicGroupMode: TopicGroupMode
   topicPageSize: TopicPageSize
   topicSortBy: TopicSortBy
   toggleLeftCollapsed: () => void
@@ -24,7 +24,7 @@ type ChatUiState = {
   setRightCollapsed: (v: boolean) => void
   getParams: (agentId: string) => ChatLlmParams
   setParams: (agentId: string, patch: Partial<ChatLlmParams>) => void
-  setTopicGroupMode: (agentId: string, mode: TopicGroupMode) => void
+  setTopicGroupMode: (mode: TopicGroupMode) => void
   setTopicPageSize: (pageSize: TopicPageSize) => void
   setTopicSortBy: (sortBy: TopicSortBy) => void
 }
@@ -33,10 +33,10 @@ export const useChatUiStore = create<ChatUiState>()(
   persist(
     (set, get) => ({
       leftCollapsed: false,
-      rightCollapsed: false,
+      rightCollapsed: true,
       wideScreen: false,
       paramsByAgent: {},
-      topicGroupModeByAgent: {},
+      topicGroupMode: 'byTime',
       topicPageSize: 40,
       topicSortBy: 'updatedAt',
       toggleLeftCollapsed: () => set((s) => ({ leftCollapsed: !s.leftCollapsed })),
@@ -58,13 +58,26 @@ export const useChatUiStore = create<ChatUiState>()(
             },
           },
         })),
-      setTopicGroupMode: (agentId, mode) =>
-        set((s) => ({
-          topicGroupModeByAgent: { ...s.topicGroupModeByAgent, [agentId]: mode },
-        })),
+      setTopicGroupMode: (topicGroupMode) => set({ topicGroupMode }),
       setTopicPageSize: (topicPageSize) => set({ topicPageSize }),
       setTopicSortBy: (topicSortBy) => set({ topicSortBy }),
     }),
-    { name: 'purechat:chat:v2:ui', version: 3 }
+    {
+      name: 'purechat:chat:v2:ui',
+      version: 4,
+      migrate: (persisted, version) => {
+        const state = (persisted ?? {}) as Record<string, unknown>
+        if (version < 4) {
+          const byAgent = state.topicGroupModeByAgent as Record<string, TopicGroupMode> | undefined
+          const firstMode = byAgent ? Object.values(byAgent)[0] : undefined
+          const { topicGroupModeByAgent: _, ...rest } = state
+          return {
+            ...rest,
+            topicGroupMode: firstMode ?? 'byTime',
+          }
+        }
+        return state
+      },
+    }
   )
 )

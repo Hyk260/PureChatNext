@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  spa-env-imports:
+    name: SPA env import guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # eslint.config.js 亦有 no-restricted-imports；此脚本专跑导入边界，避免被无关 lint 噪音挡住
+      - name: Check SPA/client must not import server env
+        run: pnpm run lint:spa-env-imports
+
+  spa-env-leak:
+    name: SPA env leak (build + scan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Vite define 若误把全部 process.env 打进 bundle，canary 值会出现在 dist/public/_spa
+      - name: Build SPA with canary secrets
+        env:
+          AI_GATEWAY_API_KEY: ci-canary-aigateway-DO-NOT-LEAK-x1y2z3a4b5c6
+          AUTH_SECRET: ci-canary-auth-DO-NOT-LEAK-d4e5f6g7h8i9
+          CRON_SECRET: ci-canary-cron-DO-NOT-LEAK-j0k1l2m3n4o5
+          DATABASE_URL: postgres://ci-canary:DO-NOT-LEAK-p6q7r8@127.0.0.1:5432/ci
+          DEEPSEEK_API_KEY: ci-canary-deepseek-DO-NOT-LEAK-s9t0u1v2w3x4
+          JWKS_KEY: '{"keys":[{"kty":"RSA","kid":"ci-canary-DO-NOT-LEAK-jwks"}]}'
+          KEY_VAULTS_SECRET: ci-canary-vault-DO-NOT-LEAK-y5z6a7b8c9d0
+          OPENAI_API_KEY: sk-ci-canary-openai-DO-NOT-LEAK-e1f2g3h4i5j6
+          REDIS_URL: redis://ci-canary:DO-NOT-LEAK-k7l8m9@127.0.0.1:6379
+          RESEND_API_KEY: re_ci-canary-DO-NOT-LEAK-n0o1p2q3r4s5
+          S3_SECRET_ACCESS_KEY: ci-canary-s3-DO-NOT-LEAK-t6u7v8w9x0y1
+          SMTP_PASS: ci-canary-smtp-DO-NOT-LEAK-z2a3b4c5d6e7
+        run: |
+          pnpm run build:spa
+          pnpm run build:spa:copy
+
+      - name: Scan SPA bundles for leaked secrets
+        env:
+          # 扫描阶段再次提供 canary，供脚本与构建产物比对
+          AI_GATEWAY_API_KEY: ci-canary-aigateway-DO-NOT-LEAK-x1y2z3a4b5c6
+          AUTH_SECRET: ci-canary-auth-DO-NOT-LEAK-d4e5f6g7h8i9
+          CRON_SECRET: ci-canary-cron-DO-NOT-LEAK-j0k1l2m3n4o5
+          DATABASE_URL: postgres://ci-canary:DO-NOT-LEAK-p6q7r8@127.0.0.1:5432/ci
+          DEEPSEEK_API_KEY: ci-canary-deepseek-DO-NOT-LEAK-s9t0u1v2w3x4
+          JWKS_KEY: '{"keys":[{"kty":"RSA","kid":"ci-canary-DO-NOT-LEAK-jwks"}]}'
+          KEY_VAULTS_SECRET: ci-canary-vault-DO-NOT-LEAK-y5z6a7b8c9d0
+          OPENAI_API_KEY: sk-ci-canary-openai-DO-NOT-LEAK-e1f2g3h4i5j6
+          REDIS_URL: redis://ci-canary:DO-NOT-LEAK-k7l8m9@127.0.0.1:6379
+          RESEND_API_KEY: re_ci-canary-DO-NOT-LEAK-n0o1p2q3r4s5
+          S3_SECRET_ACCESS_KEY: ci-canary-s3-DO-NOT-LEAK-t6u7v8w9x0y1
+          SMTP_PASS: ci-canary-smtp-DO-NOT-LEAK-z2a3b4c5d6e7
+        run: pnpm run check:spa-env-leak

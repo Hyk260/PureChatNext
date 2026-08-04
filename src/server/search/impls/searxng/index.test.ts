@@ -22,5 +22,16 @@ describe('SearXNGImpl', () => {
       // Assert
       expect(results.results.length).toEqual(43)
     })
+
+    it('缺少 number_of_results 时回退为 results.length', async () => {
+      const { number_of_results: _, ...withoutCount } = hetongxue
+      vi.spyOn(SearXNGClient.prototype, 'search').mockResolvedValueOnce(withoutCount)
+
+      const searchImpl = new SearXNGImpl()
+      const results = await searchImpl.query('何同学')
+
+      expect(results.resultNumbers).toBe(results.results.length)
+      expect(results.resultNumbers).toBe(43)
+    })
   })
 })

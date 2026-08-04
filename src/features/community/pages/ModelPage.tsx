@@ -3,8 +3,8 @@
 import { memo, useMemo } from 'react'
 
 import { Flexbox } from '@pure/ui'
+import Scrollbar from '@/components/Scrollbar'
 import AgentPagination from '@/features/community/components/AgentPagination'
-import AgentSearch from '@/features/community/components/AgentSearch'
 import ModelCategory from '@/features/community/components/ModelCategory'
 import ModelList from '@/features/community/components/ModelList'
 import { COMMUNITY_MODELS, filterCommunityModels } from '@/const/community/models'
@@ -29,15 +29,14 @@ const ModelPage = memo(() => {
   )
 
   return (
-    <Flexbox horizontal gap={24} style={{ width: '100%' }}>
+    <Flexbox horizontal gap={24} style={{ height: '100%', minHeight: 0, overflow: 'hidden', width: '100%' }}>
       <ModelCategory />
-      <Flexbox flex={1} gap={16} style={{ minWidth: 0 }}>
-        <AgentSearch placeholder='搜索名称介绍或关键词...' />
+      <Scrollbar style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
         <Flexbox gap={32} style={{ width: '100%' }}>
           <ModelList data={pageData} />
           <AgentPagination currentPage={currentPage} pageSize={PAGE_SIZE} total={total} />
         </Flexbox>
-      </Flexbox>
+      </Scrollbar>
     </Flexbox>
   )
 })

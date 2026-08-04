@@ -8,18 +8,19 @@ PureChatNext 可使用 Redis 保存 Better Auth 次级存储、微信渠道上�
 - 若尚未准备 compose 环境变量，先执行：
 
 ```bash
-cp docker-compose/dev/.env.example docker-compose/dev/.env
+pnpm docker:setup:dev
 ```
 
 ## 当前约定
 
-- 镜像：`redis:7-alpine`
+- 镜像：`redis:8.8.1-alpine`（与旧 Homebrew Redis 8.8.1 保持同主版本）
 - Compose 文件：`docker-compose/dev/docker-compose.yml`
 - 容器名：`purechat-redis`
 - 连接地址：`redis://127.0.0.1:6379`
 - 持久化：RDB（`--save 60 1000`）+ AOF
-- 认证：无密码（仅本地开发）
+- 认证：无密码（仅本地开发，端口只绑定 `127.0.0.1`）
 - 数据：Docker named volume `redis_data`
+- 内存：默认 `2gb`，淘汰策略 `allkeys-lru`（可在 Compose `.env` 调整）
 
 ## 环境变量
 

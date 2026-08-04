@@ -8,7 +8,7 @@ PureChatNext 可以直接连接本机 PostgreSQL，不需要为了数据库功�
 - 一次性复制 compose 环境变量：
 
 ```bash
-cp docker-compose/dev/.env.example docker-compose/dev/.env
+pnpm docker:setup:dev
 ```
 
 ## 当前约定
@@ -86,8 +86,6 @@ docker compose -f docker-compose/dev/docker-compose.yml exec -T postgresql \
   pg_dump -U purechat -d purechat --format=custom --no-owner \
   > purechat-backup.dump
 ```
-
-从旧 Homebrew / 外置 SSD 实例迁移时，请先自行 `pg_dump`，再在 Docker 实例上恢复。
 
 ## 常见故障
 

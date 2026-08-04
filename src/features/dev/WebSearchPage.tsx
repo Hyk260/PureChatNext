@@ -90,11 +90,18 @@ const formatNumber = (value: number | undefined) => {
 }
 
 const isSearchResponse = (value: SearchResponse | CrawlResponse | null): value is SearchResponse => {
-  return Boolean(value && 'resultNumbers' in value && 'query' in value)
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      'query' in value &&
+      typeof value.query === 'string' &&
+      'results' in value &&
+      Array.isArray(value.results)
+  )
 }
 
 const isCrawlResponse = (value: SearchResponse | CrawlResponse | null): value is CrawlResponse => {
-  return Boolean(value && 'results' in value && !('query' in value))
+  return Boolean(value && 'results' in value && Array.isArray(value.results) && !('query' in value))
 }
 
 const buildRequestBody = (
@@ -534,7 +541,12 @@ export default function WebSearchTestPage() {
               <div className='mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4'>
                 {[
                   ['Action', payload?.action ?? action],
-                  ['结果数', searchResult ? searchResult.resultNumbers : crawlResult?.results.length],
+                  [
+                    '结果数',
+                    searchResult
+                      ? (searchResult.resultNumbers ?? searchResult.results.length)
+                      : crawlResult?.results.length,
+                  ],
                   ['Provider 耗时', searchResult ? `${formatNumber(searchResult.costTime)} ms` : undefined],
                   ['HTTP 耗时', runState ? `${runState.durationMs.toLocaleString()} ms` : undefined],
                 ].map(([label, value]) => (

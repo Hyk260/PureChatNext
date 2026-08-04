@@ -5,6 +5,7 @@ import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { LayoutPanelTop } from 'lucide-react'
 import { memo, useCallback, useMemo } from 'react'
 
+import Scrollbar from '@/components/Scrollbar'
 import { getModelProviderCounts } from '@/const/community/models'
 import { COMMUNITY_PROVIDERS } from '@/const/community/providers'
 import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
@@ -51,12 +52,11 @@ const styles = createStaticStyles(({ css }) => ({
     }
   `,
   root: css`
-    position: sticky;
-    top: 0;
     flex: none;
     width: 220px;
-    max-height: calc(100vh - 120px);
-    overflow: auto;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
   `,
 }))
 
@@ -85,48 +85,52 @@ const ModelCategory = memo(() => {
   )
 
   return (
-    <Flexbox className={styles.root} gap={4}>
-      <button
-        className={cx(styles.item, selected === ALL_KEY && styles.active)}
-        type='button'
-        onClick={() => handleSelect(ALL_KEY)}
-      >
-        <Icon icon={LayoutPanelTop} size={18} />
-        <Text ellipsis>全部</Text>
-        {counts.all > 0 ? (
-          <Tag
-            className={styles.count}
-            size='small'
-            style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
-          >
-            {counts.all}
-          </Tag>
-        ) : null}
-      </button>
-      {COMMUNITY_PROVIDERS.map((provider) => {
-        const isActive = selected === provider.id
-        const count = counts[provider.id] ?? 0
-        return (
+    <Flexbox className={styles.root}>
+      <Scrollbar style={{ height: '100%', width: '100%' }}>
+        <Flexbox gap={4}>
           <button
-            className={cx(styles.item, isActive && styles.active)}
-            key={provider.id}
+            className={cx(styles.item, selected === ALL_KEY && styles.active)}
             type='button'
-            onClick={() => handleSelect(provider.id)}
+            onClick={() => handleSelect(ALL_KEY)}
           >
-            <ProviderIcon provider={provider.id} size={18} type='mono' />
-            <Text ellipsis>{provider.name}</Text>
-            {count > 0 ? (
+            <Icon icon={LayoutPanelTop} size={18} />
+            <Text ellipsis>全部</Text>
+            {counts.all > 0 ? (
               <Tag
                 className={styles.count}
                 size='small'
                 style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
               >
-                {count}
+                {counts.all}
               </Tag>
             ) : null}
           </button>
-        )
-      })}
+          {COMMUNITY_PROVIDERS.map((provider) => {
+            const isActive = selected === provider.id
+            const count = counts[provider.id] ?? 0
+            return (
+              <button
+                className={cx(styles.item, isActive && styles.active)}
+                key={provider.id}
+                type='button'
+                onClick={() => handleSelect(provider.id)}
+              >
+                <ProviderIcon provider={provider.id} size={18} type='mono' />
+                <Text ellipsis>{provider.name}</Text>
+                {count > 0 ? (
+                  <Tag
+                    className={styles.count}
+                    size='small'
+                    style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
+                  >
+                    {count}
+                  </Tag>
+                ) : null}
+              </button>
+            )
+          })}
+        </Flexbox>
+      </Scrollbar>
     </Flexbox>
   )
 })

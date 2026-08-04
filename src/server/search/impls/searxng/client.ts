@@ -23,7 +23,8 @@ export interface SearXNGSearchResponse {
   answers: any[]
   corrections: any[]
   infoboxes: any[]
-  number_of_results: number
+  /** SearXNG 可能省略该字段 */
+  number_of_results?: number
   query: string
   results: SearXNGSearchResult[]
   suggestions: string[]

@@ -1,0 +1,93 @@
+name: Docker
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  config-and-unit:
+    name: Compose config and health route tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Validate Compose
+        run: pnpm docker:validate
+      - name: Test health route
+        run: pnpm exec vitest run src/app/api/health/route.test.ts
+
+  amd64-smoke:
+    name: amd64 image and stack smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install application dependencies
+        run: pnpm install --frozen-lockfile
+      - uses: docker/setup-buildx-action@v3
+      - name: Build amd64 application image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          platforms: linux/amd64
+          tags: purechat-next:local
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Start and verify production stack
+        run: |
+          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml up -d --no-build --wait
+          curl --fail --retry 10 --retry-delay 2 http://127.0.0.1:3210/api/health
+          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml exec -T postgresql psql -U purechat -d purechat -Atc "select count(*) from drizzle.__drizzle_migrations"
+          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml exec -T redis redis-cli --no-auth-warning -a __GENERATE_REDIS_PASSWORD__ ping
+          test "$(docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml exec -T redis redis-cli ping)" = 'NOAUTH Authentication required.'
+          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml run --rm --no-deps rustfs-init -c 'mc alias set rustfs http://rustfs:9000 "$RUSTFS_ACCESS_KEY" "$RUSTFS_SECRET_KEY" >/dev/null && mc stat "rustfs/$RUSTFS_BUCKET"'
+          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml exec -T app node -e "fetch('http://searxng:8080/search?q=purechat&format=json').then(async r=>{JSON.parse(await r.text());if(!r.ok)process.exit(1)})"
+          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml restart app
+          curl --fail --retry 15 --retry-delay 2 http://127.0.0.1:3210/api/health
+      - name: Remove production smoke volumes
+        if: always()
+        run: docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml down --volumes || true
+
+  multi-platform-build:
+    name: Build ${{ matrix.platform }}
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build without publishing
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          push: false
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}

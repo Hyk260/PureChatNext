@@ -3,13 +3,13 @@
 import { memo, useMemo } from 'react'
 
 import { Flexbox } from '@pure/ui'
+import Scrollbar from '@/components/Scrollbar'
 import { COMMUNITY_AGENTS, filterCommunityAgents } from '@/const/community/agents'
 import { useSearchParams } from '@/utils/navigation'
 
 import AgentCategory from './components/AgentCategory'
 import AgentList from './components/AgentList'
 import AgentPagination from './components/AgentPagination'
-import AgentSearch from './components/AgentSearch'
 
 const PAGE_SIZE = 21
 
@@ -30,15 +30,14 @@ const AgentPage = memo(() => {
   )
 
   return (
-    <Flexbox horizontal gap={24} style={{ width: '100%' }}>
+    <Flexbox horizontal gap={24} style={{ height: '100%', minHeight: 0, overflow: 'hidden', width: '100%' }}>
       <AgentCategory />
-      <Flexbox flex={1} gap={16} style={{ minWidth: 0 }}>
-        <AgentSearch />
+      <Scrollbar style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
         <Flexbox gap={32} style={{ width: '100%' }}>
           <AgentList data={pageData} />
           <AgentPagination currentPage={currentPage} pageSize={PAGE_SIZE} total={total} />
         </Flexbox>
-      </Flexbox>
+      </Scrollbar>
     </Flexbox>
   )
 })

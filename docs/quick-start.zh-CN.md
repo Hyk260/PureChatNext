@@ -50,8 +50,8 @@ NODE_ENV=development
 不使用云托管服务时，可用 Docker Compose 一次启动 PostgreSQL、Redis、RustFS（S3）和 SearXNG（需已安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/)）：
 
 ```bash
-# 一次性：复制 compose 侧环境变量
-cp docker-compose/dev/.env.example docker-compose/dev/.env
+# 一次性：创建 compose 侧环境变量（已有文件不会覆盖）
+pnpm docker:setup:dev
 
 # 启动全部本地依赖并等待健康检查
 pnpm dev:docker
@@ -87,7 +87,7 @@ pnpm dev:docker:down   # 停止（保留数据卷）
 pnpm dev:docker:reset  # 清空卷后重建并执行 db:migrate
 ```
 
-服务说明见 [本地 PostgreSQL](./self-hosting/postgresql-local.zh-CN.md)、[本地 Redis](./self-hosting/redis-local.zh-CN.md)、[联网搜索](./self-hosting/online-search.zh-CN.md)。
+`dev:docker:reset` 会要求输入确认并永久删除全部开发卷。旧本机数据迁移和生产部署见 [Docker 自托管与数据迁移](./self-hosting/docker.zh-CN.md)；服务说明见 [本地 PostgreSQL](./self-hosting/postgresql-local.zh-CN.md)、[本地 Redis](./self-hosting/redis-local.zh-CN.md)、[联网搜索](./self-hosting/online-search.zh-CN.md)。
 
 ## 4. 启动开发服务器
 

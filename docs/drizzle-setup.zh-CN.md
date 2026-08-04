@@ -74,15 +74,9 @@ pnpm db:studio
 
 ## 📊 当前 Schema
 
-项目已定义 User 表，位于 `packages/database/src/schema`：
+Schema 位于 `packages/database/src/schemas/`，覆盖用户与 Better Auth、聊天主题/消息、Agent、文件与知识库、渠道绑定和积分账本。迁移文件位于 `packages/database/src/migrations/`，以该目录的 journal 为应用顺序依据。
 
-```typescript
-export const user = pgTable('User', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  email: varchar('email', { length: 64 }).notNull(),
-  password: varchar('password', { length: 64 }),
-})
-```
+Docker 生产镜像会在启动应用前自动执行同一组迁移，并使用 PostgreSQL advisory lock 避免多个容器同时修改 schema。Vercel 部署仍需在发布流程中单独执行 `pnpm db:migrate`。
 
 ## 📝 常用命令
 

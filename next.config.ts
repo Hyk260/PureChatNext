@@ -3,9 +3,11 @@ import type { NextConfig } from 'next'
 
 const isProd = process.env.NODE_ENV === 'production'
 const isVercel = !!process.env.VERCEL_ENV
+const isDocker = process.env.DOCKER === 'true'
 const enableCodeInspector = process.env.CODE_INSPECTOR === '1'
 
 const nextConfig: NextConfig = {
+  ...(isDocker && { output: 'standalone' as const }),
   ...(isVercel && {
     outputFileTracingExcludes: {
       '*': ['node_modules/.pnpm/@napi-rs+canvas-*-musl*', 'node_modules/.pnpm/@img+sharp-libvips-*musl*'],

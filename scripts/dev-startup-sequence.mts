@@ -10,9 +10,9 @@
  * ## 使用
  * ```bash
  * pnpm dev                 # 推荐：Next :3000 + SPA :5174
- * pnpm dev:inspect         # 同上，并启用 code-inspector（CODE_INSPECTOR=1）
+ * pnpm dev:inspect         # 同上，并启用 code-inspector（跨平台，等价 CODE_INSPECTOR=1）
  * pnpm dev -- -p 3001      # 自定义 Next 端口（`-p` > PORT > 3000）
- * PORT=3001 pnpm dev       # 等价：用环境变量指定 Next 端口
+ * PORT=3001 pnpm dev       # 等价：用环境变量指定 Next 端口（Unix）；Windows 可用 set PORT=3001
  * ```
  *
  * ## 访问
@@ -23,7 +23,7 @@
  * ```bash
  * pnpm dev:next            # 仅 Next
  * pnpm dev:spa             # 仅 Vite SPA（需本机已有 Next 或可连的 API）
- * CODE_INSPECTOR=1 pnpm dev:spa  # 仅 SPA 且开启 code-inspector
+ * # 仅 SPA 且开启 code-inspector：先设置 CODE_INSPECTOR=1，再 pnpm dev:spa
  * ```
  *
  * ## 前置
@@ -226,6 +226,12 @@ const runNextBackgroundTasks = () => {
 
 const main = async () => {
   loadEnv()
+
+  // 跨平台启用 code-inspector（避免 package.json 里用 Unix 的 VAR=1 前缀）
+  if (process.argv.includes('--inspect')) {
+    process.env.CODE_INSPECTOR = '1'
+  }
+
   nextPort = resolveNextPort()
   nextRootUrl = `http://${NEXT_HOST}:${nextPort}/`
 

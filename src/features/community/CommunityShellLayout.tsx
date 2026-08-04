@@ -10,8 +10,12 @@ import CommunitySidebar from './CommunitySidebar'
 
 const CommunityShellLayout = ({ children }: { children: ReactNode }) => {
   return (
-    <MainShellLayout header={<CommunityHeader />} sidebar={<CommunitySidebar />}>
-      <Flexbox flex={1} id='community-scroll' style={{ padding: 24, overflow: 'auto', width: '100%' }}>
+    <MainShellLayout header={<CommunityHeader />} scrollable={false} sidebar={<CommunitySidebar />}>
+      <Flexbox
+        flex={1}
+        id='community-scroll'
+        style={{ height: '100%', minHeight: 0, overflow: 'hidden', padding: 24, width: '100%' }}
+      >
         {children}
       </Flexbox>
     </MainShellLayout>

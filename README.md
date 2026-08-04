@@ -156,7 +156,7 @@ cp .env.example .env.local
 # 编辑 .env.local，填入 DATABASE_URL、OPENAI_API_KEY 等
 
 # 可选：Docker 启动本地依赖（PostgreSQL / Redis / RustFS / SearXNG）
-cp docker-compose/dev/.env.example docker-compose/dev/.env
+pnpm docker:setup:dev
 pnpm dev:docker
 pnpm db:migrate
 
@@ -207,6 +207,18 @@ pnpm db:studio      # 打开 Drizzle Studio
 4. 运行数据库迁移（可在 CI 或部署脚本中执行 `pnpm db:migrate`）
 
 生产同域：静态资源 `/_spa/**`（长缓存）；未匹配 UI 路径 fallback 到 SPA HTML 壳。
+
+### Docker 自托管
+
+仓库同时提供可本地构建的生产镜像与完整 Compose：
+
+```bash
+pnpm docker:setup:deploy
+# 修改 docker-compose/deploy/.env 中的域名和模型密钥
+docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/docker-compose.yml up -d --build --wait
+```
+
+完整说明见 [Docker 自托管](./docs/self-hosting/docker.zh-CN.md)。
 
 <div align="right">
 [![][back-to-top]](#readme-top)
@@ -306,9 +318,11 @@ pnpm build            # build:spa → copy → next build
 pnpm start            # 生产启动（端口 3210）
 pnpm lint             # ESLint 检查
 pnpm gateway          # 运行 gateway 脚本
+pnpm docker:setup:dev # 创建本地 Docker 配置（不覆盖已有文件）
+pnpm docker:validate  # 校验开发/生产 Compose
 pnpm dev:docker       # 启动本地 Docker 依赖（PG / Redis / RustFS / SearXNG）
 pnpm dev:docker:down  # 停止本地 Docker 依赖（保留数据卷）
-pnpm dev:docker:reset # 清空卷后重建并执行 db:migrate
+pnpm dev:docker:reset # 确认后清空卷、重建并执行 db:migrate
 pnpm db:migrate       # 执行数据库迁移
 pnpm db:studio        # Drizzle Studio
 ```
@@ -338,6 +352,7 @@ cd packages/web-crawler && pnpm test
 | [docs/drizzle-setup.zh-CN.md](./docs/drizzle-setup.zh-CN.md)                           | 数据库迁移流程           |
 | [docs/self-hosting/postgresql-local.zh-CN.md](./docs/self-hosting/postgresql-local.zh-CN.md) | 本地 PostgreSQL 管理 |
 | [docs/self-hosting/redis-local.zh-CN.md](./docs/self-hosting/redis-local.zh-CN.md)     | 本地 Redis 管理          |
+| [docs/self-hosting/docker.zh-CN.md](./docs/self-hosting/docker.zh-CN.md)              | Docker 自托管与生产部署  |
 | [docs/self-hosting/online-search.zh-CN.md](./docs/self-hosting/online-search.zh-CN.md) | 联网搜索与爬虫配置       |
 | [docs/self-hosting/auth/email.zh-CN.md](./docs/self-hosting/auth/email.zh-CN.md)       | 邮件服务与邮箱验证       |
 | [AGENTS.md](./AGENTS.md)                                                               | AI Agent 开发约定        |

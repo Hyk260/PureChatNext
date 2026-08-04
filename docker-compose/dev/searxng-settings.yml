@@ -1,19 +1,19 @@
 general:
-  # Debug mode, only for development. Is overwritten by ${SEARXNG_DEBUG}
+  # 调试模式，仅用于开发。会被 ${SEARXNG_DEBUG} 覆盖
   debug: false
-  # displayed name
+  # 显示名称
   instance_name: "searxng"
-  # For example: https://example.com/privacy
+  # 例如：https://example.com/privacy
   privacypolicy_url: false
-  # use true to use your own donation page written in searx/info/en/donate.md
-  # use false to disable the donation link
+  # 设为 true 可使用 searx/info/en/donate.md 中的自定义捐赠页
+  # 设为 false 可禁用捐赠链接
   donation_url: false
   # mailto:contact@example.com
   contact_url: false
-  # record stats
+  # 记录统计信息
   enable_metrics: true
-  # expose stats in open metrics format at /metrics
-  # leave empty to disable (no password set)
+  # 以 OpenMetrics 格式在 /metrics 暴露统计信息
+  # 留空则禁用（未设置密码）
   # open_metrics: <password>
   open_metrics: ''
 
@@ -25,28 +25,28 @@ brand:
   issue_url: https://github.com/searxng/searxng/issues
   # custom:
   #   maintainer: "Jon Doe"
-  #   # Custom entries in the footer: [title]: [link]
+  #   # 页脚自定义条目：[标题]: [链接]
   #   links:
   #     Uptime: https://uptime.searxng.org/history/darmarit-org
   #     About: "https://searxng.org"
 
 search:
-  # Filter results. 0: None, 1: Moderate, 2: Strict
+  # 过滤结果。0：无，1：中等，2：严格
   safe_search: 0
-  # Existing autocomplete backends: "baidu", "brave", "dbpedia", "duckduckgo", "google", "yandex",
-  # "mwmbl", "seznam", "stract", "swisscows", "qwant", "wikipedia" -
-  # leave blank to turn it off by default.
+  # 可用的自动补全后端："baidu"、"brave"、"dbpedia"、"duckduckgo"、"google"、"yandex"、
+  # "mwmbl"、"seznam"、"stract"、"swisscows"、"qwant"、"wikipedia" -
+  # 留空则默认关闭。
   autocomplete: ""
-  # minimun characters to type before autocompleter starts
+  # 启动自动补全前需输入的最少字符数
   autocomplete_min: 4
-  # backend for the favicon near URL in search results.
-  # Available resolvers: "allesedv", "duckduckgo", "google", "yandex" - leave blank to turn it off by default.
+  # 搜索结果 URL 旁 favicon 的解析后端。
+  # 可用解析器："allesedv"、"duckduckgo"、"google"、"yandex" - 留空则默认关闭。
   favicon_resolver: ""
-  # Default search language - leave blank to detect from browser information or
-  # use codes from 'languages.py'
+  # 默认搜索语言 - 留空则根据浏览器信息检测，或
+  # 使用 'languages.py' 中的语言代码
   default_lang: "auto"
-  # max_page: 0  # if engine supports paging, 0 means unlimited numbers of pages
-  # Available languages
+  # max_page: 0  # 若引擎支持分页，0 表示不限制页数
+  # 可用语言
   # languages:
   #   - all
   #   - en
@@ -55,17 +55,17 @@ search:
   #   - it-IT
   #   - fr
   #   - fr-BE
-  # ban time in seconds after engine errors
+  # 引擎出错后的封禁时间（秒）
   ban_time_on_fail: 5
-  # max ban time in seconds after engine errors
+  # 引擎出错后的最长封禁时间（秒）
   max_ban_time_on_fail: 120
   suspended_times:
-    # Engine suspension time after error (in seconds; set to 0 to disable)
-    # For error "Access denied" and "HTTP error [402, 403]"
+    # 引擎出错后的挂起时间（秒；设为 0 禁用）
+    # 对应错误 “Access denied” 与 “HTTP error [402, 403]”
     SearxEngineAccessDenied: 86400
-    # For error "CAPTCHA"
+    # 对应错误 “CAPTCHA”
     SearxEngineCaptcha: 86400
-    # For error "Too many request" and "HTTP error 429"
+    # 对应错误 “Too many request” 与 “HTTP error 429”
     SearxEngineTooManyRequests: 3600
     # Cloudflare CAPTCHA
     cf_SearxEngineCaptcha: 1296000
@@ -73,35 +73,33 @@ search:
     # ReCAPTCHA
     recaptcha_SearxEngineCaptcha: 604800
 
-  # remove format to deny access, use lower case.
+  # 删除对应格式即可禁止访问，使用小写。
   # formats: [html, csv, json, rss]
   formats:
     - html
     - json
 server:
-  # Is overwritten by ${SEARXNG_PORT} and ${SEARXNG_BIND_ADDRESS}
+  # 会被 ${SEARXNG_PORT} 与 ${SEARXNG_BIND_ADDRESS} 覆盖
   port: 8888
   bind_address: "127.0.0.1"
-  # public URL of the instance, to ensure correct inbound links. Is overwritten
-  # by ${SEARXNG_URL}.
+  # 实例的公开 URL，用于保证入站链接正确。会被 ${SEARXNG_URL} 覆盖。
   base_url: /  # "http://example.com/location"
-  # rate limit the number of request on the instance, block some bots.
-  # Is overwritten by ${SEARXNG_LIMITER}
+  # 限制对本实例的请求速率，拦截部分机器人。
+  # 会被 ${SEARXNG_LIMITER} 覆盖
   limiter: false
-  # enable features designed only for public instances.
-  # Is overwritten by ${SEARXNG_PUBLIC_INSTANCE}
+  # 启用仅面向公开实例的功能。
+  # 会被 ${SEARXNG_PUBLIC_INSTANCE} 覆盖
   public_instance: false
 
-  # If your instance owns a /etc/searxng/settings.yml file, then set the following
-  # values there.
+  # 若实例使用 /etc/searxng/settings.yml，请在该文件中设置以下
+  # 配置项。
 
-  secret_key: "779c5b69fe650f147be9012abca6b44a8697acdb2817b46353f4779bb07d81d1"  # Is overwritten by ${SEARXNG_SECRET}
-  # Proxy image results through SearXNG. Is overwritten by ${SEARXNG_IMAGE_PROXY}
+  secret_key: "779c5b69fe650f147be9012abca6b44a8697acdb2817b46353f4779bb07d81d1"  # 会被 ${SEARXNG_SECRET} 覆盖
+  # 通过 SearXNG 代理图片结果。会被 ${SEARXNG_IMAGE_PROXY} 覆盖
   image_proxy: false
-  # 1.0 and 1.1 are supported
+  # 支持 1.0 与 1.1
   http_protocol_version: "1.0"
-  # POST queries are more secure as they don't show up in history but may cause
-  # problems when using Firefox containers
+  # POST 查询更安全（不会出现在浏览历史中），但在使用 Firefox 容器时可能出问题
   method: "POST"
   default_http_headers:
     X-Content-Type-Options: nosniff
@@ -110,45 +108,45 @@ server:
     Referrer-Policy: no-referrer
 
 redis:
-  # URL to connect redis database. Is overwritten by ${SEARXNG_REDIS_URL}.
+  # 连接 Redis 数据库的 URL。会被 ${SEARXNG_REDIS_URL} 覆盖。
   # https://docs.searxng.org/admin/settings/settings_redis.html#settings-redis
   url: false
 
 ui:
-  # Custom static path - leave it blank if you didn't change
+  # 自定义静态资源路径 - 未改动则留空
   static_path: ""
-  # Is overwritten by ${SEARXNG_STATIC_USE_HASH}.
+  # 会被 ${SEARXNG_STATIC_USE_HASH} 覆盖。
   static_use_hash: false
-  # Custom templates path - leave it blank if you didn't change
+  # 自定义模板路径 - 未改动则留空
   templates_path: ""
-  # query_in_title: When true, the result page's titles contains the query
-  # it decreases the privacy, since the browser can records the page titles.
+  # query_in_title：为 true 时，结果页标题会包含查询词
+  # 会降低隐私性，因为浏览器可能记录页面标题。
   query_in_title: false
-  # infinite_scroll: When true, automatically loads the next page when scrolling to bottom of the current page.
+  # infinite_scroll：为 true 时，滚动到当前页底部会自动加载下一页。
   infinite_scroll: false
-  # ui theme
+  # UI 主题
   default_theme: simple
-  # center the results ?
+  # 结果是否居中？
   center_alignment: false
-  # URL prefix of the internet archive, don't forget trailing slash (if needed).
+  # 互联网档案馆 URL 前缀，需要时别忘了末尾斜杠。
   # cache_url: "https://webcache.googleusercontent.com/search?q=cache:"
-  # Default interface locale - leave blank to detect from browser information or
-  # use codes from the 'locales' config section
+  # 默认界面语言 - 留空则根据浏览器信息检测，或
+  # 使用 'locales' 配置段中的代码
   default_locale: ""
-  # Open result links in a new tab by default
+  # 默认在新标签页打开结果链接
   # results_on_new_tab: false
   theme_args:
-    # style of simple theme: auto, light, dark
+    # simple 主题样式：auto、light、dark
     simple_style: auto
-  # Perform search immediately if a category selected.
-  # Disable to select multiple categories at once and start the search manually.
+  # 选中分类后立即执行搜索。
+  # 禁用以同时选择多个分类并手动开始搜索。
   search_on_category_select: true
-  # Hotkeys: default or vim
+  # 快捷键：default 或 vim
   hotkeys: default
-  # URL formatting: pretty, full or host
+  # URL 显示格式：pretty、full 或 host
   url_formatting: pretty
 
-# Lock arbitrary settings on the preferences page.
+# 在偏好设置页锁定任意配置项。
 #
 # preferences:
 #   lock:
@@ -168,43 +166,41 @@ ui:
 #     - image_proxy
 #     - query_in_title
 
-# searx supports result proxification using an external service:
-# https://github.com/asciimoo/morty uncomment below section if you have running
-# morty proxy the key is base64 encoded (keep the !!binary notation)
-# Note: since commit af77ec3, morty accepts a base64 encoded key.
+# searx 支持通过外部服务代理搜索结果：
+# https://github.com/asciimoo/morty 若已运行 morty，取消下方注释
+# morty 代理密钥为 base64 编码（保留 !!binary 写法）
+# 注意：自 commit af77ec3 起，morty 接受 base64 编码密钥。
 #
 # result_proxy:
 #   url: http://127.0.0.1:3000/
-#   # the key is a base64 encoded string, the YAML !!binary prefix is optional
+#   # 密钥为 base64 字符串，YAML 的 !!binary 前缀可选
 #   key: !!binary "your_morty_proxy_key"
-#   # [true|false] enable the "proxy" button next to each result
+#   # [true|false] 是否在每条结果旁显示 “proxy” 按钮
 #   proxify_results: true
 
-# communication with search engines
+# 与搜索引擎的通信
 #
 outgoing:
-  # default timeout in seconds, can be override by engine
+  # 默认超时（秒），可被单个引擎覆盖
   request_timeout: 6.0
-  # the maximum timeout in seconds
+  # 最大超时（秒）
   # max_request_timeout: 10.0
-  # suffix of searx_useragent, could contain information like an email address
-  # to the administrator
+  # searx_useragent 后缀，可包含管理员邮箱等信息
   useragent_suffix: ""
-  # The maximum number of concurrent connections that may be established.
+  # 可建立的最大并发连接数。
   pool_connections: 100
-  # Allow the connection pool to maintain keep-alive connections below this
-  # point.
+  # 允许连接池在此数量以下保持 keep-alive 连接。
   pool_maxsize: 20
-  # See https://www.python-httpx.org/http2/
+  # 参见 https://www.python-httpx.org/http2/
   enable_http2: true
-  # uncomment below section if you want to use a custom server certificate
-  # see https://www.python-httpx.org/advanced/#changing-the-verification-defaults
-  # and https://www.python-httpx.org/compatibility/#ssl-configuration
+  # 若要使用自定义服务器证书，取消下方注释
+  # 参见 https://www.python-httpx.org/advanced/#changing-the-verification-defaults
+  # 以及 https://www.python-httpx.org/compatibility/#ssl-configuration
   #  verify: ~/.mitmproxy/mitmproxy-ca-cert.cer
   #
-  # uncomment below section if you want to use a proxyq see: SOCKS proxies
+  # 若要使用代理，取消下方注释；SOCKS 代理参见：
   #   https://2.python-requests.org/en/latest/user/advanced/#proxies
-  # are also supported: see
+  # 也支持，参见
   #   https://2.python-requests.org/en/latest/user/advanced/#socks
   #
   #  proxies:
@@ -214,19 +210,18 @@ outgoing:
   #
   #  using_tor_proxy: true
   #
-  # Extra seconds to add in order to account for the time taken by the proxy
+  # 为代理耗时额外增加的秒数
   #
   #  extra_proxy_timeout: 10
   #
-  # uncomment below section only if you have more than one network interface
-  # which can be the source of outgoing search requests
+  # 仅当有多个网卡可作为出站搜索请求源时，才取消下方注释
   #
   #  source_ips:
   #    - 1.1.1.1
   #    - 1.1.1.2
   #    - fe80::/126
 
-# External plugin configuration, for more details see
+# 外部插件配置，详情见
 #   https://docs.searxng.org/admin/settings/settings_plugins.html
 #
 # plugins:
@@ -234,23 +229,23 @@ outgoing:
 #   - mypackage.mymodule.MyOtherPlugin
 #   - ...
 
-# Comment or un-comment plugin to activate / deactivate by default.
+# 注释或取消注释插件，以默认启用 / 禁用。
 #   https://docs.searxng.org/admin/settings/settings_plugins.html
 #
 # enabled_plugins:
-#   # these plugins are enabled if nothing is configured ..
+#   # 未做配置时默认启用的插件 ..
 #   - 'Basic Calculator'
 #   - 'Hash plugin'
 #   - 'Self Information'
 #   - 'Tracker URL remover'
 #   - 'Unit converter plugin'
-#   - 'Ahmia blacklist'  # activation depends on outgoing.using_tor_proxy
-#   # these plugins are disabled if nothing is configured ..
-#   - 'Hostnames plugin'  # see 'hostnames' configuration below
+#   - 'Ahmia blacklist'  # 是否启用取决于 outgoing.using_tor_proxy
+#   # 未做配置时默认禁用的插件 ..
+#   - 'Hostnames plugin'  # 见下方 'hostnames' 配置
 #   - 'Open Access DOI rewrite'
 #   - 'Tor check plugin'
 
-# Configuration of the "Hostnames plugin":
+# “Hostnames” 插件配置：
 #
 # hostnames:
 #   replace:
@@ -266,33 +261,32 @@ outgoing:
 #   high_priority:
 #     - '(.*\.)?wikipedia.org$'
 #
-# Alternatively you can use external files for configuring the "Hostnames plugin":
+# 也可使用外部文件配置 “Hostnames” 插件：
 #
 # hostnames:
 #  replace: 'rewrite-hosts.yml'
 #
-# Content of 'rewrite-hosts.yml' (place the file in the same directory as 'settings.yml'):
+# 'rewrite-hosts.yml' 内容（与 'settings.yml' 放在同一目录）：
 # '(.*\.)?youtube\.com$': 'invidious.example.com'
 # '(.*\.)?youtu\.be$': 'invidious.example.com'
 #
 
 checker:
-  # disable checker when in debug mode
+  # 调试模式下禁用 checker
   off_when_debug: true
 
-  # use "scheduling: false" to disable scheduling
-  # scheduling: interval or int
+  # 使用 "scheduling: false" 禁用调度
+  # scheduling：interval 或 int
 
-  # to activate the scheduler:
-  # * uncomment "scheduling" section
-  # * add "cache2 = name=searxngcache,items=2000,blocks=2000,blocksize=4096,bitmap=1"
-  #   to your uwsgi.ini
+  # 启用调度器：
+  # * 取消 “scheduling” 段注释
+  # * 在 uwsgi.ini 中添加 "cache2 = name=searxngcache,items=2000,blocks=2000,blocksize=4096,bitmap=1"
 
   # scheduling:
-  #   start_after: [300, 1800]  # delay to start the first run of the checker
-  #   every: [86400, 90000]     # how often the checker runs
+  #   start_after: [300, 1800]  # 首次运行 checker 前的延迟
+  #   every: [86400, 90000]     # checker 运行频率
 
-  # additional tests: only for the YAML anchors (see the engines section)
+  # 额外测试：仅用于 YAML 锚点（见 engines 段）
   #
   additional_tests:
     rosebud: &test_rosebud
@@ -315,7 +309,7 @@ checker:
       test:
         - unique_results
 
-  # tests: only for the YAML anchors (see the engines section)
+  # 测试：仅用于 YAML 锚点（见 engines 段）
   tests:
     infobox: &tests_infobox
       infobox:
@@ -428,7 +422,7 @@ engines:
     shortcut: aps
     disabled: true
 
-  # Requires Tor
+  # 需要 Tor
   - name: ahmia
     engine: ahmia
     categories: onions
@@ -476,7 +470,7 @@ engines:
     shortcut: ask
     disabled: true
 
-  # tmp suspended:  dh key too small
+  # 临时挂起：DH 密钥过小
   # - name: base
   #   engine: base
   #   shortcut: bs
@@ -489,13 +483,13 @@ engines:
   - name: wikipedia
     engine: wikipedia
     shortcut: wp
-    # add "list" to the array to get results in the results list
+    # 在数组中加入 "list" 以便在结果列表中显示
     display_type: ["infobox"]
     categories: [general]
-    # Often unreachable from CN Docker networks without a proxy.
+    # 在国内 Docker 网络中若不走代理通常不可达。
     disabled: true
 
-  # Prefer engines reachable from mainland China local Docker.
+  # 优先选用在中国大陆本地 Docker 环境下可达的引擎。
   - name: baidu
     baidu_category: general
     categories: [general]
@@ -515,7 +509,7 @@ engines:
   - name: bing
     engine: bing
     shortcut: bi
-    # cn.bing.com is more reliable for CN Docker hosts.
+    # 对国内 Docker 主机而言，cn.bing.com 更可靠。
     base_url: https://cn.bing.com
 
   - name: bing images
@@ -567,28 +561,27 @@ engines:
   - name: media.ccc.de
     engine: ccc_media
     shortcut: c3tv
-    # We don't set language: de here because media.ccc.de is not just
-    # for a German audience. It contains many English videos and many
-    # German videos have English subtitles.
+    # 此处不设置 language: de，因为 media.ccc.de 并不只面向德语用户。
+    # 其中有大量英语视频，许多德语视频也带有英文字幕。
     disabled: true
 
   - name: chefkoch
     engine: chefkoch
     shortcut: chef
-    # to show premium or plus results too:
+    # 若也要显示 premium/plus 结果：
     # skip_premium: false
 
   - name: cloudflareai
     engine: cloudflareai
     shortcut: cfai
-    # get api token and accont id from https://developers.cloudflare.com/workers-ai/get-started/rest-api/
+    # 从 https://developers.cloudflare.com/workers-ai/get-started/rest-api/ 获取 API token 与 account id
     cf_account_id: 'your_cf_accout_id'
     cf_ai_api: 'your_cf_api'
-    # create your ai gateway by https://developers.cloudflare.com/ai-gateway/get-started/creating-gateway/
+    # 通过 https://developers.cloudflare.com/ai-gateway/get-started/creating-gateway/ 创建 AI Gateway
     cf_ai_gateway: 'your_cf_ai_gateway_name'
-    # find the model name from https://developers.cloudflare.com/workers-ai/models/#text-generation
+    # 模型名见 https://developers.cloudflare.com/workers-ai/models/#text-generation
     cf_ai_model: 'ai_model_name'
-    # custom your preferences
+    # 自定义偏好设置
     # cf_ai_model_display_name: 'Cloudflare AI'
     # cf_ai_model_assistant: 'prompts_for_assistant_role'
     # cf_ai_model_system: 'prompts_for_system_role'
@@ -599,7 +592,7 @@ engines:
   #   engine: core
   #   categories: science
   #   shortcut: cor
-  #   # get your API key from: https://core.ac.uk/api-keys/register/
+  #   # 在此获取 API key：https://core.ac.uk/api-keys/register/
   #   api_key: 'unset'
 
   - name: cppreference
@@ -699,7 +692,7 @@ engines:
     disabled: true
     tests: *tests_infobox
 
-  # cloudflare protected
+  # 受 Cloudflare 保护
   # - name: digbt
   #   engine: digbt
   #   shortcut: dbt
@@ -756,9 +749,9 @@ engines:
   #   username: elastic
   #   password: changeme
   #   index: my-index
-  #   # available options: match, simple_query_string, term, terms, custom
+  #   # 可选值：match、simple_query_string、term、terms、custom
   #   query_type: match
-  #   # if query_type is set to custom, provide your query here
+  #   # 若 query_type 为 custom，在此提供查询
   #   #custom_query_json: {"query":{"match_all": {}}}
   #   #show_metadata: false
   #   disabled: true
@@ -768,7 +761,7 @@ engines:
     shortcut: wd
     timeout: 3.0
     weight: 2
-    # add "list" to the array to get results in the results list
+    # 在数组中加入 "list" 以便在结果列表中显示
     display_type: ["infobox"]
     tests: *tests_infobox
     categories: [general]
@@ -866,11 +859,11 @@ engines:
   - name: flickr
     categories: images
     shortcut: fl
-    # You can use the engine using the official stable API, but you need an API
-    # key, see: https://www.flickr.com/services/apps/create/
+    # 可使用官方稳定 API，但需要 API
+    # 密钥，见：https://www.flickr.com/services/apps/create/
     # engine: flickr
-    # api_key: 'apikey' # required!
-    # Or you can use the html non-stable engine, activated by default
+    # api_key: 'apikey' # 必填！
+    # 也可使用默认启用的非稳定 HTML 引擎
     engine: flickr_noapi
 
   - name: free software directory
@@ -890,7 +883,7 @@ engines:
   #   shortcut: fnd
   #   disabled: true
   #   timeout: 15.0
-  # API key required, see: https://freesound.org/docs/api/overview.html
+  # 需要 API key，见：https://freesound.org/docs/api/overview.html
   #   api_key: MyAPIkey
 
   - name: frinkiac
@@ -1046,7 +1039,7 @@ engines:
     engine: hex
     shortcut: hex
     disabled: true
-    # Valid values: name inserted_at updated_at total_downloads recent_downloads
+    # 有效值：name、inserted_at、updated_at、total_downloads、recent_downloads
     sort_criteria: "recent_downloads"
     page_size: 10
 
@@ -1093,8 +1086,8 @@ engines:
 
   - name: invidious
     engine: invidious
-    # Instanes will be selected randomly, see https://api.invidious.io/ for
-    # instances that are stable (good uptime) and close to you.
+    # 将随机选择实例，稳定且靠近你的实例见 https://api.invidious.io/
+    # （良好可用性）。
     base_url:
       - https://invidious.adminforge.de
       - https://inv.nadeko.net
@@ -1189,7 +1182,7 @@ engines:
   - name: lingva
     engine: lingva
     shortcut: lv
-    # set lingva instance in url, by default it will use the official instance
+    # 在 url 中设置 lingva 实例，默认使用官方实例
     # url: https://lingva.thedaviddelta.com
 
   - name: lobste.rs
@@ -1266,8 +1259,8 @@ engines:
     engine: mixcloud
     shortcut: mc
 
-  # MongoDB engine
-  # Required dependency: pymongo
+  # MongoDB 引擎
+  # 所需依赖：pymongo
   # - name: mymongo
   #   engine: mongodb
   #   shortcut: md
@@ -1277,8 +1270,8 @@ engines:
   #   enable_http: true
   #   results_per_page: 20
   #   database: 'business'
-  #   collection: 'reviews'  # name of the db collection
-  #   key: 'name'  # key in the collection to search for
+  #   collection: 'reviews'  # 数据库集合名
+  #   key: 'name'  # 集合中用于搜索的字段
 
   - name: mozhi
     engine: mozhi
@@ -1286,7 +1279,7 @@ engines:
       - https://mozhi.aryak.me
       - https://translate.bus-hit.me
       - https://nyc1.mz.ggtyler.dev
-    # mozhi_engine: google - see https://mozhi.aryak.me for supported engines
+    # mozhi_engine: google - 支持的引擎见 https://mozhi.aryak.me
     timeout: 4.0
     shortcut: mz
     disabled: true
@@ -1324,11 +1317,11 @@ engines:
       require_api_key: false
       results: JSON
 
-  # read https://docs.searxng.org/dev/engines/online/mullvad_leta.html
+  # 参阅 https://docs.searxng.org/dev/engines/online/mullvad_leta.html
   # - name: mullvadleta
   #   engine: mullvad_leta
-  #   leta_engine: google # choose one of the following: google, brave
-  #   use_cache: true  # Only 100 non-cache searches per day, suggested only for private instances
+  #   leta_engine: google # 可选其一：google、brave
+  #   use_cache: true  # 每天仅 100 次非缓存搜索，建议仅用于私有实例
   #   search_url: https://leta.mullvad.net
   #   categories: [general, web]
   #   shortcut: ml
@@ -1440,7 +1433,7 @@ engines:
   - name: pdbe
     engine: pdbe
     shortcut: pdb
-    # Hide obsolete PDB entries.  Default is not to hide obsolete structures
+    # 隐藏过时的 PDB 条目。默认不隐藏过时结构
     #  hide_obsolete: false
 
   - name: photon
@@ -1458,9 +1451,9 @@ engines:
     piped_filter: videos
     timeout: 3.0
 
-    # URL to use as link and for embeds
+    # 用作链接与嵌入的 URL
     frontend_url: https://srv.piped.video
-    # Instance will be selected randomly, for more see https://piped-instances.kavin.rocks/
+    # 将随机选择实例，更多见 https://piped-instances.kavin.rocks/
     backend_url:
       - https://pipedapi.adminforge.de
       - https://pipedapi.nosebs.ru
@@ -1480,8 +1473,8 @@ engines:
   - name: piratebay
     engine: piratebay
     shortcut: tpb
-    # You may need to change this URL to a proxy if piratebay is blocked in your
-    # country
+    # 若所在地区屏蔽了 piratebay，可能需要将此 URL 改为代理
+    # 国家/地区
     url: https://thepiratebay.org/
     timeout: 3.0
 
@@ -1492,29 +1485,27 @@ engines:
     inactive: true
     pixiv_image_proxies:
       - https://pximg.example.org
-      # A proxy is required to load the images. Hosting an image proxy server
-      # for Pixiv:
+      # 加载图片需要代理。搭建 Pixiv 图片代理服务器：
       #    --> https://pixivfe.pages.dev/hosting-image-proxy-server/
-      # Proxies from public instances.  Ask the public instances owners if they
-      # agree to receive traffic from SearXNG!
+      # 来自公开实例的代理。使用前请征得维护者同意接收 SearXNG 流量！
       #    --> https://codeberg.org/VnPower/PixivFE#instances
       #    --> https://github.com/searxng/searxng/pull/3192#issuecomment-1941095047
-      # image proxy of https://pixiv.cat
+      # https://pixiv.cat 的图片代理
       # - https://i.pixiv.cat
-      # image proxy of https://www.pixiv.pics
+      # https://www.pixiv.pics 的图片代理
       # - https://pximg.cocomi.eu.org
-      # image proxy of https://pixivfe.exozy.me
+      # https://pixivfe.exozy.me 的图片代理
       # - https://pximg.exozy.me
-      # image proxy of https://pixivfe.ducks.party
+      # https://pixivfe.ducks.party 的图片代理
       # - https://pixiv.ducks.party
-      # image proxy of https://pixiv.perennialte.ch
+      # https://pixiv.perennialte.ch 的图片代理
       # - https://pximg.perennialte.ch
 
   - name: podcastindex
     engine: podcastindex
     shortcut: podcast
 
-  # Required dependency: psychopg2
+  # 所需依赖：psychopg2
   #  - name: postgresql
   #    engine: postgresql
   #    database: postgres
@@ -1677,7 +1668,7 @@ engines:
     shortcut: rt
     disabled: true
 
-  # Required dependency: redis
+  # 所需依赖：redis
   # - name: myredis
   #   shortcut : rds
   #   engine: redis_server
@@ -1688,7 +1679,7 @@ engines:
   #   password: ''
   #   db: 0
 
-  # tmp suspended: bad certificate
+  # 临时挂起：证书无效
   #  - name: scanr structures
   #    shortcut: scs
   #    engine: scanr_structures
@@ -1773,7 +1764,7 @@ engines:
     disabled: true
     shortcut: se
 
-  # Spotify needs API credentials
+  # Spotify 需要 API 凭证
   # - name: spotify
   #   engine: spotify
   #   shortcut: stf
@@ -1785,16 +1776,16 @@ engines:
   #   shortcut: slr
   #   base_url: http://localhost:8983
   #   collection: collection_name
-  #   sort: '' # sorting: asc or desc
-  #   field_list: '' # comma separated list of field names to display on the UI
-  #   default_fields: '' # default field to query
+  #   sort: '' # 排序：asc 或 desc
+  #   field_list: '' # 在 UI 上显示的字段名，逗号分隔
+  #   default_fields: '' # 默认查询字段
   #   query_fields: '' # query fields
   #   enable_http: true
 
   # - name: springer nature
   #   engine: springer
-  #   # get your API key from: https://dev.springernature.com/signup
-  #   # working API key, for test & debug: "a69685087d07eca9f13db62f65b8f601"
+  #   # 在此获取 API key：https://dev.springernature.com/signup
+  #   # 可用于测试与调试的 API key："a69685087d07eca9f13db62f65b8f601"
   #   api_key: 'unset'
   #   shortcut: springer
   #   timeout: 15.0
@@ -1834,10 +1825,10 @@ engines:
       - https://solidtorrents.to
       - https://bitsearch.to
 
-  # For this demo of the sqlite engine download:
+  # sqlite 引擎演示：下载
   #   https://liste.mediathekview.de/filmliste-v2.db.bz2
-  # and unpack into searx/data/filmliste-v2.db
-  # Query to test: "!demo concert"
+  # 并解压到 searx/data/filmliste-v2.db
+  # 测试查询："!demo concert"
   #
   # - name: demo
   #   engine: sqlite
@@ -1855,8 +1846,8 @@ engines:
 
   - name: tagesschau
     engine: tagesschau
-    # when set to false, display URLs from Tagesschau, and not the actual source
-    # (e.g. NDR, WDR, SWR, HR, ...)
+    # 设为 false 时显示 Tagesschau 的 URL，而非实际来源
+    # （例如 NDR、WDR、SWR、HR 等）
     use_source_url: true
     shortcut: ts
     disabled: true
@@ -1874,7 +1865,7 @@ engines:
     shortcut: tm
     disabled: true
 
-  # Requires Tor
+  # 需要 Tor
   - name: torch
     engine: xpath
     paging: true
@@ -1888,25 +1879,24 @@ engines:
     enable_http: true
     shortcut: tch
 
-  # torznab engine lets you query any torznab compatible indexer.  Using this
-  # engine in combination with Jackett opens the possibility to query a lot of
-  # public and private indexers directly from SearXNG. More details at:
+  # torznab 引擎可查询任意兼容 torznab 的索引器。与 Jackett 联用时，
+  # 可直接从 SearXNG 查询大量公开与私有索引器。详情见：
   # https://docs.searxng.org/dev/engines/online/torznab.html
   #
   # - name: Torznab EZTV
   #   engine: torznab
   #   shortcut: eztv
   #   base_url: http://localhost:9117/api/v2.0/indexers/eztv/results/torznab
-  #   enable_http: true  # if using localhost
+  #   enable_http: true  # 若使用 localhost
   #   api_key: xxxxxxxxxxxxxxx
   #   show_magnet_links: true
   #   show_torrent_files: false
   #   # https://github.com/Jackett/Jackett/wiki/Jackett-Categories
-  #   torznab_categories:  # optional
+  #   torznab_categories:  # 可选
   #     - 2000
   #     - 5000
 
-  # tmp suspended - too slow, too many errors
+  # 临时挂起 - 过慢且错误过多
   #  - name: urbandictionary
   #    engine      : xpath
   #    search_url  : https://www.urbandictionary.com/define.php?term={query}
@@ -1953,13 +1943,13 @@ engines:
 
   - name: youtube
     shortcut: yt
-    # You can use the engine using the official stable API, but you need an API
-    # key See: https://console.developers.google.com/project
+    # 可使用官方稳定 API，但需要 API
+    # 密钥见：https://console.developers.google.com/project
     #
     # engine: youtube_api
-    # api_key: 'apikey' # required!
+    # api_key: 'apikey' # 必填！
     #
-    # Or you can use the html non-stable engine, activated by default
+    # 也可使用默认启用的非稳定 HTML 引擎
     engine: youtube_noapi
 
   - name: dailymotion
@@ -2117,13 +2107,13 @@ engines:
 
   - name: wolframalpha
     shortcut: wa
-    # You can use the engine using the official stable API, but you need an API
-    # key.  See: https://products.wolframalpha.com/api/
+    # 可使用官方稳定 API，但需要 API
+    # 密钥见：https://products.wolframalpha.com/api/
     #
     # engine: wolframalpha_api
     # api_key: ''
     #
-    # Or you can use the html non-stable engine, activated by default
+    # 也可使用默认启用的非稳定 HTML 引擎
     engine: wolframalpha_noapi
     timeout: 6.0
     categories: general
@@ -2137,11 +2127,11 @@ engines:
     engine: translated
     shortcut: tl
     timeout: 5.0
-    # You can use without an API key, but you are limited to 1000 words/day
-    # See: https://mymemory.translated.net/doc/usagelimits.php
+    # 可不使用 API key，但限制为每天 1000 词
+    # 见：https://mymemory.translated.net/doc/usagelimits.php
     # api_key: ''
 
-  # Required dependency: mysql-connector-python
+  # 所需依赖：mysql-connector-python
   #  - name: mysql
   #    engine: mysql_server
   #    database: mydatabase
@@ -2151,7 +2141,7 @@ engines:
   #    query_str: 'SELECT * from mytable WHERE fieldname=%(query)s'
   #    shortcut: mysql
 
-  # Required dependency: mariadb
+  # 所需依赖：mariadb
   #  - name: mariadb
   #    engine: mariadb_server
   #    database: mydatabase
@@ -2179,9 +2169,9 @@ engines:
   # - name: deepl
   #   engine: deepl
   #   shortcut: dpl
-  #   # You can use the engine using the official stable API, but you need an API key
-  #   # See: https://www.deepl.com/pro-api?cta=header-pro-api
-  #   api_key: ''  # required!
+  #   # 可使用官方稳定 API，但需要 API key
+  #   # 见：https://www.deepl.com/pro-api?cta=header-pro-api
+  #   api_key: ''  # 必填！
   #   timeout: 5.0
   #   disabled: true
 
@@ -2258,7 +2248,7 @@ engines:
     engine: peertube
     shortcut: ptb
     paging: true
-    # alternatives see: https://instances.joinpeertube.org/instances
+    # 其他实例见：https://instances.joinpeertube.org/instances
     # base_url: https://tube.4aem.com
     categories: videos
     disabled: true
@@ -2276,7 +2266,7 @@ engines:
     search_type: text
     base_url:
       - https://yacy.searchlab.eu
-      # see https://github.com/searxng/searxng/pull/3631#issuecomment-2240903027
+      # 见 https://github.com/searxng/searxng/pull/3631#issuecomment-2240903027
       # - https://search.kyun.li
       # - https://yacy.securecomcorp.eu
       # - https://yacy.myserv.ca
@@ -2284,10 +2274,10 @@ engines:
       # - https://yacy.electroncash.de
     shortcut: ya
     disabled: true
-    # if you aren't using HTTPS for your local yacy instance disable https
+    # 若本地 yacy 实例未使用 HTTPS，请禁用 https
     # enable_http: false
     search_mode: 'global'
-    # timeout can be reduced in 'local' search mode
+    # 'local' 搜索模式下可缩短超时
     timeout: 5.0
 
   - name: yacy images
@@ -2297,7 +2287,7 @@ engines:
     search_type: image
     shortcut: yai
     disabled: true
-    # timeout can be reduced in 'local' search mode
+    # 'local' 搜索模式下可缩短超时
     timeout: 5.0
 
   - name: rumble
@@ -2334,7 +2324,7 @@ engines:
     no_result_for_http_status: [404]
     about:
       website: https://www.woxikon.de/
-      wikidata_id:  # No Wikidata ID
+      wikidata_id:  # 无 Wikidata ID
       use_official_api: false
       require_api_key: false
       results: HTML
@@ -2388,9 +2378,8 @@ engines:
     # api_key: abcdefghijklmnopqrstuvwxyz
     shortcut: wh
 
-    # wikimini: online encyclopedia for children
-    # The fulltext and title parameter is necessary for Wikimini because
-    # sometimes it will not show the results and redirect instead
+    # wikimini：面向儿童的在线百科
+    # Wikimini 需要 fulltext 与 title 参数，因为有时它不会显示结果而是重定向
   - name: wikimini
     engine: xpath
     shortcut: wkmn
@@ -2457,7 +2446,7 @@ engines:
   #   paging: true
   #   categories: [general, web]
   #   brave_category: goggles
-  #   Goggles: # required! This should be a URL ending in .goggle
+  #   Goggles: # 必填！应为以 .goggle 结尾的 URL
 
   - name: lib.rs
     shortcut: lrs
@@ -2513,17 +2502,16 @@ engines:
     shortcut: pgo
     disabled: true
 
-# Doku engine lets you access to any Doku wiki instance:
-# A public one or a privete/corporate one.
+# Doku 引擎可访问任意 Doku wiki 实例：
+# 可以是公开实例，也可以是私有/企业实例。
 #  - name: ubuntuwiki
 #    engine: doku
 #    shortcut: uw
 #    base_url: 'https://doc.ubuntu-fr.org'
 
-# Be careful when enabling this engine if you are
-# running a public instance. Do not expose any sensitive
-# information. You can restrict access by configuring a list
-# of access tokens under tokens.
+# 若运行公开实例，启用此引擎时请谨慎，勿暴露敏感信息。
+# 可通过 tokens 配置访问令牌列表来限制访问。
+#
 #  - name: git grep
 #    engine: command
 #    command: ['git', 'grep', '{{QUERY}}']
@@ -2534,10 +2522,9 @@ engines:
 #        chars: ':'
 #        keys: ['filepath', 'code']
 
-# Be careful when enabling this engine if you are
-# running a public instance. Do not expose any sensitive
-# information. You can restrict access by configuring a list
-# of access tokens under tokens.
+# 若运行公开实例，启用此引擎时请谨慎，勿暴露敏感信息。
+# 可通过 tokens 配置访问令牌列表来限制访问。
+#
 #  - name: locate
 #    engine: command
 #    command: ['locate', '{{QUERY}}']
@@ -2548,10 +2535,9 @@ engines:
 #        chars: ' '
 #        keys: ['line']
 
-# Be careful when enabling this engine if you are
-# running a public instance. Do not expose any sensitive
-# information. You can restrict access by configuring a list
-# of access tokens under tokens.
+# 若运行公开实例，启用此引擎时请谨慎，勿暴露敏感信息。
+# 可通过 tokens 配置访问令牌列表来限制访问。
+#
 #  - name: find
 #    engine: command
 #    command: ['find', '.', '-name', '{{QUERY}}']
@@ -2563,10 +2549,9 @@ engines:
 #        chars: ' '
 #        keys: ['line']
 
-# Be careful when enabling this engine if you are
-# running a public instance. Do not expose any sensitive
-# information. You can restrict access by configuring a list
-# of access tokens under tokens.
+# 若运行公开实例，启用此引擎时请谨慎，勿暴露敏感信息。
+# 可通过 tokens 配置访问令牌列表来限制访问。
+#
 #  - name: pattern search in files
 #    engine: command
 #    command: ['fgrep', '{{QUERY}}']
@@ -2577,10 +2562,9 @@ engines:
 #        chars: ' '
 #        keys: ['line']
 
-# Be careful when enabling this engine if you are
-# running a public instance. Do not expose any sensitive
-# information. You can restrict access by configuring a list
-# of access tokens under tokens.
+# 若运行公开实例，启用此引擎时请谨慎，勿暴露敏感信息。
+# 可通过 tokens 配置访问令牌列表来限制访问。
+#
 #  - name: regex search in files
 #    engine: command
 #    command: ['grep', '{{QUERY}}']

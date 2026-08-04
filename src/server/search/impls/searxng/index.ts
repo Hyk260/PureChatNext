@@ -34,13 +34,18 @@ export class SearXNGImpl implements SearchServiceImpl {
       })
       costTime = Date.now() - startAt
 
+      // SearXNG 常省略 number_of_results；undefined 经 JSON 序列化会被丢弃，
+      // 导致前端用 resultNumbers 做类型判断时识别失败。
+      const resultNumbers =
+        typeof data.number_of_results === 'number' ? data.number_of_results : data.results.length
+
       return {
         costTime,
         query,
-        resultNumbers: data.number_of_results,
+        resultNumbers,
         results: data.results.map((item) => ({
           category: item.category,
-          content: item.content!,
+          content: item.content ?? '',
           engines: item.engines,
           parsedUrl: item.url ? new URL(item.url).hostname : '',
           publishedDate: item.publishedDate || undefined,

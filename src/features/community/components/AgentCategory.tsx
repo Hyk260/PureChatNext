@@ -23,6 +23,7 @@ import type { LucideIcon } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
 import { memo, useCallback, useMemo } from 'react'
 
+import Scrollbar from '@/components/Scrollbar'
 import {
   ASSISTANT_BUSINESS_CATEGORIES,
   ASSISTANT_CATEGORY_LABELS,
@@ -72,12 +73,11 @@ const styles = createStaticStyles(({ css }) => ({
     }
   `,
   root: css`
-    position: sticky;
-    top: 0;
     flex: none;
     width: 220px;
-    max-height: calc(100vh - 120px);
-    overflow: auto;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
   `,
 }))
 
@@ -124,30 +124,34 @@ const AgentCategory = memo(() => {
   )
 
   return (
-    <Flexbox className={styles.root} gap={4}>
-      {CATEGORY_KEYS.map((key) => {
-        const isActive = selected === key
-        return (
-          <button
-            className={cx(styles.item, isActive && styles.active)}
-            key={key}
-            type='button'
-            onClick={() => handleSelect(key)}
-          >
-            <Icon icon={CATEGORY_ICONS[key]} size={18} />
-            <Text ellipsis>{ASSISTANT_CATEGORY_LABELS[key]}</Text>
-            {counts[key] > 0 ? (
-              <Tag
-                className={styles.count}
-                size='small'
-                style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
+    <Flexbox className={styles.root}>
+      <Scrollbar style={{ height: '100%', width: '100%' }}>
+        <Flexbox gap={4}>
+          {CATEGORY_KEYS.map((key) => {
+            const isActive = selected === key
+            return (
+              <button
+                className={cx(styles.item, isActive && styles.active)}
+                key={key}
+                type='button'
+                onClick={() => handleSelect(key)}
               >
-                {counts[key]}
-              </Tag>
-            ) : null}
-          </button>
-        )
-      })}
+                <Icon icon={CATEGORY_ICONS[key]} size={18} />
+                <Text ellipsis>{ASSISTANT_CATEGORY_LABELS[key]}</Text>
+                {counts[key] > 0 ? (
+                  <Tag
+                    className={styles.count}
+                    size='small'
+                    style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
+                  >
+                    {counts[key]}
+                  </Tag>
+                ) : null}
+              </button>
+            )
+          })}
+        </Flexbox>
+      </Scrollbar>
     </Flexbox>
   )
 })

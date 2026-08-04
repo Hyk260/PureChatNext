@@ -105,10 +105,12 @@ CLAUDE.*.md
 # Misc
 *.ppt*
 *.doc*
+!.dockerignore
 *.xls*
 .firecrawl/
 
 .worktrees/
+.local-backups/
 
 # Private notes / personal reference (contains credentials, subscription tokens, etc.)
 docs/private/

@@ -67,6 +67,7 @@ NODE_ENV=development
 | ------ | ------------------- | ------------------------------------- |
 | `5174` | Vite SPA（本地 UI） | 浏览器打开站点、`APP_URL`、邮件落地   |
 | `3000` | Next API / BFF      | `/api/*`、curl 直打接口；不当主站入口 |
+| `3210` | Docker 生产应用     | 仅回环监听，由 Nginx/Caddy 反向代理   |
 
 修改后需重启 Next（`pnpm dev:next` 或 `pnpm dev`）。
 
@@ -101,6 +102,7 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 
 - Supabase：`postgresql://postgres:[密码]@db.[项目引用].supabase.co:5432/postgres`
 - 本地 Docker：`postgresql://purechat:purechat@127.0.0.1:5432/purechat`（默认与 `docker-compose/dev/.env.example` 一致）
+- 生产 Docker：由 Compose 注入 `postgresql:5432` 内部地址，不应在宿主机 `.env.local` 中改写为该服务名
 - Supabase 支持直接连接（5432）或连接池（6543）；本地实例使用 5432
 
 ### DATABASE\_DRIVER
@@ -111,6 +113,12 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 - 本机或明确无需 SSL 的 PostgreSQL：`DATABASE_DRIVER=node`
 
 本地 Docker 启停与连接说明见 [本地 PostgreSQL 管理](./self-hosting/postgresql-local.zh-CN.md)。
+
+### Docker 内部服务地址
+
+开发时从宿主机运行应用，因此 PostgreSQL、Redis、RustFS 与 SearXNG 使用 `127.0.0.1` 加映射端口。生产应用与依赖位于同一 Compose 网络，使用 `postgresql:5432`、`redis:6379`、`rustfs:9000` 与 `searxng:8080`；这些端口不会发布到宿主机。
+
+生产密钥与内部 URL 由 `pnpm docker:setup:deploy` 和生产 Compose 管理，不要把 `docker-compose/deploy/.env` 提交到仓库。完整说明见 [Docker 自托管与数据迁移](./self-hosting/docker.zh-CN.md)。
 
 ### NODE\_ENV
 

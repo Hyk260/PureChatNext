@@ -6,7 +6,8 @@ import type { PluginOption } from 'vite'
  * Mirror Next `raw-loader` for `*.html` imports under `src/` (email templates, etc.).
  */
 export function viteRawHtml(rootDir: string): PluginOption {
-  const srcDir = `${path.resolve(rootDir, 'src')}/`
+  // Normalize so Windows `\` matches Vite ids (`D:/...`).
+  const srcDir = `${path.resolve(rootDir, 'src').replaceAll('\\', '/')}/`
 
   return {
     name: 'vite-raw-html',

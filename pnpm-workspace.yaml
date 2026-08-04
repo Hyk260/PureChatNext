@@ -1,7 +1,8 @@
 packages:
   - packages/**
 allowBuilds:
-  '@code-inspector/core': true
+  # Windows 上 postinstall 的 node-pty 探测会卡死（conhost + kill 不返回），跳过即可
+  '@code-inspector/core': false
   '@swc/core': true
   esbuild: true
   node-pty: true

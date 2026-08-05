@@ -161,22 +161,19 @@ export async function POST(request: Request) {
       const result = streamText({
         messages: await convertToModelMessages(messages),
         model: resolvedModel,
-        ...(system?.trim() ? { system: system.trim() } : {}),
-        async onFinish({ totalUsage, usage }) {
+        ...(system?.trim() ? { instructions: system.trim() } : {}),
+        async onEnd({ usage }) {
           if (!userId || !settlementId || !settlementPeriod || !displayModel) return
 
           const cardForCost = getPureChatModel(displayModel)
           if (!cardForCost) return
 
-          const inputTokens = totalUsage?.inputTokens ?? usage?.inputTokens
-          const outputTokens = totalUsage?.outputTokens ?? usage?.outputTokens
-          const cachedInputTokens =
-            // AI SDK usage shapes vary by provider
-            (totalUsage as { cachedInputTokens?: number } | undefined)?.cachedInputTokens ??
-            (usage as { cachedInputTokens?: number } | undefined)?.cachedInputTokens
+          const inputTokens = usage.inputTokens
+          const outputTokens = usage.outputTokens
+          const cachedInputTokens = usage.inputTokenDetails.cacheReadTokens
 
           if (inputTokens == null && outputTokens == null) {
-            log('purechat onFinish: no usage, skip charge')
+            log('purechat onEnd: no usage, skip charge')
             return
           }
 
@@ -220,7 +217,7 @@ export async function POST(request: Request) {
         return new ChatSDKError('bad_request:api', PURECHAT_MODEL_UNAVAILABLE_MESSAGE).toResponse()
       }
       const message = error instanceof Error ? error.message : 'Failed to start chat stream'
-      // 上游鉴权失败等：不扣积分（尚未 onFinish）
+      // 上游鉴权失败等：不扣积分（尚未 onEnd）
       if (/401|unauthorized|invalid.*key/i.test(message)) {
         return new ChatSDKError('bad_request:api', '服务暂不可用，请稍后重试').toResponse()
       }
@@ -251,7 +248,7 @@ export async function POST(request: Request) {
     const result = streamText({
       messages: await convertToModelMessages(messages),
       model: resolvedModel,
-      ...(system?.trim() ? { system: system.trim() } : {}),
+      ...(system?.trim() ? { instructions: system.trim() } : {}),
     })
 
     return createUIMessageStreamResponse({

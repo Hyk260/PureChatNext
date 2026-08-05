@@ -96,7 +96,13 @@ describe('POST /api/chat/topics/[id]/auto-rename', () => {
     mocks.listByTopic.mockResolvedValue([message])
     mocks.generateText.mockResolvedValue({
       text: '“设计会话标题菜单”',
-      totalUsage: { inputTokens: 10, outputTokens: 5, inputTokenDetails: {} },
+      usage: {
+        inputTokenDetails: { cacheReadTokens: undefined, cacheWriteTokens: undefined, noCacheTokens: undefined },
+        inputTokens: 10,
+        outputTokenDetails: { reasoningTokens: undefined, textTokens: undefined },
+        outputTokens: 5,
+        totalTokens: 15,
+      },
     })
     mocks.update.mockResolvedValue({ id: 'topic-1', title: '设计会话标题菜单' })
   })

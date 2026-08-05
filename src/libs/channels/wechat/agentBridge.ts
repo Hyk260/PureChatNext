@@ -42,7 +42,7 @@ export async function generateWechatAgentReply(params: {
   const result = await generateText({
     messages: [{ content: params.userText, role: 'user' }],
     model: languageModel,
-    system: agent.systemRole || undefined,
+    ...(agent.systemRole ? { instructions: agent.systemRole } : {}),
   })
 
   const text = result.text?.trim()

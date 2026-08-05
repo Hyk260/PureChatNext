@@ -112,10 +112,10 @@ const chargePureChatUsage = async (params: {
   const card = getPureChatModel(params.model)
   if (!card) return
 
-  const usage = params.result.totalUsage ?? params.result.usage
-  const cachedInputTokens = usage?.inputTokenDetails?.cacheReadTokens
-  const inputTokens = usage?.inputTokens
-  const outputTokens = usage?.outputTokens
+  const usage = params.result.usage
+  const cachedInputTokens = usage.inputTokenDetails.cacheReadTokens
+  const inputTokens = usage.inputTokens
+  const outputTokens = usage.outputTokens
   if (inputTokens == null && outputTokens == null) return
 
   const { totalCredits } = computeChatCost(card.pricing, {

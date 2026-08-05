@@ -1,4 +1,5 @@
 import { generateText } from 'ai'
+import type { ModelMessage } from 'ai'
 import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
@@ -15,7 +16,9 @@ const log = debug('channel:wechat:bridge')
  * Generate a text reply using the bound agent (env-level provider keys).
  */
 export async function generateWechatAgentReply(params: {
+  abortSignal?: AbortSignal
   agentId: string
+  history?: Array<{ content: string; responseText: string | null }>
   userId: string
   userText: string
 }): Promise<string> {
@@ -26,8 +29,11 @@ export async function generateWechatAgentReply(params: {
     throw new Error(`Agent not found: ${params.agentId}`)
   }
 
-  const providerRaw = agent.provider ?? 'deepseek'
-  const provider = isSupportedProviderId(providerRaw) ? providerRaw : 'deepseek'
+  const providerRaw = agent.provider?.trim() || 'deepseek'
+  if (!isSupportedProviderId(providerRaw)) {
+    throw new Error(`Agent provider "${providerRaw}" is not supported by the WeChat gateway`)
+  }
+  const provider = providerRaw
   const modelId = agent.model ?? (provider === 'openai' ? 'gpt-5.4-mini' : 'deepseek-v4-flash')
   const apiKey = resolveProviderApiKey(provider, undefined, undefined)
 
@@ -39,8 +45,16 @@ export async function generateWechatAgentReply(params: {
 
   log('reply agent=%s provider=%s model=%s', agent.id, provider, modelId)
 
+  const messages: ModelMessage[] = []
+  for (const turn of params.history ?? []) {
+    messages.push({ content: turn.content, role: 'user' })
+    if (turn.responseText) messages.push({ content: turn.responseText, role: 'assistant' })
+  }
+  messages.push({ content: params.userText, role: 'user' })
+
   const result = await generateText({
-    messages: [{ content: params.userText, role: 'user' }],
+    abortSignal: params.abortSignal,
+    messages,
     model: languageModel,
     ...(agent.systemRole ? { instructions: agent.systemRole } : {}),
   })

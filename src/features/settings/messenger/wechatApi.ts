@@ -3,10 +3,23 @@ import { apiFetch } from '@/utils/apiFetch'
 export type WechatStatus = {
   agentId?: string
   applicationId?: string
+  bound?: boolean
   connected: boolean
   enabled?: boolean
+  failedEventCount?: number
+  gatewaySupported?: boolean
   lastActiveAt?: string | null
+  lastError?: { code: string; message: string } | null
+  lastHeartbeatAt?: string | null
   needsRebind: boolean
+  runtimeStatus?: 'starting' | 'online' | 'degraded' | 'offline' | 'needs_rebind' | 'stopped'
+}
+
+export async function retryFailedWechatEvents(): Promise<number> {
+  const res = await apiFetch('/api/channels/wechat/events/retry', { method: 'POST' })
+  const body = (await res.json().catch(() => ({}))) as { error?: string; requeued?: number }
+  if (!res.ok) throw new Error(body.error || `retry failed: ${res.status}`)
+  return body.requeued ?? 0
 }
 
 export type WechatQrCode = {

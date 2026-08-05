@@ -126,7 +126,7 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 
 ### 微信 iLink 渠道
 
-见 [docs/self-hosting/wechat-channel.zh-CN.md](./self-hosting/wechat-channel.zh-CN.md)。协议层在 `@pure/chat-adapter/wechat`（Vercel Chat SDK）。关键变量：`KEY_VAULTS_SECRET`（凭证加密）、`REDIS_URL`、`CRON_SECRET` / `WECHAT_WEBHOOK_SECRET`、`APP_URL`、以及服务端 `OPENAI_API_KEY` / `DEEPSEEK_API_KEY`。本地轮询：`pnpm wechat:gateway`。
+见 [docs/self-hosting/wechat-channel.zh-CN.md](./self-hosting/wechat-channel.zh-CN.md)。`KEY_VAULTS_SECRET` 为必填，用于加密凭证与 `context_token`；回复还需服务端 `OPENAI_API_KEY` 或 `DEEPSEEK_API_KEY`。本地运行 `pnpm wechat:gateway`；Docker 默认启动独立 Gateway；Vercel 默认不支持且不配置 Cron。
 
 ### QQ 开放平台渠道
 

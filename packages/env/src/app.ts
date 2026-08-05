@@ -13,6 +13,8 @@ declare global {
       CRON_SECRET?: string
       /** 微信 webhook 转发鉴权；可选，未设则回退 `CRON_SECRET` */
       WECHAT_WEBHOOK_SECRET?: string
+      /** 本地/自托管常驻微信 Gateway。Vercel 默认关闭。 */
+      WECHAT_GATEWAY_ENABLED?: string
       /** QQ 内部 gateway→webhook 转发鉴权；可选，未设则回退 `CRON_SECRET` */
       QQ_WEBHOOK_SECRET?: string
     }
@@ -36,6 +38,7 @@ export const getAppConfig = () => {
       ALLOWED_ORIGINS: z.string().optional(),
       CRON_SECRET: z.string().optional(),
       WECHAT_WEBHOOK_SECRET: z.string().optional(),
+      WECHAT_GATEWAY_ENABLED: z.boolean(),
       QQ_WEBHOOK_SECRET: z.string().optional(),
     },
     runtimeEnv: {
@@ -44,6 +47,7 @@ export const getAppConfig = () => {
       ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
       CRON_SECRET: process.env.CRON_SECRET,
       WECHAT_WEBHOOK_SECRET: process.env.WECHAT_WEBHOOK_SECRET,
+      WECHAT_GATEWAY_ENABLED: parseEnvBoolean(process.env.WECHAT_GATEWAY_ENABLED, !IS_VERCEL),
       QQ_WEBHOOK_SECRET: process.env.QQ_WEBHOOK_SECRET,
     },
   })

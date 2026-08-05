@@ -24,6 +24,7 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       AUTH_SECRET: ${AUTH_SECRET}
       KEY_VAULTS_SECRET: ${KEY_VAULTS_SECRET}
+      WECHAT_GATEWAY_ENABLED: 'true'
       JWKS_KEY: ${JWKS_KEY}
       CRON_SECRET: ${CRON_SECRET}
       DATABASE_DRIVER: node
@@ -47,6 +48,39 @@ services:
         condition: service_completed_successfully
       searxng:
         condition: service_healthy
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    logging: *default-logging
+    networks: [purechat-network]
+
+  wechat-gateway:
+    image: purechat-next:local
+    container_name: purechat-wechat-gateway
+    init: true
+    command: ['node', '/app/wechat-gateway.mjs']
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_DRIVER: node
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DB}
+      KEY_VAULTS_SECRET: ${KEY_VAULTS_SECRET}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      REDIS_PREFIX: purechat
+      WECHAT_GATEWAY_ENABLED: 'true'
+    depends_on:
+      app:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'node', '/app/wechat-gateway.mjs', '--healthcheck']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     restart: unless-stopped
     security_opt: [no-new-privileges:true]
     logging: *default-logging

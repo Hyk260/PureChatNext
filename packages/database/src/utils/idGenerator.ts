@@ -11,6 +11,8 @@ const prefixes = {
   files: 'file',
   knowledgeBases: 'kb',
   channels: 'chn',
+  channelSessions: 'chs',
+  channelEvents: 'che',
 } as const
 
 /**

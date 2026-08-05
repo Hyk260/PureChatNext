@@ -1,6 +1,6 @@
 # Docker 自托管
 
-PureChatNext 同时支持 Vercel 与 Docker 自托管。Docker 生产方案包含应用、PostgreSQL、Redis、RustFS 和 SearXNG，HTTPS 由宿主机上的 Nginx 或 Caddy 提供。
+PureChatNext 同时支持 Vercel 与 Docker 自托管。Docker 生产方案包含应用、微信 Gateway、PostgreSQL、Redis、RustFS 和 SearXNG，HTTPS 由宿主机上的 Nginx 或 Caddy 提供。
 
 ## 本地开发依赖
 
@@ -48,6 +48,8 @@ docker compose \
 应用启动前会等待 PostgreSQL、获取 advisory lock 并自动执行 Drizzle migration；迁移失败时应用不会启动。健康检查为 `GET /api/health`。
 
 生产 Compose 不暴露 PostgreSQL、Redis、RustFS 或 SearXNG 端口，RustFS bucket 也不会设置匿名读取策略；文件经应用鉴权代理访问。应用只监听宿主机 `127.0.0.1:3210`。Nginx 示例：
+
+`wechat-gateway` 使用与 app 相同的镜像，等待 app、PostgreSQL 和 Redis 健康后启动，并通过本地心跳文件接受 Docker healthcheck。微信渠道要求 `KEY_VAULTS_SECRET` 和至少一个服务端模型密钥；详细验收见 [微信渠道](./wechat-channel.zh-CN.md)。
 
 ```nginx
 server {
@@ -100,6 +102,7 @@ docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/do
 ```bash
 docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/docker-compose.yml ps
 docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/docker-compose.yml logs -f app
+docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/docker-compose.yml logs -f wechat-gateway
 curl --fail http://127.0.0.1:3210/api/health
 ```
 

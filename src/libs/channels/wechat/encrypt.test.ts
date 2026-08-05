@@ -1,18 +1,50 @@
 import { createHash, createCipheriv, createDecipheriv, randomBytes } from 'node:crypto'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/envs/serverDB', () => ({
-  serverDBEnv: { KEY_VAULTS_SECRET: 'test-secret-for-unit' },
+const mocks = vi.hoisted(() => ({
+  serverDBEnv: { KEY_VAULTS_SECRET: 'test-secret-for-unit' as string | undefined },
 }))
 
-import { encryptCredentials, decryptCredentials } from './encrypt'
+vi.mock('@/envs/serverDB', () => ({ serverDBEnv: mocks.serverDBEnv }))
+
+import {
+  decryptContextToken,
+  decryptCredentials,
+  encryptContextToken,
+  encryptCredentials,
+  requireWechatVaultSecret,
+} from './encrypt'
 
 describe('wechat encryptCredentials', () => {
+  beforeEach(() => {
+    mocks.serverDBEnv.KEY_VAULTS_SECRET = 'test-secret-for-unit'
+  })
+
   it('round-trips credentials with KEY_VAULTS_SECRET', () => {
     const creds = { botId: 'bot1', botToken: 'tok', userId: 'u1' }
     const enc = encryptCredentials(creds)
     expect(enc.startsWith('enc:v1:')).toBe(true)
     expect(decryptCredentials(enc)).toEqual(creds)
+  })
+
+  it('encrypts context tokens with the same authenticated secret box', () => {
+    const encrypted = encryptContextToken('context-token-secret')
+    expect(encrypted).not.toContain('context-token-secret')
+    expect(decryptContextToken(encrypted)).toBe('context-token-secret')
+  })
+
+  it('still reads legacy plain credentials so the gateway can migrate them', () => {
+    const creds = { botId: 'legacy-bot', botToken: 'legacy-token', userId: 'legacy-user' }
+    const legacy = `plain:v1:${Buffer.from(JSON.stringify(creds)).toString('base64')}`
+    expect(decryptCredentials(legacy)).toEqual(creds)
+  })
+
+  it('refuses to create new encrypted values without KEY_VAULTS_SECRET', () => {
+    mocks.serverDBEnv.KEY_VAULTS_SECRET = undefined
+    expect(() => requireWechatVaultSecret()).toThrow('KEY_VAULTS_SECRET')
+    expect(() => encryptCredentials({ botId: 'bot', botToken: 'token', userId: 'user' })).toThrow(
+      'KEY_VAULTS_SECRET'
+    )
   })
 })
 

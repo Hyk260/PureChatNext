@@ -1,62 +1,34 @@
-import { waitUntil } from '@vercel/functions'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { z } from 'zod'
 
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
-import { getOrCreateWechatChat } from '@/libs/channels/wechat/chatBot'
-import { decryptCredentials } from '@/libs/channels/wechat/encrypt'
+import { ingestWechatRawMessage } from '@/libs/channels/wechat/poller'
 import { authorizeWechatWebhook } from '@/libs/channels/wechat/webhookAuth'
-import { logger } from '@/libs/logger'
 
-export const maxDuration = 300
+const rawMessageSchema = z.object({
+  client_id: z.string().max(255),
+  context_token: z.string().max(8192),
+  create_time_ms: z.number(),
+  from_user_id: z.string().max(255),
+  item_list: z.array(z.object({ text_item: z.object({ text: z.string().max(40_000) }).optional(), type: z.number() }).passthrough()).max(16),
+  message_id: z.number(),
+  message_state: z.number(),
+  message_type: z.number(),
+  to_user_id: z.string().max(255),
+})
 
 type RouteContext = { params: Promise<{ applicationId: string }> }
 
-/**
- * POST /api/channels/wechat/webhook/[applicationId]
- * Gateway forwards raw iLink messages here; Chat SDK WechatAdapter handles them.
- */
 export async function POST(request: NextRequest, context: RouteContext) {
-  if (!authorizeWechatWebhook(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const { applicationId: rawApplicationId } = await context.params
-  const applicationId = (() => {
-    const trimmed = rawApplicationId?.trim()
-    if (!trimmed) return ''
-    try {
-      return decodeURIComponent(trimmed)
-    } catch {
-      return trimmed
-    }
-  })()
-  if (!applicationId) {
-    return NextResponse.json({ error: 'applicationId required' }, { status: 400 })
-  }
-
-  try {
-    const model = new ChannelBindingModel()
-    const binding = await model.findByApplicationId(WECHAT_PLATFORM, applicationId)
-    if (!binding || !binding.enabled) {
-      return NextResponse.json({ error: 'Binding not found' }, { status: 404 })
-    }
-
-    const credentials = decryptCredentials(binding.credentials)
-    const chat = await getOrCreateWechatChat({
-      agentId: binding.agentId,
-      applicationId: binding.applicationId,
-      botId: credentials.botId || undefined,
-      botToken: credentials.botToken,
-      userId: binding.userId,
-    })
-
-    await model.touchActive(binding.id)
-
-    const response = await chat.webhooks.wechat(request, { waitUntil })
-    return response
-  } catch (error) {
-    logger.error({ applicationId, error }, 'wechat webhook failed')
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
+  if (!authorizeWechatWebhook(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { applicationId: raw } = await context.params
+  const applicationId = decodeURIComponent(raw || '').trim()
+  if (!applicationId) return NextResponse.json({ error: 'Invalid applicationId' }, { status: 400 })
+  const parsed = rawMessageSchema.safeParse(await request.json().catch(() => null))
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid message' }, { status: 400 })
+  const binding = await new ChannelBindingModel().findByApplicationId(WECHAT_PLATFORM, applicationId)
+  if (!binding?.enabled) return NextResponse.json({ error: 'Binding not found' }, { status: 404 })
+  await ingestWechatRawMessage(binding, parsed.data)
+  return NextResponse.json({ accepted: true }, { status: 202 })
 }

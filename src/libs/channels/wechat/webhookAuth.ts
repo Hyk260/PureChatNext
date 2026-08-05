@@ -10,8 +10,7 @@ export function resolveWechatWebhookSecret(): string {
 
 export function authorizeWechatWebhook(request: Request): boolean {
   const secret = resolveWechatWebhookSecret()
-  // No secret configured → allow (local/dev). Production should set CRON_SECRET.
-  if (!secret) return true
+  if (!secret) return false
 
   const auth = request.headers.get('authorization')
   return auth === `Bearer ${secret}`

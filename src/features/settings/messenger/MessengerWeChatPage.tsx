@@ -14,7 +14,7 @@ import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import QrCodeAuth from './QrCodeAuth'
 import type { WechatAuthCredentials } from './QrCodeAuth'
-import { bindWechat, fetchWechatStatus, unbindWechat, updateWechatAgent } from './wechatApi'
+import { bindWechat, fetchWechatStatus, retryFailedWechatEvents, unbindWechat, updateWechatAgent } from './wechatApi'
 import type { WechatStatus } from './wechatApi'
 
 const STATUS_POLL_MS = 8_000
@@ -22,8 +22,12 @@ const STATUS_POLL_MS = 8_000
 const formatActiveAt = (value: string) => formatDateTime(value, { hour12: false, second: '2-digit' })
 
 const DISCONNECTED_STATUS: WechatStatus = {
+  bound: false,
   connected: false,
+  failedEventCount: 0,
+  gatewaySupported: true,
   needsRebind: false,
+  runtimeStatus: 'stopped',
 }
 
 const MessengerWeChatPage = memo(() => {
@@ -61,9 +65,9 @@ const MessengerWeChatPage = memo(() => {
     void reload()
   }, [reload])
 
-  // 仅已连接时轮询：gateway 写 needsRebind 后及时反映；断开后停掉
+  // 已绑定后持续轮询真实心跳，Gateway 停止时不能继续显示已连接。
   useEffect(() => {
-    if (loading || !status?.connected || status.needsRebind) return
+    if (loading || !status?.bound) return
 
     const tick = () => {
       void refreshStatus().catch(() => {
@@ -73,7 +77,7 @@ const MessengerWeChatPage = memo(() => {
 
     const id = window.setInterval(tick, STATUS_POLL_MS)
     return () => window.clearInterval(id)
-  }, [loading, refreshStatus, status?.connected, status?.needsRebind])
+  }, [loading, refreshStatus, status?.bound])
 
   const handleAuthenticated = useCallback(
     async (credentials: WechatAuthCredentials) => {
@@ -85,15 +89,17 @@ const MessengerWeChatPage = memo(() => {
           botToken: credentials.botToken,
           userId: credentials.userId,
         })
-        // 先乐观切到已连接，再拉一次真实状态
+        // 绑定只代表凭证已保存；必须等 Gateway 心跳后才能显示在线。
         setStatus({
           agentId,
-          connected: true,
+          bound: true,
+          connected: false,
           enabled: true,
-          lastActiveAt: new Date().toISOString(),
+          gatewaySupported: true,
           needsRebind: false,
+          runtimeStatus: 'starting',
         })
-        message.success('微信已连接')
+        message.success('凭证已保存，正在等待 Gateway')
         await refreshStatus()
       } catch (error) {
         message.error(error instanceof Error ? error.message : '绑定失败')
@@ -107,7 +113,7 @@ const MessengerWeChatPage = memo(() => {
   const handleAgentChange = useCallback(
     async (value: string) => {
       setAgentId(value)
-      if (!status?.connected || status.needsRebind || status.enabled === false) return
+      if (!status?.bound || status.needsRebind || status.enabled === false) return
       try {
         await updateWechatAgent(value)
         message.success('已更新绑定助手')
@@ -150,13 +156,14 @@ const MessengerWeChatPage = memo(() => {
     )
   }
 
-  const connected = Boolean(status?.connected)
-  const needsRebind = Boolean(status?.needsRebind) || (connected && status?.enabled === false)
-  const showConnect = !connected || needsRebind
+  const bound = Boolean(status?.bound)
+  const gatewaySupported = status?.gatewaySupported !== false
+  const needsRebind = Boolean(status?.needsRebind) || (bound && status?.enabled === false)
+  const showConnect = !bound || needsRebind
 
   // 未连接显示「连接」，已连接显示「断开」
   const headerAction = showConnect ? (
-    <QrCodeAuth disabled={binding} onAuthenticated={(c) => void handleAuthenticated(c)} />
+    <QrCodeAuth disabled={binding || !gatewaySupported} onAuthenticated={(c) => void handleAuthenticated(c)} />
   ) : (
     <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>
       断开
@@ -182,15 +189,55 @@ const MessengerWeChatPage = memo(() => {
           />
         </Flexbox>
 
+        {!gatewaySupported && (
+          <Alert
+            showIcon
+            type='info'
+            title='当前部署不支持微信 Gateway'
+            description='Vercel 无法运行常驻轮询进程。请使用本地 pnpm wechat:gateway 或 Docker Compose 部署。'
+          />
+        )}
+
         {needsRebind && (
           <Alert showIcon type='warning' title='微信会话已过期或需要重新连接' description='请再次扫码绑定。' />
         )}
 
-        {showConnect ? (
+        {showConnect && gatewaySupported ? (
           <Text type='secondary' style={{ fontSize: 13 }}>
             打开手机微信 → 右上角「+」→ 扫一扫，扫描二维码并确认。
           </Text>
-        ) : (
+        ) : status?.runtimeStatus === 'starting' ? (
+          <Alert showIcon type='info' title='等待 Gateway' description='凭证已保存，Gateway 首次轮询成功后会显示在线。' />
+        ) : status?.runtimeStatus === 'degraded' ? (
+          <Alert
+            showIcon
+            type='warning'
+            title={`渠道异常${status.failedEventCount ? `，${status.failedEventCount} 条消息处理失败` : ''}`}
+            description={status.lastError?.message || 'Gateway 仍在运行，但存在待重试或失败消息。'}
+            action={
+              status.failedEventCount ? (
+                <Button
+                  size='small'
+                  onClick={() => {
+                    void retryFailedWechatEvents()
+                      .then((count) => message.success(`已重新入队 ${count} 条消息`))
+                      .then(refreshStatus)
+                      .catch((error) => message.error(error instanceof Error ? error.message : '重试失败'))
+                  }}
+                >
+                  重试失败消息
+                </Button>
+              ) : undefined
+            }
+          />
+        ) : status?.runtimeStatus === 'offline' && bound ? (
+          <Alert
+            showIcon
+            type='error'
+            title='Gateway 离线'
+            description='超过 90 秒未收到轮询心跳。请启动或检查微信 Gateway。'
+          />
+        ) : bound ? (
           <Alert
             showIcon
             type='success'
@@ -199,7 +246,7 @@ const MessengerWeChatPage = memo(() => {
               status?.lastActiveAt ? `最近活动：${formatActiveAt(status.lastActiveAt)}` : '打开微信私聊机器人即可对话。'
             }
           />
-        )}
+        ) : null}
       </Flexbox>
 
       <MessengerCommandList />

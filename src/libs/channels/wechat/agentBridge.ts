@@ -47,7 +47,7 @@ export async function generateWechatAgentReply(params: {
 
   const messages: ModelMessage[] = []
   for (const turn of params.history ?? []) {
-    messages.push({ content: turn.content, role: 'user' })
+    if (turn.content) messages.push({ content: turn.content, role: 'user' })
     if (turn.responseText) messages.push({ content: turn.responseText, role: 'assistant' })
   }
   messages.push({ content: params.userText, role: 'user' })

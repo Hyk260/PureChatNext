@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/envs/app', () => ({ appEnv: mocks.appEnv }))
 
-import { authorizeWechatWebhook } from './webhookAuth'
+import { authorizeWechatWebhook } from '../webhookAuth'
 
 describe('authorizeWechatWebhook', () => {
   beforeEach(() => {

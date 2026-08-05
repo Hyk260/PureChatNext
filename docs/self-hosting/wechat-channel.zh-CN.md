@@ -10,6 +10,8 @@
 
 不要同时运行常驻 Gateway 和旧版手动 Cron。`/api/cron/wechat-gateway` 已禁用，避免重复轮询。
 
+Gateway 启动时会取得 PostgreSQL 全局单实例锁。检测到另一个新版实例时会输出中文提示并退出，避免重复 Processor 破坏 `/stop` 和联系人消息顺序。若发现终端异常关闭遗留的旧 binding lease，会等待其在约 90 秒内自动过期后接管；租约持续续期才判定为仍有旧版实例运行。
+
 ## 可靠性模型
 
 ```text
@@ -44,6 +46,7 @@ Gateway Poller ──事务──► channel_events + poll_cursor
 | `KEY_VAULTS_SECRET` | 必填，用 AES-256-GCM 加密扫码凭证和 `context_token` |
 | `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` | 至少配置当前 Agent 对应的服务端密钥 |
 | `WECHAT_GATEWAY_ENABLED` | 本地/自托管默认 true；Vercel 默认 false |
+| `WECHAT_GATEWAY_LOG_MESSAGE_TEXT` | 默认 false；调试时输出单行、最多 200 字的消息正文 |
 | `WECHAT_WEBHOOK_SECRET` | 仅兼容/诊断 webhook 使用；未配置时 webhook 始终拒绝 |
 | `CRON_SECRET` | webhook secret 的兼容回退；不用于微信 Cron |
 
@@ -62,6 +65,8 @@ Gateway 直接访问 PostgreSQL 和微信 API，不需要通过 `APP_URL` 回调
 ```bash
 node /app/wechat-gateway.mjs --healthcheck
 ```
+
+运行日志默认只显示绑定 ID、联系人哈希、消息类型和长度，不输出微信用户 ID、凭证或消息正文。仅在本地排错并确认日志存储安全时临时设置 `WECHAT_GATEWAY_LOG_MESSAGE_TEXT=true`；生产环境应保持关闭。
 
 ## 微信指令
 
@@ -100,3 +105,6 @@ node /app/wechat-gateway.mjs --healthcheck
 | GET | `/api/channels/wechat/status` | session |
 | POST | `/api/channels/wechat/events/retry` | session |
 | POST | `/api/channels/wechat/webhook/[applicationId]` | webhook secret，兼容/诊断用途 |
+| GET | `/api/dev/wechat/sessions` | session；Dev 列出本库全部 wechat 会话，`canSend` 仅本人 binding + 扫码授权者 |
+| GET | `/api/dev/wechat/sessions/[sessionId]/messages` | session；可查看任意 wechat 会话时间线 |
+| POST | `/api/dev/wechat/sessions/[sessionId]/messages` | session；body `{ text }`，仅本人 binding 且扫码授权者可代发 |

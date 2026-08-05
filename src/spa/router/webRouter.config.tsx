@@ -301,6 +301,10 @@ export const webRoutes: RouteObject[] = [
               element: dynamicElement(() => import('@/features/dev/DeleteUserPage'), 'Dev > DeleteUser'),
               path: 'delete-user',
             },
+            {
+              element: dynamicElement(() => import('@/features/dev/WechatConversationPage'), 'Dev > WechatConversation'),
+              path: 'wechat-conversation',
+            },
           ],
           path: 'dev',
         },

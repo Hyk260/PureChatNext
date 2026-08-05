@@ -131,7 +131,10 @@ export function abortActiveGeneration(bindingId: string, externalUserId: string)
 
 async function buildResponse(event: ChannelEventItem): Promise<string> {
   if (event.responseText) return event.responseText
-  if (event.messageKind === 'unsupported') return '当前版本仅支持文本消息。'
+  // 图片/文件等非文本：入库供 Dev 展示，Agent 仍明确告知不支持
+  if (event.messageKind === 'unsupported' || event.messageKind === 'image' || event.messageKind === 'file') {
+    return '当前版本仅支持文本消息。'
+  }
   if (event.messageKind === 'command' || event.content.startsWith('/')) return handleCommand(event)
 
   const binding = await new ChannelBindingModel().findById(event.bindingId)
@@ -181,7 +184,9 @@ async function sendResponse(event: ChannelEventItem, owner: string, responseText
 }
 
 function safeError(error: unknown) {
-  const code = String((error as { code?: string | number; name?: string })?.code ?? (error as Error)?.name ?? 'PROCESSING_ERROR')
+  const code = String(
+    (error as { code?: string | number; name?: string })?.code ?? (error as Error)?.name ?? 'PROCESSING_ERROR'
+  )
   const raw = error instanceof Error ? error.message : 'Unknown processing error'
   return { code: code.slice(0, 100), message: raw.replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]').slice(0, 500) }
 }
@@ -207,11 +212,12 @@ export async function processNextWechatEvent(owner = `processor-${createNanoId(1
   return true
 }
 
-export async function runWechatProcessor(signal?: AbortSignal) {
+export async function runWechatProcessor(signal?: AbortSignal, onProcessed?: () => void) {
   const owner = `processor-${createNanoId(10)()}`
   while (!signal?.aborted) {
     try {
       const processed = await processNextWechatEvent(owner)
+      if (processed) onProcessed?.()
       if (!processed) await new Promise((resolve) => setTimeout(resolve, IDLE_DELAY_MS))
     } catch (error) {
       log('processor loop error owner=%s: %O', owner, error)

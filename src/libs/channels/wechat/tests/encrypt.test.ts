@@ -13,7 +13,7 @@ import {
   encryptContextToken,
   encryptCredentials,
   requireWechatVaultSecret,
-} from './encrypt'
+} from '../encrypt'
 
 describe('wechat encryptCredentials', () => {
   beforeEach(() => {

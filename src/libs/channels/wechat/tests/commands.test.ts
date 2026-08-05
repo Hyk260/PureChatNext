@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseWechatCommand, WECHAT_HELP_TEXT } from './commands'
+import { parseWechatCommand, WECHAT_HELP_TEXT } from '../commands'
 
 describe('parseWechatCommand', () => {
   it('accepts only a complete command with an optional single-line argument', () => {

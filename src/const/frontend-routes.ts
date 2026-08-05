@@ -48,6 +48,7 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
       { href: '/dev/s3', label: 'S3 测试' },
       { href: '/dev/web-search', label: '联网搜索' },
       { href: '/dev/delete-user', label: '删除用户' },
+      { href: '/dev/wechat-conversation', label: '微信对话' },
     ],
   },
 ]

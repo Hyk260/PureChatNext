@@ -29,8 +29,7 @@ PureChatNext/
 │   ├── web-crawler/           # 网页爬虫多实现（naive、firecrawl、tavily…）
 │   ├── ssrf-safe-fetch/       # SSRF 安全 fetch 封装
 │   ├── ui/                    # UI 原语（暂桥接 @lobehub/ui，逐步自研替换）
-│   ├── chat-adapter-wechat/   # 微信 iLink + Vercel Chat SDK Adapter
-│   └── chat-adapter-qq/       # QQ 开放平台 + Vercel Chat SDK Adapter
+│   └── chat-adapter/          # Vercel Chat SDK Adapter（./qq、./wechat）
 ├── src/
 │   ├── spa/                   # Vite SPA 入口与 Router（迁移中）
 │   ├── features/              # 业务 UI（供 SPA 路由挂载）

@@ -2,8 +2,14 @@
  * Bridge over `@lobehub/icons` brand/model icons.
  * No antd equivalent; keep lobehub bridge until self-hosted icons are ready.
  * Call sites should import from `@pure/ui` or `@pure/ui/icons`.
+ *
+ * `ProviderIcon` / `ProviderCombine` are wrapped to render PureChat brand assets
+ * for `purehub` (not in `@lobehub/icons` mappings).
  */
-export { Github, ModelIcon, ModelTag, ProviderCombine, ProviderIcon } from '@lobehub/icons'
+export { Github, ModelIcon, ModelTag } from '@lobehub/icons'
+export { default as ProviderCombine, type ProviderCombineProps } from './ProviderCombine'
+export { default as ProviderIcon, type ProviderIconProps } from './ProviderIcon'
+export { default as PureHubMark, type PureHubMarkProps, type PureHubMarkVariant } from './PureHubMark'
 
 /**
  * Bridge over `@lobehub/ui/icons` messenger / platform icons.

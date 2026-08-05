@@ -40,7 +40,7 @@ export interface QQGatewayOptions {
 }
 
 /**
- * Persistent WebSocket client for the QQ Bot Gateway (@pure/chat-adapter-qq).
+ * Persistent WebSocket client for the QQ Bot Gateway (@pure/chat-adapter/qq).
  *
  * Lifecycle: connect → Hello → Identify → Ready → heartbeat + dispatch.
  * Resume uses stored `session_id` + seq after disconnect.

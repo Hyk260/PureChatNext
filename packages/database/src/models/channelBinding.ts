@@ -33,6 +33,12 @@ export class ChannelBindingModel {
     })
   }
 
+  findById = async (id: string) => {
+    return this.db.query.channelBindings.findFirst({
+      where: eq(channelBindings.id, id),
+    })
+  }
+
   upsert = async (params: {
     agentId: string
     applicationId: string

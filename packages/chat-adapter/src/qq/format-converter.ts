@@ -1,7 +1,7 @@
 import { BaseFormatConverter, parseMarkdown, stringifyMarkdown } from 'chat'
 import type { Root } from 'chat'
 
-/** Markdown ↔ text for QQ Bot messages (@pure/chat-adapter-qq). */
+/** Markdown ↔ text for QQ Bot messages (@pure/chat-adapter/qq). */
 export class QQFormatConverter extends BaseFormatConverter {
   /** mdast → outbound text (QQ has limited Markdown; stringify for now). */
   fromAst(ast: Root): string {

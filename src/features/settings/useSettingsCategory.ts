@@ -97,12 +97,12 @@ export function useSettingsCategory(): SettingsCategoryGroup[] {
             key: SettingsTab.Stats,
             label: '数据统计',
           },
-          {
-            href: tabHref(SettingsTab.Credits),
-            icon: Coins,
-            key: SettingsTab.Credits,
-            label: '免费积分',
-          },
+          // {
+          //   href: tabHref(SettingsTab.Credits),
+          //   icon: Coins,
+          //   key: SettingsTab.Credits,
+          //   label: '积分',
+          // },
           {
             href: tabHref(SettingsTab.Usage),
             icon: ChartColumnBigIcon,

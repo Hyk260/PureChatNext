@@ -1,4 +1,4 @@
-/** Shared WeChat iLink types for @pure/chat-adapter-wechat. */
+/** Shared WeChat iLink types for @pure/chat-adapter/wechat. */
 
 export interface WechatAdapterConfig {
   /** Bot iLink user id from QR login. */

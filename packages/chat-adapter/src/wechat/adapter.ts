@@ -397,7 +397,7 @@ function mapToUploadMediaType(type: 'image' | 'file' | 'video' | 'audio'): Wecha
 }
 
 /**
- * WeChat (iLink) adapter for @pure/chat-adapter-wechat (Vercel Chat SDK).
+ * WeChat (iLink) adapter for @pure/chat-adapter/wechat (Vercel Chat SDK).
  * Protocol notes: `docs/self-hosting/wechat/protocol.zh-CN.md`.
  *
  * Handles webhook requests forwarded by the long-polling monitor

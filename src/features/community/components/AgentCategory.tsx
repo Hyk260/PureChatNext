@@ -125,7 +125,7 @@ const AgentCategory = memo(() => {
 
   return (
     <Flexbox className={styles.root}>
-      <Scrollbar style={{ height: '100%', width: '100%' }}>
+      <Scrollbar className='wh-full'>
         <Flexbox gap={4}>
           {CATEGORY_KEYS.map((key) => {
             const isActive = selected === key

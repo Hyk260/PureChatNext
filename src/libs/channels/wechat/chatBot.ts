@@ -1,4 +1,4 @@
-import { createWechatAdapter } from '@pure/chat-adapter-wechat'
+import { createWechatAdapter } from '@pure/chat-adapter/wechat'
 import { createMemoryState } from '@chat-adapter/state-memory'
 import { Chat } from 'chat'
 import type { Message, Thread } from 'chat'

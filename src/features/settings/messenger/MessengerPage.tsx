@@ -28,13 +28,19 @@ const styles = createStaticStyles(({ css }) => ({
       border-color: ${cssVar.colorPrimaryBorderHover};
     }
   `,
-  grid: css`
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+  list: css`
+    flex-wrap: wrap;
+    width: 100%;
+
+    & > * {
+      flex: 1 1 calc(50% - 6px);
+      min-width: min(100%, 280px);
+    }
 
     @media (width <= 720px) {
-      grid-template-columns: 1fr;
+      & > * {
+        flex: 1 1 100%;
+      }
     }
   `,
 }))
@@ -54,8 +60,8 @@ const MessengerPage = memo(() => {
   // 后续逐个接入时，把 handleSelectPlatform 内对应分支改回 navigate 跳转即可。
   const handleSelectPlatform = (item: { id: MessengerPlatformId }) => {
     // TODO(messenger): 接入该平台详情页后启用跳转
-    // navigate(`/settings/messenger/${item.id}`)
-    message.info('敬请期待')
+    navigate(`/settings/messenger/${item.id}`)
+    // message.info('敬请期待')
   }
 
   useEffect(() => {
@@ -77,9 +83,9 @@ const MessengerPage = memo(() => {
   }
 
   return (
-    <Flexbox gap={20} style={{ width: '100%' }}>
+    <Flexbox gap={20} className='wh-full'>
       <Text type='secondary'>{MESSENGER_SUBTITLE}</Text>
-      <div className={styles.grid}>
+      <Flexbox horizontal className={styles.list} gap={12}>
         {MESSENGER_PLATFORMS.map((item) => (
           <Block className={styles.card} key={item.id} onClick={() => handleSelectPlatform(item)}>
             <Flexbox horizontal align='center' gap={16}>
@@ -96,7 +102,7 @@ const MessengerPage = memo(() => {
             </Flexbox>
           </Block>
         ))}
-      </div>
+      </Flexbox>
     </Flexbox>
   )
 })

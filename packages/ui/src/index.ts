@@ -60,4 +60,4 @@ export { Tooltip, type TooltipPlacement, type TooltipProps } from './Tooltip'
 export { copyToClipboard, stopPropagation } from './utils'
 export { Icon, calcIconSize, type IconProps, type IconSize, type IconSizeConfig, type IconSizeType } from './Icon'
 
-export { Github, ModelIcon, ModelTag, ProviderCombine, ProviderIcon, ProviderIconLucide } from './icons'
+export { Github, ModelIcon, ModelTag, ProviderCombine, ProviderIcon, ProviderIconLucide, PureHubMark } from './icons'

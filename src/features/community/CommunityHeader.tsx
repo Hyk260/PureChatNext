@@ -19,7 +19,6 @@ const styles = createStaticStyles(({ css }) => ({
     background: ${cssVar.colorBgContainer};
   `,
   search: css`
-    max-width: 480px;
     width: 100%;
   `,
 }))

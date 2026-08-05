@@ -1,5 +1,5 @@
 import { createMemoryState } from '@chat-adapter/state-memory'
-import { createQQAdapter } from '@pure/chat-adapter-qq'
+import { createQQAdapter } from '@pure/chat-adapter/qq'
 import { Chat } from 'chat'
 import debug from 'debug'
 

@@ -1,4 +1,4 @@
-import { createQQAdapter } from '@pure/chat-adapter-qq'
+import { createQQAdapter } from '@pure/chat-adapter/qq'
 import { createMemoryState } from '@chat-adapter/state-memory'
 import { Chat } from 'chat'
 import type { Message, Thread } from 'chat'

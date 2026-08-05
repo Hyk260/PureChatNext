@@ -1,5 +1,5 @@
-import { MessageState, MessageType, WECHAT_RET_CODES, WechatApiClient } from '@pure/chat-adapter-wechat'
-import type { WechatRawMessage } from '@pure/chat-adapter-wechat'
+import { MessageState, MessageType, WECHAT_RET_CODES, WechatApiClient } from '@pure/chat-adapter/wechat'
+import type { WechatRawMessage } from '@pure/chat-adapter/wechat'
 import debug from 'debug'
 
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
@@ -47,6 +47,22 @@ function resolveAppBaseUrl(): string {
   return 'http://localhost:3000'
 }
 
+/** Binding removed or disabled (e.g. user disconnected while poll window still running). */
+class BindingInactiveError extends Error {
+  constructor(bindingId: string) {
+    super(`binding inactive: ${bindingId}`)
+    this.name = 'BindingInactiveError'
+  }
+}
+
+async function assertBindingActive(bindingId: string): Promise<void> {
+  const model = new ChannelBindingModel()
+  const current = await model.findById(bindingId)
+  if (!current?.enabled) {
+    throw new BindingInactiveError(bindingId)
+  }
+}
+
 async function forwardToWebhook(binding: ChannelBindingItem, msg: WechatRawMessage): Promise<void> {
   const webhookUrl = `${resolveAppBaseUrl()}/api/channels/wechat/webhook/${encodeURIComponent(binding.applicationId)}`
   const secret = resolveWechatWebhookSecret()
@@ -63,6 +79,10 @@ async function forwardToWebhook(binding: ChannelBindingItem, msg: WechatRawMessa
     method: 'POST',
   })
 
+  if (res.status === 404) {
+    throw new BindingInactiveError(binding.id)
+  }
+
   if (!res.ok) {
     const text = await res.text().catch(() => '')
     throw new Error(`webhook ${res.status}: ${text.slice(0, 200)}`)
@@ -76,6 +96,8 @@ async function handleInboundMessage(binding: ChannelBindingItem, msg: WechatRawM
   const fromUserId = msg.from_user_id
   if (!fromUserId) return
 
+  await assertBindingActive(binding.id)
+
   if (msg.context_token) {
     await setContextToken(binding.id, fromUserId, msg.context_token)
   }
@@ -83,11 +105,7 @@ async function handleInboundMessage(binding: ChannelBindingItem, msg: WechatRawM
   const model = new ChannelBindingModel()
   await model.touchActive(binding.id)
 
-  try {
-    await forwardToWebhook(binding, msg)
-  } catch (error) {
-    log('forward webhook failed binding=%s: %O', binding.id, error)
-  }
+  await forwardToWebhook(binding, msg)
 }
 
 async function processUpdates(binding: ChannelBindingItem, msgs: WechatRawMessage[] | undefined): Promise<void> {
@@ -125,6 +143,10 @@ export async function pollBinding(
       cursor = response.get_updates_buf || undefined
       await processUpdates(binding, response.msgs)
     } catch (err: unknown) {
+      if (err instanceof BindingInactiveError) {
+        log('binding inactive during probe, stop poll binding=%s', binding.id)
+        return { sessionExpired: false }
+      }
       const code = (err as { code?: number })?.code
       if (code === WECHAT_RET_CODES.SESSION_EXPIRED) {
         await model.markNeedsRebind(binding.id)
@@ -140,12 +162,17 @@ export async function pollBinding(
 
   while (!signal?.aborted && Date.now() < endTime) {
     try {
+      await assertBindingActive(binding.id)
       const response = await api.getUpdates(cursor, signal)
       retryDelay = 1000
       if (response.get_updates_buf) cursor = response.get_updates_buf
       await processUpdates(binding, response.msgs)
     } catch (err: unknown) {
       if (signal?.aborted) break
+      if (err instanceof BindingInactiveError) {
+        log('binding inactive, stop poll binding=%s', binding.id)
+        break
+      }
       const code = (err as { code?: number })?.code
       if (code === WECHAT_RET_CODES.SESSION_EXPIRED) {
         log('session expired binding=%s', binding.id)

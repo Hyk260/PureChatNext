@@ -1,4 +1,4 @@
-/** @pure/chat-adapter-qq — QQ Bot adapter for Vercel Chat SDK. */
+/** @pure/chat-adapter/qq — QQ Bot adapter for Vercel Chat SDK. */
 export { createQQAdapter, QQAdapter } from './adapter'
 export { QQApiClient } from './api'
 export { signWebhookResponse } from './crypto'

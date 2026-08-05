@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { pollQrStatus } from '@pure/chat-adapter-wechat'
+import { pollQrStatus } from '@pure/chat-adapter/wechat'
 
 import { withAuth, jsonError } from '@/libs/auth/get-session-user'
 

@@ -21,8 +21,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { applicationId } = await context.params
-  if (!applicationId?.trim()) {
+  const { applicationId: rawApplicationId } = await context.params
+  const applicationId = (() => {
+    const trimmed = rawApplicationId?.trim()
+    if (!trimmed) return ''
+    try {
+      return decodeURIComponent(trimmed)
+    } catch {
+      return trimmed
+    }
+  })()
+  if (!applicationId) {
     return NextResponse.json({ error: 'applicationId required' }, { status: 400 })
   }
 

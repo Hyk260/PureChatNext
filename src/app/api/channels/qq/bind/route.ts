@@ -1,4 +1,4 @@
-import { QQApiClient } from '@pure/chat-adapter-qq'
+import { QQApiClient } from '@pure/chat-adapter/qq'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 

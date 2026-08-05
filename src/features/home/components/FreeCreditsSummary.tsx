@@ -64,7 +64,7 @@ const FreeCreditsSummary = memo<{ onClick?: () => void }>(({ onClick }) => {
   return (
     <Link className={styles.link} href='/settings/credits' onClick={onClick}>
       <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
-        <Text type='secondary'>免费积分</Text>
+        <Text type='secondary'>积分</Text>
         <Flexbox horizontal align='center' gap={10}>
           <Text className={styles.value}>{value}</Text>
           <Progress percent={percent} showInfo={false} size={16} strokeWidth={12} type='circle' />

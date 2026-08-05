@@ -2,7 +2,7 @@
 
 通过 **QQ 开放平台机器人**（App ID / App Secret）连接，在 QQ 私聊、群聊 @、频道中与 PureChat 助手对话。
 
-协议与 Chat SDK Adapter 在 workspace 包 [`@pure/chat-adapter-qq`](../../packages/chat-adapter-qq)（配合 Vercel `chat` SDK）。平台能力与接口以 [QQ 开放平台 / 机器人文档](https://bot.q.qq.com/wiki/) 为准；本仓整理见 [qq/protocol.zh-CN.md](./qq/protocol.zh-CN.md)。
+协议与 Chat SDK Adapter 在 workspace 包 [`@pure/chat-adapter/qq`](../../packages/chat-adapter)（配合 Vercel `chat` SDK）。平台能力与接口以 [QQ 开放平台 / 机器人文档](https://bot.q.qq.com/wiki/) 为准；本仓整理见 [qq/protocol.zh-CN.md](./qq/protocol.zh-CN.md)。
 
 ## 功能范围（MVP）
 
@@ -39,7 +39,7 @@ adapter.postMessage → QQApiClient（被动回复带 msg_id）
 1. 在 [q.qq.com](https://q.qq.com) 创建机器人，复制 App ID / App Secret
 2. 设置页填写凭证与连接模式，调用 `/api/channels/qq/bind` 写入 `channel_bindings`
 3. WebSocket：启动 `pnpm qq:gateway`；Webhook：把 status 返回的回调 URL 配到开放平台
-4. 入站事件经 `@pure/chat-adapter-qq` 入队；宿主用绑定 Agent 回复
+4. 入站事件经 `@pure/chat-adapter/qq` 入队；宿主用绑定 Agent 回复
 
 ## 环境变量
 
@@ -97,6 +97,6 @@ Webhook 模式无需 gateway；生产可直接让 QQ 回调 Vercel / 自托管 H
 
 | 位置                        | 职责                                                       |
 | --------------------------- | ---------------------------------------------------------- |
-| `packages/chat-adapter-qq`  | REST / WS Gateway / Ed25519、`QQAdapter`、format-converter |
+| `packages/chat-adapter/src/qq` | REST / WS Gateway / Ed25519、`QQAdapter`、format-converter |
 | `src/libs/channels/qq`      | 凭证加解密、Chat 缓存、AgentBridge、WS gateway 转发        |
 | `src/app/api/channels/qq/*` | 绑定 / 状态 / webhook                                      |

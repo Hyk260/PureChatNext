@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { fetchQrCode } from '@pure/chat-adapter-wechat'
+import { fetchQrCode } from '@pure/chat-adapter/wechat'
 
 import { withAuth, jsonError } from '@/libs/auth/get-session-user'
 

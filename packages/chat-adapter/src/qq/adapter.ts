@@ -36,7 +36,7 @@ type PendingReplyContext = {
   msgSeq: number
 }
 
-/** QQ Bot adapter for @pure/chat-adapter-qq (Vercel Chat SDK). */
+/** QQ Bot adapter for @pure/chat-adapter/qq (Vercel Chat SDK). */
 export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   readonly name = 'qq'
   private readonly api: QQApiClient

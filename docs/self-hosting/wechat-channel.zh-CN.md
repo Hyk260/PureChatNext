@@ -2,7 +2,7 @@
 
 通过微信 **iLink Bot API** 扫码连接，在微信私聊中与 PureChat 助手对话。个人开发者**不需要**公众号 / 开放平台企业资质。
 
-协议与 Chat SDK Adapter 在 workspace 包 [`@pure/chat-adapter-wechat`](../../packages/chat-adapter-wechat)（配合 Vercel `chat` SDK）。通道基于微信 **iLink Bot API**（扫码长轮询）；具体字段与限制以微信侧公开文档 / 接口约定为准；本仓整理见 [wechat/protocol.zh-CN.md](./wechat/protocol.zh-CN.md)。
+协议与 Chat SDK Adapter 在 workspace 包 [`@pure/chat-adapter/wechat`](../../packages/chat-adapter)（配合 Vercel `chat` SDK）。通道基于微信 **iLink Bot API**（扫码长轮询）；具体字段与限制以微信侧公开文档 / 接口约定为准；本仓整理见 [wechat/protocol.zh-CN.md](./wechat/protocol.zh-CN.md)。
 
 ## 功能范围（MVP）
 
@@ -35,7 +35,7 @@ adapter.postMessage → iLink sendmessage
 1. 前端请求 `/api/channels/wechat/qrcode`，展示二维码
 2. 用户微信扫码确认后，拿到 `bot_token`，调用 `/api/channels/wechat/bind` 写入 `channel_bindings`
 3. Gateway 长轮询 `getupdates`，把原始消息转发到内部 webhook
-4. `@pure/chat-adapter-wechat` 的 `WechatAdapter` 入队；宿主 `AgentBridge` 用绑定 Agent 的 `systemRole` + 环境变量模型 Key 回复
+4. `@pure/chat-adapter/wechat` 的 `WechatAdapter` 入队；宿主 `AgentBridge` 用绑定 Agent 的 `systemRole` + 环境变量模型 Key 回复
 
 微信侧**没有官方 push webhook**，必须常驻轮询或 Cron 续命；内部 webhook 仅供 gateway 转发。
 
@@ -124,6 +124,6 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 
 | 位置                            | 职责                                                                                       |
 | ------------------------------- | ------------------------------------------------------------------------------------------ |
-| `packages/chat-adapter-wechat`  | iLink HTTP / CDN / QR、`WechatAdapter`、format-converter                                   |
+| `packages/chat-adapter/src/wechat` | iLink HTTP / CDN / QR、`WechatAdapter`、format-converter                                   |
 | `src/libs/channels/wechat`      | 凭证加解密、context\_token、poller、Chat 缓存（`@chat-adapter/state-memory`）、AgentBridge |
 | `src/app/api/channels/wechat/*` | 扫码 / 绑定 / webhook / 状态                                                               |

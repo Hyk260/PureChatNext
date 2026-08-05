@@ -1,10 +1,10 @@
 # 微信 iLink Bot API 通信协议规范
 
-> **渠道笔记**（`docs/self-hosting/wechat/protocol.zh-CN.md`）：供本仓库 `@pure/chat-adapter-wechat` 与 `pnpm wechat:gateway` 对照。正文描述的是微信 iLink / ClawBot 公开协议行为。
+> **渠道笔记**（`docs/self-hosting/wechat/protocol.zh-CN.md`）：供本仓库 `@pure/chat-adapter/wechat` 与 `pnpm wechat:gateway` 对照。正文描述的是微信 iLink / ClawBot 公开协议行为。
 >
 > 适用对象：实现微信 iLink Bot / ClawBot 协议的 SDK、网关和独立 Bot。
 >
-> 整理依据：公开协议说明、腾讯官方 `@tencent-weixin/openclaw-weixin` 等社区实现经验、本仓 `chat-adapter-wechat`。
+> 整理依据：公开协议说明、腾讯官方 `@tencent-weixin/openclaw-weixin` 等社区实现经验、本仓 `packages/chat-adapter/src/wechat`。
 >
 > 说明：文中标注 “工程建议” 的内容来自现有客户端实现经验，用于提高兼容性；它们不是服务端返回字段本身的一部分。
 

@@ -1,4 +1,4 @@
-/** Shared QQ Bot OpenAPI / Gateway types for @pure/chat-adapter-qq. */
+/** Shared QQ Bot OpenAPI / Gateway types for @pure/chat-adapter/qq. */
 
 export interface QQAdapterConfig {
   appId: string

@@ -16,11 +16,11 @@ vi.mock('@pure/database/models/credits', () => ({
   },
 }))
 
-vi.mock('@/server/purehub', () => ({
+vi.mock('@/server/purechat', () => ({
   formatResetCountdown: () => ({ days: 3, hours: 2, resetAt: '2026-08-01T00:00:00+08:00' }),
   getShanghaiBillingPeriod: () => '2026-07',
-  PUREHUB_DEFAULT_MODEL: 'gpt-5.4-mini',
-  PUREHUB_ENABLED_MODELS: [
+  PURECHAT_DEFAULT_MODEL: 'gpt-5.4-mini',
+  PURECHAT_ENABLED_MODELS: [
     { displayName: 'GPT 5.4 Mini', id: 'gpt-5.4-mini', recommended: true },
     { displayName: 'GPT 5.2', id: 'gpt-5.2' },
   ],
@@ -34,7 +34,7 @@ describe('GET /api/user/credits', () => {
     getBalance.mockResolvedValue({ grant: 500_000, period: '2026-07', remaining: 490_000, used: 10_000 })
   })
 
-  it('returns only the enabled PureHub model catalog', async () => {
+  it('returns only the enabled PureChat model catalog', async () => {
     const response = await GET(new NextRequest('http://localhost/api/user/credits'))
     const payload = await response.json()
 

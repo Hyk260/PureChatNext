@@ -1,11 +1,11 @@
-import { deepseekChatModels, DEFAULT_MODEL_PROVIDER_LIST, openaiChatModels, purehubChatModels } from '@pure/model-bank'
+import { deepseekChatModels, DEFAULT_MODEL_PROVIDER_LIST, openaiChatModels, purechatChatModels } from '@pure/model-bank'
 
 import type { DiscoverProviderItem } from '@/features/community/types'
 
 const modelsByProvider = {
   deepseek: deepseekChatModels,
   openai: openaiChatModels,
-  purehub: purehubChatModels,
+  purechat: purechatChatModels,
 } as const
 
 const getVisibleModels = (models: (typeof modelsByProvider)[keyof typeof modelsByProvider]) =>

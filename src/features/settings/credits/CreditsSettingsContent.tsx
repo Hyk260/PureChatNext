@@ -50,7 +50,7 @@ export function CreditsSettingsContent() {
     <Flexbox gap={24} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: '100%' }}>
       <SettingHeader title='免费积分' />
       <Text type='secondary'>
-        每月免费积分用于 PureHub 官方模型；用尽后可等待下月重置，或自行配置 OpenAI / DeepSeek API
+        每月免费积分用于 PureChat 官方模型；用尽后可等待下月重置，或自行配置 OpenAI / DeepSeek API
         Key。本页不提供购买入口。
       </Text>
 

@@ -281,13 +281,13 @@ export function defineConfig() {
             //   id: '',
             // }
           },
-          // 写入后：懒发放积分由 CreditsModel.ensurePeriod 在首次 PureHub 请求时完成；
+          // 写入后：懒发放积分由 CreditsModel.ensurePeriod 在首次 PureChat 请求时完成；
           // 此处保留 hook 供后续扩展（如显式 grant）。
           after: async (user) => {
             log('user create after: %O', user)
             try {
               const { CreditsModel } = await import('@pure/database/models/credits')
-              const { getShanghaiBillingPeriod } = await import('@/server/purehub/period')
+              const { getShanghaiBillingPeriod } = await import('@/server/purechat/period')
               if (user?.id) {
                 await new CreditsModel().ensurePeriod(user.id, getShanghaiBillingPeriod())
               }

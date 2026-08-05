@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  assertPureHubPricingComplete,
+  assertPureChatPricingComplete,
   computeChatCost,
-  getEnabledPureHubModel,
-  getPureHubModel,
+  getEnabledPureChatModel,
+  getPureChatModel,
   openaiChatModels,
   deepseekChatModels,
-  PUREHUB_DEFAULT_MODEL,
-  PUREHUB_PLAN_CARD_MODELS,
-  purehubEnabledChatModels,
-  resolvePureHubDisplayId,
-  resolvePureHubGatewayId,
+  PURECHAT_DEFAULT_MODEL,
+  PURECHAT_PLAN_CARD_MODELS,
+  purechatEnabledChatModels,
+  resolvePureChatDisplayId,
+  resolvePureChatGatewayId,
 } from './index'
 
 const addedModels = [
@@ -38,39 +38,39 @@ const restrictedModels = [
   'glm-5.2',
 ] as const
 
-describe('model-bank purehub', () => {
+describe('model-bank purechat', () => {
   it('maps display id ↔ gateway id', () => {
-    expect(resolvePureHubGatewayId('gpt-5.4-mini')).toBe('openai/gpt-5.4-mini')
-    expect(resolvePureHubDisplayId('anthropic/claude-sonnet-4.6')).toBe('claude-sonnet-4-6')
-    expect(resolvePureHubGatewayId('step-3.7-flash')).toBe('stepfun/step-3.7-flash')
-    expect(resolvePureHubGatewayId('minimax-m3')).toBe('minimax/minimax-m3')
+    expect(resolvePureChatGatewayId('gpt-5.4-mini')).toBe('openai/gpt-5.4-mini')
+    expect(resolvePureChatDisplayId('anthropic/claude-sonnet-4.6')).toBe('claude-sonnet-4-6')
+    expect(resolvePureChatGatewayId('step-3.7-flash')).toBe('stepfun/step-3.7-flash')
+    expect(resolvePureChatGatewayId('minimax-m3')).toBe('minimax/minimax-m3')
   })
 
   it('requires complete USD pricing', () => {
-    expect(() => assertPureHubPricingComplete()).not.toThrow()
+    expect(() => assertPureChatPricingComplete()).not.toThrow()
   })
 
   it.each(addedModels)('maps the added model %s ↔ %s', (displayId, gatewayId) => {
-    expect(resolvePureHubGatewayId(displayId)).toBe(gatewayId)
-    expect(resolvePureHubDisplayId(gatewayId)).toBe(displayId)
-    expect(getEnabledPureHubModel(displayId)?.enabled).toBe(true)
+    expect(resolvePureChatGatewayId(displayId)).toBe(gatewayId)
+    expect(resolvePureChatDisplayId(gatewayId)).toBe(displayId)
+    expect(getEnabledPureChatModel(displayId)?.enabled).toBe(true)
   })
 
   it.each(restrictedModels)('keeps %s metadata but disables it for new requests', (displayId) => {
-    expect(getPureHubModel(displayId)?.enabled).toBe(false)
-    expect(getEnabledPureHubModel(displayId)).toBeUndefined()
+    expect(getPureChatModel(displayId)?.enabled).toBe(false)
+    expect(getEnabledPureChatModel(displayId)).toBeUndefined()
   })
 
   it('keeps the default and plan-card models enabled', () => {
-    expect(getEnabledPureHubModel(PUREHUB_DEFAULT_MODEL)?.recommended).toBe(true)
-    for (const modelId of PUREHUB_PLAN_CARD_MODELS) {
-      expect(getEnabledPureHubModel(modelId)).toBeDefined()
+    expect(getEnabledPureChatModel(PURECHAT_DEFAULT_MODEL)?.recommended).toBe(true)
+    for (const modelId of PURECHAT_PLAN_CARD_MODELS) {
+      expect(getEnabledPureChatModel(modelId)).toBeDefined()
     }
-    expect(purehubEnabledChatModels).toHaveLength(24)
+    expect(purechatEnabledChatModels).toHaveLength(24)
   })
 
   it('computeChatCost matches gpt-5.4-mini sample', () => {
-    const card = getPureHubModel('gpt-5.4-mini')!
+    const card = getPureChatModel('gpt-5.4-mini')!
     const result = computeChatCost(card.pricing, { inputTokens: 1000, outputTokens: 1000 })
     expect(result.totalCostUSD).toBeCloseTo(0.00525, 8)
     expect(result.totalCredits).toBe(5250)

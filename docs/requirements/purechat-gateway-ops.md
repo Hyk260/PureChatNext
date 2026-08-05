@@ -1,4 +1,4 @@
-# PureHub / Vercel AI Gateway · 运营决策与模型校验
+# PureChat / Vercel AI Gateway · 运营决策与模型校验
 
 > 日期：2026-07-27  
 > 关联：[purechat-free-credits.md](./purechat-free-credits.md)
@@ -19,7 +19,7 @@
 
 `GET https://ai-gateway.vercel.sh/v1/models`（Bearer `AI_GATEWAY_API_KEY`）：核心 10 模型 + Free Tier 2 模型 **exact match**。
 
-Gateway `pricing.*` 为 **每 token USD**；下表换算为 **USD / 百万 tokens**（× 1e6），写入 PureHub 定价卡。
+Gateway `pricing.*` 为 **每 token USD**；下表换算为 **USD / 百万 tokens**（× 1e6），写入 PureChat 定价卡。
 
 | 展示 id | Gateway id | textInput | textOutput | cacheRead | cacheWrite |
 | --- | --- | ---: | ---: | ---: | ---: |
@@ -38,7 +38,7 @@ Gateway `pricing.*` 为 **每 token USD**；下表换算为 **USD / 百万 token
 
 说明：
 
-- `gpt-5.5` / 部分 Gemini 在 Gateway 有 long-context 分档；V1 PureHub 卡使用 **基础档固定价**（覆盖日常对话）。
+- `gpt-5.5` / 部分 Gemini 在 Gateway 有 long-context 分档；V1 PureChat 卡使用 **基础档固定价**（覆盖日常对话）。
 - `minimax-m3` 有 long-context 分档（>512k 更高价）；V1 使用基础档固定价。
 - `step-3.7-flash` / `minimax-m3`：2026-07-27 在当前 Free Tier 账户实测可通，便于本地未购 Credits 时联调。
 

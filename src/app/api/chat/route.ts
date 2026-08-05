@@ -1,6 +1,6 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { createDeepSeek } from '@ai-sdk/deepseek'
-import { PUREHUB_PROVIDER_ID } from '@pure/const'
+import { normalizeProviderId, PURECHAT_PROVIDER_ID } from '@pure/const'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
 import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream } from 'ai'
 import type { UIMessage } from 'ai'
@@ -12,17 +12,17 @@ import { ChatSDKError } from '@/libs/errors'
 import { llmEnv, resolveAiGatewayApiKey, resolveAiGatewayBaseURL } from '@/envs/llm'
 import {
   computeChatCost,
-  getEnabledPureHubModel,
-  getPureHubModel,
+  getEnabledPureChatModel,
+  getPureChatModel,
   getShanghaiBillingPeriod,
-  PUREHUB_DEFAULT_MODEL,
-  resolvePureHubGatewayId,
-} from '@/server/purehub'
+  PURECHAT_DEFAULT_MODEL,
+  resolvePureChatGatewayId,
+} from '@/server/purechat'
 import {
-  getPureHubStreamErrorMessage,
-  isPureHubRestrictedModelError,
-  PUREHUB_MODEL_UNAVAILABLE_MESSAGE,
-} from '@/server/purehub/gatewayError'
+  getPureChatStreamErrorMessage,
+  isPureChatRestrictedModelError,
+  PURECHAT_MODEL_UNAVAILABLE_MESSAGE,
+} from '@/server/purechat/gatewayError'
 
 import { createMessageMetadata } from './messageMetadata'
 
@@ -57,10 +57,10 @@ const resolveModel = (
   const options = resolveProviderOptions(apiKey, baseURL)
 
   switch (resolvedProvider) {
-    case PUREHUB_PROVIDER_ID: {
-      const gatewayId = resolvePureHubGatewayId(resolvedModel)
+    case PURECHAT_PROVIDER_ID: {
+      const gatewayId = resolvePureChatGatewayId(resolvedModel)
       if (!gatewayId) {
-        throw new ChatSDKError('bad_request:api', `Unknown PureHub model "${resolvedModel}"`)
+        throw new ChatSDKError('bad_request:api', `Unknown PureChat model "${resolvedModel}"`)
       }
       return createOpenAI(options)(gatewayId)
     }
@@ -76,7 +76,7 @@ const resolveModel = (
  * chat API
  * POST /api/chat
  *
- * PureHub：需登录；使用服务端 AI_GATEWAY_API_KEY；按 usage 扣免费积分。
+ * PureChat：需登录；使用服务端 AI_GATEWAY_API_KEY；按 usage 扣免费积分。
  * 自配 openai / deepseek：不扣积分；可选 Authorization Bearer 覆盖 env Key。
  */
 export async function POST(request: Request) {
@@ -94,23 +94,24 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
 
-  const { baseURL, messages, model, provider, system } = requestBody
+  const { baseURL, messages, model, system } = requestBody
+  const provider = normalizeProviderId(requestBody.provider)
 
   if (!Array.isArray(messages)) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
 
   const resolvedProvider = provider ?? 'deepseek'
-  const isPureHub = resolvedProvider === PUREHUB_PROVIDER_ID
+  const isPureChat = resolvedProvider === PURECHAT_PROVIDER_ID
 
   let userId: string | null = null
   let settlementId: string | undefined
   let settlementPeriod: string | undefined
   let displayModel = model
 
-  if (isPureHub) {
-    if (!llmEnv.PUREHUB_ENABLED) {
-      return new ChatSDKError('bad_request:api', 'PureHub is disabled').toResponse()
+  if (isPureChat) {
+    if (!llmEnv.PURECHAT_ENABLED) {
+      return new ChatSDKError('bad_request:api', 'PureChat is disabled').toResponse()
     }
 
     userId = await getAuthenticatedUserId()
@@ -118,20 +119,20 @@ export async function POST(request: Request) {
       return new ChatSDKError('unauthorized:chat').toResponse()
     }
 
-    const resolvedDisplayModel = model?.trim() || PUREHUB_DEFAULT_MODEL
+    const resolvedDisplayModel = model?.trim() || PURECHAT_DEFAULT_MODEL
     displayModel = resolvedDisplayModel
-    const card = getPureHubModel(resolvedDisplayModel)
+    const card = getPureChatModel(resolvedDisplayModel)
     if (!card) {
-      return new ChatSDKError('bad_request:api', `Unknown PureHub model "${resolvedDisplayModel}"`).toResponse()
+      return new ChatSDKError('bad_request:api', `Unknown PureChat model "${resolvedDisplayModel}"`).toResponse()
     }
-    if (!getEnabledPureHubModel(resolvedDisplayModel)) {
-      return new ChatSDKError('bad_request:api', PUREHUB_MODEL_UNAVAILABLE_MESSAGE).toResponse()
+    if (!getEnabledPureChatModel(resolvedDisplayModel)) {
+      return new ChatSDKError('bad_request:api', PURECHAT_MODEL_UNAVAILABLE_MESSAGE).toResponse()
     }
 
     const gatewayKey = resolveAiGatewayApiKey()
     if (!gatewayKey) {
-      log('PureHub missing AI_GATEWAY_API_KEY')
-      return new ChatSDKError('bad_request:api', 'PureHub temporarily unavailable').toResponse()
+      log('PureChat missing AI_GATEWAY_API_KEY')
+      return new ChatSDKError('bad_request:api', 'PureChat temporarily unavailable').toResponse()
     }
 
     settlementPeriod = getShanghaiBillingPeriod()
@@ -149,13 +150,13 @@ export async function POST(request: Request) {
     try {
       const usageStartedAt = Date.now()
       const resolvedModel = resolveModel(
-        PUREHUB_PROVIDER_ID,
+        PURECHAT_PROVIDER_ID,
         resolvedDisplayModel,
         gatewayKey,
         resolveAiGatewayBaseURL()
       )
 
-      log('purehub modelId: %o', resolvedModel.modelId)
+      log('purechat modelId: %o', resolvedModel.modelId)
 
       const result = streamText({
         messages: await convertToModelMessages(messages),
@@ -164,7 +165,7 @@ export async function POST(request: Request) {
         async onFinish({ totalUsage, usage }) {
           if (!userId || !settlementId || !settlementPeriod || !displayModel) return
 
-          const cardForCost = getPureHubModel(displayModel)
+          const cardForCost = getPureChatModel(displayModel)
           if (!cardForCost) return
 
           const inputTokens = totalUsage?.inputTokens ?? usage?.inputTokens
@@ -175,7 +176,7 @@ export async function POST(request: Request) {
             (usage as { cachedInputTokens?: number } | undefined)?.cachedInputTokens
 
           if (inputTokens == null && outputTokens == null) {
-            log('purehub onFinish: no usage, skip charge')
+            log('purechat onFinish: no usage, skip charge')
             return
           }
 
@@ -195,28 +196,28 @@ export async function POST(request: Request) {
               model: displayModel,
               outputTokens,
               period: settlementPeriod,
-              provider: PUREHUB_PROVIDER_ID,
+              provider: PURECHAT_PROVIDER_ID,
               userId,
             })
-            log('purehub charged: %o', charged)
+            log('purechat charged: %o', charged)
           } catch (error) {
-            log('purehub charge failed: %o', error)
+            log('purechat charge failed: %o', error)
           }
         },
       })
 
       return createUIMessageStreamResponse({
         stream: toUIMessageStream({
-          messageMetadata: createMessageMetadata(resolvedDisplayModel, PUREHUB_PROVIDER_ID),
-          onError: getPureHubStreamErrorMessage,
+          messageMetadata: createMessageMetadata(resolvedDisplayModel, PURECHAT_PROVIDER_ID),
+          onError: getPureChatStreamErrorMessage,
           sendReasoning: true,
           stream: result.stream,
         }),
       })
     } catch (error) {
-      log('purehub streamText failed: %o', error)
-      if (isPureHubRestrictedModelError(error)) {
-        return new ChatSDKError('bad_request:api', PUREHUB_MODEL_UNAVAILABLE_MESSAGE).toResponse()
+      log('purechat streamText failed: %o', error)
+      if (isPureChatRestrictedModelError(error)) {
+        return new ChatSDKError('bad_request:api', PURECHAT_MODEL_UNAVAILABLE_MESSAGE).toResponse()
       }
       const message = error instanceof Error ? error.message : 'Failed to start chat stream'
       // 上游鉴权失败等：不扣积分（尚未 onFinish）

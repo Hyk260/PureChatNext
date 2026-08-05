@@ -1,13 +1,13 @@
 import { deepseekProviderCard } from './deepseek'
 import { openaiProviderCard } from './openai'
-import { purehubProviderCard } from './purehub'
+import { purechatProviderCard } from './purechat'
 import type { ModelProviderCard } from '../types/aiModel'
 
-/** 默认启用的内置服务商列表（PureHub 优先）。 */
+/** 默认启用的内置服务商列表（PureChat 优先）。 */
 export const DEFAULT_MODEL_PROVIDER_LIST: ModelProviderCard[] = [
-  purehubProviderCard,
+  purechatProviderCard,
   openaiProviderCard,
   deepseekProviderCard,
 ]
 
-export { deepseekProviderCard, openaiProviderCard, purehubProviderCard }
+export { deepseekProviderCard, openaiProviderCard, purechatProviderCard }

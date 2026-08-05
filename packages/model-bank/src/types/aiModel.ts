@@ -4,7 +4,7 @@ export type PricingCurrency = 'CNY' | 'USD'
 
 /**
  * 固定单价（USD 或 CNY / 百万 tokens）。
- * PureHub 一律 USD；deepseek 自配卡保留官方 CNY。
+ * PureChat 一律 USD；deepseek 自配卡保留官方 CNY。
  */
 export type ModelTokenPricing = {
   currency: PricingCurrency
@@ -27,7 +27,7 @@ export type AiModelCard = {
   /** UI / 请求体使用的短 id */
   id: string
   displayName: string
-  /** PureHub：Gateway `vendor/model`；自配服务商可省略（= id） */
+  /** PureChat：Gateway `vendor/model`；自配服务商可省略（= id） */
   gatewayId?: string
   pricing: ModelTokenPricing
   enabled?: boolean

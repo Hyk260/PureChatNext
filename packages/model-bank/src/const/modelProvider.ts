@@ -1,5 +1,5 @@
 export enum ModelProvider {
-  PureHub = 'purehub',
+  PureChat = 'purechat',
   OpenAI = 'openai',
   DeepSeek = 'deepseek',
 }

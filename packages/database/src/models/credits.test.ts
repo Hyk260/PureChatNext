@@ -59,7 +59,7 @@ describe('CreditsModel chargeChatUsage', () => {
       model: 'claude-sonnet',
       outputTokens: 300,
       period: '2026-07',
-      provider: 'purehub',
+      provider: 'purechat',
       userId: 'user-1',
     })
 
@@ -85,7 +85,7 @@ describe('CreditsModel chargeChatUsage', () => {
       messageId: 'message-1',
       model: 'claude-sonnet',
       period: '2026-07',
-      provider: 'purehub',
+      provider: 'purechat',
       userId: 'user-1',
     })
 

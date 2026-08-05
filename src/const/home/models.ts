@@ -1,4 +1,4 @@
-import { AI_MODELS_BY_PROVIDER, ModelProvider, PUREHUB_DEFAULT_MODEL, getAiModel } from '@pure/model-bank'
+import { AI_MODELS_BY_PROVIDER, ModelProvider, PURECHAT_DEFAULT_MODEL, getAiModel } from '@pure/model-bank'
 
 export interface HomeModelItem {
   displayName: string
@@ -21,9 +21,9 @@ export const HOME_MODELS: HomeModelItem[] = (
 )
 
 export const DEFAULT_HOME_MODEL: HomeModelItem = {
-  displayName: getAiModel(ModelProvider.PureHub, PUREHUB_DEFAULT_MODEL)?.displayName ?? 'GPT-5.4 Mini',
-  model: PUREHUB_DEFAULT_MODEL,
-  provider: ModelProvider.PureHub,
+  displayName: getAiModel(ModelProvider.PureChat, PURECHAT_DEFAULT_MODEL)?.displayName ?? 'GPT-5.4 Mini',
+  model: PURECHAT_DEFAULT_MODEL,
+  provider: ModelProvider.PureChat,
 }
 
 export const findHomeModel = (provider: string, model: string) =>

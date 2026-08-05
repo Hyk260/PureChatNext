@@ -1,6 +1,6 @@
 import { APICallError } from 'ai'
 
-export const PUREHUB_MODEL_UNAVAILABLE_MESSAGE = '该模型在 PureHub 免费套餐中暂不可用，请切换到其他模型。'
+export const PURECHAT_MODEL_UNAVAILABLE_MESSAGE = '该模型在 PureChat 免费套餐中暂不可用，请切换到其他模型。'
 
 const safeStringify = (value: unknown) => {
   try {
@@ -35,7 +35,7 @@ const getErrorDetails = (error: unknown) => {
   return { message: safeStringify(error), statusCode: undefined }
 }
 
-export const isPureHubRestrictedModelError = (error: unknown) => {
+export const isPureChatRestrictedModelError = (error: unknown) => {
   const { message, statusCode } = getErrorDetails(error)
   if (/RestrictedModelsError|Free tier users do not have access|free credits.*restricted/i.test(message)) {
     return true
@@ -44,8 +44,8 @@ export const isPureHubRestrictedModelError = (error: unknown) => {
   return statusCode === 403 && /no_providers_available/i.test(message)
 }
 
-export const getPureHubStreamErrorMessage = (error: unknown) => {
-  if (isPureHubRestrictedModelError(error)) return PUREHUB_MODEL_UNAVAILABLE_MESSAGE
+export const getPureChatStreamErrorMessage = (error: unknown) => {
+  if (isPureChatRestrictedModelError(error)) return PURECHAT_MODEL_UNAVAILABLE_MESSAGE
 
   const { message, statusCode } = getErrorDetails(error)
   if (statusCode === 429 || /rate.?limit/i.test(message)) return '上游限流，请稍后重试。'

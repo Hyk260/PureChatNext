@@ -2,7 +2,7 @@ import { CREDITS_PER_DOLLAR } from '@pure/const'
 
 import type { ModelTokenPricing } from './types/aiModel'
 
-/** CNY → USD 粗算汇率（仅自配 deepseek 成本展示；PureHub 禁止走此路径）。 */
+/** CNY → USD 粗算汇率（仅自配 deepseek 成本展示；PureChat 禁止走此路径）。 */
 export const USD_TO_CNY = 7.12
 
 export type ChatTokenUsage = {

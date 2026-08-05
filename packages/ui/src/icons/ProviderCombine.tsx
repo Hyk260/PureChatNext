@@ -5,11 +5,15 @@ import type { ProviderCombineProps } from '@lobehub/icons'
 import { Flexbox } from '@lobehub/ui'
 import { memo } from 'react'
 
-import PureHubMark from './PureHubMark'
+import PureChatMark from './PureChatMark'
 
-const isPureHub = (provider?: string) => provider?.toLowerCase() === 'purehub'
+/** Accept legacy `purehub` so historical message metadata keeps the brand mark. */
+const isPureChat = (provider?: string) => {
+  const id = provider?.toLowerCase()
+  return id === 'purechat' || id === 'purehub'
+}
 
-const PureHubProviderCombine = memo<ProviderCombineProps>(
+const PureChatProviderCombine = memo<ProviderCombineProps>(
   ({ className, size = 12, style, type = 'color' }) => {
     return (
       <Flexbox
@@ -20,7 +24,7 @@ const PureHubProviderCombine = memo<ProviderCombineProps>(
         gap={Math.max(6, Math.round(size * 0.28))}
         style={{ height: size * 1.5, width: 'fit-content', ...style }}
       >
-        <PureHubMark size={size} variant={type === 'mono' ? 'mono' : 'color'} />
+        <PureChatMark size={size} variant={type === 'mono' ? 'mono' : 'color'} />
         <span
           style={{
             color: 'inherit',
@@ -31,18 +35,18 @@ const PureHubProviderCombine = memo<ProviderCombineProps>(
             whiteSpace: 'nowrap',
           }}
         >
-          PureHub
+          PureChat
         </span>
       </Flexbox>
     )
   }
 )
 
-PureHubProviderCombine.displayName = 'PureHubProviderCombine'
+PureChatProviderCombine.displayName = 'PureChatProviderCombine'
 
 const ProviderCombine = memo<ProviderCombineProps>((props) => {
-  if (isPureHub(props.provider)) {
-    return <PureHubProviderCombine {...props} />
+  if (isPureChat(props.provider)) {
+    return <PureChatProviderCombine {...props} />
   }
 
   return <LobeProviderCombine {...props} />

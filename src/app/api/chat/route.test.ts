@@ -25,7 +25,7 @@ vi.mock('@/libs/auth/get-session-user', () => ({
   getAuthenticatedUserId: vi.fn().mockResolvedValue('user-1'),
 }))
 vi.mock('@/envs/llm', () => ({
-  llmEnv: { PUREHUB_ENABLED: true },
+  llmEnv: { PURECHAT_ENABLED: true },
   resolveAiGatewayApiKey: () => 'gateway-test-key',
   resolveAiGatewayBaseURL: () => 'https://ai-gateway.vercel.sh/v1',
 }))
@@ -40,18 +40,18 @@ vi.mock('ai', async (importOriginal) => {
   }
 })
 
-import { PUREHUB_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purehub/gatewayError'
+import { PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 
 import { POST } from './route'
 
 const createRequest = (model: string) =>
   new Request('http://localhost/api/chat', {
-    body: JSON.stringify({ messages: [], model, provider: 'purehub' }),
+    body: JSON.stringify({ messages: [], model, provider: 'purechat' }),
     headers: { 'Content-Type': 'application/json' },
     method: 'POST',
   })
 
-describe('POST /api/chat PureHub model availability', () => {
+describe('POST /api/chat PureChat model availability', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     assertCanChat.mockResolvedValue(undefined)
@@ -63,17 +63,17 @@ describe('POST /api/chat PureHub model availability', () => {
     const payload = await response.json()
 
     expect(response.status).toBe(400)
-    expect(payload.cause).toBe(PUREHUB_MODEL_UNAVAILABLE_MESSAGE)
+    expect(payload.cause).toBe(PURECHAT_MODEL_UNAVAILABLE_MESSAGE)
     expect(createOpenAI).not.toHaveBeenCalled()
     expect(assertCanChat).not.toHaveBeenCalled()
   })
 
-  it('rejects an unknown PureHub model', async () => {
+  it('rejects an unknown PureChat model', async () => {
     const response = await POST(createRequest('not-a-model'))
     const payload = await response.json()
 
     expect(response.status).toBe(400)
-    expect(payload.cause).toContain('Unknown PureHub model')
+    expect(payload.cause).toContain('Unknown PureChat model')
     expect(createOpenAI).not.toHaveBeenCalled()
   })
 
@@ -97,6 +97,6 @@ describe('POST /api/chat PureHub model availability', () => {
     const payload = await response.json()
 
     expect(response.status).toBe(400)
-    expect(payload.cause).toBe(PUREHUB_MODEL_UNAVAILABLE_MESSAGE)
+    expect(payload.cause).toBe(PURECHAT_MODEL_UNAVAILABLE_MESSAGE)
   })
 })

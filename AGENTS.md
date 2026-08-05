@@ -23,7 +23,7 @@ PureChatNext/
 │   ├── database/              # Drizzle schema、models、migrations（@pure/database）
 │   ├── env/                   # 环境变量校验（auth、tools、serverDB 等）
 │   ├── types/                 # 共享类型（search、crawler、files 等）
-│   ├── model-bank/            # 模型目录与定价（purehub / openai / deepseek）
+│   ├── model-bank/            # 模型目录与定价（purechat / openai / deepseek）
 │   ├── utils/                 # 共享工具（apiKey、jina 等）
 │   ├── file-loaders/          # 文档加载（pdf、docx、pptx、excel…）
 │   ├── web-crawler/           # 网页爬虫多实现（naive、firecrawl、tavily…）

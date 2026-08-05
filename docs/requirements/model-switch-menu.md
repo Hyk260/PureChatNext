@@ -48,7 +48,7 @@ V1 目标：
 | --- | --- |
 | 默认视图 | `byModel` |
 | 聚合键 | `model` id（非 displayName） |
-| 多通道默认优先 | `purehub` 排前 |
+| 多通道默认优先 | `purechat` 排前 |
 | 详情数据源 | `getAiModel(provider, modelId)`（model-bank） |
 | 列表数据源 | `useProviderConfigStore` 已启用服务商 × 已启用模型 |
 | USD 价格展示 | 换算为积分/百万 tokens（`1 USD = 1_000_000` 积分） |
@@ -76,9 +76,9 @@ V1 目标：
 
 ### 5.3 按模型
 
-- 跨服务商按 model id 聚合；`purehub` 优先
+- 跨服务商按 model id 聚合；`purechat` 优先
 - 单通道：点击即选；悬停开详情
-- 多通道：点击选默认第一个通道（purehub 优先）；悬停详情底部「使用此模型来自」列出通道，点选具体 `(provider, model)`
+- 多通道：点击选默认第一个通道（purechat 优先）；悬停详情底部「使用此模型来自」列出通道，点选具体 `(provider, model)`
 
 ### 5.4 详情面板
 
@@ -99,7 +99,7 @@ V1 目标：
 - [ ] 工具栏可在按模型 / 按供应商间切换，默认按模型
 - [ ] 按供应商显示分组标题，齿轮进入对应设置页
 - [ ] 悬停模型行出现详情（描述 / 上下文 / 能力 / 价格，按数据有无显示）
-- [ ] 同一 model id 在 PureHub 与自配通道同时启用时，按模型视图可聚合，详情可切换通道
+- [ ] 同一 model id 在 PureChat 与自配通道同时启用时，按模型视图可聚合，详情可切换通道
 - [ ] 搜索过滤模型名 / id / 服务商名
 - [ ] 选中后写入 `selectedProvider` + `selectedModel`，触发器显示更新
 - [ ] `ModelSelector` / `ModelLabel` 无需改调用方 API

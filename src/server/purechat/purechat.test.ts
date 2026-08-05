@@ -1,30 +1,30 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  assertPureHubPricingComplete,
+  assertPureChatPricingComplete,
   computeChatCost,
-  getPureHubModel,
+  getPureChatModel,
   getShanghaiBillingPeriod,
   getNextShanghaiResetAt,
-  resolvePureHubDisplayId,
-  resolvePureHubGatewayId,
+  resolvePureChatDisplayId,
+  resolvePureChatGatewayId,
 } from './index'
 
-describe('purehub re-exports from model-bank', () => {
+describe('purechat re-exports from model-bank', () => {
   it('maps display id ↔ gateway id', () => {
-    expect(resolvePureHubGatewayId('gpt-5.4-mini')).toBe('openai/gpt-5.4-mini')
-    expect(resolvePureHubDisplayId('anthropic/claude-sonnet-4.6')).toBe('claude-sonnet-4-6')
-    expect(resolvePureHubGatewayId('nope')).toBeUndefined()
+    expect(resolvePureChatGatewayId('gpt-5.4-mini')).toBe('openai/gpt-5.4-mini')
+    expect(resolvePureChatDisplayId('anthropic/claude-sonnet-4.6')).toBe('claude-sonnet-4-6')
+    expect(resolvePureChatGatewayId('nope')).toBeUndefined()
   })
 
   it('requires pricing on all models', () => {
-    expect(() => assertPureHubPricingComplete()).not.toThrow()
+    expect(() => assertPureChatPricingComplete()).not.toThrow()
   })
 })
 
 describe('computeChatCost', () => {
   it('matches doc sample for gpt-5.4-mini 1k/1k', () => {
-    const card = getPureHubModel('gpt-5.4-mini')
+    const card = getPureChatModel('gpt-5.4-mini')
     expect(card).toBeTruthy()
     const result = computeChatCost(card!.pricing, { inputTokens: 1000, outputTokens: 1000 })
     expect(result.totalCostUSD).toBeCloseTo(0.00525, 8)

@@ -4,7 +4,7 @@ import { ModelProvider } from '@pure/model-bank'
 
 import type { EnabledProviderGroup, GroupMode, ListItem, ModelWithProviders } from './types'
 
-const providerPriority = (id: string) => (id === ModelProvider.PureHub ? 0 : 1)
+const providerPriority = (id: string) => (id === ModelProvider.PureChat ? 0 : 1)
 
 export const buildListItems = (
   enabledProviders: EnabledProviderGroup[],

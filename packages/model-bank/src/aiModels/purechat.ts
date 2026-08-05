@@ -1,12 +1,12 @@
 import type { AiModelCard } from '../types/aiModel'
 
 /**
- * PureHub 模型 + Gateway USD 定价。
+ * PureChat 模型 + Gateway USD 定价。
  * 定价来自 AI Gateway `/v1/models`（每 token USD → 百万 tokens）；
  * 阶梯价取基础档。含核心名单 + 适合 $5 免费额度联调的廉价 tool-use 扩展模型。
  * 免费层可用性最后核验：2026-07-28，来源 https://vercel.com/ai-gateway/models?freeTier=true
  */
-export const purehubChatModels: AiModelCard[] = [
+export const purechatChatModels: AiModelCard[] = [
   {
     id: 'gpt-5.4-mini',
     displayName: 'GPT 5.4 Mini',
@@ -707,37 +707,37 @@ export const purehubChatModels: AiModelCard[] = [
   },
 ]
 
-export const PUREHUB_DEFAULT_MODEL = 'gpt-5.4-mini'
+export const PURECHAT_DEFAULT_MODEL = 'gpt-5.4-mini'
 
-export const PUREHUB_PLAN_CARD_MODELS = ['gpt-5.2', 'qwen3.5-plus', 'kimi-k2.5', 'grok-4.1-fast-reasoning'] as const
+export const PURECHAT_PLAN_CARD_MODELS = ['gpt-5.2', 'qwen3.5-plus', 'kimi-k2.5', 'grok-4.1-fast-reasoning'] as const
 
-const byId = new Map(purehubChatModels.map((m) => [m.id, m]))
-const byGatewayId = new Map(purehubChatModels.filter((m) => m.gatewayId).map((m) => [m.gatewayId!, m]))
+const byId = new Map(purechatChatModels.map((m) => [m.id, m]))
+const byGatewayId = new Map(purechatChatModels.filter((m) => m.gatewayId).map((m) => [m.gatewayId!, m]))
 
 /** 面向用户和新请求的可用模型；完整目录仍保留暂时禁用模型。 */
-export const purehubEnabledChatModels = purehubChatModels.filter((model) => model.enabled !== false)
+export const purechatEnabledChatModels = purechatChatModels.filter((model) => model.enabled !== false)
 
-const enabledById = new Map(purehubEnabledChatModels.map((model) => [model.id, model]))
+const enabledById = new Map(purechatEnabledChatModels.map((model) => [model.id, model]))
 
-export const getPureHubModel = (displayId: string) => byId.get(displayId)
+export const getPureChatModel = (displayId: string) => byId.get(displayId)
 
-export const getEnabledPureHubModel = (displayId: string) => enabledById.get(displayId)
+export const getEnabledPureChatModel = (displayId: string) => enabledById.get(displayId)
 
-export const resolvePureHubGatewayId = (displayId: string): string | undefined => byId.get(displayId)?.gatewayId
+export const resolvePureChatGatewayId = (displayId: string): string | undefined => byId.get(displayId)?.gatewayId
 
-export const resolvePureHubDisplayId = (gatewayId: string): string | undefined => byGatewayId.get(gatewayId)?.id
+export const resolvePureChatDisplayId = (gatewayId: string): string | undefined => byGatewayId.get(gatewayId)?.id
 
 /** 缺价模型禁止上线 */
-export const assertPureHubPricingComplete = () => {
-  for (const model of purehubChatModels) {
+export const assertPureChatPricingComplete = () => {
+  for (const model of purechatChatModels) {
     if (!(model.pricing.textInput > 0) || !(model.pricing.textOutput > 0)) {
-      throw new Error(`PureHub model "${model.id}" missing pricing`)
+      throw new Error(`PureChat model "${model.id}" missing pricing`)
     }
     if (model.pricing.currency !== 'USD') {
-      throw new Error(`PureHub model "${model.id}" must use USD pricing`)
+      throw new Error(`PureChat model "${model.id}" must use USD pricing`)
     }
     if (!model.gatewayId) {
-      throw new Error(`PureHub model "${model.id}" missing gatewayId`)
+      throw new Error(`PureChat model "${model.id}" missing gatewayId`)
     }
   }
 }

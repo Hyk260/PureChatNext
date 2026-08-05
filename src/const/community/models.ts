@@ -19,7 +19,7 @@ export const COMMUNITY_MODELS: DiscoverModelItem[] = (
       contextWindowTokens: model.contextWindowTokens,
       description: model.description ?? '',
       displayName: model.displayName,
-      /** 跨服务商可能同 id（如 purehub / deepseek 均有 deepseek-v4-*），需拼 provider 保证唯一 */
+      /** 跨服务商可能同 id（如 purechat / deepseek 均有 deepseek-v4-*），需拼 provider 保证唯一 */
       id: `${provider}/${model.id}`,
       identifier: model.id,
       providers: [provider],

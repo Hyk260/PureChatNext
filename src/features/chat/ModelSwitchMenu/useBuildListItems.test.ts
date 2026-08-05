@@ -13,11 +13,11 @@ const providers: EnabledProviderGroup[] = [
     ],
   },
   {
-    id: 'purehub',
-    name: 'PureHub',
+    id: 'purechat',
+    name: 'PureChat',
     models: [
-      { displayName: 'GPT 5.4 Mini', model: 'gpt-5.4-mini', provider: 'purehub' },
-      { displayName: 'DeepSeek V4 Flash', model: 'deepseek-v4-flash', provider: 'purehub' },
+      { displayName: 'GPT 5.4 Mini', model: 'gpt-5.4-mini', provider: 'purechat' },
+      { displayName: 'DeepSeek V4 Flash', model: 'deepseek-v4-flash', provider: 'purechat' },
     ],
   },
   {
@@ -32,7 +32,7 @@ describe('buildListItems', () => {
     expect(buildListItems([], 'byModel')).toEqual([{ type: 'no-provider' }])
   })
 
-  it('aggregates by model id and prefers purehub', () => {
+  it('aggregates by model id and prefers purechat', () => {
     const items = buildListItems(providers, 'byModel')
     const mini = items.find(
       (item) =>
@@ -41,7 +41,7 @@ describe('buildListItems', () => {
 
     expect(mini?.type).toBe('model-item-multiple')
     if (mini?.type !== 'model-item-multiple') return
-    expect(mini.data.providers.map((p) => p.id)).toEqual(['purehub', 'openai'])
+    expect(mini.data.providers.map((p) => p.id)).toEqual(['purechat', 'openai'])
   })
 
   it('groups by provider with headers', () => {
@@ -53,7 +53,7 @@ describe('buildListItems', () => {
           if (item.type !== 'group-header') return ''
           return item.provider.id
         })
-    ).toEqual(['purehub', 'openai', 'deepseek'])
+    ).toEqual(['purechat', 'openai', 'deepseek'])
   })
 
   it('filters by search keyword', () => {

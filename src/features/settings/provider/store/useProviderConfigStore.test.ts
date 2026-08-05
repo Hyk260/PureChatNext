@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import { mergeProviderConfig, useProviderConfigStore } from './useProviderConfigStore'
 
-describe('PureHub provider config migration', () => {
+describe('PureChat provider config migration', () => {
   it('reconciles a v4-style model list with the current catalog', () => {
-    const config = mergeProviderConfig('purehub', {
+    const config = mergeProviderConfig('purechat', {
       models: [
         {
           displayName: 'GPT 5.5',
@@ -26,12 +26,12 @@ describe('PureHub provider config migration', () => {
     expect(config.models.find((model) => model.id === 'gpt-5-nano')?.enabled).toBe(false)
   })
 
-  it('keeps PureHub enabled even when persisted as disabled', () => {
-    const config = mergeProviderConfig('purehub', { enabled: false })
+  it('keeps PureChat enabled even when persisted as disabled', () => {
+    const config = mergeProviderConfig('purechat', { enabled: false })
     expect(config.enabled).toBe(true)
   })
 
-  it('bumps persisted provider settings to version 6', () => {
-    expect(useProviderConfigStore.persist.getOptions().version).toBe(6)
+  it('bumps persisted provider settings to version 7', () => {
+    expect(useProviderConfigStore.persist.getOptions().version).toBe(7)
   })
 })

@@ -29,7 +29,7 @@ vi.mock('@pure/database/models/file', () => ({
   },
 }))
 vi.mock('@/envs/file', () => ({ fileStorageLimitBytes: 15 * 1024 * 1024 }))
-vi.mock('@/server/purehub', () => ({ getShanghaiBillingPeriod: () => '2026-07' }))
+vi.mock('@/server/purechat', () => ({ getShanghaiBillingPeriod: () => '2026-07' }))
 
 import { GET } from './route'
 

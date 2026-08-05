@@ -4,12 +4,12 @@
  * Call sites should import from `@pure/ui` or `@pure/ui/icons`.
  *
  * `ProviderIcon` / `ProviderCombine` are wrapped to render PureChat brand assets
- * for `purehub` (not in `@lobehub/icons` mappings).
+ * for `purechat` (not in `@lobehub/icons` mappings).
  */
 export { Github, ModelIcon, ModelTag } from '@lobehub/icons'
 export { default as ProviderCombine, type ProviderCombineProps } from './ProviderCombine'
 export { default as ProviderIcon, type ProviderIconProps } from './ProviderIcon'
-export { default as PureHubMark, type PureHubMarkProps, type PureHubMarkVariant } from './PureHubMark'
+export { default as PureChatMark, type PureChatMarkProps, type PureChatMarkVariant } from './PureChatMark'
 
 /**
  * Bridge over `@lobehub/ui/icons` messenger / platform icons.

@@ -4,11 +4,15 @@ import { ProviderIcon as LobeProviderIcon } from '@lobehub/icons'
 import type { ProviderIconProps } from '@lobehub/icons'
 import { memo } from 'react'
 
-import PureHubMark from './PureHubMark'
+import PureChatMark from './PureChatMark'
 
-const isPureHub = (provider?: string) => provider?.toLowerCase() === 'purehub'
+/** Accept legacy `purehub` so historical message metadata keeps the brand icon. */
+const isPureChat = (provider?: string) => {
+  const id = provider?.toLowerCase()
+  return id === 'purechat' || id === 'purehub'
+}
 
-const PureHubProviderIcon = memo<ProviderIconProps>(
+const PureChatProviderIcon = memo<ProviderIconProps>(
   ({ className, shape = 'circle', size = 12, style, type = 'avatar' }) => {
     if (type === 'avatar') {
       return (
@@ -26,13 +30,13 @@ const PureHubProviderIcon = memo<ProviderIconProps>(
             ...style,
           }}
         >
-          <PureHubMark size={size * 0.62} variant='on-dark' />
+          <PureChatMark size={size * 0.62} variant='on-dark' />
         </span>
       )
     }
 
     return (
-      <PureHubMark
+      <PureChatMark
         className={className}
         size={size}
         style={style}
@@ -42,11 +46,11 @@ const PureHubProviderIcon = memo<ProviderIconProps>(
   }
 )
 
-PureHubProviderIcon.displayName = 'PureHubProviderIcon'
+PureChatProviderIcon.displayName = 'PureChatProviderIcon'
 
 const ProviderIcon = memo<ProviderIconProps>((props) => {
-  if (isPureHub(props.provider)) {
-    return <PureHubProviderIcon {...props} />
+  if (isPureChat(props.provider)) {
+    return <PureChatProviderIcon {...props} />
   }
 
   return <LobeProviderIcon {...props} />

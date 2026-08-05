@@ -1,5 +1,5 @@
 import { createOpenAI } from '@ai-sdk/openai'
-import { PUREHUB_PROVIDER_ID } from '@pure/const'
+import { normalizeProviderId, PURECHAT_PROVIDER_ID } from '@pure/const'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
 import { ChatMessageModel } from '@pure/database/models/chatMessage'
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
@@ -22,12 +22,12 @@ import {
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import {
   computeChatCost,
-  getEnabledPureHubModel,
-  getPureHubModel,
+  getEnabledPureChatModel,
+  getPureChatModel,
   getShanghaiBillingPeriod,
-  resolvePureHubGatewayId,
-} from '@/server/purehub'
-import { isPureHubRestrictedModelError, PUREHUB_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purehub/gatewayError'
+  resolvePureChatGatewayId,
+} from '@/server/purechat'
+import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 
 export const maxDuration = 30
 
@@ -84,8 +84,8 @@ export const normalizeGeneratedTitle = (value: string) => {
   return `${title.slice(0, MAX_TITLE_LENGTH - 1)}…`
 }
 
-const createPureHubModel = (model: string): LanguageModel | null => {
-  const gatewayId = resolvePureHubGatewayId(model)
+const createPureChatModel = (model: string): LanguageModel | null => {
+  const gatewayId = resolvePureChatGatewayId(model)
   const gatewayKey = resolveAiGatewayApiKey()
   if (!gatewayId || !gatewayKey) return null
 
@@ -101,7 +101,7 @@ const createSelfHostedModel = (request: NextRequest, provider: string, model: st
   return createProviderLanguageModel(provider, model, apiKey, resolveOptionalBaseURL(baseURL))
 }
 
-const chargePureHubUsage = async (params: {
+const chargePureChatUsage = async (params: {
   durationMs: number
   model: string
   result: Awaited<ReturnType<typeof generateText>>
@@ -109,7 +109,7 @@ const chargePureHubUsage = async (params: {
   settlementPeriod: string
   userId: string
 }) => {
-  const card = getPureHubModel(params.model)
+  const card = getPureChatModel(params.model)
   if (!card) return
 
   const usage = params.result.totalUsage ?? params.result.usage
@@ -133,7 +133,7 @@ const chargePureHubUsage = async (params: {
     model: params.model,
     outputTokens,
     period: params.settlementPeriod,
-    provider: PUREHUB_PROVIDER_ID,
+    provider: PURECHAT_PROVIDER_ID,
     userId: params.userId,
   })
 }
@@ -154,19 +154,20 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
   const parsed = bodySchema.safeParse(body)
   if (!parsed.success) return jsonError(parsed.error.message)
 
-  const { baseURL, model, provider } = parsed.data
+  const { baseURL, model } = parsed.data
+  const provider = normalizeProviderId(parsed.data.provider) ?? parsed.data.provider
   const messages = await new ChatMessageModel(userId).listByTopic(id)
   const transcript = buildTranscript(messages)
   if (!transcript) return jsonError('Topic has no text messages')
 
-  const isPureHub = provider === PUREHUB_PROVIDER_ID
+  const isPureChat = provider === PURECHAT_PROVIDER_ID
   let languageModel: LanguageModel | null
   let settlementId: string | undefined
   let settlementPeriod: string | undefined
 
-  if (isPureHub) {
-    if (!llmEnv.PUREHUB_ENABLED) return jsonError('PureHub is disabled')
-    if (!getEnabledPureHubModel(model)) return jsonError(PUREHUB_MODEL_UNAVAILABLE_MESSAGE)
+  if (isPureChat) {
+    if (!llmEnv.PURECHAT_ENABLED) return jsonError('PureChat is disabled')
+    if (!getEnabledPureChatModel(model)) return jsonError(PURECHAT_MODEL_UNAVAILABLE_MESSAGE)
 
     settlementPeriod = getShanghaiBillingPeriod()
     settlementId = createNanoId(24)()
@@ -177,8 +178,8 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
       throw error
     }
 
-    languageModel = createPureHubModel(model)
-    if (!languageModel) return jsonError('PureHub temporarily unavailable', 503)
+    languageModel = createPureChatModel(model)
+    if (!languageModel) return jsonError('PureChat temporarily unavailable', 503)
   } else {
     languageModel = createSelfHostedModel(request, provider, model, baseURL)
     if (!isSupportedProviderId(provider)) return jsonError('Unsupported provider')
@@ -198,9 +199,9 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
     const title = normalizeGeneratedTitle(result.text)
     if (!title) return jsonError('Model returned an empty title', 502)
 
-    if (isPureHub && settlementId && settlementPeriod) {
+    if (isPureChat && settlementId && settlementPeriod) {
       try {
-        await chargePureHubUsage({
+        await chargePureChatUsage({
           durationMs: Date.now() - startedAt,
           model,
           result,
@@ -218,7 +219,7 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
     return NextResponse.json(updated)
   } catch (error) {
     log('generate title failed: %o', error)
-    if (isPureHubRestrictedModelError(error)) return jsonError(PUREHUB_MODEL_UNAVAILABLE_MESSAGE)
+    if (isPureChatRestrictedModelError(error)) return jsonError(PURECHAT_MODEL_UNAVAILABLE_MESSAGE)
 
     const errorMessage = error instanceof Error ? error.message : String(error)
     if (/429|rate.?limit/i.test(errorMessage)) return jsonError('上游限流，请稍后重试', 429)

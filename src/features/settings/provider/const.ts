@@ -1,15 +1,15 @@
 import {
   DEFAULT_MODEL_PROVIDER_LIST,
   ModelProvider,
-  PUREHUB_DEFAULT_MODEL,
+  PURECHAT_DEFAULT_MODEL,
   getProviderChatModels,
-  purehubProviderCard,
+  purechatProviderCard,
 } from '@pure/model-bank'
 
 import type { ProviderConfig, ProviderConfigs, ProviderId, ProviderModelItem } from './types'
 
 export const SETTINGS_PROVIDER_IDS = [
-  ModelProvider.PureHub,
+  ModelProvider.PureChat,
   ModelProvider.OpenAI,
   ModelProvider.DeepSeek,
 ] as const satisfies readonly ProviderId[]
@@ -21,23 +21,23 @@ export const isSettingsProviderId = (id: string): id is ProviderId =>
 export const PROVIDER_DEFAULT_BASE_URLS: Record<ProviderId, string> = {
   deepseek: 'https://api.deepseek.com',
   openai: 'https://api.openai.com/v1',
-  purehub: 'https://ai-gateway.vercel.sh/v1',
+  purechat: 'https://ai-gateway.vercel.sh/v1',
 }
 
 /** Legacy defaults persisted in purechat:provider:v1 before empty-baseURL migration. */
 export const LEGACY_PROVIDER_DEFAULT_BASE_URLS: Record<ProviderId, string> = {
   deepseek: 'https://api.deepseek.com',
   openai: 'https://api.openai.com/v1',
-  purehub: 'https://ai-gateway.vercel.sh/v1',
+  purechat: 'https://ai-gateway.vercel.sh/v1',
 }
 
 export const PROVIDER_CHECK_MODELS: Record<ProviderId, string> = {
   deepseek: 'deepseek-v4-flash',
   openai: 'gpt-5.4-mini',
-  purehub: PUREHUB_DEFAULT_MODEL,
+  purechat: PURECHAT_DEFAULT_MODEL,
 }
 
-/** showConfig=false 的服务商（如 PureHub）由服务端持有 Key。 */
+/** showConfig=false 的服务商（如 PureChat）由服务端持有 Key。 */
 export const isServerManagedProvider = (id: ProviderId) => {
   const card = DEFAULT_MODEL_PROVIDER_LIST.find((p) => p.id === id)
   return card ? !card.showConfig : false
@@ -55,14 +55,14 @@ export const createDefaultProviderConfig = (id: ProviderId): ProviderConfig => (
   apiKey: '',
   baseURL: '',
   checkModel: PROVIDER_CHECK_MODELS[id],
-  enabled: id === ModelProvider.PureHub ? purehubProviderCard.enabled : false,
+  enabled: id === ModelProvider.PureChat ? purechatProviderCard.enabled : false,
   models: getBuiltinProviderModels(id),
 })
 
 export const DEFAULT_PROVIDER_CONFIGS: ProviderConfigs = {
   deepseek: createDefaultProviderConfig('deepseek'),
   openai: createDefaultProviderConfig('openai'),
-  purehub: createDefaultProviderConfig('purehub'),
+  purechat: createDefaultProviderConfig('purechat'),
 }
 
 export const SETTINGS_PROVIDERS = DEFAULT_MODEL_PROVIDER_LIST.filter((provider) =>

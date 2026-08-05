@@ -40,7 +40,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
       {serverManaged ? (
         <>
           <Text type='secondary' style={{ fontSize: 13 }}>
-            PureHub 由 PureChat 官方托管，无需填写 API
+            由 PureChat 官方托管，无需填写 API
             Key。用量计入每月免费积分；用尽后可等待下月重置，或改用下方自配服务商。
           </Text>
           <Text className={styles.hint} style={{ marginBlockStart: 8 }}>

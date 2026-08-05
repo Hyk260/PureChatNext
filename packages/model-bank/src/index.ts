@@ -1,20 +1,20 @@
 export {
   AI_MODELS_BY_PROVIDER,
-  assertPureHubPricingComplete,
+  assertPureChatPricingComplete,
   deepseekChatModels,
   getAiModel,
   getDeepSeekModel,
-  getEnabledPureHubModel,
+  getEnabledPureChatModel,
   getOpenAIModel,
   getProviderChatModels,
-  getPureHubModel,
+  getPureChatModel,
   openaiChatModels,
-  PUREHUB_DEFAULT_MODEL,
-  PUREHUB_PLAN_CARD_MODELS,
-  purehubChatModels,
-  purehubEnabledChatModels,
-  resolvePureHubDisplayId,
-  resolvePureHubGatewayId,
+  PURECHAT_DEFAULT_MODEL,
+  PURECHAT_PLAN_CARD_MODELS,
+  purechatChatModels,
+  purechatEnabledChatModels,
+  resolvePureChatDisplayId,
+  resolvePureChatGatewayId,
 } from './aiModels'
 export { computeChatCost, USD_TO_CNY, type ChatCostResult, type ChatTokenUsage } from './computeChatCost'
 export { ModelProvider, type ModelProviderId } from './const/modelProvider'
@@ -22,7 +22,7 @@ export {
   DEFAULT_MODEL_PROVIDER_LIST,
   deepseekProviderCard,
   openaiProviderCard,
-  purehubProviderCard,
+  purechatProviderCard,
 } from './modelProviders'
 export type {
   AiModelCard,

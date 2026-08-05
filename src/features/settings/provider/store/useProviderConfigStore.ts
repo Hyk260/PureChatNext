@@ -58,7 +58,7 @@ export const mergeProviderConfig = (
     baseURL,
     checkModel:
       typeof partial.checkModel === 'string' && partial.checkModel.trim() ? partial.checkModel : defaults.checkModel,
-    // PureHub 等官方托管服务商默认启用且不可关闭。
+    // PureChat 等官方托管服务商默认启用且不可关闭。
     enabled: isServerManagedProvider(id) ? true : (partial.enabled ?? defaults.enabled),
     models,
   }
@@ -190,17 +190,23 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
     }),
     {
       migrate: (persisted, version) => {
-        const state = persisted as { configs?: Partial<ProviderConfigs> } | undefined
+        const state = persisted as {
+          configs?: Partial<ProviderConfigs> & { purehub?: ProviderConfig }
+        } | undefined
         const configs = state?.configs
 
         if (!configs) {
           return { configs: DEFAULT_PROVIDER_CONFIGS }
         }
 
+        // v7: rename provider id purehub → purechat
+        const legacyPureHub = (configs as { purehub?: ProviderConfig }).purehub
+        const purechatPartial = configs.purechat ?? legacyPureHub
+
         const next: ProviderConfigs = {
           deepseek: mergeProviderConfig('deepseek', configs.deepseek),
           openai: mergeProviderConfig('openai', configs.openai),
-          purehub: mergeProviderConfig('purehub', configs.purehub),
+          purechat: mergeProviderConfig('purechat', purechatPartial),
         }
 
         // version < 2 also needs empty baseURL migration (handled in mergeProviderConfig).
@@ -209,7 +215,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
       },
       name: 'purechat:provider:v1',
       partialize: (state) => ({ configs: state.configs }),
-      version: 6,
+      version: 7,
     }
   )
 )

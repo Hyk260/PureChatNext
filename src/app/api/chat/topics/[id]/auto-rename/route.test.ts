@@ -42,11 +42,14 @@ vi.mock('@pure/database/models/credits', () => ({
   FreePlanLimitError: class FreePlanLimitError extends Error {},
 }))
 vi.mock('ai', () => ({ generateText: mocks.generateText }))
-vi.mock('@ai-sdk/openai', () => ({ createOpenAI: vi.fn(() => vi.fn(() => ({ modelId: 'purehub-model' }))) }))
-vi.mock('@pure/const', () => ({ PUREHUB_PROVIDER_ID: 'purehub' }))
+vi.mock('@ai-sdk/openai', () => ({ createOpenAI: vi.fn(() => vi.fn(() => ({ modelId: 'purechat-model' }))) }))
+vi.mock('@pure/const', () => ({
+  PURECHAT_PROVIDER_ID: 'purechat',
+  normalizeProviderId: (provider: string | undefined) => (provider === 'purehub' ? 'purechat' : provider),
+}))
 vi.mock('@pure/utils', () => ({ createNanoId: () => () => 'settlement-1' }))
 vi.mock('@/envs/llm', () => ({
-  llmEnv: { PUREHUB_ENABLED: true },
+  llmEnv: { PURECHAT_ENABLED: true },
   resolveAiGatewayApiKey: () => 'gateway-key',
   resolveAiGatewayBaseURL: () => 'https://gateway.example/v1',
 }))
@@ -57,16 +60,16 @@ vi.mock('@/libs/ai-providers/resolveClient', () => ({
   resolveOptionalBaseURL: (baseURL?: string) => baseURL,
   resolveProviderApiKey: (_provider: string, headerKey?: string) => headerKey,
 }))
-vi.mock('@/server/purehub', () => ({
+vi.mock('@/server/purechat', () => ({
   computeChatCost: () => ({ totalCredits: 2 }),
-  getEnabledPureHubModel: () => ({ id: 'model-1' }),
-  getPureHubModel: () => ({ pricing: {} }),
+  getEnabledPureChatModel: () => ({ id: 'model-1' }),
+  getPureChatModel: () => ({ pricing: {} }),
   getShanghaiBillingPeriod: () => '2026-07',
-  resolvePureHubGatewayId: () => 'openai/model-1',
+  resolvePureChatGatewayId: () => 'openai/model-1',
 }))
-vi.mock('@/server/purehub/gatewayError', () => ({
-  isPureHubRestrictedModelError: () => false,
-  PUREHUB_MODEL_UNAVAILABLE_MESSAGE: '模型不可用',
+vi.mock('@/server/purechat/gatewayError', () => ({
+  isPureChatRestrictedModelError: () => false,
+  PURECHAT_MODEL_UNAVAILABLE_MESSAGE: '模型不可用',
 }))
 
 import { normalizeGeneratedTitle, POST } from './route'
@@ -139,8 +142,8 @@ describe('POST /api/chat/topics/[id]/auto-rename', () => {
     expect(mocks.update).toHaveBeenCalledWith('topic-1', { title: '设计会话标题菜单' })
   })
 
-  it('checks and charges PureHub usage', async () => {
-    const response = await POST(request({ model: 'model-1', provider: 'purehub' }), context)
+  it('checks and charges PureChat usage', async () => {
+    const response = await POST(request({ model: 'model-1', provider: 'purechat' }), context)
 
     expect(response.status).toBe(200)
     expect(mocks.assertCanChat).toHaveBeenCalledWith('user-1', '2026-07')
@@ -149,7 +152,7 @@ describe('POST /api/chat/topics/[id]/auto-rename', () => {
         credits: 2,
         messageId: 'settlement-1',
         model: 'model-1',
-        provider: 'purehub',
+        provider: 'purechat',
         userId: 'user-1',
       })
     )

@@ -1,20 +1,20 @@
-/** PureHub 服务端辅助：计费周期；模型目录 / 定价见 `@pure/model-bank`。 */
+/** PureChat 服务端辅助：计费周期；模型目录 / 定价见 `@pure/model-bank`。 */
 
 export {
-  assertPureHubPricingComplete,
+  assertPureChatPricingComplete,
   computeChatCost,
-  getEnabledPureHubModel,
-  getPureHubModel,
-  PUREHUB_DEFAULT_MODEL,
-  PUREHUB_PLAN_CARD_MODELS,
-  purehubChatModels as PUREHUB_MODELS,
-  purehubEnabledChatModels as PUREHUB_ENABLED_MODELS,
-  resolvePureHubDisplayId,
-  resolvePureHubGatewayId,
-  type AiModelCard as PureHubModelCard,
+  getEnabledPureChatModel,
+  getPureChatModel,
+  PURECHAT_DEFAULT_MODEL,
+  PURECHAT_PLAN_CARD_MODELS,
+  purechatChatModels as PURECHAT_MODELS,
+  purechatEnabledChatModels as PURECHAT_ENABLED_MODELS,
+  resolvePureChatDisplayId,
+  resolvePureChatGatewayId,
+  type AiModelCard as PureChatModelCard,
   type ChatCostResult,
   type ChatTokenUsage,
-  type ModelTokenPricing as PureHubPricing,
+  type ModelTokenPricing as PureChatPricing,
 } from '@pure/model-bank'
 
 export { formatResetCountdown, getNextShanghaiResetAt, getShanghaiBillingPeriod } from './period'

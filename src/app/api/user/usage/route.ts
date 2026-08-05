@@ -6,7 +6,7 @@ import type { NextRequest } from 'next/server'
 
 import { fileStorageLimitBytes } from '@/envs/file'
 import { withAuth } from '@/libs/auth/get-session-user'
-import { getShanghaiBillingPeriod } from '@/server/purehub'
+import { getShanghaiBillingPeriod } from '@/server/purechat'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const SORT_FIELDS = new Set<UsageSortBy>(['createdAt', 'credits', 'durationMs', 'totalTokens'])
@@ -25,7 +25,7 @@ const parsePositiveInt = (value: string | null, fallback: number, maximum: numbe
   return parsed >= 1 && parsed <= maximum ? parsed : null
 }
 
-/** GET /api/user/usage - 当前用户的 PureHub 积分用量与明细。 */
+/** GET /api/user/usage - 当前用户的 PureChat 积分用量与明细。 */
 export const GET = withAuth(async (request: NextRequest, { userId }) => {
   const params = request.nextUrl.searchParams
   const period = getShanghaiBillingPeriod()

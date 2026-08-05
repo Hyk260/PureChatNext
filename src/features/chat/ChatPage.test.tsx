@@ -150,7 +150,7 @@ vi.mock('@/features/home/store/useHomeStore', () => {
     activeAgent: { identifier: 'agt_inbox', systemRole: '', title: 'Inbox' },
     selectedAgentId: 'agt_inbox',
     selectedModel: 'test-model',
-    selectedProvider: 'purehub',
+    selectedProvider: 'purechat',
     setActiveAgent: vi.fn(),
     setSelectedAgentId: vi.fn(),
   }
@@ -166,7 +166,7 @@ vi.mock('@/features/settings/provider/const', () => ({
 }))
 
 vi.mock('@/features/settings/provider/store/useProviderConfigStore', () => {
-  const state = { configs: { purehub: { apiKey: '', baseURL: '' } } }
+  const state = { configs: { purechat: { apiKey: '', baseURL: '' } } }
   const useProviderConfigStore = Object.assign((selector: (value: typeof state) => unknown) => selector(state), {
     getState: () => state,
   })

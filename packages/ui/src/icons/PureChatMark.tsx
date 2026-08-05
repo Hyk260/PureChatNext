@@ -8,16 +8,16 @@ const BRAND_DOT = '#8496AC'
 const ON_DARK_STROKE = '#FFFFFF'
 const ON_DARK_DOT = '#7FA0C8'
 
-export type PureHubMarkVariant = 'color' | 'mono' | 'on-dark'
+export type PureChatMarkVariant = 'color' | 'mono' | 'on-dark'
 
-export interface PureHubMarkProps {
+export interface PureChatMarkProps {
   className?: string
   size?: number
   style?: CSSProperties
-  variant?: PureHubMarkVariant
+  variant?: PureChatMarkVariant
 }
 
-const PureHubMark = memo<PureHubMarkProps>(({ className, size = 12, style, variant = 'color' }) => {
+const PureChatMark = memo<PureChatMarkProps>(({ className, size = 12, style, variant = 'color' }) => {
   const stroke = variant === 'mono' ? 'currentColor' : variant === 'on-dark' ? ON_DARK_STROKE : BRAND_STROKE
   const dot = variant === 'mono' ? 'currentColor' : variant === 'on-dark' ? ON_DARK_DOT : BRAND_DOT
 
@@ -44,6 +44,6 @@ const PureHubMark = memo<PureHubMarkProps>(({ className, size = 12, style, varia
   )
 })
 
-PureHubMark.displayName = 'PureHubMark'
+PureChatMark.displayName = 'PureChatMark'
 
-export default PureHubMark
+export default PureChatMark

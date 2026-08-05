@@ -1,22 +1,22 @@
 import { deepseekChatModels, getDeepSeekModel } from './deepseek'
 import { getOpenAIModel, openaiChatModels } from './openai'
 import {
-  assertPureHubPricingComplete,
-  getEnabledPureHubModel,
-  getPureHubModel,
-  PUREHUB_DEFAULT_MODEL,
-  PUREHUB_PLAN_CARD_MODELS,
-  purehubChatModels,
-  purehubEnabledChatModels,
-  resolvePureHubDisplayId,
-  resolvePureHubGatewayId,
-} from './purehub'
+  assertPureChatPricingComplete,
+  getEnabledPureChatModel,
+  getPureChatModel,
+  PURECHAT_DEFAULT_MODEL,
+  PURECHAT_PLAN_CARD_MODELS,
+  purechatChatModels,
+  purechatEnabledChatModels,
+  resolvePureChatDisplayId,
+  resolvePureChatGatewayId,
+} from './purechat'
 import { ModelProvider } from '../const/modelProvider'
 import type { ModelProviderId } from '../const/modelProvider'
 import type { AiModelCard } from '../types/aiModel'
 
 export const AI_MODELS_BY_PROVIDER: Record<ModelProviderId, AiModelCard[]> = {
-  [ModelProvider.PureHub]: purehubChatModels,
+  [ModelProvider.PureChat]: purechatChatModels,
   [ModelProvider.OpenAI]: openaiChatModels,
   [ModelProvider.DeepSeek]: deepseekChatModels,
 }
@@ -25,8 +25,8 @@ export const getProviderChatModels = (provider: ModelProviderId): AiModelCard[] 
 
 export const getAiModel = (provider: ModelProviderId, modelId: string): AiModelCard | undefined => {
   switch (provider) {
-    case ModelProvider.PureHub:
-      return getPureHubModel(modelId)
+    case ModelProvider.PureChat:
+      return getPureChatModel(modelId)
     case ModelProvider.OpenAI:
       return getOpenAIModel(modelId)
     case ModelProvider.DeepSeek:
@@ -37,17 +37,17 @@ export const getAiModel = (provider: ModelProviderId, modelId: string): AiModelC
 }
 
 export {
-  assertPureHubPricingComplete,
+  assertPureChatPricingComplete,
   deepseekChatModels,
   getDeepSeekModel,
-  getEnabledPureHubModel,
+  getEnabledPureChatModel,
   getOpenAIModel,
-  getPureHubModel,
+  getPureChatModel,
   openaiChatModels,
-  PUREHUB_DEFAULT_MODEL,
-  PUREHUB_PLAN_CARD_MODELS,
-  purehubChatModels,
-  purehubEnabledChatModels,
-  resolvePureHubDisplayId,
-  resolvePureHubGatewayId,
+  PURECHAT_DEFAULT_MODEL,
+  PURECHAT_PLAN_CARD_MODELS,
+  purechatChatModels,
+  purechatEnabledChatModels,
+  resolvePureChatDisplayId,
+  resolvePureChatGatewayId,
 }

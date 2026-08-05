@@ -96,7 +96,7 @@ const chatTransport = new DefaultChatTransport({
   credentials: 'include',
   headers: (): Record<string, string> => {
     const provider = useHomeStore.getState().selectedProvider
-    if (!isSettingsProviderId(provider) || provider === 'purehub') return {}
+    if (!isSettingsProviderId(provider) || provider === 'purechat') return {}
 
     const apiKey = useProviderConfigStore.getState().configs[provider]?.apiKey.trim() ?? ''
     if (!apiKey) return {}
@@ -127,7 +127,7 @@ const ChatView = memo<ChatViewProps>(
     const selectedProvider = useHomeStore((s) => s.selectedProvider)
     const activeAgent = useHomeStore((s) => s.activeAgent)
     const providerBaseURL = useProviderConfigStore((s) =>
-      isSettingsProviderId(selectedProvider) && selectedProvider !== 'purehub'
+      isSettingsProviderId(selectedProvider) && selectedProvider !== 'purechat'
         ? (s.configs[selectedProvider]?.baseURL.trim() ?? '')
         : ''
     )
@@ -702,8 +702,8 @@ const ChatPage = memo(() => {
         if (cachedMessages) await putMessages(id, cachedMessages)
 
         const updated = await autoRenameTopic(id, {
-          ...(selectedProvider !== 'purehub' && providerConfig?.apiKey ? { apiKey: providerConfig.apiKey } : {}),
-          ...(selectedProvider !== 'purehub' && providerConfig?.baseURL ? { baseURL: providerConfig.baseURL } : {}),
+          ...(selectedProvider !== 'purechat' && providerConfig?.apiKey ? { apiKey: providerConfig.apiKey } : {}),
+          ...(selectedProvider !== 'purechat' && providerConfig?.baseURL ? { baseURL: providerConfig.baseURL } : {}),
           model: selectedModel,
           provider: selectedProvider,
         })

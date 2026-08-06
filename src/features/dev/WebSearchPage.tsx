@@ -18,6 +18,13 @@ import {
 import type { CrawlUniformResult, UniformSearchResponse } from '@pure/types'
 
 type ActionMode = 'query' | 'webSearch' | 'crawlPages'
+type CopyState = 'idle' | 'copied' | 'failed'
+
+const COPY_LABEL: Record<CopyState, string> = {
+  idle: '复制',
+  copied: '已复制',
+  failed: '复制失败',
+}
 type ResultView = 'summary' | 'json'
 
 type SearchResponse = UniformSearchResponse
@@ -163,7 +170,7 @@ export default function WebSearchTestPage() {
   const [runState, setRunState] = useState<RunState | null>(null)
   const [payload, setPayload] = useState<ApiSuccess | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const [copyState, setCopyState] = useState<CopyState>('idle')
 
   const requestBody = useMemo(
     () => buildRequestBody(action, { categories, engines, impls, query, timeRange, urls }),
@@ -501,7 +508,7 @@ export default function WebSearchTestPage() {
                   className='inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50'
                 >
                   <Clipboard className='size-3.5' />
-                  {copyState === 'copied' ? '已复制' : copyState === 'failed' ? '复制失败' : '复制'}
+                  {COPY_LABEL[copyState]}
                 </button>
               </div>
               <pre className='mt-3 max-h-64 overflow-auto rounded-lg bg-slate-950 p-3 font-mono text-xs leading-5 text-slate-100'>

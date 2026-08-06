@@ -25,6 +25,16 @@ const styles = createStaticStyles(({ css }) => ({
 
 const SKELETON_WIDTHS = [128, 164, 112, 148, 136, 156]
 
+function getGroupTitleIcon(groupId: string, groupMode: TopicGroupMode) {
+  if (groupId === 'favorite') {
+    return <Icon color={cssVar.colorWarning} icon={Star} size={14} />
+  }
+  if (groupMode === 'byProject') {
+    return <Icon color={cssVar.colorTextTertiary} icon={Folder} size={14} />
+  }
+  return null
+}
+
 type Props = {
   topics: LocalChatTopic[]
   autoRenameDisabled: boolean
@@ -121,11 +131,7 @@ const TopicList = memo<Props>(
             paddingInline='8px 4px'
             title={
               <Flexbox horizontal align='center' gap={6} style={{ minWidth: 0 }}>
-                {group.id === 'favorite' ? (
-                  <Icon color={cssVar.colorWarning} icon={Star} size={14} />
-                ) : groupMode === 'byProject' ? (
-                  <Icon color={cssVar.colorTextTertiary} icon={Folder} size={14} />
-                ) : null}
+                {getGroupTitleIcon(group.id, groupMode)}
                 <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
                   {group.title}
                 </Text>

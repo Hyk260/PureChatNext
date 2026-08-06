@@ -44,6 +44,13 @@ type ApiErr = {
 type ApiResult<T = unknown> = ApiOk<T> | ApiErr
 
 type ActionMode = 'upload' | 'list' | 'download' | 'delete' | 'rename'
+type CopyState = 'idle' | 'copied' | 'failed'
+
+const COPY_LABEL: Record<CopyState, string> = {
+  idle: '复制',
+  copied: '已复制',
+  failed: '复制失败',
+}
 
 type RunState = {
   durationMs: number
@@ -114,7 +121,7 @@ export default function S3TestPage() {
   const [payload, setPayload] = useState<ApiResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [toasts, setToasts] = useState<Toast[]>([])
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const [copyState, setCopyState] = useState<CopyState>('idle')
 
   // Upload form state
   const [uploadFiles, setUploadFiles] = useState<File[]>([])
@@ -805,7 +812,7 @@ export default function S3TestPage() {
                   className='inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50'
                 >
                   <Clipboard className='size-3.5' />
-                  {copyState === 'copied' ? '已复制' : copyState === 'failed' ? '复制失败' : '复制'}
+                  {COPY_LABEL[copyState]}
                 </button>
               </div>
               <pre className='mt-3 max-h-64 overflow-auto rounded-lg bg-slate-950 p-3 font-mono text-xs leading-5 text-slate-100'>

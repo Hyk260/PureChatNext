@@ -26,6 +26,13 @@ type ContentMode = 'custom' | 'template'
 type ResultView = 'summary' | 'json'
 type RightPanelView = 'preview' | 'response'
 type ProviderOption = '' | 'nodemailer' | 'resend'
+type CopyState = 'idle' | 'copied' | 'failed'
+
+const COPY_LABEL: Record<CopyState, string> = {
+  idle: '复制',
+  copied: '已复制',
+  failed: '复制失败',
+}
 
 type VerifyResult = {
   valid: boolean
@@ -34,6 +41,11 @@ type VerifyResult = {
 type SendMailResult = {
   messageId: string
   previewUrl?: string
+}
+
+function getEmailResultSummary(verifyResult: VerifyResult | null, messageId?: string) {
+  if (verifyResult) return verifyResult.valid ? 'valid' : 'invalid'
+  return messageId
 }
 
 type ApiSuccess = {
@@ -155,7 +167,7 @@ export default function EmailServiceTestPage() {
   const [runState, setRunState] = useState<RunState | null>(null)
   const [payload, setPayload] = useState<ApiSuccess | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const [copyState, setCopyState] = useState<CopyState>('idle')
 
   const requestBody = useMemo(
     () => buildRequestBody(action, { from, html, impl, replyTo, subject, text, to }),
@@ -294,6 +306,105 @@ export default function EmailServiceTestPage() {
   }
 
   const providerLabel = providerOptions.find((option) => option.value === impl)?.label ?? 'Env 默认'
+
+  const renderRightPanelContent = () => {
+    if (showTemplatePreview && rightPanel === 'preview') {
+      return (
+        <EmailTemplatePreviewBlock
+          error={templateRenderError}
+          isLoading={templateRenderLoading}
+          label={templateLabel}
+          template={renderedTemplate}
+        />
+      )
+    }
+
+    if (view === 'json') {
+      return (
+        <pre className='h-full overflow-auto rounded-lg bg-slate-950 p-4 font-mono text-xs leading-5 text-slate-100'>
+          {rawJson || '// Response JSON will appear here'}
+        </pre>
+      )
+    }
+
+    if (verifyResult) {
+      return (
+        <article className='rounded-lg border border-slate-200 p-4'>
+          <div className='flex items-start gap-3'>
+            <ShieldCheck
+              className={`mt-0.5 size-5 shrink-0 ${verifyResult.valid ? 'text-emerald-600' : 'text-red-600'}`}
+            />
+            <div>
+              <div className='text-base font-semibold text-slate-950'>
+                {verifyResult.valid ? 'SMTP 连接验证通过' : 'SMTP 连接验证失败'}
+              </div>
+              <p className='mt-2 text-sm leading-6 text-slate-600'>
+                {verifyResult.valid
+                  ? 'EmailService.verify() 返回 true，当前 Provider 配置可用。'
+                  : 'EmailService.verify() 返回 false，请检查 SMTP 环境变量。'}
+              </p>
+              <span
+                className={`mt-3 inline-flex rounded-md px-2 py-1 text-xs font-medium ${
+                  verifyResult.valid ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                }`}
+              >
+                valid: {String(verifyResult.valid)}
+              </span>
+            </div>
+          </div>
+        </article>
+      )
+    }
+
+    if (sendMailResult) {
+      return (
+        <article className='rounded-lg border border-slate-200 p-4'>
+          <div className='flex items-start gap-3'>
+            <Mail className='mt-0.5 size-5 shrink-0 text-cyan-700' />
+            <div className='min-w-0 flex-1'>
+              <div className='text-base font-semibold text-slate-950'>邮件发送成功</div>
+              <p className='mt-2 text-sm leading-6 text-slate-600'>
+                EmailService.sendMail() 已完成，可在下方查看 messageId 与预览链接。
+              </p>
+
+              <dl className='mt-4 grid gap-3 text-sm'>
+                <div>
+                  <dt className='text-xs font-medium text-slate-500'>Message ID</dt>
+                  <dd className='mt-1 break-all font-mono text-xs text-slate-900'>{sendMailResult.messageId}</dd>
+                </div>
+                {sendMailResult.previewUrl ? (
+                  <div>
+                    <dt className='text-xs font-medium text-slate-500'>Preview URL</dt>
+                    <dd className='mt-1'>
+                      <a
+                        href={sendMailResult.previewUrl}
+                        target='_blank'
+                        rel='noreferrer'
+                        className='inline-flex items-center gap-1 break-all text-sm font-medium text-cyan-700 hover:text-cyan-900'
+                      >
+                        {sendMailResult.previewUrl}
+                        <ExternalLink className='size-3.5 shrink-0' />
+                      </a>
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
+            </div>
+          </div>
+        </article>
+      )
+    }
+
+    return (
+      <div className='grid min-h-96 place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center'>
+        <div>
+          <Mail className='mx-auto size-10 text-slate-400' />
+          <div className='mt-3 text-sm font-semibold text-slate-950'>还没有响应</div>
+          <div className='mt-1 text-sm text-slate-500'>发送请求后会展示 verify 或 sendMail 结果。</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <main className='h-screen overflow-y-auto bg-[#f5f7fb] text-slate-950'>
@@ -561,7 +672,7 @@ export default function EmailServiceTestPage() {
                   className='inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50'
                 >
                   <Clipboard className='size-3.5' />
-                  {copyState === 'copied' ? '已复制' : copyState === 'failed' ? '复制失败' : '复制'}
+                  {COPY_LABEL[copyState]}
                 </button>
               </div>
               <pre className='mt-3 max-h-64 overflow-auto rounded-lg bg-slate-950 p-3 font-mono text-xs leading-5 text-slate-100'>
@@ -602,7 +713,7 @@ export default function EmailServiceTestPage() {
                 {[
                   ['Action', payload?.action ?? action],
                   ['Provider', providerLabel],
-                  ['结果', verifyResult ? (verifyResult.valid ? 'valid' : 'invalid') : sendMailResult?.messageId],
+                  ['结果', getEmailResultSummary(verifyResult, sendMailResult?.messageId)],
                   ['HTTP 耗时', runState ? `${runState.durationMs.toLocaleString()} ms` : undefined],
                 ].map(([label, value]) => (
                   <div key={label} className='rounded-lg border border-slate-200 bg-slate-50 p-3'>
@@ -665,90 +776,7 @@ export default function EmailServiceTestPage() {
               )}
             </div>
 
-            <div className='min-h-0 flex-1 overflow-y-auto p-4'>
-              {showTemplatePreview && rightPanel === 'preview' ? (
-                <EmailTemplatePreviewBlock
-                  error={templateRenderError}
-                  isLoading={templateRenderLoading}
-                  label={templateLabel}
-                  template={renderedTemplate}
-                />
-              ) : view === 'json' ? (
-                <pre className='h-full overflow-auto rounded-lg bg-slate-950 p-4 font-mono text-xs leading-5 text-slate-100'>
-                  {rawJson || '// Response JSON will appear here'}
-                </pre>
-              ) : verifyResult ? (
-                <article className='rounded-lg border border-slate-200 p-4'>
-                  <div className='flex items-start gap-3'>
-                    <ShieldCheck
-                      className={`mt-0.5 size-5 shrink-0 ${verifyResult.valid ? 'text-emerald-600' : 'text-red-600'}`}
-                    />
-                    <div>
-                      <div className='text-base font-semibold text-slate-950'>
-                        {verifyResult.valid ? 'SMTP 连接验证通过' : 'SMTP 连接验证失败'}
-                      </div>
-                      <p className='mt-2 text-sm leading-6 text-slate-600'>
-                        {verifyResult.valid
-                          ? 'EmailService.verify() 返回 true，当前 Provider 配置可用。'
-                          : 'EmailService.verify() 返回 false，请检查 SMTP 环境变量。'}
-                      </p>
-                      <span
-                        className={`mt-3 inline-flex rounded-md px-2 py-1 text-xs font-medium ${
-                          verifyResult.valid ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
-                        }`}
-                      >
-                        valid: {String(verifyResult.valid)}
-                      </span>
-                    </div>
-                  </div>
-                </article>
-              ) : sendMailResult ? (
-                <article className='rounded-lg border border-slate-200 p-4'>
-                  <div className='flex items-start gap-3'>
-                    <Mail className='mt-0.5 size-5 shrink-0 text-cyan-700' />
-                    <div className='min-w-0 flex-1'>
-                      <div className='text-base font-semibold text-slate-950'>邮件发送成功</div>
-                      <p className='mt-2 text-sm leading-6 text-slate-600'>
-                        EmailService.sendMail() 已完成，可在下方查看 messageId 与预览链接。
-                      </p>
-
-                      <dl className='mt-4 grid gap-3 text-sm'>
-                        <div>
-                          <dt className='text-xs font-medium text-slate-500'>Message ID</dt>
-                          <dd className='mt-1 break-all font-mono text-xs text-slate-900'>
-                            {sendMailResult.messageId}
-                          </dd>
-                        </div>
-                        {sendMailResult.previewUrl ? (
-                          <div>
-                            <dt className='text-xs font-medium text-slate-500'>Preview URL</dt>
-                            <dd className='mt-1'>
-                              <a
-                                href={sendMailResult.previewUrl}
-                                target='_blank'
-                                rel='noreferrer'
-                                className='inline-flex items-center gap-1 break-all text-sm font-medium text-cyan-700 hover:text-cyan-900'
-                              >
-                                {sendMailResult.previewUrl}
-                                <ExternalLink className='size-3.5 shrink-0' />
-                              </a>
-                            </dd>
-                          </div>
-                        ) : null}
-                      </dl>
-                    </div>
-                  </div>
-                </article>
-              ) : (
-                <div className='grid min-h-96 place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center'>
-                  <div>
-                    <Mail className='mx-auto size-10 text-slate-400' />
-                    <div className='mt-3 text-sm font-semibold text-slate-950'>还没有响应</div>
-                    <div className='mt-1 text-sm text-slate-500'>发送请求后会展示 verify 或 sendMail 结果。</div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <div className='min-h-0 flex-1 overflow-y-auto p-4'>{renderRightPanelContent()}</div>
           </section>
         </div>
       </div>

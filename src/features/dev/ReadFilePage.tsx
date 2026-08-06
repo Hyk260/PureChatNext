@@ -22,6 +22,13 @@ import type { DocumentPage, FileDocument } from '@pure/file-loaders'
 
 type RequestMode = 'file' | 'url'
 type ResultView = 'content' | 'pages' | 'json'
+type CopyState = 'idle' | 'copied' | 'failed'
+
+const COPY_LABEL: Record<CopyState, string> = {
+  idle: '复制 JSON',
+  copied: '已复制',
+  failed: '复制失败',
+}
 
 type ApiError = {
   error?: string
@@ -76,7 +83,7 @@ export default function ReadFileTestPage() {
   const [result, setResult] = useState<FileDocument | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [runState, setRunState] = useState<RunState | null>(null)
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const [copyState, setCopyState] = useState<CopyState>('idle')
 
   const rawJson = useMemo(() => {
     if (!result) {
@@ -476,7 +483,7 @@ export default function ReadFileTestPage() {
                   className='inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300'
                 >
                   <Clipboard className='size-4' />
-                  {copyState === 'copied' ? '已复制' : copyState === 'failed' ? '复制失败' : '复制 JSON'}
+                  {COPY_LABEL[copyState]}
                 </button>
                 <button
                   type='button'

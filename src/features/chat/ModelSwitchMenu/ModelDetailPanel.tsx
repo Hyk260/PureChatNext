@@ -47,8 +47,10 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 const trimNumber = (value: number) => {
-  const fixed = value >= 100 ? value.toFixed(0) : value >= 10 ? value.toFixed(1) : value.toFixed(3)
-  return fixed.replace(/\.?0+$/, '')
+  let digits = 3
+  if (value >= 100) digits = 0
+  else if (value >= 10) digits = 1
+  return value.toFixed(digits).replace(/\.?0+$/, '')
 }
 
 const formatPriceValue = (pricing: ModelTokenPricing, amount: number) => {

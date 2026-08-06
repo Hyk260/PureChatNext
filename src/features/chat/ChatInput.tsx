@@ -119,11 +119,8 @@ const MenuLabel = memo<{
 }>(({ label, chevron, active }) => (
   <div className={styles.menuLabel}>
     <span>{label}</span>
-    {chevron ? (
-      <Icon className={styles.submenuChevron} icon={ChevronRight} size={16} />
-    ) : active ? (
-      <Icon icon={Check} size={16} />
-    ) : null}
+    {chevron ? <Icon className={styles.submenuChevron} icon={ChevronRight} size={16} /> : null}
+    {!chevron && active ? <Icon icon={Check} size={16} /> : null}
   </div>
 ))
 
@@ -138,8 +135,6 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
   const handleSend = useCallback(() => {
     const text = input.trim()
     if (!text || isBusy) return
-
-    // Clear immediately so the input is empty while the stream runs.
     setInput('')
     onSend(text)
   }, [input, isBusy, onSend])
@@ -199,11 +194,6 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
       <Flexbox horizontal align='center' justify='space-between' style={{ marginTop: 8 }}>
         <Flexbox horizontal align='center' gap={4}>
           <ModelSelector />
-          {/*
-            Compound DropdownMenu + native button trigger (multiple children).
-            High-level <DropdownMenu><ActionIcon/></DropdownMenu> clones the child and
-            reads element.ref, which React 19 warns about.
-          */}
           <DropdownMenuRoot open={plusOpen} onOpenChange={setPlusOpen}>
             <DropdownMenuTrigger className={styles.plusTrigger} disabled={isBusy} nativeButton>
               <Icon icon={Plus} size={18} />

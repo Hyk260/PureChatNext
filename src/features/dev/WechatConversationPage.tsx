@@ -190,6 +190,90 @@ function FileMessageCard({ fileName, fileSize, fileUrl }: { fileName?: string; f
   )
 }
 
+function renderSessionListBody({
+  bound,
+  loading,
+  onSelect,
+  selectedId,
+  sessions,
+}: {
+  bound: boolean
+  loading: boolean
+  onSelect: (id: string) => void
+  selectedId: string | null
+  sessions: WechatDevSession[]
+}): ReactNode {
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center gap-2 py-16 text-sm text-slate-400'>
+        <Loader2 className='size-4 animate-spin' />
+        加载中
+      </div>
+    )
+  }
+
+  if (sessions.length === 0 && !bound) {
+    return (
+      <div className='flex flex-col items-center gap-3 px-6 py-14 text-center'>
+        <Link2Off className='size-8 text-slate-300' />
+        <p className='text-sm text-slate-500'>尚未绑定微信</p>
+        <Link
+          className='text-xs font-medium text-emerald-700 underline-offset-2 hover:underline'
+          to='/settings/messenger/wechat'
+        >
+          前往扫码绑定
+        </Link>
+      </div>
+    )
+  }
+
+  if (sessions.length === 0) {
+    return (
+      <div className='flex flex-col items-center gap-3 px-6 py-14 text-center'>
+        <MessageSquare className='size-8 text-slate-300' />
+        <p className='text-sm text-slate-500'>暂无会话</p>
+        <p className='text-xs text-slate-400'>用微信给 Bot 发一条消息后会出现在这里</p>
+      </div>
+    )
+  }
+
+  return (
+    <ul className='p-2'>
+      {sessions.map((session) => {
+        const active = session.id === selectedId
+        const accessLabel = getAccessLabel(session.canSend, session.isOwnBinding)
+        return (
+          <li key={session.id}>
+            <button
+              className={`flex w-full flex-col gap-1 rounded-xl px-3 py-2.5 text-left transition ${
+                active ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-50'
+              }`}
+              type='button'
+              onClick={() => onSelect(session.id)}
+            >
+              <div className='flex items-center gap-2'>
+                <User className={`size-3.5 shrink-0 ${active ? 'text-slate-300' : 'text-slate-400'}`} />
+                <span className='min-w-0 flex-1 truncate font-mono text-xs font-medium'>
+                  {truncateId(session.externalUserId, 10, 6)}
+                </span>
+                <span
+                  className={`shrink-0 rounded px-1 py-0.5 text-[10px] font-medium ${getAccessChipClass(session.canSend, active)}`}
+                >
+                  {accessLabel}
+                </span>
+              </div>
+              <div className='flex items-center justify-between gap-2 text-[10px] text-slate-400'>
+                <span className='truncate'>{session.agentTitle ?? session.agentId}</span>
+                <span className='shrink-0'>{formatDateTime(session.lastActiveAt)}</span>
+              </div>
+            </button>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 export default function WechatConversationPage() {
   const [status, setStatus] = useState<WechatStatus | null>(null)
   const [sessions, setSessions] = useState<WechatDevSession[]>([])
@@ -438,65 +522,13 @@ export default function WechatConversationPage() {
           </div>
 
           <div className='min-h-0 flex-1 overflow-y-auto'>
-            {loading ? (
-              <div className='flex items-center justify-center gap-2 py-16 text-sm text-slate-400'>
-                <Loader2 className='size-4 animate-spin' />
-                加载中
-              </div>
-            ) : sessions.length === 0 && !bound ? (
-              <div className='flex flex-col items-center gap-3 px-6 py-14 text-center'>
-                <Link2Off className='size-8 text-slate-300' />
-                <p className='text-sm text-slate-500'>尚未绑定微信</p>
-                <Link
-                  className='text-xs font-medium text-emerald-700 underline-offset-2 hover:underline'
-                  to='/settings/messenger/wechat'
-                >
-                  前往扫码绑定
-                </Link>
-              </div>
-            ) : sessions.length === 0 ? (
-              <div className='flex flex-col items-center gap-3 px-6 py-14 text-center'>
-                <MessageSquare className='size-8 text-slate-300' />
-                <p className='text-sm text-slate-500'>暂无会话</p>
-                <p className='text-xs text-slate-400'>用微信给 Bot 发一条消息后会出现在这里</p>
-              </div>
-            ) : (
-              <ul className='p-2'>
-                {sessions.map((session) => {
-                  const active = session.id === selectedId
-                  const accessLabel = getAccessLabel(session.canSend, session.isOwnBinding)
-                  return (
-                    <li key={session.id}>
-                      <button
-                        className={`flex w-full flex-col gap-1 rounded-xl px-3 py-2.5 text-left transition ${
-                          active
-                            ? 'bg-slate-900 text-white shadow-sm'
-                            : 'text-slate-700 hover:bg-slate-50'
-                        }`}
-                        type='button'
-                        onClick={() => setSelectedId(session.id)}
-                      >
-                        <div className='flex items-center gap-2'>
-                          <User className={`size-3.5 shrink-0 ${active ? 'text-slate-300' : 'text-slate-400'}`} />
-                          <span className='min-w-0 flex-1 truncate font-mono text-xs font-medium'>
-                            {truncateId(session.externalUserId, 10, 6)}
-                          </span>
-                          <span
-                            className={`shrink-0 rounded px-1 py-0.5 text-[10px] font-medium ${getAccessChipClass(session.canSend, active)}`}
-                          >
-                            {accessLabel}
-                          </span>
-                        </div>
-                        <div className='flex items-center justify-between gap-2 text-[10px] text-slate-400'>
-                          <span className='truncate'>{session.agentTitle ?? session.agentId}</span>
-                          <span className='shrink-0'>{formatDateTime(session.lastActiveAt)}</span>
-                        </div>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
+            {renderSessionListBody({
+              bound,
+              loading,
+              onSelect: setSelectedId,
+              selectedId,
+              sessions,
+            })}
           </div>
         </aside>
 

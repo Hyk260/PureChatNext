@@ -159,6 +159,12 @@ interface ThinkingProps {
   text: string
 }
 
+function getThinkingLabel(thinking: boolean, duration?: number) {
+  if (thinking) return '深度思考中…'
+  if (duration !== undefined) return `已深度思考（用时 ${(duration / 1000).toFixed(1)} 秒）`
+  return '已深度思考'
+}
+
 const Thinking = memo<ThinkingProps>(({ text, thinking = false, duration }) => {
   const [open, setOpen] = useState(thinking)
 
@@ -166,11 +172,7 @@ const Thinking = memo<ThinkingProps>(({ text, thinking = false, duration }) => {
     setOpen(thinking)
   }, [thinking])
 
-  const label = thinking
-    ? '深度思考中…'
-    : duration !== undefined
-      ? `已深度思考（用时 ${(duration / 1000).toFixed(1)} 秒）`
-      : '已深度思考'
+  const label = getThinkingLabel(thinking, duration)
 
   return (
     <Accordion expandedKeys={open ? ['thinking'] : []} gap={8} onExpandedChange={(keys) => setOpen(keys.length > 0)}>

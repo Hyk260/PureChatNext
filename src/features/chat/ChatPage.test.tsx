@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => {
     fetchMessages: vi.fn(),
     fetchTopics: vi.fn(),
     navigation,
+    searchMode: 'off' as 'auto' | 'off',
     sendMessage: vi.fn().mockResolvedValue(undefined),
   }
 })
@@ -134,7 +135,9 @@ vi.mock('@/features/chat/store/useChatUiStore', () => ({
   useChatUiStore: (selector: (state: unknown) => unknown) =>
     selector({
       paramsByAgent: {},
+      searchModeByAgent: { agt_inbox: mocks.searchMode },
       setParams: vi.fn(),
+      setSearchMode: vi.fn(),
     }),
 }))
 
@@ -196,6 +199,7 @@ describe('ChatPage message loading state', () => {
     mocks.fetchTopics.mockReset().mockResolvedValue([])
     mocks.fetchAgents.mockReset()
     mocks.sendMessage.mockClear()
+    mocks.searchMode = 'off'
     setPendingTopicSend('')
   })
 
@@ -210,6 +214,24 @@ describe('ChatPage message loading state', () => {
       expect(screen.getByTestId('messages').textContent).toBe('0')
     })
     await waitFor(() => expect(mocks.sendMessage).toHaveBeenCalledWith({ text: 'hello' }, expect.any(Object)))
+    expect(mocks.sendMessage).toHaveBeenCalledWith(
+      { text: 'hello' },
+      { body: expect.objectContaining({ searchMode: 'off' }) }
+    )
+  })
+
+  it('keeps auto search enabled through the new-topic send handoff', async () => {
+    mocks.searchMode = 'auto'
+    render(<ChatPage />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'send' }))
+
+    await waitFor(() =>
+      expect(mocks.sendMessage).toHaveBeenCalledWith(
+        { text: 'hello' },
+        { body: expect.objectContaining({ searchMode: 'auto' }) }
+      )
+    )
   })
 
   it('keeps the message skeleton for an uncached existing topic', async () => {

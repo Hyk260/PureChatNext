@@ -1,8 +1,10 @@
 import type { CrawlImplType } from '@pure/web-crawler'
+import type { SearchImplType } from '@/server/search/impls'
 
 import { NextResponse } from 'next/server'
 
 import { searchService } from '@/server/search'
+import { SEARCH_IMPL_TYPES, isSearchImplType } from '@/server/search/impls'
 
 type WebSearchAction = 'query' | 'webSearch' | 'crawlPages'
 
@@ -26,6 +28,23 @@ const stringArrayOrUndefined = (value: unknown) => {
 
 const stringOrUndefined = (value: unknown) => {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined
+}
+
+const parseProvider = (value: unknown): SearchImplType | undefined | 'invalid' => {
+  if (value === undefined || value === null || value === '') {
+    return undefined
+  }
+
+  if (typeof value !== 'string') {
+    return 'invalid'
+  }
+
+  const provider = value.trim()
+  if (!provider) {
+    return undefined
+  }
+
+  return isSearchImplType(provider) ? provider : 'invalid'
 }
 
 const badRequest = (error: string) => {
@@ -60,6 +79,11 @@ export const POST = async (req: Request) => {
   }
 
   const action = rawAction as WebSearchAction
+  const provider = parseProvider(body.provider)
+
+  if (provider === 'invalid') {
+    return badRequest(`Invalid provider. Available providers: ${SEARCH_IMPL_TYPES.join(', ')}`)
+  }
 
   try {
     if (action === 'query') {
@@ -70,11 +94,15 @@ export const POST = async (req: Request) => {
       }
 
       const rawParams = isRecord(body.params) ? body.params : {}
-      const result = await searchService.query(query, {
-        searchCategories: stringArrayOrUndefined(rawParams.searchCategories),
-        searchEngines: stringArrayOrUndefined(rawParams.searchEngines),
-        searchTimeRange: stringOrUndefined(rawParams.searchTimeRange),
-      })
+      const result = await searchService.query(
+        query,
+        {
+          searchCategories: stringArrayOrUndefined(rawParams.searchCategories),
+          searchEngines: stringArrayOrUndefined(rawParams.searchEngines),
+          searchTimeRange: stringOrUndefined(rawParams.searchTimeRange),
+        },
+        { provider }
+      )
 
       return success(action, result)
     }
@@ -86,12 +114,15 @@ export const POST = async (req: Request) => {
         return badRequest('Missing or invalid "query" field')
       }
 
-      const result = await searchService.webSearch({
-        query,
-        searchCategories: stringArrayOrUndefined(body.searchCategories),
-        searchEngines: stringArrayOrUndefined(body.searchEngines),
-        searchTimeRange: stringOrUndefined(body.searchTimeRange),
-      })
+      const result = await searchService.webSearch(
+        {
+          query,
+          searchCategories: stringArrayOrUndefined(body.searchCategories),
+          searchEngines: stringArrayOrUndefined(body.searchEngines),
+          searchTimeRange: stringOrUndefined(body.searchTimeRange),
+        },
+        { provider }
+      )
 
       return success(action, result)
     }
@@ -124,6 +155,7 @@ export const GET = async () => {
     {
       actions: availableActions,
       message: 'Web search API',
+      providers: SEARCH_IMPL_TYPES,
     },
     { status: 200 }
   )

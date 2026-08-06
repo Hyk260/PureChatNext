@@ -16,6 +16,8 @@ export type TopicDeleteScope = 'all' | 'unfavorited'
 
 export type TopicPageSize = 20 | 40 | 60 | 100
 
+export type ChatSearchMode = 'auto' | 'off'
+
 export type TopicUpdate = {
   favorite?: boolean
   projectName?: string | null

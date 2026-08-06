@@ -39,7 +39,13 @@ import WideScreenContainer from '@/features/chat/WideScreenContainer'
 import { getMessageText, withMessageText } from '@/features/chat/messageText'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
-import type { ChatLlmParams, LocalChatTopic, TopicDeleteScope, TopicUpdate } from '@/features/chat/types'
+import type {
+  ChatLlmParams,
+  ChatSearchMode,
+  LocalChatTopic,
+  TopicDeleteScope,
+  TopicUpdate,
+} from '@/features/chat/types'
 import { fetchAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
@@ -118,10 +124,20 @@ interface ChatViewProps {
   onCacheMessages: (topicId: string, messages: UIMessage[]) => void
   onBindActions: (actions: ChatViewActions) => void
   onTopicsRefresh: () => void
+  searchMode: ChatSearchMode
 }
 
 const ChatView = memo<ChatViewProps>(
-  ({ agentId, topicId, initialMessages, onBusyChange, onCacheMessages, onBindActions, onTopicsRefresh }) => {
+  ({
+    agentId,
+    topicId,
+    initialMessages,
+    onBusyChange,
+    onCacheMessages,
+    onBindActions,
+    onTopicsRefresh,
+    searchMode,
+  }) => {
     const router = useRouter()
     const selectedModel = useHomeStore((s) => s.selectedModel)
     const selectedProvider = useHomeStore((s) => s.selectedProvider)
@@ -248,10 +264,11 @@ const ChatView = memo<ChatViewProps>(
       () => ({
         model: selectedModel,
         provider: selectedProvider,
+        searchMode,
         ...(providerBaseURL ? { baseURL: providerBaseURL } : {}),
         ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
       }),
-      [activeAgent, providerBaseURL, selectedModel, selectedProvider]
+      [activeAgent, providerBaseURL, searchMode, selectedModel, selectedProvider]
     )
 
     const sendWithBody = useCallback(
@@ -447,7 +464,9 @@ const ChatPage = memo(() => {
   const agents = useAgentsStore((s) => s.agents)
 
   const paramsByAgent = useChatUiStore((s) => s.paramsByAgent)
+  const searchMode = useChatUiStore((s) => s.searchModeByAgent[agentId] ?? 'off')
   const setParams = useChatUiStore((s) => s.setParams)
+  const setSearchMode = useChatUiStore((s) => s.setSearchMode)
   const params: ChatLlmParams = paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS
 
   const [topics, setTopics] = useState<LocalChatTopic[]>([])
@@ -777,6 +796,13 @@ const ChatPage = memo(() => {
     [agentId, setParams]
   )
 
+  const handleSearchModeChange = useCallback(
+    (mode: ChatSearchMode) => {
+      setSearchMode(agentId, mode)
+    },
+    [agentId, setSearchMode]
+  )
+
   const handleTopicsRefresh = useCallback(() => {
     refreshTopics()
   }, [refreshTopics])
@@ -840,6 +866,7 @@ const ChatPage = memo(() => {
               onBusyChange={handleBusyChange}
               onCacheMessages={handleCacheMessages}
               onTopicsRefresh={handleTopicsRefresh}
+              searchMode={searchMode}
             />
           ) : (
             <WideScreenContainer>
@@ -847,7 +874,13 @@ const ChatPage = memo(() => {
             </WideScreenContainer>
           )}
           <WideScreenContainer fill={false}>
-            <ChatInput isBusy={inputBusy} onSend={handleInputSend} onStop={handleInputStop} />
+            <ChatInput
+              isBusy={inputBusy}
+              searchMode={searchMode}
+              onSearchModeChange={handleSearchModeChange}
+              onSend={handleInputSend}
+              onStop={handleInputStop}
+            />
           </WideScreenContainer>
         </Flexbox>
       )}

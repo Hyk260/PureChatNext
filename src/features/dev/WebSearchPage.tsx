@@ -50,6 +50,20 @@ type RunState = {
   submittedAt: string
 }
 
+const SEARCH_PROVIDERS = [
+  { label: 'SearXNG', value: 'searxng' },
+  { label: 'Tavily', value: 'tavily' },
+  { label: 'Brave', value: 'brave' },
+  { label: 'Exa', value: 'exa' },
+  { label: 'Firecrawl', value: 'firecrawl' },
+  { label: 'Google PSE', value: 'google' },
+  { label: 'Jina', value: 'jina' },
+  { label: 'Kagi', value: 'kagi' },
+  { label: 'Search1API', value: 'search1api' },
+  { label: 'Bocha · 博查', value: 'bocha' },
+  { label: 'Anspire · 安思派', value: 'anspire' },
+] as const
+
 const examples = {
   crawlPages: {
     impls: 'naive,jina',
@@ -117,6 +131,7 @@ const buildRequestBody = (
     categories: string
     engines: string
     impls: string
+    provider: string
     query: string
     timeRange: string
     urls: string
@@ -135,6 +150,7 @@ const buildRequestBody = (
   const searchCategories = parseList(values.categories)
   const searchEngines = parseList(values.engines)
   const searchTimeRange = values.timeRange.trim()
+  const provider = values.provider.trim()
 
   if (action === 'query') {
     return {
@@ -144,12 +160,14 @@ const buildRequestBody = (
         ...(searchEngines.length > 0 ? { searchEngines } : {}),
         ...(searchTimeRange ? { searchTimeRange } : {}),
       },
+      ...(provider ? { provider } : {}),
       query: values.query.trim(),
     }
   }
 
   return {
     action,
+    ...(provider ? { provider } : {}),
     ...(searchCategories.length > 0 ? { searchCategories } : {}),
     ...(searchEngines.length > 0 ? { searchEngines } : {}),
     ...(searchTimeRange ? { searchTimeRange } : {}),
@@ -161,6 +179,7 @@ export default function WebSearchTestPage() {
   const [action, setAction] = useState<ActionMode>('webSearch')
   const [view, setView] = useState<ResultView>('summary')
   const [query, setQuery] = useState(examples.webSearch)
+  const [provider, setProvider] = useState('')
   const [categories, setCategories] = useState('general')
   const [engines, setEngines] = useState('')
   const [timeRange, setTimeRange] = useState('')
@@ -173,8 +192,8 @@ export default function WebSearchTestPage() {
   const [copyState, setCopyState] = useState<CopyState>('idle')
 
   const requestBody = useMemo(
-    () => buildRequestBody(action, { categories, engines, impls, query, timeRange, urls }),
-    [action, categories, engines, impls, query, timeRange, urls]
+    () => buildRequestBody(action, { categories, engines, impls, provider, query, timeRange, urls }),
+    [action, categories, engines, impls, provider, query, timeRange, urls]
   )
 
   const result = payload?.result ?? null
@@ -249,6 +268,7 @@ export default function WebSearchTestPage() {
   const reset = () => {
     setAction('webSearch')
     setQuery(examples.webSearch)
+    setProvider('')
     setCategories('general')
     setEngines('')
     setTimeRange('')
@@ -376,6 +396,28 @@ export default function WebSearchTestPage() {
                       placeholder='输入搜索关键词'
                       className='mt-2 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
                     />
+                  </div>
+
+                  <div>
+                    <label className='text-sm font-medium text-slate-800' htmlFor='web-search-provider'>
+                      搜索服务商 · Provider
+                    </label>
+                    <select
+                      id='web-search-provider'
+                      value={provider}
+                      onChange={(event) => setProvider(event.target.value)}
+                      className='mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
+                    >
+                      <option value=''>自动 · SEARCH_PROVIDERS 链式降级</option>
+                      {SEARCH_PROVIDERS.map((item) => (
+                        <option key={item.value} value={item.value}>
+                          {item.label} · {item.value}
+                        </option>
+                      ))}
+                    </select>
+                    <p className='mt-2 text-xs leading-5 text-slate-500'>
+                      选择后仅调用该服务商；留空则按环境变量顺序尝试并 fallback。
+                    </p>
                   </div>
 
                   <div className='grid gap-3 sm:grid-cols-2'>
@@ -545,9 +587,10 @@ export default function WebSearchTestPage() {
                 </div>
               )}
 
-              <div className='mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4'>
+              <div className='mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5'>
                 {[
                   ['Action', payload?.action ?? action],
+                  ['服务商', searchResult?.provider ?? (provider || undefined)],
                   [
                     '结果数',
                     searchResult
@@ -599,6 +642,13 @@ export default function WebSearchTestPage() {
                     </div>
                   ) : null}
 
+                  {searchResult.provider ? (
+                    <div className='rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-900'>
+                      结果来自服务商{' '}
+                      <span className='font-semibold font-mono'>{searchResult.provider}</span>
+                    </div>
+                  ) : null}
+
                   {searchResult.results.length > 0 ? (
                     searchResult.results.map((item, index) => (
                       <article key={`${item.url}-${index}`} className='rounded-lg border border-slate-200 p-4'>
@@ -615,6 +665,11 @@ export default function WebSearchTestPage() {
                             <div className='mt-1 truncate font-mono text-xs text-cyan-700'>{item.url}</div>
                           </div>
                           <div className='flex shrink-0 flex-wrap gap-1.5'>
+                            {searchResult.provider ? (
+                              <span className='rounded-md bg-violet-50 px-2 py-1 text-xs font-medium text-violet-700'>
+                                {searchResult.provider}
+                              </span>
+                            ) : null}
                             {item.category ? (
                               <span className='rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600'>
                                 {item.category}

@@ -1,8 +1,8 @@
 import { appEnv } from '@/envs/app'
 
 /**
- * Shared secret for gateway → webhook forwarding.
- * Prefer WECHAT_WEBHOOK_SECRET; fall back to CRON_SECRET.
+ * Gateway → webhook 转发的共享密钥。
+ * 优先 WECHAT_WEBHOOK_SECRET；否则回退 CRON_SECRET。
  */
 export function resolveWechatWebhookSecret(): string {
   return appEnv.WECHAT_WEBHOOK_SECRET?.trim() || appEnv.CRON_SECRET?.trim() || ''

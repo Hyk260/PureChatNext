@@ -23,7 +23,7 @@ import { MessageItemType, MessageState, MessageType } from './types'
 import type { MessageItem, WechatAdapterConfig, WechatRawMessage, WechatThreadId } from './types'
 
 /**
- * Extract text content from a WechatRawMessage's item_list.
+ * 从 WechatRawMessage 的 item_list 提取文本内容。
  */
 function extractText(msg: WechatRawMessage): string {
   const parts: string[] = []
@@ -34,11 +34,11 @@ function extractText(msg: WechatRawMessage): string {
         break
       }
       case MessageItemType.IMAGE: {
-        // Image content is conveyed via attachments, no text placeholder needed
+        // 图片内容通过 attachments 传递，无需文本占位
         break
       }
       case MessageItemType.VOICE: {
-        // Only include transcription text, skip placeholder
+        // 仅包含转写文本，跳过占位符
         if (item.voice_item?.text) parts.push(item.voice_item.text)
         break
       }
@@ -47,7 +47,7 @@ function extractText(msg: WechatRawMessage): string {
         break
       }
       case MessageItemType.VIDEO: {
-        // Video content is conveyed via attachments, no text placeholder needed
+        // 视频内容通过 attachments 传递，无需文本占位
         break
       }
     }
@@ -64,7 +64,7 @@ function parseOptionalNumber(value: number | string | undefined): number | undef
 }
 
 /**
- * Check whether a message item carries CDN media that can be downloaded.
+ * 判断消息 item 是否携带可下载的 CDN 媒体。
  */
 function hasCdnMedia(item: WechatRawMessage['item_list'][number]): boolean {
   switch (item.type) {
@@ -87,23 +87,18 @@ function hasCdnMedia(item: WechatRawMessage['item_list'][number]): boolean {
 }
 
 /**
- * Walk a raw WeChat message and produce metadata-only attachments — no
- * downloads, no decryption. Used by `WechatAdapter.parseRawEvent` so the
- * inbound parse path stays cheap: media bytes are downloaded later, on
- * demand, by the server-side `WechatGatewayClient.extractFiles`.
+ * 遍历原始微信消息，产出仅含元数据的 attachments（不下载、不解密）。
+ * 供 `WechatAdapter.parseRawEvent` 使用，解析路径保持轻量；媒体字节由服务端
+ * `WechatGatewayClient.extractFiles` 按需下载。
  *
- * Why metadata-only at parse time:
- *   1. The chat-sdk's `Message.toJSON` strips `buffer` from attachments
- *      whenever the message is enqueued (debounce always; queue when busy),
- *      so any eager-downloaded buffer is wasted on the serialization round-trip.
- *   2. Most inbound messages in group chats are not addressed to the bot —
- *      pre-downloading them is pure CPU/bandwidth waste for the 99% case.
- *   3. Concentrating the download path in one place (the server-side
- *      `extractFiles`) makes the data flow easier to reason about.
+ * 解析阶段只做元数据的原因：
+ *   1. chat-sdk 的 `Message.toJSON` 在入队时会剥离 attachment 的 `buffer`
+ *      （debounce 必走；繁忙时 queue 亦如此），提前下载的 buffer 会在序列化往返中浪费。
+ *   2. 群聊中多数入站消息并非 @ 机器人 — 对 99% 情况预下载是纯 CPU/带宽浪费。
+ *   3. 下载路径集中在服务端 `extractFiles` 一处，数据流更易推理。
  *
- * The fields populated here all survive `Message.toJSON` (type/mimeType/
- * name/size are in its allowlist), so downstream consumers still get a
- * count + descriptive metadata for each attachment.
+ * 此处填充的字段（type/mimeType/name/size）均在 `Message.toJSON` 白名单内，
+ * 下游仍能拿到每个 attachment 的数量与描述性元数据。
  */
 export function extractMediaMetadata(msg: WechatRawMessage): Attachment[] {
   const attachments: Attachment[] = []
@@ -159,15 +154,12 @@ export function extractMediaMetadata(msg: WechatRawMessage): Attachment[] {
 }
 
 /**
- * Standalone helper that downloads + decrypts media for a raw WeChat
- * message, returning attachments with `buffer` populated. This is the
- * primary download path used by the server-side `WechatGatewayClient.extractFiles`
- * to materialize media on demand after a chat-sdk Redis round-trip has
- * stripped any in-memory buffers.
+ * 独立辅助函数：下载并解密原始微信消息中的媒体，返回带 `buffer` 的 attachments。
+ * 服务端 `WechatGatewayClient.extractFiles` 的主要下载路径 — 在 chat-sdk Redis
+ * 往返剥离内存 buffer 后按需物化媒体。
  *
- * Pure function — owns no state, takes the api client + raw message + an
- * optional logger. Includes the cascading image fallback (CDN main → thumb
- * → direct URL).
+ * 纯函数 — 无状态，接收 api client、原始消息与可选 logger。
+ * 图片含级联回退（CDN 主图 → 缩略图 → 直链 URL）。
  */
 type WarnFn = (message: string, ...args: unknown[]) => void
 
@@ -235,10 +227,10 @@ export async function downloadMediaFromRawMessage(
 }
 
 /**
- * Image-specific helper used by {@link downloadMediaFromRawMessage}. Cascades:
- *   1. CDN main media (image_item.media)
- *   2. CDN thumbnail (image_item.thumb_media)
- *   3. Direct URL (image_item.url)
+ * {@link downloadMediaFromRawMessage} 使用的图片专用辅助。级联顺序：
+ *   1. CDN 主媒体（image_item.media）
+ *   2. CDN 缩略图（image_item.thumb_media）
+ *   3. 直链 URL（image_item.url）
  */
 async function downloadImageItemFromRaw(
   api: WechatApiClient,
@@ -248,7 +240,7 @@ async function downloadImageItemFromRaw(
   const imageItem = item.image_item
   if (!imageItem) return undefined
 
-  // 1. Try CDN download from main media
+  // 1. 尝试从主媒体 CDN 下载
   if (imageItem.media?.encrypt_query_param) {
     try {
       const buf = await api.downloadCdnMedia(imageItem.media, imageItem.aeskey)
@@ -264,7 +256,7 @@ async function downloadImageItemFromRaw(
     }
   }
 
-  // 2. Try CDN thumbnail as fallback
+  // 2. 回退到 CDN 缩略图
   if (imageItem.thumb_media?.encrypt_query_param) {
     try {
       const buf = await api.downloadCdnMedia(imageItem.thumb_media, imageItem.aeskey)
@@ -280,7 +272,7 @@ async function downloadImageItemFromRaw(
     }
   }
 
-  // 3. Fall back to direct url field
+  // 3. 回退到 url 直链字段
   if (imageItem.url) {
     try {
       const response = await fetch(imageItem.url, {
@@ -308,9 +300,9 @@ async function downloadImageItemFromRaw(
 }
 
 /**
- * Normalized outbound media descriptor used by `WechatAdapter.postMessage`.
- * Bridges chat-sdk's two attachment shapes (Attachment vs FileUpload) into a
- * single buffer-backed record before uploading to the iLink CDN.
+ * `WechatAdapter.postMessage` 使用的归一化出站媒体描述符。
+ * 将 chat-sdk 两种 attachment 形态（Attachment vs FileUpload）合并为
+ * 单一 buffer 记录，再上传至 iLink CDN。
  */
 interface OutboundMediaSpec {
   buffer: Buffer
@@ -320,8 +312,8 @@ interface OutboundMediaSpec {
 }
 
 /**
- * Resolve an Attachment's binary bytes from any of the SDK's three sources:
- * inline `data`, lazy `fetchData()`, or `url`. Returns undefined if none work.
+ * 从 SDK 三种来源解析 Attachment 二进制：内联 `data`、懒加载 `fetchData()` 或 `url`。
+ * 均失败时返回 undefined。
  */
 async function loadAttachmentBuffer(
   attachment: Attachment,
@@ -367,8 +359,7 @@ async function blobOrBufferToBuffer(data: Buffer | Blob | ArrayBuffer): Promise<
 }
 
 /**
- * Infer a chat-sdk Attachment.type from a filename or mime type when we only
- * have a FileUpload (which doesn't carry the type field).
+ * 仅有 FileUpload（无 type 字段）时，根据文件名或 mime 推断 chat-sdk Attachment.type。
  */
 function inferAttachmentType(filename: string, mimeType?: string): 'image' | 'file' | 'video' | 'audio' {
   const resolvedMime = mimeType || mime.getType(filename) || ''
@@ -397,11 +388,10 @@ function mapToUploadMediaType(type: 'image' | 'file' | 'video' | 'audio'): Wecha
 }
 
 /**
- * WeChat (iLink) adapter for @pure/chat-adapter/wechat (Vercel Chat SDK).
- * Protocol notes: `docs/self-hosting/wechat/protocol.zh-CN.md`.
+ * 微信（iLink）适配器，@pure/chat-adapter/wechat（Vercel Chat SDK）。
+ * 协议说明见 `docs/self-hosting/wechat/protocol.zh-CN.md`。
  *
- * Handles webhook requests forwarded by the long-polling monitor
- * and message operations via iLink Bot API.
+ * 处理长轮询 monitor 转发的 webhook 请求，以及通过 iLink Bot API 的消息操作。
  */
 export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> {
   readonly name = 'wechat'
@@ -413,8 +403,8 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   private logger!: Logger
 
   /**
-   * Per-thread contextToken cache.
-   * WeChat requires echoing the context_token from the latest inbound message.
+   * 按 thread 缓存的 contextToken。
+   * 微信要求回显最近一条入站消息的 context_token。
    */
   private contextTokens = new Map<string, string>()
 
@@ -442,7 +432,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   }
 
   // ------------------------------------------------------------------
-  // Webhook handling — processes forwarded messages from the monitor
+  // Webhook 处理 — 处理 monitor 转发的消息
   // ------------------------------------------------------------------
 
   async handleWebhook(request: Request, options?: WebhookOptions): Promise<Response> {
@@ -455,7 +445,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
       return new Response('Invalid JSON', { status: 400 })
     }
 
-    // Skip bot's own messages and non-finished messages
+    // 跳过 Bot 自身消息与未完成消息
     if (msg.message_type === MessageType.BOT) {
       return Response.json({ ok: true })
     }
@@ -475,7 +465,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
       return Response.json({ ok: true })
     }
 
-    // Build thread ID and cache context token
+    // 构建 thread ID 并缓存 context token
     const threadId = this.encodeThreadId({ id: msg.from_user_id, type: 'single' })
     this.contextTokens.set(threadId, msg.context_token)
 
@@ -486,7 +476,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   }
 
   // ------------------------------------------------------------------
-  // Message operations
+  // 消息操作
   // ------------------------------------------------------------------
 
   async postMessage(threadId: string, message: AdapterPostableMessage): Promise<RawMessage<WechatRawMessage>> {
@@ -501,9 +491,8 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
       sentItems.push({ text_item: { text }, type: MessageItemType.TEXT })
     }
 
-    // Per protocol.zh-CN.md §6.7, media items are sent as separate sendmessage calls
-    // (one item per request). We collect attachments + files from the postable
-    // payload, materialize their bytes, and upload each to the iLink CDN.
+    // 按 protocol.zh-CN.md §6.7，媒体 item 分开发送（每次 sendmessage 一个 item）。
+    // 从 postable 载荷收集 attachments + files，物化字节后逐个上传至 iLink CDN。
     const mediaSpecs = await this.collectMediaSpecs(message)
     for (const spec of mediaSpecs) {
       try {
@@ -511,13 +500,12 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
         await this.api.sendItem(id, item, contextToken)
         sentItems.push(item)
       } catch (error) {
-        // Single-attachment failure shouldn't abort the rest — log and continue.
+        // 单个 attachment 失败不应中断其余 — 记录日志并继续。
         this.logger.warn('Failed to send %s attachment "%s" to WeChat: %s', spec.type, spec.name ?? '(unnamed)', error)
       }
     }
 
-    // Fall back to an empty TEXT item if nothing was sent (preserves previous
-    // behavior where postMessage always produced a raw message).
+    // 若未发送任何内容，回退为空 TEXT item（保持 postMessage 始终产出 raw message 的旧行为）。
     const itemList = sentItems.length > 0 ? sentItems : [{ text_item: { text }, type: MessageItemType.TEXT }]
 
     return {
@@ -538,8 +526,8 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   }
 
   /**
-   * Pull `attachments` and `files` off a postable message (the shape varies by
-   * union member) and normalize them into a flat list with the bytes we'll need.
+   * 从 postable 消息提取 `attachments` 与 `files`（联合类型形态各异），
+   * 归一化为带字节的扁平列表。
    */
   private async collectMediaSpecs(message: AdapterPostableMessage): Promise<OutboundMediaSpec[]> {
     if (typeof message === 'string') return []
@@ -547,8 +535,8 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
     const attachments: Attachment[] = []
     const files: FileUpload[] = []
 
-    // PostableRaw / PostableMarkdown / PostableAst all use the same `attachments` + `files` shape.
-    // PostableCard only carries `files`. CardElement carries neither.
+    // PostableRaw / PostableMarkdown / PostableAst 共用 `attachments` + `files` 形态。
+    // PostableCard 仅含 `files`；CardElement 两者皆无。
     if ('attachments' in message && Array.isArray(message.attachments)) {
       attachments.push(...message.attachments)
     }
@@ -584,8 +572,8 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   }
 
   /**
-   * Upload one media buffer to the iLink CDN and build the corresponding
-   * MessageItem to send via {@link WechatApiClient.sendItem}.
+   * 将单个媒体 buffer 上传至 iLink CDN，构建对应 MessageItem，
+   * 经 {@link WechatApiClient.sendItem} 发送。
    */
   private async uploadAndBuildMediaItem(toUserId: string, spec: OutboundMediaSpec): Promise<MessageItem> {
     const mediaType = mapToUploadMediaType(spec.type)
@@ -634,7 +622,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
     _messageId: string,
     message: AdapterPostableMessage
   ): Promise<RawMessage<WechatRawMessage>> {
-    // WeChat doesn't support editing — fall back to posting a new message
+    // 微信不支持编辑 — 回退为发送新消息
     return this.postMessage(threadId, message)
   }
 
@@ -657,7 +645,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   }
 
   // ------------------------------------------------------------------
-  // Message parsing
+  // 消息解析
   // ------------------------------------------------------------------
 
   parseMessage(raw: WechatRawMessage): Message<WechatRawMessage> {
@@ -665,9 +653,8 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
     const formatted = parseMarkdown(text)
     const threadId = this.encodeThreadId({ id: raw.from_user_id, type: 'single' })
 
-    // No attachments here — neither this nor `parseRawEvent` downloads media
-    // anymore. Server-side `WechatGatewayClient.extractFiles` is the sole
-    // download path; it walks `message.raw.item_list` on demand.
+    // 此处不含 attachments — 本方法与 `parseRawEvent` 均不再下载媒体。
+    // 服务端 `WechatGatewayClient.extractFiles` 为唯一下载路径；按需遍历 `message.raw.item_list`。
     return new Message({
       attachments: [],
       author: {
@@ -692,9 +679,8 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   private parseRawEvent(msg: WechatRawMessage, threadId: string, text: string): Message<WechatRawMessage> {
     const formatted = parseMarkdown(text)
 
-    // Metadata-only attachments — actual binary download happens later, on
-    // demand, in the server-side `WechatGatewayClient.extractFiles`. See
-    // `extractMediaMetadata` for why we don't pre-download here.
+    // 仅元数据 attachments — 实际二进制由服务端 `WechatGatewayClient.extractFiles` 按需下载。
+    // 不在此预下载的原因见 `extractMediaMetadata`。
     const attachments = extractMediaMetadata(msg)
 
     const author: Author = {
@@ -721,7 +707,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   }
 
   // ------------------------------------------------------------------
-  // Reactions & typing (limited support)
+  // 反应与正在输入（能力有限）
   // ------------------------------------------------------------------
 
   async addReaction(_threadId: string, _messageId: string, _emoji: EmojiValue | string): Promise<void> {}
@@ -736,7 +722,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   }
 
   // ------------------------------------------------------------------
-  // Thread ID encoding
+  // Thread ID 编码
   // ------------------------------------------------------------------
 
   encodeThreadId(data: WechatThreadId): string {
@@ -761,7 +747,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   }
 
   // ------------------------------------------------------------------
-  // Format rendering
+  // 格式渲染
   // ------------------------------------------------------------------
 
   renderFormatted(content: FormattedContent): string {
@@ -769,7 +755,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   }
 
   // ------------------------------------------------------------------
-  // Context token management (public for platform client use)
+  // context_token 管理（公开供平台客户端使用）
   // ------------------------------------------------------------------
 
   getContextToken(threadId: string): string | undefined {
@@ -781,9 +767,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   }
 }
 
-/**
- * Factory function to create a WechatAdapter.
- */
+/** 创建 WechatAdapter 的工厂函数。 */
 export function createWechatAdapter(config: WechatAdapterConfig & { userName?: string }): WechatAdapter {
   return new WechatAdapter(config)
 }

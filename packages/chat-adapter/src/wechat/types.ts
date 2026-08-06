@@ -1,19 +1,17 @@
-/** Shared WeChat iLink types for @pure/chat-adapter/wechat. */
-
 export interface WechatAdapterConfig {
-  /** Bot iLink user id from QR login. */
+  /** 扫码登录获得的 Bot iLink user id。 */
   botId?: string
-  /** Bot token from iLink QR authentication. */
+  /** iLink 扫码认证获得的 bot token。 */
   botToken: string
 }
 
 export interface WechatThreadId {
-  /** WeChat user id (`xxx@im.wechat`). */
+  /** 微信用户 id（`xxx@im.wechat`）。 */
   id: string
   type: 'single' | 'group'
 }
 
-// --- iLink protocol enums ---
+// --- iLink 协议枚举 ---
 
 export enum MessageType {
   USER = 1,
@@ -34,7 +32,7 @@ export enum MessageItemType {
   VIDEO = 5,
 }
 
-// --- iLink API wire types ---
+// --- iLink API 线格式类型 ---
 
 export interface BaseInfo {
   channel_version: string
@@ -87,7 +85,7 @@ export interface MessageItem {
   voice_item?: VoiceItem
 }
 
-/** Raw message from `getupdates`. */
+/** `getupdates` 返回的原始消息。 */
 export interface WechatRawMessage {
   client_id: string
   context_token: string
@@ -100,7 +98,7 @@ export interface WechatRawMessage {
   to_user_id: string
 }
 
-/** `getupdates` response body. */
+/** `getupdates` 响应体。 */
 export interface WechatGetUpdatesResponse {
   errcode?: number
   errmsg?: string
@@ -110,7 +108,7 @@ export interface WechatGetUpdatesResponse {
   ret: number
 }
 
-/** `sendmessage` request body. */
+/** `sendmessage` 请求体。 */
 export interface WechatSendMessageReq {
   base_info: BaseInfo
   msg: {
@@ -124,13 +122,13 @@ export interface WechatSendMessageReq {
   }
 }
 
-/** `sendmessage` response body. */
+/** `sendmessage` 响应体。 */
 export interface WechatSendMessageResponse {
   errmsg?: string
   ret: number
 }
 
-/** `getconfig` response body. */
+/** `getconfig` 响应体。 */
 export interface WechatGetConfigResponse {
   errcode?: number
   errmsg?: string
@@ -138,18 +136,18 @@ export interface WechatGetConfigResponse {
   typing_ticket?: string
 }
 
-/** `sendtyping` request body. */
+/** `sendtyping` 请求体。 */
 export interface WechatSendTypingReq {
   base_info: BaseInfo
   ilink_user_id: string
-  /** `1` = start, `2` = stop */
+  /** `1` = 开始，`2` = 停止 */
   status: 1 | 2
   typing_ticket: string
 }
 
-/** iLink API `ret` codes. */
+/** iLink API `ret` 码。 */
 export const WECHAT_RET_CODES = {
   OK: 0,
-  /** Session expired — re-auth via QR. */
+  /** 会话过期 — 需重新扫码认证。 */
   SESSION_EXPIRED: -14,
 } as const

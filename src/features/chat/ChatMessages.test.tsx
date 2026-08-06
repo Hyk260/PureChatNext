@@ -212,13 +212,7 @@ describe('ChatMessages message layout', () => {
   it('uses PulseDots while waiting for the first response content', () => {
     const message: UIMessage = { id: 'assistant-loading', parts: [], role: 'assistant' }
     const { getByTestId } = render(
-      <ChatMessages
-        isStreaming
-        messages={[message]}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onRegenerate={vi.fn()}
-      />
+      <ChatMessages isStreaming messages={[message]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />
     )
 
     expect(getByTestId('pulse-dots')).toBeTruthy()
@@ -231,15 +225,31 @@ describe('ChatMessages message layout', () => {
       role: 'assistant',
     }
     const { queryByTestId } = render(
-      <ChatMessages
-        isStreaming
-        messages={[message]}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onRegenerate={vi.fn()}
-      />
+      <ChatMessages isStreaming messages={[message]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />
     )
 
+    expect(queryByTestId('pulse-dots')).toBeNull()
+  })
+
+  it('renders a search-only assistant message without the generic loading dots', () => {
+    const message = {
+      id: 'assistant-searching',
+      parts: [
+        {
+          input: { query: 'latest news' },
+          state: 'input-available',
+          toolCallId: 'search-1',
+          type: 'tool-webSearch',
+        },
+      ],
+      role: 'assistant',
+    } as UIMessage
+
+    const { getByText, queryByTestId } = render(
+      <ChatMessages isStreaming messages={[message]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />
+    )
+
+    expect(getByText('正在联网搜索…')).toBeTruthy()
     expect(queryByTestId('pulse-dots')).toBeNull()
   })
 })

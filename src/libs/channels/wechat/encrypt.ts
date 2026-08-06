@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:
 
 import { serverDBEnv } from '@/envs/serverDB'
 
-/** Credentials from WeChat iLink QR scan, stored encrypted in channel_bindings. */
+/** iLink 扫码获得的凭证，加密存储于 channel_bindings。 */
 export type WechatCredentials = {
   botId: string
   botToken: string
@@ -44,10 +44,7 @@ function decryptText(payload: string): string {
   return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
 }
 
-/**
- * Encrypt credentials for DB storage.
- * New credentials are always AES-256-GCM encrypted.
- */
+/** 加密凭证以便入库。新凭证一律使用 AES-256-GCM。 */
 export function encryptCredentials(credentials: WechatCredentials): string {
   return encryptText(JSON.stringify(credentials))
 }
@@ -62,7 +59,7 @@ export function decryptCredentials(payload: string): WechatCredentials {
     return JSON.parse(decryptText(payload)) as WechatCredentials
   }
 
-  // Legacy / raw JSON fallback
+  // 旧版 / 原始 JSON 回退
   return JSON.parse(payload) as WechatCredentials
 }
 

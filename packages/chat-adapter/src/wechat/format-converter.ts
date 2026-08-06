@@ -1,14 +1,14 @@
 import { BaseFormatConverter, parseMarkdown, stringifyMarkdown } from 'chat'
 import type { Root } from 'chat'
 
-/** Markdown ↔ plain text for WeChat iLink (no Markdown rendering on the client). */
+/** 微信 iLink 的 Markdown ↔ 纯文本（客户端不渲染 Markdown）。 */
 export class WechatFormatConverter extends BaseFormatConverter {
-  /** mdast → WeChat-safe text (stringify; client shows plain text). */
+  /** mdast → 微信安全文本（stringify；客户端显示纯文本）。 */
   fromAst(ast: Root): string {
     return stringifyMarkdown(ast)
   }
 
-  /** Inbound WeChat text → mdast. */
+  /** 入站微信文本 → mdast。 */
   toAst(text: string): Root {
     return parseMarkdown(text.trim())
   }

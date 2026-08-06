@@ -2,7 +2,7 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createDeepSeek } from '@ai-sdk/deepseek'
 import { normalizeProviderId, PURECHAT_PROVIDER_ID } from '@pure/const'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
-import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream } from 'ai'
+import { convertToModelMessages, createUIMessageStreamResponse, isStepCount, streamText, toUIMessageStream } from 'ai'
 import type { UIMessage } from 'ai'
 import debug from 'debug'
 import { createNanoId } from '@pure/utils'
@@ -23,10 +23,11 @@ import {
   isPureChatRestrictedModelError,
   PURECHAT_MODEL_UNAVAILABLE_MESSAGE,
 } from '@/server/purechat/gatewayError'
+import { resolveChatTools } from '@/server/chat/toolRegistry'
 
 import { createMessageMetadata } from './messageMetadata'
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 const log = debug('chat:route')
 
@@ -85,6 +86,7 @@ export async function POST(request: Request) {
     messages: UIMessage[]
     model?: string
     provider?: string
+    searchMode?: unknown
     system?: string
   }
 
@@ -100,6 +102,20 @@ export async function POST(request: Request) {
   if (!Array.isArray(messages)) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
+
+  if (requestBody.searchMode !== undefined && requestBody.searchMode !== 'off' && requestBody.searchMode !== 'auto') {
+    return new ChatSDKError('bad_request:api', 'Invalid search mode').toResponse()
+  }
+
+  const searchMode = requestBody.searchMode ?? 'off'
+  const tools = resolveChatTools({ channel: 'web', searchMode })
+  const searchOptions =
+    Object.keys(tools).length > 0
+      ? {
+          stopWhen: isStepCount(3),
+          tools,
+        }
+      : {}
 
   const resolvedProvider = provider ?? 'deepseek'
   const isPureChat = resolvedProvider === PURECHAT_PROVIDER_ID
@@ -161,6 +177,7 @@ export async function POST(request: Request) {
       const result = streamText({
         messages: await convertToModelMessages(messages),
         model: resolvedModel,
+        ...searchOptions,
         ...(system?.trim() ? { instructions: system.trim() } : {}),
         async onEnd({ usage }) {
           if (!userId || !settlementId || !settlementPeriod || !displayModel) return
@@ -248,6 +265,7 @@ export async function POST(request: Request) {
     const result = streamText({
       messages: await convertToModelMessages(messages),
       model: resolvedModel,
+      ...searchOptions,
       ...(system?.trim() ? { instructions: system.trim() } : {}),
     })
 

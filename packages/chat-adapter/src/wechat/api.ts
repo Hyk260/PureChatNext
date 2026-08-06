@@ -11,7 +11,7 @@ import type {
 } from './types'
 
 /**
- * iLink CDN media types.
+ * iLink CDN 媒体类型。
  * @see docs/self-hosting/wechat/protocol.zh-CN.md §8.2
  */
 export enum WechatUploadMediaType {
@@ -21,22 +21,22 @@ export enum WechatUploadMediaType {
   VOICE = 4,
 }
 
-/** Result of uploading media to the iLink CDN. */
+/** 上传媒体到 iLink CDN 的结果。 */
 export interface WechatUploadResult {
-  /** Base64-encoded hex string of the AES key — the format expected in outbound `media.aes_key`. */
+  /** AES 密钥的 Base64 编码 hex 字符串 — 出站 `media.aes_key` 所需格式。 */
   aesKey: string
-  /** AES-128-ECB ciphertext size (matches `mid_size` for image_item / video_item). */
+  /** AES-128-ECB 密文大小（与 image_item / video_item 的 `mid_size` 一致）。 */
   cipherSize: number
-  /** `encrypt_query_param` returned by CDN; place into outbound `media.encrypt_query_param`. */
+  /** CDN 返回的 `encrypt_query_param`；填入出站 `media.encrypt_query_param`。 */
   encryptQueryParam: string
-  /** Plaintext file size. */
+  /** 明文文件大小。 */
   rawSize: number
 }
 
 export const DEFAULT_BASE_URL = 'https://ilinkai.weixin.qq.com'
 export const CDN_BASE_URL = 'https://novac2c.cdn.weixin.qq.com/c2c'
 
-/** Strip trailing slashes without regex (avoids ReDoS on untrusted input). */
+/** 去除尾部斜杠（不用正则，避免不可信输入触发 ReDoS）。 */
 function stripTrailingSlashes(url: string): string {
   let end = url.length
   while (end > 0 && url[end - 1] === '/') end--
@@ -50,9 +50,7 @@ const DEFAULT_TIMEOUT_MS = 15_000
 
 const BASE_INFO: BaseInfo = { channel_version: CHANNEL_VERSION }
 
-/**
- * Generate a random X-WECHAT-UIN header value as required by the iLink API.
- */
+/** 生成 iLink API 要求的随机 X-WECHAT-UIN 请求头值。 */
 function randomUin(): string {
   const uint32 = Math.floor(Math.random() * 0xffff_ffff)
   return btoa(String(uint32))
@@ -68,8 +66,8 @@ function buildHeaders(botToken: string): Record<string, string> {
 }
 
 /**
- * Parse JSON response. Throws if HTTP error or ret is non-zero.
- * Matches reference: only throws when ret IS a number AND not 0.
+ * 解析 JSON 响应。HTTP 错误或 ret 非零时抛出。
+ * 与参考实现一致：仅当 ret 为数字且非 0 时才抛错。
  */
 async function parseResponse<T>(response: Response, label: string): Promise<T> {
   const text = await response.text()
@@ -91,9 +89,7 @@ async function parseResponse<T>(response: Response, label: string): Promise<T> {
   return payload
 }
 
-/**
- * Build a combined AbortSignal from an optional external signal and a timeout.
- */
+/** 合并可选外部 signal 与超时，生成组合 AbortSignal。 */
 function combinedSignal(signal?: AbortSignal, timeoutMs: number = POLL_TIMEOUT_MS): AbortSignal {
   const timeoutSignal = AbortSignal.timeout(timeoutMs)
   return signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal
@@ -111,8 +107,8 @@ export class WechatApiClient {
   }
 
   /**
-   * Long-poll for new messages via iLink Bot API.
-   * Server holds connection for ~35 seconds.
+   * 通过 iLink Bot API 长轮询新消息。
+   * 服务端会保持连接约 35 秒。
    */
   async getUpdates(cursor?: string, signal?: AbortSignal): Promise<WechatGetUpdatesResponse> {
     const body = {
@@ -131,8 +127,8 @@ export class WechatApiClient {
   }
 
   /**
-   * Send a text message via iLink Bot API.
-   * Reference: from_user_id is empty string, client_id is random UUID.
+   * 通过 iLink Bot API 发送文本消息。
+   * 参考实现：from_user_id 为空字符串，client_id 为随机 UUID。
    */
   async sendMessage(toUserId: string, text: string, contextToken: string): Promise<WechatSendMessageResponse> {
     const chunks = chunkText(text, MAX_TEXT_LENGTH)
@@ -150,11 +146,10 @@ export class WechatApiClient {
   }
 
   /**
-   * Send a single MessageItem (text or media) via iLink Bot API.
+   * 通过 iLink Bot API 发送单个 MessageItem（文本或媒体）。
    *
-   * Per protocol.zh-CN.md §6.7, the stable public pattern is one MessageItem per
-   * request — text + media messages are sent as separate calls. Callers should
-   * generate fresh `client_id`s per call; this method allocates one internally.
+   * 按 protocol.zh-CN.md §6.7，稳定用法是每次请求一个 MessageItem —
+   * 文本与媒体分开发送。调用方每次应生成新的 `client_id`；本方法内部会分配。
    */
   async sendItem(toUserId: string, item: MessageItem, contextToken: string): Promise<WechatSendMessageResponse> {
     const body = {
@@ -181,16 +176,16 @@ export class WechatApiClient {
   }
 
   /**
-   * Upload outbound media to the iLink CDN.
+   * 上传出站媒体到 iLink CDN。
    *
-   * Implements the 3-step flow from protocol.zh-CN.md §8.2:
-   *   1. `getuploadurl` — request `upload_param` with media metadata + AES key
-   *   2. Local AES-128-ECB + PKCS7 encrypt
-   *   3. POST ciphertext to CDN; read `x-encrypted-param` response header
+   * 实现 protocol.zh-CN.md §8.2 三步流程：
+   *   1. `getuploadurl` — 携带媒体元数据与 AES 密钥请求 `upload_param`
+   *   2. 本地 AES-128-ECB + PKCS7 加密
+   *   3. POST 密文到 CDN；读取 `x-encrypted-param` 响应头
    *
-   * The returned `aesKey` is base64-of-hex-string (the format openclaw uses for
-   * outbound `media.aes_key`, see protocol.zh-CN.md §8.4 format B). Plug the result
-   * directly into `image_item.media` / `file_item.media` / `video_item.media`.
+   * 返回的 `aesKey` 为 hex 字符串的 base64（openclaw 出站 `media.aes_key` 格式，
+   * 见 protocol.zh-CN.md §8.4 format B）。可直接填入
+   * `image_item.media` / `file_item.media` / `video_item.media`。
    */
   async uploadCdnMedia(
     toUserId: string,
@@ -205,7 +200,7 @@ export class WechatApiClient {
     const cipherSize = ciphertext.length
     const rawfilemd5 = createHash('md5').update(plaintext).digest('hex')
 
-    // Step 1: request upload_param
+    // 步骤 1：请求 upload_param
     const uploadParamResp = await fetch(`${this.baseUrl}/ilink/bot/getuploadurl`, {
       body: JSON.stringify({
         aeskey: aesKeyHex,
@@ -231,7 +226,7 @@ export class WechatApiClient {
       throw new Error('getuploadurl returned empty upload_param')
     }
 
-    // Step 2 + 3: upload ciphertext to CDN
+    // 步骤 2 + 3：上传密文到 CDN
     const cdnUrl = `${CDN_BASE_URL}/upload?encrypted_query_param=${encodeURIComponent(uploadParam)}&filekey=${filekey}`
     const cdnResp = await fetch(cdnUrl, {
       body: new Uint8Array(ciphertext),
@@ -250,16 +245,14 @@ export class WechatApiClient {
       throw new Error('CDN upload response missing x-encrypted-param header')
     }
 
-    // Outbound media.aes_key encoding follows openclaw: base64 of the 32-char hex string
-    // (protocol.zh-CN.md §8.4 format B). Inbound code accepts both formats.
+    // 出站 media.aes_key 编码遵循 openclaw：32 字符 hex 字符串的 base64
+    //（protocol.zh-CN.md §8.4 format B）。入站代码兼容两种格式。
     const aesKey = Buffer.from(aesKeyHex, 'ascii').toString('base64')
 
     return { aesKey, cipherSize, encryptQueryParam, rawSize }
   }
 
-  /**
-   * Send typing indicator via iLink Bot API.
-   */
+  /** 通过 iLink Bot API 发送正在输入指示。 */
   async sendTyping(toUserId: string, typingTicket: string, start = true): Promise<void> {
     await fetch(`${this.baseUrl}/ilink/bot/sendtyping`, {
       body: JSON.stringify({
@@ -272,13 +265,11 @@ export class WechatApiClient {
       method: 'POST',
       signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
     }).catch(() => {
-      // Typing is best-effort
+      // 正在输入指示为尽力而为，失败可忽略
     })
   }
 
-  /**
-   * Convenience: getConfig + sendTyping in one call. Best-effort, never throws.
-   */
+  /** 便捷方法：getConfig + sendTyping 一次调用。尽力而为，永不抛错。 */
   async startTyping(toUserId: string, contextToken: string): Promise<void> {
     try {
       const config = await this.getConfig(toUserId, contextToken)
@@ -286,20 +277,20 @@ export class WechatApiClient {
         await this.sendTyping(toUserId, config.typing_ticket)
       }
     } catch {
-      // typing is best-effort
+      // 正在输入指示为尽力而为，失败可忽略
     }
   }
 
   /**
-   * Download and decrypt media from WeChat CDN.
+   * 从微信 CDN 下载并解密媒体。
    *
-   * Flow per protocol.zh-CN.md §8.3:
-   *   GET CDN_BASE_URL/download?encrypted_query_param=... → AES-128-ECB decrypt
+   * 流程见 protocol.zh-CN.md §8.3：
+   *   GET CDN_BASE_URL/download?encrypted_query_param=... → AES-128-ECB 解密
    *
-   * Per §8.5: when AES key is missing, try downloading as plaintext.
+   * §8.5：缺少 AES 密钥时，尝试按明文下载。
    *
-   * @param media  CDNMedia reference from the message item
-   * @param imageAeskey  Optional hex AES key from image_item.aeskey (takes priority)
+   * @param media  消息 item 中的 CDNMedia 引用
+   * @param imageAeskey  可选，来自 image_item.aeskey 的 hex AES 密钥（优先）
    */
   async downloadCdnMedia(media: CDNMedia, imageAeskey?: string): Promise<Buffer> {
     if (!media.encrypt_query_param) {
@@ -317,20 +308,20 @@ export class WechatApiClient {
 
     const raw = Buffer.from(await response.arrayBuffer())
 
-    // Per protocol.zh-CN.md §8.5: when AES key is missing, return as plaintext
+    // protocol.zh-CN.md §8.5：缺少 AES 密钥时按明文返回
     let key: Buffer
     try {
       key = resolveAesKey(imageAeskey, media.aes_key)
     } catch {
-      // No valid AES key — return plaintext per spec
+      // 无有效 AES 密钥 — 按规范返回明文
       return raw
     }
     return decryptAesEcb(raw, key)
   }
 
   /**
-   * Get bot configuration (including typing_ticket).
-   * Requires userId and contextToken per reference implementation.
+   * 获取 Bot 配置（含 typing_ticket）。
+   * 参考实现要求传入 userId 与 contextToken。
    */
   async getConfig(userId: string, contextToken: string): Promise<WechatGetConfigResponse> {
     const response = await fetch(`${this.baseUrl}/ilink/bot/getconfig`, {
@@ -349,7 +340,7 @@ export class WechatApiClient {
 }
 
 // ============================================================================
-// QR Code Authentication (unauthenticated endpoints)
+// 二维码认证（无需鉴权的端点）
 // ============================================================================
 
 export interface QrCodeResponse {
@@ -365,9 +356,7 @@ export interface QrStatusResponse {
   status: 'wait' | 'scaned' | 'confirmed' | 'expired'
 }
 
-/**
- * Request a new QR code for bot login.
- */
+/** 请求 Bot 登录用的新二维码。 */
 export async function fetchQrCode(baseUrl: string = DEFAULT_BASE_URL): Promise<QrCodeResponse> {
   const url = `${stripTrailingSlashes(baseUrl)}/ilink/bot/get_bot_qrcode?bot_type=3`
   const response = await fetch(url, { method: 'GET' })
@@ -380,9 +369,7 @@ export async function fetchQrCode(baseUrl: string = DEFAULT_BASE_URL): Promise<Q
   return response.json() as Promise<QrCodeResponse>
 }
 
-/**
- * Poll the QR code scan status.
- */
+/** 轮询二维码扫码状态。 */
 export async function pollQrStatus(qrcode: string, baseUrl: string = DEFAULT_BASE_URL): Promise<QrStatusResponse> {
   const url = `${stripTrailingSlashes(baseUrl)}/ilink/bot/get_qrcode_status?qrcode=${encodeURIComponent(qrcode)}`
   const response = await fetch(url, {
@@ -399,7 +386,7 @@ export async function pollQrStatus(qrcode: string, baseUrl: string = DEFAULT_BAS
 }
 
 // ============================================================================
-// Utilities
+// 工具函数
 // ============================================================================
 
 function chunkText(text: string, limit: number): string[] {
@@ -415,21 +402,19 @@ function chunkText(text: string, limit: number): string[] {
 }
 
 // ============================================================================
-// CDN Media Crypto (protocol.zh-CN.md §8.3–8.4)
+// CDN 媒体加解密（protocol.zh-CN.md §8.3–8.4）
 // ============================================================================
 
-/**
- * AES-128-ECB decrypt.
- */
+/** AES-128-ECB 解密。 */
 function decryptAesEcb(ciphertext: Buffer, key: Buffer): Buffer {
   const decipher = createDecipheriv('aes-128-ecb', key, null)
   return Buffer.concat([decipher.update(ciphertext), decipher.final()])
 }
 
 /**
- * AES-128-ECB encrypt with PKCS7 padding (Node's default for createCipheriv).
+ * AES-128-ECB 加密（PKCS7 填充，Node createCipheriv 默认）。
  *
- * Used for outbound media uploads — see {@link WechatApiClient.uploadCdnMedia}.
+ * 用于出站媒体上传 — 见 {@link WechatApiClient.uploadCdnMedia}。
  */
 function encryptAesEcb(plaintext: Buffer, key: Buffer): Buffer {
   const cipher = createCipheriv('aes-128-ecb', key, null)
@@ -437,32 +422,32 @@ function encryptAesEcb(plaintext: Buffer, key: Buffer): Buffer {
 }
 
 /**
- * Resolve the 16-byte AES key from the two possible sources and encodings.
+ * 从两种来源与编码解析 16 字节 AES 密钥。
  *
- * Priority per protocol.zh-CN.md §8.4:
- *  1. `image_item.aeskey` — 32-char hex string → hex decode to 16 bytes
- *  2. `media.aes_key` — base64 encoded, two possible formats:
- *     - Format A: base64(raw 16 bytes) → decoded length = 16
- *     - Format B: base64(hex string)   → decoded length = 32, hex decode to 16
+ * 优先级见 protocol.zh-CN.md §8.4：
+ *  1. `image_item.aeskey` — 32 字符 hex → hex 解码为 16 字节
+ *  2. `media.aes_key` — base64 编码，两种可能格式：
+ *     - Format A：base64(原始 16 字节) → 解码长度 = 16
+ *     - Format B：base64(hex 字符串)   → 解码长度 = 32，再 hex 解码为 16
  */
 export function resolveAesKey(imageAeskey?: string, mediaAesKey?: string): Buffer {
-  // Priority 1: image_item.aeskey (hex string, 32 chars)
+  // 优先级 1：image_item.aeskey（hex 字符串，32 字符）
   if (imageAeskey && /^[\da-f]{32}$/i.test(imageAeskey)) {
     return Buffer.from(imageAeskey, 'hex')
   }
 
-  // Priority 2: media.aes_key (base64 encoded)
+  // 优先级 2：media.aes_key（base64 编码）
   if (mediaAesKey) {
     const decoded = Buffer.from(mediaAesKey, 'base64')
 
     if (decoded.length === 16) {
-      return decoded // Format A: base64(raw 16 bytes)
+      return decoded // Format A：base64(原始 16 字节)
     }
 
     if (decoded.length === 32) {
       const hexStr = decoded.toString('ascii')
       if (/^[\da-f]{32}$/i.test(hexStr)) {
-        return Buffer.from(hexStr, 'hex') // Format B: base64(hex string)
+        return Buffer.from(hexStr, 'hex') // Format B：base64(hex 字符串)
       }
     }
   }

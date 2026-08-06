@@ -8,7 +8,13 @@ import { createSearchServiceImpl, SearchImplType } from './impls'
 import { SearchService } from './index'
 
 // Mock dependencies
-vi.mock('./impls')
+vi.mock('./impls', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./impls')>()
+  return {
+    ...actual,
+    createSearchServiceImpl: vi.fn(),
+  }
+})
 vi.mock('@pure/web-crawler')
 vi.mock('@/envs/tools', () => ({
   toolsEnv: {
@@ -31,6 +37,7 @@ describe('SearchService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(toolsEnv).SEARCH_PROVIDERS = ''
     mockSearchImpl = createMockSearchImpl()
     vi.mocked(createSearchServiceImpl).mockReturnValue(mockSearchImpl as any)
     searchService = new SearchService()
@@ -76,7 +83,7 @@ describe('SearchService', () => {
       const result = await searchService.query('test query')
 
       expect(mockSearchImpl.query).toHaveBeenCalledWith('test query', undefined)
-      expect(result).toBe(mockResponse)
+      expect(result).toEqual({ ...mockResponse, provider: SearchImplType.SearXNG })
     })
 
     it('should pass search parameters to searchImpl.query', async () => {
@@ -99,6 +106,22 @@ describe('SearchService', () => {
       expect(mockSearchImpl.query).toHaveBeenCalledWith('test query', params)
     })
 
+    it('should use the specified provider for query', async () => {
+      const mockTavily = { query: vi.fn().mockResolvedValue({
+        costTime: 10,
+        query: 'test query',
+        resultNumbers: 0,
+        results: [],
+      }) }
+      vi.mocked(createSearchServiceImpl).mockReturnValue(mockTavily as any)
+
+      const result = await searchService.query('test query', undefined, { provider: SearchImplType.Tavily })
+
+      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Tavily)
+      expect(mockTavily.query).toHaveBeenCalledWith('test query', undefined)
+      expect(result.provider).toBe(SearchImplType.Tavily)
+    })
+
     it('should return errorDetail instead of throwing when impl fails', async () => {
       mockSearchImpl.query.mockRejectedValue(new Error('Service unavailable'))
 
@@ -107,6 +130,7 @@ describe('SearchService', () => {
       expect(result).toEqual({
         costTime: 0,
         errorDetail: 'Service unavailable',
+        provider: SearchImplType.SearXNG,
         query: 'test query',
         resultNumbers: 0,
         results: [],
@@ -141,7 +165,7 @@ describe('SearchService', () => {
       })
 
       expect(mockSearchImpl.query).toHaveBeenCalledTimes(1)
-      expect(result).toBe(mockResponse)
+      expect(result).toEqual({ ...mockResponse, provider: SearchImplType.SearXNG })
     })
 
     it('should retry without searchEngines when no results found', async () => {
@@ -188,7 +212,7 @@ describe('SearchService', () => {
         searchEngines: undefined,
         searchTimeRange: '1d',
       })
-      expect(result).toBe(successResponse)
+      expect(result).toEqual({ ...successResponse, provider: SearchImplType.SearXNG })
     })
 
     it('should retry without any params when still no results found', async () => {
@@ -229,7 +253,7 @@ describe('SearchService', () => {
 
       expect(mockSearchImpl.query).toHaveBeenCalledTimes(3)
       expect(mockSearchImpl.query).toHaveBeenNthCalledWith(3, 'test', undefined)
-      expect(result).toBe(successResponse)
+      expect(result).toEqual({ ...successResponse, provider: SearchImplType.SearXNG })
     })
 
     it('should skip second retry if searchEngines not provided', async () => {
@@ -270,7 +294,7 @@ describe('SearchService', () => {
         searchTimeRange: undefined,
       })
       expect(mockSearchImpl.query).toHaveBeenNthCalledWith(2, 'test', undefined)
-      expect(result).toBe(successResponse)
+      expect(result).toEqual({ ...successResponse, provider: SearchImplType.SearXNG })
     })
 
     it('should return empty results after all retries fail', async () => {
@@ -289,7 +313,57 @@ describe('SearchService', () => {
       })
 
       expect(result.results).toHaveLength(0)
-      expect(result).toEqual({ costTime: 0, query: 'test', resultNumbers: 0, results: [] })
+      expect(result).toEqual({
+        costTime: 0,
+        provider: SearchImplType.SearXNG,
+        query: 'test',
+        resultNumbers: 0,
+        results: [],
+      })
+    })
+
+    it('should preserve the last provider error when all retries fail', async () => {
+      mockSearchImpl.query.mockResolvedValue({
+        costTime: 0,
+        errorDetail: 'Service unavailable',
+        query: 'test',
+        resultNumbers: 0,
+        results: [],
+      })
+
+      const result = await searchService.webSearch({ query: 'test' })
+
+      expect(result).toEqual({
+        costTime: 0,
+        errorDetail: 'Service unavailable',
+        provider: SearchImplType.SearXNG,
+        query: 'test',
+        resultNumbers: 0,
+        results: [],
+      })
+    })
+
+    it('should only use the specified provider without fallback', async () => {
+      const mockImpl1 = { query: vi.fn().mockResolvedValue({
+        costTime: 100,
+        query: 'test',
+        resultNumbers: 0,
+        results: [],
+      }) }
+      const mockImpl2 = { query: vi.fn() }
+
+      vi.mocked(createSearchServiceImpl)
+        .mockReturnValueOnce(mockImpl1 as any)
+        .mockReturnValueOnce(mockImpl2 as any)
+      vi.mocked(toolsEnv).SEARCH_PROVIDERS = 'searxng,exa'
+      searchService = new SearchService()
+
+      const result = await searchService.webSearch({ query: 'test' }, { provider: SearchImplType.SearXNG })
+
+      expect(mockImpl1.query).toHaveBeenCalled()
+      expect(mockImpl2.query).not.toHaveBeenCalled()
+      expect(result.provider).toBe(SearchImplType.SearXNG)
+      expect(result.results).toHaveLength(0)
     })
   })
 
@@ -334,7 +408,45 @@ describe('SearchService', () => {
       expect(mockImpl1.query).toHaveBeenCalledTimes(2)
       // Second provider returned results on first call
       expect(mockImpl2.query).toHaveBeenCalledTimes(1)
-      expect(result).toBe(successResponse)
+      expect(result).toEqual({ ...successResponse, provider: SearchImplType.Exa })
+    })
+
+    it('should fall back when AI relevance filtering rejects non-empty weather results', async () => {
+      const irrelevantResponse = {
+        ...successResponse,
+        results: [
+          {
+            ...successResponse.results[0],
+            content: '全年重要事件列表',
+            title: '2026年大事一览',
+          },
+        ],
+      }
+      const weatherResponse = {
+        ...successResponse,
+        results: [
+          {
+            ...successResponse.results[0],
+            content: '今日气温32℃，有阵雨',
+            title: '武汉洪山区天气预报',
+          },
+        ],
+      }
+      const mockImpl1 = { query: vi.fn().mockResolvedValue(irrelevantResponse) }
+      const mockImpl2 = { query: vi.fn().mockResolvedValue(weatherResponse) }
+
+      vi.mocked(createSearchServiceImpl)
+        .mockReturnValueOnce(mockImpl1 as any)
+        .mockReturnValueOnce(mockImpl2 as any)
+      vi.mocked(toolsEnv).SEARCH_PROVIDERS = 'searxng,exa'
+      searchService = new SearchService()
+
+      const result = await searchService.webSearch({ query: '武汉洪山区天气' }, { filterIrrelevant: true })
+
+      expect(mockImpl1.query).toHaveBeenCalledTimes(2)
+      expect(mockImpl2.query).toHaveBeenCalledTimes(1)
+      expect(result.results[0]?.title).toBe('武汉洪山区天气预报')
+      expect(result.provider).toBe(SearchImplType.Exa)
     })
 
     it('should try all providers in order and return empty when all fail', async () => {
@@ -356,6 +468,7 @@ describe('SearchService', () => {
       expect(mockImpl2.query).toHaveBeenCalled()
       expect(mockImpl3.query).toHaveBeenCalled()
       expect(result.results).toHaveLength(0)
+      expect(result.provider).toBe(SearchImplType.Brave)
     })
 
     it('should not call later providers if first provider succeeds', async () => {
@@ -373,7 +486,7 @@ describe('SearchService', () => {
 
       expect(mockImpl1.query).toHaveBeenCalledTimes(1)
       expect(mockImpl2.query).not.toHaveBeenCalled()
-      expect(result).toBe(successResponse)
+      expect(result).toEqual({ ...successResponse, provider: SearchImplType.SearXNG })
     })
 
     it('should exhaust all retries on first provider before falling back', async () => {
@@ -395,17 +508,10 @@ describe('SearchService', () => {
       // First provider: full params → without engines → bare = 3 calls
       expect(mockImpl1.query).toHaveBeenCalledTimes(3)
       expect(mockImpl2.query).toHaveBeenCalledTimes(1)
-      expect(result).toBe(successResponse)
+      expect(result).toEqual({ ...successResponse, provider: SearchImplType.Exa })
     })
 
     it('should handle provider errors gracefully and continue to next', async () => {
-      const errorResponse = {
-        costTime: 0,
-        errorDetail: 'Service unavailable',
-        query: 'test',
-        resultNumbers: 0,
-        results: [],
-      }
       const mockImpl1 = { query: vi.fn().mockRejectedValue(new Error('Service unavailable')) }
       const mockImpl2 = { query: vi.fn().mockResolvedValue(successResponse) }
 
@@ -420,7 +526,7 @@ describe('SearchService', () => {
 
       // First provider error results in empty results → falls through retries → next provider
       expect(mockImpl2.query).toHaveBeenCalled()
-      expect(result).toBe(successResponse)
+      expect(result).toEqual({ ...successResponse, provider: SearchImplType.Exa })
     })
   })
 

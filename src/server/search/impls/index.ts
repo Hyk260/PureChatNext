@@ -28,6 +28,12 @@ export enum SearchImplType {
   Tavily = 'tavily',
 }
 
+export const SEARCH_IMPL_TYPES = Object.values(SearchImplType)
+
+export const isSearchImplType = (value: string): value is SearchImplType => {
+  return SEARCH_IMPL_TYPES.includes(value as SearchImplType)
+}
+
 /**
  * Create a search service implementation instance
  */

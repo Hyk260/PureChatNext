@@ -58,8 +58,8 @@ function registerHandlers(chat: Chat, ctx: WechatChatContext): void {
 }
 
 /**
- * Get or create a Chat instance for a WeChat applicationId.
- * Cached in-process because processMessage is async and the instance must stay alive.
+ * 按 applicationId 获取或创建 Chat 实例。
+ * 进程内缓存：processMessage 为异步，实例须保持存活。
  */
 export async function getOrCreateWechatChat(ctx: WechatChatContext): Promise<Chat> {
   const cache = getBotCache()

@@ -28,6 +28,7 @@ import MessageMarkdown from '@/features/chat/MessageMarkdown'
 import { getMessageReasoning, getMessageText } from '@/features/chat/messageText'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
+import WebSearchStatus, { getWebSearchStatusSignature, hasWebSearchToolPart } from '@/features/chat/WebSearchStatus'
 import { CONVERSATION_MAX_WIDTH } from '@/features/chat/WideScreenContainer'
 
 export interface AgentMeta {
@@ -228,6 +229,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
     const [editing, setEditing] = useState(false)
     const text = getMessageText(message)
     const reasoning = getMessageReasoning(message)
+    const hasWebSearch = hasWebSearchToolPart(message)
     const isUser = message.role === 'user'
     const metadata = message.metadata as ChatMessageMetadata | undefined
     const isReasoning =
@@ -258,7 +260,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
       { danger: true, icon: Trash, key: 'delete', label: '删除', onClick: handleDelete },
     ]
 
-    if (!text && !reasoning && !isStreaming) return null
+    if (!text && !reasoning && !hasWebSearch && !isStreaming) return null
 
     return (
       <div className={styles.row} data-role={message.role}>
@@ -270,6 +272,8 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
         ) : null}
 
         <div className={cx(styles.bubble, isUser ? styles.user : styles.assistant)} data-message-content>
+          {!isUser && hasWebSearch ? <WebSearchStatus message={message} /> : null}
+
           {!isUser && reasoning ? (
             <Thinking duration={metadata?.reasoning?.duration} text={reasoning} thinking={isReasoning} />
           ) : null}
@@ -280,7 +284,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
               isStreaming={isStreaming}
               text={text}
             />
-          ) : isStreaming && !reasoning ? (
+          ) : isStreaming && !reasoning && !hasWebSearch ? (
             <PulseDots />
           ) : null}
         </div>
@@ -343,10 +347,11 @@ const ChatMessages = memo<ChatMessagesProps>(
     const lastMessage = messages.at(-1)
     const lastText = lastMessage ? getMessageText(lastMessage) : ''
     const lastReasoning = lastMessage ? getMessageReasoning(lastMessage) : ''
+    const lastWebSearchStatus = lastMessage ? getWebSearchStatusSignature(lastMessage) : ''
 
     const getScrollElement = useCallback(() => scrollbarRef.current?.wrapRef ?? null, [])
     const { handleScroll, resetScrollLock } = useAutoScroll<HTMLDivElement>({
-      deps: [messages.length, lastText, lastReasoning],
+      deps: [messages.length, lastText, lastReasoning, lastWebSearchStatus],
       enabled: isStreaming || disabled === true,
       getScrollElement,
     })

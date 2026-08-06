@@ -39,7 +39,31 @@ export interface UniformSearchResult {
 export interface UniformSearchResponse {
   costTime: number
   errorDetail?: string
+  /**
+   * 实际返回结果的搜索服务商（如 searxng / tavily）
+   */
+  provider?: string
   query: string
   resultNumbers: number
   results: UniformSearchResult[]
 }
+
+export type ChatWebSearchResultItem = {
+  content: string
+  publishedDate?: string
+  title: string
+  url: string
+}
+
+export type ChatWebSearchToolResult =
+  | {
+      query: string
+      results: ChatWebSearchResultItem[]
+      success: true
+    }
+  | {
+      error: string
+      query: string
+      results: []
+      success: false
+    }

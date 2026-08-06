@@ -34,11 +34,14 @@ describe('/api/dev/web-search', () => {
 
     expect(response.status).toBe(200)
     expect(payload.actions).toEqual(['query', 'webSearch', 'crawlPages'])
+    expect(payload.providers).toContain('searxng')
+    expect(payload.providers).toContain('tavily')
   })
 
   it('dispatches query action to searchService.query', async () => {
     const result = {
       costTime: 12,
+      provider: 'searxng',
       query: 'nextjs',
       resultNumbers: 0,
       results: [],
@@ -57,17 +60,22 @@ describe('/api/dev/web-search', () => {
     const payload = await response.json()
 
     expect(response.status).toBe(200)
-    expect(searchService.query).toHaveBeenCalledWith('nextjs', {
-      searchCategories: ['general'],
-      searchEngines: ['google'],
-      searchTimeRange: 'day',
-    })
+    expect(searchService.query).toHaveBeenCalledWith(
+      'nextjs',
+      {
+        searchCategories: ['general'],
+        searchEngines: ['google'],
+        searchTimeRange: 'day',
+      },
+      { provider: undefined }
+    )
     expect(payload).toEqual({ action: 'query', result, success: true })
   })
 
   it('dispatches webSearch action to searchService.webSearch', async () => {
     const result = {
       costTime: 20,
+      provider: 'tavily',
       query: 'pure chat',
       resultNumbers: 1,
       results: [
@@ -85,6 +93,7 @@ describe('/api/dev/web-search', () => {
 
     const response = await postJson({
       action: 'webSearch',
+      provider: 'tavily',
       query: 'pure chat',
       searchCategories: ['general'],
       searchEngines: ['searxng'],
@@ -93,13 +102,29 @@ describe('/api/dev/web-search', () => {
     const payload = await response.json()
 
     expect(response.status).toBe(200)
-    expect(searchService.webSearch).toHaveBeenCalledWith({
-      query: 'pure chat',
-      searchCategories: ['general'],
-      searchEngines: ['searxng'],
-      searchTimeRange: 'week',
-    })
+    expect(searchService.webSearch).toHaveBeenCalledWith(
+      {
+        query: 'pure chat',
+        searchCategories: ['general'],
+        searchEngines: ['searxng'],
+        searchTimeRange: 'week',
+      },
+      { provider: 'tavily' }
+    )
     expect(payload).toEqual({ action: 'webSearch', result, success: true })
+  })
+
+  it('returns 400 for invalid provider', async () => {
+    const response = await postJson({
+      action: 'webSearch',
+      provider: 'unknown-provider',
+      query: 'test',
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(payload.success).toBe(false)
+    expect(payload.error).toContain('Invalid provider')
   })
 
   it('dispatches crawlPages action to searchService.crawlPages', async () => {

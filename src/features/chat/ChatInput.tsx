@@ -12,13 +12,14 @@ import {
   Flexbox,
 } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
-import { Check, ChevronRight, GlobeOff, LibraryBig, Plus, Settings2 } from 'lucide-react'
+import { createStaticStyles, cssVar, cx } from 'antd-style'
+import { Check, ChevronRight, Globe, GlobeOff, LibraryBig, Plus, Settings2 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import ModelSelector from '@/features/chat/ModelSelector'
 import { SendButton } from '@/features/chat/SendArea'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
+import type { ChatSearchMode } from '@/features/chat/types'
 
 const styles = createStaticStyles(({ css }) => ({
   input: css`
@@ -104,29 +105,68 @@ const styles = createStaticStyles(({ css }) => ({
     flex: none;
     color: ${cssVar.colorTextQuaternary};
   `,
+  toggle: css`
+    position: relative;
+    flex: none;
+    width: 28px;
+    height: 16px;
+    border-radius: 8px;
+    background: ${cssVar.colorFillSecondary};
+    transition: background-color 0.2s;
+  `,
+  toggleActive: css`
+    background: ${cssVar.colorPrimary};
+  `,
+  toggleThumb: css`
+    position: absolute;
+    inset-block-start: 2px;
+    inset-inline-start: 2px;
+
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+
+    background: ${cssVar.colorBgContainer};
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+
+    transition: transform 0.2s;
+  `,
+  toggleThumbActive: css`
+    transform: translateX(12px);
+  `,
 }))
 
 interface ChatInputProps {
   isBusy?: boolean
   onSend: (text: string) => void | Promise<void>
+  onSearchModeChange: (mode: ChatSearchMode) => void
   onStop?: () => void
+  searchMode: ChatSearchMode
 }
 
 const MenuLabel = memo<{
   active?: boolean
   chevron?: boolean
   label: string
-}>(({ label, chevron, active }) => (
+  toggle?: boolean
+}>(({ label, chevron, active, toggle }) => (
   <div className={styles.menuLabel}>
     <span>{label}</span>
-    {chevron ? <Icon className={styles.submenuChevron} icon={ChevronRight} size={16} /> : null}
-    {!chevron && active ? <Icon icon={Check} size={16} /> : null}
+    {toggle ? (
+      <div aria-hidden className={cx(styles.toggle, active && styles.toggleActive)}>
+        <div className={cx(styles.toggleThumb, active && styles.toggleThumbActive)} />
+      </div>
+    ) : chevron ? (
+      <Icon className={styles.submenuChevron} icon={ChevronRight} size={16} />
+    ) : active ? (
+      <Icon icon={Check} size={16} />
+    ) : null}
   </div>
 ))
 
 MenuLabel.displayName = 'MenuLabel'
 
-const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
+const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, onStop, searchMode }) => {
   const [input, setInput] = useState('')
   const [plusOpen, setPlusOpen] = useState(false)
   const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
@@ -148,6 +188,10 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
     setPlusOpen(false)
   }, [toggleRightCollapsed])
 
+  const handleSearchModeChange = useCallback(() => {
+    onSearchModeChange(searchMode === 'auto' ? 'off' : 'auto')
+  }, [onSearchModeChange, searchMode])
+
   const plusMenuItems = useMemo<MenuProps['items']>(
     () => [
       {
@@ -156,9 +200,11 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
         label: <MenuLabel chevron label='附件' />,
       },
       {
-        icon: GlobeOff,
+        disabled: isBusy,
+        icon: searchMode === 'auto' ? Globe : GlobeOff,
         key: 'search',
-        label: <MenuLabel chevron label='联网搜索' />,
+        label: <MenuLabel active={searchMode === 'auto'} label='联网搜索' toggle />,
+        onClick: handleSearchModeChange,
       },
       {
         icon: Settings2,
@@ -167,7 +213,7 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSend, onStop }) => {
         onClick: handleToggleParams,
       },
     ],
-    [handleToggleParams, rightCollapsed]
+    [handleSearchModeChange, handleToggleParams, isBusy, rightCollapsed, searchMode]
   )
 
   const plusMenuContent = useMemo(() => renderDropdownMenuItems(plusMenuItems), [plusMenuItems])

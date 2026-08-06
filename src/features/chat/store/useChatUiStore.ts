@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
-import type { ChatLlmParams, TopicGroupMode, TopicPageSize, TopicSortBy } from '@/features/chat/types'
+import type { ChatLlmParams, ChatSearchMode, TopicGroupMode, TopicPageSize, TopicSortBy } from '@/features/chat/types'
 
 type ChatUiState = {
   leftCollapsed: boolean
@@ -13,6 +13,8 @@ type ChatUiState = {
   wideScreen: boolean
   /** agentId → params */
   paramsByAgent: Record<string, ChatLlmParams>
+  /** agentId → web search mode */
+  searchModeByAgent: Record<string, ChatSearchMode>
   /** Shared across all agents */
   topicGroupMode: TopicGroupMode
   topicPageSize: TopicPageSize
@@ -24,6 +26,7 @@ type ChatUiState = {
   setRightCollapsed: (v: boolean) => void
   getParams: (agentId: string) => ChatLlmParams
   setParams: (agentId: string, patch: Partial<ChatLlmParams>) => void
+  setSearchMode: (agentId: string, mode: ChatSearchMode) => void
   setTopicGroupMode: (mode: TopicGroupMode) => void
   setTopicPageSize: (pageSize: TopicPageSize) => void
   setTopicSortBy: (sortBy: TopicSortBy) => void
@@ -36,6 +39,7 @@ export const useChatUiStore = create<ChatUiState>()(
       rightCollapsed: true,
       wideScreen: false,
       paramsByAgent: {},
+      searchModeByAgent: {},
       topicGroupMode: 'byTime',
       topicPageSize: 40,
       topicSortBy: 'updatedAt',
@@ -58,25 +62,32 @@ export const useChatUiStore = create<ChatUiState>()(
             },
           },
         })),
+      setSearchMode: (agentId, mode) =>
+        set((s) => ({
+          searchModeByAgent: {
+            ...s.searchModeByAgent,
+            [agentId]: mode,
+          },
+        })),
       setTopicGroupMode: (topicGroupMode) => set({ topicGroupMode }),
       setTopicPageSize: (topicPageSize) => set({ topicPageSize }),
       setTopicSortBy: (topicSortBy) => set({ topicSortBy }),
     }),
     {
       name: 'purechat:chat:v2:ui',
-      version: 4,
+      version: 5,
       migrate: (persisted, version) => {
-        const state = (persisted ?? {}) as Record<string, unknown>
+        let state = (persisted ?? {}) as Record<string, unknown>
         if (version < 4) {
           const byAgent = state.topicGroupModeByAgent as Record<string, TopicGroupMode> | undefined
           const firstMode = byAgent ? Object.values(byAgent)[0] : undefined
           const { topicGroupModeByAgent: _, ...rest } = state
-          return {
+          state = {
             ...rest,
             topicGroupMode: firstMode ?? 'byTime',
           }
         }
-        return state
+        return version < 5 ? { ...state, searchModeByAgent: {} } : state
       },
     }
   )

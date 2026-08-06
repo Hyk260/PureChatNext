@@ -4,7 +4,7 @@ import type { BaseRedisProvider } from '@/libs/redis/types'
 
 const CONTEXT_TOKEN_TTL_SEC = 24 * 60 * 60
 
-/** In-memory fallback when Redis is unavailable (local gateway). */
+/** Redis 不可用时内存回退（本地 Gateway）。 */
 const memoryTokens = new Map<string, { expiresAt: number; token: string }>()
 
 async function getWechatRedis(): Promise<BaseRedisProvider | null> {

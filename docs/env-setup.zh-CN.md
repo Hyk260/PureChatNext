@@ -79,6 +79,14 @@ NODE_ENV=development
 - 临时开启推荐：`pnpm dev:inspect`（等价于 `CODE_INSPECTOR=1 pnpm dev`，完整 Next + SPA）
 - 也可写入 `.env.local`：`CODE_INSPECTOR=1` 后重启开发进程
 
+### VITE\_DEVTOOLS
+
+本地开发可选。设为 `1` 时，在 Vite SPA 启用 [@vitejs/devtools](https://devtools.vite.dev/guide/)（嵌入式浮动面板；`vite build` 时还会开启 Rolldown `devtools` 并写出分析产物）。
+
+- 默认关闭
+- 临时开启：`VITE_DEVTOOLS=1 pnpm dev:spa`（或写入 `.env.local` 后重启）
+- 生产构建请勿开启（避免把 DevTools 产物打进 `public/_spa`）
+
 ### NEXT\_PUBLIC\_SUPABASE\_URL
 
 Supabase 项目的 URL，格式通常是：`https://xxxxx.supabase.co`

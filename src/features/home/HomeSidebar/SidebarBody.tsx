@@ -1,8 +1,9 @@
 'use client'
 
-import { Accordion, Flexbox } from '@pure/ui'
+import { ActionIcon, Accordion, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import Scrollbar from '@/components/Scrollbar'
+import { Settings } from 'lucide-react'
 import { memo, useCallback, useMemo } from 'react'
 import type { Key, ReactElement } from 'react'
 
@@ -127,8 +128,6 @@ const SidebarBody = memo(() => {
   const topContent = useMemo(() => buildContent(topKeys), [buildContent, topKeys])
   const bottomContent = useMemo(() => buildContent(bottomKeys), [buildContent, bottomKeys])
 
-  if (topContent.length === 0 && bottomContent.length === 0) return null
-
   return (
     <Flexbox flex={1} gap={1} style={{ minHeight: 0 }}>
       <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }} viewStyle={{ paddingInline: '4px 8px' }}>
@@ -141,6 +140,11 @@ const SidebarBody = memo(() => {
           {bottomContent}
         </Flexbox>
       ) : null}
+      <Flexbox horizontal style={{ flex: 'none', paddingBlock: 4, paddingInline: '4px 8px' }}>
+        <Link href='/settings/profile' style={{ color: 'inherit', textDecoration: 'none' }}>
+          <ActionIcon icon={Settings} size='small' title='设置' />
+        </Link>
+      </Flexbox>
     </Flexbox>
   )
 })

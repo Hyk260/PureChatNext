@@ -2,7 +2,7 @@ import { SettingsEmptyPage } from '@/features/settings/SettingsEmptyPage'
 
 export function createSettingsEmptyPage(title: string) {
   function Page() {
-    return <SettingsEmptyPage title={title} />
+    return <SettingsEmptyPage />
   }
   Page.displayName = `SettingsEmpty(${title})`
   return Page

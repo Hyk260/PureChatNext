@@ -47,7 +47,7 @@ interface MessengerDetailShellProps {
   platformMeta: MessengerPlatformMeta
 }
 
-/** 详情页共用壳：返回行 + 品牌卡（SettingHeader 由路由层渲染） */
+/** 详情页共用壳：返回行 + 品牌卡（页面标题由 SettingsHeader 渲染） */
 export const MessengerDetailShell = memo<MessengerDetailShellProps>(
   ({ children, headerAction, platform, platformMeta }) => {
     const navigate = useNavigate()

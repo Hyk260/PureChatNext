@@ -34,10 +34,11 @@
  */
 
 import type { ChildProcess, SpawnOptions } from 'node:child_process'
-import { spawn } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
 import net from 'node:net'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { promisify } from 'node:util'
 
 import { config as loadDotenv } from 'dotenv'
 
@@ -46,6 +47,8 @@ interface DevProcessHandle {
   groupPid?: number
   isWindows: boolean
 }
+
+const execFileAsync = promisify(execFile)
 
 const isWindows = process.platform === 'win32'
 const NEXT_HOST = 'localhost'
@@ -67,8 +70,16 @@ const resolveNextPort = (): number => {
   return 3000
 }
 
+/** SPA 端口：SPA_PORT 环境变量 > 5174（与 vite.config.ts 一致） */
+const resolveSpaPort = (): number => {
+  if (process.env.SPA_PORT) return Number(process.env.SPA_PORT)
+  return 5174
+}
+
 let nextPort = 3000
+let spaPort = 5174
 let nextRootUrl = `http://${NEXT_HOST}:${nextPort}/`
+let spaRootUrl = `http://localhost:${spaPort}/`
 let nextProcess: ChildProcess | undefined
 let viteProcess: ChildProcess | undefined
 let nextHandle: DevProcessHandle | undefined
@@ -146,15 +157,104 @@ const isPortOpen = (host: string, port: number) =>
     socket.setTimeout(1_000, () => onDone(false))
   })
 
+/** 尝试解析占用端口的进程（macOS / Linux：lsof），失败时返回 undefined */
+const describePortHolder = async (port: number): Promise<string | undefined> => {
+  if (isWindows) return undefined
+
+  try {
+    const { stdout } = await execFileAsync('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN'], {
+      timeout: 2_000,
+    })
+    const lines = stdout.trim().split('\n').filter(Boolean)
+    if (lines.length < 2) return undefined
+
+    const header = lines[0]?.split(/\s+/) ?? []
+    const commandIdx = header.indexOf('COMMAND')
+    const pidIdx = header.indexOf('PID')
+    const row = lines[1]?.split(/\s+/) ?? []
+    const command = commandIdx >= 0 ? row[commandIdx] : row[0]
+    const pid = pidIdx >= 0 ? row[pidIdx] : row[1]
+    if (!command || !pid) return undefined
+    return `${command} (PID ${pid})`
+  } catch {
+    return undefined
+  }
+}
+
+const printPortInUseError = async ({
+  port,
+  service,
+  hints,
+}: {
+  port: number
+  service: string
+  hints: string[]
+}) => {
+  const holder = await describePortHolder(port)
+  console.error('')
+  console.error(`❌ 端口 ${port} 已被占用，无法启动 ${service}。`)
+  if (holder) {
+    console.error(`   当前占用进程：${holder}`)
+  }
+  console.error('   请先结束占用该端口的进程，或换一个端口再启动：')
+  for (const hint of hints) {
+    console.error(`   - ${hint}`)
+  }
+  if (!isWindows) {
+    console.error(`   - 查看占用：lsof -nP -iTCP:${port} -sTCP:LISTEN`)
+  }
+  console.error('')
+}
+
+const ensurePortsAvailable = async () => {
+  const checks: Array<{
+    host: string
+    port: number
+    service: string
+    hints: string[]
+  }> = [
+    {
+      host: NEXT_HOST,
+      port: nextPort,
+      service: 'Next（API / BFF）',
+      hints: [
+        `换 Next 端口：pnpm dev -- -p ${nextPort === 3000 ? 3001 : nextPort + 1}`,
+        `或：PORT=${nextPort === 3000 ? 3001 : nextPort + 1} pnpm dev`,
+      ],
+    },
+    {
+      host: 'localhost',
+      port: spaPort,
+      service: 'Vite SPA',
+      hints: [
+        `换 SPA 端口：SPA_PORT=${spaPort === 5174 ? 5175 : spaPort + 1} pnpm dev`,
+      ],
+    },
+  ]
+
+  for (const check of checks) {
+    if (!(await isPortOpen(check.host, check.port))) continue
+    await printPortInUseError(check)
+    process.exitCode = 1
+    throw new Error(`PORT_IN_USE:${check.port}`)
+  }
+}
+
+const hasChildSettled = (child?: ChildProcess) => !child || child.exitCode !== null || child.signalCode !== null
+
 const waitForNextReady = async () => {
   const startedAt = Date.now()
 
   while (Date.now() - startedAt < NEXT_READY_TIMEOUT_MS) {
+    if (shuttingDown) return
+    if (hasChildSettled(nextProcess)) {
+      throw new Error(`Next 进程已退出，未能在 ${NEXT_HOST}:${nextPort} 就绪`)
+    }
     if (await isPortOpen(NEXT_HOST, nextPort)) return
     await wait(NEXT_READY_RETRY_MS)
   }
 
-  throw new Error(`Next server was not ready within ${NEXT_READY_TIMEOUT_MS / 1000}s on ${NEXT_HOST}:${nextPort}`)
+  throw new Error(`Next 在 ${NEXT_READY_TIMEOUT_MS / 1000}s 内未就绪（${NEXT_HOST}:${nextPort}）`)
 }
 
 const terminateChildren = () => {
@@ -172,8 +272,6 @@ const clearForceKillTimer = () => {
   clearTimeout(forceKillTimer)
   forceKillTimer = undefined
 }
-
-const hasChildSettled = (child?: ChildProcess) => !child || child.exitCode !== null || child.signalCode !== null
 
 const clearForceKillTimerWhenChildrenSettle = () => {
   if (!shuttingDown) return
@@ -203,23 +301,30 @@ const watchChildExit = (child: ChildProcess, name: 'next' | 'vite') => {
       return
     }
 
-    console.error(`❌ ${name} exited unexpectedly (code: ${code ?? 'null'}, signal: ${signal ?? 'null'})`)
+    const label = name === 'next' ? 'Next' : 'Vite SPA'
+    console.error(`❌ ${label} 意外退出（code: ${code ?? 'null'}, signal: ${signal ?? 'null'}）`)
+    if (name === 'next' && code === 1) {
+      console.error(`   若刚出现 EADDRINUSE，说明端口 ${nextPort} 在启动瞬间被占用，请检查后重试。`)
+    }
     shutdownAll('SIGTERM')
   })
 }
 
 const runNextBackgroundTasks = () => {
   setTimeout(() => {
+    if (shuttingDown) return
     console.log(`🔁 Next API: ${nextRootUrl}`)
-    console.log(`🔁 SPA:      http://localhost:5174/`)
+    console.log(`🔁 SPA:      ${spaRootUrl}`)
   }, 2_000)
 
   void (async () => {
     try {
       await waitForNextReady()
-      console.log(`✅ Next ready on ${NEXT_HOST}:${nextPort}`)
+      if (shuttingDown) return
+      console.log(`✅ Next 已就绪：${NEXT_HOST}:${nextPort}`)
     } catch (error) {
-      console.warn('⚠️ Next ready check failed:', error)
+      if (shuttingDown) return
+      console.warn('⚠️ Next 就绪检测失败:', error instanceof Error ? error.message : error)
     }
   })()
 }
@@ -227,25 +332,30 @@ const runNextBackgroundTasks = () => {
 const main = async () => {
   loadEnv()
 
-  // 跨平台启用 code-inspector（避免 package.json 里用 Unix 的 VAR=1 前缀）
   if (process.argv.includes('--inspect')) {
     process.env.CODE_INSPECTOR = '1'
   }
 
   nextPort = resolveNextPort()
+  spaPort = resolveSpaPort()
   nextRootUrl = `http://${NEXT_HOST}:${nextPort}/`
+  spaRootUrl = `http://localhost:${spaPort}/`
+  process.env.SPA_PORT = String(spaPort)
+  process.env.PORT = String(nextPort)
+
+  await ensurePortsAvailable()
 
   for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP'] as NodeJS.Signals[]) {
     process.on(sig, () => shutdownAll(sig))
   }
 
   process.on('uncaughtException', (error) => {
-    console.error('❌ uncaught exception in dev startup:', error)
+    console.error('❌ 开发启动未捕获异常:', error)
     shutdownAll('SIGTERM')
   })
 
   process.on('unhandledRejection', (reason) => {
-    console.error('❌ unhandled rejection in dev startup:', reason)
+    console.error('❌ 开发启动未处理的 Promise 拒绝:', reason)
     shutdownAll('SIGTERM')
   })
 
@@ -280,7 +390,11 @@ const isMainModule = () => {
 
 if (isMainModule()) {
   void main().catch((error) => {
-    console.error('❌ dev startup sequence failed:', error)
+    const message = error instanceof Error ? error.message : String(error)
+    if (message.startsWith('PORT_IN_USE:')) {
+      process.exit(1)
+    }
+    console.error('❌ 开发启动失败:', error)
     shutdownAll('SIGTERM')
   })
 }

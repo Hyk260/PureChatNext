@@ -281,8 +281,6 @@ export function UsageSettingsContent() {
 
   return (
     <Flexbox className={styles.page} gap={40}>
-      <Text className={styles.title}>用量</Text>
-
       <Block className={styles.section} gap={16} variant='filled'>
         <Text className={styles.sectionTitle}>总览</Text>
         {loading && !data ? (

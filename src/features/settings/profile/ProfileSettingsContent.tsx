@@ -13,7 +13,6 @@ import { FullNameSetting } from './components/FullNameSetting'
 import { InterestsSetting } from './components/InterestsSetting'
 import { LinkedAccountsSetting } from './components/LinkedAccountsSetting'
 import { PasswordSetting } from './components/PasswordSetting'
-import { SettingHeader } from './components/SettingHeader'
 import { UsernameSetting } from './components/UsernameSetting'
 
 interface ProfileSettingsContentProps {
@@ -103,8 +102,6 @@ export function ProfileSettingsContent({
 
   return (
     <Flexbox gap={24} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: '100%' }}>
-      <SettingHeader title='个人资料' />
-
       <Block gap={16} title='账户' variant='filled'>
         <Flexbox style={{ padding: 16 }}>
           {accountRows.map((row, index) => (

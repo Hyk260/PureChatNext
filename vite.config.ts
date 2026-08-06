@@ -1,6 +1,8 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { DevTools } from '@vitejs/devtools'
+import type { PluginOption } from 'vite'
 import { defineConfig, loadEnv } from 'vite'
 
 import {
@@ -20,6 +22,7 @@ export default defineConfig(({ mode }) => {
 
   const isDev = mode !== 'production'
   const enableCodeInspector = process.env.CODE_INSPECTOR === '1'
+  const enableViteDevTools = process.env.VITE_DEVTOOLS === '1'
   const nextPort = env.PORT || process.env.PORT || '3000'
   const nextTarget = `http://localhost:${nextPort}`
   const spaPort = Number(env.SPA_PORT || process.env.SPA_PORT) || 5174
@@ -30,12 +33,20 @@ export default defineConfig(({ mode }) => {
     // Avoid copying Next `public/` (incl. `_spa`) into Vite `dist` — prevents nested `_spa/_spa`.
     publicDir: false,
     define: sharedRendererDefine(isDev),
-    plugins: sharedRendererPlugins({
-      enableCodeInspector,
-      isDev,
-      rootDir,
-      spaEntry,
-    }),
+    plugins: [
+      enableViteDevTools &&
+        DevTools({
+          build: {
+            withApp: true,
+          },
+        }),
+      ...sharedRendererPlugins({
+        enableCodeInspector,
+        isDev,
+        rootDir,
+        spaEntry,
+      }),
+    ].filter(Boolean) as PluginOption[],
     resolve: {
       // SPA: Vite alias `@` → tsconfig.json paths
       tsconfigPaths: true,
@@ -87,6 +98,7 @@ export default defineConfig(({ mode }) => {
       reportCompressedSize: false,
       chunkSizeWarningLimit: 1000,
       rolldownOptions: {
+        ...(enableViteDevTools && { devtools: {} }),
         input: path.resolve(rootDir, 'index.html'),
         output: createSharedRolldownOutput({ strictExecutionOrder: true }),
       },

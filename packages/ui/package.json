@@ -46,6 +46,6 @@
     "react": "*"
   },
   "dependencies": {
-    "@lobehub/ui": "^5.16.1"
+    "@lobehub/ui": "^5.28.1"
   }
 }

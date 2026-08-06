@@ -107,7 +107,8 @@ pnpm dev:spa
 
 > CORS：`.env.local` 的 `ALLOWED_ORIGINS` 需包含 `http://localhost:5174`（见上文示例）。\
 > 修改 `APP_URL` 后需重启 `dev:next`。\
-> `dev:inspect` / `CODE_INSPECTOR=1`：Alt+Shift 点击页面元素可在 Cursor 中打开对应源码；默认关闭以降低编译开销。
+> `dev:inspect` / `CODE_INSPECTOR=1`：Alt+Shift 点击页面元素可在 Cursor 中打开对应源码；默认关闭以降低编译开销。\
+> `VITE_DEVTOOLS=1`：启用 Vite DevTools 浮动面板；默认关闭。临时：`VITE_DEVTOOLS=1 pnpm dev:spa`。
 
 ## 5. 测试认证功能
 

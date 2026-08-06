@@ -49,6 +49,35 @@ export enum SettingsTab {
   Usage = 'usage',
 }
 
+/** Page titles for SettingsHeader (covers nav + empty/hidden tabs). */
+export const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
+  [SettingsTab.About]: '关于',
+  [SettingsTab.Advanced]: '高级设置',
+  [SettingsTab.Appearance]: '外观',
+  [SettingsTab.Connector]: '连接器',
+  [SettingsTab.Credits]: '免费积分',
+  [SettingsTab.Creds]: '凭证管理',
+  [SettingsTab.Hotkey]: '快捷键',
+  [SettingsTab.Language]: '语言',
+  [SettingsTab.Memory]: '记忆设置',
+  [SettingsTab.Messenger]: '聊天平台',
+  [SettingsTab.Notification]: '通知',
+  [SettingsTab.Profile]: '个人资料',
+  [SettingsTab.Provider]: 'AI 服务商',
+  [SettingsTab.ServiceModel]: '服务模型',
+  [SettingsTab.Skill]: '技能',
+  [SettingsTab.Stats]: '数据统计',
+  [SettingsTab.Storage]: '数据存储',
+  [SettingsTab.Usage]: '用量',
+}
+
+export function getSettingsTabLabel(tab: string | undefined): string {
+  if (tab && Object.values(SettingsTab).includes(tab as SettingsTab)) {
+    return SETTINGS_TAB_LABELS[tab as SettingsTab]
+  }
+  return SETTINGS_TAB_LABELS[SettingsTab.Profile]
+}
+
 export interface SettingsCategoryItem {
   href: string
   icon?: IconProps['icon']

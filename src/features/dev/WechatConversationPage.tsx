@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { formatDateTime, formatSize } from '@pure/utils/client'
 
@@ -34,14 +34,17 @@ import {
 } from '@/features/dev/wechatConversationApi'
 import type { WechatDevMessage, WechatDevSession } from '@/features/dev/wechatConversationApi'
 import {
-  fetchWechatStatus,
-  retryFailedWechatEvents,
-} from '@/features/settings/messenger/wechatApi'
+  getActiveWechatEventIds,
+  hasActiveWechatMessages,
+  mergeWechatDevMessages,
+  MESSAGE_POLL_DELAYS,
+  nextWechatMessagePollDelay,
+} from '@/features/dev/wechatConversationPolling'
+import { fetchWechatStatus, retryFailedWechatEvents } from '@/features/settings/messenger/wechatApi'
 import type { WechatStatus } from '@/features/settings/messenger/wechatApi'
 
-const STATUS_POLL_MS = 8_000
-const MESSAGES_POLL_MS = 2_000
-const SESSIONS_POLL_MS = 5_000
+const STATUS_POLL_MS = 30_000
+const SESSIONS_POLL_MS = 30_000
 
 const STATUS_META: Record<
   string,
@@ -53,6 +56,102 @@ const STATUS_META: Record<
   online: { color: 'text-emerald-700', dot: 'bg-emerald-500', label: '在线' },
   starting: { color: 'text-sky-700', dot: 'bg-sky-500', label: '启动中' },
   stopped: { color: 'text-slate-500', dot: 'bg-slate-400', label: '已停止' },
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError'
+}
+
+function useVisiblePeriodicRefresh(
+  task: (signal: AbortSignal) => Promise<unknown>,
+  intervalMs: number,
+  enabled: boolean
+): () => void {
+  const taskRef = useRef(task)
+  const refreshRef = useRef<() => void>(() => {})
+
+  useEffect(() => {
+    taskRef.current = task
+  }, [task])
+
+  useEffect(() => {
+    if (!enabled) {
+      refreshRef.current = () => {}
+      return
+    }
+
+    let controller: AbortController | null = null
+    let inFlight = false
+    let refreshPending = false
+    let stopped = false
+    let timer: number | undefined
+
+    const clearTimer = () => {
+      if (timer !== undefined) window.clearTimeout(timer)
+      timer = undefined
+    }
+    const schedule = () => {
+      clearTimer()
+      if (!stopped && document.visibilityState === 'visible') timer = window.setTimeout(run, intervalMs)
+    }
+    const run = async () => {
+      clearTimer()
+      if (stopped || document.visibilityState !== 'visible') return
+      if (inFlight) {
+        refreshPending = true
+        return
+      }
+      inFlight = true
+      controller = new AbortController()
+      try {
+        await taskRef.current(controller.signal)
+      } catch {
+        // Periodic fallback refreshes are best-effort; the next scheduled run retries.
+      } finally {
+        inFlight = false
+        controller = null
+        if (stopped || document.visibilityState !== 'visible') return
+        if (refreshPending) {
+          refreshPending = false
+          void run()
+        } else {
+          schedule()
+        }
+      }
+    }
+    refreshRef.current = () => {
+      clearTimer()
+      if (document.visibilityState !== 'visible') {
+        refreshPending = true
+        return
+      }
+      if (inFlight) {
+        refreshPending = true
+        return
+      }
+      void run()
+    }
+    const onVisibilityChange = () => {
+      clearTimer()
+      if (document.visibilityState !== 'visible') {
+        controller?.abort()
+        return
+      }
+      refreshPending = false
+      void run()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    schedule()
+    return () => {
+      stopped = true
+      clearTimer()
+      controller?.abort()
+      refreshRef.current = () => {}
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [enabled, intervalMs])
+
+  return useCallback(() => refreshRef.current(), [])
 }
 
 function truncateId(id: string, head = 8, tail = 4) {
@@ -253,8 +352,8 @@ function renderSessionListBody({
             >
               <div className='flex items-center gap-2'>
                 <User className={`size-3.5 shrink-0 ${active ? 'text-slate-300' : 'text-slate-400'}`} />
-                <span className='min-w-0 flex-1 truncate font-mono text-xs font-medium'>
-                  {truncateId(session.externalUserId, 10, 6)}
+                <span className='min-w-0 flex-1 truncate text-xs font-medium'>
+                  {session.externalUserName || truncateId(session.externalUserId, 10, 6)}
                 </span>
                 <span
                   className={`shrink-0 rounded px-1 py-0.5 text-[10px] font-medium ${getAccessChipClass(session.canSend, active)}`}
@@ -288,15 +387,23 @@ export default function WechatConversationPage() {
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
+  const messagesRef = useRef<WechatDevMessage[]>([])
+  const pauseMessagesRef = useRef<() => void>(() => {})
+  const refreshMessagesNowRef = useRef<() => void>(() => {})
+  const selectedIdRef = useRef(selectedId)
 
-  const refreshStatus = useCallback(async () => {
-    const st = await fetchWechatStatus()
+  useEffect(() => {
+    selectedIdRef.current = selectedId
+  }, [selectedId])
+
+  const refreshStatus = useCallback(async (signal?: AbortSignal) => {
+    const st = await fetchWechatStatus(signal)
     setStatus(st)
     return st
   }, [])
 
-  const refreshSessions = useCallback(async () => {
-    const data = await fetchWechatDevSessions()
+  const refreshSessions = useCallback(async (signal?: AbortSignal) => {
+    const data = await fetchWechatDevSessions(signal)
     setBound(data.bound)
     setSessions(data.sessions)
     setSelectedId((prev) => {
@@ -306,92 +413,219 @@ export default function WechatConversationPage() {
     return data
   }, [])
 
-  const refreshMessages = useCallback(async (sessionId: string, silent = false) => {
-    if (!silent) setMessagesLoading(true)
+  const bootstrap = useCallback(async (signal: AbortSignal) => {
     try {
-      const data = await fetchWechatDevSessionMessages(sessionId, 80)
-      setMessages(data.messages)
-      setSessionMeta(data.session)
-      setLastSyncedAt(new Date().toISOString())
-      setError(null)
-    } finally {
-      if (!silent) setMessagesLoading(false)
-    }
-  }, [])
-
-  const bootstrap = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      await Promise.all([refreshStatus(), refreshSessions()])
+      await Promise.all([refreshStatus(signal), refreshSessions(signal)])
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
+      if (!isAbortError(err)) setError(err instanceof Error ? err.message : '加载失败')
     } finally {
-      setLoading(false)
+      if (!signal.aborted) setLoading(false)
     }
   }, [refreshSessions, refreshStatus])
 
   useEffect(() => {
-    void bootstrap()
+    const controller = new AbortController()
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) void bootstrap(controller.signal)
+    })
+    return () => controller.abort()
   }, [bootstrap])
 
-  // Status poll (8s) when bound
-  useEffect(() => {
-    if (loading || !status?.bound) return
-    const tick = () => {
-      if (document.visibilityState !== 'visible') return
-      void refreshStatus().catch(() => {})
-    }
-    const id = window.setInterval(tick, STATUS_POLL_MS)
-    return () => window.clearInterval(id)
-  }, [loading, refreshStatus, status?.bound])
-
-  // Sessions poll（Dev 可看全库 wechat 会话，不依赖本人是否已绑定）
-  useEffect(() => {
-    if (loading) return
-    const tick = () => {
-      if (document.visibilityState !== 'visible') return
-      void refreshSessions().catch(() => {})
-    }
-    const id = window.setInterval(tick, SESSIONS_POLL_MS)
-    return () => window.clearInterval(id)
-  }, [loading, refreshSessions])
+  const refreshStatusNow = useVisiblePeriodicRefresh(
+    async (signal) => {
+      await refreshStatus(signal).catch(() => {})
+    },
+    STATUS_POLL_MS,
+    !loading
+  )
+  const refreshSessionsNow = useVisiblePeriodicRefresh(
+    async (signal) => {
+      await refreshSessions(signal).catch(() => {})
+    },
+    SESSIONS_POLL_MS,
+    !loading
+  )
 
   useEffect(() => {
-    setDraft('')
+    let active = true
+    queueMicrotask(() => {
+      if (active) setDraft('')
+    })
+    return () => {
+      active = false
+    }
   }, [selectedId])
 
-  // Messages poll when session selected
+  const selectedConversationVersion = sessions.find((session) => session.id === selectedId)?.conversationVersion
+
+  // Selected-session messages use a non-overlapping, visibility-aware adaptive delta loop.
   useEffect(() => {
     if (!selectedId) {
+      messagesRef.current = []
+      pauseMessagesRef.current = () => {}
+      refreshMessagesNowRef.current = () => {}
+      let active = true
+      queueMicrotask(() => {
+        if (!active) return
+        setMessages([])
+        setSessionMeta(null)
+      })
+      return () => {
+        active = false
+      }
+    }
+
+    let controller: AbortController | null = null
+    let cursor: string | undefined
+    let conversationVersion: number | undefined
+    let delay: number = MESSAGE_POLL_DELAYS[0]
+    let inFlight = false
+    let paused = false
+    let refreshPending = false
+    let stopped = false
+    let timer: number | undefined
+
+    const clearTimer = () => {
+      if (timer !== undefined) window.clearTimeout(timer)
+      timer = undefined
+    }
+    const schedule = (waitMs: number) => {
+      clearTimer()
+      if (!stopped && document.visibilityState === 'visible') timer = window.setTimeout(run, waitMs)
+    }
+    const run = async () => {
+      clearTimer()
+      if (stopped || paused || document.visibilityState !== 'visible') return
+      if (inFlight) {
+        refreshPending = true
+        return
+      }
+      inFlight = true
+      controller = new AbortController()
+      const initial = !cursor || conversationVersion === undefined
+      try {
+        const data = await fetchWechatDevSessionMessages(selectedId, {
+          ...(initial
+            ? { limit: 80 }
+            : {
+                conversationVersion,
+                cursor,
+                limit: 200,
+                watchEventIds: getActiveWechatEventIds(messagesRef.current),
+              }),
+          signal: controller.signal,
+        })
+        if (stopped) return
+
+        if (!initial && data.session.conversationVersion !== conversationVersion) {
+          cursor = undefined
+          conversationVersion = undefined
+          messagesRef.current = []
+          setMessages([])
+          setSessionMeta(data.session)
+          delay = MESSAGE_POLL_DELAYS[0]
+          refreshPending = true
+          refreshSessionsNow()
+          return
+        }
+
+        const merged = mergeWechatDevMessages(initial ? [] : messagesRef.current, data.messages)
+        messagesRef.current = merged.messages
+        setMessages(merged.messages)
+        setSessionMeta(data.session)
+        setLastSyncedAt(new Date().toISOString())
+        setError(null)
+        cursor = data.cursor ?? cursor
+        conversationVersion = data.session.conversationVersion
+        delay = initial
+          ? MESSAGE_POLL_DELAYS[0]
+          : nextWechatMessagePollDelay(delay, {
+              changed: merged.changed,
+              pending: hasActiveWechatMessages(merged.messages),
+            })
+        if (!initial && merged.changed) refreshSessionsNow()
+      } catch (err) {
+        if (!isAbortError(err) && !stopped) setError(err instanceof Error ? err.message : '消息加载失败')
+      } finally {
+        inFlight = false
+        controller = null
+        if (initial && !stopped) setMessagesLoading(false)
+        if (stopped || paused || document.visibilityState !== 'visible') return
+        if (refreshPending) {
+          refreshPending = false
+          void run()
+        } else {
+          schedule(delay)
+        }
+      }
+    }
+    pauseMessagesRef.current = () => {
+      paused = true
+      refreshPending = false
+      clearTimer()
+      controller?.abort()
+    }
+    refreshMessagesNowRef.current = () => {
+      paused = false
+      delay = MESSAGE_POLL_DELAYS[0]
+      clearTimer()
+      if (document.visibilityState !== 'visible') {
+        refreshPending = true
+        return
+      }
+      if (inFlight) {
+        refreshPending = true
+        controller?.abort()
+        return
+      }
+      void run()
+    }
+    const onVisibilityChange = () => {
+      clearTimer()
+      if (paused) return
+      if (document.visibilityState !== 'visible') {
+        controller?.abort()
+        return
+      }
+      delay = MESSAGE_POLL_DELAYS[0]
+      refreshPending = false
+      void run()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    queueMicrotask(() => {
+      if (stopped) return
+      messagesRef.current = []
       setMessages([])
       setSessionMeta(null)
-      return
-    }
-    void refreshMessages(selectedId).catch((err) => {
-      setError(err instanceof Error ? err.message : '消息加载失败')
+      setMessagesLoading(true)
+      void run()
     })
-    const tick = () => {
-      if (document.visibilityState !== 'visible') return
-      void refreshMessages(selectedId, true).catch(() => {})
+    return () => {
+      stopped = true
+      clearTimer()
+      controller?.abort()
+      pauseMessagesRef.current = () => {}
+      refreshMessagesNowRef.current = () => {}
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
-    const id = window.setInterval(tick, MESSAGES_POLL_MS)
-    return () => window.clearInterval(id)
-  }, [refreshMessages, selectedId])
+  }, [refreshSessionsNow, selectedConversationVersion, selectedId])
 
   const handleRetry = useCallback(async () => {
     setRetrying(true)
     try {
       await retryFailedWechatEvents()
-      await Promise.all([refreshStatus(), selectedId ? refreshMessages(selectedId) : Promise.resolve()])
+      refreshMessagesNowRef.current()
+      refreshSessionsNow()
+      refreshStatusNow()
     } catch (err) {
       setError(err instanceof Error ? err.message : '重试失败')
     } finally {
       setRetrying(false)
     }
-  }, [refreshMessages, refreshStatus, selectedId])
+  }, [refreshSessionsNow, refreshStatusNow])
 
   const selectedSession = sessions.find((s) => s.id === selectedId) ?? sessionMeta
+  const externalUserLabel = selectedSession?.externalUserName || selectedSession?.externalUserId || '微信用户'
   const canSend = Boolean(selectedSession?.canSend)
 
   const handleSend = useCallback(async () => {
@@ -400,16 +634,26 @@ export default function WechatConversationPage() {
     if (!text) return
     setSending(true)
     setError(null)
+    const sendingSessionId = selectedId
+    pauseMessagesRef.current()
     try {
-      await sendWechatDevMessage(selectedId, text)
-      setDraft('')
-      await refreshMessages(selectedId, true)
+      const message = await sendWechatDevMessage(sendingSessionId, text)
+      if (selectedIdRef.current === sendingSessionId) {
+        const merged = mergeWechatDevMessages(messagesRef.current, [message])
+        messagesRef.current = merged.messages
+        setMessages(merged.messages)
+      }
+      if (selectedIdRef.current === sendingSessionId) setDraft('')
+      refreshSessionsNow()
     } catch (err) {
-      setError(err instanceof Error ? err.message : '发送失败')
+      if (selectedIdRef.current === sendingSessionId) {
+        setError(err instanceof Error ? err.message : '发送失败')
+      }
     } finally {
+      if (selectedIdRef.current === sendingSessionId) refreshMessagesNowRef.current()
       setSending(false)
     }
-  }, [canSend, draft, refreshMessages, selectedId, sending])
+  }, [canSend, draft, refreshSessionsNow, selectedId, sending])
 
   const runtimeKey = status?.runtimeStatus ?? 'stopped'
   const runtimeMeta = STATUS_META[runtimeKey] ?? STATUS_META.stopped
@@ -478,7 +722,11 @@ export default function WechatConversationPage() {
               className='inline-flex items-center gap-1 rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-slate-800 disabled:opacity-50'
               disabled={loading}
               type='button'
-              onClick={() => void bootstrap()}
+              onClick={() => {
+                refreshStatusNow()
+                refreshSessionsNow()
+                refreshMessagesNowRef.current()
+              }}
             >
               <RefreshCcw className={`size-3 ${loading ? 'animate-spin' : ''}`} />
               刷新
@@ -541,7 +789,9 @@ export default function WechatConversationPage() {
               </div>
               <div className='min-w-0 flex-1'>
                 <div className='flex items-center gap-2'>
-                  <div className='truncate font-mono text-sm font-semibold'>{selectedSession.externalUserId}</div>
+                  <div className='truncate text-sm font-semibold'>
+                    {selectedSession.externalUserName || selectedSession.externalUserId}
+                  </div>
                   <span
                     className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${
                       canSend ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
@@ -551,6 +801,8 @@ export default function WechatConversationPage() {
                   </span>
                 </div>
                 <div className='flex flex-wrap items-center gap-2 text-[11px] text-slate-500'>
+                  <span className='truncate font-mono'>{selectedSession.externalUserId}</span>
+                  <span>·</span>
                   <span className='inline-flex items-center gap-1'>
                     <Bot className='size-3' />
                     {selectedSession.agentTitle ?? selectedSession.agentId}
@@ -633,7 +885,7 @@ export default function WechatConversationPage() {
                         <Bot className='size-3 text-emerald-600' />
                       )}
                       <span className='text-[10px] font-medium text-slate-400'>
-                        {isUser ? '微信用户' : 'Agent'}
+                        {isUser ? externalUserLabel : 'Agent'}
                       </span>
                       {kindChip(msg.messageKind)}
                       {statusChip(msg.status)}

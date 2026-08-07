@@ -55,6 +55,7 @@ export const GET = withAuth(async (_request, { userId }) => {
           isOwnBinding && canSendWechatDevOutbound(ownerExternalUserId, session.externalUserId),
         conversationVersion: session.conversationVersion,
         externalUserId: session.externalUserId,
+        externalUserName: session.externalUserName,
         id: session.id,
         isOwnBinding,
         lastActiveAt: session.lastActiveAt.toISOString(),

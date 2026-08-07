@@ -4,6 +4,7 @@ import { parseWechatFileContent } from './inboundMedia'
 
 export type TimelineMessage = {
   createdAt: string
+  eventId: string
   fileName?: string
   fileSize?: number | null
   fileUrl?: string
@@ -29,6 +30,7 @@ export function expandEventsToMessages(events: ChannelTimelineEvent[]): Timeline
       if (event.responseText) {
         messages.push({
           createdAt: (event.completedAt ?? event.createdAt).toISOString(),
+          eventId: event.id,
           id: `${event.id}:assistant`,
           messageKind: event.messageKind,
           role: 'assistant',
@@ -45,6 +47,7 @@ export function expandEventsToMessages(events: ChannelTimelineEvent[]): Timeline
 
     messages.push({
       createdAt: event.createdAt.toISOString(),
+      eventId: event.id,
       id: `${event.id}:user`,
       ...(isImage ? { imageUrl: `/api/dev/wechat/events/${event.id}/image` } : {}),
       ...(isFile
@@ -62,6 +65,7 @@ export function expandEventsToMessages(events: ChannelTimelineEvent[]): Timeline
     if (event.responseText) {
       messages.push({
         createdAt: (event.completedAt ?? event.createdAt).toISOString(),
+        eventId: event.id,
         id: `${event.id}:assistant`,
         messageKind: event.messageKind,
         role: 'assistant',

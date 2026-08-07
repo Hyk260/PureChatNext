@@ -56,6 +56,7 @@ export const channelSessions = pgTable(
       .references(() => channelBindings.id, { onDelete: 'cascade' })
       .notNull(),
     externalUserId: varchar255('external_user_id').notNull(),
+    externalUserName: varchar255('external_user_name'),
     activeAgentId: text('active_agent_id'),
     conversationVersion: integer('conversation_version').notNull().default(1),
     lastActiveAt: timestamptz('last_active_at').notNull().defaultNow(),

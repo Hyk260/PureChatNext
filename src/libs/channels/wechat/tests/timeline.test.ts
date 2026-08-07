@@ -45,6 +45,7 @@ describe('expandEventsToMessages', () => {
     expect(messages).toEqual([
       {
         createdAt: '2026-01-01T00:00:02.000Z',
+        eventId: 'out-1',
         id: 'out-1:assistant',
         messageKind: 'outbound',
         role: 'assistant',

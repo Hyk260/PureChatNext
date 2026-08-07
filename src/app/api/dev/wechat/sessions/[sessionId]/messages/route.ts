@@ -11,6 +11,11 @@ import {
   WechatOutboundError,
 } from '@/libs/channels/wechat/outbound'
 import { expandEventsToMessages } from '@/libs/channels/wechat/timeline'
+import {
+  advanceWechatTimelineCursor,
+  encodeWechatTimelineCursor,
+  parseWechatTimelineCursor,
+} from '@/libs/channels/wechat/timelineCursor'
 
 const MAX_OUTBOUND_TEXT_LENGTH = 40_000
 
@@ -29,16 +34,24 @@ export const GET = withAuth<{ sessionId: string }>(async (request, { params, use
   const myBinding = await new ChannelBindingModel().findByUserAndPlatform(userId, WECHAT_PLATFORM)
   const limitParam = Number(request.nextUrl.searchParams.get('limit') ?? '50')
   const limit = Number.isFinite(limitParam) ? limitParam : 50
-  const afterParam = request.nextUrl.searchParams.get('after')
-  let after: Date | undefined
-  if (afterParam) {
-    after = new Date(afterParam)
-    if (Number.isNaN(after.getTime())) return jsonError('Invalid after timestamp')
+  const cursorParam = request.nextUrl.searchParams.get('cursor')
+  const after = cursorParam ? parseWechatTimelineCursor(cursorParam) : null
+  if (cursorParam && !after) return jsonError('Invalid cursor', 400)
+  const conversationVersionParam = request.nextUrl.searchParams.get('conversationVersion')
+  const conversationVersion = conversationVersionParam === null ? undefined : Number(conversationVersionParam)
+  if (conversationVersion !== undefined && (!Number.isInteger(conversationVersion) || conversationVersion < 1)) {
+    return jsonError('Invalid conversationVersion', 400)
   }
+  const watchEventIds = request.nextUrl.searchParams
+    .getAll('watchEventId')
+    .filter((id) => id.length > 0 && id.length <= 128)
+    .slice(0, 20)
 
   const result = await new ChannelEventModel().listTimelineBySession(sessionId, {
-    after,
+    ...(after ? { after } : {}),
+    conversationVersion,
     limit,
+    watchEventIds,
   })
   if (!result) return jsonError('Session not found', 404)
 
@@ -53,8 +66,17 @@ export const GET = withAuth<{ sessionId: string }>(async (request, { params, use
   const isOwnBinding = Boolean(myBinding && session.bindingId === myBinding.id)
   const ownerExternalUserId = myBinding ? resolveOwnerExternalUserId(myBinding.credentials) : ''
 
+  const responseCursor = encodeWechatTimelineCursor(
+    advanceWechatTimelineCursor(
+      after,
+      events.map(({ createdAt, id }) => ({ createdAt, id }))
+    ) ?? { createdAt: new Date(0), id: '' }
+  )
+  const expandedMessages = expandEventsToMessages(events)
+
   return NextResponse.json({
-    messages: expandEventsToMessages(events),
+    cursor: responseCursor,
+    messages: cursorParam ? expandedMessages : expandedMessages.slice(-Math.min(Math.max(limit, 1), 200)),
     session: {
       activeAgentId: session.activeAgentId,
       agentId: effectiveAgentId,
@@ -65,6 +87,7 @@ export const GET = withAuth<{ sessionId: string }>(async (request, { params, use
         isOwnBinding && canSendWechatDevOutbound(ownerExternalUserId, session.externalUserId),
       conversationVersion: session.conversationVersion,
       externalUserId: session.externalUserId,
+      externalUserName: session.externalUserName,
       id: session.id,
       isOwnBinding,
       lastActiveAt: session.lastActiveAt.toISOString(),

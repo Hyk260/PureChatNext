@@ -34,8 +34,8 @@ export type WechatQrStatus = {
   status: 'wait' | 'scaned' | 'confirmed' | 'expired'
 }
 
-export async function fetchWechatStatus(): Promise<WechatStatus> {
-  const res = await apiFetch('/api/channels/wechat/status')
+export async function fetchWechatStatus(signal?: AbortSignal): Promise<WechatStatus> {
+  const res = await apiFetch('/api/channels/wechat/status', { signal })
   if (!res.ok) throw new Error(`status failed: ${res.status}`)
   return res.json() as Promise<WechatStatus>
 }

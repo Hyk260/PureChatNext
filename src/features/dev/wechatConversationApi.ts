@@ -9,6 +9,7 @@ export type WechatDevSession = {
   canSend: boolean
   conversationVersion: number
   externalUserId: string
+  externalUserName: string | null
   id: string
   isOwnBinding?: boolean
   lastActiveAt: string
@@ -24,6 +25,7 @@ export type WechatDevSessionsResponse = {
 
 export type WechatDevMessage = {
   createdAt: string
+  eventId: string
   fileName?: string
   fileSize?: number | null
   fileUrl?: string
@@ -36,23 +38,39 @@ export type WechatDevMessage = {
 }
 
 export type WechatDevMessagesResponse = {
+  cursor?: string
   messages: WechatDevMessage[]
   session: WechatDevSession
 }
 
-export async function fetchWechatDevSessions(): Promise<WechatDevSessionsResponse> {
-  const res = await apiFetch('/api/dev/wechat/sessions')
+export async function fetchWechatDevSessions(signal?: AbortSignal): Promise<WechatDevSessionsResponse> {
+  const res = await apiFetch('/api/dev/wechat/sessions', { signal })
   if (!res.ok) throw new Error(`sessions failed: ${res.status}`)
   return res.json() as Promise<WechatDevSessionsResponse>
 }
 
 export async function fetchWechatDevSessionMessages(
   sessionId: string,
-  limit = 50
+  options:
+    | number
+    | {
+        conversationVersion?: number
+        cursor?: string
+        limit?: number
+        signal?: AbortSignal
+        watchEventIds?: string[]
+      } = 50
 ): Promise<WechatDevMessagesResponse> {
-  const res = await apiFetch(
-    `/api/dev/wechat/sessions/${encodeURIComponent(sessionId)}/messages?limit=${limit}`
-  )
+  const resolved = typeof options === 'number' ? { limit: options } : options
+  const searchParams = new URLSearchParams({ limit: String(resolved.limit ?? 50) })
+  if (resolved.cursor) searchParams.set('cursor', resolved.cursor)
+  if (resolved.conversationVersion !== undefined) {
+    searchParams.set('conversationVersion', String(resolved.conversationVersion))
+  }
+  for (const eventId of resolved.watchEventIds ?? []) searchParams.append('watchEventId', eventId)
+  const res = await apiFetch(`/api/dev/wechat/sessions/${encodeURIComponent(sessionId)}/messages?${searchParams}`, {
+    signal: resolved.signal,
+  })
   if (!res.ok) throw new Error(`messages failed: ${res.status}`)
   return res.json() as Promise<WechatDevMessagesResponse>
 }

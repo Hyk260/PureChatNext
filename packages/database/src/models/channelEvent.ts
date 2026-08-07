@@ -273,6 +273,7 @@ export class ChannelEventModel {
         activeAgentId: channelSessions.activeAgentId,
         conversationVersion: channelSessions.conversationVersion,
         externalUserId: channelSessions.externalUserId,
+        externalUserName: channelSessions.externalUserName,
         id: channelSessions.id,
         lastActiveAt: channelSessions.lastActiveAt,
       })
@@ -293,6 +294,7 @@ export class ChannelEventModel {
         bindingUserId: channelBindings.userId,
         conversationVersion: channelSessions.conversationVersion,
         externalUserId: channelSessions.externalUserId,
+        externalUserName: channelSessions.externalUserName,
         id: channelSessions.id,
         lastActiveAt: channelSessions.lastActiveAt,
       })
@@ -309,17 +311,34 @@ export class ChannelEventModel {
    */
   listTimelineBySession = async (
     sessionId: string,
-    options?: { after?: Date; conversationVersion?: number; limit?: number }
+    options?: {
+      after?: { createdAt: Date; id: string }
+      conversationVersion?: number
+      limit?: number
+      watchEventIds?: string[]
+    }
   ): Promise<{ events: ChannelTimelineEvent[]; session: ChannelSessionItem } | null> => {
     const session = await this.getSession(sessionId)
     if (!session) return null
 
     const version = options?.conversationVersion ?? session.conversationVersion
     const limit = Math.min(Math.max(options?.limit ?? 50, 1), 200)
+    const afterCondition = options?.after
+      ? or(
+          gt(channelEvents.createdAt, options.after.createdAt),
+          and(eq(channelEvents.createdAt, options.after.createdAt), gt(channelEvents.id, options.after.id))
+        )
+      : undefined
+    const watchedIds = options?.watchEventIds?.slice(0, 20) ?? []
+    const timelineCondition = watchedIds.length
+      ? afterCondition
+        ? or(afterCondition, inArray(channelEvents.id, watchedIds))
+        : inArray(channelEvents.id, watchedIds)
+      : afterCondition
     const conditions = [
       eq(channelEvents.sessionId, sessionId),
       eq(channelEvents.conversationVersion, version),
-      ...(options?.after ? [gt(channelEvents.createdAt, options.after)] : []),
+      ...(timelineCondition ? [timelineCondition] : []),
     ]
 
     const rows = await this.db
@@ -336,10 +355,13 @@ export class ChannelEventModel {
       })
       .from(channelEvents)
       .where(and(...conditions))
-      .orderBy(desc(channelEvents.createdAt))
+      .orderBy(
+        options?.after ? asc(channelEvents.createdAt) : desc(channelEvents.createdAt),
+        options?.after ? asc(channelEvents.id) : desc(channelEvents.id)
+      )
       .limit(limit)
 
-    return { events: rows.reverse(), session }
+    return { events: options?.after ? rows : rows.reverse(), session }
   }
 
   startNewConversation = async (sessionId: string, activeAgentId?: string | null, excludeEventId?: string) => {

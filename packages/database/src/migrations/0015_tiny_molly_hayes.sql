@@ -1,0 +1,1 @@
+ALTER TABLE "channel_sessions" ADD COLUMN "external_user_name" varchar(255);

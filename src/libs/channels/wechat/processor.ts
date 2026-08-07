@@ -9,11 +9,12 @@ import { createNanoId } from '@pure/utils'
 import { generateWechatAgentReply } from './agentBridge'
 import { parseWechatCommand, WECHAT_HELP_TEXT } from './commands'
 import { decryptContextToken, decryptCredentials } from './encrypt'
+import { getWechatHistoryTokenBudget, trimWechatHistory } from './history'
+import { startWechatTyping } from './typing'
 
 const log = debug('channel:wechat:processor')
 const EVENT_LEASE_MS = 3 * 60_000
 const IDLE_DELAY_MS = 500
-const MAX_CONTEXT_CHARS = 40_000
 const MAX_TEXT_LENGTH = 2000
 
 type ActiveGeneration = { abortController: AbortController; eventId: string }
@@ -27,29 +28,6 @@ function splitText(text: string): string[] {
     chunks.push(text.slice(offset, offset + MAX_TEXT_LENGTH))
   }
   return chunks.length ? chunks : ['（空回复）']
-}
-
-function limitContext(rows: Array<{ content: string; responseText: string | null }>, budget: number) {
-  let remaining = Math.max(0, budget)
-  const selected: typeof rows = []
-  for (let index = rows.length - 1; index >= 0; index -= 1) {
-    const row = rows[index]!
-    const length = row.content.length + (row.responseText?.length ?? 0)
-    if (length > remaining) {
-      if (!remaining) break
-      const responseBudget = Math.min(row.responseText?.length ?? 0, Math.floor(remaining / 2))
-      const contentBudget = remaining - responseBudget
-      selected.unshift({
-        content: row.content.slice(-contentBudget),
-        responseText: responseBudget ? row.responseText!.slice(-responseBudget) : null,
-      })
-      break
-    }
-    selected.unshift(row)
-    remaining -= length
-    if (remaining <= 0) break
-  }
-  return selected
 }
 
 function isAgentUsable(provider: string | null) {
@@ -148,19 +126,29 @@ async function buildResponse(event: ChannelEventItem): Promise<string> {
   if (activeGenerations.has(key)) throw new Error('A reply is already being generated')
   const abortController = new AbortController()
   activeGenerations.set(key, { abortController, eventId: event.id })
+  let stopTyping = () => {}
   try {
-    const history = limitContext(
+    const agentId = session.activeAgentId || binding.agentId
+    const agent = await new AgentModel(binding.userId).findVisibleById(agentId)
+    const provider = agent?.provider?.trim() || 'deepseek'
+    const modelId = agent?.model ?? (provider === 'openai' ? 'gpt-5.4-mini' : 'deepseek-v4-flash')
+    const history = trimWechatHistory(
       await eventModel.findContext(event.sessionId, event.conversationVersion),
-      MAX_CONTEXT_CHARS - event.content.length
+      getWechatHistoryTokenBudget(provider, modelId, event.content)
     )
+    const credentials = decryptCredentials(binding.credentials)
+    const contextToken = decryptContextToken(event.encryptedContextToken)
+    const api = new WechatApiClient(credentials.botToken, credentials.botId)
+    stopTyping = startWechatTyping(api, event.externalUserId, contextToken)
     return await generateWechatAgentReply({
       abortSignal: abortController.signal,
-      agentId: session.activeAgentId || binding.agentId,
+      agentId,
       history,
       userId: binding.userId,
       userText: event.content,
     })
   } finally {
+    stopTyping()
     if (activeGenerations.get(key)?.eventId === event.id) activeGenerations.delete(key)
   }
 }

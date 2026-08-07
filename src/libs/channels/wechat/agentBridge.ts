@@ -15,6 +15,12 @@ const log = debug('channel:wechat:bridge')
 const MAX_GENERATION_STEPS = 5
 const FINAL_ANSWER_STEP = 3
 const WECHAT_TIME_ZONE = 'Asia/Shanghai'
+type WechatUserContent =
+  | string
+  | Array<
+      | { type: 'text'; text: string }
+      | { type: 'image'; image: string | Uint8Array | URL; mediaType?: string }
+    >
 
 export const buildWechatRuntimeInstructions = (now = new Date()) => {
   const currentTime = new Intl.DateTimeFormat('zh-CN', {
@@ -37,6 +43,7 @@ export async function generateWechatAgentReply(params: {
   history?: Array<{ content: string; responseText: string | null }>
   userId: string
   userText: string
+  userContent?: WechatUserContent
 }): Promise<string> {
   const agentModel = new AgentModel(params.userId)
   const agent = await agentModel.findVisibleById(params.agentId)
@@ -67,7 +74,7 @@ export async function generateWechatAgentReply(params: {
     if (turn.content) messages.push({ content: turn.content, role: 'user' })
     if (turn.responseText) messages.push({ content: turn.responseText, role: 'assistant' })
   }
-  messages.push({ content: params.userText, role: 'user' })
+  messages.push({ content: params.userContent ?? params.userText, role: 'user' })
 
   const result = await generateText({
     abortSignal: params.abortSignal,

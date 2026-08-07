@@ -1,3 +1,8 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+
+import { loadFile } from '@pure/file-loaders'
 import { downloadMediaFromRawMessage, MessageItemType, MessageState, MessageType } from '@pure/chat-adapter/wechat'
 import type { CDNMedia, FileItem, ImageItem, WechatApiClient, WechatRawMessage } from '@pure/chat-adapter/wechat'
 
@@ -19,6 +24,16 @@ export type StoredWechatFilePayload = {
   media?: CDNMedia
   type: 'file'
   v: 1
+}
+
+export const WECHAT_MAX_INBOUND_FILE_BYTES = 10 * 1024 * 1024
+export const WECHAT_MAX_PARSED_FILE_CHARS = 120_000
+
+export type PreparedWechatFile = {
+  content: string
+  fileName: string
+  fileType: string
+  truncated: boolean
 }
 
 export function encodeWechatImageContent(imageItem: ImageItem): string {
@@ -69,6 +84,42 @@ export function parseWechatFileContent(content: string): StoredWechatFilePayload
   return null
 }
 
+/** Download and parse a supported inbound file without retaining it on disk. */
+export async function prepareWechatFileForAgent(
+  api: WechatApiClient,
+  payload: StoredWechatFilePayload,
+): Promise<PreparedWechatFile> {
+  const declaredSize = Number(payload.len)
+  if (Number.isFinite(declaredSize) && declaredSize > WECHAT_MAX_INBOUND_FILE_BYTES) {
+    throw new Error('文件超过 10MB 限制，无法处理。')
+  }
+  const downloaded = await downloadStoredWechatFile(api, payload)
+  if (!downloaded) throw new Error('微信文件无法下载，可能已过期或缺少媒体凭证。')
+  if (downloaded.buffer.byteLength > WECHAT_MAX_INBOUND_FILE_BYTES) {
+    throw new Error('文件超过 10MB 限制，无法处理。')
+  }
+
+  const fileName = path.basename(downloaded.fileName || 'wechat-file') || 'wechat-file'
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'purechat-wechat-'))
+  const filePath = path.join(tempDir, fileName)
+  try {
+    await writeFile(filePath, downloaded.buffer)
+    const document = await loadFile(filePath, { filename: fileName, fileType: path.extname(fileName).slice(1) })
+    if (document.metadata.error) throw new Error(`文件解析失败：${document.metadata.error}`)
+    const raw = document.content.trim()
+    if (!raw) throw new Error('文件没有可读取的文本内容。')
+    const content = raw.slice(0, WECHAT_MAX_PARSED_FILE_CHARS)
+    return {
+      content,
+      fileName,
+      fileType: document.fileType,
+      truncated: raw.length > content.length,
+    }
+  } finally {
+    await rm(tempDir, { recursive: true, force: true }).catch(() => undefined)
+  }
+}
+
 function attachmentBuffer(buffer: unknown): Buffer {
   if (Buffer.isBuffer(buffer)) return buffer
   return Buffer.from(buffer as ArrayBuffer)
@@ -102,9 +153,9 @@ export async function downloadStoredWechatImage(
   }
 
   const [attachment] = await downloadMediaFromRawMessage(api, stub)
-  if (!attachment?.buffer) return null
+  if (!(attachment as { buffer?: unknown } | undefined)?.buffer) return null
   return {
-    buffer: attachmentBuffer(attachment.buffer),
+    buffer: attachmentBuffer((attachment as unknown as { buffer: unknown }).buffer),
     mimeType: attachment.mimeType || 'image/jpeg',
   }
 }
@@ -137,9 +188,9 @@ export async function downloadStoredWechatFile(
   }
 
   const [attachment] = await downloadMediaFromRawMessage(api, stub)
-  if (!attachment?.buffer) return null
+  if (!(attachment as { buffer?: unknown } | undefined)?.buffer) return null
   return {
-    buffer: attachmentBuffer(attachment.buffer),
+    buffer: attachmentBuffer((attachment as unknown as { buffer: unknown }).buffer),
     fileName: attachment.name || payload.file_name || 'file',
     mimeType: attachment.mimeType || 'application/octet-stream',
   }

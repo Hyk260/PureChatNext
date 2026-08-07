@@ -5,9 +5,13 @@ import {
   encodeWechatImageContent,
   parseWechatFileContent,
   parseWechatImageContent,
+  WECHAT_MAX_INBOUND_FILE_BYTES,
 } from '../inboundMedia'
 
 describe('inboundMedia', () => {
+  it('uses the 10MB inbound media limit', () => {
+    expect(WECHAT_MAX_INBOUND_FILE_BYTES).toBe(10 * 1024 * 1024)
+  })
   it('round-trips image metadata for CDN download', () => {
     const encoded = encodeWechatImageContent({
       aeskey: 'a'.repeat(32),

@@ -11,11 +11,19 @@ import { parseWechatCommand, WECHAT_HELP_TEXT } from './commands'
 import { decryptContextToken, decryptCredentials } from './encrypt'
 import { getWechatHistoryTokenBudget, trimWechatHistory } from './history'
 import { startWechatTyping } from './typing'
+import {
+  downloadStoredWechatImage,
+  parseWechatFileContent,
+  parseWechatImageContent,
+  prepareWechatFileForAgent,
+  WECHAT_MAX_INBOUND_FILE_BYTES,
+} from './inboundMedia'
 
 const log = debug('channel:wechat:processor')
 const EVENT_LEASE_MS = 3 * 60_000
 const IDLE_DELAY_MS = 500
 const MAX_TEXT_LENGTH = 2000
+const SUPPORTED_IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp'])
 
 type ActiveGeneration = { abortController: AbortController; eventId: string }
 const activeGenerations = new Map<string, ActiveGeneration>()
@@ -109,8 +117,7 @@ export function abortActiveGeneration(bindingId: string, externalUserId: string)
 
 async function buildResponse(event: ChannelEventItem): Promise<string> {
   if (event.responseText) return event.responseText
-  // 图片/文件等非文本：入库供 Dev 展示，Agent 仍明确告知不支持
-  if (event.messageKind === 'unsupported' || event.messageKind === 'image' || event.messageKind === 'file') {
+  if (event.messageKind === 'unsupported') {
     return '当前版本仅支持文本消息。'
   }
   if (event.messageKind === 'command' || event.content.startsWith('/')) return handleCommand(event)
@@ -139,13 +146,40 @@ async function buildResponse(event: ChannelEventItem): Promise<string> {
     const credentials = decryptCredentials(binding.credentials)
     const contextToken = decryptContextToken(event.encryptedContextToken)
     const api = new WechatApiClient(credentials.botToken, credentials.botId)
+    let userText = event.content
+    let userContent: Parameters<typeof generateWechatAgentReply>[0]['userContent']
+    if (event.messageKind === 'file') {
+      const payload = parseWechatFileContent(event.content)
+      if (!payload) return '文件消息格式无效，无法处理。'
+      try {
+        const prepared = await prepareWechatFileForAgent(api, payload)
+        userText = `用户发送了文件：${prepared.fileName}（${prepared.fileType}）。请结合附件内容回答用户问题。`
+        userContent = `${userText}\n\n<附件内容>${prepared.truncated ? '\n（内容已截断）' : ''}\n${prepared.content}\n</附件内容>`
+      } catch (error) {
+        return error instanceof Error ? error.message : '文件解析失败，暂时无法处理。'
+      }
+    } else if (event.messageKind === 'image') {
+      const payload = parseWechatImageContent(event.content)
+      if (!payload) return '图片消息格式无效，无法处理。'
+      if (provider !== 'openai') return '当前助手使用的模型不支持图片理解，请切换到支持视觉的模型后重试。'
+      const image = await downloadStoredWechatImage(api, payload)
+      if (!image) return '图片无法下载，可能已过期或缺少媒体凭证。'
+      if (image.buffer.byteLength > WECHAT_MAX_INBOUND_FILE_BYTES) return '图片超过 10MB 限制，无法处理。'
+      if (!SUPPORTED_IMAGE_MIME.has(image.mimeType)) return '暂不支持该图片格式，目前支持 JPG、PNG、WEBP、GIF、BMP。'
+      userText = '用户发送了一张图片，请结合图片内容回答用户问题。'
+      userContent = [
+        { type: 'text', text: userText },
+        { type: 'image', image: `data:${image.mimeType};base64,${image.buffer.toString('base64')}`, mediaType: image.mimeType },
+      ]
+    }
     stopTyping = startWechatTyping(api, event.externalUserId, contextToken)
     return await generateWechatAgentReply({
       abortSignal: abortController.signal,
       agentId,
       history,
       userId: binding.userId,
-      userText: event.content,
+      userText,
+      userContent,
     })
   } finally {
     stopTyping()

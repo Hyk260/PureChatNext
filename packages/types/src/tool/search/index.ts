@@ -43,6 +43,12 @@ export interface UniformSearchResponse {
    * 实际返回结果的搜索服务商（如 searxng / tavily）
    */
   provider?: string
+  /** Describes whether SearchService had to relax the requested filters. */
+  fallback?: {
+    applied: SearchParams
+    level: 'all-filters-removed' | 'engine-removed' | 'none'
+    requested: SearchParams
+  }
   query: string
   resultNumbers: number
   results: UniformSearchResult[]

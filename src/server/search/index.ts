@@ -1,4 +1,4 @@
-import type { SearchParams, SearchQuery } from '@pure/types'
+import type { SearchParams, SearchQuery, UniformSearchResponse } from '@pure/types'
 import type { Crawler, CrawlImplType, CrawlUniformResult } from '@pure/web-crawler'
 import debug from 'debug'
 import pMap from 'p-map'
@@ -181,7 +181,11 @@ export class SearchService {
   /**
    * 查询搜索结果（默认使用第一个提供者；可通过 provider 指定）
    */
-  async query(query: string, params?: SearchParams, options?: { provider?: SearchImplType }) {
+  async query(
+    query: string,
+    params?: SearchParams,
+    options?: { provider?: SearchImplType }
+  ): Promise<UniformSearchResponse> {
     const [entry] = this.resolveProviders(options?.provider)
     return this.queryWithImpl(entry.impl, query, params, entry.type)
   }
@@ -189,7 +193,7 @@ export class SearchService {
   async webSearch(
     { query, searchCategories, searchEngines, searchTimeRange }: SearchQuery,
     options?: { filterIrrelevant?: boolean; provider?: SearchImplType }
-  ) {
+  ): Promise<UniformSearchResponse> {
     const providers = this.resolveProviders(options?.provider)
 
     try {
@@ -207,6 +211,11 @@ export class SearchService {
 
     let lastErrorDetail: string | undefined
     let lastProvider: SearchImplType | undefined
+    const requestedFilters: SearchParams = {
+      ...(searchCategories ? { searchCategories } : {}),
+      ...(searchEngines ? { searchEngines } : {}),
+      ...(searchTimeRange ? { searchTimeRange } : {}),
+    }
 
     for (const { impl, type } of providers) {
       lastProvider = type
@@ -229,6 +238,8 @@ export class SearchService {
         data = { ...data, resultNumbers: results.length, results }
       }
 
+      let fallbackLevel: NonNullable<UniformSearchResponse['fallback']>['level'] = 'none'
+
       // 第一次重试：如果没有结果，移除搜索引擎限制
       if (data.results.length === 0 && searchEngines && searchEngines?.length > 0) {
         data = await this.queryWithImpl(impl, query, {
@@ -241,6 +252,7 @@ export class SearchService {
           const results = filterRelevantSearchResults(query, data.results)
           data = { ...data, resultNumbers: results.length, results }
         }
+        fallbackLevel = 'engine-removed'
       }
 
       // 第二次重试：如果仍然没有结果，移除所有限制
@@ -251,11 +263,29 @@ export class SearchService {
           const results = filterRelevantSearchResults(query, data.results)
           data = { ...data, resultNumbers: results.length, results }
         }
+        fallbackLevel = 'all-filters-removed'
       }
 
       // 如果此提供者返回了结果，直接使用
       if (data.results.length > 0) {
-        return data
+        return {
+          ...data,
+          ...(fallbackLevel === 'none'
+            ? {}
+            : {
+                fallback: {
+                  applied:
+                    fallbackLevel === 'engine-removed'
+                      ? {
+                          ...(searchCategories ? { searchCategories } : {}),
+                          ...(searchTimeRange ? { searchTimeRange } : {}),
+                        }
+                      : {},
+                  level: fallbackLevel,
+                  requested: requestedFilters,
+                },
+              }),
+        }
       }
     }
 

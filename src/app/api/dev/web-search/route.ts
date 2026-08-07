@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 
 import { searchService } from '@/server/search'
 import { SEARCH_IMPL_TYPES, isSearchImplType } from '@/server/search/impls'
+import { toolsEnv } from '@/envs/tools'
 
 type WebSearchAction = 'query' | 'webSearch' | 'crawlPages'
 
@@ -151,11 +152,37 @@ export const POST = async (req: Request) => {
  * GET /api/dev/web-search
  */
 export const GET = async () => {
+  let searxng: { engines: Array<{ categories: string[]; enabled: boolean; name: string; timeRangeSupport: boolean }> } | null = null
+
+  if (toolsEnv.SEARXNG_URL) {
+    try {
+      const response = await fetch(new URL('/config', toolsEnv.SEARXNG_URL), {
+        signal: AbortSignal.timeout(2500),
+      })
+      if (response.ok) {
+        const config = (await response.json()) as { engines?: Array<{ categories?: string[]; enabled?: boolean; name?: string; time_range_support?: boolean }> }
+        searxng = {
+          engines: (config.engines ?? [])
+            .filter((engine) => typeof engine.name === 'string')
+            .map((engine) => ({
+              categories: engine.categories ?? [],
+              enabled: engine.enabled !== false,
+              name: engine.name!,
+              timeRangeSupport: engine.time_range_support === true,
+            })),
+        }
+      }
+    } catch {
+      // The test page still works with its conservative static fallback.
+    }
+  }
+
   return NextResponse.json(
     {
       actions: availableActions,
       message: 'Web search API',
       providers: SEARCH_IMPL_TYPES,
+      searxng,
     },
     { status: 200 }
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   CheckCircle2,
@@ -13,11 +13,17 @@ import {
   RefreshCcw,
   Search,
   Sparkles,
+  Trash2,
 } from 'lucide-react'
 
 import type { CrawlUniformResult, UniformSearchResponse } from '@pure/types'
+import { Highlighter } from '@pure/ui'
 
-type ActionMode = 'query' | 'webSearch' | 'crawlPages'
+import Scrollbar from '@/components/Scrollbar'
+
+import type { ActionMode, WebSearchCachedForm, WebSearchCachedSlot } from './webSearchCache'
+import { clearWebSearchCache, readWebSearchCache, writeWebSearchCacheSlot } from './webSearchCache'
+
 type CopyState = 'idle' | 'copied' | 'failed'
 
 const COPY_LABEL: Record<CopyState, string> = {
@@ -44,30 +50,58 @@ type ApiFailure = {
   success: false
 }
 
+type SearXNGConfig = {
+  engines: Array<{ categories: string[]; enabled: boolean; name: string; timeRangeSupport: boolean }>
+}
+
 type RunState = {
   durationMs: number
   status: number
   submittedAt: string
 }
 
+type CachedSlot = WebSearchCachedSlot<ApiSuccess, RunState>
+
 const SEARCH_PROVIDERS = [
-  { label: 'SearXNG', value: 'searxng' },
-  { label: 'Tavily', value: 'tavily' },
-  { label: 'Brave', value: 'brave' },
-  { label: 'Exa', value: 'exa' },
-  { label: 'Firecrawl', value: 'firecrawl' },
-  { label: 'Google PSE', value: 'google' },
+  { label: 'SearXNG', tag: '自部署', value: 'searxng' },
+  { label: 'Tavily', tag: 'Key', value: 'tavily' },
+  { label: 'Brave', tag: 'Key', value: 'brave' },
+  { label: 'Exa', tag: 'Key', value: 'exa' },
+  { label: 'Firecrawl', tag: 'Key', value: 'firecrawl' },
+  { label: 'Google PSE', tag: 'Key', value: 'google' },
+  { label: 'Jina', tag: 'Key', value: 'jina' },
+  { label: 'Kagi', tag: 'Key', value: 'kagi' },
+  { label: 'Search1API', tag: 'Key', value: 'search1api' },
+  { label: 'Bocha · 博查', tag: 'Key', value: 'bocha' },
+  { label: 'Anspire · 安思派', tag: 'Key', value: 'anspire' },
+] as const
+
+const STATIC_SEARXNG_ENGINES = [
+  { categories: ['general', 'web'], enabled: true, name: 'bing', timeRangeSupport: false },
+  { categories: ['news'], enabled: true, name: 'bing news', timeRangeSupport: true },
+  { categories: ['images', 'web'], enabled: true, name: 'bing images', timeRangeSupport: true },
+  { categories: ['videos', 'web'], enabled: true, name: 'bing videos', timeRangeSupport: true },
+  { categories: ['science', 'scientific publications'], enabled: true, name: 'arxiv', timeRangeSupport: false },
+  { categories: ['it', 'repos'], enabled: true, name: 'github', timeRangeSupport: false },
+  { categories: ['general'], enabled: true, name: 'google', timeRangeSupport: false },
+  { categories: ['news'], enabled: true, name: 'google news', timeRangeSupport: false },
+  { categories: ['videos'], enabled: true, name: 'bilibili', timeRangeSupport: true },
+  { categories: ['general', 'news'], enabled: true, name: 'sogou wechat', timeRangeSupport: false },
+] satisfies SearXNGConfig['engines']
+
+const CRAWLER_IMPLS = [
+  { label: 'Naive', value: 'naive' },
   { label: 'Jina', value: 'jina' },
-  { label: 'Kagi', value: 'kagi' },
+  { label: 'Browserless', value: 'browserless' },
   { label: 'Search1API', value: 'search1api' },
-  { label: 'Bocha · 博查', value: 'bocha' },
-  { label: 'Anspire · 安思派', value: 'anspire' },
+  { label: 'Firecrawl', value: 'firecrawl' },
+  { label: 'Exa', value: 'exa' },
+  { label: 'Tavily', value: 'tavily' },
 ] as const
 
 const examples = {
   crawlPages: {
-    impls: 'naive,jina',
-    urls: 'https://example.com\nhttps://nextjs.org',
+    urls: 'https://vercel.com/\nhttps://nextjs.org',
   },
   query: 'Next.js 16 App Router',
   webSearch: 'web search',
@@ -175,6 +209,18 @@ const buildRequestBody = (
   }
 }
 
+const defaultQueryForAction = (nextAction: ActionMode) => {
+  if (nextAction === 'query') {
+    return examples.query
+  }
+
+  if (nextAction === 'webSearch') {
+    return examples.webSearch
+  }
+
+  return examples.webSearch
+}
+
 export default function WebSearchTestPage() {
   const [action, setAction] = useState<ActionMode>('webSearch')
   const [view, setView] = useState<ResultView>('summary')
@@ -190,6 +236,18 @@ export default function WebSearchTestPage() {
   const [payload, setPayload] = useState<ApiSuccess | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copyState, setCopyState] = useState<CopyState>('idle')
+  const [searxngConfig, setSearxngConfig] = useState<SearXNGConfig | null>(null)
+
+  const selectedImpls = useMemo(() => new Set(parseList(impls)), [impls])
+  const availableEngines = useMemo(() => {
+    const source = searxngConfig?.engines ?? STATIC_SEARXNG_ENGINES
+    return source.filter((engine) => {
+      if (!engine.enabled) return false
+      if (categories && !engine.categories.includes(categories)) return false
+      if (timeRange && !engine.timeRangeSupport) return false
+      return true
+    })
+  }, [categories, searxngConfig, timeRange])
 
   const requestBody = useMemo(
     () => buildRequestBody(action, { categories, engines, impls, provider, query, timeRange, urls }),
@@ -203,20 +261,109 @@ export default function WebSearchTestPage() {
   const crawlResult = isCrawlResponse(result) ? result : null
   const canSubmit = action === 'crawlPages' ? parseList(urls).length > 0 : query.trim().length > 0
 
-  const selectAction = (nextAction: ActionMode) => {
-    setAction(nextAction)
+  const applyForm = (form: WebSearchCachedForm) => {
+    if (typeof form.query === 'string') {
+      setQuery(form.query)
+    }
+    if (typeof form.provider === 'string') {
+      setProvider(form.provider)
+    }
+    if (typeof form.categories === 'string') {
+      setCategories(form.categories)
+    }
+    if (typeof form.engines === 'string') {
+      setEngines(form.engines)
+    }
+    if (typeof form.timeRange === 'string') {
+      setTimeRange(form.timeRange)
+    }
+    if (typeof form.urls === 'string') {
+      setUrls(form.urls)
+    }
+    if (typeof form.impls === 'string') {
+      setImpls(form.impls)
+    }
+  }
+
+  const applySlot = (slot: CachedSlot) => {
+    setPayload(slot.payload)
+    setRunState(slot.runState)
+    applyForm(slot.form)
     setError(null)
+    setCopyState('idle')
+    setView('summary')
+  }
+
+  const snapshotForm = (): WebSearchCachedForm => {
+    if (action === 'crawlPages') {
+      return { impls, urls }
+    }
+
+    return { categories, engines, provider, query, timeRange }
+  }
+
+  useEffect(() => {
+    void fetch('/api/dev/web-search')
+      .then(async (response) => (response.ok ? ((await response.json()) as { searxng?: SearXNGConfig | null }).searxng : null))
+      .then((config) => {
+        if (config) setSearxngConfig(config)
+      })
+      .catch(() => {
+        // Keep the static engine list when SearXNG is unavailable.
+      })
+
+    const store = readWebSearchCache<ApiSuccess, RunState>()
+    const slot = store.webSearch
+    if (slot) {
+      // Hydrating a cached form is an intentional one-time state restoration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      applySlot(slot)
+    }
+    // Hydrate once on mount for the default action.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const toggleImpl = (value: string) => {
+    const next = new Set(selectedImpls)
+    if (next.has(value)) {
+      next.delete(value)
+    } else {
+      next.add(value)
+    }
+
+    setImpls(
+      CRAWLER_IMPLS.map((item) => item.value)
+        .filter((item) => next.has(item))
+        .join(',')
+    )
+  }
+
+  const selectAction = (nextAction: ActionMode) => {
+    if (nextAction === action) {
+      return
+    }
+
+    setAction(nextAction)
+    setCopyState('idle')
+    setError(null)
+
+    const store = readWebSearchCache<ApiSuccess, RunState>()
+    const slot = store[nextAction]
+
+    if (slot) {
+      applySlot(slot)
+      return
+    }
+
     setPayload(null)
     setRunState(null)
-    setCopyState('idle')
 
-    if (nextAction === 'query') {
-      setQuery(examples.query)
+    if (nextAction === 'crawlPages') {
+      setUrls(examples.crawlPages.urls)
+      return
     }
 
-    if (nextAction === 'webSearch') {
-      setQuery(examples.webSearch)
-    }
+    setQuery(defaultQueryForAction(nextAction))
   }
 
   const submit = async () => {
@@ -240,11 +387,13 @@ export default function WebSearchTestPage() {
       })
       const data = (await response.json()) as ApiSuccess | ApiFailure
 
-      setRunState({
+      const nextRunState: RunState = {
         durationMs: Math.round(performance.now() - startedAt),
         status: response.status,
         submittedAt,
-      })
+      }
+
+      setRunState(nextRunState)
 
       if (!response.ok || !data.success) {
         setError('error' in data ? data.error : `Request failed with ${response.status}`)
@@ -253,6 +402,11 @@ export default function WebSearchTestPage() {
 
       setPayload(data)
       setView('summary')
+      writeWebSearchCacheSlot(action, {
+        form: snapshotForm(),
+        payload: data,
+        runState: nextRunState,
+      })
     } catch (requestError) {
       setRunState({
         durationMs: Math.round(performance.now() - startedAt),
@@ -280,11 +434,22 @@ export default function WebSearchTestPage() {
     setCopyState('idle')
   }
 
-  const copyJson = async () => {
-    const text = view === 'json' && rawJson ? rawJson : requestJson
+  const clearCache = () => {
+    clearWebSearchCache()
+    setProvider('')
+    setCategories('general')
+    setEngines('')
+    setTimeRange('')
+    setImpls('')
+    setPayload(null)
+    setError(null)
+    setRunState(null)
+    setCopyState('idle')
+  }
 
+  const copyRequestJson = async () => {
     try {
-      await navigator.clipboard.writeText(text)
+      await navigator.clipboard.writeText(requestJson)
       setCopyState('copied')
       window.setTimeout(() => setCopyState('idle'), 1600)
     } catch {
@@ -293,7 +458,7 @@ export default function WebSearchTestPage() {
   }
 
   return (
-    <main className='h-screen overflow-y-auto bg-[#f5f7fb] text-slate-950'>
+    <main className='h-screen overflow-x-hidden overflow-y-auto bg-[#f5f7fb] text-slate-950'>
       <div className='mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8'>
         <header className='flex flex-col justify-between gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end'>
           <div>
@@ -331,8 +496,8 @@ export default function WebSearchTestPage() {
           </div>
         </header>
 
-        <div className='grid flex-1 gap-6 lg:grid-cols-[410px_minmax(0,1fr)]'>
-          <section className='flex flex-col gap-4'>
+        <div className='grid min-w-0 flex-1 items-start gap-6 lg:grid-cols-[410px_minmax(0,1fr)]'>
+          <section className='flex min-w-0 flex-col gap-4'>
             <div className='rounded-lg border border-slate-200 bg-white p-4 shadow-sm'>
               <div className='flex items-start gap-3 rounded-lg border border-cyan-200 bg-cyan-50 p-3 text-cyan-900'>
                 <Globe2 className='mt-0.5 size-5 shrink-0' />
@@ -367,16 +532,43 @@ export default function WebSearchTestPage() {
                   </div>
 
                   <div>
-                    <label className='text-sm font-medium text-slate-800' htmlFor='web-search-impls'>
+                    <div className='text-sm font-medium text-slate-800' id='web-search-impls-label'>
                       抓取实现 · Crawler impls
-                    </label>
-                    <input
-                      id='web-search-impls'
-                      value={impls}
-                      onChange={(event) => setImpls(event.target.value)}
-                      placeholder='naive,jina,browserless,search1api'
-                      className='mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
-                    />
+                    </div>
+                    <div
+                      role='group'
+                      aria-labelledby='web-search-impls-label'
+                      className='mt-2 grid grid-cols-2 gap-2'
+                    >
+                      {CRAWLER_IMPLS.map((item) => {
+                        const checked = selectedImpls.has(item.value)
+
+                        return (
+                          <label
+                            key={item.value}
+                            className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                              checked
+                                ? 'border-cyan-300 bg-cyan-50 text-cyan-900'
+                                : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white'
+                            }`}
+                          >
+                            <input
+                              type='checkbox'
+                              checked={checked}
+                              onChange={() => toggleImpl(item.value)}
+                              className='size-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-200'
+                            />
+                            <span className='min-w-0'>
+                              <span className='font-medium'>{item.label}</span>
+                              <span className='ml-1 font-mono text-xs text-slate-500'>{item.value}</span>
+                            </span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                    <p className='mt-2 text-xs leading-5 text-slate-500'>
+                      可多选；不选则走服务端默认抓取链路。
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -411,7 +603,7 @@ export default function WebSearchTestPage() {
                       <option value=''>自动 · SEARCH_PROVIDERS 链式降级</option>
                       {SEARCH_PROVIDERS.map((item) => (
                         <option key={item.value} value={item.value}>
-                          {item.label} · {item.value}
+                          {item.label} · {item.value} · {item.tag}
                         </option>
                       ))}
                     </select>
@@ -428,7 +620,10 @@ export default function WebSearchTestPage() {
                       <select
                         id='web-search-categories'
                         value={categories}
-                        onChange={(event) => setCategories(event.target.value)}
+                        onChange={(event) => {
+                          setCategories(event.target.value)
+                          setEngines('')
+                        }}
                         className='mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
                       >
                         <option value='general'>通用 · general</option>
@@ -454,19 +649,15 @@ export default function WebSearchTestPage() {
                         className='mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
                       >
                         <option value=''>全部 · All</option>
-                        <option value='google'>Google</option>
-                        <option value='bing'>Bing</option>
-                        <option value='duckduckgo'>DuckDuckGo</option>
-                        <option value='yahoo'>Yahoo</option>
-                        <option value='youtube'>YouTube</option>
-                        <option value='x'>X (Twitter)</option>
-                        <option value='reddit'>Reddit</option>
-                        <option value='github'>GitHub</option>
-                        <option value='arxiv'>arXiv</option>
-                        <option value='wechat'>微信 · WeChat</option>
-                        <option value='bilibili'>Bilibili</option>
-                        <option value='imdb'>IMDb</option>
-                        <option value='wikipedia'>Wikipedia</option>
+                        {availableEngines.map((engine) => (
+                          <option key={engine.name} value={engine.name}>
+                            {engine.name}
+                            {engine.timeRangeSupport ? ' · time-range' : ''}
+                          </option>
+                        ))}
+                        <option value='x' disabled>
+                          X (Twitter) · 当前镜像不可用
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -475,10 +666,13 @@ export default function WebSearchTestPage() {
                     <label className='text-sm font-medium text-slate-800' htmlFor='web-search-time-range'>
                       时间范围 · Time range
                     </label>
-                    <select
-                      id='web-search-time-range'
-                      value={timeRange}
-                      onChange={(event) => setTimeRange(event.target.value)}
+                      <select
+                        id='web-search-time-range'
+                        value={timeRange}
+                        onChange={(event) => {
+                          setTimeRange(event.target.value)
+                          setEngines('')
+                        }}
                       className='mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
                     >
                       <option value=''>不限 · anytime</option>
@@ -491,7 +685,7 @@ export default function WebSearchTestPage() {
                 </div>
               )}
 
-              <div className='mt-4 grid grid-cols-[1fr_auto] gap-2'>
+              <div className='mt-4 grid grid-cols-[1fr_auto_auto] gap-2'>
                 <button
                   type='button'
                   disabled={!canSubmit || isLoading}
@@ -500,6 +694,15 @@ export default function WebSearchTestPage() {
                 >
                   {isLoading ? <Loader2 className='size-4 animate-spin' /> : <Sparkles className='size-4' />}
                   发送请求
+                </button>
+                <button
+                  type='button'
+                  onClick={clearCache}
+                  className='grid size-10 place-items-center rounded-md border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-red-50 hover:text-red-700'
+                  aria-label='清理缓存'
+                  title='清理缓存（结果与服务商/分类/引擎/时间范围/impls）'
+                >
+                  <Trash2 className='size-4' />
                 </button>
                 <button
                   type='button'
@@ -546,27 +749,39 @@ export default function WebSearchTestPage() {
                 <h2 className='text-sm font-semibold text-slate-950'>请求体</h2>
                 <button
                   type='button'
-                  onClick={copyJson}
+                  onClick={copyRequestJson}
                   className='inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50'
                 >
                   <Clipboard className='size-3.5' />
                   {COPY_LABEL[copyState]}
                 </button>
               </div>
-              <pre className='mt-3 max-h-64 overflow-auto rounded-lg bg-slate-950 p-3 font-mono text-xs leading-5 text-slate-100'>
-                {requestJson}
-              </pre>
+              <div className='mt-3'>
+                <Scrollbar maxHeight='16rem' className='overflow-hidden rounded-lg ring-1 ring-slate-200'>
+                  <Highlighter
+                    actionIconSize='small'
+                    copyable={false}
+                    language='json'
+                    showLanguage={false}
+                    variant='borderless'
+                    wrap
+                    styles={{ content: { height: 'auto' } }}
+                  >
+                    {requestJson}
+                  </Highlighter>
+                </Scrollbar>
+              </div>
             </div>
           </section>
 
-          <section className='flex min-w-0 flex-col rounded-lg border border-slate-200 bg-white shadow-sm'>
-            <div className='border-b border-slate-200 p-4'>
+          <section className='flex min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm'>
+            <div className='shrink-0 border-b border-slate-200 p-4'>
               {error ? (
                 <div className='flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-red-800'>
                   <AlertCircle className='mt-0.5 size-5 shrink-0' />
-                  <div>
+                  <div className='min-w-0'>
                     <div className='text-sm font-semibold'>请求失败</div>
-                    <div className='mt-1 text-sm leading-5'>{error}</div>
+                    <div className='mt-1 text-sm leading-5 break-words'>{error}</div>
                   </div>
                 </div>
               ) : payload ? (
@@ -608,7 +823,7 @@ export default function WebSearchTestPage() {
               </div>
             </div>
 
-            <div className='flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='flex shrink-0 flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between'>
               <div className='grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1'>
                 {[
                   ['summary', '摘要'],
@@ -629,15 +844,33 @@ export default function WebSearchTestPage() {
               </div>
             </div>
 
-            <div className='min-h-0 flex-1 overflow-y-auto p-4'>
+            <Scrollbar maxHeight='min(100vh, 60rem)' className='min-h-0'>
+              <div className='min-w-0 p-4'>
               {view === 'json' ? (
-                <pre className='h-full overflow-auto rounded-lg bg-slate-950 p-4 font-mono text-xs leading-5 text-slate-100'>
-                  {rawJson || '// Response JSON will appear here'}
-                </pre>
+                rawJson ? (
+                  <Highlighter
+                    actionIconSize='small'
+                    className='rounded-lg ring-1 ring-slate-200'
+                    language='json'
+                    variant='borderless'
+                    wrap
+                    styles={{ content: { height: 'auto' } }}
+                  >
+                    {rawJson}
+                  </Highlighter>
+                ) : (
+                  <div className='grid min-h-40 place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center'>
+                    <div>
+                      <Code2 className='mx-auto size-8 text-slate-400' />
+                      <div className='mt-3 text-sm font-semibold text-slate-950'>还没有响应 JSON</div>
+                      <div className='mt-1 text-sm text-slate-500'>发送请求后会在这里高亮展示原始响应。</div>
+                    </div>
+                  </div>
+                )
               ) : searchResult ? (
-                <div className='grid gap-3'>
+                <div className='grid min-w-0 gap-3'>
                   {searchResult.errorDetail ? (
-                    <div className='rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800'>
+                    <div className='rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm break-words text-amber-800'>
                       {searchResult.errorDetail}
                     </div>
                   ) : null}
@@ -649,29 +882,43 @@ export default function WebSearchTestPage() {
                     </div>
                   ) : null}
 
+                  {searchResult.fallback && searchResult.fallback.level !== 'none' ? (
+                    <div className='rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900'>
+                      搜索已降级：
+                      {searchResult.fallback.level === 'engine-removed'
+                        ? '指定引擎无结果，已移除引擎限制。'
+                        : '仍无结果，已移除分类、引擎和时间范围限制。'}
+                    </div>
+                  ) : null}
+
                   {searchResult.results.length > 0 ? (
                     searchResult.results.map((item, index) => (
-                      <article key={`${item.url}-${index}`} className='rounded-lg border border-slate-200 p-4'>
-                        <div className='flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between'>
-                          <div className='min-w-0'>
+                      <article
+                        key={`${item.url}-${index}`}
+                        className='min-w-0 overflow-hidden rounded-lg border border-slate-200 p-4'
+                      >
+                        <div className='flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between'>
+                          <div className='min-w-0 flex-1 overflow-hidden'>
                             <a
                               href={item.url}
                               target='_blank'
                               rel='noreferrer'
-                              className='text-base font-semibold text-slate-950 hover:text-cyan-700'
+                              className='block text-base font-semibold break-words text-slate-950 hover:text-cyan-700'
                             >
                               {item.title || item.url}
                             </a>
-                            <div className='mt-1 truncate font-mono text-xs text-cyan-700'>{item.url}</div>
+                            <div className='mt-1 truncate font-mono text-xs text-cyan-700' title={item.url}>
+                              {item.url}
+                            </div>
                           </div>
-                          <div className='flex shrink-0 flex-wrap gap-1.5'>
+                          <div className='flex max-w-full shrink-0 flex-wrap gap-1.5 sm:max-w-[40%] sm:justify-end'>
                             {searchResult.provider ? (
                               <span className='rounded-md bg-violet-50 px-2 py-1 text-xs font-medium text-violet-700'>
                                 {searchResult.provider}
                               </span>
                             ) : null}
                             {item.category ? (
-                              <span className='rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600'>
+                              <span className='rounded-md bg-slate-100 px-2 py-1 text-xs font-medium break-all text-slate-600'>
                                 {item.category}
                               </span>
                             ) : null}
@@ -680,12 +927,12 @@ export default function WebSearchTestPage() {
                             </span>
                           </div>
                         </div>
-                        <p className='mt-3 line-clamp-3 text-sm leading-6 text-slate-600'>{item.content}</p>
+                        <p className='mt-3 line-clamp-3 text-sm leading-6 break-words text-slate-600'>{item.content}</p>
                         <div className='mt-3 flex flex-wrap gap-1.5'>
                           {item.engines.map((engine) => (
                             <span
                               key={engine}
-                              className='rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-500'
+                              className='rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium break-all text-slate-500'
                             >
                               {engine}
                             </span>
@@ -694,7 +941,7 @@ export default function WebSearchTestPage() {
                       </article>
                     ))
                   ) : (
-                    <div className='grid min-h-80 place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center'>
+                    <div className='grid min-h-40 place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center'>
                       <div>
                         <Search className='mx-auto size-8 text-slate-400' />
                         <div className='mt-3 text-sm font-semibold text-slate-950'>没有搜索结果</div>
@@ -704,7 +951,7 @@ export default function WebSearchTestPage() {
                   )}
                 </div>
               ) : crawlResult ? (
-                <div className='grid gap-3'>
+                <div className='grid min-w-0 gap-3'>
                   {crawlResult.results.map((item, index) => {
                     const errorType = 'errorType' in item.data ? item.data.errorType : undefined
                     const errorMessage = 'errorMessage' in item.data ? item.data.errorMessage : undefined
@@ -713,25 +960,30 @@ export default function WebSearchTestPage() {
                     const contentType = 'contentType' in item.data ? item.data.contentType : undefined
 
                     return (
-                      <article key={`${item.originalUrl}-${index}`} className='rounded-lg border border-slate-200 p-4'>
-                        <div className='flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between'>
-                          <div className='min-w-0'>
+                      <article
+                        key={`${item.originalUrl}-${index}`}
+                        className='min-w-0 overflow-hidden rounded-lg border border-slate-200 p-4'
+                      >
+                        <div className='flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between'>
+                          <div className='min-w-0 flex-1 overflow-hidden'>
                             <a
                               href={item.originalUrl}
                               target='_blank'
                               rel='noreferrer'
-                              className='text-base font-semibold text-slate-950 hover:text-cyan-700'
+                              className='block text-base font-semibold break-words text-slate-950 hover:text-cyan-700'
                             >
                               {title || item.originalUrl}
                             </a>
-                            <div className='mt-1 truncate font-mono text-xs text-cyan-700'>{item.originalUrl}</div>
+                            <div className='mt-1 truncate font-mono text-xs text-cyan-700' title={item.originalUrl}>
+                              {item.originalUrl}
+                            </div>
                           </div>
-                          <div className='flex shrink-0 flex-wrap gap-1.5'>
-                            <span className='rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600'>
+                          <div className='flex max-w-full shrink-0 flex-wrap gap-1.5 sm:max-w-[40%] sm:justify-end'>
+                            <span className='rounded-md bg-slate-100 px-2 py-1 text-xs font-medium break-all text-slate-600'>
                               {item.crawler}
                             </span>
                             <span
-                              className={`rounded-md px-2 py-1 text-xs font-medium ${
+                              className={`rounded-md px-2 py-1 text-xs font-medium break-all ${
                                 isError ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'
                               }`}
                             >
@@ -739,7 +991,7 @@ export default function WebSearchTestPage() {
                             </span>
                           </div>
                         </div>
-                        <p className='mt-3 line-clamp-5 text-sm leading-6 text-slate-600'>
+                        <p className='mt-3 line-clamp-5 text-sm leading-6 break-words text-slate-600'>
                           {errorMessage || item.data.content || 'No content returned'}
                         </p>
                       </article>
@@ -747,7 +999,7 @@ export default function WebSearchTestPage() {
                   })}
                 </div>
               ) : (
-                <div className='grid min-h-96 place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center'>
+                <div className='grid min-h-40 place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center'>
                   <div>
                     <Globe2 className='mx-auto size-10 text-slate-400' />
                     <div className='mt-3 text-sm font-semibold text-slate-950'>还没有响应</div>
@@ -755,7 +1007,8 @@ export default function WebSearchTestPage() {
                   </div>
                 </div>
               )}
-            </div>
+              </div>
+            </Scrollbar>
           </section>
         </div>
       </div>

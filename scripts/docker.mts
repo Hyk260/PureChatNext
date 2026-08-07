@@ -40,6 +40,75 @@ function requireFile(filename: string, setupCommand: string) {
   }
 }
 
+function isDockerDaemonDown(output: string) {
+  return /docker\.sock|Cannot connect to the Docker daemon|Is the docker daemon running|failed to connect to the docker API|The system cannot find the file specified/i.test(
+    output
+  )
+}
+
+/** 启动依赖前检查 Docker CLI / 守护进程，失败时给出中文操作指引 */
+function ensureDockerReady() {
+  const result = spawnSync('docker', ['info'], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+
+  if (result.error) {
+    const code = (result.error as NodeJS.ErrnoException).code
+    if (code === 'ENOENT') {
+      throw new Error(
+        [
+          '未检测到 Docker 命令（未安装或不在 PATH 中）。',
+          '',
+          '请按以下步骤操作：',
+          '  1. 安装 Docker Desktop：https://www.docker.com/products/docker-desktop/',
+          '  2. 安装完成后打开 Docker Desktop',
+          '  3. 等待引擎启动完成，再执行：pnpm run dev:docker',
+        ].join('\n')
+      )
+    }
+    throw result.error
+  }
+
+  if (result.status === 0) return
+
+  const output = `${result.stderr ?? ''}\n${result.stdout ?? ''}`.trim()
+  if (isDockerDaemonDown(output)) {
+    const steps =
+      process.platform === 'darwin'
+        ? [
+            '  1. 打开 Docker Desktop（启动台 / 应用程序）',
+            '  2. 等待菜单栏鲸鱼图标变为 Running（引擎已启动）',
+            '  3. 再执行：pnpm run dev:docker',
+          ]
+        : process.platform === 'win32'
+          ? [
+              '  1. 打开 Docker Desktop',
+              '  2. 等待托盘图标显示 Running',
+              '  3. 再执行：pnpm run dev:docker',
+            ]
+          : [
+              '  1. 启动 Docker 服务，例如：sudo systemctl start docker',
+              '  2. 确认当前用户已加入 docker 组（或使用有权限的方式）',
+              '  3. 再执行：pnpm run dev:docker',
+            ]
+
+    throw new Error(
+      [
+        'Docker 已安装，但守护进程未运行（无法连接 docker.sock）。',
+        '',
+        '请按以下步骤操作：',
+        ...steps,
+        '',
+        '自检命令：docker info',
+      ].join('\n')
+    )
+  }
+
+  throw new Error(`Docker 不可用（exit ${result.status ?? 1}）${output ? `：\n${output}` : ''}`)
+}
+
 async function setupDev() {
   const source = path.join(devDir, '.env.example')
   await copyFile(source, devEnv, fsConstants.COPYFILE_EXCL).catch((error: NodeJS.ErrnoException) => {
@@ -171,15 +240,19 @@ async function main() {
       await setupDeploy()
       break
     case 'up':
+      ensureDockerReady()
       await upDev()
       break
     case 'down':
+      ensureDockerReady()
       downDev()
       break
     case 'reset':
+      ensureDockerReady()
       await resetDev()
       break
     case 'validate':
+      ensureDockerReady()
       validate()
       break
     default:

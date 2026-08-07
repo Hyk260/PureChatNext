@@ -212,7 +212,11 @@ describe('SearchService', () => {
         searchEngines: undefined,
         searchTimeRange: '1d',
       })
-      expect(result).toEqual({ ...successResponse, provider: SearchImplType.SearXNG })
+      expect(result).toEqual(expect.objectContaining({
+        ...successResponse,
+        fallback: expect.objectContaining({ level: 'engine-removed' }),
+        provider: SearchImplType.SearXNG,
+      }))
     })
 
     it('should retry without any params when still no results found', async () => {
@@ -253,7 +257,11 @@ describe('SearchService', () => {
 
       expect(mockSearchImpl.query).toHaveBeenCalledTimes(3)
       expect(mockSearchImpl.query).toHaveBeenNthCalledWith(3, 'test', undefined)
-      expect(result).toEqual({ ...successResponse, provider: SearchImplType.SearXNG })
+      expect(result).toEqual(expect.objectContaining({
+        ...successResponse,
+        fallback: expect.objectContaining({ level: 'all-filters-removed' }),
+        provider: SearchImplType.SearXNG,
+      }))
     })
 
     it('should skip second retry if searchEngines not provided', async () => {
@@ -294,7 +302,11 @@ describe('SearchService', () => {
         searchTimeRange: undefined,
       })
       expect(mockSearchImpl.query).toHaveBeenNthCalledWith(2, 'test', undefined)
-      expect(result).toEqual({ ...successResponse, provider: SearchImplType.SearXNG })
+      expect(result).toEqual(expect.objectContaining({
+        ...successResponse,
+        fallback: expect.objectContaining({ level: 'all-filters-removed' }),
+        provider: SearchImplType.SearXNG,
+      }))
     })
 
     it('should return empty results after all retries fail', async () => {

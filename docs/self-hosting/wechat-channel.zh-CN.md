@@ -44,7 +44,9 @@ Gateway Poller ──事务──► channel_events + poll_cursor
 | --- | --- |
 | `DATABASE_URL` | 必填，可靠队列的事实来源 |
 | `KEY_VAULTS_SECRET` | 必填，用 AES-256-GCM 加密扫码凭证和 `context_token` |
-| `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` | 至少配置当前 Agent 对应的服务端密钥 |
+| `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` | 自配 OpenAI / DeepSeek Agent 时需配置对应服务端密钥 |
+| `AI_GATEWAY_API_KEY`（或 `PURECHAT_API_KEY`） | PureChat Agent 时需配置；Gateway 进程与 app 共用 |
+| `PURECHAT_ENABLED` | 默认 true；设为 false 时禁用 PureChat 渠道 |
 | `WECHAT_GATEWAY_ENABLED` | 本地/自托管默认 true；Vercel 默认 false |
 | `WECHAT_GATEWAY_LOG_MESSAGE_TEXT` | 默认 false；调试时输出单行、最多 200 字的消息正文 |
 | `WECHAT_WEBHOOK_SECRET` | 仅兼容/诊断 webhook 使用；未配置时 webhook 始终拒绝 |
@@ -80,7 +82,7 @@ node /app/wechat-gateway.mjs --healthcheck
 
 指令必须是完整的 `/command [args]`。未知斜杠指令只返回帮助，不进入模型。普通联系人可以使用 `/new`、`/stop`、`/help`；只有扫码授权得到的微信账号可以枚举或切换 Agent。
 
-可用于微信渠道的 Agent Provider 仅为默认 DeepSeek、OpenAI 或 DeepSeek，并且必须有对应服务端密钥。其他 Provider 会显示不可用，不会静默回退。
+可用于微信渠道的 Agent Provider 为 PureChat、OpenAI 或 DeepSeek。PureChat 走 AI Gateway 并扣绑定用户的免费积分；OpenAI / DeepSeek 需对应服务端密钥。其他 Provider 会显示不可用，不会静默回退。
 
 ## 回环验收
 
@@ -91,7 +93,7 @@ node /app/wechat-gateway.mjs --healthcheck
 5. 用扫码账号执行 `/agents` 并切换；其他联系人执行应被拒绝。
 6. 长回答期间发送 `/stop`，应收到停止确认且生成调用被中止。
 7. 停止 Gateway；90 秒后页面应显示 offline。重新启动后应恢复轮询并继续过期 lease/待重试事件。
-8. 发送图片或文件，应收到“当前版本仅支持文本消息”。
+8. 发送图片时，仅当当前助手模型具备 vision 能力才会进入多模态理解；否则提示切换视觉模型。文件消息会解析文本后交给助手。
 
 失败事件可在设置页点击“重试失败消息”，单次最多重新入队 100 条。
 

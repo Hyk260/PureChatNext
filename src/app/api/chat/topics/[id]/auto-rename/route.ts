@@ -1,9 +1,7 @@
-import { createOpenAI } from '@ai-sdk/openai'
 import { normalizeProviderId, PURECHAT_PROVIDER_ID } from '@pure/const'
-import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
+import { FreePlanLimitError } from '@pure/database/models/credits'
 import { ChatMessageModel } from '@pure/database/models/chatMessage'
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
-import { createNanoId } from '@pure/utils'
 import { generateText } from 'ai'
 import type { LanguageModel, UIMessage } from 'ai'
 import debug from 'debug'
@@ -11,7 +9,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 
-import { llmEnv, resolveAiGatewayApiKey, resolveAiGatewayBaseURL } from '@/envs/llm'
 import {
   createProviderLanguageModel,
   isSupportedProviderId,
@@ -21,11 +18,9 @@ import {
 } from '@/libs/ai-providers/resolveClient'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import {
-  computeChatCost,
-  getEnabledPureChatModel,
-  getPureChatModel,
-  getShanghaiBillingPeriod,
-  resolvePureChatGatewayId,
+  assertPureChatCanChat,
+  chargePureChatGenerateUsage,
+  createPureChatLanguageModel,
 } from '@/server/purechat'
 import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 
@@ -84,14 +79,6 @@ export const normalizeGeneratedTitle = (value: string) => {
   return `${title.slice(0, MAX_TITLE_LENGTH - 1)}…`
 }
 
-const createPureChatModel = (model: string): LanguageModel | null => {
-  const gatewayId = resolvePureChatGatewayId(model)
-  const gatewayKey = resolveAiGatewayApiKey()
-  if (!gatewayId || !gatewayKey) return null
-
-  return createOpenAI({ apiKey: gatewayKey, baseURL: resolveAiGatewayBaseURL() })(gatewayId)
-}
-
 const createSelfHostedModel = (request: NextRequest, provider: string, model: string, baseURL?: string) => {
   if (!isSupportedProviderId(provider)) return null
 
@@ -99,43 +86,6 @@ const createSelfHostedModel = (request: NextRequest, provider: string, model: st
   if (!apiKey) return null
 
   return createProviderLanguageModel(provider, model, apiKey, resolveOptionalBaseURL(baseURL))
-}
-
-const chargePureChatUsage = async (params: {
-  durationMs: number
-  model: string
-  result: Awaited<ReturnType<typeof generateText>>
-  settlementId: string
-  settlementPeriod: string
-  userId: string
-}) => {
-  const card = getPureChatModel(params.model)
-  if (!card) return
-
-  const usage = params.result.usage
-  const cachedInputTokens = usage.inputTokenDetails.cacheReadTokens
-  const inputTokens = usage.inputTokens
-  const outputTokens = usage.outputTokens
-  if (inputTokens == null && outputTokens == null) return
-
-  const { totalCredits } = computeChatCost(card.pricing, {
-    cachedInputTokens,
-    inputTokens,
-    outputTokens,
-  })
-
-  await new CreditsModel().chargeChatUsage({
-    cachedInputTokens,
-    credits: totalCredits,
-    durationMs: params.durationMs,
-    inputTokens,
-    messageId: params.settlementId,
-    model: params.model,
-    outputTokens,
-    period: params.settlementPeriod,
-    provider: PURECHAT_PROVIDER_ID,
-    userId: params.userId,
-  })
 }
 
 export const POST = withAuth<{ id: string }>(async (request, { params, userId }) => {
@@ -166,19 +116,20 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
   let settlementPeriod: string | undefined
 
   if (isPureChat) {
-    if (!llmEnv.PURECHAT_ENABLED) return jsonError('PureChat is disabled')
-    if (!getEnabledPureChatModel(model)) return jsonError(PURECHAT_MODEL_UNAVAILABLE_MESSAGE)
-
-    settlementPeriod = getShanghaiBillingPeriod()
-    settlementId = createNanoId(24)()
     try {
-      await new CreditsModel().assertCanChat(userId, settlementPeriod)
+      const settlement = await assertPureChatCanChat(userId, model)
+      settlementId = settlement.settlementId
+      settlementPeriod = settlement.settlementPeriod
     } catch (error) {
       if (error instanceof FreePlanLimitError) return jsonError(error.message, 429)
+      const message = error instanceof Error ? error.message : 'PureChat temporarily unavailable'
+      if (message === PURECHAT_MODEL_UNAVAILABLE_MESSAGE) return jsonError(message)
+      if (message === 'PureChat is disabled') return jsonError(message)
+      if (message === 'PureChat temporarily unavailable') return jsonError(message, 503)
       throw error
     }
 
-    languageModel = createPureChatModel(model)
+    languageModel = createPureChatLanguageModel(model)
     if (!languageModel) return jsonError('PureChat temporarily unavailable', 503)
   } else {
     languageModel = createSelfHostedModel(request, provider, model, baseURL)
@@ -201,7 +152,7 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
 
     if (isPureChat && settlementId && settlementPeriod) {
       try {
-        await chargePureChatUsage({
+        await chargePureChatGenerateUsage({
           durationMs: Date.now() - startedAt,
           model,
           result,

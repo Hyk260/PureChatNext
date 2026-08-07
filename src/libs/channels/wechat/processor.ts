@@ -7,6 +7,12 @@ import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import { createNanoId } from '@pure/utils'
 import { generateWechatAgentReply } from './agentBridge'
+import {
+  isWechatAgentUsable,
+  normalizeWechatAgentProvider,
+  resolveWechatAgentModelId,
+  wechatModelSupportsVision,
+} from './agentSupport'
 import { parseWechatCommand, WECHAT_HELP_TEXT } from './commands'
 import { decryptContextToken, decryptCredentials } from './encrypt'
 import { getWechatHistoryTokenBudget, trimWechatHistory } from './history'
@@ -38,13 +44,6 @@ function splitText(text: string): string[] {
   return chunks.length ? chunks : ['（空回复）']
 }
 
-function isAgentUsable(provider: string | null) {
-  const normalized = provider?.trim() || 'deepseek'
-  if (normalized === 'openai') return Boolean(process.env.OPENAI_API_KEY?.trim())
-  if (normalized === 'deepseek') return Boolean(process.env.DEEPSEEK_API_KEY?.trim())
-  return false
-}
-
 async function handleAgentsCommand(event: ChannelEventItem, argument: string) {
   const binding = await new ChannelBindingModel().findById(event.bindingId)
   if (!binding) throw new Error('Binding no longer exists')
@@ -63,7 +62,7 @@ async function handleAgentsCommand(event: ChannelEventItem, argument: string) {
     return [
       '可用助手：',
       ...agents.map((agent, index) => {
-        const usable = isAgentUsable(agent.provider)
+        const usable = isWechatAgentUsable(agent.provider)
         const marker = agent.id === current ? '（当前）' : ''
         return `${index + 1}. ${agent.title} [${agent.id}]${usable ? '' : '（不可用：渠道未配置服务端密钥或 Provider 不支持）'}${marker}`
       }),
@@ -75,7 +74,7 @@ async function handleAgentsCommand(event: ChannelEventItem, argument: string) {
   const index = /^\d+$/.test(argument) ? Number(argument) - 1 : -1
   const target = index >= 0 ? agents[index] : agents.find((agent) => agent.id === argument)
   if (!target) return '未找到该助手。发送 /agents 查看列表。'
-  if (!isAgentUsable(target.provider)) return '该助手的 Provider 不受支持或服务端密钥未配置，无法切换。'
+  if (!isWechatAgentUsable(target.provider)) return '该助手的 Provider 不受支持或服务端密钥未配置，无法切换。'
 
   await eventModel.startNewConversation(event.sessionId, target.id, event.id)
   abortActiveGeneration(event.bindingId, event.externalUserId)
@@ -137,8 +136,8 @@ async function buildResponse(event: ChannelEventItem): Promise<string> {
   try {
     const agentId = session.activeAgentId || binding.agentId
     const agent = await new AgentModel(binding.userId).findVisibleById(agentId)
-    const provider = agent?.provider?.trim() || 'deepseek'
-    const modelId = agent?.model ?? (provider === 'openai' ? 'gpt-5.4-mini' : 'deepseek-v4-flash')
+    const provider = normalizeWechatAgentProvider(agent?.provider)
+    const modelId = resolveWechatAgentModelId(provider, agent?.model)
     const history = trimWechatHistory(
       await eventModel.findContext(event.sessionId, event.conversationVersion),
       getWechatHistoryTokenBudget(provider, modelId, event.content)
@@ -161,7 +160,9 @@ async function buildResponse(event: ChannelEventItem): Promise<string> {
     } else if (event.messageKind === 'image') {
       const payload = parseWechatImageContent(event.content)
       if (!payload) return '图片消息格式无效，无法处理。'
-      if (provider !== 'openai') return '当前助手使用的模型不支持图片理解，请切换到支持视觉的模型后重试。'
+      if (!wechatModelSupportsVision(provider, modelId)) {
+        return '当前助手使用的模型不支持图片理解，请切换到支持视觉的模型后重试。'
+      }
       const image = await downloadStoredWechatImage(api, payload)
       if (!image) return '图片无法下载，可能已过期或缺少媒体凭证。'
       if (image.buffer.byteLength > WECHAT_MAX_INBOUND_FILE_BYTES) return '图片超过 10MB 限制，无法处理。'

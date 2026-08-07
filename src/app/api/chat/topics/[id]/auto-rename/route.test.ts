@@ -3,9 +3,10 @@ import { NextRequest } from 'next/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-  assertCanChat: vi.fn(),
-  chargeChatUsage: vi.fn(),
+  assertPureChatCanChat: vi.fn(),
+  chargePureChatGenerateUsage: vi.fn(),
   createProviderLanguageModel: vi.fn(() => ({ modelId: 'test-model' })),
+  createPureChatLanguageModel: vi.fn(() => ({ modelId: 'purechat-model' })),
   findById: vi.fn(),
   generateText: vi.fn(),
   getAuthenticatedUserId: vi.fn(),
@@ -35,23 +36,12 @@ vi.mock('@pure/database/models/chatMessage', () => ({
   ChatMessageModel: vi.fn(() => ({ listByTopic: mocks.listByTopic })),
 }))
 vi.mock('@pure/database/models/credits', () => ({
-  CreditsModel: vi.fn(() => ({
-    assertCanChat: mocks.assertCanChat,
-    chargeChatUsage: mocks.chargeChatUsage,
-  })),
   FreePlanLimitError: class FreePlanLimitError extends Error {},
 }))
 vi.mock('ai', () => ({ generateText: mocks.generateText }))
-vi.mock('@ai-sdk/openai', () => ({ createOpenAI: vi.fn(() => vi.fn(() => ({ modelId: 'purechat-model' }))) }))
 vi.mock('@pure/const', () => ({
   PURECHAT_PROVIDER_ID: 'purechat',
   normalizeProviderId: (provider: string | undefined) => (provider === 'purehub' ? 'purechat' : provider),
-}))
-vi.mock('@pure/utils', () => ({ createNanoId: () => () => 'settlement-1' }))
-vi.mock('@/envs/llm', () => ({
-  llmEnv: { PURECHAT_ENABLED: true },
-  resolveAiGatewayApiKey: () => 'gateway-key',
-  resolveAiGatewayBaseURL: () => 'https://gateway.example/v1',
 }))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
   createProviderLanguageModel: mocks.createProviderLanguageModel,
@@ -61,11 +51,9 @@ vi.mock('@/libs/ai-providers/resolveClient', () => ({
   resolveProviderApiKey: (_provider: string, headerKey?: string) => headerKey,
 }))
 vi.mock('@/server/purechat', () => ({
-  computeChatCost: () => ({ totalCredits: 2 }),
-  getEnabledPureChatModel: () => ({ id: 'model-1' }),
-  getPureChatModel: () => ({ pricing: {} }),
-  getShanghaiBillingPeriod: () => '2026-07',
-  resolvePureChatGatewayId: () => 'openai/model-1',
+  assertPureChatCanChat: mocks.assertPureChatCanChat,
+  chargePureChatGenerateUsage: mocks.chargePureChatGenerateUsage,
+  createPureChatLanguageModel: mocks.createPureChatLanguageModel,
 }))
 vi.mock('@/server/purechat/gatewayError', () => ({
   isPureChatRestrictedModelError: () => false,
@@ -105,6 +93,10 @@ describe('POST /api/chat/topics/[id]/auto-rename', () => {
       },
     })
     mocks.update.mockResolvedValue({ id: 'topic-1', title: '设计会话标题菜单' })
+    mocks.assertPureChatCanChat.mockResolvedValue({
+      settlementId: 'settlement-1',
+      settlementPeriod: '2026-07',
+    })
   })
 
   it('requires authentication and topic ownership', async () => {
@@ -152,13 +144,13 @@ describe('POST /api/chat/topics/[id]/auto-rename', () => {
     const response = await POST(request({ model: 'model-1', provider: 'purechat' }), context)
 
     expect(response.status).toBe(200)
-    expect(mocks.assertCanChat).toHaveBeenCalledWith('user-1', '2026-07')
-    expect(mocks.chargeChatUsage).toHaveBeenCalledWith(
+    expect(mocks.assertPureChatCanChat).toHaveBeenCalledWith('user-1', 'model-1')
+    expect(mocks.createPureChatLanguageModel).toHaveBeenCalledWith('model-1')
+    expect(mocks.chargePureChatGenerateUsage).toHaveBeenCalledWith(
       expect.objectContaining({
-        credits: 2,
-        messageId: 'settlement-1',
         model: 'model-1',
-        provider: 'purechat',
+        settlementId: 'settlement-1',
+        settlementPeriod: '2026-07',
         userId: 'user-1',
       })
     )

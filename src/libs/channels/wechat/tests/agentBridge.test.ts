@@ -2,7 +2,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
+  assertPureChatCanChat: vi.fn(),
+  chargePureChatGenerateUsage: vi.fn(),
   createProviderLanguageModel: vi.fn(() => ({ modelId: 'test-model' })),
+  createPureChatLanguageModel: vi.fn(() => ({ modelId: 'purechat-model' })),
   findVisibleById: vi.fn(),
   generateText: vi.fn(),
   isStepCount: vi.fn(),
@@ -23,6 +26,15 @@ vi.mock('@/libs/ai-providers/resolveClient', () => ({
   isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek',
   resolveProviderApiKey: () => 'test-api-key',
 }))
+vi.mock('@/server/purechat', () => ({
+  assertPureChatCanChat: mocks.assertPureChatCanChat,
+  chargePureChatGenerateUsage: mocks.chargePureChatGenerateUsage,
+  createPureChatLanguageModel: mocks.createPureChatLanguageModel,
+}))
+vi.mock('@/server/purechat/gatewayError', () => ({
+  isPureChatRestrictedModelError: () => false,
+  PURECHAT_MODEL_UNAVAILABLE_MESSAGE: '该模型在 PureChat 免费套餐中暂不可用，请切换到其他模型。',
+}))
 vi.mock('@/server/search/chatTool', () => ({ webSearchTool: mocks.webSearchTool }))
 vi.mock('@/server/weather/chatTool', () => ({ weatherTool: mocks.weatherTool }))
 
@@ -38,7 +50,20 @@ describe('generateWechatAgentReply', () => {
       provider: 'openai',
       systemRole: '回答要简洁',
     })
-    mocks.generateText.mockResolvedValue({ finishReason: 'stop', steps: [{ finishReason: 'stop' }], text: '基于联网结果的回答' })
+    mocks.generateText.mockResolvedValue({
+      finishReason: 'stop',
+      steps: [{ finishReason: 'stop' }],
+      text: '基于联网结果的回答',
+      usage: {
+        inputTokenDetails: { cacheReadTokens: undefined },
+        inputTokens: 10,
+        outputTokens: 5,
+      },
+    })
+    mocks.assertPureChatCanChat.mockResolvedValue({
+      settlementId: 'settlement-1',
+      settlementPeriod: '2026-08',
+    })
   })
 
   it('enables bounded web search by default', async () => {
@@ -53,6 +78,7 @@ describe('generateWechatAgentReply', () => {
 
     expect(reply).toBe('基于联网结果的回答')
     expect(mocks.isStepCount).toHaveBeenCalledWith(5)
+    expect(mocks.assertPureChatCanChat).not.toHaveBeenCalled()
     expect(mocks.generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         abortSignal: abortController.signal,
@@ -73,6 +99,76 @@ describe('generateWechatAgentReply', () => {
     const options = mocks.generateText.mock.calls[0]![0]
     expect(options.prepareStep({ stepNumber: 2 })).toBeUndefined()
     expect(options.prepareStep({ stepNumber: 3 })).toEqual({ activeTools: [], toolChoice: 'none' })
+  })
+
+  it('uses PureChat gateway model and charges usage', async () => {
+    mocks.findVisibleById.mockResolvedValue({
+      id: 'agent-pure',
+      model: 'gpt-5.4-mini',
+      provider: 'purechat',
+      systemRole: '简洁回答',
+    })
+
+    const reply = await generateWechatAgentReply({
+      agentId: 'agent-pure',
+      userId: 'user-1',
+      userText: '你好',
+    })
+
+    expect(reply).toBe('基于联网结果的回答')
+    expect(mocks.assertPureChatCanChat).toHaveBeenCalledWith('user-1', 'gpt-5.4-mini')
+    expect(mocks.createPureChatLanguageModel).toHaveBeenCalledWith('gpt-5.4-mini')
+    expect(mocks.createProviderLanguageModel).not.toHaveBeenCalled()
+    expect(mocks.generateText).toHaveBeenCalledWith(
+      expect.objectContaining({ model: { modelId: 'purechat-model' } })
+    )
+    expect(mocks.chargePureChatGenerateUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'gpt-5.4-mini',
+        settlementId: 'settlement-1',
+        settlementPeriod: '2026-08',
+        userId: 'user-1',
+      })
+    )
+  })
+
+  it('defaults PureChat model when agent.model is empty', async () => {
+    mocks.findVisibleById.mockResolvedValue({
+      id: 'agent-pure',
+      model: null,
+      provider: 'purechat',
+      systemRole: null,
+    })
+
+    await generateWechatAgentReply({
+      agentId: 'agent-pure',
+      userId: 'user-1',
+      userText: '你好',
+    })
+
+    expect(mocks.assertPureChatCanChat).toHaveBeenCalledWith('user-1', 'gpt-5.4-mini')
+    expect(mocks.createPureChatLanguageModel).toHaveBeenCalledWith('gpt-5.4-mini')
+  })
+
+  it('surfaces PureChat precheck failures', async () => {
+    mocks.findVisibleById.mockResolvedValue({
+      id: 'agent-pure',
+      model: 'unknown-model',
+      provider: 'purechat',
+      systemRole: null,
+    })
+    mocks.assertPureChatCanChat.mockRejectedValueOnce(new Error('该模型在 PureChat 免费套餐中暂不可用，请切换到其他模型。'))
+
+    await expect(
+      generateWechatAgentReply({
+        agentId: 'agent-pure',
+        userId: 'user-1',
+        userText: '你好',
+      })
+    ).rejects.toThrow('该模型在 PureChat 免费套餐中暂不可用，请切换到其他模型。')
+
+    expect(mocks.generateText).not.toHaveBeenCalled()
+    expect(mocks.chargePureChatGenerateUsage).not.toHaveBeenCalled()
   })
 
   it('injects an explicit Shanghai date for relative-time questions', () => {

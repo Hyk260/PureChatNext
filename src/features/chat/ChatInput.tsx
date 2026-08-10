@@ -13,10 +13,12 @@ import {
 } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import { Check, ChevronRight, Globe, GlobeOff, LibraryBig, Plus, Settings2 } from 'lucide-react'
-import { memo, useCallback, useMemo, useState } from 'react'
+import { Check, ChevronRight, FileText, Globe, GlobeOff, LibraryBig, Plus, Settings2, X } from 'lucide-react'
+import { memo, useCallback, useMemo, useRef, useState } from 'react'
 
+import { useApp } from '@/components/AntdStaticMethods'
 import ModelSelector from '@/features/chat/ModelSelector'
+import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
 import { SendButton } from '@/features/chat/SendArea'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { ChatSearchMode } from '@/features/chat/types'
@@ -138,7 +140,7 @@ const styles = createStaticStyles(({ css }) => ({
 
 interface ChatInputProps {
   isBusy?: boolean
-  onSend: (text: string) => void | Promise<void>
+  onSend: (text: string, files: File[]) => void | Promise<void>
   onSearchModeChange: (mode: ChatSearchMode) => void
   onStop?: () => void
   searchMode: ChatSearchMode
@@ -168,16 +170,44 @@ MenuLabel.displayName = 'MenuLabel'
 
 const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, onStop, searchMode }) => {
   const [input, setInput] = useState('')
+  const [files, setFiles] = useState<File[]>([])
   const [plusOpen, setPlusOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { message } = useApp()
+  const currentModel = useCurrentHomeModel()
   const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
   const toggleRightCollapsed = useChatUiStore((s) => s.toggleRightCollapsed)
 
   const handleSend = useCallback(() => {
     const text = input.trim()
-    if (!text || isBusy) return
+    if ((!text && files.length === 0) || isBusy) return
     setInput('')
-    onSend(text)
-  }, [input, isBusy, onSend])
+    const pendingFiles = files
+    setFiles([])
+    onSend(text, pendingFiles)
+  }, [files, input, isBusy, onSend])
+
+  const handleAttachmentClick = useCallback(() => {
+    setPlusOpen(false)
+    fileInputRef.current?.click()
+  }, [])
+
+  const handleFilesSelected = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const selected = Array.from(event.target.files ?? [])
+      event.target.value = ''
+      if (selected.length === 0) return
+
+      const imageFiles = selected.filter((file) => file.type.startsWith('image/'))
+      if (imageFiles.length > 0 && !currentModel.abilities?.vision) {
+        message.error('当前模型不支持图片理解')
+        return
+      }
+
+      setFiles((previous) => [...previous, ...selected])
+    },
+    [currentModel.abilities?.vision, message]
+  )
 
   const handleStop = useCallback(() => {
     onStop?.()
@@ -198,6 +228,7 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, on
         icon: LibraryBig,
         key: 'attachments',
         label: <MenuLabel chevron label='附件' />,
+        onClick: handleAttachmentClick,
       },
       {
         disabled: isBusy,
@@ -213,15 +244,54 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, on
         onClick: handleToggleParams,
       },
     ],
-    [handleSearchModeChange, handleToggleParams, isBusy, rightCollapsed, searchMode]
+    [handleAttachmentClick, handleSearchModeChange, handleToggleParams, isBusy, rightCollapsed, searchMode]
   )
 
   const plusMenuContent = useMemo(() => renderDropdownMenuItems(plusMenuItems), [plusMenuItems])
 
-  const canSend = Boolean(input.trim()) && !isBusy
+  const canSend = Boolean(input.trim() || files.length > 0) && !isBusy
 
   return (
     <Block className={styles.shell} padding={12} variant='outlined'>
+      <input
+        ref={fileInputRef}
+        accept='image/*,.txt,.md,.csv,.pdf,.doc,.docx,.xls,.xlsx,.pptx'
+        className={styles.srOnly}
+        disabled={isBusy}
+        multiple
+        type='file'
+        onChange={handleFilesSelected}
+      />
+
+      {files.length > 0 ? (
+        <Flexbox horizontal gap={8} style={{ flexWrap: 'wrap', marginBottom: 8 }}>
+          {files.map((file, index) => (
+            <Flexbox
+              key={`${file.name}-${file.lastModified}-${index}`}
+              horizontal
+              align='center'
+              gap={6}
+              style={{ background: 'var(--ant-color-fill-quaternary)', borderRadius: 8, maxWidth: 260, padding: '5px 8px' }}
+            >
+              {file.type.startsWith('image/') ? (
+                <img alt='' height={28} src={URL.createObjectURL(file)} style={{ borderRadius: 4, objectFit: 'cover', width: 28 }} />
+              ) : (
+                <Icon icon={FileText} size={16} />
+              )}
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
+              <button
+                aria-label={`删除 ${file.name}`}
+                className={styles.plusTrigger}
+                type='button'
+                onClick={() => setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index))}
+              >
+                <Icon icon={X} size={14} />
+              </button>
+            </Flexbox>
+          ))}
+        </Flexbox>
+      ) : null}
+
       <textarea
         className={styles.input}
         placeholder='随心输入'

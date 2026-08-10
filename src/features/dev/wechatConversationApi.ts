@@ -24,7 +24,18 @@ export type WechatDevSessionsResponse = {
 }
 
 export type WechatDevMessage = {
+  attachments?: Array<{
+    deliveryError?: string
+    deliveryStatus: string
+    fileName: string
+    fileSize: number
+    fileUrl: string
+    id: string
+    summary?: string
+    version: number
+  }>
   createdAt: string
+  durationMs?: number
   eventId: string
   fileName?: string
   fileSize?: number | null
@@ -32,7 +43,10 @@ export type WechatDevMessage = {
   id: string
   imageUrl?: string
   messageKind?: string
+  model?: string
+  provider?: string
   role: 'assistant' | 'user'
+  source: 'manual' | 'model' | 'system' | 'user'
   status?: string
   text: string
 }

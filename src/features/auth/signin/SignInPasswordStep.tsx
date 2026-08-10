@@ -115,7 +115,7 @@ export const SignInPasswordStep = ({
               {'忘记密码？'}
             </a>
           </Text>
-          <Button variant='filled' icon={<ChevronLeft />} size='large' style={{ marginTop: 12 }} onClick={onBack}>
+          <Button icon={<ChevronLeft />} size='large' style={{ marginTop: 12 }} type='fill' onClick={onBack}>
             返回修改邮箱
           </Button>
         </>
@@ -146,7 +146,7 @@ export const SignInPasswordStep = ({
                 loading={loading}
                 style={{ color: cssVar.colorPrimary }}
                 title='登录'
-                variant='filled'
+                type='fill'
                 onClick={() => form.submit()}
               />
             }

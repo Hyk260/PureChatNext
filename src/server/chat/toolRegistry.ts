@@ -2,6 +2,7 @@ import type { Tool, ToolSet } from 'ai'
 
 import { webSearchTool } from '@/server/search/chatTool'
 import { weatherTool } from '@/server/weather/chatTool'
+import { createEditExcelTool } from './editExcelTool'
 
 export type ChatToolChannel = 'web' | 'wechat'
 export type ChatToolSearchMode = 'auto' | 'off'
@@ -9,6 +10,23 @@ export type ChatToolSearchMode = 'auto' | 'off'
 export interface ChatToolContext {
   channel: ChatToolChannel
   searchMode: ChatToolSearchMode
+  wechat?: WechatToolContext
+}
+
+export type WechatToolArtifact = {
+  artifactId: string
+  fileId: string
+  filename: string
+  size: number
+  summary: string
+}
+
+export type WechatToolContext = {
+  conversationVersion: number
+  event: { conversationVersion: number; id: string; sessionId: string }
+  producedArtifacts: WechatToolArtifact[]
+  sessionId: string
+  userId: string
 }
 
 interface ChatToolRegistration {
@@ -20,7 +38,7 @@ interface ChatToolRegistration {
   modelName: string
   enabled: (context: ChatToolContext) => boolean
   systemInstruction?: string
-  tool: Tool
+  tool: Tool | ((context: ChatToolContext) => Tool)
 }
 
 const registrations: ChatToolRegistration[] = [
@@ -41,6 +59,15 @@ const registrations: ChatToolRegistration[] = [
     systemInstruction: '天气问题优先使用 getWeather，不要用网页搜索代替结构化天气查询。',
     tool: weatherTool,
   },
+  {
+    apiName: 'editExcel',
+    enabled: ({ channel, wechat }) => channel === 'wechat' && Boolean(wechat),
+    identifier: 'builtin-edit-excel',
+    modelName: 'editExcel',
+    systemInstruction:
+      '用户明确要求修改当前会话中的 .xlsx 时使用 editExcel。只有工具返回 success=true 才能说文件已修改或已生成；失败时如实说明并根据错误追问。',
+    tool: (context) => createEditExcelTool(context.wechat!),
+  },
 ]
 
 const assertUniqueRegistrations = (items: ChatToolRegistration[]) => {
@@ -60,7 +87,9 @@ assertUniqueRegistrations(registrations)
 
 export const resolveChatTools = (context: ChatToolContext): ToolSet =>
   Object.fromEntries(
-    registrations.filter((registration) => registration.enabled(context)).map(({ modelName, tool }) => [modelName, tool])
+    registrations
+      .filter((registration) => registration.enabled(context))
+      .map(({ modelName, tool }) => [modelName, typeof tool === 'function' ? tool(context) : tool])
   )
 
 export const resolveChatToolInstructions = (context: ChatToolContext): string[] =>

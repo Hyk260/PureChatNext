@@ -40,9 +40,10 @@ describe('wechat agentSupport', () => {
     mocks.getAiModel.mockReturnValue({ abilities: { vision: true } })
   })
 
-  it('normalizes legacy purehub to purechat', () => {
-    expect(normalizeWechatAgentProvider('purehub')).toBe('purechat')
+  it('defaults empty provider to deepseek', () => {
     expect(normalizeWechatAgentProvider(null)).toBe('deepseek')
+    expect(normalizeWechatAgentProvider('  ')).toBe('deepseek')
+    expect(normalizeWechatAgentProvider('openai')).toBe('openai')
   })
 
   it('resolves default model ids per provider', () => {

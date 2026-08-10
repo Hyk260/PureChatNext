@@ -13,6 +13,8 @@ export type WechatChatContext = {
   applicationId: string
   botId?: string
   botToken: string
+  model: string
+  provider: string
   userId: string
 }
 
@@ -20,6 +22,8 @@ type CachedBot = {
   agentId: string
   botToken: string
   chat: Chat
+  model: string
+  provider: string
   userId: string
 }
 
@@ -42,6 +46,8 @@ function registerHandlers(chat: Chat, ctx: WechatChatContext): void {
     await handleWechatMention({
       agentId: ctx.agentId,
       message,
+      model: ctx.model,
+      provider: ctx.provider,
       thread,
       userId: ctx.userId,
     })
@@ -69,6 +75,8 @@ export async function getOrCreateWechatChat(ctx: WechatChatContext): Promise<Cha
     existing &&
     existing.botToken === ctx.botToken &&
     existing.agentId === ctx.agentId &&
+    existing.model === ctx.model &&
+    existing.provider === ctx.provider &&
     existing.userId === ctx.userId
   ) {
     return existing.chat
@@ -98,6 +106,8 @@ export async function getOrCreateWechatChat(ctx: WechatChatContext): Promise<Cha
     agentId: ctx.agentId,
     botToken: ctx.botToken,
     chat,
+    model: ctx.model,
+    provider: ctx.provider,
     userId: ctx.userId,
   })
 

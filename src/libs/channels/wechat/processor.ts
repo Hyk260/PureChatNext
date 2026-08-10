@@ -1,24 +1,25 @@
-import { MessageItemType, WechatApiClient } from '@pure/chat-adapter/wechat'
+import { MessageItemType, WechatApiClient, WechatUploadMediaType } from '@pure/chat-adapter/wechat'
 import debug from 'debug'
 
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
+import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
 import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import { createNanoId } from '@pure/utils'
+import type { WechatToolArtifact } from '@/server/chat/toolRegistry'
 import { generateWechatAgentReply } from './agentBridge'
-import {
-  isWechatAgentUsable,
-  normalizeWechatAgentProvider,
-  resolveWechatAgentModelId,
-  wechatModelSupportsVision,
-} from './agentSupport'
-import { parseWechatCommand, WECHAT_HELP_TEXT } from './commands'
+import type { WechatAgentReply } from './agentBridge'
+import { wechatModelSupportsVision } from './agentSupport'
+import { buildWechatWelcomeText, parseWechatCommand, WECHAT_HELP_TEXT } from './commands'
 import { decryptContextToken, decryptCredentials } from './encrypt'
 import { getWechatHistoryTokenBudget, trimWechatHistory } from './history'
+import { sendWithValidWechatEventLease } from './leaseGuard'
+import { listWechatConversationFiles, persistWechatFile, readWechatFile } from './fileArtifacts'
 import { startWechatTyping } from './typing'
 import {
   downloadStoredWechatImage,
+  downloadValidatedWechatFile,
   parseWechatFileContent,
   parseWechatImageContent,
   prepareWechatFileForAgent,
@@ -62,9 +63,8 @@ async function handleAgentsCommand(event: ChannelEventItem, argument: string) {
     return [
       '可用助手：',
       ...agents.map((agent, index) => {
-        const usable = isWechatAgentUsable(agent.provider)
         const marker = agent.id === current ? '（当前）' : ''
-        return `${index + 1}. ${agent.title} [${agent.id}]${usable ? '' : '（不可用：渠道未配置服务端密钥或 Provider 不支持）'}${marker}`
+        return `${index + 1}. ${agent.title} [${agent.id}]${marker}`
       }),
       '',
       '发送 /agents <序号|agentId> 切换助手。',
@@ -74,8 +74,6 @@ async function handleAgentsCommand(event: ChannelEventItem, argument: string) {
   const index = /^\d+$/.test(argument) ? Number(argument) - 1 : -1
   const target = index >= 0 ? agents[index] : agents.find((agent) => agent.id === argument)
   if (!target) return '未找到该助手。发送 /agents 查看列表。'
-  if (!isWechatAgentUsable(target.provider)) return '该助手的 Provider 不受支持或服务端密钥未配置，无法切换。'
-
   await eventModel.startNewConversation(event.sessionId, target.id, event.id)
   abortActiveGeneration(event.bindingId, event.externalUserId)
   return `已切换到「${target.title}」，并创建新对话。`
@@ -114,12 +112,25 @@ export function abortActiveGeneration(bindingId: string, externalUserId: string)
   return true
 }
 
-async function buildResponse(event: ChannelEventItem): Promise<string> {
-  if (event.responseText) return event.responseText
-  if (event.messageKind === 'unsupported') {
-    return '当前版本仅支持文本消息。'
+type WechatEventResponse = Partial<Omit<WechatAgentReply, 'text'>> & { text: string }
+
+const systemResponse = (text: string): WechatEventResponse => ({ text })
+
+async function buildResponse(event: ChannelEventItem): Promise<WechatEventResponse> {
+  if (event.responseText) {
+    return {
+      ...(event.durationMs === null ? {} : { durationMs: event.durationMs }),
+      ...(event.model ? { model: event.model } : {}),
+      ...(event.provider ? { provider: event.provider } : {}),
+      text: event.responseText,
+    }
   }
-  if (event.messageKind === 'command' || event.content.startsWith('/')) return handleCommand(event)
+  if (event.messageKind === 'unsupported') {
+    return systemResponse('当前版本仅支持文本消息。')
+  }
+  if (event.messageKind === 'command' || event.content.startsWith('/')) {
+    return systemResponse(await handleCommand(event))
+  }
 
   const binding = await new ChannelBindingModel().findById(event.bindingId)
   if (!binding?.enabled) throw new Error('Binding is inactive')
@@ -135,9 +146,9 @@ async function buildResponse(event: ChannelEventItem): Promise<string> {
   let stopTyping = () => {}
   try {
     const agentId = session.activeAgentId || binding.agentId
-    const agent = await new AgentModel(binding.userId).findVisibleById(agentId)
-    const provider = normalizeWechatAgentProvider(agent?.provider)
-    const modelId = resolveWechatAgentModelId(provider, agent?.model)
+    const provider = binding.provider
+    const modelId = binding.model
+    if (!provider || !modelId) throw new Error('Binding model configuration is missing')
     const history = trimWechatHistory(
       await eventModel.findContext(event.sessionId, event.conversationVersion),
       getWechatHistoryTokenBudget(provider, modelId, event.content)
@@ -149,42 +160,121 @@ async function buildResponse(event: ChannelEventItem): Promise<string> {
     let userContent: Parameters<typeof generateWechatAgentReply>[0]['userContent']
     if (event.messageKind === 'file') {
       const payload = parseWechatFileContent(event.content)
-      if (!payload) return '文件消息格式无效，无法处理。'
+      if (!payload) return systemResponse('文件消息格式无效，无法处理。')
       try {
-        const prepared = await prepareWechatFileForAgent(api, payload)
+        const retained = await downloadValidatedWechatFile(api, payload)
+        const inputArtifact = await persistWechatFile({
+          buffer: retained.buffer,
+          contentType: retained.mimeType,
+          direction: 'input',
+          event,
+          filename: retained.fileName,
+          summary: '微信用户上传的文件',
+          userId: binding.userId,
+        })
+        const prepared = await prepareWechatFileForAgent(api, payload, retained)
         userText = `用户发送了文件：${prepared.fileName}（${prepared.fileType}）。请结合附件内容回答用户问题。`
-        userContent = `${userText}\n\n<附件内容>${prepared.truncated ? '\n（内容已截断）' : ''}\n${prepared.content}\n</附件内容>`
+        userContent = `${userText}\n文件 ID：${inputArtifact.file.id}\n\n<附件内容>${prepared.truncated ? '\n（内容已截断）' : ''}\n${prepared.content}\n</附件内容>`
       } catch (error) {
-        return error instanceof Error ? error.message : '文件解析失败，暂时无法处理。'
+        return systemResponse(error instanceof Error ? error.message : '文件解析失败，暂时无法处理。')
       }
     } else if (event.messageKind === 'image') {
       const payload = parseWechatImageContent(event.content)
-      if (!payload) return '图片消息格式无效，无法处理。'
+      if (!payload) return systemResponse('图片消息格式无效，无法处理。')
       if (!wechatModelSupportsVision(provider, modelId)) {
-        return '当前助手使用的模型不支持图片理解，请切换到支持视觉的模型后重试。'
+        return systemResponse('当前助手使用的模型不支持图片理解，请切换到支持视觉的模型后重试。')
       }
       const image = await downloadStoredWechatImage(api, payload)
-      if (!image) return '图片无法下载，可能已过期或缺少媒体凭证。'
-      if (image.buffer.byteLength > WECHAT_MAX_INBOUND_FILE_BYTES) return '图片超过 10MB 限制，无法处理。'
-      if (!SUPPORTED_IMAGE_MIME.has(image.mimeType)) return '暂不支持该图片格式，目前支持 JPG、PNG、WEBP、GIF、BMP。'
+      if (!image) return systemResponse('图片无法下载，可能已过期或缺少媒体凭证。')
+      if (image.buffer.byteLength > WECHAT_MAX_INBOUND_FILE_BYTES) return systemResponse('图片超过 10MB 限制，无法处理。')
+      if (!SUPPORTED_IMAGE_MIME.has(image.mimeType)) return systemResponse('暂不支持该图片格式，目前支持 JPG、PNG、WEBP、GIF、BMP。')
       userText = '用户发送了一张图片，请结合图片内容回答用户问题。'
       userContent = [
         { type: 'text', text: userText },
         { type: 'image', image: `data:${image.mimeType};base64,${image.buffer.toString('base64')}`, mediaType: image.mimeType },
       ]
     }
+    const conversationFiles = await listWechatConversationFiles(event.sessionId, event.conversationVersion)
+    const attachmentContext = conversationFiles.length
+      ? [
+          '<wechat_conversation_files>',
+          ...conversationFiles.map(({ artifact, file }) =>
+            JSON.stringify({
+              direction: artifact.direction,
+              fileId: file.id,
+              filename: file.name,
+              summary: artifact.summary,
+              version: artifact.version,
+            })
+          ),
+          '</wechat_conversation_files>',
+          '用户说“这个文件/上面的文件”时，默认使用列表中最新的 output，否则使用最新 input。多个同等候选时先询问。',
+        ].join('\n')
+      : undefined
+    const producedArtifacts: WechatToolArtifact[] = []
     stopTyping = startWechatTyping(api, event.externalUserId, contextToken)
     return await generateWechatAgentReply({
       abortSignal: abortController.signal,
       agentId,
+      attachmentContext,
       history,
+      model: modelId,
+      provider,
       userId: binding.userId,
       userText,
       userContent,
+      wechatToolContext: {
+        conversationVersion: event.conversationVersion,
+        event: {
+          conversationVersion: event.conversationVersion,
+          id: event.id,
+          sessionId: event.sessionId,
+        },
+        producedArtifacts,
+        sessionId: event.sessionId,
+        userId: binding.userId,
+      },
     })
   } finally {
     stopTyping()
     if (activeGenerations.get(key)?.eventId === event.id) activeGenerations.delete(key)
+  }
+}
+
+/** 扫码绑定后首次具备 context_token 时发送欢迎语（iLink 无法在绑定时主动推送）。 */
+async function maybeSendPendingWelcome(params: {
+  api: WechatApiClient
+  binding: NonNullable<Awaited<ReturnType<ChannelBindingModel['findById']>>>
+  contextToken: string
+  event: ChannelEventItem
+  owner: string
+}) {
+  if (!params.binding.pendingWelcome) return
+  // 先 CAS 清除，避免并发事件或发送失败重试导致重复欢迎。
+  const cleared = await new ChannelBindingModel().clearPendingWelcome(params.binding.id)
+  if (!cleared) return
+
+  const agent = await new AgentModel(params.binding.userId).findVisibleById(params.binding.agentId)
+  const welcome = buildWechatWelcomeText(agent?.title ?? '助手')
+  const model = new ChannelEventModel()
+  try {
+    for (const chunk of splitText(welcome)) {
+      await sendWithValidWechatEventLease({
+        eventId: params.event.id,
+        hasValidLease: model.hasValidLease,
+        owner: params.owner,
+        send: () =>
+          params.api.sendItem(
+            params.event.externalUserId,
+            { text_item: { text: chunk }, type: MessageItemType.TEXT },
+            params.contextToken
+          ),
+      })
+    }
+    log('sent welcome binding=%s agent=%s', params.binding.id, params.binding.agentId)
+  } catch (error) {
+    log('welcome send failed binding=%s: %O', params.binding.id, error)
+    throw error
   }
 }
 
@@ -194,15 +284,68 @@ async function sendResponse(event: ChannelEventItem, owner: string, responseText
   const credentials = decryptCredentials(binding.credentials)
   const contextToken = decryptContextToken(event.encryptedContextToken)
   const api = new WechatApiClient(credentials.botToken, credentials.botId)
+  // 首条出站前先发欢迎语；仅当 sentChunkCount=0 时发送，避免分片重试时重复欢迎。
+  if (event.sentChunkCount === 0) {
+    await maybeSendPendingWelcome({ api, binding, contextToken, event, owner })
+  }
   const chunks = splitText(responseText)
   const model = new ChannelEventModel()
   for (let index = event.sentChunkCount; index < chunks.length; index += 1) {
-    await api.sendItem(
-      event.externalUserId,
-      { text_item: { text: chunks[index]! }, type: MessageItemType.TEXT },
-      contextToken
-    )
+    await sendWithValidWechatEventLease({
+      eventId: event.id,
+      hasValidLease: model.hasValidLease,
+      owner,
+      send: () =>
+        api.sendItem(
+          event.externalUserId,
+          { text_item: { text: chunks[index]! }, type: MessageItemType.TEXT },
+          contextToken
+        ),
+    })
     await model.markChunkSent(event.id, owner, index + 1)
+  }
+
+  const artifactModel = new ChannelEventFileModel()
+  const artifacts = (await artifactModel.listForEvent(event.id)).filter(
+    ({ artifact }) => artifact.direction === 'output' && artifact.deliveryStatus !== 'sent'
+  )
+  for (const { artifact, file } of artifacts) {
+    await artifactModel.markSending(artifact.id)
+    try {
+      const stored = await readWechatFile(binding.userId, file.id)
+      await sendWithValidWechatEventLease({
+        eventId: event.id,
+        hasValidLease: model.hasValidLease,
+        owner,
+        send: async () => {
+          const uploaded = await api.uploadCdnMedia(
+            event.externalUserId,
+            WechatUploadMediaType.FILE,
+            stored.buffer
+          )
+          return api.sendItem(
+            event.externalUserId,
+            {
+              file_item: {
+                file_name: file.name,
+                len: String(stored.buffer.byteLength),
+                media: {
+                  aes_key: uploaded.aesKey,
+                  encrypt_query_param: uploaded.encryptQueryParam,
+                  encrypt_type: 1,
+                },
+              },
+              type: MessageItemType.FILE,
+            },
+            contextToken
+          )
+        },
+      })
+      await artifactModel.markSent(artifact.id)
+    } catch (error) {
+      await artifactModel.markFailed(artifact.id, error instanceof Error ? error.message : '文件发送失败')
+      throw error
+    }
   }
 }
 
@@ -219,9 +362,10 @@ export async function processNextWechatEvent(owner = `processor-${createNanoId(1
   const event = await model.claimNext(owner, EVENT_LEASE_MS)
   if (!event) return false
   try {
-    const responseText = await buildResponse(event)
-    await model.saveResponse(event.id, owner, responseText)
-    await sendResponse(event, owner, responseText)
+    const response = await buildResponse(event)
+    const saved = await model.saveResponse(event.id, owner, response)
+    if (!saved) throw new Error('Event lease lost')
+    await sendResponse(event, owner, response.text)
     await model.complete(event.id, owner)
   } catch (error) {
     if ((error as { name?: string })?.name === 'AbortError') {

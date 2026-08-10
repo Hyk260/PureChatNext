@@ -1,6 +1,8 @@
 import { AI_MODELS_BY_PROVIDER, ModelProvider, PURECHAT_DEFAULT_MODEL, getAiModel } from '@pure/model-bank'
+import type { ModelAbilities } from '@pure/model-bank'
 
 export interface HomeModelItem {
+  abilities?: ModelAbilities
   displayName: string
   model: string
   provider: string

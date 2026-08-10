@@ -41,7 +41,6 @@ vi.mock('@pure/database/models/credits', () => ({
 vi.mock('ai', () => ({ generateText: mocks.generateText }))
 vi.mock('@pure/const', () => ({
   PURECHAT_PROVIDER_ID: 'purechat',
-  normalizeProviderId: (provider: string | undefined) => (provider === 'purehub' ? 'purechat' : provider),
 }))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
   createProviderLanguageModel: mocks.createProviderLanguageModel,

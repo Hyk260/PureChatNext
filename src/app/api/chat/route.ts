@@ -1,6 +1,12 @@
+import { writeFile, unlink } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { randomUUID } from 'node:crypto'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createDeepSeek } from '@ai-sdk/deepseek'
-import { normalizeProviderId, PURECHAT_PROVIDER_ID } from '@pure/const'
+import { PURECHAT_PROVIDER_ID } from '@pure/const'
+import { getAiModel } from '@pure/model-bank'
+import { loadFile } from '@pure/file-loaders'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
 import { convertToModelMessages, createUIMessageStreamResponse, isStepCount, streamText, toUIMessageStream } from 'ai'
 import type { UIMessage } from 'ai'
@@ -30,6 +36,55 @@ import { createMessageMetadata } from './messageMetadata'
 export const maxDuration = 60
 
 const log = debug('chat:route')
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024
+const MAX_ATTACHMENTS = 8
+const MAX_EXTRACTED_CHARS = 40_000
+
+const dataUrlToBuffer = (url: string) => {
+  const match = /^data:([^;,]+);base64,(.+)$/s.exec(url)
+  if (!match) throw new Error('附件数据格式无效')
+  return { buffer: Buffer.from(match[2], 'base64'), mediaType: match[1] }
+}
+
+const normalizeAttachmentMessages = async (messages: UIMessage[], supportsVision: boolean): Promise<UIMessage[]> => {
+  const attachments = messages.flatMap((message) => message.parts.filter((part) => part.type === 'file'))
+  if (attachments.length > MAX_ATTACHMENTS) throw new Error(`最多支持 ${MAX_ATTACHMENTS} 个附件`)
+
+  const tempPaths: string[] = []
+  try {
+    return (await Promise.all(
+      messages.map(async (message) => {
+        const parts: UIMessage['parts'] = []
+        for (const part of message.parts) {
+          if (part.type !== 'file') {
+            parts.push(part)
+            continue
+          }
+
+          const filePart = part as typeof part & { filename?: string; name?: string }
+          const filename = filePart.filename ?? filePart.name ?? 'attachment'
+          const { buffer, mediaType } = dataUrlToBuffer(part.url)
+          if (buffer.byteLength > MAX_ATTACHMENT_BYTES) throw new Error(`附件「${filename}」超过 10MB 限制`)
+          if (mediaType.startsWith('image/')) {
+            if (!supportsVision) throw new Error('当前模型不支持图片理解')
+            parts.push({ ...part, mediaType })
+            continue
+          }
+
+          const tempPath = join(tmpdir(), `chat-file-${randomUUID()}-${filename}`)
+          tempPaths.push(tempPath)
+          await writeFile(tempPath, buffer)
+          const document = await loadFile(tempPath, { filename, source: tempPath })
+          const extracted = document.content.slice(0, MAX_EXTRACTED_CHARS)
+          parts.push({ type: 'text', text: `[附件 ${filename}]\n${extracted}` })
+        }
+        return { ...message, parts }
+      })
+    )) as UIMessage[]
+  } finally {
+    await Promise.all(tempPaths.map((path) => unlink(path).catch(() => {})))
+  }
+}
 
 /** Prefer Authorization: Bearer <token>; otherwise fall back to provider env keys. */
 const resolveApiKeyFromHeader = (request: Request) => {
@@ -96,8 +151,9 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
 
-  const { baseURL, messages, model, system } = requestBody
-  const provider = normalizeProviderId(requestBody.provider)
+  const { baseURL, model, system } = requestBody
+  let messages = requestBody.messages
+  const provider = requestBody.provider
 
   if (!Array.isArray(messages)) {
     return new ChatSDKError('bad_request:api').toResponse()
@@ -108,6 +164,13 @@ export async function POST(request: Request) {
   }
 
   const searchMode = requestBody.searchMode ?? 'off'
+  const supportsVision = Boolean(getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision)
+  try {
+    messages = await normalizeAttachmentMessages(messages, supportsVision)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '附件解析失败'
+    return new ChatSDKError('bad_request:api', message).toResponse()
+  }
   const tools = resolveChatTools({ channel: 'web', searchMode })
   const searchOptions =
     Object.keys(tools).length > 0

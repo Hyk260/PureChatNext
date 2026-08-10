@@ -3,9 +3,13 @@
 import { Alert, Select, Spin } from 'antd'
 import { Button, confirmModal, Text, Flexbox } from '@pure/ui'
 import { formatDateTime } from '@pure/utils/client'
+import { getProviderChatModels, PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
+import type { ModelProviderId } from '@pure/model-bank'
 import { useApp } from '@/components/AntdStaticMethods'
-import { Trash2Icon } from 'lucide-react'
+import { isDev } from '@/libs/constants'
+import { MessagesSquareIcon, Trash2Icon } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 
 import { fetchAgents } from '@/features/home/agentApi'
 
@@ -14,10 +18,20 @@ import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import QrCodeAuth from './QrCodeAuth'
 import type { WechatAuthCredentials } from './QrCodeAuth'
-import { bindWechat, fetchWechatStatus, retryFailedWechatEvents, unbindWechat, updateWechatAgent } from './wechatApi'
-import type { WechatStatus } from './wechatApi'
+import { bindWechat, fetchWechatStatus, retryFailedWechatEvents, unbindWechat, updateWechatConfiguration } from './wechatApi'
+import type { WechatConfiguration, WechatProviderId, WechatStatus } from './wechatApi'
 
 const STATUS_POLL_MS = 8_000
+const DEFAULT_MODELS: Record<WechatProviderId, string> = {
+  deepseek: 'deepseek-v4-flash',
+  openai: 'gpt-5.4-mini',
+  purechat: PURECHAT_DEFAULT_MODEL,
+}
+const PROVIDERS: Array<{ label: string; value: WechatProviderId }> = [
+  { label: 'PureChat', value: 'purechat' },
+  { label: 'OpenAI', value: 'openai' },
+  { label: 'DeepSeek', value: 'deepseek' },
+]
 
 const formatActiveAt = (value: string) => formatDateTime(value, { hour12: false, second: '2-digit' })
 
@@ -32,17 +46,23 @@ const DISCONNECTED_STATUS: WechatStatus = {
 
 const MessengerWeChatPage = memo(() => {
   const { message } = useApp()
+  const navigate = useNavigate()
   const platformMeta = getMessengerPlatform('wechat')!
   const [loading, setLoading] = useState(true)
   const [binding, setBinding] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [status, setStatus] = useState<WechatStatus | null>(null)
   const [agents, setAgents] = useState<Array<{ label: string; value: string }>>([])
   const [agentId, setAgentId] = useState('agt_inbox')
+  const [provider, setProvider] = useState<WechatProviderId>('deepseek')
+  const [modelId, setModelId] = useState(DEFAULT_MODELS.deepseek)
 
   const refreshStatus = useCallback(async () => {
     const st = await fetchWechatStatus()
     setStatus(st)
     if (st.agentId) setAgentId(st.agentId)
+    if (st.provider) setProvider(st.provider)
+    if (st.model) setModelId(st.model)
     return st
   }, [])
 
@@ -54,6 +74,8 @@ const MessengerWeChatPage = memo(() => {
       setAgents(agentList.map((a) => ({ label: a.title, value: a.id })))
       if (st.agentId) setAgentId(st.agentId)
       else if (agentList[0]) setAgentId(agentList[0].id)
+      if (st.provider) setProvider(st.provider)
+      if (st.model) setModelId(st.model)
     } catch (error) {
       message.error(error instanceof Error ? error.message : '加载失败')
     } finally {
@@ -87,6 +109,8 @@ const MessengerWeChatPage = memo(() => {
           agentId,
           botId: credentials.botId,
           botToken: credentials.botToken,
+          model: modelId,
+          provider,
           userId: credentials.userId,
         })
         // 绑定只代表凭证已保存；必须等 Gateway 心跳后才能显示在线。
@@ -97,6 +121,8 @@ const MessengerWeChatPage = memo(() => {
           enabled: true,
           gatewaySupported: true,
           needsRebind: false,
+          model: modelId,
+          provider,
           runtimeStatus: 'starting',
         })
         message.success('凭证已保存，正在等待 Gateway')
@@ -107,23 +133,54 @@ const MessengerWeChatPage = memo(() => {
         setBinding(false)
       }
     },
-    [agentId, message, refreshStatus]
+    [agentId, message, modelId, provider, refreshStatus]
   )
 
-  const handleAgentChange = useCallback(
-    async (value: string) => {
-      setAgentId(value)
+  const saveConfiguration = useCallback(
+    async (next: WechatConfiguration, previous: WechatConfiguration) => {
       if (!status?.bound || status.needsRebind || status.enabled === false) return
+      setSaving(true)
       try {
-        await updateWechatAgent(value)
-        message.success('已更新绑定助手')
-        await refreshStatus()
+        await updateWechatConfiguration(next)
+        message.success('已更新微信渠道配置，新消息将使用全新对话')
       } catch (error) {
+        setAgentId(previous.agentId)
+        setProvider(previous.provider)
+        setModelId(previous.model)
         message.error(error instanceof Error ? error.message : '更新失败')
+        setSaving(false)
+        return
+      }
+      try {
+        await refreshStatus()
+      } catch {
+        message.warning('配置已保存，状态将在稍后自动刷新')
+      } finally {
+        setSaving(false)
       }
     },
     [message, refreshStatus, status]
   )
+
+  const handleAgentChange = useCallback((value: string) => {
+    const previous = { agentId, model: modelId, provider }
+    setAgentId(value)
+    void saveConfiguration({ ...previous, agentId: value }, previous)
+  }, [agentId, modelId, provider, saveConfiguration])
+
+  const handleProviderChange = useCallback((value: WechatProviderId) => {
+    const previous = { agentId, model: modelId, provider }
+    const next = { agentId, model: DEFAULT_MODELS[value], provider: value }
+    setProvider(value)
+    setModelId(next.model)
+    void saveConfiguration(next, previous)
+  }, [agentId, modelId, provider, saveConfiguration])
+
+  const handleModelChange = useCallback((value: string) => {
+    const previous = { agentId, model: modelId, provider }
+    setModelId(value)
+    void saveConfiguration({ ...previous, model: value }, previous)
+  }, [agentId, modelId, provider, saveConfiguration])
 
   const handleDisconnect = useCallback(() => {
     confirmModal({
@@ -160,14 +217,35 @@ const MessengerWeChatPage = memo(() => {
   const gatewaySupported = status?.gatewaySupported !== false
   const needsRebind = Boolean(status?.needsRebind) || (bound && status?.enabled === false)
   const showConnect = !bound || needsRebind
+  const controlsDisabled = binding || saving
+  const modelOptions = getProviderChatModels(provider as ModelProviderId)
+    .filter((model) => model.enabled !== false)
+    .map((model) => ({ label: model.displayName, value: model.id }))
+  const providerOptions = PROVIDERS.map((item) => {
+    const availability = status?.providerAvailability?.[item.value]
+    return {
+      ...item,
+      disabled: availability?.available === false,
+      label: availability?.available === false ? `${item.label}（${availability.reason || '服务端不可用'}）` : item.label,
+    }
+  })
 
-  // 未连接显示「连接」，已连接显示「断开」
-  const headerAction = showConnect ? (
-    <QrCodeAuth disabled={binding || !gatewaySupported} onAuthenticated={(c) => void handleAuthenticated(c)} />
-  ) : (
-    <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>
-      断开
-    </Button>
+  // 未连接显示「连接」，已连接显示「断开」；开发环境旁挂对话监控入口
+  const headerAction = (
+    <Flexbox horizontal align='center' gap={8}>
+      {isDev ? (
+        <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/dev/wechat-conversation')}>
+          对话监控
+        </Button>
+      ) : null}
+      {showConnect ? (
+        <QrCodeAuth disabled={binding || !gatewaySupported} onAuthenticated={(c) => void handleAuthenticated(c)} />
+      ) : (
+        <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>
+          断开
+        </Button>
+      )}
+    </Flexbox>
   )
 
   return (
@@ -182,11 +260,22 @@ const MessengerWeChatPage = memo(() => {
             绑定助手
           </Text>
           <Select
+            disabled={controlsDisabled}
             options={agents}
             style={{ maxWidth: 360 }}
             value={agentId}
             onChange={(v) => void handleAgentChange(v)}
           />
+        </Flexbox>
+
+        <Flexbox gap={8}>
+          <Text type='secondary' style={{ fontSize: 13 }}>服务商</Text>
+          <Select disabled={controlsDisabled} options={providerOptions} style={{ maxWidth: 360 }} value={provider} onChange={handleProviderChange} />
+        </Flexbox>
+
+        <Flexbox gap={8}>
+          <Text type='secondary' style={{ fontSize: 13 }}>模型</Text>
+          <Select disabled={controlsDisabled} options={modelOptions} style={{ maxWidth: 360 }} value={modelId} onChange={handleModelChange} />
         </Flexbox>
 
         {!gatewaySupported && (

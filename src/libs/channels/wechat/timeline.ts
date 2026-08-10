@@ -3,7 +3,18 @@ import type { ChannelTimelineEvent } from '@pure/database/models/channelEvent'
 import { parseWechatFileContent } from './inboundMedia'
 
 export type TimelineMessage = {
+  attachments?: Array<{
+    deliveryError?: string
+    deliveryStatus: string
+    fileName: string
+    fileSize: number
+    fileUrl: string
+    id: string
+    summary?: string
+    version: number
+  }>
   createdAt: string
+  durationMs?: number
   eventId: string
   fileName?: string
   fileSize?: number | null
@@ -11,7 +22,10 @@ export type TimelineMessage = {
   id: string
   imageUrl?: string
   messageKind?: string
+  model?: string
+  provider?: string
   role: 'assistant' | 'user'
+  source: 'manual' | 'model' | 'system' | 'user'
   status?: string
   text: string
 }
@@ -34,6 +48,7 @@ export function expandEventsToMessages(events: ChannelTimelineEvent[]): Timeline
           id: `${event.id}:assistant`,
           messageKind: event.messageKind,
           role: 'assistant',
+          source: 'manual',
           status: event.status,
           text: event.responseText,
         })
@@ -59,16 +74,34 @@ export function expandEventsToMessages(events: ChannelTimelineEvent[]): Timeline
         : {}),
       messageKind: event.messageKind,
       role: 'user',
+      source: 'user',
       status: event.status,
       text: isImage ? '[图片]' : isFile ? '[文件]' : event.content,
     })
     if (event.responseText) {
+      const outputAttachments = event.attachments
+        .filter(({ direction }) => direction === 'output')
+        .map((attachment) => ({
+          ...(attachment.deliveryError ? { deliveryError: attachment.deliveryError } : {}),
+          deliveryStatus: attachment.deliveryStatus,
+          fileName: attachment.fileName,
+          fileSize: attachment.fileSize,
+          fileUrl: `/api/resources/files/${attachment.fileId}/content`,
+          id: attachment.id,
+          ...(attachment.summary ? { summary: attachment.summary } : {}),
+          version: attachment.version,
+        }))
       messages.push({
+        ...(outputAttachments.length ? { attachments: outputAttachments } : {}),
         createdAt: (event.completedAt ?? event.createdAt).toISOString(),
         eventId: event.id,
         id: `${event.id}:assistant`,
         messageKind: event.messageKind,
+        ...(event.durationMs === null ? {} : { durationMs: event.durationMs }),
+        ...(event.model ? { model: event.model } : {}),
+        ...(event.provider ? { provider: event.provider } : {}),
         role: 'assistant',
+        source: event.model && event.provider ? 'model' : 'system',
         status: event.status,
         text: event.responseText,
       })

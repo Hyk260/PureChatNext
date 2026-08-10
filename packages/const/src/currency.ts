@@ -10,9 +10,3 @@ export const MONTHLY_FREE_CREDITS = 500_000
 export const MIN_RESERVE_CREDITS = 1_000
 
 export const PURECHAT_PROVIDER_ID = 'purechat' as const
-
-/** Map legacy `purehub` requests to `purechat`; leave other providers unchanged. */
-export const normalizeProviderId = (provider: string | undefined): string | undefined => {
-  if (provider === 'purehub') return PURECHAT_PROVIDER_ID
-  return provider
-}

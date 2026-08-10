@@ -4,6 +4,7 @@ import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/chan
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { isWechatGatewaySupported } from '@/libs/channels/wechat'
+import { getWechatProviderAvailability } from '@/libs/channels/wechat/agentSupport'
 
 const HEARTBEAT_STALE_MS = 90_000
 
@@ -17,6 +18,7 @@ export const GET = withAuth(async (_request, { userId }) => {
       failedEventCount: 0,
       gatewaySupported,
       needsRebind: false,
+      providerAvailability: getWechatProviderAvailability(),
       runtimeStatus: 'stopped',
     })
   }
@@ -52,6 +54,9 @@ export const GET = withAuth(async (_request, { userId }) => {
       : null,
     lastHeartbeatAt: binding.lastHeartbeatAt?.toISOString() ?? null,
     needsRebind: binding.needsRebind,
+    model: binding.model,
+    provider: binding.provider,
+    providerAvailability: getWechatProviderAvailability(),
     runtimeStatus,
   })
 })

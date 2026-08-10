@@ -3,6 +3,7 @@
 import { DatePicker, Pagination, Progress, Table } from 'antd'
 import type { TableProps } from 'antd'
 import { Block, Button, Empty, Grid, ModelIcon, SearchBar, Select, Skeleton, Tag, Text, Flexbox } from '@pure/ui'
+import { SHANGHAI_TIMEZONE } from '@pure/const'
 import { formatSize } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { MessageSquareText, RotateCcw } from 'lucide-react'
@@ -23,7 +24,7 @@ const dateTimeFormat = new Intl.DateTimeFormat('zh-CN', {
   minute: '2-digit',
   month: 'numeric',
   second: '2-digit',
-  timeZone: 'Asia/Shanghai',
+  timeZone: SHANGHAI_TIMEZONE,
 })
 
 const formatDuration = (value: number | null) => (value == null ? '--' : `${(value / 1000).toFixed(2)}s`)

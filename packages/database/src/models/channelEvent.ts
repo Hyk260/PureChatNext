@@ -1,19 +1,34 @@
 import { and, asc, desc, eq, gt, inArray, lt, lte, ne, or, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import { channelBindings, channelEvents, channelSessions } from '../schemas/channel'
+import { channelBindings, channelEventFiles, channelEvents, channelSessions } from '../schemas/channel'
+import { files } from '../schemas/file'
 import type { ChannelEventItem, ChannelSessionItem } from '../schemas/channel'
 import type { ChatDatabase, Transaction } from '../type'
 
 /** 时间线查询用的精简事件（不含 encryptedContextToken）。 */
 export type ChannelTimelineEvent = {
+  attachments: Array<{
+    deliveryError: string | null
+    deliveryStatus: string
+    direction: string
+    fileId: string
+    fileName: string
+    fileSize: number
+    id: string
+    summary: string | null
+    version: number
+  }>
   completedAt: Date | null
   content: string
   createdAt: Date
+  durationMs: number | null
   id: string
   lastErrorCode: string | null
   lastErrorMessage: string | null
   messageKind: string
+  model: string | null
+  provider: string | null
   responseText: string | null
   status: string
 }
@@ -64,7 +79,7 @@ export class ChannelEventModel {
     recordHeartbeat = true
   ) => {
     return this.db.transaction(async (tx) => {
-      const inserted: ChannelEventItem[] = []
+      const inserted: Array<ChannelEventItem & { externalUserName: string | null }> = []
       for (const event of events) {
         const session = await ensureSession(tx, event)
         const [row] = await tx
@@ -76,7 +91,7 @@ export class ChannelEventModel {
           })
           .onConflictDoNothing({ target: [channelEvents.bindingId, channelEvents.platformMessageId] })
           .returning()
-        if (row) inserted.push(row)
+        if (row) inserted.push({ ...row, externalUserName: session.externalUserName ?? null })
       }
 
       const now = new Date()
@@ -194,13 +209,49 @@ export class ChannelEventModel {
     })
   }
 
-  saveResponse = async (id: string, owner: string, responseText: string) => {
+  saveResponse = async (
+    id: string,
+    owner: string,
+    response: { durationMs?: number; model?: string; provider?: string; text: string }
+  ) => {
+    const now = new Date()
     const [event] = await this.db
       .update(channelEvents)
-      .set({ responseText, updatedAt: new Date() })
-      .where(and(eq(channelEvents.id, id), eq(channelEvents.leaseOwner, owner)))
+      .set({
+        durationMs: response.durationMs,
+        model: response.model,
+        provider: response.provider,
+        responseText: response.text,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(channelEvents.id, id),
+          eq(channelEvents.leaseOwner, owner),
+          eq(channelEvents.status, 'processing'),
+          gt(channelEvents.leaseExpiresAt, now)
+        )
+      )
       .returning()
     return event ?? null
+  }
+
+  /** 发送外部副作用前确认事件仍处于 processing 且持有有效 lease。 */
+  hasValidLease = async (id: string, owner: string) => {
+    const now = new Date()
+    const [row] = await this.db
+      .select({ id: channelEvents.id })
+      .from(channelEvents)
+      .where(
+        and(
+          eq(channelEvents.id, id),
+          eq(channelEvents.leaseOwner, owner),
+          eq(channelEvents.status, 'processing'),
+          gt(channelEvents.leaseExpiresAt, now)
+        )
+      )
+      .limit(1)
+    return Boolean(row)
   }
 
   markChunkSent = async (id: string, owner: string, sentChunkCount: number) => {
@@ -231,7 +282,7 @@ export class ChannelEventModel {
     const delayMs = Math.min(5 * 60_000, 1000 * 2 ** Math.min(retryCount, 8))
     const now = new Date()
     await this.db.transaction(async (tx) => {
-      await tx
+      const [updated] = await tx
         .update(channelEvents)
         .set({
           availableAt: failed ? event.availableAt : new Date(now.getTime() + delayMs),
@@ -244,6 +295,8 @@ export class ChannelEventModel {
           updatedAt: now,
         })
         .where(and(eq(channelEvents.id, event.id), eq(channelEvents.leaseOwner, owner)))
+        .returning({ id: channelEvents.id })
+      if (!updated) return
       await tx
         .update(channelBindings)
         .set({
@@ -346,10 +399,13 @@ export class ChannelEventModel {
         completedAt: channelEvents.completedAt,
         content: channelEvents.content,
         createdAt: channelEvents.createdAt,
+        durationMs: channelEvents.durationMs,
         id: channelEvents.id,
         lastErrorCode: channelEvents.lastErrorCode,
         lastErrorMessage: channelEvents.lastErrorMessage,
         messageKind: channelEvents.messageKind,
+        model: channelEvents.model,
+        provider: channelEvents.provider,
         responseText: channelEvents.responseText,
         status: channelEvents.status,
       })
@@ -361,7 +417,38 @@ export class ChannelEventModel {
       )
       .limit(limit)
 
-    return { events: options?.after ? rows : rows.reverse(), session }
+    const orderedRows = options?.after ? rows : rows.reverse()
+    const eventIds = orderedRows.map(({ id }) => id)
+    const attachmentRows = eventIds.length
+      ? await this.db
+          .select({
+            deliveryError: channelEventFiles.deliveryError,
+            deliveryStatus: channelEventFiles.deliveryStatus,
+            direction: channelEventFiles.direction,
+            eventId: channelEventFiles.eventId,
+            fileId: files.id,
+            fileName: files.name,
+            fileSize: files.size,
+            id: channelEventFiles.id,
+            summary: channelEventFiles.summary,
+            version: channelEventFiles.version,
+          })
+          .from(channelEventFiles)
+          .innerJoin(files, eq(channelEventFiles.fileId, files.id))
+          .where(inArray(channelEventFiles.eventId, eventIds))
+          .orderBy(asc(channelEventFiles.createdAt))
+      : []
+    const attachmentsByEvent = new Map<string, typeof attachmentRows>()
+    for (const attachment of attachmentRows) {
+      const items = attachmentsByEvent.get(attachment.eventId) ?? []
+      items.push(attachment)
+      attachmentsByEvent.set(attachment.eventId, items)
+    }
+    const events = orderedRows.map((event) => ({
+      ...event,
+      attachments: (attachmentsByEvent.get(event.id) ?? []).map(({ eventId: _eventId, ...attachment }) => attachment),
+    }))
+    return { events, session }
   }
 
   startNewConversation = async (sessionId: string, activeAgentId?: string | null, excludeEventId?: string) => {

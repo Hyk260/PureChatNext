@@ -10,6 +10,7 @@ let pendingChatTextClaimed = false
 let pendingTopicSendMemory: string | null = null
 /** Ensures the pending topic send text is only claimed once per setPendingTopicSend. */
 let pendingTopicSendClaimed = false
+let pendingTopicSendFiles: File[] = []
 
 export const truncateTitle = (text: string): string => {
   const trimmed = text.trim() || '新话题'
@@ -89,6 +90,16 @@ export const setPendingTopicSend = (text: string): void => {
   }
 }
 
+export const setPendingTopicSendFiles = (files: File[]): void => {
+  pendingTopicSendFiles = files
+}
+
+export const claimPendingTopicSendFiles = (): File[] => {
+  const files = pendingTopicSendFiles
+  pendingTopicSendFiles = []
+  return files
+}
+
 /** Claim pending topic send text once per setPendingTopicSend. */
 export const claimPendingTopicSend = (): string | null => {
   if (pendingTopicSendClaimed) return null
@@ -123,6 +134,7 @@ export const claimPendingTopicSend = (): string | null => {
 export const finishPendingTopicSend = (): void => {
   pendingTopicSendMemory = null
   pendingTopicSendClaimed = true
+  pendingTopicSendFiles = []
 
   if (typeof window === 'undefined') return
 

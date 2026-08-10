@@ -30,10 +30,18 @@ export const WECHAT_MAX_INBOUND_FILE_BYTES = 10 * 1024 * 1024
 export const WECHAT_MAX_PARSED_FILE_CHARS = 120_000
 
 export type PreparedWechatFile = {
+  buffer: Buffer
   content: string
   fileName: string
   fileType: string
+  mimeType: string
   truncated: boolean
+}
+
+export type DownloadedWechatFile = {
+  buffer: Buffer
+  fileName: string
+  mimeType: string
 }
 
 export function encodeWechatImageContent(imageItem: ImageItem): string {
@@ -88,17 +96,9 @@ export function parseWechatFileContent(content: string): StoredWechatFilePayload
 export async function prepareWechatFileForAgent(
   api: WechatApiClient,
   payload: StoredWechatFilePayload,
+  retained?: DownloadedWechatFile,
 ): Promise<PreparedWechatFile> {
-  const declaredSize = Number(payload.len)
-  if (Number.isFinite(declaredSize) && declaredSize > WECHAT_MAX_INBOUND_FILE_BYTES) {
-    throw new Error('文件超过 10MB 限制，无法处理。')
-  }
-  const downloaded = await downloadStoredWechatFile(api, payload)
-  if (!downloaded) throw new Error('微信文件无法下载，可能已过期或缺少媒体凭证。')
-  if (downloaded.buffer.byteLength > WECHAT_MAX_INBOUND_FILE_BYTES) {
-    throw new Error('文件超过 10MB 限制，无法处理。')
-  }
-
+  const downloaded = retained ?? await downloadValidatedWechatFile(api, payload)
   const fileName = path.basename(downloaded.fileName || 'wechat-file') || 'wechat-file'
   const tempDir = await mkdtemp(path.join(os.tmpdir(), 'purechat-wechat-'))
   const filePath = path.join(tempDir, fileName)
@@ -110,14 +110,33 @@ export async function prepareWechatFileForAgent(
     if (!raw) throw new Error('文件没有可读取的文本内容。')
     const content = raw.slice(0, WECHAT_MAX_PARSED_FILE_CHARS)
     return {
+      buffer: downloaded.buffer,
       content,
       fileName,
       fileType: document.fileType,
+      mimeType: downloaded.mimeType,
       truncated: raw.length > content.length,
     }
   } finally {
     await rm(tempDir, { recursive: true, force: true }).catch(() => undefined)
   }
+}
+
+export async function downloadValidatedWechatFile(
+  api: WechatApiClient,
+  payload: StoredWechatFilePayload
+): Promise<DownloadedWechatFile> {
+  const declaredSize = Number(payload.len)
+  if (Number.isFinite(declaredSize) && declaredSize > WECHAT_MAX_INBOUND_FILE_BYTES) {
+    throw new Error('文件超过 10MB 限制，无法处理。')
+  }
+  const downloaded = await downloadStoredWechatFile(api, payload)
+  if (!downloaded) throw new Error('微信文件无法下载，可能已过期或缺少媒体凭证。')
+  if (downloaded.buffer.byteLength > WECHAT_MAX_INBOUND_FILE_BYTES) {
+    throw new Error('文件超过 10MB 限制，无法处理。')
+  }
+
+  return downloaded
 }
 
 function attachmentBuffer(buffer: unknown): Buffer {

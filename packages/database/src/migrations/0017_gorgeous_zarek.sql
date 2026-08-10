@@ -1,0 +1,1 @@
+ALTER TABLE "channel_bindings" ADD COLUMN "pending_welcome" boolean DEFAULT false NOT NULL;

@@ -12,8 +12,14 @@ export type WechatStatus = {
   lastError?: { code: string; message: string } | null
   lastHeartbeatAt?: string | null
   needsRebind: boolean
+  model?: string | null
+  provider?: WechatProviderId | null
+  providerAvailability?: Record<WechatProviderId, { available: boolean; reason?: string }>
   runtimeStatus?: 'starting' | 'online' | 'degraded' | 'offline' | 'needs_rebind' | 'stopped'
 }
+
+export type WechatProviderId = 'purechat' | 'openai' | 'deepseek'
+export type WechatConfiguration = { agentId: string; model: string; provider: WechatProviderId }
 
 export async function retryFailedWechatEvents(): Promise<number> {
   const res = await apiFetch('/api/channels/wechat/events/retry', { method: 'POST' })
@@ -58,8 +64,7 @@ export async function pollWechatQrStatus(qrcode: string, signal?: AbortSignal): 
   return res.json() as Promise<WechatQrStatus>
 }
 
-export async function bindWechat(params: {
-  agentId: string
+export async function bindWechat(params: WechatConfiguration & {
   botId: string
   botToken: string
   userId: string
@@ -80,9 +85,9 @@ export async function unbindWechat(): Promise<void> {
   if (!res.ok) throw new Error(`unbind failed: ${res.status}`)
 }
 
-export async function updateWechatAgent(agentId: string): Promise<void> {
+export async function updateWechatConfiguration(config: WechatConfiguration): Promise<void> {
   const res = await apiFetch('/api/channels/wechat/bind', {
-    body: JSON.stringify({ agentId }),
+    body: JSON.stringify(config),
     headers: { 'Content-Type': 'application/json' },
     method: 'PATCH',
   })

@@ -6,11 +6,7 @@ import { memo } from 'react'
 
 import PureChatMark from './PureChatMark'
 
-/** Accept legacy `purehub` so historical message metadata keeps the brand icon. */
-const isPureChat = (provider?: string) => {
-  const id = provider?.toLowerCase()
-  return id === 'purechat' || id === 'purehub'
-}
+const isPureChat = (provider?: string) => provider?.toLowerCase() === 'purechat'
 
 const PureChatProviderIcon = memo<ProviderIconProps>(
   ({ className, shape = 'circle', size = 12, style, type = 'avatar' }) => {

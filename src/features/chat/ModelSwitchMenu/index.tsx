@@ -185,7 +185,9 @@ export const useCurrentHomeModel = () => {
     if (isSettingsProviderId(selectedProvider)) {
       const model = configs[selectedProvider]?.models.find((item) => item.id === selectedModel)
       if (model) {
+        const catalog = getAiModel(selectedProvider, model.id)
         return {
+          abilities: catalog?.abilities,
           displayName: model.displayName,
           model: model.id,
           provider: selectedProvider,
@@ -193,6 +195,7 @@ export const useCurrentHomeModel = () => {
       }
     }
 
-    return findHomeModel(selectedProvider, selectedModel)
+    const homeModel = findHomeModel(selectedProvider, selectedModel)
+    return { ...homeModel, abilities: getAiModel(selectedProvider as ModelProviderId, selectedModel)?.abilities }
   }, [configs, selectedModel, selectedProvider])
 }

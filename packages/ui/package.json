@@ -39,13 +39,11 @@
   },
   "main": "./src/index.ts",
   "peerDependencies": {
-    "@lobehub/icons": "*",
+    "@lobehub/icons": "^5.15.0",
+    "@lobehub/ui": "^5.28.1",
     "antd": "*",
     "antd-style": "*",
     "lucide-react": "*",
     "react": "*"
-  },
-  "dependencies": {
-    "@lobehub/ui": "^5.28.1"
   }
 }

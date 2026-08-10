@@ -80,14 +80,6 @@ export interface Search1ApiResponseItem {
   success: boolean
 }
 
-/**
- * @deprecated Use Search1ApiRawResponse instead
- */
-export interface Search1ApiResponse {
-  results?: Search1ApiResult[]
-  searchParameters?: Search1ApiSearchParameters
-}
-
 export interface Search1ApiRawResponse {
   results: Search1ApiResponseItem[]
   summary?: string

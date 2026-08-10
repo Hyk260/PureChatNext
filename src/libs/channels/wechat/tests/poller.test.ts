@@ -146,6 +146,14 @@ describe('rawMessageToEvent', () => {
     expect(safeLog).toContain('联系人=sha256:')
     expect(safeLog).not.toContain('wechat-owner')
     expect(safeLog).not.toContain('hello')
+    expect(safeLog).not.toContain('用户=')
     expect(formatWechatInboundLog(event, true)).toContain('内容="hello"')
   })
+
+  it('includes external user name only when present', () => {
+    const event = rawMessageToEvent('binding-1', message())!
+    expect(formatWechatInboundLog({ ...event, externalUserName: '  Alice  ' }, false)).toContain('用户="Alice"')
+    expect(formatWechatInboundLog({ ...event, externalUserName: '   ' }, false)).not.toContain('用户=')
+  })
 })
+

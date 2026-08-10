@@ -1,6 +1,6 @@
 # 微信 iLink 文本渠道
 
-微信渠道通过 iLink Bot API 扫码授权。首版只支持微信私聊文本；群聊、图片、文件、工具调用和网页 Topic 同步暂不支持。
+微信渠道通过 iLink Bot API 扫码授权。支持微信私聊文本、图片/文件理解，以及受控的 `.xlsx` 修改与文件回传；群聊和网页 Topic 同步暂不支持。
 
 ## 部署边界
 
@@ -46,6 +46,7 @@ Gateway Poller ──事务──► channel_events + poll_cursor
 | `KEY_VAULTS_SECRET` | 必填，用 AES-256-GCM 加密扫码凭证和 `context_token` |
 | `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` | 自配 OpenAI / DeepSeek Agent 时需配置对应服务端密钥 |
 | `AI_GATEWAY_API_KEY`（或 `PURECHAT_API_KEY`） | PureChat Agent 时需配置；Gateway 进程与 app 共用 |
+| `S3_*`、`FILE_STORAGE_LIMIT_MB` | 文件长期保存、Excel 新版本生成与微信文件回传必需 |
 | `PURECHAT_ENABLED` | 默认 true；设为 false 时禁用 PureChat 渠道 |
 | `WECHAT_GATEWAY_ENABLED` | 本地/自托管默认 true；Vercel 默认 false |
 | `WECHAT_GATEWAY_LOG_MESSAGE_TEXT` | 默认 false；调试时输出单行、最多 200 字的消息正文 |
@@ -74,26 +75,33 @@ node /app/wechat-gateway.mjs --healthcheck
 
 | 指令 | 行为 |
 | --- | --- |
-| `/help` | 显示指令和文本限制 |
+| `/h` / `/help` | 显示指令和文本限制 |
 | `/new` | 中止当前生成并增加会话版本 |
 | `/stop` | 通过 `AbortSignal` 停止当前模型调用 |
 | `/agents` | 列出助手和当前选择 |
 | `/agents <序号\|agentId>` | 切换当前联系人的助手并开始新对话 |
 
-指令必须是完整的 `/command [args]`。未知斜杠指令只返回帮助，不进入模型。普通联系人可以使用 `/new`、`/stop`、`/help`；只有扫码授权得到的微信账号可以枚举或切换 Agent。
+扫码绑定成功后，因 iLink 需要 `context_token` 才能出站，欢迎语会在用户发来的**第一条消息**回复前推送：介绍当前 Agent，并提示发送 `/h` 查看指令。
 
-可用于微信渠道的 Agent Provider 为 PureChat、OpenAI 或 DeepSeek。PureChat 走 AI Gateway 并扣绑定用户的免费积分；OpenAI / DeepSeek 需对应服务端密钥。其他 Provider 会显示不可用，不会静默回退。
+指令必须是完整的 `/command [args]`。未知斜杠指令只返回帮助，不进入模型。普通联系人可以使用 `/new`、`/stop`、`/h`；只有扫码授权得到的微信账号可以枚举或切换 Agent。
+
+设置页可为微信渠道独立选择 Agent、服务商和模型。Agent 只提供 system role；`/agents` 仅切换 Agent，不改变渠道固定的服务商和模型。修改配置会取消旧的待处理回复，并让后续消息从新对话开始。
+
+微信渠道服务商仅支持 PureChat、OpenAI 或 DeepSeek。PureChat 走 AI Gateway 并扣绑定用户的免费积分；OpenAI / DeepSeek 需对应服务端密钥。服务端不可用的服务商会在设置页标记并禁用。
 
 ## 回环验收
 
 1. 启动数据库、app 和 Gateway，扫码绑定。
-2. 90 秒内状态应从 starting 变为 online。
+2. 90 秒内状态应从 starting 变为 online；绑定账号向机器人发首条消息时，应先收到欢迎语（介绍当前 Agent 并提示 `/h`），再收到对首条消息的正常回复。
 3. 连续发送两条文本，第二条应使用第一轮上下文，且每条只产生一份入站事件。
 4. 发送 `/new` 后再提问，旧上下文不应进入 Prompt。
 5. 用扫码账号执行 `/agents` 并切换；其他联系人执行应被拒绝。
 6. 长回答期间发送 `/stop`，应收到停止确认且生成调用被中止。
 7. 停止 Gateway；90 秒后页面应显示 offline。重新启动后应恢复轮询并继续过期 lease/待重试事件。
-8. 发送图片时，仅当当前助手模型具备 vision 能力才会进入多模态理解；否则提示切换视觉模型。文件消息会解析文本后交给助手。
+8. 发送图片时，仅当渠道模型具备 vision 能力才会进入多模态理解；否则提示切换视觉模型。文件消息会解析文本后交给助手。
+9. 上传不超过 10MB 的 `.xlsx`，下一轮要求修改明确文本；应收到修改摘要和新的 `.xlsx` 文件。继续说“修改这个文件”时应基于最近生成版本创建下一版本。
+
+Excel 编辑不会覆盖原件；每次成功修改都会生成新版本并计入用户文件存储配额。首版支持常规 `.xlsx` 文本替换和指定单元格赋值，不支持 `.xls`、`.xlsm`、宏或任意代码执行。只有文件工具实际成功后 Agent 才会声明已生成文件。
 
 失败事件可在设置页点击“重试失败消息”，单次最多重新入队 100 条。
 

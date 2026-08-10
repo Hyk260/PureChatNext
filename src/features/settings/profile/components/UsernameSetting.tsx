@@ -118,7 +118,6 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
               handleCancel()
             }}
             size='small'
-            variant='outlined'
           >
             取消
           </Button>

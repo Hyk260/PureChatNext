@@ -1,10 +1,11 @@
 /** Asia/Shanghai 计费周期工具（禁止用 UTC 算 period）。 */
 
-const SHANGHAI_TZ = 'Asia/Shanghai'
+import { SHANGHAI_TIMEZONE } from '@pure/const'
+import { HOUR } from '@pure/utils/units'
 
 const shanghaiParts = (date: Date) => {
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: SHANGHAI_TZ,
+    timeZone: SHANGHAI_TIMEZONE,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -46,7 +47,7 @@ export const getNextShanghaiResetAt = (date: Date = new Date()): Date => {
 export const formatResetCountdown = (now: Date = new Date()) => {
   const resetAt = getNextShanghaiResetAt(now)
   const ms = Math.max(0, resetAt.getTime() - now.getTime())
-  const totalHours = Math.floor(ms / (1000 * 60 * 60))
+  const totalHours = Math.floor(ms / HOUR)
   const days = Math.floor(totalHours / 24)
   const hours = totalHours % 24
   return { days, hours, ms, resetAt: resetAt.toISOString() }

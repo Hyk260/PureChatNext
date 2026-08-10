@@ -153,13 +153,17 @@ export const POST = withAuth<{ sessionId: string }>(async (request, { params, us
 
   const [message] = expandEventsToMessages([
     {
+      attachments: [],
       completedAt: event.completedAt,
       content: event.content,
       createdAt: event.createdAt,
+      durationMs: event.durationMs,
       id: event.id,
       lastErrorCode: event.lastErrorCode,
       lastErrorMessage: event.lastErrorMessage,
       messageKind: event.messageKind,
+      model: event.model,
+      provider: event.provider,
       responseText: event.responseText,
       status: event.status,
     },

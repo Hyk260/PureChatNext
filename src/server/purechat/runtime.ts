@@ -75,9 +75,9 @@ export async function chargePureChatGenerateUsage(params: {
   if (!card) return
 
   const usage = params.result.usage
-  const cachedInputTokens = usage.inputTokenDetails.cacheReadTokens
-  const inputTokens = usage.inputTokens
-  const outputTokens = usage.outputTokens
+  const cachedInputTokens = usage.inputTokenDetails.cacheReadTokens ?? undefined
+  const inputTokens = usage.inputTokens ?? undefined
+  const outputTokens = usage.outputTokens ?? undefined
   if (inputTokens == null && outputTokens == null) return
 
   const { totalCredits } = computeChatCost(card.pricing, {

@@ -1,9 +1,6 @@
 /** Pure AI 系统内置助理固定 id（对应 `agents.id`） */
 export const PURE_AI_AGENT_ID = 'agt_inbox'
 
-/** @deprecated 使用 PURE_AI_AGENT_ID */
-export const DEFAULT_HOME_AGENT_ID = PURE_AI_AGENT_ID
-
 export interface AgentListItem {
   avatar: string
   backgroundColor?: string | null

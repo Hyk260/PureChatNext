@@ -7,11 +7,7 @@ import { memo } from 'react'
 
 import PureChatMark from './PureChatMark'
 
-/** Accept legacy `purehub` so historical message metadata keeps the brand mark. */
-const isPureChat = (provider?: string) => {
-  const id = provider?.toLowerCase()
-  return id === 'purechat' || id === 'purehub'
-}
+const isPureChat = (provider?: string) => provider?.toLowerCase() === 'purechat'
 
 const PureChatProviderCombine = memo<ProviderCombineProps>(
   ({ className, size = 12, style, type = 'color' }) => {

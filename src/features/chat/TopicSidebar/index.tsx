@@ -87,7 +87,7 @@ const TopicSidebar = memo<Props>(
         />
         <Flexbox flex={1} gap={8} style={{ minHeight: 0 }}>
           <div style={{ paddingInline: 12 }}>
-            <Button block color='default' variant='filled' icon={<MessageSquarePlus size={16} />} onClick={onNewTopic}>
+            <Button block icon={<MessageSquarePlus size={16} />} type='fill' onClick={onNewTopic}>
               开启新话题
             </Button>
           </div>

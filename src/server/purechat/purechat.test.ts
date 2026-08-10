@@ -4,11 +4,11 @@ import {
   assertPureChatPricingComplete,
   computeChatCost,
   getPureChatModel,
-  getShanghaiBillingPeriod,
-  getNextShanghaiResetAt,
   resolvePureChatDisplayId,
   resolvePureChatGatewayId,
-} from './index'
+} from '@pure/model-bank'
+
+import { getNextShanghaiResetAt, getShanghaiBillingPeriod } from './period'
 
 describe('purechat re-exports from model-bank', () => {
   it('maps display id ↔ gateway id', () => {

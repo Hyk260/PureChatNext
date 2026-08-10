@@ -6,7 +6,11 @@ import { z } from 'zod'
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
-import { wechatAgentUnavailableReason } from '@/libs/channels/wechat/agentSupport'
+import {
+  isWechatProviderId,
+  validateWechatModel,
+  wechatAgentUnavailableReason,
+} from '@/libs/channels/wechat/agentSupport'
 import {
   encryptCredentials,
   invalidateWechatChat,
@@ -19,9 +23,22 @@ const bindSchema = z.object({
   agentId: z.string().trim().min(1).max(128),
   botId: z.string().trim().max(255).optional().default(''),
   botToken: z.string().trim().min(16).max(4096),
+  model: z.string().trim().min(1).max(255),
+  provider: z.string().trim().min(1).max(32),
   userId: z.string().trim().max(255).optional().default(''),
 })
-const patchSchema = z.object({ agentId: z.string().trim().min(1).max(128) })
+const patchSchema = bindSchema.pick({ agentId: true, model: true, provider: true })
+
+async function validateConfiguration(userId: string, config: z.infer<typeof patchSchema>) {
+  const agent = await new AgentModel(userId).findVisibleById(config.agentId)
+  if (!agent) return { error: 'Agent not found', status: 404 } as const
+  if (!isWechatProviderId(config.provider)) return { error: '该 Provider 不支持微信渠道', status: 400 } as const
+  const unavailable = wechatAgentUnavailableReason(config.provider)
+  if (unavailable) return { error: unavailable, status: 400 } as const
+  const modelError = validateWechatModel(config.provider, config.model)
+  if (modelError) return { error: modelError, status: 400 } as const
+  return null
+}
 
 export const POST = withAuth(async (request: NextRequest, { userId }) => {
   if (!isWechatGatewaySupported()) return jsonError('当前部署不支持微信 Gateway，请使用 Docker 或本地 Gateway', 503)
@@ -33,21 +50,22 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
 
   const parsed = bindSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return jsonError('Invalid bind request')
-  const { agentId, botId, botToken } = parsed.data
-  const agent = await new AgentModel(userId).findVisibleById(agentId)
-  if (!agent) return jsonError('Agent not found', 404)
-  const unavailable = wechatAgentUnavailableReason(agent.provider)
-  if (unavailable) return jsonError(unavailable, 400)
+  const { agentId, botId, botToken, model: modelId, provider } = parsed.data
+  const invalid = await validateConfiguration(userId, parsed.data)
+  if (invalid) return jsonError(invalid.error, invalid.status)
 
   const credentials: WechatCredentials = { botId, botToken, userId: parsed.data.userId }
   const applicationId = botId || `wechat_${createHash('sha256').update(botToken).digest('hex').slice(0, 32)}`
   const model = new ChannelBindingModel()
   const previous = await model.findByUserAndPlatform(userId, WECHAT_PLATFORM)
   if (previous?.applicationId) invalidateWechatChat(previous.applicationId)
-  const binding = await model.upsertWechat({
+  const binding = await model.upsert({
     agentId,
     applicationId,
     credentials: encryptCredentials(credentials),
+    model: modelId,
+    platform: WECHAT_PLATFORM,
+    provider,
     userId,
   })
   return NextResponse.json({ id: binding.id, ok: true, runtimeStatus: binding.runtimeStatus })
@@ -64,11 +82,14 @@ export const DELETE = withAuth(async (_request, { userId }) => {
 export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
   const parsed = patchSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return jsonError('Invalid agent request')
-  const agent = await new AgentModel(userId).findVisibleById(parsed.data.agentId)
-  if (!agent) return jsonError('Agent not found', 404)
-  const unavailable = wechatAgentUnavailableReason(agent.provider)
-  if (unavailable) return jsonError(unavailable, 400)
-  const updated = await new ChannelBindingModel().updateAgent(userId, WECHAT_PLATFORM, parsed.data.agentId)
+  const invalid = await validateConfiguration(userId, parsed.data)
+  if (invalid) return jsonError(invalid.error, invalid.status)
+  const updated = await new ChannelBindingModel().updateConfiguration({
+    ...parsed.data,
+    platform: WECHAT_PLATFORM,
+    userId,
+  })
   if (!updated) return jsonError('WeChat not connected', 404)
-  return NextResponse.json({ agentId: updated.agentId, ok: true })
+  invalidateWechatChat(updated.applicationId)
+  return NextResponse.json({ agentId: updated.agentId, model: updated.model, ok: true, provider: updated.provider })
 })

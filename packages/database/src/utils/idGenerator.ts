@@ -13,6 +13,7 @@ const prefixes = {
   channels: 'chn',
   channelSessions: 'chs',
   channelEvents: 'che',
+  channelEventFiles: 'cef',
 } as const
 
 /**

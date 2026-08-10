@@ -1,5 +1,6 @@
 export * from './apiKey'
 export * from './apiKeyManager'
+export * from './editExcel'
 export * from './jina'
 export * from './client/fetchEventSource'
 export * from './uuid'

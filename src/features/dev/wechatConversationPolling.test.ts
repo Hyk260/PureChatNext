@@ -9,7 +9,7 @@ import {
 } from './wechatConversationPolling'
 
 function message(id: string, createdAt: string, status = 'completed'): WechatDevMessage {
-  return { createdAt, eventId: id.split(':')[0]!, id, role: 'user', status, text: id }
+  return { createdAt, eventId: id.split(':')[0]!, id, role: 'user', source: 'user', status, text: id }
 }
 
 describe('wechat conversation delta helpers', () => {

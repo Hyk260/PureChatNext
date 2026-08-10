@@ -3,6 +3,7 @@ import 'dotenv/config'
 
 import { stat, writeFile } from 'node:fs/promises'
 import { appEnv } from '@/envs/app'
+import { fileEnv } from '@/envs/file'
 
 const LOOP_GAP_MS = 2_000
 const POLL_WINDOW_MS = 60_000
@@ -122,16 +123,21 @@ async function main() {
   console.log(`[微信 Gateway] 正在启动：PID=${process.pid}，Processor=${PROCESSOR_COUNT}`)
   const releaseSingletonLock = await acquireSingletonLock()
   console.log('[微信 Gateway] 单实例锁获取成功，数据库连接正常')
+  if (!(fileEnv.S3_ACCESS_KEY_ID && fileEnv.S3_SECRET_ACCESS_KEY && fileEnv.S3_ENDPOINT && fileEnv.S3_BUCKET)) {
+    console.warn('[微信 Gateway] S3 未完整配置：文本消息可用，但文件长期保存、Excel 编辑和文件回传将不可用')
+  }
 
   try {
-    const [{ ChannelBindingModel, WECHAT_PLATFORM }, { ChannelEventModel }, wechat] = await Promise.all([
+    const [{ ChannelBindingModel, WECHAT_PLATFORM }, { ChannelEventModel }, { ChannelEventFileModel }, wechat] = await Promise.all([
       import('@pure/database/models/channelBinding'),
       import('@pure/database/models/channelEvent'),
+      import('@pure/database/models/channelEventFile'),
       import('../src/libs/channels/wechat'),
     ])
     wechat.requireWechatVaultSecret()
     const bindingModel = new ChannelBindingModel()
     const eventModel = new ChannelEventModel()
+    await new ChannelEventFileModel().assertReady()
     await waitForForeignBindingLeases(bindingModel, WECHAT_PLATFORM)
     await migrateLegacyCredentials(bindingModel, wechat, WECHAT_PLATFORM)
 
@@ -142,6 +148,7 @@ async function main() {
     let processedSinceSummary = 0
     let lastBindingCount = -1
     let lastSummaryAt = 0
+    let lastSummarySnapshot = ''
     const stop = () => {
       if (stopping) return
       stopping = true
@@ -223,9 +230,22 @@ async function main() {
             counts[status] = (counts[status] ?? 0) + 1
             return counts
           }, {})
-          console.log(
-            `[微信 Gateway] 运行摘要：在线=${statusCounts.online ?? 0}，异常=${statusCounts.degraded ?? 0}，离线=${statusCounts.offline ?? 0}，需重绑=${statusCounts.needs_rebind ?? 0}，处理中=${queue.processing}，待处理=${queue.pending}，重试=${queue.retry}，失败=${queue.failed}，本周期处理=${processedSinceSummary}`
-          )
+          const snapshot = [
+            statusCounts.online ?? 0,
+            statusCounts.degraded ?? 0,
+            statusCounts.offline ?? 0,
+            statusCounts.needs_rebind ?? 0,
+            queue.processing,
+            queue.pending,
+            queue.retry,
+            queue.failed,
+          ].join('|')
+          if (snapshot !== lastSummarySnapshot || processedSinceSummary > 0) {
+            console.log(
+              `[微信 Gateway] 运行摘要：在线=${statusCounts.online ?? 0}，异常=${statusCounts.degraded ?? 0}，离线=${statusCounts.offline ?? 0}，需重绑=${statusCounts.needs_rebind ?? 0}，处理中=${queue.processing}，待处理=${queue.pending}，重试=${queue.retry}，失败=${queue.failed}，本周期处理=${processedSinceSummary}`
+            )
+            lastSummarySnapshot = snapshot
+          }
           processedSinceSummary = 0
           lastSummaryAt = Date.now()
         }

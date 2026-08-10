@@ -24,9 +24,11 @@ import {
 import {
   claimPendingChatText,
   claimPendingTopicSend,
+  claimPendingTopicSendFiles,
   finishPendingChatText,
   finishPendingTopicSend,
   setPendingTopicSend,
+  setPendingTopicSendFiles,
   truncateTitle,
 } from '@/features/chat/chatLocalStorage'
 import ChatInput from '@/features/chat/ChatInput'
@@ -57,6 +59,21 @@ const getClientSnapshot = () => true
 const getServerSnapshot = () => false
 const EMPTY_MESSAGES: UIMessage[] = []
 const DRAFT_TOPIC_TITLE = '新话题'
+
+const fileToPart = (file: File): Promise<{ type: 'file'; mediaType: string; url: string; filename: string }> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve({ type: 'file', mediaType: file.type || 'application/octet-stream', url: String(reader.result), filename: file.name })
+    reader.onerror = () => reject(reader.error ?? new Error('读取附件失败'))
+    reader.readAsDataURL(file)
+  })
+
+const buildTopicTitle = (text: string, files: File[]) => {
+  const attachmentLabel = files.length > 0 ? `📎 ${files.map((file) => file.name).join('、')}` : ''
+  const trimmedText = text.trim()
+  if (!attachmentLabel) return truncateTitle(trimmedText || '附件')
+  return [trimmedText ? truncateTitle(trimmedText) : '', attachmentLabel].filter(Boolean).join(' · ')
+}
 
 /** Stable content fingerprint so hydrate / Strict Mode remounts do not re-PUT identical snapshots. */
 const messagesSignature = (messages: UIMessage[]) =>
@@ -112,7 +129,7 @@ const chatTransport = new DefaultChatTransport({
 })
 
 type ChatViewActions = {
-  send: (text: string) => void | Promise<void>
+  send: (text: string, files?: File[]) => void | Promise<void>
   stop: () => void
 }
 
@@ -272,10 +289,11 @@ const ChatView = memo<ChatViewProps>(
     )
 
     const sendWithBody = useCallback(
-      async (text: string) => {
+      async (text: string, files: File[] = []) => {
         clearError()
+        const fileParts = await Promise.all(files.map(fileToPart))
         await sendMessage(
-          { text },
+          { text, ...(fileParts.length > 0 ? { files: fileParts } : {}) },
           {
             body: requestBody,
           }
@@ -287,13 +305,14 @@ const ChatView = memo<ChatViewProps>(
     )
 
     const sendOrSolidify = useCallback(
-      async (text: string) => {
+      async (text: string, files: File[] = []) => {
         if (!topicId) {
           try {
-            const topic = await createTopic(agentId, truncateTitle(text))
+            const topic = await createTopic(agentId, buildTopicTitle(text, files))
             onCacheMessages(topic.id, EMPTY_MESSAGES)
             onTopicsRefresh()
             setPendingTopicSend(text)
+            setPendingTopicSendFiles(files)
             // Must go through the SPA router — raw history.replaceState does not
             // update react-router useSearchParams, so ChatView would never remount.
             router.replace(buildChatHref(agentId, topic.id))
@@ -309,9 +328,9 @@ const ChatView = memo<ChatViewProps>(
     )
 
     const handleSend = useCallback(
-      async (text: string) => {
+      async (text: string, files: File[] = []) => {
         if (isBusy) return
-        await sendOrSolidify(text)
+        await sendOrSolidify(text, files)
       },
       [isBusy, sendOrSolidify]
     )
@@ -331,8 +350,9 @@ const ChatView = memo<ChatViewProps>(
       handoffStartedRef.current = true
 
       const pendingTopic = claimPendingTopicSend()
-      if (pendingTopic) {
-        sendWithBodyRef.current(pendingTopic).finally(() => {
+      const pendingFiles = claimPendingTopicSendFiles()
+      if (pendingTopic || pendingFiles.length > 0) {
+        sendWithBodyRef.current(pendingTopic ?? '', pendingFiles).finally(() => {
           finishPendingTopicSend()
         })
         return
@@ -525,8 +545,8 @@ const ChatPage = memo(() => {
     setIsBusy(busy)
   }, [])
 
-  const handleInputSend = useCallback(async (text: string) => {
-    await chatActionsRef.current.send(text)
+  const handleInputSend = useCallback(async (text: string, files: File[]) => {
+    await chatActionsRef.current.send(text, files)
   }, [])
 
   const handleInputStop = useCallback(() => {

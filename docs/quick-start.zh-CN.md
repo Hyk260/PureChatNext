@@ -74,6 +74,7 @@ S3_BUCKET=purechat
 S3_ENDPOINT=http://localhost:9000
 S3_ENABLE_PATH_STYLE=1
 S3_SET_ACL=0
+# S3_SET_ACL=0：对象私有，经应用鉴权代理访问（RustFS 必用）。详见 docs/env-setup.zh-CN.md
 
 SEARCH_PROVIDERS=searxng
 SEARXNG_URL=http://localhost:8180

@@ -117,12 +117,11 @@ export const SignInEmailStep = ({
               const button = (
                 <Button
                   block
-                  color="default" 
-                  variant="filled"
                   disabled={pendingProvider !== null}
                   icon={<Icon icon={AuthIcons(provider, 18)} style={PROVIDER_ICON_STYLE} />}
                   loading={pendingProvider === provider}
                   size='large'
+                  type='fill'
                   onClick={() => {
                     handleProviderClick(provider)
                   }}
@@ -166,7 +165,7 @@ export const SignInEmailStep = ({
                     icon={ChevronRight}
                     loading={loading}
                     title='下一步'
-                    variant='filled'
+                    type='fill'
                     onClick={() => form.submit()}
                   />
                 }

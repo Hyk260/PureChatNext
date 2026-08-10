@@ -128,6 +128,48 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 
 生产密钥与内部 URL 由 `pnpm docker:setup:deploy` 和生产 Compose 管理，不要把 `docker-compose/deploy/.env` 提交到仓库。完整说明见 [Docker 自托管与数据迁移](./self-hosting/docker.zh-CN.md)。
 
+### S3 对象存储
+
+资源库文件、头像等依赖 S3 兼容存储（AWS S3、RustFS、MinIO 等）。相关变量定义在 `packages/env/src/file.ts`，示例见根目录 `.env.example`。
+
+| 变量 | 说明 |
+| ---- | ---- |
+| `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | 访问密钥 |
+| `S3_BUCKET` | 桶名 |
+| `S3_ENDPOINT` | API 端点（本地 RustFS 一般为 `http://localhost:9000`） |
+| `S3_REGION` | 区域；本地可填 `us-east-1` |
+| `S3_ENABLE_PATH_STYLE` | `1` 时使用 path-style（`endpoint/bucket/key`）；RustFS / MinIO 通常需要 |
+| `S3_SET_ACL` | 是否上传时设置对象 `public-read` ACL（见下） |
+| `S3_PREVIEW_URL_EXPIRE_IN` | 预签名 URL 过期秒数，默认 `7200` |
+| `FILE_STORAGE_LIMIT_MB` | 单用户存储额度（MB），默认 `15` |
+
+本地 Docker RustFS（`pnpm dev:docker`）推荐与 `docker-compose/dev/.env` 中 `RUSTFS_*` 对齐：
+
+```env
+S3_ACCESS_KEY_ID=purechat
+S3_SECRET_ACCESS_KEY=purechat_secret
+S3_BUCKET=purechat
+S3_ENDPOINT=http://localhost:9000
+S3_ENABLE_PATH_STYLE=1
+S3_SET_ACL=0
+```
+
+#### `S3_SET_ACL`
+
+控制上传时是否给对象打 **`public-read` ACL**，以及客户端如何拿到文件 URL。
+
+| 值 | 上传行为 | 访问方式 |
+| -- | -------- | -------- |
+| `1` | PutObject / 预签名上传带 `ACL: public-read` | 客户端直接使用 S3 公网 URL |
+| `0` | 不设置 ACL，对象保持私有 | 经应用鉴权代理，如 `/api/resources/files/:id/content`、头像代理路由 |
+
+推荐：
+
+- **本地 RustFS / Docker 生产 / 私有桶**：固定 `S3_SET_ACL=0`（多数兼容存储不支持或不建议对象级 ACL；生产 Compose 也不会开放匿名读桶）
+- **云上公开直链**：仅当桶策略允许对象级 `public-read`，且你确实需要浏览器直链访问时再设 `S3_SET_ACL=1`
+
+修改后需重启 Next（及依赖 `S3_*` 的 Gateway 等进程）。
+
 ### NODE\_ENV
 
 运行环境，通常为 `development` 或 `production`。

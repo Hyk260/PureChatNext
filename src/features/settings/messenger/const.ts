@@ -84,13 +84,8 @@ export const WECHAT_COMMANDS: readonly MessengerCommandItem[] = [
     description: '停止当前执行',
     icon: 'stop',
   },
-  // {
-  //   command: '/feedback',
-  //   description: '向团队发送反馈（不会触发 AI 回复），如 /feedback 你的反馈内容',
-  //   icon: 'feedback',
-  // },
   {
-    command: '/help',
+    command: '/help（/h）',
     description: '在机器人中查看全部指令',
     icon: 'help',
   },

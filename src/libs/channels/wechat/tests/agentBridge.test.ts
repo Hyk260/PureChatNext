@@ -72,13 +72,21 @@ describe('generateWechatAgentReply', () => {
       abortSignal: abortController.signal,
       agentId: 'agent-1',
       history: [{ content: '上一问', responseText: '上一答' }],
+      model: 'gpt-channel',
+      provider: 'openai',
       userId: 'user-1',
       userText: '今天有什么新闻？',
     })
 
-    expect(reply).toBe('基于联网结果的回答')
+    expect(reply).toMatchObject({
+      model: 'gpt-channel',
+      provider: 'openai',
+      text: '基于联网结果的回答',
+    })
+    expect(reply.durationMs).toBeGreaterThanOrEqual(0)
     expect(mocks.isStepCount).toHaveBeenCalledWith(5)
     expect(mocks.assertPureChatCanChat).not.toHaveBeenCalled()
+    expect(mocks.createProviderLanguageModel).toHaveBeenCalledWith('openai', 'gpt-channel', 'test-api-key', undefined)
     expect(mocks.generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         abortSignal: abortController.signal,
@@ -111,11 +119,17 @@ describe('generateWechatAgentReply', () => {
 
     const reply = await generateWechatAgentReply({
       agentId: 'agent-pure',
+      model: 'gpt-5.4-mini',
+      provider: 'purechat',
       userId: 'user-1',
       userText: '你好',
     })
 
-    expect(reply).toBe('基于联网结果的回答')
+    expect(reply).toMatchObject({
+      model: 'gpt-5.4-mini',
+      provider: 'purechat',
+      text: '基于联网结果的回答',
+    })
     expect(mocks.assertPureChatCanChat).toHaveBeenCalledWith('user-1', 'gpt-5.4-mini')
     expect(mocks.createPureChatLanguageModel).toHaveBeenCalledWith('gpt-5.4-mini')
     expect(mocks.createProviderLanguageModel).not.toHaveBeenCalled()
@@ -132,7 +146,7 @@ describe('generateWechatAgentReply', () => {
     )
   })
 
-  it('defaults PureChat model when agent.model is empty', async () => {
+  it('uses the channel model instead of the Agent model', async () => {
     mocks.findVisibleById.mockResolvedValue({
       id: 'agent-pure',
       model: null,
@@ -142,6 +156,8 @@ describe('generateWechatAgentReply', () => {
 
     await generateWechatAgentReply({
       agentId: 'agent-pure',
+      model: 'gpt-5.4-mini',
+      provider: 'purechat',
       userId: 'user-1',
       userText: '你好',
     })
@@ -162,6 +178,8 @@ describe('generateWechatAgentReply', () => {
     await expect(
       generateWechatAgentReply({
         agentId: 'agent-pure',
+        model: 'unknown-model',
+        provider: 'purechat',
         userId: 'user-1',
         userText: '你好',
       })

@@ -107,7 +107,7 @@ const SendButton = memo<SendButtonProps>(
           shape={shape}
           style={{ ...cssVariables, width: size }}
           title='停止'
-          variant='filled'
+          type='fill'
           onClick={(event) => {
             event.stopPropagation()
             event.preventDefault()

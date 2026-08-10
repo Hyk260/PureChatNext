@@ -190,23 +190,17 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
     }),
     {
       migrate: (persisted, version) => {
-        const state = persisted as {
-          configs?: Partial<ProviderConfigs> & { purehub?: ProviderConfig }
-        } | undefined
+        const state = persisted as { configs?: Partial<ProviderConfigs> } | undefined
         const configs = state?.configs
 
         if (!configs) {
           return { configs: DEFAULT_PROVIDER_CONFIGS }
         }
 
-        // v7: rename provider id purehub → purechat
-        const legacyPureHub = (configs as { purehub?: ProviderConfig }).purehub
-        const purechatPartial = configs.purechat ?? legacyPureHub
-
         const next: ProviderConfigs = {
           deepseek: mergeProviderConfig('deepseek', configs.deepseek),
           openai: mergeProviderConfig('openai', configs.openai),
-          purechat: mergeProviderConfig('purechat', purechatPartial),
+          purechat: mergeProviderConfig('purechat', configs.purechat),
         }
 
         // version < 2 also needs empty baseURL migration (handled in mergeProviderConfig).
@@ -215,7 +209,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
       },
       name: 'purechat:provider:v1',
       partialize: (state) => ({ configs: state.configs }),
-      version: 7,
+      version: 8,
     }
   )
 )

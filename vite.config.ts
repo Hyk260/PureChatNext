@@ -51,6 +51,7 @@ export default defineConfig(({ mode }) => {
       // SPA: Vite alias `@` → tsconfig.json paths
       tsconfigPaths: true,
       alias: sharedResolveAlias(rootDir),
+      dedupe: ['@lobehub/icons', '@lobehub/ui'],
     },
     optimizeDeps: sharedOptimizeDeps,
     server: {

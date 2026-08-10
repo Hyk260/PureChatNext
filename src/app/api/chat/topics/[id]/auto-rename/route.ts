@@ -1,4 +1,4 @@
-import { normalizeProviderId, PURECHAT_PROVIDER_ID } from '@pure/const'
+import { PURECHAT_PROVIDER_ID } from '@pure/const'
 import { FreePlanLimitError } from '@pure/database/models/credits'
 import { ChatMessageModel } from '@pure/database/models/chatMessage'
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
@@ -105,7 +105,7 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
   if (!parsed.success) return jsonError(parsed.error.message)
 
   const { baseURL, model } = parsed.data
-  const provider = normalizeProviderId(parsed.data.provider) ?? parsed.data.provider
+  const provider = parsed.data.provider
   const messages = await new ChatMessageModel(userId).listByTopic(id)
   const transcript = buildTranscript(messages)
   if (!transcript) return jsonError('Topic has no text messages')

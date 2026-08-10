@@ -1,4 +1,4 @@
-import { PURECHAT_PROVIDER_ID } from '@pure/const'
+import { PURECHAT_PROVIDER_ID, SHANGHAI_TIMEZONE } from '@pure/const'
 import { generateText, isStepCount } from 'ai'
 import type { LanguageModel, ModelMessage } from 'ai'
 import type { Message, Thread } from 'chat'
@@ -14,19 +14,15 @@ import {
   assertPureChatCanChat,
   chargePureChatGenerateUsage,
   createPureChatLanguageModel,
-  type PureChatSettlement,
 } from '@/server/purechat'
+import type { PureChatSettlement } from '@/server/purechat'
 import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
-import {
-  normalizeWechatAgentProvider,
-  resolveWechatAgentModelId,
-} from './agentSupport'
+import type { WechatToolArtifact, WechatToolContext } from '@/server/chat/toolRegistry'
 
 const log = debug('channel:wechat:bridge')
 const MAX_GENERATION_STEPS = 5
 const FINAL_ANSWER_STEP = 3
-const WECHAT_TIME_ZONE = 'Asia/Shanghai'
 type WechatUserContent =
   | string
   | Array<
@@ -34,17 +30,25 @@ type WechatUserContent =
       | { type: 'image'; image: string | Uint8Array | URL; mediaType?: string }
     >
 
+export type WechatAgentReply = {
+  artifacts: WechatToolArtifact[]
+  durationMs: number
+  model: string
+  provider: string
+  text: string
+}
+
 export const buildWechatRuntimeInstructions = (now = new Date()) => {
   const currentTime = new Intl.DateTimeFormat('zh-CN', {
     dateStyle: 'full',
     timeStyle: 'long',
-    timeZone: WECHAT_TIME_ZONE,
+    timeZone: SHANGHAI_TIMEZONE,
   }).format(now)
 
   return [
-    `当前服务器时间：${currentTime}（${WECHAT_TIME_ZONE}）。涉及“今天、明天、现在”等相对时间时，以此为准。`,
-    ...resolveChatToolInstructions({ channel: 'wechat', searchMode: 'auto' }),
+    `当前服务器时间：${currentTime}（${SHANGHAI_TIMEZONE}）。涉及“今天、明天、现在”等相对时间时，以此为准。`,
     '调用工具后必须给出完整最终回答，不要只回复“正在查询”或“稍等”。引用网页资料时附上来源 URL。',
+    '不得声称已修改、生成或发送文件，除非相应文件工具明确返回 success=true。',
   ].join('\n')
 }
 
@@ -53,10 +57,14 @@ export async function generateWechatAgentReply(params: {
   abortSignal?: AbortSignal
   agentId: string
   history?: Array<{ content: string; responseText: string | null }>
+  model: string
+  provider: string
   userId: string
   userText: string
   userContent?: WechatUserContent
-}): Promise<string> {
+  attachmentContext?: string
+  wechatToolContext?: WechatToolContext
+}): Promise<WechatAgentReply> {
   const agentModel = new AgentModel(params.userId)
   const agent = await agentModel.findVisibleById(params.agentId)
 
@@ -64,8 +72,8 @@ export async function generateWechatAgentReply(params: {
     throw new Error(`Agent not found: ${params.agentId}`)
   }
 
-  const provider = normalizeWechatAgentProvider(agent.provider)
-  const modelId = resolveWechatAgentModelId(provider, agent.model)
+  const provider = params.provider
+  const modelId = params.model
   const isPureChat = provider === PURECHAT_PROVIDER_ID
 
   let languageModel: LanguageModel
@@ -80,7 +88,7 @@ export async function generateWechatAgentReply(params: {
     languageModel = pureChatModel
   } else {
     if (!isSupportedProviderId(provider)) {
-      throw new Error(`Agent provider "${provider}" is not supported by the WeChat gateway`)
+      throw new Error(`Channel provider "${provider}" is not supported by the WeChat gateway`)
     }
     const apiKey = resolveProviderApiKey(provider, undefined, undefined)
     if (!apiKey) {
@@ -91,7 +99,8 @@ export async function generateWechatAgentReply(params: {
     languageModel = createProviderLanguageModel(provider, modelId, apiKey, undefined)
   }
 
-  const tools = resolveChatTools({ channel: 'wechat', searchMode: 'auto' })
+  const toolContext = { channel: 'wechat' as const, searchMode: 'auto' as const, wechat: params.wechatToolContext }
+  const tools = resolveChatTools(toolContext)
 
   log('reply agent=%s provider=%s model=%s', agent.id, provider, modelId)
 
@@ -109,7 +118,12 @@ export async function generateWechatAgentReply(params: {
       abortSignal: params.abortSignal,
       messages,
       model: languageModel,
-      instructions: [agent.systemRole, buildWechatRuntimeInstructions()].filter(Boolean).join('\n\n'),
+      instructions: [
+        agent.systemRole,
+        buildWechatRuntimeInstructions(),
+        ...resolveChatToolInstructions(toolContext),
+        params.attachmentContext,
+      ].filter(Boolean).join('\n\n'),
       onStepEnd: ({ finishReason, stepNumber, toolCalls, toolResults }) => {
         log(
           'step agent=%s step=%d finish=%s tools=%s results=%d',
@@ -132,10 +146,12 @@ export async function generateWechatAgentReply(params: {
     throw error
   }
 
+  const durationMs = Date.now() - startedAt
+
   if (isPureChat && settlement) {
     try {
       await chargePureChatGenerateUsage({
-        durationMs: Date.now() - startedAt,
+        durationMs,
         model: modelId,
         result,
         settlementId: settlement.settlementId,
@@ -150,20 +166,25 @@ export async function generateWechatAgentReply(params: {
   log('reply complete agent=%s steps=%d finish=%s chars=%d', agent.id, result.steps.length, result.finishReason, result.text.length)
 
   const text = result.text?.trim()
-  if (!text) {
-    return '（模型未返回内容）'
+  return {
+    artifacts: params.wechatToolContext?.producedArtifacts ?? [],
+    durationMs,
+    model: modelId,
+    provider,
+    text: text || '（模型未返回内容）',
   }
-  return text
 }
 
 /** Chat SDK 处理器：入站私聊 → Agent → thread.post。 */
 export async function handleWechatMention(params: {
   agentId: string
   message: Message
+  model: string
+  provider: string
   thread: Thread
   userId: string
 }): Promise<void> {
-  const { agentId, message, thread, userId } = params
+  const { agentId, message, model, provider, thread, userId } = params
 
   if (message.author?.isBot === true) return
 
@@ -175,8 +196,8 @@ export async function handleWechatMention(params: {
       /* 正在输入指示为尽力而为 */
     })
 
-    const reply = await generateWechatAgentReply({ agentId, userId, userText })
-    await thread.post({ markdown: reply })
+    const reply = await generateWechatAgentReply({ agentId, model, provider, userId, userText })
+    await thread.post({ markdown: reply.text })
   } catch (error) {
     log('handleMention failed agent=%s: %O', agentId, error)
     const errMsg = error instanceof Error ? error.message : '处理失败'

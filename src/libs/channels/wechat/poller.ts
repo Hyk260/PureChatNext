@@ -126,37 +126,42 @@ export function rawMessageToEvent(bindingId: string, message: WechatRawMessage) 
   }
 }
 
+const MESSAGE_KIND_LABEL: Record<string, string> = {
+  command: '指令',
+  file: '文件',
+  image: '图片',
+  text: '文本',
+  unsupported: '非文本',
+}
+
+function formatInboundContentDetail(messageKind: string, content: string): string {
+  if (messageKind === 'image') return '，内容=[图片]'
+  if (messageKind === 'file') return '，内容=[文件]'
+
+  const normalized = content
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+  const visible = messageKind === 'command' ? normalized.split(' ')[0] : normalized.slice(0, 200)
+  return `，内容=${JSON.stringify(visible)}${normalized.length > visible.length ? '…' : ''}`
+}
+
 export function formatWechatInboundLog(
-  event: { bindingId: string; content: string; externalUserId: string; messageKind: string },
+  event: {
+    bindingId: string
+    content: string
+    externalUserId: string
+    externalUserName?: string | null
+    messageKind: string
+  },
   includeMessageText: boolean
 ) {
   const contactHash = createHash('sha256').update(event.externalUserId).digest('hex').slice(0, 10)
-  const kind =
-    event.messageKind === 'image'
-      ? '图片'
-      : event.messageKind === 'file'
-        ? '文件'
-        : event.messageKind === 'unsupported'
-          ? '非文本'
-          : event.messageKind === 'command'
-            ? '指令'
-            : '文本'
-  let detail = ''
-  if (includeMessageText) {
-    if (event.messageKind === 'image') {
-      detail = '，内容=[图片]'
-    } else if (event.messageKind === 'file') {
-      detail = '，内容=[文件]'
-    } else {
-      const normalized = event.content
-        .replace(/[\r\n\t]+/g, ' ')
-        .replace(/\s{2,}/g, ' ')
-        .trim()
-      const visible = event.messageKind === 'command' ? normalized.split(' ')[0] : normalized.slice(0, 200)
-      detail = `，内容=${JSON.stringify(visible)}${normalized.length > visible.length ? '…' : ''}`
-    }
-  }
-  return `[微信 Gateway] 收到${kind}消息：绑定=${event.bindingId}，联系人=sha256:${contactHash}，长度=${event.content.length}${detail}`
+  const kind = MESSAGE_KIND_LABEL[event.messageKind] ?? '文本'
+  const userName = event.externalUserName?.trim()
+  const userPart = userName ? `，用户=${JSON.stringify(userName)}` : ''
+  const detail = includeMessageText ? formatInboundContentDetail(event.messageKind, event.content) : ''
+  return `[微信 Gateway] 收到${kind}消息：绑定=${event.bindingId}，联系人=sha256:${contactHash}${userPart}，长度=${event.content.length}${detail}`
 }
 
 /** 持久化 webhook 兼容入口；生产 Gateway 不经过 HTTP。 */

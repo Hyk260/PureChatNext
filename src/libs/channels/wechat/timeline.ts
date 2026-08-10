@@ -36,23 +36,40 @@ function parseFileSize(len?: string): number | null {
   return Number.isFinite(n) && n >= 0 ? n : null
 }
 
+function mapOutputAttachments(event: ChannelTimelineEvent) {
+  return event.attachments
+    .filter(({ direction }) => direction === 'output')
+    .map((attachment) => ({
+      ...(attachment.deliveryError ? { deliveryError: attachment.deliveryError } : {}),
+      deliveryStatus: attachment.deliveryStatus,
+      fileName: attachment.fileName,
+      fileSize: attachment.fileSize,
+      fileUrl: `/api/resources/files/${attachment.fileId}/content`,
+      id: attachment.id,
+      ...(attachment.summary ? { summary: attachment.summary } : {}),
+      version: attachment.version,
+    }))
+}
+
 /** 将 channel_events 时间线展开为 Dev 会话气泡（outbound 仅 assistant）。 */
 export function expandEventsToMessages(events: ChannelTimelineEvent[]): TimelineMessage[] {
   const messages: TimelineMessage[] = []
   for (const event of events) {
     if (event.messageKind === 'outbound') {
-      if (event.responseText) {
-        messages.push({
-          createdAt: (event.completedAt ?? event.createdAt).toISOString(),
-          eventId: event.id,
-          id: `${event.id}:assistant`,
-          messageKind: event.messageKind,
-          role: 'assistant',
-          source: 'manual',
-          status: event.status,
-          text: event.responseText,
-        })
-      }
+      const outputAttachments = mapOutputAttachments(event)
+      const text = event.responseText?.trim() || ''
+      if (!text && outputAttachments.length === 0) continue
+      messages.push({
+        ...(outputAttachments.length ? { attachments: outputAttachments } : {}),
+        createdAt: (event.completedAt ?? event.createdAt).toISOString(),
+        eventId: event.id,
+        id: `${event.id}:assistant`,
+        messageKind: event.messageKind,
+        role: 'assistant',
+        source: 'manual',
+        status: event.status,
+        text: text || '[附件]',
+      })
       continue
     }
 
@@ -79,18 +96,7 @@ export function expandEventsToMessages(events: ChannelTimelineEvent[]): Timeline
       text: isImage ? '[图片]' : isFile ? '[文件]' : event.content,
     })
     if (event.responseText) {
-      const outputAttachments = event.attachments
-        .filter(({ direction }) => direction === 'output')
-        .map((attachment) => ({
-          ...(attachment.deliveryError ? { deliveryError: attachment.deliveryError } : {}),
-          deliveryStatus: attachment.deliveryStatus,
-          fileName: attachment.fileName,
-          fileSize: attachment.fileSize,
-          fileUrl: `/api/resources/files/${attachment.fileId}/content`,
-          id: attachment.id,
-          ...(attachment.summary ? { summary: attachment.summary } : {}),
-          version: attachment.version,
-        }))
+      const outputAttachments = mapOutputAttachments(event)
       messages.push({
         ...(outputAttachments.length ? { attachments: outputAttachments } : {}),
         createdAt: (event.completedAt ?? event.createdAt).toISOString(),

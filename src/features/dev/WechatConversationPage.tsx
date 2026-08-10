@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  ArrowLeftRight,
   Bot,
   Check,
   Copy,
@@ -14,6 +15,7 @@ import {
   Link2Off,
   Loader2,
   MessageSquare,
+  Paperclip,
   Radio,
   RefreshCcw,
   RotateCcw,
@@ -54,6 +56,17 @@ import type { WechatStatus } from '@/features/settings/messenger/wechatApi'
 
 const STATUS_POLL_MS = 30_000
 const SESSIONS_POLL_MS = 30_000
+const MAX_OUTBOUND_FILES = 5
+const MAX_OUTBOUND_FILE_BYTES = 10 * 1024 * 1024
+const IMAGE_FILE_RE = /\.(jpe?g|png|gif|webp|bmp)$/i
+
+type ChatPerspective = 'agent' | 'wechat'
+
+type PendingAttachment = {
+  file: File
+  id: string
+  previewUrl: string | null
+}
 
 const STATUS_META: Record<
   string,
@@ -335,19 +348,25 @@ function getComposerPlaceholder(
   isOwnBinding?: boolean,
 ) {
   if (!selectedId) return '先选择会话'
-  if (canSend) return '以 Agent 身份发送文本…（Enter 发送，Shift+Enter 换行）'
+  if (canSend) return '以 Agent 身份发送文字或附件…（Enter 发送，Shift+Enter 换行）'
   if (isOwnBinding) return '仅可向扫码授权的微信账号代发（当前会话只读）'
   return '其它账号的会话，仅可查看'
 }
 
-function getBubbleClass(isUser: boolean, hasMedia: boolean) {
+function isImageFileName(fileName?: string, mimeType?: string) {
+  if (mimeType?.startsWith('image/')) return true
+  return IMAGE_FILE_RE.test(fileName || '')
+}
+
+function getBubbleClass(isRight: boolean, isUser: boolean, hasMedia: boolean) {
+  const corner = isRight ? 'rounded-br-md' : 'rounded-bl-md'
   if (isUser && hasMedia) {
-    return 'overflow-hidden rounded-br-md bg-transparent p-0 shadow-none'
+    return `overflow-hidden ${corner} bg-transparent p-0 shadow-none`
   }
   if (isUser) {
-    return 'rounded-br-md bg-slate-900 px-3.5 py-2.5 text-white'
+    return `${corner} bg-slate-900 px-3.5 py-2.5 text-white`
   }
-  return 'rounded-bl-md bg-slate-50 px-3.5 py-2.5 text-slate-800 ring-1 ring-slate-200/80'
+  return `${corner} bg-slate-50 px-3.5 py-2.5 text-slate-800 ring-1 ring-slate-200/80`
 }
 
 type FileVisual = {
@@ -501,17 +520,26 @@ export default function WechatConversationPage() {
   const [retrying, setRetrying] = useState(false)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([])
+  const [perspective, setPerspective] = useState<ChatPerspective>('agent')
   const [exportOpen, setExportOpen] = useState(false)
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const messagesRef = useRef<WechatDevMessage[]>([])
   const pauseMessagesRef = useRef<() => void>(() => {})
   const refreshMessagesNowRef = useRef<() => void>(() => {})
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const pendingRequestIdRef = useRef<string | null>(null)
   const selectedIdRef = useRef(selectedId)
+  const pendingAttachmentsRef = useRef(pendingAttachments)
 
   useEffect(() => {
     selectedIdRef.current = selectedId
   }, [selectedId])
+
+  useEffect(() => {
+    pendingAttachmentsRef.current = pendingAttachments
+  }, [pendingAttachments])
 
   const refreshStatus = useCallback(async (signal?: AbortSignal) => {
     const st = await fetchWechatStatus(signal)
@@ -570,12 +598,27 @@ export default function WechatConversationPage() {
         setDraft('')
         setExportOpen(false)
         setCopiedMessageId(null)
+        setPendingAttachments((prev) => {
+          for (const item of prev) {
+            if (item.previewUrl) URL.revokeObjectURL(item.previewUrl)
+          }
+          return []
+        })
+        pendingRequestIdRef.current = null
       }
     })
     return () => {
       active = false
     }
   }, [selectedId])
+
+  useEffect(() => {
+    return () => {
+      for (const item of pendingAttachmentsRef.current) {
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl)
+      }
+    }
+  }, [])
 
   const selectedConversationVersion = sessions.find((session) => session.id === selectedId)?.conversationVersion
 
@@ -749,22 +792,82 @@ export default function WechatConversationPage() {
   const externalUserLabel = selectedSession?.externalUserName || selectedSession?.externalUserId || '微信用户'
   const canSend = Boolean(selectedSession?.canSend)
 
+  const clearPendingAttachments = useCallback(() => {
+    setPendingAttachments((prev) => {
+      for (const item of prev) {
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl)
+      }
+      return []
+    })
+  }, [])
+
+  const handlePickFiles = useCallback((fileList: FileList | null) => {
+    if (!fileList?.length) return
+    const current = pendingAttachmentsRef.current
+    pendingRequestIdRef.current = null
+    const remaining = MAX_OUTBOUND_FILES - current.length
+    if (remaining <= 0) {
+      setError(`一次最多添加 ${MAX_OUTBOUND_FILES} 个附件`)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    const accepted: PendingAttachment[] = []
+    let errorMessage: string | null = null
+    for (const file of Array.from(fileList)) {
+      if (accepted.length >= remaining) {
+        errorMessage = `一次最多添加 ${MAX_OUTBOUND_FILES} 个附件`
+        break
+      }
+      if (file.size <= 0) {
+        errorMessage ??= `附件「${file.name}」为空`
+        continue
+      }
+      if (file.size > MAX_OUTBOUND_FILE_BYTES) {
+        errorMessage ??= `附件「${file.name}」超过 10MB 限制`
+        continue
+      }
+      accepted.push({
+        file,
+        id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
+        previewUrl: isImageFileName(file.name, file.type) ? URL.createObjectURL(file) : null,
+      })
+    }
+    if (accepted.length) setPendingAttachments((prev) => [...prev, ...accepted])
+    if (errorMessage) setError(errorMessage)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [])
+
+  const handleRemovePendingAttachment = useCallback((id: string) => {
+    pendingRequestIdRef.current = null
+    setPendingAttachments((prev) => {
+      const target = prev.find((item) => item.id === id)
+      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
+      return prev.filter((item) => item.id !== id)
+    })
+  }, [])
+
   const handleSend = useCallback(async () => {
     if (!selectedId || sending || !canSend) return
     const text = draft.trim()
-    if (!text) return
+    const files = pendingAttachments.map((item) => item.file)
+    if (!text && files.length === 0) return
+    const requestId = pendingRequestIdRef.current ?? crypto.randomUUID()
+    pendingRequestIdRef.current = requestId
     setSending(true)
     setError(null)
     const sendingSessionId = selectedId
     pauseMessagesRef.current()
     try {
-      const message = await sendWechatDevMessage(sendingSessionId, text)
+      const message = await sendWechatDevMessage(sendingSessionId, { files, requestId, text })
       if (selectedIdRef.current === sendingSessionId) {
         const merged = mergeWechatDevMessages(messagesRef.current, [message])
         messagesRef.current = merged.messages
         setMessages(merged.messages)
+        setDraft('')
+        clearPendingAttachments()
+        pendingRequestIdRef.current = null
       }
-      if (selectedIdRef.current === sendingSessionId) setDraft('')
       refreshSessionsNow()
     } catch (err) {
       if (selectedIdRef.current === sendingSessionId) {
@@ -774,7 +877,7 @@ export default function WechatConversationPage() {
       if (selectedIdRef.current === sendingSessionId) refreshMessagesNowRef.current()
       setSending(false)
     }
-  }, [canSend, draft, refreshSessionsNow, selectedId, sending])
+  }, [canSend, clearPendingAttachments, draft, pendingAttachments, refreshSessionsNow, selectedId, sending])
 
   const handleCopyMessage = useCallback(async (message: WechatDevMessage) => {
     try {
@@ -951,6 +1054,16 @@ export default function WechatConversationPage() {
                 </div>
               </div>
               <button
+                aria-label='切换消息视角'
+                className='inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50'
+                title={perspective === 'agent' ? '当前：Agent 左 / 微信右' : '当前：微信 左 / Agent 右'}
+                type='button'
+                onClick={() => setPerspective((prev) => (prev === 'agent' ? 'wechat' : 'agent'))}
+              >
+                <ArrowLeftRight className='size-3.5' />
+                {perspective === 'agent' ? 'Agent 视角' : '微信视角'}
+              </button>
+              <button
                 className='inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-40'
                 disabled={messages.length === 0}
                 type='button'
@@ -984,12 +1097,14 @@ export default function WechatConversationPage() {
             ) : (
               messages.map((msg) => {
                 const isUser = msg.role === 'user'
+                const isRight = perspective === 'agent' ? isUser : !isUser
                 const hasMedia = Boolean(msg.imageUrl || msg.fileUrl)
+                const showTextBubble = Boolean(msg.text.trim()) && !(isUser && hasMedia) && msg.text !== '[附件]'
                 let content: ReactNode
                 if (isUser && msg.imageUrl) {
                   content = (
                     <a
-                      className='block overflow-hidden rounded-2xl rounded-br-md bg-white p-1 ring-1 ring-slate-200'
+                      className={`block overflow-hidden rounded-2xl bg-white p-1 ring-1 ring-slate-200 ${isRight ? 'rounded-br-md' : 'rounded-bl-md'}`}
                       href={msg.imageUrl}
                       rel='noreferrer'
                       target='_blank'
@@ -1010,15 +1125,17 @@ export default function WechatConversationPage() {
                   )
                 } else if (isUser) {
                   content = <div className='whitespace-pre-wrap wrap-break-word'>{msg.text}</div>
-                } else {
+                } else if (showTextBubble) {
                   content = (
                     <MessageMarkdown className='wechat-dev-md prose prose-sm max-w-none prose-slate' text={msg.text} />
                   )
+                } else {
+                  content = null
                 }
                 return (
                   <div
                     key={msg.id}
-                    className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}
+                    className={`flex flex-col gap-1 ${isRight ? 'items-end' : 'items-start'}`}
                   >
                     <div className='flex items-center gap-1.5 px-1'>
                       {isUser ? (
@@ -1041,33 +1158,53 @@ export default function WechatConversationPage() {
                       ) : null}
                       <span className='text-[10px] text-slate-300'>{formatDateTime(msg.createdAt)}</span>
                     </div>
-                    <div className={`group flex max-w-[92%] items-end gap-1.5 ${isUser ? 'flex-row-reverse' : ''}`}>
-                      <div
-                        className={`max-w-[min(720px,100%)] rounded-2xl text-sm leading-relaxed shadow-sm ${getBubbleClass(isUser, hasMedia)}`}
-                      >
-                        {content}
-                      </div>
-                      {!hasMedia && msg.text.trim() ? (
-                        <button
-                          aria-label='复制消息'
-                          className='mb-0.5 rounded-lg p-1.5 text-slate-300 opacity-0 transition hover:bg-slate-100 hover:text-slate-600 focus:opacity-100 group-hover:opacity-100'
-                          title={copiedMessageId === msg.id ? '已复制' : '复制'}
-                          type='button'
-                          onClick={() => void handleCopyMessage(msg)}
+                    {content ? (
+                      <div className={`group flex max-w-[92%] items-end gap-1.5 ${isRight ? 'flex-row-reverse' : ''}`}>
+                        <div
+                          className={`max-w-[min(720px,100%)] rounded-2xl text-sm leading-relaxed shadow-sm ${getBubbleClass(isRight, isUser, hasMedia)}`}
                         >
-                          {copiedMessageId === msg.id ? <Check className='size-3.5 text-emerald-600' /> : <Copy className='size-3.5' />}
-                        </button>
-                      ) : null}
-                    </div>
+                          {content}
+                        </div>
+                        {!hasMedia && msg.text.trim() && msg.text !== '[附件]' ? (
+                          <button
+                            aria-label='复制消息'
+                            className='mb-0.5 rounded-lg p-1.5 text-slate-300 opacity-0 transition hover:bg-slate-100 hover:text-slate-600 focus:opacity-100 group-hover:opacity-100'
+                            title={copiedMessageId === msg.id ? '已复制' : '复制'}
+                            type='button'
+                            onClick={() => void handleCopyMessage(msg)}
+                          >
+                            {copiedMessageId === msg.id ? <Check className='size-3.5 text-emerald-600' /> : <Copy className='size-3.5' />}
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
                     {!isUser && msg.attachments?.length ? (
-                      <div className='mt-1 flex max-w-[92%] flex-col gap-2'>
+                      <div className={`mt-1 flex max-w-[92%] flex-col gap-2 ${isRight ? 'items-end' : 'items-start'}`}>
                         {msg.attachments.map((attachment) => (
                           <div key={attachment.id}>
-                            <FileMessageCard
-                              fileName={attachment.fileName}
-                              fileSize={attachment.fileSize}
-                              fileUrl={attachment.fileUrl}
-                            />
+                            {isImageFileName(attachment.fileName) ? (
+                              <a
+                                className={`block overflow-hidden rounded-2xl bg-white p-1 ring-1 ring-slate-200 ${isRight ? 'rounded-br-md' : 'rounded-bl-md'}`}
+                                href={attachment.fileUrl}
+                                rel='noreferrer'
+                                target='_blank'
+                              >
+                                {/* Auth-gated same-origin proxy; next/image is a poor fit here. */}
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  alt={attachment.fileName}
+                                  className='max-h-80 max-w-full rounded-xl object-contain'
+                                  loading='lazy'
+                                  src={attachment.fileUrl}
+                                />
+                              </a>
+                            ) : (
+                              <FileMessageCard
+                                fileName={attachment.fileName}
+                                fileSize={attachment.fileSize}
+                                fileUrl={attachment.fileUrl}
+                              />
+                            )}
                             <div className='mt-1 flex max-w-[320px] items-center gap-2 px-1 text-[10px] text-slate-400'>
                               <span>v{attachment.version}</span>
                               <span>·</span>
@@ -1091,24 +1228,79 @@ export default function WechatConversationPage() {
           </div>
 
           <div className='shrink-0 border-t border-slate-100 px-4 py-3 sm:px-6'>
+            {pendingAttachments.length > 0 ? (
+              <div className='mb-2 flex flex-wrap gap-2'>
+                {pendingAttachments.map((item) => (
+                  <div
+                    key={item.id}
+                    className='relative flex items-center gap-2 rounded-xl bg-slate-50 px-2 py-1.5 ring-1 ring-slate-200'
+                  >
+                    {item.previewUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img alt={item.file.name} className='size-10 rounded-lg object-cover' src={item.previewUrl} />
+                    ) : (
+                      <div className='flex size-10 items-center justify-center rounded-lg bg-white ring-1 ring-slate-200'>
+                        <File className='size-4 text-slate-500' />
+                      </div>
+                    )}
+                    <div className='min-w-0 max-w-[160px]'>
+                      <div className='truncate text-xs font-medium text-slate-700'>{item.file.name}</div>
+                      <div className='text-[10px] text-slate-400'>{formatSize(item.file.size)}</div>
+                    </div>
+                    <button
+                      aria-label={`移除 ${item.file.name}`}
+                      className='rounded-md p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700'
+                      disabled={sending}
+                      type='button'
+                      onClick={() => handleRemovePendingAttachment(item.id)}
+                    >
+                      <X className='size-3.5' />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <div className='flex items-end gap-2'>
-              <textarea
-                className='min-h-[44px] max-h-36 flex-1 resize-none rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none ring-1 ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-slate-300 disabled:opacity-50'
-                disabled={!selectedId || sending || !canSend}
-                placeholder={getComposerPlaceholder(selectedId, canSend, selectedSession?.isOwnBinding)}
-                rows={2}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    void handleSend()
-                  }
-                }}
-              />
+              <div className='flex min-w-0 flex-1 flex-col rounded-xl bg-slate-50 ring-1 ring-slate-200 focus-within:bg-white focus-within:ring-slate-300'>
+                <textarea
+                  className='min-h-[44px] max-h-36 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-sm text-slate-800 outline-none placeholder:text-slate-400 disabled:opacity-50'
+                  disabled={!selectedId || sending || !canSend}
+                  placeholder={getComposerPlaceholder(selectedId, canSend, selectedSession?.isOwnBinding)}
+                  rows={2}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      void handleSend()
+                    }
+                  }}
+                />
+                <div className='flex items-center px-2 pb-1.5'>
+                  <input
+                    ref={fileInputRef}
+                    accept='image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.md,.zip,.pptx'
+                    className='hidden'
+                    multiple
+                    type='file'
+                    onChange={(e) => handlePickFiles(e.target.files)}
+                  />
+                  <button
+                    aria-label='添加附件'
+                    className='inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 transition hover:bg-slate-200/70 hover:text-slate-700 disabled:opacity-40'
+                    disabled={!selectedId || sending || !canSend || pendingAttachments.length >= MAX_OUTBOUND_FILES}
+                    title='上传图片或文件'
+                    type='button'
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Paperclip className='size-3.5' />
+                    附件
+                  </button>
+                </div>
+              </div>
               <button
                 className='inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:opacity-50'
-                disabled={!selectedId || sending || !canSend || !draft.trim()}
+                disabled={!selectedId || sending || !canSend || (!draft.trim() && pendingAttachments.length === 0)}
                 type='button'
                 onClick={() => void handleSend()}
               >

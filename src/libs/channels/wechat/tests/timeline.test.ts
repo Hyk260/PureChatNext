@@ -60,6 +60,38 @@ describe('expandEventsToMessages', () => {
     ])
   })
 
+  it('renders outbound attachment-only messages', () => {
+    const messages = expandEventsToMessages([
+      base({
+        attachments: [
+          {
+            deliveryError: null,
+            deliveryStatus: 'sent',
+            direction: 'output',
+            fileId: 'file-out',
+            fileName: 'shot.png',
+            fileSize: 12,
+            id: 'artifact-out',
+            summary: '网页代发附件',
+            version: 1,
+          },
+        ],
+        completedAt: new Date('2026-01-01T00:00:03.000Z'),
+        id: 'out-2',
+        messageKind: 'outbound',
+        responseText: '',
+      }),
+    ])
+    expect(messages).toEqual([
+      expect.objectContaining({
+        attachments: [expect.objectContaining({ fileName: 'shot.png' })],
+        id: 'out-2:assistant',
+        role: 'assistant',
+        text: '[附件]',
+      }),
+    ])
+  })
+
   it('marks replies with persisted generation metadata as model output', () => {
     const messages = expandEventsToMessages([
       base({

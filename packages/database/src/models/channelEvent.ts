@@ -180,8 +180,10 @@ export class ChannelEventModel {
     conversationVersion: number
     encryptedContextToken: string
     externalUserId: string
+    platformMessageId?: string
     responseText: string
     sessionId: string
+    status?: string
   }) => {
     const now = new Date()
     return this.db.transaction(async (tx) => {
@@ -189,16 +191,16 @@ export class ChannelEventModel {
         .insert(channelEvents)
         .values({
           bindingId: params.bindingId,
-          completedAt: now,
+          completedAt: params.status === 'completed' || !params.status ? now : null,
           content: '',
           conversationVersion: params.conversationVersion,
           encryptedContextToken: params.encryptedContextToken,
           externalUserId: params.externalUserId,
           messageKind: 'outbound',
-          platformMessageId: `web-outbound:${crypto.randomUUID()}`,
+          platformMessageId: params.platformMessageId ?? `web-outbound:${crypto.randomUUID()}`,
           responseText: params.responseText,
           sessionId: params.sessionId,
-          status: 'completed',
+          status: params.status ?? 'completed',
         })
         .returning()
       await tx
@@ -207,6 +209,43 @@ export class ChannelEventModel {
         .where(eq(channelSessions.id, params.sessionId))
       return row!
     })
+  }
+
+  findByPlatformMessageId = async (bindingId: string, platformMessageId: string) => {
+    return this.db.query.channelEvents.findFirst({
+      where: and(eq(channelEvents.bindingId, bindingId), eq(channelEvents.platformMessageId, platformMessageId)),
+    })
+  }
+
+  resumeOutbound = async (id: string) => {
+    const [event] = await this.db
+      .update(channelEvents)
+      .set({ lastErrorCode: null, lastErrorMessage: null, status: 'processing', updatedAt: new Date() })
+      .where(and(eq(channelEvents.id, id), eq(channelEvents.messageKind, 'outbound')))
+      .returning()
+    return event ?? null
+  }
+
+  markOutboundTextSent = async (id: string) => {
+    await this.db
+      .update(channelEvents)
+      .set({ sentChunkCount: 1, updatedAt: new Date() })
+      .where(eq(channelEvents.id, id))
+  }
+
+  completeOutbound = async (id: string) => {
+    const now = new Date()
+    await this.db
+      .update(channelEvents)
+      .set({ completedAt: now, lastErrorCode: null, lastErrorMessage: null, status: 'completed', updatedAt: now })
+      .where(and(eq(channelEvents.id, id), eq(channelEvents.messageKind, 'outbound')))
+  }
+
+  failOutbound = async (id: string, error: string) => {
+    await this.db
+      .update(channelEvents)
+      .set({ lastErrorCode: 'OUTBOUND_SEND_FAILED', lastErrorMessage: error.slice(0, 500), status: 'failed', updatedAt: new Date() })
+      .where(and(eq(channelEvents.id, id), eq(channelEvents.messageKind, 'outbound')))
   }
 
   saveResponse = async (

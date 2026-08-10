@@ -89,10 +89,27 @@ export async function fetchWechatDevSessionMessages(
   return res.json() as Promise<WechatDevMessagesResponse>
 }
 
-export async function sendWechatDevMessage(sessionId: string, text: string): Promise<WechatDevMessage> {
+export async function sendWechatDevMessage(
+  sessionId: string,
+  payload: string | { files?: File[]; requestId?: string; text?: string }
+): Promise<WechatDevMessage> {
+  const resolved = typeof payload === 'string' ? { text: payload } : payload
+  const text = resolved.text?.trim() ?? ''
+  const files = resolved.files ?? []
+  const requestId = resolved.requestId ?? crypto.randomUUID()
+  const hasFiles = files.length > 0
+
   const res = await apiFetch(`/api/dev/wechat/sessions/${encodeURIComponent(sessionId)}/messages`, {
-    body: JSON.stringify({ text }),
-    headers: { 'Content-Type': 'application/json' },
+    body: hasFiles
+      ? (() => {
+          const form = new FormData()
+          if (text) form.set('text', text)
+          form.set('requestId', requestId)
+          for (const file of files) form.append('files', file)
+          return form
+        })()
+      : JSON.stringify({ requestId, text }),
+    ...(hasFiles ? {} : { headers: { 'Content-Type': 'application/json' } }),
     method: 'POST',
   })
   if (!res.ok) {
@@ -100,5 +117,6 @@ export async function sendWechatDevMessage(sessionId: string, text: string): Pro
     throw new Error(data?.error || `send failed: ${res.status}`)
   }
   const data = (await res.json()) as { message: WechatDevMessage }
+  if (!data.message) throw new Error('发送成功但未返回消息记录，请刷新会话确认状态')
   return data.message
 }

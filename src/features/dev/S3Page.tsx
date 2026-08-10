@@ -206,6 +206,7 @@ export default function S3TestPage() {
       try {
         const url = new URL('/api/dev/s3', window.location.origin)
         url.searchParams.set('action', 'list')
+        url.searchParams.set('prefix', 'dev/')
         const res = await fetch(url.toString())
         const json = (await res.json()) as ApiResult<FileInfo[]>
         if (json.success) setFileList(json.data)
@@ -220,7 +221,7 @@ export default function S3TestPage() {
     try {
       const url = new URL('/api/dev/s3', window.location.origin)
       url.searchParams.set('action', 'list')
-      if (listPrefix) url.searchParams.set('prefix', listPrefix)
+      url.searchParams.set('prefix', listPrefix || 'dev/')
 
       const res = await fetch(url.toString())
       const json = (await res.json()) as ApiResult<FileInfo[]>
@@ -614,7 +615,7 @@ export default function S3TestPage() {
                       id='upload-key'
                       value={uploadKey}
                       onChange={(e) => setUploadKey(e.target.value)}
-                      placeholder='folder/file.txt'
+                      placeholder='folder/file.txt（实际保存到 dev/ 下）'
                       className='mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:bg-white focus:ring-3 focus:ring-violet-100'
                     />
                   </div>
@@ -625,7 +626,7 @@ export default function S3TestPage() {
                       <input
                         value={textKey}
                         onChange={(e) => setTextKey(e.target.value)}
-                        placeholder='文本文件 Key（如 data.json）'
+                        placeholder='文本文件 Key（如 data.json，实际保存到 dev/ 下）'
                         className='w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:ring-3 focus:ring-violet-100'
                       />
                     </div>
@@ -660,7 +661,7 @@ export default function S3TestPage() {
                     id='list-prefix'
                     value={listPrefix}
                     onChange={(e) => setListPrefix(e.target.value)}
-                    placeholder='folder/ 或留空列出全部'
+                    placeholder='folder/ 或留空列出 dev/ 下全部文件'
                     className='mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:bg-white focus:ring-3 focus:ring-violet-100'
                   />
                 </div>

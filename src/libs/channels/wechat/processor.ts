@@ -191,7 +191,11 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
       userText = '用户发送了一张图片，请结合图片内容回答用户问题。'
       userContent = [
         { type: 'text', text: userText },
-        { type: 'image', image: `data:${image.mimeType};base64,${image.buffer.toString('base64')}`, mediaType: image.mimeType },
+        {
+          data: `data:${image.mimeType};base64,${image.buffer.toString('base64')}`,
+          mediaType: image.mimeType,
+          type: 'file',
+        },
       ]
     }
     const conversationFiles = await listWechatConversationFiles(event.sessionId, event.conversationVersion)

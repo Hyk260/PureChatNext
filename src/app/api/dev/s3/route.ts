@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { FileS3 } from '@/server/modules/S3'
 
 const fileS3 = new FileS3()
+const DEV_S3_PREFIX = 'dev/'
 
 // —— Helpers ——
 
@@ -21,6 +22,14 @@ const serverError = (error: string) => {
 const getAction = (searchParams: URLSearchParams) => {
   return searchParams.get('action') ?? ''
 }
+
+/** 测试页面专用对象前缀，避免污染正式资源目录。 */
+const toDevKey = (key: string) => {
+  const normalized = key.replace(/^\/+/, '')
+  return normalized.startsWith(DEV_S3_PREFIX) ? normalized : `${DEV_S3_PREFIX}${normalized}`
+}
+
+const toDevPrefix = (prefix: string | null) => toDevKey(prefix?.trim() || '')
 
 /**
  * S3 测试 API（仅开发环境）
@@ -42,7 +51,7 @@ export const POST = async (req: Request) => {
         return badRequest('Missing or invalid file field')
       }
 
-      const key = (formData.get('key') as string) || file.name
+      const key = toDevKey((formData.get('key') as string) || file.name)
       const buffer = Buffer.from(await file.arrayBuffer())
       const contentType = file.type || undefined
 
@@ -53,7 +62,7 @@ export const POST = async (req: Request) => {
 
     if (action === 'uploadText') {
       const body = await req.json()
-      const key = body.key as string | undefined
+      const key = body.key ? toDevKey(body.key as string) : undefined
       const content = body.content as string | undefined
 
       if (!key || content === undefined) {
@@ -67,7 +76,7 @@ export const POST = async (req: Request) => {
 
     if (action === 'uploadBuffer') {
       const body = await req.json()
-      const key = body.key as string | undefined
+      const key = body.key ? toDevKey(body.key as string) : undefined
       const content = body.content as string | undefined
       const contentType = body.contentType as string | undefined
 
@@ -83,7 +92,7 @@ export const POST = async (req: Request) => {
 
     if (action === 'preSignedUpload') {
       const body = await req.json()
-      const key = body.key as string | undefined
+      const key = body.key ? toDevKey(body.key as string) : undefined
 
       if (!key) {
         return badRequest('Missing "key"')
@@ -114,14 +123,15 @@ export const GET = async (req: Request) => {
     const action = getAction(url.searchParams)
 
     if (action === 'list') {
-      const prefix = url.searchParams.get('prefix') ?? undefined
+      const prefix = toDevPrefix(url.searchParams.get('prefix'))
       const files = await fileS3.listFiles(prefix)
 
       return ok(files)
     }
 
     if (action === 'info') {
-      const key = url.searchParams.get('key')
+      const keyParam = url.searchParams.get('key')
+      const key = keyParam ? toDevKey(keyParam) : null
 
       if (!key) {
         return badRequest('Missing "key"')
@@ -133,7 +143,8 @@ export const GET = async (req: Request) => {
     }
 
     if (action === 'download' || action === 'downloadUrl') {
-      const key = url.searchParams.get('key')
+      const keyParam = url.searchParams.get('key')
+      const key = keyParam ? toDevKey(keyParam) : null
 
       if (!key) {
         return badRequest('Missing "key"')
@@ -164,7 +175,8 @@ export const DELETE = async (req: Request) => {
     const action = getAction(url.searchParams)
 
     if (action === 'deleteOne') {
-      const key = url.searchParams.get('key')
+      const keyParam = url.searchParams.get('key')
+      const key = keyParam ? toDevKey(keyParam) : null
 
       if (!key) {
         return badRequest('Missing "key"')
@@ -177,7 +189,7 @@ export const DELETE = async (req: Request) => {
 
     if (action === 'deleteMany') {
       const body = await req.json()
-      const keys = body.keys as string[] | undefined
+      const keys = Array.isArray(body.keys) ? body.keys.map((key: unknown) => toDevKey(String(key))) : undefined
 
       if (!keys || !Array.isArray(keys) || keys.length === 0) {
         return badRequest('Missing or invalid "keys" array')
@@ -206,8 +218,8 @@ export const PUT = async (req: Request) => {
 
     if (action === 'rename') {
       const body = await req.json()
-      const oldKey = body.oldKey as string | undefined
-      const newKey = body.newKey as string | undefined
+      const oldKey = body.oldKey ? toDevKey(body.oldKey as string) : undefined
+      const newKey = body.newKey ? toDevKey(body.newKey as string) : undefined
 
       if (!oldKey || !newKey) {
         return badRequest('Missing "oldKey" or "newKey"')

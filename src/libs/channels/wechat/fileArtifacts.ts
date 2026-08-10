@@ -12,6 +12,7 @@ import { buildPublicS3Url, extractS3KeyFromUrl } from '@/server/modules/S3/url'
 export type WechatFileArtifact = {
   artifactId: string
   direction: 'input' | 'output'
+  deliveryStatus: 'pending' | 'sending' | 'sent'
   file: FileItem
   sourceFileId: string | null
   summary: string | null
@@ -36,6 +37,7 @@ const safeName = (name: string) => path.basename(name).replace(/[^\p{L}\p{N}._-]
 export async function persistWechatFile(params: {
   buffer: Buffer
   contentType: string
+  deliveryStatus?: 'pending' | 'sent'
   direction: 'input' | 'output'
   event: Pick<ChannelEventItem, 'conversationVersion' | 'id' | 'sessionId'>
   filename: string
@@ -56,6 +58,7 @@ export async function persistWechatFile(params: {
     return {
       artifactId: existing.artifact.id,
       direction: existing.artifact.direction as 'input' | 'output',
+      deliveryStatus: existing.artifact.deliveryStatus as 'pending' | 'sending' | 'sent',
       file: existing.file,
       sourceFileId: existing.artifact.sourceFileId,
       summary: existing.artifact.summary,
@@ -97,14 +100,18 @@ export async function persistWechatFile(params: {
     throw error
   }
 
+  const deliveryStatus =
+    params.deliveryStatus ?? (params.direction === 'input' ? 'sent' : 'pending')
+  const now = deliveryStatus === 'sent' ? new Date() : undefined
   const artifact = await artifactModel.create({
     conversationVersion: params.event.conversationVersion,
-    deliveryStatus: params.direction === 'input' ? 'sent' : 'pending',
+    deliveryStatus,
     direction: params.direction,
     eventId: params.event.id,
     fileId,
     metadata: { contentHash },
     operationHash,
+    ...(now ? { sentAt: now } : {}),
     sessionId: params.event.sessionId,
     sourceFileId: params.sourceFileId,
     summary: params.summary,
@@ -115,6 +122,7 @@ export async function persistWechatFile(params: {
   return {
     artifactId: artifact.id,
     direction: params.direction,
+    deliveryStatus: artifact.deliveryStatus as 'pending' | 'sending' | 'sent',
     file,
     sourceFileId: artifact.sourceFileId,
     summary: artifact.summary,

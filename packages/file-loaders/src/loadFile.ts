@@ -25,46 +25,46 @@ export class UnsupportedFileTypeError extends Error {
  * @returns The determined file type or 'txt' if text-readable, undefined otherwise.
  */
 const getFileType = (filePath: string): SupportedFileType | undefined => {
-  log('Determining file type for:', filePath)
+  log('正在根据文件名判断文件类型：%s', filePath)
   const extension = path.extname(filePath).toLowerCase().replace('.', '')
 
   if (!extension) {
-    log('No extension found, treating as txt')
+    log('未检测到文件扩展名，按纯文本文件处理')
     return 'txt' // Treat files without extension as text?
   }
 
   // Prioritize checking if it's a generally text-readable type
   if (isTextReadableFile(extension)) {
-    log(`Extension '${extension}' is text-readable, treating as txt`)
+    log('扩展名“%s”属于可读取的文本类型，按纯文本文件处理', extension)
     return 'txt'
   }
 
   // Handle specific non-text or complex types
-  log(`Checking specific types for extension: '${extension}'`)
+  log('正在检查扩展名“%s”对应的专用文件类型', extension)
   switch (extension) {
     case 'pdf': {
-      log('File type identified as pdf')
+      log('识别为 PDF 文件')
       return 'pdf'
     }
     case 'doc': {
-      log('File type identified as doc')
+      log('识别为 DOC 文件')
       return 'doc'
     }
     case 'docx': {
-      log('File type identified as docx')
+      log('识别为 DOCX 文件')
       return 'docx'
     }
     case 'xlsx':
     case 'xls': {
-      log('File type identified as excel')
+      log('识别为 Excel 文件')
       return 'excel'
     }
     case 'pptx': {
-      log('File type identified as pptx')
+      log('识别为 PPTX 文件')
       return 'pptx'
     }
     default: {
-      log(`Extension '${extension}' is not a specifically handled type and not text-readable. Unsupported.`)
+      log('扩展名“%s”既不是已支持的专用类型，也不是可读取的文本类型，文件类型不受支持', extension)
       // If not text-readable and not a specific known type, it's unsupported
       return undefined
     }
@@ -80,23 +80,23 @@ const getFileType = (filePath: string): SupportedFileType | undefined => {
  * @returns A Promise resolving to a FileDocument object.
  */
 export const loadFile = async (filePath: string, fileMetadata?: FileMetadata): Promise<FileDocument> => {
-  log('Starting to load file:', filePath, 'with metadata:', fileMetadata)
+  log('开始加载文件：%s，附加元数据：%O', filePath, fileMetadata)
   let stats
   let fsError: string | undefined
 
   try {
-    log('Attempting to get file stats for:', filePath)
+    log('正在读取文件属性：%s', filePath)
     stats = await stat(filePath)
-    log('Successfully retrieved file stats:', stats)
+    log('文件属性读取完成：%O', stats)
   } catch (e) {
     const error = e as Error
-    log('Error getting file stats for %s: %s', filePath, error.message)
+    log('读取文件属性失败，文件：%s，原因：%s', filePath, error.message)
     console.error(`Error getting file stats for ${filePath}: ${error.message}`)
     fsError = `Failed to access file stats: ${error.message}`
   }
 
   // Determine base file info from path and stats (if available)
-  log('Determining base file info')
+  log('正在确定文件基础信息')
   const fileExtension = path.extname(filePath).slice(1).toLowerCase()
   const baseFilename = path.basename(filePath)
 
@@ -106,7 +106,7 @@ export const loadFile = async (filePath: string, fileMetadata?: FileMetadata): P
   const fileType = fileMetadata?.fileType ?? fileExtension
   const createdTime = fileMetadata?.createdTime ?? stats?.ctime ?? new Date()
   const modifiedTime = fileMetadata?.modifiedTime ?? stats?.mtime ?? new Date()
-  log('File info determined/overridden: %O', {
+  log('文件基础信息已确定（含元数据覆盖项）：%O', {
     createdTime,
     fileType,
     filename,
@@ -115,7 +115,7 @@ export const loadFile = async (filePath: string, fileMetadata?: FileMetadata): P
   })
 
   const parserType = getFileType(filePath)
-  log('Parser type determined as:', parserType)
+  log('已确定解析器类型：%s', parserType ?? '未识别')
 
   if (!parserType && !fsError) {
     console.warn(`No specific loader found for file type '${fileType}'. Rejecting unsupported file type.`)
@@ -125,7 +125,7 @@ export const loadFile = async (filePath: string, fileMetadata?: FileMetadata): P
   // Use lazy loading to get the loader class - this prevents heavy dependencies
   // like pdfjs-dist from being loaded until they're actually needed
   const LoaderClass = await getFileLoader(parserType ?? 'txt')
-  log('Selected loader class:', LoaderClass.name)
+  log('已选择文件加载器：%s', LoaderClass.name)
 
   let pages: DocumentPage[]
   let aggregatedContent = ''
@@ -135,23 +135,23 @@ export const loadFile = async (filePath: string, fileMetadata?: FileMetadata): P
   let loaderSpecificMetadata: any | undefined
 
   // Instantiate the loader
-  log('Instantiating loader:', LoaderClass.name)
+  log('正在初始化文件加载器：%s', LoaderClass.name)
   const loaderInstance = new LoaderClass()
 
   // If we couldn't even get stats, skip loader execution
   if (!fsError) {
-    log('File stats available, proceeding with loader execution.')
+    log('文件属性可用，开始执行文件加载器')
     try {
       // 1. Load pages using the instance
-      log('Loading pages with loader:', LoaderClass.name, 'for file:', filePath)
+      log('正在使用 %s 加载文件页面：%s', LoaderClass.name, filePath)
       pages = await loaderInstance.loadPages(filePath)
-      log('Pages loaded successfully, count:', pages.length)
+      log('文件页面加载完成，共 %d 页', pages.length)
 
       try {
         // 2. Aggregate content using the instance
-        log('Aggregating content with loader:', LoaderClass.name)
+        log('正在使用 %s 聚合文件内容', LoaderClass.name)
         aggregatedContent = await loaderInstance.aggregateContent(pages)
-        log('Content aggregated successfully, length:', aggregatedContent.length)
+        log('文件内容聚合完成，字符数：%d', aggregatedContent.length)
       } catch (aggError) {
         const error = aggError as Error
         console.error(`Error aggregating content for ${filePath} using ${LoaderClass.name}: ${error.message}`)
@@ -161,17 +161,17 @@ export const loadFile = async (filePath: string, fileMetadata?: FileMetadata): P
 
       // 3. Attach document-specific metadata if loader supports it
       if (typeof loaderInstance.attachDocumentMetadata === 'function') {
-        log('Loader supports attachDocumentMetadata. Attaching...')
+        log('当前加载器支持附加文档元数据，正在提取')
         try {
           loaderSpecificMetadata = await loaderInstance.attachDocumentMetadata(filePath)
-          log('Document-specific metadata attached:', loaderSpecificMetadata)
+          log('文档专属元数据提取完成：%O', loaderSpecificMetadata)
         } catch (metaErr) {
           const error = metaErr as Error
           console.error(`Error attaching metadata for ${filePath} using ${LoaderClass.name}: ${error.message}`)
           metadataError = `Metadata attachment failed: ${error.message}`
         }
       } else {
-        log('Loader does not support attachDocumentMetadata.')
+        log('当前加载器不支持附加文档元数据')
       }
     } catch (loadErr) {
       const error = loadErr as Error
@@ -189,7 +189,7 @@ export const loadFile = async (filePath: string, fileMetadata?: FileMetadata): P
       // Aggregated content remains empty
     }
   } else {
-    log('File stats access failed (fsError: %s). Creating minimal error page.', fsError)
+    log('文件属性读取失败（%s），正在创建最小错误页面', fsError)
     // If stats failed, create a minimal error page
     pages = [
       {
@@ -205,19 +205,19 @@ export const loadFile = async (filePath: string, fileMetadata?: FileMetadata): P
   // Calculate totals from the loaded pages
   let totalCharCount = 0
   let totalLineCount = 0
-  log('Calculating total char and line counts from pages.')
+  log('正在统计所有页面的字符数和行数')
   for (const page of pages) {
     totalCharCount += page.charCount
     totalLineCount += page.lineCount
   }
-  log('Totals calculated:', { totalCharCount, totalLineCount })
+  log('页面统计完成：%O', { totalCharCount, totalLineCount })
 
   // Combine all potential errors
   const combinedError = [fsError, loaderError, aggregationError, metadataError].filter(Boolean).join('; ') || undefined
-  if (combinedError) log('Combined errors:', combinedError)
+  if (combinedError) log('文件加载过程中发现错误：%s', combinedError)
 
   // Construct the final FileDocument
-  log('Constructing final FileDocument.')
+  log('正在构建最终文件文档对象')
   const fileDocument: FileDocument = {
     content: aggregatedContent, // Use content from aggregateContent
     createdTime,
@@ -243,7 +243,7 @@ export const loadFile = async (filePath: string, fileMetadata?: FileMetadata): P
     delete fileDocument.metadata.error
   }
 
-  log('File loading process completed for:', filePath, 'Returning document:', {
+  log('文件加载完成：%s，返回文档摘要：%O', filePath, {
     fileType: fileDocument.fileType,
     filename: fileDocument.filename,
     pages: fileDocument.pages?.length,

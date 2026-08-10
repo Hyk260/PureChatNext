@@ -1,15 +1,21 @@
+import { createHash } from 'node:crypto'
+
 import { NextResponse } from 'next/server'
 
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
+import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials } from '@/libs/channels/wechat/encrypt'
+import { persistWechatFile } from '@/libs/channels/wechat/fileArtifacts'
+import { WECHAT_MAX_INBOUND_FILE_BYTES } from '@/libs/channels/wechat/inboundMedia'
 import {
   canSendWechatDevOutbound,
-  sendWechatOutboundText,
+  sendWechatOutbound,
   WechatOutboundError,
 } from '@/libs/channels/wechat/outbound'
+import type { WechatOutboundMedia } from '@/libs/channels/wechat/outbound'
 import { expandEventsToMessages } from '@/libs/channels/wechat/timeline'
 import {
   advanceWechatTimelineCursor,
@@ -18,6 +24,7 @@ import {
 } from '@/libs/channels/wechat/timelineCursor'
 
 const MAX_OUTBOUND_TEXT_LENGTH = 40_000
+const MAX_OUTBOUND_FILES = 5
 
 function resolveOwnerExternalUserId(credentials: string): string {
   try {
@@ -25,6 +32,70 @@ function resolveOwnerExternalUserId(credentials: string): string {
   } catch {
     return ''
   }
+}
+
+function safeFileName(name: string) {
+  const base = name.split(/[/\\]/).pop()?.trim() || 'file'
+  return base.slice(0, 180) || 'file'
+}
+
+async function parseOutboundBody(request: Request): Promise<{ media: WechatOutboundMedia[]; requestId: string; text: string }> {
+  const contentType = request.headers.get('content-type') || ''
+  if (contentType.includes('multipart/form-data')) {
+    const form = await request.formData()
+    const textValue = form.get('text')
+    const text = typeof textValue === 'string' ? textValue.trim() : ''
+    const requestIdValue = form.get('requestId')
+    const requestId = typeof requestIdValue === 'string' ? requestIdValue.trim() : ''
+    const entries = form.getAll('files').filter((item): item is File => item instanceof File)
+    if (entries.length > MAX_OUTBOUND_FILES) {
+      throw new WechatOutboundError(`一次最多发送 ${MAX_OUTBOUND_FILES} 个附件`)
+    }
+    const media: WechatOutboundMedia[] = []
+    for (const file of entries) {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      if (buffer.byteLength <= 0) throw new WechatOutboundError(`附件「${file.name}」为空`)
+      if (buffer.byteLength > WECHAT_MAX_INBOUND_FILE_BYTES) {
+        throw new WechatOutboundError(`附件「${file.name}」超过 10MB 限制`)
+      }
+      media.push({
+        buffer,
+        fileName: safeFileName(file.name || 'file'),
+        mimeType: file.type || 'application/octet-stream',
+      })
+    }
+    return { media, requestId, text }
+  }
+
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    throw new WechatOutboundError('Invalid JSON body')
+  }
+  const text = typeof (body as { text?: unknown })?.text === 'string' ? (body as { text: string }).text.trim() : ''
+  const requestId = typeof (body as { requestId?: unknown })?.requestId === 'string' ? (body as { requestId: string }).requestId.trim() : ''
+  return { media: [], requestId, text }
+}
+
+function outboundAttachments(eventId: string) {
+  return new ChannelEventFileModel()
+    .listForEvent(eventId)
+    .then((rows) =>
+      rows
+        .filter(({ artifact }) => artifact.direction === 'output')
+        .map(({ artifact, file }) => ({
+          deliveryError: artifact.deliveryError,
+          deliveryStatus: artifact.deliveryStatus,
+          direction: artifact.direction,
+          fileId: file.id,
+          fileName: file.name,
+          fileSize: file.size,
+          id: artifact.id,
+          summary: artifact.summary,
+          version: artifact.version,
+        }))
+    )
 }
 
 export const GET = withAuth<{ sessionId: string }>(async (request, { params, userId }) => {
@@ -99,14 +170,17 @@ export const POST = withAuth<{ sessionId: string }>(async (request, { params, us
   const { sessionId } = await params
   if (!sessionId?.trim()) return jsonError('Invalid sessionId', 400)
 
-  let body: unknown
+  let requestId = ''
+  let text = ''
+  let media: WechatOutboundMedia[] = []
   try {
-    body = await request.json()
-  } catch {
-    return jsonError('Invalid JSON body')
+    ;({ media, requestId, text } = await parseOutboundBody(request))
+  } catch (error) {
+    if (error instanceof WechatOutboundError) return jsonError(error.message, 400)
+    return jsonError('Invalid request body', 400)
   }
-  const text = typeof (body as { text?: unknown })?.text === 'string' ? (body as { text: string }).text.trim() : ''
-  if (!text) return jsonError('text is required')
+  if (!text && media.length === 0) return jsonError('请输入文字或选择附件')
+  if (!requestId || requestId.length > 128) return jsonError('Invalid requestId', 400)
   if (text.length > MAX_OUTBOUND_TEXT_LENGTH) {
     return jsonError(`text exceeds ${MAX_OUTBOUND_TEXT_LENGTH} characters`)
   }
@@ -124,37 +198,84 @@ export const POST = withAuth<{ sessionId: string }>(async (request, { params, us
     return jsonError('仅可向扫码授权的微信账号代发', 403)
   }
 
-  const encryptedContextToken = await eventModel.findLatestEncryptedContextToken(sessionId)
+  const platformMessageId = `web-outbound:${requestId}`
+  let event = await eventModel.findByPlatformMessageId(binding.id, platformMessageId)
+  if (event && event.sessionId !== session.id) return jsonError('Invalid requestId', 400)
+  const encryptedContextToken = event?.encryptedContextToken ?? (await eventModel.findLatestEncryptedContextToken(sessionId))
   if (!encryptedContextToken) {
     return jsonError('该联系人尚无可用会话 token，请先用微信发一条消息', 400)
   }
 
-  try {
-    await sendWechatOutboundText({
-      credentials: binding.credentials,
+  if (!event) {
+    event = await eventModel.insertOutboundMessage({
+      bindingId: binding.id,
+      conversationVersion: session.conversationVersion,
       encryptedContextToken,
-      text,
-      toUserId: session.externalUserId,
+      externalUserId: session.externalUserId,
+      platformMessageId,
+      responseText: text,
+      sessionId: session.id,
+      status: 'processing',
     })
+  } else if (event.status === 'completed') {
+    const attachments = await outboundAttachments(event.id)
+    const [message] = expandEventsToMessages([{ ...event, attachments }])
+    if (!message) return jsonError('已发送消息记录为空', 500)
+    return NextResponse.json({ message })
+  } else {
+    event = (await eventModel.resumeOutbound(event.id)) ?? event
+  }
+
+  const persisted = [] as Array<{ artifactId: string; deliveryStatus: string; fileId: string }>
+  try {
+    for (const [index, item] of media.entries()) {
+      const operationHash = createHash('sha256')
+        .update(`${requestId}:${index}:${item.fileName}:${item.buffer.byteLength}`)
+        .digest('hex')
+      const artifact = await persistWechatFile({
+        buffer: item.buffer,
+        contentType: item.mimeType,
+        deliveryStatus: 'pending',
+        direction: 'output',
+        event: { conversationVersion: session.conversationVersion, id: event.id, sessionId: session.id },
+        filename: item.fileName,
+        operationHash,
+        summary: '网页代发附件',
+        userId,
+      })
+      persisted.push({ artifactId: artifact.artifactId, deliveryStatus: artifact.deliveryStatus, fileId: artifact.file.id })
+    }
+
+    const sendable = media
+      .map((item, index) => ({ item, index }))
+      .filter(({ index }) => persisted[index]?.deliveryStatus !== 'sent')
+    if ((event.sentChunkCount === 0 && text) || sendable.length > 0) {
+      await sendWechatOutbound({
+        credentials: binding.credentials,
+        encryptedContextToken,
+        media: sendable.map(({ item }) => item),
+        onMediaSent: async (sendIndex) => {
+          const target = persisted[sendable[sendIndex]!.index]
+          if (target) await new ChannelEventFileModel().markSent(target.artifactId)
+        },
+        onTextSent: () => eventModel.markOutboundTextSent(event!.id),
+        text: event.sentChunkCount > 0 ? '' : text,
+        toUserId: session.externalUserId,
+      })
+    }
+    await eventModel.completeOutbound(event.id)
   } catch (error) {
+    await eventModel.failOutbound(event.id, error instanceof Error ? error.message : 'Send failed')
     if (error instanceof WechatOutboundError) return jsonError(error.message, 400)
     const message = error instanceof Error ? error.message : 'Send failed'
     return jsonError(message.replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]').slice(0, 200), 502)
   }
 
-  const event = await eventModel.insertOutboundMessage({
-    bindingId: binding.id,
-    conversationVersion: session.conversationVersion,
-    encryptedContextToken,
-    externalUserId: session.externalUserId,
-    responseText: text,
-    sessionId: session.id,
-  })
-
+  const attachments = await outboundAttachments(event.id)
   const [message] = expandEventsToMessages([
     {
-      attachments: [],
-      completedAt: event.completedAt,
+      attachments,
+      completedAt: new Date(),
       content: event.content,
       createdAt: event.createdAt,
       durationMs: event.durationMs,
@@ -165,7 +286,7 @@ export const POST = withAuth<{ sessionId: string }>(async (request, { params, us
       model: event.model,
       provider: event.provider,
       responseText: event.responseText,
-      status: event.status,
+      status: 'completed',
     },
   ])
 

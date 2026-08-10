@@ -27,7 +27,7 @@ type WechatUserContent =
   | string
   | Array<
       | { type: 'text'; text: string }
-      | { type: 'image'; image: string | Uint8Array | URL; mediaType?: string }
+      | { type: 'file'; data: string | Uint8Array | URL; mediaType: string; filename?: string }
     >
 
 export type WechatAgentReply = {

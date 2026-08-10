@@ -31,11 +31,55 @@ export const resolveProviderApiKey = (
   return envKey?.trim() || undefined
 }
 
-/** Empty / whitespace baseURL → undefined (SDK default). Otherwise trimmed custom URL. */
+const PRIVATE_HOST_PATTERNS = [
+  /^localhost$/i,
+  /^127\./,
+  /^10\./,
+  /^172\.(1[6-9]|2\d|3[01])\./,
+  /^192\.168\./,
+  /^0\./,
+  /^::$/,        // IPv6 unspecified
+  /^::1$/,       // IPv6 loopback
+  /^\[::1\]$/,   // IPv6 loopback (bracket form)
+  /^fc00:/i,
+  /^fd/i,
+  /^fe80:/i,
+  /^169\.254\./,
+]
+
+function isPrivateHostname(hostname: string): boolean {
+  return PRIVATE_HOST_PATTERNS.some((p) => p.test(hostname))
+}
+
+/**
+ * Validate a user-provided baseURL against SSRF attacks.
+ * Rejects non-HTTPS, private IPs, localhost, and link-local addresses.
+ */
+export const validateBaseURL = (baseURL: string): string => {
+  let parsed: URL
+  try {
+    parsed = new URL(baseURL)
+  } catch {
+    throw new Error(`Invalid baseURL: ${baseURL}`)
+  }
+
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw new Error(`baseURL must use http or https protocol, got "${parsed.protocol}"`)
+  }
+
+  if (isPrivateHostname(parsed.hostname)) {
+    throw new Error(`baseURL hostname "${parsed.hostname}" is not allowed (private/reserved address)`)
+  }
+
+  return baseURL
+}
+
+/** Empty / whitespace baseURL → undefined (SDK default). Otherwise trimmed custom URL. Validates against SSRF. */
 export const resolveOptionalBaseURL = (baseURL: string | undefined) => {
   if (typeof baseURL !== 'string') return undefined
   const trimmed = baseURL.trim()
-  return trimmed || undefined
+  if (!trimmed) return undefined
+  return validateBaseURL(trimmed)
 }
 
 export const resolveModelsListBaseURL = (provider: SupportedProviderId, baseURL: string | undefined) =>

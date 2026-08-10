@@ -8,6 +8,7 @@ import debug from 'debug'
 import { createNanoId } from '@pure/utils'
 
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
+import { validateBaseURL } from '@/libs/ai-providers/resolveClient'
 import { ChatSDKError } from '@/libs/errors'
 import { llmEnv, resolveAiGatewayApiKey, resolveAiGatewayBaseURL } from '@/envs/llm'
 import {
@@ -231,7 +232,12 @@ export async function POST(request: Request) {
   }
 
   const apiKey = resolveApiKeyFromHeader(request)
-  const resolvedBaseURL = typeof baseURL === 'string' && baseURL.trim() ? baseURL.trim() : undefined
+  let resolvedBaseURL: string | undefined
+  try {
+    resolvedBaseURL = typeof baseURL === 'string' && baseURL.trim() ? validateBaseURL(baseURL.trim()) : undefined
+  } catch (error) {
+    return new ChatSDKError('bad_request:api', (error as Error).message).toResponse()
+  }
 
   // Fail fast with a JSON error so the client can surface it (streamText would
   // otherwise return 200 with a broken stream when the env key is missing).

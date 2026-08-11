@@ -120,6 +120,11 @@ export class FileModel {
     })
   }
 
+  hasUrlReference = async (url: string) => {
+    const [item] = await this.db.select({ id: files.id }).from(files).where(eq(files.url, url)).limit(1)
+    return Boolean(item)
+  }
+
   update = async (id: string, data: Partial<Pick<FileItem, 'name' | 'parentId' | 'metadata'>>) => {
     const [item] = await this.db
       .update(files)

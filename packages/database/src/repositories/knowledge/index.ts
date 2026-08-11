@@ -101,21 +101,25 @@ export class KnowledgeRepo {
     }
   }
 
-  async deleteMany(items: Array<{ id: string; sourceType: 'file' | 'document' }>): Promise<void> {
+  async deleteMany(items: Array<{ id: string; sourceType: 'file' | 'document' }>): Promise<FileItem[]> {
     const fileIds = items.filter((item) => item.sourceType === 'file').map((item) => item.id)
     const documentIds = items.filter((item) => item.sourceType === 'document').map((item) => item.id)
 
-    await Promise.all([
-      fileIds.length > 0 ? this.fileModel.deleteMany(fileIds) : Promise.resolve(),
+    const [deletedFiles, deletedFromDocuments] = await Promise.all([
+      fileIds.length > 0 ? this.fileModel.deleteMany(fileIds) : Promise.resolve([] as FileItem[]),
       documentIds.length > 0
-        ? Promise.all(documentIds.map((id) => this.deleteDocumentWithRelations(id)))
-        : Promise.resolve(),
+        ? Promise.all(documentIds.map((id) => this.deleteDocumentWithRelations(id))).then((groups) => groups.flat())
+        : Promise.resolve([] as FileItem[]),
     ])
+
+    return [...deletedFiles, ...deletedFromDocuments]
   }
 
-  private deleteDocumentWithRelations = async (id: string): Promise<void> => {
+  private deleteDocumentWithRelations = async (id: string): Promise<FileItem[]> => {
     const document = await this.documentModel.findById(id)
-    if (!document) return
+    if (!document) return []
+
+    const deletedFiles: FileItem[] = []
 
     if (document.fileType === DOCUMENT_FOLDER_TYPE) {
       const children = await this.db.query.documents.findMany({
@@ -123,7 +127,7 @@ export class KnowledgeRepo {
       })
 
       for (const child of children) {
-        await this.deleteDocumentWithRelations(child.id)
+        deletedFiles.push(...(await this.deleteDocumentWithRelations(child.id)))
       }
 
       const childFiles = await this.db.query.files.findMany({
@@ -131,15 +135,18 @@ export class KnowledgeRepo {
       })
 
       for (const file of childFiles) {
-        await this.fileModel.delete(file.id)
+        const deleted = await this.fileModel.delete(file.id)
+        if (deleted) deletedFiles.push(deleted)
       }
     }
 
     if (document.fileId) {
-      await this.fileModel.delete(document.fileId)
+      const deleted = await this.fileModel.delete(document.fileId)
+      if (deleted) deletedFiles.push(deleted)
     }
 
     await this.documentModel.delete(id)
+    return deletedFiles
   }
 
   private fileToKnowledgeItem(file: FileItem): KnowledgeItem {

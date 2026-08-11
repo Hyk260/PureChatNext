@@ -100,8 +100,9 @@ export async function prepareWechatFileForAgent(
 ): Promise<PreparedWechatFile> {
   const downloaded = retained ?? await downloadValidatedWechatFile(api, payload)
   const fileName = path.basename(downloaded.fileName || 'wechat-file') || 'wechat-file'
-  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'purechat-wechat-'))
-  const filePath = path.join(tempDir, fileName)
+  // 临时目录路径在运行时才确定；忽略 Turbopack 文件追踪，避免整仓打进 server bundle
+  const tempDir = await mkdtemp(path.join(/*turbopackIgnore: true*/ os.tmpdir(), 'purechat-wechat-'))
+  const filePath = path.join(/*turbopackIgnore: true*/ tempDir, fileName)
   try {
     await writeFile(filePath, downloaded.buffer)
     const document = await loadFile(filePath, { filename: fileName, fileType: path.extname(fileName).slice(1) })

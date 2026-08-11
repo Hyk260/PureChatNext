@@ -67,9 +67,25 @@ NODE_ENV=development
 | ------ | ------------------- | ------------------------------------- |
 | `5174` | Vite SPA（本地 UI） | 浏览器打开站点、`APP_URL`、邮件落地   |
 | `3000` | Next API / BFF      | `/api/*`、curl 直打接口；不当主站入口 |
-| `3210` | Docker 生产应用     | 仅回环监听，由 Nginx/Caddy 反向代理   |
+| `3210` | Docker / 本地生产预览 | Docker 回环；或 `pnpm preview:prod` 同域入口 |
 
 修改后需重启 Next（`pnpm dev:next` 或 `pnpm dev`）。
+
+### 本地生产预览
+
+发布前若要在本地跑「生产构建 + 生产密钥」形态：
+
+```bash
+# 需本机 bun；先准备 .env.production.local（生产 S3 / Redis / DATABASE 等）
+pnpm preview:prod
+
+# 已 build 过可跳过构建
+pnpm preview:prod -- --skip-build
+```
+
+脚本会按 Next production 顺序加载 `.env` → `.env.production` → `.env.local` → `.env.production.local`，再将 `APP_URL` 覆写为 `http://localhost:3210`（可用 `-p` / `PORT` 改端口），并确保 `ALLOWED_ORIGINS` 含该地址。浏览器打开打印出的本地 URL（同域 SPA + API）。
+
+**警告**：会连接生产 DB / S3 / Redis，写操作会影响真实数据。本地 `build:spa:copy` 还会改写 `spaHtmlTemplate.generated.ts`，勿提交构建产物。
 
 ### CODE\_INSPECTOR
 

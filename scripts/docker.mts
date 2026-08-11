@@ -175,19 +175,73 @@ async function upDev() {
   const rustfsS3Port = values.RUSTFS_PORT || '9000'
   const searxngPort = values.SEARXNG_PORT || '8180'
 
+  printDevReadySummary({
+    host,
+    postgresPort,
+    redisPort,
+    rustfsAdminPort,
+    rustfsS3Port,
+    searxngPort,
+  })
+}
+
+function printDevReadySummary(ports: {
+  host: string
+  postgresPort: string
+  redisPort: string
+  rustfsAdminPort: string
+  rustfsS3Port: string
+  searxngPort: string
+}) {
+  const { host, postgresPort, redisPort, rustfsAdminPort, rustfsS3Port, searxngPort } = ports
+  const rustfsConsole = `http://${host}:${rustfsAdminPort}`
+  const rustfsS3 = `http://${host}:${rustfsS3Port}`
+  const searxng = `http://${host}:${searxngPort}`
+
   console.log('')
-  console.log(`开发依赖已就绪（${host}）`)
-  console.log(
-    `  PostgreSQL  ${postgresPort}   凭证: docker-compose/dev/.env（POSTGRES_*）；应用侧 DATABASE_URL 见 .env.local`
+  console.log(`  ${c.cyan(c.bold('DOCKER'))} ${c.green('ready')}`)
+  console.log('')
+  printReadyLine(
+    'PostgreSQL',
+    `${host}:${postgresPort}`,
+    c.dim('凭证 POSTGRES_* / DATABASE_URL 见 docker-compose/dev/.env、.env.local')
   )
-  console.log(`  Redis       ${redisPort}   无密码；应用侧 REDIS_URL 见 .env.local`)
-  console.log(
-    `  RustFS      控制台 http://${host}:${rustfsAdminPort}（对象存储管理）；S3 API :${rustfsS3Port}；密钥 RUSTFS_* 见 docker-compose/dev/.env`
+  printReadyLine('Redis', `${host}:${redisPort}`, c.dim('无密码；REDIS_URL 见 .env.local'))
+  printReadyLine(
+    'RustFS',
+    rustfsConsole,
+    `${c.dim('控制台；S3 ')}${colorLink(rustfsS3)}${c.dim('；密钥 RUSTFS_* 见 docker-compose/dev/.env')}`
   )
-  console.log(
-    `  SearXNG     http://${host}:${searxngPort}（联网搜索 UI / JSON API）；应用侧 SEARXNG_URL 见 .env.local`
+  printReadyLine(
+    'SearXNG',
+    searxng,
+    c.dim('联网搜索 UI / JSON API；SEARXNG_URL 见 .env.local')
   )
   console.log('')
+}
+
+const supportsColor =
+  !process.env.NO_COLOR && process.env.FORCE_COLOR !== '0' && Boolean(process.stdout.isTTY)
+
+const wrap =
+  (open: string, close: string) =>
+  (text: string) =>
+    supportsColor ? `${open}${text}${close}` : text
+
+const c = {
+  bold: wrap('\x1b[1m', '\x1b[22m'),
+  cyan: wrap('\x1b[36m', '\x1b[39m'),
+  dim: wrap('\x1b[2m', '\x1b[22m'),
+  green: wrap('\x1b[32m', '\x1b[39m'),
+}
+
+/** 整段着色，避免端口中间插入样式打断终端 URL 识别 */
+const colorLink = (value: string) => c.cyan(value)
+
+function printReadyLine(label: string, value: string, note: string) {
+  const labelWidth = 10
+  console.log(`  ${c.green('➜')}  ${c.bold(`${label}:`.padEnd(labelWidth + 1))} ${colorLink(value)}`)
+  console.log(`                 ${note}`)
 }
 
 function downDev() {

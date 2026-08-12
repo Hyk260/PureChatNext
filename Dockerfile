@@ -61,7 +61,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/packages/database/src/migrations ./migrations
 COPY --from=builder --chown=nextjs:nodejs /app/dist/docker-migrate.mjs ./docker-migrate.mjs
-COPY --from=builder --chown=nextjs:nodejs /app/dist/wechat-gateway.mjs ./wechat-gateway.mjs
 
 USER nextjs
 EXPOSE 3210/tcp

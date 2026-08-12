@@ -9,6 +9,7 @@ import { authorizeQQInternalWebhook } from '@/libs/channels/qq/webhookAuth'
 import { logger } from '@/libs/logger'
 
 export const maxDuration = 300
+export const runtime = 'nodejs'
 
 type RouteContext = { params: Promise<{ applicationId: string }> }
 
@@ -25,10 +26,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'applicationId required' }, { status: 400 })
   }
 
-  if (request.headers.get('authorization') && !authorizeQQInternalWebhook(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   try {
     const model = new ChannelBindingModel()
     const binding = await model.findByApplicationId(QQ_PLATFORM, applicationId)
@@ -37,6 +34,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     const credentials = decryptCredentials(binding.credentials)
+    if (credentials.connectionMode === 'websocket' && !authorizeQQInternalWebhook(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const chat = await getOrCreateQQChat({
       agentId: binding.agentId,
       appId: credentials.appId,

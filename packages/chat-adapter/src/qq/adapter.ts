@@ -203,16 +203,18 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
    * preserving compatibility with the existing handleWebhook() pipeline.
    */
   async startGatewayListener(
-    options: { waitUntil: (task: Promise<any>) => void },
-    durationMs: number,
+    options: { waitUntil: (task: Promise<unknown>) => void },
+    durationMs: number | undefined,
     abortSignal: AbortSignal,
     webhookUrl: string,
-    webhookHeaders?: Record<string, string>
-  ): Promise<void> {
+    webhookHeaders?: Record<string, string>,
+    callbacks?: Pick<import('./gateway').QQGatewayOptions, 'onForwardError' | 'onStatus'>
+  ): Promise<QQGatewayConnection> {
     const gateway = new QQGatewayConnection(this.api, {
       abortSignal,
       durationMs,
-      log: (msg: string, ...rest: any[]) => this.logger.info(msg, ...rest),
+      log: (msg: string, ...rest: unknown[]) => this.logger.info(msg, ...rest),
+      ...callbacks,
       webhookHeaders,
       webhookUrl,
     })
@@ -220,6 +222,7 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     const gatewayTask = gateway.connect()
     options.waitUntil(gatewayTask)
     await gatewayTask
+    return gateway
   }
 
   // ------------------------------------------------------------------

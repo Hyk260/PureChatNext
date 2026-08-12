@@ -19,6 +19,7 @@ const formatActiveAt = (value: string) => formatDateTime(value, { hour12: false,
 
 const DISCONNECTED_STATUS: QQStatus = {
   connected: false,
+  gatewaySupported: false,
 }
 
 const MessengerQQPage = memo(() => {
@@ -52,6 +53,7 @@ const MessengerQQPage = memo(() => {
       else if (agentList[0]) setAgentId(agentList[0].id)
       if (st.appId) setAppId(st.appId)
       if (st.connectionMode) setConnectionMode(st.connectionMode)
+      else if (st.gatewaySupported === false) setConnectionMode('webhook')
     } catch (error) {
       message.error(error instanceof Error ? error.message : '加载失败')
     } finally {
@@ -89,7 +91,7 @@ const MessengerQQPage = memo(() => {
   const handleAgentChange = useCallback(
     async (value: string) => {
       setAgentId(value)
-      if (!status?.connected || status.enabled === false) return
+      if (!status?.applicationId || status.enabled === false) return
       try {
         await updateQQAgent(value)
         message.success('已更新绑定助手')
@@ -132,7 +134,7 @@ const MessengerQQPage = memo(() => {
   }
 
   const connected = Boolean(status?.connected)
-  const showConnect = !connected
+  const showConnect = !status?.applicationId
 
   const headerAction = showConnect ? (
     <Button loading={binding} type='primary' onClick={() => void handleBind()}>
@@ -195,22 +197,25 @@ const MessengerQQPage = memo(() => {
                 value={connectionMode}
                 onChange={(e) => setConnectionMode(e.target.value as QQConnectionMode)}
               >
-                <Radio.Button value='websocket'>WebSocket（推荐）</Radio.Button>
+                <Radio.Button disabled={status?.gatewaySupported === false} value='websocket'>WebSocket（推荐）</Radio.Button>
                 <Radio.Button value='webhook'>Webhook</Radio.Button>
               </Radio.Group>
             </Flexbox>
             <Text type='secondary' style={{ fontSize: 13 }}>
               {connectionMode === 'websocket'
-                ? '保存后请运行 pnpm qq:gateway 维护 WebSocket 连接。'
+                ? '保存后由 Next Server 内置 Gateway 自动维护 WebSocket 连接。'
                 : '保存后将显示回调地址，请粘贴到 QQ 开放平台「回调配置」。'}
             </Text>
+            {status?.gatewaySupported === false && (
+              <Alert showIcon type='info' title='当前部署仅支持 Webhook' description='Vercel 与未开启 Gateway 的本地环境不能运行 QQ WebSocket。' />
+            )}
           </>
         ) : (
           <>
             <Alert
               showIcon
-              type='success'
-              title='已连接 QQ'
+              type={connected ? 'success' : 'warning'}
+              title={connected ? '已连接 QQ' : 'QQ 绑定已保存，当前离线'}
               description={
                 status?.lastActiveAt
                   ? `最近活动：${formatActiveAt(status.lastActiveAt)} · 模式：${status.connectionMode ?? 'websocket'}`
@@ -236,10 +241,8 @@ const MessengerQQPage = memo(() => {
                 }
               />
             )}
-            {status?.connectionMode === 'websocket' && (
-              <Text type='secondary' style={{ fontSize: 13 }}>
-                自托管请保持运行：pnpm qq:gateway
-              </Text>
+            {status?.connectionMode === 'websocket' && status.runtimeStatus !== 'online' && (
+              <Alert showIcon type='warning' title='QQ WebSocket 当前离线' description={status.lastError?.message || 'Next Server Gateway 正在等待连接或恢复。'} />
             )}
           </>
         )}

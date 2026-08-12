@@ -1,142 +1,60 @@
 import { createMemoryState } from '@chat-adapter/state-memory'
 import { createQQAdapter } from '@pure/chat-adapter/qq'
+import type { QQGatewayConnection } from '@pure/chat-adapter/qq'
 import { Chat } from 'chat'
 import debug from 'debug'
 
-import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import type { ChannelBindingItem } from '@pure/database/schemas/channel'
-import { appEnv } from '@/envs/app'
+import { buildChannelGatewayHeaders, buildChannelGatewayWebhookUrl } from '@/server/channel-gateway/internal'
+import type { ChannelGatewayStatusEvent } from '@/server/channel-gateway/types'
 
 import { decryptCredentials } from './encrypt'
-import type { QQCredentials } from './encrypt'
-import { resolveQQWebhookSecret } from './webhookAuth'
 
 const log = debug('channel:qq:gateway')
 
-/** Default WS session window before refresh (~8h). */
-export const DEFAULT_QQ_GATEWAY_DURATION_MS = 8 * 60 * 60 * 1000
+export class QQChannelGatewayClient {
+  private readonly abortController = new AbortController()
+  private chat: Chat | null = null
+  private connection: QQGatewayConnection | null = null
+  private donePromise: Promise<void> | null = null
+  private stopped = false
 
-function resolveAppBaseUrl(): string {
-  const fromEnv = appEnv.APP_URL?.trim()
-  if (fromEnv) return fromEnv.replace(/\/$/, '')
-  return 'http://localhost:3000'
-}
+  constructor(
+    private readonly binding: ChannelBindingItem,
+    private readonly reportStatus: (event: ChannelGatewayStatusEvent) => void
+  ) {}
 
-function buildWebhookUrl(applicationId: string): string {
-  return `${resolveAppBaseUrl()}/api/channels/qq/webhook/${encodeURIComponent(applicationId)}`
-}
-
-function buildWebhookHeaders(): Record<string, string> {
-  const secret = resolveQQWebhookSecret()
-  if (!secret) return {}
-  return { Authorization: `Bearer ${secret}` }
-}
-
-/**
- * Run WebSocket gateway for a single websocket-mode binding.
- * Dispatch events are POSTed to the internal webhook.
- */
-export async function runQQGatewayForBinding(
-  binding: ChannelBindingItem,
-  options?: {
-    durationMs?: number
-    signal?: AbortSignal
-    waitUntil?: (task: Promise<unknown>) => void
-  }
-): Promise<void> {
-  const credentials = decryptCredentials(binding.credentials)
-  if (credentials.connectionMode !== 'websocket') {
-    log('skip non-websocket binding appId=%s mode=%s', binding.applicationId, credentials.connectionMode)
-    return
+  get done(): Promise<void> {
+    return this.donePromise ?? Promise.resolve()
   }
 
-  const durationMs = options?.durationMs ?? DEFAULT_QQ_GATEWAY_DURATION_MS
-  const abortSignal = options?.signal ?? new AbortController().signal
-  const waitUntil =
-    options?.waitUntil ??
-    ((task: Promise<unknown>) => {
-      void task
-    })
-
-  const adapter = createQQAdapter({
-    appId: credentials.appId,
-    clientSecret: credentials.appSecret,
-  })
-
-  // Lightweight Chat shell so adapter.initialize / logger work
-  const chat = new Chat({
-    adapters: { qq: adapter },
-    concurrency: 'queue',
-    state: createMemoryState(),
-    userName: 'purechat-qq-gateway',
-  })
-  await chat.initialize()
-
-  const webhookUrl = buildWebhookUrl(binding.applicationId)
-  log('starting gateway appId=%s webhook=%s durationMs=%d', binding.applicationId, webhookUrl, durationMs)
-
-  // startGatewayListener resolves on READY; keep the process alive for the window
-  // so the WS stays up (adapter also auto-closes after durationMs).
-  await adapter.startGatewayListener({ waitUntil }, durationMs, abortSignal, webhookUrl, buildWebhookHeaders())
-
-  await sleep(durationMs, abortSignal)
-
-  const model = new ChannelBindingModel()
-  await model.touchActive(binding.id)
-}
-
-function sleep(ms: number, signal?: AbortSignal): Promise<void> {
-  return new Promise((resolve) => {
-    if (signal?.aborted) {
-      resolve()
-      return
-    }
-    const timer = setTimeout(resolve, ms)
-    signal?.addEventListener(
-      'abort',
-      () => {
-        clearTimeout(timer)
-        resolve()
-      },
-      { once: true }
+  async start(): Promise<void> {
+    if (this.stopped) throw new Error('QQ gateway client has been stopped')
+    const credentials = decryptCredentials(this.binding.credentials)
+    if (credentials.connectionMode !== 'websocket') throw new Error('QQ binding is not configured for WebSocket')
+    const adapter = createQQAdapter({ appId: credentials.appId, clientSecret: credentials.appSecret })
+    this.chat = new Chat({ adapters: { qq: adapter }, concurrency: 'queue', state: createMemoryState(), userName: 'purechat-qq-gateway' })
+    await this.chat.initialize()
+    this.connection = await adapter.startGatewayListener(
+      { waitUntil: (task) => void task },
+      undefined,
+      this.abortController.signal,
+      buildChannelGatewayWebhookUrl(`/api/channels/qq/webhook/${encodeURIComponent(this.binding.applicationId)}`),
+      buildChannelGatewayHeaders('qq'),
+      {
+        onForwardError: (error) => log('webhook forward failed: %O', error),
+        onStatus: (status, detail) => this.reportStatus({ ...detail, status }),
+      }
     )
-  })
-}
+    this.donePromise = this.connection.done
+  }
 
-export async function runAllQQWebSocketGateways(options?: {
-  durationMs?: number
-  signal?: AbortSignal
-}): Promise<{ started: number; skipped: number }> {
-  const model = new ChannelBindingModel()
-  const bindings = await model.findEnabledByPlatform(QQ_PLATFORM)
-
-  let started = 0
-  let skipped = 0
-
-  await Promise.all(
-    bindings.map(async (binding) => {
-      let credentials: QQCredentials
-      try {
-        credentials = decryptCredentials(binding.credentials)
-      } catch (error) {
-        log('decrypt failed appId=%s: %O', binding.applicationId, error)
-        skipped += 1
-        return
-      }
-
-      if (credentials.connectionMode !== 'websocket') {
-        skipped += 1
-        return
-      }
-
-      started += 1
-      try {
-        await runQQGatewayForBinding(binding, options)
-      } catch (error) {
-        log('gateway failed appId=%s: %O', binding.applicationId, error)
-      }
-    })
-  )
-
-  return { skipped, started }
+  async stop(): Promise<void> {
+    if (this.stopped) return
+    this.stopped = true
+    this.abortController.abort()
+    this.connection?.close()
+    await this.chat?.shutdown().catch(() => undefined)
+    await this.donePromise?.catch(() => undefined)
+  }
 }

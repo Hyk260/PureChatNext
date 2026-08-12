@@ -1,3 +1,3 @@
-import { appEnv } from '@/envs/app'
+import { gatewayEnv } from '@/envs/gateway'
 
-export const isWechatGatewaySupported = () => appEnv.WECHAT_GATEWAY_ENABLED
+export const isWechatGatewaySupported = () => gatewayEnv.CHANNEL_GATEWAY_ENABLED

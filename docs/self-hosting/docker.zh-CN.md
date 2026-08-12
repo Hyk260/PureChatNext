@@ -49,7 +49,7 @@ docker compose \
 
 生产 Compose 不暴露 PostgreSQL、Redis、RustFS 或 SearXNG 端口，RustFS bucket 也不会设置匿名读取策略；文件经应用鉴权代理访问。应用只监听宿主机 `127.0.0.1:3210`。Nginx 示例：
 
-`wechat-gateway` 使用与 app 相同的镜像，等待 app、PostgreSQL 和 Redis 健康后启动，并通过本地心跳文件接受 Docker healthcheck。微信渠道要求 `KEY_VAULTS_SECRET` 和至少一个服务端模型密钥；详细验收见 [微信渠道](./wechat-channel.zh-CN.md)。
+Channel Gateway 内置于 `app` 的 Next Node Server，Compose 通过 `CHANNEL_GATEWAY_ENABLED=1` 显式开启，不再启动第二个 Gateway 容器。微信渠道要求 `KEY_VAULTS_SECRET` 和至少一个服务端模型密钥；详细验收见 [微信渠道](./wechat-channel.zh-CN.md)。
 
 ```nginx
 server {
@@ -102,7 +102,7 @@ docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/do
 ```bash
 docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/docker-compose.yml ps
 docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/docker-compose.yml logs -f app
-docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/docker-compose.yml logs -f wechat-gateway
+docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/docker-compose.yml logs -f app
 curl --fail http://127.0.0.1:3210/api/health
 ```
 

@@ -38,8 +38,8 @@ export const channelBindings = pgTable(
     lastErrorCode: varchar255('last_error_code'),
     lastErrorMessage: text('last_error_message'),
     lastErrorAt: timestamptz('last_error_at'),
-    pollLeaseOwner: varchar255('poll_lease_owner'),
-    pollLeaseExpiresAt: timestamptz('poll_lease_expires_at'),
+    gatewayLeaseOwner: varchar255('gateway_lease_owner'),
+    gatewayLeaseExpiresAt: timestamptz('gateway_lease_expires_at'),
     lastActiveAt: timestamptz('last_active_at'),
     ...timestamps,
   },
@@ -47,7 +47,7 @@ export const channelBindings = pgTable(
     uniqueIndex('channel_bindings_user_platform_unique').on(t.userId, t.platform),
     uniqueIndex('channel_bindings_platform_app_unique').on(t.platform, t.applicationId),
     index('channel_bindings_enabled_idx').on(t.enabled, t.platform),
-    index('channel_bindings_poll_lease_idx').on(t.platform, t.pollLeaseExpiresAt),
+    index('channel_bindings_gateway_lease_idx').on(t.platform, t.gatewayLeaseExpiresAt),
   ]
 )
 

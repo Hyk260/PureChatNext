@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
     webVitalsAttribution: ['CLS', 'LCP'],
   },
   logging: {
+    // WeChat Gateway forwards polling batches through this internal route.
+    // Keep application errors visible while avoiding one access-log line per poll.
+    incomingRequests: {
+      ignore: [/^\/api\/channels\/wechat\/webhook(?:\/|$)/],
+    },
     fetches: {
       fullUrl: true,
       hmrRefreshes: true,

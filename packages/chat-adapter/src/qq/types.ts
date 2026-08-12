@@ -164,7 +164,7 @@ export const QQ_INTENTS = {
 // --- WebSocket Gateway payload shapes ---
 
 export interface QQGatewayPayload {
-  d: any
+  d: unknown
   id?: string
   op: number
   s?: number
@@ -176,6 +176,7 @@ export interface QQGatewayHelloData {
 }
 
 export interface QQGatewayReadyData {
+  resume_gateway_url?: string
   session_id: string
   shard: [number, number]
   user: { bot: boolean; id: string; username: string }

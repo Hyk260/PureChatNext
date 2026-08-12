@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { appEnv } from '@/envs/app'
+import { gatewayEnv } from '@/envs/gateway'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials } from '@/libs/channels/qq'
 
@@ -19,6 +20,8 @@ export const GET = withAuth(async (_request, { userId }) => {
   if (!binding) {
     return NextResponse.json({
       connected: false,
+      gatewaySupported: gatewayEnv.CHANNEL_GATEWAY_ENABLED,
+      runtimeStatus: 'stopped',
     })
   }
 
@@ -33,15 +36,26 @@ export const GET = withAuth(async (_request, { userId }) => {
   }
 
   const webhookUrl = `${resolveAppBaseUrl()}/api/channels/qq/webhook/${encodeURIComponent(binding.applicationId)}`
+  const gatewaySupported = gatewayEnv.CHANNEL_GATEWAY_ENABLED
+  const heartbeatFresh = Boolean(binding.lastHeartbeatAt && Date.now() - binding.lastHeartbeatAt.getTime() <= 90_000)
+  const runtimeStatus = connectionMode === 'webhook'
+    ? binding.enabled ? 'online' : 'offline'
+    : !gatewaySupported || !heartbeatFresh ? 'offline' : binding.runtimeStatus
 
   return NextResponse.json({
     agentId: binding.agentId,
     appId,
     applicationId: binding.applicationId,
-    connected: true,
+    connected: connectionMode === 'webhook' ? binding.enabled : runtimeStatus === 'online' || runtimeStatus === 'degraded',
     connectionMode,
     enabled: binding.enabled,
+    gatewaySupported,
     lastActiveAt: binding.lastActiveAt?.toISOString() ?? null,
+    lastError: binding.lastErrorCode
+      ? { code: binding.lastErrorCode, message: binding.lastErrorMessage || 'QQ Gateway 暂时异常' }
+      : null,
+    lastHeartbeatAt: binding.lastHeartbeatAt?.toISOString() ?? null,
+    runtimeStatus,
     webhookUrl,
   })
 })

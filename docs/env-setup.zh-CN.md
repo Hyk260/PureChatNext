@@ -192,11 +192,11 @@ S3_SET_ACL=0
 
 ### 微信 iLink 渠道
 
-见 [docs/self-hosting/wechat-channel.zh-CN.md](./self-hosting/wechat-channel.zh-CN.md)。`KEY_VAULTS_SECRET` 为必填，用于加密凭证与 `context_token`；回复还需服务端 `OPENAI_API_KEY` 或 `DEEPSEEK_API_KEY`。本地运行 `pnpm wechat:gateway`；Docker 默认启动独立 Gateway；Vercel 默认不支持且不配置 Cron。
+见 [docs/self-hosting/wechat-channel.zh-CN.md](./self-hosting/wechat-channel.zh-CN.md)。`KEY_VAULTS_SECRET` 为必填，用于加密凭证与 `context_token`；回复还需服务端模型密钥。本地需显式设置 `CHANNEL_GATEWAY_ENABLED=1`；Docker 在单一 Next 容器内启用；Vercel 不支持。
 
 ### QQ 开放平台渠道
 
-见 [docs/self-hosting/qq-channel.zh-CN.md](./self-hosting/qq-channel.zh-CN.md)。协议层在 `@pure/chat-adapter/qq`。凭证按绑定加密存储（`KEY_VAULTS_SECRET`）；内部 WS 转发可用 `QQ_WEBHOOK_SECRET` / `CRON_SECRET`。WebSocket：`pnpm qq:gateway`；Webhook：公网回调 + Ed25519 验证。
+见 [docs/self-hosting/qq-channel.zh-CN.md](./self-hosting/qq-channel.zh-CN.md)。协议层在 `@pure/chat-adapter/qq`。凭证按绑定加密存储；WebSocket 由开启后的 Next Server 内置 Gateway 维护，Webhook 继续使用公网回调与平台验证。Vercel 仅支持 Webhook。
 
 ## 安全提示
 

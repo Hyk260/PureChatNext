@@ -19,6 +19,11 @@ import {
 } from '@/libs/channels/wechat'
 import type { WechatCredentials } from '@/libs/channels/wechat'
 
+const requestGatewayReconcile = async () => {
+  const { reconcileChannelGateway } = await import('@/server/channel-gateway')
+  await reconcileChannelGateway()
+}
+
 const bindSchema = z.object({
   agentId: z.string().trim().min(1).max(128),
   botId: z.string().trim().max(255).optional().default(''),
@@ -68,6 +73,7 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
     provider,
     userId,
   })
+  await requestGatewayReconcile()
   return NextResponse.json({ id: binding.id, ok: true, runtimeStatus: binding.runtimeStatus })
 })
 
@@ -76,6 +82,7 @@ export const DELETE = withAuth(async (_request, { userId }) => {
   const existing = await model.findByUserAndPlatform(userId, WECHAT_PLATFORM)
   if (existing?.applicationId) invalidateWechatChat(existing.applicationId)
   await model.disconnect(userId, WECHAT_PLATFORM)
+  await requestGatewayReconcile()
   return NextResponse.json({ ok: true })
 })
 

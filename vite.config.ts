@@ -16,6 +16,22 @@ import {
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const spaEntry = path.resolve(rootDir, 'src/spa/entry.web.tsx')
 
+/**
+ * Vite `server.allowedHosts` from env.
+ * - `true` / `1` / `*` → allow any Host（仅本地临时隧道；有 DNS rebinding 风险）
+ * - 逗号分隔主机名；前缀 `.` 表示含子域（如 `.trycloudflare.com` 覆盖随机 quick tunnel）
+ */
+function resolveAllowedHosts(raw?: string): true | string[] | undefined {
+  const value = raw?.trim()
+  if (!value) return undefined
+  if (value === '1' || value === 'true' || value === '*') return true
+  const hosts = value
+    .split(',')
+    .map((host) => host.trim())
+    .filter(Boolean)
+  return hosts.length > 0 ? hosts : undefined
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, rootDir, '')
   Object.assign(process.env, env)
@@ -26,6 +42,7 @@ export default defineConfig(({ mode }) => {
   const nextPort = env.PORT || process.env.PORT || '3000'
   const nextTarget = `http://localhost:${nextPort}`
   const spaPort = Number(env.SPA_PORT || process.env.SPA_PORT) || 5174
+  const allowedHosts = resolveAllowedHosts(env.VITE_ALLOWED_HOSTS || process.env.VITE_ALLOWED_HOSTS)
 
   return {
     // Production assets are served from Next `public/_spa` (same-origin).
@@ -55,6 +72,7 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: sharedOptimizeDeps,
     server: {
+      ...(allowedHosts !== undefined ? { allowedHosts } : {}),
       cors: true,
       host: true,
       port: spaPort,

@@ -9,7 +9,11 @@ export type QQStatus = {
   connected: boolean
   connectionMode?: QQConnectionMode
   enabled?: boolean
+  gatewaySupported?: boolean
   lastActiveAt?: string | null
+  lastError?: { code: string; message: string } | null
+  lastHeartbeatAt?: string | null
+  runtimeStatus?: string
   webhookUrl?: string
 }
 

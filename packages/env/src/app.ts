@@ -11,16 +11,6 @@ declare global {
       ALLOWED_ORIGINS?: string
       /** Vercel Cron / 内部定时任务鉴权（`Authorization: Bearer …`） */
       CRON_SECRET?: string
-      /** 微信 webhook 转发鉴权；可选，未设则回退 `CRON_SECRET` */
-      WECHAT_WEBHOOK_SECRET?: string
-      /** 本地/自托管常驻微信 Gateway。Vercel 默认关闭。 */
-      WECHAT_GATEWAY_ENABLED?: string
-      /** 微信 Gateway 健康心跳文件。 */
-      WECHAT_GATEWAY_HEALTH_FILE?: string
-      /** 调试时输出截断后的微信消息正文；生产默认关闭。 */
-      WECHAT_GATEWAY_LOG_MESSAGE_TEXT?: string
-      /** QQ 内部 gateway→webhook 转发鉴权；可选，未设则回退 `CRON_SECRET` */
-      QQ_WEBHOOK_SECRET?: string
     }
   }
 }
@@ -41,22 +31,12 @@ export const getAppConfig = () => {
       VERCEL_EDGE_CONFIG: z.string().optional(),
       ALLOWED_ORIGINS: z.string().optional(),
       CRON_SECRET: z.string().optional(),
-      WECHAT_WEBHOOK_SECRET: z.string().optional(),
-      WECHAT_GATEWAY_ENABLED: z.boolean(),
-      WECHAT_GATEWAY_HEALTH_FILE: z.string().optional(),
-      WECHAT_GATEWAY_LOG_MESSAGE_TEXT: z.boolean(),
-      QQ_WEBHOOK_SECRET: z.string().optional(),
     },
     runtimeEnv: {
       APP_URL,
       VERCEL_EDGE_CONFIG: process.env.VERCEL_EDGE_CONFIG,
       ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
       CRON_SECRET: process.env.CRON_SECRET,
-      WECHAT_WEBHOOK_SECRET: process.env.WECHAT_WEBHOOK_SECRET,
-      WECHAT_GATEWAY_ENABLED: parseEnvBoolean(process.env.WECHAT_GATEWAY_ENABLED, !IS_VERCEL),
-      WECHAT_GATEWAY_HEALTH_FILE: process.env.WECHAT_GATEWAY_HEALTH_FILE,
-      WECHAT_GATEWAY_LOG_MESSAGE_TEXT: parseEnvBoolean(process.env.WECHAT_GATEWAY_LOG_MESSAGE_TEXT),
-      QQ_WEBHOOK_SECRET: process.env.QQ_WEBHOOK_SECRET,
     },
   })
 }

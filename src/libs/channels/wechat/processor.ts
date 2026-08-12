@@ -17,14 +17,7 @@ import { getWechatHistoryTokenBudget, trimWechatHistory } from './history'
 import { sendWithValidWechatEventLease } from './leaseGuard'
 import { listWechatConversationFiles, persistWechatFile, readWechatFile } from './fileArtifacts'
 import { startWechatTyping } from './typing'
-import {
-  downloadStoredWechatImage,
-  downloadValidatedWechatFile,
-  parseWechatFileContent,
-  parseWechatImageContent,
-  prepareWechatFileForAgent,
-  WECHAT_MAX_INBOUND_FILE_BYTES,
-} from './inboundMedia'
+import { parseWechatFileContent, parseWechatImageContent } from './content'
 
 const log = debug('channel:wechat:processor')
 const EVENT_LEASE_MS = 3 * 60_000
@@ -159,6 +152,7 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
     let userText = event.content
     let userContent: Parameters<typeof generateWechatAgentReply>[0]['userContent']
     if (event.messageKind === 'file') {
+      const { downloadValidatedWechatFile, prepareWechatFileForAgent } = await import('./inboundMedia')
       const payload = parseWechatFileContent(event.content)
       if (!payload) return systemResponse('文件消息格式无效，无法处理。')
       try {
@@ -179,6 +173,7 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
         return systemResponse(error instanceof Error ? error.message : '文件解析失败，暂时无法处理。')
       }
     } else if (event.messageKind === 'image') {
+      const { downloadStoredWechatImage, WECHAT_MAX_INBOUND_FILE_BYTES } = await import('./inboundMedia')
       const payload = parseWechatImageContent(event.content)
       if (!payload) return systemResponse('图片消息格式无效，无法处理。')
       if (!wechatModelSupportsVision(provider, modelId)) {

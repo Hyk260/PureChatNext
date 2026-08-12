@@ -71,8 +71,8 @@ export class ChannelBindingModel {
             needsRebind: false,
             pendingWelcome: true,
             pollCursor: null,
-            pollLeaseExpiresAt: null,
-            pollLeaseOwner: null,
+            gatewayLeaseExpiresAt: null,
+            gatewayLeaseOwner: null,
             provider: params.provider,
             runtimeStatus: 'starting',
             updatedAt: now,
@@ -171,8 +171,8 @@ export class ChannelBindingModel {
       .set({
         enabled: false,
         needsRebind: true,
-        pollLeaseExpiresAt: null,
-        pollLeaseOwner: null,
+        gatewayLeaseExpiresAt: null,
+        gatewayLeaseOwner: null,
         runtimeStatus: 'needs_rebind',
         updatedAt: new Date(),
       })
@@ -186,13 +186,13 @@ export class ChannelBindingModel {
       .where(eq(channelBindings.id, id))
   }
 
-  acquirePollLease = async (id: string, owner: string, leaseMs: number) => {
+  acquireGatewayLease = async (id: string, owner: string, leaseMs: number) => {
     const now = new Date()
     const [binding] = await this.db
       .update(channelBindings)
       .set({
-        pollLeaseExpiresAt: new Date(now.getTime() + leaseMs),
-        pollLeaseOwner: owner,
+        gatewayLeaseExpiresAt: new Date(now.getTime() + leaseMs),
+        gatewayLeaseOwner: owner,
         updatedAt: now,
       })
       .where(
@@ -200,9 +200,9 @@ export class ChannelBindingModel {
           eq(channelBindings.id, id),
           eq(channelBindings.enabled, true),
           or(
-            isNull(channelBindings.pollLeaseExpiresAt),
-            lt(channelBindings.pollLeaseExpiresAt, now),
-            eq(channelBindings.pollLeaseOwner, owner)
+            isNull(channelBindings.gatewayLeaseExpiresAt),
+            lt(channelBindings.gatewayLeaseExpiresAt, now),
+            eq(channelBindings.gatewayLeaseOwner, owner)
           )
         )
       )
@@ -210,35 +210,57 @@ export class ChannelBindingModel {
     return binding ?? null
   }
 
-  renewPollLease = async (id: string, owner: string, leaseMs: number) => {
+  renewGatewayLease = async (id: string, owner: string, leaseMs: number) => {
     const now = new Date()
     const [binding] = await this.db
       .update(channelBindings)
-      .set({ pollLeaseExpiresAt: new Date(now.getTime() + leaseMs), updatedAt: now })
-      .where(and(eq(channelBindings.id, id), eq(channelBindings.pollLeaseOwner, owner), eq(channelBindings.enabled, true)))
+      .set({ gatewayLeaseExpiresAt: new Date(now.getTime() + leaseMs), updatedAt: now })
+      .where(
+        and(eq(channelBindings.id, id), eq(channelBindings.gatewayLeaseOwner, owner), eq(channelBindings.enabled, true))
+      )
       .returning()
     return binding ?? null
   }
 
-  releasePollLease = async (id: string, owner: string) => {
+  releaseGatewayLease = async (id: string, owner: string) => {
     await this.db
       .update(channelBindings)
-      .set({ pollLeaseExpiresAt: null, pollLeaseOwner: null, updatedAt: new Date() })
-      .where(and(eq(channelBindings.id, id), eq(channelBindings.pollLeaseOwner, owner)))
+      .set({ gatewayLeaseExpiresAt: null, gatewayLeaseOwner: null, updatedAt: new Date() })
+      .where(and(eq(channelBindings.id, id), eq(channelBindings.gatewayLeaseOwner, owner)))
   }
 
-  markPollError = async (id: string, code: string, message: string) => {
+  updateGatewayStatus = async (
+    id: string,
+    status: 'starting' | 'online' | 'degraded' | 'offline' | 'needs_rebind',
+    error?: { code: string; message: string } | null
+  ) => {
     const now = new Date()
     await this.db
       .update(channelBindings)
       .set({
-        lastErrorAt: now,
-        lastErrorCode: code.slice(0, 100),
-        lastErrorMessage: message.slice(0, 500),
-        runtimeStatus: 'degraded',
+        lastErrorAt: error ? now : null,
+        lastErrorCode: error?.code.slice(0, 100) ?? null,
+        lastErrorMessage: error?.message.slice(0, 500) ?? null,
+        lastHeartbeatAt: status === 'online' ? now : undefined,
+        runtimeStatus: status,
         updatedAt: now,
       })
       .where(eq(channelBindings.id, id))
+  }
+
+  touchGatewayHeartbeat = async (id: string) => {
+    const now = new Date()
+    await this.db
+      .update(channelBindings)
+      .set({
+        lastErrorAt: null,
+        lastErrorCode: null,
+        lastErrorMessage: null,
+        lastHeartbeatAt: now,
+        runtimeStatus: 'online',
+        updatedAt: now,
+      })
+      .where(and(eq(channelBindings.id, id), eq(channelBindings.enabled, true)))
   }
 
   updateCredentials = async (id: string, credentials: string) => {

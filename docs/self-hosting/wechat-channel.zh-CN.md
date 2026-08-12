@@ -1,120 +1,36 @@
-# 微信 iLink 文本渠道
+# 微信 iLink 渠道
 
-微信渠道通过 iLink Bot API 扫码授权。支持微信私聊文本、图片/文件理解，以及受控的 `.xlsx` 修改与文件回传；群聊和网页 Topic 同步暂不支持。
+微信渠道由 Next Node Server 内置 Channel Gateway 维护，不再运行独立进程。Gateway 长轮询 iLink，将完整批次回调到应用内部 Webhook；Webhook 在同一事务中写入事件队列并推进 cursor，4 个 processor 从 PostgreSQL 队列生成与分片发送回复。
 
-## 部署边界
+## 部署支持
 
-- 本地：运行 `pnpm dev` 后，另开终端运行 `pnpm wechat:gateway`。
-- Docker：生产 Compose 默认启动 `wechat-gateway` 服务，并与 app 共用镜像和环境变量。
-- Vercel：不支持常驻 Gateway，设置页会显示“不支持”并禁用扫码。仓库不配置 Vercel Cron。
+- 本地：默认关闭。在 `.env.local` 设置 `CHANNEL_GATEWAY_ENABLED=1`，然后正常运行 `pnpm dev`。
+- Docker：生产 Compose 已显式开启，单一 `app` 容器同时运行 Next 与 Gateway。
+- Vercel：不支持持久连接；设置页保留入口但禁用扫码和绑定。
 
-不要同时运行常驻 Gateway 和旧版手动 Cron。`/api/cron/wechat-gateway` 已禁用，避免重复轮询。
+不要再启动 `wechat-gateway.ts`，也不要使用旧版手动 Cron。`/api/cron/wechat-gateway` 保持禁用。
 
-Gateway 启动时会取得 PostgreSQL 全局单实例锁。检测到另一个新版实例时会输出中文提示并退出，避免重复 Processor 破坏 `/stop` 和联系人消息顺序。若发现终端异常关闭遗留的旧 binding lease，会等待其在约 90 秒内自动过期后接管；租约持续续期才判定为仍有旧版实例运行。
+## 必需配置
 
-## 可靠性模型
-
-```text
-iLink getUpdates
-       │
-       ▼
-Gateway Poller ──事务──► channel_events + poll_cursor
-                              │
-                              ▼
-                       Processor lease
-                              │
-                       模型输出先落库
-                              │
-                       分片发送并记进度
+```dotenv
+CHANNEL_GATEWAY_ENABLED=1
+DATABASE_URL=postgresql://...
+KEY_VAULTS_SECRET=replace-with-a-random-secret
+OPENAI_API_KEY=... # 或受支持的其他服务端模型密钥
 ```
 
-- Poller 将一个 `getUpdates` 批次的事件和新 cursor 在同一 PostgreSQL 事务中提交。
-- 入站按 `binding_id + message_id/client_id` 去重。
-- Processor 使用数据库 lease；失败指数退避，最多 8 次，最终进入 failed。
-- 已生成回复会先保存，发送重试不会再次调用模型；每个 2000 字分片保存发送进度。
-- 进程异常退出后，过期 lease 可被新进程回收。
-- 渠道历史独立存储，Prompt 只取当前会话版本最近 20 轮、最多 40,000 字符；已完成历史保留 30 天。
-- 外部发送 API 没有事务回执。如果微信已接收分片但进程在保存进度前崩溃，恢复后该分片可能重复；不会因此跳过入站消息。
+可选配置：
 
-状态以 Gateway 心跳为准。成功完成一次 `getUpdates` 会刷新数据库心跳；超过 90 秒没有心跳，页面显示 offline，而不是“已连接”。
-
-## 环境变量
-
-| 变量 | 要求 |
+| 变量 | 用途 |
 | --- | --- |
-| `DATABASE_URL` | 必填，可靠队列的事实来源 |
-| `KEY_VAULTS_SECRET` | 必填，用 AES-256-GCM 加密扫码凭证和 `context_token` |
-| `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` | 自配 OpenAI / DeepSeek Agent 时需配置对应服务端密钥 |
-| `AI_GATEWAY_API_KEY`（或 `PURECHAT_API_KEY`） | PureChat Agent 时需配置；Gateway 进程与 app 共用 |
-| `S3_*`、`FILE_STORAGE_LIMIT_MB` | 文件长期保存、Excel 新版本生成与微信文件回传必需 |
-| `PURECHAT_ENABLED` | 默认 true；设为 false 时禁用 PureChat 渠道 |
-| `WECHAT_GATEWAY_ENABLED` | 本地/自托管默认 true；Vercel 默认 false |
-| `WECHAT_GATEWAY_LOG_MESSAGE_TEXT` | 默认 false；调试时输出单行、最多 200 字的消息正文 |
-| `WECHAT_WEBHOOK_SECRET` | 仅兼容/诊断 webhook 使用；未配置时 webhook 始终拒绝 |
-| `CRON_SECRET` | webhook secret 的兼容回退；不用于微信 Cron |
+| `CHANNEL_GATEWAY_INTERNAL_URL` | 内部回调地址；默认 `http://127.0.0.1:$PORT` |
+| `CHANNEL_GATEWAY_INTERNAL_SECRET` | 内部 Webhook 鉴权密钥，生产建议显式设置 |
+| `WECHAT_GATEWAY_LOG_MESSAGE_TEXT` | 调试时输出截断后的消息正文，默认关闭 |
 
-旧的 `plain:v1` 或裸 JSON 凭证会在 Gateway 启动时重加密。没有 `KEY_VAULTS_SECRET` 时 Gateway 拒绝启动，扫码绑定接口也会拒绝保存新凭证。
+兼容周期内仍读取 `WECHAT_GATEWAY_ENABLED` 和 `WECHAT_WEBHOOK_SECRET`，但新配置应使用统一变量。
 
-## 数据库与运行
+## 运行与恢复
 
-```bash
-pnpm db:migrate
-pnpm dev
-pnpm wechat:gateway
-```
+每个绑定持有 PostgreSQL Gateway lease（90 秒 TTL、30 秒续租）。多实例只有租约持有者建立连接；实例停止后，其他实例会在租约过期后接管。Webhook 失败不会推进 cursor，Poller 会重试同一批次。会话过期时绑定进入 `needs_rebind`，需重新扫码。
 
-Gateway 直接访问 PostgreSQL 和微信 API，不需要通过 `APP_URL` 回调自身 webhook。Docker 镜像内置 `/app/wechat-gateway.mjs`；健康检查为：
-
-```bash
-node /app/wechat-gateway.mjs --healthcheck
-```
-
-运行日志默认只显示绑定 ID、联系人哈希、消息类型和长度，不输出微信用户 ID、凭证或消息正文。仅在本地排错并确认日志存储安全时临时设置 `WECHAT_GATEWAY_LOG_MESSAGE_TEXT=true`；生产环境应保持关闭。
-
-## 微信指令
-
-| 指令 | 行为 |
-| --- | --- |
-| `/h` / `/help` | 显示指令和文本限制 |
-| `/new` | 中止当前生成并增加会话版本 |
-| `/stop` | 通过 `AbortSignal` 停止当前模型调用 |
-| `/agents` | 列出助手和当前选择 |
-| `/agents <序号\|agentId>` | 切换当前联系人的助手并开始新对话 |
-
-扫码绑定成功后，因 iLink 需要 `context_token` 才能出站，欢迎语会在用户发来的**第一条消息**回复前推送：介绍当前 Agent，并提示发送 `/h` 查看指令。
-
-指令必须是完整的 `/command [args]`。未知斜杠指令只返回帮助，不进入模型。普通联系人可以使用 `/new`、`/stop`、`/h`；只有扫码授权得到的微信账号可以枚举或切换 Agent。
-
-设置页可为微信渠道独立选择 Agent、服务商和模型。Agent 只提供 system role；`/agents` 仅切换 Agent，不改变渠道固定的服务商和模型。修改配置会取消旧的待处理回复，并让后续消息从新对话开始。
-
-微信渠道服务商仅支持 PureChat、OpenAI 或 DeepSeek。PureChat 走 AI Gateway 并扣绑定用户的免费积分；OpenAI / DeepSeek 需对应服务端密钥。服务端不可用的服务商会在设置页标记并禁用。
-
-## 回环验收
-
-1. 启动数据库、app 和 Gateway，扫码绑定。
-2. 90 秒内状态应从 starting 变为 online；绑定账号向机器人发首条消息时，应先收到欢迎语（介绍当前 Agent 并提示 `/h`），再收到对首条消息的正常回复。
-3. 连续发送两条文本，第二条应使用第一轮上下文，且每条只产生一份入站事件。
-4. 发送 `/new` 后再提问，旧上下文不应进入 Prompt。
-5. 用扫码账号执行 `/agents` 并切换；其他联系人执行应被拒绝。
-6. 长回答期间发送 `/stop`，应收到停止确认且生成调用被中止。
-7. 停止 Gateway；90 秒后页面应显示 offline。重新启动后应恢复轮询并继续过期 lease/待重试事件。
-8. 发送图片时，仅当渠道模型具备 vision 能力才会进入多模态理解；否则提示切换视觉模型。文件消息会解析文本后交给助手。
-9. 上传不超过 10MB 的 `.xlsx`，下一轮要求修改明确文本；应收到修改摘要和新的 `.xlsx` 文件。继续说“修改这个文件”时应基于最近生成版本创建下一版本。
-
-Excel 编辑不会覆盖原件；每次成功修改都会生成新版本并计入用户文件存储配额。首版支持常规 `.xlsx` 文本替换和指定单元格赋值，不支持 `.xls`、`.xlsm`、宏或任意代码执行。只有文件工具实际成功后 Agent 才会声明已生成文件。
-
-失败事件可在设置页点击“重试失败消息”，单次最多重新入队 100 条。
-
-## API
-
-| 方法 | 路径 | 鉴权 |
-| --- | --- | --- |
-| POST | `/api/channels/wechat/qrcode` | session |
-| GET | `/api/channels/wechat/qrcode/status?qrcode=` | session |
-| POST / PATCH / DELETE | `/api/channels/wechat/bind` | session |
-| GET | `/api/channels/wechat/status` | session |
-| POST | `/api/channels/wechat/events/retry` | session |
-| POST | `/api/channels/wechat/webhook/[applicationId]` | webhook secret，兼容/诊断用途 |
-| GET | `/api/dev/wechat/sessions` | session；Dev 列出本库全部 wechat 会话，`canSend` 仅本人 binding + 扫码授权者 |
-| GET | `/api/dev/wechat/sessions/[sessionId]/messages` | session；可查看任意 wechat 会话时间线 |
-| POST | `/api/dev/wechat/sessions/[sessionId]/messages` | session；body `{ text }`，仅本人 binding 且扫码授权者可代发 |
+健康检查 `/api/health` 只显示平台级计数，不返回 binding ID。单绑定异常显示 `degraded`；数据库或 Gateway 核心启动失败返回 `503 unhealthy`。

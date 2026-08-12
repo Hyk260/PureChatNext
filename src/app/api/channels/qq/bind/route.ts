@@ -7,6 +7,12 @@ import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelB
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials, encryptCredentials, invalidateQQChat } from '@/libs/channels/qq'
 import type { QQConnectionMode, QQCredentials } from '@/libs/channels/qq'
+import { gatewayEnv } from '@/envs/gateway'
+
+const requestGatewayReconcile = async () => {
+  const { reconcileChannelGateway } = await import('@/server/channel-gateway')
+  await reconcileChannelGateway()
+}
 
 function parseConnectionMode(value: unknown): QQConnectionMode {
   return value === 'webhook' ? 'webhook' : 'websocket'
@@ -52,6 +58,9 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
     appSecret,
     connectionMode: parseConnectionMode(body.connectionMode),
   }
+  if (credentials.connectionMode === 'websocket' && !gatewayEnv.CHANNEL_GATEWAY_ENABLED) {
+    return jsonError('QQ WebSocket gateway is not supported in this deployment', 409)
+  }
 
   const model = new ChannelBindingModel()
   const previous = await model.findByUserAndPlatform(userId, QQ_PLATFORM)
@@ -66,6 +75,7 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
     platform: QQ_PLATFORM,
     userId,
   })
+  await requestGatewayReconcile()
 
   return NextResponse.json({
     agentId: binding.agentId,
@@ -85,6 +95,7 @@ export const DELETE = withAuth(async (_request, { userId }) => {
     invalidateQQChat(existing.applicationId)
   }
   await model.disconnect(userId, QQ_PLATFORM)
+  await requestGatewayReconcile()
   return NextResponse.json({ ok: true })
 })
 
@@ -100,6 +111,10 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
   const model = new ChannelBindingModel()
   const existing = await model.findByUserAndPlatform(userId, QQ_PLATFORM)
   if (!existing) return jsonError('QQ not connected', 404)
+
+  if (body.connectionMode !== undefined && parseConnectionMode(body.connectionMode) === 'websocket' && !gatewayEnv.CHANNEL_GATEWAY_ENABLED) {
+    return jsonError('QQ WebSocket gateway is not supported in this deployment', 409)
+  }
 
   if (existing.applicationId) {
     invalidateQQChat(existing.applicationId)
@@ -124,6 +139,7 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
         platform: QQ_PLATFORM,
         userId,
       })
+      await requestGatewayReconcile()
     }
 
     return NextResponse.json({
@@ -142,6 +158,7 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
       platform: QQ_PLATFORM,
       userId,
     })
+    await requestGatewayReconcile()
     return NextResponse.json({
       agentId: updated.agentId,
       connectionMode: creds.connectionMode,

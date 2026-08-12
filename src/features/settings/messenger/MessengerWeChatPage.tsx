@@ -283,7 +283,7 @@ const MessengerWeChatPage = memo(() => {
             showIcon
             type='info'
             title='当前部署不支持微信 Gateway'
-            description='Vercel 无法运行常驻轮询进程。请使用本地 pnpm wechat:gateway 或 Docker Compose 部署。'
+            description='Vercel 无法运行常驻轮询进程。请使用开启内置 Gateway 的本地环境或 Docker Compose 部署。'
           />
         )}
 

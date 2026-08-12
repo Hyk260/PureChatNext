@@ -70,18 +70,18 @@ export function ProfileSettingsContent({
         />
       ),
     },
-    {
-      key: 'fullName',
-      node: <FullNameSetting fullName={user.fullName ?? null} onUpdated={handleFullNameUpdated} />,
-    },
+    // {
+    //   key: 'fullName',
+    //   node: <FullNameSetting fullName={user.fullName ?? null} onUpdated={handleFullNameUpdated} />,
+    // },
     {
       key: 'username',
       node: <UsernameSetting onUpdated={handleUsernameUpdated} username={user.username ?? null} />,
     },
-    {
-      key: 'interests',
-      node: <InterestsSetting interests={user.interests ?? []} onUpdated={handleInterestsUpdated} />,
-    },
+    // {
+    //   key: 'interests',
+    //   node: <InterestsSetting interests={user.interests ?? []} onUpdated={handleInterestsUpdated} />,
+    // },
     ...(showPasswordSetting
       ? [
           {
@@ -94,10 +94,10 @@ export function ProfileSettingsContent({
       key: 'email',
       node: <EmailSetting email={user.email ?? null} />,
     },
-    {
-      key: 'linked',
-      node: <LinkedAccountsSetting userEmail={user.email ?? null} />,
-    },
+    // {
+    //   key: 'linked',
+    //   node: <LinkedAccountsSetting userEmail={user.email ?? null} />,
+    // },
   ]
 
   return (

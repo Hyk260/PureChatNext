@@ -134,7 +134,8 @@ export const useSignIn = () => {
         {
           onError: (ctx) => {
             console.error('Sign in error:', ctx.error)
-            if (ctx.error.status === 403) {
+            // 仅未验证邮箱才进 OTP；Invalid origin 等其它 403 不能误判
+            if (ctx.error.code === 'EMAIL_NOT_VERIFIED') {
               router.push(
                 `/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`
               )
@@ -145,9 +146,11 @@ export const useSignIn = () => {
         }
       )
 
-      if (result.error && result.error.status !== 403) {
+      if (result.error && result.error.code !== 'EMAIL_NOT_VERIFIED') {
         if (result.error.status === 401 && result.error.code === 'INVALID_EMAIL_OR_PASSWORD') {
           message.error('邮箱或密码错误')
+        } else if (result.error.code === 'INVALID_ORIGIN') {
+          message.error('当前访问域名未授权，请检查隧道 / Origin 配置后重试')
         } else {
           message.error(result.error.message || '登录遇到了问题。请检查账号与密码后重试')
         }

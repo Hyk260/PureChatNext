@@ -2,12 +2,9 @@ import debug from 'debug'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyAuth } from '@/libs/auth/middleware'
-import { getAllowedOrigins } from '@/libs/utils/allowed-origins'
+import { isAllowedOrigin } from '@/libs/utils/allowed-origins'
 
 import { PROXY_CONFIG } from '@/const/branding'
-
-export const allowedOrigins = getAllowedOrigins()
-const allowedOriginSet = new Set(allowedOrigins)
 
 /**
  * CORS 配置
@@ -21,7 +18,7 @@ const log = debug('cors:default')
 
 function resolveAllowedOrigin(origin: string | null): string | null {
   if (!origin) return null
-  if (allowedOriginSet.has(origin)) return origin
+  if (isAllowedOrigin(origin)) return origin
   if (process.env.NODE_ENV === 'development') return origin
   return null
 }

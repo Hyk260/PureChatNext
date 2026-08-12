@@ -79,13 +79,24 @@ NODE_ENV=development
 # 需本机 bun；先准备 .env.production.local（生产 S3 / Redis / DATABASE 等）
 pnpm preview:prod
 
-# 已 build 过可跳过构建
+# 已 build 过可跳过构建（仍会校验 .next/BUILD_ID）
 pnpm preview:prod -- --skip-build
+
+# 仅在确认目标数据库已迁移后跳过迁移
+pnpm preview:prod -- --skip-migrate
+
+# 同时复用已有构建并跳过迁移
+pnpm preview:prod -- --skip-build --skip-migrate
+
+# 更换预览端口（也支持 -p 3211 或调用方 PORT=3211）
+pnpm preview:prod -- --port 3211
 ```
 
-脚本会按 Next production 顺序加载 `.env` → `.env.production` → `.env.local` → `.env.production.local`，再将 `APP_URL` 覆写为 `http://localhost:3210`（可用 `-p` / `PORT` 改端口），并确保 `ALLOWED_ORIGINS` 含该地址。浏览器打开打印出的本地 URL（同域 SPA + API）。
+`preview:prod` 会关闭 Bun 默认的 Env 自动加载，再由脚本按 `.env` → `.env.production` → `.env.local` → `.env.production.local` 的顺序加载 Env 文件，后者覆盖前者，调用命令显式传入的环境变量优先级最高。随后将 `APP_URL` 覆写为 `http://localhost:3210`（可用 `-p` / `--port` 或调用方 `PORT` 改端口），并确保 `ALLOWED_ORIGINS` 含该地址。
 
-**警告**：会连接生产 DB / S3 / Redis，写操作会影响真实数据。本地 `build:spa:copy` 还会改写 `spaHtmlTemplate.generated.ts`，勿提交构建产物。
+启动顺序为：校验配置与端口 → 生产构建 → 校验 `.next/BUILD_ID` → `db:migrate` → `next start` → `/api/health` 就绪检测。迁移失败时不会启动服务；健康检查返回降级或 `503` 时会醒目告警，但保留已经启动的预览进程供排查。浏览器打开最终打印出的本地 URL（同域 SPA + API）。
+
+**警告**：默认会迁移并连接生产 DB，也会连接生产 S3 / Redis，迁移和其他写操作可能影响真实数据。`db:migrate` 可重复安全执行；仅在确认数据库已经与当前代码同步时使用 `--skip-migrate`。本地 `build:spa:copy` 还会改写 `spaHtmlTemplate.generated.ts`，勿提交构建产物。
 
 ### CODE\_INSPECTOR
 

@@ -38,10 +38,11 @@ export const useResourceStore = create<ResourceStoreState>()(
     setQueryParams: (queryParams) => set({ queryParams }),
     setResourceList: (resourceList, hasMore) => set({ resourceList, hasMore }),
     setLoading: (isLoading) => set({ isLoading }),
-    removeResourcesOptimistically: (ids) =>
+    removeResourcesOptimistically: (ids) => {
       set((state) => ({
         resourceList: state.resourceList.filter((item) => !ids.includes(item.id)),
-      })),
+      }))
+    },
     fetchResources: async (params) => {
       set({ isLoading: true, queryParams: params })
       try {

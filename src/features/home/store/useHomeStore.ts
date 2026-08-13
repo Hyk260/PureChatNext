@@ -58,7 +58,7 @@ export const useHomeStore = create<HomeStoreState>()(
       selectedModel: DEFAULT_HOME_MODEL.model,
       selectedProvider: DEFAULT_HOME_MODEL.provider,
       sidebarCollapsed: false,
-      addAgentGroup: (name) =>
+      addAgentGroup: (name) => {
         set((state) => ({
           agentGroups: [
             ...state.agentGroups,
@@ -68,30 +68,36 @@ export const useHomeStore = create<HomeStoreState>()(
               sort: state.agentGroups.length,
             },
           ],
-        })),
+        }))
+      },
       clearActiveAgent: () => set({ activeAgent: null }),
-      removeAgentGroup: (groupId) =>
+      removeAgentGroup: (groupId) => {
         set((state) => ({
           agentGroups: state.agentGroups
             .filter((group) => group.id !== groupId)
             .map((group, index) => ({ ...group, sort: index })),
-        })),
-      resetSidebarCustomization: () =>
+        }))
+      },
+      resetSidebarCustomization: () => {
         set((state) => ({
           ...DEFAULT_HOME_SIDEBAR_STATE,
           agentGroups: state.agentGroups,
-        })),
+        }))
+      },
       setActiveAgent: (agent) => set({ activeAgent: agent }),
       setAgentMode: (mode) => set({ agentMode: mode }),
       setSelectedAgentId: (agentId) => set({ selectedAgentId: agentId }),
       setSelectedModel: (provider, model) => set({ selectedProvider: provider, selectedModel: model }),
-      setSidebarAccordionExpandedKeys: (accordionKeys, expandedKeys) =>
+      setSidebarAccordionExpandedKeys: (accordionKeys, expandedKeys) => {
         set((state) => ({
           sidebarExpandedKeys: mergeSidebarExpandedKeys(state.sidebarExpandedKeys, accordionKeys, expandedKeys),
-        })),
+        }))
+      },
       setHiddenSidebarSections: (sections) => set({ hiddenSidebarSections: sections }),
       setSidebarExpandedKeys: (keys) => set({ sidebarExpandedKeys: keys }),
-      setSidebarItems: (items) => set({ sidebarItems: normalizePersistedSidebarItems(items) }),
+      setSidebarItems: (items) => {
+        set({ sidebarItems: normalizePersistedSidebarItems(items) })
+      },
       toggleHiddenSidebarSection: (key) => {
         const { hiddenSidebarSections } = get()
         const isHidden = hiddenSidebarSections.includes(key)
@@ -103,14 +109,16 @@ export const useHomeStore = create<HomeStoreState>()(
         })
       },
       toggleSidebarCollapsed: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-      updateAgentGroupName: (groupId, name) =>
+      updateAgentGroupName: (groupId, name) => {
         set((state) => ({
           agentGroups: state.agentGroups.map((group) => (group.id === groupId ? { ...group, name } : group)),
-        })),
-      updateAgentGroupSort: (groups) =>
+        }))
+      },
+      updateAgentGroupSort: (groups) => {
         set({
           agentGroups: groups.map((group, index) => ({ ...group, sort: index })),
-        }),
+        })
+      },
     }),
     {
       migrate: (persistedState, version) => {

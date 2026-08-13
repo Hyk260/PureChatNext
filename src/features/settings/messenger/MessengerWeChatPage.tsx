@@ -230,8 +230,8 @@ const MessengerWeChatPage = memo(() => {
     }
   })
 
-  // 未连接显示「连接」，已连接显示「断开」；开发环境旁挂对话监控入口
-  const headerAction = (
+  // Gateway 不可用（Vercel / 未开启内置进程）时不展示连接配置与操作按钮。
+  const headerAction = gatewaySupported ? (
     <Flexbox horizontal align='center' gap={8}>
       {isDev ? (
         <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/dev/wechat-conversation')}>
@@ -239,104 +239,104 @@ const MessengerWeChatPage = memo(() => {
         </Button>
       ) : null}
       {showConnect ? (
-        <QrCodeAuth disabled={binding || !gatewaySupported} onAuthenticated={(c) => void handleAuthenticated(c)} />
+        <QrCodeAuth disabled={binding} onAuthenticated={(c) => void handleAuthenticated(c)} />
       ) : (
         <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>
           断开
         </Button>
       )}
     </Flexbox>
-  )
+  ) : undefined
 
   return (
     <MessengerDetailShell headerAction={headerAction} platform='wechat' platformMeta={platformMeta}>
-      <Flexbox gap={8}>
-        <Text strong style={{ fontSize: 15 }}>
-          连接微信
-        </Text>
-
+      {!gatewaySupported ? (
+        <Alert
+          showIcon
+          type='info'
+          title='当前部署不支持微信 Gateway'
+          description='Vercel 无法运行常驻轮询进程。请使用开启内置 Gateway 的本地环境或 Docker Compose 部署。'
+        />
+      ) : (
         <Flexbox gap={8}>
-          <Text type='secondary' style={{ fontSize: 13 }}>
-            绑定助手
+          <Text strong style={{ fontSize: 15 }}>
+            连接微信
           </Text>
-          <Select
-            disabled={controlsDisabled}
-            options={agents}
-            style={{ maxWidth: 360 }}
-            value={agentId}
-            onChange={(v) => void handleAgentChange(v)}
-          />
+
+          <Flexbox gap={8}>
+            <Text type='secondary' style={{ fontSize: 13 }}>
+              绑定助手
+            </Text>
+            <Select
+              disabled={controlsDisabled}
+              options={agents}
+              style={{ maxWidth: 360 }}
+              value={agentId}
+              onChange={(v) => void handleAgentChange(v)}
+            />
+          </Flexbox>
+
+          <Flexbox gap={8}>
+            <Text type='secondary' style={{ fontSize: 13 }}>服务商</Text>
+            <Select disabled={controlsDisabled} options={providerOptions} style={{ maxWidth: 360 }} value={provider} onChange={handleProviderChange} />
+          </Flexbox>
+
+          <Flexbox gap={8}>
+            <Text type='secondary' style={{ fontSize: 13 }}>模型</Text>
+            <Select disabled={controlsDisabled} options={modelOptions} style={{ maxWidth: 360 }} value={modelId} onChange={handleModelChange} />
+          </Flexbox>
+
+          {needsRebind && (
+            <Alert showIcon type='warning' title='微信会话已过期或需要重新连接' description='请再次扫码绑定。' />
+          )}
+
+          {showConnect ? (
+            <Text type='secondary' style={{ fontSize: 13 }}>
+              打开手机微信 → 右上角「+」→ 扫一扫，扫描二维码并确认。
+            </Text>
+          ) : status?.runtimeStatus === 'starting' ? (
+            <Alert showIcon type='info' title='等待 Gateway' description='凭证已保存，Gateway 首次轮询成功后会显示在线。' />
+          ) : status?.runtimeStatus === 'degraded' ? (
+            <Alert
+              showIcon
+              type='warning'
+              title={`渠道异常${status.failedEventCount ? `，${status.failedEventCount} 条消息处理失败` : ''}`}
+              description={status.lastError?.message || 'Gateway 仍在运行，但存在待重试或失败消息。'}
+              action={
+                status.failedEventCount ? (
+                  <Button
+                    size='small'
+                    onClick={() => {
+                      void retryFailedWechatEvents()
+                        .then((count) => message.success(`已重新入队 ${count} 条消息`))
+                        .then(refreshStatus)
+                        .catch((error) => message.error(error instanceof Error ? error.message : '重试失败'))
+                    }}
+                  >
+                    重试失败消息
+                  </Button>
+                ) : undefined
+              }
+            />
+          ) : status?.runtimeStatus === 'offline' && bound ? (
+            <Alert
+              showIcon
+              type='error'
+              title='Gateway 离线'
+              description='超过 90 秒未收到轮询心跳。请启动或检查微信 Gateway。'
+            />
+          ) : bound ? (
+            <Alert
+              showIcon
+              type='success'
+              title='已连接微信'
+              description={
+                status?.lastActiveAt ? `最近活动：${formatActiveAt(status.lastActiveAt)}` : '打开微信私聊机器人即可对话。'
+              }
+            />
+          ) : null}
         </Flexbox>
-
-        <Flexbox gap={8}>
-          <Text type='secondary' style={{ fontSize: 13 }}>服务商</Text>
-          <Select disabled={controlsDisabled} options={providerOptions} style={{ maxWidth: 360 }} value={provider} onChange={handleProviderChange} />
-        </Flexbox>
-
-        <Flexbox gap={8}>
-          <Text type='secondary' style={{ fontSize: 13 }}>模型</Text>
-          <Select disabled={controlsDisabled} options={modelOptions} style={{ maxWidth: 360 }} value={modelId} onChange={handleModelChange} />
-        </Flexbox>
-
-        {!gatewaySupported && (
-          <Alert
-            showIcon
-            type='info'
-            title='当前部署不支持微信 Gateway'
-            description='Vercel 无法运行常驻轮询进程。请使用开启内置 Gateway 的本地环境或 Docker Compose 部署。'
-          />
-        )}
-
-        {needsRebind && (
-          <Alert showIcon type='warning' title='微信会话已过期或需要重新连接' description='请再次扫码绑定。' />
-        )}
-
-        {showConnect && gatewaySupported ? (
-          <Text type='secondary' style={{ fontSize: 13 }}>
-            打开手机微信 → 右上角「+」→ 扫一扫，扫描二维码并确认。
-          </Text>
-        ) : status?.runtimeStatus === 'starting' ? (
-          <Alert showIcon type='info' title='等待 Gateway' description='凭证已保存，Gateway 首次轮询成功后会显示在线。' />
-        ) : status?.runtimeStatus === 'degraded' ? (
-          <Alert
-            showIcon
-            type='warning'
-            title={`渠道异常${status.failedEventCount ? `，${status.failedEventCount} 条消息处理失败` : ''}`}
-            description={status.lastError?.message || 'Gateway 仍在运行，但存在待重试或失败消息。'}
-            action={
-              status.failedEventCount ? (
-                <Button
-                  size='small'
-                  onClick={() => {
-                    void retryFailedWechatEvents()
-                      .then((count) => message.success(`已重新入队 ${count} 条消息`))
-                      .then(refreshStatus)
-                      .catch((error) => message.error(error instanceof Error ? error.message : '重试失败'))
-                  }}
-                >
-                  重试失败消息
-                </Button>
-              ) : undefined
-            }
-          />
-        ) : status?.runtimeStatus === 'offline' && bound ? (
-          <Alert
-            showIcon
-            type='error'
-            title='Gateway 离线'
-            description='超过 90 秒未收到轮询心跳。请启动或检查微信 Gateway。'
-          />
-        ) : bound ? (
-          <Alert
-            showIcon
-            type='success'
-            title='已连接微信'
-            description={
-              status?.lastActiveAt ? `最近活动：${formatActiveAt(status.lastActiveAt)}` : '打开微信私聊机器人即可对话。'
-            }
-          />
-        ) : null}
-      </Flexbox>
+      )}
 
       <MessengerCommandList />
     </MessengerDetailShell>

@@ -60,12 +60,13 @@ export const useAgentsStore = create<AgentsStoreState>((set, get) => ({
 
   findById: (id) => get().agents.find((agent) => agent.id === id),
 
-  removeLocal: (id) =>
+  removeLocal: (id) => {
     set((state) => ({
       agents: state.agents.filter((agent) => agent.id !== id),
-    })),
+    }))
+  },
 
-  upsertLocal: (agent) =>
+  upsertLocal: (agent) => {
     set((state) => {
       const index = state.agents.findIndex((item) => item.id === agent.id)
       if (index === -1) {
@@ -74,7 +75,8 @@ export const useAgentsStore = create<AgentsStoreState>((set, get) => ({
       const next = [...state.agents]
       next[index] = agent
       return { agents: next }
-    }),
+    })
+  },
 }))
 
 export const resolveAgentMeta = (id: string): AgentListItem => {

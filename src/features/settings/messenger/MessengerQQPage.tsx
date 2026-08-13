@@ -134,119 +134,129 @@ const MessengerQQPage = memo(() => {
   }
 
   const connected = Boolean(status?.connected)
+  const gatewaySupported = status?.gatewaySupported !== false
   const showConnect = !status?.applicationId
 
-  const headerAction = showConnect ? (
-    <Button loading={binding} type='primary' onClick={() => void handleBind()}>
-      连接
-    </Button>
-  ) : (
-    <Button danger disabled={binding} icon={<Trash2Icon />} onClick={handleDisconnect}>
-      断开
-    </Button>
-  )
+  // Gateway 不可用（Vercel / 未开启内置进程）时不展示连接配置与操作按钮。
+  const headerAction = gatewaySupported ? (
+    showConnect ? (
+      <Button loading={binding} type='primary' onClick={() => void handleBind()}>
+        连接
+      </Button>
+    ) : (
+      <Button danger disabled={binding} icon={<Trash2Icon />} onClick={handleDisconnect}>
+        断开
+      </Button>
+    )
+  ) : undefined
 
   return (
     <MessengerDetailShell headerAction={headerAction} platform='qq' platformMeta={platformMeta}>
-      <Flexbox gap={12}>
-        <Text strong style={{ fontSize: 15 }}>
-          连接 QQ
-        </Text>
-
-        <Flexbox gap={8}>
-          <Text type='secondary' style={{ fontSize: 13 }}>
-            绑定助手
+      {!gatewaySupported ? (
+        <Alert
+          showIcon
+          type='info'
+          title='当前部署不支持 QQ Gateway'
+          description='Vercel 无法运行常驻 WebSocket 进程。请使用开启内置 Gateway 的本地环境或 Docker Compose 部署。'
+        />
+      ) : (
+        <Flexbox gap={12}>
+          <Text strong style={{ fontSize: 15 }}>
+            连接 QQ
           </Text>
-          <Select
-            options={agents}
-            style={{ maxWidth: 360 }}
-            value={agentId}
-            onChange={(v) => void handleAgentChange(v)}
-          />
-        </Flexbox>
 
-        {showConnect ? (
-          <>
-            <Flexbox gap={8}>
-              <Text type='secondary' style={{ fontSize: 13 }}>
-                App ID
-              </Text>
-              <Input
-                placeholder='来自 q.qq.com 开发设置'
-                style={{ maxWidth: 420 }}
-                value={appId}
-                onChange={(e) => setAppId(e.target.value)}
-              />
-            </Flexbox>
-            <Flexbox gap={8}>
-              <Text type='secondary' style={{ fontSize: 13 }}>
-                App Secret
-              </Text>
-              <Input.Password
-                placeholder='请妥善保管，不会回显已保存的密钥'
-                style={{ maxWidth: 420 }}
-                value={appSecret}
-                onChange={(e) => setAppSecret(e.target.value)}
-              />
-            </Flexbox>
-            <Flexbox gap={8}>
-              <Text type='secondary' style={{ fontSize: 13 }}>
-                连接模式
-              </Text>
-              <Radio.Group
-                value={connectionMode}
-                onChange={(e) => setConnectionMode(e.target.value as QQConnectionMode)}
-              >
-                <Radio.Button disabled={status?.gatewaySupported === false} value='websocket'>WebSocket（推荐）</Radio.Button>
-                <Radio.Button value='webhook'>Webhook</Radio.Button>
-              </Radio.Group>
-            </Flexbox>
+          <Flexbox gap={8}>
             <Text type='secondary' style={{ fontSize: 13 }}>
-              {connectionMode === 'websocket'
-                ? '保存后由 Next Server 内置 Gateway 自动维护 WebSocket 连接。'
-                : '保存后将显示回调地址，请粘贴到 QQ 开放平台「回调配置」。'}
+              绑定助手
             </Text>
-            {status?.gatewaySupported === false && (
-              <Alert showIcon type='info' title='当前部署仅支持 Webhook' description='Vercel 与未开启 Gateway 的本地环境不能运行 QQ WebSocket。' />
-            )}
-          </>
-        ) : (
-          <>
-            <Alert
-              showIcon
-              type={connected ? 'success' : 'warning'}
-              title={connected ? '已连接 QQ' : 'QQ 绑定已保存，当前离线'}
-              description={
-                status?.lastActiveAt
-                  ? `最近活动：${formatActiveAt(status.lastActiveAt)} · 模式：${status.connectionMode ?? 'websocket'}`
-                  : `模式：${status?.connectionMode ?? 'websocket'}。在 QQ 私聊或群内 @ 机器人即可对话。`
-              }
+            <Select
+              options={agents}
+              style={{ maxWidth: 360 }}
+              value={agentId}
+              onChange={(v) => void handleAgentChange(v)}
             />
-            {status?.connectionMode === 'webhook' && status.webhookUrl && (
+          </Flexbox>
+
+          {showConnect ? (
+            <>
+              <Flexbox gap={8}>
+                <Text type='secondary' style={{ fontSize: 13 }}>
+                  App ID
+                </Text>
+                <Input
+                  placeholder='来自 q.qq.com 开发设置'
+                  style={{ maxWidth: 420 }}
+                  value={appId}
+                  onChange={(e) => setAppId(e.target.value)}
+                />
+              </Flexbox>
+              <Flexbox gap={8}>
+                <Text type='secondary' style={{ fontSize: 13 }}>
+                  App Secret
+                </Text>
+                <Input.Password
+                  placeholder='请妥善保管，不会回显已保存的密钥'
+                  style={{ maxWidth: 420 }}
+                  value={appSecret}
+                  onChange={(e) => setAppSecret(e.target.value)}
+                />
+              </Flexbox>
+              <Flexbox gap={8}>
+                <Text type='secondary' style={{ fontSize: 13 }}>
+                  连接模式
+                </Text>
+                <Radio.Group
+                  value={connectionMode}
+                  onChange={(e) => setConnectionMode(e.target.value as QQConnectionMode)}
+                >
+                  <Radio.Button value='websocket'>WebSocket（推荐）</Radio.Button>
+                  <Radio.Button value='webhook'>Webhook</Radio.Button>
+                </Radio.Group>
+              </Flexbox>
+              <Text type='secondary' style={{ fontSize: 13 }}>
+                {connectionMode === 'websocket'
+                  ? '保存后由 Next Server 内置 Gateway 自动维护 WebSocket 连接。'
+                  : '保存后将显示回调地址，请粘贴到 QQ 开放平台「回调配置」。'}
+              </Text>
+            </>
+          ) : (
+            <>
               <Alert
                 showIcon
-                type='info'
-                title='Webhook 回调地址'
+                type={connected ? 'success' : 'warning'}
+                title={connected ? '已连接 QQ' : 'QQ 绑定已保存，当前离线'}
                 description={
-                  <Text
-                    style={{ cursor: 'copy', fontSize: 13 }}
-                    title='点击复制'
-                    onClick={async () => {
-                      await copyToClipboard(status.webhookUrl!)
-                      message.success('已复制 Webhook 回调地址')
-                    }}
-                  >
-                    {status.webhookUrl}
-                  </Text>
+                  status?.lastActiveAt
+                    ? `最近活动：${formatActiveAt(status.lastActiveAt)} · 模式：${status.connectionMode ?? 'websocket'}`
+                    : `模式：${status?.connectionMode ?? 'websocket'}。在 QQ 私聊或群内 @ 机器人即可对话。`
                 }
               />
-            )}
-            {status?.connectionMode === 'websocket' && status.runtimeStatus !== 'online' && (
-              <Alert showIcon type='warning' title='QQ WebSocket 当前离线' description={status.lastError?.message || 'Next Server Gateway 正在等待连接或恢复。'} />
-            )}
-          </>
-        )}
-      </Flexbox>
+              {status?.connectionMode === 'webhook' && status.webhookUrl && (
+                <Alert
+                  showIcon
+                  type='info'
+                  title='Webhook 回调地址'
+                  description={
+                    <Text
+                      style={{ cursor: 'copy', fontSize: 13 }}
+                      title='点击复制'
+                      onClick={async () => {
+                        await copyToClipboard(status.webhookUrl!)
+                        message.success('已复制 Webhook 回调地址')
+                      }}
+                    >
+                      {status.webhookUrl}
+                    </Text>
+                  }
+                />
+              )}
+              {status?.connectionMode === 'websocket' && status.runtimeStatus !== 'online' && (
+                <Alert showIcon type='warning' title='QQ WebSocket 当前离线' description={status.lastError?.message || 'Next Server Gateway 正在等待连接或恢复。'} />
+              )}
+            </>
+          )}
+        </Flexbox>
+      )}
 
       <MessengerCommandList />
     </MessengerDetailShell>

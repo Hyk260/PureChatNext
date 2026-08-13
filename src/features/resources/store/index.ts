@@ -82,10 +82,11 @@ export const useResourceManagerStore = create<ResourceManagerState>()(
     setSorter: (sorter) => set({ sorter }),
     setSortType: (sortType) => set({ sortType }),
     setViewMode: (viewMode) => set({ viewMode }),
-    updateColumnWidth: (column, width) =>
+    updateColumnWidth: (column, width) => {
       set((state) => ({
         columnWidths: { ...state.columnWidths, [column]: width },
-      })),
+      }))
+    },
     toggleSelectFile: (id) => {
       const { selectedFileIds } = get()
       set({

@@ -52,7 +52,7 @@ export const useChatUiStore = create<ChatUiState>()(
       setLeftCollapsed: (leftCollapsed) => set({ leftCollapsed }),
       setRightCollapsed: (rightCollapsed) => set({ rightCollapsed }),
       getParams: (agentId) => get().paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS,
-      setParams: (agentId, patch) =>
+      setParams: (agentId, patch) => {
         set((s) => ({
           paramsByAgent: {
             ...s.paramsByAgent,
@@ -61,14 +61,16 @@ export const useChatUiStore = create<ChatUiState>()(
               ...patch,
             },
           },
-        })),
-      setSearchMode: (agentId, mode) =>
+        }))
+      },
+      setSearchMode: (agentId, mode) => {
         set((s) => ({
           searchModeByAgent: {
             ...s.searchModeByAgent,
             [agentId]: mode,
           },
-        })),
+        }))
+      },
       setTopicGroupMode: (topicGroupMode) => set({ topicGroupMode }),
       setTopicPageSize: (topicPageSize) => set({ topicPageSize }),
       setTopicSortBy: (topicSortBy) => set({ topicSortBy }),

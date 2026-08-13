@@ -20,20 +20,23 @@ interface TreeStoreState {
 export const useTreeStore = create<TreeStoreState>((set, get) => ({
   children: {},
   expanded: {},
-  init: (libraryId, items) =>
+  init: (libraryId, items) => {
     set((state) => ({
       children: { ...state.children, [libraryId]: items },
-    })),
-  toggle: (id) =>
+    }))
+  },
+  toggle: (id) => {
     set((state) => ({
       expanded: { ...state.expanded, [id]: !state.expanded[id] },
-    })),
-  expandAncestors: (ids) =>
+    }))
+  },
+  expandAncestors: (ids) => {
     set((state) => {
       const expanded = { ...state.expanded }
       for (const id of ids) expanded[id] = true
       return { expanded }
-    }),
+    })
+  },
 }))
 
 export const treeSelectors = {

@@ -90,7 +90,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
 
         return result
       },
-      mergeRemoteModels: (id, remote) =>
+      mergeRemoteModels: (id, remote) => {
         set((state) => {
           const current = state.configs[id] ?? createDefaultProviderConfig(id)
           const byId = new Map(current.models.map((model) => [model.id, model]))
@@ -130,8 +130,9 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
               },
             },
           }
-        }),
-      patchConfig: (id, patch) =>
+        })
+      },
+      patchConfig: (id, patch) => {
         set((state) => ({
           configs: {
             ...state.configs,
@@ -141,8 +142,9 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
               ...(isServerManagedProvider(id) ? { enabled: true } : null),
             },
           },
-        })),
-      setCheckModel: (id, checkModel) =>
+        }))
+      },
+      setCheckModel: (id, checkModel) => {
         set((state) => ({
           configs: {
             ...state.configs,
@@ -151,7 +153,8 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
               checkModel,
             },
           },
-        })),
+        }))
+      },
       setEnabled: (id, enabled) => {
         if (isServerManagedProvider(id)) return
         set((state) => ({
@@ -164,7 +167,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
           },
         }))
       },
-      setModels: (id, models) =>
+      setModels: (id, models) => {
         set((state) => ({
           configs: {
             ...state.configs,
@@ -173,8 +176,9 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
               models,
             },
           },
-        })),
-      toggleModelEnabled: (id, modelId, enabled) =>
+        }))
+      },
+      toggleModelEnabled: (id, modelId, enabled) => {
         set((state) => {
           const current = state.configs[id] ?? createDefaultProviderConfig(id)
           return {
@@ -186,7 +190,8 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
               },
             },
           }
-        }),
+        })
+      },
     }),
     {
       migrate: (persisted, version) => {

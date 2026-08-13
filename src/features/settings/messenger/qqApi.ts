@@ -17,6 +17,31 @@ export type QQStatus = {
   webhookUrl?: string
 }
 
+export type QQQrStatus =
+  | { qrCodeUrl: string; qrVersion: number; status: 'waiting' }
+  | { appIds: string[]; status: 'selecting' }
+  | { status: 'binding' }
+  | { applicationId: string; status: 'connected' }
+  | { message: string; status: 'failed' }
+
+export type QQQrStartResult = QQQrStatus & { sessionId: string }
+
+class QQApiError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message)
+    this.name = 'QQApiError'
+  }
+}
+
+async function readApiError(res: Response, fallback: string): Promise<Error> {
+  const body = (await res.json().catch(() => ({}))) as { error?: string }
+  return new QQApiError(body.error || fallback, res.status)
+}
+
+export function isQQQrSessionMissingError(error: unknown): boolean {
+  return error instanceof QQApiError && error.status === 404
+}
+
 export async function fetchQQStatus(): Promise<QQStatus> {
   const res = await apiFetch('/api/channels/qq/status')
   if (!res.ok) throw new Error(`status failed: ${res.status}`)
@@ -35,9 +60,37 @@ export async function bindQQ(params: {
     method: 'POST',
   })
   if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string }
-    throw new Error(body.error || `bind failed: ${res.status}`)
+    throw await readApiError(res, `bind failed: ${res.status}`)
   }
+}
+
+export async function startQQQrLogin(agentId: string): Promise<QQQrStartResult> {
+  const res = await apiFetch('/api/channels/qq/qrcode', {
+    body: JSON.stringify({ agentId }),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+  })
+  if (!res.ok) throw await readApiError(res, `qrcode failed: ${res.status}`)
+  return res.json() as Promise<QQQrStartResult>
+}
+
+export async function pollQQQrLogin(sessionId: string, signal?: AbortSignal): Promise<QQQrStatus> {
+  const res = await apiFetch(`/api/channels/qq/qrcode?sessionId=${encodeURIComponent(sessionId)}`, { signal })
+  if (!res.ok) throw await readApiError(res, `qrcode status failed: ${res.status}`)
+  return res.json() as Promise<QQQrStatus>
+}
+
+export async function completeQQQrLogin(sessionId: string, appId: string): Promise<void> {
+  const res = await apiFetch('/api/channels/qq/qrcode', {
+    body: JSON.stringify({ action: 'complete', appId, sessionId }),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+  })
+  if (!res.ok) throw await readApiError(res, `qrcode complete failed: ${res.status}`)
+}
+
+export async function cancelQQQrLogin(sessionId: string): Promise<void> {
+  await apiFetch(`/api/channels/qq/qrcode?sessionId=${encodeURIComponent(sessionId)}`, { method: 'DELETE' })
 }
 
 export async function unbindQQ(): Promise<void> {
@@ -52,7 +105,6 @@ export async function updateQQAgent(agentId: string): Promise<void> {
     method: 'PATCH',
   })
   if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string }
-    throw new Error(body.error || `update agent failed: ${res.status}`)
+    throw await readApiError(res, `update agent failed: ${res.status}`)
   }
 }

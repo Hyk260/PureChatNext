@@ -1,4 +1,3 @@
-import { QQApiClient } from '@pure/chat-adapter/qq'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -6,7 +5,8 @@ import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials, encryptCredentials, invalidateQQChat } from '@/libs/channels/qq'
-import type { QQConnectionMode, QQCredentials } from '@/libs/channels/qq'
+import type { QQConnectionMode } from '@/libs/channels/qq'
+import { bindQQCredentials, QQBindingError } from '@/libs/channels/qq/binding'
 import { gatewayEnv } from '@/envs/gateway'
 
 const requestGatewayReconcile = async () => {
@@ -40,51 +40,17 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
   if (!appSecret) return jsonError('appSecret is required')
   if (!agentId) return jsonError('agentId is required')
 
-  const agentModel = new AgentModel(userId)
-  const agent = await agentModel.findVisibleById(agentId)
-  if (!agent) return jsonError('Agent not found', 404)
-
-  // Validate credentials against QQ Open Platform
-  try {
-    const client = new QQApiClient(appId, appSecret)
-    await client.getAccessToken()
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : 'QQ auth failed'
-    return jsonError(`Invalid QQ credentials: ${msg}`, 400)
-  }
-
-  const credentials: QQCredentials = {
-    appId,
-    appSecret,
-    connectionMode: parseConnectionMode(body.connectionMode),
-  }
-  if (credentials.connectionMode === 'websocket' && !gatewayEnv.CHANNEL_GATEWAY_ENABLED) {
+  const connectionMode = parseConnectionMode(body.connectionMode)
+  if (connectionMode === 'websocket' && !gatewayEnv.CHANNEL_GATEWAY_ENABLED) {
     return jsonError('QQ WebSocket gateway is not supported in this deployment', 409)
   }
 
-  const model = new ChannelBindingModel()
-  const previous = await model.findByUserAndPlatform(userId, QQ_PLATFORM)
-  if (previous?.applicationId) {
-    invalidateQQChat(previous.applicationId)
+  try {
+    return NextResponse.json(await bindQQCredentials({ agentId, appId, appSecret, connectionMode, userId }))
+  } catch (error) {
+    if (error instanceof QQBindingError) return jsonError(error.message, error.status)
+    throw error
   }
-
-  const binding = await model.upsert({
-    agentId,
-    applicationId: appId,
-    credentials: encryptCredentials(credentials),
-    platform: QQ_PLATFORM,
-    userId,
-  })
-  await requestGatewayReconcile()
-
-  return NextResponse.json({
-    agentId: binding.agentId,
-    applicationId: binding.applicationId,
-    connectionMode: credentials.connectionMode,
-    enabled: binding.enabled,
-    id: binding.id,
-    ok: true,
-  })
 })
 
 /** DELETE /api/channels/qq/bind — 断开 QQ 连接 */

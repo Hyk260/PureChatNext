@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert, Input, Radio, Select, Spin } from 'antd'
+import { Alert, Select, Spin } from 'antd'
 import { Button, confirmModal, Text, copyToClipboard, Flexbox } from '@pure/ui'
 import { formatDateTime } from '@pure/utils/client'
 import { useApp } from '@/components/AntdStaticMethods'
@@ -12,8 +12,9 @@ import { fetchAgents } from '@/features/home/agentApi'
 import { getMessengerPlatform } from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
-import { bindQQ, fetchQQStatus, unbindQQ, updateQQAgent } from './qqApi'
-import type { QQConnectionMode, QQStatus } from './qqApi'
+import { QQConnectButton } from './QQConnectModal'
+import { fetchQQStatus, unbindQQ, updateQQAgent } from './qqApi'
+import type { QQStatus } from './qqApi'
 
 const formatActiveAt = (value: string) => formatDateTime(value, { hour12: false, second: '2-digit' })
 
@@ -30,16 +31,11 @@ const MessengerQQPage = memo(() => {
   const [status, setStatus] = useState<QQStatus | null>(null)
   const [agents, setAgents] = useState<Array<{ label: string; value: string }>>([])
   const [agentId, setAgentId] = useState('agt_inbox')
-  const [appId, setAppId] = useState('')
-  const [appSecret, setAppSecret] = useState('')
-  const [connectionMode, setConnectionMode] = useState<QQConnectionMode>('websocket')
 
   const refreshStatus = useCallback(async () => {
     const st = await fetchQQStatus()
     setStatus(st)
     if (st.agentId) setAgentId(st.agentId)
-    if (st.appId) setAppId(st.appId)
-    if (st.connectionMode) setConnectionMode(st.connectionMode)
     return st
   }, [])
 
@@ -51,9 +47,6 @@ const MessengerQQPage = memo(() => {
       setAgents(agentList.map((a) => ({ label: a.title, value: a.id })))
       if (st.agentId) setAgentId(st.agentId)
       else if (agentList[0]) setAgentId(agentList[0].id)
-      if (st.appId) setAppId(st.appId)
-      if (st.connectionMode) setConnectionMode(st.connectionMode)
-      else if (st.gatewaySupported === false) setConnectionMode('webhook')
     } catch (error) {
       message.error(error instanceof Error ? error.message : '加载失败')
     } finally {
@@ -64,29 +57,6 @@ const MessengerQQPage = memo(() => {
   useEffect(() => {
     void reload()
   }, [reload])
-
-  const handleBind = useCallback(async () => {
-    if (!appId.trim() || !appSecret.trim()) {
-      message.warning('请填写 App ID 与 App Secret')
-      return
-    }
-    setBinding(true)
-    try {
-      await bindQQ({
-        agentId,
-        appId: appId.trim(),
-        appSecret: appSecret.trim(),
-        connectionMode,
-      })
-      setAppSecret('')
-      message.success('QQ 已连接')
-      await refreshStatus()
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : '绑定失败')
-    } finally {
-      setBinding(false)
-    }
-  }, [agentId, appId, appSecret, connectionMode, message, refreshStatus])
 
   const handleAgentChange = useCallback(
     async (value: string) => {
@@ -111,7 +81,6 @@ const MessengerQQPage = memo(() => {
       onOk: async () => {
         await unbindQQ()
         setStatus(DISCONNECTED_STATUS)
-        setAppSecret('')
         message.success('已断开 QQ')
         try {
           await refreshStatus()
@@ -137,90 +106,56 @@ const MessengerQQPage = memo(() => {
   const gatewaySupported = status?.gatewaySupported !== false
   const showConnect = !status?.applicationId
 
-  // Gateway 不可用（Vercel / 未开启内置进程）时不展示连接配置与操作按钮。
-  const headerAction = gatewaySupported ? (
-    showConnect ? (
-      <Button loading={binding} type='primary' onClick={() => void handleBind()}>
-        连接
-      </Button>
-    ) : (
-      <Button danger disabled={binding} icon={<Trash2Icon />} onClick={handleDisconnect}>
-        断开
-      </Button>
-    )
-  ) : undefined
+  const headerAction = showConnect ? (
+    <QQConnectButton
+      agentId={agentId}
+      gatewaySupported={gatewaySupported}
+      onConnected={async () => {
+        setBinding(true)
+        try {
+          message.success('QQ 凭证已保存，正在建立连接')
+          await refreshStatus()
+        } finally {
+          setBinding(false)
+        }
+      }}
+    />
+  ) : (
+    <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>
+      断开
+    </Button>
+  )
 
   return (
     <MessengerDetailShell headerAction={headerAction} platform='qq' platformMeta={platformMeta}>
-      {!gatewaySupported ? (
-        <Alert
-          showIcon
-          type='info'
-          title='当前部署不支持 QQ Gateway'
-          description='Vercel 无法运行常驻 WebSocket 进程。请使用开启内置 Gateway 的本地环境或 Docker Compose 部署。'
-        />
-      ) : (
-        <Flexbox gap={12}>
-          <Text strong style={{ fontSize: 15 }}>
-            连接 QQ
+      <Flexbox gap={12}>
+        <Text strong style={{ fontSize: 15 }}>
+          连接 QQ
+        </Text>
+
+        <Flexbox gap={8}>
+          <Text type='secondary' style={{ fontSize: 13 }}>
+            绑定助手
           </Text>
+          <Select
+            options={agents}
+            style={{ maxWidth: 360 }}
+            value={agentId}
+            onChange={(v) => void handleAgentChange(v)}
+          />
+        </Flexbox>
 
-          <Flexbox gap={8}>
-            <Text type='secondary' style={{ fontSize: 13 }}>
-              绑定助手
-            </Text>
-            <Select
-              options={agents}
-              style={{ maxWidth: 360 }}
-              value={agentId}
-              onChange={(v) => void handleAgentChange(v)}
-            />
-          </Flexbox>
-
-          {showConnect ? (
-            <>
-              <Flexbox gap={8}>
-                <Text type='secondary' style={{ fontSize: 13 }}>
-                  App ID
-                </Text>
-                <Input
-                  placeholder='来自 q.qq.com 开发设置'
-                  style={{ maxWidth: 420 }}
-                  value={appId}
-                  onChange={(e) => setAppId(e.target.value)}
-                />
-              </Flexbox>
-              <Flexbox gap={8}>
-                <Text type='secondary' style={{ fontSize: 13 }}>
-                  App Secret
-                </Text>
-                <Input.Password
-                  placeholder='请妥善保管，不会回显已保存的密钥'
-                  style={{ maxWidth: 420 }}
-                  value={appSecret}
-                  onChange={(e) => setAppSecret(e.target.value)}
-                />
-              </Flexbox>
-              <Flexbox gap={8}>
-                <Text type='secondary' style={{ fontSize: 13 }}>
-                  连接模式
-                </Text>
-                <Radio.Group
-                  value={connectionMode}
-                  onChange={(e) => setConnectionMode(e.target.value as QQConnectionMode)}
-                >
-                  <Radio.Button value='websocket'>WebSocket（推荐）</Radio.Button>
-                  <Radio.Button value='webhook'>Webhook</Radio.Button>
-                </Radio.Group>
-              </Flexbox>
-              <Text type='secondary' style={{ fontSize: 13 }}>
-                {connectionMode === 'websocket'
-                  ? '保存后由 Next Server 内置 Gateway 自动维护 WebSocket 连接。'
-                  : '保存后将显示回调地址，请粘贴到 QQ 开放平台「回调配置」。'}
-              </Text>
-            </>
-          ) : (
-            <>
+        {showConnect ? (
+          <Alert
+            showIcon
+            type='info'
+            title={gatewaySupported ? '支持扫码、WebSocket 与 URL 回调' : '当前部署仅支持 URL 回调'}
+            description={gatewaySupported
+              ? '点击右上角「连接」，推荐使用手机 QQ 扫码自动完成机器人授权。'
+              : '扫码和 WebSocket 需要常驻 Gateway；点击右上角「连接」可使用 App ID / Secret 配置 URL 回调。'}
+          />
+        ) : (
+          <>
               <Alert
                 showIcon
                 type={connected ? 'success' : 'warning'}
@@ -253,10 +188,9 @@ const MessengerQQPage = memo(() => {
               {status?.connectionMode === 'websocket' && status.runtimeStatus !== 'online' && (
                 <Alert showIcon type='warning' title='QQ WebSocket 当前离线' description={status.lastError?.message || 'Next Server Gateway 正在等待连接或恢复。'} />
               )}
-            </>
-          )}
-        </Flexbox>
-      )}
+          </>
+        )}
+      </Flexbox>
 
       <MessengerCommandList />
     </MessengerDetailShell>

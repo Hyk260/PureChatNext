@@ -75,6 +75,7 @@
     "@supabase/supabase-js": "^2.78.0",
     "@t3-oss/env-core": "^0.13.10",
     "@t3-oss/env-nextjs": "^0.13.10",
+    "@tencent-connect/qqbot-connector": "1.2.0",
     "@testing-library/react": "^16.3.2",
     "@types/nodemailer": "^8.0.1",
     "@vercel/analytics": "^1.5.0",

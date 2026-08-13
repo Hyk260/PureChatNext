@@ -28,6 +28,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun scripts/migrate.ts",
     "db:studio": "drizzle-kit studio",
+    "tunnel:cloudflare": "cloudflared tunnel --url http://localhost:5174 --protocol http2",
+    "tunnel:ngrok": "ngrok http http://localhost:5174",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "lint": "pnpm run lint:ts && pnpm run lint:spa-env-imports && pnpm run lint:style && pnpm run typecheck && pnpm run lint:circular",

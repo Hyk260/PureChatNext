@@ -89,7 +89,13 @@ vi.mock('antd-style', () => ({
 import { UsageSettingsContent } from './UsageSettingsContent'
 
 const usageResponse = {
-  balance: { grant: 500_000, period: '2026-07', remaining: 486_889, used: 13_111 },
+  balance: {
+    grant: 500_000,
+    period: '2026-07',
+    remaining: 486_889,
+    resetIn: { days: 8, hours: 3 },
+    used: 13_111,
+  },
   items: [],
   models: [],
   page: 1,
@@ -112,7 +118,10 @@ describe('UsageSettingsContent', () => {
     await waitFor(() => expect(screen.getByText('积分')).toBeTruthy())
     expect(screen.getByText('文件使用量')).toBeTruthy()
     expect(screen.getByText(/13,111 \/ 500,000/)).toBeTruthy()
-    expect(screen.queryByText(/当前方案|升级|返利积分|向量存储|每日积分消耗趋势/)).toBeNull()
+    expect(screen.getByText('当前方案：免费版')).toBeTruthy()
+    expect(screen.getByText('8 天后重置')).toBeTruthy()
+    expect(screen.queryByText('升级')).toBeNull()
+    expect(screen.queryByText(/返利积分|向量存储|每日积分消耗趋势/)).toBeNull()
   })
 
   it('updates search, filtering, sorting, paging, and reset query parameters', async () => {

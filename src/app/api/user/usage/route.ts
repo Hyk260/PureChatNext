@@ -6,7 +6,7 @@ import type { NextRequest } from 'next/server'
 
 import { fileStorageLimitBytes } from '@/envs/file'
 import { withAuth } from '@/libs/auth/get-session-user'
-import { getShanghaiBillingPeriod } from '@/server/purechat'
+import { formatResetCountdown, getShanghaiBillingPeriod } from '@/server/purechat'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const SORT_FIELDS = new Set<UsageSortBy>(['createdAt', 'credits', 'durationMs', 'totalTokens'])
@@ -79,8 +79,13 @@ export const GET = withAuth(async (request: NextRequest, { userId }) => {
     fileModel.getStorageUsage(),
   ])
 
+  const countdown = formatResetCountdown()
+
   return NextResponse.json({
-    balance,
+    balance: {
+      ...balance,
+      resetIn: { days: countdown.days, hours: countdown.hours },
+    },
     storage: { limitBytes: fileStorageLimitBytes, usedBytes },
     ...usage,
   })

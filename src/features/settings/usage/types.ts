@@ -12,7 +12,13 @@ export type UsageItem = {
 }
 
 export type UsageResponse = {
-  balance: { grant: number; period: string; remaining: number; used: number }
+  balance: {
+    grant: number
+    period: string
+    remaining: number
+    resetIn: { days: number; hours: number }
+    used: number
+  }
   items: UsageItem[]
   models: string[]
   page: number

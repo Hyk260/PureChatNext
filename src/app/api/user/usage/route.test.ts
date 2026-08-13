@@ -29,7 +29,10 @@ vi.mock('@pure/database/models/file', () => ({
   },
 }))
 vi.mock('@/envs/file', () => ({ fileStorageLimitBytes: 15 * 1024 * 1024 }))
-vi.mock('@/server/purechat', () => ({ getShanghaiBillingPeriod: () => '2026-07' }))
+vi.mock('@/server/purechat', () => ({
+  formatResetCountdown: () => ({ days: 8, hours: 3, ms: 1, resetAt: '2026-08-01T00:00:00+08:00' }),
+  getShanghaiBillingPeriod: () => '2026-07',
+}))
 
 import { GET } from './route'
 
@@ -46,6 +49,13 @@ describe('GET /api/user/usage', () => {
     const payload = await response.json()
 
     expect(response.status).toBe(200)
+    expect(payload.balance).toEqual({
+      grant: 500_000,
+      period: '2026-07',
+      remaining: 490_000,
+      resetIn: { days: 8, hours: 3 },
+      used: 10_000,
+    })
     expect(payload.storage).toEqual({ limitBytes: 15 * 1024 * 1024, usedBytes: 1024 })
     expect(getUsage).toHaveBeenCalledWith(expect.objectContaining({ page: 1, pageSize: 10, userId: 'user-1' }))
     expect(getUsage.mock.calls[0]![0]).not.toHaveProperty('startAt')

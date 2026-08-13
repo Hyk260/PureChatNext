@@ -30,18 +30,26 @@ const dateTimeFormat = new Intl.DateTimeFormat('zh-CN', {
 const formatDuration = (value: number | null) => (value == null ? '--' : `${(value / 1000).toFixed(2)}s`)
 const formatDateTime = (value: string) => dateTimeFormat.format(new Date(value)).replace('日', '')
 const getPercentage = (used: number, limit: number) => Math.round((used / Math.max(1, limit)) * 100)
+const formatResetHint = (days: number, hours: number) => {
+  if (days > 0) return `${days} 天后重置`
+  if (hours > 0) return `${hours} 小时后重置`
+  return '即将重置'
+}
 
 const styles = createStaticStyles(({ css }) => ({
   details: css`
     overflow: hidden;
   `,
   error: css`
-    padding: 12px 16px;
+    padding: 10px 16px;
     border-bottom: 1px solid ${cssVar.colorBorderSecondary};
+  `,
+  header: css`
+    width: 100%;
   `,
   metric: css`
     min-width: 0;
-    padding: 16px;
+    padding: 16px 20px;
 
     & + & {
       border-inline-start: 1px solid ${cssVar.colorBorderSecondary};
@@ -57,9 +65,13 @@ const styles = createStaticStyles(({ css }) => ({
   metricGrid: css`
     width: 100%;
   `,
+  metricHint: css`
+    color: ${cssVar.colorTextTertiary};
+    font-size: 13px;
+  `,
   metricLabel: css`
     color: ${cssVar.colorTextSecondary};
-    font-size: 15px;
+    font-size: 14px;
   `,
   metricValue: css`
     font-size: 16px;
@@ -77,7 +89,7 @@ const styles = createStaticStyles(({ css }) => ({
     padding: 24px 24px 64px;
   `,
   pagination: css`
-    padding: 12px 16px;
+    padding: 10px 16px;
     border-top: 1px solid ${cssVar.colorBorderSecondary};
 
     @media (width <= 640px) {
@@ -89,6 +101,10 @@ const styles = createStaticStyles(({ css }) => ({
       }
     }
   `,
+  plan: css`
+    color: ${cssVar.colorTextSecondary};
+    font-size: 13px;
+  `,
   section: css`
     padding: 16px;
   `,
@@ -98,43 +114,40 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   table: css`
     .ant-table-thead > tr > th {
-      padding-block: 11px;
+      padding-block: 10px;
       font-weight: 600;
       background: ${cssVar.colorBgContainer};
     }
 
     .ant-table-tbody > tr > td {
-      padding-block: 9px;
+      padding-block: 8px;
     }
   `,
-  title: css`
-    text-align: center;
-    font-size: 20px;
-    font-weight: 600;
-  `,
   toolbar: css`
-    padding: 12px 16px;
+    padding: 10px 16px;
     border-bottom: 1px solid ${cssVar.colorBorderSecondary};
   `,
 }))
 
 type UsageMetricProps = {
+  hint?: string
   label: string
   limit: number
   used: number
   value: string
 }
 
-const UsageMetric = ({ label, limit, used, value }: UsageMetricProps) => {
+const UsageMetric = ({ hint, label, limit, used, value }: UsageMetricProps) => {
   const percentage = getPercentage(used, limit)
 
   return (
     <Flexbox horizontal align='center' className={styles.metric} justify='space-between'>
-      <Flexbox gap={5}>
+      <Flexbox gap={4}>
         <Text className={styles.metricLabel}>{label}</Text>
         <Text className={styles.metricValue}>
           {value} ({percentage}%)
         </Text>
+        {hint ? <Text className={styles.metricHint}>{hint}</Text> : null}
       </Flexbox>
       <Progress
         percent={Math.min(100, percentage)}
@@ -283,7 +296,10 @@ export function UsageSettingsContent() {
   return (
     <Flexbox className={styles.page} gap={40}>
       <Block className={styles.section} gap={16} variant='filled'>
-        <Text className={styles.sectionTitle}>总览</Text>
+        <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
+          <Text className={styles.sectionTitle}>总览</Text>
+          <Text className={styles.plan}>当前方案：免费版</Text>
+        </Flexbox>
         {loading && !data ? (
           <Block padding={16} variant='outlined'>
             <Skeleton active paragraph={{ rows: 2 }} />
@@ -294,8 +310,9 @@ export function UsageSettingsContent() {
           </Block>
         ) : data ? (
           <Block padding={0} variant='outlined'>
-            <Grid className={styles.metricGrid} gap={0} maxItemWidth={300} rows={2}>
+            <Grid className={styles.metricGrid} gap={0} maxItemWidth={360} rows={1}>
               <UsageMetric
+                hint={formatResetHint(data.balance.resetIn.days, data.balance.resetIn.hours)}
                 label='积分'
                 limit={data.balance.grant}
                 used={data.balance.used}

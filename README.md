@@ -316,7 +316,7 @@ pnpm dev:next         # 仅 Next API / BFF
 pnpm dev:spa          # 仅 Vite SPA
 pnpm build            # build:spa → copy → next build
 pnpm start            # 生产启动（端口 3210）
-pnpm lint             # ESLint 检查
+pnpm lint             # ESLint / Stylelint / 导入边界 / 循环依赖 / tsc（见 docs/lint.zh-CN.md）
 pnpm gateway          # 运行 gateway 脚本
 pnpm docker:setup:dev # 创建本地 Docker 配置（不覆盖已有文件）
 pnpm docker:validate  # 校验开发/生产 Compose
@@ -348,6 +348,7 @@ cd packages/web-crawler && pnpm test
 | 文档                                                                                   | 说明                     |
 | -------------------------------------------------------------------------------------- | ------------------------ |
 | [docs/quick-start.zh-CN.md](./docs/quick-start.zh-CN.md)                               | 快速开始与 Supabase 配置 |
+| [docs/lint.zh-CN.md](./docs/lint.zh-CN.md)                                             | Lint / typecheck 脚本    |
 | [docs/env-setup.zh-CN.md](./docs/env-setup.zh-CN.md)                                   | 环境变量详解             |
 | [docs/drizzle-setup.zh-CN.md](./docs/drizzle-setup.zh-CN.md)                           | 数据库迁移流程           |
 | [docs/self-hosting/postgresql-local.zh-CN.md](./docs/self-hosting/postgresql-local.zh-CN.md) | 本地 PostgreSQL 管理 |

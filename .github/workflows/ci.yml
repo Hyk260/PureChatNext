@@ -28,7 +28,7 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # eslint.config.js 亦有 no-restricted-imports；此脚本专跑导入边界，避免被无关 lint 噪音挡住
+      # eslint.config.mjs 亦有 no-restricted-imports；此脚本专跑导入边界，避免被无关 lint 噪音挡住
       - name: Check SPA/client must not import server env
         run: pnpm run lint:spa-env-imports
 

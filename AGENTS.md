@@ -104,7 +104,7 @@ pnpm dev:spa          # 仅 Vite SPA（http://localhost:5174，代理 /api → N
 pnpm build            # build:spa → copy → build:next（Vercel 同此；见 vercel.json）
 pnpm start            # 生产启动（端口 3210）
 pnpm gateway          # 运行 gateway 脚本
-pnpm lint             # ESLint
+pnpm lint             # 质量检查聚合（见 docs/lint.zh-CN.md）
 ```
 
 - 本地开发：浏览器访问 **SPA 端口** `http://localhost:5174`（不要依赖线上 Debug Proxy）；Next 在 `3000`
@@ -143,7 +143,8 @@ cd packages/file-loaders && pnpm exec vitest run --silent='passed-only' 'src/loa
 
 ### 代码风格
 
-- ESLint：`eslint.config.js`，强制顶层 type import：`import type { Foo }` + `import { Bar } from 'pkg'`（`@typescript-eslint/consistent-type-imports` + `import/consistent-type-specifier-style: prefer-top-level` + `import/no-duplicates`）
+- ESLint：`eslint.config.mjs`，强制顶层 type import：`import type { Foo }` + `import { Bar } from 'pkg'`（`@typescript-eslint/consistent-type-imports` + `import/consistent-type-specifier-style: prefer-top-level` + `import/no-duplicates`）
+- 质量检查脚本说明见 `docs/lint.zh-CN.md`；提交前跑 `pnpm lint`（只检查、不格式化）
 - 单文件超过 ~800 行时考虑拆分
 - Debug 日志遵循 `.cursor/rules/debug-usage.md` 命名空间（如 `auth:*`、`db:*`）
 - 修改范围：只做任务相关的最小 diff，不重构无关代码
@@ -153,6 +154,7 @@ cd packages/file-loaders && pnpm exec vitest run --silent='passed-only' 'src/loa
 | 文档                                        | 用途                    |
 | ------------------------------------------- | ----------------------- |
 | `docs/quick-start.zh-CN.md`                 | 快速开始、Supabase 配置 |
+| `docs/lint.zh-CN.md`                        | Lint / typecheck 脚本   |
 | `docs/env-setup.zh-CN.md`                   | 环境变量详解            |
 | `docs/drizzle-setup.zh-CN.md`               | 数据库迁移              |
 | `docs/self-hosting/online-search.zh-CN.md`  | 联网搜索与爬虫配置      |

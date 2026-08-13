@@ -1,4 +1,5 @@
 import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 // import tsconfigPaths from 'vite-tsconfig-paths'
 import { coverageConfigDefaults, defineConfig } from 'vitest/config'
@@ -7,9 +8,11 @@ if (process.env.NODE_ENV === 'production') {
   Reflect.set(process.env, 'NODE_ENV', 'test')
 }
 
+const rootDir = dirname(fileURLToPath(import.meta.url))
+
 const alias = {
-  '@/envs': resolve(__dirname, './packages/env/src'),
-  '@': resolve(__dirname, './src'),
+  '@/envs': resolve(rootDir, './packages/env/src'),
+  '@': resolve(rootDir, './src'),
 }
 
 export default defineConfig({
@@ -67,6 +70,6 @@ export default defineConfig({
         inline: ['vitest-canvas-mock'],
       },
     },
-    setupFiles: join(__dirname, './tests/setup.ts'),
+    setupFiles: join(rootDir, './tests/setup.ts'),
   },
 })

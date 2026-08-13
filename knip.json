@@ -15,7 +15,7 @@
     "vite.config.ts",
     "drizzle.config.ts",
     "vitest.config.ts",
-    "eslint.config.js",
+    "eslint.config.mjs",
     "stylelint.config.mjs",
     "remark.config.mjs"
   ],

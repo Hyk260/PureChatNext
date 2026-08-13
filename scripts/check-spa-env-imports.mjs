@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * 静态检查：SPA/客户端源码不得 import 服务端 env / supabase。
- * 与 eslint.config.js 的 no-restricted-imports 互补；供 CI 单独跑，不受其它 lint 规则干扰。
+ * 与 eslint.config.mjs 的 no-restricted-imports 互补；供 CI 单独跑，不受其它 lint 规则干扰。
  *
  * 用法：`pnpm run lint:spa-env-imports`
  */

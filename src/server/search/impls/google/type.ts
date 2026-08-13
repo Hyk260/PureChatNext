@@ -38,16 +38,16 @@ interface GoogleItems {
   htmlTitle?: string
   kind?: string
   link: string
-  pagemap?: any
+  pagemap?: Record<string, unknown>
   snippet: string
   title: string
 }
 
 export interface GoogleResponse {
-  context?: any
+  context?: Record<string, unknown>
   items: GoogleItems[]
   kind?: string
-  queries?: any
-  searchInformation?: any
-  url?: any
+  queries?: Record<string, unknown>
+  searchInformation?: Record<string, unknown>
+  url?: Record<string, unknown>
 }

@@ -20,15 +20,15 @@ export interface SearXNGSearchResult {
 }
 
 export interface SearXNGSearchResponse {
-  answers: any[]
-  corrections: any[]
-  infoboxes: any[]
+  answers: string[]
+  corrections: string[]
+  infoboxes: Record<string, unknown>[]
   /** SearXNG 可能省略该字段 */
   number_of_results?: number
   query: string
   results: SearXNGSearchResult[]
   suggestions: string[]
-  unresponsive_engines: any[]
+  unresponsive_engines: Array<[string, string]>
 }
 
 export class SearXNGClient {
@@ -38,11 +38,11 @@ export class SearXNGClient {
     this.baseUrl = baseUrl
   }
 
-  async search(query: string, optionalParams: Record<string, any> = {}): Promise<SearXNGSearchResponse> {
+  async search(query: string, optionalParams: Record<string, unknown> = {}): Promise<SearXNGSearchResponse> {
     try {
       const { time_range, ...otherParams } = optionalParams
 
-      const processedParams = Object.entries(otherParams).reduce<Record<string, any>>((acc, [key, value]) => {
+      const processedParams = Object.entries(otherParams).reduce<Record<string, unknown>>((acc, [key, value]) => {
         acc[key] = Array.isArray(value) ? value.join(',') : value
         return acc
       }, {})

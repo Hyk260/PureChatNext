@@ -103,7 +103,6 @@ export function ProfileContent({ user }: ProfileContentProps) {
         <div className='mb-6 rounded-2xl border border-border bg-card p-6 shadow-xs'>
           <div className='flex items-center gap-5'>
             {user.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 alt={displayName}
                 className='h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border'

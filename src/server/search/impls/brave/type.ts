@@ -26,15 +26,15 @@ interface BraveResults {
   is_source_both?: boolean
   is_source_local?: boolean
   language?: string
-  meta_url?: any
+  meta_url?: Record<string, unknown>
   page_age?: string
-  profile?: any
+  profile?: Record<string, unknown>
   subtype?: string
-  thumbnail?: any
+  thumbnail?: Record<string, unknown>
   title: string
   type: string
   url: string
-  video?: any
+  video?: Record<string, unknown>
 }
 
 interface BraveVideos {
@@ -50,8 +50,8 @@ interface BraveWeb {
 }
 
 export interface BraveResponse {
-  mixed: any
-  query?: any
+  mixed: unknown
+  query?: Record<string, unknown>
   type: string
   videos?: BraveVideos
   web: BraveWeb

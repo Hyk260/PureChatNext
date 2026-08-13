@@ -41,8 +41,6 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
   const [unlinkingId, setUnlinkingId] = useState<string | null>(null)
 
   const loadAccounts = useCallback(async () => {
-    setLoading(true)
-
     try {
       const { data, error } = await listAccounts()
 
@@ -60,8 +58,28 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
   }, [message])
 
   useEffect(() => {
-    loadAccounts()
-  }, [loadAccounts])
+    let cancelled = false
+
+    void listAccounts()
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) {
+          message.error(error.message ?? '加载关联账户失败')
+          return
+        }
+        setAccounts((data ?? []) as LinkedAccount[])
+      })
+      .catch(() => {
+        if (!cancelled) message.error('加载关联账户失败')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [message])
 
   const oauthAccounts = useMemo(() => accounts.filter((account) => account.providerId !== 'credential'), [accounts])
 

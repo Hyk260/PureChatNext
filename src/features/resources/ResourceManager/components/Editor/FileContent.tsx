@@ -205,7 +205,6 @@ const ImagePreview = memo<ImagePreviewProps>(({ fileName, onError, url }) => {
     <Flexbox align='center' className={styles.centered} justify='center'>
       {!loaded && <Spin />}
       {/* The preview URL may be authenticated or remote and has no known dimensions. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         alt={fileName}
         className={styles.image}

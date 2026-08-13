@@ -26,7 +26,13 @@ export const useSignIn = () => {
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
   const [isSocialOnly, setIsSocialOnly] = useState(false)
-  const [lastAuthProvider, setLastAuthProvider] = useState<string | null>(null)
+  const [lastAuthProvider] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(LAST_AUTH_PROVIDER_KEY)
+    } catch {
+      return null
+    }
+  })
 
   const { enableEmailVerification, enableMagicLink, oAuthSSOProviders } = config
 
@@ -36,11 +42,6 @@ export const useSignIn = () => {
     const emailParam = searchParams.get('email')
     if (emailParam) form.setFieldValue('email', emailParam)
   }, [searchParams, form, serverConfigInit])
-
-  useEffect(() => {
-    const stored = localStorage.getItem(LAST_AUTH_PROVIDER_KEY)
-    if (stored) setLastAuthProvider(stored)
-  }, [])
 
   const handleSendMagicLink = async (targetEmail?: string) => {
     const resolvedEmail = (targetEmail ?? email).trim()

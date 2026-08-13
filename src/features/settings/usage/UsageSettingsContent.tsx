@@ -175,28 +175,45 @@ export function UsageSettingsContent() {
   const [sortBy, setSortBy] = useState('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const [reloadNonce, setReloadNonce] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), sortBy, sortOrder, type })
     if (modelQuery) params.set('model', modelQuery)
     if (range) {
       params.set('startDate', range[0].format('YYYY-MM-DD'))
       params.set('endDate', range[1].format('YYYY-MM-DD'))
     }
-    try {
-      const response = await fetch(`/api/user/usage?${params}`, { credentials: 'include' })
-      const json = (await response.json().catch(() => null)) as (UsageResponse & { error?: string }) | null
-      if (!response.ok || !json) throw new Error(json?.error || `HTTP ${response.status}`)
-      setData(json)
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '加载失败')
-    } finally {
-      setLoading(false)
-    }
-  }, [modelQuery, page, pageSize, range, sortBy, sortOrder, type])
 
-  useEffect(() => void load(), [load])
+    void fetch(`/api/user/usage?${params}`, { credentials: 'include' })
+      .then(async (response) => {
+        const json = (await response.json().catch(() => null)) as (UsageResponse & { error?: string }) | null
+        if (!response.ok || !json) throw new Error(json?.error || `HTTP ${response.status}`)
+        return json
+      })
+      .then((json) => {
+        if (cancelled) return
+        setData(json)
+        setError(null)
+      })
+      .catch((cause: unknown) => {
+        if (cancelled) return
+        setError(cause instanceof Error ? cause.message : '加载失败')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [modelQuery, page, pageSize, range, reloadNonce, sortBy, sortOrder, type])
+
+  const retry = () => {
+    setLoading(true)
+    setReloadNonce((nonce) => nonce + 1)
+  }
 
   const reset = () => {
     setModel('')
@@ -306,7 +323,7 @@ export function UsageSettingsContent() {
           </Block>
         ) : error && !data ? (
           <Block variant='outlined'>
-            <Empty action={<Button onClick={() => void load()}>重试</Button>} description={error} />
+            <Empty action={<Button onClick={retry}>重试</Button>} description={error} />
           </Block>
         ) : data ? (
           <Block padding={0} variant='outlined'>
@@ -379,7 +396,7 @@ export function UsageSettingsContent() {
           {error && data ? (
             <Flexbox horizontal align='center' className={styles.error} gap={12}>
               <Text type='danger'>{error}</Text>
-              <Button size='small' onClick={() => void load()}>
+              <Button size='small' onClick={retry}>
                 重试
               </Button>
             </Flexbox>

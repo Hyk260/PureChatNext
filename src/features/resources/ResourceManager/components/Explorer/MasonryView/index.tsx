@@ -94,7 +94,6 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
           <FileIcon fileType={item.fileType} size={16} />
         </Flexbox>
         {isImage && item.url ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             alt={item.name}
             src={item.url}

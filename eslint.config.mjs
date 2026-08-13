@@ -90,6 +90,8 @@ const eslintConfig = defineConfig([
   {
     files: spaClientFiles,
     rules: {
+      // Vite SPA 不走 Next Image 优化；聊天附件 / blob 预览用原生 <img>
+      '@next/next/no-img-element': 'off',
       'no-restricted-imports': [
         'error',
         {
@@ -151,7 +153,7 @@ const eslintConfig = defineConfig([
     },
   },
   // Override default ignores of eslint-config-next.
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'src/app/spa/spaHtmlTemplate.generated.ts']),
 ])
 
 export default eslintConfig

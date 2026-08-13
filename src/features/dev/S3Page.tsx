@@ -73,6 +73,8 @@ const isImageKey = (key: string): boolean => {
   return ext ? IMAGE_EXTENSIONS.has(ext) : false
 }
 
+const nowMs = () => performance.now()
+
 const actionOptions: Array<{
   description: string
   icon: typeof Upload
@@ -248,7 +250,7 @@ export default function S3TestPage() {
     setError(null)
     setPayload(null)
 
-    const startedAt = performance.now()
+    const startedAt = nowMs()
     const submittedAt = new Date().toLocaleString()
 
     try {
@@ -305,7 +307,7 @@ export default function S3TestPage() {
       const data = (await response.json()) as ApiResult
 
       setRunState({
-        durationMs: Math.round(performance.now() - startedAt),
+        durationMs: Math.round(nowMs() - startedAt),
         status: response.status,
         submittedAt,
       })
@@ -343,7 +345,7 @@ export default function S3TestPage() {
       }
     } catch (requestError) {
       setRunState({
-        durationMs: Math.round(performance.now() - startedAt),
+        durationMs: Math.round(nowMs() - startedAt),
         status: 0,
         submittedAt,
       })
@@ -501,7 +503,6 @@ export default function S3TestPage() {
               </button>
             </div>
             <div className='overflow-auto p-4'>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={imagePreview.url} alt={imagePreview.key} className='max-h-[75vh] max-w-full object-contain' />
             </div>
           </div>

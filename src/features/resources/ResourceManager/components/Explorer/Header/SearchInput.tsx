@@ -2,6 +2,7 @@
 
 import { ActionIcon } from '@pure/ui'
 import { Input } from 'antd'
+import type { InputRef } from 'antd'
 import { SearchIcon, XIcon } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
@@ -13,7 +14,7 @@ const SearchInput = memo(() => {
   const [showIcon, setShowIcon] = useState(true)
   const [localQuery, setLocalQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
-  const inputRef = useRef<any>(null)
+  const inputRef = useRef<InputRef>(null)
   const setSearchQuery = useResourceManagerStore((s) => s.setSearchQuery)
 
   useEffect(() => {

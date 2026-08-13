@@ -20,5 +20,5 @@ interface KagiData {
 
 export interface KagiResponse {
   data: KagiData[]
-  meta?: any
+  meta?: Record<string, unknown>
 }

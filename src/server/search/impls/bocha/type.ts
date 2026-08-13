@@ -33,9 +33,9 @@ interface BochaWebPages {
 }
 
 interface BochaData {
-  images?: any
+  images?: unknown
   queryContext?: BochaQueryContext
-  videos?: any
+  videos?: unknown
   webPages: BochaWebPages
 }
 

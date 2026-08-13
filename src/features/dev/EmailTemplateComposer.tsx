@@ -52,10 +52,12 @@ export function EmailTemplateComposer({ onRendered, onRenderError, onRenderState
   const onRenderStateChangeRef = useRef(onRenderStateChange)
   const onTemplateChangeRef = useRef(onTemplateChange)
 
-  onRenderedRef.current = onRendered
-  onRenderErrorRef.current = onRenderError
-  onRenderStateChangeRef.current = onRenderStateChange
-  onTemplateChangeRef.current = onTemplateChange
+  useEffect(() => {
+    onRenderedRef.current = onRendered
+    onRenderErrorRef.current = onRenderError
+    onRenderStateChangeRef.current = onRenderStateChange
+    onTemplateChangeRef.current = onTemplateChange
+  })
 
   const activeEntry = useMemo(
     () => EMAIL_TEMPLATE_CATALOG.find((entry) => entry.key === activeTemplate),

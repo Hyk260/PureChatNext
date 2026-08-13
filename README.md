@@ -197,8 +197,6 @@ pnpm db:studio      # 打开 Drizzle Studio
 | Install Command | `pnpm install`                                    |
 | Build Command   | `pnpm build`（`build:spa` → copy → `next build`） |
 
-环境变量与改造前相同，无需为 SPA 单独加一套。
-
 部署前请确保：
 
 1. 在平台环境变量中配置 `DATABASE_URL`、`OPENAI_API_KEY` 等必填项

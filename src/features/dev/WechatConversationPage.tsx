@@ -1110,7 +1110,6 @@ export default function WechatConversationPage() {
                       target='_blank'
                     >
                       {/* Auth-gated same-origin proxy; next/image is a poor fit here. */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         alt='微信图片'
                         className='max-h-80 max-w-full rounded-xl object-contain'
@@ -1190,7 +1189,6 @@ export default function WechatConversationPage() {
                                 target='_blank'
                               >
                                 {/* Auth-gated same-origin proxy; next/image is a poor fit here. */}
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   alt={attachment.fileName}
                                   className='max-h-80 max-w-full rounded-xl object-contain'
@@ -1236,7 +1234,6 @@ export default function WechatConversationPage() {
                     className='relative flex items-center gap-2 rounded-xl bg-slate-50 px-2 py-1.5 ring-1 ring-slate-200'
                   >
                     {item.previewUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img alt={item.file.name} className='size-10 rounded-lg object-cover' src={item.previewUrl} />
                     ) : (
                       <div className='flex size-10 items-center justify-center rounded-lg bg-white ring-1 ring-slate-200'>

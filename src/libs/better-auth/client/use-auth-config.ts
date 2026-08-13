@@ -49,12 +49,7 @@ export const useAuthConfig = () => {
   useEffect(() => {
     let cancelled = false
 
-    if (cachedConfig) {
-      setConfig(cachedConfig)
-      return
-    }
-
-    loadAuthServerConfig().then((data) => {
+    void loadAuthServerConfig().then((data) => {
       if (!cancelled) setConfig(data)
     })
 

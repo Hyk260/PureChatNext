@@ -16,6 +16,16 @@ const maxVendorChunkSize = 700 * 1024
 function sharedManualChunks(id: string): string | undefined {
   if (!id.includes('node_modules')) return
 
+  // beautiful-mermaid statically imports ELK's 1.6 MB bundled layout engine.
+  // ELK is a single generated module, so maxSize cannot split it any further;
+  // isolate it from the surrounding Markdown/Mermaid dependencies instead.
+  if (isNodePackage(id, 'elkjs')) return 'vendor-diagram-engine'
+  if (isNodePackage(id, 'beautiful-mermaid')) return 'vendor-diagram-renderer'
+
+  // @primer/octicons ships its complete icon catalog as one large JSON module.
+  // Keep that route-specific data out of the generic shared vendor chunks.
+  if (isNodePackage(id, '@primer/octicons')) return 'vendor-octicons'
+
   // antd：从 eager 主入口拆出，独立可缓存 vendor chunk。
   // antd 本就被 ThemeProviders eager 引用，拆出后主入口骨架降至 ~65kB，
   // 且 antd 版本稳定时跨部署可复用缓存。

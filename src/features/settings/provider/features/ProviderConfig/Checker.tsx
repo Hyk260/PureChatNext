@@ -1,7 +1,8 @@
 'use client'
 
 import { CheckCircleFilled } from '@ant-design/icons'
-import { Alert, Button, Flexbox, Highlighter, ModelIcon, Select } from '@pure/ui'
+import { Alert, Button, Flexbox, ModelIcon, Select } from '@pure/ui'
+import { Highlighter } from '@pure/ui/Markdown'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useEffect, useMemo, useState } from 'react'
 

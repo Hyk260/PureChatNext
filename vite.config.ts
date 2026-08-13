@@ -100,7 +100,9 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       emptyOutDir: true,
       reportCompressedSize: false,
-      chunkSizeWarningLimit: 1000,
+      // elkjs/lib/elk.bundled.js is a single generated module (~1.4MB minified) and
+      // cannot be split further; it is lazy-loaded only when a mermaid fence renders.
+      chunkSizeWarningLimit: 1500,
       rolldownOptions: {
         ...(enableViteDevTools && { devtools: {} }),
         input: path.resolve(rootDir, 'index.html'),

@@ -1,6 +1,7 @@
 'use client'
 
-import { Center, FileTypeIcon, Icon, Text, Flexbox } from '@pure/ui'
+import { Center, Icon, Text, Flexbox } from '@pure/ui'
+import { FileTypeIcon } from '@pure/ui/Markdown'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowUpIcon } from 'lucide-react'
 import { memo, useRef } from 'react'

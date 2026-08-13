@@ -26,7 +26,6 @@ export {
 } from './DropdownMenu'
 export { Empty, type EmptyProps } from './Empty'
 export { Popover, type PopoverPlacement, type PopoverProps, type PopoverTrigger } from './Popover'
-export { FileTypeIcon, Highlighter, Markdown, type MarkdownProps } from './Markdown'
 export { Input, InputPassword, type InputPasswordProps, type InputProps } from './Input'
 export { Modal, type ModalProps } from './Modal'
 export { Menu } from './Menu'

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 
 import type { CrawlUniformResult, UniformSearchResponse } from '@pure/types'
-import { Highlighter } from '@pure/ui'
+import { Highlighter } from '@pure/ui/Markdown'
 
 import Scrollbar from '@/components/Scrollbar'
 

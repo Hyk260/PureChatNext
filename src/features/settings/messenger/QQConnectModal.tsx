@@ -10,7 +10,7 @@ import { modal } from '@/components/AntdStaticMethods'
 
 import { PlatformAvatar } from './PlatformAvatar'
 import { bindQQ, cancelQQQrLogin, completeQQQrLogin, isQQQrSessionMissingError, pollQQQrLogin, startQQQrLogin } from './qqApi'
-import type { QQConnectionMode, QQQrStatus } from './qqApi'
+import type { QQConnectionMode, QQProviderId, QQQrStatus } from './qqApi'
 
 const QR_SIZE = 240
 const POLL_MS = 1_500
@@ -41,10 +41,12 @@ interface QQConnectContentProps {
   agentId: string
   close: () => void
   gatewaySupported: boolean
+  model: string
   onConnected: () => Promise<void> | void
+  provider: QQProviderId
 }
 
-const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewaySupported, onConnected }) => {
+const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewaySupported, model, onConnected, provider }) => {
   const [mode, setMode] = useState<ConnectMode>(gatewaySupported ? 'qr' : 'webhook')
   const [appId, setAppId] = useState('')
   const [appSecret, setAppSecret] = useState('')
@@ -118,7 +120,7 @@ const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewayS
     setError(undefined)
     setQrStatus(undefined)
     try {
-      const result = await startQQQrLogin(agentId)
+      const result = await startQQQrLogin({ agentId, model, provider })
       sessionRef.current = result.sessionId
       setSessionId(result.sessionId)
       const { sessionId: _sessionId, ...status } = result
@@ -129,7 +131,7 @@ const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewayS
     } finally {
       setLoading(false)
     }
-  }, [agentId, cancelSession, poll])
+  }, [agentId, cancelSession, model, poll, provider])
 
   useEffect(() => {
     if (mode === 'qr' && gatewaySupported) void startQr()
@@ -145,7 +147,14 @@ const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewayS
     setLoading(true)
     setError(undefined)
     try {
-      await bindQQ({ agentId, appId: appId.trim(), appSecret: appSecret.trim(), connectionMode: mode as QQConnectionMode })
+      await bindQQ({
+        agentId,
+        appId: appId.trim(),
+        appSecret: appSecret.trim(),
+        connectionMode: mode as QQConnectionMode,
+        model,
+        provider,
+      })
       await finish()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'QQ 绑定失败')

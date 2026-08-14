@@ -9,13 +9,24 @@ import HomeContent from '@/features/home/HomeContent'
 
 const HomePage = memo(() => {
   return (
-    <Flexbox style={{ height: '100%', width: '100%' }}>
+    <Flexbox flex={1} style={{ height: '100%', minHeight: 0, width: '100%' }}>
       <NavHeader />
-      <Flexbox flex={1} style={{ height: '100%', overflowY: 'auto', paddingBlock: '0 16vh', width: '100%' }}>
-        <WideScreenContainer style={{ paddingBlock: 24 }}>
+      <Flexbox
+        flex={1}
+        style={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 0,
+          overflowY: 'auto',
+          paddingBlock: 24,
+          width: '100%',
+        }}
+      >
+        <WideScreenContainer>
           <HomeContent />
         </WideScreenContainer>
       </Flexbox>
+      <div className='h-11'></div>
     </Flexbox>
   )
 })

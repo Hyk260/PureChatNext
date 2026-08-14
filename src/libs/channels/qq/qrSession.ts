@@ -24,6 +24,8 @@ type QQQrSession = {
   credentials?: QrConnectCredentials[]
   expiresAt: number
   id: string
+  model?: string
+  provider?: string
   publicStatus: QQQrPublicStatus
   stop?: () => void
   ttlTimer?: ReturnType<typeof setTimeout>
@@ -59,16 +61,26 @@ function getOwnedSession(userId: string, sessionId: string): QQQrSession | undef
   return session?.userId === userId ? session : undefined
 }
 
+function bindParamsFromSession(
+  session: QQQrSession,
+  credential: QrConnectCredentials,
+  userId = session.userId
+) {
+  return {
+    agentId: session.agentId,
+    appId: credential.appId,
+    appSecret: credential.appSecret,
+    connectionMode: 'websocket' as const,
+    userId,
+    ...(session.model ? { model: session.model } : {}),
+    ...(session.provider ? { provider: session.provider } : {}),
+  }
+}
+
 async function completeSingleCredential(session: QQQrSession, credential: QrConnectCredentials) {
   session.publicStatus = { status: 'binding' }
   try {
-    const binding = await bindQQCredentials({
-      agentId: session.agentId,
-      appId: credential.appId,
-      appSecret: credential.appSecret,
-      connectionMode: 'websocket',
-      userId: session.userId,
-    })
+    const binding = await bindQQCredentials(bindParamsFromSession(session, credential))
     session.credentials = undefined
     session.publicStatus = { applicationId: binding.applicationId, status: 'connected' }
   } catch (error) {
@@ -78,7 +90,11 @@ async function completeSingleCredential(session: QQQrSession, credential: QrConn
   }
 }
 
-export async function startQQQrSession(userId: string, agentId: string) {
+export async function startQQQrSession(
+  userId: string,
+  agentId: string,
+  config?: { model?: string; provider?: string }
+) {
   cleanupExpiredSessions()
   for (const session of getStore().values()) {
     if (session.userId === userId) disposeSession(session)
@@ -89,6 +105,8 @@ export async function startQQQrSession(userId: string, agentId: string) {
     createdAt: Date.now(),
     expiresAt: Date.now() + SESSION_TTL_MS,
     id: randomUUID(),
+    model: config?.model,
+    provider: config?.provider,
     publicStatus: { qrCodeUrl: '', qrVersion: 0, status: 'waiting' },
     userId,
   }
@@ -162,13 +180,7 @@ export async function completeQQQrSession(userId: string, sessionId: string, app
 
   session.publicStatus = { status: 'binding' }
   try {
-    const binding = await bindQQCredentials({
-      agentId: session.agentId,
-      appId: credential.appId,
-      appSecret: credential.appSecret,
-      connectionMode: 'websocket',
-      userId,
-    })
+    const binding = await bindQQCredentials(bindParamsFromSession(session, credential, userId))
     session.credentials = undefined
     session.publicStatus = { applicationId: binding.applicationId, status: 'connected' }
     return binding

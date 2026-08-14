@@ -3,8 +3,7 @@
 import { Alert, Select, Spin } from 'antd'
 import { Button, confirmModal, Text, Flexbox } from '@pure/ui'
 import { formatDateTime } from '@pure/utils/client'
-import { getProviderChatModels, PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
-import type { ModelProviderId } from '@pure/model-bank'
+import { PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
 import { useApp } from '@/components/AntdStaticMethods'
 import { isDev } from '@/libs/constants'
 import { MessagesSquareIcon, Trash2Icon } from 'lucide-react'
@@ -16,6 +15,7 @@ import { fetchAgents } from '@/features/home/agentApi'
 import { getMessengerPlatform } from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
+import { MessengerModelSwitch } from './MessengerModelSwitch'
 import QrCodeAuth from './QrCodeAuth'
 import type { WechatAuthCredentials } from './QrCodeAuth'
 import { bindWechat, fetchWechatStatus, retryFailedWechatEvents, unbindWechat, updateWechatConfiguration } from './wechatApi'
@@ -27,13 +27,12 @@ const DEFAULT_MODELS: Record<WechatProviderId, string> = {
   openai: 'gpt-5.4-mini',
   purechat: PURECHAT_DEFAULT_MODEL,
 }
-const PROVIDERS: Array<{ label: string; value: WechatProviderId }> = [
-  { label: 'PureChat', value: 'purechat' },
-  { label: 'OpenAI', value: 'openai' },
-  { label: 'DeepSeek', value: 'deepseek' },
-]
+const WECHAT_PROVIDERS: WechatProviderId[] = ['purechat', 'openai', 'deepseek']
 
 const formatActiveAt = (value: string) => formatDateTime(value, { hour12: false, second: '2-digit' })
+
+const isWechatProviderId = (id: string): id is WechatProviderId =>
+  WECHAT_PROVIDERS.includes(id as WechatProviderId)
 
 const DISCONNECTED_STATUS: WechatStatus = {
   bound: false,
@@ -168,19 +167,16 @@ const MessengerWeChatPage = memo(() => {
     void saveConfiguration({ ...previous, agentId: value }, previous)
   }, [agentId, modelId, provider, saveConfiguration])
 
-  const handleProviderChange = useCallback((value: WechatProviderId) => {
-    const previous = { agentId, model: modelId, provider }
-    const next = { agentId, model: DEFAULT_MODELS[value], provider: value }
-    setProvider(value)
-    setModelId(next.model)
-    void saveConfiguration(next, previous)
-  }, [agentId, modelId, provider, saveConfiguration])
-
-  const handleModelChange = useCallback((value: string) => {
-    const previous = { agentId, model: modelId, provider }
-    setModelId(value)
-    void saveConfiguration({ ...previous, model: value }, previous)
-  }, [agentId, modelId, provider, saveConfiguration])
+  const handleModelSelect = useCallback(
+    (nextProvider: string, nextModel: string) => {
+      if (!isWechatProviderId(nextProvider)) return
+      const previous = { agentId, model: modelId, provider }
+      setProvider(nextProvider)
+      setModelId(nextModel)
+      void saveConfiguration({ agentId, model: nextModel, provider: nextProvider }, previous)
+    },
+    [agentId, modelId, provider, saveConfiguration]
+  )
 
   const handleDisconnect = useCallback(() => {
     confirmModal({
@@ -218,17 +214,9 @@ const MessengerWeChatPage = memo(() => {
   const needsRebind = Boolean(status?.needsRebind) || (bound && status?.enabled === false)
   const showConnect = !bound || needsRebind
   const controlsDisabled = binding || saving
-  const modelOptions = getProviderChatModels(provider as ModelProviderId)
-    .filter((model) => model.enabled !== false)
-    .map((model) => ({ label: model.displayName, value: model.id }))
-  const providerOptions = PROVIDERS.map((item) => {
-    const availability = status?.providerAvailability?.[item.value]
-    return {
-      ...item,
-      disabled: availability?.available === false,
-      label: availability?.available === false ? `${item.label}（${availability.reason || '服务端不可用'}）` : item.label,
-    }
-  })
+  const allowedProviders = WECHAT_PROVIDERS.filter(
+    (id) => status?.providerAvailability?.[id]?.available !== false
+  )
 
   // Gateway 不可用（Vercel / 未开启内置进程）时不展示连接配置与操作按钮。
   const headerAction = gatewaySupported ? (
@@ -276,15 +264,13 @@ const MessengerWeChatPage = memo(() => {
             />
           </Flexbox>
 
-          <Flexbox gap={8}>
-            <Text type='secondary' style={{ fontSize: 13 }}>服务商</Text>
-            <Select disabled={controlsDisabled} options={providerOptions} style={{ maxWidth: 360 }} value={provider} onChange={handleProviderChange} />
-          </Flexbox>
-
-          <Flexbox gap={8}>
-            <Text type='secondary' style={{ fontSize: 13 }}>模型</Text>
-            <Select disabled={controlsDisabled} options={modelOptions} style={{ maxWidth: 360 }} value={modelId} onChange={handleModelChange} />
-          </Flexbox>
+          <MessengerModelSwitch
+            allowedProviders={allowedProviders}
+            disabled={controlsDisabled}
+            modelId={modelId}
+            provider={provider}
+            onSelect={handleModelSelect}
+          />
 
           {needsRebind && (
             <Alert showIcon type='warning' title='微信会话已过期或需要重新连接' description='请再次扫码绑定。' />

@@ -3,6 +3,7 @@
 import { Alert, Select, Spin } from 'antd'
 import { Button, confirmModal, Text, copyToClipboard, Flexbox } from '@pure/ui'
 import { formatDateTime } from '@pure/utils/client'
+import { PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Trash2Icon } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
@@ -12,11 +13,21 @@ import { fetchAgents } from '@/features/home/agentApi'
 import { getMessengerPlatform } from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
+import { MessengerModelSwitch } from './MessengerModelSwitch'
 import { QQConnectButton } from './QQConnectModal'
-import { fetchQQStatus, unbindQQ, updateQQAgent } from './qqApi'
-import type { QQStatus } from './qqApi'
+import { fetchQQStatus, unbindQQ, updateQQConfiguration } from './qqApi'
+import type { QQProviderId, QQStatus } from './qqApi'
 
 const formatActiveAt = (value: string) => formatDateTime(value, { hour12: false, second: '2-digit' })
+
+const QQ_PROVIDERS: QQProviderId[] = ['purechat', 'openai', 'deepseek']
+const DEFAULT_MODELS: Record<QQProviderId, string> = {
+  deepseek: 'deepseek-v4-flash',
+  openai: 'gpt-5.4-mini',
+  purechat: PURECHAT_DEFAULT_MODEL,
+}
+
+const isQQProviderId = (id: string): id is QQProviderId => QQ_PROVIDERS.includes(id as QQProviderId)
 
 const DISCONNECTED_STATUS: QQStatus = {
   connected: false,
@@ -28,55 +39,88 @@ const MessengerQQPage = memo(() => {
   const platformMeta = getMessengerPlatform('qq')!
   const [loading, setLoading] = useState(true)
   const [binding, setBinding] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [status, setStatus] = useState<QQStatus | null>(null)
   const [agents, setAgents] = useState<Array<{ label: string; value: string }>>([])
   const [agentId, setAgentId] = useState('agt_inbox')
+  const [provider, setProvider] = useState<QQProviderId>('deepseek')
+  const [modelId, setModelId] = useState(DEFAULT_MODELS.deepseek)
 
-  const refreshStatus = useCallback(async () => {
-    const st = await fetchQQStatus()
+  const applyStatus = useCallback((st: QQStatus) => {
     setStatus(st)
     if (st.agentId) setAgentId(st.agentId)
+    if (st.provider && isQQProviderId(st.provider)) setProvider(st.provider)
+    if (st.model) setModelId(st.model)
     return st
   }, [])
+
+  const refreshStatus = useCallback(async () => {
+    return applyStatus(await fetchQQStatus())
+  }, [applyStatus])
 
   const reload = useCallback(async () => {
     setLoading(true)
     try {
       const [st, agentList] = await Promise.all([fetchQQStatus(), fetchAgents()])
-      setStatus(st)
+      applyStatus(st)
       setAgents(agentList.map((a) => ({ label: a.title, value: a.id })))
-      if (st.agentId) setAgentId(st.agentId)
-      else if (agentList[0]) setAgentId(agentList[0].id)
+      if (!st.agentId && agentList[0]) setAgentId(agentList[0].id)
     } catch (error) {
       message.error(error instanceof Error ? error.message : '加载失败')
     } finally {
       setLoading(false)
     }
-  }, [message])
+  }, [applyStatus, message])
 
   useEffect(() => {
     void reload()
   }, [reload])
 
-  const handleAgentChange = useCallback(
-    async (value: string) => {
-      setAgentId(value)
+  const saveConfiguration = useCallback(
+    async (next: { agentId: string; model: string; provider: QQProviderId }, previous: { agentId: string; model: string; provider: QQProviderId }) => {
       if (!status?.applicationId || status.enabled === false) return
+      setSaving(true)
       try {
-        await updateQQAgent(value)
-        message.success('已更新绑定助手')
+        await updateQQConfiguration(next)
+        message.success('已更新 QQ 渠道配置')
         await refreshStatus()
       } catch (error) {
+        setAgentId(previous.agentId)
+        setProvider(previous.provider)
+        setModelId(previous.model)
         message.error(error instanceof Error ? error.message : '更新失败')
+      } finally {
+        setSaving(false)
       }
     },
     [message, refreshStatus, status]
+  )
+
+  const handleAgentChange = useCallback(
+    (value: string) => {
+      const previous = { agentId, model: modelId, provider }
+      setAgentId(value)
+      void saveConfiguration({ ...previous, agentId: value }, previous)
+    },
+    [agentId, modelId, provider, saveConfiguration]
+  )
+
+  const handleModelSelect = useCallback(
+    (nextProvider: string, nextModel: string) => {
+      if (!isQQProviderId(nextProvider)) return
+      const previous = { agentId, model: modelId, provider }
+      setProvider(nextProvider)
+      setModelId(nextModel)
+      void saveConfiguration({ agentId, model: nextModel, provider: nextProvider }, previous)
+    },
+    [agentId, modelId, provider, saveConfiguration]
   )
 
   const handleDisconnect = useCallback(() => {
     confirmModal({
       content: '断开后需重新填写 App ID / Secret 才能在 QQ 中对话。',
       okText: '断开',
+      cancelText: '取消',
       okButtonProps: { danger: true },
       onOk: async () => {
         await unbindQQ()
@@ -105,11 +149,14 @@ const MessengerQQPage = memo(() => {
   const connected = Boolean(status?.connected)
   const gatewaySupported = status?.gatewaySupported !== false
   const showConnect = !status?.applicationId
+  const controlsDisabled = binding || saving
 
   const headerAction = showConnect ? (
     <QQConnectButton
       agentId={agentId}
       gatewaySupported={gatewaySupported}
+      model={modelId}
+      provider={provider}
       onConnected={async () => {
         setBinding(true)
         try {
@@ -138,12 +185,20 @@ const MessengerQQPage = memo(() => {
             绑定助手
           </Text>
           <Select
+            disabled={controlsDisabled}
             options={agents}
             style={{ maxWidth: 360 }}
             value={agentId}
             onChange={(v) => void handleAgentChange(v)}
           />
         </Flexbox>
+
+        <MessengerModelSwitch
+          disabled={controlsDisabled}
+          modelId={modelId}
+          provider={provider}
+          onSelect={handleModelSelect}
+        />
 
         {showConnect ? (
           <Alert

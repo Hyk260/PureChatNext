@@ -12,7 +12,7 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
     return jsonError('当前部署不支持 QQ 扫码连接，请使用 URL 回调', 409)
   }
 
-  let body: { action?: string; agentId?: string; appId?: string; sessionId?: string }
+  let body: { action?: string; agentId?: string; appId?: string; model?: string; provider?: string; sessionId?: string }
   try {
     body = await request.json()
   } catch {
@@ -39,6 +39,11 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
   if (!(await new AgentModel(userId).findVisibleById(agentId))) return jsonError('Agent not found', 404)
 
   try {
+    const model = body.model?.trim()
+    const provider = body.provider?.trim()
+    if (model || provider) {
+      return NextResponse.json(await startQQQrSession(userId, agentId, { model, provider }))
+    }
     return NextResponse.json(await startQQQrSession(userId, agentId))
   } catch {
     return jsonError('获取 QQ 二维码失败，请稍后重试', 502)

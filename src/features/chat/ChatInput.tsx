@@ -17,6 +17,10 @@ import { Check, ChevronRight, FileText, Globe, GlobeOff, LibraryBig, Plus, Setti
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
+import {
+  CHAT_ATTACHMENT_ACCEPT,
+  validateChatAttachments,
+} from '@/features/chat/attachmentRules'
 import ModelSelector from '@/features/chat/ModelSelector'
 import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
 import { SendButton } from '@/features/chat/SendArea'
@@ -198,6 +202,12 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, on
       event.target.value = ''
       if (selected.length === 0) return
 
+      const validationError = validateChatAttachments(selected, files.length)
+      if (validationError) {
+        message.error(validationError)
+        return
+      }
+
       const imageFiles = selected.filter((file) => file.type.startsWith('image/'))
       if (imageFiles.length > 0 && !currentModel.abilities?.vision) {
         message.error('当前模型不支持图片理解')
@@ -206,7 +216,7 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, on
 
       setFiles((previous) => [...previous, ...selected])
     },
-    [currentModel.abilities?.vision, message]
+    [currentModel.abilities?.vision, files.length, message]
   )
 
   const handleStop = useCallback(() => {
@@ -255,7 +265,7 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, on
     <Block className={styles.shell} padding={12} variant='outlined'>
       <input
         ref={fileInputRef}
-        accept='image/*,.txt,.md,.csv,.pdf,.doc,.docx,.xls,.xlsx,.pptx'
+        accept={CHAT_ATTACHMENT_ACCEPT}
         className={styles.srOnly}
         disabled={isBusy}
         multiple
@@ -323,7 +333,7 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, on
           </DropdownMenuRoot>
         </Flexbox>
 
-        <SendButton disabled={!canSend} generating={isBusy} onClick={handleSend} onStop={handleStop} />
+        <SendButton generating={isBusy} onClick={handleSend} onStop={handleStop} />
       </Flexbox>
     </Block>
   )

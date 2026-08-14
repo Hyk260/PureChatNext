@@ -22,10 +22,11 @@ vi.hoisted(() => {
 
 import { AgentModel } from '@pure/database/models/agent'
 import type { AgentDeleteError } from '@pure/database/models/agent'
+import { ChatMessageModel } from '@pure/database/models/chatMessage'
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import * as schema from '@pure/database/schemas'
 import { agents, PURE_AI_AGENT_ID } from '@pure/database/schemas/agent'
-import { chatTopics } from '@pure/database/schemas/chat'
+import { chatMessages, chatTopics } from '@pure/database/schemas/chat'
 import { users } from '@pure/database/schemas/user'
 import type { ChatDatabase } from '@pure/database/type'
 
@@ -106,15 +107,28 @@ describeIfDb('AgentModel', () => {
     } satisfies Partial<AgentDeleteError>)
   })
 
-  it('rejects deleting agent that has topics', async () => {
+  it('deletes user agent together with its topics and messages', async () => {
     const agent = await new AgentModel(userAId, db).create({ title: '有话题的助理' })
     createdAgentIds.push(agent.id)
 
-    await new ChatTopicModel(userAId, db).create({ agentId: agent.id, title: '话题' })
+    const topic = await new ChatTopicModel(userAId, db).create({ agentId: agent.id, title: '话题' })
+    await new ChatMessageModel(userAId, db).replaceAll(topic.id, [
+      { id: `${TEST_PREFIX}-msg-1`, parts: [{ type: 'text', text: 'hello' }], role: 'user' },
+    ])
 
-    await expect(new AgentModel(userAId, db).delete(agent.id)).rejects.toMatchObject({
-      code: 'has_topics',
+    await new AgentModel(userAId, db).delete(agent.id)
+    createdAgentIds = createdAgentIds.filter((id) => id !== agent.id)
+
+    const foundAgent = await db.query.agents.findFirst({ where: eq(agents.id, agent.id) })
+    expect(foundAgent).toBeUndefined()
+
+    const foundTopic = await db.query.chatTopics.findFirst({ where: eq(chatTopics.id, topic.id) })
+    expect(foundTopic).toBeUndefined()
+
+    const foundMessages = await db.query.chatMessages.findMany({
+      where: eq(chatMessages.topicId, topic.id),
     })
+    expect(foundMessages).toEqual([])
   })
 
   it('deletes user agent without topics', async () => {

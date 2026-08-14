@@ -4,7 +4,7 @@ import { ModelProvider } from '../const/modelProvider'
 export const purechatProviderCard: ModelProviderCard = {
   id: ModelProvider.PureChat,
   name: 'PureChat',
-  description: 'PureChat 官方接入模型，用量以 Credits 计量；无需配置 API Key。',
+  description: 'PureChat 通过官方 API 接入 AI 模型，并按模型令牌用量消耗积分。',
   enabled: true,
   showConfig: false,
   settings: {

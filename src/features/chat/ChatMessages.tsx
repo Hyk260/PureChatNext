@@ -40,9 +40,12 @@ const styles = createStaticStyles(({ css }) => ({
   actions: css`
     display: flex;
     margin-block-start: 4px;
-    opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.15s ease;
+  `,
+  actionsVisible: css`
+    visibility: visible;
+    pointer-events: auto;
   `,
   actionsAssistant: css`
     justify-content: flex-start;
@@ -117,12 +120,6 @@ const styles = createStaticStyles(({ css }) => ({
     flex-direction: column;
     width: 100%;
     margin-block-end: 8px;
-
-    &:hover .chat-msg-actions,
-    &:focus-within .chat-msg-actions {
-      opacity: 1;
-      pointer-events: auto;
-    }
   `,
   thinkingBody: css`
     color: ${cssVar.colorTextDescription};
@@ -356,7 +353,12 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
 
         {!disabled ? (
           <div
-            className={cx(styles.actions, isUser ? styles.actionsUser : styles.actionsAssistant, 'chat-msg-actions')}
+            aria-hidden={isStreaming || undefined}
+            className={cx(
+              styles.actions,
+              isUser ? styles.actionsUser : styles.actionsAssistant,
+              !isStreaming && styles.actionsVisible
+            )}
             data-message-actions
           >
             <Flexbox horizontal align='center' gap={2}>

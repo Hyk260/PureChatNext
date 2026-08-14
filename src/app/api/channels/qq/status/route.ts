@@ -55,6 +55,8 @@ export const GET = withAuth(async (_request, { userId }) => {
       ? { code: binding.lastErrorCode, message: binding.lastErrorMessage || 'QQ Gateway 暂时异常' }
       : null,
     lastHeartbeatAt: binding.lastHeartbeatAt?.toISOString() ?? null,
+    model: binding.model,
+    provider: binding.provider,
     runtimeStatus,
     webhookUrl,
   })

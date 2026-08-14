@@ -12,6 +12,7 @@ const styles = createStaticStyles(({ css }) => ({
   container: css`
     flex-grow: 1;
     align-self: center;
+    container-type: inline-size;
   `,
 }))
 
@@ -21,7 +22,7 @@ interface WideScreenContainerProps extends FlexboxProps {
 
 const WideScreenContainer = memo<WideScreenContainerProps>(({ children, style, ...rest }) => {
   return (
-    <Flexbox style={{ width: '100%' }}>
+    <Flexbox flex='none' style={{ height: 'auto', width: '100%' }}>
       <Flexbox
         className={styles.container}
         {...rest}

@@ -75,6 +75,5 @@ export const updateAgent = async (id: string, body: AgentUpdateBody): Promise<Ag
 export const deleteAgent = async (id: string): Promise<void> => {
   const res = await apiFetch(`/api/agents/${encodeURIComponent(id)}`, { method: 'DELETE' })
   if (res.status === 403) throw new Error('BUILTIN')
-  if (res.status === 409) throw new Error('HAS_TOPICS')
   if (!res.ok) throw new Error(`deleteAgent failed: ${res.status}`)
 }

@@ -209,6 +209,28 @@ describe('ChatMessages message layout', () => {
     expect(getByText('已深度思考（用时 2.3 秒）')).toBeTruthy()
   })
 
+  it('keeps action placeholders while streaming and reveals them when finished', () => {
+    const streamingMessage: UIMessage = {
+      id: 'assistant-stream',
+      parts: [{ state: 'streaming', text: '答', type: 'text' }],
+      role: 'assistant',
+    }
+    const { container, rerender } = render(
+      <ChatMessages isStreaming messages={[streamingMessage]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />
+    )
+
+    const streamingActions = container.querySelector('[data-message-actions]')
+    expect(streamingActions).toBeTruthy()
+    expect(streamingActions?.getAttribute('aria-hidden')).toBe('true')
+
+    rerender(
+      <ChatMessages messages={[streamingMessage]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />
+    )
+
+    const finishedActions = container.querySelector('[data-message-actions]')
+    expect(finishedActions?.getAttribute('aria-hidden')).toBeNull()
+  })
+
   it('uses PulseDots while waiting for the first response content', () => {
     const message: UIMessage = { id: 'assistant-loading', parts: [], role: 'assistant' }
     const { getByTestId } = render(

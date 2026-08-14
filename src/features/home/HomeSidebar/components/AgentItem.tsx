@@ -103,7 +103,6 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
       if (code === 'BUILTIN') message.error('系统内置助理不可删除')
-      else if (code === 'HAS_TOPICS') message.error('该助理下还有话题，请先删除话题')
       else message.error('删除失败')
       throw error
     }
@@ -139,7 +138,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
           stopMenuEvent(info)
           confirmModal({
             cancelText: '取消',
-            content: '删除后不可恢复。若仍有话题将无法删除。',
+            content: '删除后不可恢复，该助理下的话题也会一并删除。',
             okButtonProps: { danger: true },
             okText: '删除',
             onOk: () => handleConfirmDelete(),

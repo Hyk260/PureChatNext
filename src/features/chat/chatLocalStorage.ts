@@ -5,6 +5,8 @@ export const PENDING_TOPIC_SEND_KEY = 'purechat:chat:v2:pending-topic-send'
 let pendingChatTextMemory: string | null = null
 /** Ensures the pending text is only claimed once per setPendingChatText call. */
 let pendingChatTextClaimed = false
+/** File objects only survive the in-app home → chat navigation. */
+let pendingChatFilesMemory: File[] = []
 
 /** In-memory pending topic send text. */
 let pendingTopicSendMemory: string | null = null
@@ -35,6 +37,16 @@ export const setPendingChatText = (text: string): void => {
   } catch {
     // Ignore quota / private mode errors
   }
+}
+
+export const setPendingChatFiles = (files: File[]): void => {
+  pendingChatFilesMemory = files
+}
+
+export const claimPendingChatFiles = (): File[] => {
+  const files = pendingChatFilesMemory
+  pendingChatFilesMemory = []
+  return files
 }
 
 /** Claim pending home→chat text once. */
@@ -69,7 +81,7 @@ export const claimPendingChatText = (): string | null => {
 }
 
 export const finishPendingChatText = (_text: string): void => {
-  // Reserved for callers that await send completion; claim already consumed the text.
+  pendingChatFilesMemory = []
 }
 
 export const setPendingTopicSend = (text: string): void => {

@@ -1,6 +1,8 @@
 import { apiFetch } from '@/utils/apiFetch'
 
 export type QQConnectionMode = 'websocket' | 'webhook'
+export type QQProviderId = 'purechat' | 'openai' | 'deepseek'
+export type QQConfiguration = { agentId: string; model: string; provider: QQProviderId }
 
 export type QQStatus = {
   agentId?: string
@@ -13,6 +15,8 @@ export type QQStatus = {
   lastActiveAt?: string | null
   lastError?: { code: string; message: string } | null
   lastHeartbeatAt?: string | null
+  model?: string | null
+  provider?: QQProviderId | null
   runtimeStatus?: string
   webhookUrl?: string
 }
@@ -53,6 +57,8 @@ export async function bindQQ(params: {
   appId: string
   appSecret: string
   connectionMode: QQConnectionMode
+  model?: string
+  provider?: QQProviderId
 }): Promise<void> {
   const res = await apiFetch('/api/channels/qq/bind', {
     body: JSON.stringify(params),
@@ -64,9 +70,13 @@ export async function bindQQ(params: {
   }
 }
 
-export async function startQQQrLogin(agentId: string): Promise<QQQrStartResult> {
+export async function startQQQrLogin(params: {
+  agentId: string
+  model?: string
+  provider?: QQProviderId
+}): Promise<QQQrStartResult> {
   const res = await apiFetch('/api/channels/qq/qrcode', {
-    body: JSON.stringify({ agentId }),
+    body: JSON.stringify(params),
     headers: { 'Content-Type': 'application/json' },
     method: 'POST',
   })
@@ -106,5 +116,16 @@ export async function updateQQAgent(agentId: string): Promise<void> {
   })
   if (!res.ok) {
     throw await readApiError(res, `update agent failed: ${res.status}`)
+  }
+}
+
+export async function updateQQConfiguration(config: QQConfiguration): Promise<void> {
+  const res = await apiFetch('/api/channels/qq/bind', {
+    body: JSON.stringify(config),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'PATCH',
+  })
+  if (!res.ok) {
+    throw await readApiError(res, `update configuration failed: ${res.status}`)
   }
 }

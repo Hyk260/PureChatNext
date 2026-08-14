@@ -12,6 +12,7 @@ import type { SendButtonProps } from './SendButton'
 export interface SendAreaProps extends SendButtonProps {
   /** Extra nodes rendered before the model label */
   prefix?: ReactNode
+  modelLabelClassName?: string
   showModelLabel?: boolean
 }
 
@@ -20,13 +21,16 @@ export interface SendAreaProps extends SendButtonProps {
  * Layout: ChatInput send area with model label on the right.
  */
 const SendArea = memo<SendAreaProps>(
-  ({ prefix, showModelLabel = true, disabled, generating, loading, shape, size, onClick, onStop }) => {
+  ({ prefix, modelLabelClassName, showModelLabel = true, disabled, generating, loading, shape, size, onClick, onStop }) => {
     return (
       <Flexbox horizontal align='center' flex='none' gap={12}>
         {prefix}
-        {showModelLabel ? <ModelLabel /> : null}
+        {showModelLabel ? (
+          <span className={modelLabelClassName}>
+            <ModelLabel />
+          </span>
+        ) : null}
         <SendButton
-          disabled={disabled}
           generating={generating}
           loading={loading}
           shape={shape}

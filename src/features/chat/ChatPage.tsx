@@ -22,6 +22,7 @@ import {
   updateTopic,
 } from '@/features/chat/chatApi'
 import {
+  claimPendingChatFiles,
   claimPendingChatText,
   claimPendingTopicSend,
   claimPendingTopicSendFiles,
@@ -359,10 +360,11 @@ const ChatView = memo<ChatViewProps>(
       }
 
       const pending = claimPendingChatText()
-      if (!pending) return
+      const pendingChatFiles = claimPendingChatFiles()
+      if (!pending && pendingChatFiles.length === 0) return
 
-      sendOrSolidifyRef.current(pending).finally(() => {
-        finishPendingChatText(pending)
+      sendOrSolidifyRef.current(pending ?? '', pendingChatFiles).finally(() => {
+        finishPendingChatText(pending ?? '')
       })
     }, [])
 

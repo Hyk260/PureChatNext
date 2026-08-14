@@ -47,7 +47,6 @@ export const DELETE = withAuth(async (_request, { params, userId }) => {
   } catch (error) {
     if (error instanceof AgentDeleteError) {
       if (error.code === 'builtin') return jsonError(error.message, 403)
-      if (error.code === 'has_topics') return jsonError(error.message, 409)
       return jsonError(error.message, 404)
     }
     throw error

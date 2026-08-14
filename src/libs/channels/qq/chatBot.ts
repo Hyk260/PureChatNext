@@ -13,6 +13,8 @@ export type QQChatContext = {
   appId: string
   appSecret: string
   applicationId: string
+  model?: string | null
+  provider?: string | null
   userId: string
 }
 
@@ -20,6 +22,8 @@ type CachedBot = {
   agentId: string
   appSecret: string
   chat: Chat
+  model?: string | null
+  provider?: string | null
   userId: string
 }
 
@@ -42,6 +46,8 @@ function registerHandlers(chat: Chat, ctx: QQChatContext): void {
     await handleQQMention({
       agentId: ctx.agentId,
       message,
+      model: ctx.model,
+      provider: ctx.provider,
       thread,
       userId: ctx.userId,
     })
@@ -70,6 +76,8 @@ export async function getOrCreateQQChat(ctx: QQChatContext): Promise<Chat> {
     existing &&
     existing.appSecret === ctx.appSecret &&
     existing.agentId === ctx.agentId &&
+    existing.model === ctx.model &&
+    existing.provider === ctx.provider &&
     existing.userId === ctx.userId
   ) {
     return existing.chat
@@ -99,6 +107,8 @@ export async function getOrCreateQQChat(ctx: QQChatContext): Promise<Chat> {
     agentId: ctx.agentId,
     appSecret: ctx.appSecret,
     chat,
+    model: ctx.model,
+    provider: ctx.provider,
     userId: ctx.userId,
   })
 

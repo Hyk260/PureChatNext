@@ -6,6 +6,7 @@ import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelB
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials, encryptCredentials, invalidateQQChat } from '@/libs/channels/qq'
 import type { QQConnectionMode } from '@/libs/channels/qq'
+import { isQQProviderId, qqChannelUnavailableReason, validateQQModel } from '@/libs/channels/qq/agentSupport'
 import { bindQQCredentials, QQBindingError } from '@/libs/channels/qq/binding'
 import { gatewayEnv } from '@/envs/gateway'
 
@@ -18,6 +19,19 @@ function parseConnectionMode(value: unknown): QQConnectionMode {
   return value === 'webhook' ? 'webhook' : 'websocket'
 }
 
+function parseChannelConfig(body: { agentId?: string; model?: string; provider?: string }) {
+  const agentId = body.agentId?.trim()
+  const model = body.model?.trim()
+  const provider = body.provider?.trim()
+  if (!agentId || !model || !provider) return null
+  if (!isQQProviderId(provider)) return { error: '该 Provider 不支持 QQ 渠道', status: 400 } as const
+  const unavailable = qqChannelUnavailableReason(provider)
+  if (unavailable) return { error: unavailable, status: 400 } as const
+  const modelError = validateQQModel(provider, model)
+  if (modelError) return { error: modelError, status: 400 } as const
+  return { agentId, model, provider }
+}
+
 /** POST /api/channels/qq/bind — 保存 AppID/Secret 并校验凭证 */
 export const POST = withAuth(async (request: NextRequest, { userId }) => {
   let body: {
@@ -25,6 +39,8 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
     appId?: string
     appSecret?: string
     connectionMode?: string
+    model?: string
+    provider?: string
   }
 
   try {
@@ -46,7 +62,17 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
   }
 
   try {
-    return NextResponse.json(await bindQQCredentials({ agentId, appId, appSecret, connectionMode, userId }))
+    return NextResponse.json(
+      await bindQQCredentials({
+        agentId,
+        appId,
+        appSecret,
+        connectionMode,
+        model: body.model?.trim(),
+        provider: body.provider?.trim(),
+        userId,
+      })
+    )
   } catch (error) {
     if (error instanceof QQBindingError) return jsonError(error.message, error.status)
     throw error
@@ -65,9 +91,9 @@ export const DELETE = withAuth(async (_request, { userId }) => {
   return NextResponse.json({ ok: true })
 })
 
-/** PATCH /api/channels/qq/bind — 更新绑定的 Agent（或 connectionMode） */
+/** PATCH /api/channels/qq/bind — 更新绑定的 Agent、模型或 connectionMode */
 export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
-  let body: { agentId?: string; connectionMode?: string }
+  let body: { agentId?: string; connectionMode?: string; model?: string; provider?: string }
   try {
     body = await request.json()
   } catch {
@@ -86,10 +112,48 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     invalidateQQChat(existing.applicationId)
   }
 
+  const channelConfig = parseChannelConfig(body)
+  if (channelConfig && 'error' in channelConfig) return jsonError(channelConfig.error, channelConfig.status)
+
+  if (channelConfig) {
+    const agent = await new AgentModel(userId).findVisibleById(channelConfig.agentId)
+    if (!agent) return jsonError('Agent not found', 404)
+
+    const updated = await model.updateConfiguration({
+      agentId: channelConfig.agentId,
+      model: channelConfig.model,
+      platform: QQ_PLATFORM,
+      provider: channelConfig.provider,
+      userId,
+    })
+    if (!updated) return jsonError('QQ not connected', 404)
+
+    if (body.connectionMode !== undefined) {
+      const creds = decryptCredentials(existing.credentials)
+      creds.connectionMode = parseConnectionMode(body.connectionMode)
+      await model.upsert({
+        agentId: updated.agentId,
+        applicationId: existing.applicationId,
+        credentials: encryptCredentials(creds),
+        model: updated.model,
+        platform: QQ_PLATFORM,
+        provider: updated.provider,
+        userId,
+      })
+      await requestGatewayReconcile()
+    }
+
+    return NextResponse.json({
+      agentId: updated.agentId,
+      model: updated.model,
+      ok: true,
+      provider: updated.provider,
+    })
+  }
+
   const agentId = body.agentId?.trim()
   if (agentId) {
-    const agentModel = new AgentModel(userId)
-    const agent = await agentModel.findVisibleById(agentId)
+    const agent = await new AgentModel(userId).findVisibleById(agentId)
     if (!agent) return jsonError('Agent not found', 404)
 
     const updated = await model.updateAgent(userId, QQ_PLATFORM, agentId)
@@ -102,7 +166,9 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
         agentId: updated.agentId,
         applicationId: existing.applicationId,
         credentials: encryptCredentials(creds),
+        model: existing.model,
         platform: QQ_PLATFORM,
+        provider: existing.provider,
         userId,
       })
       await requestGatewayReconcile()
@@ -121,7 +187,9 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
       agentId: existing.agentId,
       applicationId: existing.applicationId,
       credentials: encryptCredentials(creds),
+      model: existing.model,
       platform: QQ_PLATFORM,
+      provider: existing.provider,
       userId,
     })
     await requestGatewayReconcile()

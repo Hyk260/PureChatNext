@@ -43,7 +43,7 @@ export type AgentUpdateInput = Partial<
 export class AgentDeleteError extends Error {
   constructor(
     message: string,
-    public readonly code: 'builtin' | 'not_found' | 'has_topics'
+    public readonly code: 'builtin' | 'not_found'
   ) {
     super(message)
     this.name = 'AgentDeleteError'
@@ -152,14 +152,6 @@ export class AgentModel {
     return row?.count ?? 0
   }
 
-  countTopics = async (agentId: string) => {
-    const [row] = await this.db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(chatTopics)
-      .where(and(eq(chatTopics.agentId, agentId), eq(chatTopics.userId, this.userId)))
-    return row?.count ?? 0
-  }
-
   delete = async (id: string) => {
     const existing = await this.findVisibleById(id)
     if (!existing) {
@@ -172,11 +164,10 @@ export class AgentModel {
       throw new AgentDeleteError('Agent not found', 'not_found')
     }
 
-    const topicCount = await this.countTopics(id)
-    if (topicCount > 0) {
-      throw new AgentDeleteError('Agent has topics', 'has_topics')
-    }
-
-    await this.db.delete(agents).where(and(eq(agents.id, id), eq(agents.userId, this.userId)))
+    // 话题无 FK；消息随 topic_id cascade。先删话题再删助理。
+    await this.db.transaction(async (tx) => {
+      await tx.delete(chatTopics).where(and(eq(chatTopics.agentId, id), eq(chatTopics.userId, this.userId)))
+      await tx.delete(agents).where(and(eq(agents.id, id), eq(agents.userId, this.userId)))
+    })
   }
 }

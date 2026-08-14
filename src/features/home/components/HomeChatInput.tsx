@@ -29,6 +29,8 @@ import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { useRouter } from '@/utils/navigation'
 
+const mechaCatSrc = typeof mechaCat === 'string' ? mechaCat : mechaCat.src
+
 const styles = createStaticStyles(({ css }) => ({
   input: css`
     width: 100%;
@@ -250,7 +252,7 @@ const HomeChatInput = memo(() => {
 
   return (
     <Block className={styles.shell} padding={12} variant='outlined'>
-      <img alt='' aria-hidden className={styles.mascot} src={mechaCat} />
+      <img alt='' aria-hidden className={styles.mascot} src={mechaCatSrc} />
       <input
         ref={fileInputRef}
         accept={CHAT_ATTACHMENT_ACCEPT}

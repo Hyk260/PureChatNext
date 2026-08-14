@@ -7,6 +7,7 @@ import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials, encryptCredentials, invalidateQQChat } from '@/libs/channels/qq'
 import type { QQConnectionMode } from '@/libs/channels/qq'
 import { isQQProviderId, qqChannelUnavailableReason, validateQQModel } from '@/libs/channels/qq/agentSupport'
+import type { QQProviderId } from '@/libs/channels/qq/agentSupport'
 import { bindQQCredentials, QQBindingError } from '@/libs/channels/qq/binding'
 import { gatewayEnv } from '@/envs/gateway'
 
@@ -19,17 +20,25 @@ function parseConnectionMode(value: unknown): QQConnectionMode {
   return value === 'webhook' ? 'webhook' : 'websocket'
 }
 
-function parseChannelConfig(body: { agentId?: string; model?: string; provider?: string }) {
+type ParsedQQChannelConfig =
+  | { ok: true; agentId: string; model: string; provider: QQProviderId }
+  | { ok: false; error: string; status: 400 }
+
+function parseChannelConfig(body: {
+  agentId?: string
+  model?: string
+  provider?: string
+}): ParsedQQChannelConfig | null {
   const agentId = body.agentId?.trim()
   const model = body.model?.trim()
   const provider = body.provider?.trim()
   if (!agentId || !model || !provider) return null
-  if (!isQQProviderId(provider)) return { error: '该 Provider 不支持 QQ 渠道', status: 400 } as const
+  if (!isQQProviderId(provider)) return { ok: false, error: '该 Provider 不支持 QQ 渠道', status: 400 }
   const unavailable = qqChannelUnavailableReason(provider)
-  if (unavailable) return { error: unavailable, status: 400 } as const
+  if (unavailable) return { ok: false, error: unavailable, status: 400 }
   const modelError = validateQQModel(provider, model)
-  if (modelError) return { error: modelError, status: 400 } as const
-  return { agentId, model, provider }
+  if (modelError) return { ok: false, error: modelError, status: 400 }
+  return { ok: true, agentId, model, provider }
 }
 
 /** POST /api/channels/qq/bind — 保存 AppID/Secret 并校验凭证 */
@@ -113,7 +122,7 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
   }
 
   const channelConfig = parseChannelConfig(body)
-  if (channelConfig && 'error' in channelConfig) return jsonError(channelConfig.error, channelConfig.status)
+  if (channelConfig?.ok === false) return jsonError(channelConfig.error, channelConfig.status)
 
   if (channelConfig) {
     const agent = await new AgentModel(userId).findVisibleById(channelConfig.agentId)

@@ -1,30 +1,21 @@
 'use client'
 
-import {
-  Accordion,
-  AccordionItem,
-  ActionIcon,
-  Avatar,
-  Block,
-  copyToClipboard,
-  DropdownMenu,
-  Icon,
-  Text,
-  Flexbox,
-} from '@pure/ui'
+import { ActionIcon, Avatar, copyToClipboard, DropdownMenu, Text, Flexbox } from '@pure/ui'
 import type { ChatMessageMetadata } from '@pure/types'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import type { UIMessage } from 'ai'
-import { AtomIcon, Copy, Edit, FileText, Loader2Icon, MoreHorizontal, RefreshCw, Trash } from 'lucide-react'
+import { Copy, Edit, MoreHorizontal, RefreshCw, Trash } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
 import type { ScrollbarRef } from '@/components/Scrollbar'
 import { PulseDots } from '@/components/Loading'
+import MessageAttachments from '@/features/chat/MessageAttachments'
 import MessageEditorModal from '@/features/chat/MessageEditorModal'
-import MessageUsage from '@/features/chat/MessageUsage'
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
+import MessageUsage from '@/features/chat/MessageUsage'
+import Thinking from '@/features/chat/Thinking'
 import { getMessageReasoning, getMessageText } from '@/features/chat/messageText'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
@@ -121,18 +112,6 @@ const styles = createStaticStyles(({ css }) => ({
     width: 100%;
     margin-block-end: 8px;
   `,
-  thinkingBody: css`
-    color: ${cssVar.colorTextDescription};
-    font-size: 13px;
-    line-height: 1.55;
-    white-space: pre-wrap;
-    word-break: break-word;
-  `,
-  thinkingLabel: css`
-    color: ${cssVar.colorTextSecondary};
-    font-size: 12px;
-    user-select: none;
-  `,
   title: css`
     font-size: 13px;
     font-weight: 600;
@@ -149,125 +128,7 @@ const styles = createStaticStyles(({ css }) => ({
   userMarkdown: css`
     color: inherit;
   `,
-  attachment: css`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    max-width: 280px;
-    margin-block-end: 8px;
-    padding: 7px 9px;
-    border: 1px solid ${cssVar.colorBorderSecondary};
-    border-radius: 10px;
-    background: ${cssVar.colorBgContainer};
-  `,
-  attachmentImage: css`
-    display: block;
-    width: 180px;
-    max-height: 180px;
-    object-fit: contain;
-    border-radius: 8px;
-  `,
-  attachmentName: css`
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  `,
 }))
-
-interface ThinkingProps {
-  duration?: number
-  thinking?: boolean
-  text: string
-}
-
-function getThinkingLabel(thinking: boolean, duration?: number) {
-  if (thinking) return '深度思考中…'
-  if (duration !== undefined) return `已深度思考（用时 ${(duration / 1000).toFixed(1)} 秒）`
-  return '已深度思考'
-}
-
-const Thinking = memo<ThinkingProps>(({ text, thinking = false, duration }) => {
-  const [open, setOpen] = useState(thinking)
-
-  useEffect(() => {
-    setOpen(thinking)
-  }, [thinking])
-
-  const label = getThinkingLabel(thinking, duration)
-
-  return (
-    <Accordion expandedKeys={open ? ['thinking'] : []} gap={8} onExpandedChange={(keys) => setOpen(keys.length > 0)}>
-      <AccordionItem
-        itemKey='thinking'
-        paddingBlock={4}
-        paddingInline={4}
-        title={
-          <Flexbox horizontal align='center' gap={6}>
-            <Block
-              align='center'
-              flex='none'
-              gap={4}
-              height={24}
-              horizontal
-              justify='center'
-              style={{ fontSize: 12 }}
-              variant='outlined'
-              width={24}
-            >
-              <Icon
-                color={cssVar.colorTextDescription}
-                icon={thinking ? Loader2Icon : AtomIcon}
-                size={14}
-                spin={thinking}
-              />
-            </Block>
-            <span className={styles.thinkingLabel}>{label}</span>
-          </Flexbox>
-        }
-      >
-        <div className={styles.thinkingBody}>{text}</div>
-      </AccordionItem>
-    </Accordion>
-  )
-})
-
-Thinking.displayName = 'Thinking'
-
-const MessageAttachments = memo<{ message: UIMessage }>(({ message }) => {
-  const files = message.parts.filter((part) => part.type === 'file') as Array<{
-    type: 'file'
-    mediaType?: string
-    url: string
-    filename?: string
-    name?: string
-  }>
-
-  if (files.length === 0) return null
-
-  return (
-    <Flexbox gap={8} style={{ marginBlockEnd: 4 }}>
-      {files.map((file, index) => {
-        const name = file.filename ?? file.name ?? '附件'
-        if (file.mediaType?.startsWith('image/')) {
-          return (
-            <a key={`${name}-${index}`} href={file.url} rel='noreferrer' target='_blank'>
-              <img alt={name} className={styles.attachmentImage} src={file.url} />
-            </a>
-          )
-        }
-
-        return (
-          <div className={styles.attachment} key={`${name}-${index}`} title={name}>
-            <FileText size={18} />
-            <span className={styles.attachmentName}>{name}</span>
-          </div>
-        )
-      })}
-    </Flexbox>
-  )
-})
-
-MessageAttachments.displayName = 'MessageAttachments'
 
 interface ChatMessageItemProps {
   agentMeta?: AgentMeta

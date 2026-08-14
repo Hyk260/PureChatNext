@@ -128,6 +128,22 @@ export class UserModel {
     return this.db.query.users.findFirst({ where: eq(users.email, email) })
   }
 
+  static findByUsername = async (username: string) => {
+    return this.db.query.users.findFirst({ where: eq(users.username, username) })
+  }
+
+  static findSignInCheck = async (lookup: { email: string } | { username: string }) => {
+    const user = 'email' in lookup ? await this.findByEmail(lookup.email) : await this.findByUsername(lookup.username)
+    if (!user) return null
+
+    const hash = await this.findCredentialAccountPassword(user.id)
+    return {
+      email: user.email,
+      emailVerified: user.emailVerified,
+      hasPassword: Boolean(hash && hash.length > 0),
+    }
+  }
+
   private static getVerificationIdentifiers = (user: UserItem) => {
     return [user.email, user.phone].filter((value): value is string => Boolean(value))
   }

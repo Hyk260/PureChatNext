@@ -8,7 +8,8 @@ import { Loader2 } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 
-import { updateUser } from '@/libs/better-auth/client'
+import { checkUsernameTaken, updateUser } from '@/libs/better-auth/client'
+import { LOGIN_USERNAME_REGEX } from '@/libs/better-auth/shared'
 
 import { SettingRow } from './SettingRow'
 
@@ -17,7 +18,10 @@ interface UsernameSettingProps {
   onUpdated: (username: string) => void
 }
 
-const USERNAME_REGEX = /^\w+$/
+const isUsernameConflictError = (error: { code?: string | null; message?: string | null }) => {
+  const text = `${error.code ?? ''} ${error.message ?? ''}`.toLowerCase()
+  return text.includes('23505') || text.includes('users_username_unique')
+}
 
 export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
   const { message } = useApp()
@@ -31,7 +35,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
 
     if (!trimmed) return '用户名不能为空'
     if (trimmed.length > 64) return '用户名不能超过 64 个字符'
-    if (!USERNAME_REGEX.test(trimmed)) return '用户名只能包含字母、数字和下划线'
+    if (!LOGIN_USERNAME_REGEX.test(trimmed)) return '用户名只能包含字母、数字和下划线'
 
     return ''
   }
@@ -56,10 +60,15 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
     setError('')
 
     try {
+      if (await checkUsernameTaken(value)) {
+        setError('该用户名已被占用')
+        return
+      }
+
       const { error: updateError } = await updateUser({ name: value })
 
       if (updateError) {
-        setError(updateError.message ?? '用户名更新失败')
+        setError(isUsernameConflictError(updateError) ? '该用户名已被占用' : (updateError.message ?? '用户名更新失败'))
         return
       }
 
@@ -82,7 +91,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
       return
     }
 
-    if (!USERNAME_REGEX.test(value)) {
+    if (!LOGIN_USERNAME_REGEX.test(value)) {
       setError('用户名只能包含字母、数字和下划线')
       return
     }

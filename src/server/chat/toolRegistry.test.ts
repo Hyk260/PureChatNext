@@ -12,12 +12,15 @@ vi.mock('@/server/weather/chatTool', () => ({ weatherTool: mocks.weatherTool }))
 import { resolveChatToolInstructions, resolveChatTools } from './toolRegistry'
 
 describe('chat tool registry', () => {
-  it('does not expose tools to web chat when search is off', () => {
-    expect(resolveChatTools({ channel: 'web', searchMode: 'off' })).toEqual({})
+  it('keeps structured weather available to web chat when search is off', () => {
+    expect(resolveChatTools({ channel: 'web', searchMode: 'off' })).toEqual({
+      getWeather: mocks.weatherTool,
+    })
   })
 
-  it('only exposes web search to web chat in auto mode', () => {
+  it('exposes weather and web search to web chat in auto mode', () => {
     expect(resolveChatTools({ channel: 'web', searchMode: 'auto' })).toEqual({
+      getWeather: mocks.weatherTool,
       webSearch: mocks.webSearchTool,
     })
   })
@@ -30,7 +33,7 @@ describe('chat tool registry', () => {
   })
 
   it('only emits instructions for enabled tools', () => {
-    expect(resolveChatToolInstructions({ channel: 'web', searchMode: 'off' })).toEqual([])
+    expect(resolveChatToolInstructions({ channel: 'web', searchMode: 'off' }).join('\n')).toMatch(/getWeather/)
     expect(resolveChatToolInstructions({ channel: 'wechat', searchMode: 'auto' }).join('\n')).toMatch(
       /webSearch[\s\S]*getWeather/
     )

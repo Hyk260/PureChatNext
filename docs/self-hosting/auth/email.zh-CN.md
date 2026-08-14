@@ -146,14 +146,6 @@ curl -X POST http://localhost:3000/api/dev/email \
   -d '{"action":"verify","impl":"nodemailer"}'
 ```
 
-### 业务流验收
-
-- \[ ] 注册验证邮件（若 `AUTH_EMAIL_VERIFICATION=1`）
-- \[ ] 忘记密码邮件
-- \[ ] 魔法链接（若 `AUTH_ENABLE_MAGIC_LINK=1`）
-- \[ ] 修改邮箱确认邮件
-- \[ ] 邮件内链接指向 `https://next.purechat.cn/...`
-
 ## 邮箱验证
 
 启用邮箱验证以确保用户拥有其注册的邮箱地址（默认关闭）：

@@ -62,7 +62,7 @@ export function EmailSetting({ email }: EmailSettingProps) {
         <Text type={email ? undefined : 'secondary'}>{email || '未绑定邮箱'}</Text>
       </SettingRow>
 
-      <Modal destroyOnHidden footer={null} onCancel={() => setOpen(false)} open={open} title='修改邮箱'>
+      <Modal destroyOnHidden footer={null} onCancel={() => setOpen(false)} open={open} title='修改邮箱' width={420}>
         <Text type='secondary' style={{ display: 'block', marginBottom: 16 }}>
           验证邮件将发送到新邮箱地址，验证完成后邮箱才会更新。
         </Text>

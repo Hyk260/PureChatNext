@@ -2,7 +2,7 @@
 
 import { Alert, Badge, Divider, Form, Input, Skeleton } from 'antd'
 import type { FormInstance, InputRef } from 'antd'
-import { ChevronRight, Mail } from 'lucide-react'
+import { ChevronRight, User } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Button, Icon, Text, Flexbox } from '@pure/ui'
@@ -10,7 +10,7 @@ import AuthIcons from '@/components/AuthIcons'
 import { BRANDING_NAME } from '@/const/branding'
 import AuthAgreement from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
-import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
+import { SSO_PROVIDER_LABELS, normalizeLoginIdentifier } from '@/libs/better-auth/shared'
 
 interface SignInFormValues {
   email: string
@@ -149,14 +149,22 @@ export const SignInEmailStep = ({
             <Form.Item
               name='email'
               rules={[
-                { message: '请输入邮箱', required: true },
-                { message: '请输入有效的邮箱地址', type: 'email' },
+                { message: '请输入邮箱或用户名', required: true },
+                {
+                  validator: async (_, value: string) => {
+                    const raw = value?.trim() ?? ''
+                    if (!raw) return
+                    if (normalizeLoginIdentifier(raw)) return
+                    if (raw.includes('@')) throw new Error('请输入有效的邮箱地址')
+                    throw new Error('用户名只能包含字母、数字和下划线')
+                  },
+                },
               ]}
               style={{ marginBottom: 0 }}
             >
               <Input
                 placeholder='请输入邮箱或用户名'
-                prefix={<Icon icon={Mail} style={INPUT_ICON_STYLE} />}
+                prefix={<Icon icon={User} style={INPUT_ICON_STYLE} />}
                 ref={emailInputRef}
                 size='large'
                 style={EMAIL_INPUT_STYLE}

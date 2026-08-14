@@ -29,7 +29,8 @@ import {
   isPureChatRestrictedModelError,
   PURECHAT_MODEL_UNAVAILABLE_MESSAGE,
 } from '@/server/purechat/gatewayError'
-import { resolveChatTools } from '@/server/chat/toolRegistry'
+import { buildChatRuntimeInstructions } from '@/server/chat/runtimeInstructions'
+import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
 
 import { createMessageMetadata } from './messageMetadata'
 
@@ -163,15 +164,21 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api', 'Invalid search mode').toResponse()
   }
 
-  const searchMode = requestBody.searchMode ?? 'off'
-  const supportsVision = Boolean(getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision)
+  const searchMode = requestBody.searchMode === 'auto' ? 'auto' : 'off'
+  const supportsVision = Boolean(
+    getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision
+  )
   try {
     messages = await normalizeAttachmentMessages(messages, supportsVision)
   } catch (error) {
     const message = error instanceof Error ? error.message : '附件解析失败'
     return new ChatSDKError('bad_request:api', message).toResponse()
   }
-  const tools = resolveChatTools({ channel: 'web', searchMode })
+  const toolContext = { channel: 'web', searchMode } as const
+  const tools = resolveChatTools(toolContext)
+  const instructions = [system?.trim(), buildChatRuntimeInstructions(), ...resolveChatToolInstructions(toolContext)]
+    .filter(Boolean)
+    .join('\n\n')
   const searchOptions =
     Object.keys(tools).length > 0
       ? {
@@ -241,7 +248,7 @@ export async function POST(request: Request) {
         messages: await convertToModelMessages(messages),
         model: resolvedModel,
         ...searchOptions,
-        ...(system?.trim() ? { instructions: system.trim() } : {}),
+        instructions,
         async onEnd({ usage }) {
           if (!userId || !settlementId || !settlementPeriod || !displayModel) return
 
@@ -329,7 +336,7 @@ export async function POST(request: Request) {
       messages: await convertToModelMessages(messages),
       model: resolvedModel,
       ...searchOptions,
-      ...(system?.trim() ? { instructions: system.trim() } : {}),
+      instructions,
     })
 
     return createUIMessageStreamResponse({

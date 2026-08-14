@@ -53,7 +53,7 @@ const registrations: ChatToolRegistration[] = [
   },
   {
     apiName: 'getWeather',
-    enabled: ({ channel }) => channel === 'wechat',
+    enabled: () => true,
     identifier: 'builtin-weather',
     modelName: 'getWeather',
     systemInstruction: '天气问题优先使用 getWeather，不要用网页搜索代替结构化天气查询。',

@@ -15,7 +15,7 @@ interface SignInFormValues {
 }
 
 interface SignInPasswordStepProps {
-  email: string
+  accountLabel: string
   enableMagicLink?: boolean
   form: FormInstance<SignInFormValues>
   isSocialOnly?: boolean
@@ -29,7 +29,7 @@ interface SignInPasswordStepProps {
 }
 
 export const SignInPasswordStep = ({
-  email,
+  accountLabel,
   enableMagicLink,
   form,
   forgotPasswordLoading = false,
@@ -59,12 +59,12 @@ export const SignInPasswordStep = ({
       <AuthCard
         footer={
           <Button icon={<ChevronLeft />} size='large' style={{ marginTop: 12 }} onClick={onBack}>
-            返回修改邮箱
+            返回修改账号
           </Button>
         }
         subtitle='请输入密码以继续'
       >
-        <Text style={{ fontSize: 20 }}>{email}</Text>
+        <Text style={{ fontSize: 20 }}>{accountLabel}</Text>
         <Alert
           showIcon
           style={{ marginTop: 12 }}
@@ -116,13 +116,13 @@ export const SignInPasswordStep = ({
             </a>
           </Text>
           <Button icon={<ChevronLeft />} size='large' style={{ marginTop: 12 }} type='fill' onClick={onBack}>
-            返回修改邮箱
+            返回修改账号
           </Button>
         </>
       }
       subtitle='请输入密码以继续'
     >
-      <Text style={{ fontSize: 20 }}>{email}</Text>
+      <Text style={{ fontSize: 20 }}>{accountLabel}</Text>
       <Form form={form} layout='vertical' onFinish={onSignIn}>
         <Form.Item name='password' rules={[{ message: '请输入密码', required: true }]} style={{ marginBottom: 0 }}>
           <Input.Password

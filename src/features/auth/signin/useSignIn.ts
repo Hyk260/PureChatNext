@@ -3,7 +3,11 @@ import { useRouter, useSearchParams } from '@/utils/navigation'
 import { useEffect, useState } from 'react'
 import { message } from '@/components/AntdStaticMethods'
 
-import { AUTH_UI_SSO_PROVIDERS, BUILTIN_BETTER_AUTH_PROVIDERS } from '@/libs/better-auth/shared'
+import {
+  AUTH_UI_SSO_PROVIDERS,
+  BUILTIN_BETTER_AUTH_PROVIDERS,
+  normalizeLoginIdentifier,
+} from '@/libs/better-auth/shared'
 import { checkUserByEmail, requestPasswordReset, signIn, useAuthConfig } from '@/libs/better-auth/client'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
@@ -25,6 +29,7 @@ export const useSignIn = () => {
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false)
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
+  const [accountLabel, setAccountLabel] = useState('')
   const [isSocialOnly, setIsSocialOnly] = useState(false)
   const [lastAuthProvider] = useState<string | null>(() => {
     try {
@@ -70,23 +75,34 @@ export const useSignIn = () => {
   }
 
   const handleCheckUser = async (values: Pick<SignInFormValues, 'email'>) => {
-    const normalizedEmail = values.email.trim().toLowerCase()
-    if (!normalizedEmail) {
-      message.error('请输入邮箱')
+    const identifier = normalizeLoginIdentifier(values.email)
+    if (!identifier) {
+      message.error('请输入有效的邮箱或用户名')
       return
     }
 
     setLoading(true)
     try {
-      const result = await checkUserByEmail(normalizedEmail)
+      const result = await checkUserByEmail(identifier.value)
       const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
       const callbackUrlParam = resolveCallbackUrl(searchParams.get('callbackUrl'), '')
 
       if (!result.exists) {
+        if (identifier.kind === 'username') {
+          message.error('该用户名尚未注册')
+          return
+        }
+
         message.info('该邮箱尚未注册，请先创建账户')
-        const params = new URLSearchParams({ email: normalizedEmail })
+        const params = new URLSearchParams({ email: identifier.value })
         if (callbackUrlParam) params.set('callbackUrl', callbackUrlParam)
         router.push(`/signup?${params.toString()}`)
+        return
+      }
+
+      const loginEmail = result.email?.trim()
+      if (!loginEmail) {
+        message.error('该账户未绑定邮箱，请使用第三方登录')
         return
       }
 
@@ -94,12 +110,13 @@ export const useSignIn = () => {
       if (enableEmailVerification && result.emailVerified === false) {
         message.info('请先完成邮箱验证')
         router.push(
-          `/verify-email?email=${encodeURIComponent(normalizedEmail)}&callbackUrl=${encodeURIComponent(callbackUrl)}`
+          `/verify-email?email=${encodeURIComponent(loginEmail)}&callbackUrl=${encodeURIComponent(callbackUrl)}`
         )
         return
       }
 
-      setEmail(normalizedEmail)
+      setEmail(loginEmail)
+      setAccountLabel(identifier.kind === 'username' ? identifier.value : loginEmail)
 
       if (result.hasPassword) {
         setIsSocialOnly(false)
@@ -108,7 +125,7 @@ export const useSignIn = () => {
       }
 
       if (enableMagicLink) {
-        await handleSendMagicLink(normalizedEmail)
+        await handleSendMagicLink(loginEmail)
         return
       }
 
@@ -149,7 +166,7 @@ export const useSignIn = () => {
 
       if (result.error && result.error.code !== 'EMAIL_NOT_VERIFIED') {
         if (result.error.status === 401 && result.error.code === 'INVALID_EMAIL_OR_PASSWORD') {
-          message.error('邮箱或密码错误')
+          message.error('账号或密码错误')
         } else if (result.error.code === 'INVALID_ORIGIN') {
           message.error('当前访问域名未授权，请检查隧道 / Origin 配置后重试')
         } else {
@@ -239,6 +256,7 @@ export const useSignIn = () => {
     : uiProviders
 
   return {
+    accountLabel,
     disableEmailPassword: false,
     email,
     enableMagicLink,

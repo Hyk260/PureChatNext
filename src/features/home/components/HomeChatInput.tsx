@@ -24,6 +24,7 @@ import { CHAT_ATTACHMENT_ACCEPT, validateChatAttachments } from '@/features/chat
 import { setPendingChatFiles, setPendingChatText } from '@/features/chat/chatLocalStorage'
 import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
 import SendArea from '@/features/chat/SendArea'
+import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
 import HomeAgentSelect from '@/features/home/components/HomeAgentSelect'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
@@ -154,6 +155,7 @@ const HomeChatInput = memo(() => {
   const [sending, setSending] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const currentModel = useCurrentHomeModel()
+  const { onCompositionEnd, onCompositionStart, shouldIgnoreEnter } = useImeEnterGuard()
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
   const activeAgent = useHomeStore((s) => s.activeAgent)
   const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
@@ -295,11 +297,13 @@ const HomeChatInput = memo(() => {
         placeholder='随心输入'
         value={input}
         onChange={(event) => setInput(event.target.value)}
+        onCompositionEnd={onCompositionEnd}
+        onCompositionStart={onCompositionStart}
         onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault()
-            handleSend()
-          }
+          if (event.key !== 'Enter' || event.shiftKey) return
+          if (shouldIgnoreEnter(event)) return
+          event.preventDefault()
+          handleSend()
         }}
       />
 

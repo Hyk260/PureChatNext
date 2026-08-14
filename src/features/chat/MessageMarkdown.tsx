@@ -1,22 +1,38 @@
 'use client'
 
-import { Markdown } from '@pure/ui/Markdown'
+import { ActionIcon } from '@pure/ui'
 import type { MarkdownProps } from '@pure/ui/Markdown'
-import { useDeferredValue, useMemo } from 'react'
+import { Markdown } from '@pure/ui/Markdown'
+import { createStaticStyles, cx } from 'antd-style'
+import { Eye } from 'lucide-react'
+import { memo, useMemo, useState } from 'react'
 
-/**
- * Streaming strategy:
- * - While generating, render plain text (live `text`) so tokens paint immediately.
- *   Enabling Markdown Streamdown (`enableStream` + `animated`) under high-frequency
- *   parent updates nests setStates → "Maximum update depth exceeded".
- * - When idle, render full Markdown with Streamdown off and deferred content.
- */
-const STATIC_COMPONENT_PROPS = {
-  // Keep shiki-stream off — animated highlight also loops under parent updates
-  highlight: { animated: false, fullFeatured: true },
-  // Avoid Image preview's deprecated antd `rootClassName`
-  img: { preview: false },
+import HtmlPreviewModal from '@/features/chat/HtmlPreviewModal'
+import { isHtmlPreviewLanguage } from '@/features/chat/htmlPreview'
+
+const styles = createStaticStyles(({ css }) => ({
+  colorfulFileIcons: css`
+    .ant-highlighter .languageTitle {
+      opacity: 1;
+      filter: grayscale(0%);
+    }
+  `,
+}))
+
+const STATIC_HIGHLIGHT_PROPS = {
+  animated: false,
+  fullFeatured: true,
 } as const
+
+const MARKDOWN_PROPS = {
+  enableImageGallery: false,
+  enableMermaid: true,
+  enableStream: true,
+  fullFeaturedCodeBlock: true,
+  enableCustomFootnotes: true,
+  showFootnotes: true,
+  variant: 'chat',
+} satisfies Partial<MarkdownProps>
 
 interface MessageMarkdownProps {
   className?: string
@@ -24,37 +40,55 @@ interface MessageMarkdownProps {
   text: string
 }
 
-const MessageMarkdown = ({ text, className, isStreaming = false }: MessageMarkdownProps) => {
-  const deferredText = useDeferredValue(text)
+const MessageMarkdown = memo<MessageMarkdownProps>(({ text, className, isStreaming = false }) => {
+  const [preview, setPreview] = useState<{ content: string; language: string } | null>(null)
 
-  const markdownProps = useMemo(
-    (): Partial<MarkdownProps> => ({
-      animated: false,
-      componentProps: STATIC_COMPONENT_PROPS,
-      enableImageGallery: false,
-      enableMermaid: true,
-      enableStream: false,
-      fullFeaturedCodeBlock: true,
-      variant: 'chat',
+  const componentProps = useMemo<MarkdownProps['componentProps']>(
+    () => ({
+      highlight: {
+        ...STATIC_HIGHLIGHT_PROPS,
+        actionsRender: ({ actionIconSize, getContent, language, originalNode }) => {
+          if (isStreaming || !isHtmlPreviewLanguage(language)) return originalNode
+
+          return (
+            <>
+              <ActionIcon
+                icon={Eye}
+                size={actionIconSize}
+                title='预览'
+                onClick={() => setPreview({ content: getContent(), language })}
+              />
+              {originalNode}
+            </>
+          )
+        },
+      },
+      img: { preview: false },
     }),
-    []
+    [isStreaming]
   )
-
-  // Live text during stream — Markdown/Streamdown is too heavy and can loop.
-  if (isStreaming) {
-    return (
-      <div className={className} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-        {text}
-      </div>
-    )
-  }
 
   return (
-    <Markdown className={className} {...markdownProps}>
-      {deferredText}
-    </Markdown>
+    <>
+      <Markdown
+        {...MARKDOWN_PROPS}
+        animated={isStreaming}
+        className={cx(styles.colorfulFileIcons, className)}
+        componentProps={componentProps}
+      >
+        {text}
+      </Markdown>
+      {preview ? (
+        <HtmlPreviewModal
+          content={preview.content}
+          language={preview.language}
+          open
+          onClose={() => setPreview(null)}
+        />
+      ) : null}
+    </>
   )
-}
+})
 
 MessageMarkdown.displayName = 'MessageMarkdown'
 

@@ -32,6 +32,9 @@ vi.mock('@/envs/llm', () => ({
 vi.mock('@/server/search/chatTool', () => ({
   webSearchTool: { description: 'search tool' },
 }))
+vi.mock('@/server/weather/chatTool', () => ({
+  weatherTool: { description: 'weather tool' },
+}))
 vi.mock('ai', async (importOriginal) => {
   const actual = await importOriginal<typeof import('ai')>()
   return {
@@ -101,14 +104,19 @@ describe('POST /api/chat PureChat model availability', () => {
     expect(streamText).toHaveBeenCalledOnce()
   })
 
-  it('does not expose the search tool when search mode is omitted or off', async () => {
+  it('keeps weather available and injects the current time when web search is off', async () => {
     await POST(createRequest('gpt-5.2'))
     await POST(createRequest('gpt-5.2', 'off'))
 
     expect(streamText).toHaveBeenCalledTimes(2)
     for (const [options] of streamText.mock.calls) {
-      expect(options).not.toHaveProperty('tools')
-      expect(options).not.toHaveProperty('stopWhen')
+      expect(options).toEqual(
+        expect.objectContaining({
+          instructions: expect.stringMatching(/当前日期与时间：[\s\S]*Asia\/Shanghai[\s\S]*getWeather/),
+          stopWhen: expect.any(Function),
+          tools: { getWeather: { description: 'weather tool' } },
+        })
+      )
     }
   })
 
@@ -119,7 +127,10 @@ describe('POST /api/chat PureChat model availability', () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         stopWhen: expect.any(Function),
-        tools: { webSearch: { description: 'search tool' } },
+        tools: {
+          getWeather: { description: 'weather tool' },
+          webSearch: { description: 'search tool' },
+        },
       })
     )
   })
@@ -131,7 +142,10 @@ describe('POST /api/chat PureChat model availability', () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         stopWhen: expect.any(Function),
-        tools: { webSearch: { description: 'search tool' } },
+        tools: {
+          getWeather: { description: 'weather tool' },
+          webSearch: { description: 'search tool' },
+        },
       })
     )
   })

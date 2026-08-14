@@ -11,8 +11,8 @@ import { useSignIn } from './useSignIn'
 
 const SignInContent = () => {
   const {
+    accountLabel,
     disableEmailPassword,
-    email,
     enableMagicLink,
     form,
     forgotPasswordLoading,
@@ -50,7 +50,7 @@ const SignInContent = () => {
         />
       ) : (
         <SignInPasswordStep
-          email={email}
+          accountLabel={accountLabel}
           enableMagicLink={enableMagicLink}
           forgotPasswordLoading={forgotPasswordLoading}
           form={form}

@@ -1,13 +1,81 @@
 'use client'
 
 import type { ChatWebSearchToolResult } from '@pure/types'
+import { Avatar } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { getToolName, isToolUIPart } from 'ai'
 import type { ToolUIPart, UIMessage } from 'ai'
-import { CircleAlert, ExternalLink, Globe, Loader2 } from 'lucide-react'
+import { ChevronRight, CircleAlert, Globe, Loader2 } from 'lucide-react'
 import { memo } from 'react'
 
 const styles = createStaticStyles(({ css }) => ({
+  avatars: css`
+    display: flex;
+    align-items: center;
+    margin-inline-start: 2px;
+
+    > * {
+      margin-inline-start: -3px;
+      border: 1px solid ${cssVar.colorBgContainer};
+      border-radius: 50%;
+    }
+  `,
+  card: css`
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    justify-content: space-between;
+
+    width: 160px;
+    min-height: 80px;
+    padding: 7px 8px;
+    border: 1px solid ${cssVar.colorBorderSecondary};
+    border-radius: 8px;
+
+    color: ${cssVar.colorText};
+    text-decoration: none;
+    background: ${cssVar.colorBgContainer};
+
+    &:hover {
+      border-color: ${cssVar.colorPrimaryBorder};
+      background: ${cssVar.colorFillQuaternary};
+    }
+  `,
+  cardDomain: css`
+    overflow: hidden;
+    color: ${cssVar.colorTextQuaternary};
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  `,
+  cardTitle: css`
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+
+    font-size: 12px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+  `,
+  cards: css`
+    overflow-x: auto;
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    padding-block-end: 2px;
+  `,
+  chevron: css`
+    flex: none;
+    transition: transform 0.2s ${cssVar.motionEaseInOut};
+  `,
+  detail: css`
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-block-start: 10px;
+  `,
   error: css`
     color: ${cssVar.colorWarningText};
     background: ${cssVar.colorWarningBg};
@@ -15,48 +83,34 @@ const styles = createStaticStyles(({ css }) => ({
   icon: css`
     flex: none;
   `,
-  link: css`
-    display: flex;
-    gap: 6px;
-    align-items: center;
-
-    min-width: 0;
-    padding: 5px 8px;
+  panel: css`
+    width: fit-content;
+    max-width: 100%;
+    margin-block: 4px 10px;
+    padding: 4px 8px;
     border-radius: 6px;
 
-    color: ${cssVar.colorTextSecondary};
-    text-decoration: none;
+    color: ${cssVar.colorTextTertiary};
+    font-size: 13px;
 
     &:hover {
-      color: ${cssVar.colorPrimary};
-      background: ${cssVar.colorFillSecondary};
+      background: ${cssVar.colorFillTertiary};
+    }
+
+    &[open] {
+      width: 100%;
+      background: ${cssVar.colorFillQuaternary};
+    }
+
+    &[open] [data-chevron] {
+      transform: rotate(90deg);
     }
   `,
-  linkIcon: css`
-    flex: none;
-    color: ${cssVar.colorTextQuaternary};
-  `,
-  linkTitle: css`
+  query: css`
     overflow: hidden;
-    min-width: 0;
+    color: ${cssVar.colorTextSecondary};
     text-overflow: ellipsis;
     white-space: nowrap;
-  `,
-  list: css`
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin-block-start: 4px;
-  `,
-  panel: css`
-    margin-block: 4px 10px;
-    padding: 8px 10px;
-    border: 1px solid ${cssVar.colorBorderSecondary};
-    border-radius: 10px;
-
-    color: ${cssVar.colorTextSecondary};
-    background: ${cssVar.colorFillQuaternary};
-    font-size: 13px;
   `,
   summary: css`
     cursor: pointer;
@@ -110,6 +164,19 @@ const safeHttpUrl = (value: string) => {
     return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null
   } catch {
     return null
+  }
+}
+
+const getUrlMeta = (value: string) => {
+  try {
+    const url = new URL(value)
+    const domain = url.hostname.replace(/^www\./u, '')
+    return {
+      domain,
+      favicon: `https://icons.duckduckgo.com/ip3/${encodeURIComponent(url.hostname)}.ico`,
+    }
+  } catch {
+    return { domain: value, favicon: '' }
   }
 }
 
@@ -185,25 +252,40 @@ const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
             <summary className={styles.summary}>
               <Globe className={styles.icon} size={15} aria-hidden />
               <span>已搜索 {output.results.length} 个来源</span>
+              <span className={styles.avatars} aria-hidden>
+                {output.results.slice(0, 6).map((result, index) => {
+                  const href = safeHttpUrl(result.url)
+                  if (!href) return null
+                  const { favicon } = getUrlMeta(href)
+                  return <Avatar avatar={favicon || '🌐'} key={`${href}:${index}`} size={16} />
+                })}
+              </span>
+              <ChevronRight className={styles.chevron} data-chevron size={14} aria-hidden />
             </summary>
-            <div className={styles.list}>
-              {output.results.map((result, index) => {
-                const href = safeHttpUrl(result.url)
-                if (!href) return null
+            <div className={styles.detail}>
+              <div className={styles.query} title={output.query}>
+                搜索：{output.query}
+              </div>
+              <div className={styles.cards}>
+                {output.results.map((result, index) => {
+                  const href = safeHttpUrl(result.url)
+                  if (!href) return null
+                  const { domain } = getUrlMeta(href)
 
-                return (
-                  <a
-                    className={styles.link}
-                    href={href}
-                    key={`${href}:${index}`}
-                    rel='noreferrer noopener'
-                    target='_blank'
-                  >
-                    <span className={styles.linkTitle}>{result.title}</span>
-                    <ExternalLink className={styles.linkIcon} size={13} aria-hidden />
-                  </a>
-                )
-              })}
+                  return (
+                    <a
+                      className={styles.card}
+                      href={href}
+                      key={`${href}:${index}`}
+                      rel='noreferrer noopener'
+                      target='_blank'
+                    >
+                      <span className={styles.cardTitle}>{result.title}</span>
+                      <span className={styles.cardDomain}>{domain}</span>
+                    </a>
+                  )
+                })}
+              </div>
             </div>
           </details>
         )

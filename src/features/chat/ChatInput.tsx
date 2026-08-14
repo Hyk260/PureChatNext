@@ -26,6 +26,7 @@ import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
 import { SendButton } from '@/features/chat/SendArea'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { ChatSearchMode } from '@/features/chat/types'
+import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
 
 const styles = createStaticStyles(({ css }) => ({
   input: css`
@@ -181,6 +182,7 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, on
   const currentModel = useCurrentHomeModel()
   const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
   const toggleRightCollapsed = useChatUiStore((s) => s.toggleRightCollapsed)
+  const { onCompositionEnd, onCompositionStart, shouldIgnoreEnter } = useImeEnterGuard()
 
   const handleSend = useCallback(() => {
     const text = input.trim()
@@ -308,12 +310,14 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, on
         rows={1}
         value={input}
         onChange={(event) => setInput(event.target.value)}
+        onCompositionEnd={onCompositionEnd}
+        onCompositionStart={onCompositionStart}
         onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault()
-            if (isBusy) return
-            handleSend()
-          }
+          if (event.key !== 'Enter' || event.shiftKey) return
+          if (shouldIgnoreEnter(event)) return
+          event.preventDefault()
+          if (isBusy) return
+          handleSend()
         }}
       />
 

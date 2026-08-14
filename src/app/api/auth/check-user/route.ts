@@ -1,12 +1,11 @@
-import { and, eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { account } from '@pure/database/schemas/betterAuth'
-import { users } from '@pure/database/schemas/user'
-import { serverDB } from '@pure/database/core/db-adaptor'
+import { UserModel } from '@pure/database/models/user'
+import { normalizeLoginIdentifier } from '@/libs/better-auth/shared'
 
 export interface CheckUserResponseData {
+  email?: string | null
   emailVerified?: boolean
   exists: boolean
   hasPassword?: boolean
@@ -14,9 +13,8 @@ export interface CheckUserResponseData {
 
 /**
  * POST /api/auth/check-user
- * Check if a user exists by email
- * @param req - POST request with { email: string }
- * @returns { exists: boolean, emailVerified?: boolean, hasPassword?: boolean }
+ * 按邮箱或用户名检查账户是否存在
+ * @param req - POST `{ email: string }`（字段名沿用，值可为邮箱或用户名）
  */
 export async function POST(req: NextRequest) {
   try {
@@ -24,38 +22,29 @@ export async function POST(req: NextRequest) {
     const { email } = body
 
     if (!email || typeof email !== 'string') {
-      return NextResponse.json({ error: 'Email is required', exists: false }, { status: 400 })
+      return NextResponse.json({ error: 'Email or username is required', exists: false }, { status: 400 })
     }
 
-    const [user] = await serverDB
-      .select({
-        emailVerified: users.emailVerified,
-        id: users.id,
-      })
-      .from(users)
-      .where(eq(users.email, email.toLowerCase().trim()))
-      .limit(1)
+    const identifier = normalizeLoginIdentifier(email)
+    if (!identifier) {
+      return NextResponse.json({ error: 'Invalid email or username', exists: false }, { status: 400 })
+    }
+
+    const user =
+      identifier.kind === 'email'
+        ? await UserModel.findSignInCheck({ email: identifier.value })
+        : await UserModel.findSignInCheck({ username: identifier.value })
 
     if (!user) {
       return NextResponse.json({ exists: false })
     }
 
-    const accounts = await serverDB
-      .select({
-        password: account.password,
-        providerId: account.providerId,
-      })
-      .from(account)
-      .where(and(eq(account.userId, user.id)))
-    const hasPassword = accounts.some(
-      (a) => a.providerId === 'credential' && typeof a.password === 'string' && a.password.length > 0
-    )
-
     return NextResponse.json({
+      email: user.email,
       emailVerified: user.emailVerified,
       exists: true,
-      hasPassword,
-    })
+      hasPassword: user.hasPassword,
+    } satisfies CheckUserResponseData)
   } catch (error) {
     console.error('Error checking user existence:', error)
     return NextResponse.json({ error: 'Internal server error', exists: false }, { status: 500 })

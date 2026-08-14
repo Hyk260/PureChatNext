@@ -2,6 +2,10 @@ import { render, screen } from '@testing-library/react'
 import type { UIMessage } from 'ai'
 import { describe, expect, it, vi } from 'vitest'
 
+vi.mock('@pure/ui', () => ({
+  Avatar: ({ avatar }: { avatar: string }) => <span data-avatar={avatar} />,
+}))
+
 vi.mock('antd-style', () => ({
   createStaticStyles: () => new Proxy({}, { get: (_, key) => String(key) }),
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),

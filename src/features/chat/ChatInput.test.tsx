@@ -85,4 +85,28 @@ describe('ChatInput web search mode', () => {
 
     expect((screen.getByRole('button', { name: 'search' }) as HTMLButtonElement).disabled).toBe(true)
   })
+
+  it('does not send composing IME text on Enter', () => {
+    const onSend = vi.fn()
+    render(<ChatInput searchMode='off' onSearchModeChange={vi.fn()} onSend={onSend} />)
+
+    const textarea = screen.getByPlaceholderText('随心输入')
+    fireEvent.change(textarea, { target: { value: 'asd' } })
+    fireEvent.compositionStart(textarea)
+    fireEvent.keyDown(textarea, { isComposing: true, key: 'Enter', keyCode: 229 })
+
+    expect(onSend).not.toHaveBeenCalled()
+    expect((textarea as HTMLTextAreaElement).value).toBe('asd')
+  })
+
+  it('sends on Enter when IME is idle', () => {
+    const onSend = vi.fn()
+    render(<ChatInput searchMode='off' onSearchModeChange={vi.fn()} onSend={onSend} />)
+
+    const textarea = screen.getByPlaceholderText('随心输入')
+    fireEvent.change(textarea, { target: { value: 'hello' } })
+    fireEvent.keyDown(textarea, { key: 'Enter' })
+
+    expect(onSend).toHaveBeenCalledWith('hello', [])
+  })
 })

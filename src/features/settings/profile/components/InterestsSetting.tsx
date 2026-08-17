@@ -1,7 +1,6 @@
 'use client'
 
-import { Block, Icon, Text, Flexbox } from '@pure/ui'
-import { Input } from 'antd'
+import { Block, Icon, Input, Text, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { cssVar } from 'antd-style'
 import { BriefcaseIcon } from 'lucide-react'

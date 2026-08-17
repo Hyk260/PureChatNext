@@ -15,8 +15,8 @@ const CATEGORIES: { icon: LucideIcon; key: FilesTabs; label: string }[] = [
   { icon: LayoutPanelTopIcon, key: FilesTabs.All, label: '全部' },
   { icon: FileText, key: FilesTabs.Documents, label: '文档' },
   { icon: ImageIcon, key: FilesTabs.Images, label: '图片' },
-  { icon: Mic2, key: FilesTabs.Audios, label: '音频' },
-  { icon: SquarePlay, key: FilesTabs.Videos, label: '视频' },
+  // { icon: Mic2, key: FilesTabs.Audios, label: '音频' },
+  // { icon: SquarePlay, key: FilesTabs.Videos, label: '视频' },
 ]
 
 const CategoryMenu = memo(() => {

@@ -7,7 +7,6 @@ import { memo } from 'react'
 import { useQueryState } from 'nuqs'
 import { useShallow } from 'zustand/react/shallow'
 
-import FileIcon from '@/components/FileIcon'
 import { useResourceManagerStore } from '@/features/resources/store'
 import { useResourceStore } from '@/features/resources/store/resourceStore'
 
@@ -62,10 +61,9 @@ const FileEditor = memo(() => {
 
   return (
     <Flexbox className={styles.overlay} style={{ height: '100%' }}>
-      <Flexbox horizontal align='center' className={styles.header} gap={12}>
+      <Flexbox horizontal align='center' className={styles.header} gap={4}>
         <ActionIcon icon={ArrowLeft} onClick={handleBack} title='返回' />
         <Flexbox horizontal align='center' className={styles.headerTitle} flex={1} gap={8}>
-          <FileIcon fileType={item.fileType} />
           <Text strong className={styles.name} title={item.name}>
             {item.name}
           </Text>

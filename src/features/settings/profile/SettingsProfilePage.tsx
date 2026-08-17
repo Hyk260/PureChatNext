@@ -1,7 +1,6 @@
 'use client'
 
-import { Flexbox } from '@pure/ui'
-import { Skeleton } from 'antd'
+import { Flexbox, Skeleton } from '@pure/ui'
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 

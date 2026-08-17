@@ -1,7 +1,6 @@
 'use client'
 
-import { AccordionItem, Text, Flexbox } from '@pure/ui'
-import { Skeleton } from 'antd'
+import { AccordionItem, Flexbox, Skeleton, Text } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { useRouter } from '@/utils/navigation'

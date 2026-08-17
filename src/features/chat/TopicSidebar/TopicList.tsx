@@ -1,7 +1,6 @@
 'use client'
 
-import { Skeleton } from 'antd'
-import { Accordion, AccordionItem, Icon, Text, Flexbox } from '@pure/ui'
+import { Accordion, AccordionItem, Flexbox, Icon, Skeleton, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Folder, Star } from 'lucide-react'
 import { memo, useMemo, useState } from 'react'

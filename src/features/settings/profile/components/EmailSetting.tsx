@@ -1,7 +1,7 @@
 'use client'
 
-import { Input, Form } from 'antd'
-import { Button, Text, Modal } from '@pure/ui'
+import { Form } from 'antd'
+import { Button, Input, Text, Modal } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { useState } from 'react'
 

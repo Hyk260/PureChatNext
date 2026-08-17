@@ -1,4 +1,32 @@
 /** Bridge over `@lobehub/ui` Skeleton primitives. */
+import { Skeleton as AntSkeleton } from 'antd'
+import {
+  Skeleton as LobeSkeleton,
+  SkeletonAvatar,
+  SkeletonBlock,
+  SkeletonButton,
+  SkeletonParagraph,
+  SkeletonTags,
+  SkeletonTitle,
+} from '@lobehub/ui'
+import type {
+  SkeletonAvatarProps,
+  SkeletonBlockProps,
+  SkeletonButtonProps,
+  SkeletonParagraphProps,
+  SkeletonProps,
+  SkeletonTagsProps,
+  SkeletonTitleProps,
+} from '@lobehub/ui'
+
+type CompatibleSkeleton = typeof LobeSkeleton & {
+  Input: typeof AntSkeleton.Input
+}
+
+const Skeleton = Object.assign(LobeSkeleton, {
+  Input: AntSkeleton.Input,
+}) as CompatibleSkeleton
+
 export {
   Skeleton,
   SkeletonAvatar,
@@ -14,4 +42,4 @@ export {
   type SkeletonTagsProps,
   SkeletonTitle,
   type SkeletonTitleProps,
-} from '@lobehub/ui'
+}

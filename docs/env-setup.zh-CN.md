@@ -174,7 +174,7 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 
 ```env
 S3_ACCESS_KEY_ID=purechat
-S3_SECRET_ACCESS_KEY=purechat_secret
+S3_SECRET_ACCESS_KEY=123456qwer
 S3_BUCKET=purechat
 S3_ENDPOINT=http://localhost:9000
 S3_ENABLE_PATH_STYLE=1

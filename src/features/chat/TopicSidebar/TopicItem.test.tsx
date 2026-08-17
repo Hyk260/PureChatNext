@@ -33,6 +33,7 @@ vi.mock('@pure/ui', () => ({
   Icon: ({ icon, spin }: { icon: { displayName?: string }; spin?: boolean }) => (
     <span data-icon={icon.displayName} data-spin={String(Boolean(spin))} />
   ),
+  Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
   Modal: () => null,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
   confirmModal: vi.fn(),

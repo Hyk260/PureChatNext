@@ -1,7 +1,6 @@
 'use client'
 
-import { Input } from 'antd'
-import { Modal } from '@pure/ui'
+import { Input, Modal } from '@pure/ui'
 import { memo, useState } from 'react'
 
 interface LibraryModalProps {

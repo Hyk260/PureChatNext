@@ -9,9 +9,6 @@ import HomeChatInput from '@/features/home/components/HomeChatInput'
 // import StarterList from '@/features/home/components/StarterList'
 
 const styles = createStaticStyles(({ css }) => ({
-  content: css`
-    width: 100%;
-  `,
   title: css`
     margin: 0;
     color: ${cssVar.colorText};
@@ -28,7 +25,7 @@ const styles = createStaticStyles(({ css }) => ({
 
 const HomeContent = memo(() => {
   return (
-    <Flexbox className={styles.content} gap={28}>
+    <Flexbox className={'w-full'} gap={28}>
       <h1 className={styles.title}>今天想聊点什么？</h1>
       <HomeChatInput />
       {/* <StarterList /> */}

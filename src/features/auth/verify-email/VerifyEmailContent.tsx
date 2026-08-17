@@ -1,7 +1,6 @@
 'use client'
 
-import { Block, Button, Text, Flexbox } from '@pure/ui'
-import { Input } from 'antd'
+import { Block, Button, Input, Text, Flexbox } from '@pure/ui'
 import { RefreshCw } from 'lucide-react'
 
 import { useAuthConfig } from '@/libs/better-auth/client'

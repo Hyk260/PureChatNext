@@ -18,6 +18,7 @@ vi.mock('@pure/ui', () => ({
   ),
   Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Icon: () => null,
+  Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
   Modal: ({
     children,
     okButtonProps,

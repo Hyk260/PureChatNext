@@ -1,7 +1,6 @@
 'use client'
 
-import { Checkbox } from 'antd'
-import { Center, Text, Flexbox } from '@pure/ui'
+import { Center, Checkbox, Flexbox, Text } from '@pure/ui'
 import { formatDateTime, formatSize } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useCallback } from 'react'
@@ -111,7 +110,7 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
           width: columnWidths.name,
         }}
       >
-        <FileIcon fileType={item.fileType} />
+        <FileIcon fileName={item.name} isDirectory={isFolder} size={24} />
         <Text ellipsis style={{ color: cssVar.colorText, flex: 1, minWidth: 0 }}>
           {item.name}
         </Text>

@@ -1,7 +1,6 @@
 'use client'
 
-import { Input } from 'antd'
-import { confirmModal, DropdownMenu, Icon, Modal, Text, Flexbox } from '@pure/ui'
+import { confirmModal, DropdownMenu, Icon, Input, Modal, Text, Flexbox } from '@pure/ui'
 import type { MenuInfo, MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import {

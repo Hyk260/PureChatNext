@@ -1,6 +1,6 @@
 'use client'
 
-import { Text, Flexbox } from '@pure/ui'
+import { Flexbox } from '@pure/ui'
 import { useChat } from '@ai-sdk/react'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { DefaultChatTransport } from 'ai'
@@ -95,11 +95,17 @@ const buildChatHref = (agentId: string, topicId?: string | null) => {
 
 const styles = createStaticStyles(({ css }) => ({
   error: css`
+    box-sizing: border-box;
+    width: 100%;
+    margin-block-end: 8px;
     padding: 8px 12px;
-    border-radius: 8px;
+    border: 1px solid ${cssVar.colorErrorBorder};
+    border-radius: 16px;
     background: ${cssVar.colorErrorBg};
     color: ${cssVar.colorError};
     font-size: 13px;
+    line-height: 1.5;
+    word-break: break-word;
   `,
   page: css`
     display: flex;
@@ -245,9 +251,6 @@ const ChatView = memo<ChatViewProps>(
       fire()
     }, [isBusy, messages, onCacheMessages, persistMessages, topicId])
 
-    // Flush latest messages on real unmount (topic switch / navigate away).
-    // Strict Mode runs cleanup→setup on the same fiber; delay the PUT and cancel it
-    // if we remount, otherwise a single topic open would PUT 2–3 times by itself.
     useEffect(() => {
       if (!topicId) return
 
@@ -299,7 +302,6 @@ const ChatView = memo<ChatViewProps>(
             body: requestBody,
           }
         )
-        // replaceAll (PUT) bumps topic.updatedAt server-side; refresh sidebar order.
         onTopicsRefresh()
       },
       [clearError, onTopicsRefresh, requestBody, sendMessage]
@@ -314,8 +316,6 @@ const ChatView = memo<ChatViewProps>(
             onTopicsRefresh()
             setPendingTopicSend(text)
             setPendingTopicSendFiles(files)
-            // Must go through the SPA router — raw history.replaceState does not
-            // update react-router useSearchParams, so ChatView would never remount.
             router.replace(buildChatHref(agentId, topic.id))
           } catch (error) {
             console.error('[chat] createTopic failed', error)
@@ -336,8 +336,6 @@ const ChatView = memo<ChatViewProps>(
       [isBusy, sendOrSolidify]
     )
 
-    // Mount-only handoff. Do NOT depend on sendWithBody/sendOrSolidify — their
-    // identity churn during streaming would re-fire sendMessage repeatedly.
     const sendWithBodyRef = useRef(sendWithBody)
     const sendOrSolidifyRef = useRef(sendOrSolidify)
     useLayoutEffect(() => {
@@ -425,7 +423,13 @@ const ChatView = memo<ChatViewProps>(
           onEdit={handleEdit}
           onRegenerate={handleRegenerate}
         />
-        {error ? <Text className={styles.error}>{error.message || '发送失败，请稍后重试'}</Text> : null}
+        {error ? (
+          <WideScreenContainer fill={false}>
+            <div className={styles.error} role='alert'>
+              {error.message || '发送失败，请稍后重试'}
+            </div>
+          </WideScreenContainer>
+        ) : null}
       </>
     )
   }

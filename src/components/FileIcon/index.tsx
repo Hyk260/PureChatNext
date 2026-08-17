@@ -1,32 +1,39 @@
 'use client'
 
-import { FileIcon as LucideFile, FileImage, FileText, FileVideo, FolderIcon, Music } from 'lucide-react'
+import { FileTypeIcon, MaterialFileTypeIcon } from '@pure/ui'
 import { memo } from 'react'
 
 import { DOCUMENT_FOLDER_TYPE } from '@/const/resources/fileTypes'
 
+import { mimeTypeMap } from './config'
+
 interface FileIconProps {
-  fileType: string
+  fileName: string
+  fileType?: string
+  isDirectory?: boolean
   size?: number
+  variant?: 'raw' | 'file' | 'folder'
 }
 
-const FileIcon = memo<FileIconProps>(({ fileType, size = 20 }) => {
-  if (fileType === DOCUMENT_FOLDER_TYPE) {
-    return <FolderIcon size={size} />
+const FileIcon = memo<FileIconProps>(({ fileName, fileType, size, variant = 'raw', isDirectory }) => {
+  if (isDirectory || fileType === DOCUMENT_FOLDER_TYPE) {
+    return (
+      <MaterialFileTypeIcon
+        fallbackUnknownType={false}
+        filename={fileName}
+        size={size}
+        type='folder'
+        variant={variant}
+      />
+    )
   }
-  if (fileType.startsWith('image/')) {
-    return <FileImage size={size} />
+
+  const ext = Object.keys(mimeTypeMap).find((key) => fileName.toLowerCase().endsWith(`.${key}`))
+  if (ext) {
+    return <FileTypeIcon color={mimeTypeMap[ext]} filetype={ext.toUpperCase()} size={size} type='file' />
   }
-  if (fileType.startsWith('video/')) {
-    return <FileVideo size={size} />
-  }
-  if (fileType.startsWith('audio/')) {
-    return <Music size={size} />
-  }
-  if (fileType.startsWith('text/') || fileType.includes('pdf')) {
-    return <FileText size={size} />
-  }
-  return <LucideFile size={size} />
+
+  return <MaterialFileTypeIcon filename={fileName} size={size} type='file' variant={variant} />
 })
 
 FileIcon.displayName = 'FileIcon'

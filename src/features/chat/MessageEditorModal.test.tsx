@@ -2,15 +2,12 @@ import { fireEvent, render, waitFor } from '@testing-library/react'
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('antd', () => ({
+vi.mock('@pure/ui', () => ({
   Input: {
     TextArea: ({ onChange, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
       <textarea {...props} onChange={onChange} />
     ),
   },
-}))
-
-vi.mock('@pure/ui', () => ({
   Modal: ({
     cancelText,
     children,

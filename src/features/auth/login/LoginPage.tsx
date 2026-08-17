@@ -1,12 +1,12 @@
 'use client'
 
 import { login } from '@/libs/utils/api-client'
-import { Input, Card } from 'antd'
+import { Card } from 'antd'
 import Link from '@/utils/link'
 import { useRouter } from '@/utils/navigation'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Button } from '@pure/ui'
+import { Button, Input } from '@pure/ui'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')

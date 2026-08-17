@@ -1,7 +1,6 @@
 'use client'
 
-import { Checkbox } from 'antd'
-import { Center, Flexbox } from '@pure/ui'
+import { Center, Checkbox, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useCallback } from 'react'
 import type { MouseEvent, PointerEvent } from 'react'
@@ -108,12 +107,6 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
         style={{ flexShrink: 0, paddingInlineEnd: 16, position: 'relative', width: columnWidths.size }}
       >
         大小
-        <ColumnResizeHandle
-          currentWidth={columnWidths.size}
-          maxWidth={200}
-          minWidth={80}
-          onResize={(width) => updateColumnWidth('size', width)}
-        />
       </Flexbox>
     </Flexbox>
   )

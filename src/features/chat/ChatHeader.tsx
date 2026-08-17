@@ -1,7 +1,6 @@
 'use client'
 
-import { Input } from 'antd'
-import { ActionIcon, confirmModal, copyToClipboard, DropdownMenu, Icon, Modal, Text, Flexbox } from '@pure/ui'
+import { ActionIcon, confirmModal, copyToClipboard, DropdownMenu, Icon, Input, Modal, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
   Hash,

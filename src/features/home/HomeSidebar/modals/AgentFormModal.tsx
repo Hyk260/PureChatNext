@@ -1,7 +1,6 @@
 'use client'
 
-import { Input } from 'antd'
-import { Text, Modal, Flexbox } from '@pure/ui'
+import { Input, Text, Modal, Flexbox } from '@pure/ui'
 import { memo, useEffect, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'

@@ -1,7 +1,7 @@
 'use client'
 
-import { Alert, Button as AntButton, Input, QRCode, Radio, Select, Spin } from 'antd'
-import { Button, Flexbox, Text } from '@pure/ui'
+import { Alert, Button as AntButton, QRCode, Radio, Select, Spin } from 'antd'
+import { Button, Flexbox, Input, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'

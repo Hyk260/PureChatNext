@@ -1,7 +1,6 @@
 'use client'
 
-import { Checkbox } from 'antd'
-import { Block, Center, Grid, Text, Flexbox } from '@pure/ui'
+import { Block, Center, Checkbox, Flexbox, Grid, Text } from '@pure/ui'
 import { formatDate } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useCallback } from 'react'
@@ -91,7 +90,7 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
           >
             <Checkbox checked={selected} style={{ pointerEvents: 'none' }} />
           </Center>
-          <FileIcon fileType={item.fileType} size={16} />
+          <FileIcon fileName={item.name} isDirectory={isFolder} size={16} />
         </Flexbox>
         {isImage && item.url ? (
           <img
@@ -101,7 +100,7 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
           />
         ) : (
           <Flexbox align='center' justify='center' style={{ height: 120 }}>
-            <FileIcon fileType={item.fileType} size={40} />
+            <FileIcon fileName={item.name} isDirectory={isFolder} size={40} />
           </Flexbox>
         )}
         <Text ellipsis>{item.name}</Text>

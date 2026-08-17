@@ -1,7 +1,6 @@
 'use client'
 
-import { Modal } from '@pure/ui'
-import { Input } from 'antd'
+import { Input, Modal } from '@pure/ui'
 import { memo, useEffect, useState } from 'react'
 
 interface MessageEditorModalProps {

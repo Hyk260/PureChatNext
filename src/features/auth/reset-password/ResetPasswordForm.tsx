@@ -1,7 +1,7 @@
 'use client'
 
-import { Block, Button, Icon, Text } from '@pure/ui'
-import { Form, Input } from 'antd'
+import { Block, Button, Icon, InputPassword, Text } from '@pure/ui'
+import { Form } from 'antd'
 import { Lock } from 'lucide-react'
 
 import { useResetPassword } from './useResetPassword'
@@ -42,7 +42,7 @@ export const ResetPasswordForm = () => {
   return (
     <Form form={form} layout='vertical' onFinish={handleResetPassword}>
       <Form.Item name='password' rules={passwordRules}>
-        <Input.Password
+        <InputPassword
           placeholder='请输入新密码'
           size='large'
           prefix={<Icon icon={Lock} style={{ marginInline: 6 }} />}
@@ -50,7 +50,7 @@ export const ResetPasswordForm = () => {
       </Form.Item>
 
       <Form.Item dependencies={['password']} name='confirmPassword' rules={confirmPasswordRules}>
-        <Input.Password
+        <InputPassword
           placeholder='请再次输入新密码'
           size='large'
           prefix={<Icon icon={Lock} style={{ marginInline: 6 }} />}

@@ -5,14 +5,13 @@ import { Input } from 'antd'
 import { memo, useEffect, useState } from 'react'
 
 interface MessageEditorModalProps {
-  isUser: boolean
   onCancel: () => void
   onSubmit: (value: string) => void | Promise<void>
   open: boolean
   value: string
 }
 
-const MessageEditorModal = memo<MessageEditorModalProps>(({ isUser, onCancel, onSubmit, open, value }) => {
+const MessageEditorModal = memo<MessageEditorModalProps>(({ onCancel, onSubmit, open, value }) => {
   const [draft, setDraft] = useState(value)
   const [confirmLoading, setConfirmLoading] = useState(false)
 
@@ -45,7 +44,7 @@ const MessageEditorModal = memo<MessageEditorModalProps>(({ isUser, onCancel, on
       closable={false}
       confirmLoading={confirmLoading}
       destroyOnHidden
-      okText={isUser ? '发送' : '保存'}
+      okText='保存'
       open={open}
       title={null}
       width='min(90vw, 920px)'

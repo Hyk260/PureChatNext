@@ -21,6 +21,26 @@ pnpm dev:docker:reset -- --yes
 
 `dev:docker:reset` 会删除 PostgreSQL、Redis、RustFS 的全部开发数据。日常停止只使用 `dev:docker:down`。
 
+## 镜像构建命令
+
+`Dockerfile` 的 builder 阶段执行 `pnpm run build:docker`，不要用普通 `pnpm build` 替代。后者只产出可运行的 Next 应用，不含容器启动时要用的迁移入口。
+
+### `build:docker`
+
+等价于 `pnpm build && pnpm run build:docker:migrate`：先走和 Vercel 相同的 SPA + Next standalone 构建，再打包容器启动用的迁移入口。本地一般不需要手跑；`docker compose ... up --build` 会在镜像里执行。
+
+### `build:docker:migrate`
+
+`scripts/build-docker-migrate.mjs` 用 esbuild 把 `scripts/docker-migrate.mjs` 打成单文件 `dist/docker-migrate.mjs`（Node 22 ESM）。镜像再把它拷成 `/app/docker-migrate.mjs`。
+
+必须单独 bundle：standalone 运行时没有完整 `node_modules` 和源码，启动前又要能连上 PostgreSQL、拿 advisory lock、跑 Drizzle SQL。打进一个文件后，容器入口可以是：
+
+```sh
+node /app/docker-migrate.mjs && exec node /app/server.js
+```
+
+迁移失败则进程退出，应用不会起来。逻辑说明见 [Drizzle 指南](../drizzle-setup.zh-CN.md)。
+
 ## 生产部署
 
 生成生产配置：

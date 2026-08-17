@@ -1,22 +1,65 @@
 'use client'
 
-import { Modal } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import type { HtmlPreviewProps } from '@pure/ui'
+import { ActionIcon, copyToClipboard, HtmlPreview, Modal } from '@pure/ui'
+import { Segmented } from 'antd'
+import { Copy, Download } from 'lucide-react'
 import { memo } from 'react'
 
 import { toHtmlPreviewSrcDoc } from '@/features/chat/htmlPreview'
 
-const HTML_PREVIEW_SANDBOX = 'allow-scripts allow-forms allow-modals'
+const MODE_OPTIONS = [
+  { label: '预览', value: 'preview' },
+  { label: '源码', value: 'source' },
+] as const
 
-const styles = createStaticStyles(({ css }) => ({
-  frame: css`
-    display: block;
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: ${cssVar.colorBgLayout};
-  `,
-}))
+async function downloadHtml(content: string, fileName = 'preview.html') {
+  const blob = new Blob([content], { type: 'text/html;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  try {
+    const link = document.createElement('a')
+    link.download = fileName
+    link.href = url
+    link.style.display = 'none'
+    document.body.append(link)
+    link.click()
+    link.remove()
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+const actionsRender: NonNullable<HtmlPreviewProps['actionsRender']> = ({
+  actionIconSize,
+  getContent,
+  mode,
+  setMode,
+}) => (
+  <>
+    <Segmented
+      options={[...MODE_OPTIONS]}
+      size='small'
+      value={mode}
+      onChange={(value) => setMode(value as typeof mode)}
+    />
+    <ActionIcon
+      icon={Copy}
+      size={actionIconSize}
+      title='复制'
+      onClick={() => {
+        void copyToClipboard(getContent())
+      }}
+    />
+    <ActionIcon
+      icon={Download}
+      size={actionIconSize}
+      title='下载 HTML'
+      onClick={() => {
+        void downloadHtml(getContent())
+      }}
+    />
+  </>
+)
 
 interface HtmlPreviewModalProps {
   content: string
@@ -36,13 +79,18 @@ const HtmlPreviewModal = memo<HtmlPreviewModalProps>(({ content, language = 'htm
       width='min(96vw, 1080px)'
       onCancel={onClose}
     >
-      <iframe
-        className={styles.frame}
-        referrerPolicy='no-referrer'
-        sandbox={HTML_PREVIEW_SANDBOX}
-        srcDoc={toHtmlPreviewSrcDoc(content, language)}
-        title='HTML 预览'
-      />
+      <HtmlPreview
+        language={language}
+        copyable={true}
+        defaultHeight={360}
+        downloadable={true}
+        style={{ height: '100%' }}
+        styles={{ iframe: { height: '100%' } }}
+        variant='borderless'
+        actionsRender={actionsRender}
+      >
+        {toHtmlPreviewSrcDoc(content, language)}
+      </HtmlPreview>
     </Modal>
   )
 })

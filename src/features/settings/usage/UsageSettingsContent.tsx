@@ -17,6 +17,7 @@ type PickerValue = Exclude<NonNullable<ComponentProps<typeof RangePicker>['value
 type DateRange = [PickerValue, PickerValue]
 
 const numberFormat = new Intl.NumberFormat('zh-CN')
+const EMPTY_CELL = '--'
 const dateTimeFormat = new Intl.DateTimeFormat('zh-CN', {
   day: 'numeric',
   hour: '2-digit',
@@ -27,7 +28,7 @@ const dateTimeFormat = new Intl.DateTimeFormat('zh-CN', {
   timeZone: SHANGHAI_TIMEZONE,
 })
 
-const formatDuration = (value: number | null) => (value == null ? '--' : `${(value / 1000).toFixed(2)}s`)
+const formatDuration = (value: number | null) => (value == null ? EMPTY_CELL : `${(value / 1000).toFixed(2)}s`)
 const formatDateTime = (value: string) => dateTimeFormat.format(new Date(value)).replace('日', '')
 const getPercentage = (used: number, limit: number) => Math.round((used / Math.max(1, limit)) * 100)
 const formatResetHint = (days: number, hours: number) => {
@@ -162,6 +163,32 @@ const UsageMetric = ({ hint, label, limit, used, value }: UsageMetricProps) => {
   )
 }
 
+function renderModel(value: string | null) {
+  if (!value) return EMPTY_CELL
+
+  return (
+    <span className={styles.model}>
+      <ModelIcon model={value} size={20} />
+      <span>{value}</span>
+    </span>
+  )
+}
+
+function renderTokenUsage(_value: unknown, record: UsageItem) {
+  if (record.inputTokens == null && record.outputTokens == null) return EMPTY_CELL
+
+  return (
+    <Flexbox horizontal align='center' gap={6} wrap='wrap'>
+      <Tag color={record.totalTokens >= 50_000 ? 'orange' : 'green'} size='small'>
+        {numberFormat.format(record.totalTokens)}
+      </Tag>
+      <Text type='secondary'>
+        = ↓ {numberFormat.format(record.inputTokens ?? 0)} + ↑ {numberFormat.format(record.outputTokens ?? 0)}
+      </Text>
+    </Flexbox>
+  )
+}
+
 export function UsageSettingsContent() {
   const [data, setData] = useState<UsageResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -240,49 +267,29 @@ export function UsageSettingsContent() {
         sortOrder: activeSortOrder('createdAt'),
         sorter: true,
         title: '时间',
-        width: 160,
+        width: 100,
       },
       {
         key: 'type',
         render: () => <MessageSquareText color={cssVar.colorPrimary} size={18} />,
         title: '类型',
-        width: 72,
+        width: 50,
       },
-      { key: 'trigger', render: () => '聊天消息', title: '触发方式', width: 105 },
+      { key: 'trigger', render: () => '聊天消息', title: '触发方式', width: 90 },
       {
         dataIndex: 'model',
         key: 'model',
-        render: (value: string | null) =>
-          value ? (
-            <span className={styles.model}>
-              <ModelIcon model={value} size={20} />
-              <span>{value}</span>
-            </span>
-          ) : (
-            '--'
-          ),
+        render: renderModel,
         title: '模型',
-        width: 210,
+        width: 120,
       },
       {
         key: 'totalTokens',
-        render: (_value, record) =>
-          record.inputTokens == null && record.outputTokens == null ? (
-            '--'
-          ) : (
-            <Flexbox horizontal align='center' gap={6} wrap='wrap'>
-              <Tag color={record.totalTokens >= 50_000 ? 'orange' : 'green'} size='small'>
-                {numberFormat.format(record.totalTokens)}
-              </Tag>
-              <Text type='secondary'>
-                = ↓ {numberFormat.format(record.inputTokens ?? 0)} + ↑ {numberFormat.format(record.outputTokens ?? 0)}
-              </Text>
-            </Flexbox>
-          ),
+        render: renderTokenUsage,
         sortOrder: activeSortOrder('totalTokens'),
         sorter: true,
         title: 'Token 使用量',
-        width: 270,
+        width: 180,
       },
       {
         dataIndex: 'credits',
@@ -291,7 +298,7 @@ export function UsageSettingsContent() {
         sortOrder: activeSortOrder('credits'),
         sorter: true,
         title: '消耗积分',
-        width: 115,
+        width: 90,
       },
       {
         dataIndex: 'durationMs',
@@ -327,7 +334,7 @@ export function UsageSettingsContent() {
           </Block>
         ) : data ? (
           <Block padding={0} variant='outlined'>
-            <Grid className={styles.metricGrid} gap={0} maxItemWidth={360} rows={1}>
+            <Grid className={styles.metricGrid} gap={0} maxItemWidth={160} rows={1}>
               <UsageMetric
                 hint={formatResetHint(data.balance.resetIn.days, data.balance.resetIn.hours)}
                 label='积分'
@@ -351,6 +358,7 @@ export function UsageSettingsContent() {
         <Block className={styles.details} padding={0} variant='outlined'>
           <Flexbox horizontal className={styles.toolbar} gap={10} wrap='wrap'>
             <SearchBar
+              size='small'
               loading={loading}
               placeholder='搜索模型'
               style={{ flex: '1 1 260px' }}
@@ -368,6 +376,7 @@ export function UsageSettingsContent() {
               }}
             />
             <Select
+             size='small'
               options={[
                 { label: '全部类型', value: 'all' },
                 { label: '聊天消息', value: 'chat' },
@@ -380,6 +389,7 @@ export function UsageSettingsContent() {
               }}
             />
             <RangePicker
+             size='small'
               placeholder={['开始日期', '结束日期']}
               style={{ flex: '1 1 280px' }}
               value={range}
@@ -388,7 +398,7 @@ export function UsageSettingsContent() {
                 setPage(1)
               }}
             />
-            <Button icon={RotateCcw} onClick={reset}>
+            <Button size='small' icon={RotateCcw} onClick={reset}>
               重置
             </Button>
           </Flexbox>
@@ -426,6 +436,7 @@ export function UsageSettingsContent() {
               第 {rangeStart}-{rangeEnd} 条，共 {total} 条
             </Text>
             <Pagination
+              size='small'
               current={page}
               pageSize={pageSize}
               pageSizeOptions={[10, 20, 50, 100]}

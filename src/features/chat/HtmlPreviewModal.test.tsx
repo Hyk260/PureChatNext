@@ -3,6 +3,38 @@ import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@pure/ui', () => ({
+  ActionIcon: ({ title, onClick }: { onClick?: () => void; title?: string }) => (
+    <button type='button' onClick={onClick}>
+      {title}
+    </button>
+  ),
+  copyToClipboard: vi.fn(),
+  HtmlPreview: ({
+    actionsRender,
+    children,
+  }: {
+    actionsRender?: (props: {
+      actionIconSize: 'small'
+      content: string
+      getContent: () => string
+      mode: 'preview' | 'source'
+      originalNode: React.ReactNode
+      setMode: (mode: 'preview' | 'source') => void
+    }) => React.ReactNode
+    children: string
+  }) => (
+    <>
+      {actionsRender?.({
+        actionIconSize: 'small',
+        content: children,
+        getContent: () => children,
+        mode: 'preview',
+        originalNode: null,
+        setMode: vi.fn(),
+      })}
+      <iframe sandbox='allow-scripts allow-forms allow-modals' srcDoc={children} title='HTML 预览' />
+    </>
+  ),
   Modal: ({
     children,
     onCancel,
@@ -37,6 +69,17 @@ describe('HtmlPreviewModal', () => {
     expect(sandbox).toContain('allow-scripts')
     expect(sandbox).not.toContain('allow-same-origin')
     expect(iframe.srcdoc).toContain('<h1>登录</h1>')
+  })
+
+  it('renders Chinese toolbar labels', () => {
+    const { getByRole, getByText } = render(
+      <HtmlPreviewModal content='<h1>登录</h1>' open onClose={vi.fn()} />
+    )
+
+    expect(getByText('预览')).toBeTruthy()
+    expect(getByText('源码')).toBeTruthy()
+    expect(getByRole('button', { name: '复制' })).toBeTruthy()
+    expect(getByRole('button', { name: '下载 HTML' })).toBeTruthy()
   })
 
   it('closes from the dialog cancel action', () => {

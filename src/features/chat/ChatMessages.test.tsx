@@ -32,7 +32,20 @@ vi.mock('@pure/ui', () => ({
       )}
     </>
   ),
-  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Flexbox: ({
+    children,
+    align: _align,
+    gap: _gap,
+    horizontal: _horizontal,
+    justify: _justify,
+    ...props
+  }: {
+    children?: React.ReactNode
+    align?: string
+    gap?: number
+    horizontal?: boolean
+    justify?: string
+  } & React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
   Icon: () => <span />,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
   copyToClipboard: vi.fn(),
@@ -62,18 +75,16 @@ vi.mock('@/features/chat/MessageUsage', () => ({
 
 vi.mock('@/features/chat/MessageEditorModal', () => ({
   default: ({
-    isUser,
     onSubmit,
     open,
     value,
   }: {
-    isUser: boolean
     onSubmit: (value: string) => void
     open: boolean
     value: string
   }) =>
     open ? (
-      <div data-testid='message-editor' data-is-user={isUser} data-value={value}>
+      <div data-testid='message-editor' data-value={value}>
         <button type='button' onClick={() => onSubmit('edited message')}>
           提交编辑
         </button>
@@ -142,7 +153,6 @@ describe('ChatMessages message layout', () => {
 
     const editor = getByTestId('message-editor')
     expect(editor.dataset.value).toBe('hello')
-    expect(editor.dataset.isUser).toBe('true')
 
     fireEvent.click(getByText('提交编辑'))
     expect(onEdit).toHaveBeenCalledWith('user-1', 'edited message')

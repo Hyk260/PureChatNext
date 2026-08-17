@@ -46,13 +46,6 @@ const ModelFeatureTags = memo<ModelFeatureTagsProps>(({ abilities, contextWindow
 
   return (
     <Flexbox horizontal gap={2} justify='flex-end' style={{ width: '100%' }}>
-      {showTokens ? (
-        <Tooltip title={`该模型单个会话最多支持 ${contextWindowTokens!.toLocaleString('en-US')} Tokens`}>
-          <Tag className={styles.token} size='small'>
-            {formatTokenNumber(contextWindowTokens)}
-          </Tag>
-        </Tooltip>
-      ) : null}
       {showFunctionCall ? (
         <Tooltip title='该模型支持工具调用（Tool Calling）'>
           <Tag className={styles.tag} color='blue' size='small'>
@@ -64,6 +57,13 @@ const ModelFeatureTags = memo<ModelFeatureTagsProps>(({ abilities, contextWindow
         <Tooltip title='该模型支持视觉识别'>
           <Tag className={styles.tag} color='geekblue' size='small'>
             <Icon icon={EyeIcon} size={12} />
+          </Tag>
+        </Tooltip>
+      ) : null}
+      {showTokens ? (
+        <Tooltip title={`该模型单个会话最多支持 ${contextWindowTokens!.toLocaleString('en-US')} Tokens`}>
+          <Tag className={styles.token} size='small'>
+            {formatTokenNumber(contextWindowTokens)}
           </Tag>
         </Tooltip>
       ) : null}

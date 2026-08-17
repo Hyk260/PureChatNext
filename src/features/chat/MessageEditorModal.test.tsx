@@ -51,15 +51,12 @@ vi.mock('@pure/ui', () => ({
 import MessageEditorModal from '@/features/chat/MessageEditorModal'
 
 describe('MessageEditorModal', () => {
-  it.each([
-    [true, '发送'],
-    [false, '保存'],
-  ])('uses the expected submit label when isUser is %s', (isUser, label) => {
+  it('uses 保存 as the submit label', () => {
     const { getByRole } = render(
-      <MessageEditorModal isUser={isUser} open value='hello' onCancel={vi.fn()} onSubmit={vi.fn()} />
+      <MessageEditorModal open value='hello' onCancel={vi.fn()} onSubmit={vi.fn()} />
     )
 
-    expect(getByRole('button', { name: label })).toBeTruthy()
+    expect(getByRole('button', { name: '保存' })).toBeTruthy()
     expect((getByRole('textbox', { name: '消息内容' }) as HTMLTextAreaElement).value).toBe('hello')
   })
 
@@ -70,7 +67,7 @@ describe('MessageEditorModal', () => {
     const onCancel = vi.fn()
     const onSubmit = vi.fn()
     const view = render(
-      <MessageEditorModal isUser={false} open value='hello' onCancel={onCancel} onSubmit={onSubmit} />
+      <MessageEditorModal open value='hello' onCancel={onCancel} onSubmit={onSubmit} />
     )
 
     fireEvent.click(getTarget(view))
@@ -82,7 +79,7 @@ describe('MessageEditorModal', () => {
     const onCancel = vi.fn()
     const onSubmit = vi.fn()
     const view = render(
-      <MessageEditorModal isUser={false} open value='hello' onCancel={onCancel} onSubmit={onSubmit} />
+      <MessageEditorModal open value='hello' onCancel={onCancel} onSubmit={onSubmit} />
     )
 
     fireEvent.keyDown(view.getByRole('dialog'), { key: 'Escape' })
@@ -93,12 +90,12 @@ describe('MessageEditorModal', () => {
   it('submits trimmed content and closes after success', async () => {
     const onCancel = vi.fn()
     const onSubmit = vi.fn().mockResolvedValue(undefined)
-    const view = render(<MessageEditorModal isUser open value='hello' onCancel={onCancel} onSubmit={onSubmit} />)
+    const view = render(<MessageEditorModal open value='hello' onCancel={onCancel} onSubmit={onSubmit} />)
 
     fireEvent.change(view.getByRole('textbox', { name: '消息内容' }), {
       target: { value: '  updated  ' },
     })
-    fireEvent.click(view.getByRole('button', { name: '发送' }))
+    fireEvent.click(view.getByRole('button', { name: '保存' }))
 
     expect(onSubmit).toHaveBeenCalledWith('updated')
     await waitFor(() => expect(onCancel).toHaveBeenCalledOnce())
@@ -108,7 +105,7 @@ describe('MessageEditorModal', () => {
     const onCancel = vi.fn()
     const onSubmit = vi.fn()
     const view = render(
-      <MessageEditorModal isUser={false} open value='hello' onCancel={onCancel} onSubmit={onSubmit} />
+      <MessageEditorModal open value='hello' onCancel={onCancel} onSubmit={onSubmit} />
     )
 
     fireEvent.change(view.getByRole('textbox', { name: '消息内容' }), { target: { value: draft } })
@@ -122,7 +119,7 @@ describe('MessageEditorModal', () => {
     const onCancel = vi.fn()
     const onSubmit = vi.fn().mockRejectedValue(new Error('save failed'))
     const view = render(
-      <MessageEditorModal isUser={false} open value='hello' onCancel={onCancel} onSubmit={onSubmit} />
+      <MessageEditorModal open value='hello' onCancel={onCancel} onSubmit={onSubmit} />
     )
 
     fireEvent.change(view.getByRole('textbox', { name: '消息内容' }), { target: { value: 'updated' } })

@@ -5,6 +5,7 @@ export { Alert, type AlertProps } from './Alert'
 export { Avatar, type AvatarGroupProps, type AvatarProps } from './Avatar'
 export { Block, type BlockProps, type BlockVariant } from './Block'
 export { Flexbox, type FlexboxProps } from './Flexbox'
+export { HtmlPreview, type HtmlPreviewProps } from './HtmlPreview'
 export { Center, Grid, MaskShadow, ScrollShadow } from './Layout'
 export {
   DropdownMenu,

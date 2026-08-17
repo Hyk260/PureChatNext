@@ -17,6 +17,7 @@
     "./DropdownMenu": "./src/DropdownMenu/index.ts",
     "./Empty": "./src/Empty/index.ts",
     "./Flexbox": "./src/Flexbox/index.ts",
+    "./HtmlPreview": "./src/HtmlPreview/index.ts",
     "./Icon": "./src/Icon/index.tsx",
     "./Input": "./src/Input/index.ts",
     "./Layout": "./src/Layout/index.ts",

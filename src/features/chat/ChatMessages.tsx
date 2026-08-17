@@ -1,16 +1,16 @@
 'use client'
 
-import { ActionIcon, Avatar, copyToClipboard, DropdownMenu, Text, Flexbox } from '@pure/ui'
+import { Avatar, copyToClipboard, Text, Flexbox } from '@pure/ui'
 import type { ChatMessageMetadata } from '@pure/types'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import type { UIMessage } from 'ai'
-import { Copy, Edit, MoreHorizontal, RefreshCw, Trash } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
 import type { ScrollbarRef } from '@/components/Scrollbar'
 import { PulseDots } from '@/components/Loading'
+import MessageActions from '@/features/chat/MessageActions'
 import MessageAttachments from '@/features/chat/MessageAttachments'
 import MessageEditorModal from '@/features/chat/MessageEditorModal'
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
@@ -28,22 +28,6 @@ export interface AgentMeta {
 }
 
 const styles = createStaticStyles(({ css }) => ({
-  actions: css`
-    display: flex;
-    margin-block-start: 4px;
-    visibility: hidden;
-    pointer-events: none;
-  `,
-  actionsVisible: css`
-    visibility: visible;
-    pointer-events: auto;
-  `,
-  actionsAssistant: css`
-    justify-content: flex-start;
-  `,
-  actionsUser: css`
-    justify-content: flex-end;
-  `,
   assistant: css`
     align-self: flex-start;
     width: 100%;
@@ -81,28 +65,6 @@ const styles = createStaticStyles(({ css }) => ({
 
     pre {
       margin-block: 8px;
-    }
-  `,
-  moreTrigger: css`
-    cursor: pointer;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    border: none;
-    border-radius: 6px;
-
-    color: ${cssVar.colorTextSecondary};
-    background: transparent;
-    outline: none;
-
-    &:hover {
-      color: ${cssVar.colorText};
-      background: ${cssVar.colorFillSecondary};
     }
   `,
   row: css`
@@ -165,18 +127,6 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
       onDelete(message.id)
     }, [message.id, onDelete])
 
-    const handleRegenerate = useCallback(() => {
-      onRegenerate(message.id)
-    }, [message.id, onRegenerate])
-
-    const moreMenuItems = [
-      { icon: Edit, key: 'edit', label: '编辑', onClick: handleEdit },
-      { icon: Copy, key: 'copy', label: '复制', onClick: handleCopy },
-      { type: 'divider' as const },
-      // { icon: RefreshCw, key: 'regenerate', label: '重新生成', onClick: handleRegenerate },
-      { danger: true, icon: Trash, key: 'delete', label: '删除', onClick: handleDelete },
-    ]
-
     const hasAttachments = message.parts.some((part) => part.type === 'file')
 
     if (!text && !reasoning && !hasWebSearch && !hasAttachments && !isStreaming) return null
@@ -212,30 +162,15 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
 
         {!isUser && metadata ? <MessageUsage metadata={metadata} /> : null}
 
-        {!disabled ? (
-          <div
-            aria-hidden={isStreaming || undefined}
-            className={cx(
-              styles.actions,
-              isUser ? styles.actionsUser : styles.actionsAssistant,
-              !isStreaming && styles.actionsVisible
-            )}
-            data-message-actions
-          >
-            <Flexbox horizontal align='center' gap={2}>
-              {/* <ActionIcon icon={RefreshCw} size='small' title='重新生成' onClick={handleRegenerate} /> */}
-              <ActionIcon icon={Edit} size='small' title='编辑' onClick={handleEdit} />
-              <ActionIcon icon={Copy} size='small' title='复制' onClick={handleCopy} />
-              <DropdownMenu items={moreMenuItems} placement={isUser ? 'bottomRight' : 'bottomLeft'}>
-                <button className={styles.moreTrigger} title='更多' type='button'>
-                  <MoreHorizontal size={16} />
-                </button>
-              </DropdownMenu>
-            </Flexbox>
-          </div>
-        ) : null}
-        <MessageEditorModal
+        <MessageActions
+          disabled={disabled}
+          isStreaming={isStreaming}
           isUser={isUser}
+          onCopy={handleCopy}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+        />
+        <MessageEditorModal
           open={editing}
           value={text}
           onCancel={() => setEditing(false)}

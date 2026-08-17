@@ -133,11 +133,6 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
                 <Icon icon={AtomIcon} size={12} />
               </Tag>
             ) : null}
-            {/* {abilities?.structuredOutput ? (
-              <Tag className={styles.tag} color='cyan' size='small' style={{ fontSize: 11 }}>
-                JSON
-              </Tag>
-            ) : null} */}
           </Flexbox>
         </Flexbox>
       ) : null}

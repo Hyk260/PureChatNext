@@ -376,27 +376,10 @@ const ChatView = memo<ChatViewProps>(
     )
 
     const handleEdit = useCallback(
-      async (id: string, text: string) => {
-        const target = messagesRef.current.find((message) => message.id === id)
-        if (!target) return
-
-        clearError()
-
-        if (target.role === 'user') {
-          // Replace the user message and regenerate the assistant reply.
-          await sendMessage(
-            { text, messageId: id },
-            {
-              body: requestBody,
-            }
-          )
-          onTopicsRefresh()
-          return
-        }
-
+      (id: string, text: string) => {
         setMessages((prev) => prev.map((message) => (message.id === id ? withMessageText(message, text) : message)))
       },
-      [clearError, onTopicsRefresh, requestBody, sendMessage, setMessages]
+      [setMessages]
     )
 
     const handleStop = useCallback(() => {
@@ -877,7 +860,7 @@ const ChatPage = memo(() => {
       {!isClient ? (
         <div className={styles.shell} />
       ) : (
-        <Flexbox className={styles.page} gap={16}>
+        <Flexbox className={styles.page}>
           {messagesReady ? (
             <ChatView
               key={`${agentId}:${activeTopicId ?? 'draft'}`}

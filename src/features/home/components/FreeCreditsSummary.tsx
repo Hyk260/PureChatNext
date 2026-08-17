@@ -62,7 +62,7 @@ const FreeCreditsSummary = memo<{ onClick?: () => void }>(({ onClick }) => {
       : '暂不可用'
 
   return (
-    <Link className={styles.link} href='/settings/credits' onClick={onClick}>
+    <Link className={styles.link} href='/settings/usage' onClick={onClick}>
       <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
         <Text type='secondary'>积分</Text>
         <Flexbox horizontal align='center' gap={10}>

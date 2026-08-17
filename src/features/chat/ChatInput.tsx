@@ -91,7 +91,6 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   shell: css`
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
   `,
   srOnly: css`
     position: absolute;
@@ -264,7 +263,7 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, on
   const canSend = Boolean(input.trim() || files.length > 0) && !isBusy
 
   return (
-    <Block className={styles.shell} padding={12} variant='outlined'>
+    <Block padding={12} variant='outlined'>
       <input
         ref={fileInputRef}
         accept={CHAT_ATTACHMENT_ACCEPT}

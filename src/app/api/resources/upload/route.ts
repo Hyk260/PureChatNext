@@ -27,6 +27,11 @@ const quotaExceededResponse = (usedBytes: number, requestedBytes: number) =>
     { status: 413 }
   )
 
+/**
+ * POST /api/resources/upload
+ * 上传文件到 S3 并写入文件记录
+ * @param request - multipart/form-data，字段 `file`；可选 `knowledgeBaseId` / `parentId`
+ */
 export const POST = withAuth(async (request, { userId }) => {
   if (!isS3Configured()) {
     return jsonError('S3 is not configured', 503)

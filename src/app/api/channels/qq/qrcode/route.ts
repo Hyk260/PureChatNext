@@ -7,6 +7,11 @@ import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { QQBindingError } from '@/libs/channels/qq/binding'
 import { cancelQQQrSession, completeQQQrSession, getQQQrSessionStatus, startQQQrSession } from '@/libs/channels/qq/qrSession'
 
+/**
+ * POST /api/channels/qq/qrcode
+ * 发起 QQ 扫码会话，或 `action=complete` 完成绑定
+ * @param request - JSON `{ agentId, model?, provider? }` 或 `{ action: 'complete', sessionId, appId }`
+ */
 export const POST = withAuth(async (request: NextRequest, { userId }) => {
   if (!gatewayEnv.CHANNEL_GATEWAY_ENABLED) {
     return jsonError('当前部署不支持 QQ 扫码连接，请使用 URL 回调', 409)
@@ -50,6 +55,11 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
   }
 })
 
+/**
+ * GET /api/channels/qq/qrcode
+ * 轮询 QQ 扫码会话状态
+ * @param request - query `sessionId` 必填
+ */
 export const GET = withAuth(async (request: NextRequest, { userId }) => {
   const sessionId = request.nextUrl.searchParams.get('sessionId')?.trim()
   if (!sessionId) return jsonError('sessionId is required')
@@ -58,6 +68,11 @@ export const GET = withAuth(async (request: NextRequest, { userId }) => {
   return NextResponse.json(status)
 })
 
+/**
+ * DELETE /api/channels/qq/qrcode
+ * 取消 QQ 扫码会话
+ * @param request - query `sessionId` 必填
+ */
 export const DELETE = withAuth(async (request: NextRequest, { userId }) => {
   const sessionId = request.nextUrl.searchParams.get('sessionId')?.trim()
   if (!sessionId) return jsonError('sessionId is required')

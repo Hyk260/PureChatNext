@@ -35,6 +35,11 @@ const batchSchema = z.object({
 
 type RouteContext = { params: Promise<{ applicationId: string }> }
 
+/**
+ * POST /api/channels/wechat/webhook/[applicationId]
+ * 微信 Gateway / 推送批量入站消息
+ * @param request - JSON `{ msgs, get_updates_buf? }`；需通过 webhook 鉴权
+ */
 export async function POST(request: NextRequest, context: RouteContext) {
   if (!authorizeWechatWebhook(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { applicationId: raw } = await context.params

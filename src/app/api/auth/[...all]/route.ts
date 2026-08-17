@@ -32,11 +32,19 @@ const validateJsonBody = async (request: Request) => {
   }
 }
 
+/**
+ * GET /api/auth/[...all]
+ * better-auth 捕获路由（会话 / OAuth 等 GET）
+ */
 export const GET = async (request: NextRequest) => {
   // log('GET %s', request.url);
   return handler.GET(request)
 }
 
+/**
+ * POST /api/auth/[...all]
+ * better-auth 捕获路由（登录 / 注册等 POST）；非法 JSON 在边界返回 400
+ */
 export const POST = async (request: NextRequest) => {
   log('POST %s content-type=%s', request.url, request.headers.get('content-type') || '')
 

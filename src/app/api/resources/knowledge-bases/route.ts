@@ -10,6 +10,10 @@ const createSchema = z.object({
   name: z.string().min(1),
 })
 
+/**
+ * GET /api/resources/knowledge-bases
+ * 列出当前用户的知识库
+ */
 export const GET = withAuth(async (_request, { userId }) => {
   try {
     const items = await new KnowledgeBaseModel(userId).list()
@@ -26,6 +30,11 @@ export const GET = withAuth(async (_request, { userId }) => {
   }
 })
 
+/**
+ * POST /api/resources/knowledge-bases
+ * 创建知识库
+ * @param request - JSON `{ name, avatar?, description? }`
+ */
 export const POST = withAuth(async (request, { userId }) => {
   const body = await request.json()
   const parsed = createSchema.safeParse(body)

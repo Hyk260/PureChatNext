@@ -5,6 +5,10 @@ import { ChatMessageModel } from '@pure/database/models/chatMessage'
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import { withAuth } from '@/libs/auth/get-session-user'
 
+/**
+ * GET /api/user/stats
+ * 当前用户的 Agent / Topic / Message 数量统计
+ */
 export const GET = withAuth(async (_request, { userId }) => {
   try {
     const agentModel = new AgentModel(userId)

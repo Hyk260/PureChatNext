@@ -13,6 +13,10 @@ function contentDispositionFilename(fileName: string) {
   return `attachment; filename="${safe}"; filename*=UTF-8''${encoded}`
 }
 
+/**
+ * GET /api/dev/wechat/events/[eventId]/file
+ * 开发环境：下载微信入站文件事件内容
+ */
 export const GET = withAuth<{ eventId: string }>(async (_request, { params, userId }) => {
   const { eventId } = await params
   if (!eventId?.trim()) return jsonError('Invalid eventId', 400)

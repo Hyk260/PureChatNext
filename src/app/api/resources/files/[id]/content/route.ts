@@ -4,10 +4,8 @@ import { FileS3 } from '@/server/modules/S3'
 import { extractS3KeyFromUrl } from '@/server/modules/S3/url'
 
 /**
- * Authenticated file content proxy.
- * GET /api/resources/files/:id/content
- *
- * Streams the object from S3 so private buckets work without public ACL.
+ * GET /api/resources/files/[id]/content
+ * 鉴权后代理文件内容：从 S3 流式返回，私有桶无需公开 ACL
  */
 export const GET = withAuth(async (_request, { params, userId }) => {
   const { id } = await params

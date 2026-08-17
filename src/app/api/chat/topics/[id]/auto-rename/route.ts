@@ -88,6 +88,10 @@ const createSelfHostedModel = (request: NextRequest, provider: string, model: st
   return createProviderLanguageModel(provider, model, apiKey, resolveOptionalBaseURL(baseURL))
 }
 
+/**
+ * POST /api/chat/topics/[id]/auto-rename
+ * 根据对话内容用模型自动生成并更新 Topic 标题
+ */
 export const POST = withAuth<{ id: string }>(async (request, { params, userId }) => {
   const { id } = await params
   const topicModel = new ChatTopicModel(userId)

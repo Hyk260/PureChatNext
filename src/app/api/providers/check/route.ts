@@ -15,11 +15,9 @@ export const maxDuration = 30
 const log = debug('providers:check')
 
 /**
- * Provider connectivity check
  * POST /api/providers/check
- *
- * Body: { provider, model, apiKey?, baseURL? }
- * Optional header: Authorization: Bearer <api-key>
+ * 检测 Provider 连通性（发起一次最小生成请求）
+ * @param request - JSON `{ provider, model, apiKey?, baseURL? }`；可选 Header `Authorization: Bearer <api-key>`
  */
 export async function POST(request: Request) {
   let body: {

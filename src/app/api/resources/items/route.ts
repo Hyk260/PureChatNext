@@ -5,6 +5,11 @@ import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { resolveFileAccessUrl } from '@/server/modules/S3/url'
 import { QueryFileListSchema } from '@/types/files'
 
+/**
+ * GET /api/resources/items
+ * 查询当前用户的知识库文件 / 文档列表
+ * @param request - query 见 `QueryFileListSchema`
+ */
 export const GET = withAuth(async (request, { userId }) => {
   const params = Object.fromEntries(request.nextUrl.searchParams.entries())
   const parsed = QueryFileListSchema.safeParse(params)

@@ -10,6 +10,10 @@ const responseHeaders = {
   'Cache-Control': 'no-store',
 }
 
+/**
+ * GET /api/health
+ * 健康检查：探测数据库连通性与渠道 Gateway 状态
+ */
 export async function GET() {
   try {
     await serverDB.execute(sql`SELECT 1`)

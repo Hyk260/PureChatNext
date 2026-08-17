@@ -7,6 +7,10 @@ import { withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials } from '@/libs/channels/wechat/encrypt'
 import { canSendWechatDevOutbound } from '@/libs/channels/wechat/outbound'
 
+/**
+ * GET /api/dev/wechat/sessions
+ * 开发环境：列出微信会话（仅开发调试）
+ */
 export const GET = withAuth(async (_request, { userId }) => {
   const myBinding = await new ChannelBindingModel().findByUserAndPlatform(userId, WECHAT_PLATFORM)
 

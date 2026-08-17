@@ -98,6 +98,11 @@ function outboundAttachments(eventId: string) {
     )
 }
 
+/**
+ * GET /api/dev/wechat/sessions/[sessionId]/messages
+ * 开发环境：分页拉取微信会话时间线消息
+ * @param request - query `limit` / `cursor` / `conversationVersion` / `watchEventId`
+ */
 export const GET = withAuth<{ sessionId: string }>(async (request, { params, userId }) => {
   const { sessionId } = await params
   if (!sessionId?.trim()) return jsonError('Invalid sessionId', 400)
@@ -166,6 +171,10 @@ export const GET = withAuth<{ sessionId: string }>(async (request, { params, use
   })
 })
 
+/**
+ * POST /api/dev/wechat/sessions/[sessionId]/messages
+ * 开发环境：向微信会话发送出站消息
+ */
 export const POST = withAuth<{ sessionId: string }>(async (request, { params, userId }) => {
   const { sessionId } = await params
   if (!sessionId?.trim()) return jsonError('Invalid sessionId', 400)

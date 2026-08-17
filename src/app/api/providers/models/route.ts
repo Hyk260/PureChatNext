@@ -28,11 +28,9 @@ const BUILTIN_FALLBACK: Record<SupportedProviderId, Array<{ displayName: string;
 }
 
 /**
- * List provider models (OpenAI-compatible)
  * POST /api/providers/models
- *
- * Body: { provider, apiKey?, baseURL? }
- * Optional header: Authorization: Bearer <api-key>
+ * 列出 Provider 模型（OpenAI 兼容 /models）
+ * @param request - JSON `{ provider, apiKey?, baseURL? }`；可选 Header `Authorization: Bearer <api-key>`
  */
 export async function POST(request: Request) {
   let body: {

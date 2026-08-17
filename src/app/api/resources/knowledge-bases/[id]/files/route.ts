@@ -9,6 +9,11 @@ const schema = z.object({
   fileIds: z.array(z.string()).min(1),
 })
 
+/**
+ * POST /api/resources/knowledge-bases/[id]/files
+ * 向知识库批量添加或移除文件
+ * @param request - JSON `{ action: 'add'|'remove', fileIds: string[] }`
+ */
 export const POST = withAuth(async (request, { params, userId }) => {
   const { id } = await params
   const body = await request.json()

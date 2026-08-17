@@ -18,6 +18,10 @@ const updateSchema = z.object({
   title: z.string().min(1).optional(),
 })
 
+/**
+ * GET /api/agents/[id]
+ * 获取单个可见 Agent
+ */
 export const GET = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
   const item = await new AgentModel(userId).findVisibleById(id)
@@ -26,6 +30,11 @@ export const GET = withAuth(async (_request, { params, userId }) => {
   return NextResponse.json(item)
 })
 
+/**
+ * PATCH /api/agents/[id]
+ * 更新 Agent 字段
+ * @param request - JSON body（至少一项可选字段）
+ */
 export const PATCH = withAuth(async (request, { params, userId }) => {
   const { id } = await params
   const body = await request.json()
@@ -38,6 +47,10 @@ export const PATCH = withAuth(async (request, { params, userId }) => {
   return NextResponse.json(item)
 })
 
+/**
+ * DELETE /api/agents/[id]
+ * 删除 Agent（内置 Agent 禁止删除）
+ */
 export const DELETE = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
 

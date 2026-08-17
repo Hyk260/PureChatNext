@@ -18,6 +18,11 @@ const batchSchema = z.object({
     .min(1),
 })
 
+/**
+ * POST /api/resources/files/batch
+ * 批量操作资源项（当前仅支持删除）
+ * @param request - JSON `{ action: 'delete', items: { id, sourceType }[] }`
+ */
 export const POST = withAuth(async (request, { userId }) => {
   const body = await request.json()
   const parsed = batchSchema.safeParse(body)

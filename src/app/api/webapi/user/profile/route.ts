@@ -28,7 +28,10 @@ function isS3Configured() {
   return Boolean(fileEnv.S3_ACCESS_KEY_ID && fileEnv.S3_SECRET_ACCESS_KEY && fileEnv.S3_ENDPOINT && fileEnv.S3_BUCKET)
 }
 
-/** GET /api/webapi/user/profile — SPA / client settings profile bootstrap */
+/**
+ * GET /api/webapi/user/profile
+ * SPA / 客户端设置页用户资料引导数据
+ */
 export const GET = withAuth(async (_request, { userId }) => {
   const user = await UserModel.findById(userId)
 
@@ -56,6 +59,11 @@ const updateProfileSchema = z
     message: 'At least one field is required',
   })
 
+/**
+ * PATCH /api/webapi/user/profile
+ * 更新用户资料（姓名 / 兴趣）
+ * @param request - JSON `{ fullName?, interests? }`（至少一项）
+ */
 export const PATCH = withAuth(async (request, { userId }) => {
   let body: unknown
 

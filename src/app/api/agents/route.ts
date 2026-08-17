@@ -18,6 +18,10 @@ const createSchema = z.object({
   title: z.string().min(1),
 })
 
+/**
+ * GET /api/agents
+ * 列出当前用户可见的 Agent
+ */
 export const GET = withAuth(async (_request, { userId }) => {
   try {
     const items = await new AgentModel(userId).listVisible()
@@ -28,6 +32,11 @@ export const GET = withAuth(async (_request, { userId }) => {
   }
 })
 
+/**
+ * POST /api/agents
+ * 创建 Agent
+ * @param request - JSON body（title 必填，其余可选）
+ */
 export const POST = withAuth(async (request, { userId }) => {
   const body = await request.json()
   const parsed = createSchema.safeParse(body)

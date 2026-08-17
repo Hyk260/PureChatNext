@@ -8,6 +8,10 @@ import { getWechatProviderAvailability } from '@/libs/channels/wechat/agentSuppo
 
 const HEARTBEAT_STALE_MS = 90_000
 
+/**
+ * GET /api/channels/wechat/status
+ * 当前用户微信连接状态（不含敏感凭证）
+ */
 export const GET = withAuth(async (_request, { userId }) => {
   const binding = await new ChannelBindingModel().findByUserAndPlatform(userId, WECHAT_PLATFORM)
   const gatewaySupported = isWechatGatewaySupported()

@@ -19,14 +19,9 @@ const methodNotAllowed = () => {
 }
 
 /**
- * REST API
  * POST /api/rest-api
- *
- * Request body:
- * {
- *   funName: "accountCheck" | "accountImport" | "restSendMsg" | "addGroupMember",
- *   params: AccountCheckItem[] | AccountImportParams | SendMsgParams | AddGroupMemberParams
- * }
+ * 对外 REST 方法分发入口
+ * @param request - JSON `{ funName, params }`（funName 见 availableMethods）
  */
 export async function POST(request: NextRequest) {
   try {
@@ -54,8 +49,8 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * REST API
  * GET /api/rest-api
+ * 返回 REST API 可用方法列表
  */
 export async function GET() {
   return NextResponse.json(

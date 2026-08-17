@@ -10,6 +10,10 @@ const updateSchema = z.object({
   name: z.string().min(1).optional(),
 })
 
+/**
+ * GET /api/resources/knowledge-bases/[id]
+ * 获取单个知识库
+ */
 export const GET = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
   const item = await new KnowledgeBaseModel(userId).findById(id)
@@ -18,6 +22,11 @@ export const GET = withAuth(async (_request, { params, userId }) => {
   return NextResponse.json(item)
 })
 
+/**
+ * PATCH /api/resources/knowledge-bases/[id]
+ * 更新知识库
+ * @param request - JSON `{ name?, avatar?, description? }`
+ */
 export const PATCH = withAuth(async (request, { params, userId }) => {
   const { id } = await params
   const body = await request.json()
@@ -30,6 +39,10 @@ export const PATCH = withAuth(async (request, { params, userId }) => {
   return NextResponse.json(item)
 })
 
+/**
+ * DELETE /api/resources/knowledge-bases/[id]
+ * 删除知识库
+ */
 export const DELETE = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
   await new KnowledgeBaseModel(userId).delete(id)

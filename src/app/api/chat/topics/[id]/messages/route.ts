@@ -36,6 +36,10 @@ export const replaceMessagesSchema = z.object({
   messages: z.array(uiMessageSchema),
 })
 
+/**
+ * GET /api/chat/topics/[id]/messages
+ * 列出 Topic 下全部消息
+ */
 export const GET = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
   const topic = await new ChatTopicModel(userId).findById(id)
@@ -45,6 +49,11 @@ export const GET = withAuth(async (_request, { params, userId }) => {
   return NextResponse.json(messages)
 })
 
+/**
+ * PUT /api/chat/topics/[id]/messages
+ * 全量替换 Topic 消息列表
+ * @param request - JSON `{ messages: UIMessage[] }`
+ */
 export const PUT = withAuth(async (request, { params, userId }) => {
   const { id } = await params
   const topic = await new ChatTopicModel(userId).findById(id)

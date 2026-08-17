@@ -16,6 +16,11 @@ const updateSchema = z
     'At least one field is required'
   )
 
+/**
+ * PATCH /api/chat/topics/[id]
+ * 更新 Topic（标题 / 收藏 / 项目名）
+ * @param request - JSON body（至少一项字段）
+ */
 export const PATCH = withAuth(async (request, { params, userId }) => {
   const { id } = await params
   const body = await request.json()
@@ -32,6 +37,10 @@ export const PATCH = withAuth(async (request, { params, userId }) => {
   return NextResponse.json(item)
 })
 
+/**
+ * DELETE /api/chat/topics/[id]
+ * 删除单个 Topic
+ */
 export const DELETE = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
   const topicModel = new ChatTopicModel(userId)

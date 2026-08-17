@@ -15,10 +15,10 @@ type RouteContext = { params: Promise<{ applicationId: string }> }
 
 /**
  * POST /api/channels/qq/webhook/[applicationId]
- * QQ Open Platform push (webhook mode) or gateway forward (websocket mode).
+ * QQ 开放平台推送（webhook）或 Gateway 转发（websocket）
  *
- * Auth: if `Authorization` is present, require Bearer (internal gateway).
- * QQ Open Platform callbacks omit Authorization; Ed25519 verify is handled in adapter (op=13).
+ * 鉴权：若带 `Authorization` 则校验 Bearer（内部 Gateway）；
+ * QQ 平台回调通常不带 Authorization，Ed25519 校验在 adapter（op=13）处理。
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   const { applicationId } = await context.params

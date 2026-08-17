@@ -45,6 +45,11 @@ async function validateConfiguration(userId: string, config: z.infer<typeof patc
   return null
 }
 
+/**
+ * POST /api/channels/wechat/bind
+ * 绑定微信 Bot（加密凭证并触发 Gateway 对账）
+ * @param request - JSON `{ agentId, botToken, model, provider, botId?, userId? }`
+ */
 export const POST = withAuth(async (request: NextRequest, { userId }) => {
   if (!isWechatGatewaySupported()) return jsonError('当前部署不支持微信 Gateway，请使用 Docker 或本地 Gateway', 503)
   try {
@@ -77,6 +82,10 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
   return NextResponse.json({ id: binding.id, ok: true, runtimeStatus: binding.runtimeStatus })
 })
 
+/**
+ * DELETE /api/channels/wechat/bind
+ * 断开当前用户的微信绑定
+ */
 export const DELETE = withAuth(async (_request, { userId }) => {
   const model = new ChannelBindingModel()
   const existing = await model.findByUserAndPlatform(userId, WECHAT_PLATFORM)
@@ -86,6 +95,11 @@ export const DELETE = withAuth(async (_request, { userId }) => {
   return NextResponse.json({ ok: true })
 })
 
+/**
+ * PATCH /api/channels/wechat/bind
+ * 更新微信绑定的 Agent / 模型配置
+ * @param request - JSON `{ agentId, model, provider }`
+ */
 export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
   const parsed = patchSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return jsonError('Invalid agent request')

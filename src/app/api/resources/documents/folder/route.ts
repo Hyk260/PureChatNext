@@ -10,6 +10,11 @@ const schema = z.object({
   parentId: z.string().nullable().optional(),
 })
 
+/**
+ * POST /api/resources/documents/folder
+ * 创建文档文件夹
+ * @param request - JSON `{ name, knowledgeBaseId?, parentId? }`
+ */
 export const POST = withAuth(async (request, { userId }) => {
   const body = await request.json()
   const parsed = schema.safeParse(body)

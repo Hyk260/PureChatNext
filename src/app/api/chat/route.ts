@@ -311,6 +311,11 @@ export async function POST(request: Request) {
   const apiKey = resolveApiKeyFromHeader(request)
   const resolvedBaseURL = typeof baseURL === 'string' && baseURL.trim() ? baseURL.trim() : undefined
 
+  // 使用服务端环境变量 API Key 时，禁止自定义 baseURL，防止 SSRF 导致 Key 外泄
+  if (resolvedBaseURL && !apiKey) {
+    return new ChatSDKError('bad_request:api', 'Custom baseURL requires a user-provided API key').toResponse()
+  }
+
   // Fail fast with a JSON error so the client can surface it (streamText would
   // otherwise return 200 with a broken stream when the env key is missing).
   if (!apiKey) {

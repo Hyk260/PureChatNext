@@ -175,3 +175,48 @@ describe('POST /api/chat PureChat model availability', () => {
     expect(payload.cause).toBe(PURECHAT_MODEL_UNAVAILABLE_MESSAGE)
   })
 })
+
+describe('POST /api/chat SSRF protection', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    streamText.mockReturnValue({ stream: new ReadableStream() })
+  })
+
+  it('rejects custom baseURL without user-provided API key (SSRF prevention)', async () => {
+    const response = await POST(
+      new Request('http://localhost/api/chat', {
+        body: JSON.stringify({
+          baseURL: 'http://attacker.com/steal',
+          messages: [],
+          model: 'gpt-4',
+          provider: 'openai',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+    )
+    const payload = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(payload.cause).toBe('Custom baseURL requires a user-provided API key')
+    expect(streamText).not.toHaveBeenCalled()
+  })
+
+  it('allows custom baseURL when user provides their own API key', async () => {
+    const response = await POST(
+      new Request('http://localhost/api/chat', {
+        body: JSON.stringify({
+          baseURL: 'https://my-proxy.example.com/v1',
+          messages: [],
+          model: 'gpt-4',
+          provider: 'openai',
+        }),
+        headers: { Authorization: 'Bearer user-own-key', 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(streamText).toHaveBeenCalledOnce()
+  })
+})

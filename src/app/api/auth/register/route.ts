@@ -28,9 +28,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '邮箱格式不正确' }, { status: 400 })
     }
 
-    // 验证密码长度
-    if (password.length < 6) {
-      return NextResponse.json({ error: '密码长度至少为 6 个字符' }, { status: 400 })
+    // 验证密码长度（与 Better Auth minPasswordLength 对齐）
+    if (password.length < 8) {
+      return NextResponse.json({ error: '密码长度至少为 8 个字符' }, { status: 400 })
+    }
+
+    if (password.length > 64) {
+      return NextResponse.json({ error: '密码长度不能超过 64 个字符' }, { status: 400 })
     }
 
     if (email) {

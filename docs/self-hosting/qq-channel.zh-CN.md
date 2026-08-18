@@ -29,6 +29,8 @@ KEY_VAULTS_SECRET=replace-with-a-random-secret
 
 `CHANNEL_GATEWAY_INTERNAL_URL` 可覆盖内部回调地址。兼容周期内仍读取 `QQ_WEBHOOK_SECRET`，统一密钥优先。Webhook 模式无需启用 Gateway；保存绑定后把设置页显示的回调地址配置到 QQ 开放平台。
 
+入站消息日志通过 `DEBUG=channel:qq:webhook`（或 `channel:qq:*`）开启。
+
 设置页点击“连接”后可以选择扫码、手动 WebSocket 或 URL 回调。未启用 Gateway 时，扫码和 WebSocket 会禁用，但 URL 回调仍可配置。
 
 ## 状态判断

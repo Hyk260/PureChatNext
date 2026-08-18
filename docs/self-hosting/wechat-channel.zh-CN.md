@@ -25,7 +25,8 @@ OPENAI_API_KEY=... # 或受支持的其他服务端模型密钥
 | --- | --- |
 | `CHANNEL_GATEWAY_INTERNAL_URL` | 内部回调地址；默认 `http://127.0.0.1:$PORT` |
 | `CHANNEL_GATEWAY_INTERNAL_SECRET` | 内部 Webhook 鉴权密钥，生产建议显式设置 |
-| `WECHAT_GATEWAY_LOG_MESSAGE_TEXT` | 调试时输出截断后的消息正文，默认关闭 |
+
+入站消息日志通过 `DEBUG=channel:wechat:webhook`（或 `channel:wechat:*`）开启，不再单独设置环境变量。
 
 兼容周期内仍读取 `WECHAT_GATEWAY_ENABLED` 和 `WECHAT_WEBHOOK_SECRET`，但新配置应使用统一变量。
 

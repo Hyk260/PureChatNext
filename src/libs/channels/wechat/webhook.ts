@@ -6,7 +6,6 @@ import debug from 'debug'
 
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import type { ChannelBindingItem } from '@pure/database/schemas/channel'
-import { gatewayEnv } from '@/envs/gateway'
 import { buildChannelGatewayHeaders, buildChannelGatewayWebhookUrl } from '@/server/channel-gateway/internal'
 
 import { encodeWechatFileContent, encodeWechatImageContent } from './content'
@@ -40,10 +39,13 @@ export function rawMessageToEvent(bindingId: string, message: WechatRawMessage) 
   return { ...common, content: '[unsupported message]', messageKind: 'unsupported' as const }
 }
 
-export function formatWechatInboundLog(
-  event: { bindingId: string; content: string; externalUserId: string; externalUserName?: string | null; messageKind: string },
-  includeMessageText = gatewayEnv.WECHAT_GATEWAY_LOG_MESSAGE_TEXT
-) {
+export function formatWechatInboundLog(event: {
+  bindingId: string
+  content: string
+  externalUserId: string
+  externalUserName?: string | null
+  messageKind: string
+}) {
   const contactHash = createHash('sha256').update(event.externalUserId).digest('hex').slice(0, 10)
   const labels: Record<string, string> = { command: '指令', file: '文件', image: '图片', text: '文本', unsupported: '非文本' }
   const visible = event.messageKind === 'image'
@@ -54,7 +56,7 @@ export function formatWechatInboundLog(
         ? `，内容=${JSON.stringify(event.content.replace(/[\r\n\t]+/g, ' ').slice(0, 200))}`
         : ''
   const userName = event.externalUserName?.trim()
-  return `[微信 Gateway] 收到${labels[event.messageKind] ?? '文本'}消息：绑定=${event.bindingId}，联系人=sha256:${contactHash}${userName ? `，用户=${JSON.stringify(userName)}` : ''}，长度=${event.content.length}${includeMessageText ? visible : ''}`
+  return `[微信 Gateway] 收到${labels[event.messageKind] ?? '文本'}消息：绑定=${event.bindingId}，联系人=sha256:${contactHash}${userName ? `，用户=${JSON.stringify(userName)}` : ''}，长度=${event.content.length}${visible}`
 }
 
 export async function ingestWechatWebhookBatch(binding: ChannelBindingItem, batch: WechatPollBatch) {
@@ -62,7 +64,7 @@ export async function ingestWechatWebhookBatch(binding: ChannelBindingItem, batc
     .map((message) => rawMessageToEvent(binding.id, message))
     .filter((event): event is NonNullable<typeof event> => event !== null)
   const inserted = await new ChannelEventModel().ingestBatchAndAdvanceCursor(events, binding.id, batch.cursor)
-  for (const event of inserted) console.log(formatWechatInboundLog(event))
+  for (const event of inserted) log(formatWechatInboundLog(event))
   return inserted
 }
 

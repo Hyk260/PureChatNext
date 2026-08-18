@@ -4,9 +4,13 @@ import { Select, Spin } from 'antd'
 import { Alert, Button, confirmModal, Text, copyToClipboard, Flexbox } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
+import type { AgentListItem } from '@/const/home/agents'
 import { Trash2Icon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
+import useSWR from 'swr'
+
+import { useSession } from '@/libs/better-auth/client'
 
 import { fetchAgents } from '@/features/home/agentApi'
 
@@ -117,44 +121,51 @@ const DISCONNECTED_STATUS: QQStatus = {
 const MessengerQQPage = memo(() => {
   const { message } = useApp()
   const platformMeta = getMessengerPlatform('qq')!
-  const [loading, setLoading] = useState(true)
+  const { data: session } = useSession()
+  const userId = session?.user?.id
   const [binding, setBinding] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [status, setStatus] = useState<QQStatus | null>(null)
-  const [agents, setAgents] = useState<Array<{ label: string; value: string }>>([])
   const [agentId, setAgentId] = useState('agt_inbox')
   const [provider, setProvider] = useState<QQProviderId>(MESSENGER_DEFAULT_PROVIDER)
   const [modelId, setModelId] = useState(MESSENGER_DEFAULT_MODELS.deepseek)
 
-  const applyStatus = useCallback((st: QQStatus) => {
-    setStatus(st)
-    if (st.agentId) setAgentId(st.agentId)
-    if (st.provider && isMessengerProviderId(st.provider)) setProvider(st.provider)
-    if (st.model) setModelId(st.model)
-    return st
-  }, [])
-
-  const refreshStatus = useCallback(async () => {
-    return applyStatus(await fetchQQStatus())
-  }, [applyStatus])
-
-  const reload = useCallback(async () => {
-    setLoading(true)
-    try {
-      const [st, agentList] = await Promise.all([fetchQQStatus(), fetchAgents()])
-      applyStatus(st)
-      setAgents(agentList.map((a) => ({ label: a.title, value: a.id })))
-      if (!st.agentId && agentList[0]) setAgentId(agentList[0].id)
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : '加载失败')
-    } finally {
-      setLoading(false)
-    }
-  }, [applyStatus, message])
+  const {
+    data: status,
+    error: statusError,
+    isLoading: statusLoading,
+    mutate: mutateStatus,
+  } = useSWR<QQStatus>(userId ? ['messenger-qq-status', userId] : null, () => fetchQQStatus(), {
+    revalidateOnFocus: false,
+  })
+  const {
+    data: agentList,
+    error: agentsError,
+    isLoading: agentsLoading,
+  } = useSWR<AgentListItem[]>(userId ? ['messenger-agents', userId] : null, fetchAgents, {
+    revalidateOnFocus: false,
+  })
+  const agents = agentList?.map((agent) => ({ label: agent.title, value: agent.id })) ?? []
+  const loading = !userId || statusLoading || agentsLoading
 
   useEffect(() => {
-    void reload()
-  }, [reload])
+    const error = statusError ?? agentsError
+    if (!error || status || agentList?.length) return
+    message.error(error instanceof Error ? error.message : '加载失败')
+  }, [agentList?.length, agentsError, message, status, statusError])
+
+  useEffect(() => {
+    if (status?.agentId) setAgentId(status.agentId)
+    else if (agentList?.[0]) setAgentId((current) => (current === 'agt_inbox' ? agentList[0].id : current))
+    if (status?.provider && isMessengerProviderId(status.provider)) setProvider(status.provider)
+    if (status?.model) setModelId(status.model)
+  }, [agentList, status])
+
+  const refreshStatus = useCallback(async () => {
+    if (!userId) throw new Error('登录状态尚未准备好')
+    const nextStatus = await mutateStatus()
+    if (!nextStatus) throw new Error('QQ 状态暂时不可用')
+    return nextStatus
+  }, [mutateStatus, userId])
 
   const saveConfiguration = useCallback(
     async (
@@ -217,7 +228,7 @@ const MessengerQQPage = memo(() => {
       okButtonProps: { danger: true },
       onOk: async () => {
         await unbindQQ()
-        setStatus(DISCONNECTED_STATUS)
+        await mutateStatus(DISCONNECTED_STATUS, { revalidate: false })
         message.success('已断开 QQ')
         try {
           await refreshStatus()
@@ -227,7 +238,7 @@ const MessengerQQPage = memo(() => {
       },
       title: '断开 QQ 连接？',
     })
-  }, [message, refreshStatus])
+  }, [message, mutateStatus, refreshStatus])
 
   if (loading) {
     return (
@@ -285,7 +296,7 @@ const MessengerQQPage = memo(() => {
           onSelect={handleModelSelect}
         />
 
-        {renderQqStatusBanner({ connected, gatewaySupported, message, showConnect, status })}
+        {renderQqStatusBanner({ connected, gatewaySupported, message, showConnect, status: status ?? null })}
       </Flexbox>
 
       <MessengerCommandList />

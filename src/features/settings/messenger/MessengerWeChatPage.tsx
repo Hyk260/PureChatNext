@@ -3,13 +3,16 @@
 import { Select, Spin } from 'antd'
 import { Alert, Button, confirmModal, Text, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
+import type { AgentListItem } from '@/const/home/agents'
 import { isDev } from '@/libs/constants'
 import { MessagesSquareIcon, Trash2Icon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
+import useSWR from 'swr'
 
 import { fetchAgents } from '@/features/home/agentApi'
+import { useSession } from '@/libs/better-auth/client'
 
 import {
   formatMessengerActiveAt,
@@ -123,58 +126,55 @@ const MessengerWeChatPage = memo(() => {
   const { message } = useApp()
   const navigate = useNavigate()
   const platformMeta = getMessengerPlatform('wechat')!
-  const [loading, setLoading] = useState(true)
+  const { data: session } = useSession()
+  const userId = session?.user?.id
   const [binding, setBinding] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [status, setStatus] = useState<WechatStatus | null>(null)
-  const [agents, setAgents] = useState<Array<{ label: string; value: string }>>([])
   const [agentId, setAgentId] = useState('agt_inbox')
   const [provider, setProvider] = useState<WechatProviderId>(MESSENGER_DEFAULT_PROVIDER)
   const [modelId, setModelId] = useState(MESSENGER_DEFAULT_MODELS.deepseek)
 
+  const {
+    data: status,
+    error: statusError,
+    isLoading: statusLoading,
+    mutate: mutateStatus,
+  } = useSWR<WechatStatus>(
+    userId ? ['messenger-wechat-status', userId] : null,
+    () => fetchWechatStatus(),
+    {
+      refreshInterval: (latestStatus) => (latestStatus?.bound ? STATUS_POLL_MS : 0),
+    }
+  )
+  const {
+    data: agentList,
+    error: agentsError,
+    isLoading: agentsLoading,
+  } = useSWR<AgentListItem[]>(userId ? ['messenger-agents', userId] : null, fetchAgents, {
+    revalidateOnFocus: false,
+  })
+  const agents = agentList?.map((agent) => ({ label: agent.title, value: agent.id })) ?? []
+  const loading = !userId || statusLoading || agentsLoading
+
+  useEffect(() => {
+    const error = statusError ?? agentsError
+    if (!error || status || agentList?.length) return
+    message.error(error instanceof Error ? error.message : '加载失败')
+  }, [agentList?.length, agentsError, message, status, statusError])
+
+  useEffect(() => {
+    if (status?.agentId) setAgentId(status.agentId)
+    else if (agentList?.[0]) setAgentId((current) => (current === 'agt_inbox' ? agentList[0].id : current))
+    if (status?.provider) setProvider(status.provider)
+    if (status?.model) setModelId(status.model)
+  }, [agentList, status])
+
   const refreshStatus = useCallback(async () => {
-    const st = await fetchWechatStatus()
-    setStatus(st)
-    if (st.agentId) setAgentId(st.agentId)
-    if (st.provider) setProvider(st.provider)
-    if (st.model) setModelId(st.model)
-    return st
-  }, [])
-
-  const reload = useCallback(async () => {
-    setLoading(true)
-    try {
-      const [st, agentList] = await Promise.all([fetchWechatStatus(), fetchAgents()])
-      setStatus(st)
-      setAgents(agentList.map((a) => ({ label: a.title, value: a.id })))
-      if (st.agentId) setAgentId(st.agentId)
-      else if (agentList[0]) setAgentId(agentList[0].id)
-      if (st.provider) setProvider(st.provider)
-      if (st.model) setModelId(st.model)
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : '加载失败')
-    } finally {
-      setLoading(false)
-    }
-  }, [message])
-
-  useEffect(() => {
-    void reload()
-  }, [reload])
-
-  // 已绑定后持续轮询真实心跳，Gateway 停止时不能继续显示已连接。
-  useEffect(() => {
-    if (loading || !status?.bound) return
-
-    const tick = () => {
-      void refreshStatus().catch(() => {
-        /* 静默：轮询失败不打扰 */
-      })
-    }
-
-    const id = window.setInterval(tick, STATUS_POLL_MS)
-    return () => window.clearInterval(id)
-  }, [loading, refreshStatus, status?.bound])
+    if (!userId) throw new Error('登录状态尚未准备好')
+    const nextStatus = await mutateStatus()
+    if (!nextStatus) throw new Error('微信状态暂时不可用')
+    return nextStatus
+  }, [mutateStatus, userId])
 
   const handleAuthenticated = useCallback(
     async (credentials: WechatAuthCredentials) => {
@@ -189,7 +189,7 @@ const MessengerWeChatPage = memo(() => {
           userId: credentials.userId,
         })
         // 绑定只代表凭证已保存；必须等 Gateway 心跳后才能显示在线。
-        setStatus({
+        const startingStatus: WechatStatus = {
           agentId,
           bound: true,
           connected: false,
@@ -199,16 +199,16 @@ const MessengerWeChatPage = memo(() => {
           model: modelId,
           provider,
           runtimeStatus: 'starting',
-        })
+        }
+        await mutateStatus(startingStatus, { revalidate: true })
         message.success('凭证已保存，正在等待 Gateway')
-        await refreshStatus()
       } catch (error) {
         message.error(error instanceof Error ? error.message : '绑定失败')
       } finally {
         setBinding(false)
       }
     },
-    [agentId, message, modelId, provider, refreshStatus]
+    [agentId, message, modelId, mutateStatus, provider]
   )
 
   const saveConfiguration = useCallback(
@@ -263,7 +263,7 @@ const MessengerWeChatPage = memo(() => {
       onOk: async () => {
         await unbindWechat()
         // 先乐观更新，避免仍显示「已连接」
-        setStatus(DISCONNECTED_STATUS)
+        await mutateStatus(DISCONNECTED_STATUS, { revalidate: false })
         message.success('已断开微信')
         try {
           await refreshStatus()
@@ -273,7 +273,7 @@ const MessengerWeChatPage = memo(() => {
       },
       title: '断开微信连接？',
     })
-  }, [message, refreshStatus])
+  }, [message, mutateStatus, refreshStatus])
 
   if (loading) {
     return (
@@ -352,7 +352,7 @@ const MessengerWeChatPage = memo(() => {
             <Alert showIcon type='warning' title='微信会话已过期或需要重新连接' description='请再次扫码绑定。' />
           )}
 
-          {renderWechatStatusBanner({ bound, message, refreshStatus, showConnect, status })}
+          {renderWechatStatusBanner({ bound, message, refreshStatus, showConnect, status: status ?? null })}
         </Flexbox>
       )}
 

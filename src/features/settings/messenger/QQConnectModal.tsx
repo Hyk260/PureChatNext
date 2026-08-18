@@ -14,6 +14,8 @@ import type { QQConnectionMode, QQProviderId, QQQrStatus } from './qqApi'
 
 const QR_SIZE = 240
 const POLL_MS = 1_500
+const SESSION_MISSING_RETRY_MS = 1_000
+const MAX_SESSION_MISSING_RETRIES = 2
 // qrWrap: QR_SIZE(240) + padding(12*2) + border(1*2) = 266；+ gap(12) + 状态行(~22) ≈ 300
 const QR_PLACEHOLDER_HEIGHT = 318
 
@@ -60,8 +62,10 @@ const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewayS
   const sessionRef = useRef<string | undefined>(undefined)
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const abortRef = useRef<AbortController | undefined>(undefined)
+  const attemptRef = useRef(0)
 
   const cancelSession = useCallback(() => {
+    attemptRef.current += 1
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = undefined
     abortRef.current?.abort()
@@ -83,7 +87,7 @@ const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewayS
 
   const poll = useCallback(
     (id: string) => {
-      const run = async () => {
+      const run = async (missingRetries = 0) => {
         if (sessionRef.current !== id) return
         const controller = new AbortController()
         abortRef.current = controller
@@ -104,7 +108,14 @@ const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewayS
         } catch (err) {
           if (err instanceof DOMException && err.name === 'AbortError') return
           if (isQQQrSessionMissingError(err)) {
+            if (sessionRef.current !== id) return
+            if (missingRetries < MAX_SESSION_MISSING_RETRIES) {
+              timerRef.current = setTimeout(() => void run(missingRetries + 1), SESSION_MISSING_RETRY_MS)
+              return
+            }
             sessionRef.current = undefined
+            setSessionId(undefined)
+            setQrStatus(undefined)
             setError('QQ 扫码会话已失效，请重新获取二维码')
             return
           }
@@ -118,20 +129,28 @@ const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewayS
 
   const startQr = useCallback(async () => {
     cancelSession()
+    const attempt = attemptRef.current
     setLoading(true)
     setError(undefined)
     setQrStatus(undefined)
+    setSelectedAppId(undefined)
     try {
       const result = await startQQQrLogin({ agentId, model, provider })
+      if (attemptRef.current !== attempt) {
+        void cancelQQQrLogin(result.sessionId)
+        return
+      }
       sessionRef.current = result.sessionId
       setSessionId(result.sessionId)
       const { sessionId: _sessionId, ...status } = result
       setQrStatus(status)
       poll(result.sessionId)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '获取 QQ 二维码失败')
+      if (attemptRef.current === attempt) {
+        setError(err instanceof Error ? err.message : '获取 QQ 二维码失败')
+      }
     } finally {
-      setLoading(false)
+      if (attemptRef.current === attempt) setLoading(false)
     }
   }, [agentId, cancelSession, model, poll, provider])
 
@@ -185,7 +204,7 @@ const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewayS
       <Radio.Group value={mode} onChange={(event) => setMode(event.target.value as ConnectMode)}>
         <Radio disabled={!gatewaySupported} value='qr'>扫码绑定</Radio>
         <Radio disabled={!gatewaySupported} value='websocket'>WebSocket 长连接</Radio>
-        <Radio value='webhook'>使用 URL 回调</Radio>
+        <Radio value='webhook'>使用 URL 回调</Radio> 
       </Radio.Group>
 
       {!gatewaySupported && (
@@ -221,7 +240,6 @@ const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewayS
               align='center'
               gap={12}
               justify='center'
-              style={{ height: QR_PLACEHOLDER_HEIGHT, width: '100%' }}
             >
               <Alert showIcon type='warning' title={error} />
               <AntButton icon={<RefreshCw size={16} />} onClick={() => void startQr()}>重新获取二维码</AntButton>

@@ -92,7 +92,7 @@ describe('rawMessageToEvent', () => {
       type: 'file',
       v: 1,
     })
-    expect(formatWechatInboundLog(event!, true)).toContain('内容=[文件]')
+    expect(formatWechatInboundLog(event!)).toContain('内容=[文件]')
   })
 
   it('detects file_item even when type is missing or mismatched', () => {
@@ -140,20 +140,19 @@ describe('rawMessageToEvent', () => {
     expect(rawMessageToEvent('binding-1', message({ message_state: MessageState.GENERATING }))).toBeNull()
   })
 
-  it('logs hashed contacts and keeps message text opt-in', () => {
+  it('logs hashed contacts and truncated message text', () => {
     const event = rawMessageToEvent('binding-1', message())!
-    const safeLog = formatWechatInboundLog(event, false)
-    expect(safeLog).toContain('联系人=sha256:')
-    expect(safeLog).not.toContain('wechat-owner')
-    expect(safeLog).not.toContain('hello')
-    expect(safeLog).not.toContain('用户=')
-    expect(formatWechatInboundLog(event, true)).toContain('内容="hello"')
+    const inboundLog = formatWechatInboundLog(event)
+    expect(inboundLog).toContain('联系人=sha256:')
+    expect(inboundLog).not.toContain('wechat-owner')
+    expect(inboundLog).not.toContain('用户=')
+    expect(inboundLog).toContain('内容="hello"')
   })
 
   it('includes external user name only when present', () => {
     const event = rawMessageToEvent('binding-1', message())!
-    expect(formatWechatInboundLog({ ...event, externalUserName: '  Alice  ' }, false)).toContain('用户="Alice"')
-    expect(formatWechatInboundLog({ ...event, externalUserName: '   ' }, false)).not.toContain('用户=')
+    expect(formatWechatInboundLog({ ...event, externalUserName: '  Alice  ' })).toContain('用户="Alice"')
+    expect(formatWechatInboundLog({ ...event, externalUserName: '   ' })).not.toContain('用户=')
   })
 })
 

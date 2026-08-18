@@ -19,8 +19,6 @@ declare global {
       WECHAT_WEBHOOK_SECRET?: string
       /** 本地/自托管常驻微信 Gateway。Vercel 默认关闭。 */
       WECHAT_GATEWAY_ENABLED?: string
-      /** 调试时输出截断后的微信消息正文；生产默认关闭。 */
-      WECHAT_GATEWAY_LOG_MESSAGE_TEXT?: string
       /** QQ 内部 gateway→webhook 转发鉴权；可选，未设则回退 `CRON_SECRET` */
       QQ_WEBHOOK_SECRET?: string
     }
@@ -35,7 +33,6 @@ export const getGatewayConfig = () => {
       CHANNEL_GATEWAY_INTERNAL_SECRET: z.string().optional(),
       WECHAT_WEBHOOK_SECRET: z.string().optional(),
       WECHAT_GATEWAY_ENABLED: z.boolean(),
-      WECHAT_GATEWAY_LOG_MESSAGE_TEXT: z.boolean(),
       QQ_WEBHOOK_SECRET: z.string().optional(),
     },
     runtimeEnv: {
@@ -46,7 +43,6 @@ export const getGatewayConfig = () => {
       CHANNEL_GATEWAY_INTERNAL_SECRET: process.env.CHANNEL_GATEWAY_INTERNAL_SECRET,
       WECHAT_WEBHOOK_SECRET: process.env.WECHAT_WEBHOOK_SECRET,
       WECHAT_GATEWAY_ENABLED: IS_VERCEL ? false : parseEnvBoolean(process.env.WECHAT_GATEWAY_ENABLED),
-      WECHAT_GATEWAY_LOG_MESSAGE_TEXT: parseEnvBoolean(process.env.WECHAT_GATEWAY_LOG_MESSAGE_TEXT),
       QQ_WEBHOOK_SECRET: process.env.QQ_WEBHOOK_SECRET,
     },
   })

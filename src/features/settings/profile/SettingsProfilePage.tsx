@@ -1,8 +1,8 @@
 'use client'
 
 import { Flexbox, Skeleton } from '@pure/ui'
-import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
+import useSWR from 'swr'
 
 import type { ProfileUser } from '@/features/settings/profile/ProfileContent'
 import { ProfileSettingsContent } from '@/features/settings/profile/ProfileSettingsContent'
@@ -15,43 +15,44 @@ type ProfilePayload = {
   user: ProfileUser
 }
 
+type ProfileKey = readonly ['user-profile', string]
+
+class ProfileApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string
+  ) {
+    super(message)
+    this.name = 'ProfileApiError'
+  }
+}
+
+async function fetchProfile(_key: ProfileKey): Promise<ProfilePayload> {
+  const res = await apiFetch('/api/webapi/user/profile')
+  if (!res.ok) {
+    throw new ProfileApiError(res.status, `加载个人资料失败：${res.status}`)
+  }
+
+  return res.json() as Promise<ProfilePayload>
+}
+
 /**
  * Client settings profile — fetches `/api/webapi/user/profile` after session is ready.
  * Replaces Next SSR prefetch for SPA (and can be reused by App Router later).
  */
 export default function SettingsProfilePage() {
   const { data: session, isPending } = useSession()
-  const [payload, setPayload] = useState<ProfilePayload | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (isPending || !session?.user) return
-
-    let cancelled = false
-
-    ;(async () => {
-      try {
-        const res = await apiFetch('/api/webapi/user/profile', { credentials: 'include' })
-        if (!res.ok) {
-          if (!cancelled) {
-            setLoadError(res.status === 401 ? 'unauthorized' : 'failed')
-          }
-          return
-        }
-        const data = (await res.json()) as ProfilePayload
-        if (!cancelled) {
-          setPayload(data)
-          setLoadError(null)
-        }
-      } catch {
-        if (!cancelled) setLoadError('failed')
-      }
-    })()
-
-    return () => {
-      cancelled = true
+  const userId = session?.user?.id
+  const { data: payload, error: loadError, isLoading } = useSWR<ProfilePayload, ProfileApiError>(
+    userId ? ['user-profile', userId] : null,
+    fetchProfile,
+    {
+      dedupingInterval: 5_000,
+      revalidateOnFocus: false,
+      revalidateOnMount: true,
+      shouldRetryOnError: false,
     }
-  }, [isPending, session?.user])
+  )
 
   if (isPending) {
     return (
@@ -61,15 +62,15 @@ export default function SettingsProfilePage() {
     )
   }
 
-  if (!session?.user || loadError === 'unauthorized') {
+  if (!session?.user || loadError?.status === 401) {
     return <Navigate replace to='/signin?callbackUrl=/settings/profile' />
   }
 
-  if (loadError === 'failed') {
+  if (loadError) {
     return <Flexbox style={{ padding: 24 }}>加载个人资料失败，请刷新重试。</Flexbox>
   }
 
-  if (!payload) {
+  if (isLoading || !payload) {
     return (
       <Flexbox style={{ padding: 24 }}>
         <Skeleton active paragraph={{ rows: 8 }} />

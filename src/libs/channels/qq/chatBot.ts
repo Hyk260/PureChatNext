@@ -45,6 +45,7 @@ function registerHandlers(chat: Chat, ctx: QQChatContext): void {
   const handler = async (thread: Thread, message: Message) => {
     await handleQQMention({
       agentId: ctx.agentId,
+      applicationId: ctx.applicationId,
       message,
       model: ctx.model,
       provider: ctx.provider,

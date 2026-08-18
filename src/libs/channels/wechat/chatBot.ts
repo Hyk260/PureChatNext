@@ -4,6 +4,7 @@ import { Chat } from 'chat'
 import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
+import { buildChatBotFingerprint, ChatBotRegistry } from '../core/chatBotRegistry'
 import { handleWechatMention } from './agentBridge'
 
 const log = debug('channel:wechat:chatBot')
@@ -18,28 +19,7 @@ export type WechatChatContext = {
   userId: string
 }
 
-type CachedBot = {
-  agentId: string
-  botToken: string
-  chat: Chat
-  model: string
-  provider: string
-  userId: string
-}
-
-const GLOBAL_KEY = '__purechat_wechat_chat_bots__' as const
-
-type GlobalWithBots = typeof globalThis & {
-  [GLOBAL_KEY]?: Map<string, CachedBot>
-}
-
-function getBotCache(): Map<string, CachedBot> {
-  const g = globalThis as GlobalWithBots
-  if (!g[GLOBAL_KEY]) {
-    g[GLOBAL_KEY] = new Map()
-  }
-  return g[GLOBAL_KEY]
-}
+const wechatChatBotRegistry = new ChatBotRegistry<Chat>()
 
 function registerHandlers(chat: Chat, ctx: WechatChatContext): void {
   const handler = async (thread: Thread, message: Message) => {
@@ -68,53 +48,35 @@ function registerHandlers(chat: Chat, ctx: WechatChatContext): void {
  * 进程内缓存：processMessage 为异步，实例须保持存活。
  */
 export async function getOrCreateWechatChat(ctx: WechatChatContext): Promise<Chat> {
-  const cache = getBotCache()
-  const existing = cache.get(ctx.applicationId)
-
-  if (
-    existing &&
-    existing.botToken === ctx.botToken &&
-    existing.agentId === ctx.agentId &&
-    existing.model === ctx.model &&
-    existing.provider === ctx.provider &&
-    existing.userId === ctx.userId
-  ) {
-    return existing.chat
-  }
-
-  if (existing) {
-    cache.delete(ctx.applicationId)
-    log('invalidate cached chat appId=%s (creds/agent changed)', ctx.applicationId)
-  }
-
-  const adapter = createWechatAdapter({
-    botId: ctx.botId,
-    botToken: ctx.botToken,
-  })
-
-  const chat = new Chat({
-    adapters: { wechat: adapter },
-    concurrency: 'queue',
-    state: createMemoryState(),
-    userName: 'purechat-wechat',
-  })
-
-  registerHandlers(chat, ctx)
-  await chat.initialize()
-
-  cache.set(ctx.applicationId, {
-    agentId: ctx.agentId,
-    botToken: ctx.botToken,
-    chat,
-    model: ctx.model,
-    provider: ctx.provider,
-    userId: ctx.userId,
-  })
-
-  log('created chat appId=%s agent=%s', ctx.applicationId, ctx.agentId)
-  return chat
+  return wechatChatBotRegistry.getOrCreate(
+    {
+      applicationId: ctx.applicationId,
+      fingerprint: buildChatBotFingerprint({
+        agentId: ctx.agentId,
+        applicationId: ctx.applicationId,
+        botId: ctx.botId,
+        botToken: ctx.botToken,
+        model: ctx.model,
+        provider: ctx.provider,
+        userId: ctx.userId,
+      }),
+      platform: 'wechat',
+    },
+    () => {
+      const adapter = createWechatAdapter({ botId: ctx.botId, botToken: ctx.botToken })
+      const chat = new Chat({
+        adapters: { wechat: adapter },
+        concurrency: 'queue',
+        state: createMemoryState(),
+        userName: 'purechat-wechat',
+      })
+      registerHandlers(chat, ctx)
+      log('created chat appId=%s agent=%s', ctx.applicationId, ctx.agentId)
+      return chat
+    }
+  )
 }
 
-export function invalidateWechatChat(applicationId: string): void {
-  getBotCache().delete(applicationId)
+export function invalidateWechatChat(applicationId: string): Promise<void> {
+  return wechatChatBotRegistry.invalidate('wechat', applicationId)
 }

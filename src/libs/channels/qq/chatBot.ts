@@ -4,6 +4,7 @@ import { Chat } from 'chat'
 import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
+import { buildChatBotFingerprint, ChatBotRegistry } from '../core/chatBotRegistry'
 import { handleQQMention } from './agentBridge'
 
 const log = debug('channel:qq:chatBot')
@@ -18,28 +19,7 @@ export type QQChatContext = {
   userId: string
 }
 
-type CachedBot = {
-  agentId: string
-  appSecret: string
-  chat: Chat
-  model?: string | null
-  provider?: string | null
-  userId: string
-}
-
-const GLOBAL_KEY = '__purechat_qq_chat_bots__' as const
-
-type GlobalWithBots = typeof globalThis & {
-  [GLOBAL_KEY]?: Map<string, CachedBot>
-}
-
-function getBotCache(): Map<string, CachedBot> {
-  const g = globalThis as GlobalWithBots
-  if (!g[GLOBAL_KEY]) {
-    g[GLOBAL_KEY] = new Map()
-  }
-  return g[GLOBAL_KEY]
-}
+const qqChatBotRegistry = new ChatBotRegistry<Chat>()
 
 function registerHandlers(chat: Chat, ctx: QQChatContext): void {
   const handler = async (thread: Thread, message: Message) => {
@@ -70,53 +50,34 @@ function registerHandlers(chat: Chat, ctx: QQChatContext): void {
  * Cached in-process because processMessage is async and the instance must stay alive.
  */
 export async function getOrCreateQQChat(ctx: QQChatContext): Promise<Chat> {
-  const cache = getBotCache()
-  const existing = cache.get(ctx.applicationId)
-
-  if (
-    existing &&
-    existing.appSecret === ctx.appSecret &&
-    existing.agentId === ctx.agentId &&
-    existing.model === ctx.model &&
-    existing.provider === ctx.provider &&
-    existing.userId === ctx.userId
-  ) {
-    return existing.chat
-  }
-
-  if (existing) {
-    cache.delete(ctx.applicationId)
-    log('invalidate cached chat appId=%s (creds/agent changed)', ctx.applicationId)
-  }
-
-  const adapter = createQQAdapter({
-    appId: ctx.appId,
-    clientSecret: ctx.appSecret,
-  })
-
-  const chat = new Chat({
-    adapters: { qq: adapter },
-    concurrency: 'queue',
-    state: createMemoryState(),
-    userName: 'purechat-qq',
-  })
-
-  registerHandlers(chat, ctx)
-  await chat.initialize()
-
-  cache.set(ctx.applicationId, {
-    agentId: ctx.agentId,
-    appSecret: ctx.appSecret,
-    chat,
-    model: ctx.model,
-    provider: ctx.provider,
-    userId: ctx.userId,
-  })
-
-  log('created chat appId=%s agent=%s', ctx.applicationId, ctx.agentId)
-  return chat
+  return qqChatBotRegistry.getOrCreate(
+    {
+      applicationId: ctx.applicationId,
+      fingerprint: buildChatBotFingerprint({
+        agentId: ctx.agentId,
+        appId: ctx.appId,
+        appSecret: ctx.appSecret,
+        model: ctx.model,
+        provider: ctx.provider,
+        userId: ctx.userId,
+      }),
+      platform: 'qq',
+    },
+    () => {
+      const adapter = createQQAdapter({ appId: ctx.appId, clientSecret: ctx.appSecret })
+      const chat = new Chat({
+        adapters: { qq: adapter },
+        concurrency: 'queue',
+        state: createMemoryState(),
+        userName: 'purechat-qq',
+      })
+      registerHandlers(chat, ctx)
+      log('created chat appId=%s agent=%s', ctx.applicationId, ctx.agentId)
+      return chat
+    }
+  )
 }
 
-export function invalidateQQChat(applicationId: string): void {
-  getBotCache().delete(applicationId)
+export function invalidateQQChat(applicationId: string): Promise<void> {
+  return qqChatBotRegistry.invalidate('qq', applicationId)
 }

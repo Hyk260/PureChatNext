@@ -93,7 +93,7 @@ export const DELETE = withAuth(async (_request, { userId }) => {
   const model = new ChannelBindingModel()
   const existing = await model.findByUserAndPlatform(userId, QQ_PLATFORM)
   if (existing?.applicationId) {
-    invalidateQQChat(existing.applicationId)
+    await invalidateQQChat(existing.applicationId)
   }
   await model.disconnect(userId, QQ_PLATFORM)
   await requestGatewayReconcile()
@@ -118,7 +118,7 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
   }
 
   if (existing.applicationId) {
-    invalidateQQChat(existing.applicationId)
+    await invalidateQQChat(existing.applicationId)
   }
 
   const channelConfig = parseChannelConfig(body)

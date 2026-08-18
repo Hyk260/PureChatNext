@@ -76,7 +76,7 @@ export async function bindQQCredentials(params: BindQQCredentialsParams) {
   }
   const model = new ChannelBindingModel()
   const previous = await model.findByUserAndPlatform(params.userId, QQ_PLATFORM)
-  if (previous?.applicationId) invalidateQQChat(previous.applicationId)
+  if (previous?.applicationId) await invalidateQQChat(previous.applicationId)
 
   const channelModel = resolveQQChannelModel({
     agentModel: agent.model,

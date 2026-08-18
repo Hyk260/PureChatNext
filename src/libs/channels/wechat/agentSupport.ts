@@ -1,27 +1,29 @@
-import { PURECHAT_PROVIDER_ID } from '@pure/const'
-import { getAiModel, getProviderChatModels, PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
+import { getAiModel, getProviderChatModels } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 
-import { isSupportedProviderId, resolveProviderApiKey } from '@/libs/ai-providers/resolveClient'
-import { isPureChatRuntimeAvailable } from '@/server/purechat'
+import {
+  channelProviderUnavailableReason,
+  defaultChannelModel,
+  isChannelProviderId,
+  normalizeChannelProvider,
+  validateChannelModel,
+} from '../core/modelResolver'
 
 export function normalizeWechatAgentProvider(provider: string | null | undefined): string {
-  return provider?.trim() || 'deepseek'
+  return normalizeChannelProvider(provider)
 }
 
 export function resolveWechatAgentModelId(provider: string, model: string | null | undefined): string {
   const trimmed = model?.trim()
   if (trimmed) return trimmed
-  if (provider === PURECHAT_PROVIDER_ID) return PURECHAT_DEFAULT_MODEL
-  if (provider === 'openai') return 'gpt-5.4-mini'
-  return 'deepseek-v4-flash'
+  return defaultChannelModel(isChannelProviderId(provider) ? provider : 'deepseek')
 }
 
 export const WECHAT_PROVIDER_IDS = ['purechat', 'openai', 'deepseek'] as const
 export type WechatProviderId = (typeof WECHAT_PROVIDER_IDS)[number]
 
 export function isWechatProviderId(provider: string): provider is WechatProviderId {
-  return WECHAT_PROVIDER_IDS.includes(provider as WechatProviderId)
+  return isChannelProviderId(provider)
 }
 
 export function getWechatProviderAvailability(): Record<WechatProviderId, { available: boolean; reason?: string }> {
@@ -34,9 +36,7 @@ export function getWechatProviderAvailability(): Record<WechatProviderId, { avai
 }
 
 export function validateWechatModel(provider: WechatProviderId, model: string): string | null {
-  const item = getAiModel(provider as ModelProviderId, model)
-  if (!item || item.enabled === false) return '所选模型不属于该服务商或已停用'
-  return null
+  return validateChannelModel(provider, model)
 }
 
 export function getEnabledWechatModels(provider: WechatProviderId) {
@@ -44,22 +44,12 @@ export function getEnabledWechatModels(provider: WechatProviderId) {
 }
 
 export function isWechatAgentUsable(provider: string | null | undefined): boolean {
-  const normalized = normalizeWechatAgentProvider(provider)
-  if (normalized === PURECHAT_PROVIDER_ID) return isPureChatRuntimeAvailable()
-  if (normalized === 'openai') return Boolean(resolveProviderApiKey('openai', undefined, undefined))
-  if (normalized === 'deepseek') return Boolean(resolveProviderApiKey('deepseek', undefined, undefined))
-  return false
+  return !wechatAgentUnavailableReason(provider)
 }
 
 export function wechatAgentUnavailableReason(provider: string | null | undefined): string | null {
-  const normalized = normalizeWechatAgentProvider(provider)
-  if (normalized === PURECHAT_PROVIDER_ID) {
-    if (!isPureChatRuntimeAvailable()) return '服务器未启用 PureChat 或未配置 AI Gateway 密钥'
-    return null
-  }
-  if (!isSupportedProviderId(normalized)) return '该 Agent 的 Provider 不支持微信渠道'
-  if (!resolveProviderApiKey(normalized, undefined, undefined)) return `服务器未配置 ${normalized} 渠道密钥`
-  return null
+  const reason = channelProviderUnavailableReason(provider, '微信渠道')
+  return reason === '该 Provider 不支持微信渠道' ? '该 Agent 的 Provider 不支持微信渠道' : reason
 }
 
 export function wechatModelSupportsVision(provider: string, modelId: string): boolean {

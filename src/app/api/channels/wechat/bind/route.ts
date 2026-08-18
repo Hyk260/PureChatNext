@@ -68,7 +68,7 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
   const applicationId = botId || `wechat_${createHash('sha256').update(botToken).digest('hex').slice(0, 32)}`
   const model = new ChannelBindingModel()
   const previous = await model.findByUserAndPlatform(userId, WECHAT_PLATFORM)
-  if (previous?.applicationId) invalidateWechatChat(previous.applicationId)
+  if (previous?.applicationId) await invalidateWechatChat(previous.applicationId)
   const binding = await model.upsert({
     agentId,
     applicationId,
@@ -89,7 +89,7 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
 export const DELETE = withAuth(async (_request, { userId }) => {
   const model = new ChannelBindingModel()
   const existing = await model.findByUserAndPlatform(userId, WECHAT_PLATFORM)
-  if (existing?.applicationId) invalidateWechatChat(existing.applicationId)
+  if (existing?.applicationId) await invalidateWechatChat(existing.applicationId)
   await model.disconnect(userId, WECHAT_PLATFORM)
   await requestGatewayReconcile()
   return NextResponse.json({ ok: true })
@@ -111,6 +111,6 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     userId,
   })
   if (!updated) return jsonError('WeChat not connected', 404)
-  invalidateWechatChat(updated.applicationId)
+  await invalidateWechatChat(updated.applicationId)
   return NextResponse.json({ agentId: updated.agentId, model: updated.model, ok: true, provider: updated.provider })
 })

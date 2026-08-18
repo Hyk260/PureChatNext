@@ -1,23 +1,7 @@
-import { generateText } from 'ai'
-import type { LanguageModel } from 'ai'
 import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
-import { PURECHAT_PROVIDER_ID } from '@pure/const'
-import { AgentModel } from '@pure/database/models/agent'
-import {
-  createProviderLanguageModel,
-  isSupportedProviderId,
-  resolveProviderApiKey,
-} from '@/libs/ai-providers/resolveClient'
-import {
-  assertPureChatCanChat,
-  chargePureChatGenerateUsage,
-  createPureChatLanguageModel,
-} from '@/server/purechat'
-import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
-
-import { defaultQQModel, isQQProviderId } from './agentSupport'
+import { generateChannelAgentReply } from '../core/agentRuntime'
 import { formatQQInboundLog, resolveQQInboundKind } from './inboundLog'
 
 const log = debug('channel:qq:bridge')
@@ -33,74 +17,15 @@ export async function generateQQAgentReply(params: {
   userId: string
   userText: string
 }): Promise<string> {
-  const agentModel = new AgentModel(params.userId)
-  const agent = await agentModel.findVisibleById(params.agentId)
-
-  if (!agent) {
-    throw new Error(`Agent not found: ${params.agentId}`)
-  }
-
-  const providerRaw = params.provider || agent.provider || 'deepseek'
-  const provider = isQQProviderId(providerRaw) ? providerRaw : 'deepseek'
-  const modelId = params.model || agent.model || defaultQQModel(provider)
-  const isPureChat = provider === PURECHAT_PROVIDER_ID
-
-  let languageModel: LanguageModel
-  let settlement: Awaited<ReturnType<typeof assertPureChatCanChat>> | undefined
-
-  if (isPureChat) {
-    settlement = await assertPureChatCanChat(params.userId, modelId)
-    const pureChatModel = createPureChatLanguageModel(modelId)
-    if (!pureChatModel) {
-      throw new Error('PureChat temporarily unavailable')
-    }
-    languageModel = pureChatModel
-  } else {
-    if (!isSupportedProviderId(provider)) {
-      throw new Error(`Channel provider "${provider}" is not supported by the QQ gateway`)
-    }
-    const apiKey = resolveProviderApiKey(provider, undefined, undefined)
-    if (!apiKey) {
-      throw new Error(`No API key for provider "${provider}". Set OPENAI_API_KEY or DEEPSEEK_API_KEY for QQ replies.`)
-    }
-    languageModel = createProviderLanguageModel(provider, modelId, apiKey, undefined)
-  }
-
-  log('reply agent=%s provider=%s model=%s', agent.id, provider, modelId)
-
-  const startedAt = Date.now()
-  let result: Awaited<ReturnType<typeof generateText>>
-  try {
-    result = await generateText({
-      messages: [{ content: params.userText, role: 'user' }],
-      model: languageModel,
-      ...(agent.systemRole ? { instructions: agent.systemRole } : {}),
-    })
-  } catch (error) {
-    if (isPureChatRestrictedModelError(error)) {
-      throw new Error(PURECHAT_MODEL_UNAVAILABLE_MESSAGE)
-    }
-    throw error
-  }
-
-  if (isPureChat && settlement) {
-    try {
-      await chargePureChatGenerateUsage({
-        durationMs: Date.now() - startedAt,
-        model: modelId,
-        result,
-        settlementId: settlement.settlementId,
-        settlementPeriod: settlement.settlementPeriod,
-        userId: params.userId,
-      })
-    } catch (error) {
-      log('charge usage failed agent=%s: %O', agent.id, error)
-    }
-  }
-
-  const text = result.text?.trim()
-  if (!text) return '（模型未返回内容）'
-  return text
+  const result = await generateChannelAgentReply({
+    agentId: params.agentId,
+    model: params.model,
+    platform: 'qq',
+    provider: params.provider,
+    text: params.userText,
+    userId: params.userId,
+  })
+  return result.text
 }
 
 /**

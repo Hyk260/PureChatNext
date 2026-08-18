@@ -1,24 +1,14 @@
-import { PURECHAT_PROVIDER_ID, SHANGHAI_TIMEZONE } from '@pure/const'
-import { generateText, isStepCount } from 'ai'
-import type { LanguageModel, ModelMessage } from 'ai'
+import { SHANGHAI_TIMEZONE } from '@pure/const'
+import { isStepCount } from 'ai'
+import type { ModelMessage } from 'ai'
 import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
-import { AgentModel } from '@pure/database/models/agent'
-import {
-  createProviderLanguageModel,
-  isSupportedProviderId,
-  resolveProviderApiKey,
-} from '@/libs/ai-providers/resolveClient'
-import {
-  assertPureChatCanChat,
-  chargePureChatGenerateUsage,
-  createPureChatLanguageModel,
-} from '@/server/purechat'
-import type { PureChatSettlement } from '@/server/purechat'
-import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
 import type { WechatToolArtifact, WechatToolContext } from '@/server/chat/toolRegistry'
+
+import { generateChannelAgentReply } from '../core/agentRuntime'
+import type { ChannelGenerationOptions } from '../core/types'
 
 const log = debug('channel:wechat:bridge')
 const MAX_GENERATION_STEPS = 5
@@ -65,44 +55,8 @@ export async function generateWechatAgentReply(params: {
   attachmentContext?: string
   wechatToolContext?: WechatToolContext
 }): Promise<WechatAgentReply> {
-  const agentModel = new AgentModel(params.userId)
-  const agent = await agentModel.findVisibleById(params.agentId)
-
-  if (!agent) {
-    throw new Error(`Agent not found: ${params.agentId}`)
-  }
-
-  const provider = params.provider
-  const modelId = params.model
-  const isPureChat = provider === PURECHAT_PROVIDER_ID
-
-  let languageModel: LanguageModel
-  let settlement: PureChatSettlement | undefined
-
-  if (isPureChat) {
-    settlement = await assertPureChatCanChat(params.userId, modelId)
-    const pureChatModel = createPureChatLanguageModel(modelId)
-    if (!pureChatModel) {
-      throw new Error('PureChat temporarily unavailable')
-    }
-    languageModel = pureChatModel
-  } else {
-    if (!isSupportedProviderId(provider)) {
-      throw new Error(`Channel provider "${provider}" is not supported by the WeChat gateway`)
-    }
-    const apiKey = resolveProviderApiKey(provider, undefined, undefined)
-    if (!apiKey) {
-      throw new Error(
-        `No API key for provider "${provider}". Set OPENAI_API_KEY or DEEPSEEK_API_KEY for WeChat replies.`
-      )
-    }
-    languageModel = createProviderLanguageModel(provider, modelId, apiKey, undefined)
-  }
-
   const toolContext = { channel: 'wechat' as const, searchMode: 'auto' as const, wechat: params.wechatToolContext }
   const tools = resolveChatTools(toolContext)
-
-  log('reply agent=%s provider=%s model=%s', agent.id, provider, modelId)
 
   const messages: ModelMessage[] = []
   for (const turn of params.history ?? []) {
@@ -110,68 +64,52 @@ export async function generateWechatAgentReply(params: {
     if (turn.responseText) messages.push({ content: turn.responseText, role: 'assistant' })
   }
   messages.push({ content: params.userContent ?? params.userText, role: 'user' })
-
-  const startedAt = Date.now()
-  let result: Awaited<ReturnType<typeof generateText>>
-  try {
-    result = await generateText({
-      abortSignal: params.abortSignal,
-      messages,
-      model: languageModel,
-      instructions: [
-        agent.systemRole,
-        buildWechatRuntimeInstructions(),
-        ...resolveChatToolInstructions(toolContext),
-        params.attachmentContext,
-      ].filter(Boolean).join('\n\n'),
-      onStepEnd: ({ finishReason, stepNumber, toolCalls, toolResults }) => {
-        log(
-          'step agent=%s step=%d finish=%s tools=%s results=%d',
-          agent.id,
-          stepNumber,
-          finishReason,
-          toolCalls.map((call) => call.toolName).join(',') || '-',
-          toolResults.length
-        )
-      },
-      prepareStep: ({ stepNumber }) =>
-        stepNumber >= FINAL_ANSWER_STEP ? { activeTools: [], toolChoice: 'none' as const } : undefined,
-      stopWhen: isStepCount(MAX_GENERATION_STEPS),
-      tools,
-    })
-  } catch (error) {
-    if (isPureChatRestrictedModelError(error)) {
-      throw new Error(PURECHAT_MODEL_UNAVAILABLE_MESSAGE)
-    }
-    throw error
+  const generation: ChannelGenerationOptions = {
+    instructions: [
+      buildWechatRuntimeInstructions(),
+      ...resolveChatToolInstructions(toolContext),
+      params.attachmentContext,
+    ].filter(Boolean).join('\n\n'),
+    messages,
+    onStepEnd: (event) => {
+      const step = event as {
+        finishReason?: string
+        stepNumber?: number
+        toolCalls?: Array<{ toolName: string }>
+        toolResults?: unknown[]
+      }
+      log(
+        'step platform=wechat step=%d finish=%s tools=%s results=%d',
+        step.stepNumber ?? 0,
+        step.finishReason ?? '-',
+        step.toolCalls?.map((call) => call.toolName).join(',') || '-',
+        step.toolResults?.length ?? 0
+      )
+    },
+    prepareStep: (event) => {
+      const stepNumber = (event as { stepNumber?: number }).stepNumber ?? 0
+      return stepNumber >= FINAL_ANSWER_STEP ? { activeTools: [], toolChoice: 'none' as const } : undefined
+    },
+    stopWhen: isStepCount(MAX_GENERATION_STEPS),
+    tools,
   }
+  const result = await generateChannelAgentReply({
+    abortSignal: params.abortSignal,
+    agentId: params.agentId,
+    generation,
+    model: params.model,
+    platform: 'wechat',
+    provider: params.provider,
+    text: params.userText,
+    userId: params.userId,
+  })
 
-  const durationMs = Date.now() - startedAt
-
-  if (isPureChat && settlement) {
-    try {
-      await chargePureChatGenerateUsage({
-        durationMs,
-        model: modelId,
-        result,
-        settlementId: settlement.settlementId,
-        settlementPeriod: settlement.settlementPeriod,
-        userId: params.userId,
-      })
-    } catch (error) {
-      log('charge usage failed agent=%s: %O', agent.id, error)
-    }
-  }
-
-  log('reply complete agent=%s steps=%d finish=%s chars=%d', agent.id, result.steps.length, result.finishReason, result.text.length)
-
-  const text = result.text?.trim()
   return {
     artifacts: params.wechatToolContext?.producedArtifacts ?? [],
-    durationMs,
-    model: modelId,
-    provider,
-    text: text || '（模型未返回内容）',
+    durationMs: result.durationMs,
+    model: result.model,
+    provider: result.provider,
+    text: result.text,
   }
 }
 

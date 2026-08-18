@@ -1,25 +1,25 @@
 import { createPrivateKey, sign } from 'node:crypto'
 
 /**
- * PKCS#8 DER prefix for an Ed25519 private key seed.
+ * Ed25519 私钥种子的 PKCS#8 DER 前缀。
  *
- * ASN.1:
+ * ASN.1 结构：
  *   SEQUENCE {
  *     INTEGER 0
- *     SEQUENCE { OID 1.3.101.112 (Ed25519) }
- *     OCTET STRING { OCTET STRING { <32-byte seed> } }
+ *     SEQUENCE { OID 1.3.101.112（Ed25519） }
+ *     OCTET STRING { OCTET STRING { <32 字节种子> } }
  *   }
  */
 const ED25519_PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex')
 
 /**
- * Ed25519 sign for QQ Bot webhook URL verification.
+ * 为 QQ Bot Webhook 地址验证生成 Ed25519 签名。
  *
- * Steps (see `docs/self-hosting/qq/protocol.zh-CN.md`):
- * 1. Repeat `clientSecret` until length ≥ 32, then take the first 32 bytes as seed
- * 2. Build an Ed25519 private key from that seed
- * 3. Sign `eventTs + plainToken`
- * 4. Return hex signature
+ * 步骤（详见 `docs/self-hosting/qq/protocol.zh-CN.md`）：
+ * 1. 重复 `clientSecret` 直到长度不小于 32，再截取前 32 字节作为种子；
+ * 2. 根据种子构造 Ed25519 私钥；
+ * 3. 对 `eventTs + plainToken` 进行签名；
+ * 4. 返回十六进制格式的签名。
  */
 export function signWebhookResponse(eventTs: string, plainToken: string, clientSecret: string): string {
   let seedStr = clientSecret

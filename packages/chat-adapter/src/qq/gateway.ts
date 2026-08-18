@@ -4,27 +4,46 @@ import type { QQGatewayHelloData, QQGatewayPayload, QQGatewayReadyData, QQGatewa
 
 export type GatewayLogger = (message: string, ...args: unknown[]) => void
 
+/** WebSocket Gateway 的默认空日志函数。 */
 const noop: GatewayLogger = () => {}
+/** 重连退避的初始等待时间。 */
 const RECONNECT_BASE_DELAY_MS = 1000
+/** 重连退避的最大等待时间。 */
 const RECONNECT_MAX_DELAY_MS = 30_000
+/** 单个连接允许的最大重连次数。 */
 const MAX_RECONNECT_ATTEMPTS = 10
+/** QQ 返回的心跳间隔允许的最小值。 */
 const HEARTBEAT_MIN_INTERVAL_MS = 1_000
+/** QQ 返回的心跳间隔允许的最大值。 */
 const HEARTBEAT_MAX_INTERVAL_MS = 300_000
+/** 无法读取心跳间隔时使用的默认值。 */
 const HEARTBEAT_DEFAULT_INTERVAL_MS = 45_000
+/** 默认订阅的事件意图：公共频道、私信以及群聊/C2C 事件。 */
 const DEFAULT_INTENTS = QQ_INTENTS.PUBLIC_GUILD_MESSAGES | QQ_INTENTS.DIRECT_MESSAGE | QQ_INTENTS.GROUP_AND_C2C_EVENT
 
+/** QQ WebSocket Gateway 连接配置。 */
 export interface QQGatewayOptions {
+  /** 外部取消信号；触发后会关闭连接并停止重试。 */
   abortSignal?: AbortSignal
+  /** 连接持续时间，超时后主动关闭；未设置时保持连接。 */
   durationMs?: number
+  /** 要订阅的 Gateway intents 位掩码。 */
   intents?: number
+  /** Gateway 日志函数。 */
   log?: GatewayLogger
+  /** Webhook 转发重试耗尽后的错误回调。 */
   onForwardError?: (error: Error) => void
+  /** Gateway 状态变化回调。 */
   onStatus?: (status: 'online' | 'degraded', detail?: { code: string; message: string }) => void
+  /** 当前分片编号和分片总数，默认使用 `[0, 1]`。 */
   shard?: [number, number]
+  /** 转发事件时附加到 Webhook 请求的请求头。 */
   webhookHeaders?: Record<string, string>
+  /** 接收 Gateway 事件转发请求的 Webhook 地址。 */
   webhookUrl: string
 }
 
+/** 可被 AbortSignal 中断的延迟。 */
 function delay(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) return reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))
@@ -36,8 +55,9 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
   })
 }
 
-/** Persistent QQ Bot Gateway connection with explicit readiness and terminal lifecycle. */
+/** 管理 QQ Bot Gateway 持久连接，并提供明确的就绪与终止生命周期。 */
 export class QQGatewayConnection {
+  /** 连接最终关闭或因不可恢复错误终止时完成的 Promise。 */
   readonly done: Promise<void>
   private readonly abortSignal?: AbortSignal
   private readonly api: QQApiClient
@@ -86,7 +106,9 @@ export class QQGatewayConnection {
     this.abortSignal?.addEventListener('abort', this.handleAbort, { once: true })
   }
 
+  /** 获取 Gateway 地址并建立连接，直到收到 READY 或 RESUMED。 */
   async connect(): Promise<void> {
+    // 连接前先处理已取消或已关闭的情况，避免创建无效 WebSocket。
     if (this.abortSignal?.aborted || this.closed) {
       this.close()
       return
@@ -95,11 +117,13 @@ export class QQGatewayConnection {
     this.gatewayUrl = gatewayInfo.url
     this.log('Gateway URL: %s (shards: %d)', this.gatewayUrl, gatewayInfo.shards ?? 1)
     if (this.durationMs) {
+      // 长连接由调用方限定生命周期时，到期自动关闭。
       this.durationTimer = setTimeout(() => this.close(), this.durationMs)
     }
     await this.openConnection(this.gatewayUrl, false)
   }
 
+  /** 主动关闭 WebSocket、定时器和后续重连，并完成生命周期 Promise。 */
   close(): void {
     if (this.closed) return
     this.closed = true
@@ -150,6 +174,7 @@ export class QQGatewayConnection {
           const data = typeof event.data === 'string' ? event.data : new TextDecoder().decode(event.data as ArrayBuffer)
           payload = JSON.parse(data)
         } catch {
+          // 单条非法载荷不应破坏整个连接，只记录并等待后续消息。
           this.log('Failed to parse gateway message')
           return
         }
@@ -168,6 +193,7 @@ export class QQGatewayConnection {
         }
         if (this.closed || this.abortSignal?.aborted) return
         if (this.hasConnected) {
+          // 只有已经成功连接过的会话才进入自动重连流程。
           this.onStatus?.('degraded', { code: 'DISCONNECTED', message: 'QQ gateway disconnected' })
           this.attemptReconnect()
         }
@@ -176,6 +202,7 @@ export class QQGatewayConnection {
   }
 
   private handlePayload(payload: QQGatewayPayload, isResume: boolean, onReady: (error?: Error) => void): void {
+    // `s` 是 Gateway 的全局序列号，恢复会话和心跳都需要使用最新值。
     if (payload.s !== undefined && payload.s !== null) this.seq = payload.s
     switch (payload.op) {
       case QQ_WS_OP_CODES.HELLO:
@@ -189,9 +216,11 @@ export class QQGatewayConnection {
         this.onStatus?.('online')
         break
       case QQ_WS_OP_CODES.RECONNECT:
+        // 服务端要求重连时关闭当前连接，由 close 事件统一调度重连。
         this.ws?.close(4000, 'Server reconnect')
         break
       case QQ_WS_OP_CODES.INVALID_SESSION:
+        // `d === true` 表示仍可尝试恢复，否则丢弃旧会话状态。
         if (payload.d !== true) {
           this.sessionId = null
           this.seq = null
@@ -211,6 +240,7 @@ export class QQGatewayConnection {
     const interval = Number.isFinite(raw)
       ? Math.min(Math.max(raw, HEARTBEAT_MIN_INTERVAL_MS), HEARTBEAT_MAX_INTERVAL_MS)
       : HEARTBEAT_DEFAULT_INTERVAL_MS
+    // 收到 Hello 后先启动心跳，再根据是否有有效会话选择恢复或重新鉴权。
     this.startHeartbeat(interval)
     if (isResume && this.sessionId) this.sendResume()
     else this.sendIdentify()
@@ -218,6 +248,7 @@ export class QQGatewayConnection {
 
   private handleDispatch(payload: QQGatewayPayload, onReady: (error?: Error) => void): void {
     if (payload.t === 'READY') {
+      // READY 表示新会话建立成功，记录恢复所需的会话信息。
       const ready = payload.d as QQGatewayReadyData
       this.sessionId = ready.session_id
       this.resumeGatewayUrl = ready.resume_gateway_url || this.resumeGatewayUrl
@@ -228,6 +259,7 @@ export class QQGatewayConnection {
       return
     }
     if (payload.t === 'RESUMED') {
+      // RESUMED 表示旧会话恢复成功，可以继续转发后续事件。
       this.hasConnected = true
       this.reconnectAttempts = 0
       this.onStatus?.('online')
@@ -242,6 +274,7 @@ export class QQGatewayConnection {
   }
 
   private sendIdentify(): void {
+    // Identify 必须使用最新 Access Token，避免长时间运行时使用过期 Token。
     void this.api.getAccessToken().then((token) => {
       this.send({
         d: {
@@ -259,6 +292,7 @@ export class QQGatewayConnection {
   }
 
   private sendResume(): void {
+    // Resume 使用上次会话的 ID 和序列号，尽量避免丢失断线期间的事件。
     void this.api.getAccessToken().then((token) => {
       this.send({ d: { seq: this.seq, session_id: this.sessionId, token: `QQBot ${token}` }, op: QQ_WS_OP_CODES.RESUME })
     }).catch((error) => {
@@ -281,8 +315,10 @@ export class QQGatewayConnection {
     this.heartbeatJitterTimer = setTimeout(() => {
       if (this.closed || this.abortSignal?.aborted) return
       this.sendHeartbeat()
+      // 首次心跳使用随机抖动，避免多个连接同时发送心跳造成瞬时峰值。
       this.heartbeatTimer = setInterval(() => {
         if (!this.heartbeatAcked) {
+          // 上一个心跳未收到 ACK，认为连接不可用并主动触发重连。
           this.ws?.close(4000, 'Heartbeat timeout')
           return
         }
@@ -300,6 +336,7 @@ export class QQGatewayConnection {
   }
 
   private async forwardEvent(payload: QQGatewayPayload): Promise<void> {
+    // 将 Gateway dispatch 事件包装成 HTTP Webhook 可处理的 op: 0 载荷。
     const body = JSON.stringify({ d: payload.d, id: payload.id || `gw_${Date.now()}`, op: 0, s: payload.s, t: payload.t })
     let lastError: unknown
     for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -315,6 +352,7 @@ export class QQGatewayConnection {
       } catch (error) {
         lastError = error
         if (this.closed || this.abortSignal?.aborted) return
+        // 转发失败采用指数退避，最多尝试 5 次；取消或关闭时立即停止。
         if (attempt < 4) await delay(1000 * 2 ** attempt, this.abortSignal)
       }
     }
@@ -329,6 +367,7 @@ export class QQGatewayConnection {
     }
     this.reconnectAttempts += 1
     const timeout = Math.min(RECONNECT_BASE_DELAY_MS * 2 ** (this.reconnectAttempts - 1), RECONNECT_MAX_DELAY_MS)
+    // 使用指数退避限制重连频率；存在会话时优先使用恢复地址。
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null
       if (this.closed || this.abortSignal?.aborted) return

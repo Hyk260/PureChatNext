@@ -30,13 +30,13 @@ import type {
   QQWebhookPayload,
 } from './types'
 
-/** Inbound msg_id (+ seq) for passive replies within QQ's reply window. */
+/** QQ 被动回复窗口所需的入站 `msg_id` 和消息序号。 */
 type PendingReplyContext = {
   msgId: string
   msgSeq: number
 }
 
-/** QQ Bot adapter for @pure/chat-adapter/qq (Vercel Chat SDK). */
+/** `@pure/chat-adapter/qq` 的 QQ Bot 适配器（Vercel Chat SDK）。 */
 export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   readonly name = 'qq'
   private readonly api: QQApiClient
@@ -46,17 +46,20 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   private _botUserId?: string
   private chat!: ChatInstance
   private logger!: Logger
-  /** threadId → last inbound message context for passive replies */
+  /** `threadId` → 最近一条入站消息的上下文，用于发送被动回复。 */
   private readonly replyContext = new Map<string, PendingReplyContext>()
 
+  /** 返回当前 Bot 的显示名称。 */
   get userName(): string {
     return this._userName
   }
 
+  /** 返回初始化阶段获取到的 Bot 用户 ID。 */
   get botUserId(): string | undefined {
     return this._botUserId
   }
 
+  /** 创建 QQ 适配器，并初始化 OpenAPI 客户端和格式转换器。 */
   constructor(config: QQAdapterConfig & { userName?: string }) {
     this.api = new QQApiClient(config.appId, config.clientSecret)
     this.clientSecret = config.clientSecret
@@ -64,15 +67,16 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     this._userName = config.userName || 'qq-bot'
   }
 
+  /** 注入 Chat SDK 实例，验证凭据并尽力获取 Bot 基本信息。 */
   async initialize(chat: ChatInstance): Promise<void> {
     this.chat = chat
     this.logger = chat.getLogger(this.name)
     this._userName = chat.getUserName()
 
-    // Validate credentials by getting access token
+    // 通过获取 Access Token 验证应用凭据是否有效。
     await this.api.getAccessToken()
 
-    // Try to fetch bot info
+    // 尝试获取机器人信息；失败不影响适配器继续工作。
     try {
       const botInfo = await this.api.getBotInfo()
       if (botInfo) {
@@ -80,16 +84,17 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
         if (botInfo.id) this._botUserId = botInfo.id
       }
     } catch {
-      // Bot info not critical
+      // 机器人信息不是初始化所必需的。
     }
 
     this.logger.info('Initialized QQ adapter (botUserId=%s)', this._botUserId)
   }
 
   // ------------------------------------------------------------------
-  // Webhook handling
+  // Webhook 处理
   // ------------------------------------------------------------------
 
+  /** 校验并处理 QQ Webhook 请求，将消息事件交给 Chat SDK。 */
   async handleWebhook(request: Request, options?: WebhookOptions): Promise<Response> {
     const bodyText = await request.text()
 
@@ -100,7 +105,7 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
       return new Response('Invalid JSON', { status: 400 })
     }
 
-    // Handle webhook verification (op: 13)
+    // 处理 Webhook 地址验证（op: 13）。
     if (payload.op === QQ_OP_CODES.VERIFY) {
       const verifyData = payload.d as { event_ts: string; plain_token: string }
       if (verifyData.plain_token && verifyData.event_ts) {
@@ -113,7 +118,7 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
       return new Response('Missing verification data', { status: 400 })
     }
 
-    // Handle dispatch events (op: 0)
+    // 处理事件分发载荷（op: 0）；其他操作码直接确认即可。
     if (payload.op !== QQ_OP_CODES.DISPATCH) {
       return Response.json({ ok: true })
     }
@@ -121,33 +126,33 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     const eventType = payload.t
     const eventData = payload.d
 
-    // Only handle message events
+    // 目前只处理消息事件，其他事件交由调用方忽略。
     if (!this.isMessageEvent(eventType)) {
       return Response.json({ ok: true })
     }
 
-    // Extract message content — allow through if there are attachments
+    // 提取消息内容；即使没有文本，只要包含附件也必须继续处理。
     const content = eventData.content
     const hasAttachments = eventData.attachments && eventData.attachments.length > 0
     if (!content?.trim() && !hasAttachments) {
       return Response.json({ ok: true })
     }
 
-    // Build thread ID based on event type
+    // 根据事件类型构造统一的 thread ID。
     const threadId = this.buildThreadId(eventType, eventData)
     if (!threadId) {
       return Response.json({ ok: true })
     }
 
-    // Remember inbound msg_id so postMessage can send a passive reply
+    // 记住入站 `msg_id`，让后续 `postMessage` 能发送被动回复。
     if (eventData.id) {
       this.replyContext.set(threadId, { msgId: eventData.id, msgSeq: 1 })
     }
 
-    // Create message via factory
+    // 通过延迟执行的工厂函数创建 Chat SDK 消息对象。
     const messageFactory = () => this.parseRawEvent(eventData, threadId, eventType!)
 
-    // Delegate to Chat SDK pipeline
+    // 将消息交给 Chat SDK 的标准处理流水线。
     this.chat.processMessage(this, threadId, messageFactory, options)
 
     return Response.json({ ok: true })
@@ -194,13 +199,13 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   }
 
   // ------------------------------------------------------------------
-  // Gateway listener (WebSocket mode)
+  // Gateway 监听器（WebSocket 模式）
   // ------------------------------------------------------------------
 
   /**
-   * Start a persistent WebSocket gateway connection.
-   * Dispatch events are forwarded to the webhookUrl as HTTP POSTs,
-   * preserving compatibility with the existing handleWebhook() pipeline.
+   * 启动持久化的 WebSocket Gateway 连接。
+   * Gateway 收到的事件会以 HTTP POST 转发到 `webhookUrl`，
+   * 从而复用现有的 `handleWebhook()` 处理流水线。
    */
   async startGatewayListener(
     options: { waitUntil: (task: Promise<unknown>) => void },
@@ -226,9 +231,10 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   }
 
   // ------------------------------------------------------------------
-  // Message operations
+  // 消息操作
   // ------------------------------------------------------------------
 
+  /** 根据线程类型发送消息，并返回 Chat SDK 所需的原始消息包装。 */
   async postMessage(threadId: string, message: AdapterPostableMessage): Promise<RawMessage<QQRawMessage>> {
     const { type, id, guildId } = this.decodeThreadId(threadId)
     const text = this.formatConverter.renderPostable(message)
@@ -282,28 +288,32 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     return { msgId: ctx.msgId, msgSeq }
   }
 
+  /** 编辑消息；QQ 不支持原地编辑时退化为发送新消息。 */
   async editMessage(
     threadId: string,
     _messageId: string,
     message: AdapterPostableMessage
   ): Promise<RawMessage<QQRawMessage>> {
-    // QQ doesn't support editing — fall back to posting a new message
+    // QQ 暂不支持编辑消息，因此退化为重新发送一条新消息。
     return this.postMessage(threadId, message)
   }
 
+  /** 删除消息；当前 QQ Bot API 不支持该操作，因此仅记录警告。 */
   async deleteMessage(_threadId: string, _messageId: string): Promise<void> {
-    // TODO: Implement message recall if QQ API supports it
+    // TODO：如果 QQ API 提供撤回接口，再实现消息撤回。
     this.logger.warn('Message deletion not implemented for QQ')
   }
 
+  /** 查询线程历史消息；QQ Bot API 不提供历史消息接口，因此返回空结果。 */
   async fetchMessages(_threadId: string, _options?: FetchOptions): Promise<FetchResult<QQRawMessage>> {
-    // QQ doesn't provide message history API for bots
+    // QQ Bot API 不提供机器人消息历史查询接口。
     return {
       messages: [],
       nextCursor: undefined,
     }
   }
 
+  /** 根据线程 ID 构造 Chat SDK 的线程信息。 */
   async fetchThread(threadId: string): Promise<ThreadInfo> {
     const { type, id } = this.decodeThreadId(threadId)
 
@@ -316,9 +326,10 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   }
 
   // ------------------------------------------------------------------
-  // Message parsing
+  // 消息解析
   // ------------------------------------------------------------------
 
+  /** 将 QQ 原始消息转换为 Chat SDK 的标准消息对象。 */
   parseMessage(raw: QQRawMessage): Message<QQRawMessage> {
     const cleanText = this.formatConverter.cleanMentions(raw.content || '')
     const formatted = parseMarkdown(cleanText)
@@ -369,7 +380,8 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     const formatted = parseMarkdown(cleanText)
 
     const authorId = data.author?.id || 'unknown'
-    const isBot = false // Webhook events are from users
+    // Webhook 消息事件来自用户，而不是机器人自身。
+    const isBot = false
 
     const author: Author = {
       fullName: authorId,
@@ -408,23 +420,21 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   }
 
   // ------------------------------------------------------------------
-  // Attachment mapping
+  // 附件映射
   // ------------------------------------------------------------------
 
   /**
-   * Map QQ attachments to Chat SDK Attachment objects.
-   * QQ provides direct URLs for media files.
+   * 将 QQ 附件转换为 Chat SDK 的 `Attachment` 对象。
+   * QQ 会为媒体文件提供可直接访问的 URL。
    */
   private mapQQAttachments(qqAttachments?: QQAttachment[]): Attachment[] {
     if (!qqAttachments || qqAttachments.length === 0) return []
 
     return qqAttachments.map((a) => {
-      // QQ's `content_type` is not always a real MIME type — for c2c file
-      // attachments it comes back as the coarse category label `"file"`. Trusting
-      // it verbatim mislabels e.g. an `.m4a` as `"file"` instead of `audio/mp4`,
-      // which then defeats the filename-based MIME recovery in ingestAttachment
-      // (that only re-infers for `application/octet-stream`). Fall back to the
-      // filename when content_type isn't a usable MIME type.
+      // QQ 的 `content_type` 不一定是真实的 MIME 类型：C2C 文件附件可能只返回
+      // 粗粒度的 `"file"`。如果原样使用，会把 `.m4a` 错判为 `"file"` 而不是
+      // `audio/mp4`，也会绕过 `ingestAttachment` 基于文件名的 MIME 类型恢复。
+      // 因此，当 `content_type` 不可用时，回退到文件名推断类型。
       const mimeType = this.resolveMimeType(a.content_type, a.filename)
       return {
         fetchData: () => this.fetchAttachmentData(a.url),
@@ -440,8 +450,8 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   }
 
   /**
-   * Resolve a usable MIME type from QQ's `content_type`, falling back to
-   * filename-based inference when QQ sends a non-MIME value (e.g. `"file"`).
+   * 从 QQ 的 `content_type` 解析可用的 MIME 类型。
+   * 当 QQ 返回 `"file"` 等非 MIME 值时，回退到根据文件名推断类型。
    */
   private resolveMimeType(contentType: string | undefined, filename?: string): string {
     if (contentType && contentType.includes('/')) return contentType
@@ -464,29 +474,33 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   }
 
   // ------------------------------------------------------------------
-  // Reactions (not supported by QQ Bot API)
+  // 表情反应（QQ Bot API 不支持）
   // ------------------------------------------------------------------
 
+  /** 添加表情反应；QQ Bot API 当前不支持该操作。 */
   async addReaction(_threadId: string, _messageId: string, _emoji: EmojiValue | string): Promise<void> {
-    // QQ Bot API doesn't support reactions
+    // QQ Bot API 不支持添加表情反应。
   }
 
+  /** 移除表情反应；QQ Bot API 当前不支持该操作。 */
   async removeReaction(_threadId: string, _messageId: string, _emoji: EmojiValue | string): Promise<void> {
-    // QQ Bot API doesn't support reactions
+    // QQ Bot API 不支持移除表情反应。
   }
 
   // ------------------------------------------------------------------
-  // Typing (not supported by QQ Bot API)
+  // 正在输入状态（QQ Bot API 不支持）
   // ------------------------------------------------------------------
 
+  /** 开始输入提示；QQ Bot API 当前没有对应接口。 */
   async startTyping(_threadId: string): Promise<void> {
-    // QQ has no typing indicator API for bots
+    // QQ 没有面向 Bot 的正在输入状态接口。
   }
 
   // ------------------------------------------------------------------
-  // Thread ID encoding
+  // Thread ID 编解码
   // ------------------------------------------------------------------
 
+  /** 将 QQ 线程结构编码为持久化的字符串 ID。 */
   encodeThreadId(data: QQThreadId): string {
     if (data.guildId) {
       return `qq:${data.type}:${data.id}:${data.guildId}`
@@ -494,10 +508,11 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     return `qq:${data.type}:${data.id}`
   }
 
+  /** 将字符串线程 ID 解码为 QQ 线程结构。 */
   decodeThreadId(threadId: string): QQThreadId {
     const parts = threadId.split(':')
     if (parts.length < 3 || parts[0] !== 'qq') {
-      // Fallback for malformed thread IDs
+      // 格式错误时回退为群聊线程，保持 Adapter 接口可继续处理。
       return { id: threadId, type: 'group' }
     }
 
@@ -508,27 +523,28 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     return { guildId, id, type }
   }
 
+  /** 返回 Chat SDK 所需的频道 ID；QQ 直接使用线程 ID 作为频道 ID。 */
   channelIdFromThreadId(threadId: string): string {
     return threadId
   }
 
+  /** 判断线程是否属于 C2C 单聊或频道私信。 */
   isDM(threadId: string): boolean {
     const { type } = this.decodeThreadId(threadId)
     return type === 'c2c' || type === 'dms'
   }
 
   // ------------------------------------------------------------------
-  // Format rendering
+  // 格式渲染
   // ------------------------------------------------------------------
 
+  /** 将 Chat SDK 的格式化内容渲染为 QQ 可发送的文本。 */
   renderFormatted(content: FormattedContent): string {
     return this.formatConverter.fromAst(content)
   }
 }
 
-/**
- * Factory function to create a QQAdapter.
- */
+/** 创建 QQ 适配器实例的工厂函数。 */
 export function createQQAdapter(config: QQAdapterConfig & { userName?: string }): QQAdapter {
   return new QQAdapter(config)
 }

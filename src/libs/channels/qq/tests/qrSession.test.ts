@@ -20,7 +20,7 @@ vi.mock('@tencent-connect/qqbot-connector', () => ({
     return mocks.stop
   }),
 }))
-vi.mock('./binding', () => ({ bindQQCredentials: mocks.bindQQCredentials }))
+vi.mock('../binding', () => ({ bindQQCredentials: mocks.bindQQCredentials }))
 
 import {
   cancelQQQrSession,
@@ -28,7 +28,7 @@ import {
   completeQQQrSession,
   getQQQrSessionStatus,
   startQQQrSession,
-} from './qrSession'
+} from '../qrSession'
 
 describe('QQ QR sessions', () => {
   beforeEach(() => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatQQInboundLog, resolveQQInboundKind } from './inboundLog'
+import { formatQQInboundLog, resolveQQInboundKind } from '../inboundLog'
 
 describe('resolveQQInboundKind', () => {
   it('prefers attachments over caption text', () => {

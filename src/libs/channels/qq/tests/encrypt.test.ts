@@ -4,7 +4,7 @@ vi.mock('@/envs/serverDB', () => ({
   serverDBEnv: { KEY_VAULTS_SECRET: 'test-secret-for-unit' },
 }))
 
-import { decryptCredentials, encryptCredentials } from './encrypt'
+import { decryptCredentials, encryptCredentials } from '../encrypt'
 
 describe('qq encryptCredentials', () => {
   it('round-trips credentials with KEY_VAULTS_SECRET', () => {

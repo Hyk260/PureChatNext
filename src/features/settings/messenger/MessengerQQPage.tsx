@@ -1,16 +1,20 @@
 'use client'
 
-import { Alert, Select, Spin } from 'antd'
-import { Button, confirmModal, Text, copyToClipboard, Flexbox } from '@pure/ui'
-import { formatDateTime } from '@pure/utils/client'
-import { PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
+import { Select, Spin } from 'antd'
+import { Alert, Button, confirmModal, Text, copyToClipboard, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Trash2Icon } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
 
 import { fetchAgents } from '@/features/home/agentApi'
 
-import { getMessengerPlatform } from './const'
+import {
+  formatMessengerActiveAt,
+  getMessengerPlatform,
+  isMessengerProviderId,
+  MESSENGER_DEFAULT_MODELS,
+  MESSENGER_DEFAULT_PROVIDER,
+} from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
@@ -18,16 +22,26 @@ import { QQConnectButton } from './QQConnectModal'
 import { fetchQQStatus, unbindQQ, updateQQConfiguration } from './qqApi'
 import type { QQProviderId, QQStatus } from './qqApi'
 
-const formatActiveAt = (value: string) => formatDateTime(value, { hour12: false, second: '2-digit' })
-
-const QQ_PROVIDERS: QQProviderId[] = ['purechat', 'openai', 'deepseek']
-const DEFAULT_MODELS: Record<QQProviderId, string> = {
-  deepseek: 'deepseek-v4-flash',
-  openai: 'gpt-5.4-mini',
-  purechat: PURECHAT_DEFAULT_MODEL,
+function qqConnectHint(gatewaySupported: boolean) {
+  if (gatewaySupported) {
+    return {
+      title: '支持扫码、WebSocket 与 URL 回调',
+      description: '点击右上角「连接」，推荐使用手机 QQ 扫码自动完成机器人授权。',
+    }
+  }
+  return {
+    title: '当前部署仅支持 URL 回调',
+    description: '扫码和 WebSocket 需要常驻 Gateway；点击右上角「连接」可使用 App ID / Secret 配置 URL 回调。',
+  }
 }
 
-const isQQProviderId = (id: string): id is QQProviderId => QQ_PROVIDERS.includes(id as QQProviderId)
+function qqBoundDescription(status: QQStatus) {
+  const mode = status.connectionMode ?? 'websocket'
+  if (status.lastActiveAt) {
+    return `最近活动：${formatMessengerActiveAt(status.lastActiveAt)} · 模式：${mode}`
+  }
+  return `模式：${mode}。在 QQ 私聊或群内 @ 机器人即可对话。`
+}
 
 const DISCONNECTED_STATUS: QQStatus = {
   connected: false,
@@ -43,13 +57,13 @@ const MessengerQQPage = memo(() => {
   const [status, setStatus] = useState<QQStatus | null>(null)
   const [agents, setAgents] = useState<Array<{ label: string; value: string }>>([])
   const [agentId, setAgentId] = useState('agt_inbox')
-  const [provider, setProvider] = useState<QQProviderId>('deepseek')
-  const [modelId, setModelId] = useState(DEFAULT_MODELS.deepseek)
+  const [provider, setProvider] = useState<QQProviderId>(MESSENGER_DEFAULT_PROVIDER)
+  const [modelId, setModelId] = useState(MESSENGER_DEFAULT_MODELS.deepseek)
 
   const applyStatus = useCallback((st: QQStatus) => {
     setStatus(st)
     if (st.agentId) setAgentId(st.agentId)
-    if (st.provider && isQQProviderId(st.provider)) setProvider(st.provider)
+    if (st.provider && isMessengerProviderId(st.provider)) setProvider(st.provider)
     if (st.model) setModelId(st.model)
     return st
   }, [])
@@ -107,7 +121,7 @@ const MessengerQQPage = memo(() => {
 
   const handleModelSelect = useCallback(
     (nextProvider: string, nextModel: string) => {
-      if (!isQQProviderId(nextProvider)) return
+      if (!isMessengerProviderId(nextProvider)) return
       const previous = { agentId, model: modelId, provider }
       setProvider(nextProvider)
       setModelId(nextModel)
@@ -201,25 +215,14 @@ const MessengerQQPage = memo(() => {
         />
 
         {showConnect ? (
-          <Alert
-            showIcon
-            type='info'
-            title={gatewaySupported ? '支持扫码、WebSocket 与 URL 回调' : '当前部署仅支持 URL 回调'}
-            description={gatewaySupported
-              ? '点击右上角「连接」，推荐使用手机 QQ 扫码自动完成机器人授权。'
-              : '扫码和 WebSocket 需要常驻 Gateway；点击右上角「连接」可使用 App ID / Secret 配置 URL 回调。'}
-          />
+          <Alert showIcon type='info' {...qqConnectHint(gatewaySupported)} />
         ) : (
           <>
               <Alert
                 showIcon
                 type={connected ? 'success' : 'warning'}
                 title={connected ? '已连接 QQ' : 'QQ 绑定已保存，当前离线'}
-                description={
-                  status?.lastActiveAt
-                    ? `最近活动：${formatActiveAt(status.lastActiveAt)} · 模式：${status.connectionMode ?? 'websocket'}`
-                    : `模式：${status?.connectionMode ?? 'websocket'}。在 QQ 私聊或群内 @ 机器人即可对话。`
-                }
+                description={status ? qqBoundDescription(status) : undefined}
               />
               {status?.connectionMode === 'webhook' && status.webhookUrl && (
                 <Alert

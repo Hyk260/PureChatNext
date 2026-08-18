@@ -1,6 +1,6 @@
 import type { RouteObject } from 'react-router'
 
-import { dynamicElement, dynamicLayout, redirectElement } from '@/utils/router'
+import { dynamicElement, dynamicLayout } from '@/utils/router'
 
 /**
  * Web SPA route tree (react-router).
@@ -313,7 +313,7 @@ export const webRoutes: RouteObject[] = [
 
   // —— Fallback ——
   {
-    element: redirectElement('/'),
+    element: dynamicElement(() => import('@/components/404'), '404'),
     path: '*',
   },
 ]

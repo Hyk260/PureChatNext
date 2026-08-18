@@ -33,7 +33,16 @@ export class QQChannelGatewayClient {
     const credentials = decryptCredentials(this.binding.credentials)
     if (credentials.connectionMode !== 'websocket') throw new Error('QQ binding is not configured for WebSocket')
     const adapter = createQQAdapter({ appId: credentials.appId, clientSecret: credentials.appSecret })
-    this.chat = new Chat({ adapters: { qq: adapter }, concurrency: 'queue', state: createMemoryState(), userName: 'purechat-qq-gateway' })
+    // This Chat instance only provides the adapter lifecycle/logger required by
+    // the gateway listener. Failed gateway startups are retried by the channel
+    // gateway manager, so its normal info-level lifecycle logs are too noisy.
+    this.chat = new Chat({
+      adapters: { qq: adapter },
+      concurrency: 'queue',
+      logger: 'warn',
+      state: createMemoryState(),
+      userName: 'purechat-qq-gateway',
+    })
     await this.chat.initialize()
     this.connection = await adapter.startGatewayListener(
       { waitUntil: (task) => void task },

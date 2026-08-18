@@ -2,10 +2,12 @@
 
 import { lazy, memo, Suspense } from 'react'
 import type { ComponentType, ReactElement } from 'react'
-import { createBrowserRouter, Navigate, Outlet } from 'react-router'
+import { createBrowserRouter, isRouteErrorResponse, Navigate, Outlet, useRouteError } from 'react-router'
 import type { RouteObject } from 'react-router'
 
+import NotFound from '@/components/404'
 import Loading from '@/components/Loading/BrandTextLoading'
+import ErrorPage from '@/components/Error'
 import AppLayer from '@/spa/AppLayer'
 
 /** Loose component type so layout modules with required `children` stay assignable. */
@@ -69,6 +71,26 @@ export function redirectElement(to: string): ReactElement {
   return <Navigate replace to={to} />
 }
 
+function normalizeRouteError(error: unknown): Error {
+  if (error instanceof Error) return error
+  if (typeof error === 'string') return new Error(error)
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+    return new Error(error.message)
+  }
+  return new Error('Unknown route error')
+}
+
+/** Shared data-router fallback for render, loader, and action errors. */
+export function RouterErrorElement(): ReactElement {
+  const error = useRouteError()
+
+  if (isRouteErrorResponse(error) && error.status === 404) {
+    return <NotFound />
+  }
+
+  return <ErrorPage error={normalizeRouteError(error)} reset={() => window.location.reload()} />
+}
+
 export interface CreateAppRouterOptions {
   basename?: string
 }
@@ -89,6 +111,7 @@ export function createAppRouter(routes: RouteObject[], options?: CreateAppRouter
     [
       {
         children: routes,
+        errorElement: <RouterErrorElement />,
         element: <RouterRoot />,
         path: '/',
       },

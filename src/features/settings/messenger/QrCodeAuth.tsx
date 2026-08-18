@@ -1,7 +1,7 @@
 'use client'
 
-import { Alert, QRCode, Spin } from 'antd'
-import { Button, Text, Flexbox } from '@pure/ui'
+import { QRCode, Spin } from 'antd'
+import { Alert, Button, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'

@@ -1,4 +1,20 @@
+import { PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
+import { formatDateTime } from '@pure/utils/client'
+
 export type MessengerPlatformId = 'slack' | 'telegram' | 'discord' | 'wechat' | 'qq'
+
+export const MESSENGER_PROVIDER_IDS = ['purechat', 'openai', 'deepseek'] as const
+export type MessengerProviderId = (typeof MESSENGER_PROVIDER_IDS)[number]
+export const MESSENGER_DEFAULT_PROVIDER: MessengerProviderId = 'deepseek'
+export const MESSENGER_DEFAULT_MODELS: Record<MessengerProviderId, string> = {
+  deepseek: 'deepseek-v4-flash',
+  openai: 'gpt-5.4-mini',
+  purechat: PURECHAT_DEFAULT_MODEL,
+}
+export const isMessengerProviderId = (id: string): id is MessengerProviderId =>
+  MESSENGER_PROVIDER_IDS.includes(id as MessengerProviderId)
+export const formatMessengerActiveAt = (value: string) =>
+  formatDateTime(value, { hour12: false, second: '2-digit' })
 
 export type MessengerPlatformMeta = {
   description: string

@@ -34,6 +34,7 @@ type ActiveClient = {
 }
 
 type RetryState = { attempt: number; retryAt: number }
+type RetrySchedule = RetryState & { delayMs: number }
 
 type ManagerOptions = {
   bindingModel?: ChannelBindingModel
@@ -67,6 +68,7 @@ export class ChannelGatewayManager {
   private readonly now: () => number
   private readonly owner = `next-${hostname()}-${process.pid}-${createNanoId(8)()}`
   private readonly retry = new Map<string, RetryState>()
+  private readonly loggedFailures = new Map<string, string>()
   private readonly statuses = new Map<string, ChannelGatewayRuntimeStatus>()
   private abortController: AbortController | null = null
   private coreError: string | undefined
@@ -210,14 +212,17 @@ export class ChannelGatewayManager {
         (error) => this.handleClientExit(binding.id, error)
       )
       this.retry.delete(binding.id)
+      this.loggedFailures.delete(binding.id)
       await this.reportStatus(binding.id, { status: 'online' })
     } catch (error) {
       if (client && !this.active.has(binding.id)) await client.stop().catch(() => undefined)
       if (!this.active.has(binding.id)) {
         if (this.statuses.get(binding.id) === 'needs_rebind') return
-        await this.reportStatus(binding.id, { ...safeError(error), status: 'degraded' })
+        const details = safeError(error)
+        const retry = this.scheduleRetry(binding.id)
+        this.logClientFailure(binding.id, details, retry)
+        await this.reportStatus(binding.id, { ...details, status: 'degraded' })
         await this.bindingModel.releaseGatewayLease(binding.id, this.owner).catch(() => undefined)
-        this.scheduleRetry(binding.id)
         return
       }
       await this.handleClientExit(binding.id, error)
@@ -240,16 +245,33 @@ export class ChannelGatewayManager {
     const active = this.active.get(bindingId)
     if (!active || active.expectedStop) return
     const details = safeError(error)
+    const retry = this.scheduleRetry(bindingId)
+    this.logClientFailure(bindingId, details, retry)
     await this.reportStatus(bindingId, { ...details, status: 'degraded' })
     await this.stopClient(bindingId, false)
-    this.scheduleRetry(bindingId)
   }
 
-  private scheduleRetry(bindingId: string) {
+  private scheduleRetry(bindingId: string): RetrySchedule {
     const prior = this.retry.get(bindingId)?.attempt ?? 0
     const attempt = prior + 1
     const delay = Math.min(1000 * 2 ** Math.min(prior, 5), MAX_BACKOFF_MS)
-    this.retry.set(bindingId, { attempt, retryAt: this.now() + delay })
+    const state = { attempt, delayMs: delay, retryAt: this.now() + delay }
+    this.retry.set(bindingId, state)
+    return state
+  }
+
+  private logClientFailure(bindingId: string, details: { code: string; message: string }, retry: RetrySchedule) {
+    const failureSignature = `${details.code}:${details.message}`
+    if (this.loggedFailures.get(bindingId) === failureSignature) return
+    this.loggedFailures.set(bindingId, failureSignature)
+    log(
+      'client failed binding=%s code=%s message=%s; retry scheduled attempt=%d delayMs=%d',
+      bindingId,
+      details.code,
+      details.message,
+      retry.attempt,
+      retry.delayMs,
+    )
   }
 
   private async reportStatus(bindingId: string, event: ChannelGatewayStatusEvent) {
@@ -281,7 +303,10 @@ export class ChannelGatewayManager {
     await active.client.stop().catch((error) => log('client stop failed platform=%s: %O', active.definition.platform, error))
     await this.bindingModel.releaseGatewayLease(bindingId, this.owner).catch(() => undefined)
     if (expected && this.running) await this.bindingModel.updateGatewayStatus(bindingId, 'offline', null)
-    if (expected) this.retry.delete(bindingId)
+    if (expected) {
+      this.retry.delete(bindingId)
+      this.loggedFailures.delete(bindingId)
+    }
   }
 
   async stop(): Promise<void> {
@@ -295,6 +320,7 @@ export class ChannelGatewayManager {
     await Promise.allSettled(this.workerTasks)
     this.workerTasks = []
     this.retry.clear()
+    this.loggedFailures.clear()
     this.desiredCounts.clear()
     this.degradedCounts.clear()
     this.statuses.clear()

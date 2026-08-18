@@ -41,4 +41,9 @@ describe('webRouter.config smoke', () => {
   it('uses RequireAuth for chat layout', () => {
     expect(source).toContain("import('@/routes/chat/_layout')")
   })
+
+  it('renders the shared 404 page for unmatched paths', () => {
+    expect(source).toContain("import('@/components/404')")
+    expect(source).not.toContain("redirectElement('/')")
+  })
 })

@@ -1,18 +1,24 @@
 'use client'
 
-import { Alert, Select, Spin } from 'antd'
-import { Button, confirmModal, Text, Flexbox } from '@pure/ui'
-import { formatDateTime } from '@pure/utils/client'
-import { PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
+import { Select, Spin } from 'antd'
+import { Alert, Button, confirmModal, Text, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { isDev } from '@/libs/constants'
 import { MessagesSquareIcon, Trash2Icon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { fetchAgents } from '@/features/home/agentApi'
 
-import { getMessengerPlatform } from './const'
+import {
+  formatMessengerActiveAt,
+  getMessengerPlatform,
+  isMessengerProviderId,
+  MESSENGER_DEFAULT_MODELS,
+  MESSENGER_DEFAULT_PROVIDER,
+  MESSENGER_PROVIDER_IDS,
+} from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
@@ -22,17 +28,6 @@ import { bindWechat, fetchWechatStatus, retryFailedWechatEvents, unbindWechat, u
 import type { WechatConfiguration, WechatProviderId, WechatStatus } from './wechatApi'
 
 const STATUS_POLL_MS = 8_000
-const DEFAULT_MODELS: Record<WechatProviderId, string> = {
-  deepseek: 'deepseek-v4-flash',
-  openai: 'gpt-5.4-mini',
-  purechat: PURECHAT_DEFAULT_MODEL,
-}
-const WECHAT_PROVIDERS: WechatProviderId[] = ['purechat', 'openai', 'deepseek']
-
-const formatActiveAt = (value: string) => formatDateTime(value, { hour12: false, second: '2-digit' })
-
-const isWechatProviderId = (id: string): id is WechatProviderId =>
-  WECHAT_PROVIDERS.includes(id as WechatProviderId)
 
 const DISCONNECTED_STATUS: WechatStatus = {
   bound: false,
@@ -41,6 +36,78 @@ const DISCONNECTED_STATUS: WechatStatus = {
   gatewaySupported: true,
   needsRebind: false,
   runtimeStatus: 'stopped',
+}
+
+function wechatBoundDescription(status: WechatStatus) {
+  if (status.lastActiveAt) return `最近活动：${formatMessengerActiveAt(status.lastActiveAt)}`
+  return '打开微信私聊机器人即可对话。'
+}
+
+function renderWechatStatusBanner(params: {
+  bound: boolean
+  message: { error: (content: string) => void; success: (content: string) => void }
+  refreshStatus: () => Promise<WechatStatus>
+  showConnect: boolean
+  status: WechatStatus | null
+}): ReactNode {
+  const { bound, message, refreshStatus, showConnect, status } = params
+
+  if (showConnect) {
+    return (
+      <Text type='secondary' style={{ fontSize: 13 }}>
+        打开手机微信 → 右上角「+」→ 扫一扫，扫描二维码并确认。
+      </Text>
+    )
+  }
+
+  if (status?.runtimeStatus === 'starting') {
+    return (
+      <Alert showIcon type='info' title='等待 Gateway' description='凭证已保存，Gateway 首次轮询成功后会显示在线。' />
+    )
+  }
+
+  if (status?.runtimeStatus === 'degraded') {
+    return (
+      <Alert
+        showIcon
+        type='warning'
+        title={`渠道异常${status.failedEventCount ? `，${status.failedEventCount} 条消息处理失败` : ''}`}
+        description={status.lastError?.message || 'Gateway 仍在运行，但存在待重试或失败消息。'}
+        action={
+          status.failedEventCount ? (
+            <Button
+              size='small'
+              onClick={() => {
+                void retryFailedWechatEvents()
+                  .then((count) => message.success(`已重新入队 ${count} 条消息`))
+                  .then(refreshStatus)
+                  .catch((error) => message.error(error instanceof Error ? error.message : '重试失败'))
+              }}
+            >
+              重试失败消息
+            </Button>
+          ) : undefined
+        }
+      />
+    )
+  }
+
+  if (status?.runtimeStatus === 'offline' && bound) {
+    return (
+      <Alert
+        showIcon
+        type='error'
+        title='Gateway 离线'
+        description='超过 90 秒未收到轮询心跳。请启动或检查微信 Gateway。'
+      />
+    )
+  }
+
+  if (bound && status) {
+    return <Alert showIcon type='success' title='已连接微信' description={wechatBoundDescription(status)} />
+  }
+
+  return null
 }
 
 const MessengerWeChatPage = memo(() => {
@@ -53,8 +120,8 @@ const MessengerWeChatPage = memo(() => {
   const [status, setStatus] = useState<WechatStatus | null>(null)
   const [agents, setAgents] = useState<Array<{ label: string; value: string }>>([])
   const [agentId, setAgentId] = useState('agt_inbox')
-  const [provider, setProvider] = useState<WechatProviderId>('deepseek')
-  const [modelId, setModelId] = useState(DEFAULT_MODELS.deepseek)
+  const [provider, setProvider] = useState<WechatProviderId>(MESSENGER_DEFAULT_PROVIDER)
+  const [modelId, setModelId] = useState(MESSENGER_DEFAULT_MODELS.deepseek)
 
   const refreshStatus = useCallback(async () => {
     const st = await fetchWechatStatus()
@@ -169,7 +236,7 @@ const MessengerWeChatPage = memo(() => {
 
   const handleModelSelect = useCallback(
     (nextProvider: string, nextModel: string) => {
-      if (!isWechatProviderId(nextProvider)) return
+      if (!isMessengerProviderId(nextProvider)) return
       const previous = { agentId, model: modelId, provider }
       setProvider(nextProvider)
       setModelId(nextModel)
@@ -214,7 +281,7 @@ const MessengerWeChatPage = memo(() => {
   const needsRebind = Boolean(status?.needsRebind) || (bound && status?.enabled === false)
   const showConnect = !bound || needsRebind
   const controlsDisabled = binding || saving
-  const allowedProviders = WECHAT_PROVIDERS.filter(
+  const allowedProviders = MESSENGER_PROVIDER_IDS.filter(
     (id) => status?.providerAvailability?.[id]?.available !== false
   )
 
@@ -276,51 +343,7 @@ const MessengerWeChatPage = memo(() => {
             <Alert showIcon type='warning' title='微信会话已过期或需要重新连接' description='请再次扫码绑定。' />
           )}
 
-          {showConnect ? (
-            <Text type='secondary' style={{ fontSize: 13 }}>
-              打开手机微信 → 右上角「+」→ 扫一扫，扫描二维码并确认。
-            </Text>
-          ) : status?.runtimeStatus === 'starting' ? (
-            <Alert showIcon type='info' title='等待 Gateway' description='凭证已保存，Gateway 首次轮询成功后会显示在线。' />
-          ) : status?.runtimeStatus === 'degraded' ? (
-            <Alert
-              showIcon
-              type='warning'
-              title={`渠道异常${status.failedEventCount ? `，${status.failedEventCount} 条消息处理失败` : ''}`}
-              description={status.lastError?.message || 'Gateway 仍在运行，但存在待重试或失败消息。'}
-              action={
-                status.failedEventCount ? (
-                  <Button
-                    size='small'
-                    onClick={() => {
-                      void retryFailedWechatEvents()
-                        .then((count) => message.success(`已重新入队 ${count} 条消息`))
-                        .then(refreshStatus)
-                        .catch((error) => message.error(error instanceof Error ? error.message : '重试失败'))
-                    }}
-                  >
-                    重试失败消息
-                  </Button>
-                ) : undefined
-              }
-            />
-          ) : status?.runtimeStatus === 'offline' && bound ? (
-            <Alert
-              showIcon
-              type='error'
-              title='Gateway 离线'
-              description='超过 90 秒未收到轮询心跳。请启动或检查微信 Gateway。'
-            />
-          ) : bound ? (
-            <Alert
-              showIcon
-              type='success'
-              title='已连接微信'
-              description={
-                status?.lastActiveAt ? `最近活动：${formatActiveAt(status.lastActiveAt)}` : '打开微信私聊机器人即可对话。'
-              }
-            />
-          ) : null}
+          {renderWechatStatusBanner({ bound, message, refreshStatus, showConnect, status })}
         </Flexbox>
       )}
 

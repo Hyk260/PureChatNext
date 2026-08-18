@@ -69,6 +69,12 @@ function renderWechatStatusBanner(params: {
     )
   }
 
+  if (status?.runtimeStatus === 'reconnecting') {
+    return (
+      <Alert showIcon type='warning' title='Gateway 正在重连' description='微信轮询暂时失败，Gateway 正在自动重试。' />
+    )
+  }
+
   if (status?.runtimeStatus === 'degraded') {
     return (
       <Alert

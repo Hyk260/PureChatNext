@@ -58,4 +58,13 @@ describe('channel-gateway index', () => {
     expect(mocks.ensureRunning).not.toHaveBeenCalled()
     expect(mocks.reconcileNow).not.toHaveBeenCalled()
   })
+
+  it('propagates startup failures to the binding caller', async () => {
+    const error = new Error('gateway startup failed')
+    mocks.ensureRunning.mockRejectedValueOnce(error)
+    const { reconcileChannelGateway } = await import('./index')
+
+    await expect(reconcileChannelGateway()).rejects.toBe(error)
+    expect(mocks.reconcileNow).not.toHaveBeenCalled()
+  })
 })

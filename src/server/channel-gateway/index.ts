@@ -23,19 +23,13 @@ export async function ensureChannelGatewayRunning(): Promise<void> {
   await getChannelGatewayManager().ensureRunning()
 }
 
-/**
- * 绑定后对账。必须 ensureRunning：Next/Turbopack 下 instrumentation
- * 与 Route Handler 不一定共享同一个 isolate，只 reconcile 已有 manager 会变成空操作。
- */
 export async function reconcileChannelGateway(): Promise<void> {
   if (!gatewayEnv.CHANNEL_GATEWAY_ENABLED) return
   const manager = getChannelGatewayManager()
-  void manager
-    .ensureRunning()
-    .then(() => manager.reconcileNow())
-    .catch((error) => {
-      console.error('[Channel Gateway] 启动或对账失败', error)
-    })
+  // Next/Turbopack 下 instrumentation 与 Route Handler 不一定共享同一个
+  // isolate，因此必须确保当前 isolate 的 manager 已经启动后再对账。
+  await manager.ensureRunning()
+  await manager.reconcileNow()
 }
 
 export async function stopChannelGateway(): Promise<void> {

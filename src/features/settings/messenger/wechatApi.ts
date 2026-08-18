@@ -15,7 +15,7 @@ export type WechatStatus = {
   model?: string | null
   provider?: WechatProviderId | null
   providerAvailability?: Record<WechatProviderId, { available: boolean; reason?: string }>
-  runtimeStatus?: 'starting' | 'online' | 'degraded' | 'offline' | 'needs_rebind' | 'stopped'
+  runtimeStatus?: 'starting' | 'online' | 'degraded' | 'reconnecting' | 'offline' | 'needs_rebind' | 'stopped'
 }
 
 export type WechatProviderId = 'purechat' | 'openai' | 'deepseek'
@@ -40,22 +40,10 @@ export type WechatQrStatus = {
   status: 'wait' | 'scaned' | 'confirmed' | 'expired'
 }
 
-let wechatStatusInflight: Promise<WechatStatus> | null = null
-
 export async function fetchWechatStatus(signal?: AbortSignal): Promise<WechatStatus> {
-  if (!signal && wechatStatusInflight) return wechatStatusInflight
-  const request = (async () => {
-    const res = await apiFetch('/api/channels/wechat/status', { signal })
-    if (!res.ok) throw new Error(`status failed: ${res.status}`)
-    return res.json() as Promise<WechatStatus>
-  })()
-  if (!signal) {
-    wechatStatusInflight = request.finally(() => {
-      wechatStatusInflight = null
-    })
-    return wechatStatusInflight
-  }
-  return request
+  const res = await apiFetch('/api/channels/wechat/status', { signal })
+  if (!res.ok) throw new Error(`status failed: ${res.status}`)
+  return res.json() as Promise<WechatStatus>
 }
 
 export async function fetchWechatQrCode(): Promise<WechatQrCode> {

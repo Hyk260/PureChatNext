@@ -39,19 +39,11 @@ const toListItem = (a: ApiAgent): AgentListItem => ({
   title: a.title,
 })
 
-let agentsInflight: Promise<AgentListItem[]> | null = null
-
 export const fetchAgents = async (): Promise<AgentListItem[]> => {
-  if (agentsInflight) return agentsInflight
-  agentsInflight = (async () => {
-    const res = await apiFetch('/api/agents')
-    if (!res.ok) throw new Error(`fetchAgents failed: ${res.status}`)
-    const items = (await res.json()) as ApiAgent[]
-    return items.map(toListItem)
-  })().finally(() => {
-    agentsInflight = null
-  })
-  return agentsInflight
+  const res = await apiFetch('/api/agents')
+  if (!res.ok) throw new Error(`fetchAgents failed: ${res.status}`)
+  const items = (await res.json()) as ApiAgent[]
+  return items.map(toListItem)
 }
 
 export const fetchAgent = async (id: string): Promise<AgentListItem> => {

@@ -71,4 +71,31 @@ describe('GET /api/channels/wechat/status', () => {
       },
     })
   })
+
+  it('does not fail the status response when lazy gateway startup fails', async () => {
+    mocks.ensureChannelGatewayRunning.mockRejectedValueOnce(new Error('database unavailable'))
+
+    const response = await GET(new NextRequest('http://localhost/api/channels/wechat/status'))
+
+    expect(response.status).toBe(200)
+  })
+
+  it('reports reconnecting while a degraded gateway retries without a fresh heartbeat', async () => {
+    mocks.findByUserAndPlatform.mockResolvedValueOnce({
+      agentId: 'agent-1',
+      applicationId: 'wechat-app',
+      enabled: true,
+      id: 'binding-1',
+      lastHeartbeatAt: new Date(Date.now() - 120_000),
+      model: 'gpt-5.4-mini',
+      needsRebind: false,
+      provider: 'openai',
+      runtimeStatus: 'degraded',
+      updatedAt: new Date(Date.now() - 120_000),
+    })
+
+    const response = await GET(new NextRequest('http://localhost/api/channels/wechat/status'))
+
+    await expect(response.json()).resolves.toMatchObject({ connected: false, runtimeStatus: 'reconnecting' })
+  })
 })

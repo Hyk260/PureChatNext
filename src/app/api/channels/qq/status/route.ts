@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import debug from 'debug'
 
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { appEnv } from '@/envs/app'
@@ -6,6 +7,8 @@ import { gatewayEnv } from '@/envs/gateway'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials } from '@/libs/channels/qq'
 import { ensureChannelGatewayRunning } from '@/server/channel-gateway'
+
+const log = debug('channel:qq:status')
 
 function resolveAppBaseUrl(): string {
   const fromEnv = appEnv.APP_URL?.trim()
@@ -29,7 +32,9 @@ function resolveQqRuntimeStatus(input: {
 
 /** GET /api/channels/qq/status — 当前用户 QQ 连接状态（不含 Secret） */
 export const GET = withAuth(async (_request, { userId }) => {
-  void ensureChannelGatewayRunning()
+  void ensureChannelGatewayRunning().catch((error) => {
+    log('gateway startup failed: %O', error)
+  })
   const model = new ChannelBindingModel()
   const binding = await model.findByUserAndPlatform(userId, QQ_PLATFORM)
 

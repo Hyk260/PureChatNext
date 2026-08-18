@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import debug from 'debug'
 
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
@@ -6,6 +7,8 @@ import { withAuth } from '@/libs/auth/get-session-user'
 import { isWechatGatewaySupported } from '@/libs/channels/wechat'
 import { getWechatProviderAvailability } from '@/libs/channels/wechat/agentSupport'
 import { ensureChannelGatewayRunning } from '@/server/channel-gateway'
+
+const log = debug('channel:wechat:status')
 
 const HEARTBEAT_STALE_MS = 90_000
 
@@ -20,6 +23,7 @@ function resolveWechatRuntimeStatus(input: {
   if (input.needsRebind) return 'needs_rebind'
   if (!input.gatewaySupported) return 'offline'
   if (input.waitingForFirstHeartbeat) return 'starting'
+  if (input.runtimeStatus === 'degraded' && input.heartbeatStale) return 'reconnecting'
   if (input.heartbeatStale) return 'offline'
   if (input.failedEventCount > 0) return 'degraded'
   return input.runtimeStatus
@@ -30,7 +34,9 @@ function resolveWechatRuntimeStatus(input: {
  * 当前用户微信连接状态（不含敏感凭证）
  */
 export const GET = withAuth(async (_request, { userId }) => {
-  void ensureChannelGatewayRunning()
+  void ensureChannelGatewayRunning().catch((error) => {
+    log('gateway startup failed: %O', error)
+  })
   const binding = await new ChannelBindingModel().findByUserAndPlatform(userId, WECHAT_PLATFORM)
   const gatewaySupported = isWechatGatewaySupported()
   if (!binding) {

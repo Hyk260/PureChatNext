@@ -6,6 +6,7 @@ import { ChannelBindingModel } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { createNanoId } from '@pure/utils'
 
+import { pingDatabase } from './dbReady'
 import type {
   ChannelGatewayClient,
   ChannelGatewayPlatformDefinition,
@@ -22,6 +23,8 @@ const LEASE_TTL_MS = 90_000
 const LEASE_RENEW_INTERVAL_MS = 30_000
 const MAX_BACKOFF_MS = 30_000
 const PROCESSOR_COUNT = 4
+const DB_WAIT_INITIAL_MS = 1_000
+const DB_WAIT_MAX_MS = 15_000
 
 type ActiveClient = {
   binding: ChannelBindingItem
@@ -40,6 +43,7 @@ type ManagerOptions = {
   bindingModel?: ChannelBindingModel
   definitions: ChannelGatewayPlatformDefinition[]
   eventModel?: ChannelEventModel
+  isDatabaseReady?: () => Promise<boolean>
   now?: () => number
 }
 
@@ -65,6 +69,7 @@ export class ChannelGatewayManager {
   private readonly bindingModel: ChannelBindingModel
   private readonly definitions: ChannelGatewayPlatformDefinition[]
   private readonly eventModel: ChannelEventModel
+  private readonly isDatabaseReady: () => Promise<boolean>
   private readonly now: () => number
   private readonly owner = `next-${hostname()}-${process.pid}-${createNanoId(8)()}`
   private readonly retry = new Map<string, RetryState>()
@@ -78,12 +83,14 @@ export class ChannelGatewayManager {
   private reconcileTimer: ReturnType<typeof setInterval> | null = null
   private running = false
   private startPromise: Promise<void> | null = null
+  private waitingForDatabase = false
   private workerTasks: Promise<void>[] = []
 
   constructor(options: ManagerOptions) {
     this.bindingModel = options.bindingModel ?? new ChannelBindingModel()
     this.definitions = options.definitions
     this.eventModel = options.eventModel ?? new ChannelEventModel()
+    this.isDatabaseReady = options.isDatabaseReady ?? pingDatabase
     this.now = options.now ?? Date.now
   }
 
@@ -97,19 +104,42 @@ export class ChannelGatewayManager {
   }
 
   private async start(): Promise<void> {
-    this.running = true
     this.coreError = undefined
     this.abortController = new AbortController()
+    const signal = this.abortController.signal
     try {
-      await this.startWorkers(this.abortController.signal)
+      await this.waitUntilDatabaseReady(signal)
+      if (signal.aborted) return
+      this.running = true
+      this.waitingForDatabase = false
+      await this.startWorkers(signal)
       await this.reconcileNow()
       this.reconcileTimer = setInterval(() => {
         void this.reconcileNow().catch((error) => this.recordCoreError(error))
       }, RECONCILE_INTERVAL_MS)
     } catch (error) {
+      this.waitingForDatabase = false
+      if (signal.aborted) return
       this.recordCoreError(error)
       await this.stop()
       throw error
+    }
+  }
+
+  private async waitUntilDatabaseReady(signal: AbortSignal) {
+    if (await this.isDatabaseReady()) return
+    this.waitingForDatabase = true
+    log('database not ready, waiting to start gateway')
+    let delay = DB_WAIT_INITIAL_MS
+    while (!signal.aborted) {
+      log('database unavailable, retry in %dms', delay)
+      await abortableDelay(delay, signal)
+      if (signal.aborted) return
+      if (await this.isDatabaseReady()) {
+        log('database ready, starting gateway')
+        return
+      }
+      delay = Math.min(delay * 2, DB_WAIT_MAX_MS)
     }
   }
 
@@ -324,6 +354,7 @@ export class ChannelGatewayManager {
     this.desiredCounts.clear()
     this.degradedCounts.clear()
     this.statuses.clear()
+    this.waitingForDatabase = false
   }
 
   getSummary(enabled = true): ChannelGatewaySummary {
@@ -346,7 +377,15 @@ export class ChannelGatewayManager {
       ...(this.coreError ? { error: this.coreError } : {}),
       platforms,
       running: this.running,
-      status: this.coreError ? 'unhealthy' : !this.running ? 'stopped' : degraded ? 'degraded' : 'healthy',
+      status: this.coreError
+        ? 'unhealthy'
+        : this.waitingForDatabase
+          ? 'starting'
+          : !this.running
+            ? 'stopped'
+            : degraded
+              ? 'degraded'
+              : 'healthy',
     }
   }
 

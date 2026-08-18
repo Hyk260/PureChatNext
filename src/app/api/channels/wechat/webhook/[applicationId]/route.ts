@@ -9,14 +9,14 @@ import { authorizeWechatWebhook } from '@/libs/channels/wechat/webhookAuth'
 
 export const runtime = 'nodejs'
 
-const messageItemSchema = z.object({
+const messageItemSchema = z.looseObject({
   file_item: z.record(z.string(), z.unknown()).optional(),
   image_item: z.record(z.string(), z.unknown()).optional(),
-  text_item: z.object({ text: z.string().max(40_000) }).passthrough().optional(),
+  text_item: z.looseObject({ text: z.string().max(40_000) }).optional(),
   type: z.number().optional(),
-}).passthrough()
+})
 
-const rawMessageSchema = z.object({
+const rawMessageSchema = z.looseObject({
   client_id: z.union([z.string(), z.number()]).transform(String),
   context_token: z.string().max(8192).default(''),
   create_time_ms: z.number().optional().default(0),
@@ -26,12 +26,12 @@ const rawMessageSchema = z.object({
   message_state: z.number().default(2),
   message_type: z.number().default(1),
   to_user_id: z.string().max(255).default(''),
-}).passthrough()
+})
 
-const batchSchema = z.object({
+const batchSchema = z.looseObject({
   get_updates_buf: z.string().max(64_000).optional(),
   msgs: z.array(rawMessageSchema).max(100).default([]),
-}).passthrough()
+})
 
 type RouteContext = { params: Promise<{ applicationId: string }> }
 

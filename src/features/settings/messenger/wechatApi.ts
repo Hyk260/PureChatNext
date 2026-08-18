@@ -40,10 +40,22 @@ export type WechatQrStatus = {
   status: 'wait' | 'scaned' | 'confirmed' | 'expired'
 }
 
+let wechatStatusInflight: Promise<WechatStatus> | null = null
+
 export async function fetchWechatStatus(signal?: AbortSignal): Promise<WechatStatus> {
-  const res = await apiFetch('/api/channels/wechat/status', { signal })
-  if (!res.ok) throw new Error(`status failed: ${res.status}`)
-  return res.json() as Promise<WechatStatus>
+  if (!signal && wechatStatusInflight) return wechatStatusInflight
+  const request = (async () => {
+    const res = await apiFetch('/api/channels/wechat/status', { signal })
+    if (!res.ok) throw new Error(`status failed: ${res.status}`)
+    return res.json() as Promise<WechatStatus>
+  })()
+  if (!signal) {
+    wechatStatusInflight = request.finally(() => {
+      wechatStatusInflight = null
+    })
+    return wechatStatusInflight
+  }
+  return request
 }
 
 export async function fetchWechatQrCode(): Promise<WechatQrCode> {

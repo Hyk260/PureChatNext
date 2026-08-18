@@ -5,6 +5,7 @@ import { appEnv } from '@/envs/app'
 import { gatewayEnv } from '@/envs/gateway'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials } from '@/libs/channels/qq'
+import { ensureChannelGatewayRunning } from '@/server/channel-gateway'
 
 function resolveAppBaseUrl(): string {
   const fromEnv = appEnv.APP_URL?.trim()
@@ -28,6 +29,7 @@ function resolveQqRuntimeStatus(input: {
 
 /** GET /api/channels/qq/status — 当前用户 QQ 连接状态（不含 Secret） */
 export const GET = withAuth(async (_request, { userId }) => {
+  void ensureChannelGatewayRunning()
   const model = new ChannelBindingModel()
   const binding = await model.findByUserAndPlatform(userId, QQ_PLATFORM)
 

@@ -57,7 +57,9 @@ export async function pollWechatUpdates(binding: ChannelBindingItem, options: We
         options.onReady?.()
       }
     } catch (error) {
-      if (options.signal.aborted || (error as { name?: string })?.name === 'AbortError') return
+      // 只在本 client 被 stop 时退出。getUpdates 的 AbortSignal.timeout 在部分
+      // runtime 也会抛 AbortError，当成中止会导致首次轮询失败后永远等不到心跳。
+      if (options.signal.aborted) return
       const details = errorDetails(error)
       if (Number(details.code) === WECHAT_RET_CODES.SESSION_EXPIRED) {
         options.onSessionExpired?.()

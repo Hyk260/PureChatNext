@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   countFailed: vi.fn(),
+  ensureChannelGatewayRunning: vi.fn().mockResolvedValue(undefined),
   findByUserAndPlatform: vi.fn(),
   getWechatProviderAvailability: vi.fn(),
 }))
@@ -27,6 +28,9 @@ vi.mock('@pure/database/models/channelEvent', () => ({
 vi.mock('@/libs/channels/wechat', () => ({ isWechatGatewaySupported: vi.fn(() => true) }))
 vi.mock('@/libs/channels/wechat/agentSupport', () => ({
   getWechatProviderAvailability: mocks.getWechatProviderAvailability,
+}))
+vi.mock('@/server/channel-gateway', () => ({
+  ensureChannelGatewayRunning: mocks.ensureChannelGatewayRunning,
 }))
 
 import { GET } from './route'
@@ -57,6 +61,7 @@ describe('GET /api/channels/wechat/status', () => {
   it('returns the saved provider and model with provider availability', async () => {
     const response = await GET(new NextRequest('http://localhost/api/channels/wechat/status'))
 
+    expect(mocks.ensureChannelGatewayRunning).toHaveBeenCalledOnce()
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toMatchObject({
       model: 'gpt-5.4-mini',

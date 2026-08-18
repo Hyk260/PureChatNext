@@ -46,10 +46,18 @@ export function isQQQrSessionMissingError(error: unknown): boolean {
   return error instanceof QQApiError && error.status === 404
 }
 
+let qqStatusInflight: Promise<QQStatus> | null = null
+
 export async function fetchQQStatus(): Promise<QQStatus> {
-  const res = await apiFetch('/api/channels/qq/status')
-  if (!res.ok) throw new Error(`status failed: ${res.status}`)
-  return res.json() as Promise<QQStatus>
+  if (qqStatusInflight) return qqStatusInflight
+  qqStatusInflight = (async () => {
+    const res = await apiFetch('/api/channels/qq/status')
+    if (!res.ok) throw new Error(`status failed: ${res.status}`)
+    return res.json() as Promise<QQStatus>
+  })().finally(() => {
+    qqStatusInflight = null
+  })
+  return qqStatusInflight
 }
 
 export async function bindQQ(params: {

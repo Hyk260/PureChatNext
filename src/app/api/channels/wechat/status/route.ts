@@ -5,6 +5,7 @@ import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { isWechatGatewaySupported } from '@/libs/channels/wechat'
 import { getWechatProviderAvailability } from '@/libs/channels/wechat/agentSupport'
+import { ensureChannelGatewayRunning } from '@/server/channel-gateway'
 
 const HEARTBEAT_STALE_MS = 90_000
 
@@ -29,6 +30,7 @@ function resolveWechatRuntimeStatus(input: {
  * 当前用户微信连接状态（不含敏感凭证）
  */
 export const GET = withAuth(async (_request, { userId }) => {
+  void ensureChannelGatewayRunning()
   const binding = await new ChannelBindingModel().findByUserAndPlatform(userId, WECHAT_PLATFORM)
   const gatewaySupported = isWechatGatewaySupported()
   if (!binding) {

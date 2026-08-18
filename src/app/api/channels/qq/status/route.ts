@@ -12,6 +12,20 @@ function resolveAppBaseUrl(): string {
   return 'http://localhost:3000'
 }
 
+function resolveQqRuntimeStatus(input: {
+  connectionMode: 'websocket' | 'webhook'
+  enabled: boolean
+  gatewaySupported: boolean
+  heartbeatFresh: boolean
+  runtimeStatus: string
+}) {
+  if (input.connectionMode === 'webhook') {
+    return input.enabled ? 'online' : 'offline'
+  }
+  if (!input.gatewaySupported || !input.heartbeatFresh) return 'offline'
+  return input.runtimeStatus
+}
+
 /** GET /api/channels/qq/status — 当前用户 QQ 连接状态（不含 Secret） */
 export const GET = withAuth(async (_request, { userId }) => {
   const model = new ChannelBindingModel()
@@ -38,15 +52,23 @@ export const GET = withAuth(async (_request, { userId }) => {
   const webhookUrl = `${resolveAppBaseUrl()}/api/channels/qq/webhook/${encodeURIComponent(binding.applicationId)}`
   const gatewaySupported = gatewayEnv.CHANNEL_GATEWAY_ENABLED
   const heartbeatFresh = Boolean(binding.lastHeartbeatAt && Date.now() - binding.lastHeartbeatAt.getTime() <= 90_000)
-  const runtimeStatus = connectionMode === 'webhook'
-    ? binding.enabled ? 'online' : 'offline'
-    : !gatewaySupported || !heartbeatFresh ? 'offline' : binding.runtimeStatus
+  const runtimeStatus = resolveQqRuntimeStatus({
+    connectionMode,
+    enabled: binding.enabled,
+    gatewaySupported,
+    heartbeatFresh,
+    runtimeStatus: binding.runtimeStatus,
+  })
+  const connected =
+    connectionMode === 'webhook'
+      ? binding.enabled
+      : runtimeStatus === 'online' || runtimeStatus === 'degraded'
 
   return NextResponse.json({
     agentId: binding.agentId,
     appId,
     applicationId: binding.applicationId,
-    connected: connectionMode === 'webhook' ? binding.enabled : runtimeStatus === 'online' || runtimeStatus === 'degraded',
+    connected,
     connectionMode,
     enabled: binding.enabled,
     gatewaySupported,

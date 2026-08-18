@@ -2,8 +2,10 @@
 
 import { Select, Spin } from 'antd'
 import { Alert, Button, confirmModal, Text, copyToClipboard, Flexbox } from '@pure/ui'
+import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Trash2Icon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
 
 import { fetchAgents } from '@/features/home/agentApi'
@@ -26,7 +28,7 @@ function qqConnectHint(gatewaySupported: boolean) {
   if (gatewaySupported) {
     return {
       title: '支持扫码、WebSocket 与 URL 回调',
-      description: '点击右上角「连接」，推荐使用手机 QQ 扫码自动完成机器人授权。',
+      description: '点击右上角「连接」，使用手机 QQ 扫码自动完成机器人授权。',
     }
   }
   return {
@@ -41,6 +43,70 @@ function qqBoundDescription(status: QQStatus) {
     return `最近活动：${formatMessengerActiveAt(status.lastActiveAt)} · 模式：${mode}`
   }
   return `模式：${mode}。在 QQ 私聊或群内 @ 机器人即可对话。`
+}
+
+function renderQqStatusBanner(params: {
+  connected: boolean
+  gatewaySupported: boolean
+  message: { success: (content: string) => void }
+  showConnect: boolean
+  status: QQStatus | null
+}): ReactNode {
+  const { connected, gatewaySupported, message, showConnect, status } = params
+
+  if (showConnect) {
+    return <Alert showIcon type='info' {...qqConnectHint(gatewaySupported)} />
+  }
+
+  const boundType = connected ? 'success' : 'warning'
+  const boundTitle = connected ? '已连接 QQ' : 'QQ 绑定已保存，当前离线'
+  const webhookUrl = status?.connectionMode === 'webhook' ? status.webhookUrl : undefined
+  const showWebsocketOffline = status?.connectionMode === 'websocket' && status.runtimeStatus !== 'online'
+
+  return (
+    <>
+      <Alert
+        showIcon
+        type={boundType}
+        title={boundTitle}
+        description={status ? qqBoundDescription(status) : undefined}
+      />
+      {webhookUrl ? (
+        <Alert
+          showIcon
+          type='info'
+          title='Webhook 回调地址'
+          description={
+            <Text
+              style={{ cursor: 'copy', fontSize: 13 }}
+              title='点击复制'
+              onClick={async () => {
+                await copyToClipboard(webhookUrl)
+                message.success('已复制 Webhook 回调地址')
+              }}
+            >
+              {webhookUrl}
+            </Text>
+          }
+        />
+      ) : null}
+      {showWebsocketOffline ? (
+        <Alert
+          showIcon
+          type='warning'
+          title='QQ WebSocket 当前离线'
+          description={status?.lastError?.message || 'Next Server Gateway 正在等待连接或恢复。'}
+          extra={
+            status ? (
+              <Highlighter actionIconSize={'small'} language={'json'} padding={8} variant={'borderless'}>
+                {JSON.stringify(status?.lastError, null, 2)}
+              </Highlighter>
+            ) : null
+          }
+        />
+      ) : null}
+    </>
+  )
 }
 
 const DISCONNECTED_STATUS: QQStatus = {
@@ -91,7 +157,10 @@ const MessengerQQPage = memo(() => {
   }, [reload])
 
   const saveConfiguration = useCallback(
-    async (next: { agentId: string; model: string; provider: QQProviderId }, previous: { agentId: string; model: string; provider: QQProviderId }) => {
+    async (
+      next: { agentId: string; model: string; provider: QQProviderId },
+      previous: { agentId: string; model: string; provider: QQProviderId }
+    ) => {
       if (!status?.applicationId || status.enabled === false) return
       setSaving(true)
       try {
@@ -129,6 +198,16 @@ const MessengerQQPage = memo(() => {
     },
     [agentId, modelId, provider, saveConfiguration]
   )
+
+  const handleConnected = useCallback(async () => {
+    setBinding(true)
+    try {
+      message.success('QQ 凭证已保存，正在建立连接')
+      await refreshStatus()
+    } finally {
+      setBinding(false)
+    }
+  }, [message, refreshStatus])
 
   const handleDisconnect = useCallback(() => {
     confirmModal({
@@ -171,15 +250,7 @@ const MessengerQQPage = memo(() => {
       gatewaySupported={gatewaySupported}
       model={modelId}
       provider={provider}
-      onConnected={async () => {
-        setBinding(true)
-        try {
-          message.success('QQ 凭证已保存，正在建立连接')
-          await refreshStatus()
-        } finally {
-          setBinding(false)
-        }
-      }}
+      onConnected={handleConnected}
     />
   ) : (
     <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>
@@ -214,40 +285,7 @@ const MessengerQQPage = memo(() => {
           onSelect={handleModelSelect}
         />
 
-        {showConnect ? (
-          <Alert showIcon type='info' {...qqConnectHint(gatewaySupported)} />
-        ) : (
-          <>
-              <Alert
-                showIcon
-                type={connected ? 'success' : 'warning'}
-                title={connected ? '已连接 QQ' : 'QQ 绑定已保存，当前离线'}
-                description={status ? qqBoundDescription(status) : undefined}
-              />
-              {status?.connectionMode === 'webhook' && status.webhookUrl && (
-                <Alert
-                  showIcon
-                  type='info'
-                  title='Webhook 回调地址'
-                  description={
-                    <Text
-                      style={{ cursor: 'copy', fontSize: 13 }}
-                      title='点击复制'
-                      onClick={async () => {
-                        await copyToClipboard(status.webhookUrl!)
-                        message.success('已复制 Webhook 回调地址')
-                      }}
-                    >
-                      {status.webhookUrl}
-                    </Text>
-                  }
-                />
-              )}
-              {status?.connectionMode === 'websocket' && status.runtimeStatus !== 'online' && (
-                <Alert showIcon type='warning' title='QQ WebSocket 当前离线' description={status.lastError?.message || 'Next Server Gateway 正在等待连接或恢复。'} />
-              )}
-          </>
-        )}
+        {renderQqStatusBanner({ connected, gatewaySupported, message, showConnect, status })}
       </Flexbox>
 
       <MessengerCommandList />

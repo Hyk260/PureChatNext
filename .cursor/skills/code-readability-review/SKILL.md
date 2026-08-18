@@ -15,6 +15,8 @@ description: >-
 
 改写示例与 before/after 见 [references/patterns.md](references/patterns.md)。遇到嵌套三元、条件 className、多分支 placeholder/label 时先读该文件。
 
+`src/app/api/**/route.ts` 的 handler 格式（有序守卫、JSDoc、early return）走 [api-route-readability](../api-route-readability/SKILL.md)。
+
 ## 工作流
 
 1. **审查（默认）**：扫描目标文件/选区，按下方规则出 findings。**不改文件**。

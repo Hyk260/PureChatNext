@@ -29,6 +29,10 @@ export const maxDuration = 30
 const log = debug('chat:auto-rename')
 const MAX_TRANSCRIPT_LENGTH = 12_000
 const MAX_TITLE_LENGTH = 30
+const ROLE_LABEL: Record<string, string> = {
+  assistant: '助手',
+  user: '用户',
+}
 
 const bodySchema = z.object({
   baseURL: z.string().trim().max(2048).optional(),
@@ -48,7 +52,7 @@ const buildTranscript = (messages: UIMessage[]) => {
     .map((message) => {
       const text = getMessageText(message)
       if (!text) return ''
-      const role = message.role === 'user' ? '用户' : message.role === 'assistant' ? '助手' : '系统'
+      const role = ROLE_LABEL[message.role] ?? '系统'
       return `${role}：${text}`
     })
     .filter(Boolean)

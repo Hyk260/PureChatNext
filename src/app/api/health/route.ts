@@ -10,6 +10,12 @@ const responseHeaders = {
   'Cache-Control': 'no-store',
 }
 
+function resolveHealthStatus(unhealthy: boolean, gatewayStatus: string) {
+  if (unhealthy) return 'unhealthy'
+  if (gatewayStatus === 'degraded') return 'degraded'
+  return 'ok'
+}
+
 /**
  * GET /api/health
  * 健康检查：探测数据库连通性与渠道 Gateway 状态
@@ -21,7 +27,7 @@ export async function GET() {
     const unhealthy = gateway.status === 'unhealthy'
 
     return Response.json(
-      { gateway, status: unhealthy ? 'unhealthy' : gateway.status === 'degraded' ? 'degraded' : 'ok' },
+      { gateway, status: resolveHealthStatus(unhealthy, gateway.status) },
       { headers: responseHeaders, status: unhealthy ? 503 : 200 }
     )
   } catch {

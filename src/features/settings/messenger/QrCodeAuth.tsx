@@ -1,12 +1,10 @@
 'use client'
 
 import { QRCode, Spin } from 'antd'
-import { Alert, Button, Text, Flexbox } from '@pure/ui'
+import { Alert, Button, Modal, Text, Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-
-import { modal } from '@/components/AntdStaticMethods'
 
 import { PlatformAvatar } from './PlatformAvatar'
 import { fetchWechatQrCode, pollWechatQrStatus } from './wechatApi'
@@ -222,18 +220,6 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
 
 QrCodeContent.displayName = 'QrCodeContent'
 
-const openQrCodeAuthModal = (onAuthenticated: (credentials: WechatAuthCredentials) => void) => {
-  const instance = modal.info({
-    content: <QrCodeContent close={() => instance.destroy()} onAuthenticated={onAuthenticated} />,
-    footer: null,
-    icon: null,
-    maskClosable: true,
-    title: '微信扫码连接',
-    width: 460,
-  })
-  return instance
-}
-
 interface QrCodeAuthProps {
   buttonLabel?: string
   disabled?: boolean
@@ -241,15 +227,18 @@ interface QrCodeAuthProps {
 }
 
 const QrCodeAuth = memo<QrCodeAuthProps>(({ buttonLabel = '连接', disabled, onAuthenticated }) => {
-  const handleOpen = () => {
-    if (disabled) return
-    openQrCodeAuthModal(onAuthenticated)
-  }
+  const [open, setOpen] = useState(false)
+  const handleClose = useCallback(() => setOpen(false), [])
 
   return (
-    <Button disabled={disabled} icon={<LinkIcon size={16} />} type='primary' onClick={handleOpen}>
-      {buttonLabel}
-    </Button>
+    <>
+      <Button disabled={disabled} icon={<LinkIcon size={16} />} type='primary' onClick={() => setOpen(true)}>
+        {buttonLabel}
+      </Button>
+      <Modal destroyOnHidden footer={null} open={open} title='微信扫码连接' width={460} onCancel={handleClose}>
+        <QrCodeContent close={handleClose} onAuthenticated={onAuthenticated} />
+      </Modal>
+    </>
   )
 })
 

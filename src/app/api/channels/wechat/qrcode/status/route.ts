@@ -9,10 +9,10 @@ import { isWechatGatewaySupported } from '@/libs/channels/wechat'
 export const maxDuration = 30
 
 /**
- * GET
- * /api/channels/wechat/qrcode/status?qrcode=
- * — 轮询扫码状态
- * */
+ * GET /api/channels/wechat/qrcode/status
+ * 轮询扫码状态
+ * @param request - query `qrcode`
+ */
 export const GET = withAuth(async (request: NextRequest) => {
   if (!isWechatGatewaySupported()) return jsonError('当前部署不支持微信 Gateway', 503)
   const qrcode = request.nextUrl.searchParams.get('qrcode')?.trim()

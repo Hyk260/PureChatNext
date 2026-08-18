@@ -14,6 +14,8 @@ import type { QQConnectionMode, QQProviderId, QQQrStatus } from './qqApi'
 
 const QR_SIZE = 240
 const POLL_MS = 1_500
+// qrWrap: QR_SIZE(240) + padding(12*2) + border(1*2) = 266；+ gap(12) + 状态行(~22) ≈ 300
+const QR_PLACEHOLDER_HEIGHT = 318
 
 type ConnectMode = 'qr' | QQConnectionMode
 
@@ -191,8 +193,12 @@ const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewayS
       )}
 
       {mode === 'qr' ? (
-        <Flexbox align='center' gap={12} style={{ minHeight: 318 }}>
-          {loading && !qrStatus ? <Spin size='large' /> : null}
+        <Flexbox align='center' gap={12} style={{ minHeight: QR_PLACEHOLDER_HEIGHT }}>
+          {loading && !qrStatus ? (
+            <Flexbox align='center' justify='center' style={{ height: QR_PLACEHOLDER_HEIGHT, width: '100%' }}>
+              <Spin size='large' />
+            </Flexbox>
+          ) : null}
           {qrStatus?.status === 'waiting' && (
             <>
               <div className={styles.qrWrap}>
@@ -211,7 +217,12 @@ const QQConnectContent = memo<QQConnectContentProps>(({ agentId, close, gatewayS
             </Flexbox>
           )}
           {error && (
-            <Flexbox align='center' gap={12}>
+            <Flexbox
+              align='center'
+              gap={12}
+              justify='center'
+              style={{ height: QR_PLACEHOLDER_HEIGHT, width: '100%' }}
+            >
               <Alert showIcon type='warning' title={error} />
               <AntButton icon={<RefreshCw size={16} />} onClick={() => void startQr()}>重新获取二维码</AntButton>
             </Flexbox>

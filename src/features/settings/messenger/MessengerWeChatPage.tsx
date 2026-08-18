@@ -43,6 +43,13 @@ function wechatBoundDescription(status: WechatStatus) {
   return '打开微信私聊机器人即可对话。'
 }
 
+function wechatConnectHint() {
+  return {
+    title: '使用微信扫码连接',
+    description: '点击右上角「连接」，打开手机微信 → 右上角「+」→ 扫一扫，扫描二维码并确认授权。',
+  }
+}
+
 function renderWechatStatusBanner(params: {
   bound: boolean
   message: { error: (content: string) => void; success: (content: string) => void }
@@ -53,11 +60,7 @@ function renderWechatStatusBanner(params: {
   const { bound, message, refreshStatus, showConnect, status } = params
 
   if (showConnect) {
-    return (
-      <Text type='secondary' style={{ fontSize: 13 }}>
-        打开手机微信 → 右上角「+」→ 扫一扫，扫描二维码并确认。
-      </Text>
-    )
+    return <Alert showIcon type='info' {...wechatConnectHint()} />
   }
 
   if (status?.runtimeStatus === 'starting') {

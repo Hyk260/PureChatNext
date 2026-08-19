@@ -80,6 +80,43 @@ describe('pollWechatUpdates', () => {
     expect(onStatus).toHaveBeenCalledWith({ status: 'online' })
   })
 
+  it('uses the server long-poll timeout for the next request', async () => {
+    const ac = new AbortController()
+    let callCount = 0
+    getUpdates.mockImplementation(async (_cursor?: string, _signal?: AbortSignal, timeoutMs?: number) => {
+      callCount += 1
+      if (callCount === 1) {
+        expect(timeoutMs).toBe(40_000)
+        return { get_updates_buf: 'cursor-1', longpolling_timeout_ms: 12_000, msgs: [] }
+      }
+
+      expect(timeoutMs).toBe(14_000)
+      ac.abort()
+      return { get_updates_buf: 'cursor-1', msgs: [] }
+    })
+
+    await pollWechatUpdates(binding(), {
+      forwardBatch: async () => undefined,
+      signal: ac.signal,
+    })
+  })
+
+  it('falls back to the default timeout when the server omits its timeout', async () => {
+    const ac = new AbortController()
+    let callCount = 0
+    getUpdates.mockImplementation(async (_cursor?: string, _signal?: AbortSignal, timeoutMs?: number) => {
+      callCount += 1
+      expect(timeoutMs).toBe(40_000)
+      if (callCount === 2) ac.abort()
+      return { get_updates_buf: 'cursor-1', msgs: [] }
+    })
+
+    await pollWechatUpdates(binding(), {
+      forwardBatch: async () => undefined,
+      signal: ac.signal,
+    })
+  })
+
   it('exits when the client abort signal fires', async () => {
     const ac = new AbortController()
     getUpdates.mockImplementation(async (cursor?: string, signal?: AbortSignal) => {

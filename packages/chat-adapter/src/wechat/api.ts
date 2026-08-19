@@ -110,7 +110,7 @@ export class WechatApiClient {
    * 通过 iLink Bot API 长轮询新消息。
    * 服务端会保持连接约 35 秒。
    */
-  async getUpdates(cursor?: string, signal?: AbortSignal): Promise<WechatGetUpdatesResponse> {
+  async getUpdates(cursor?: string, signal?: AbortSignal, timeoutMs: number = POLL_TIMEOUT_MS): Promise<WechatGetUpdatesResponse> {
     const body = {
       base_info: BASE_INFO,
       get_updates_buf: cursor || '',
@@ -120,7 +120,7 @@ export class WechatApiClient {
       body: JSON.stringify(body),
       headers: buildHeaders(this.botToken),
       method: 'POST',
-      signal: combinedSignal(signal, POLL_TIMEOUT_MS),
+      signal: combinedSignal(signal, timeoutMs),
     })
 
     return parseResponse<WechatGetUpdatesResponse>(response, 'getupdates')

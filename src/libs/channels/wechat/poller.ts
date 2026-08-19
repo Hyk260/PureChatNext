@@ -7,6 +7,10 @@ import type { ChannelBindingItem } from '@pure/database/schemas/channel'
 import { decryptCredentials } from './encrypt'
 
 const log = debug('channel:wechat:poller')
+const DEFAULT_POLL_TIMEOUT_MS = 40_000
+const POLL_TIMEOUT_MARGIN_MS = 2_000
+const MIN_POLL_TIMEOUT_MS = 5_000
+const MAX_POLL_TIMEOUT_MS = 60_000
 const MAX_RETRY_DELAY_MS = 10_000
 
 export type WechatPollBatch = { cursor?: string; messages: WechatRawMessage[] }
@@ -36,20 +40,30 @@ function errorDetails(error: unknown) {
   return { code, message: raw.replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]').slice(0, 500) }
 }
 
+function resolvePollTimeoutMs(serverTimeoutMs?: number): number | undefined {
+  if (!Number.isFinite(serverTimeoutMs) || serverTimeoutMs === undefined || serverTimeoutMs <= 0) return undefined
+  return Math.min(
+    Math.max(Math.round(serverTimeoutMs) + POLL_TIMEOUT_MARGIN_MS, MIN_POLL_TIMEOUT_MS),
+    MAX_POLL_TIMEOUT_MS
+  )
+}
+
 /** Long-poll iLink and forward complete protocol batches. Lease and persistence belong to the caller/Webhook. */
 export async function pollWechatUpdates(binding: ChannelBindingItem, options: WechatPollOptions): Promise<void> {
   const credentials = decryptCredentials(binding.credentials)
   const api = new WechatApiClient(credentials.botToken, credentials.botId)
   let cursor = binding.pollCursor || undefined
+  let pollTimeoutMs: number | undefined = DEFAULT_POLL_TIMEOUT_MS
   let retryDelay = 1_000
   let ready = false
 
   while (!options.signal.aborted) {
     try {
-      const response = await api.getUpdates(cursor, options.signal)
+      const response = await api.getUpdates(cursor, options.signal, pollTimeoutMs)
       const nextCursor = response.get_updates_buf || cursor
       await options.forwardBatch({ cursor: nextCursor, messages: response.msgs ?? [] }, options.signal)
       cursor = nextCursor
+      pollTimeoutMs = resolvePollTimeoutMs(response.longpolling_timeout_ms) ?? DEFAULT_POLL_TIMEOUT_MS
       retryDelay = 1_000
       options.onStatus?.({ status: 'online' })
       if (!ready) {

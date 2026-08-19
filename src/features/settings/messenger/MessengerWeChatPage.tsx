@@ -30,6 +30,7 @@ import type { WechatAuthCredentials } from './QrCodeAuth'
 import { bindWechat, fetchWechatStatus, retryFailedWechatEvents, unbindWechat, updateWechatConfiguration } from './wechatApi'
 import type { WechatConfiguration, WechatProviderId, WechatStatus } from './wechatApi'
 
+const STATUS_POLL_STARTING_MS = 1_000
 const STATUS_POLL_MS = 8_000
 
 const DISCONNECTED_STATUS: WechatStatus = {
@@ -143,7 +144,10 @@ const MessengerWeChatPage = memo(() => {
     userId ? ['messenger-wechat-status', userId] : null,
     () => fetchWechatStatus(),
     {
-      refreshInterval: (latestStatus) => (latestStatus?.bound ? STATUS_POLL_MS : 0),
+      refreshInterval: (latestStatus) => {
+        if (!latestStatus?.bound) return 0
+        return latestStatus.runtimeStatus === 'starting' ? STATUS_POLL_STARTING_MS : STATUS_POLL_MS
+      },
     }
   )
   const {

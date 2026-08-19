@@ -62,6 +62,15 @@ describe('WechatApiClient', () => {
   // ---------- getUpdates ----------
 
   describe('getUpdates', () => {
+    it('uses a caller-provided polling timeout', async () => {
+      const timeout = vi.spyOn(AbortSignal, 'timeout')
+      mockFetch.mockResolvedValueOnce(jsonResponse({ ret: 0, msgs: [], get_updates_buf: 'cursor_1' }))
+
+      await client.getUpdates(undefined, undefined, 12_345)
+
+      expect(timeout).toHaveBeenCalledWith(12_345)
+    })
+
     it('should return parsed response on success', async () => {
       const payload = { ret: 0, msgs: [], get_updates_buf: 'cursor_1' }
       mockFetch.mockResolvedValueOnce(jsonResponse(payload))

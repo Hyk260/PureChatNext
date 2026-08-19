@@ -3,9 +3,12 @@ import { NextRequest } from 'next/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
+  findByUserAndPlatform: vi.fn(),
   findVisibleById: vi.fn(),
   invalidateWechatChat: vi.fn(),
   isWechatProviderId: vi.fn(),
+  reconcileChannelGateway: vi.fn(),
+  upsert: vi.fn(),
   updateConfiguration: vi.fn(),
   validateWechatModel: vi.fn(),
   wechatAgentUnavailableReason: vi.fn(),
@@ -24,6 +27,8 @@ vi.mock('@pure/database/models/agent', () => ({
 }))
 vi.mock('@pure/database/models/channelBinding', () => ({
   ChannelBindingModel: class {
+    findByUserAndPlatform = mocks.findByUserAndPlatform
+    upsert = mocks.upsert
     updateConfiguration = mocks.updateConfiguration
   },
   WECHAT_PLATFORM: 'wechat',
@@ -39,8 +44,11 @@ vi.mock('@/libs/channels/wechat', () => ({
   isWechatGatewaySupported: vi.fn(() => true),
   requireWechatVaultSecret: vi.fn(),
 }))
+vi.mock('@/server/channel-gateway', () => ({
+  reconcileChannelGateway: mocks.reconcileChannelGateway,
+}))
 
-import { PATCH } from './route'
+import { PATCH, POST } from './route'
 
 const patchRequest = (body: Record<string, string>) =>
   new NextRequest('http://localhost/api/channels/wechat/bind', {
@@ -51,17 +59,72 @@ const patchRequest = (body: Record<string, string>) =>
 
 const validConfig = { agentId: 'agent-1', model: 'gpt-5.4-mini', provider: 'openai' }
 
-describe('PATCH /api/channels/wechat/bind', () => {
+const postRequest = (body: Record<string, string>) =>
+  new NextRequest('http://localhost/api/channels/wechat/bind', {
+    body: JSON.stringify(body),
+    headers: { 'content-type': 'application/json' },
+    method: 'POST',
+  })
+
+describe('/api/channels/wechat/bind', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.findVisibleById.mockResolvedValue({ id: 'agent-1' })
     mocks.isWechatProviderId.mockReturnValue(true)
     mocks.validateWechatModel.mockReturnValue(null)
     mocks.wechatAgentUnavailableReason.mockReturnValue(null)
+    mocks.findByUserAndPlatform.mockResolvedValue(null)
+    mocks.upsert.mockResolvedValue({ id: 'binding-1', runtimeStatus: 'starting' })
     mocks.updateConfiguration.mockResolvedValue({
       ...validConfig,
       applicationId: 'wechat-app',
     })
+    mocks.reconcileChannelGateway.mockResolvedValue(undefined)
+  })
+
+  it('returns immediately without waiting for the first Gateway poll', async () => {
+    let resolveReconcile!: () => void
+    mocks.reconcileChannelGateway.mockImplementationOnce(
+      () => new Promise<void>((resolve) => {
+        resolveReconcile = resolve
+      })
+    )
+
+    const response = await POST(
+      postRequest({
+        ...validConfig,
+        botId: 'wechat-bot',
+        botToken: 'wechat-bot-token-123456',
+        userId: 'wechat-user',
+      })
+    )
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toMatchObject({
+      id: 'binding-1',
+      ok: true,
+      runtimeStatus: 'starting',
+    })
+    await vi.waitFor(() => expect(mocks.reconcileChannelGateway).toHaveBeenCalledOnce())
+
+    resolveReconcile()
+  })
+
+  it('keeps the bind response successful when background Gateway startup fails', async () => {
+    mocks.reconcileChannelGateway.mockRejectedValueOnce(new Error('Gateway startup failed'))
+
+    const response = await POST(
+      postRequest({
+        ...validConfig,
+        botId: 'wechat-bot',
+        botToken: 'wechat-bot-token-123456',
+        userId: 'wechat-user',
+      })
+    )
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toMatchObject({ id: 'binding-1', ok: true })
+    await vi.waitFor(() => expect(mocks.reconcileChannelGateway).toHaveBeenCalledOnce())
   })
 
   it('atomically updates a valid channel configuration', async () => {

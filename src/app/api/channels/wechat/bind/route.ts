@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { z } from 'zod'
+import debug from 'debug'
 
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
@@ -19,9 +20,17 @@ import {
 } from '@/libs/channels/wechat'
 import type { WechatCredentials } from '@/libs/channels/wechat'
 
+const log = debug('channel:wechat:bind')
+
 const requestGatewayReconcile = async () => {
   const { reconcileChannelGateway } = await import('@/server/channel-gateway')
   await reconcileChannelGateway()
+}
+
+const scheduleGatewayReconcile = () => {
+  void requestGatewayReconcile().catch((error) => {
+    log('gateway reconcile failed after bind: %O', error)
+  })
 }
 
 const bindSchema = z.object({
@@ -78,7 +87,7 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
     provider,
     userId,
   })
-  await requestGatewayReconcile()
+  scheduleGatewayReconcile()
   return NextResponse.json({ id: binding.id, ok: true, runtimeStatus: binding.runtimeStatus })
 })
 

@@ -14,18 +14,45 @@
 [![][github-license-shield]][github-license-link]
 [![][github-stars-shield]][github-stars-link]
 [![][github-issues-shield]][github-issues-link]
+[![][github-discussions-shield]][github-discussions-link]
 
 </div>
 
+<p align="center">
+  <img src="./images/wechat-chat.png" alt="微信中与 PureChat 对话" width="280" />
+  &nbsp;
+  <img src="./images/qq-chat.png" alt="QQ 中与 PureChat 对话" width="280" />
+</p>
+
+<p align="center">
+  <img src="./images/wechat-settings.png" alt="微信渠道设置" width="48%" />
+  <img src="./images/qq-settings.png" alt="QQ 渠道设置" width="48%" />
+</p>
+
+## 目录
+
+- [项目简介](#项目简介)
+- [特性](#特性)
+- [快速开始](#快速开始)
+- [部署](#部署)
+- [环境变量](#环境变量)
+- [项目结构](#项目结构)
+- [常用命令](#常用命令)
+- [文档](#文档)
+- [参与贡献](#参与贡献)
+- [License](#license)
+
 ## 项目简介
 
-PureChat（仓库名：PureChatNext）让同一个 AI 助手同时服务于 Web、微信和 QQ。你可以直接使用在线体验，也可以把数据库、模型密钥、文件和聊天记录完整部署在自己的环境中。
+PureChat（仓库名：[PureChatNext][repo-link]）让同一个 AI 助手同时服务于 **Web、微信和 QQ**。你可以直接使用 [在线体验][online-demo-link]，也可以把数据库、模型密钥、文件和聊天记录完整部署在自己的环境中。
 
 与通用 ChatGPT Clone 相比，PureChat 优先解决中文用户的三个具体问题：
 
-- **聊天入口不必迁移**：通过微信和 QQ Channel Gateway，在已有通讯工具中直接使用 AI；
-- **数据与成本可控**：支持自托管、自备模型 API Key、免费额度账本与用量明细；
-- **能力可以组合**：多模型、联网搜索、文件解析、Agent 和消息渠道共用一套工作台。
+- **聊天入口不必迁移**：通过微信和 QQ Channel Gateway，在已有通讯工具中直接使用 AI
+- **数据与成本可控**：支持自托管、自备模型 API Key、免费额度账本与用量明细
+- **能力可以组合**：多模型、联网搜索、文件解析、Agent 和消息渠道共用一套工作台
+
+技术栈：
 
 - **前端**：Vite + React Router SPA，开发时运行在 `5174` 端口
 - **服务端**：Next.js 16 BFF，负责 API、认证和生产环境的 SPA HTML 壳
@@ -34,21 +61,34 @@ PureChat（仓库名：PureChatNext）让同一个 AI 助手同时服务于 Web�
 
 生产环境以单个 Next.js 项目部署，SPA 静态资源与 API 共用同一域名。
 
+```mermaid
+flowchart LR
+  WeChat[微信] --> Gateway[Channel Gateway]
+  QQ[QQ] --> Gateway
+  Web[Web SPA] --> Next[Next.js BFF]
+  Gateway --> Next
+  Next --> PG[(PostgreSQL)]
+  Next --> LLM[OpenAI / DeepSeek / Gateway]
+```
+
 ## 特性
+
+### 微信与 QQ 渠道
+
+在微信或 QQ 里扫码绑定后，即可私聊或群内 @ 助手，不必再打开单独的网页。
+
+- 微信 iLink 扫码连接，并由 Channel Gateway 持续接收与回复消息
+- QQ 扫码、WebSocket 与 Webhook 多种连接方式
+- 渠道可选择 Agent、模型与 Provider，复用 Web 端能力
+- 支持 `/agents`、`/new`、`/stop`、`/help` 等会话指令
+
+配置说明见 [微信渠道](./docs/self-hosting/wechat-channel.zh-CN.md) 与 [QQ 渠道](./docs/self-hosting/qq-channel.zh-CN.md)。
 
 ### 多模型对话
 
 - 流式输出与 Tool Calling
 - 通过环境变量切换模型 Provider、API Key 和代理地址
 - 支持 OpenAI、DeepSeek 等常用模型服务
-
-### 微信与 QQ 渠道
-
-- 微信 iLink 扫码连接，并由 Channel Gateway 持续接收与回复消息
-- QQ 扫码、WebSocket 与 Webhook 多种连接方式
-- 渠道可选择 Agent、模型与 Provider，复用 Web 端能力
-
-配置说明见 [微信渠道](./docs/self-hosting/wechat-channel.zh-CN.md) 与 [QQ 渠道](./docs/self-hosting/qq-channel.zh-CN.md)。
 
 ### 用户认证
 
@@ -277,7 +317,7 @@ pnpm dev:docker:down
 
 ## 参与贡献
 
-欢迎提交 [Issue][github-issues-link]、参与 [Discussion][github-discussions-link] 或发起 Pull Request。开始前请阅读 [贡献指南](./CONTRIBUTING.md)、[路线图](./ROADMAP.md) 与 [安全政策](./SECURITY.md)。提交前请运行：
+欢迎提交 [Issue][github-issues-link]、参与 [Discussion][github-discussions-link] 或发起 Pull Request。开始前请阅读 [贡献指南](./CONTRIBUTING.md) 与 [安全政策](./SECURITY.md)。提交前请运行：
 
 ```bash
 pnpm lint
@@ -293,6 +333,7 @@ pnpm exec vitest run --silent='passed-only'
 Copyright © 2025–2026 [Hyk260][profile-link].
 
 [github-discussions-link]: https://github.com/Hyk260/PureChatNext/discussions
+[github-discussions-shield]: https://img.shields.io/github/discussions/Hyk260/PureChatNext?color=c084fc&labelColor=black&style=flat-square
 [github-issues-link]: https://github.com/Hyk260/PureChatNext/issues
 [github-issues-shield]: https://img.shields.io/github/issues/Hyk260/PureChatNext?color=ff80eb&labelColor=black&style=flat-square
 [github-license-link]: https://github.com/Hyk260/PureChatNext/blob/main/LICENSE
@@ -303,4 +344,5 @@ Copyright © 2025–2026 [Hyk260][profile-link].
 [github-stars-shield]: https://img.shields.io/github/stars/Hyk260/PureChatNext?color=ffcb47&labelColor=black&style=flat-square
 [online-demo-link]: https://next.purechat.cn
 [profile-link]: https://github.com/Hyk260
+[repo-link]: https://github.com/Hyk260/PureChatNext
 [vercel-deploy-link]: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHyk260%2FPureChatNext

@@ -1,6 +1,6 @@
 {
   "name": "pure-chat-next",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "把 AI 助手接入 Web、微信与 QQ 的开源自托管平台，支持多模型、联网搜索、文件处理和私有部署。",
   "homepage": "https://next.purechat.cn",
   "repository": {

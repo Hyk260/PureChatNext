@@ -5,8 +5,6 @@ import { memo } from 'react'
 import { Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import HomeChatInput from '@/features/home/components/HomeChatInput'
-// import RecommendationList from '@/features/home/components/RecommendationList'
-// import StarterList from '@/features/home/components/StarterList'
 
 const styles = createStaticStyles(({ css }) => ({
   title: css`
@@ -28,8 +26,6 @@ const HomeContent = memo(() => {
     <Flexbox className={'w-full'} gap={28}>
       <h1 className={styles.title}>今天想聊点什么？</h1>
       <HomeChatInput />
-      {/* <StarterList /> */}
-      {/* <RecommendationList /> */}
     </Flexbox>
   )
 })

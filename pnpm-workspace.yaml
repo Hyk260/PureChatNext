@@ -1,10 +1,13 @@
 packages:
+  - apps/desktop
   - packages/**
 allowBuilds:
   # Windows 上 postinstall 的 node-pty 探测会卡死（conhost + kill 不返回），跳过即可
   '@code-inspector/core': false
   '@swc/core': true
   esbuild: true
+  electron: true
+  electron-builder: true
   node-pty: true
   sharp: true
   unrs-resolver: true

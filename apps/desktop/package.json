@@ -1,0 +1,24 @@
+{
+  "name": "purechat-desktop",
+  "version": "0.2.0",
+  "private": true,
+  "description": "PureChat desktop application",
+  "main": "./dist/main/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "electron-vite build",
+    "dev": "electron-vite dev",
+    "package:dir": "pnpm build && electron-builder --dir --config electron-builder.mjs",
+    "package:mac": "pnpm build && electron-builder --mac --config electron-builder.mjs --publish never",
+    "package:win": "pnpm build && electron-builder --win --config electron-builder.mjs --publish never",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "electron": "41.3.0",
+    "electron-builder": "26.14.0",
+    "electron-vite": "6.0.0-beta.1",
+    "typescript": "^5.9.3",
+    "vitest": "3.2.4"
+  }
+}

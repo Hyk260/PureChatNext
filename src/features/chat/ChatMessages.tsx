@@ -194,6 +194,7 @@ ChatMessageItem.displayName = 'ChatMessageItem'
 interface ChatMessagesProps {
   agentMeta?: AgentMeta
   disabled?: boolean
+  initialScrollToBottom?: boolean
   isStreaming?: boolean
   messages: UIMessage[]
   onDelete: (id: string) => void
@@ -202,7 +203,16 @@ interface ChatMessagesProps {
 }
 
 const ChatMessages = memo<ChatMessagesProps>(
-  ({ messages, agentMeta, disabled, isStreaming = false, onDelete, onEdit, onRegenerate }) => {
+  ({
+    messages,
+    agentMeta,
+    disabled,
+    initialScrollToBottom = false,
+    isStreaming = false,
+    onDelete,
+    onEdit,
+    onRegenerate,
+  }) => {
     const scrollbarRef = useRef<ScrollbarRef>(null)
     const wideScreen = useChatUiStore((state) => state.wideScreen)
     const lastMessage = messages.at(-1)
@@ -216,6 +226,7 @@ const ChatMessages = memo<ChatMessagesProps>(
       deps: [messages.length, lastText, lastReasoning, lastWebSearchStatus, lastAttachmentCount],
       enabled: isStreaming || disabled === true,
       getScrollElement,
+      initialScrollToBottom,
     })
 
     // Unlock follow when a new user turn starts

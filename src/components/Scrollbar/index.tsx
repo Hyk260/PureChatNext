@@ -1,12 +1,12 @@
 'use client'
 
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties, MouseEvent as ReactMouseEvent, ReactNode, UIEvent } from 'react'
 
 const BAR_SIZE = 6
 const BAR_GAP = 2
-/** 亚像素取整常导致 scrollHeight 比 clientHeight 大 1px，用阈值避免误显滚动条 */
+/** 亚像素取整可能导致 scrollHeight 比 clientHeight 大 1px，因此忽略这类误差。 */
 const OVERFLOW_THRESHOLD = 1
 
 const styles = createStaticStyles(({ css }) => ({
@@ -121,8 +121,71 @@ type Axis = 'vertical' | 'horizontal'
 
 interface ThumbState {
   size: number
-  move: number
   visible: boolean
+}
+
+interface AxisMetrics extends ThumbState {
+  maxMove: number
+  overflow: number
+  trackSize: number
+}
+
+interface ScrollbarMetrics {
+  horizontal: AxisMetrics
+  vertical: AxisMetrics
+}
+
+interface DragState {
+  axis: Axis
+  startPage: number
+  startScroll: number
+}
+
+const EMPTY_THUMB_STATE: ThumbState = {
+  size: 0,
+  visible: false,
+}
+
+const EMPTY_AXIS_METRICS: AxisMetrics = {
+  maxMove: 0,
+  overflow: 0,
+  size: 0,
+  trackSize: 0,
+  visible: false,
+}
+
+const createEmptyMetrics = (): ScrollbarMetrics => ({
+  horizontal: { ...EMPTY_AXIS_METRICS },
+  vertical: { ...EMPTY_AXIS_METRICS },
+})
+
+const isSameThumbState = (previous: ThumbState, next: ThumbState) =>
+  previous.size === next.size && previous.visible === next.visible
+
+const calculateAxisMetrics = (viewportSize: number, contentSize: number, minSize: number): AxisMetrics => {
+  const overflow = Math.max(contentSize - viewportSize, 0)
+  const visible = overflow > OVERFLOW_THRESHOLD
+  const trackSize = Math.max(viewportSize - BAR_GAP * 2, 0)
+  const ratio = visible && contentSize > 0 ? viewportSize / contentSize : 1
+  const size = Math.max(ratio * trackSize, visible ? minSize : 0)
+
+  return {
+    maxMove: Math.max(trackSize - size, 0),
+    overflow,
+    size,
+    trackSize,
+    visible,
+  }
+}
+
+const getThumbOffset = (scrollOffset: number, metrics: AxisMetrics) => {
+  if (!metrics.visible || metrics.overflow <= 0) return 0
+  return (scrollOffset / metrics.overflow) * metrics.maxMove
+}
+
+const setThumbTransform = (thumb: HTMLDivElement | null, offset: number, axis: Axis) => {
+  if (!thumb) return
+  thumb.style.transform = axis === 'vertical' ? `translateY(${offset}px)` : `translateX(${offset}px)`
 }
 
 const Scrollbar = memo(
@@ -145,72 +208,81 @@ const Scrollbar = memo(
       },
       ref
     ) => {
-      const rootRef = useRef<HTMLDivElement>(null)
       const wrapRef = useRef<HTMLDivElement>(null)
       const viewRef = useRef<HTMLDivElement>(null)
+      const verticalThumbRef = useRef<HTMLDivElement>(null)
+      const horizontalThumbRef = useRef<HTMLDivElement>(null)
+      const metricsRef = useRef<ScrollbarMetrics>(createEmptyMetrics())
+      const dragRef = useRef<DragState | null>(null)
+      const measureRafRef = useRef<number | null>(null)
+      const positionRafRef = useRef<number | null>(null)
 
-      const [vertical, setVertical] = useState<ThumbState>({ size: 0, move: 0, visible: false })
-      const [horizontal, setHorizontal] = useState<ThumbState>({ size: 0, move: 0, visible: false })
+      const [vertical, setVertical] = useState<ThumbState>(EMPTY_THUMB_STATE)
+      const [horizontal, setHorizontal] = useState<ThumbState>(EMPTY_THUMB_STATE)
       const [dragging, setDragging] = useState<Axis | null>(null)
 
-      const dragRef = useRef<{ axis: Axis; startPage: number; startScroll: number } | null>(null)
-      // 缓存上一次计算结果，仅在值真正变化时才 setState，避免高频 ResizeObserver 引发无谓重渲染
-      const lastRef = useRef<{ v: ThumbState; h: ThumbState }>({
-        v: { size: 0, move: 0, visible: false },
-        h: { size: 0, move: 0, visible: false },
-      })
-      // rAF 节流句柄
-      const rafRef = useRef<number | null>(null)
+      const syncThumbPositions = useCallback(() => {
+        if (native) return
 
-      const update = useCallback(() => {
+        const wrap = wrapRef.current
+        const metrics = metricsRef.current
+        if (!wrap) return
+
+        setThumbTransform(verticalThumbRef.current, getThumbOffset(wrap.scrollTop, metrics.vertical), 'vertical')
+        setThumbTransform(horizontalThumbRef.current, getThumbOffset(wrap.scrollLeft, metrics.horizontal), 'horizontal')
+      }, [native])
+
+      const schedulePositionSync = useCallback(() => {
+        if (native || positionRafRef.current != null) return
+
+        positionRafRef.current = requestAnimationFrame(() => {
+          positionRafRef.current = null
+          syncThumbPositions()
+        })
+      }, [native, syncThumbPositions])
+
+      const measureScrollbars = useCallback(() => {
+        if (native) return
+
         const wrap = wrapRef.current
         if (!wrap) return
 
-        const { clientHeight, clientWidth, scrollHeight, scrollWidth, scrollTop, scrollLeft } = wrap
-        const vOverflow = scrollHeight - clientHeight
-        const hOverflow = scrollWidth - clientWidth
-        const vVisible = vOverflow > OVERFLOW_THRESHOLD
-        const hVisible = hOverflow > OVERFLOW_THRESHOLD
-        const vRatio = vVisible ? clientHeight / scrollHeight : 1
-        const hRatio = hVisible ? clientWidth / scrollWidth : 1
-
-        const vTrack = Math.max(clientHeight - BAR_GAP * 2, 0)
-        const hTrack = Math.max(clientWidth - BAR_GAP * 2, 0)
-        const vSize = Math.max(vRatio * vTrack, vVisible ? minSize : 0)
-        const hSize = Math.max(hRatio * hTrack, hVisible ? minSize : 0)
-
-        const vMax = Math.max(vOverflow, 0)
-        const hMax = Math.max(hOverflow, 0)
-        const vMove = vVisible ? (scrollTop / vMax) * Math.max(vTrack - vSize, 0) : 0
-        const hMove = hVisible ? (scrollLeft / hMax) * Math.max(hTrack - hSize, 0) : 0
-
-        const last = lastRef.current
-        if (last.v.size !== vSize || last.v.move !== vMove || last.v.visible !== vVisible) {
-          last.v = { size: vSize, move: vMove, visible: vVisible }
-          setVertical(last.v)
+        const nextMetrics: ScrollbarMetrics = {
+          horizontal: calculateAxisMetrics(wrap.clientWidth, wrap.scrollWidth, minSize),
+          vertical: calculateAxisMetrics(wrap.clientHeight, wrap.scrollHeight, minSize),
         }
-        if (last.h.size !== hSize || last.h.move !== hMove || last.h.visible !== hVisible) {
-          last.h = { size: hSize, move: hMove, visible: hVisible }
-          setHorizontal(last.h)
-        }
-      }, [minSize])
+        metricsRef.current = nextMetrics
 
-      // 用 rAF 合并同一帧内多次触发，避免排版抖动期间高频 setState
-      const scheduleUpdate = useCallback(() => {
-        if (rafRef.current != null) return
-        rafRef.current = requestAnimationFrame(() => {
-          rafRef.current = null
-          update()
+        const nextHorizontal = {
+          size: nextMetrics.horizontal.size,
+          visible: nextMetrics.horizontal.visible,
+        }
+        const nextVertical = {
+          size: nextMetrics.vertical.size,
+          visible: nextMetrics.vertical.visible,
+        }
+
+        setHorizontal((previous) => (isSameThumbState(previous, nextHorizontal) ? previous : nextHorizontal))
+        setVertical((previous) => (isSameThumbState(previous, nextVertical) ? previous : nextVertical))
+        syncThumbPositions()
+      }, [minSize, native, syncThumbPositions])
+
+      const scheduleMeasure = useCallback(() => {
+        if (native || measureRafRef.current != null) return
+
+        measureRafRef.current = requestAnimationFrame(() => {
+          measureRafRef.current = null
+          measureScrollbars()
         })
-      }, [update])
+      }, [measureScrollbars, native])
 
       const handleScroll = useCallback(
         (event: UIEvent<HTMLDivElement>) => {
           const target = event.currentTarget
-          scheduleUpdate()
+          schedulePositionSync()
           onScroll?.({ scrollTop: target.scrollTop, scrollLeft: target.scrollLeft })
         },
-        [onScroll, scheduleUpdate]
+        [onScroll, schedulePositionSync]
       )
 
       const setScrollTop = useCallback((value: number) => {
@@ -240,33 +312,48 @@ const Scrollbar = memo(
           get wrapRef() {
             return wrapRef.current
           },
-          update,
+          update: measureScrollbars,
           scrollTo,
-          setScrollTop,
           setScrollLeft,
+          setScrollTop,
         }),
-        [scrollTo, setScrollLeft, setScrollTop, update]
+        [measureScrollbars, scrollTo, setScrollLeft, setScrollTop]
       )
 
       useEffect(() => {
-        update()
+        if (native) {
+          metricsRef.current = createEmptyMetrics()
+          setHorizontal(EMPTY_THUMB_STATE)
+          setVertical(EMPTY_THUMB_STATE)
+          return
+        }
+
+        measureScrollbars()
 
         const wrap = wrapRef.current
         const view = viewRef.current
         if (!wrap) return
 
-        const observer = new ResizeObserver(() => scheduleUpdate())
+        const observer = new ResizeObserver(scheduleMeasure)
         observer.observe(wrap)
         if (view) observer.observe(view)
 
         return () => {
           observer.disconnect()
-          if (rafRef.current != null) {
-            cancelAnimationFrame(rafRef.current)
-            rafRef.current = null
+          if (measureRafRef.current != null) {
+            cancelAnimationFrame(measureRafRef.current)
+            measureRafRef.current = null
+          }
+          if (positionRafRef.current != null) {
+            cancelAnimationFrame(positionRafRef.current)
+            positionRafRef.current = null
           }
         }
-      }, [update, scheduleUpdate])
+      }, [measureScrollbars, native, scheduleMeasure])
+
+      useLayoutEffect(() => {
+        syncThumbPositions()
+      }, [horizontal.size, horizontal.visible, syncThumbPositions, vertical.size, vertical.visible])
 
       const onThumbMouseDown = useCallback(
         (axis: Axis) => (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -294,21 +381,15 @@ const Scrollbar = memo(
           const wrap = wrapRef.current
           if (!drag || !wrap) return
 
-          const { clientHeight, clientWidth, scrollHeight, scrollWidth } = wrap
+          const metrics = drag.axis === 'vertical' ? metricsRef.current.vertical : metricsRef.current.horizontal
+          const pageOffset = (drag.axis === 'vertical' ? event.clientY : event.clientX) - drag.startPage
+          const nextScroll =
+            drag.startScroll + (metrics.maxMove > 0 ? (pageOffset / metrics.maxMove) * metrics.overflow : 0)
+
           if (drag.axis === 'vertical') {
-            const track = Math.max(clientHeight - BAR_GAP * 2, 0)
-            const thumb = vertical.size
-            const offset = event.clientY - drag.startPage
-            const maxScroll = Math.max(scrollHeight - clientHeight, 0)
-            const maxMove = Math.max(track - thumb, 0)
-            wrap.scrollTop = drag.startScroll + (maxMove > 0 ? (offset / maxMove) * maxScroll : 0)
+            wrap.scrollTop = nextScroll
           } else {
-            const track = Math.max(clientWidth - BAR_GAP * 2, 0)
-            const thumb = horizontal.size
-            const offset = event.clientX - drag.startPage
-            const maxScroll = Math.max(scrollWidth - clientWidth, 0)
-            const maxMove = Math.max(track - thumb, 0)
-            wrap.scrollLeft = drag.startScroll + (maxMove > 0 ? (offset / maxMove) * maxScroll : 0)
+            wrap.scrollLeft = nextScroll
           }
         }
 
@@ -323,7 +404,7 @@ const Scrollbar = memo(
           document.removeEventListener('mousemove', onMove)
           document.removeEventListener('mouseup', onUp)
         }
-      }, [dragging, horizontal.size, vertical.size])
+      }, [dragging])
 
       const rootStyle: CSSProperties = {
         ...style,
@@ -331,9 +412,7 @@ const Scrollbar = memo(
         maxHeight: toCssSize(maxHeight) ?? style?.maxHeight,
       }
 
-      // maxHeight/height 也下发到 wrap（真正的滚动容器）。wrap 默认 height:100%，
-      // 当父级为 auto 高度时百分比高度回退为 auto，导致 max-height 无法约束滚动区；
-      // 把 max-height 直接作用在 overflow:auto 的 wrap 上才能正确触发滚动。
+      // 高度约束必须同时作用于真正的滚动容器，否则 auto 高度父级中的 100% 高度无法触发滚动。
       const wrapStyleMerged: CSSProperties = {
         ...(height !== undefined ? { height: toCssSize(height) } : {}),
         ...(maxHeight !== undefined ? { maxHeight: toCssSize(maxHeight) } : {}),
@@ -343,7 +422,7 @@ const Scrollbar = memo(
       const showCustomBar = !native
 
       return (
-        <div ref={rootRef} className={cx(styles.root, always && 'always', className)} style={rootStyle}>
+        <div className={cx(styles.root, always && 'always', className)} style={rootStyle}>
           <div
             ref={wrapRef}
             className={cx(styles.wrap, showCustomBar && 'hidden-native', wrapClassName)}
@@ -365,8 +444,9 @@ const Scrollbar = memo(
               )}
             >
               <div
+                ref={verticalThumbRef}
                 className={cx(styles.thumb, 'vertical', dragging === 'vertical' && 'dragging')}
-                style={{ height: vertical.size, transform: `translateY(${vertical.move}px)` }}
+                style={{ height: vertical.size }}
                 onMouseDown={onThumbMouseDown('vertical')}
               />
             </div>
@@ -382,8 +462,9 @@ const Scrollbar = memo(
               )}
             >
               <div
+                ref={horizontalThumbRef}
                 className={cx(styles.thumb, 'horizontal', dragging === 'horizontal' && 'dragging')}
-                style={{ width: horizontal.size, transform: `translateX(${horizontal.move}px)` }}
+                style={{ width: horizontal.size }}
                 onMouseDown={onThumbMouseDown('horizontal')}
               />
             </div>

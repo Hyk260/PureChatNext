@@ -35,7 +35,13 @@ const EMPTY_MESSAGES: UIMessage[] = []
 const fileToPart = (file: File): Promise<{ type: 'file'; mediaType: string; url: string; filename: string }> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = () => resolve({ type: 'file', mediaType: file.type || 'application/octet-stream', url: String(reader.result), filename: file.name })
+    reader.onload = () =>
+      resolve({
+        type: 'file',
+        mediaType: file.type || 'application/octet-stream',
+        url: String(reader.result),
+        filename: file.name,
+      })
     reader.onerror = () => reject(reader.error ?? new Error('读取附件失败'))
     reader.readAsDataURL(file)
   })
@@ -370,6 +376,7 @@ const ChatView = memo<ChatViewProps>(
         <ChatMessages
           agentMeta={agentMeta}
           disabled={isBusy}
+          initialScrollToBottom={topicId !== null}
           isStreaming={isStreaming}
           messages={messages}
           onDelete={handleDelete}

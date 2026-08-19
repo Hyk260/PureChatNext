@@ -3,6 +3,10 @@ import type { UIMessage } from 'ai'
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
+const autoScrollMocks = vi.hoisted(() => ({
+  useAutoScroll: vi.fn(),
+}))
+
 vi.mock('@pure/ui', () => ({
   Accordion: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   AccordionItem: ({ children, title }: { children?: React.ReactNode; title?: React.ReactNode }) => (
@@ -74,15 +78,7 @@ vi.mock('@/features/chat/MessageUsage', () => ({
 }))
 
 vi.mock('@/features/chat/MessageEditorModal', () => ({
-  default: ({
-    onSubmit,
-    open,
-    value,
-  }: {
-    onSubmit: (value: string) => void
-    open: boolean
-    value: string
-  }) =>
+  default: ({ onSubmit, open, value }: { onSubmit: (value: string) => void; open: boolean; value: string }) =>
     open ? (
       <div data-testid='message-editor' data-value={value}>
         <button type='button' onClick={() => onSubmit('edited message')}>
@@ -97,7 +93,10 @@ vi.mock('@/features/chat/store/useChatUiStore', () => ({
 }))
 
 vi.mock('@/features/chat/useAutoScroll', () => ({
-  useAutoScroll: () => ({ handleScroll: vi.fn(), resetScrollLock: vi.fn() }),
+  useAutoScroll: (options: Record<string, unknown>) => {
+    autoScrollMocks.useAutoScroll(options)
+    return { handleScroll: vi.fn(), resetScrollLock: vi.fn() }
+  },
 }))
 
 import ChatMessages from '@/features/chat/ChatMessages'
@@ -113,6 +112,22 @@ const messages: UIMessage[] = [
 ]
 
 describe('ChatMessages message layout', () => {
+  it('passes the initial bottom-scroll option to the auto-scroll hook', () => {
+    autoScrollMocks.useAutoScroll.mockClear()
+
+    render(
+      <ChatMessages
+        initialScrollToBottom
+        messages={messages}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onRegenerate={vi.fn()}
+      />
+    )
+
+    expect(autoScrollMocks.useAutoScroll).toHaveBeenCalledWith(expect.objectContaining({ initialScrollToBottom: true }))
+  })
+
   it('renders both action bars as siblings of message content', () => {
     const { container, getByTestId } = render(
       <ChatMessages
@@ -226,16 +241,20 @@ describe('ChatMessages message layout', () => {
       role: 'assistant',
     }
     const { container, rerender } = render(
-      <ChatMessages isStreaming messages={[streamingMessage]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />
+      <ChatMessages
+        isStreaming
+        messages={[streamingMessage]}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onRegenerate={vi.fn()}
+      />
     )
 
     const streamingActions = container.querySelector('[data-message-actions]')
     expect(streamingActions).toBeTruthy()
     expect(streamingActions?.getAttribute('aria-hidden')).toBe('true')
 
-    rerender(
-      <ChatMessages messages={[streamingMessage]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />
-    )
+    rerender(<ChatMessages messages={[streamingMessage]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />)
 
     const finishedActions = container.querySelector('[data-message-actions]')
     expect(finishedActions?.getAttribute('aria-hidden')).toBeNull()

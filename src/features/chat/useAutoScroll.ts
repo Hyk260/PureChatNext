@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 
 interface UseAutoScrollOptions {
@@ -13,6 +13,8 @@ interface UseAutoScrollOptions {
    * @default true
    */
   enabled?: boolean
+  /** Scroll to the bottom once after the container is mounted. */
+  initialScrollToBottom?: boolean
   /** Resolve an externally-owned scroll element (for example Scrollbar.wrapRef). */
   getScrollElement?: () => HTMLElement | null
   /**
@@ -39,7 +41,7 @@ interface UseAutoScrollReturn<T extends HTMLElement> {
 export function useAutoScroll<T extends HTMLElement = HTMLDivElement>(
   options: UseAutoScrollOptions = {}
 ): UseAutoScrollReturn<T> {
-  const { deps = [], enabled = true, getScrollElement, threshold = 80 } = options
+  const { deps = [], enabled = true, getScrollElement, initialScrollToBottom = false, threshold = 80 } = options
 
   const ref = useRef<T | null>(null)
   const [userHasScrolled, setUserHasScrolled] = useState(false)
@@ -88,6 +90,30 @@ export function useAutoScroll<T extends HTMLElement = HTMLDivElement>(
     },
     [getContainer]
   )
+
+  // Existing topics should open at the newest message. Do the first write in a
+  // layout effect to avoid painting the list at the old scroll position, then
+  // repeat it once after the first frame for content whose height settles late.
+  useLayoutEffect(() => {
+    if (!initialScrollToBottom) return
+
+    const container = getContainer()
+    if (!container) return
+
+    isAutoScrollingRef.current = true
+    container.scrollTop = container.scrollHeight
+
+    const frame = requestAnimationFrame(() => {
+      const nextContainer = getContainer()
+      if (nextContainer) nextContainer.scrollTop = nextContainer.scrollHeight
+      isAutoScrollingRef.current = false
+    })
+
+    return () => {
+      cancelAnimationFrame(frame)
+      isAutoScrollingRef.current = false
+    }
+  }, [getContainer, initialScrollToBottom])
 
   const handleScroll = useCallback(() => {
     if (isAutoScrollingRef.current) return

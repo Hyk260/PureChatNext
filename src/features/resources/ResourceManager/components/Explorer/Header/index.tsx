@@ -25,6 +25,8 @@ import SearchInput from './SearchInput'
 
 const styles = createStaticStyles(({ css }) => ({
   header: css`
+    box-sizing: border-box;
+    min-height: 48px;
     padding: 8px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
   `,
@@ -126,33 +128,34 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
 
   return (
     <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
-      <Flexbox horizontal align='center' gap={8} style={{ overflow: 'hidden' }}>
+      <Flexbox horizontal align='center' gap={8} style={{ minHeight: 32, overflow: 'hidden' }}>
         {sidebarCollapsed ? (
           <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
         ) : null}
         {hasSelected ? (
-          <Flexbox horizontal align='center' gap={8}>
-            <ActionIcon
-              icon={Trash2Icon}
-              title='删除'
-              onClick={() => {
-                if (!onDelete) return
-                confirmModal({
-                  cancelText: '取消',
-                  content: `确定删除选中的 ${selectCount} 个文件吗？删除后将无法恢复。`,
-                  okButtonProps: { danger: true },
-                  okText: '删除',
-                  onOk: async () => {
-                    await onDelete()
-                    message.success('删除成功')
-                  },
-                  title: '删除',
-                })
-              }}
-            />
-          </Flexbox>
+          <ActionIcon
+            icon={Trash2Icon}
+            size='small'
+            title='删除'
+            onClick={() => {
+              if (!onDelete) return
+              confirmModal({
+                cancelText: '取消',
+                content: `确定删除选中的 ${selectCount} 个文件吗？删除后将无法恢复。`,
+                okButtonProps: { danger: true },
+                okText: '删除',
+                onOk: async () => {
+                  await onDelete()
+                  message.success('删除成功')
+                },
+                title: '删除',
+              })
+            }}
+          />
         ) : (
-          <Text style={{ marginInlineStart: 8 }}>{title ?? '资源'}</Text>
+          <Text ellipsis style={{ marginInlineStart: 8 }}>
+            {title ?? '资源'}
+          </Text>
         )}
       </Flexbox>
       <Flexbox horizontal align='center' gap={4}>

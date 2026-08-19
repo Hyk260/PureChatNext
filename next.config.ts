@@ -5,6 +5,18 @@ const isProd = process.env.NODE_ENV === 'production'
 const isVercel = !!process.env.VERCEL_ENV
 const isDocker = process.env.DOCKER === 'true'
 const enableCodeInspector = process.env.CODE_INSPECTOR === '1'
+const logChannelPolls = /^(1|true)$/i.test(process.env.NEXT_LOG_CHANNEL_POLLS?.trim() ?? '')
+
+/** Internal Gateway webhook batches — always silent in the access log. */
+const alwaysIgnoreIncomingRequests = [/^\/api\/channels\/wechat\/webhook(?:\/|$)/]
+
+/** High-frequency status / qrcode polls. Hidden by default; set NEXT_LOG_CHANNEL_POLLS=1 to show. */
+const channelPollIncomingRequests = [
+  /^\/api\/channels\/qq\/status(?:\/|$)/,
+  /^\/api\/channels\/qq\/qrcode(?:\/|$)/,
+  /^\/api\/channels\/wechat\/status(?:\/|$)/,
+  /^\/api\/channels\/wechat\/qrcode(?:\/|$)/,
+]
 
 const nextConfig: NextConfig = {
   ...(isDocker && { output: 'standalone' as const }),
@@ -23,12 +35,8 @@ const nextConfig: NextConfig = {
     webVitalsAttribution: ['CLS', 'LCP'],
   },
   logging: {
-    // WeChat Gateway forwards polling batches through this internal route.
-    // Keep application errors visible while avoiding one access-log line per poll.
     incomingRequests: {
-      ignore: [
-        /^\/api\/channels\/wechat\/webhook(?:\/|$)/
-      ],
+      ignore: [...alwaysIgnoreIncomingRequests, ...(logChannelPolls ? [] : channelPollIncomingRequests)],
     },
     fetches: {
       fullUrl: true,

@@ -14,7 +14,7 @@ export const MESSENGER_DEFAULT_MODELS: Record<MessengerProviderId, string> = {
 export const isMessengerProviderId = (id: string): id is MessengerProviderId =>
   MESSENGER_PROVIDER_IDS.includes(id as MessengerProviderId)
 export const formatMessengerActiveAt = (value: string) =>
-  formatDateTime(value, { hour12: false, second: '2-digit' })
+  formatDateTime(value, { hourCycle: 'h23', second: '2-digit' })
 
 export type MessengerPlatformMeta = {
   description: string

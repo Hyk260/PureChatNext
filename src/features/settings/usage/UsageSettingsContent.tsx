@@ -21,7 +21,7 @@ const EMPTY_CELL = '--'
 const dateTimeFormat = new Intl.DateTimeFormat('zh-CN', {
   day: 'numeric',
   hour: '2-digit',
-  hour12: false,
+  hourCycle: 'h23',
   minute: '2-digit',
   month: 'numeric',
   second: '2-digit',
@@ -156,7 +156,7 @@ const UsageMetric = ({ hint, label, limit, used, value }: UsageMetricProps) => {
         size={42}
         strokeColor={cssVar.colorSuccess}
         strokeWidth={8}
-        trailColor={cssVar.colorFillSecondary}
+        railColor={cssVar.colorFillSecondary}
         type='circle'
       />
     </Flexbox>

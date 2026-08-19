@@ -17,17 +17,21 @@ import ColumnResizeHandle from './ColumnResizeHandle'
 
 const styles = createStaticStyles(({ css }) => ({
   header: css`
+    box-sizing: border-box;
+    flex: none;
     min-width: 800px;
     height: 40px;
-    min-height: 40px;
+    overflow: hidden;
     color: ${cssVar.colorTextDescription};
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
     font-size: 12px;
   `,
   headerItem: css`
+    overflow: hidden;
     height: 100%;
     padding-block: 6px;
     padding-inline: 0 24px;
+    white-space: nowrap;
   `,
 }))
 
@@ -61,7 +65,7 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
     <Flexbox horizontal align='center' className={styles.header} style={{ paddingInline: 8 }}>
       <Center
         height={40}
-        style={{ cursor: 'pointer', paddingInline: 4 }}
+        style={{ cursor: 'pointer', flexShrink: 0, overflow: 'hidden', paddingInline: 4 }}
         onClick={handleHeaderCheckboxClick}
         onPointerDown={handleHeaderCheckboxPointerDown}
       >
@@ -97,7 +101,7 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
         <ColumnResizeHandle
           currentWidth={columnWidths.date}
           maxWidth={300}
-          minWidth={120}
+          minWidth={150}
           onResize={(width) => updateColumnWidth('date', width)}
         />
       </Flexbox>

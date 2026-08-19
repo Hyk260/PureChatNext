@@ -138,7 +138,7 @@ const SignUpFormContent = () => {
           </Button>
         </Form.Item>
       </Form>
-      {/* <AuthAgreement /> */}
+      <AuthAgreement />
     </AuthCard>
   )
 }

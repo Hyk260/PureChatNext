@@ -2,9 +2,9 @@ export const BRANDING_NAME = 'PureChat'
 export const BRANDING_LOGO_URL = ''
 
 export const BRANDING_URL = {
-  help: undefined,
-  privacy: undefined,
-  terms: undefined,
+  help: '/help',
+  privacy: '/privacy',
+  terms: '/terms',
 }
 
 export const PROXY_CONFIG = {
@@ -34,7 +34,7 @@ export const SECURITY_HEADERS = {
 }
 
 export const SOCIAL_URL = {
-  github: 'https://github.com/Hyk260/PureChat',
+  github: 'https://github.com/Hyk260/PureChatNext',
 }
 
 export const BRANDING_EMAIL = {

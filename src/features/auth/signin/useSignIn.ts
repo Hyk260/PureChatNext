@@ -9,6 +9,7 @@ import {
   normalizeLoginIdentifier,
 } from '@/libs/better-auth/shared'
 import { checkUserByEmail, requestPasswordReset, signIn, useAuthConfig } from '@/libs/better-auth/client'
+import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 type Step = 'email' | 'password'
@@ -160,7 +161,13 @@ export const useSignIn = () => {
             }
           },
           // SPA in-app navigation — do not rely on Next server redirect
-          onSuccess: () => router.push(callbackUrl),
+          onSuccess: () => {
+            trackAcquisitionEvent('sign_in_completed', {
+              first: markFirstConversion('sign_in'),
+              method: 'email',
+            })
+            router.push(callbackUrl)
+          },
         }
       )
 
@@ -183,6 +190,7 @@ export const useSignIn = () => {
 
   const handleSocialSignIn = async (provider: string) => {
     try {
+      trackAcquisitionEvent('sign_in_started', { method: provider })
       try {
         localStorage.setItem(LAST_AUTH_PROVIDER_KEY, provider)
       } catch {

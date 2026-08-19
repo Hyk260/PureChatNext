@@ -1,6 +1,17 @@
 {
   "name": "pure-chat-next",
   "version": "0.2.0",
+  "description": "把 AI 助手接入 Web、微信与 QQ 的开源自托管平台，支持多模型、联网搜索、文件处理和私有部署。",
+  "homepage": "https://next.purechat.cn",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hyk260/PureChatNext.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Hyk260/PureChatNext/issues"
+  },
+  "author": "Hyk260",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "bun scripts/dev-startup-sequence.mts",
@@ -23,6 +34,7 @@
     "gateway": "bun scripts/gateway.ts",
     "docker:setup:dev": "bun scripts/docker.mts setup-dev",
     "docker:setup:deploy": "bun scripts/docker.mts setup-deploy",
+    "docker:deploy": "bun scripts/docker.mts deploy",
     "docker:validate": "bun scripts/docker.mts validate",
     "agents:sync": "bun scripts/fetch-community-agents.ts",
     "db:check": "drizzle-kit check",
@@ -168,8 +180,16 @@
     }
   },
   "keywords": [
+    "ai",
+    "ai-chat",
+    "self-hosted",
+    "wechat",
+    "qq-bot",
+    "llm",
+    "chatbot",
     "nextjs",
     "vercel-ai",
-    "openai"
+    "openai",
+    "deepseek"
   ]
 }

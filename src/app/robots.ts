@@ -1,14 +1,17 @@
 import type { MetadataRoute } from 'next'
 
 import { appEnv } from '@/envs/app'
+import { SITE_DEFAULT_URL } from '@/const/site'
 
 /** Revalidate robots.txt every 24 hours. */
 export const revalidate = 86_400
 export const dynamic = 'force-static'
 
 const robots = (): MetadataRoute.Robots => {
+  const siteUrl = new URL(appEnv.APP_URL ?? SITE_DEFAULT_URL)
+
   return {
-    ...(appEnv.APP_URL ? { host: appEnv.APP_URL } : {}),
+    host: siteUrl.origin,
     rules: [
       // Social crawlers: allow community pages for link previews
       {
@@ -43,6 +46,7 @@ const robots = (): MetadataRoute.Robots => {
         userAgent: '*',
       },
     ],
+    sitemap: new URL('/sitemap.xml', siteUrl).toString(),
   }
 }
 

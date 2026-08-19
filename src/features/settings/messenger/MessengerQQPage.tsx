@@ -11,6 +11,7 @@ import { memo, useCallback, useEffect, useState } from 'react'
 import useSWR from 'swr'
 
 import { useSession } from '@/libs/better-auth/client'
+import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 
 import { fetchAgents } from '@/features/home/agentApi'
 
@@ -215,6 +216,10 @@ const MessengerQQPage = memo(() => {
     try {
       message.success('QQ 凭证已保存，正在建立连接')
       await refreshStatus()
+      trackAcquisitionEvent('channel_connected', {
+        first: markFirstConversion('channel_connected'),
+        platform: 'qq',
+      })
     } finally {
       setBinding(false)
     }

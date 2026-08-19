@@ -28,6 +28,7 @@ import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { isSettingsProviderId } from '@/features/settings/provider/const'
 import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
+import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { useRouter } from '@/utils/navigation'
 
 const EMPTY_MESSAGES: UIMessage[] = []
@@ -150,6 +151,27 @@ const ChatView = memo<ChatViewProps>(
     }, [messages])
     const isBusy = status === 'submitted' || status === 'streaming'
     const isStreaming = status === 'streaming'
+    const responsePendingRef = useRef(false)
+
+    useEffect(() => {
+      if (isBusy) {
+        responsePendingRef.current = true
+        return
+      }
+      if (status === 'error') {
+        responsePendingRef.current = false
+        return
+      }
+      if (!responsePendingRef.current || status !== 'ready') return
+      responsePendingRef.current = false
+
+      if (messages.at(-1)?.role !== 'assistant') return
+      trackAcquisitionEvent('chat_response_completed', {
+        first: markFirstConversion('chat_response'),
+        model: selectedModel,
+        provider: selectedProvider,
+      })
+    }, [isBusy, messages, selectedModel, selectedProvider, status])
 
     useLayoutEffect(() => {
       onBusyChange(isBusy)

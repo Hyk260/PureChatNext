@@ -103,6 +103,29 @@ export const webRoutes: RouteObject[] = [
     path: 'protected',
   },
 
+  // —— Public information ——
+  {
+    element: dynamicElement(
+      () => import('@/features/public/PublicInfoPages').then((module) => ({ default: module.HelpPage })),
+      'Help'
+    ),
+    path: 'help',
+  },
+  {
+    element: dynamicElement(
+      () => import('@/features/public/PublicInfoPages').then((module) => ({ default: module.PrivacyPage })),
+      'Privacy'
+    ),
+    path: 'privacy',
+  },
+  {
+    element: dynamicElement(
+      () => import('@/features/public/PublicInfoPages').then((module) => ({ default: module.TermsPage })),
+      'Terms'
+    ),
+    path: 'terms',
+  },
+
   // —— Settings ——
   {
     children: [

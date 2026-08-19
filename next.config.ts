@@ -46,10 +46,6 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        headers: [{ key: 'x-robots-tag', value: 'all' }],
-        source: '/:path*',
-      },
-      {
         // Hashed Vite assets under public/_spa — long cache
         source: '/_spa/:path*',
         headers: [

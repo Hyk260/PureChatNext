@@ -1,12 +1,14 @@
 <div align="center">
 
+<img alt="PureChat" height="112" src="./public/logos/purechat-appicon.svg" width="112" />
+
 # PureChat
 
-轻量、私密、可扩展的 AI 聊天应用。
+把你的 AI 助手接入微信和 QQ。
 
-基于 React、Vite SPA、Next.js BFF 与 Vercel AI SDK 构建，支持多模型对话、联网搜索、文档解析和自托管部署。
+面向中文用户和小团队的开源自托管 AI 工作台，支持多模型、联网搜索、文件处理和私有部署。
 
-[快速开始](#快速开始) · [环境变量](#环境变量) · [文档](#文档) · [反馈问题][github-issues-link]
+[在线体验][online-demo-link] · [Vercel 部署][vercel-deploy-link] · [Docker 自托管](./docs/self-hosting/docker.zh-CN.md) · [文档](#文档) · [讨论区][github-discussions-link]
 
 [![][github-release-shield]][github-release-link]
 [![][github-license-shield]][github-license-link]
@@ -17,7 +19,13 @@
 
 ## 项目简介
 
-PureChat（仓库名：PureChatNext）是一个面向自托管场景的 AI 聊天 Web 应用。
+PureChat（仓库名：PureChatNext）让同一个 AI 助手同时服务于 Web、微信和 QQ。你可以直接使用在线体验，也可以把数据库、模型密钥、文件和聊天记录完整部署在自己的环境中。
+
+与通用 ChatGPT Clone 相比，PureChat 优先解决中文用户的三个具体问题：
+
+- **聊天入口不必迁移**：通过微信和 QQ Channel Gateway，在已有通讯工具中直接使用 AI；
+- **数据与成本可控**：支持自托管、自备模型 API Key、免费额度账本与用量明细；
+- **能力可以组合**：多模型、联网搜索、文件解析、Agent 和消息渠道共用一套工作台。
 
 - **前端**：Vite + React Router SPA，开发时运行在 `5174` 端口
 - **服务端**：Next.js 16 BFF，负责 API、认证和生产环境的 SPA HTML 壳
@@ -33,6 +41,14 @@ PureChat（仓库名：PureChatNext）是一个面向自托管场景的 AI 聊�
 - 流式输出与 Tool Calling
 - 通过环境变量切换模型 Provider、API Key 和代理地址
 - 支持 OpenAI、DeepSeek 等常用模型服务
+
+### 微信与 QQ 渠道
+
+- 微信 iLink 扫码连接，并由 Channel Gateway 持续接收与回复消息
+- QQ 扫码、WebSocket 与 Webhook 多种连接方式
+- 渠道可选择 Agent、模型与 Provider，复用 Web 端能力
+
+配置说明见 [微信渠道](./docs/self-hosting/wechat-channel.zh-CN.md) 与 [QQ 渠道](./docs/self-hosting/qq-channel.zh-CN.md)。
 
 ### 用户认证
 
@@ -146,7 +162,11 @@ pnpm dev:docker:reset  # 确认后删除开发数据并重建
 
 ### Vercel
 
-项目按单个 Next.js 项目部署，仓库已包含 `vercel.json`。配置以下内容后直接部署：
+点击下方按钮克隆并创建 Vercel 项目，然后按环境变量文档补齐数据库、认证与模型配置：
+
+[![Deploy with Vercel](https://vercel.com/button)][vercel-deploy-link]
+
+项目按单个 Next.js 项目部署，仓库已包含 `vercel.json`。配置以下内容后即可上线：
 
 1. 安装命令：`pnpm install`
 2. 构建命令：`pnpm build`
@@ -161,10 +181,8 @@ pnpm dev:docker:reset  # 确认后删除开发数据并重建
 ```bash
 pnpm docker:setup:deploy
 
-docker compose \
-  --env-file docker-compose/deploy/.env \
-  -f docker-compose/deploy/docker-compose.yml \
-  up -d --build --wait
+# 修改 docker-compose/deploy/.env 后，一条命令构建并启动
+pnpm docker:deploy
 ```
 
 首次生成配置后，请修改正式域名、`ALLOWED_ORIGINS` 和模型密钥。生产 Compose 会在应用启动前自动执行数据库迁移，健康检查地址为 `/api/health`。
@@ -237,6 +255,7 @@ pnpm exec vitest run --silent='passed-only'
 
 # Docker
 pnpm docker:validate
+pnpm docker:deploy
 pnpm dev:docker
 pnpm dev:docker:down
 ```
@@ -258,7 +277,7 @@ pnpm dev:docker:down
 
 ## 参与贡献
 
-欢迎提交 [Issue][github-issues-link] 或 Pull Request。提交前请运行：
+欢迎提交 [Issue][github-issues-link]、参与 [Discussion][github-discussions-link] 或发起 Pull Request。开始前请阅读 [贡献指南](./CONTRIBUTING.md)、[路线图](./ROADMAP.md) 与 [安全政策](./SECURITY.md)。提交前请运行：
 
 ```bash
 pnpm lint
@@ -271,8 +290,9 @@ pnpm exec vitest run --silent='passed-only'
 
 本项目基于 [MIT License](./LICENSE) 开源。
 
-Copyright © 2025 [Hyk260][profile-link].
+Copyright © 2025–2026 [Hyk260][profile-link].
 
+[github-discussions-link]: https://github.com/Hyk260/PureChatNext/discussions
 [github-issues-link]: https://github.com/Hyk260/PureChatNext/issues
 [github-issues-shield]: https://img.shields.io/github/issues/Hyk260/PureChatNext?color=ff80eb&labelColor=black&style=flat-square
 [github-license-link]: https://github.com/Hyk260/PureChatNext/blob/main/LICENSE
@@ -281,4 +301,6 @@ Copyright © 2025 [Hyk260][profile-link].
 [github-release-shield]: https://img.shields.io/github/v/release/Hyk260/PureChatNext?color=369eff&labelColor=black&logo=github&style=flat-square
 [github-stars-link]: https://github.com/Hyk260/PureChatNext/stargazers
 [github-stars-shield]: https://img.shields.io/github/stars/Hyk260/PureChatNext?color=ffcb47&labelColor=black&style=flat-square
+[online-demo-link]: https://next.purechat.cn
 [profile-link]: https://github.com/Hyk260
+[vercel-deploy-link]: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHyk260%2FPureChatNext

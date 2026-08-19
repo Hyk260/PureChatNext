@@ -1,7 +1,9 @@
 import { analyticsEnv } from '@/envs/analytics'
-import { IS_VERCEL } from '@/envs/app'
+import { appEnv, IS_VERCEL } from '@/envs/app'
 import { renderSpaHtml } from '@/server/spaHtml'
 import type { SPAServerConfig } from '@/types/spaServerConfig'
+
+import type { NextRequest } from 'next/server'
 
 import spaHtmlTemplate from '../spaHtmlTemplate.generated'
 
@@ -24,8 +26,19 @@ function buildServerConfig(): SPAServerConfig {
  *
  * Local UI development: use http://localhost:5174 — do not rely on this route or a Debug Proxy.
  */
-export async function GET() {
+type SpaRouteContext = {
+  params: Promise<{ path?: string[] }>
+}
+
+export async function GET(request: NextRequest, context: SpaRouteContext) {
+  const { path = [] } = await context.params
+  const pathname = path.length > 0 ? `/${path.map(encodeURIComponent).join('/')}` : '/'
+
   return renderSpaHtml(spaHtmlTemplate, {
+    publicMetadata: {
+      baseUrl: appEnv.APP_URL ?? request.nextUrl.origin,
+      pathname,
+    },
     serverConfig: buildServerConfig(),
   })
 }

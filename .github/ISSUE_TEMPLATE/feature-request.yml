@@ -1,0 +1,45 @@
+name: 功能建议
+description: 描述使用场景、用户价值与建议方案
+title: '[Feature] '
+labels: ['enhancement', 'needs-triage']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 使用场景与问题
+      description: 谁在什么情况下遇到什么问题？
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: 期望结果
+      description: 完成后用户能够做到什么？如何判断有效？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 可选。也可以列出你考虑过的替代方案与取舍。
+  - type: dropdown
+    id: area
+    attributes:
+      label: 功能领域
+      options:
+        - Web 对话
+        - 微信 / QQ 渠道
+        - 模型与 Provider
+        - 搜索与文件
+        - 自托管与运维
+        - 开发者体验
+        - 其他
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: 参与方式
+      options:
+        - label: 我愿意进一步补充需求或参与测试。
+        - label: 我愿意尝试提交 Pull Request。

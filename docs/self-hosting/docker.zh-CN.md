@@ -59,11 +59,10 @@ pnpm docker:setup:deploy
 启动：
 
 ```bash
-docker compose \
-  --env-file docker-compose/deploy/.env \
-  -f docker-compose/deploy/docker-compose.yml \
-  up -d --build --wait
+pnpm docker:deploy
 ```
+
+该命令等价于使用生产 `.env` 执行 `docker compose up -d --build --wait`。后续升级也复用同一命令。
 
 应用启动前会等待 PostgreSQL、获取 advisory lock 并自动执行 Drizzle migration；迁移失败时应用不会启动。健康检查为 `GET /api/health`。
 
@@ -114,6 +113,8 @@ RustFS 数据位于 `purechat-deploy_rustfs_data`，应通过 `mc mirror` 或独
 docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/docker-compose.yml \
   up -d --build --wait
 ```
+
+也可以直接执行 `pnpm docker:deploy`。
 
 不要对生产 Compose 执行 `down -v`，也不要运行全局 `docker system prune --volumes`。
 

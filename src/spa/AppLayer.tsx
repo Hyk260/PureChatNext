@@ -1,8 +1,9 @@
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v8'
-import { useLayoutEffect } from 'react'
+import { useEffect, useLayoutEffect } from 'react'
 import type { PropsWithChildren } from 'react'
 
 import ThemeProviders from '@/layout/ThemeProviders'
+import { captureAcquisitionAttribution } from '@/libs/analytics/acquisition'
 import SpaTelemetry from '@/spa/SpaTelemetry'
 
 /**
@@ -13,6 +14,10 @@ import SpaTelemetry from '@/spa/SpaTelemetry'
 const AppLayer = ({ children }: PropsWithChildren) => {
   useLayoutEffect(() => {
     document.getElementById('loading-screen')?.remove()
+  }, [])
+
+  useEffect(() => {
+    captureAcquisitionAttribution(window.location, document.referrer)
   }, [])
 
   return (

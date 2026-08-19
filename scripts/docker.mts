@@ -249,6 +249,11 @@ function downDev() {
   run('docker', [...composeArgs(devCompose, devEnv), 'down'])
 }
 
+function deploy() {
+  requireFile(deployEnv, 'pnpm docker:setup:deploy')
+  run('docker', [...composeArgs(deployCompose, deployEnv), 'up', '-d', '--build', '--wait'])
+}
+
 async function confirmReset() {
   console.log('将删除 Docker project purechat 的 postgres_data、redis_data、rustfs_data 卷。')
   if (flags.has('--yes')) return
@@ -293,6 +298,10 @@ async function main() {
     case 'setup-deploy':
       await setupDeploy()
       break
+    case 'deploy':
+      ensureDockerReady()
+      deploy()
+      break
     case 'up':
       ensureDockerReady()
       await upDev()
@@ -310,7 +319,7 @@ async function main() {
       validate()
       break
     default:
-      throw new Error('用法: bun scripts/docker.mts {setup-dev|setup-deploy|up|down|reset|validate}')
+      throw new Error('用法: bun scripts/docker.mts {setup-dev|setup-deploy|deploy|up|down|reset|validate}')
   }
 }
 

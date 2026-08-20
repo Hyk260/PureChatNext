@@ -114,6 +114,14 @@ pnpm preview:prod -- --port 3211
 - 临时开启：`VITE_DEVTOOLS=1 pnpm dev:spa`（或写入 `.env.local` 后重启）
 - 生产构建请勿开启（避免把 DevTools 产物打进 `public/_spa`）
 
+### VITE\_SPA\_UPDATE\_PREVIEW
+
+本地开发可选。设为 `1` 时，SPA 会在进入页面后立刻弹出「检测到系统有新版本」提示，用于核对样式与「立即刷新 / 稍后再说」。
+
+- 默认关闭（开发环境本来就不会做部署指纹检测）
+- 临时开启：`VITE_SPA_UPDATE_PREVIEW=1 pnpm dev:spa`（或写入 `.env.local` 后重启）
+- 也可不改 env：浏览器打开任意 SPA 路径并加上 `?spaUpdatePreview=1`
+
 ### NEXT\_PUBLIC\_SUPABASE\_URL
 
 Supabase 项目的 URL，格式通常是：`https://xxxxx.supabase.co`

@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
 import type { PluginOption } from 'vite'
 
+import { htmlBuildTimePlugin } from './htmlBuildTime'
 import { viteRawHtml } from './rawHtml'
 
 const isNodePackage = (id: string, packageName: string) => {
@@ -124,6 +125,7 @@ export function sharedRendererPlugins(options: SharedRendererPluginsOptions): Pl
         injectTo: spaEntry,
       }),
     viteRawHtml(rootDir),
+    htmlBuildTimePlugin,
     react(),
   ].filter(Boolean) as PluginOption[]
 }

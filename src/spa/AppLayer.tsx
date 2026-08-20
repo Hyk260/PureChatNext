@@ -5,6 +5,7 @@ import type { PropsWithChildren } from 'react'
 import ThemeProviders from '@/layout/ThemeProviders'
 import { captureAcquisitionAttribution } from '@/libs/analytics/acquisition'
 import SpaTelemetry from '@/spa/SpaTelemetry'
+import SpaUpdateNotifier from '@/spa/SpaUpdateNotifier'
 
 /**
  * SPA global providers (Theme / URL state / telemetry).
@@ -25,6 +26,7 @@ const AppLayer = ({ children }: PropsWithChildren) => {
       <NuqsAdapter>
         {children}
         <SpaTelemetry />
+        <SpaUpdateNotifier />
       </NuqsAdapter>
     </ThemeProviders>
   )

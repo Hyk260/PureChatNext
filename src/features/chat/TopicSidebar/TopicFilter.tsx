@@ -51,7 +51,7 @@ const TopicFilter = memo<Props>(({ groupMode, sortBy, onGroupModeChange, onSortB
 
   return (
     <DropdownMenu items={items} open={open} placement='bottomLeft' onOpenChange={setOpen}>
-      <ActionIcon icon={ListFilter} size='small' title='整理话题' />
+      <ActionIcon icon={<Icon icon={ListFilter} />} size='small' title='整理话题' />
     </DropdownMenu>
   )
 })

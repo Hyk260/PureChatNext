@@ -2,9 +2,8 @@ import { waitUntil } from '@vercel/functions'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { QQ_OP_CODES, signWebhookResponse } from '@pure/chat-adapter/qq'
+import { QQ_OP_CODES, signWebhookResponse, verifyWebhookSignature } from '@pure/chat-adapter/qq'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
-import { getOrCreateQQChat } from '@/libs/channels/qq/chatBot'
 import { decryptCredentials } from '@/libs/channels/qq/encrypt'
 import { authorizeQQInternalWebhook } from '@/libs/channels/qq/webhookAuth'
 import { logger } from '@/libs/logger'
@@ -22,12 +21,19 @@ type QQWebhookProbe = {
   op?: unknown
 }
 
-async function probeQQWebhook(request: NextRequest): Promise<QQWebhookProbe | null> {
+async function readQQWebhookBody(
+  request: NextRequest
+): Promise<{ bodyText: string; payload: QQWebhookProbe | null }> {
+  const bodyText = await request.clone().text()
+
   try {
-    const payload = await request.clone().json()
-    return payload && typeof payload === 'object' ? (payload as QQWebhookProbe) : null
+    const payload: unknown = JSON.parse(bodyText)
+    return {
+      bodyText,
+      payload: payload && typeof payload === 'object' ? (payload as QQWebhookProbe) : null,
+    }
   } catch {
-    return null
+    return { bodyText, payload: null }
   }
 }
 
@@ -35,8 +41,8 @@ async function probeQQWebhook(request: NextRequest): Promise<QQWebhookProbe | nu
  * POST /api/channels/qq/webhook/[applicationId]
  * QQ 开放平台推送（webhook）或 Gateway 转发（websocket）
  *
- * 鉴权：若带 `Authorization` 则校验 Bearer（内部 Gateway）；
- * QQ 平台回调通常不带 Authorization；op=13 在初始化 Chat 前直接签名响应。
+ * 鉴权：websocket 内部 Gateway 校验 Bearer；webhook 事件校验 QQ Ed25519 签名；
+ * op=13 在事件验签和初始化 Chat 前直接签名响应。
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   const { applicationId } = await context.params
@@ -56,7 +62,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const payload = await probeQQWebhook(request)
+    const { bodyText, payload } = await readQQWebhookBody(request)
     if (payload?.op === QQ_OP_CODES.VERIFY) {
       const eventTs = payload.d?.event_ts
       const plainToken = payload.d?.plain_token
@@ -69,6 +75,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
         signature: signWebhookResponse(eventTs, plainToken, credentials.appSecret),
       })
     }
+
+    if (credentials.connectionMode === 'webhook') {
+      const signature = request.headers.get('X-Signature-Ed25519')
+      const timestamp = request.headers.get('X-Signature-Timestamp')
+      if (
+        !signature ||
+        !timestamp ||
+        !verifyWebhookSignature(bodyText, timestamp, signature, credentials.appSecret)
+      ) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    }
+
+    const { getOrCreateQQChat } = await import('@/libs/channels/qq/chatBot')
 
     const chat = await getOrCreateQQChat({
       agentId: binding.agentId,

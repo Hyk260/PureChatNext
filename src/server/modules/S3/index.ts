@@ -83,11 +83,12 @@ export class S3 {
   }
 
   /** Check bucket access without creating or modifying an object. */
-  public async checkConnection() {
+  public async checkConnection(options?: { abortSignal?: AbortSignal }) {
     return this.client.send(
       new HeadBucketCommand({
         Bucket: this.bucket,
-      })
+      }),
+      options
     )
   }
 

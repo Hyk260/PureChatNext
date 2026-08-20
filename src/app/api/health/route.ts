@@ -1,3 +1,5 @@
+import type { ChannelGatewaySummary } from '@/server/channel-gateway/types'
+
 import { getChannelGatewaySummary } from '@/server/channel-gateway'
 import { checkHealthDependencies } from '@/server/health/dependencies'
 
@@ -14,14 +16,20 @@ function resolveHealthStatus(unhealthy: boolean, gatewayStatus: string) {
   return 'ok'
 }
 
+const SAFE_GATEWAY_ERROR = 'Channel gateway unavailable'
+
+export function sanitizeGatewayForHealth(gateway: ChannelGatewaySummary): ChannelGatewaySummary {
+  return gateway.error ? { ...gateway, error: SAFE_GATEWAY_ERROR } : gateway
+}
+
 /**
  * GET /api/health
  * 健康检查：探测已配置的数据库、Redis、对象存储、搜索服务与渠道 Gateway 状态
  */
-export async function GET() {
+export async function GET(request?: Request) {
   try {
-    const checks = await checkHealthDependencies()
-    const gateway = getChannelGatewaySummary()
+    const checks = await checkHealthDependencies(request?.signal)
+    const gateway = sanitizeGatewayForHealth(getChannelGatewaySummary())
     const unhealthy = gateway.status === 'unhealthy' || Object.values(checks).some((status) => status === 'unhealthy')
     const degraded = gateway.status === 'degraded'
 

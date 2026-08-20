@@ -13,14 +13,14 @@ pnpm docker:setup:dev
 
 ## 当前约定
 
-- 镜像：`redis:8.8.1-alpine`（与旧 Homebrew Redis 8.8.1 保持同主版本）
+- 镜像：`redis:8.8.1-alpine3.23`（固定多架构 digest）
 - Compose 文件：`docker-compose/dev/docker-compose.yml`
-- 容器名：`purechat-redis`
+- 容器名：由 Compose project 自动生成（不要依赖固定容器名）
 - 连接地址：`redis://127.0.0.1:6379`
 - 持久化：RDB（`--save 60 1000`）+ AOF
 - 认证：无密码（仅本地开发，端口只绑定 `127.0.0.1`）
 - 数据：Docker named volume `redis_data`
-- 内存：默认 `2gb`，淘汰策略 `allkeys-lru`（可在 Compose `.env` 调整）
+- 内存：默认 `384mb`，淘汰策略 `noeviction`（可在 Compose `.env` 调整）
 
 ## 环境变量
 
@@ -57,7 +57,7 @@ docker compose -f docker-compose/dev/docker-compose.yml logs --tail=100 redis
 docker compose -f docker-compose/dev/docker-compose.yml exec redis redis-cli PING
 # PONG
 
-bun scripts/redis-seed.ts
+pnpm exec tsx scripts/redis-seed.ts
 ```
 
 ## 常见故障

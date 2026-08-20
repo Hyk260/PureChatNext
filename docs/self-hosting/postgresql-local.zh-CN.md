@@ -13,9 +13,9 @@ pnpm docker:setup:dev
 
 ## 当前约定
 
-- 镜像：`postgres:17-alpine`
+- 镜像：`postgres:17.10-alpine3.24`（固定多架构 digest）
 - Compose 文件：`docker-compose/dev/docker-compose.yml`
-- 容器名：`purechat-postgres`
+- 容器名：由 Compose project 自动生成（不要依赖固定容器名）
 - 连接地址：`127.0.0.1:5432`
 - 数据库 / 用户：默认均为 `purechat`；密码由 `pnpm docker:setup:dev` 随机生成，实际值以 `docker-compose/dev/.env` 为准
 - 数据：Docker named volume `postgres_data`

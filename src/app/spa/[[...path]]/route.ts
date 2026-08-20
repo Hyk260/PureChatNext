@@ -1,5 +1,6 @@
 import { analyticsEnv } from '@/envs/analytics'
 import { appEnv, IS_VERCEL } from '@/envs/app'
+import { getProviderEnvKeyFlags } from '@/libs/ai-providers/envKeys'
 import { renderSpaHtml } from '@/server/spaHtml'
 import type { SPAServerConfig } from '@/types/spaServerConfig'
 
@@ -15,6 +16,7 @@ function buildServerConfig(): SPAServerConfig {
     enableVercelAnalytics: analyticsEnv.ENABLE_VERCEL_ANALYTICS,
     debugVercelAnalytics: analyticsEnv.DEBUG_VERCEL_ANALYTICS,
     enableSpeedInsights: IS_VERCEL,
+    providerEnvKeys: getProviderEnvKeyFlags(),
     ...(analyticsEnv.REACT_SCAN_MONITOR_API_KEY ? { reactScanApiKey: analyticsEnv.REACT_SCAN_MONITOR_API_KEY } : {}),
   }
 }

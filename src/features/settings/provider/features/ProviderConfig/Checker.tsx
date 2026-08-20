@@ -3,9 +3,12 @@
 import { CheckCircleFilled } from '@ant-design/icons'
 import { Alert, Button, Flexbox, ModelIcon, Select } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
+import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useEffect, useMemo, useState } from 'react'
 
+import { getSettingsProviderMeta, PROVIDER_ENV_API_KEY_NAME } from '../../const'
+import { loadProviderEnvKeyFlags, providerHasEnvApiKey } from '../../envKeys'
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
 import type { ProviderId } from '../../types'
 
@@ -20,8 +23,10 @@ interface CheckerProps {
 }
 
 const Checker = memo<CheckerProps>(({ provider }) => {
+  const { modal } = useApp()
   const config = useProviderConfigStore((s) => s.configs[provider])
   const setCheckModel = useProviderConfigStore((s) => s.setCheckModel)
+  const meta = getSettingsProviderMeta(provider)
 
   const models = useMemo(() => config?.models ?? [], [config?.models])
   const persistedCheckModel = config?.checkModel ?? models[0]?.id ?? ''
@@ -37,6 +42,10 @@ const Checker = memo<CheckerProps>(({ provider }) => {
     setError(undefined)
   }, [persistedCheckModel, provider])
 
+  useEffect(() => {
+    void loadProviderEnvKeyFlags().catch(() => {})
+  }, [])
+
   const sortedModelIds = useMemo(() => {
     const next = [...models]
     next.sort((a, b) => {
@@ -49,12 +58,25 @@ const Checker = memo<CheckerProps>(({ provider }) => {
   }, [checkModel, models])
 
   const checkConnection = async () => {
+    const apiKey = config?.apiKey.trim() ?? ''
+    const hasBrowserKey = Boolean(apiKey)
+
+    if (!hasBrowserKey) {
+      const hasEnvKey = await providerHasEnvApiKey(provider)
+      if (hasEnvKey === false) {
+        modal.error({
+          title: '缺少 API Key',
+          content: `浏览器与环境变量均未配置 ${meta.name} API Key。请先填写，或在服务端设置 ${PROVIDER_ENV_API_KEY_NAME[provider]}。`,
+        })
+        return
+      }
+    }
+
     setPass(false)
     setError(undefined)
     setLoading(true)
 
     try {
-      const apiKey = config?.apiKey.trim() ?? ''
       const baseURL = config?.baseURL.trim() ?? ''
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',

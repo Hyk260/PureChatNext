@@ -1,5 +1,5 @@
-import { copyFile, readFile, writeFile } from 'node:fs/promises'
-import { constants as fsConstants, existsSync } from 'node:fs'
+import { readFile, writeFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 import process from 'node:process'
@@ -111,11 +111,25 @@ function ensureDockerReady() {
 
 async function setupDev() {
   const source = path.join(devDir, '.env.example')
-  await copyFile(source, devEnv, fsConstants.COPYFILE_EXCL).catch((error: NodeJS.ErrnoException) => {
-    if (error.code === 'EEXIST') throw new Error('docker-compose/dev/.env 已存在，未覆盖')
-    throw error
-  })
-  console.log('✅ 已创建 docker-compose/dev/.env')
+  const template = await readFile(source, 'utf8')
+  const replacements: Record<string, string> = {
+    __GENERATE_POSTGRES_PASSWORD__: secret(24),
+    __GENERATE_RUSTFS_ACCESS_KEY__: secret(18),
+    __GENERATE_RUSTFS_SECRET__: secret(24),
+    __GENERATE_SEARXNG_SECRET__: secret(),
+  }
+  const contents = Object.entries(replacements).reduce(
+    (value, [placeholder, replacement]) => value.replace(placeholder, replacement),
+    template
+  )
+
+  await writeFile(devEnv, contents, { encoding: 'utf8', flag: 'wx', mode: 0o600 }).catch(
+    (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EEXIST') throw new Error('docker-compose/dev/.env 已存在，未覆盖')
+      throw error
+    }
+  )
+  console.log('✅ 已创建 docker-compose/dev/.env（已生成随机本地凭证）')
 }
 
 const secret = (bytes = 32) => randomBytes(bytes).toString('base64url')

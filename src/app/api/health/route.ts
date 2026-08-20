@@ -1,7 +1,5 @@
-import { sql } from 'drizzle-orm'
-
-import { serverDB } from '@pure/database/core/db-adaptor'
 import { getChannelGatewaySummary } from '@/server/channel-gateway'
+import { checkHealthDependencies } from '@/server/health/dependencies'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -18,16 +16,17 @@ function resolveHealthStatus(unhealthy: boolean, gatewayStatus: string) {
 
 /**
  * GET /api/health
- * 健康检查：探测数据库连通性与渠道 Gateway 状态
+ * 健康检查：探测已配置的数据库、Redis、对象存储、搜索服务与渠道 Gateway 状态
  */
 export async function GET() {
   try {
-    await serverDB.execute(sql`SELECT 1`)
+    const checks = await checkHealthDependencies()
     const gateway = getChannelGatewaySummary()
-    const unhealthy = gateway.status === 'unhealthy'
+    const unhealthy = gateway.status === 'unhealthy' || Object.values(checks).some((status) => status === 'unhealthy')
+    const degraded = gateway.status === 'degraded'
 
     return Response.json(
-      { gateway, status: resolveHealthStatus(unhealthy, gateway.status) },
+      { checks, gateway, status: resolveHealthStatus(unhealthy, degraded ? 'degraded' : gateway.status) },
       { headers: responseHeaders, status: unhealthy ? 503 : 200 }
     )
   } catch {

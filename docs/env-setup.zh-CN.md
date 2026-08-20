@@ -19,7 +19,7 @@ DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:
 
 # 本地 Docker PostgreSQL（pnpm dev:docker）改用：
 # DATABASE_DRIVER=node
-# DATABASE_URL=postgresql://purechat:purechat@127.0.0.1:5432/purechat
+# DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat
 # 密码需与 docker-compose/dev/.env 中 POSTGRES_PASSWORD 一致
 
 # 应用对外地址（本地统一 SPA 端口）
@@ -136,7 +136,7 @@ Supabase 的匿名/公开密钥，用于客户端访问。
 PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操作。
 
 - Supabase：`postgresql://postgres:[密码]@db.[项目引用].supabase.co:5432/postgres`
-- 本地 Docker：`postgresql://purechat:purechat@127.0.0.1:5432/purechat`（默认与 `docker-compose/dev/.env.example` 一致）
+- 本地 Docker：`postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat`（密码以 `docker-compose/dev/.env` 为准）
 - 生产 Docker：由 Compose 注入 `postgresql:5432` 内部地址，不应在宿主机 `.env.local` 中改写为该服务名
 - Supabase 支持直接连接（5432）或连接池（6543）；本地实例使用 5432
 
@@ -173,8 +173,8 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 本地 Docker RustFS（`pnpm dev:docker`）推荐与 `docker-compose/dev/.env` 中 `RUSTFS_*` 对齐：
 
 ```env
-S3_ACCESS_KEY_ID=purechat
-S3_SECRET_ACCESS_KEY=123456qwer
+S3_ACCESS_KEY_ID=<docker-compose/dev/.env 中的 RUSTFS_ACCESS_KEY>
+S3_SECRET_ACCESS_KEY=<docker-compose/dev/.env 中的 RUSTFS_SECRET_KEY>
 S3_BUCKET=purechat
 S3_ENDPOINT=http://localhost:9000
 S3_ENABLE_PATH_STYLE=1

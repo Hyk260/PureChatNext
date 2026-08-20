@@ -28,7 +28,7 @@ COPY packages ./packages
 RUN set -e; \
     if [ "${USE_CN_MIRROR:-false}" = "true" ]; then npm config set registry https://registry.npmmirror.com/; fi; \
     export COREPACK_NPM_REGISTRY="$(npm config get registry | sed 's/\/$//')"; \
-    npm install --global corepack@latest; \
+    npm install --global corepack@0.31.0; \
     corepack enable; \
     corepack use "$(sed -n 's/.*"packageManager": "\(.*\)".*/\1/p' package.json)"; \
     pnpm install --frozen-lockfile

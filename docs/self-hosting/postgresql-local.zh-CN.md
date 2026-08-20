@@ -17,7 +17,7 @@ pnpm docker:setup:dev
 - Compose 文件：`docker-compose/dev/docker-compose.yml`
 - 容器名：`purechat-postgres`
 - 连接地址：`127.0.0.1:5432`
-- 数据库 / 用户 / 密码：默认均为 `purechat`（见 `docker-compose/dev/.env`）
+- 数据库 / 用户：默认均为 `purechat`；密码由 `pnpm docker:setup:dev` 随机生成，实际值以 `docker-compose/dev/.env` 为准
 - 数据：Docker named volume `postgres_data`
 
 ## 环境变量
@@ -27,14 +27,14 @@ pnpm docker:setup:dev
 ```env
 POSTGRES_DB=purechat
 POSTGRES_USER=purechat
-POSTGRES_PASSWORD=purechat
+POSTGRES_PASSWORD=<从 docker-compose/dev/.env 读取>
 ```
 
 ### 应用侧（项目根 `.env.local`）
 
 ```env
 DATABASE_DRIVER=node
-DATABASE_URL=postgresql://purechat:purechat@127.0.0.1:5432/purechat
+DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat
 ```
 
 `DATABASE_DRIVER=node` 会关闭本地连接的强制 SSL。`DATABASE_URL` 中的用户、库名、密码必须与 compose `.env` 一致。密码包含 `@`、`:`、`/`、`?`、`#` 或 `%` 时必须进行 URL 编码。不要提交 `.env.local` 或 `docker-compose/dev/.env`。

@@ -62,14 +62,14 @@ pnpm db:migrate
 
 ```env
 DATABASE_DRIVER=node
-DATABASE_URL=postgresql://purechat:purechat@127.0.0.1:5432/purechat
+DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat
 
 REDIS_URL=redis://127.0.0.1:6379
 REDIS_PREFIX=purechat
 DISABLE_REDIS=0
 
-S3_ACCESS_KEY_ID=purechat
-S3_SECRET_ACCESS_KEY=123456qwer
+S3_ACCESS_KEY_ID=<docker-compose/dev/.env 中的 RUSTFS_ACCESS_KEY>
+S3_SECRET_ACCESS_KEY=<docker-compose/dev/.env 中的 RUSTFS_SECRET_KEY>
 S3_BUCKET=purechat
 S3_ENDPOINT=http://localhost:9000
 S3_ENABLE_PATH_STYLE=1

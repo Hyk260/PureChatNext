@@ -50,6 +50,7 @@ export interface RedisClient {
   mget: (...keys: RedisKey[]) => Promise<(string | null)[]>
   mset: (values: RedisMSetArgument) => Promise<'OK'>
   pipeline: () => RedisPipeline
+  ping: () => Promise<string>
   set: (key: RedisKey, value: RedisValue, options?: SetOptions) => Promise<RedisSetResult>
   setex: (key: RedisKey, seconds: number, value: RedisValue) => Promise<'OK'>
   ttl: (key: RedisKey) => Promise<number>

@@ -10,7 +10,7 @@ pnpm dev:docker
 pnpm db:migrate
 ```
 
-开发服务只监听 `127.0.0.1`。端口、镜像与 Redis 内存上限可在 `docker-compose/dev/.env` 修改。`pnpm dev:docker` 结束后会打印 PostgreSQL、Redis、RustFS、SearXNG 的入口与凭证位置。
+开发服务只监听 `127.0.0.1`。`pnpm docker:setup:dev` 会创建权限为 `0600` 的 `.env`，并为 PostgreSQL、RustFS、SearXNG 生成随机本地凭证；不要直接把 `.env.example` 复制成 `.env`。端口、镜像与 Redis 内存上限可在 `docker-compose/dev/.env` 修改。`pnpm dev:docker` 结束后会打印各服务入口与凭证位置。
 
 ```bash
 pnpm docker:validate
@@ -49,12 +49,12 @@ node /app/docker-migrate.mjs && exec node /app/server.js
 pnpm docker:setup:deploy
 ```
 
-该命令生成 `docker-compose/deploy/.env`，包含随机 PostgreSQL/Redis/RustFS 密码、鉴权密钥与 JWKS。已有文件不会被覆盖。随后必须修改：
+该命令生成权限为 `0600` 的 `docker-compose/deploy/.env`，包含随机 PostgreSQL/Redis/RustFS/SearXNG 密码、鉴权密钥与 JWKS。已有文件不会被覆盖。随后必须修改：
 
 - `APP_URL`：正式 HTTPS 地址；
 - `ALLOWED_ORIGINS`：与正式地址一致；
 - 至少一个模型 Provider 密钥；
-- 如需固定供应链版本，将 RustFS/SearXNG 镜像改为验证过的 tag 或 digest。
+- 将 RustFS、SearXNG、MinIO MC 以及基础镜像固定到经过验证的 tag 或 digest，不要在生产环境使用 `latest`。
 
 启动：
 
@@ -64,7 +64,7 @@ pnpm docker:deploy
 
 该命令等价于使用生产 `.env` 执行 `docker compose up -d --build --wait`。后续升级也复用同一命令。
 
-应用启动前会等待 PostgreSQL、获取 advisory lock 并自动执行 Drizzle migration；迁移失败时应用不会启动。健康检查为 `GET /api/health`。
+应用启动前会等待 PostgreSQL、Redis、RustFS、SearXNG，获取 advisory lock 并自动执行 Drizzle migration；迁移失败时应用不会启动。`GET /api/health` 会检查已配置的依赖，未配置的可选依赖显示为 `skipped`。
 
 生产 Compose 不暴露 PostgreSQL、Redis、RustFS 或 SearXNG 端口，RustFS bucket 也不会设置匿名读取策略；文件经应用鉴权代理访问。应用只监听宿主机 `127.0.0.1:3210`。Nginx 示例：
 

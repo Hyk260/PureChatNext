@@ -30,7 +30,8 @@ services:
       CRON_SECRET: ${CRON_SECRET}
       DATABASE_DRIVER: node
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DB}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      REDIS_URL: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PREFIX: purechat
       S3_ACCESS_KEY_ID: ${RUSTFS_ACCESS_KEY}
       S3_SECRET_ACCESS_KEY: ${RUSTFS_SECRET_KEY}
@@ -40,6 +41,9 @@ services:
       S3_SET_ACL: '0'
       SEARCH_PROVIDERS: searxng
       SEARXNG_URL: http://searxng:8080
+      NODE_OPTIONS: >-
+        --dns-result-order=ipv4first --use-openssl-ca
+        --max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE:-768}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -51,6 +55,9 @@ services:
         condition: service_healthy
     restart: unless-stopped
     security_opt: [no-new-privileges:true]
+    mem_limit: ${APP_MEMORY_LIMIT:-1g}
+    cpus: ${APP_CPUS:-2.0}
+    pids_limit: ${APP_PIDS_LIMIT:-512}
     logging: *default-logging
     networks: [purechat-network]
 
@@ -69,6 +76,10 @@ services:
       timeout: 5s
       retries: 12
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    mem_limit: ${POSTGRES_MEMORY_LIMIT:-1g}
+    cpus: ${POSTGRES_CPUS:-1.5}
+    pids_limit: ${POSTGRES_PIDS_LIMIT:-256}
     logging: *default-logging
     networks: [purechat-network]
 
@@ -78,18 +89,11 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     command:
-      - redis-server
-      - --requirepass
-      - ${REDIS_PASSWORD}
-      - --save
-      - '60'
-      - '1000'
-      - --appendonly
-      - 'yes'
-      - --maxmemory
-      - ${REDIS_MAXMEMORY:-2gb}
-      - --maxmemory-policy
-      - allkeys-lru
+      - /bin/sh
+      - -ec
+      - |
+        exec redis-server --requirepass "$${REDIS_PASSWORD}" --save 60 1000 \
+          --appendonly yes --maxmemory "${REDIS_MAXMEMORY:-512mb}" --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
     healthcheck:
@@ -98,17 +102,21 @@ services:
       timeout: 3s
       retries: 12
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    mem_limit: ${REDIS_MEMORY_LIMIT:-512m}
+    cpus: ${REDIS_CPUS:-1.0}
+    pids_limit: ${REDIS_PIDS_LIMIT:-256}
     logging: *default-logging
     networks: [purechat-network]
 
   rustfs:
-    image: ${RUSTFS_IMAGE:-rustfs/rustfs:latest}
+    image: ${RUSTFS_IMAGE:-rustfs/rustfs:1.0.0-beta.12}
     container_name: purechat-deploy-rustfs
     environment:
-      RUSTFS_CONSOLE_ENABLE: 'true'
+      RUSTFS_CONSOLE_ENABLE: 'false'
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
-    command: ['--access-key', '${RUSTFS_ACCESS_KEY}', '--secret-key', '${RUSTFS_SECRET_KEY}', '/data']
+    command: ['/data']
     volumes:
       - rustfs_data:/data
     healthcheck:
@@ -117,11 +125,15 @@ services:
       timeout: 3s
       retries: 30
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    mem_limit: ${RUSTFS_MEMORY_LIMIT:-768m}
+    cpus: ${RUSTFS_CPUS:-1.0}
+    pids_limit: ${RUSTFS_PIDS_LIMIT:-256}
     logging: *default-logging
     networks: [purechat-network]
 
   rustfs-init:
-    image: ${MC_IMAGE:-minio/mc:latest}
+    image: ${MC_IMAGE:-minio/mc:RELEASE.2025-08-13T08-35-41Z}
     container_name: purechat-deploy-rustfs-init
     depends_on:
       rustfs:
@@ -138,11 +150,15 @@ services:
         mc alias set rustfs http://rustfs:9000 "$${RUSTFS_ACCESS_KEY}" "$${RUSTFS_SECRET_KEY}"
         mc mb "rustfs/$${RUSTFS_BUCKET}" --ignore-existing
     restart: 'no'
+    security_opt: [no-new-privileges:true]
+    mem_limit: ${RUSTFS_INIT_MEMORY_LIMIT:-256m}
+    cpus: ${RUSTFS_INIT_CPUS:-0.5}
+    pids_limit: ${RUSTFS_INIT_PIDS_LIMIT:-128}
     logging: *default-logging
     networks: [purechat-network]
 
   searxng:
-    image: ${SEARXNG_IMAGE:-searxng/searxng:latest}
+    image: ${SEARXNG_IMAGE:-searxng/searxng:2026.8.3-aa059419f}
     container_name: purechat-deploy-searxng
     volumes:
       - ../dev/searxng-settings.yml:/etc/searxng/settings.yml:ro
@@ -161,6 +177,10 @@ services:
       timeout: 5s
       retries: 12
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    mem_limit: ${SEARXNG_MEMORY_LIMIT:-768m}
+    cpus: ${SEARXNG_CPUS:-1.5}
+    pids_limit: ${SEARXNG_PIDS_LIMIT:-256}
     logging: *default-logging
     networks: [purechat-network]
 

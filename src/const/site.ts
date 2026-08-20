@@ -9,9 +9,15 @@ export const SITE_DEFAULT_URL = 'https://next.purechat.cn'
 
 export const SITE_REPOSITORY_URL = 'https://github.com/Hyk260/PureChatNext'
 
+export const SITE_REPOSITORY_SLUG = 'Hyk260/PureChatNext'
+
 export const SITE_DISCUSSIONS_URL = `${SITE_REPOSITORY_URL}/discussions`
 
 export const SITE_ISSUES_URL = `${SITE_REPOSITORY_URL}/issues`
+
+export const SITE_RELEASES_URL = `${SITE_REPOSITORY_URL}/releases`
+
+export const SITE_LICENSE_URL = `${SITE_REPOSITORY_URL}/blob/main/LICENSE`
 
 export const SITE_KEYWORDS = [
   'AI 助手',

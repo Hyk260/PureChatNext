@@ -209,10 +209,7 @@ export const webRoutes: RouteObject[] = [
         path: 'creds',
       },
       {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.AboutPage })),
-          'Settings > About'
-        ),
+        element: dynamicElement(() => import('@/routes/settings/about/page'), 'Settings > About'),
         path: 'about',
       },
       {

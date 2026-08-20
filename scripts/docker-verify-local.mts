@@ -14,6 +14,7 @@ const templateFile = path.join(root, 'docker-compose/deploy/.env.example')
 const keep = process.argv.includes('--keep')
 const skipBuild = process.argv.includes('--skip-build')
 const skipScan = process.argv.includes('--skip-scan')
+const externalScan = process.argv.includes('--external-scan')
 const platform =
   process.argv.find((arg) => arg.startsWith('--platform='))?.slice('--platform='.length) ??
   (() => {
@@ -502,6 +503,8 @@ async function main() {
     await smokeAndPersistence(contents, port, persistenceKey)
     if (skipScan) {
       console.warn('⚠️ 已显式跳过镜像漏洞门禁；此选项仅供隔离环境排障，不得用于生产验收')
+    } else if (externalScan) {
+      console.log('ℹ️ 镜像漏洞门禁由外部扫描步骤执行')
     } else {
       scoutGate()
     }

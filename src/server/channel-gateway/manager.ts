@@ -49,8 +49,7 @@ type ManagerOptions = {
 
 function safeError(error: unknown): { code: string; message: string } {
   const code = String((error as { code?: string; name?: string })?.code || (error as Error)?.name || 'GATEWAY_ERROR')
-  const raw = error instanceof Error ? error.message : 'Channel gateway failed'
-  return { code: code.slice(0, 100), message: raw.replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]').slice(0, 500) }
+  return { code: code.replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 100), message: 'Channel gateway unavailable' }
 }
 
 function abortableDelay(ms: number, signal: AbortSignal): Promise<void> {

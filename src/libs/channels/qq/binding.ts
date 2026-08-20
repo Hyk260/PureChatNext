@@ -29,9 +29,7 @@ export type BindQQCredentialsParams = {
   userId: string
 }
 
-function resolveQQChannelModel(params: {
-  agentModel?: string | null
-  agentProvider?: string | null
+export function resolveQQChannelModel(params: {
   model?: string
   previousModel?: string | null
   previousProvider?: string | null
@@ -47,11 +45,14 @@ function resolveQQChannelModel(params: {
     return { model, provider: params.provider }
   }
 
-  const fallbackRaw = params.previousProvider || params.agentProvider || 'deepseek'
-  const provider = isQQProviderId(fallbackRaw) ? fallbackRaw : 'deepseek'
+  // QQ is an independent channel. Unless the user explicitly chose a provider
+  // or is reusing an existing binding, prefer the server-managed PureChat quota
+  // instead of inheriting the Agent's web-chat provider.
+  const fallbackRaw = params.previousProvider || 'purechat'
+  const provider = isQQProviderId(fallbackRaw) ? fallbackRaw : 'purechat'
   const unavailable = qqChannelUnavailableReason(provider)
   if (unavailable) throw new QQBindingError(unavailable)
-  const model = params.model || params.previousModel || params.agentModel || defaultQQModel(provider)
+  const model = params.model || params.previousModel || defaultQQModel(provider)
   const modelError = validateQQModel(provider, model)
   if (modelError) throw new QQBindingError(modelError)
   return { model, provider }
@@ -79,8 +80,6 @@ export async function bindQQCredentials(params: BindQQCredentialsParams) {
   if (previous?.applicationId) await invalidateQQChat(previous.applicationId)
 
   const channelModel = resolveQQChannelModel({
-    agentModel: agent.model,
-    agentProvider: agent.provider,
     model: params.model,
     previousModel: previous?.model,
     previousProvider: previous?.provider,

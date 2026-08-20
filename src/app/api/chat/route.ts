@@ -26,6 +26,7 @@ import {
 } from '@/server/purechat'
 import {
   getPureChatStreamErrorMessage,
+  getPublicGatewayErrorMessage,
   isPureChatRestrictedModelError,
   PURECHAT_MODEL_UNAVAILABLE_MESSAGE,
 } from '@/server/purechat/gatewayError'
@@ -303,15 +304,12 @@ export async function POST(request: Request) {
       if (isPureChatRestrictedModelError(error)) {
         return new ChatSDKError('bad_request:api', PURECHAT_MODEL_UNAVAILABLE_MESSAGE).toResponse()
       }
-      const message = error instanceof Error ? error.message : 'Failed to start chat stream'
       // 上游鉴权失败等：不扣积分（尚未 onEnd）
-      if (/401|unauthorized|invalid.*key/i.test(message)) {
-        return new ChatSDKError('bad_request:api', '服务暂不可用，请稍后重试').toResponse()
+      const publicMessage = getPublicGatewayErrorMessage(error)
+      if (publicMessage === '上游限流，请稍后重试。') {
+        return new ChatSDKError('rate_limit:chat', publicMessage).toResponse()
       }
-      if (/429|rate.?limit/i.test(message)) {
-        return new ChatSDKError('rate_limit:chat', '上游限流，请稍后重试').toResponse()
-      }
-      return new ChatSDKError('bad_request:api', message).toResponse()
+      return new ChatSDKError('bad_request:api', publicMessage).toResponse()
     }
   }
 
@@ -348,7 +346,6 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     log('streamText failed: %o', error)
-    const message = error instanceof Error ? error.message : 'Failed to start chat stream'
-    return new ChatSDKError('bad_request:api', message).toResponse()
+    return new ChatSDKError('bad_request:api', getPublicGatewayErrorMessage(error)).toResponse()
   }
 }

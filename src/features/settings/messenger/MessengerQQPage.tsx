@@ -19,8 +19,8 @@ import {
   formatMessengerActiveAt,
   getMessengerPlatform,
   isMessengerProviderId,
-  MESSENGER_DEFAULT_MODELS,
-  MESSENGER_DEFAULT_PROVIDER,
+  QQ_DEFAULT_MODEL,
+  QQ_DEFAULT_PROVIDER,
 } from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
@@ -127,8 +127,8 @@ const MessengerQQPage = memo(() => {
   const [binding, setBinding] = useState(false)
   const [saving, setSaving] = useState(false)
   const [agentId, setAgentId] = useState('agt_inbox')
-  const [provider, setProvider] = useState<QQProviderId>(MESSENGER_DEFAULT_PROVIDER)
-  const [modelId, setModelId] = useState(MESSENGER_DEFAULT_MODELS.deepseek)
+  const [provider, setProvider] = useState<QQProviderId>(QQ_DEFAULT_PROVIDER)
+  const [modelId, setModelId] = useState(QQ_DEFAULT_MODEL)
 
   const {
     data: status,

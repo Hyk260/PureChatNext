@@ -1,3 +1,4 @@
+# Docker 工作流：校验 Compose 配置、运行健康检查，并构建 amd64/arm64 镜像进行冒烟验证。
 name: Docker
 
 on:
@@ -16,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
       - uses: pnpm/action-setup@v4
         with:
           version: 10.33.4
@@ -26,6 +28,8 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Validate Compose
+        env:
+          SEARXNG_SECRET: ci-compose-validation-secret
         run: pnpm docker:validate
       - name: Test health route
         run: pnpm exec vitest run src/app/api/health/route.test.ts

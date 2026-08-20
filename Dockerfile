@@ -16,6 +16,12 @@ RUN set -e; \
 FROM base AS deps
 WORKDIR /app
 
+# node-pty may fall back to node-gyp when an architecture-specific prebuild is unavailable.
+RUN set -e; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends python3 make g++; \
+    rm -rf /var/lib/apt/lists/*
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages ./packages
 

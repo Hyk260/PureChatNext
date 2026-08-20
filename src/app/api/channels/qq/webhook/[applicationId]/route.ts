@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 import { QQ_OP_CODES, signWebhookResponse, verifyWebhookSignature } from '@pure/chat-adapter/qq'
-import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { decryptCredentials } from '@/libs/channels/qq/encrypt'
 import { authorizeQQInternalWebhook } from '@/libs/channels/qq/webhookAuth'
 import { logger } from '@/libs/logger'
@@ -51,6 +50,43 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   try {
+    const { bodyText, payload } = await readQQWebhookBody(request)
+    const hasVerificationToken = request.nextUrl.searchParams.has('verification_token')
+    if (payload?.op === QQ_OP_CODES.VERIFY && hasVerificationToken) {
+      const verificationToken = request.nextUrl.searchParams.get('verification_token') || ''
+
+      try {
+        if (!verificationToken.startsWith('enc:v1:')) throw new Error('Invalid verification token')
+
+        const credentials = decryptCredentials(verificationToken)
+        const headerAppId = request.headers.get('X-Bot-Appid')
+        if (
+          credentials.connectionMode !== 'webhook' ||
+          credentials.appId !== applicationId ||
+          (headerAppId !== null && headerAppId !== applicationId) ||
+          !credentials.appSecret
+        ) {
+          throw new Error('Invalid verification token')
+        }
+
+        const eventTs = payload.d?.event_ts
+        const plainToken = payload.d?.plain_token
+        if (typeof eventTs !== 'string' || !eventTs || typeof plainToken !== 'string' || !plainToken) {
+          return new NextResponse('Missing verification data', { status: 400 })
+        }
+
+        return NextResponse.json({
+          plain_token: plainToken,
+          signature: signWebhookResponse(eventTs, plainToken, credentials.appSecret),
+        })
+      } catch {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    }
+
+    const { ChannelBindingModel, QQ_PLATFORM } = await import(
+      '@pure/database/models/channelBinding'
+    )
     const model = new ChannelBindingModel()
     const binding = await model.findByApplicationId(QQ_PLATFORM, applicationId)
     if (!binding || !binding.enabled) {
@@ -62,7 +98,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { bodyText, payload } = await readQQWebhookBody(request)
     if (payload?.op === QQ_OP_CODES.VERIFY) {
       const eventTs = payload.d?.event_ts
       const plainToken = payload.d?.plain_token

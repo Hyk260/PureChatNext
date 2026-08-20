@@ -8,6 +8,7 @@ import { authorizeQQInternalWebhook } from '@/libs/channels/qq/webhookAuth'
 import { logger } from '@/libs/logger'
 
 export const maxDuration = 300
+export const preferredRegion = 'sin1'
 export const runtime = 'nodejs'
 
 type RouteContext = { params: Promise<{ applicationId: string }> }
@@ -51,44 +52,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   try {
     const { bodyText, payload } = await readQQWebhookBody(request)
-    const hasVerificationToken = request.nextUrl.searchParams.has('verification_token')
-    if (payload?.op === QQ_OP_CODES.VERIFY && hasVerificationToken) {
-      const verificationToken = request.nextUrl.searchParams.get('verification_token') || ''
-
-      try {
-        if (!verificationToken.startsWith('enc:v1:')) throw new Error('Invalid verification token')
-
-        const credentials = decryptCredentials(verificationToken)
-        const headerAppId = request.headers.get('X-Bot-Appid')
-        if (
-          credentials.connectionMode !== 'webhook' ||
-          credentials.appId !== applicationId ||
-          (headerAppId !== null && headerAppId !== applicationId) ||
-          !credentials.appSecret
-        ) {
-          throw new Error('Invalid verification token')
-        }
-
-        const eventTs = payload.d?.event_ts
-        const plainToken = payload.d?.plain_token
-        if (typeof eventTs !== 'string' || !eventTs || typeof plainToken !== 'string' || !plainToken) {
-          return new NextResponse('Missing verification data', { status: 400 })
-        }
-
-        return NextResponse.json({
-          plain_token: plainToken,
-          signature: signWebhookResponse(eventTs, plainToken, credentials.appSecret),
-        })
-      } catch {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-    }
-
+    const bindingLookupStartedAt = performance.now()
     const { ChannelBindingModel, QQ_PLATFORM } = await import(
       '@pure/database/models/channelBinding'
     )
     const model = new ChannelBindingModel()
     const binding = await model.findByApplicationId(QQ_PLATFORM, applicationId)
+    const bindingLookupDuration = performance.now() - bindingLookupStartedAt
     if (!binding || !binding.enabled) {
       return NextResponse.json({ error: 'Binding not found' }, { status: 404 })
     }
@@ -105,10 +75,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
         return new NextResponse('Missing verification data', { status: 400 })
       }
 
-      return NextResponse.json({
+      const signingStartedAt = performance.now()
+      const response = NextResponse.json({
         plain_token: plainToken,
         signature: signWebhookResponse(eventTs, plainToken, credentials.appSecret),
       })
+      const signingDuration = performance.now() - signingStartedAt
+      response.headers.set(
+        'Server-Timing',
+        `binding;dur=${bindingLookupDuration.toFixed(1)}, sign;dur=${signingDuration.toFixed(1)}`
+      )
+      return response
     }
 
     if (credentials.connectionMode === 'webhook') {

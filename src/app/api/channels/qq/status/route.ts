@@ -48,14 +48,10 @@ export const GET = withAuth(async (_request, { userId }) => {
 
   let connectionMode: 'websocket' | 'webhook' = 'websocket'
   let appId = binding.applicationId
-  let verificationToken: string | undefined
   try {
     const credentials = decryptCredentials(binding.credentials)
     connectionMode = credentials.connectionMode
     appId = credentials.appId || binding.applicationId
-    if (connectionMode === 'webhook' && binding.credentials.startsWith('enc:v1:')) {
-      verificationToken = binding.credentials
-    }
   } catch {
     /* credentials decrypt failure — still report connected */
   }
@@ -64,7 +60,6 @@ export const GET = withAuth(async (_request, { userId }) => {
     `/api/channels/qq/webhook/${encodeURIComponent(binding.applicationId)}`,
     resolveAppBaseUrl()
   )
-  if (verificationToken) webhookUrl.searchParams.set('verification_token', verificationToken)
   const gatewaySupported = gatewayEnv.CHANNEL_GATEWAY_ENABLED
   const heartbeatFresh = Boolean(binding.lastHeartbeatAt && Date.now() - binding.lastHeartbeatAt.getTime() <= 90_000)
   const runtimeStatus = resolveQqRuntimeStatus({

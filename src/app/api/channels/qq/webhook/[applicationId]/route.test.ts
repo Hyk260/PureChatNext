@@ -47,14 +47,9 @@ vi.mock('@/libs/logger', () => ({ logger: { error: vi.fn() } }))
 import { POST } from './route'
 
 const context = { params: Promise.resolve({ applicationId: 'app-1' }) }
-const createRequest = (
-  body: unknown,
-  headers: Record<string, string> = {},
-  verificationToken?: string
-) => {
+const createRequest = (body: unknown, headers: Record<string, string> = {}) => {
   const bodyText = typeof body === 'string' ? body : JSON.stringify(body)
   const url = new URL('http://localhost/api/channels/qq/webhook/app-1')
-  if (verificationToken !== undefined) url.searchParams.set('verification_token', verificationToken)
 
   return new NextRequest(url, {
     body: bodyText,
@@ -85,86 +80,7 @@ describe('POST /api/channels/qq/webhook/[applicationId]', () => {
     mocks.touchActive.mockResolvedValue(undefined)
   })
 
-  it('signs a tokenized op=13 verification without constructing or calling the database model', async () => {
-    const verificationToken = encryptCredentials({
-      appId: 'app-1',
-      appSecret: 'qq-app-secret',
-      connectionMode: 'webhook',
-    })
-    const response = await POST(
-      createRequest(
-        { d: { event_ts: '1723987200', plain_token: 'plain-token' }, op: 13 },
-        { 'X-Bot-Appid': 'app-1' },
-        verificationToken
-      ),
-      context
-    )
-
-    expect(response.status).toBe(200)
-    const data = (await response.json()) as { plain_token: string; signature: string }
-    expect(data).toEqual({
-      plain_token: 'plain-token',
-      signature: signWebhookResponse('1723987200', 'plain-token', 'qq-app-secret'),
-    })
-    expect(data.signature).toMatch(/^[0-9a-f]{128}$/)
-    expect(mocks.databaseModuleLoaded).not.toHaveBeenCalled()
-    expect(mocks.constructBindingModel).not.toHaveBeenCalled()
-    expect(mocks.findByApplicationId).not.toHaveBeenCalled()
-    expect(mocks.chatModuleLoaded).not.toHaveBeenCalled()
-    expect(mocks.getOrCreateQQChat).not.toHaveBeenCalled()
-    expect(mocks.touchActive).not.toHaveBeenCalled()
-  })
-
-  const invalidTokenCases: Array<[string, string, Record<string, string>]> = [
-    [
-      'an applicationId mismatch',
-      encryptCredentials({
-        appId: 'other-app',
-        appSecret: 'qq-app-secret',
-        connectionMode: 'webhook',
-      }),
-      {},
-    ],
-    [
-      'an X-Bot-Appid mismatch',
-      encryptCredentials({
-        appId: 'app-1',
-        appSecret: 'qq-app-secret',
-        connectionMode: 'webhook',
-      }),
-      { 'X-Bot-Appid': 'other-app' },
-    ],
-    [
-      'WebSocket credentials',
-      encryptCredentials({
-        appId: 'app-1',
-        appSecret: 'qq-app-secret',
-        connectionMode: 'websocket',
-      }),
-      {},
-    ],
-    ['invalid ciphertext', 'enc:v1:not-valid', {}],
-    ['plain credentials', 'plain:v1:bm90LWFsbG93ZWQ=', {}],
-  ]
-
-  it.each(invalidTokenCases)('fails closed for tokenized op=13 with %s', async (_case, verificationToken, headers) => {
-    const response = await POST(
-      createRequest(
-        { d: { event_ts: '1723987200', plain_token: 'plain-token' }, op: 13 },
-        headers,
-        verificationToken
-      ),
-      context
-    )
-
-    expect(response.status).toBe(401)
-    expect(mocks.databaseModuleLoaded).not.toHaveBeenCalled()
-    expect(mocks.constructBindingModel).not.toHaveBeenCalled()
-    expect(mocks.findByApplicationId).not.toHaveBeenCalled()
-    expect(mocks.getOrCreateQQChat).not.toHaveBeenCalled()
-  })
-
-  it('preserves the legacy tokenless op=13 database fallback', async () => {
+  it('signs an official tokenless op=13 verification through the appId binding', async () => {
     const response = await POST(
       createRequest({ d: { event_ts: '1723987200', plain_token: 'plain-token' }, op: 13 }),
       context
@@ -178,6 +94,7 @@ describe('POST /api/channels/qq/webhook/[applicationId]', () => {
     expect(mocks.databaseModuleLoaded).toHaveBeenCalledOnce()
     expect(mocks.constructBindingModel).toHaveBeenCalledOnce()
     expect(mocks.findByApplicationId).toHaveBeenCalledWith('qq', 'app-1')
+    expect(response.headers.get('server-timing')).toMatch(/^binding;dur=\d+\.\d, sign;dur=\d+\.\d$/)
     expect(mocks.getOrCreateQQChat).not.toHaveBeenCalled()
     expect(mocks.touchActive).not.toHaveBeenCalled()
   })

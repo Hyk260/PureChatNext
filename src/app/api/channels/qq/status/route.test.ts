@@ -56,7 +56,7 @@ describe('GET /api/channels/qq/status', () => {
     mocks.findByUserAndPlatform.mockResolvedValue(createBinding(encryptedCredentials))
   })
 
-  it('returns an encoded encrypted verification token without exposing the app secret', async () => {
+  it('returns the official tokenless webhook URL without exposing credentials', async () => {
     const response = await GET(new NextRequest('http://localhost/api/channels/qq/status'))
 
     expect(response.status).toBe(200)
@@ -64,8 +64,8 @@ describe('GET /api/channels/qq/status', () => {
     const webhookUrl = new URL(data.webhookUrl)
     expect(webhookUrl.origin).toBe('https://chat.example.com')
     expect(webhookUrl.pathname).toBe('/api/channels/qq/webhook/app-1')
-    expect(webhookUrl.searchParams.get('verification_token')).toBe(encryptedCredentials)
-    expect(data.webhookUrl).toContain('verification_token=enc%3Av1%3A')
+    expect(webhookUrl.search).toBe('')
+    expect(data.webhookUrl).not.toContain(encryptedCredentials)
     expect(data.webhookUrl).not.toContain('never-expose-this-secret')
   })
 
@@ -79,8 +79,7 @@ describe('GET /api/channels/qq/status', () => {
     const response = await GET(new NextRequest('http://localhost/api/channels/qq/status'))
 
     const data = (await response.json()) as { webhookUrl: string }
-    const webhookUrl = new URL(data.webhookUrl)
-    expect(webhookUrl.searchParams.has('verification_token')).toBe(false)
+    expect(new URL(data.webhookUrl).search).toBe('')
     expect(data.webhookUrl).not.toContain(credentials)
   })
 
@@ -94,7 +93,7 @@ describe('GET /api/channels/qq/status', () => {
     const response = await GET(new NextRequest('http://localhost/api/channels/qq/status'))
 
     const data = (await response.json()) as { webhookUrl: string }
-    expect(new URL(data.webhookUrl).searchParams.has('verification_token')).toBe(false)
+    expect(new URL(data.webhookUrl).search).toBe('')
   })
 
   it('does not add a token when encrypted credentials cannot be decrypted', async () => {
@@ -105,6 +104,6 @@ describe('GET /api/channels/qq/status', () => {
     const response = await GET(new NextRequest('http://localhost/api/channels/qq/status'))
 
     const data = (await response.json()) as { webhookUrl: string }
-    expect(new URL(data.webhookUrl).searchParams.has('verification_token')).toBe(false)
+    expect(new URL(data.webhookUrl).search).toBe('')
   })
 })

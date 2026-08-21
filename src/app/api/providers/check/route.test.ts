@@ -80,6 +80,7 @@ describe('POST /api/providers/check', () => {
     expect(mocks.withHealthTimeout).toHaveBeenCalledWith(expect.any(Function), { timeoutMs: 22_000 })
     expect(mocks.generateText).toHaveBeenCalledWith(
       expect.objectContaining({
+        maxRetries: 0,
         maxOutputTokens: 16,
         model: { modelId: 'openai-model' },
         prompt: 'ping',
@@ -111,6 +112,19 @@ describe('POST /api/providers/check', () => {
 
     expect(response.status).toBe(502)
     expect(json.error.message).toBe('请求超时（1 秒）')
+  })
+
+  it('returns upstream rate limiting without retrying or exposing the upstream response', async () => {
+    const rateLimit = Object.assign(new Error('Too Many Requests: sk-secret'), { status: 429 })
+    mocks.generateText.mockRejectedValue(rateLimit)
+
+    const response = await POST(requestFor({ model: 'gpt-test', provider: 'openai', apiKey: 'sk-secret' }))
+    const json = await response.json()
+
+    expect(response.status).toBe(429)
+    expect(json.error.message).toBe('上游限流，请稍后重试')
+    expect(JSON.stringify(json)).not.toContain('sk-secret')
+    expect(mocks.generateText).toHaveBeenCalledWith(expect.objectContaining({ maxRetries: 0 }))
   })
 
   it('checks PureChat through the authenticated, billable runtime', async () => {

@@ -103,7 +103,7 @@ const Checker = memo<CheckerProps>(({ provider }) => {
       if (!response.ok || !json.ok) {
         setPass(false)
         setError({
-          body: json.error?.body ?? json,
+          body: json.error?.body,
           message: json.error?.message || json.cause || json.message || '连通性检查失败',
         })
         return
@@ -164,17 +164,16 @@ const Checker = memo<CheckerProps>(({ provider }) => {
       {error ? (
         <Alert
           showIcon
-          type='error'
-          message={error.message}
-          action={
-            error.body ? (
-              <Flexbox style={{ paddingBlock: 8, paddingInline: 16 }}>
-                <Highlighter actionIconSize='small' language='json' variant='borderless' wrap>
-                  {JSON.stringify(error.body, null, 2)}
-                </Highlighter>
-              </Flexbox>
-            ) : undefined
+          className='min-w-0'
+          extra={
+            error.body == null ? undefined : (
+              <Highlighter actionIconSize='small' language='json' padding={8} variant='borderless' wrap>
+                {JSON.stringify(error.body, null, 2)}
+              </Highlighter>
+            )
           }
+          title={error.message}
+          type='error'
         />
       ) : null}
     </Flexbox>

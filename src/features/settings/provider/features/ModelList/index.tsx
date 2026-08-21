@@ -12,6 +12,7 @@ import { getSettingsProviderMeta } from '../../const'
 import type { ProviderId } from '../../types'
 import EmptyModels from './EmptyModels'
 import HealthCheckModal from './HealthCheckModal'
+import { DEFAULT_HEALTH_CHECK_CONCURRENCY, runWithConcurrency } from './healthCheck'
 import ModelItem from './ModelItem'
 import ModelTitle from './ModelTitle'
 
@@ -29,22 +30,6 @@ type ModelTab = 'all' | 'chat'
 
 interface ModelListProps {
   id: ProviderId
-}
-
-const HEALTH_CHECK_CONCURRENCY = 4
-
-const runWithConcurrency = async <T,>(items: T[], worker: (item: T) => Promise<void>) => {
-  let nextIndex = 0
-  const workerCount = Math.min(HEALTH_CHECK_CONCURRENCY, items.length)
-
-  await Promise.all(
-    Array.from({ length: workerCount }, async () => {
-      while (nextIndex < items.length) {
-        const item = items[nextIndex++]
-        if (item) await worker(item)
-      }
-    })
-  )
 }
 
 const ModelList = memo<ModelListProps>(({ id }) => {
@@ -133,7 +118,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
 
   const handleFetch = showModelFetcher ? () => void fetchRemoteModels() : undefined
 
-  const runHealthCheck = async (timeoutMs: number) => {
+  const runHealthCheck = async (timeoutMs: number, concurrency: number) => {
     setHealthModalOpen(false)
     setHealthLoading(true)
 
@@ -142,57 +127,61 @@ const ModelList = memo<ModelListProps>(({ id }) => {
     const apiKey = config?.apiKey.trim() ?? ''
     const baseURL = config?.baseURL.trim() ?? ''
 
-    await runWithConcurrency(enabledHealthModels, async (model) => {
-      setModelHealth(id, model.id, { status: 'checking' })
+    await runWithConcurrency(
+      enabledHealthModels,
+      async (model) => {
+        setModelHealth(id, model.id, { status: 'checking' })
 
-      try {
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-        if (apiKey) headers.Authorization = `Bearer ${apiKey}`
+        try {
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+          if (apiKey) headers.Authorization = `Bearer ${apiKey}`
 
-        const response = await apiFetch('/api/providers/check', {
-          body: JSON.stringify({
-            baseURL: baseURL || undefined,
-            model: model.id,
-            provider: id,
-            timeoutMs,
-          }),
-          headers,
-          method: 'POST',
-        })
-        const json = (await response.json()) as {
-          durationMs?: number
-          error?: { message?: string }
-          cause?: string
-          message?: string
-          ok?: boolean
-        }
+          const response = await apiFetch('/api/providers/check', {
+            body: JSON.stringify({
+              baseURL: baseURL || undefined,
+              model: model.id,
+              provider: id,
+              timeoutMs,
+            }),
+            headers,
+            method: 'POST',
+          })
+          const json = (await response.json()) as {
+            durationMs?: number
+            error?: { message?: string }
+            cause?: string
+            message?: string
+            ok?: boolean
+          }
 
-        if (!response.ok || !json.ok) {
+          if (!response.ok || !json.ok) {
+            failureCount += 1
+            setModelHealth(id, model.id, {
+              checkedAt: new Date().toISOString(),
+              message: json.error?.message || json.cause || json.message || '检查失败',
+              status: 'failure',
+            })
+            return
+          }
+
+          successCount += 1
+          setModelHealth(id, model.id, {
+            checkedAt: new Date().toISOString(),
+            durationMs: json.durationMs,
+            message: '检查成功',
+            status: 'success',
+          })
+        } catch (error) {
           failureCount += 1
           setModelHealth(id, model.id, {
             checkedAt: new Date().toISOString(),
-            message: json.error?.message || json.cause || json.message || '检查失败',
+            message: error instanceof Error ? error.message : '检查失败',
             status: 'failure',
           })
-          return
         }
-
-        successCount += 1
-        setModelHealth(id, model.id, {
-          checkedAt: new Date().toISOString(),
-          durationMs: json.durationMs,
-          message: '检查成功',
-          status: 'success',
-        })
-      } catch (error) {
-        failureCount += 1
-        setModelHealth(id, model.id, {
-          checkedAt: new Date().toISOString(),
-          message: error instanceof Error ? error.message : '检查失败',
-          status: 'failure',
-        })
-      }
-    })
+      },
+      concurrency || DEFAULT_HEALTH_CHECK_CONCURRENCY
+    )
 
     setHealthLoading(false)
     message.info(`${getSettingsProviderMeta(id).name}：成功 ${successCount} 个，失败 ${failureCount} 个`)
@@ -218,7 +207,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         open={healthModalOpen}
         provider={id}
         onCancel={() => setHealthModalOpen(false)}
-        onStart={(timeoutMs) => void runHealthCheck(timeoutMs)}
+        onStart={(timeoutMs, concurrency) => void runHealthCheck(timeoutMs, concurrency)}
       />
 
       <Tabs

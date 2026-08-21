@@ -13,7 +13,11 @@ import {
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 import { ChatSDKError } from '@/libs/errors'
 import { withHealthTimeout } from '@/server/health/dependencies'
-import { assertPureChatCanChat, chargePureChatGenerateUsage, createPureChatLanguageModel } from '@/server/purechat/runtime'
+import {
+  assertPureChatCanChat,
+  chargePureChatGenerateUsage,
+  createPureChatLanguageModel,
+} from '@/server/purechat/runtime'
 
 export const maxDuration = 150
 
@@ -27,17 +31,52 @@ const normalizeTimeoutMs = (value: unknown) => {
   return Math.min(MAX_TIMEOUT_MS, Math.max(MIN_TIMEOUT_MS, timeoutMs))
 }
 
-const truncate = (value: string, maxLength = 120) => (value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value)
+const truncate = (value: string, maxLength = 120) =>
+  value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value
+
+const getErrorValues = (error: unknown) => {
+  const values: unknown[] = []
+  const pending: unknown[] = [error]
+  const visited = new Set<object>()
+
+  while (pending.length > 0) {
+    const current = pending.shift()
+    if (current == null) continue
+
+    values.push(current)
+    if (typeof current !== 'object') continue
+    if (visited.has(current)) continue
+    visited.add(current)
+
+    const candidate = current as {
+      cause?: unknown
+      errors?: unknown
+      lastError?: unknown
+    }
+    if (candidate.lastError) pending.push(candidate.lastError)
+    if (candidate.cause) pending.push(candidate.cause)
+    if (Array.isArray(candidate.errors)) pending.push(...candidate.errors)
+  }
+
+  return values
+}
 
 const getStatusCode = (error: unknown) => {
-  if (!error || typeof error !== 'object') return undefined
-  const candidate = error as { status?: unknown; statusCode?: unknown }
-  const status = candidate.status ?? candidate.statusCode
-  return typeof status === 'number' ? status : undefined
+  for (const value of getErrorValues(error)) {
+    if (!value || typeof value !== 'object') continue
+    const candidate = value as { status?: unknown; statusCode?: unknown }
+    const status = candidate.status ?? candidate.statusCode
+    if (typeof status === 'number') return status
+  }
+
+  return undefined
 }
 
 const summarizeCheckError = (error: unknown, timeoutMs: number) => {
-  const rawMessage = error instanceof Error ? error.message : String(error)
+  const rawMessage = getErrorValues(error)
+    .map((value) => (value instanceof Error ? value.message : typeof value === 'string' ? value : ''))
+    .filter(Boolean)
+    .join(' | ')
   const message = rawMessage.replace(/Bearer\s+\S+/gi, 'Bearer [redacted]').replace(/sk-[\w-]+/gi, '[redacted]')
   const status = getStatusCode(error) ?? message.match(/\b(401|403|404|408|429|5\d{2})\b/)?.[1]
 
@@ -46,11 +85,13 @@ const summarizeCheckError = (error: unknown, timeoutMs: number) => {
   if (status === 401 || /unauthorized|invalid api key|authentication/i.test(message)) return '鉴权失败'
   if (status === 403 || /forbidden|permission/i.test(message)) return '无权限'
   if (status === 404 || /not found|model.*exist/i.test(message)) return '模型不存在或接口地址错误'
-  if (status === 429 || /rate limit|too many requests/i.test(message)) return '请求过于频繁'
+  if (status === 429 || /rate limit|too many requests/i.test(message)) return '上游限流，请稍后重试'
   if (/fetch failed|network|connect|dns/i.test(message)) return '网络请求失败'
 
   return `接口错误：${truncate(message || '未知错误')}`
 }
+
+const getFailureStatus = (error: unknown) => (getStatusCode(error) === 429 ? 429 : 502)
 
 const failedResponse = (model: string, provider: string, message: string, status = 502) =>
   Response.json(
@@ -125,7 +166,12 @@ export async function POST(request: Request) {
       }
 
       const message = error instanceof Error ? error.message : String(error)
-      return failedResponse(model, provider, summarizeCheckError(error, timeoutMs), /disabled|unavailable/i.test(message) ? 503 : 400)
+      return failedResponse(
+        model,
+        provider,
+        summarizeCheckError(error, timeoutMs),
+        /disabled|unavailable/i.test(message) ? 503 : 400
+      )
     }
   } else {
     const apiKey = resolveProviderApiKey(provider, resolveApiKeyFromHeader(request), body.apiKey)
@@ -146,6 +192,7 @@ export async function POST(request: Request) {
         generateText({
           abortSignal: signal,
           maxOutputTokens: 16,
+          maxRetries: 0,
           model: languageModel,
           prompt: 'ping',
         }),
@@ -177,7 +224,16 @@ export async function POST(request: Request) {
       provider,
     })
   } catch (error) {
-    log('check failed provider=%o model=%o error=%o', provider, model, error)
-    return failedResponse(model, provider, summarizeCheckError(error, timeoutMs))
+    const message = summarizeCheckError(error, timeoutMs)
+    const status = getFailureStatus(error)
+    log(
+      'check failed provider=%o model=%o status=%o errorType=%o reason=%o',
+      provider,
+      model,
+      status,
+      error instanceof Error ? error.name : typeof error,
+      message
+    )
+    return failedResponse(model, provider, message, status)
   }
 }

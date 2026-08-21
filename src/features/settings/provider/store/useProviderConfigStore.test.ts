@@ -31,7 +31,33 @@ describe('PureChat provider config migration', () => {
     expect(config.enabled).toBe(true)
   })
 
-  it('bumps persisted provider settings to version 7', () => {
-    expect(useProviderConfigStore.persist.getOptions().version).toBe(7)
+  it('does not restore an interrupted health check as active', () => {
+    const config = mergeProviderConfig('purechat', {
+      models: [
+        {
+          displayName: 'GPT 5.4 Mini',
+          enabled: true,
+          health: { status: 'checking' },
+          id: 'gpt-5.4-mini',
+          source: 'builtin',
+        },
+      ],
+    })
+
+    expect(config.models[0]?.health).toEqual({ status: 'idle' })
+  })
+
+  it('persists model health state without changing model configuration shape', () => {
+    useProviderConfigStore.getState().setModelHealth('purechat', 'gpt-5.4-mini', {
+      durationMs: 120,
+      message: '检查成功',
+      status: 'success',
+    })
+
+    expect(useProviderConfigStore.getState().configs.purechat.models[0]?.health).toMatchObject({
+      durationMs: 120,
+      status: 'success',
+    })
+    expect(useProviderConfigStore.persist.getOptions().version).toBe(9)
   })
 })

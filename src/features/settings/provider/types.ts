@@ -2,9 +2,19 @@ export type ProviderId = 'openai' | 'deepseek' | 'purechat'
 
 export type ProviderModelSource = 'builtin' | 'remote'
 
+export type ProviderModelHealthStatus = 'idle' | 'checking' | 'success' | 'failure'
+
+export interface ProviderModelHealth {
+  checkedAt?: string
+  durationMs?: number
+  message?: string
+  status: ProviderModelHealthStatus
+}
+
 export interface ProviderModelItem {
   displayName: string
   enabled: boolean
+  health?: ProviderModelHealth
   id: string
   source: ProviderModelSource
 }

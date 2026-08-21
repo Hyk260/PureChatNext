@@ -2,11 +2,14 @@
 
 import { Button, Flexbox, SearchBar, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { LucideRefreshCcwDot } from 'lucide-react'
+import { Activity, LucideRefreshCcwDot } from 'lucide-react'
 import { memo } from 'react'
 
 interface ModelTitleProps {
   loading: boolean
+  healthLoading?: boolean
+  healthModelCount?: number
+  onHealthCheck?: () => void
   onFetch?: () => void
   onKeywordChange: (keyword: string) => void
   searchKeyword: string
@@ -34,7 +37,17 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 const ModelTitle = memo<ModelTitleProps>(
-  ({ total, searchKeyword, onKeywordChange, loading, onFetch, showModelFetcher = true }) => (
+  ({
+    total,
+    searchKeyword,
+    onKeywordChange,
+    loading,
+    healthLoading = false,
+    healthModelCount = 0,
+    onHealthCheck,
+    onFetch,
+    showModelFetcher = true,
+  }) => (
     <Flexbox
       gap={12}
       style={{
@@ -63,6 +76,11 @@ const ModelTitle = memo<ModelTitleProps>(
             value={searchKeyword}
             onInputChange={onKeywordChange}
           />
+          {onHealthCheck && healthModelCount > 0 ? (
+            <Button icon={<Activity size={16} />} loading={healthLoading} onClick={onHealthCheck}>
+              模型健康检查
+            </Button>
+          ) : null}
           {showModelFetcher && onFetch ? (
             <Button icon={<LucideRefreshCcwDot size={16} />} loading={loading} onClick={onFetch}>
               获取模型列表

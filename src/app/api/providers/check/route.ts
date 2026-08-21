@@ -1,6 +1,8 @@
 import { generateText } from 'ai'
 import debug from 'debug'
 
+import { FreePlanLimitError } from '@pure/database/models/credits'
+
 import {
   createProviderLanguageModel,
   isSupportedProviderId,
@@ -8,11 +10,61 @@ import {
   resolveOptionalBaseURL,
   resolveProviderApiKey,
 } from '@/libs/ai-providers/resolveClient'
+import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 import { ChatSDKError } from '@/libs/errors'
+import { withHealthTimeout } from '@/server/health/dependencies'
+import { assertPureChatCanChat, chargePureChatGenerateUsage, createPureChatLanguageModel } from '@/server/purechat/runtime'
 
-export const maxDuration = 30
+export const maxDuration = 150
 
 const log = debug('providers:check')
+const DEFAULT_TIMEOUT_MS = 15_000
+const MIN_TIMEOUT_MS = 1_000
+const MAX_TIMEOUT_MS = 120_000
+
+const normalizeTimeoutMs = (value: unknown) => {
+  const timeoutMs = typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : DEFAULT_TIMEOUT_MS
+  return Math.min(MAX_TIMEOUT_MS, Math.max(MIN_TIMEOUT_MS, timeoutMs))
+}
+
+const truncate = (value: string, maxLength = 120) => (value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value)
+
+const getStatusCode = (error: unknown) => {
+  if (!error || typeof error !== 'object') return undefined
+  const candidate = error as { status?: unknown; statusCode?: unknown }
+  const status = candidate.status ?? candidate.statusCode
+  return typeof status === 'number' ? status : undefined
+}
+
+const summarizeCheckError = (error: unknown, timeoutMs: number) => {
+  const rawMessage = error instanceof Error ? error.message : String(error)
+  const message = rawMessage.replace(/Bearer\s+\S+/gi, 'Bearer [redacted]').replace(/sk-[\w-]+/gi, '[redacted]')
+  const status = getStatusCode(error) ?? message.match(/\b(401|403|404|408|429|5\d{2})\b/)?.[1]
+
+  if (error instanceof Error && error.name === 'AbortError') return `请求超时（${Math.round(timeoutMs / 1000)} 秒）`
+  if (/timeout|timed out|aborted/i.test(message)) return `请求超时（${Math.round(timeoutMs / 1000)} 秒）`
+  if (status === 401 || /unauthorized|invalid api key|authentication/i.test(message)) return '鉴权失败'
+  if (status === 403 || /forbidden|permission/i.test(message)) return '无权限'
+  if (status === 404 || /not found|model.*exist/i.test(message)) return '模型不存在或接口地址错误'
+  if (status === 429 || /rate limit|too many requests/i.test(message)) return '请求过于频繁'
+  if (/fetch failed|network|connect|dns/i.test(message)) return '网络请求失败'
+
+  return `接口错误：${truncate(message || '未知错误')}`
+}
+
+const failedResponse = (model: string, provider: string, message: string, status = 502) =>
+  Response.json(
+    {
+      ok: false,
+      model,
+      provider,
+      error: {
+        message,
+        type: 'ConnectionCheckFailed',
+      },
+    },
+    { status }
+  )
 
 /**
  * POST /api/providers/check
@@ -25,6 +77,7 @@ export async function POST(request: Request) {
     baseURL?: string
     model?: string
     provider?: string
+    timeoutMs?: number
   }
 
   try {
@@ -35,8 +88,9 @@ export async function POST(request: Request) {
 
   const provider = body.provider
   const model = typeof body.model === 'string' ? body.model.trim() : ''
+  const timeoutMs = normalizeTimeoutMs(body.timeoutMs)
 
-  if (!provider || !isSupportedProviderId(provider)) {
+  if (!provider || (provider !== 'purechat' && !isSupportedProviderId(provider))) {
     return new ChatSDKError('bad_request:api', 'Unsupported provider').toResponse()
   }
 
@@ -44,55 +98,86 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api', 'Missing model').toResponse()
   }
 
-  const apiKey = resolveProviderApiKey(provider, resolveApiKeyFromHeader(request), body.apiKey)
   const baseURL = resolveOptionalBaseURL(body.baseURL)
+  let languageModel
+  let pureChatContext:
+    | {
+        settlementId: string
+        settlementPeriod: string
+        userId: string
+      }
+    | undefined
 
-  if (!apiKey) {
-    return new ChatSDKError('bad_request:api', `Missing API key for provider "${provider}"`).toResponse()
-  }
+  if (provider === 'purechat') {
+    const userId = await getAuthenticatedUserId()
+    if (!userId) return new ChatSDKError('unauthorized:chat').toResponse()
 
-  const languageModel = createProviderLanguageModel(provider, model, apiKey, baseURL)
+    try {
+      const settlement = await assertPureChatCanChat(userId, model)
+      const pureChatModel = createPureChatLanguageModel(model)
+      if (!pureChatModel) return failedResponse(model, provider, 'PureChat 暂不可用', 503)
 
-  log('check provider=%o model=%o baseURL=%o', provider, model, baseURL ?? '(default)')
+      languageModel = pureChatModel
+      pureChatContext = { ...settlement, userId }
+    } catch (error) {
+      if (error instanceof FreePlanLimitError) {
+        return new ChatSDKError('free_plan_limit:chat', error.message).toResponse()
+      }
 
-  try {
-    const result = await generateText({
-      model: languageModel,
-      prompt: 'hello',
-    })
+      const message = error instanceof Error ? error.message : String(error)
+      return failedResponse(model, provider, summarizeCheckError(error, timeoutMs), /disabled|unavailable/i.test(message) ? 503 : 400)
+    }
+  } else {
+    const apiKey = resolveProviderApiKey(provider, resolveApiKeyFromHeader(request), body.apiKey)
 
-    if (!result.text?.trim()) {
-      return Response.json(
-        {
-          ok: false,
-          error: {
-            message: 'Connection check returned empty response',
-            type: 'ConnectionCheckFailed',
-          },
-        },
-        { status: 502 }
-      )
+    if (!apiKey) {
+      return new ChatSDKError('bad_request:api', `Missing API key for provider "${provider}"`).toResponse()
     }
 
-    return Response.json({ ok: true })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    log('check failed: %o', message)
+    languageModel = createProviderLanguageModel(provider, model, apiKey, baseURL)
+  }
 
-    return Response.json(
-      {
-        ok: false,
-        error: {
-          body: {
-            message,
-            model,
-            provider,
-          },
-          message,
-          type: 'ConnectionCheckFailed',
-        },
-      },
-      { status: 502 }
+  log('check provider=%o model=%o baseURL=%o timeoutMs=%o', provider, model, baseURL ?? '(default)', timeoutMs)
+
+  try {
+    const startedAt = Date.now()
+    const result = await withHealthTimeout(
+      (signal) =>
+        generateText({
+          abortSignal: signal,
+          maxOutputTokens: 16,
+          model: languageModel,
+          prompt: 'ping',
+        }),
+      { timeoutMs }
     )
+
+    if (pureChatContext) {
+      await chargePureChatGenerateUsage({
+        durationMs: Date.now() - startedAt,
+        model,
+        result,
+        settlementId: pureChatContext.settlementId,
+        settlementPeriod: pureChatContext.settlementPeriod,
+        userId: pureChatContext.userId,
+      }).catch((error) => log('purechat health check charge failed: %o', error))
+    }
+
+    const responseText = result.text?.trim() || result.reasoningText?.trim()
+
+    if (!responseText) {
+      log('check returned empty response provider=%o model=%o finishReason=%o', provider, model, result.finishReason)
+      return failedResponse(model, provider, '模型返回空响应')
+    }
+
+    return Response.json({
+      durationMs: Date.now() - startedAt,
+      model,
+      ok: true,
+      provider,
+    })
+  } catch (error) {
+    log('check failed provider=%o model=%o error=%o', provider, model, error)
+    return failedResponse(model, provider, summarizeCheckError(error, timeoutMs))
   }
 }

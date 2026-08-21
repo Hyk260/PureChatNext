@@ -10,7 +10,13 @@ import {
   isServerManagedProvider,
   LEGACY_PROVIDER_DEFAULT_BASE_URLS,
 } from '../const'
-import type { ProviderConfig, ProviderConfigs, ProviderId, ProviderModelItem } from '../types'
+import type {
+  ProviderConfig,
+  ProviderConfigs,
+  ProviderId,
+  ProviderModelHealth,
+  ProviderModelItem,
+} from '../types'
 
 interface ProviderConfigState {
   configs: ProviderConfigs
@@ -20,6 +26,7 @@ interface ProviderConfigState {
   patchConfig: (id: ProviderId, patch: Partial<ProviderConfig>) => void
   setCheckModel: (id: ProviderId, checkModel: string) => void
   setEnabled: (id: ProviderId, enabled: boolean) => void
+  setModelHealth: (id: ProviderId, modelId: string, health: ProviderModelHealth) => void
   setModels: (id: ProviderId, models: ProviderModelItem[]) => void
   toggleModelEnabled: (id: ProviderId, modelId: string, enabled: boolean) => void
 }
@@ -39,12 +46,13 @@ export const mergeProviderConfig = (
   const persistedModels = Array.isArray(partial.models) && partial.models.length > 0 ? partial.models : defaults.models
 
   // Reconcile with model-bank: catalog `enabled: false` stays off after persist hydrate.
-  const models = persistedModels.map((model) => {
+  const models: ProviderModelItem[] = persistedModels.map((model) => {
     const catalog = catalogById.get(model.id)
+    const health = model.health?.status === 'checking' ? { status: 'idle' as const } : model.health
     if (catalog && !catalog.enabled) {
-      return { ...model, displayName: catalog.displayName, enabled: false }
+      return { ...model, displayName: catalog.displayName, enabled: false, health }
     }
-    return model
+    return { ...model, health }
   })
 
   const knownIds = new Set(models.map((model) => model.id))
@@ -167,6 +175,20 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
           },
         }))
       },
+      setModelHealth: (id, modelId, health) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: current.models.map((model) => (model.id === modelId ? { ...model, health } : model)),
+              },
+            },
+          }
+        })
+      },
       setModels: (id, models) => {
         set((state) => ({
           configs: {
@@ -214,7 +236,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
       },
       name: 'purechat:provider:v1',
       partialize: (state) => ({ configs: state.configs }),
-      version: 8,
+      version: 9,
     }
   )
 )

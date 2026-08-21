@@ -21,5 +21,7 @@ Agent 指引：https://ant.design/docs/react/for-agents.md
 - 反馈类 API：**优先** `App.useApp()` 取 `message` / `modal` / `notification`，勿用已弃用的静态 `message.xxx`（主题/上下文会错）。全局静态桥接见 `src/components/AntdStaticMethods`。
 - `ConfigProvider` 与 `App` 成对：主题 token 在 `ConfigProvider` 内，`App` 包在其内层；本仓库主题入口见 `src/layout/ThemeProviders.tsx`。
 - Button：主操作 `type="primary"`；危险操作用 `danger`；可用 `color` + `variant` 组合变体（v5.21+ / v6）。
-- 定制样式优先 Design Token / `classNames` / `styles`（语义化 DOM），再配合 `antd-style`；避免硬编码与 antd 内部类名耦合。
+- 业务自有组件的布局、间距、颜色、边框和简单状态优先使用 Tailwind 与语义化主题变量。
+- antd 组件内部定制优先使用 Design Token / `classNames` / `styles`（语义化 DOM）；只有复杂或动态 CSS 才使用 `antd-style`，避免硬编码与 antd 内部类名耦合。
+- 不要为简单的几行静态 CSS 创建 `createStaticStyles`；新组件遵循 `.cursor/rules/tailwind-style.mdc`。
 - API 不确定时先查对应 `components/<name>.md` 或 `llms-full.txt`，勿臆造已移除的 v3/v4 API。

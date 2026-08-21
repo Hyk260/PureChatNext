@@ -72,7 +72,7 @@ const ModelTitle = memo<ModelTitleProps>(
         <Flexbox horizontal align='center' className={styles.actions} gap={8}>
           <SearchBar
             placeholder='搜索模型...'
-            style={{ width: 180 }}
+            style={{ width: 180, height: 32 }}
             value={searchKeyword}
             onInputChange={onKeywordChange}
           />

@@ -1,0 +1,24 @@
+---
+description: PureChatNext 样式与 AI 编码规范；编写或迁移 React 组件样式时启用
+globs: "**/*.{tsx,ts}"
+alwaysApply: false
+---
+
+# PureChatNext 样式规范
+
+新组件默认使用 Tailwind CSS。简单的几行静态 CSS 不要创建 `createStaticStyles`；样式量大、包含复杂状态/伪类、响应式或 container query、动画、SVG、滚动条、动态几何值时，可以继续使用 `createStaticStyles`。
+
+## AI 编码要求
+
+- 先判断样式复杂度，再选择 Tailwind 或 `createStaticStyles`。
+- 业务布局、间距、颜色、边框、圆角和简单响应式优先写 `className`。
+- 优先使用语义化主题变量，不要复制 dev 页面中的 `slate-*` / `cyan-*` 作为主应用 token。
+- 允许使用 `@pure/ui`；不要把 `@pure/ui` 内部样式桥接迁移混入普通业务改动。
+- 保留 `createStaticStyles` 时，在代码附近说明保留原因。
+- 不要为形式上的 Tailwind 化制造超长、难以阅读的 className；复杂样式可以保留。
+- 修改后检查无必要的 `antd-style` import、styles 常量和测试 mock。
+
+完整规范与迁移步骤见：
+
+- [`docs/tailwind-style-guidelines.zh-CN.md`](../../docs/tailwind-style-guidelines.zh-CN.md)
+- [`docs/tailwind-style-migration-guide.zh-CN.md`](../../docs/tailwind-style-migration-guide.zh-CN.md)

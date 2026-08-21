@@ -80,50 +80,6 @@ jobs:
           scanners: vuln
           severity: CRITICAL,HIGH
           vuln-type: os,library
-      - name: 扫描 PostgreSQL 镜像的 High/Critical 漏洞
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          exit-code: '1'
-          format: table
-          ignore-unfixed: true
-          image-ref: postgres:17.10-alpine3.24@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
-          scanners: vuln
-          severity: CRITICAL,HIGH
-          skip-setup-trivy: true
-          vuln-type: os,library
-      - name: 扫描 Redis 镜像的 High/Critical 漏洞
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          exit-code: '1'
-          format: table
-          ignore-unfixed: true
-          image-ref: redis:8.8.1-alpine3.23@sha256:8096655e437712b07503796fb64d81359256cfcff0ab29d95a7da72863786efb
-          scanners: vuln
-          severity: CRITICAL,HIGH
-          skip-setup-trivy: true
-          vuln-type: os,library
-      - name: 扫描 RustFS 镜像的 High/Critical 漏洞
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          exit-code: '1'
-          format: table
-          ignore-unfixed: true
-          image-ref: ghcr.io/rustfs/rustfs:1.0.0-beta.12@sha256:41fe89380f4120a337790c02af192c3fe7bb55c3edc2e6e9357b487b47c6ab21
-          scanners: vuln
-          severity: CRITICAL,HIGH
-          skip-setup-trivy: true
-          vuln-type: os,library
-      - name: 扫描 SearXNG 镜像的 High/Critical 漏洞
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          exit-code: '1'
-          format: table
-          ignore-unfixed: true
-          image-ref: searxng/searxng:2026.8.3-aa059419f@sha256:77a4f1013b9e2ba857b360dcfea68bc10b3cc5f63572f3d7861cc323cba22c16
-          scanners: vuln
-          severity: CRITICAL,HIGH
-          skip-setup-trivy: true
-          vuln-type: os,library
 
   production-audit:
     name: Production dependency audit

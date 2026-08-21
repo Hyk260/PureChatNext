@@ -12,7 +12,7 @@ export default function ProviderShellLayout({ children }: { children: ReactNode 
     <Flexbox horizontal height='100%' style={{ maxHeight: '100vh', minHeight: 0, overflow: 'hidden' }} width='100%'>
       <ProviderSettingsNav />
       <Flexbox flex={1} height='100%' style={{ maxHeight: '100vh', minWidth: 0 }} width='100%'>
-        {/* <SettingsHeader /> */}
+        <SettingsHeader />
         <Flexbox flex={1} style={{ minHeight: 0, overflow: 'auto' }} width='100%'>
           {children}
         </Flexbox>

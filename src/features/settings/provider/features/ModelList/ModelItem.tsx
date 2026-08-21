@@ -16,7 +16,7 @@ const styles = createStaticStyles(({ css }) => ({
     position: relative;
     padding-block: 10px;
     padding-inline: 8px;
-    border-radius: ${cssVar.borderRadiusLG}px;
+    border-radius: ${cssVar.borderRadius};
     transition: background 200ms ease-in-out;
 
     &:hover {
@@ -101,24 +101,28 @@ const ModelItem = memo<ModelItemProps>(({ model, provider }) => {
             <Tag className={styles.id}>{model.id}</Tag>
           </Flexbox>
           {metadata.length > 0 ? <Text className={styles.metadata}>{metadata.join(' · ')}</Text> : null}
-          {card ? <ModelCapabilityTags card={card} /> : null}
         </Flexbox>
       </Flexbox>
 
-      <Tooltip title={healthLabel}>{healthStatus}</Tooltip>
-
-      <Switch
-        aria-label={`${model.enabled ? '停用' : '启用'} ${model.displayName}`}
-        checked={model.enabled}
-        size='small'
-        onChange={(next) => toggleModelEnabled(provider, model.id, next)}
-      />
+      <Flexbox horizontal align='center' className='shrink-0' gap={8}>
+        {card ? <ModelCapabilityTags card={card} /> : null}
+        <Tooltip title={healthLabel}>{healthStatus}</Tooltip>
+        <Switch
+          aria-label={`${model.enabled ? '停用' : '启用'} ${model.displayName}`}
+          checked={model.enabled}
+          size='small'
+          onChange={(next) => toggleModelEnabled(provider, model.id, next)}
+        />
+      </Flexbox>
     </Flexbox>
   )
 })
 
 const formatPrice = (currency: 'CNY' | 'USD', amount: number) => {
-  const value = amount.toFixed(amount >= 10 ? 1 : 2).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1')
+  const value = amount
+    .toFixed(amount >= 10 ? 1 : 2)
+    .replace(/\.0+$/, '')
+    .replace(/(\.\d*?)0+$/, '$1')
   return `${currency === 'USD' ? '$' : '¥'}${value}`
 }
 

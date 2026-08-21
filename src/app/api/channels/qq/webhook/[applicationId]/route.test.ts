@@ -42,9 +42,9 @@ vi.mock('@/libs/channels/qq/chatBot', () => {
 vi.mock('@/libs/channels/qq/webhookAuth', () => ({
   authorizeQQInternalWebhook: mocks.authorizeQQInternalWebhook,
 }))
-vi.mock('@/libs/logger', () => ({ logger: { error: vi.fn() } }))
+vi.mock('@/libs/logger', () => ({ logger: { error: vi.fn(), info: vi.fn() } }))
 
-import { POST } from './route'
+import { GET, POST } from './route'
 
 const context = { params: Promise.resolve({ applicationId: 'app-1' }) }
 const createRequest = (body: unknown, headers: Record<string, string> = {}) => {
@@ -99,6 +99,81 @@ describe('POST /api/channels/qq/webhook/[applicationId]', () => {
     expect(mocks.touchActive).not.toHaveBeenCalled()
   })
 
+  it('signs op=13 when the opcode or timestamp arrive as JSON numbers or strings', async () => {
+    const response = await POST(
+      createRequest({ d: { event_ts: 1723987200, plain_token: 'plain-token' }, op: '13' }),
+      context
+    )
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({
+      plain_token: 'plain-token',
+      signature: signWebhookResponse('1723987200', 'plain-token', 'qq-app-secret'),
+    })
+  })
+
+  it('signs official op=13 before websocket internal Bearer authorization', async () => {
+    mocks.findByApplicationId.mockResolvedValueOnce({
+      agentId: 'agent-1',
+      applicationId: 'app-1',
+      credentials: encryptCredentials({
+        appId: 'app-1',
+        appSecret: 'qq-app-secret',
+        connectionMode: 'websocket',
+      }),
+      enabled: true,
+      id: 'binding-1',
+      model: 'gpt-5.4-mini',
+      provider: 'openai',
+      userId: 'user-1',
+    })
+    mocks.authorizeQQInternalWebhook.mockReturnValue(false)
+
+    const response = await POST(
+      createRequest({ d: { event_ts: '1723987200', plain_token: 'plain-token' }, op: 13 }),
+      context
+    )
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({
+      plain_token: 'plain-token',
+      signature: signWebhookResponse('1723987200', 'plain-token', 'qq-app-secret'),
+    })
+    expect(mocks.authorizeQQInternalWebhook).not.toHaveBeenCalled()
+    expect(mocks.getOrCreateQQChat).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 for an empty QQBot-Callback body instead of treating it as a failed event signature', async () => {
+    const request = new NextRequest('http://localhost/api/channels/qq/webhook/app-1', {
+      headers: {
+        'content-type': 'application/json',
+        'User-Agent': 'QQBot-Callback',
+        'X-Bot-Appid': 'app-1',
+        'X-Signature-Ed25519': '00'.repeat(64),
+        'X-Signature-Timestamp': '1725442341',
+      },
+      method: 'POST',
+    })
+
+    const response = await POST(request, context)
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({ error: 'Empty body' })
+    expect(mocks.findByApplicationId).not.toHaveBeenCalled()
+    expect(mocks.getOrCreateQQChat).not.toHaveBeenCalled()
+  })
+
+  it('logs GET probes and returns 405 because QQ validation is POST-only', async () => {
+    const request = new NextRequest('http://localhost/api/channels/qq/webhook/app-1', {
+      headers: { 'user-agent': 'Mozilla/5.0' },
+      method: 'GET',
+    })
+    const response = await GET(request, context)
+
+    expect(response.status).toBe(405)
+    expect(response.headers.get('allow')).toBe('POST')
+  })
+
   it('rejects a webhook dispatch with an invalid signature', async () => {
     const response = await POST(
       createRequest(
@@ -132,7 +207,8 @@ describe('POST /api/channels/qq/webhook/[applicationId]', () => {
 
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toEqual({ payload })
-    expect(mocks.handleWebhook).toHaveBeenCalledWith(request, expect.any(Object))
+    expect(mocks.handleWebhook).toHaveBeenCalledOnce()
+    expect(mocks.handleWebhook.mock.calls[0]?.[0]).not.toBe(request)
     expect(mocks.touchActive).toHaveBeenCalledWith('binding-1')
   })
 
@@ -162,6 +238,7 @@ describe('POST /api/channels/qq/webhook/[applicationId]', () => {
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toEqual({ payload })
     expect(mocks.authorizeQQInternalWebhook).toHaveBeenCalledWith(request)
-    expect(mocks.handleWebhook).toHaveBeenCalledWith(request, expect.any(Object))
+    expect(mocks.handleWebhook).toHaveBeenCalledOnce()
+    expect(mocks.handleWebhook.mock.calls[0]?.[0]).not.toBe(request)
   })
 })

@@ -12,6 +12,41 @@ QQ 支持三种连接方式：
 - Docker：生产 Compose 已开启，WebSocket 随单一 `app` 容器启动。
 - Vercel：仅支持 Webhook；UI 与服务端都会拒绝创建或切换到 WebSocket。
 
+## 本地 TryCloudflare 测试 → Vercel 上线
+
+两套环境走**同一条** webhook 路由，不要为隧道单独改 Proxy。本地校验通过后，上线只换 QQ 控制台里的回调 URL。
+
+### 1. 本地隧道
+
+保持 `pnpm dev:next`、`pnpm dev:spa`、`pnpm tunnel:cloudflare` 同时运行。隧道脚本指向 SPA `:5174`，`/api` 由 Vite 转到 Next `:3000`。
+
+首次保存回调前，先用官方 `op=13` 预热一次（避免冷编译超时）：
+
+```bash
+curl -sS -X POST "https://<隧道域名>/api/channels/qq/webhook/<AppID>" \
+  -H 'Content-Type: application/json' \
+  -H 'User-Agent: QQBot-Callback' \
+  -H "X-Bot-Appid: <AppID>" \
+  --data '{"d":{"plain_token":"ping","event_ts":"1"},"op":13}'
+```
+
+QQ 开放平台填：
+
+`https://<隧道域名>/api/channels/qq/webhook/<AppID>`
+
+终端出现 `reason: verify-signed`、`op: 13`、`bodyBytes` 非 0 即校验成功。之后私聊发消息应看到 `reason: dispatch`。
+
+### 2. 部署到 Vercel
+
+1. 生产 `APP_URL` 设为正式 HTTPS 域名（不要留 `localhost` / `*.trycloudflare.com`）。
+2. Production 关闭 Deployment Protection，否则 QQ 会打到 Vercel 登录页。
+3. 使用与本地相同的 `DATABASE_URL` / `KEY_VAULTS_SECRET` 时，绑定会直接可用；否则在线上设置页重新用 URL 回调绑定一次。
+4. 部署完成后，把 QQ 控制台回调**改成**：
+
+`https://<生产域名>/api/channels/qq/webhook/<AppID>`
+
+不要继续用 trycloudflare 地址。失焦保存后应再次出现 `verify-signed`。
+
 扫码由腾讯官方 `@tencent-connect/qqbot-connector@1.2.0` 提供。扫码会话和机器人 Secret 仅保存在当前 Node.js 进程内，成功后凭证沿用现有加密存储。因此首版只支持单实例本地或 Docker 部署，不支持多副本路由漂移、Serverless 或跨进程续接。二维码关闭、重开和超时会取消当前进程中的轮询。
 
 该 npm 包当前声明为 `UNLICENSED`，授权页默认将接入方显示为“第三方机器人”。如需展示 PureChatNext 品牌或确认商务授权，请联系 `qq_bot_api@tencent.com`。

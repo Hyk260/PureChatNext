@@ -71,18 +71,21 @@ const ModelTitle = memo<ModelTitleProps>(
 
         <Flexbox horizontal align='center' className={styles.actions} gap={8}>
           <SearchBar
+            className='h-8'
             placeholder='搜索模型...'
-            style={{ width: 180, height: 32 }}
+            size='middle'
+            style={{ width: 180 }}
+            styles={{ input: { height: 32 } }}
             value={searchKeyword}
             onInputChange={onKeywordChange}
           />
           {onHealthCheck && healthModelCount > 0 ? (
-            <Button icon={<Activity size={16} />} loading={healthLoading} onClick={onHealthCheck}>
+            <Button className='h-8' icon={<Activity size={16} />} loading={healthLoading} onClick={onHealthCheck}>
               模型健康检查
             </Button>
           ) : null}
           {showModelFetcher && onFetch ? (
-            <Button icon={<LucideRefreshCcwDot size={16} />} loading={loading} onClick={onFetch}>
+            <Button className='h-8' icon={<LucideRefreshCcwDot size={16} />} loading={loading} onClick={onFetch}>
               获取模型列表
             </Button>
           ) : null}

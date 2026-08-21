@@ -4,6 +4,7 @@ import { CheckCircleFilled } from '@ant-design/icons'
 import { Alert, Button, Flexbox, ModelIcon, Select } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
+import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useEffect, useMemo, useState } from 'react'
 
@@ -88,6 +89,7 @@ const Checker = memo<CheckerProps>(({ provider }) => {
           baseURL: baseURL || undefined,
           model: checkModel,
           provider,
+          timeoutMs: DEFAULT_PROVIDER_CHECK_TIMEOUT_MS,
         }),
         headers,
         method: 'POST',

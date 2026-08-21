@@ -78,6 +78,13 @@ describe('POST /api/providers/check', () => {
     expect(response.status).toBe(200)
     expect(json).toMatchObject({ model: 'gpt-test', ok: true, provider: 'openai' })
     expect(mocks.withHealthTimeout).toHaveBeenCalledWith(expect.any(Function), { timeoutMs: 22_000 })
+    expect(mocks.createProviderLanguageModel).toHaveBeenCalledWith(
+      'openai',
+      'gpt-test',
+      'test-key',
+      'https://example.com/v1',
+      { timeoutMs: 22_000 }
+    )
     expect(mocks.generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         maxRetries: 0,

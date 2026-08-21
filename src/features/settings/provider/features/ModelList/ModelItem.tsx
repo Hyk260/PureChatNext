@@ -5,7 +5,7 @@ import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { formatTokenNumber } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { Activity, Check, CircleX, Eye, Lightbulb, Wrench } from 'lucide-react'
+import { Check, CircleX, Eye, Lightbulb, Loader2, Wrench } from 'lucide-react'
 import { memo } from 'react'
 
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
@@ -50,15 +50,6 @@ const styles = createStaticStyles(({ css }) => ({
     color: ${cssVar.colorTextDescription};
     font-size: 12px;
   `,
-  spin: css`
-    animation: provider-model-health-spin 1s linear infinite;
-
-    @keyframes provider-model-health-spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-  `,
 }))
 
 interface ModelItemProps {
@@ -90,7 +81,9 @@ const ModelItem = memo<ModelItemProps>(({ model, provider }) => {
     <span className={styles.status}>
       {health?.status === 'success' ? <Check color={cssVar.colorSuccess} size={16} /> : null}
       {health?.status === 'failure' ? <CircleX color={cssVar.colorError} size={16} /> : null}
-      {health?.status === 'checking' ? <Activity className={styles.spin} color={cssVar.colorPrimary} size={16} /> : null}
+      {health?.status === 'checking' ? (
+        <Loader2 className='animate-spin' color={cssVar.colorPrimary} size={16} />
+      ) : null}
       {health?.status !== 'success' && health?.status !== 'failure' && health?.status !== 'checking' ? '—' : null}
       {health?.status === 'success' && typeof health.durationMs === 'number' ? formatDuration(health.durationMs) : null}
     </span>

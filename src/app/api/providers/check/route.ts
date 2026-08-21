@@ -3,6 +3,7 @@ import debug from 'debug'
 
 import { FreePlanLimitError } from '@pure/database/models/credits'
 
+import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
 import {
   createProviderLanguageModel,
   isSupportedProviderId,
@@ -22,7 +23,7 @@ import {
 export const maxDuration = 150
 
 const log = debug('providers:check')
-const DEFAULT_TIMEOUT_MS = 15_000
+const DEFAULT_TIMEOUT_MS = DEFAULT_PROVIDER_CHECK_TIMEOUT_MS
 const MIN_TIMEOUT_MS = 1_000
 const MAX_TIMEOUT_MS = 120_000
 
@@ -180,7 +181,7 @@ export async function POST(request: Request) {
       return new ChatSDKError('bad_request:api', `Missing API key for provider "${provider}"`).toResponse()
     }
 
-    languageModel = createProviderLanguageModel(provider, model, apiKey, baseURL)
+    languageModel = createProviderLanguageModel(provider, model, apiKey, baseURL, { timeoutMs })
   }
 
   log('check provider=%o model=%o baseURL=%o timeoutMs=%o', provider, model, baseURL ?? '(default)', timeoutMs)

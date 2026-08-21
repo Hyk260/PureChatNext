@@ -101,7 +101,7 @@ export const purechatChatModels: AiModelCard[] = [
     displayName: 'DeepSeek V3.2 Thinking',
     gatewayId: 'deepseek/deepseek-v3.2-thinking',
     description: 'DeepSeek V3.2 的思考版本，适用于推理与工具调用任务。',
-    enabled: true,
+    enabled: false,
     family: 'deepseek',
     contextWindowTokens: 128_000,
     maxOutput: 8_000,

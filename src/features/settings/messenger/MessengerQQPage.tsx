@@ -1,7 +1,7 @@
 'use client'
 
-import { Select, Spin } from 'antd'
-import { Alert, Button, confirmModal, Text, copyToClipboard, Flexbox } from '@pure/ui'
+import { Spin } from 'antd'
+import { Alert, Button, confirmModal, Select, Text, copyToClipboard, Flexbox } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'

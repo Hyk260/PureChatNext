@@ -13,7 +13,7 @@ import AgentSearch from './components/AgentSearch'
 const styles = createStaticStyles(({ css }) => ({
   header: css`
     flex: none;
-    height: 53px;
+    height: 40px;
     padding-inline: 8px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
     background: ${cssVar.colorBgContainer};

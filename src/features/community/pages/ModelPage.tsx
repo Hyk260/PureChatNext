@@ -31,7 +31,11 @@ const ModelPage = memo(() => {
   return (
     <Flexbox horizontal gap={24} style={{ height: '100%', minHeight: 0, overflow: 'hidden', width: '100%' }}>
       <ModelCategory />
-      <Scrollbar style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
+      <Scrollbar
+        style={{ flex: 1, minHeight: 0, minWidth: 0 }}
+        viewStyle={{ paddingInlineEnd: 24 }}
+        wrapClassName='community-scroll-viewport'
+      >
         <Flexbox gap={32} style={{ width: '100%' }}>
           <ModelList data={pageData} />
           <AgentPagination currentPage={currentPage} pageSize={PAGE_SIZE} total={total} />

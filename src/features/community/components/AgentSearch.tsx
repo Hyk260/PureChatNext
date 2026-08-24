@@ -41,6 +41,7 @@ const AgentSearch = memo<AgentSearchProps>(({ placeholder = '搜索名称、描�
   return (
     <SearchBar
       placeholder={placeholder}
+      variant='borderless'
       value={value}
       onInputChange={(next) => {
         setValue(next)

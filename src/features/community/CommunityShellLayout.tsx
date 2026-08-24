@@ -13,8 +13,15 @@ const CommunityShellLayout = ({ children }: { children: ReactNode }) => {
     <MainShellLayout header={<CommunityHeader />} scrollable={false} sidebar={<CommunitySidebar />}>
       <Flexbox
         flex={1}
-        id='community-scroll'
-        style={{ height: '100%', minHeight: 0, overflow: 'hidden', padding: 24, width: '100%' }}
+        style={{
+          height: '100%',
+          minHeight: 0,
+          overflow: 'hidden',
+          paddingBlock: 24,
+          paddingInlineEnd: 0,
+          paddingInlineStart: 24,
+          width: '100%',
+        }}
       >
         {children}
       </Flexbox>

@@ -8,6 +8,7 @@ import { LazyMotion, domAnimation } from 'motion/react'
 import * as m from 'motion/react-m'
 import { useCallback, useEffect, useState } from 'react'
 import type { PropsWithChildren } from 'react'
+import { localStg } from '@pure/utils/storage'
 
 import AntdStaticMethods from '@/components/AntdStaticMethods'
 import { useSystemAppearance } from '@/hooks/useSystemAppearance'
@@ -26,24 +27,14 @@ import {
 const ThemeProviders = ({ children }: PropsWithChildren) => {
   const systemAppearance = useSystemAppearance()
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
-    if (typeof window === 'undefined') return DEFAULT_THEME_MODE
-
-    try {
-      return parseStoredThemeMode(window.localStorage.getItem(THEME_STORAGE_KEY))
-    } catch {
-      return DEFAULT_THEME_MODE
-    }
+    return parseStoredThemeMode(localStg.getString(THEME_STORAGE_KEY))
   })
   const appearance = resolveThemeAppearance(themeMode, systemAppearance)
 
   const handleThemeModeChange = useCallback((nextThemeMode: ThemeMode) => {
     setThemeMode(nextThemeMode)
 
-    try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, serializeThemeMode(nextThemeMode))
-    } catch {
-      // Ignore storage failures so theme switching still works in restricted browsers.
-    }
+    localStg.setString(THEME_STORAGE_KEY, serializeThemeMode(nextThemeMode))
   }, [])
 
   useEffect(() => {

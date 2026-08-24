@@ -1,3 +1,5 @@
+import { localStg } from '@pure/utils/storage'
+
 /**
  * API 客户端工具函数
  * 用于前端调用后端 API（相对路径 `/api/...`；`API_BASE_URL` 保持空串，禁止写死 host）
@@ -7,25 +9,21 @@ const API_BASE_URL = ''
 // ── Token 存储 ──────────────────────────────────────────────
 
 function getAccessToken(): string | null {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem('access_token')
+  return localStg.getString('access_token')
 }
 
 function getRefreshToken(): string | null {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem('refresh_token')
+  return localStg.getString('refresh_token')
 }
 
 export function saveTokens(accessToken: string, refreshToken: string) {
-  if (typeof window === 'undefined') return
-  localStorage.setItem('access_token', accessToken)
-  localStorage.setItem('refresh_token', refreshToken)
+  localStg.setString('access_token', accessToken)
+  localStg.setString('refresh_token', refreshToken)
 }
 
 export function clearTokens() {
-  if (typeof window === 'undefined') return
-  localStorage.removeItem('access_token')
-  localStorage.removeItem('refresh_token')
+  localStg.remove('access_token')
+  localStg.remove('refresh_token')
 }
 
 // ── Token 刷新 ──────────────────────────────────────────────

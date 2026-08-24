@@ -1,3 +1,5 @@
+import { localStg } from '@pure/utils/storage'
+
 export type ActionMode = 'query' | 'webSearch' | 'crawlPages'
 
 export const WEB_SEARCH_CACHE_KEY = 'purechat:dev:web-search:v1'
@@ -67,65 +69,36 @@ export const readWebSearchCache = <TPayload = unknown, TRunState = unknown>(): W
   TPayload,
   TRunState
 > => {
-  if (typeof window === 'undefined') {
+  const parsed = localStg.getJson(WEB_SEARCH_CACHE_KEY)
+  if (!isRecord(parsed)) {
     return {}
   }
 
-  try {
-    const raw = localStorage.getItem(WEB_SEARCH_CACHE_KEY)
-    if (!raw) {
-      return {}
+  const store: WebSearchCacheStore<TPayload, TRunState> = {}
+
+  for (const key of Object.keys(parsed)) {
+    if (!isActionMode(key)) {
+      continue
     }
 
-    const parsed: unknown = JSON.parse(raw)
-    if (!isRecord(parsed)) {
-      return {}
+    const slot = parseSlot<TPayload, TRunState>(parsed[key])
+    if (slot) {
+      store[key] = slot
     }
-
-    const store: WebSearchCacheStore<TPayload, TRunState> = {}
-
-    for (const key of Object.keys(parsed)) {
-      if (!isActionMode(key)) {
-        continue
-      }
-
-      const slot = parseSlot<TPayload, TRunState>(parsed[key])
-      if (slot) {
-        store[key] = slot
-      }
-    }
-
-    return store
-  } catch {
-    return {}
   }
+
+  return store
 }
 
 export const writeWebSearchCacheSlot = <TPayload, TRunState>(
   action: ActionMode,
   slot: WebSearchCachedSlot<TPayload, TRunState>
 ): void => {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  try {
-    const store = readWebSearchCache<TPayload, TRunState>()
-    store[action] = slot
-    localStorage.setItem(WEB_SEARCH_CACHE_KEY, JSON.stringify(store))
-  } catch {
-    // Ignore quota / private mode errors
-  }
+  const store = readWebSearchCache<TPayload, TRunState>()
+  store[action] = slot
+  localStg.setJson(WEB_SEARCH_CACHE_KEY, store)
 }
 
 export const clearWebSearchCache = (): void => {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  try {
-    localStorage.removeItem(WEB_SEARCH_CACHE_KEY)
-  } catch {
-    // Ignore quota / private mode errors
-  }
+  localStg.remove(WEB_SEARCH_CACHE_KEY)
 }

@@ -40,4 +40,15 @@ describe('acquisition analytics', () => {
     expect(markFirstConversion('chat_response')).toBe(true)
     expect(markFirstConversion('chat_response')).toBe(false)
   })
+
+  it('ignores persisted values that do not match the attribution shape', () => {
+    localStorage.setItem('purechat:acquisition:first:v1', JSON.stringify({ campaign: 'launch', source: 'github' }))
+
+    trackAcquisitionEvent('chat_intent')
+
+    expect(track).toHaveBeenCalledWith(
+      'chat_intent',
+      expect.objectContaining({ first_source: 'unknown', landing_path: 'unknown' })
+    )
+  })
 })

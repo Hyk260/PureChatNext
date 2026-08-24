@@ -1,3 +1,5 @@
+import { sessionStg } from '@pure/utils/storage'
+
 export const SPA_UPDATE_DISMISS_KEY = 'spa-update-dismissed-build-time'
 export const SPA_UPDATE_NOTIFICATION_KEY = 'spa-update'
 
@@ -44,7 +46,7 @@ export async function checkForSpaUpdate(options: { isShowing: boolean }): Promis
 
   const local = readLocalSpaBuildTime()
   const remote = await fetchRemoteSpaBuildTime()
-  const dismissed = sessionStorage.getItem(SPA_UPDATE_DISMISS_KEY)
+  const dismissed = sessionStg.getString(SPA_UPDATE_DISMISS_KEY)
 
   return { remote, show: shouldNotifySpaUpdate(local, remote, dismissed) }
 }

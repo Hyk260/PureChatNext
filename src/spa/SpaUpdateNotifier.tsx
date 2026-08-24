@@ -1,4 +1,5 @@
 import { Button, Flex } from 'antd'
+import { sessionStg } from '@pure/utils/storage'
 import { useEffect, useRef } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
@@ -33,7 +34,7 @@ const SpaUpdateNotifier = ({
   const { notification } = useApp()
   const isShowingRef = useRef(false)
 
-  useEffect(() => {  
+  useEffect(() => {
     if (!enabled) return
 
     const notify = (remote: string) => {
@@ -53,7 +54,7 @@ const SpaUpdateNotifier = ({
         onClose: () => {
           isShowingRef.current = false
           if (preview) return
-          sessionStorage.setItem(SPA_UPDATE_DISMISS_KEY, remote)
+          sessionStg.setString(SPA_UPDATE_DISMISS_KEY, remote)
         },
       })
     }

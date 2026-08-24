@@ -1,4 +1,5 @@
 import { track } from '@vercel/analytics'
+import { localStg } from '@pure/utils/storage'
 
 type EventProperties = Record<string, boolean | null | number | string>
 
@@ -11,25 +12,31 @@ type Attribution = {
   source: string
 }
 
+const isAttribution = (value: unknown): value is Attribution => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+
+  const attribution = value as Record<string, unknown>
+  return (
+    typeof attribution.campaign === 'string' &&
+    typeof attribution.capturedAt === 'string' &&
+    typeof attribution.landingPath === 'string' &&
+    typeof attribution.medium === 'string' &&
+    typeof attribution.referrer === 'string' &&
+    typeof attribution.source === 'string'
+  )
+}
+
 const FIRST_ATTRIBUTION_KEY = 'purechat:acquisition:first:v1'
 const LAST_ATTRIBUTION_KEY = 'purechat:acquisition:last:v1'
 const CONVERSION_PREFIX = 'purechat:conversion:v1:'
 
 const readAttribution = (key: string): Attribution | undefined => {
-  try {
-    const raw = localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as Attribution) : undefined
-  } catch {
-    return undefined
-  }
+  const value = localStg.getJson(key)
+  return isAttribution(value) ? value : undefined
 }
 
 const writeStorage = (key: string, value: unknown) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    // Analytics must never block the product flow.
-  }
+  localStg.setJson(key, value)
 }
 
 const inferSource = (url: URL, referrer: string) => {
@@ -87,11 +94,6 @@ export const trackAcquisitionEvent = (name: string, properties: EventProperties 
 
 export const markFirstConversion = (name: string) => {
   const key = `${CONVERSION_PREFIX}${name}`
-  try {
-    if (localStorage.getItem(key)) return false
-    localStorage.setItem(key, new Date().toISOString())
-    return true
-  } catch {
-    return false
-  }
+  if (localStg.getString(key)) return false
+  return localStg.setString(key, new Date().toISOString())
 }

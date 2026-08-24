@@ -29,7 +29,7 @@ const NavHeader = memo(() => {
       align='center'
       className={styles.header}
       justify='space-between'
-      style={{ height: 44, padding: 8 }}
+      style={{ height: 40, padding: 8 }}
     >
       <Flexbox horizontal align='center' gap={2}>
         {sidebarCollapsed ? (

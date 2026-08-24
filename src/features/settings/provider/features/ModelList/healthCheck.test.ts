@@ -38,4 +38,16 @@ describe('runWithConcurrency', () => {
     expect(worker).toHaveBeenCalledTimes(5)
     expect(maxActive).toBe(3)
   })
+
+  it('stops scheduling new work after cancellation', async () => {
+    const controller = new AbortController()
+    const worker = vi.fn(async () => {
+      controller.abort()
+      await wait(2)
+    })
+
+    await runWithConcurrency([1, 2, 3], worker, 1, controller.signal)
+
+    expect(worker).toHaveBeenCalledTimes(1)
+  })
 })

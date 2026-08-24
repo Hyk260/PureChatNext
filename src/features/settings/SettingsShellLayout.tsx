@@ -14,7 +14,11 @@ const SettingsShellLayout = ({ children }: { children: ReactNode }) => {
   const isProviderRoute = pathname.startsWith('/settings/provider')
 
   return (
-    <MainShellLayout header={isProviderRoute ? undefined : <SettingsHeader />} sidebar={<SettingsSidebar />}>
+    <MainShellLayout
+      header={isProviderRoute ? undefined : <SettingsHeader />}
+      scrollable={!isProviderRoute}
+      sidebar={<SettingsSidebar />}
+    >
       <Flexbox
         flex={1}
         style={{

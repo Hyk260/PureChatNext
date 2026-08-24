@@ -2,13 +2,14 @@
 
 import { Button, Flexbox, SearchBar, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { Activity, LucideRefreshCcwDot } from 'lucide-react'
+import { Activity, LucideRefreshCcwDot, X } from 'lucide-react'
 import { memo } from 'react'
 
 interface ModelTitleProps {
   loading: boolean
   healthLoading?: boolean
   healthModelCount?: number
+  onCancelHealthCheck?: () => void
   onHealthCheck?: () => void
   onFetch?: () => void
   onKeywordChange: (keyword: string) => void
@@ -44,6 +45,7 @@ const ModelTitle = memo<ModelTitleProps>(
     loading,
     healthLoading = false,
     healthModelCount = 0,
+    onCancelHealthCheck,
     onHealthCheck,
     onFetch,
     showModelFetcher = true,
@@ -80,8 +82,12 @@ const ModelTitle = memo<ModelTitleProps>(
             onInputChange={onKeywordChange}
           />
           {onHealthCheck && healthModelCount > 0 ? (
-            <Button className='h-8' icon={<Activity size={16} />} loading={healthLoading} onClick={onHealthCheck}>
-              模型健康检查
+            <Button
+              className='h-8'
+              icon={healthLoading ? <X size={16} /> : <Activity size={16} />}
+              onClick={healthLoading ? onCancelHealthCheck : onHealthCheck}
+            >
+              {healthLoading ? '取消检查' : '模型健康检查'}
             </Button>
           ) : null}
           {showModelFetcher && onFetch ? (

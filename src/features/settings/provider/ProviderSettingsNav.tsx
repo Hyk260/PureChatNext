@@ -94,7 +94,7 @@ const ProviderSettingsNav = memo(() => {
 
   return (
     <Flexbox className={styles.menu} height='100vh'>
-      <Flexbox className={styles.searchBar}>
+      <Flexbox align='center' justify='center' className={styles.searchBar}>
         <SearchBar
           allowClear
           placeholder='搜索服务商'

@@ -142,13 +142,13 @@ const ModelCapabilityTags = ({ card }: { card: NonNullable<ReturnType<typeof get
           </Tag>
         </Tooltip>
       ) : null}
-      {abilities?.reasoning ? (
+      {/* {abilities?.reasoning ? (
         <Tooltip title='支持推理能力'>
           <Tag color='purple' size='small'>
             <Icon icon={Lightbulb} size={12} />
           </Tag>
         </Tooltip>
-      ) : null}
+      ) : null} */}
       {abilities?.vision ? (
         <Tooltip title='支持视觉输入'>
           <Tag color='geekblue' size='small'>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { mergeProviderConfig, useProviderConfigStore } from './useProviderConfigStore'
+import type { ProviderConfigs } from '../types'
 
 describe('PureChat provider config migration', () => {
   it('reconciles a v4-style model list with the current catalog', () => {
@@ -59,5 +60,15 @@ describe('PureChat provider config migration', () => {
       status: 'success',
     })
     expect(useProviderConfigStore.persist.getOptions().version).toBe(9)
+  })
+
+  it('does not persist an active health check state', () => {
+    useProviderConfigStore.getState().setModelHealth('purechat', 'gpt-5.4-mini', { status: 'checking' })
+
+    const partialized = useProviderConfigStore.persist.getOptions().partialize?.(useProviderConfigStore.getState()) as {
+      configs: ProviderConfigs
+    }
+
+    expect(partialized.configs.purechat.models[0]?.health).toEqual({ status: 'idle' })
   })
 })

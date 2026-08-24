@@ -72,6 +72,28 @@ export const mergeProviderConfig = (
   }
 }
 
+const normalizePersistedConfigs = (configs?: Partial<ProviderConfigs>): ProviderConfigs => ({
+  deepseek: mergeProviderConfig('deepseek', configs?.deepseek),
+  openai: mergeProviderConfig('openai', configs?.openai),
+  purechat: mergeProviderConfig('purechat', configs?.purechat),
+})
+
+const normalizePersistedHealth = (configs: ProviderConfigs): ProviderConfigs => {
+  const next = { ...configs }
+
+  for (const providerId of Object.keys(next) as ProviderId[]) {
+    const config = next[providerId]
+    next[providerId] = {
+      ...config,
+      models: config.models.map((model) =>
+        model.health?.status === 'checking' ? { ...model, health: { status: 'idle' } } : model
+      ),
+    }
+  }
+
+  return next
+}
+
 export const useProviderConfigStore = create<ProviderConfigState>()(
   persist(
     (set, get) => ({
@@ -224,18 +246,21 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
           return { configs: DEFAULT_PROVIDER_CONFIGS }
         }
 
-        const next: ProviderConfigs = {
-          deepseek: mergeProviderConfig('deepseek', configs.deepseek),
-          openai: mergeProviderConfig('openai', configs.openai),
-          purechat: mergeProviderConfig('purechat', configs.purechat),
-        }
+        const next = normalizePersistedConfigs(configs)
 
         // version < 2 also needs empty baseURL migration (handled in mergeProviderConfig).
         void version
         return { configs: next }
       },
+      merge: (persisted, current) => {
+        const state = persisted as { configs?: Partial<ProviderConfigs> } | undefined
+        return {
+          ...current,
+          configs: normalizePersistedHealth(normalizePersistedConfigs(state?.configs)),
+        }
+      },
       name: 'purechat:provider:v1',
-      partialize: (state) => ({ configs: state.configs }),
+      partialize: (state) => ({ configs: normalizePersistedHealth(state.configs) }),
       version: 9,
     }
   )

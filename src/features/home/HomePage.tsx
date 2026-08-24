@@ -26,7 +26,7 @@ const HomePage = memo(() => {
           <HomeContent />
         </WideScreenContainer>
       </Flexbox>
-      <div className='h-11'></div>
+      <div className='h-10'></div>
     </Flexbox>
   )
 })

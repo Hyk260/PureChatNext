@@ -5,7 +5,7 @@ import { Flexbox, Tabs, Text } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { apiFetch } from '@/utils/apiFetch'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { memo, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
 import { getSettingsProviderMeta } from '../../const'
@@ -43,6 +43,9 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   const [loading, setLoading] = useState(false)
   const [healthLoading, setHealthLoading] = useState(false)
   const [healthModalOpen, setHealthModalOpen] = useState(false)
+  const healthAbortRef = useRef<AbortController | null>(null)
+  const healthModelIdsRef = useRef<string[]>([])
+  const healthRunIdRef = useRef(0)
 
   const showModelFetcher =
     DEFAULT_MODEL_PROVIDER_LIST.find((provider) => provider.id === id)?.settings?.showModelFetcher !== false
@@ -118,9 +121,48 @@ const ModelList = memo<ModelListProps>(({ id }) => {
 
   const handleFetch = showModelFetcher ? () => void fetchRemoteModels() : undefined
 
+  const clearCheckingHealth = useCallback(
+    (modelIds: string[]) => {
+      const currentConfig = useProviderConfigStore.getState().configs[id]
+      for (const modelId of modelIds) {
+        const model = currentConfig?.models.find((item) => item.id === modelId)
+        if (model?.health?.status === 'checking') {
+          setModelHealth(id, modelId, { status: 'idle' })
+        }
+      }
+    },
+    [id, setModelHealth]
+  )
+
+  const cancelHealthCheck = useCallback(
+    (notify = true) => {
+      const modelIds = healthModelIdsRef.current
+      healthRunIdRef.current += 1
+      healthAbortRef.current?.abort()
+      healthAbortRef.current = null
+      healthModelIdsRef.current = []
+      clearCheckingHealth(modelIds)
+      setHealthLoading(false)
+      setHealthModalOpen(false)
+      if (notify) message.info('模型健康检查已取消')
+    },
+    [clearCheckingHealth, message]
+  )
+
+  useEffect(() => () => cancelHealthCheck(false), [cancelHealthCheck])
+
   const runHealthCheck = async (timeoutMs: number, concurrency: number) => {
+    if (healthLoading) return
+
     setHealthModalOpen(false)
     setHealthLoading(true)
+
+    const controller = new AbortController()
+    const runId = healthRunIdRef.current + 1
+    healthRunIdRef.current = runId
+    healthAbortRef.current = controller
+    healthModelIdsRef.current = enabledHealthModels.map((model) => model.id)
+    const isCurrentRun = () => healthRunIdRef.current === runId && !controller.signal.aborted
 
     let successCount = 0
     let failureCount = 0
@@ -130,6 +172,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
     await runWithConcurrency(
       enabledHealthModels,
       async (model) => {
+        if (!isCurrentRun()) return
         setModelHealth(id, model.id, { status: 'checking' })
 
         try {
@@ -145,6 +188,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
             }),
             headers,
             method: 'POST',
+            signal: controller.signal,
           })
           const json = (await response.json()) as {
             durationMs?: number
@@ -153,6 +197,8 @@ const ModelList = memo<ModelListProps>(({ id }) => {
             message?: string
             ok?: boolean
           }
+
+          if (!isCurrentRun()) return
 
           if (!response.ok || !json.ok) {
             failureCount += 1
@@ -172,6 +218,8 @@ const ModelList = memo<ModelListProps>(({ id }) => {
             status: 'success',
           })
         } catch (error) {
+          if (!isCurrentRun()) return
+
           failureCount += 1
           setModelHealth(id, model.id, {
             checkedAt: new Date().toISOString(),
@@ -180,9 +228,14 @@ const ModelList = memo<ModelListProps>(({ id }) => {
           })
         }
       },
-      concurrency || DEFAULT_HEALTH_CHECK_CONCURRENCY
+      concurrency || DEFAULT_HEALTH_CHECK_CONCURRENCY,
+      controller.signal
     )
 
+    if (!isCurrentRun()) return
+
+    healthAbortRef.current = null
+    healthModelIdsRef.current = []
     setHealthLoading(false)
     message.info(`${getSettingsProviderMeta(id).name}：成功 ${successCount} 个，失败 ${failureCount} 个`)
   }
@@ -196,6 +249,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         searchKeyword={keyword}
         showModelFetcher={showModelFetcher}
         total={models.length}
+        onCancelHealthCheck={() => cancelHealthCheck()}
         onHealthCheck={() => setHealthModalOpen(true)}
         onFetch={handleFetch}
         onKeywordChange={setKeyword}

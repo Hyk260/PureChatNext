@@ -14,12 +14,13 @@ import type { ProviderConfig, ProviderConfigs, ProviderId, ProviderModelHealth, 
 
 interface ProviderConfigState {
   configs: ProviderConfigs
-  addCustomModel: (id: ProviderId, model: { displayName?: string; id: string }) => void
+  addCustomModel: (id: ProviderId, model: CustomModelPatch & { id: string }) => void
   clearRemoteModels: (id: ProviderId) => void
   getConfig: (id: ProviderId) => ProviderConfig
   getEnabledModels: () => Array<{ displayName: string; model: string; provider: ProviderId }>
   mergeRemoteModels: (id: ProviderId, remote: Array<{ displayName?: string; id: string }>) => void
   patchConfig: (id: ProviderId, patch: Partial<ProviderConfig>) => void
+  removeCustomModel: (id: ProviderId, modelId: string) => void
   setCheckModel: (id: ProviderId, checkModel: string) => void
   setEnabled: (id: ProviderId, enabled: boolean) => void
   setModelHealth: (id: ProviderId, modelId: string, health: ProviderModelHealth) => void
@@ -27,7 +28,14 @@ interface ProviderConfigState {
   setAllModelsEnabled: (id: ProviderId, enabled: boolean) => void
   resetModels: (id: ProviderId) => void
   reorderModels: (id: ProviderId, orderedModelIds: string[]) => void
+  updateCustomModel: (id: ProviderId, modelId: string, patch: CustomModelPatch) => void
   toggleModelEnabled: (id: ProviderId, modelId: string, enabled: boolean) => void
+}
+
+export type CustomModelPatch = {
+  abilities?: ProviderModelItem['abilities']
+  contextWindowTokens?: number
+  displayName: string
 }
 
 export const mergeProviderConfig = (
@@ -111,6 +119,8 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
                 models: [
                   ...current.models,
                   {
+                    abilities: model.abilities,
+                    contextWindowTokens: model.contextWindowTokens,
                     displayName: model.displayName?.trim() || modelId,
                     enabled: true,
                     id: modelId,
@@ -168,7 +178,10 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
             if (existing) {
               return {
                 ...existing,
-                displayName: item.displayName?.trim() || existing.displayName,
+                displayName:
+                  existing.source === 'custom'
+                    ? existing.displayName
+                    : item.displayName?.trim() || existing.displayName,
               }
             }
 
@@ -210,6 +223,20 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
             },
           },
         }))
+      },
+      removeCustomModel: (id, modelId) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: current.models.filter((model) => !(model.id === modelId && model.source === 'custom')),
+              },
+            },
+          }
+        })
       },
       setCheckModel: (id, checkModel) => {
         set((state) => ({
@@ -306,6 +333,29 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
             configs: {
               ...state.configs,
               [id]: { ...current, models },
+            },
+          }
+        })
+      },
+      updateCustomModel: (id, modelId, patch) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: current.models.map((model) =>
+                  model.id === modelId && model.source === 'custom'
+                    ? {
+                        ...model,
+                        abilities: patch.abilities,
+                        contextWindowTokens: patch.contextWindowTokens,
+                        displayName: patch.displayName.trim() || model.displayName,
+                      }
+                    : model
+                ),
+              },
             },
           }
         })

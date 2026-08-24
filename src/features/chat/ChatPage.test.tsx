@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => {
     fetchTopics: vi.fn(),
     navigation,
     searchMode: 'off' as 'auto' | 'off',
+    chatError: undefined as Error | undefined,
+    clearChatError: vi.fn(),
     sendMessage: vi.fn().mockResolvedValue(undefined),
   }
 })
@@ -50,8 +52,8 @@ vi.mock('@/utils/navigation', () => ({
 
 vi.mock('@ai-sdk/react', () => ({
   useChat: ({ messages = [] }: { messages?: UIMessage[] }) => ({
-    clearError: vi.fn(),
-    error: undefined,
+    clearError: mocks.clearChatError,
+    error: mocks.chatError,
     messages,
     sendMessage: mocks.sendMessage,
     setMessages: vi.fn(),
@@ -128,6 +130,7 @@ vi.mock('@/features/chat/ChatMessagesSkeleton', () => ({
 vi.mock('@/features/chat/ParamsPanel', () => ({ default: () => null }))
 vi.mock('@/features/chat/TopicSidebar', () => ({ default: () => null }))
 vi.mock('@/features/chat/WideScreenContainer', () => ({
+  CONVERSATION_MAX_WIDTH: 960,
   default: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))
 
@@ -136,6 +139,7 @@ vi.mock('@/features/chat/store/useChatUiStore', () => ({
     selector({
       paramsByAgent: {},
       searchModeByAgent: { agt_inbox: mocks.searchMode },
+      wideScreen: false,
       setParams: vi.fn(),
       setSearchMode: vi.fn(),
     }),
@@ -169,7 +173,7 @@ vi.mock('@/features/settings/provider/const', () => ({
 }))
 
 vi.mock('@/features/settings/provider/store/useProviderConfigStore', () => {
-  const state = { configs: { purechat: { apiKey: '', baseURL: '' } } }
+  const state = { configs: { purechat: { apiKey: '', baseURL: '', models: [] } } }
   const useProviderConfigStore = Object.assign((selector: (value: typeof state) => unknown) => selector(state), {
     getState: () => state,
   })
@@ -199,6 +203,8 @@ describe('ChatPage message loading state', () => {
     mocks.fetchTopics.mockReset().mockResolvedValue([])
     mocks.fetchAgents.mockReset()
     mocks.sendMessage.mockClear()
+    mocks.clearChatError.mockClear()
+    mocks.chatError = undefined
     mocks.searchMode = 'off'
     setPendingTopicSend('')
   })
@@ -241,6 +247,20 @@ describe('ChatPage message loading state', () => {
 
     expect(await screen.findByTestId('messages-skeleton')).toBeTruthy()
     expect(screen.queryByTestId('messages')).toBeNull()
+  })
+
+  it('renders a dismissible send error without adding a message row', async () => {
+    mocks.chatError = new Error('发送失败')
+
+    render(<ChatPage />)
+
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain('发送失败')
+    expect(alert.parentElement?.parentElement?.className).toContain('absolute')
+    expect(screen.getByTestId('messages').textContent).toBe('0')
+    fireEvent.click(screen.getByRole('button', { name: '关闭错误提示' }))
+
+    expect(mocks.clearChatError).toHaveBeenCalledOnce()
   })
 
   it('clears the shared auto rename state after success', async () => {

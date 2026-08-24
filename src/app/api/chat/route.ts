@@ -141,6 +141,7 @@ export async function POST(request: Request) {
   let requestBody: {
     baseURL?: string
     messages: UIMessage[]
+    modelAbilities?: { vision?: boolean }
     model?: string
     provider?: string
     searchMode?: unknown
@@ -167,6 +168,7 @@ export async function POST(request: Request) {
 
   const searchMode = requestBody.searchMode === 'auto' ? 'auto' : 'off'
   const supportsVision = Boolean(
+    requestBody.modelAbilities?.vision ??
     getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision
   )
   try {

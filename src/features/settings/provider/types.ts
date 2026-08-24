@@ -1,3 +1,5 @@
+import type { ModelAbilities } from '@pure/model-bank'
+
 export type ProviderId = 'openai' | 'deepseek' | 'purechat'
 
 export type ProviderModelSource = 'builtin' | 'custom' | 'remote'
@@ -12,6 +14,8 @@ export interface ProviderModelHealth {
 }
 
 export interface ProviderModelItem {
+  abilities?: ModelAbilities
+  contextWindowTokens?: number
   displayName: string
   enabled: boolean
   health?: ProviderModelHealth

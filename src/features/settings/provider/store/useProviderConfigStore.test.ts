@@ -76,7 +76,32 @@ describe('PureChat provider config migration', () => {
     const store = useProviderConfigStore.getState()
     const originalModels = store.configs.deepseek.models
 
-    store.addCustomModel('deepseek', { displayName: '我的模型', id: 'my-model' })
+    store.addCustomModel('deepseek', {
+      abilities: { functionCall: true, vision: true },
+      contextWindowTokens: 128_000,
+      displayName: '我的模型',
+      id: 'my-model',
+    })
+    store.updateCustomModel('deepseek', 'my-model', {
+      abilities: { reasoning: true },
+      contextWindowTokens: 256_000,
+      displayName: '我的模型 2',
+    })
+    expect(useProviderConfigStore.getState().configs.deepseek.models).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          abilities: { reasoning: true },
+          contextWindowTokens: 256_000,
+          displayName: '我的模型 2',
+          id: 'my-model',
+        }),
+      ])
+    )
+    store.addCustomModel('deepseek', { displayName: '待删除模型', id: 'delete-model' })
+    store.removeCustomModel('deepseek', 'delete-model')
+    expect(useProviderConfigStore.getState().configs.deepseek.models.map((model) => model.id)).not.toContain(
+      'delete-model'
+    )
     const builtinModelId = originalModels[0]?.id ?? 'deepseek-v4-flash'
     store.mergeRemoteModels('deepseek', [{ id: 'remote-model' }, { id: builtinModelId }])
     expect(useProviderConfigStore.getState().configs.deepseek.models).toEqual(

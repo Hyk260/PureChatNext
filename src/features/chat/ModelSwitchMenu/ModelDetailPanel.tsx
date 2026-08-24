@@ -6,8 +6,21 @@ import type { ModelProviderId, ModelTokenPricing } from '@pure/model-bank'
 import { Icon, Tag, Text, Flexbox } from '@pure/ui'
 import { formatTokenNumber } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { ArrowDownToDot, ArrowUpFromDot, AtomIcon, CircleFadingArrowUp, Eye, Wrench } from 'lucide-react'
+import {
+  ArrowDownToDot,
+  ArrowUpFromDot,
+  AtomIcon,
+  CircleFadingArrowUp,
+  Code2,
+  Eye,
+  Globe2,
+  ImageIcon,
+  Wrench,
+} from 'lucide-react'
 import { memo, useMemo } from 'react'
+
+import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
+import type { ProviderId } from '@/features/settings/provider/types'
 
 const styles = createStaticStyles(({ css }) => ({
   bar: css`
@@ -71,8 +84,11 @@ export interface ModelDetailPanelProps {
 
 const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider }) => {
   const card = useMemo(() => getAiModel(provider as ModelProviderId, modelId), [modelId, provider])
+  const configuredModel = useProviderConfigStore((state) =>
+    state.configs[provider as ProviderId]?.models.find((model) => model.id === modelId)
+  )
 
-  if (!card) {
+  if (!card && !configuredModel) {
     return (
       <div className={styles.container}>
         <Text as='p' className={styles.description} fontSize={12} type='secondary'>
@@ -82,14 +98,22 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
     )
   }
 
-  const description = card.description?.trim()
-  const pricing = card.pricing
-  const abilities = card.abilities
+  const description = card?.description?.trim()
+  const pricing = card?.pricing
+  const abilities = configuredModel?.abilities ?? card?.abilities
+  const contextWindowTokens = configuredModel?.contextWindowTokens ?? card?.contextWindowTokens
   const hasAbilities = Boolean(
-    abilities?.functionCall || abilities?.vision || abilities?.reasoning || abilities?.structuredOutput
+    abilities?.functionCall ||
+    abilities?.vision ||
+    abilities?.reasoning ||
+    abilities?.structuredOutput ||
+    abilities?.webSearch ||
+    abilities?.imageGeneration
   )
   const contextLabel =
-    typeof card.contextWindowTokens === 'number' ? `${formatTokenNumber(card.contextWindowTokens)} tokens` : null
+    typeof contextWindowTokens === 'number' && contextWindowTokens > 0
+      ? `${formatTokenNumber(contextWindowTokens)} tokens`
+      : null
 
   return (
     <Flexbox className={styles.container} gap={4}>
@@ -133,6 +157,21 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
                 <Icon icon={AtomIcon} size={12} />
               </Tag>
             ) : null}
+            {abilities?.webSearch ? (
+              <Tag className={styles.tag} color='cyan' size='small'>
+                <Icon icon={Globe2} size={12} />
+              </Tag>
+            ) : null}
+            {abilities?.imageGeneration ? (
+              <Tag className={styles.tag} color='magenta' size='small'>
+                <Icon icon={ImageIcon} size={12} />
+              </Tag>
+            ) : null}
+            {/* {abilities?.structuredOutput ? (
+              <Tag className={styles.tag} color='green' size='small'>
+                <Icon icon={Code2} size={12} />
+              </Tag>
+            ) : null} */}
           </Flexbox>
         </Flexbox>
       ) : null}

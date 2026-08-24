@@ -1,12 +1,11 @@
 'use client'
 
+import type { ModelAbilities } from '@pure/model-bank'
 import { Icon, Tag, Tooltip, Flexbox } from '@pure/ui'
 import { formatTokenNumber } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { EyeIcon, WrenchIcon } from 'lucide-react'
+import { AtomIcon, EyeIcon, Globe2, ImageIcon, WrenchIcon } from 'lucide-react'
 import { memo } from 'react'
-
-import type { DiscoverModelAbilities } from '@/features/community/types'
 
 const styles = createStaticStyles(({ css }) => ({
   tag: css`
@@ -33,16 +32,21 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 export interface ModelFeatureTagsProps {
-  abilities?: DiscoverModelAbilities
+  abilities?: ModelAbilities
   contextWindowTokens?: number
 }
 
 const ModelFeatureTags = memo<ModelFeatureTagsProps>(({ abilities, contextWindowTokens }) => {
   const showFunctionCall = Boolean(abilities?.functionCall)
+  const showImageGeneration = Boolean(abilities?.imageGeneration)
+  const showReasoning = Boolean(abilities?.reasoning)
   const showVision = Boolean(abilities?.vision)
+  const showWebSearch = Boolean(abilities?.webSearch)
   const showTokens = typeof contextWindowTokens === 'number'
 
-  if (!showFunctionCall && !showVision && !showTokens) return null
+  if (!showFunctionCall && !showImageGeneration && !showReasoning && !showVision && !showWebSearch && !showTokens) {
+    return null
+  }
 
   return (
     <Flexbox horizontal gap={2} justify='flex-end' style={{ width: '100%' }}>
@@ -57,6 +61,27 @@ const ModelFeatureTags = memo<ModelFeatureTagsProps>(({ abilities, contextWindow
         <Tooltip title='该模型支持视觉识别'>
           <Tag className={styles.tag} color='geekblue' size='small'>
             <Icon icon={EyeIcon} size={12} />
+          </Tag>
+        </Tooltip>
+      ) : null}
+      {/* {showReasoning ? (
+        <Tooltip title='该模型支持深度思考'>
+          <Tag className={styles.tag} color='purple' size='small'>
+            <Icon icon={AtomIcon} size={12} />
+          </Tag>
+        </Tooltip>
+      ) : null} */}
+      {showWebSearch ? (
+        <Tooltip title='该模型支持联网搜索'>
+          <Tag className={styles.tag} color='cyan' size='small'>
+            <Icon icon={Globe2} size={12} />
+          </Tag>
+        </Tooltip>
+      ) : null}
+      {showImageGeneration ? (
+        <Tooltip title='该模型支持图片生成'>
+          <Tag className={styles.tag} color='magenta' size='small'>
+            <Icon icon={ImageIcon} size={12} />
           </Tag>
         </Tooltip>
       ) : null}

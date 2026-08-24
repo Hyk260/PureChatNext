@@ -1,9 +1,9 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { createStaticStyles, cssVar } from 'antd-style'
 import { DefaultChatTransport } from 'ai'
 import type { UIMessage } from 'ai'
+import { X } from 'lucide-react'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
 import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
@@ -23,7 +23,8 @@ import {
 import ChatMessages from '@/features/chat/ChatMessages'
 import { getMessageText, withMessageText } from '@/features/chat/messageText'
 import type { ChatSearchMode } from '@/features/chat/types'
-import WideScreenContainer from '@/features/chat/WideScreenContainer'
+import { CONVERSATION_MAX_WIDTH } from '@/features/chat/WideScreenContainer'
+import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { isSettingsProviderId } from '@/features/settings/provider/const'
@@ -64,22 +65,6 @@ const messagesSignature = (messages: UIMessage[]) =>
       role: message.role,
     }))
   )
-
-const styles = createStaticStyles(({ css }) => ({
-  error: css`
-    box-sizing: border-box;
-    width: 100%;
-    margin-block-end: 8px;
-    padding: 8px 12px;
-    border: 1px solid ${cssVar.colorErrorBorder};
-    border-radius: 16px;
-    background: ${cssVar.colorErrorBg};
-    color: ${cssVar.colorError};
-    font-size: 13px;
-    line-height: 1.5;
-    word-break: break-word;
-  `,
-}))
 
 const chatTransport = new DefaultChatTransport({
   api: '/api/chat',
@@ -131,6 +116,13 @@ const ChatView = memo<ChatViewProps>(
         ? (s.configs[selectedProvider]?.baseURL.trim() ?? '')
         : ''
     )
+    const selectedModelConfig = useProviderConfigStore((s) =>
+      isSettingsProviderId(selectedProvider)
+        ? s.configs[selectedProvider]?.models.find((model) => model.id === selectedModel)
+        : undefined
+    )
+    const selectedModelAbilities = selectedModelConfig?.abilities
+    const wideScreen = useChatUiStore((state) => state.wideScreen)
 
     const chatId = `purechat-${agentId}-${topicId ?? 'draft'}`
 
@@ -265,12 +257,13 @@ const ChatView = memo<ChatViewProps>(
     const requestBody = useMemo(
       () => ({
         model: selectedModel,
+        ...(selectedModelAbilities ? { modelAbilities: selectedModelAbilities } : {}),
         provider: selectedProvider,
         searchMode,
         ...(providerBaseURL ? { baseURL: providerBaseURL } : {}),
         ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
       }),
-      [activeAgent, providerBaseURL, searchMode, selectedModel, selectedProvider]
+      [activeAgent, providerBaseURL, searchMode, selectedModel, selectedModelAbilities, selectedProvider]
     )
 
     const sendWithBody = useCallback(
@@ -394,7 +387,7 @@ const ChatView = memo<ChatViewProps>(
     }, [handleSend, handleStop, onBindActions])
 
     return (
-      <>
+      <div className='relative flex min-h-0 min-w-0 flex-1 flex-col'>
         <ChatMessages
           agentMeta={agentMeta}
           disabled={isBusy}
@@ -406,13 +399,30 @@ const ChatView = memo<ChatViewProps>(
           onRegenerate={handleRegenerate}
         />
         {error ? (
-          <WideScreenContainer fill={false}>
-            <div className={styles.error} role='alert'>
-              {error.message || '发送失败，请稍后重试'}
+          <div className='pointer-events-none absolute inset-x-0 bottom-2 z-10 flex justify-center'>
+            <div
+              className='pointer-events-auto box-border flex w-full max-w-full items-center justify-between gap-3 px-4'
+              style={{ maxWidth: wideScreen ? undefined : `${CONVERSATION_MAX_WIDTH}px` }}
+            >
+              <div
+                className='box-border flex min-w-0 flex-1 items-center justify-between gap-3 rounded-2xl border border-[var(--pure-vars-colorErrorBorder)] bg-[var(--pure-vars-colorErrorBg)] px-3 py-2 text-[13px] leading-[1.5] break-words text-[var(--pure-vars-colorError)]'
+                role='alert'
+              >
+                <span className='min-w-0'>{error.message || '发送失败，请稍后重试'}</span>
+                <button
+                  aria-label='关闭错误提示'
+                  className='-m-1 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-[var(--pure-vars-colorError)] transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pure-vars-colorError)]'
+                  title='关闭'
+                  type='button'
+                  onClick={clearError}
+                >
+                  <X aria-hidden size={16} />
+                </button>
+              </div>
             </div>
-          </WideScreenContainer>
+          </div>
         ) : null}
-      </>
+      </div>
     )
   }
 )

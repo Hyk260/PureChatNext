@@ -3,7 +3,7 @@
 import { ActionIcon, DropdownMenu, Flexbox, SearchBar, Text } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { Activity, MoreVertical, Plus, RefreshCcwDot, RotateCcw, X } from 'lucide-react'
+import { Activity, CircleX, MoreVertical, Plus, RefreshCcwDot, RotateCcw, X } from 'lucide-react'
 import { memo, useMemo } from 'react'
 
 interface ModelTitleProps {
@@ -59,16 +59,19 @@ const ModelTitle = memo<ModelTitleProps>(
   }) => {
     const menuItems = useMemo<MenuProps['items']>(
       () => [
-        {
-          disabled: !onResetModels,
-          icon: <RotateCcw size={16} />,
-          key: 'reset-models',
-          label: '重置所有修改',
-          onClick: onResetModels,
-        },
+        ...(onResetModels
+          ? [
+              {
+                icon: <RotateCcw size={16} />,
+                key: 'reset-models',
+                label: '重置所有修改',
+                onClick: onResetModels,
+              },
+            ]
+          : []),
         ...(onHealthCheck && healthModelCount > 0
           ? [
-              { type: 'divider' as const },
+              ...(onResetModels ? [{ type: 'divider' as const }] : []),
               {
                 icon: healthLoading ? <X size={16} /> : <Activity size={16} />,
                 key: 'health-check',
@@ -119,7 +122,7 @@ const ModelTitle = memo<ModelTitleProps>(
               模型列表
             </Text>
             {canClearRemoteModels && onClearRemoteModels ? (
-              <ActionIcon icon={X} size='small' title='清除获取的模型' onClick={onClearRemoteModels} />
+              <ActionIcon icon={CircleX} size='small' title='清除获取的模型' onClick={onClearRemoteModels} />
             ) : null}
           </Flexbox>
 
@@ -134,7 +137,13 @@ const ModelTitle = memo<ModelTitleProps>(
               onInputChange={onKeywordChange}
             />
             {onAddCustomModel ? (
-              <ActionIcon icon={Plus} size='small' title='添加自定义模型' onClick={onAddCustomModel} />
+              <ActionIcon
+                variant={'outlined'}
+                icon={Plus}
+                size='small'
+                title='添加自定义模型'
+                onClick={onAddCustomModel}
+              />
             ) : null}
             <DropdownMenu
               items={menuItems}
@@ -142,7 +151,7 @@ const ModelTitle = memo<ModelTitleProps>(
               placement='bottomRight'
               triggerProps={{ className: 'size-8', title: '更多' }}
             >
-              <ActionIcon icon={MoreVertical} size='small' />
+              <ActionIcon variant={'outlined'} icon={MoreVertical} size='small' />
             </DropdownMenu>
           </Flexbox>
         </Flexbox>

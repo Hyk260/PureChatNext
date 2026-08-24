@@ -104,6 +104,8 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
           if (!model.enabled) continue
           if (!isCatalogEnabled(providerId, model.id)) continue
           models.push({
+            abilities: model.abilities ?? getAiModel(providerId, model.id)?.abilities,
+            contextWindowTokens: model.contextWindowTokens ?? getAiModel(providerId, model.id)?.contextWindowTokens,
             displayName: model.displayName,
             model: model.id,
             provider: providerId,
@@ -220,7 +222,8 @@ export const useCurrentHomeModel = () => {
       if (model) {
         const catalog = getAiModel(selectedProvider, model.id)
         return {
-          abilities: catalog?.abilities,
+          abilities: model.abilities ?? catalog?.abilities,
+          contextWindowTokens: model.contextWindowTokens ?? catalog?.contextWindowTokens,
           displayName: model.displayName,
           model: model.id,
           provider: selectedProvider,
@@ -229,6 +232,10 @@ export const useCurrentHomeModel = () => {
     }
 
     const homeModel = findHomeModel(selectedProvider, selectedModel)
-    return { ...homeModel, abilities: getAiModel(selectedProvider as ModelProviderId, selectedModel)?.abilities }
+    return {
+      ...homeModel,
+      abilities: getAiModel(selectedProvider as ModelProviderId, selectedModel)?.abilities,
+      contextWindowTokens: getAiModel(selectedProvider as ModelProviderId, selectedModel)?.contextWindowTokens,
+    }
   }, [configs, selectedModel, selectedProvider])
 }

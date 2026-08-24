@@ -8,10 +8,11 @@ import { ArrowDownUp, Eye, EyeOff } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
-import { getSettingsProviderMeta } from '../../const'
-import type { ProviderId } from '../../types'
+import { getSettingsProviderMeta, isServerManagedProvider } from '../../const'
+import type { ProviderId, ProviderModelItem } from '../../types'
 import EmptyModels from './EmptyModels'
 import CustomModelModal from './CustomModelModal'
+import type { CustomModelFormValues } from './CustomModelModal'
 import HealthCheckModal from './HealthCheckModal'
 import { DEFAULT_HEALTH_CHECK_CONCURRENCY, runWithConcurrency } from './healthCheck'
 import ModelItem from './ModelItem'
@@ -29,10 +30,12 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   const addCustomModel = useProviderConfigStore((s) => s.addCustomModel)
   const clearRemoteModels = useProviderConfigStore((s) => s.clearRemoteModels)
   const mergeRemoteModels = useProviderConfigStore((s) => s.mergeRemoteModels)
+  const removeCustomModel = useProviderConfigStore((s) => s.removeCustomModel)
   const reorderModels = useProviderConfigStore((s) => s.reorderModels)
   const resetModels = useProviderConfigStore((s) => s.resetModels)
   const setAllModelsEnabled = useProviderConfigStore((s) => s.setAllModelsEnabled)
   const setModelHealth = useProviderConfigStore((s) => s.setModelHealth)
+  const updateCustomModel = useProviderConfigStore((s) => s.updateCustomModel)
 
   const [keyword, setKeyword] = useState('')
   const [tab, setTab] = useState<ModelTab>('all')
@@ -40,6 +43,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   const [healthLoading, setHealthLoading] = useState(false)
   const [healthModalOpen, setHealthModalOpen] = useState(false)
   const [customModelModalOpen, setCustomModelModalOpen] = useState(false)
+  const [editingCustomModel, setEditingCustomModel] = useState<ProviderModelItem>()
   const [sortMode, setSortMode] = useState(false)
   const healthAbortRef = useRef<AbortController | null>(null)
   const healthModelIdsRef = useRef<string[]>([])
@@ -47,6 +51,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
 
   const showModelFetcher =
     DEFAULT_MODEL_PROVIDER_LIST.find((provider) => provider.id === id)?.settings?.showModelFetcher !== false
+  const canManageCustomModels = !isServerManagedProvider(id)
 
   const models = useMemo(() => config?.models ?? [], [config?.models])
 
@@ -120,13 +125,50 @@ const ModelList = memo<ModelListProps>(({ id }) => {
 
   const handleFetch = showModelFetcher ? () => void fetchRemoteModels() : undefined
 
-  const handleAddCustomModel = useCallback(
-    (model: { displayName: string; id: string }) => {
-      addCustomModel(id, model)
+  const handleSaveCustomModel = useCallback(
+    (model: CustomModelFormValues) => {
+      if (!canManageCustomModels) return
+
+      if (editingCustomModel) {
+        updateCustomModel(id, editingCustomModel.id, model)
+      } else {
+        addCustomModel(id, model)
+      }
       setCustomModelModalOpen(false)
-      message.success(`已添加模型 ${model.displayName}`)
+      setEditingCustomModel(undefined)
+      message.success(editingCustomModel ? `已更新模型 ${model.displayName}` : `已添加模型 ${model.displayName}`)
     },
-    [addCustomModel, id, message]
+    [addCustomModel, canManageCustomModels, editingCustomModel, id, message, updateCustomModel]
+  )
+
+  const handleOpenAddCustomModel = useCallback(() => {
+    if (!canManageCustomModels) return
+
+    setEditingCustomModel(undefined)
+    setCustomModelModalOpen(true)
+  }, [canManageCustomModels])
+
+  const handleEditCustomModel = useCallback((model: ProviderModelItem) => {
+    setEditingCustomModel(model)
+    setCustomModelModalOpen(true)
+  }, [])
+
+  const handleDeleteCustomModel = useCallback(
+    (model: ProviderModelItem) => {
+      if (model.source !== 'custom') return
+      confirmModal({
+        cancelText: '取消',
+        content: `确定删除自定义模型「${model.displayName}」吗？删除后不可恢复。`,
+        okButtonProps: { danger: true },
+        okText: '删除',
+        title: '删除自定义模型？',
+        onOk: () => {
+          removeCustomModel(id, model.id)
+          message.success(`已删除模型 ${model.displayName}`)
+        },
+      })
+    },
+    [id, message, removeCustomModel]
   )
 
   const clearCheckingHealth = useCallback(
@@ -175,6 +217,8 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   }, [clearRemoteModels, id, message, remoteModelCount])
 
   const handleResetModels = useCallback(() => {
+    if (!canManageCustomModels) return
+
     confirmModal({
       cancelText: '取消',
       content: '模型启用状态、自定义模型、获取的模型和排序都会恢复为默认设置。',
@@ -188,7 +232,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         message.success('已重置所有模型修改')
       },
     })
-  }, [cancelHealthCheck, healthLoading, id, message, resetModels])
+  }, [canManageCustomModels, cancelHealthCheck, healthLoading, id, message, resetModels])
 
   const handleSetAllModelsEnabled = useCallback(
     (enabled: boolean) => {
@@ -205,7 +249,13 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         items={items}
         renderItem={(model) => (
           <SortableList.Item id={model.id} width='100%'>
-            <ModelItem model={model} provider={id} showDragHandle={sortMode} />
+            <ModelItem
+              model={model}
+              provider={id}
+              showDragHandle={sortMode}
+              onDeleteCustomModel={handleDeleteCustomModel}
+              onEditCustomModel={handleEditCustomModel}
+            />
           </SortableList.Item>
         )}
         width='100%'
@@ -217,7 +267,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         }
       />
     ),
-    [id, reorderModels, sortMode]
+    [handleDeleteCustomModel, handleEditCustomModel, id, reorderModels, sortMode]
   )
 
   const runHealthCheck = async (timeoutMs: number, concurrency: number) => {
@@ -316,7 +366,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         healthLoading={healthLoading}
         healthModelCount={enabledHealthModels.length}
         loading={loading}
-        onAddCustomModel={() => setCustomModelModalOpen(true)}
+        onAddCustomModel={canManageCustomModels ? handleOpenAddCustomModel : undefined}
         searchKeyword={keyword}
         showModelFetcher={showModelFetcher}
         onCancelHealthCheck={() => cancelHealthCheck()}
@@ -324,14 +374,18 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         onHealthCheck={() => setHealthModalOpen(true)}
         onFetch={handleFetch}
         onKeywordChange={setKeyword}
-        onResetModels={handleResetModels}
+        onResetModels={canManageCustomModels ? handleResetModels : undefined}
       />
 
       <CustomModelModal
-        existingModelIds={models.map((model) => model.id)}
+        existingModelIds={models.filter((item) => item.id !== editingCustomModel?.id).map((model) => model.id)}
+        model={editingCustomModel}
         open={customModelModalOpen}
-        onAdd={handleAddCustomModel}
-        onCancel={() => setCustomModelModalOpen(false)}
+        onSave={handleSaveCustomModel}
+        onCancel={() => {
+          setCustomModelModalOpen(false)
+          setEditingCustomModel(undefined)
+        }}
       />
 
       <HealthCheckModal

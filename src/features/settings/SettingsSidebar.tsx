@@ -53,7 +53,7 @@ const SettingsSidebar = memo(() => {
       className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')}
       style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}
     >
-      <Flexbox gap={1} style={{ height: '100%', paddingBlock: 4 }}>
+      <Flexbox gap={1} style={{ height: '100%' }}>
         <SideBarHeaderLayout
           breadcrumb={[
             {

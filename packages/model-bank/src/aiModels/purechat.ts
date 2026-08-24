@@ -606,7 +606,7 @@ export const purechatChatModels: AiModelCard[] = [
     displayName: 'Nova Micro',
     gatewayId: 'amazon/nova-micro',
     description: '一款仅支持文本的模型，具备超低延迟和极低成本。',
-    enabled: true,
+    enabled: false,
     family: 'nova',
     contextWindowTokens: 128_000,
     maxOutput: 8_192,

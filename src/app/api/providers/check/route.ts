@@ -2,6 +2,8 @@ import { generateText } from 'ai'
 import debug from 'debug'
 
 import { FreePlanLimitError } from '@pure/database/models/credits'
+import { getAiModel } from '@pure/model-bank'
+import type { ModelProviderId } from '@pure/model-bank'
 
 import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
 import {
@@ -26,6 +28,23 @@ const log = debug('providers:check')
 const DEFAULT_TIMEOUT_MS = DEFAULT_PROVIDER_CHECK_TIMEOUT_MS
 const MIN_TIMEOUT_MS = 1_000
 const MAX_TIMEOUT_MS = 120_000
+const HEALTH_CHECK_DEFAULT_MAX_OUTPUT_TOKENS = 128
+const HEALTH_CHECK_REASONING_MAX_OUTPUT_TOKENS = 256
+const HEALTH_CHECK_MAX_OUTPUT_TOKEN_CAP = 1_024
+
+const getHealthCheckPlan = (provider: string, model: string) => {
+  const card = getAiModel(provider as ModelProviderId, model)
+  const modelMaxOutputTokens = card?.maxOutput && card.maxOutput > 0 ? card.maxOutput : 4_096
+  const hardCap = Math.min(modelMaxOutputTokens, HEALTH_CHECK_MAX_OUTPUT_TOKEN_CAP)
+  const initial = card?.abilities?.reasoning
+    ? HEALTH_CHECK_REASONING_MAX_OUTPUT_TOKENS
+    : HEALTH_CHECK_DEFAULT_MAX_OUTPUT_TOKENS
+
+  return {
+    card,
+    budgets: [...new Set([Math.min(initial, hardCap), hardCap])],
+  }
+}
 
 const normalizeTimeoutMs = (value: unknown) => {
   const timeoutMs = typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : DEFAULT_TIMEOUT_MS
@@ -188,34 +207,75 @@ export async function POST(request: Request) {
 
   try {
     const startedAt = Date.now()
-    const result = await withHealthTimeout(
-      (signal) =>
-        generateText({
-          abortSignal: signal,
-          maxOutputTokens: 16,
-          maxRetries: 0,
-          model: languageModel,
-          prompt: 'ping',
-        }),
-      { timeoutMs }
-    )
+    const { budgets, card } = getHealthCheckPlan(provider, model)
+    const totalUsage = {
+      inputTokenDetails: {} as { cacheReadTokens?: number | null },
+      inputTokens: undefined as number | undefined,
+      outputTokens: undefined as number | undefined,
+    }
+    let responseText = ''
+    let lastFinishReason: unknown
+
+    for (const [attempt, maxOutputTokens] of budgets.entries()) {
+      const result = await withHealthTimeout(
+        (signal) =>
+          generateText({
+            abortSignal: signal,
+            ...(card?.abilities?.reasoning ? { reasoning: 'minimal' as const } : {}),
+            maxOutputTokens,
+            maxRetries: 0,
+            model: languageModel,
+            prompt: 'Reply with exactly pong.',
+          }),
+        { timeoutMs }
+      )
+
+      const inputTokens = result.usage?.inputTokens
+      const outputTokens = result.usage?.outputTokens
+      const cacheReadTokens = result.usage?.inputTokenDetails?.cacheReadTokens
+      if (typeof inputTokens === 'number') {
+        totalUsage.inputTokens = (totalUsage.inputTokens ?? 0) + inputTokens
+      }
+      if (typeof outputTokens === 'number') {
+        totalUsage.outputTokens = (totalUsage.outputTokens ?? 0) + outputTokens
+      }
+      if (typeof cacheReadTokens === 'number') {
+        totalUsage.inputTokenDetails.cacheReadTokens =
+          (totalUsage.inputTokenDetails.cacheReadTokens ?? 0) + cacheReadTokens
+      }
+
+      responseText = result.text?.trim() || ''
+      lastFinishReason = result.finishReason
+      if (responseText) break
+
+      log(
+        'check returned empty response provider=%o model=%o attempt=%o maxOutputTokens=%o finishReason=%o',
+        provider,
+        model,
+        attempt + 1,
+        maxOutputTokens,
+        result.finishReason
+      )
+      if (result.finishReason !== 'length') break
+    }
+
+    if (!responseText) {
+      return failedResponse(
+        model,
+        provider,
+        lastFinishReason === 'length' ? '模型输出达到上限，仍未生成最终文本' : '模型返回空响应'
+      )
+    }
 
     if (pureChatContext) {
       await chargePureChatGenerateUsage({
         durationMs: Date.now() - startedAt,
         model,
-        result,
+        result: { usage: totalUsage },
         settlementId: pureChatContext.settlementId,
         settlementPeriod: pureChatContext.settlementPeriod,
         userId: pureChatContext.userId,
       }).catch((error) => log('purechat health check charge failed: %o', error))
-    }
-
-    const responseText = result.text?.trim() || result.reasoningText?.trim()
-
-    if (!responseText) {
-      log('check returned empty response provider=%o model=%o finishReason=%o', provider, model, result.finishReason)
-      return failedResponse(model, provider, '模型返回空响应')
     }
 
     return Response.json({

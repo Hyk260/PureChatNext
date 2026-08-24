@@ -30,11 +30,7 @@ const styles = createStaticStyles(({ css }) => ({
     }
   `,
   searchBar: css`
-    position: sticky;
-    z-index: 50;
-    inset-block-start: 0;
-    margin-block-end: 8px;
-    padding: 8px;
+    height: 40px;
     background: ${cssVar.colorBgContainer};
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
   `,
@@ -98,7 +94,7 @@ const ProviderSettingsNav = memo(() => {
 
   return (
     <Flexbox className={styles.menu} height='100vh'>
-      <div className={styles.searchBar}>
+      <Flexbox className={styles.searchBar}>
         <SearchBar
           allowClear
           placeholder='搜索服务商'
@@ -108,9 +104,9 @@ const ProviderSettingsNav = memo(() => {
           variant='borderless'
           onInputChange={setKeyword}
         />
-      </div>
+      </Flexbox>
       <ScrollShadow size={2} style={{ flex: 1, minHeight: 0, width: '100%' }}>
-        <Flexbox gap={4} paddingInline={4} style={{ paddingBlock: '0 32px' }}>
+        <Flexbox gap={4} paddingInline={4} style={{ paddingBlock: '0 32px', marginBlockStart: 8 }}>
           <Link href='/settings/provider/all' style={{ color: 'inherit', textDecoration: 'none' }}>
             <NavItem active={isAllActive} clickable icon={LayoutGrid} title='全部' />
           </Link>

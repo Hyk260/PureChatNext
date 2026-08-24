@@ -88,14 +88,14 @@ describe('POST /api/providers/check', () => {
     expect(mocks.generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         maxRetries: 0,
-        maxOutputTokens: 16,
+        maxOutputTokens: 128,
         model: { modelId: 'openai-model' },
-        prompt: 'ping',
+        prompt: 'Reply with exactly pong.',
       })
     )
   })
 
-  it('accepts a reasoning response when the visible text is empty', async () => {
+  it('does not treat reasoning-only output as a successful health check', async () => {
     mocks.generateText.mockResolvedValue({
       finishReason: 'stop',
       reasoningText: 'health check completed',
@@ -105,8 +105,49 @@ describe('POST /api/providers/check', () => {
     const response = await POST(requestFor({ model: 'deepseek-v4-flash', provider: 'deepseek' }))
     const json = await response.json()
 
+    expect(response.status).toBe(502)
+    expect(json.error.message).toBe('模型返回空响应')
+  })
+
+  it('increases the output budget once when the response is truncated', async () => {
+    mocks.generateText
+      .mockResolvedValueOnce({
+        finishReason: 'length',
+        text: '',
+        usage: { inputTokenDetails: {}, inputTokens: 1, outputTokens: 128 },
+      })
+      .mockResolvedValueOnce({
+        finishReason: 'stop',
+        text: 'pong',
+        usage: { inputTokenDetails: {}, inputTokens: 1, outputTokens: 2 },
+      })
+
+    const response = await POST(requestFor({ model: 'gpt-test', provider: 'openai' }))
+
     expect(response.status).toBe(200)
-    expect(json).toMatchObject({ model: 'deepseek-v4-flash', ok: true, provider: 'deepseek' })
+    expect(mocks.generateText).toHaveBeenCalledTimes(2)
+    expect(mocks.generateText.mock.calls[0][0]).toMatchObject({ maxOutputTokens: 128 })
+    expect(mocks.generateText.mock.calls[1][0]).toMatchObject({ maxOutputTokens: 1_024 })
+  })
+
+  it('does not charge PureChat when the health check returns no text', async () => {
+    mocks.getAuthenticatedUserId.mockResolvedValue('user-1')
+    mocks.assertPureChatCanChat.mockResolvedValue({
+      settlementId: 'settlement-1',
+      settlementPeriod: '2026-08',
+    })
+    mocks.generateText.mockResolvedValue({
+      finishReason: 'length',
+      reasoningText: '',
+      text: '',
+    })
+
+    const response = await POST(requestFor({ model: 'gpt-5.4-mini', provider: 'purechat' }))
+    const json = await response.json()
+
+    expect(response.status).toBe(502)
+    expect(json.error.message).toBe('模型输出达到上限，仍未生成最终文本')
+    expect(mocks.chargePureChatGenerateUsage).not.toHaveBeenCalled()
   })
 
   it('returns a concise timeout reason', async () => {

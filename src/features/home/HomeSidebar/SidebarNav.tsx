@@ -22,7 +22,7 @@ const SidebarNav = memo(() => {
     <>
       <Flexbox gap={1} style={{ paddingInline: 4 }}>
         {HOME_TOP_NAV.map((item) => {
-          const active = item.key === 'home' && pathname === '/'
+          const active = item.href === '/' ? pathname === '/' : Boolean(item.href && pathname.startsWith(item.href))
 
           if (item.key === 'search') {
             return (

@@ -29,8 +29,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
+:root[data-theme='dark'] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --primary: #2e8dff;
+  --primary-foreground: #000;
+  --secondary: #1c1c1e;
+  --secondary-foreground: #f5f5f7;
+  --muted-foreground: #8e8e93;
+  --card: #1c1c1e;
+  --border: #3a3a3c;
+  --ring: #2e8dff;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --background: #0a0a0a;
     --foreground: #ededed;
     --primary: #2e8dff;

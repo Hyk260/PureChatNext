@@ -1,3 +1,4 @@
+import AppearanceSettingsContent from '@/features/settings/appearance/AppearanceSettingsContent'
 import { SettingsEmptyPage } from '@/features/settings/SettingsEmptyPage'
 
 export function createSettingsEmptyPage(title: string) {
@@ -8,7 +9,7 @@ export function createSettingsEmptyPage(title: string) {
   return Page
 }
 
-export const AppearancePage = createSettingsEmptyPage('外观')
+export const AppearancePage = AppearanceSettingsContent
 export const LanguagePage = createSettingsEmptyPage('语言')
 export const HotkeyPage = createSettingsEmptyPage('快捷键')
 export const NotificationPage = createSettingsEmptyPage('通知')

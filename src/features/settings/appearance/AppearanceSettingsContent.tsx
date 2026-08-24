@@ -15,7 +15,7 @@ const AppearanceSettingsContent = () => {
 
   return (
     <div className='flex w-full flex-col gap-6 px-6 pb-16 pt-6'>
-      <div className='flex w-full max-w-[720px] flex-wrap items-center justify-between gap-6'>
+      <div className='flex-between-wrap w-full max-w-[720px] gap-6'>
         <div className='min-w-0 flex-1'>
           <Text strong>主题模式</Text>
           <Text type='secondary'>自动模式会跟随系统的浅色或深色外观。</Text>

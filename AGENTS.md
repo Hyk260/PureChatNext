@@ -142,7 +142,7 @@ cd packages/file-loaders && pnpm exec vitest run --silent='passed-only' 'src/loa
 ### 代码风格
 
 - ESLint：`eslint.config.mjs`，强制顶层 type import：`import type { Foo }` + `import { Bar } from 'pkg'`（`@typescript-eslint/consistent-type-imports` + `import/consistent-type-specifier-style: prefer-top-level` + `import/no-duplicates`）
-- 新组件样式默认使用 Tailwind CSS；简单的几行静态 CSS 不使用 `createStaticStyles`。样式量大、状态/选择器复杂、动画、SVG、滚动条或动态几何值可以保留 `createStaticStyles`，并说明原因。详见 [`docs/tailwind-style-guidelines.zh-CN.md`](docs/tailwind-style-guidelines.zh-CN.md) 与 [`docs/tailwind-style-migration-guide.zh-CN.md`](docs/tailwind-style-migration-guide.zh-CN.md)。
+- 新组件样式默认使用 Tailwind CSS；简单的几行静态 CSS 不使用 `createStaticStyles`。跨页面高频且语义稳定的组合优先复用 `src/styles/utilities.css`，新增前必须搜索仓库验证复用频率，不为单页尺寸、间距或颜色创建全局 shortcut。样式量大、状态/选择器复杂、动画、SVG、滚动条或动态几何值可以保留 `createStaticStyles`，并说明原因。详见 [`docs/tailwind-style-guidelines.zh-CN.md`](docs/tailwind-style-guidelines.zh-CN.md) 与 [`docs/tailwind-style-migration-guide.zh-CN.md`](docs/tailwind-style-migration-guide.zh-CN.md)。
 - 质量检查脚本说明见 `docs/lint.zh-CN.md`；提交前跑 `pnpm lint`（只检查、不格式化）
 - 单文件超过 ~800 行时考虑拆分
 - Debug 日志遵循 `.cursor/rules/debug-usage.md` 命名空间（如 `auth:*`、`db:*`）

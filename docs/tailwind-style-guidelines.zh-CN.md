@@ -57,6 +57,25 @@ const styles = createStaticStyles(({ css }) => ({
 
 也不要为了“迁移到 Tailwind”把复杂的动态 CSS 拆成难以阅读的超长 className。
 
+## 公共组合工具类
+
+跨页面反复出现的静态组合可以收敛到 [`src/styles/utilities.css`](../src/styles/utilities.css)，使用 Tailwind v4 的 `@utility` 定义。新增前必须先搜索仓库，并同时满足：
+
+- 至少在多个页面或功能域重复出现，而不是只服务于单个组件。
+- 组合语义稳定，通常由三个及以上基础工具类构成，并能明显缩短 `className`。
+- 使用完整、可理解的名称，例如 `flex-center`、`flex-between`、`flex-between-wrap`；不要维护 `flex-bc` 这类需要查表的字母缩写矩阵。
+- 只封装稳定的布局或浏览器兼容行为。`gap`、`padding`、颜色、断点和 `max-width` 等页面设计决策通常保留在调用处。
+- 优先使用 Tailwind 已有工具，例如 `size-full`、`truncate`、`grid`；不要创建重复别名。
+- 按 Flex、定位、文本/滚动等类别集中维护注释，并同步迁移至少一个实际调用点，避免积累未使用的工具类。
+
+例如：
+
+```tsx
+<div className='flex-between-wrap w-full max-w-[720px] gap-6'>...</div>
+```
+
+`@pure/ui` 的 `Flexbox` 是例外：其 `flex`、`width`、`height`、`padding` 等属性由 `--lobe-flex-*` CSS 变量控制。不要依赖普通 Tailwind 工具类覆盖这些属性；应使用 `Flexbox` 自身 props，或者由原生 HTML 元素承担 Tailwind 布局。
+
 ## 主题与颜色
 
 - 业务组件优先使用主题语义：文字、次级文字、容器背景、边框、主色、错误色等。
@@ -92,6 +111,7 @@ AI 创建或修改 React 组件时必须遵循：
 4. 优先复用现有主题变量与 `@pure/ui`，不要引入新的 CSS-in-JS 库或新的样式方案。
 5. 不进行与任务无关的全量样式重构，不把 `@pure/ui` 内部实现迁移混入业务组件修改。
 6. 完成后检查是否新增了不必要的 `createStaticStyles`，并运行针对性的 lint/typecheck。
+7. 添加组合工具类前先验证仓库复用频率；禁止为单页尺寸或一次性视觉参数创建全局 shortcut。
 
 ## 现有代码迁移原则
 

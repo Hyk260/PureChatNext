@@ -86,7 +86,7 @@ const ModelCategory = memo(() => {
 
   return (
     <Flexbox className={styles.root}>
-      <Scrollbar className='wh-full'>
+      <Scrollbar className='size-full'>
         <Flexbox gap={4}>
           <button
             className={cx(styles.item, selected === ALL_KEY && styles.active)}

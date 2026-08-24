@@ -71,4 +71,40 @@ describe('PureChat provider config migration', () => {
 
     expect(partialized.configs.purechat.models[0]?.health).toEqual({ status: 'idle' })
   })
+
+  it('supports custom models, remote cleanup, bulk toggles, and ordering', () => {
+    const store = useProviderConfigStore.getState()
+    const originalModels = store.configs.deepseek.models
+
+    store.addCustomModel('deepseek', { displayName: '我的模型', id: 'my-model' })
+    const builtinModelId = originalModels[0]?.id ?? 'deepseek-v4-flash'
+    store.mergeRemoteModels('deepseek', [{ id: 'remote-model' }, { id: builtinModelId }])
+    expect(useProviderConfigStore.getState().configs.deepseek.models).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'my-model', source: 'custom' }),
+        expect.objectContaining({ id: 'remote-model', source: 'remote' }),
+        expect.objectContaining({ id: builtinModelId, source: 'builtin' }),
+      ])
+    )
+
+    store.clearRemoteModels('deepseek')
+    expect(useProviderConfigStore.getState().configs.deepseek.models.map((model) => model.id)).not.toContain(
+      'remote-model'
+    )
+    expect(useProviderConfigStore.getState().configs.deepseek.models.map((model) => model.id)).toContain('my-model')
+
+    store.setAllModelsEnabled('deepseek', false)
+    expect(useProviderConfigStore.getState().configs.deepseek.models.every((model) => !model.enabled)).toBe(true)
+    store.setAllModelsEnabled('deepseek', true)
+    expect(useProviderConfigStore.getState().configs.deepseek.models.every((model) => model.enabled)).toBe(true)
+
+    const modelIds = useProviderConfigStore.getState().configs.deepseek.models.map((model) => model.id)
+    store.reorderModels('deepseek', [...modelIds].reverse())
+    expect(useProviderConfigStore.getState().configs.deepseek.models.map((model) => model.id)).toEqual(
+      [...modelIds].reverse()
+    )
+
+    store.resetModels('deepseek')
+    expect(useProviderConfigStore.getState().configs.deepseek.models).toEqual(originalModels)
+  })
 })

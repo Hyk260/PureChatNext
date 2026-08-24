@@ -10,16 +10,12 @@ import {
   isServerManagedProvider,
   LEGACY_PROVIDER_DEFAULT_BASE_URLS,
 } from '../const'
-import type {
-  ProviderConfig,
-  ProviderConfigs,
-  ProviderId,
-  ProviderModelHealth,
-  ProviderModelItem,
-} from '../types'
+import type { ProviderConfig, ProviderConfigs, ProviderId, ProviderModelHealth, ProviderModelItem } from '../types'
 
 interface ProviderConfigState {
   configs: ProviderConfigs
+  addCustomModel: (id: ProviderId, model: { displayName?: string; id: string }) => void
+  clearRemoteModels: (id: ProviderId) => void
   getConfig: (id: ProviderId) => ProviderConfig
   getEnabledModels: () => Array<{ displayName: string; model: string; provider: ProviderId }>
   mergeRemoteModels: (id: ProviderId, remote: Array<{ displayName?: string; id: string }>) => void
@@ -28,6 +24,9 @@ interface ProviderConfigState {
   setEnabled: (id: ProviderId, enabled: boolean) => void
   setModelHealth: (id: ProviderId, modelId: string, health: ProviderModelHealth) => void
   setModels: (id: ProviderId, models: ProviderModelItem[]) => void
+  setAllModelsEnabled: (id: ProviderId, enabled: boolean) => void
+  resetModels: (id: ProviderId) => void
+  reorderModels: (id: ProviderId, orderedModelIds: string[]) => void
   toggleModelEnabled: (id: ProviderId, modelId: string, enabled: boolean) => void
 }
 
@@ -98,6 +97,45 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
   persist(
     (set, get) => ({
       configs: DEFAULT_PROVIDER_CONFIGS,
+      addCustomModel: (id, model) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          const modelId = model.id.trim()
+          if (!modelId || current.models.some((item) => item.id === modelId)) return state
+
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: [
+                  ...current.models,
+                  {
+                    displayName: model.displayName?.trim() || modelId,
+                    enabled: true,
+                    id: modelId,
+                    source: 'custom',
+                  },
+                ],
+              },
+            },
+          }
+        })
+      },
+      clearRemoteModels: (id) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: current.models.filter((model) => model.source !== 'remote'),
+              },
+            },
+          }
+        })
+      },
       getConfig: (id) => get().configs[id] ?? createDefaultProviderConfig(id),
       getEnabledModels: () => {
         const { configs } = get()
@@ -131,7 +169,6 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
               return {
                 ...existing,
                 displayName: item.displayName?.trim() || existing.displayName,
-                source: 'remote',
               }
             }
 
@@ -221,6 +258,57 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
             },
           },
         }))
+      },
+      setAllModelsEnabled: (id, enabled) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: current.models.map((model) => ({
+                  ...model,
+                  enabled: getAiModel(id, model.id)?.enabled === false ? false : enabled,
+                })),
+              },
+            },
+          }
+        })
+      },
+      resetModels: (id) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: createDefaultProviderConfig(id).models,
+              },
+            },
+          }
+        })
+      },
+      reorderModels: (id, orderedModelIds) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          const modelById = new Map(current.models.map((model) => [model.id, model]))
+          let nextIndex = 0
+
+          const models = current.models.map((model) => {
+            if (!orderedModelIds.includes(model.id)) return model
+            const nextModelId = orderedModelIds[nextIndex++]
+            return modelById.get(nextModelId) ?? model
+          })
+
+          return {
+            configs: {
+              ...state.configs,
+              [id]: { ...current, models },
+            },
+          }
+        })
       },
       toggleModelEnabled: (id, modelId, enabled) => {
         set((state) => {

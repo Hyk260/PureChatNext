@@ -1,30 +1,21 @@
 'use client'
 
 import { DEFAULT_MODEL_PROVIDER_LIST, getAiModel } from '@pure/model-bank'
-import { Flexbox, Tabs, Text } from '@pure/ui'
+import { ActionIcon, confirmModal, Flexbox, SortableList, Tabs } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { apiFetch } from '@/utils/apiFetch'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { ArrowDownUp, Eye, EyeOff } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
 import { getSettingsProviderMeta } from '../../const'
 import type { ProviderId } from '../../types'
 import EmptyModels from './EmptyModels'
+import CustomModelModal from './CustomModelModal'
 import HealthCheckModal from './HealthCheckModal'
 import { DEFAULT_HEALTH_CHECK_CONCURRENCY, runWithConcurrency } from './healthCheck'
 import ModelItem from './ModelItem'
 import ModelTitle from './ModelTitle'
-
-const styles = createStaticStyles(({ css }) => ({
-  sectionLabel: css`
-    padding-block: 8px;
-    padding-inline: 8px;
-    color: ${cssVar.colorTextSecondary};
-    font-size: 12px;
-    font-weight: 500;
-  `,
-}))
 
 type ModelTab = 'all' | 'chat'
 
@@ -35,7 +26,12 @@ interface ModelListProps {
 const ModelList = memo<ModelListProps>(({ id }) => {
   const { message } = useApp()
   const config = useProviderConfigStore((s) => s.configs[id])
+  const addCustomModel = useProviderConfigStore((s) => s.addCustomModel)
+  const clearRemoteModels = useProviderConfigStore((s) => s.clearRemoteModels)
   const mergeRemoteModels = useProviderConfigStore((s) => s.mergeRemoteModels)
+  const reorderModels = useProviderConfigStore((s) => s.reorderModels)
+  const resetModels = useProviderConfigStore((s) => s.resetModels)
+  const setAllModelsEnabled = useProviderConfigStore((s) => s.setAllModelsEnabled)
   const setModelHealth = useProviderConfigStore((s) => s.setModelHealth)
 
   const [keyword, setKeyword] = useState('')
@@ -43,6 +39,8 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   const [loading, setLoading] = useState(false)
   const [healthLoading, setHealthLoading] = useState(false)
   const [healthModalOpen, setHealthModalOpen] = useState(false)
+  const [customModelModalOpen, setCustomModelModalOpen] = useState(false)
+  const [sortMode, setSortMode] = useState(false)
   const healthAbortRef = useRef<AbortController | null>(null)
   const healthModelIdsRef = useRef<string[]>([])
   const healthRunIdRef = useRef(0)
@@ -70,6 +68,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
     () => models.filter((model) => model.enabled && getAiModel(id, model.id)?.enabled !== false),
     [id, models]
   )
+  const remoteModelCount = useMemo(() => models.filter((model) => model.source === 'remote').length, [models])
 
   const fetchRemoteModels = async () => {
     if (!showModelFetcher) return
@@ -121,6 +120,15 @@ const ModelList = memo<ModelListProps>(({ id }) => {
 
   const handleFetch = showModelFetcher ? () => void fetchRemoteModels() : undefined
 
+  const handleAddCustomModel = useCallback(
+    (model: { displayName: string; id: string }) => {
+      addCustomModel(id, model)
+      setCustomModelModalOpen(false)
+      message.success(`已添加模型 ${model.displayName}`)
+    },
+    [addCustomModel, id, message]
+  )
+
   const clearCheckingHealth = useCallback(
     (modelIds: string[]) => {
       const currentConfig = useProviderConfigStore.getState().configs[id]
@@ -150,6 +158,67 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   )
 
   useEffect(() => () => cancelHealthCheck(false), [cancelHealthCheck])
+
+  const handleClearRemoteModels = useCallback(() => {
+    if (remoteModelCount === 0) return
+    confirmModal({
+      cancelText: '取消',
+      content: `将移除当前服务商获取的 ${remoteModelCount} 个模型，自定义模型和内置模型会保留。`,
+      okButtonProps: { danger: true },
+      okText: '清除',
+      title: '清除获取的模型？',
+      onOk: () => {
+        clearRemoteModels(id)
+        message.success('已清除获取的模型')
+      },
+    })
+  }, [clearRemoteModels, id, message, remoteModelCount])
+
+  const handleResetModels = useCallback(() => {
+    confirmModal({
+      cancelText: '取消',
+      content: '模型启用状态、自定义模型、获取的模型和排序都会恢复为默认设置。',
+      okButtonProps: { danger: true },
+      okText: '重置',
+      title: '重置所有模型修改？',
+      onOk: () => {
+        if (healthLoading) cancelHealthCheck(false)
+        resetModels(id)
+        setKeyword('')
+        message.success('已重置所有模型修改')
+      },
+    })
+  }, [cancelHealthCheck, healthLoading, id, message, resetModels])
+
+  const handleSetAllModelsEnabled = useCallback(
+    (enabled: boolean) => {
+      setAllModelsEnabled(id, enabled)
+      message.success(enabled ? '已全部启用模型' : '已全部禁用模型')
+    },
+    [id, message, setAllModelsEnabled]
+  )
+
+  const renderSortableModels = useCallback(
+    (items: typeof models) => (
+      <SortableList
+        gap={4}
+        items={items}
+        renderItem={(model) => (
+          <SortableList.Item id={model.id} width='100%'>
+            <ModelItem model={model} provider={id} showDragHandle={sortMode} />
+          </SortableList.Item>
+        )}
+        width='100%'
+        onChange={(nextItems) =>
+          reorderModels(
+            id,
+            nextItems.map((model) => model.id)
+          )
+        }
+      />
+    ),
+    [id, reorderModels, sortMode]
+  )
 
   const runHealthCheck = async (timeoutMs: number, concurrency: number) => {
     if (healthLoading) return
@@ -243,16 +312,26 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   return (
     <Flexbox gap={8} width='100%'>
       <ModelTitle
+        canClearRemoteModels={remoteModelCount > 0}
         healthLoading={healthLoading}
         healthModelCount={enabledHealthModels.length}
         loading={loading}
+        onAddCustomModel={() => setCustomModelModalOpen(true)}
         searchKeyword={keyword}
         showModelFetcher={showModelFetcher}
-        total={models.length}
         onCancelHealthCheck={() => cancelHealthCheck()}
+        onClearRemoteModels={handleClearRemoteModels}
         onHealthCheck={() => setHealthModalOpen(true)}
         onFetch={handleFetch}
         onKeywordChange={setKeyword}
+        onResetModels={handleResetModels}
+      />
+
+      <CustomModelModal
+        existingModelIds={models.map((model) => model.id)}
+        open={customModelModalOpen}
+        onAdd={handleAddCustomModel}
+        onCancel={() => setCustomModelModalOpen(false)}
       />
 
       <HealthCheckModal
@@ -279,21 +358,28 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         <Flexbox gap={4} width='100%'>
           {enabledModels.length > 0 ? (
             <>
-              <div className={styles.sectionLabel}>已启用</div>
-              {enabledModels.map((model) => (
-                <ModelItem key={model.id} model={model} provider={id} />
-              ))}
+              <ModelSectionHeader
+                actionIcon={EyeOff}
+                actionTitle='全部禁用'
+                sortMode={sortMode}
+                title='已启用'
+                onAction={() => handleSetAllModelsEnabled(false)}
+                onToggleSort={() => setSortMode((current) => !current)}
+              />
+              {renderSortableModels(enabledModels)}
             </>
           ) : null}
 
           {disabledModels.length > 0 ? (
             <>
-              <div className={styles.sectionLabel}>
-                <Text type='secondary'>未启用</Text>
-              </div>
-              {disabledModels.map((model) => (
-                <ModelItem key={model.id} model={model} provider={id} />
-              ))}
+              <ModelSectionHeader
+                actionIcon={Eye}
+                actionTitle='全部启用'
+                onToggleSort={enabledModels.length === 0 ? () => setSortMode((current) => !current) : undefined}
+                title='未启用'
+                onAction={() => handleSetAllModelsEnabled(true)}
+              />
+              {renderSortableModels(disabledModels)}
             </>
           ) : null}
         </Flexbox>
@@ -303,5 +389,36 @@ const ModelList = memo<ModelListProps>(({ id }) => {
 })
 
 ModelList.displayName = 'ModelList'
+
+interface ModelSectionHeaderProps {
+  actionIcon: typeof Eye
+  actionTitle: string
+  sortMode?: boolean
+  title: string
+  onAction: () => void
+  onToggleSort?: () => void
+}
+
+const ModelSectionHeader = memo<ModelSectionHeaderProps>(
+  ({ actionIcon, actionTitle, onAction, onToggleSort, sortMode = false, title }) => (
+    <div className='flex items-center justify-between px-2 py-2 text-xs font-medium text-[var(--pure-vars-colorTextSecondary)]'>
+      <span>{title}</span>
+      <div className='flex items-center gap-1'>
+        {onToggleSort ? (
+          <ActionIcon
+            active={sortMode}
+            icon={ArrowDownUp}
+            size='small'
+            title={sortMode ? '完成自定义排序' : '自定义排序'}
+            onClick={onToggleSort}
+          />
+        ) : null}
+        <ActionIcon icon={actionIcon} size='small' title={actionTitle} onClick={onAction} />
+      </div>
+    </div>
+  )
+)
+
+ModelSectionHeader.displayName = 'ModelSectionHeader'
 
 export default ModelList

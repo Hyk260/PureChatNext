@@ -1,6 +1,6 @@
 export type ProviderId = 'openai' | 'deepseek' | 'purechat'
 
-export type ProviderModelSource = 'builtin' | 'remote'
+export type ProviderModelSource = 'builtin' | 'custom' | 'remote'
 
 export type ProviderModelHealthStatus = 'idle' | 'checking' | 'success' | 'failure'
 

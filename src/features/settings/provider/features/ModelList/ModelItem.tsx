@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox, Icon, ModelIcon, Switch, Tag, Text, Tooltip } from '@pure/ui'
+import { Flexbox, Icon, ModelIcon, SortableList, Switch, Tag, Text, Tooltip } from '@pure/ui'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { formatTokenNumber } from '@pure/utils/client'
@@ -55,9 +55,10 @@ const styles = createStaticStyles(({ css }) => ({
 interface ModelItemProps {
   model: ProviderModelItem
   provider: ProviderId
+  showDragHandle?: boolean
 }
 
-const ModelItem = memo<ModelItemProps>(({ model, provider }) => {
+const ModelItem = memo<ModelItemProps>(({ model, provider, showDragHandle = false }) => {
   const toggleModelEnabled = useProviderConfigStore((s) => s.toggleModelEnabled)
   const card = getAiModel(provider as ModelProviderId, model.id)
   const pricing = card?.pricing
@@ -92,6 +93,7 @@ const ModelItem = memo<ModelItemProps>(({ model, provider }) => {
   return (
     <Flexbox horizontal align='center' className={styles.container} gap={16} justify='space-between' width='100%'>
       <Flexbox horizontal align='center' className={styles.desc} gap={12}>
+        {showDragHandle ? <SortableList.DragHandle size='small' title='拖动排序' /> : null}
         <ModelIcon model={model.id} size={32} />
         <Flexbox className={styles.meta} gap={4}>
           <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0 }}>

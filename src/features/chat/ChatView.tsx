@@ -3,7 +3,6 @@
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import type { UIMessage } from 'ai'
-import { X } from 'lucide-react'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
 import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
@@ -20,11 +19,10 @@ import {
   setPendingTopicSendFiles,
   truncateTitle,
 } from '@/features/chat/chatLocalStorage'
+import ChatErrorBanner from '@/features/chat/ChatErrorBanner'
 import ChatMessages from '@/features/chat/ChatMessages'
 import { getMessageText, withMessageText } from '@/features/chat/messageText'
 import type { ChatSearchMode } from '@/features/chat/types'
-import { CONVERSATION_MAX_WIDTH } from '@/features/chat/WideScreenContainer'
-import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { isSettingsProviderId } from '@/features/settings/provider/const'
@@ -122,7 +120,6 @@ const ChatView = memo<ChatViewProps>(
         : undefined
     )
     const selectedModelAbilities = selectedModelConfig?.abilities
-    const wideScreen = useChatUiStore((state) => state.wideScreen)
 
     const chatId = `purechat-${agentId}-${topicId ?? 'draft'}`
 
@@ -398,30 +395,7 @@ const ChatView = memo<ChatViewProps>(
           onEdit={handleEdit}
           onRegenerate={handleRegenerate}
         />
-        {error ? (
-          <div className='pointer-events-none absolute inset-x-0 bottom-2 z-10 flex justify-center'>
-            <div
-              className='pointer-events-auto box-border flex w-full max-w-full items-center justify-between gap-3 px-4'
-              style={{ maxWidth: wideScreen ? undefined : `${CONVERSATION_MAX_WIDTH}px` }}
-            >
-              <div
-                className='box-border flex min-w-0 flex-1 items-center justify-between gap-3 rounded-2xl border border-[var(--pure-vars-colorErrorBorder)] bg-[var(--pure-vars-colorErrorBg)] px-3 py-2 text-[13px] leading-[1.5] break-words text-[var(--pure-vars-colorError)]'
-                role='alert'
-              >
-                <span className='min-w-0'>{error.message || '发送失败，请稍后重试'}</span>
-                <button
-                  aria-label='关闭错误提示'
-                  className='-m-1 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-[var(--pure-vars-colorError)] transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pure-vars-colorError)]'
-                  title='关闭'
-                  type='button'
-                  onClick={clearError}
-                >
-                  <X aria-hidden size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : null}
+        {error ? <ChatErrorBanner message={error.message} onDismiss={clearError} /> : null}
       </div>
     )
   }

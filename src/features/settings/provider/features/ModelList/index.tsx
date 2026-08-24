@@ -4,6 +4,7 @@ import { DEFAULT_MODEL_PROVIDER_LIST, getAiModel } from '@pure/model-bank'
 import { ActionIcon, confirmModal, Flexbox, SortableList, Tabs } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { apiFetch } from '@/utils/apiFetch'
+import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowDownUp, Eye, EyeOff } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -453,9 +454,22 @@ interface ModelSectionHeaderProps {
   onToggleSort?: () => void
 }
 
+// 保留 createStaticStyles：完整的 Tailwind className 会超过 120 字符，且颜色来自 antd 主题。
+const styles = createStaticStyles(({ css }) => ({
+  sectionHeader: css`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    color: ${cssVar.colorTextSecondary};
+    font-size: 12px;
+    font-weight: 500;
+  `,
+}))
+
 const ModelSectionHeader = memo<ModelSectionHeaderProps>(
   ({ actionIcon, actionTitle, onAction, onToggleSort, sortMode = false, title }) => (
-    <div className='flex items-center justify-between px-2 py-2 text-xs font-medium text-[var(--pure-vars-colorTextSecondary)]'>
+    <div className={styles.sectionHeader}>
       <span>{title}</span>
       <div className='flex items-center gap-1'>
         {onToggleSort ? (

@@ -136,7 +136,7 @@ const ModelTitle = memo<ModelTitleProps>(
               value={searchKeyword}
               onInputChange={onKeywordChange}
             />
-            {onAddCustomModel ? (
+            {/* {onAddCustomModel ? (
               <ActionIcon
                 variant={'outlined'}
                 icon={Plus}
@@ -144,7 +144,7 @@ const ModelTitle = memo<ModelTitleProps>(
                 title='添加自定义模型'
                 onClick={onAddCustomModel}
               />
-            ) : null}
+            ) : null} */}
             <DropdownMenu
               items={menuItems}
               nativeButton

@@ -6,9 +6,9 @@
 
 迁移完成后的边界：
 
-- 新业务组件默认使用 Tailwind。
+- 新业务组件默认使用 Tailwind，但格式化后的单个静态 `className` 不得超过 120 字符。
 - 简单静态样式不再新增 `createStaticStyles`。
-- 复杂、动态、动画和基础 UI 样式允许继续使用 `createStaticStyles`。
+- 复杂、动态、动画、超长 className 和基础 UI 样式允许继续使用 `createStaticStyles`。
 - `@pure/ui` 的主题和组件桥接在业务迁移稳定后再单独评估。
 
 ## 当前基线
@@ -17,8 +17,8 @@
 
 迁移前的代码扫描基线：
 
-- 约 92 个生产代码文件使用 `createStaticStyles`。
-- 约 87 个生产代码文件直接使用 `cssVar`。
+- 约 90 个生产代码文件使用 `createStaticStyles`。
+- 约 85 个生产代码文件直接使用 `cssVar`。
 - 主要分布在 chat、settings、home、resources、community。
 - Tailwind class 已在 dev 页面、认证页和少量基础组件中使用。
 
@@ -43,14 +43,20 @@ rg -l "cssVar" src packages --glob '*.{ts,tsx}' --glob '!**/*.test.*' | wc -l
 
 ```css
 @theme inline {
-  --color-app-text: var(--pure-vars-colorText);
-  --color-app-text-secondary: var(--pure-vars-colorTextSecondary);
-  --color-app-surface: var(--pure-vars-colorBgContainer);
-  --color-app-border: var(--pure-vars-colorBorderSecondary);
+  --color-app-text: var(--ant-color-text);
+  --color-app-text-secondary: var(--ant-color-text-secondary);
+  --color-app-surface: var(--ant-color-bg-container);
+  --color-app-border: var(--ant-color-border-secondary);
 }
 ```
 
-变量名以浏览器中实际生成的 `pure-vars` 为准；如果当前主题系统生成的名称不同，应先修正映射，不要在组件中散落多个写法。
+`ThemeProvider` 的 `theme={{ cssVar: { key: 'pure-vars' } }}` 只设置 CSS 变量作用域 key，不会把 key 作为变量名前缀。当前 `antd-style` 的 `cssVar` 实际对应 kebab-case 的 `--ant-*` 变量，例如：
+
+- `cssVar.colorTextSecondary` → `var(--ant-color-text-secondary)`
+- `cssVar.colorError` → `var(--ant-color-error)`
+- `cssVar.colorErrorBg` → `var(--ant-color-error-bg)`
+
+上面的 `app-*` 仅表示后续可新增的语义映射方向。新增前必须确认变量在实际 Provider 作用域内存在，并验证浅色、深色主题；业务 JSX 只能使用已经提交到 `globals.css` 的语义 token，不得自行拼接变量名。
 
 ## 阶段 1：新代码设闸
 
@@ -58,7 +64,8 @@ rg -l "cssVar" src packages --glob '*.{ts,tsx}' --glob '!**/*.test.*' | wc -l
 
 - 新组件默认写 Tailwind class。
 - 少量样式修改不创建 `styles` 常量。
-- `createStaticStyles` 只有在复杂性可说明时才允许新增。
+- 格式化后单个静态 `className` 超过 120 字符时，先复用 Tailwind 内置工具和 `utilities.css` 组合；仍超限则必须使用 `createStaticStyles`。
+- `createStaticStyles` 可用于复杂样式、动态几何值和无法合理压缩到 120 字符以内的组件级样式。
 - 新增例外时，在代码附近写一句保留原因。
 - `@pure/ui` 组件继续使用，但业务布局优先用 `className` 或已有 props 组合。
 
@@ -76,10 +83,12 @@ rg -l "cssVar" src packages --glob '*.{ts,tsx}' --glob '!**/*.test.*' | wc -l
 每个试点按以下顺序完成：
 
 1. 把 `styles.xxx` 用 Tailwind class 替换。
-2. 将 `cssVar` 使用转为统一的语义 token。
-3. 删除无用的 `antd-style` import、`styles` 常量和测试 mock。
-4. 检查响应式、暗色模式和交互状态。
-5. 运行 lint/typecheck，并进行页面视觉检查。
+2. 检查静态 `className` 是否超过 120 字符；优先复用 Tailwind 内置工具和已有公共 utility。
+3. 只有跨组件重复且语义稳定时才新增 `@utility`；单组件样式仍超限则保留或恢复 `createStaticStyles`。
+4. 将 `cssVar` 使用转为 `globals.css` 已存在的语义 token；不存在映射时继续通过 `createStaticStyles` 使用 `cssVar`。
+5. 删除无用的 `antd-style` import、样式常量和测试 mock。
+6. 检查响应式、暗色模式和交互状态。
+7. 运行 lint/typecheck，并进行页面视觉检查。
 
 ## 阶段 3：按功能域迁移
 
@@ -106,6 +115,7 @@ rg -l "cssVar" src packages --glob '*.{ts,tsx}' --glob '!**/*.test.*' | wc -l
 - [`src/components/NeuralNetworkLoading/index.tsx`](../src/components/NeuralNetworkLoading/index.tsx)：SVG 属性、动画和动态延迟。
 - 包含多个 `@media` / `@container` / 属性选择器 / 后代选择器的组件。
 - 依赖动态 CSS 值、计算尺寸或复杂 transition 的组件。
+- 经合理复用后静态 `className` 仍超过 120 字符的组件级样式。
 - `packages/ui` 中仍作为公共桥接层的基础组件。
 
 这些样式可以继续使用 `createStaticStyles`。如果未来需要进一步去除 CSS-in-JS，应先建立独立的基础组件样式方案，再单独迁移，而不是在业务迁移中顺带处理。
@@ -127,7 +137,10 @@ rg -l "cssVar" src packages --glob '*.{ts,tsx}' --glob '!**/*.test.*' | wc -l
 每个迁移 PR 至少满足：
 
 - 新增组件没有无必要的 `createStaticStyles`。
+- 新增或修改的静态 `className` 在格式化后不超过 120 字符。
+- 超长样式没有通过字符串拼接、模板拆行、数组或无意义的 `cx()` 参数拆分规避检查。
 - Tailwind class 使用语义化 token，不新增无理由的硬编码主题色。
+- JSX 中不存在根据 `cssVar.key` 猜测出来的 CSS 变量名；新增变量映射已经过实际运行时和明暗主题验证。
 - 桌面、窄屏、暗色模式和主要交互状态保持一致。
 - `pnpm exec eslint <changed-files>` 通过。
 - `pnpm exec tsc --noEmit` 通过。
@@ -137,6 +150,7 @@ rg -l "cssVar" src packages --glob '*.{ts,tsx}' --glob '!**/*.test.*' | wc -l
 
 - 用全局搜索替换一次性迁移全部 `styles.xxx`。
 - 把每个 CSS 属性机械转换成 class，导致 className 无法阅读。
+- 为了满足 120 字符限制而机械拆分 class 字符串，或为单个组件创建专属全局 utility。
 - 在组件中直接写一套与 `antd-style` 不一致的暗色 token。
 - 为了迁移简单样式而引入新的 `clsx`、CSS-in-JS 或样式框架。
 - 把 `@pure/ui` 内部实现与业务迁移放在同一个大 PR 中。
@@ -146,7 +160,7 @@ rg -l "cssVar" src packages --glob '*.{ts,tsx}' --glob '!**/*.test.*' | wc -l
 
 迁移不是要求仓库中完全没有 `createStaticStyles`，而是满足：
 
-- 新代码全部遵循 Tailwind 优先。
+- 新代码遵循 Tailwind 优先和静态 `className` 120 字符限制。
 - 存量 `createStaticStyles` 都有复杂性或公共组件边界上的合理原因。
 - 主题 token 只有一个可维护来源。
 - 业务层不再依赖 LobeHub 风格的样式组织方式来完成普通布局。

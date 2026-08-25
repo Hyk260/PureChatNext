@@ -2,22 +2,20 @@
 
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
-import { LoaderCircle, MessageCircle, RotateCcw, Search, Send, Square, Trash2, X } from 'lucide-react'
+import { LoaderCircle, MessageCircle, RotateCcw, Search, Trash2, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Markdown from 'react-markdown'
+import { AIAgentInput } from './ai-agent-input'
 
 const suggestions = ['如何快速开始？', '如何使用 Docker 部署？', '在线搜索需要配置什么？']
 
 export function AskAI() {
   const pathname = usePathname()
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const [input, setInput] = useState('')
+  const [composerResetKey, setComposerResetKey] = useState(0)
   const [open, setOpen] = useState(false)
-  const transport = useMemo(
-    () => new DefaultChatTransport({ api: '/api/chat', body: { page: pathname } }),
-    [pathname],
-  )
+  const transport = useMemo(() => new DefaultChatTransport({ api: '/api/chat', body: { page: pathname } }), [pathname])
   const { clearError, error, messages, regenerate, sendMessage, setMessages, status, stop } = useChat({ transport })
   const pending = status === 'submitted' || status === 'streaming'
 
@@ -34,14 +32,13 @@ export function AskAI() {
     if (!value || pending || value.length > 1000) return
     clearError()
     void sendMessage({ text: value })
-    setInput('')
   }
 
   function clearConversation() {
     stop()
     clearError()
     setMessages([])
-    setInput('')
+    setComposerResetKey((key) => key + 1)
   }
 
   return (
@@ -89,7 +86,12 @@ export function AskAI() {
                 <p>回答只依据当前公开文档，并附上可继续阅读的来源。</p>
                 <div className='grid gap-2 pt-2'>
                   {suggestions.map((suggestion) => (
-                    <button className='docs-ai-suggestion' key={suggestion} onClick={() => submit(suggestion)} type='button'>
+                    <button
+                      className='docs-ai-suggestion'
+                      key={suggestion}
+                      onClick={() => submit(suggestion)}
+                      type='button'
+                    >
                       {suggestion}
                     </button>
                   ))}
@@ -98,7 +100,6 @@ export function AskAI() {
             ) : (
               messages.map((message) => (
                 <article className='docs-ai-message' data-role={message.role} key={message.id}>
-                  <p className='docs-ai-message-role'>{message.role === 'user' ? '你' : 'PureChat AI'}</p>
                   {message.parts.map((part, index) => {
                     if (part.type === 'text') {
                       return (
@@ -141,41 +142,13 @@ export function AskAI() {
             ) : null}
           </div>
 
-          <form
-            className='docs-ai-composer'
-            onSubmit={(event) => {
-              event.preventDefault()
-              submit(input)
-            }}
-          >
-            <textarea
-              aria-label='向 PureChat 文档提问'
-              disabled={pending}
-              maxLength={1000}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault()
-                  submit(input)
-                }
-              }}
-              placeholder='询问安装、部署或开发问题…'
-              rows={3}
-              value={input}
-            />
-            <div className='docs-ai-composer-footer'>
-              <span>{input.length}/1000</span>
-              {pending ? (
-                <button aria-label='停止生成' onClick={stop} type='button'>
-                  <Square aria-hidden className='size-3.5 fill-current' />
-                </button>
-              ) : (
-                <button aria-label='发送问题' disabled={!input.trim()} type='submit'>
-                  <Send aria-hidden className='size-4' />
-                </button>
-              )}
-            </div>
-          </form>
+          <AIAgentInput
+            key={composerResetKey}
+            onStop={stop}
+            onSubmit={submit}
+            pending={pending}
+            resetKey={composerResetKey}
+          />
         </div>
       </dialog>
     </>

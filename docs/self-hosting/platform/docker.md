@@ -41,7 +41,7 @@ pnpm dev:docker:reset -- --yes
 node /app/docker-s3-init.mjs && node /app/docker-migrate.mjs && exec node /app/server.js
 ```
 
-迁移失败则进程退出，应用不会起来。逻辑说明见 [Drizzle 指南](../drizzle-setup.zh-CN.md)。
+迁移失败则进程退出，应用不会起来。逻辑说明见 [Drizzle 指南](../../development/database/drizzle.md)。
 
 ## 生产部署
 
@@ -70,7 +70,7 @@ pnpm docker:deploy
 
 生产 Compose 不暴露 PostgreSQL、Redis、RustFS 或 SearXNG 端口，RustFS bucket 也不会设置匿名读取策略；文件经应用鉴权代理访问。应用只监听宿主机 `127.0.0.1:3210`。`data-network` 为 internal 网络，仅连接 app、PostgreSQL、Redis、RustFS；`app-network` 只连接 app 与 SearXNG，使搜索服务可出网。各容器不固定 `container_name`，使用非 root 用户、只读 rootfs、tmpfs、最小 capabilities 和资源上限。Nginx 示例：
 
-Channel Gateway 内置于 `app` 的 Next Node Server，Compose 通过 `CHANNEL_GATEWAY_ENABLED=1` 显式开启，不再启动第二个 Gateway 容器。微信渠道要求 `KEY_VAULTS_SECRET` 和至少一个服务端模型密钥；详细验收见 [微信渠道](./wechat-channel.zh-CN.md)。
+Channel Gateway 内置于 `app` 的 Next Node Server，Compose 通过 `CHANNEL_GATEWAY_ENABLED=1` 显式开启，不再启动第二个 Gateway 容器。微信渠道要求 `KEY_VAULTS_SECRET` 和至少一个服务端模型密钥；详细验收见 [微信渠道](../channels/wechat/setup.md)。
 
 ```nginx
 server {
@@ -147,4 +147,4 @@ docker compose --env-file docker-compose/deploy/.env -f docker-compose/deploy/do
 curl --fail http://127.0.0.1:3210/api/health
 ```
 
-应用日志停在 `[Database] waiting for PostgreSQL` 时检查数据库健康与密码；迁移报 schema 不一致时按 [Drizzle 指南](../drizzle-setup.zh-CN.md#迁移失败) 修复，禁止清卷绕过。
+应用日志停在 `[Database] waiting for PostgreSQL` 时检查数据库健康与密码；迁移报 schema 不一致时按 [Drizzle 指南](../../development/database/drizzle.md#迁移失败) 修复，禁止清卷绕过。

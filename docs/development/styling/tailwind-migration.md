@@ -13,7 +13,7 @@
 
 ## 当前基线
 
-当前仓库已经在 [`src/styles/globals.css`](../src/styles/globals.css) 接入 Tailwind v4，并通过 [`postcss.config.mjs`](../postcss.config.mjs) 构建。
+当前仓库已经在 [`src/styles/globals.css`](../../../src/styles/globals.css) 接入 Tailwind v4，并通过 [`postcss.config.mjs`](../../../postcss.config.mjs) 构建。
 
 迁移前的代码扫描基线：
 
@@ -111,8 +111,8 @@ rg -l "cssVar" src packages --glob '*.{ts,tsx}' --glob '!**/*.test.*' | wc -l
 
 以下代码不应为了追求 Tailwind 覆盖率强行改写：
 
-- [`src/components/Scrollbar/index.tsx`](../src/components/Scrollbar/index.tsx)：运行时滚动尺寸、横纵轴状态和拖拽状态。
-- [`src/components/NeuralNetworkLoading/index.tsx`](../src/components/NeuralNetworkLoading/index.tsx)：SVG 属性、动画和动态延迟。
+- [`src/components/Scrollbar/index.tsx`](../../../src/components/Scrollbar/index.tsx)：运行时滚动尺寸、横纵轴状态和拖拽状态。
+- [`src/components/NeuralNetworkLoading/index.tsx`](../../../src/components/NeuralNetworkLoading/index.tsx)：SVG 属性、动画和动态延迟。
 - 包含多个 `@media` / `@container` / 属性选择器 / 后代选择器的组件。
 - 依赖动态 CSS 值、计算尺寸或复杂 transition 的组件。
 - 经合理复用后静态 `className` 仍超过 120 字符的组件级样式。

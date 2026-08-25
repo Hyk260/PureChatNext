@@ -43,7 +43,7 @@ NODE_ENV=development
 
 ⚠️ **注意**：将上面的 URL 和 KEY 替换为你从 Supabase 获取的实际值。
 
-本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [env-setup.zh-CN.md · APP\_URL](./env-setup.zh-CN.md#app_url)。
+本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [环境变量 · APP\_URL](../self-hosting/configuration/environment.md#app_url)。
 
 ### 3.1 可选：本地依赖（Docker）
 
@@ -74,7 +74,7 @@ S3_BUCKET=purechat
 S3_ENDPOINT=http://localhost:9000
 S3_ENABLE_PATH_STYLE=1
 S3_SET_ACL=0
-# S3_SET_ACL=0：对象私有，经应用鉴权代理访问（RustFS 必用）。详见 docs/env-setup.zh-CN.md
+# S3_SET_ACL=0：对象私有，经应用鉴权代理访问（RustFS 必用）。详见 docs/self-hosting/configuration/environment.md
 
 SEARCH_PROVIDERS=searxng
 SEARXNG_URL=http://localhost:8180
@@ -88,7 +88,7 @@ pnpm dev:docker:down   # 停止（保留数据卷）
 pnpm dev:docker:reset  # 清空卷后重建并执行 db:migrate
 ```
 
-`dev:docker:reset` 会要求输入确认并永久删除全部开发卷。旧本机数据迁移和生产部署见 [Docker 自托管与数据迁移](./self-hosting/docker.zh-CN.md)；服务说明见 [本地 PostgreSQL](./self-hosting/postgresql-local.zh-CN.md)、[本地 Redis](./self-hosting/redis-local.zh-CN.md)、[联网搜索](./self-hosting/online-search.zh-CN.md)。
+`dev:docker:reset` 会要求输入确认并永久删除全部开发卷。旧本机数据迁移和生产部署见 [Docker 自托管与数据迁移](../self-hosting/platform/docker.md)；服务说明见 [本地 PostgreSQL](../self-hosting/infrastructure/postgresql.md)、[本地 Redis](../self-hosting/infrastructure/redis.md)、[联网搜索](../self-hosting/features/online-search.md)。
 
 ## 4. 启动开发服务器
 
@@ -166,6 +166,6 @@ curl -X GET http://localhost:3000/api/auth/me \
 
 ## 下一步
 
-- 查看 [README.md](./README.md) 了解完整的 API 文档
-- 查看 [env-setup.zh-CN.md](./env-setup.zh-CN.md) 了解环境变量详细配置
+- 查看 [文档索引](../README.md) 了解全部公开文档
+- 查看 [环境变量](../self-hosting/configuration/environment.md) 了解详细配置
 - 开始开发你的应用功能！

@@ -12,7 +12,7 @@ import type {
 
 /**
  * iLink CDN 媒体类型。
- * @see docs/self-hosting/wechat/protocol.zh-CN.md §8.2
+ * @see docs/self-hosting/channels/wechat/protocol.md §8.2
  */
 export enum WechatUploadMediaType {
   IMAGE = 1,
@@ -148,7 +148,7 @@ export class WechatApiClient {
   /**
    * 通过 iLink Bot API 发送单个 MessageItem（文本或媒体）。
    *
-   * 按 protocol.zh-CN.md §6.7，稳定用法是每次请求一个 MessageItem —
+   * 按 protocol.md §6.7，稳定用法是每次请求一个 MessageItem —
    * 文本与媒体分开发送。调用方每次应生成新的 `client_id`；本方法内部会分配。
    */
   async sendItem(toUserId: string, item: MessageItem, contextToken: string): Promise<WechatSendMessageResponse> {
@@ -178,13 +178,13 @@ export class WechatApiClient {
   /**
    * 上传出站媒体到 iLink CDN。
    *
-   * 实现 protocol.zh-CN.md §8.2 三步流程：
+   * 实现 protocol.md §8.2 三步流程：
    *   1. `getuploadurl` — 携带媒体元数据与 AES 密钥请求 `upload_param`
    *   2. 本地 AES-128-ECB + PKCS7 加密
    *   3. POST 密文到 CDN；读取 `x-encrypted-param` 响应头
    *
    * 返回的 `aesKey` 为 hex 字符串的 base64（openclaw 出站 `media.aes_key` 格式，
-   * 见 protocol.zh-CN.md §8.4 format B）。可直接填入
+   * 见 protocol.md §8.4 format B）。可直接填入
    * `image_item.media` / `file_item.media` / `video_item.media`。
    */
   async uploadCdnMedia(
@@ -246,7 +246,7 @@ export class WechatApiClient {
     }
 
     // 出站 media.aes_key 编码遵循 openclaw：32 字符 hex 字符串的 base64
-    //（protocol.zh-CN.md §8.4 format B）。入站代码兼容两种格式。
+    //（protocol.md §8.4 format B）。入站代码兼容两种格式。
     const aesKey = Buffer.from(aesKeyHex, 'ascii').toString('base64')
 
     return { aesKey, cipherSize, encryptQueryParam, rawSize }
@@ -284,7 +284,7 @@ export class WechatApiClient {
   /**
    * 从微信 CDN 下载并解密媒体。
    *
-   * 流程见 protocol.zh-CN.md §8.3：
+   * 流程见 protocol.md §8.3：
    *   GET CDN_BASE_URL/download?encrypted_query_param=... → AES-128-ECB 解密
    *
    * §8.5：缺少 AES 密钥时，尝试按明文下载。
@@ -308,7 +308,7 @@ export class WechatApiClient {
 
     const raw = Buffer.from(await response.arrayBuffer())
 
-    // protocol.zh-CN.md §8.5：缺少 AES 密钥时按明文返回
+    // protocol.md §8.5：缺少 AES 密钥时按明文返回
     let key: Buffer
     try {
       key = resolveAesKey(imageAeskey, media.aes_key)
@@ -402,7 +402,7 @@ function chunkText(text: string, limit: number): string[] {
 }
 
 // ============================================================================
-// CDN 媒体加解密（protocol.zh-CN.md §8.3–8.4）
+// CDN 媒体加解密（protocol.md §8.3–8.4）
 // ============================================================================
 
 /** AES-128-ECB 解密。 */
@@ -424,7 +424,7 @@ function encryptAesEcb(plaintext: Buffer, key: Buffer): Buffer {
 /**
  * 从两种来源与编码解析 16 字节 AES 密钥。
  *
- * 优先级见 protocol.zh-CN.md §8.4：
+ * 优先级见 protocol.md §8.4：
  *  1. `image_item.aeskey` — 32 字符 hex → hex 解码为 16 字节
  *  2. `media.aes_key` — base64 编码，两种可能格式：
  *     - Format A：base64(原始 16 字节) → 解码长度 = 16

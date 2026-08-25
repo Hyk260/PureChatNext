@@ -28,7 +28,7 @@ function createWebhookPrivateKey(clientSecret: string) {
 /**
  * 为 QQ Bot Webhook 地址验证生成 Ed25519 签名。
  *
- * 步骤（详见 `docs/self-hosting/qq/protocol.zh-CN.md`）：
+ * 步骤（详见 `docs/self-hosting/channels/qq/protocol.md`）：
  * 1. 重复 `clientSecret` 直到长度不小于 32，再截取前 32 字节作为种子；
  * 2. 根据种子构造 Ed25519 私钥；
  * 3. 对 `eventTs + plainToken` 进行签名；

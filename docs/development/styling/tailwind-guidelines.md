@@ -70,7 +70,7 @@ const styles = createStaticStyles(({ css }) => ({
 
 ## 公共组合工具类
 
-跨页面反复出现的静态组合可以收敛到 [`src/styles/utilities.css`](../src/styles/utilities.css)，使用 Tailwind v4 的 `@utility` 定义。新增前必须先搜索仓库，并同时满足：
+跨页面反复出现的静态组合可以收敛到 [`src/styles/utilities.css`](../../../src/styles/utilities.css)，使用 Tailwind v4 的 `@utility` 定义。新增前必须先搜索仓库，并同时满足：
 
 - 至少在多个页面或功能域重复出现，而不是只服务于单个组件。
 - 组合语义稳定，通常由三个及以上基础工具类构成，并能明显缩短 `className`。
@@ -91,7 +91,7 @@ const styles = createStaticStyles(({ css }) => ({
 ## 主题与颜色
 
 - 业务组件优先使用主题语义：文字、次级文字、容器背景、边框、主色、错误色等。
-- Tailwind 只能使用 [`src/styles/globals.css`](../src/styles/globals.css) 中已经定义的语义 token；迁移时不要直接复制 dev 页面中的 `slate-*`、`cyan-*` 等展示色作为主应用 token。
+- Tailwind 只能使用 [`src/styles/globals.css`](../../../src/styles/globals.css) 中已经定义的语义 token；迁移时不要直接复制 dev 页面中的 `slate-*`、`cyan-*` 等展示色作为主应用 token。
 - 当前主题由 `@pure/ui/ThemeProvider` 与 `antd-style` 共同提供。除非 `@pure/ui` 的主题桥接也已替换，否则不要移除 `StyleProvider` 或假设 Tailwind 能独立提供全部主题能力。
 - `theme={{ cssVar: { key: 'pure-vars' } }}` 中的 `pure-vars` 是 CSS 变量作用域 key，不是变量名前缀。不得根据 key 猜测或拼接变量名。
 - `antd-style` 的 `cssVar` 当前对应 kebab-case 的 `--ant-*` 变量，例如 `cssVar.colorTextSecondary` 是 `var(--ant-color-text-secondary)`，`cssVar.colorError` 是 `var(--ant-color-error)`。
@@ -139,8 +139,8 @@ AI 创建或修改 React 组件时必须遵循：
 
 ## 相关文件
 
-- [Tailwind 样式迁移方案](./tailwind-style-migration-guide.zh-CN.md)
-- [全局 Tailwind 入口](../src/styles/globals.css)
-- [语义化 Tailwind utilities](../src/styles/utilities.css)
-- [主题 Provider](../src/layout/ThemeProviders.tsx)
-- [UI 包主题桥接](../packages/ui/src/ThemeProvider/index.ts)
+- [Tailwind 样式迁移方案](./tailwind-migration.md)
+- [全局 Tailwind 入口](../../../src/styles/globals.css)
+- [语义化 Tailwind utilities](../../../src/styles/utilities.css)
+- [主题 Provider](../../../src/layout/ThemeProviders.tsx)
+- [UI 包主题桥接](../../../packages/ui/src/ThemeProvider/index.ts)

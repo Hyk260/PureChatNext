@@ -187,12 +187,14 @@ const HelpContent = () => (
               <ExternalLink href={`${SITE_REPOSITORY_URL}#快速开始`}>本地开发与快速开始</ExternalLink>
             </li>
             <li>
-              <ExternalLink href={`${SITE_REPOSITORY_URL}/blob/main/docs/self-hosting/docker.zh-CN.md`}>
+              <ExternalLink href={`${SITE_REPOSITORY_URL}/blob/main/docs/self-hosting/platform/docker.md`}>
                 Docker 自托管
               </ExternalLink>
             </li>
             <li>
-              <ExternalLink href={`${SITE_REPOSITORY_URL}/blob/main/docs/env-setup.zh-CN.md`}>
+              <ExternalLink
+                href={`${SITE_REPOSITORY_URL}/blob/main/docs/self-hosting/configuration/environment.md`}
+              >
                 环境变量与生产配置
               </ExternalLink>
             </li>

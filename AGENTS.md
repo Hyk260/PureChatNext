@@ -51,20 +51,20 @@
 
 - 业务代码通过 `@/envs/*` 对应入口访问环境变量。
 - 新字段加入对应 env 模块，不要在业务模块重复声明校验规则。
-- 配置方式见 `docs/env-setup.zh-CN.md`。
+- 配置方式见 `docs/self-hosting/configuration/environment.md`。
 
 ### 搜索与爬虫
 
 - `SearchService` 按 `SEARCH_PROVIDERS` 配置依次调用 provider。
 - 新增 provider 时，在 `src/server/search/impls/<name>/` 实现，并注册到 `impls/index.ts`。
 - 网页抓取由 `packages/web-crawler/` 提供，`CRAWLER_IMPLS` 控制实现优先级。
-- 配置和扩展方式见 `docs/self-hosting/online-search.zh-CN.md`。
+- 配置和扩展方式见 `docs/self-hosting/features/online-search.md`。
 
 ### 数据库
 
 - Schema 位于 `packages/database/src/schemas/`，model 位于 `packages/database/src/models/`。
 - 数据库修改按需运行 `pnpm db:check`、`pnpm db:generate` 和 `pnpm db:migrate`。
-- 完整迁移流程见 `docs/drizzle-setup.zh-CN.md`。
+- 完整迁移流程见 `docs/development/database/drizzle.md`。
 
 ### API
 
@@ -96,14 +96,14 @@ pnpm exec vitest run --silent='passed-only' '<test-file>'
 - 根 `vitest.config.ts` 不执行 `packages/**` 测试；package 测试应在对应目录按其 `package.json` 脚本和 Vitest 配置（如有）运行。
 - 优先使用 `vi.spyOn`，避免无必要的大范围 `vi.mock`。
 - 修改行为时优先运行直接相关测试，再根据影响范围扩大验证。
-- 交付前运行 `pnpm lint`；该命令只检查，不自动格式化。检查说明见 `docs/lint.zh-CN.md`。
+- 交付前运行 `pnpm lint`；该命令只检查，不自动格式化。检查说明见 `docs/development/quality/lint.md`。
 
 ## 代码风格
 
 - 遵循 `eslint.config.mjs`；类型导入使用顶层 `import type`，不要把同一来源拆成重复 import。
 - 新组件和简单静态样式默认使用 Tailwind CSS；复杂选择器、动画、SVG、滚动条或动态几何值可保留 `createStaticStyles`。
 - 仅将跨页面高频且语义稳定的样式组合加入 `src/styles/utilities.css`；新增前先搜索仓库验证复用需求。
-- Tailwind 细则见 `docs/tailwind-style-guidelines.zh-CN.md` 与 `docs/tailwind-style-migration-guide.zh-CN.md`。
+- Tailwind 细则见 `docs/development/styling/tailwind-guidelines.md` 与 `docs/development/styling/tailwind-migration.md`。
 - 单文件接近或超过 800 行时评估拆分，但不要为控制行数进行无关重构。
 - Debug 日志遵循 `.cursor/rules/debug-usage.md`，使用 `auth:*`、`db:*` 等领域命名空间。
 
@@ -118,7 +118,7 @@ pnpm build        # 构建 SPA、复制产物并构建 Next
 pnpm lint         # lint、类型与仓库质量检查
 ```
 
-首次配置参考 `docs/quick-start.zh-CN.md`；微信和 QQ 渠道分别参考 `docs/self-hosting/wechat-channel.zh-CN.md` 与 `docs/self-hosting/qq-channel.zh-CN.md`。
+首次配置参考 `docs/getting-started/quick-start.md`；微信和 QQ 渠道分别参考 `docs/self-hosting/channels/wechat/setup.md` 与 `docs/self-hosting/channels/qq/setup.md`。
 
 <!-- BEGIN:nextjs-agent-rules -->
 

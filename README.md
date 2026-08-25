@@ -8,7 +8,7 @@
 
 面向中文用户和小团队的开源自托管 AI 工作台，支持多模型、联网搜索、文件处理和私有部署。
 
-[在线体验][online-demo-link] · [Vercel 部署][vercel-deploy-link] · [Docker 自托管](./docs/self-hosting/docker.zh-CN.md) · [文档](#文档) · [讨论区][github-discussions-link]
+[在线体验][online-demo-link] · [Vercel 部署][vercel-deploy-link] · [Docker 自托管](./docs/self-hosting/platform/docker.md) · [文档](./docs/README.md) · [讨论区][github-discussions-link]
 
 [![][github-release-shield]][github-release-link]
 [![][github-license-shield]][github-license-link]
@@ -82,7 +82,7 @@ flowchart LR
 - 渠道可选择 Agent、模型与 Provider，复用 Web 端能力
 - 支持 `/agents`、`/new`、`/stop`、`/help` 等会话指令
 
-配置说明见 [微信渠道](./docs/self-hosting/wechat-channel.zh-CN.md) 与 [QQ 渠道](./docs/self-hosting/qq-channel.zh-CN.md)。
+配置说明见 [微信渠道](./docs/self-hosting/channels/wechat/setup.md) 与 [QQ 渠道](./docs/self-hosting/channels/qq/setup.md)。
 
 ### 多模型对话
 
@@ -97,7 +97,7 @@ flowchart LR
 - GitHub、Google、Apple、微信、飞书等 OAuth / SSO
 - 个人资料、密码和关联账号管理
 
-认证与邮件配置见 [邮箱服务与验证](./docs/self-hosting/auth/email.zh-CN.md)。
+认证与邮件配置见 [邮箱服务与验证](./docs/self-hosting/auth/email.md)。
 
 ### 联网搜索与文件处理
 
@@ -105,7 +105,7 @@ flowchart LR
 - 网页抓取：naive、Firecrawl、Tavily、Jina、Browserless 等
 - 文档解析：PDF、DOCX、PPTX、Excel 等
 
-详细配置见 [联网搜索与爬虫](./docs/self-hosting/online-search.zh-CN.md)。
+详细配置见 [联网搜索与爬虫](./docs/self-hosting/features/online-search.md)。
 
 ### 模块化 Monorepo
 
@@ -150,7 +150,7 @@ JWKS_KEY='{"keys":[...]}'
 OPENAI_API_KEY=your-api-key
 ```
 
-密钥生成和完整变量说明见 [.env.example](./.env.example) 与 [环境变量配置](./docs/env-setup.zh-CN.md)。
+密钥生成和完整变量说明见 [.env.example](./.env.example) 与 [环境变量配置](./docs/self-hosting/configuration/environment.md)。
 
 ### 2. 执行数据库迁移
 
@@ -227,7 +227,7 @@ pnpm docker:deploy
 
 首次生成配置后，请修改正式域名、`ALLOWED_ORIGINS` 和模型密钥。生产 Compose 会在应用启动前自动执行数据库迁移，健康检查地址为 `/api/health`。
 
-完整说明见 [Docker 自托管](./docs/self-hosting/docker.zh-CN.md)。
+完整说明见 [Docker 自托管](./docs/self-hosting/platform/docker.md)。
 
 ## 环境变量
 
@@ -246,7 +246,7 @@ pnpm docker:deploy
 | `REDIS_URL` | 缓存与队列 | 使用 Docker 或托管 Redis 时配置 |
 | `S3_*` | 文件对象存储 | 使用 RustFS、MinIO、S3 等兼容服务时配置 |
 
-完整变量列表、认证、邮件、对象存储和联网搜索配置请查看 [环境变量详解](./docs/env-setup.zh-CN.md)。
+完整变量列表、认证、邮件、对象存储和联网搜索配置请查看 [环境变量详解](./docs/self-hosting/configuration/environment.md)。
 
 ## 项目结构
 
@@ -304,15 +304,10 @@ pnpm dev:docker:down
 
 | 文档 | 内容 |
 | --- | --- |
-| [快速开始](./docs/quick-start.zh-CN.md) | 云数据库与本地开发配置 |
-| [环境变量](./docs/env-setup.zh-CN.md) | 全量配置说明 |
-| [Drizzle 数据库](./docs/drizzle-setup.zh-CN.md) | Schema、迁移与数据库操作 |
-| [Docker 自托管](./docs/self-hosting/docker.zh-CN.md) | 本地依赖、生产 Compose 与数据迁移 |
-| [联网搜索](./docs/self-hosting/online-search.zh-CN.md) | 搜索 Provider 与网页爬虫 |
-| [邮件服务](./docs/self-hosting/auth/email.zh-CN.md) | SMTP、Resend 与邮箱验证 |
-| [本地 PostgreSQL](./docs/self-hosting/postgresql-local.zh-CN.md) | 本地数据库管理 |
-| [本地 Redis](./docs/self-hosting/redis-local.zh-CN.md) | 本地缓存与队列 |
-| [QQ 渠道](./docs/self-hosting/qq-channel.zh-CN.md) / [微信渠道](./docs/self-hosting/wechat-channel.zh-CN.md) | Channel Gateway 配置 |
+| [文档索引](./docs/README.md) | 全部公开文档与维护规范 |
+| [快速开始](./docs/getting-started/quick-start.md) | 云数据库与本地开发配置 |
+| [开发指南](./docs/development/README.md) | 数据库、质量检查与样式约定 |
+| [自托管指南](./docs/self-hosting/README.md) | 部署、基础设施、功能与消息渠道 |
 | [开发约定](./AGENTS.md) | AI Agent 与项目开发指南 |
 
 ## 参与贡献

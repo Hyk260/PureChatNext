@@ -18,7 +18,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-本地访问 `http://localhost:5174`；Next API / BFF 默认运行在 `http://localhost:3000`。完整配置见 [快速开始](./docs/quick-start.zh-CN.md)。
+本地访问 `http://localhost:5174`；Next API / BFF 默认运行在 `http://localhost:3000`。完整配置见 [快速开始](./docs/getting-started/quick-start.md)。
 
 ## 开发约定
 

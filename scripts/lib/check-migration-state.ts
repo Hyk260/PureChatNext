@@ -120,7 +120,7 @@ export async function assertMigrationStateHealthy(connection: postgres.Sql, migr
         '迁移状态异常：`drizzle.__drizzle_migrations.hash` 不是有效的 SHA256 哈希。',
         `当前值：${lastDbMigration.hash}`,
         '请勿手动写入迁移 tag 名；应写入对应 .sql 文件的 SHA256 哈希与 journal 中的 when 时间戳。',
-        '请参考 docs/drizzle-setup.zh-CN.md#迁移失败 修复迁移记录后再执行。',
+        '请参考 docs/development/database/drizzle.md#迁移失败 修复迁移记录后再执行。',
       ].join('\n')
     )
   }
@@ -137,7 +137,7 @@ export async function assertMigrationStateHealthy(connection: postgres.Sql, migr
           ? `当前 __drizzle_migrations.created_at=${lastDbMigration.created_at}`
           : '当前 __drizzle_migrations 为空。',
         '这通常由手动写入错误的迁移记录引起，会导致重复 CREATE TABLE 失败。',
-        '请参考 docs/drizzle-setup.zh-CN.md#迁移失败 修复迁移记录后再执行。',
+        '请参考 docs/development/database/drizzle.md#迁移失败 修复迁移记录后再执行。',
       ].join('\n')
     )
   }

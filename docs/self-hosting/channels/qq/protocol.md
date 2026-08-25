@@ -1,6 +1,6 @@
 # QQ 开放平台机器人 API 通信协议规范
 
-> **渠道笔记**（`docs/self-hosting/qq/protocol.zh-CN.md`）：供本仓库 `@pure/chat-adapter/qq` 与内置 Channel Gateway 对照。正文描述的是 QQ 开放平台公开协议行为。
+> **渠道笔记**（`docs/self-hosting/channels/qq/protocol.md`）：供本仓库 `@pure/chat-adapter/qq` 与内置 Channel Gateway 对照。正文描述的是 QQ 开放平台公开协议行为。
 >
 > 适用对象：实现 QQ 开放平台机器人消息收发的 SDK、网关和独立 Bot。
 >

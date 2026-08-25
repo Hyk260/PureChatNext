@@ -155,13 +155,13 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 - 云托管 PostgreSQL（Supabase、Neon 等）：`DATABASE_DRIVER=neon`
 - 本机或明确无需 SSL 的 PostgreSQL：`DATABASE_DRIVER=node`
 
-本地 Docker 启停与连接说明见 [本地 PostgreSQL 管理](./self-hosting/postgresql-local.zh-CN.md)。
+本地 Docker 启停与连接说明见 [本地 PostgreSQL 管理](../infrastructure/postgresql.md)。
 
 ### Docker 内部服务地址
 
 开发时从宿主机运行应用，因此 PostgreSQL、Redis、RustFS 与 SearXNG 使用 `127.0.0.1` 加映射端口。生产应用与依赖位于同一 Compose 网络，使用 `postgresql:5432`、`redis:6379`、`rustfs:9000` 与 `searxng:8080`；这些端口不会发布到宿主机。
 
-生产密钥与内部 URL 由 `pnpm docker:setup:deploy` 和生产 Compose 管理，不要把 `docker-compose/deploy/.env` 提交到仓库。完整说明见 [Docker 自托管与数据迁移](./self-hosting/docker.zh-CN.md)。
+生产密钥与内部 URL 由 `pnpm docker:setup:deploy` 和生产 Compose 管理，不要把 `docker-compose/deploy/.env` 提交到仓库。完整说明见 [Docker 自托管与数据迁移](../platform/docker.md)。
 
 ### S3 对象存储
 
@@ -211,11 +211,11 @@ S3_SET_ACL=0
 
 ### 微信 iLink 渠道
 
-见 [docs/self-hosting/wechat-channel.zh-CN.md](./self-hosting/wechat-channel.zh-CN.md)。`KEY_VAULTS_SECRET` 为必填，用于加密凭证与 `context_token`；回复还需服务端模型密钥。本地需显式设置 `CHANNEL_GATEWAY_ENABLED=1`；Docker 在单一 Next 容器内启用；Vercel 不支持。
+见 [微信渠道](../channels/wechat/setup.md)。`KEY_VAULTS_SECRET` 为必填，用于加密凭证与 `context_token`；回复还需服务端模型密钥。本地需显式设置 `CHANNEL_GATEWAY_ENABLED=1`；Docker 在单一 Next 容器内启用；Vercel 不支持。
 
 ### QQ 开放平台渠道
 
-见 [docs/self-hosting/qq-channel.zh-CN.md](./self-hosting/qq-channel.zh-CN.md)。协议层在 `@pure/chat-adapter/qq`。凭证按绑定加密存储；WebSocket 由开启后的 Next Server 内置 Gateway 维护，Webhook 继续使用公网回调与平台验证。Vercel 仅支持 Webhook。
+见 [QQ 渠道](../channels/qq/setup.md)。协议层在 `@pure/chat-adapter/qq`。凭证按绑定加密存储；WebSocket 由开启后的 Next Server 内置 Gateway 维护，Webhook 继续使用公网回调与平台验证。Vercel 仅支持 Webhook。
 
 ## 安全提示
 

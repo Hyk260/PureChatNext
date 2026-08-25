@@ -55,6 +55,11 @@ const styles = createStaticStyles(({ css }) => ({
     gap: 4px;
     min-width: 0;
   `,
+  placeholder: css`
+    width: 120px;
+    height: 14px;
+    visibility: hidden;
+  `,
   progress: css`
     overflow: hidden;
     display: flex;
@@ -148,10 +153,23 @@ const PerformanceLabel = memo<{ label: string; tooltip: string; value: string }>
 PerformanceLabel.displayName = 'PerformanceLabel'
 
 interface MessageUsageProps {
-  metadata: ChatMessageMetadata
+  isStreaming?: boolean
+  metadata?: ChatMessageMetadata
 }
 
-const MessageUsage = memo<MessageUsageProps>(({ metadata }) => {
+const MessageUsage = memo<MessageUsageProps>(({ isStreaming = false, metadata }) => {
+  if (isStreaming) {
+    return (
+      <div aria-hidden className={styles.summary}>
+        <span className={styles.left}>
+          <span className={styles.placeholder} />
+        </span>
+      </div>
+    )
+  }
+
+  if (!metadata) return null
+
   const { model, performance, provider } = metadata
   const details = getMessageUsageDetails(metadata)
   const modelCard = model && provider ? getAiModel(provider as ModelProviderId, model) : undefined

@@ -35,8 +35,8 @@ interface UseAutoScrollReturn<T extends HTMLElement> {
  * Auto-scroll a container to the bottom while content streams,
  * stopping when the user scrolls away.
  *
- * - Streaming start: smooth scroll once
- * - Token updates: instant follow via scrollTop (avoids interrupting smooth animations)
+ * - Busy start: instant scroll once
+ * - Token updates: instant follow via scrollTop
  */
 export function useAutoScroll<T extends HTMLElement = HTMLDivElement>(
   options: UseAutoScrollOptions = {}
@@ -65,19 +65,11 @@ export function useAutoScroll<T extends HTMLElement = HTMLDivElement>(
   )
 
   const scrollToBottom = useCallback(
-    (smooth: boolean) => {
+    () => {
       const container = getContainer()
       if (!container) return
 
       isAutoScrollingRef.current = true
-
-      if (smooth) {
-        container.scrollTo({ behavior: 'smooth', top: container.scrollHeight })
-        window.setTimeout(() => {
-          isAutoScrollingRef.current = false
-        }, 320)
-        return
-      }
 
       requestAnimationFrame(() => {
         const nextContainer = getContainer()
@@ -129,7 +121,9 @@ export function useAutoScroll<T extends HTMLElement = HTMLDivElement>(
     setScrollLock(false)
   }, [setScrollLock])
 
-  // Smooth scroll once when streaming / busy state turns on
+  // Snap to the bottom once when streaming / busy state turns on. A smooth
+  // animation races with token/layout updates and can emit an intermediate
+  // scroll position that is mistaken for a user scroll.
   useEffect(() => {
     const justEnabled = !prevEnabledRef.current && enabled
     prevEnabledRef.current = enabled
@@ -137,7 +131,7 @@ export function useAutoScroll<T extends HTMLElement = HTMLDivElement>(
     if (justEnabled) {
       userHasScrolledRef.current = false
       const frame = requestAnimationFrame(() => setUserHasScrolled(false))
-      scrollToBottom(true)
+      scrollToBottom()
       return () => cancelAnimationFrame(frame)
     }
   }, [enabled, scrollToBottom, setUserHasScrolled])
@@ -145,7 +139,7 @@ export function useAutoScroll<T extends HTMLElement = HTMLDivElement>(
   // Follow content growth while enabled
   useEffect(() => {
     if (!enabled || userHasScrolled) return
-    scrollToBottom(false)
+    scrollToBottom()
   }, [depsKey, enabled, scrollToBottom, userHasScrolled])
 
   return {

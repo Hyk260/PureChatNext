@@ -74,7 +74,9 @@ vi.mock('@/features/chat/MessageMarkdown', () => ({
 }))
 
 vi.mock('@/features/chat/MessageUsage', () => ({
-  default: () => <div data-testid='message-usage' />,
+  default: ({ isStreaming }: { isStreaming?: boolean }) => (
+    <div data-testid='message-usage' data-streaming={isStreaming ? 'true' : undefined} />
+  ),
 }))
 
 vi.mock('@/features/chat/MessageEditorModal', () => ({
@@ -258,6 +260,40 @@ describe('ChatMessages message layout', () => {
 
     const finishedActions = container.querySelector('[data-message-actions]')
     expect(finishedActions?.getAttribute('aria-hidden')).toBeNull()
+  })
+
+  it('keeps user actions available while the assistant is busy', () => {
+    const { container } = render(
+      <ChatMessages
+        disabled
+        isStreaming
+        messages={messages}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onRegenerate={vi.fn()}
+      />
+    )
+
+    const userActions = container.querySelector('[data-role="user"] [data-message-actions]')
+    expect(userActions).toBeTruthy()
+    expect(userActions?.getAttribute('aria-hidden')).toBeNull()
+  })
+
+  it('keeps the assistant usage slot stable while streaming', () => {
+    const message: UIMessage = {
+      id: 'assistant-usage-stream',
+      metadata: { model: 'deepseek-v4-flash', provider: 'deepseek' },
+      parts: [{ state: 'streaming', text: '答', type: 'text' }],
+      role: 'assistant',
+    }
+    const { getByTestId, rerender } = render(
+      <ChatMessages isStreaming messages={[message]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />
+    )
+
+    expect(getByTestId('message-usage').dataset.streaming).toBe('true')
+
+    rerender(<ChatMessages messages={[message]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />)
+    expect(getByTestId('message-usage').dataset.streaming).toBeUndefined()
   })
 
   it('uses PulseDots while waiting for the first response content', () => {

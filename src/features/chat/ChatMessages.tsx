@@ -94,7 +94,6 @@ const styles = createStaticStyles(({ css }) => ({
 
 interface ChatMessageItemProps {
   agentMeta?: AgentMeta
-  disabled?: boolean
   isStreaming?: boolean
   message: UIMessage
   onDelete: (id: string) => void
@@ -103,7 +102,7 @@ interface ChatMessageItemProps {
 }
 
 const ChatMessageItem = memo<ChatMessageItemProps>(
-  ({ message, agentMeta, disabled, isStreaming, onDelete, onEdit, onRegenerate }) => {
+  ({ message, agentMeta, isStreaming, onDelete, onEdit, onRegenerate }) => {
     const { message: antdMessage } = useApp()
     const [editing, setEditing] = useState(false)
     const text = getMessageText(message)
@@ -160,10 +159,11 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
           ) : null}
         </div>
 
-        {!isUser && metadata ? <MessageUsage metadata={metadata} /> : null}
+        {!isUser && (metadata || isStreaming) ? (
+          <MessageUsage isStreaming={isStreaming} metadata={metadata} />
+        ) : null}
 
         <MessageActions
-          disabled={disabled}
           isStreaming={isStreaming}
           isUser={isUser}
           onCopy={handleCopy}
@@ -180,7 +180,6 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
     )
   },
   (prev, next) =>
-    prev.disabled === next.disabled &&
     prev.isStreaming === next.isStreaming &&
     prev.message === next.message &&
     prev.onDelete === next.onDelete &&
@@ -267,7 +266,6 @@ const ChatMessages = memo<ChatMessagesProps>(
             return (
               <ChatMessageItem
                 agentMeta={agentMeta}
-                disabled={disabled}
                 isStreaming={streamingThis}
                 key={message.id}
                 message={message}

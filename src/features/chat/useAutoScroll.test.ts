@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { useAutoScroll } from './useAutoScroll'
 
@@ -11,6 +11,7 @@ const createScrollElement = (scrollTop: number) => {
     scrollHeight: { configurable: true, value: 1200 },
     scrollTop: { configurable: true, value: scrollTop, writable: true },
   })
+  element.scrollTo = vi.fn()
 
   return element
 }
@@ -47,5 +48,19 @@ describe('useAutoScroll', () => {
     )
 
     expect(scrollElement.scrollTop).toBe(180)
+  })
+
+  it('follows the bottom immediately when busy state starts without smooth scrolling', async () => {
+    const scrollElement = createScrollElement(500)
+    const { rerender } = renderHook(
+      ({ enabled }) => useAutoScroll({ enabled, getScrollElement: () => scrollElement }),
+      { initialProps: { enabled: false } }
+    )
+
+    rerender({ enabled: true })
+    await waitForAnimationFrame()
+
+    expect(scrollElement.scrollTop).toBe(1200)
+    expect(scrollElement.scrollTo).not.toHaveBeenCalled()
   })
 })

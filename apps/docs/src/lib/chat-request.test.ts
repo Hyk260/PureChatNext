@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DEFAULT_ASK_AI_MODEL } from '@/lib/ask-ai-config'
 import { getAIStreamErrorMessage, MAX_BODY_BYTES, parseChatRequest } from '@/lib/chat-request'
 
 function message(text: string) {
@@ -9,6 +10,49 @@ describe('Ask AI request validation', () => {
   it('accepts a short text-only user request', async () => {
     const result = await parseChatRequest(JSON.stringify({ messages: [message('如何开始？')], page: '/' }))
     expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.model).toBe(DEFAULT_ASK_AI_MODEL)
+      expect(result.data.skills).toEqual([])
+    }
+  })
+
+  it('accepts allowlisted models and document answer skills', async () => {
+    const result = await parseChatRequest(
+      JSON.stringify({
+        messages: [message('如何排查？')],
+        model: 'alibaba/qwen3.5-plus',
+        skills: ['deep-research', 'troubleshoot'],
+      }),
+    )
+
+    expect(result).toMatchObject({
+      data: { model: 'alibaba/qwen3.5-plus', skills: ['deep-research', 'troubleshoot'] },
+      success: true,
+    })
+  })
+
+  it('rejects unknown models, skills and excessive skill selections', async () => {
+    const base = { messages: [message('如何开始？')] }
+
+    await expect(parseChatRequest(JSON.stringify({ ...base, model: 'openai/unknown' }))).resolves.toEqual({
+      error: '消息格式无效',
+      success: false,
+    })
+    await expect(parseChatRequest(JSON.stringify({ ...base, skills: ['web-search'] }))).resolves.toEqual({
+      error: '消息格式无效',
+      success: false,
+    })
+    await expect(
+      parseChatRequest(JSON.stringify({ ...base, skills: ['summarize', 'summarize'] })),
+    ).resolves.toEqual({ error: '消息格式无效', success: false })
+    await expect(
+      parseChatRequest(
+        JSON.stringify({
+          ...base,
+          skills: ['deep-research', 'summarize', 'step-by-step', 'troubleshoot', 'summarize'],
+        }),
+      ),
+    ).resolves.toEqual({ error: '消息格式无效', success: false })
   })
 
   it('rejects oversized bodies and user messages', async () => {

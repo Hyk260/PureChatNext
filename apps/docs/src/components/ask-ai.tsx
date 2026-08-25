@@ -6,6 +6,8 @@ import { LoaderCircle, MessageCircle, RotateCcw, Search, Trash2, X } from 'lucid
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Markdown from 'react-markdown'
+import type { AskAIModelId, AskAISkillId } from '@/lib/ask-ai-config'
+import { DEFAULT_ASK_AI_MODEL } from '@/lib/ask-ai-config'
 import { AIAgentInput } from './ai-agent-input'
 
 const suggestions = ['如何快速开始？', '如何使用 Docker 部署？', '在线搜索需要配置什么？']
@@ -13,8 +15,13 @@ const suggestions = ['如何快速开始？', '如何使用 Docker 部署？', '
 export function AskAI() {
   const pathname = usePathname()
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const lastRequestRef = useRef<{ model: AskAIModelId; skills: AskAISkillId[] }>({
+    model: DEFAULT_ASK_AI_MODEL,
+    skills: [],
+  })
   const [composerResetKey, setComposerResetKey] = useState(0)
   const [open, setOpen] = useState(false)
+  const [selectedModel, setSelectedModel] = useState<AskAIModelId>(DEFAULT_ASK_AI_MODEL)
   const transport = useMemo(() => new DefaultChatTransport({ api: '/api/chat', body: { page: pathname } }), [pathname])
   const { clearError, error, messages, regenerate, sendMessage, setMessages, status, stop } = useChat({ transport })
   const pending = status === 'submitted' || status === 'streaming'
@@ -27,11 +34,18 @@ export function AskAI() {
     if (!open && dialog.open) dialog.close()
   }, [open])
 
-  function submit(text: string) {
+  function submit(text: string, skills: AskAISkillId[] = []) {
     const value = text.trim()
     if (!value || pending || value.length > 1000) return
+    const requestContext = { model: selectedModel, skills }
+    lastRequestRef.current = requestContext
     clearError()
-    void sendMessage({ text: value })
+    void sendMessage({ text: value }, { body: requestContext })
+  }
+
+  function submitSuggestion(text: string) {
+    submit(text)
+    setComposerResetKey((key) => key + 1)
   }
 
   function clearConversation() {
@@ -89,7 +103,7 @@ export function AskAI() {
                     <button
                       className='docs-ai-suggestion'
                       key={suggestion}
-                      onClick={() => submit(suggestion)}
+                      onClick={() => submitSuggestion(suggestion)}
                       type='button'
                     >
                       {suggestion}
@@ -134,7 +148,7 @@ export function AskAI() {
             {error ? (
               <div className='docs-ai-error' role='alert'>
                 <span>Ask AI 暂时无法回答，请稍后重试。</span>
-                <button onClick={() => void regenerate()} type='button'>
+                <button onClick={() => void regenerate({ body: lastRequestRef.current })} type='button'>
                   <RotateCcw aria-hidden className='size-3.5' />
                   重试
                 </button>
@@ -143,9 +157,10 @@ export function AskAI() {
           </div>
 
           <AIAgentInput
-            key={composerResetKey}
+            model={selectedModel}
+            onModelChange={setSelectedModel}
             onStop={stop}
-            onSubmit={submit}
+            onSubmit={({ skills, text }) => submit(text, skills)}
             pending={pending}
             resetKey={composerResetKey}
           />

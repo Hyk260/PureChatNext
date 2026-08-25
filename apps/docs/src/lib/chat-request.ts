@@ -2,6 +2,13 @@ import { safeValidateUIMessages } from 'ai'
 import type { UIMessage } from 'ai'
 import { z } from 'zod'
 import { searchDocsInputSchema } from '@/lib/ai-schema'
+import type { AskAIModelId, AskAISkillId } from '@/lib/ask-ai-config'
+import {
+  ASK_AI_MODEL_IDS,
+  ASK_AI_SKILL_IDS,
+  DEFAULT_ASK_AI_MODEL,
+  MAX_ASK_AI_SKILLS,
+} from '@/lib/ask-ai-config'
 
 export const MAX_BODY_BYTES = 32 * 1024
 export const MAX_MESSAGES = 8
@@ -9,11 +16,20 @@ export const MAX_USER_TEXT = 1000
 
 const requestSchema = z.object({
   messages: z.array(z.unknown()).min(1).max(MAX_MESSAGES),
+  model: z.enum(ASK_AI_MODEL_IDS).default(DEFAULT_ASK_AI_MODEL),
   page: z.string().max(300).optional(),
+  skills: z
+    .array(z.enum(ASK_AI_SKILL_IDS))
+    .max(MAX_ASK_AI_SKILLS)
+    .refine((skills) => new Set(skills).size === skills.length)
+    .default([]),
 })
 
 type ChatRequestResult =
-  | { data: { messages: UIMessage[]; page?: string }; success: true }
+  | {
+      data: { messages: UIMessage[]; model: AskAIModelId; page?: string; skills: AskAISkillId[] }
+      success: true
+    }
   | { error: string; success: false }
 
 export async function parseChatRequest(rawBody: string): Promise<ChatRequestResult> {
@@ -58,7 +74,12 @@ export async function parseChatRequest(rawBody: string): Promise<ChatRequestResu
   }
 
   return {
-    data: { messages, ...(parsed.data.page ? { page: parsed.data.page } : {}) },
+    data: {
+      messages,
+      model: parsed.data.model,
+      ...(parsed.data.page ? { page: parsed.data.page } : {}),
+      skills: parsed.data.skills,
+    },
     success: true,
   }
 }

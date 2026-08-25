@@ -16,12 +16,9 @@
     #1a1a1a 70%,
     #1a1a1a 100%
   );
-  --pi-chip-bg: #ffffff;
-  --pi-chip-border: #e6e8ec;
   --pi-icon-fill: rgb(26 26 26 / 6%);
   --pi-icon-fill-hover: rgb(26 26 26 / 10%);
   --pi-icon-fill-open: rgb(26 26 26 / 12%);
-  --pi-chip-remove-hover: rgb(26 26 26 / 8%);
   --pi-send-fg: #ffffff;
   --pi-send-bg: #0b0d12;
   --pi-send-bg-hover: #2a2f3a;
@@ -49,12 +46,9 @@
     #f5f5f5 70%,
     #f5f5f5 100%
   );
-  --pi-chip-bg: #1a1a1a;
-  --pi-chip-border: #303030;
   --pi-icon-fill: rgb(245 245 245 / 6%);
   --pi-icon-fill-hover: rgb(245 245 245 / 10%);
   --pi-icon-fill-open: rgb(245 245 245 / 12%);
-  --pi-chip-remove-hover: rgb(245 245 245 / 8%);
   --pi-send-fg: #0a0a0a;
   --pi-send-bg: #f5f5f5;
   --pi-send-bg-hover: #ffffff;
@@ -82,12 +76,9 @@
       #f5f5f5 70%,
       #f5f5f5 100%
     );
-    --pi-chip-bg: #1a1a1a;
-    --pi-chip-border: #303030;
     --pi-icon-fill: rgb(245 245 245 / 6%);
     --pi-icon-fill-hover: rgb(245 245 245 / 10%);
     --pi-icon-fill-open: rgb(245 245 245 / 12%);
-    --pi-chip-remove-hover: rgb(245 245 245 / 8%);
     --pi-send-fg: #0a0a0a;
     --pi-send-bg: #f5f5f5;
     --pi-send-bg-hover: #ffffff;
@@ -108,10 +99,6 @@
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
-.hiddenInput {
-  display: none;
-}
-
 .frame {
   position: relative;
   display: flex;
@@ -122,10 +109,6 @@
   border-radius: 12px;
   background: var(--pi-frame-bg, #ffffff);
   box-shadow: var(--pi-frame-shadow);
-}
-
-.frame:has(.chips) {
-  padding-top: 10px;
 }
 
 @property --pi-angle {
@@ -259,6 +242,10 @@
   white-space: nowrap;
 }
 
+.skillPill[data-start] {
+  margin-left: 0;
+}
+
 .skillPillLabel {
   max-width: 180px;
   overflow: hidden;
@@ -324,78 +311,6 @@
   font-size: 11px;
 }
 
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: -6px;
-}
-
-.chip {
-  display: inline-flex;
-  max-width: 100%;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 4px 3px 5px;
-  border: 0.5px solid var(--pi-chip-border);
-  border-radius: 999px;
-  background: var(--pi-chip-bg);
-  color: var(--pi-fg);
-  font-size: 11px;
-  line-height: 14px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 2%);
-  animation: pi-chip-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.chipIcon {
-  display: inline-flex;
-  flex: none;
-  color: var(--pi-muted);
-}
-
-.chipName {
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.chipRemove {
-  display: inline-flex;
-  width: 15px;
-  height: 15px;
-  align-items: center;
-  justify-content: center;
-  margin-left: -2px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--pi-muted);
-  cursor: pointer;
-  transition:
-    background 150ms cubic-bezier(0.22, 1, 0.36, 1),
-    color 150ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.chipRemove:hover {
-  background: var(--pi-chip-remove-hover);
-  color: var(--pi-fg);
-}
-
-@keyframes pi-chip-in {
-  from {
-    opacity: 0;
-    filter: blur(2px);
-    transform: translateY(4px);
-  }
-
-  to {
-    opacity: 1;
-    filter: blur(0);
-    transform: translateY(0);
-  }
-}
-
 .row {
   display: flex;
   align-items: center;
@@ -444,6 +359,15 @@
 
 .iconBtn:active::before {
   transform: scale(0.98);
+}
+
+.iconBtn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.iconBtn:disabled:hover::before {
+  background: var(--pi-icon-fill);
 }
 
 .iconBtn > svg,
@@ -607,6 +531,15 @@
   background: var(--pi-menu-hover);
 }
 
+.menuItem:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.menuItem:disabled:hover {
+  background: transparent;
+}
+
 .menuItem:active,
 .menuItemActive {
   background: var(--pi-menu-active);
@@ -694,10 +627,48 @@
   pointer-events: none;
 }
 
+.popoverTitle {
+  margin-bottom: 3px;
+  color: var(--pi-fg);
+  font-weight: 550;
+}
+
+.popoverDesc {
+  margin: 0;
+}
+
+.popoverMeta {
+  margin-top: 5px;
+  font-size: 10px;
+  opacity: 0.8;
+}
+
 .menuDivider {
   height: 0.5px;
   margin: 4px -3px;
   background: var(--pi-menu-border);
+}
+
+.enhanceError {
+  margin: 6px 2px 0;
+  color: #dc2626;
+  font-size: 11px;
+  line-height: 15px;
+}
+
+@media (max-width: 520px) {
+  .menuFlyout,
+  .menuPopover {
+    top: auto;
+    right: auto;
+    bottom: calc(100% + 6px);
+    left: 0;
+    width: min(200px, calc(100vw - 48px));
+  }
+
+  .menuFlyout::before {
+    display: none;
+  }
 }
 
 @keyframes pi-menu-in {
@@ -718,13 +689,10 @@
   .iconBtn::before,
   .pill::before,
   .menuItem,
-  .chipRemove,
   .plusIcon {
     transition: none;
   }
 
-  .chip,
-  .chip[data-exit],
   .pill,
   .skillPill[data-exit],
   .menu,

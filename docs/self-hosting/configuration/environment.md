@@ -10,22 +10,17 @@ description: 按领域配置 PureChatNext 本地开发、Vercel 与 Docker 环�
 在项目根目录创建 `.env.local` 文件，并添加以下配置：
 
 ```dotenv
-# Supabase 配置
-# 从 Supabase 项目设置中获取这些值
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
 # 数据库连接（用于 Drizzle ORM）
-# Supabase 数据库连接字符串格式：
-# postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
-# 或者使用连接池（推荐）：
-# postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
-DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
-
-# 本地 Docker PostgreSQL（pnpm dev:docker）改用：
-# DATABASE_DRIVER=node
-# DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat
+# 本地 Docker PostgreSQL（pnpm dev:docker）：
+DATABASE_DRIVER=node
+DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat
 # 密码需与 docker-compose/dev/.env 中 POSTGRES_PASSWORD 一致
+
+# 云托管 Postgres（Supabase 免费服务、Neon 等）示例：
+# DATABASE_DRIVER=neon
+# DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
+# 连接池（推荐）：
+# DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
 
 # 应用对外地址（本地统一 SPA 端口）
 APP_URL=http://localhost:5174
@@ -36,22 +31,25 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5174
 
 # Node 环境
 NODE_ENV=development
+
+# 可选：仅调试遗留 Supabase 客户端时需要（非必填）
+# NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-## 获取 Supabase 配置
+## 可选：使用 Supabase 免费 Postgres
 
-1. 登录 [Supabase](https://supabase.com)
-2. 创建新项目或选择现有项目
-3. 进入项目设置（Settings）
-4. 点击 API 选项卡
-5. 复制以下信息：
-   - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
-   - **anon/public key** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-6. 点击 **Database** 选项卡
-7. 在 **Connection string** 部分选择 **URI** 或 **Transaction mode** (连接池模式)
-8. 复制连接字符串并替换密码占位符 → `DATABASE_URL`
-   - 格式示例：`postgresql://postgres:[YOUR-PASSWORD]@db.xxxxx.supabase.co:5432/postgres`
-   - 或者使用连接池：`postgresql://postgres.xxxxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres`
+应用不依赖完整 Supabase 栈；可将 [Supabase](https://supabase.com) 仅当作免费 Postgres：
+
+1. 登录并创建项目
+2. 进入项目设置（Settings）→ **Database**
+3. 在 **Connection string** 选择 **URI** 或 **Transaction mode**（连接池）
+4. 复制连接字符串并替换密码占位符 → `DATABASE_URL`
+   - 直连示例：`postgresql://postgres:[YOUR-PASSWORD]@db.xxxxx.supabase.co:5432/postgres`
+   - 连接池：`postgresql://postgres.xxxxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres`
+5. 云托管通常设置 `DATABASE_DRIVER=neon`
+
+`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` 与数据库无关，仅测试用，见下方说明。
 
 ## 配置说明
 
@@ -127,13 +125,14 @@ pnpm preview:prod -- --port 3211
 - 临时开启：`VITE_SPA_UPDATE_PREVIEW=1 pnpm dev:spa`（或写入 `.env.local` 后重启）
 - 也可不改 env：浏览器打开任意 SPA 路径并加上 `?spaUpdatePreview=1`
 
-### NEXT\_PUBLIC\_SUPABASE\_URL
+### NEXT\_PUBLIC\_SUPABASE\_URL / NEXT\_PUBLIC\_SUPABASE\_ANON\_KEY
 
-Supabase 项目的 URL，格式通常是：`https://xxxxx.supabase.co`
+**非必填**，仅用于调试遗留 Supabase 客户端代码；日常开发与 better-auth 认证不需要。
 
-### NEXT\_PUBLIC\_SUPABASE\_ANON\_KEY
+- `NEXT_PUBLIC_SUPABASE_URL`：项目 URL，格式通常是 `https://xxxxx.supabase.co`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`：匿名/公开密钥
 
-Supabase 的匿名/公开密钥，用于客户端访问。
+若只用 Supabase 提供的 Postgres，配置 `DATABASE_URL` 即可，不必设置这两项。
 
 ### ALLOWED\_ORIGINS
 
@@ -148,10 +147,10 @@ Supabase 的匿名/公开密钥，用于客户端访问。
 
 PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操作。
 
-- Supabase：`postgresql://postgres:[密码]@db.[项目引用].supabase.co:5432/postgres`
 - 本地 Docker：`postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat`（密码以 `docker-compose/dev/.env` 为准）
+- 云托管（Supabase 免费 Postgres、Neon 等）：`postgresql://postgres:[密码]@db.[项目引用].supabase.co:5432/postgres`
 - 生产 Docker：由 Compose 注入 `postgresql:5432` 内部地址，不应在宿主机 `.env.local` 中改写为该服务名
-- Supabase 支持直接连接（5432）或连接池（6543）；本地实例使用 5432
+- 云托管常支持直连（5432）或连接池（6543）；本地实例使用 5432
 
 ### DATABASE\_DRIVER
 

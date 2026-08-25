@@ -11,48 +11,13 @@ description: 安装 PureChatNext、配置本地环境并启动 Vite SPA 与 Next
 pnpm install
 ```
 
-## 2. 配置 Supabase
+## 2. 配置数据库
 
-### 2.1 创建 Supabase 项目
+应用认证使用 better-auth，只需可用的 PostgreSQL（本地 Docker，或云托管如 [Supabase](https://supabase.com) 免费 Postgres、Neon 等均可）。
 
-1. 访问 <https://supabase.com>
-2. 注册/登录账号
-3. 创建新项目
-4. 等待项目创建完成（通常需要 1-2 分钟）
+### 2.1 推荐：本地 Docker
 
-### 2.2 获取配置信息
-
-1. 进入项目后，点击左侧菜单的 **Settings**（设置）
-2. 点击 **API** 选项卡
-3. 复制以下信息：
-   - **Project URL** → 用作 `NEXT_PUBLIC_SUPABASE_URL`
-   - **anon/public key** → 用作 `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-### 2.3 配置认证
-
-1. 点击左侧菜单的 **Authentication**（认证）
-2. 确保 **Email** 认证方式已启用（默认已启用）
-3. 可以根据需要调整其他设置（如密码强度要求等）
-
-## 3. 配置环境变量
-
-在项目根目录创建 `.env.local` 文件：
-
-```dotenv
-NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-APP_URL=http://localhost:5174
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5174
-NODE_ENV=development
-```
-
-⚠️ **注意**：将上面的 URL 和 KEY 替换为你从 Supabase 获取的实际值。
-
-本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [环境变量 · APP\_URL](../self-hosting/configuration/environment.md#app_url)。
-
-### 3.1 可选：本地依赖（Docker）
-
-不使用云托管服务时，可用 Docker Compose 一次启动 PostgreSQL、Redis、RustFS（S3）和 SearXNG（需已安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/)）：
+需已安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/)：
 
 ```bash
 # 一次性：创建 compose 侧环境变量（已有文件不会覆盖）
@@ -63,12 +28,42 @@ pnpm dev:docker
 pnpm db:migrate
 ```
 
-在 `.env.local` 中对齐连接信息（与 `docker-compose/dev/.env` 一致）：
+会一并启动 PostgreSQL、Redis、RustFS（S3）和 SearXNG。连接信息见下方环境变量示例，并与 `docker-compose/dev/.env` 保持一致。
+
+### 2.2 可选：云托管 Postgres
+
+也可使用 Supabase 免费 Postgres（或其它云托管实例）：
+
+1. 访问 <https://supabase.com> 创建项目（或使用 Neon 等）
+2. 在项目设置 → Database → Connection string 复制 URI
+3. 将连接串写入 `.env.local` 的 `DATABASE_URL`（云托管通常设 `DATABASE_DRIVER=neon`）
+
+更细的连接说明见 [环境变量配置](../self-hosting/configuration/environment.md) 与 [Drizzle 指南](../development/database/drizzle.md)。
+
+## 3. 配置环境变量
+
+在项目根目录创建 `.env.local`（也可从 `.env.example` 复制）：
 
 ```dotenv
+APP_URL=http://localhost:5174
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5174
+NODE_ENV=development
+
+# 本地 Docker PostgreSQL（与 docker-compose/dev/.env 一致）
 DATABASE_DRIVER=node
 DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat
 
+# 密钥生成方式见 .env.example
+KEY_VAULTS_SECRET=your-random-secret
+AUTH_SECRET=your-random-secret
+JWKS_KEY='{"keys":[...]}'
+```
+
+本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [环境变量 · APP\_URL](../self-hosting/configuration/environment.md#app_url)。
+
+若使用本地 Docker 的 Redis / S3 / 搜索，可一并配置：
+
+```dotenv
 REDIS_URL=redis://127.0.0.1:6379
 REDIS_PREFIX=purechat
 DISABLE_REDIS=0
@@ -85,7 +80,7 @@ SEARCH_PROVIDERS=searxng
 SEARXNG_URL=http://localhost:8180
 ```
 
-常用命令：
+常用 Docker 命令：
 
 ```bash
 pnpm dev:docker        # 启动
@@ -94,6 +89,10 @@ pnpm dev:docker:reset  # 清空卷后重建并执行 db:migrate
 ```
 
 `dev:docker:reset` 会要求输入确认并永久删除全部开发卷。旧本机数据迁移和生产部署见 [Docker 自托管与数据迁移](../self-hosting/platform/docker.md)；服务说明见 [本地 PostgreSQL](../self-hosting/infrastructure/postgresql.md)、[本地 Redis](../self-hosting/infrastructure/redis.md)、[联网搜索](../self-hosting/features/online-search.md)。
+
+### 3.1 可选：Supabase 客户端变量（仅测试）
+
+`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` **非必填**，仅在调试遗留 Supabase 客户端代码时需要，日常开发与认证流程可不配置。
 
 ## 4. 启动开发服务器
 
@@ -157,9 +156,13 @@ curl -X GET http://localhost:3000/api/auth/me \
 
 **A**: 检查邮箱和密码是否正确，或先使用注册接口创建账号。
 
+### Q: 提示缺少 `DATABASE_URL` 或无法连接数据库
+
+**A**: 确认已配置 `.env.local` 中的 `DATABASE_URL`，本地 Docker 需先执行 `pnpm dev:docker`，云托管需检查连接串与 `DATABASE_DRIVER`。
+
 ### Q: 提示 "Missing Supabase environment variables"
 
-**A**: 确保已创建 `.env.local` 文件，并且环境变量名称正确。
+**A**: 这两个变量仅测试用、非必填。若未主动调用 Supabase 客户端，可忽略；需要时再在 `.env.local` 中配置 `NEXT_PUBLIC_SUPABASE_URL` 与 `NEXT_PUBLIC_SUPABASE_ANON_KEY`。
 
 ### Q: CORS 错误
 

@@ -5,19 +5,21 @@ description: 配置 PureChatNext 数据库并执行 Drizzle schema 检查、迁�
 
 # Drizzle ORM 配置和运行指南
 
-本指南介绍如何使用 Drizzle ORM 连接 PostgreSQL（Supabase 或本地实例）并管理数据库迁移。
+本指南介绍如何使用 Drizzle ORM 连接 PostgreSQL 并管理数据库迁移。
 
 ## 📋 前置要求
 
-1. 已安装项目依赖：`pnpm install` 或 `npm install`
-2. 已准备 Supabase 项目或本地 PostgreSQL 17
+1. 已安装项目依赖：`pnpm install`
+2. 已准备 PostgreSQL 17（本地实例，或 [Supabase](https://supabase.com) 免费 Postgres 服务均可）
 3. 已配置 `.env.local` 文件（参考 [环境变量配置](../../self-hosting/configuration/environment.md)）
 
 ## 🔧 配置步骤
 
 ### 1. 配置环境变量
 
-在 `.env.local` 文件中添加 Supabase 数据库连接字符串：
+在 `.env.local` 文件中添加数据库连接字符串。
+
+使用 Supabase 免费 Postgres 时：
 
 ```dotenv
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
@@ -32,7 +34,7 @@ DATABASE_URL=postgresql://purechat:[LOCAL-PASSWORD]@127.0.0.1:5432/purechat
 
 本地实例启动方式见 [本地 PostgreSQL 管理](../../self-hosting/infrastructure/postgresql.md)。
 
-**获取连接字符串的方法：**
+**获取 Supabase 连接字符串的方法：**
 
 1. 登录 Supabase 控制台
 2. 进入项目设置 → Database
@@ -115,10 +117,10 @@ Docker 生产镜像会在启动应用前自动执行同一组迁移，并使用 
 
 ### 错误：连接数据库失败
 
-- 检查 Supabase 项目是否正常运行
-- 验证数据库密码是否正确
+- 确认 PostgreSQL 实例已启动（本地 Docker 先执行 `pnpm dev:docker`）
+- 验证 `DATABASE_URL` 与密码是否正确
 - 确认网络连接是否正常
-- 检查 Supabase 项目的 IP 白名单设置（如果启用了）
+- 云托管（如 Supabase）若启用了 IP 白名单，检查是否放行当前出口 IP
 
 ### 迁移失败
 
@@ -164,5 +166,5 @@ VALUES ('<SHA256>', <when>);
 #### 其他迁移错误
 
 - 检查迁移文件是否已存在冲突
-- 查看 Supabase 日志获取详细错误信息
+- 查看数据库日志（本地 Docker 容器日志，或云托管控制台）获取详细错误信息
 - 确认数据库用户有足够权限执行 DDL 操作

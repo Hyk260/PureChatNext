@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import { RootProvider } from 'fumadocs-ui/provider/next'
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
+import { AskAI } from '@/components/ask-ai'
 import { CategorySwitcher } from '@/components/category-switcher'
-import { GlobalHeader } from '@/components/global-header'
+import { SidebarFooter } from '@/components/sidebar-footer'
 import { baseOptions } from '@/lib/layout'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import { source } from '@/lib/source'
@@ -38,7 +39,7 @@ export const viewport: Viewport = {
   colorScheme: 'light dark',
   themeColor: [
     { color: '#ffffff', media: '(prefers-color-scheme: light)' },
-    { color: '#0f1115', media: '(prefers-color-scheme: dark)' },
+    { color: '#151310', media: '(prefers-color-scheme: dark)' },
   ],
 }
 
@@ -49,12 +50,16 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <RootProvider i18n={docsI18n} search={{ options: { type: 'static' } }}>
           <DocsLayout
             {...baseOptions()}
-            sidebar={{ banner: <CategorySwitcher key='category-switcher' />, collapsible: true }}
-            slots={{ header: GlobalHeader }}
+            sidebar={{
+              banner: <CategorySwitcher key='category-switcher' />,
+              collapsible: true,
+              footer: <SidebarFooter key='sidebar-footer' />,
+            }}
             tabs={false}
             tree={source.getPageTree()}
           >
             {children}
+            <AskAI />
           </DocsLayout>
         </RootProvider>
       </body>

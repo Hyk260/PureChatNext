@@ -20,6 +20,7 @@ export const getLLMConfig = () => {
       /** AI Gateway */
       AI_GATEWAY_API_KEY: z.string().optional(),
       AI_GATEWAY_BASE_URL: z.string().optional(),
+      VERCEL_OIDC_TOKEN: z.string().optional(),
     },
     runtimeEnv: {
       // API Key 选择模式
@@ -36,6 +37,7 @@ export const getLLMConfig = () => {
       // AI Gateway
       AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
       AI_GATEWAY_BASE_URL: process.env.AI_GATEWAY_BASE_URL,
+      VERCEL_OIDC_TOKEN: process.env.VERCEL_OIDC_TOKEN,
     },
   })
 }

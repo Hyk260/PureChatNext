@@ -11,6 +11,7 @@ import process from 'node:process'
 const ROOT = process.cwd()
 const DOCS_ROOT = path.join(ROOT, 'docs')
 const DOCS_INDEX = path.join(DOCS_ROOT, 'README.md')
+const DOCS_SOURCE = path.join(ROOT, 'apps/docs/src/lib/source.ts')
 const META_FILENAME = 'meta.json'
 const PUBLIC_SECTIONS = new Set(['development', 'getting-started', 'self-hosting'])
 
@@ -163,6 +164,17 @@ function main() {
   if (!existsSync(DOCS_INDEX)) {
     console.error('❌ 缺少 docs/README.md')
     process.exit(1)
+  }
+
+  if (!existsSync(DOCS_SOURCE)) failures.push('apps/docs/src/lib/source.ts：缺少文档站内容源配置')
+  else {
+    const sourceConfig = readFileSync(DOCS_SOURCE, 'utf8')
+    if (!sourceConfig.includes("'!private/**'")) {
+      failures.push('apps/docs/src/lib/source.ts：必须明确排除 docs/private/**')
+    }
+    if (!/includeProcessedMarkdown:\s*true/.test(sourceConfig)) {
+      failures.push('apps/docs/src/lib/source.ts：必须生成 Copy Markdown 所需的 processed Markdown')
+    }
   }
 
   const publicDocs = walk(DOCS_ROOT).sort()

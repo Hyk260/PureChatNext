@@ -7,6 +7,9 @@ const docs = defineDocs({
   dir: '../../docs',
   docs: {
     files: ['**/*.md', '!private/**'],
+    postprocess: {
+      includeProcessedMarkdown: true,
+    },
     schema: pageSchema,
   },
   meta: {
@@ -31,4 +34,8 @@ export const source = loader({
 
 export function getGitHubEditUrl(path: string) {
   return `https://github.com/Hyk260/PureChatNext/edit/main/docs/${path}`
+}
+
+export function getGitHubSourceUrl(path: string) {
+  return `https://github.com/Hyk260/PureChatNext/blob/main/docs/${path}`
 }

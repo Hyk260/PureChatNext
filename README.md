@@ -344,7 +344,7 @@ Copyright © 2025–2026 [Hyk260][profile-link].
 [github-stars-link]: https://github.com/Hyk260/PureChatNext/stargazers
 [github-stars-shield]: https://img.shields.io/github/stars/Hyk260/PureChatNext?color=ffcb47&labelColor=black&style=flat-square
 [online-demo-link]: https://next.purechat.cn
-[docs-site-link]: https://docs.purechat.cn
+[docs-site-link]: https://next-docs.purechat.cn
 [profile-link]: https://github.com/Hyk260
 [repo-link]: https://github.com/Hyk260/PureChatNext
 [vercel-deploy-link]: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHyk260%2FPureChatNext

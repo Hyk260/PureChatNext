@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import { createRelativeLink } from 'fumadocs-ui/mdx'
-import { DocsBody, DocsPage } from 'fumadocs-ui/layouts/docs/page'
+import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/layouts/docs/page'
 import { notFound } from 'next/navigation'
 import { getMDXComponents } from '@/components/mdx'
 import { HomeCards } from '@/components/home-cards'
+import { PageActions } from '@/components/page-actions'
 import { TocFooter } from '@/components/toc-footer'
+import { getMarkdownUrl } from '@/lib/markdown'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
-import { getGitHubEditUrl, source } from '@/lib/source'
+import { getGitHubEditUrl, getGitHubSourceUrl, source } from '@/lib/source'
 
 export const dynamicParams = false
 
@@ -17,19 +19,23 @@ export default async function Page({ params }: PageProps<'/[[...slug]]'>) {
 
   const MDX = page.data.body
   const editUrl = getGitHubEditUrl(page.path)
+  const githubUrl = getGitHubSourceUrl(page.path)
+  const markdownUrl = getMarkdownUrl(page.url)
 
   return (
     <DocsPage
       breadcrumb={{ includeRoot: true }}
       tableOfContent={{
         footer: <TocFooter editUrl={editUrl} />,
-        header: <p className='mb-4 text-sm font-semibold'>本页内容</p>,
       }}
-      toc={page.data.toc}
+      toc={page.data.toc.filter((item) => item.depth > 1)}
     >
+      <DocsTitle>{page.data.title}</DocsTitle>
+      <DocsDescription>{page.data.description}</DocsDescription>
+      <PageActions githubUrl={githubUrl} markdownUrl={markdownUrl} />
       <DocsBody className='docs-body'>
         {page.url === '/' ? <HomeCards /> : null}
-        <MDX components={getMDXComponents({ a: createRelativeLink(source, page) })} />
+        <MDX components={getMDXComponents({ a: createRelativeLink(source, page), h1: () => null })} />
       </DocsBody>
     </DocsPage>
   )

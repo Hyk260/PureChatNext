@@ -59,6 +59,7 @@
     "lint:console": "tsx scripts/check-console-log.mts",
     "lint:docs": "node scripts/check-docs.mjs",
     "lint:docs-site": "pnpm --filter @pure/docs lint",
+    "test:docs-site": "pnpm --filter @pure/docs test",
     "lint:md": "remark . --silent --frail",
     "lint:md:fix": "remark . --silent --output",
     "lint:unused": "knip --include files,exports,types,enumMembers,duplicates",

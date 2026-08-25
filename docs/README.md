@@ -7,7 +7,7 @@ description: PureChatNext 的快速开始、开发指南与自托管文档入口
 
 这里收录 PureChatNext 的公开中文文档。请按读者任务进入对应分类：
 
-正式文档站：<https://docs.purechat.cn>。本目录仍是 GitHub 阅读与文档站构建共用的唯一内容源。
+正式文档站：<https://next-docs.purechat.cn>。旧版 VitePress 文档仍位于 <https://docs.purechat.cn>。本目录仍是 GitHub 阅读与新版文档站构建共用的唯一内容源。
 
 - [快速开始](./getting-started/quick-start.md)：安装依赖、准备环境并启动本地开发。
 - [开发指南](./development/README.md)：数据库、质量检查和前端样式约定。

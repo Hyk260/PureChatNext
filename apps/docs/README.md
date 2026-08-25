@@ -14,7 +14,9 @@ pnpm test:docs-site
 pnpm build:docs
 ```
 
-开发地址为 <http://localhost:3010>。
+开发地址为 <http://localhost:3020>。
+
+开发服务器固定使用 Next.js webpack 模式。文档站需要读取 monorepo 根部的 `docs/` 与 workspace 包；若使用默认 Turbopack，它会将仓库根识别为应用根并误加载主应用的 `src/instrumentation.ts`。
 
 ## Vercel 部署
 
@@ -30,11 +32,13 @@ pnpm build:docs
 
 ## Ask AI
 
-Ask AI 只检索仓库中的公开文档，不读取 `docs/private/`，也不保存会话。开发环境在未提交的 `.env.local` 中配置：
+Ask AI 只检索仓库中的公开文档，不读取 `docs/private/`，也不保存会话。开发环境读取仓库根目录的 `.env.local`（与主应用共用），不要只写在 `apps/docs/` 下才指望生效：
 
 ```bash
 AI_GATEWAY_API_KEY=your_ai_gateway_key
 ```
+
+`apps/docs/.env.local` 仍可单独覆盖同名变量。重启 `pnpm dev:docs` 后生效。
 
 Vercel 生产部署优先使用自动提供的 OIDC；若项目未启用 OIDC，再为独立文档 Project 配置同名密钥。
 

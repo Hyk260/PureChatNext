@@ -20,7 +20,7 @@ pnpm dev
 
 本地访问 `http://localhost:5174`；Next API / BFF 默认运行在 `http://localhost:3000`。完整配置见 [快速开始](./docs/getting-started/quick-start.md)。
 
-公开文档站是独立 workspace，运行 `pnpm dev:docs` 后访问 `http://localhost:3010`。文档内容继续编辑 `docs/**/*.md`，站点代码位于 `apps/docs/`。
+公开文档站是独立 workspace，运行 `pnpm dev:docs` 后访问 `http://localhost:3020`。文档内容继续编辑 `docs/**/*.md`，站点代码位于 `apps/docs/`。
 
 ## 开发约定
 

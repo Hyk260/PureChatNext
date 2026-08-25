@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build --webpack",
-    "dev": "next dev --webpack -p 3010",
+    "build": "next build",
+    "dev": "next dev --webpack -p 3020",
     "lint": "eslint .",
-    "start": "next start -p 3010",
+    "start": "next start -p 3020",
     "test": "vitest run",
     "types:check": "next typegen && tsc --noEmit"
   },

@@ -45,7 +45,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang='zh-CN' suppressHydrationWarning>
+    <html data-scroll-behavior='smooth' lang='zh-CN' suppressHydrationWarning>
       <body id='top'>
         <RootProvider i18n={docsI18n} search={{ options: { type: 'static' } }}>
           <DocsLayout

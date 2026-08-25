@@ -115,7 +115,7 @@ pnpm dev          # 同时启动 Next BFF 与 Vite SPA
 pnpm dev:inspect  # 启用 code-inspector 的开发模式
 pnpm dev:next     # 仅启动 Next，端口 3000
 pnpm dev:spa      # 仅启动 Vite SPA，端口 5174
-pnpm dev:docs     # 仅启动公开文档站，端口 3010
+pnpm dev:docs     # 仅启动公开文档站，端口 3020
 pnpm build        # 构建 SPA、复制产物并构建 Next
 pnpm build:docs   # 构建独立文档站
 pnpm lint         # lint、类型与仓库质量检查

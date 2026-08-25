@@ -1,3 +1,8 @@
+---
+title: 微信 iLink 渠道
+description: 在 PureChatNext 中配置微信 iLink 渠道、模型凭证和运行方式。
+---
+
 # 微信 iLink 渠道
 
 微信渠道由 Next Node Server 内置 Channel Gateway 维护，不再运行独立进程。Gateway 长轮询 iLink，将完整批次回调到应用内部 Webhook；Webhook 在同一事务中写入事件队列并推进 cursor，4 个 processor 从 PostgreSQL 队列生成与分片发送回复。

@@ -1,3 +1,8 @@
+---
+title: PureChatNext 样式与 AI 编码规范
+description: PureChatNext 的 Tailwind 优先样式规则、主题边界与 AI 编码要求。
+---
+
 # PureChatNext 样式与 AI 编码规范
 
 本文是 PureChatNext 的样式单一约定，适用于人工开发与 AI coding agent。目标是让业务层逐步采用 Tailwind CSS，同时保持 JSX 可读，并把复杂、动态或过长的样式留给 `createStaticStyles`。不要求为了迁移而进行一次性重写。

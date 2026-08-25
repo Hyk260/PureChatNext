@@ -1,3 +1,8 @@
+---
+title: 微信 iLink Bot API 通信协议规范
+description: PureChatNext 微信渠道的会话、消息、文件与 iLink Bot 协议说明。
+---
+
 # 微信 iLink Bot API 通信协议规范
 
 > **渠道笔记**（`docs/self-hosting/channels/wechat/protocol.md`）：供本仓库 `@pure/chat-adapter/wechat` 与内置 Channel Gateway 对照。正文描述的是微信 iLink / ClawBot 公开协议行为。

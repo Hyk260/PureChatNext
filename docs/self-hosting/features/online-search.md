@@ -1,3 +1,8 @@
+---
+title: 配置联网搜索功能
+description: 配置 PureChatNext 搜索 Provider、网页抓取实现与故障排查方式。
+---
+
 # 配置联网搜索功能
 
 支持为 AI 配置**联网搜索功能**，使其能够实时获取互联网信息，从而提供更准确、最新的回答。联网搜索支持多个搜索引擎提供商，包括 [SearXNG](https://github.com/searxng/searxng)、[Search1API](https://www.search1api.com)、[Google](https://programmablesearchengine.google.com)、[Brave](https://brave.com/search/api) 等。
@@ -12,7 +17,7 @@
 
 配置可用的网页爬虫，用于对网页进行结构化内容提取。
 
-```env
+```dotenv
 CRAWLER_IMPLS="naive,search1api"
 ```
 
@@ -36,7 +41,7 @@ CRAWLER_IMPLS="naive,search1api"
 
 将 Jina Reader / Search 切换到中国大陆可用的备用域名。
 
-```env
+```dotenv
 JINA_USE_CN_DOMAINS=true
 ```
 
@@ -53,7 +58,7 @@ JINA_USE_CN_DOMAINS=true
 
 控制单次网页抓取任务的并发数量，默认值为 `3`。在低配置服务器上建议设置为 `1` 以降低 CPU 峰值。
 
-```env
+```dotenv
 CRAWL_CONCURRENCY=3
 ```
 
@@ -61,7 +66,7 @@ CRAWL_CONCURRENCY=3
 
 控制单个 URL 的抓取失败重试次数，默认值为 `1`（即最多尝试 2 次）。
 
-```env
+```dotenv
 CRAWLER_RETRY=1
 ```
 
@@ -71,7 +76,7 @@ CRAWLER_RETRY=1
 
 配置联网搜索使用的搜索引擎提供商。
 
-```env
+```dotenv
 SEARCH_PROVIDERS="searxng"
 ```
 
@@ -99,7 +104,7 @@ SEARCH_PROVIDERS="searxng"
 
 指定 [Browserless](https://www.browserless.io/) 服务的 API 地址，用于执行网页爬取任务。Browserless 是一个基于无头浏览器（Headless Chrome）的浏览器自动化平台，适合处理需要渲染的动态页面。
 
-```env
+```dotenv
 BROWSERLESS_URL=https://chrome.browserless.io
 ```
 
@@ -111,7 +116,7 @@ BROWSERLESS_URL=https://chrome.browserless.io
 
 启用广告拦截功能，在使用 [Browserless](https://www.browserless.io/) 进行网页抓取时自动屏蔽常见广告资源（如脚本、图片、追踪器等），提高抓取速度与页面清晰度。
 
-```env
+```dotenv
 BROWSERLESS_BLOCK_ADS=1
 ```
 
@@ -128,7 +133,7 @@ BROWSERLESS_BLOCK_ADS=1
 
 启用隐身模式，在使用 [Browserless](https://www.browserless.io/) 抓取网页时，通过一系列防检测手段（如修改 UA、移除 webdriver 特征、模拟用户操作）来规避反爬虫机制。
 
-```env
+```dotenv
 BROWSERLESS_STEALTH_MODE=1
 ```
 
@@ -145,7 +150,7 @@ BROWSERLESS_STEALTH_MODE=1
 
 配置 Google Programmable Search Engine（Google PSE）的搜索引擎 ID，用于限定搜索范围。需配合 `GOOGLE_PSE_API_KEY` 一起使用。
 
-```env
+```dotenv
 GOOGLE_PSE_ENGINE_ID=your-google-cx-id
 ```
 
@@ -157,7 +162,7 @@ GOOGLE_PSE_ENGINE_ID=your-google-cx-id
 
 设置 [Firecrawl](https://firecrawl.dev/) API 的访问地址。用于网页内容抓取，默认值如下：
 
-```env
+```dotenv
 FIRECRAWL_URL=https://api.firecrawl.dev/v2
 ```
 
@@ -169,7 +174,7 @@ FIRECRAWL_URL=https://api.firecrawl.dev/v2
 
 配置 [Tavily](https://www.tavily.com/) 搜索的结果深度。
 
-```env
+```dotenv
 TAVILY_SEARCH_DEPTH=basic
 ```
 
@@ -184,7 +189,7 @@ TAVILY_SEARCH_DEPTH=basic
 
 配置 Tavily 在抓取网页内容时的提取深度。
 
-```env
+```dotenv
 TAVILY_EXTRACT_DEPTH=basic
 ```
 

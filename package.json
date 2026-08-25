@@ -17,6 +17,7 @@
     "dev": "bun scripts/dev-startup-sequence.mts",
     "dev:next": "next dev -p 3000",
     "dev:spa": "vite",
+    "dev:docs": "pnpm --filter @pure/docs dev",
     "dev:inspect": "bun scripts/dev-startup-sequence.mts --inspect",
     "dev:docker": "bun scripts/docker.mts up",
     "dev:docker:down": "bun scripts/docker.mts down",
@@ -26,6 +27,7 @@
     "build:spa": "vite build",
     "build:spa:copy": "node scripts/copy-spa-build.mjs",
     "build:next": "next build",
+    "build:docs": "pnpm --filter @pure/docs build",
     "build:docker:migrate": "node scripts/build-docker-migrate.mjs",
     "build:docker": "pnpm run build && pnpm run build:docker:migrate",
     "build:vercel": "pnpm build",
@@ -46,7 +48,7 @@
     "tunnel:ngrok": "ngrok http http://localhost:5174",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "lint": "node scripts/run-parallel.mjs lint:ts lint:spa-env-imports lint:style lint:circular lint:docs lint:md && pnpm run typecheck",
+    "lint": "node scripts/run-parallel.mjs lint:ts lint:spa-env-imports lint:style lint:circular lint:docs lint:docs-site lint:md && pnpm run typecheck && pnpm run typecheck:docs",
     "lint:ts": "eslint src/ tests/ --concurrency=auto",
     "lint:style": "stylelint \"{src,tests}/**/*.css\"",
     "lint:style:fix": "stylelint \"{src,tests}/**/*.css\" --fix",
@@ -56,6 +58,7 @@
     "lint:circular:packages": "dpdm \"packages/**/src/**/*.{ts,tsx}\" --no-warning --no-tree --no-progress --exit-code circular:1 --transform --skip-dynamic-imports circular",
     "lint:console": "tsx scripts/check-console-log.mts",
     "lint:docs": "node scripts/check-docs.mjs",
+    "lint:docs-site": "pnpm --filter @pure/docs lint",
     "lint:md": "remark . --silent --frail",
     "lint:md:fix": "remark . --silent --output",
     "lint:unused": "knip --include files,exports,types,enumMembers,duplicates",
@@ -63,6 +66,7 @@
     "prettier:check": "prettier --check .",
     "check:spa-env-leak": "node scripts/check-spa-env-leak.mjs",
     "typecheck": "tsc --noEmit",
+    "typecheck:docs": "pnpm --filter @pure/docs types:check",
     "typecheck:packages": "pnpm -r --filter \"@pure/*\" exec tsc --noEmit"
   },
   "dependencies": {
@@ -178,8 +182,10 @@
   "pnpm": {
     "overrides": {
       "fast-xml-parser": "5.11.0",
+      "framer-motion": "12.41.0",
       "js-cookie": "^3.0.7",
       "lodash": "^4.18.0",
+      "motion": "12.41.0",
       "zod": "^4.3.6"
     }
   },

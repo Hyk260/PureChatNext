@@ -1,3 +1,8 @@
+---
+title: QQ 机器人渠道
+description: 在 PureChatNext 中配置 QQ 开放平台机器人渠道并验证连接状态。
+---
+
 # QQ 机器人渠道
 
 QQ 支持三种连接方式：

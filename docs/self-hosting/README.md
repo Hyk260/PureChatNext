@@ -1,3 +1,8 @@
+---
+title: 自托管指南
+description: 部署、配置和维护 PureChatNext 自托管实例的文档入口。
+---
+
 # 自托管指南
 
 面向部署、配置和维护 PureChatNext 实例的管理员。

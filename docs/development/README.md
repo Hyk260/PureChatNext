@@ -1,3 +1,8 @@
+---
+title: 开发指南
+description: 面向 PureChatNext 贡献者的数据库、质量检查与前端样式指南。
+---
+
 # 开发指南
 
 面向参与 PureChatNext 开发、测试和维护的贡献者。

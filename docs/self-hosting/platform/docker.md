@@ -1,3 +1,8 @@
+---
+title: Docker 自托管
+description: 使用 Docker 部署 PureChatNext 及其 PostgreSQL、Redis、RustFS 与搜索服务。
+---
+
 # Docker 自托管
 
 PureChatNext 同时支持 Vercel 与 Docker 自托管。Docker 生产方案包含应用、微信 Gateway、PostgreSQL、Redis、RustFS 和 SearXNG，HTTPS 由宿主机上的 Nginx 或 Caddy 提供。

@@ -1,3 +1,8 @@
+---
+title: PureChatNext 样式迁移方案
+description: 将 PureChatNext 业务组件渐进迁移到 Tailwind CSS 的阶段与验收标准。
+---
+
 # PureChatNext 样式迁移方案
 
 ## 目标

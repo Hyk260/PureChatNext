@@ -1,3 +1,8 @@
+---
+title: 快速开始指南
+description: 安装 PureChatNext、配置本地环境并启动 Vite SPA 与 Next BFF。
+---
+
 # 快速开始指南
 
 ## 1. 安装依赖
@@ -33,7 +38,7 @@ pnpm install
 
 在项目根目录创建 `.env.local` 文件：
 
-```env
+```dotenv
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 APP_URL=http://localhost:5174
@@ -60,7 +65,7 @@ pnpm db:migrate
 
 在 `.env.local` 中对齐连接信息（与 `docker-compose/dev/.env` 一致）：
 
-```env
+```dotenv
 DATABASE_DRIVER=node
 DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat
 

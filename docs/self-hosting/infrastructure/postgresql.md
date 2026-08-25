@@ -1,3 +1,8 @@
+---
+title: 本地 PostgreSQL 管理
+description: 启动、连接、检查和维护 PureChatNext 使用的本地 PostgreSQL。
+---
+
 # 本地 PostgreSQL 管理
 
 PureChatNext 可以直接连接本机 PostgreSQL，不需要为了数据库功能单独部署完整 Supabase。本地实例通过 Docker Compose 与 Redis / RustFS / SearXNG 一并管理，在 Windows / macOS / Linux 上用法相同。
@@ -24,7 +29,7 @@ pnpm docker:setup:dev
 
 ### Compose 侧（`docker-compose/dev/.env`）
 
-```env
+```dotenv
 POSTGRES_DB=purechat
 POSTGRES_USER=purechat
 POSTGRES_PASSWORD=<从 docker-compose/dev/.env 读取>
@@ -32,7 +37,7 @@ POSTGRES_PASSWORD=<从 docker-compose/dev/.env 读取>
 
 ### 应用侧（项目根 `.env.local`）
 
-```env
+```dotenv
 DATABASE_DRIVER=node
 DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat
 ```

@@ -1,0 +1,10 @@
+export const SITE_NAME = 'PureChat Docs'
+export const SITE_DESCRIPTION = 'PureChatNext 的快速开始、开发指南与自托管文档。'
+export const SITE_URL = 'https://docs.purechat.cn'
+export const PRODUCT_URL = 'https://next.purechat.cn'
+export const REPOSITORY_URL = 'https://github.com/Hyk260/PureChatNext'
+export const REPOSITORY_OWNER = 'Hyk260'
+export const REPOSITORY_NAME = 'PureChatNext'
+export const REPOSITORY_BRANCH = 'main'
+
+export const QUICK_START_URL = '/getting-started/quick-start'

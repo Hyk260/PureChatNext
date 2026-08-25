@@ -1,10 +1,15 @@
+---
+title: 环境变量配置指南
+description: 按领域配置 PureChatNext 本地开发、Vercel 与 Docker 环境变量。
+---
+
 # 环境变量配置指南
 
 ## 创建环境变量文件
 
 在项目根目录创建 `.env.local` 文件，并添加以下配置：
 
-```env
+```dotenv
 # Supabase 配置
 # 从 Supabase 项目设置中获取这些值
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
@@ -180,7 +185,7 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 
 本地 Docker RustFS（`pnpm dev:docker`）推荐与 `docker-compose/dev/.env` 中 `RUSTFS_*` 对齐：
 
-```env
+```dotenv
 S3_ACCESS_KEY_ID=<docker-compose/dev/.env 中的 RUSTFS_ACCESS_KEY>
 S3_SECRET_ACCESS_KEY=<docker-compose/dev/.env 中的 RUSTFS_SECRET_KEY>
 S3_BUCKET=purechat

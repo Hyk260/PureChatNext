@@ -1,3 +1,8 @@
+---
+title: QQ 开放平台机器人 API 通信协议规范
+description: PureChatNext QQ 机器人渠道的鉴权、事件、消息与 WebSocket 协议说明。
+---
+
 # QQ 开放平台机器人 API 通信协议规范
 
 > **渠道笔记**（`docs/self-hosting/channels/qq/protocol.md`）：供本仓库 `@pure/chat-adapter/qq` 与内置 Channel Gateway 对照。正文描述的是 QQ 开放平台公开协议行为。

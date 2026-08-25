@@ -1,3 +1,8 @@
+---
+title: 本地 Redis 管理
+description: 启动、连接和排查 PureChatNext 缓存与次级存储使用的 Redis。
+---
+
 # 本地 Redis 管理
 
 PureChatNext 可使用 Redis 保存 Better Auth 次级存储、微信渠道上下文和其他缓存数据。本地 Redis 通过 Docker Compose 手动启停，不随 `pnpm dev` 自动启动；在 Windows / macOS / Linux 上用法相同。
@@ -26,7 +31,7 @@ pnpm docker:setup:dev
 
 在 `.env.local` 中启用应用侧 Redis：
 
-```env
+```dotenv
 REDIS_URL=redis://127.0.0.1:6379
 REDIS_DATABASE=0
 REDIS_TLS=0

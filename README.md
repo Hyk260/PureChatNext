@@ -8,7 +8,7 @@
 
 面向中文用户和小团队的开源自托管 AI 工作台，支持多模型、联网搜索、文件处理和私有部署。
 
-[在线体验][online-demo-link] · [Vercel 部署][vercel-deploy-link] · [Docker 自托管](./docs/self-hosting/platform/docker.md) · [文档](./docs/README.md) · [讨论区][github-discussions-link]
+[在线体验][online-demo-link] · [Vercel 部署][vercel-deploy-link] · [Docker 自托管](./docs/self-hosting/platform/docker.md) · [文档站][docs-site-link] · [讨论区][github-discussions-link]
 
 [![][github-release-shield]][github-release-link]
 [![][github-license-shield]][github-license-link]
@@ -252,6 +252,9 @@ pnpm docker:deploy
 
 ```text
 PureChatNext/
+├── apps/
+│   ├── desktop/               # Electron 桌面应用
+│   └── docs/                  # 独立 Next.js + Fumadocs 文档站
 ├── packages/                  # @pure/* 工作区包
 │   ├── database/              # Drizzle Schema、Model 与迁移
 │   ├── env/                   # 环境变量校验
@@ -266,7 +269,7 @@ PureChatNext/
 │   ├── server/                # 服务端业务与搜索聚合
 │   ├── libs/                  # 认证、中间件与工具
 │   └── components/            # 通用 React 组件
-├── docs/                      # 开发与自托管文档
+├── docs/                      # 文档站与 GitHub 共用的公开 Markdown 内容源
 └── scripts/                   # 开发、构建、迁移与 Docker 脚本
 ```
 
@@ -278,9 +281,11 @@ pnpm dev
 pnpm dev:inspect
 pnpm dev:next
 pnpm dev:spa
+pnpm dev:docs
 
 # 构建与运行
 pnpm build
+pnpm build:docs
 pnpm start
 
 # 数据库
@@ -304,6 +309,7 @@ pnpm dev:docker:down
 
 | 文档 | 内容 |
 | --- | --- |
+| [公开文档站][docs-site-link] | 可搜索的正式文档、目录和页面导航 |
 | [文档索引](./docs/README.md) | 全部公开文档与维护规范 |
 | [快速开始](./docs/getting-started/quick-start.md) | 云数据库与本地开发配置 |
 | [开发指南](./docs/development/README.md) | 数据库、质量检查与样式约定 |
@@ -338,6 +344,7 @@ Copyright © 2025–2026 [Hyk260][profile-link].
 [github-stars-link]: https://github.com/Hyk260/PureChatNext/stargazers
 [github-stars-shield]: https://img.shields.io/github/stars/Hyk260/PureChatNext?color=ffcb47&labelColor=black&style=flat-square
 [online-demo-link]: https://next.purechat.cn
+[docs-site-link]: https://docs.purechat.cn
 [profile-link]: https://github.com/Hyk260
 [repo-link]: https://github.com/Hyk260/PureChatNext
 [vercel-deploy-link]: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHyk260%2FPureChatNext

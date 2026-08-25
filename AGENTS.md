@@ -22,7 +22,7 @@
 ## 架构不变量
 
 - 业务 UI 使用 Vite SPA、React 19 和 react-router，主要位于 `src/spa/` 与 `src/features/`；样式与组件按需使用 Tailwind CSS 4、`@lobehub/ui` 和 antd。
-- Next.js 16 只负责 API、认证和生产 SPA HTML 壳；不要把新业务页面迁回 Next.js 页面路由。
+- 主应用的 Next.js 16 只负责 API、认证和生产 SPA HTML 壳；不要把新业务页面迁回 Next.js 页面路由。`apps/docs/` 是独立部署的公开文档站，不属于主应用页面路由。
 - 本地开发访问 `http://localhost:5174`；Vite 将 `/api` 代理到 `http://localhost:3000` 的 Next BFF。
 - 本地 `APP_URL` 使用 `http://localhost:5174`；生产环境使用正式同域地址。
 - 请求边界使用 `src/proxy.ts` 处理 CORS 和 `/api/rest-api` JWT，不要改回 `middleware.ts`。
@@ -44,6 +44,7 @@
 | 搜索与爬虫 | `src/server/search/`、`packages/web-crawler/` | 搜索 provider 与网页抓取实现 |
 | 共享类型与工具 | `packages/types/`、`packages/utils/` | 跨 workspace 复用逻辑 |
 | 文件解析 | `packages/file-loaders/` | PDF、Office、文本等加载器 |
+| 公开文档站 | `apps/docs/`、`docs/` | 独立 Fumadocs 应用与共享 Markdown 内容源 |
 
 ## 领域约定
 
@@ -114,7 +115,9 @@ pnpm dev          # 同时启动 Next BFF 与 Vite SPA
 pnpm dev:inspect  # 启用 code-inspector 的开发模式
 pnpm dev:next     # 仅启动 Next，端口 3000
 pnpm dev:spa      # 仅启动 Vite SPA，端口 5174
+pnpm dev:docs     # 仅启动公开文档站，端口 3010
 pnpm build        # 构建 SPA、复制产物并构建 Next
+pnpm build:docs   # 构建独立文档站
 pnpm lint         # lint、类型与仓库质量检查
 ```
 

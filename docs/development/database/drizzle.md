@@ -1,3 +1,8 @@
+---
+title: Drizzle ORM 配置和运行指南
+description: 配置 PureChatNext 数据库并执行 Drizzle schema 检查、迁移与常用操作。
+---
+
 # Drizzle ORM 配置和运行指南
 
 本指南介绍如何使用 Drizzle ORM 连接 PostgreSQL（Supabase 或本地实例）并管理数据库迁移。
@@ -14,13 +19,13 @@
 
 在 `.env.local` 文件中添加 Supabase 数据库连接字符串：
 
-```env
+```dotenv
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
 ```
 
 本地实例使用：
 
-```env
+```dotenv
 DATABASE_DRIVER=node
 DATABASE_URL=postgresql://purechat:[LOCAL-PASSWORD]@127.0.0.1:5432/purechat
 ```

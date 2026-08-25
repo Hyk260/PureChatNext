@@ -1,3 +1,8 @@
+---
+title: Lint 与类型检查脚本
+description: 了解 PureChatNext 的代码、样式、文档、依赖循环与类型检查命令。
+---
+
 # Lint 与类型检查脚本
 
 根目录 `package.json` 里的质量检查脚本。提交前跑 **`pnpm lint`**；其余命令按需单独执行。

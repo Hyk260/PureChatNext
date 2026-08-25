@@ -1,0 +1,5 @@
+{
+  "title": "质量检查",
+  "icon": "BadgeCheck",
+  "pages": ["lint"]
+}

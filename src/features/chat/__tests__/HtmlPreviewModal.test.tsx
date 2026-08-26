@@ -56,7 +56,7 @@ vi.mock('@pure/ui', () => ({
     ) : null,
 }))
 
-import HtmlPreviewModal from './HtmlPreviewModal'
+import HtmlPreviewModal from '../HtmlPreviewModal'
 
 describe('HtmlPreviewModal', () => {
   it('renders a sandboxed preview iframe', () => {

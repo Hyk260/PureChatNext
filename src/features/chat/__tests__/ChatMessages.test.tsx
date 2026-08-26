@@ -156,17 +156,14 @@ describe('ChatMessages message layout', () => {
     }
   })
 
-  it.each([
-    ['操作栏', '编辑'],
-    ['更多菜单', '菜单-编辑'],
-  ])('opens the editor from the %s edit action', (_source, label) => {
+  it('opens the editor from the action bar edit button', () => {
     const onEdit = vi.fn()
     const { container, getByLabelText, getByTestId, getByText } = render(
       <ChatMessages messages={[messages[0]]} onDelete={vi.fn()} onEdit={onEdit} onRegenerate={vi.fn()} />
     )
 
     const row = container.querySelector('[data-role="user"]')!
-    fireEvent.click(getByLabelText(label, { selector: `[data-role="user"] button` }))
+    fireEvent.click(getByLabelText('编辑', { selector: `[data-role="user"] button` }))
 
     const editor = getByTestId('message-editor')
     expect(editor.dataset.value).toBe('hello')

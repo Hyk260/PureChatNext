@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { useAutoScroll } from './useAutoScroll'
+import { useAutoScroll } from '../useAutoScroll'
 
 const createScrollElement = (scrollTop: number) => {
   const element = document.createElement('div')

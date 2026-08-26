@@ -7,7 +7,7 @@ import {
   setPendingChatText,
   setPendingTopicSend,
   truncateTitle,
-} from './chatLocalStorage'
+} from '../chatLocalStorage'
 
 describe('chatLocalStorage pending helpers', () => {
   afterEach(() => {

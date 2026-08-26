@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isHtmlPreviewLanguage, toHtmlPreviewSrcDoc } from './htmlPreview'
+import { isHtmlPreviewLanguage, toHtmlPreviewSrcDoc } from '../htmlPreview'
 
 describe('isHtmlPreviewLanguage', () => {
   it.each(['html', 'HTML', ' htm ', 'svg'])('accepts %s', (language) => {

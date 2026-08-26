@@ -98,7 +98,7 @@ vi.mock('@/features/chat/store/useChatUiStore', () => ({
     }),
 }))
 
-import ChatHeader from './ChatHeader'
+import ChatHeader from '../ChatHeader'
 
 const topic: LocalChatTopic = {
   agentId: 'agent-1',

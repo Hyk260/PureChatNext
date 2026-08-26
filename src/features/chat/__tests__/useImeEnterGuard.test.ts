@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { useImeEnterGuard } from './useImeEnterGuard'
+import { useImeEnterGuard } from '../useImeEnterGuard'
 
 const enterEvent = (overrides: { isComposing?: boolean; keyCode?: number } = {}) =>
   ({

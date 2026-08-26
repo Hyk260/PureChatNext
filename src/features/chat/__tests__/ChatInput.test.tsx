@@ -57,7 +57,7 @@ vi.mock('@/features/chat/store/useChatUiStore', () => ({
     selector({ rightCollapsed: true, toggleRightCollapsed: vi.fn() }),
 }))
 
-import ChatInput from './ChatInput'
+import ChatInput from '../ChatInput'
 
 describe('ChatInput web search mode', () => {
   it('toggles search from off to auto', () => {

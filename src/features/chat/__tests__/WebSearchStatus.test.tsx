@@ -11,7 +11,7 @@ vi.mock('antd-style', () => ({
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
 }))
 
-import WebSearchStatus, { getWebSearchStatusSignature, hasWebSearchToolPart } from './WebSearchStatus'
+import WebSearchStatus, { getWebSearchStatusSignature, hasWebSearchToolPart } from '../WebSearchStatus'
 
 const createMessage = (part: Record<string, unknown>): UIMessage =>
   ({

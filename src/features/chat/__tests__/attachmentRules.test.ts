@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { MAX_CHAT_ATTACHMENT_BYTES, validateChatAttachments } from './attachmentRules'
+import { MAX_CHAT_ATTACHMENT_BYTES, validateChatAttachments } from '../attachmentRules'
 
 describe('validateChatAttachments', () => {
   it('limits the combined attachment count to eight', () => {

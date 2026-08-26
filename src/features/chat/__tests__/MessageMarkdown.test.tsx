@@ -31,7 +31,7 @@ vi.mock('@/features/chat/HtmlPreviewModal', () => ({
   default: ({ open }: { open: boolean }) => (open ? <div data-testid='html-preview-modal' /> : null),
 }))
 
-import MessageMarkdown from './MessageMarkdown'
+import MessageMarkdown from '../MessageMarkdown'
 
 beforeEach(() => {
   markdownSpy.mockClear()

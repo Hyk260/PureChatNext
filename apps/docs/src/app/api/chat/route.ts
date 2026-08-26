@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   const result = streamText({
     instructions: `你是 PureChatNext 公开文档助手。当前页面是 ${page ?? '未知页面'}。
 回答前必须调用 searchDocs。只依据工具返回的公开文档回答，不要使用外部知识猜测。
-回答使用简洁中文，并在相关结论后附上 Markdown 格式的文档链接。
+回答使用简洁中文，并在相关结论后附上 Markdown 格式的文档链接。链接必须使用站点相对路径（例如 /self-hosting/features/online-search），不要使用完整域名。
 如果文档中没有答案，明确回答“当前公开文档中没有找到相关说明”，并建议用户在 GitHub 提交问题。${skillInstructions ? `\n本轮回答方式：\n${skillInstructions}` : ''}`,
     maxOutputTokens: 1000,
     messages: await convertToModelMessages(messages, { tools: docsTools }),

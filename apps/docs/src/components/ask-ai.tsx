@@ -5,12 +5,22 @@ import { DefaultChatTransport } from 'ai'
 import { LoaderCircle, MessageCircle, RotateCcw, Search, Trash2, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ComponentProps } from 'react'
 import Markdown from 'react-markdown'
 import type { AskAIModelId, AskAISkillId } from '@/lib/ask-ai-config'
 import { DEFAULT_ASK_AI_MODEL } from '@/lib/ask-ai-config'
+import { loadAskAIMessages, saveAskAIMessages, toDocsRelativeHref } from '@/lib/ask-ai-session'
 import { AIAgentInput } from './ai-agent-input'
 
 const suggestions = ['如何快速开始？', '如何使用 Docker 部署？', '在线搜索需要配置什么？']
+
+function DocsMarkdownLink({ href, children, ...props }: ComponentProps<'a'>) {
+  return (
+    <a href={href ? toDocsRelativeHref(href) : href} {...props}>
+      {children}
+    </a>
+  )
+}
 
 export function AskAI() {
   const pathname = usePathname()
@@ -21,6 +31,7 @@ export function AskAI() {
   })
   const [composerResetKey, setComposerResetKey] = useState(0)
   const [open, setOpen] = useState(false)
+  const [restored, setRestored] = useState(false)
   const [selectedModel, setSelectedModel] = useState<AskAIModelId>(DEFAULT_ASK_AI_MODEL)
   const transport = useMemo(() => new DefaultChatTransport({ api: '/api/chat', body: { page: pathname } }), [pathname])
   const { clearError, error, messages, regenerate, sendMessage, setMessages, status, stop } = useChat({ transport })
@@ -33,6 +44,25 @@ export function AskAI() {
     if (open && !dialog.open) dialog.showModal()
     if (!open && dialog.open) dialog.close()
   }, [open])
+
+  useEffect(() => {
+    let cancelled = false
+
+    void loadAskAIMessages().then((stored) => {
+      if (cancelled) return
+      if (stored.length > 0) setMessages(stored)
+      setRestored(true)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [setMessages])
+
+  useEffect(() => {
+    if (!restored) return
+    saveAskAIMessages(messages)
+  }, [messages, restored])
 
   function submit(text: string, skills: AskAISkillId[] = []) {
     const value = text.trim()
@@ -57,9 +87,9 @@ export function AskAI() {
 
   return (
     <>
-      <button aria-label='打开 Ask AI' className='docs-ai-trigger' onClick={() => setOpen(true)} type='button'>
+      <button aria-label='打开文档助手' className='docs-ai-trigger' onClick={() => setOpen(true)} type='button'>
         <MessageCircle aria-hidden className='size-4' />
-        Ask AI
+        问问文档
       </button>
 
       <dialog
@@ -74,24 +104,29 @@ export function AskAI() {
       >
         <div className='docs-ai-panel'>
           <header className='docs-ai-header'>
-            <div>
-              <p className='docs-ai-eyebrow'>PURECHAT DOCS</p>
-              <h2 className='docs-ai-title' id='docs-ai-title'>
-                Ask AI
-              </h2>
+            <div className='docs-ai-brand'>
+              <span aria-hidden className='docs-ai-brand-mark'>
+                <MessageCircle className='size-4' />
+              </span>
+              <div className='min-w-0'>
+                <h2 className='docs-ai-title' id='docs-ai-title'>
+                  问问文档
+                </h2>
+                <p className='docs-ai-eyebrow'>基于公开文档回答</p>
+              </div>
             </div>
-            <div className='flex items-center gap-1'>
+            <div className='flex items-center gap-0.5'>
               <button aria-label='清空对话' className='docs-ai-icon' onClick={clearConversation} type='button'>
                 <Trash2 aria-hidden className='size-4' />
               </button>
-              <button aria-label='关闭 Ask AI' className='docs-ai-icon' onClick={() => setOpen(false)} type='button'>
+              <button aria-label='关闭文档助手' className='docs-ai-icon' onClick={() => setOpen(false)} type='button'>
                 <X aria-hidden className='size-4' />
               </button>
             </div>
           </header>
 
           <div aria-live='polite' className='docs-ai-messages'>
-            {messages.length === 0 ? (
+            {restored && messages.length === 0 ? (
               <div className='docs-ai-empty'>
                 <span className='docs-ai-empty-icon'>
                   <Search aria-hidden className='size-5' />
@@ -111,32 +146,34 @@ export function AskAI() {
                   ))}
                 </div>
               </div>
-            ) : (
-              messages.map((message) => (
-                <article className='docs-ai-message' data-role={message.role} key={message.id}>
-                  {message.parts.map((part, index) => {
-                    if (part.type === 'text') {
-                      return (
-                        <div className='docs-ai-markdown' key={`${message.id}-text-${index}`}>
-                          <Markdown>{part.text}</Markdown>
-                        </div>
-                      )
-                    }
+            ) : null}
 
-                    if (part.type === 'tool-searchDocs' && part.state !== 'output-available') {
-                      return (
-                        <p className='docs-ai-tool' key={part.toolCallId}>
-                          <LoaderCircle aria-hidden className='size-3.5 animate-spin' />
-                          正在检索文档…
-                        </p>
-                      )
-                    }
+            {restored
+              ? messages.map((message) => (
+                  <article className='docs-ai-message' data-role={message.role} key={message.id}>
+                    {message.parts.map((part, index) => {
+                      if (part.type === 'text') {
+                        return (
+                          <div className='docs-ai-markdown' key={`${message.id}-text-${index}`}>
+                            <Markdown components={{ a: DocsMarkdownLink }}>{part.text}</Markdown>
+                          </div>
+                        )
+                      }
 
-                    return null
-                  })}
-                </article>
-              ))
-            )}
+                      if (part.type === 'tool-searchDocs' && part.state !== 'output-available') {
+                        return (
+                          <p className='docs-ai-tool' key={part.toolCallId}>
+                            <LoaderCircle aria-hidden className='size-3.5 animate-spin' />
+                            正在检索文档…
+                          </p>
+                        )
+                      }
+
+                      return null
+                    })}
+                  </article>
+                ))
+              : null}
 
             {status === 'submitted' ? (
               <p className='docs-ai-tool'>

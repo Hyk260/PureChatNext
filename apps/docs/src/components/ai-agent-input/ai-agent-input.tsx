@@ -550,12 +550,12 @@ function AIAgentInputInstance({
           ) : (
             <div
               aria-disabled={pending}
-              aria-label='Ask AI Agent'
+              aria-label='向文档助手提问'
               aria-multiline='true'
               className={styles.field}
               contentEditable={!pending}
               data-empty={visuallyEmpty || undefined}
-              data-placeholder='Ask AI Agent'
+              data-placeholder='向文档助手提问'
               onBlur={saveSelection}
               onClick={removeSkill}
               onDrop={handleDrop}

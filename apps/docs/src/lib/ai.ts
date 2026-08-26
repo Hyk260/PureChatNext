@@ -1,7 +1,7 @@
-import { docsSearch } from '@/lib/search'
-import { SITE_URL } from '@/lib/site'
 import { tool } from 'ai'
 import { searchDocsInputSchema } from '@/lib/ai-schema'
+import { toDocsRelativeHref } from '@/lib/ask-ai-session'
+import { docsSearch } from '@/lib/search'
 
 const markTagPattern = /<\/?mark>/g
 
@@ -15,7 +15,7 @@ export const searchDocs = tool({
       breadcrumbs: result.breadcrumbs?.map((item) => item.replace(markTagPattern, '')),
       content: result.content.replace(markTagPattern, ''),
       type: result.type,
-      url: new URL(result.url, SITE_URL).toString(),
+      url: toDocsRelativeHref(result.url),
     }))
   },
 })

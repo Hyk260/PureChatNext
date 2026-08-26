@@ -32,7 +32,7 @@ pnpm build:docs
 
 ## Ask AI
 
-Ask AI 只检索仓库中的公开文档，不读取 `docs/private/`，也不保存会话。开发环境读取仓库根目录的 `.env.local`（与主应用共用），不要只写在 `apps/docs/` 下才指望生效：
+Ask AI 只检索仓库中的公开文档，不读取 `docs/private/`。对话记录保存在浏览器本地存储中，刷新页面后仍可继续。开发环境读取仓库根目录的 `.env.local`（与主应用共用），不要只写在 `apps/docs/` 下才指望生效：
 
 ```bash
 AI_GATEWAY_API_KEY=your_ai_gateway_key

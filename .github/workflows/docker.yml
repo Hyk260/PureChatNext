@@ -1,3 +1,4 @@
+# Docker 工作流：校验 Compose 配置、运行健康检查，并构建 amd64/arm64 镜像进行安全验证。
 name: Docker
 
 on:
@@ -10,64 +11,94 @@ concurrency:
   group: docker-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # docker/build-push-action 的内置摘要不可本地化，改由工作流写入中文摘要。
+  DOCKER_BUILD_SUMMARY: false
+
 jobs:
   config-and-unit:
     name: Compose config and health route tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           version: 10.33.4
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
+          bun-version: 1.3.14
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.23.2
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Validate Compose
+        env:
+          SEARXNG_SECRET: ci-compose-validation-secret
         run: pnpm docker:validate
-      - name: Test health route
-        run: pnpm exec vitest run src/app/api/health/route.test.ts
+      - name: Test health helpers and route
+        run: pnpm exec vitest run src/app/api/health/route.test.ts src/server/health/dependencies.test.ts
 
   amd64-smoke:
     name: amd64 image and stack smoke
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           version: 10.33.4
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
+          bun-version: 1.3.14
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.23.2
           cache: pnpm
       - name: Install application dependencies
         run: pnpm install --frozen-lockfile
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - name: Build amd64 application image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           load: true
           platforms: linux/amd64
           tags: purechat-next:local
+          pull: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Start and verify production stack
-        run: |
-          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml up -d --no-build --wait
-          curl --fail --retry 10 --retry-delay 2 http://127.0.0.1:3210/api/health
-          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml exec -T postgresql psql -U purechat -d purechat -Atc "select count(*) from drizzle.__drizzle_migrations"
-          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml exec -T redis redis-cli --no-auth-warning -a __GENERATE_REDIS_PASSWORD__ ping
-          test "$(docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml exec -T redis redis-cli ping)" = 'NOAUTH Authentication required.'
-          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml run --rm --no-deps rustfs-init -c 'mc alias set rustfs http://rustfs:9000 "$RUSTFS_ACCESS_KEY" "$RUSTFS_SECRET_KEY" >/dev/null && mc stat "rustfs/$RUSTFS_BUCKET"'
-          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml exec -T app node -e "fetch('http://searxng:8080/search?q=purechat&format=json').then(async r=>{JSON.parse(await r.text());if(!r.ok)process.exit(1)})"
-          docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml restart app
-          curl --fail --retry 15 --retry-delay 2 http://127.0.0.1:3210/api/health
-      - name: Remove production smoke volumes
-        if: always()
-        run: docker compose --env-file docker-compose/deploy/.env.example -f docker-compose/deploy/docker-compose.yml down --volumes || true
+        run: pnpm docker:verify:local -- --skip-build --external-scan --platform linux/amd64
+      - name: 扫描 amd64 应用镜像的 High/Critical 漏洞
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          exit-code: '1'
+          format: table
+          ignore-unfixed: true
+          image-ref: purechat-next:local
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          vuln-type: os,library
+
+  production-audit:
+    name: Production dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.33.4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.23.2
+          cache: pnpm
+      - name: Install production dependency graph
+        run: pnpm install --frozen-lockfile --prod
+      - name: Audit production dependencies for High/Critical vulnerabilities
+        # pnpm 的共享锁文件会将 optional peer 的开发工具链计入 --prod；这些依赖不进入生产镜像。
+        # 最终镜像中的 OS/Node 依赖由 amd64 Trivy 门禁补充扫描。
+        run: pnpm audit --prod --no-optional --audit-level high
 
   multi-platform-build:
     name: Build ${{ matrix.platform }}
@@ -81,13 +112,40 @@ jobs:
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
       - name: Build without publishing
-        uses: docker/build-push-action@v6
+        id: build
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=gha,scope=${{ matrix.platform }}
           cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+      - name: 写入中文构建摘要
+        if: always()
+        env:
+          BUILD_DIGEST: ${{ steps.build.outputs.digest }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          TARGET_PLATFORM: ${{ matrix.platform }}
+        run: |
+          case "${BUILD_OUTCOME}" in
+            success) result='✅ 成功' ;;
+            failure) result='❌ 失败' ;;
+            cancelled) result='⚪ 已取消' ;;
+            skipped) result='⏭️ 已跳过' ;;
+            *) result="${BUILD_OUTCOME}" ;;
+          esac
+          digest="${BUILD_DIGEST:-未生成}"
+          {
+            echo '## Docker 镜像构建摘要'
+            echo
+            echo '| 项目 | 内容 |'
+            echo '| --- | --- |'
+            echo "| 目标平台 | \`${TARGET_PLATFORM}\` |"
+            echo "| 构建结果 | ${result} |"
+            echo '| 发布镜像 | 否（仅执行构建验证） |'
+            echo "| 镜像摘要 | \`${digest}\` |"
+            echo '| 构建缓存 | GitHub Actions 缓存 |'
+          } >> "${GITHUB_STEP_SUMMARY}"

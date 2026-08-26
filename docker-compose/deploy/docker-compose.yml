@@ -12,25 +12,29 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile
-    container_name: purechat-app
     init: true
+    user: '1001:1001'
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m
+    env_file:
+      - path: ${DEPLOY_ENV_FILE:-.env}
+        required: false
     ports:
       - '127.0.0.1:${APP_PORT:-3210}:3210'
-    env_file:
-      - path: .env
-        required: false
     environment:
       APP_URL: ${APP_URL}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       AUTH_SECRET: ${AUTH_SECRET}
       KEY_VAULTS_SECRET: ${KEY_VAULTS_SECRET}
-      CHANNEL_GATEWAY_ENABLED: '1'
+      CHANNEL_GATEWAY_ENABLED: ${CHANNEL_GATEWAY_ENABLED:-1}
       CHANNEL_GATEWAY_INTERNAL_SECRET: ${CHANNEL_GATEWAY_INTERNAL_SECRET:-}
       JWKS_KEY: ${JWKS_KEY}
       CRON_SECRET: ${CRON_SECRET}
       DATABASE_DRIVER: node
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DB}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      REDIS_URL: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PREFIX: purechat
       S3_ACCESS_KEY_ID: ${RUSTFS_ACCESS_KEY}
       S3_SECRET_ACCESS_KEY: ${RUSTFS_SECRET_KEY}
@@ -38,25 +42,43 @@ services:
       S3_ENDPOINT: http://rustfs:9000
       S3_ENABLE_PATH_STYLE: '1'
       S3_SET_ACL: '0'
+      S3_AUTO_CREATE_BUCKET: ${S3_AUTO_CREATE_BUCKET:-1}
       SEARCH_PROVIDERS: searxng
       SEARXNG_URL: http://searxng:8080
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      AI_GATEWAY_API_KEY: ${AI_GATEWAY_API_KEY:-}
+      PURECHAT_API_KEY: ${PURECHAT_API_KEY:-}
+      NODE_OPTIONS: >-
+        --dns-result-order=ipv4first --use-openssl-ca
+        --max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE:-768}
     depends_on:
       postgresql:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rustfs-init:
-        condition: service_completed_successfully
+      rustfs:
+        condition: service_healthy
       searxng:
         condition: service_healthy
     restart: unless-stopped
     security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: ${APP_MEMORY_LIMIT:-1g}
+    cpus: ${APP_CPUS:-2.0}
+    pids_limit: ${APP_PIDS_LIMIT:-512}
     logging: *default-logging
-    networks: [purechat-network]
+    networks: [app-network, data-network]
 
   postgresql:
-    image: ${POSTGRES_IMAGE:-postgres:17-alpine}
-    container_name: purechat-deploy-postgres
+    image: postgres:17.10-alpine3.24@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+    # The official entrypoint needs a transient root phase to initialize and
+    # chown the volume, then drops the server to the image's postgres UID 70.
+    user: '0:0'
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+      - /var/run/postgresql:rw,nosuid,size=16m,uid=70,gid=70,mode=1770
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -69,27 +91,29 @@ services:
       timeout: 5s
       retries: 12
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    mem_limit: ${POSTGRES_MEMORY_LIMIT:-1g}
+    cpus: ${POSTGRES_CPUS:-1.5}
+    pids_limit: ${POSTGRES_PIDS_LIMIT:-256}
     logging: *default-logging
-    networks: [purechat-network]
+    networks: [data-network]
 
   redis:
-    image: ${REDIS_IMAGE:-redis:8.8.1-alpine}
-    container_name: purechat-deploy-redis
+    image: redis:8.8.1-alpine3.23@sha256:8096655e437712b07503796fb64d81359256cfcff0ab29d95a7da72863786efb
+    user: redis
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     command:
-      - redis-server
-      - --requirepass
-      - ${REDIS_PASSWORD}
-      - --save
-      - '60'
-      - '1000'
-      - --appendonly
-      - 'yes'
-      - --maxmemory
-      - ${REDIS_MAXMEMORY:-2gb}
-      - --maxmemory-policy
-      - allkeys-lru
+      - /bin/sh
+      - -ec
+      - |
+        exec redis-server --requirepass "$${REDIS_PASSWORD}" --save 60 1000 \
+          --appendonly yes --maxmemory "${REDIS_MAXMEMORY:-384mb}" --maxmemory-policy noeviction
     volumes:
       - redis_data:/data
     healthcheck:
@@ -98,17 +122,26 @@ services:
       timeout: 3s
       retries: 12
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: ${REDIS_MEMORY_LIMIT:-768m}
+    cpus: ${REDIS_CPUS:-1.0}
+    pids_limit: ${REDIS_PIDS_LIMIT:-256}
     logging: *default-logging
-    networks: [purechat-network]
+    networks: [data-network]
 
   rustfs:
-    image: ${RUSTFS_IMAGE:-rustfs/rustfs:latest}
-    container_name: purechat-deploy-rustfs
+    image: ghcr.io/rustfs/rustfs:1.0.0-beta.12@sha256:41fe89380f4120a337790c02af192c3fe7bb55c3edc2e6e9357b487b47c6ab21
+    user: rustfs:rustfs
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
     environment:
-      RUSTFS_CONSOLE_ENABLE: 'true'
+      RUSTFS_CONSOLE_ENABLE: 'false'
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
-    command: ['--access-key', '${RUSTFS_ACCESS_KEY}', '--secret-key', '${RUSTFS_SECRET_KEY}', '/data']
+      RUSTFS_OBS_LOG_DIRECTORY: /tmp
+    command: ['/data']
     volumes:
       - rustfs_data:/data
     healthcheck:
@@ -117,40 +150,29 @@ services:
       timeout: 3s
       retries: 30
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: ${RUSTFS_MEMORY_LIMIT:-768m}
+    cpus: ${RUSTFS_CPUS:-1.0}
+    pids_limit: ${RUSTFS_PIDS_LIMIT:-256}
     logging: *default-logging
-    networks: [purechat-network]
-
-  rustfs-init:
-    image: ${MC_IMAGE:-minio/mc:latest}
-    container_name: purechat-deploy-rustfs-init
-    depends_on:
-      rustfs:
-        condition: service_healthy
-    environment:
-      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
-      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
-      RUSTFS_BUCKET: ${RUSTFS_BUCKET}
-    entrypoint: /bin/sh
-    command:
-      - -c
-      - |
-        set -eu
-        mc alias set rustfs http://rustfs:9000 "$${RUSTFS_ACCESS_KEY}" "$${RUSTFS_SECRET_KEY}"
-        mc mb "rustfs/$${RUSTFS_BUCKET}" --ignore-existing
-    restart: 'no'
-    logging: *default-logging
-    networks: [purechat-network]
+    networks: [data-network]
 
   searxng:
-    image: ${SEARXNG_IMAGE:-searxng/searxng:latest}
-    container_name: purechat-deploy-searxng
+    image: searxng/searxng:2026.8.3-aa059419f@sha256:77a4f1013b9e2ba857b360dcfea68bc10b3cc5f63572f3d7861cc323cba22c16
+    user: searxng:searxng
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m
     volumes:
       - ../dev/searxng-settings.yml:/etc/searxng/settings.yml:ro
+      - searxng_cache:/var/cache/searxng
     environment:
       SEARXNG_BIND_ADDRESS: 0.0.0.0
       SEARXNG_PORT: '8080'
       SEARXNG_SECRET: ${SEARXNG_SECRET:?Set SEARXNG_SECRET before deploying SearXNG}
       SEARXNG_SETTINGS_FILE: /etc/searxng/settings.yml
+      FORCE_OWNERSHIP: 'false'
     healthcheck:
       test:
         [
@@ -161,14 +183,24 @@ services:
       timeout: 5s
       retries: 12
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: ${SEARXNG_MEMORY_LIMIT:-768m}
+    cpus: ${SEARXNG_CPUS:-1.5}
+    pids_limit: ${SEARXNG_PIDS_LIMIT:-256}
     logging: *default-logging
-    networks: [purechat-network]
+    networks: [app-network]
 
 volumes:
   postgres_data:
   redis_data:
   rustfs_data:
 
+  searxng_cache:
+
 networks:
-  purechat-network:
+  app-network:
     driver: bridge
+  data-network:
+    driver: bridge
+    internal: true

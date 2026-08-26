@@ -28,6 +28,7 @@ import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
 import HomeAgentSelect from '@/features/home/components/HomeAgentSelect'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
+import { trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { useRouter } from '@/utils/navigation'
 
 const mechaCatSrc = typeof mechaCat === 'string' ? mechaCat : mechaCat.src
@@ -242,6 +243,11 @@ const HomeChatInput = memo(() => {
 
       setPendingChatText(text)
       setPendingChatFiles(files)
+      trackAcquisitionEvent('chat_intent', {
+        agent: agentId,
+        attachment_count: files.length,
+        provider: currentModel.provider,
+      })
       setInput('')
       setFiles([])
       router.push(`/chat?agent=${encodeURIComponent(agentId)}`)

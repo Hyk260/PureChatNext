@@ -24,6 +24,7 @@ vi.mock('../binding', () => ({ bindQQCredentials: mocks.bindQQCredentials }))
 
 import {
   cancelQQQrSession,
+  cancelQQQrSessionsForUser,
   clearQQQrSessionsForTests,
   completeQQQrSession,
   getQQQrSessionStatus,
@@ -53,6 +54,15 @@ describe('QQ QR sessions', () => {
     expect(mocks.stop).toHaveBeenCalledTimes(1)
     expect(getQQQrSessionStatus('user-1', first.sessionId)).toBeUndefined()
     expect(getQQQrSessionStatus('user-1', second.sessionId)?.status).toBe('waiting')
+  })
+
+  it('cancels all sessions for a user without affecting other users', async () => {
+    const userSession = await startQQQrSession('user-1', 'agent-1')
+    const otherSession = await startQQQrSession('user-2', 'agent-2')
+
+    expect(cancelQQQrSessionsForUser('user-1')).toBe(1)
+    expect(getQQQrSessionStatus('user-1', userSession.sessionId)).toBeUndefined()
+    expect(getQQQrSessionStatus('user-2', otherSession.sessionId)).toMatchObject({ status: 'waiting' })
   })
 
   it('automatically binds a single returned bot without exposing its secret', async () => {

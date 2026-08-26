@@ -9,6 +9,8 @@ export interface EnabledProviderGroup {
 }
 
 export interface ModelWithProviders {
+  abilities?: HomeModelItem['abilities']
+  contextWindowTokens?: number
   displayName: string
   model: string
   providers: Array<{ id: string; name: string }>

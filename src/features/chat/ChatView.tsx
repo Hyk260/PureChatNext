@@ -1,7 +1,6 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { createStaticStyles, cssVar } from 'antd-style'
 import { DefaultChatTransport } from 'ai'
 import type { UIMessage } from 'ai'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
@@ -20,14 +19,15 @@ import {
   setPendingTopicSendFiles,
   truncateTitle,
 } from '@/features/chat/chatLocalStorage'
+import ChatErrorBanner from '@/features/chat/ChatErrorBanner'
 import ChatMessages from '@/features/chat/ChatMessages'
 import { getMessageText, withMessageText } from '@/features/chat/messageText'
 import type { ChatSearchMode } from '@/features/chat/types'
-import WideScreenContainer from '@/features/chat/WideScreenContainer'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { isSettingsProviderId } from '@/features/settings/provider/const'
 import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
+import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { useRouter } from '@/utils/navigation'
 
 const EMPTY_MESSAGES: UIMessage[] = []
@@ -63,22 +63,6 @@ const messagesSignature = (messages: UIMessage[]) =>
       role: message.role,
     }))
   )
-
-const styles = createStaticStyles(({ css }) => ({
-  error: css`
-    box-sizing: border-box;
-    width: 100%;
-    margin-block-end: 8px;
-    padding: 8px 12px;
-    border: 1px solid ${cssVar.colorErrorBorder};
-    border-radius: 16px;
-    background: ${cssVar.colorErrorBg};
-    color: ${cssVar.colorError};
-    font-size: 13px;
-    line-height: 1.5;
-    word-break: break-word;
-  `,
-}))
 
 const chatTransport = new DefaultChatTransport({
   api: '/api/chat',
@@ -130,6 +114,12 @@ const ChatView = memo<ChatViewProps>(
         ? (s.configs[selectedProvider]?.baseURL.trim() ?? '')
         : ''
     )
+    const selectedModelConfig = useProviderConfigStore((s) =>
+      isSettingsProviderId(selectedProvider)
+        ? s.configs[selectedProvider]?.models.find((model) => model.id === selectedModel)
+        : undefined
+    )
+    const selectedModelAbilities = selectedModelConfig?.abilities
 
     const chatId = `purechat-${agentId}-${topicId ?? 'draft'}`
 
@@ -150,6 +140,27 @@ const ChatView = memo<ChatViewProps>(
     }, [messages])
     const isBusy = status === 'submitted' || status === 'streaming'
     const isStreaming = status === 'streaming'
+    const responsePendingRef = useRef(false)
+
+    useEffect(() => {
+      if (isBusy) {
+        responsePendingRef.current = true
+        return
+      }
+      if (status === 'error') {
+        responsePendingRef.current = false
+        return
+      }
+      if (!responsePendingRef.current || status !== 'ready') return
+      responsePendingRef.current = false
+
+      if (messages.at(-1)?.role !== 'assistant') return
+      trackAcquisitionEvent('chat_response_completed', {
+        first: markFirstConversion('chat_response'),
+        model: selectedModel,
+        provider: selectedProvider,
+      })
+    }, [isBusy, messages, selectedModel, selectedProvider, status])
 
     useLayoutEffect(() => {
       onBusyChange(isBusy)
@@ -243,12 +254,13 @@ const ChatView = memo<ChatViewProps>(
     const requestBody = useMemo(
       () => ({
         model: selectedModel,
+        ...(selectedModelAbilities ? { modelAbilities: selectedModelAbilities } : {}),
         provider: selectedProvider,
         searchMode,
         ...(providerBaseURL ? { baseURL: providerBaseURL } : {}),
         ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
       }),
-      [activeAgent, providerBaseURL, searchMode, selectedModel, selectedProvider]
+      [activeAgent, providerBaseURL, searchMode, selectedModel, selectedModelAbilities, selectedProvider]
     )
 
     const sendWithBody = useCallback(
@@ -372,7 +384,7 @@ const ChatView = memo<ChatViewProps>(
     }, [handleSend, handleStop, onBindActions])
 
     return (
-      <>
+      <div className='relative flex min-h-0 min-w-0 flex-1 flex-col'>
         <ChatMessages
           agentMeta={agentMeta}
           disabled={isBusy}
@@ -383,14 +395,8 @@ const ChatView = memo<ChatViewProps>(
           onEdit={handleEdit}
           onRegenerate={handleRegenerate}
         />
-        {error ? (
-          <WideScreenContainer fill={false}>
-            <div className={styles.error} role='alert'>
-              {error.message || '发送失败，请稍后重试'}
-            </div>
-          </WideScreenContainer>
-        ) : null}
-      </>
+        {error ? <ChatErrorBanner message={error.message} onDismiss={clearError} /> : null}
+      </div>
     )
   }
 )

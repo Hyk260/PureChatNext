@@ -1,7 +1,7 @@
 'use client'
 
-import { Select, Spin } from 'antd'
-import { Alert, Button, confirmModal, Text, copyToClipboard, Flexbox } from '@pure/ui'
+import { Spin } from 'antd'
+import { Alert, Button, confirmModal, Select, Text, copyToClipboard, Flexbox } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
@@ -11,6 +11,7 @@ import { memo, useCallback, useEffect, useState } from 'react'
 import useSWR from 'swr'
 
 import { useSession } from '@/libs/better-auth/client'
+import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 
 import { fetchAgents } from '@/features/home/agentApi'
 
@@ -18,8 +19,8 @@ import {
   formatMessengerActiveAt,
   getMessengerPlatform,
   isMessengerProviderId,
-  MESSENGER_DEFAULT_MODELS,
-  MESSENGER_DEFAULT_PROVIDER,
+  QQ_DEFAULT_MODEL,
+  QQ_DEFAULT_PROVIDER,
 } from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
@@ -126,8 +127,8 @@ const MessengerQQPage = memo(() => {
   const [binding, setBinding] = useState(false)
   const [saving, setSaving] = useState(false)
   const [agentId, setAgentId] = useState('agt_inbox')
-  const [provider, setProvider] = useState<QQProviderId>(MESSENGER_DEFAULT_PROVIDER)
-  const [modelId, setModelId] = useState(MESSENGER_DEFAULT_MODELS.deepseek)
+  const [provider, setProvider] = useState<QQProviderId>(QQ_DEFAULT_PROVIDER)
+  const [modelId, setModelId] = useState(QQ_DEFAULT_MODEL)
 
   const {
     data: status,
@@ -215,6 +216,10 @@ const MessengerQQPage = memo(() => {
     try {
       message.success('QQ 凭证已保存，正在建立连接')
       await refreshStatus()
+      trackAcquisitionEvent('channel_connected', {
+        first: markFirstConversion('channel_connected'),
+        platform: 'qq',
+      })
     } finally {
       setBinding(false)
     }

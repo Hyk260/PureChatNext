@@ -56,7 +56,10 @@ export const GET = withAuth(async (_request, { userId }) => {
     /* credentials decrypt failure — still report connected */
   }
 
-  const webhookUrl = `${resolveAppBaseUrl()}/api/channels/qq/webhook/${encodeURIComponent(binding.applicationId)}`
+  const webhookUrl = new URL(
+    `/api/channels/qq/webhook/${encodeURIComponent(binding.applicationId)}`,
+    resolveAppBaseUrl()
+  )
   const gatewaySupported = gatewayEnv.CHANNEL_GATEWAY_ENABLED
   const heartbeatFresh = Boolean(binding.lastHeartbeatAt && Date.now() - binding.lastHeartbeatAt.getTime() <= 90_000)
   const runtimeStatus = resolveQqRuntimeStatus({
@@ -87,6 +90,6 @@ export const GET = withAuth(async (_request, { userId }) => {
     model: binding.model,
     provider: binding.provider,
     runtimeStatus,
-    webhookUrl,
+    webhookUrl: webhookUrl.toString(),
   })
 })

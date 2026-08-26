@@ -106,7 +106,6 @@ export const SETTINGS_EMPTY_TABS = [
   SettingsTab.Creds,
   SettingsTab.Storage,
   SettingsTab.Advanced,
-  SettingsTab.About,
 ] as const
 
 export function useSettingsCategory(): SettingsCategoryGroup[] {

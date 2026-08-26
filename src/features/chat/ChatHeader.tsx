@@ -22,7 +22,7 @@ import type { LocalChatTopic } from '@/features/chat/types'
 const styles = createStaticStyles(({ css }) => ({
   header: css`
     flex: none;
-    height: 44px;
+    height: 40px;
     padding-inline: 8px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
   `,

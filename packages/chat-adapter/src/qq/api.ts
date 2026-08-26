@@ -1,7 +1,7 @@
 import { QQ_MSG_TYPE } from './types'
 import type { QQAccessTokenResponse, QQGatewayUrlResponse, QQSendMessageParams, QQSendMessageResponse } from './types'
 
-/** `@pure/chat-adapter/qq` 的 QQ OpenAPI 客户端，协议说明见 `docs/self-hosting/qq/protocol.zh-CN.md`。 */
+/** `@pure/chat-adapter/qq` 的 QQ OpenAPI 客户端，协议说明见 `docs/self-hosting/channels/qq/protocol.md`。 */
 
 const AUTH_URL = 'https://bots.qq.com/app/getAppAccessToken'
 const API_BASE_URL = 'https://api.sgroup.qq.com'

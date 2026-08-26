@@ -12,5 +12,5 @@ export const purechatProviderCard: ModelProviderCard = {
     showAddNewModel: false,
     showModelFetcher: false,
   },
-  url: 'https://purechat.cn',
+  url: 'https://next.purechat.cn',
 }

@@ -3,6 +3,7 @@ import type { ModelAbilities } from '@pure/model-bank'
 
 export interface HomeModelItem {
   abilities?: ModelAbilities
+  contextWindowTokens?: number
   displayName: string
   model: string
   provider: string

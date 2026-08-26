@@ -18,9 +18,11 @@ export type ModelTokenPricing = {
 /** 模型能力开关 */
 export type ModelAbilities = {
   functionCall?: boolean
+  imageGeneration?: boolean
   reasoning?: boolean
   structuredOutput?: boolean
   vision?: boolean
+  webSearch?: boolean
 }
 
 export type AiModelCard = {

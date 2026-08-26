@@ -10,18 +10,32 @@ import {
   isServerManagedProvider,
   LEGACY_PROVIDER_DEFAULT_BASE_URLS,
 } from '../const'
-import type { ProviderConfig, ProviderConfigs, ProviderId, ProviderModelItem } from '../types'
+import type { ProviderConfig, ProviderConfigs, ProviderId, ProviderModelHealth, ProviderModelItem } from '../types'
 
 interface ProviderConfigState {
   configs: ProviderConfigs
+  addCustomModel: (id: ProviderId, model: CustomModelPatch & { id: string }) => void
+  clearRemoteModels: (id: ProviderId) => void
   getConfig: (id: ProviderId) => ProviderConfig
   getEnabledModels: () => Array<{ displayName: string; model: string; provider: ProviderId }>
   mergeRemoteModels: (id: ProviderId, remote: Array<{ displayName?: string; id: string }>) => void
   patchConfig: (id: ProviderId, patch: Partial<ProviderConfig>) => void
+  removeCustomModel: (id: ProviderId, modelId: string) => void
   setCheckModel: (id: ProviderId, checkModel: string) => void
   setEnabled: (id: ProviderId, enabled: boolean) => void
+  setModelHealth: (id: ProviderId, modelId: string, health: ProviderModelHealth) => void
   setModels: (id: ProviderId, models: ProviderModelItem[]) => void
+  setAllModelsEnabled: (id: ProviderId, enabled: boolean) => void
+  resetModels: (id: ProviderId) => void
+  reorderModels: (id: ProviderId, orderedModelIds: string[]) => void
+  updateCustomModel: (id: ProviderId, modelId: string, patch: CustomModelPatch) => void
   toggleModelEnabled: (id: ProviderId, modelId: string, enabled: boolean) => void
+}
+
+export type CustomModelPatch = {
+  abilities?: ProviderModelItem['abilities']
+  contextWindowTokens?: number
+  displayName: string
 }
 
 export const mergeProviderConfig = (
@@ -39,12 +53,13 @@ export const mergeProviderConfig = (
   const persistedModels = Array.isArray(partial.models) && partial.models.length > 0 ? partial.models : defaults.models
 
   // Reconcile with model-bank: catalog `enabled: false` stays off after persist hydrate.
-  const models = persistedModels.map((model) => {
+  const models: ProviderModelItem[] = persistedModels.map((model) => {
     const catalog = catalogById.get(model.id)
+    const health = model.health?.status === 'checking' ? { status: 'idle' as const } : model.health
     if (catalog && !catalog.enabled) {
-      return { ...model, displayName: catalog.displayName, enabled: false }
+      return { ...model, displayName: catalog.displayName, enabled: false, health }
     }
-    return model
+    return { ...model, health }
   })
 
   const knownIds = new Set(models.map((model) => model.id))
@@ -64,10 +79,73 @@ export const mergeProviderConfig = (
   }
 }
 
+const normalizePersistedConfigs = (configs?: Partial<ProviderConfigs>): ProviderConfigs => ({
+  deepseek: mergeProviderConfig('deepseek', configs?.deepseek),
+  openai: mergeProviderConfig('openai', configs?.openai),
+  purechat: mergeProviderConfig('purechat', configs?.purechat),
+})
+
+const normalizePersistedHealth = (configs: ProviderConfigs): ProviderConfigs => {
+  const next = { ...configs }
+
+  for (const providerId of Object.keys(next) as ProviderId[]) {
+    const config = next[providerId]
+    next[providerId] = {
+      ...config,
+      models: config.models.map((model) =>
+        model.health?.status === 'checking' ? { ...model, health: { status: 'idle' } } : model
+      ),
+    }
+  }
+
+  return next
+}
+
 export const useProviderConfigStore = create<ProviderConfigState>()(
   persist(
     (set, get) => ({
       configs: DEFAULT_PROVIDER_CONFIGS,
+      addCustomModel: (id, model) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          const modelId = model.id.trim()
+          if (!modelId || current.models.some((item) => item.id === modelId)) return state
+
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: [
+                  ...current.models,
+                  {
+                    abilities: model.abilities,
+                    contextWindowTokens: model.contextWindowTokens,
+                    displayName: model.displayName?.trim() || modelId,
+                    enabled: true,
+                    id: modelId,
+                    source: 'custom',
+                  },
+                ],
+              },
+            },
+          }
+        })
+      },
+      clearRemoteModels: (id) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: current.models.filter((model) => model.source !== 'remote'),
+              },
+            },
+          }
+        })
+      },
       getConfig: (id) => get().configs[id] ?? createDefaultProviderConfig(id),
       getEnabledModels: () => {
         const { configs } = get()
@@ -100,8 +178,10 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
             if (existing) {
               return {
                 ...existing,
-                displayName: item.displayName?.trim() || existing.displayName,
-                source: 'remote',
+                displayName:
+                  existing.source === 'custom'
+                    ? existing.displayName
+                    : item.displayName?.trim() || existing.displayName,
               }
             }
 
@@ -144,6 +224,20 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
           },
         }))
       },
+      removeCustomModel: (id, modelId) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: current.models.filter((model) => !(model.id === modelId && model.source === 'custom')),
+              },
+            },
+          }
+        })
+      },
       setCheckModel: (id, checkModel) => {
         set((state) => ({
           configs: {
@@ -167,6 +261,20 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
           },
         }))
       },
+      setModelHealth: (id, modelId, health) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: current.models.map((model) => (model.id === modelId ? { ...model, health } : model)),
+              },
+            },
+          }
+        })
+      },
       setModels: (id, models) => {
         set((state) => ({
           configs: {
@@ -177,6 +285,80 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
             },
           },
         }))
+      },
+      setAllModelsEnabled: (id, enabled) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: current.models.map((model) => ({
+                  ...model,
+                  enabled: getAiModel(id, model.id)?.enabled === false ? false : enabled,
+                })),
+              },
+            },
+          }
+        })
+      },
+      resetModels: (id) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: createDefaultProviderConfig(id).models,
+              },
+            },
+          }
+        })
+      },
+      reorderModels: (id, orderedModelIds) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          const modelById = new Map(current.models.map((model) => [model.id, model]))
+          let nextIndex = 0
+
+          const models = current.models.map((model) => {
+            if (!orderedModelIds.includes(model.id)) return model
+            const nextModelId = orderedModelIds[nextIndex++]
+            return modelById.get(nextModelId) ?? model
+          })
+
+          return {
+            configs: {
+              ...state.configs,
+              [id]: { ...current, models },
+            },
+          }
+        })
+      },
+      updateCustomModel: (id, modelId, patch) => {
+        set((state) => {
+          const current = state.configs[id] ?? createDefaultProviderConfig(id)
+          return {
+            configs: {
+              ...state.configs,
+              [id]: {
+                ...current,
+                models: current.models.map((model) =>
+                  model.id === modelId && model.source === 'custom'
+                    ? {
+                        ...model,
+                        abilities: patch.abilities,
+                        contextWindowTokens: patch.contextWindowTokens,
+                        displayName: patch.displayName.trim() || model.displayName,
+                      }
+                    : model
+                ),
+              },
+            },
+          }
+        })
       },
       toggleModelEnabled: (id, modelId, enabled) => {
         set((state) => {
@@ -202,19 +384,22 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
           return { configs: DEFAULT_PROVIDER_CONFIGS }
         }
 
-        const next: ProviderConfigs = {
-          deepseek: mergeProviderConfig('deepseek', configs.deepseek),
-          openai: mergeProviderConfig('openai', configs.openai),
-          purechat: mergeProviderConfig('purechat', configs.purechat),
-        }
+        const next = normalizePersistedConfigs(configs)
 
         // version < 2 also needs empty baseURL migration (handled in mergeProviderConfig).
         void version
         return { configs: next }
       },
+      merge: (persisted, current) => {
+        const state = persisted as { configs?: Partial<ProviderConfigs> } | undefined
+        return {
+          ...current,
+          configs: normalizePersistedHealth(normalizePersistedConfigs(state?.configs)),
+        }
+      },
       name: 'purechat:provider:v1',
-      partialize: (state) => ({ configs: state.configs }),
-      version: 8,
+      partialize: (state) => ({ configs: normalizePersistedHealth(state.configs) }),
+      version: 9,
     }
   )
 )

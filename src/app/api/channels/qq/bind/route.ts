@@ -10,6 +10,7 @@ import { isQQProviderId, qqChannelUnavailableReason, validateQQModel } from '@/l
 import type { QQProviderId } from '@/libs/channels/qq/agentSupport'
 import { bindQQCredentials, QQBindingError } from '@/libs/channels/qq/binding'
 import { gatewayEnv } from '@/envs/gateway'
+import { cancelQQQrSessionsForUser } from '@/libs/channels/qq/qrSession'
 
 const requestGatewayReconcile = async () => {
   const { reconcileChannelGateway } = await import('@/server/channel-gateway')
@@ -90,6 +91,7 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
 
 /** DELETE /api/channels/qq/bind — 断开 QQ 连接 */
 export const DELETE = withAuth(async (_request, { userId }) => {
+  cancelQQQrSessionsForUser(userId)
   const model = new ChannelBindingModel()
   const existing = await model.findByUserAndPlatform(userId, QQ_PLATFORM)
   if (existing?.applicationId) {

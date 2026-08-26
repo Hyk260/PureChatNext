@@ -13,7 +13,7 @@ const styles = createStaticStyles(({ css }) => ({
   header: css`
     position: relative;
     flex: none;
-    height: 44px;
+    height: 40px;
     padding-inline: 8px;
     background: ${cssVar.colorBgContainer};
   `,

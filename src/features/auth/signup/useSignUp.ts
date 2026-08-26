@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
 import { checkUserByEmail, reclaimUnverifiedEmail, signUp, useAuthConfig } from '@/libs/better-auth/client'
+import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 export interface SignUpFormValues {
@@ -86,6 +87,11 @@ export const useSignUp = () => {
         message.error(signUpError.message || '注册失败，请重试')
         return
       }
+
+      trackAcquisitionEvent('sign_up_completed', {
+        email_verification: config.enableEmailVerification,
+        first: markFirstConversion('sign_up'),
+      })
 
       if (config.enableEmailVerification) {
         router.push(`/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`)

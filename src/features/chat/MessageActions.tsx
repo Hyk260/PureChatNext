@@ -41,7 +41,6 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 interface MessageActionsProps {
-  disabled?: boolean
   isStreaming?: boolean
   isUser: boolean
   onCopy: () => void
@@ -49,7 +48,7 @@ interface MessageActionsProps {
   onEdit: () => void
 }
 
-const MessageActions = memo<MessageActionsProps>(({ disabled, isStreaming, isUser, onCopy, onDelete, onEdit }) => {
+const MessageActions = memo<MessageActionsProps>(({ isStreaming, isUser, onCopy, onDelete, onEdit }) => {
   const moreMenuItems = useMemo<MenuProps['items']>(
     () => [
       { icon: Copy, key: 'copy', label: '复制', onClick: onCopy },
@@ -59,8 +58,6 @@ const MessageActions = memo<MessageActionsProps>(({ disabled, isStreaming, isUse
     ],
     [onCopy, onDelete, onEdit]
   )
-
-  if (disabled) return null
 
   return (
     <Flexbox

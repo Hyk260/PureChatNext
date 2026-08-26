@@ -1,6 +1,7 @@
 'use client'
 
 import { Flexbox } from '@pure/ui'
+import { Image } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import type { UIMessage } from 'ai'
 import { FileText } from 'lucide-react'
@@ -20,8 +21,8 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   attachmentImage: css`
     display: block;
-    width: 180px;
-    max-height: 180px;
+    width: 60px;
+    max-height: 60px;
     object-fit: contain;
     border-radius: 8px;
   `,
@@ -43,18 +44,28 @@ const MessageAttachments = memo<{ message: UIMessage }>(({ message }) => {
 
   if (files.length === 0) return null
 
+  const imageFiles = files.filter((file) => file.mediaType?.startsWith('image/'))
+  const otherFiles = files.filter((file) => !file.mediaType?.startsWith('image/'))
+
   return (
     <Flexbox gap={8} style={{ marginBlockEnd: 4 }}>
-      {files.map((file, index) => {
+      {imageFiles.length > 0 ? (
+        <Image.PreviewGroup>
+          {imageFiles.map((file, index) => {
+            const name = file.filename ?? file.name ?? '附件'
+            return (
+              <Image
+                key={`${name}-${index}`}
+                alt={name}
+                classNames={{ image: styles.attachmentImage }}
+                src={file.url}
+              />
+            )
+          })}
+        </Image.PreviewGroup>
+      ) : null}
+      {otherFiles.map((file, index) => {
         const name = file.filename ?? file.name ?? '附件'
-        if (file.mediaType?.startsWith('image/')) {
-          return (
-            <a key={`${name}-${index}`} href={file.url} rel='noreferrer' target='_blank'>
-              <img alt={name} className={styles.attachmentImage} src={file.url} />
-            </a>
-          )
-        }
-
         return (
           <div className={styles.attachment} key={`${name}-${index}`} title={name}>
             <FileText size={18} />

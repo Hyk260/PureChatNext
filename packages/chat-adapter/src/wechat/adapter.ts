@@ -389,7 +389,7 @@ function mapToUploadMediaType(type: 'image' | 'file' | 'video' | 'audio'): Wecha
 
 /**
  * 微信（iLink）适配器，@pure/chat-adapter/wechat（Vercel Chat SDK）。
- * 协议说明见 `docs/self-hosting/wechat/protocol.zh-CN.md`。
+ * 协议说明见 `docs/self-hosting/channels/wechat/protocol.md`。
  *
  * 处理长轮询 monitor 转发的 webhook 请求，以及通过 iLink Bot API 的消息操作。
  */
@@ -491,7 +491,7 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
       sentItems.push({ text_item: { text }, type: MessageItemType.TEXT })
     }
 
-    // 按 protocol.zh-CN.md §6.7，媒体 item 分开发送（每次 sendmessage 一个 item）。
+    // 按 protocol.md §6.7，媒体 item 分开发送（每次 sendmessage 一个 item）。
     // 从 postable 载荷收集 attachments + files，物化字节后逐个上传至 iLink CDN。
     const mediaSpecs = await this.collectMediaSpecs(message)
     for (const spec of mediaSpecs) {

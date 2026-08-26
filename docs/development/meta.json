@@ -1,0 +1,8 @@
+{
+  "title": "开发指南",
+  "description": "参与 PureChatNext 开发、测试和维护。",
+  "icon": "CodeXml",
+  "root": true,
+  "pagesIndex": "README",
+  "pages": ["README", "database", "quality", "styling"]
+}

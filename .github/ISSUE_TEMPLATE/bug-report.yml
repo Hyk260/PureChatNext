@@ -1,0 +1,57 @@
+name: 缺陷报告
+description: 提交可复现的 PureChat 功能异常
+title: '[Bug] '
+labels: ['bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: 感谢反馈。请先搜索已有 Issue，并确保日志和截图已移除密钥、Cookie、连接串与个人数据。
+  - type: input
+    id: version
+    attributes:
+      label: 版本或提交
+      placeholder: v0.2.0 / commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: 部署方式
+      options:
+        - Vercel
+        - Docker Compose
+        - 本地开发
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 实际发生了什么？你预期发生什么？
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开……
+        2. 点击……
+        3. 看到……
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 已脱敏的日志或截图
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交确认
+      options:
+        - label: 我已搜索现有 Issue，未发现相同问题。
+          required: true
+        - label: 我已移除所有密钥、Cookie、连接串、二维码凭证和个人数据。
+          required: true

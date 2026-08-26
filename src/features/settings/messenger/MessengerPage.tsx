@@ -83,7 +83,7 @@ const MessengerPage = memo(() => {
   }
 
   return (
-    <Flexbox gap={20} className='wh-full'>
+    <Flexbox gap={20} height='100%' width='100%'>
       <Text type='secondary'>{MESSENGER_SUBTITLE}</Text>
       <Flexbox horizontal className={styles.list} gap={12}>
         {MESSENGER_PLATFORMS.map((item) => (

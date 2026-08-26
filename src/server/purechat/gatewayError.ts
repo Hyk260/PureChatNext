@@ -55,3 +55,13 @@ export const getPureChatStreamErrorMessage = (error: unknown) => {
 
   return '模型生成失败，请稍后重试。'
 }
+
+/** Public response for synchronous provider failures; never return upstream details. */
+export const getPublicGatewayErrorMessage = (error: unknown) => {
+  const { message, statusCode } = getErrorDetails(error)
+  if (statusCode === 429 || /rate.?limit/i.test(message)) return '上游限流，请稍后重试。'
+  if (statusCode === 401 || /unauthorized|invalid.*key/i.test(message)) {
+    return '模型服务暂不可用，请稍后重试。'
+  }
+  return '模型服务暂不可用，请稍后重试。'
+}

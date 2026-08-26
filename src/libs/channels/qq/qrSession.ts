@@ -198,6 +198,18 @@ export function cancelQQQrSession(userId: string, sessionId: string): boolean {
   return true
 }
 
+/** 断开 QQ 绑定时清理该用户仍在运行的扫码会话，避免旧连接回调干扰下一次扫码。 */
+export function cancelQQQrSessionsForUser(userId: string): number {
+  cleanupExpiredSessions()
+  let canceled = 0
+  for (const session of [...getStore().values()]) {
+    if (session.userId !== userId) continue
+    disposeSession(session)
+    canceled += 1
+  }
+  return canceled
+}
+
 export function clearQQQrSessionsForTests() {
   for (const session of getStore().values()) disposeSession(session)
 }

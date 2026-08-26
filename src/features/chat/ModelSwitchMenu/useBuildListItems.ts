@@ -37,11 +37,18 @@ export const buildListItems = (
         const existing = modelMap.get(model.model)
         if (!existing) {
           modelMap.set(model.model, {
+            abilities: model.abilities,
+            contextWindowTokens: model.contextWindowTokens,
             displayName: model.displayName,
             model: model.model,
             providers: [{ id: provider.id, name: provider.name }],
           })
           continue
+        }
+
+        if (!existing.abilities && model.abilities) existing.abilities = model.abilities
+        if (existing.contextWindowTokens == null && model.contextWindowTokens != null) {
+          existing.contextWindowTokens = model.contextWindowTokens
         }
 
         existing.providers.push({ id: provider.id, name: provider.name })

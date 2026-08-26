@@ -3,6 +3,7 @@ import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
   GetObjectCommand,
+  HeadBucketCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
@@ -79,6 +80,16 @@ export class S3 {
     })
 
     return this.client.send(command)
+  }
+
+  /** Check bucket access without creating or modifying an object. */
+  public async checkConnection(options?: { abortSignal?: AbortSignal }) {
+    return this.client.send(
+      new HeadBucketCommand({
+        Bucket: this.bucket,
+      }),
+      options
+    )
   }
 
   public async deleteFiles(keys: string[]) {

@@ -79,36 +79,45 @@ const styles = createStaticStyles(({ css }) => ({
 const isProModel = (displayName: string) => /pro/i.test(displayName)
 
 interface ModelRowContentProps {
+  abilities?: ModelWithProviders['abilities']
+  contextWindowTokens?: number
   displayName: string
   model: string
   provider: string
 }
 
-const ModelRowContent = memo<ModelRowContentProps>(({ displayName, model, provider }) => {
-  const card = getAiModel(provider as ModelProviderId, model)
+const ModelRowContent = memo<ModelRowContentProps>(
+  ({ abilities, contextWindowTokens, displayName, model, provider }) => {
+    const card = getAiModel(provider as ModelProviderId, model)
 
-  return (
-    <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
-      <ModelIcon model={model} size={20} />
-      <Text ellipsis style={{ fontSize: 13, flex: 1, minWidth: 0 }}>
-        {displayName}
-      </Text>
-      {/* {isProModel(displayName) ? (
+    return (
+      <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
+        <ModelIcon model={model} size={20} />
+        <Text ellipsis style={{ fontSize: 13, flex: 1, minWidth: 0 }}>
+          {displayName}
+        </Text>
+        {/* {isProModel(displayName) ? (
         <Tag color='gold' size='small' style={{ fontSize: 12, margin: 0 }}>
           Pro
         </Tag>
       ) : null} */}
-      <div style={{ flexShrink: 0, maxWidth: 120 }}>
-        <ModelFeatureTags abilities={card?.abilities} contextWindowTokens={card?.contextWindowTokens} />
-      </div>
-    </Flexbox>
-  )
-})
+        <div style={{ flexShrink: 0, maxWidth: 120 }}>
+          <ModelFeatureTags
+            abilities={abilities ?? card?.abilities}
+            contextWindowTokens={contextWindowTokens ?? card?.contextWindowTokens}
+          />
+        </div>
+      </Flexbox>
+    )
+  }
+)
 
 ModelRowContent.displayName = 'ModelRowContent'
 
 interface ModelRowProps {
   active: boolean
+  abilities?: ModelRowContentProps['abilities']
+  contextWindowTokens?: number
   detailProvider: string
   displayName: string
   model: string
@@ -116,35 +125,43 @@ interface ModelRowProps {
   subscribeScroll?: (cb: () => void) => () => void
 }
 
-const ModelRow = memo<ModelRowProps>(({ active, detailProvider, displayName, model, onSelect, subscribeScroll }) => {
-  const [detailOpen, setDetailOpen] = useState(false)
+const ModelRow = memo<ModelRowProps>(
+  ({ abilities, active, contextWindowTokens, detailProvider, displayName, model, onSelect, subscribeScroll }) => {
+    const [detailOpen, setDetailOpen] = useState(false)
 
-  useEffect(() => subscribeScroll?.(() => setDetailOpen(false)), [subscribeScroll])
+    useEffect(() => subscribeScroll?.(() => setDetailOpen(false)), [subscribeScroll])
 
-  return (
-    <div className={styles.rowWrap}>
-      <DropdownMenuSubmenuRoot open={detailOpen} onOpenChange={setDetailOpen}>
-        <DropdownMenuSubmenuTrigger
-          className={cx(styles.rowTrigger, active && styles.itemActive)}
-          onClick={(event) => {
-            event.preventDefault()
-            setDetailOpen(false)
-            onSelect()
-          }}
-        >
-          <ModelRowContent displayName={displayName} model={model} provider={detailProvider} />
-        </DropdownMenuSubmenuTrigger>
-        <DropdownMenuPortal>
-          <DropdownMenuPositioner anchor={null} placement='right' sideOffset={12}>
-            <DropdownMenuPopup className={styles.detailPopup}>
-              <ModelDetailPanel model={model} provider={detailProvider} />
-            </DropdownMenuPopup>
-          </DropdownMenuPositioner>
-        </DropdownMenuPortal>
-      </DropdownMenuSubmenuRoot>
-    </div>
-  )
-})
+    return (
+      <div className={styles.rowWrap}>
+        <DropdownMenuSubmenuRoot open={detailOpen} onOpenChange={setDetailOpen}>
+          <DropdownMenuSubmenuTrigger
+            className={cx(styles.rowTrigger, active && styles.itemActive)}
+            onClick={(event) => {
+              event.preventDefault()
+              setDetailOpen(false)
+              onSelect()
+            }}
+          >
+            <ModelRowContent
+              abilities={abilities}
+              contextWindowTokens={contextWindowTokens}
+              displayName={displayName}
+              model={model}
+              provider={detailProvider}
+            />
+          </DropdownMenuSubmenuTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuPositioner anchor={null} placement='right' sideOffset={12}>
+              <DropdownMenuPopup className={styles.detailPopup}>
+                <ModelDetailPanel model={model} provider={detailProvider} />
+              </DropdownMenuPopup>
+            </DropdownMenuPositioner>
+          </DropdownMenuPortal>
+        </DropdownMenuSubmenuRoot>
+      </div>
+    )
+  }
+)
 
 ModelRow.displayName = 'ModelRow'
 
@@ -180,7 +197,13 @@ const MultiProviderModelRow = memo<MultiProviderModelRowProps>(
               onSelect(defaultProvider.id, data.model)
             }}
           >
-            <ModelRowContent displayName={data.displayName} model={data.model} provider={detailProvider} />
+            <ModelRowContent
+              abilities={data.abilities}
+              contextWindowTokens={data.contextWindowTokens}
+              displayName={data.displayName}
+              model={data.model}
+              provider={detailProvider}
+            />
           </DropdownMenuSubmenuTrigger>
           <DropdownMenuPortal>
             <DropdownMenuPositioner anchor={null} placement='right' sideOffset={12}>
@@ -326,6 +349,8 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
                   detailProvider={item.provider.id}
                   displayName={item.model.displayName}
                   model={item.model.model}
+                  abilities={item.model.abilities}
+                  contextWindowTokens={item.model.contextWindowTokens}
                   subscribeScroll={subscribeScroll}
                   onSelect={() => {
                     onClose()

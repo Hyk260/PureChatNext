@@ -19,7 +19,6 @@ export const deepseekChatModels: AiModelCard[] = [
     },
     pricing: {
       currency: 'CNY',
-      // Official cache-hit input price is permanently reduced to 1/10 of the launch price.
       textInput: 1,
       textOutput: 2,
       textInputCacheRead: 0.02,
@@ -43,7 +42,6 @@ export const deepseekChatModels: AiModelCard[] = [
     },
     pricing: {
       currency: 'CNY',
-      // Official cache-hit input price is permanently reduced to 1/10 of the launch price.
       textInput: 3,
       textOutput: 6,
       textInputCacheRead: 0.025,

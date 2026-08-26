@@ -37,6 +37,13 @@ export const PROVIDER_CHECK_MODELS: Record<ProviderId, string> = {
   purechat: PURECHAT_DEFAULT_MODEL,
 }
 
+/** Server-side env var that backs each provider when the browser key is empty. */
+export const PROVIDER_ENV_API_KEY_NAME: Record<ProviderId, string> = {
+  deepseek: 'DEEPSEEK_API_KEY',
+  openai: 'OPENAI_API_KEY',
+  purechat: 'PURECHAT_API_KEY',
+}
+
 /** showConfig=false 的服务商（如 PureChat）由服务端持有 Key。 */
 export const isServerManagedProvider = (id: ProviderId) => {
   const card = DEFAULT_MODEL_PROVIDER_LIST.find((p) => p.id === id)

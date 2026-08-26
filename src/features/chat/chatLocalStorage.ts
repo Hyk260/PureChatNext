@@ -1,3 +1,5 @@
+import { sessionStg } from '@pure/utils/storage'
+
 export const PENDING_CHAT_TEXT_KEY = 'purechat:chat:v1:pending-text'
 export const PENDING_TOPIC_SEND_KEY = 'purechat:chat:v2:pending-topic-send'
 
@@ -26,16 +28,10 @@ export const setPendingChatText = (text: string): void => {
   pendingChatTextMemory = next || null
   pendingChatTextClaimed = false
 
-  if (typeof window === 'undefined') return
-
-  try {
-    if (next) {
-      sessionStorage.setItem(PENDING_CHAT_TEXT_KEY, next)
-    } else {
-      sessionStorage.removeItem(PENDING_CHAT_TEXT_KEY)
-    }
-  } catch {
-    // Ignore quota / private mode errors
+  if (next) {
+    sessionStg.setString(PENDING_CHAT_TEXT_KEY, next)
+  } else {
+    sessionStg.remove(PENDING_CHAT_TEXT_KEY)
   }
 }
 
@@ -55,13 +51,7 @@ export const claimPendingChatText = (): string | null => {
 
   let text = pendingChatTextMemory
 
-  if (!text && typeof window !== 'undefined') {
-    try {
-      text = sessionStorage.getItem(PENDING_CHAT_TEXT_KEY)
-    } catch {
-      text = null
-    }
-  }
+  if (!text) text = sessionStg.getString(PENDING_CHAT_TEXT_KEY)
 
   const next = text?.trim() || null
   if (!next) return null
@@ -69,13 +59,7 @@ export const claimPendingChatText = (): string | null => {
   pendingChatTextClaimed = true
   pendingChatTextMemory = null
 
-  if (typeof window !== 'undefined') {
-    try {
-      sessionStorage.removeItem(PENDING_CHAT_TEXT_KEY)
-    } catch {
-      // Ignore
-    }
-  }
+  sessionStg.remove(PENDING_CHAT_TEXT_KEY)
 
   return next
 }
@@ -89,16 +73,10 @@ export const setPendingTopicSend = (text: string): void => {
   pendingTopicSendMemory = next || null
   pendingTopicSendClaimed = false
 
-  if (typeof window === 'undefined') return
-
-  try {
-    if (next) {
-      sessionStorage.setItem(PENDING_TOPIC_SEND_KEY, next)
-    } else {
-      sessionStorage.removeItem(PENDING_TOPIC_SEND_KEY)
-    }
-  } catch {
-    // Ignore quota / private mode errors
+  if (next) {
+    sessionStg.setString(PENDING_TOPIC_SEND_KEY, next)
+  } else {
+    sessionStg.remove(PENDING_TOPIC_SEND_KEY)
   }
 }
 
@@ -118,13 +96,7 @@ export const claimPendingTopicSend = (): string | null => {
 
   let text = pendingTopicSendMemory
 
-  if (!text && typeof window !== 'undefined') {
-    try {
-      text = sessionStorage.getItem(PENDING_TOPIC_SEND_KEY)
-    } catch {
-      text = null
-    }
-  }
+  if (!text) text = sessionStg.getString(PENDING_TOPIC_SEND_KEY)
 
   const next = text?.trim() || null
   if (!next) return null
@@ -132,13 +104,7 @@ export const claimPendingTopicSend = (): string | null => {
   pendingTopicSendClaimed = true
   pendingTopicSendMemory = null
 
-  if (typeof window !== 'undefined') {
-    try {
-      sessionStorage.removeItem(PENDING_TOPIC_SEND_KEY)
-    } catch {
-      // Ignore
-    }
-  }
+  sessionStg.remove(PENDING_TOPIC_SEND_KEY)
 
   return next
 }
@@ -148,11 +114,5 @@ export const finishPendingTopicSend = (): void => {
   pendingTopicSendClaimed = true
   pendingTopicSendFiles = []
 
-  if (typeof window === 'undefined') return
-
-  try {
-    sessionStorage.removeItem(PENDING_TOPIC_SEND_KEY)
-  } catch {
-    // Ignore
-  }
+  sessionStg.remove(PENDING_TOPIC_SEND_KEY)
 }

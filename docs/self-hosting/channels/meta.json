@@ -1,0 +1,5 @@
+{
+  "title": "消息渠道",
+  "icon": "MessagesSquare",
+  "pages": ["qq", "wechat"]
+}

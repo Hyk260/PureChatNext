@@ -6,7 +6,7 @@ import { memo, useCallback } from 'react'
 
 import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
 
-const SCROLL_PARENT_ID = 'community-scroll'
+const SCROLL_VIEWPORT_CLASS = 'community-scroll-viewport'
 const prefixCls = 'ant'
 
 const styles = createStaticStyles(({ css, cssVar }) => ({
@@ -45,7 +45,7 @@ const AgentPagination = memo<AgentPaginationProps>(({ currentPage, pageSize, tot
       const query = next.toString()
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
 
-      const scrollableElement = document?.querySelector(`#${SCROLL_PARENT_ID}`)
+      const scrollableElement = document?.querySelector(`.${SCROLL_VIEWPORT_CLASS}`)
       scrollableElement?.scrollTo({ behavior: 'smooth', top: 0 })
     },
     [pathname, router, searchParams]

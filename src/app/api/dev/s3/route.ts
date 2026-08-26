@@ -2,8 +2,15 @@ import { NextResponse } from 'next/server'
 
 import { FileS3 } from '@/server/modules/S3'
 
-const fileS3 = new FileS3()
 const DEV_S3_PREFIX = 'dev/'
+let fileS3: FileS3 | undefined
+
+const getFileS3 = () => (fileS3 ??= new FileS3())
+
+const rejectOutsideDevelopment = () => {
+  if (process.env.NODE_ENV === 'development') return
+  return NextResponse.json({ error: 'Not found', success: false }, { status: 404 })
+}
 
 // —— Helpers ——
 
@@ -39,6 +46,9 @@ const toDevPrefix = (prefix: string | null) => toDevKey(prefix?.trim() || '')
  * - action=uploadBuffer    (JSON: { key, content, contentType? })
  */
 export const POST = async (req: Request) => {
+  const rejected = rejectOutsideDevelopment()
+  if (rejected) return rejected
+
   try {
     const url = new URL(req.url)
     const action = getAction(url.searchParams)
@@ -55,7 +65,7 @@ export const POST = async (req: Request) => {
       const buffer = Buffer.from(await file.arrayBuffer())
       const contentType = file.type || undefined
 
-      await fileS3.uploadBuffer(key, buffer, contentType)
+      await getFileS3().uploadBuffer(key, buffer, contentType)
 
       return ok({ key, size: buffer.length, contentType })
     }
@@ -69,7 +79,7 @@ export const POST = async (req: Request) => {
         return badRequest('Missing "key" or "content"')
       }
 
-      await fileS3.uploadContent(key, content)
+      await getFileS3().uploadContent(key, content)
 
       return ok({ key, size: Buffer.byteLength(content) })
     }
@@ -85,7 +95,7 @@ export const POST = async (req: Request) => {
       }
 
       const buffer = Buffer.from(content, 'utf-8')
-      await fileS3.uploadBuffer(key, buffer, contentType)
+      await getFileS3().uploadBuffer(key, buffer, contentType)
 
       return ok({ key, size: buffer.length, contentType })
     }
@@ -98,7 +108,7 @@ export const POST = async (req: Request) => {
         return badRequest('Missing "key"')
       }
 
-      const result = await fileS3.createPreSignedUpload(key)
+      const result = await getFileS3().createPreSignedUpload(key)
 
       return ok({ key, ...result })
     }
@@ -118,13 +128,16 @@ export const POST = async (req: Request) => {
  * - action=downloadUrl&key=xxx&expiresIn=xxx
  */
 export const GET = async (req: Request) => {
+  const rejected = rejectOutsideDevelopment()
+  if (rejected) return rejected
+
   try {
     const url = new URL(req.url)
     const action = getAction(url.searchParams)
 
     if (action === 'list') {
       const prefix = toDevPrefix(url.searchParams.get('prefix'))
-      const files = await fileS3.listFiles(prefix)
+      const files = await getFileS3().listFiles(prefix)
 
       return ok(files)
     }
@@ -137,7 +150,7 @@ export const GET = async (req: Request) => {
         return badRequest('Missing "key"')
       }
 
-      const metadata = await fileS3.getFileMetadata(key)
+      const metadata = await getFileS3().getFileMetadata(key)
 
       return ok({ key, ...metadata })
     }
@@ -152,7 +165,7 @@ export const GET = async (req: Request) => {
 
       const expiresInRaw = url.searchParams.get('expiresIn')
       const expiresIn = expiresInRaw ? parseInt(expiresInRaw, 10) : undefined
-      const downloadUrl = await fileS3.createPreSignedUrlForPreview(key, expiresIn)
+      const downloadUrl = await getFileS3().createPreSignedUrlForPreview(key, expiresIn)
 
       return ok({ key, downloadUrl, expiresIn: expiresIn ?? 7200 })
     }
@@ -170,6 +183,9 @@ export const GET = async (req: Request) => {
  * - action=deleteMany  (JSON body: { keys: string[] })
  */
 export const DELETE = async (req: Request) => {
+  const rejected = rejectOutsideDevelopment()
+  if (rejected) return rejected
+
   try {
     const url = new URL(req.url)
     const action = getAction(url.searchParams)
@@ -182,7 +198,7 @@ export const DELETE = async (req: Request) => {
         return badRequest('Missing "key"')
       }
 
-      await fileS3.deleteFile(key)
+      await getFileS3().deleteFile(key)
 
       return ok({ key, deleted: true })
     }
@@ -195,7 +211,7 @@ export const DELETE = async (req: Request) => {
         return badRequest('Missing or invalid "keys" array')
       }
 
-      await fileS3.deleteFiles(keys)
+      await getFileS3().deleteFiles(keys)
 
       return ok({ keys, deleted: true })
     }
@@ -212,6 +228,9 @@ export const DELETE = async (req: Request) => {
  * - action=rename  (JSON body: { oldKey, newKey })
  */
 export const PUT = async (req: Request) => {
+  const rejected = rejectOutsideDevelopment()
+  if (rejected) return rejected
+
   try {
     const url = new URL(req.url)
     const action = getAction(url.searchParams)
@@ -225,8 +244,8 @@ export const PUT = async (req: Request) => {
         return badRequest('Missing "oldKey" or "newKey"')
       }
 
-      await fileS3.copyObject(oldKey, newKey)
-      await fileS3.deleteFile(oldKey)
+      await getFileS3().copyObject(oldKey, newKey)
+      await getFileS3().deleteFile(oldKey)
 
       return ok({ oldKey, newKey, renamed: true })
     }

@@ -1,7 +1,7 @@
-import { sql } from 'drizzle-orm'
+import type { ChannelGatewaySummary } from '@/server/channel-gateway/types'
 
-import { serverDB } from '@pure/database/core/db-adaptor'
 import { getChannelGatewaySummary } from '@/server/channel-gateway'
+import { checkHealthDependencies } from '@/server/health/dependencies'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -16,18 +16,25 @@ function resolveHealthStatus(unhealthy: boolean, gatewayStatus: string) {
   return 'ok'
 }
 
+const SAFE_GATEWAY_ERROR = 'Channel gateway unavailable'
+
+export function sanitizeGatewayForHealth(gateway: ChannelGatewaySummary): ChannelGatewaySummary {
+  return gateway.error ? { ...gateway, error: SAFE_GATEWAY_ERROR } : gateway
+}
+
 /**
  * GET /api/health
- * 健康检查：探测数据库连通性与渠道 Gateway 状态
+ * 健康检查：探测已配置的数据库、Redis、对象存储、搜索服务与渠道 Gateway 状态
  */
-export async function GET() {
+export async function GET(request?: Request) {
   try {
-    await serverDB.execute(sql`SELECT 1`)
-    const gateway = getChannelGatewaySummary()
-    const unhealthy = gateway.status === 'unhealthy'
+    const checks = await checkHealthDependencies(request?.signal)
+    const gateway = sanitizeGatewayForHealth(getChannelGatewaySummary())
+    const unhealthy = gateway.status === 'unhealthy' || Object.values(checks).some((status) => status === 'unhealthy')
+    const degraded = gateway.status === 'degraded'
 
     return Response.json(
-      { gateway, status: resolveHealthStatus(unhealthy, gateway.status) },
+      { checks, gateway, status: resolveHealthStatus(unhealthy, degraded ? 'degraded' : gateway.status) },
       { headers: responseHeaders, status: unhealthy ? 503 : 200 }
     )
   } catch {

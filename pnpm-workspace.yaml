@@ -1,5 +1,6 @@
 packages:
   - apps/desktop
+  - apps/docs
   - packages/**
 allowBuilds:
   # Windows 上 postinstall 的 node-pty 探测会卡死（conhost + kill 不返回），跳过即可

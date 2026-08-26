@@ -102,6 +102,10 @@ export class IoRedisRedisProvider implements BaseRedisProvider {
     return this.ensureClient().mset(normalizeMsetValues(values))
   }
 
+  async ping(): Promise<string> {
+    return this.ensureClient().ping()
+  }
+
   async hget(key: RedisKey, field: RedisKey): Promise<string | null> {
     return this.ensureClient().hget(key, field)
   }

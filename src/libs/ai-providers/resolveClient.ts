@@ -2,7 +2,13 @@ import { createDeepSeek } from '@ai-sdk/deepseek'
 import { createOpenAI } from '@ai-sdk/openai'
 import type { LanguageModel } from 'ai'
 
+import { createTimedFetch } from './timedFetch'
+
 export type SupportedProviderId = 'openai' | 'deepseek'
+
+export type ProviderLanguageModelOptions = {
+  timeoutMs?: number
+}
 
 export const PROVIDER_RUNTIME_DEFAULT_BASE_URLS: Record<SupportedProviderId, string> = {
   deepseek: 'https://api.deepseek.com',
@@ -45,13 +51,19 @@ export const createProviderLanguageModel = (
   provider: SupportedProviderId,
   model: string,
   apiKey: string | undefined,
-  baseURL: string | undefined
+  baseURL: string | undefined,
+  options?: ProviderLanguageModelOptions
 ): LanguageModel => {
-  const options: { apiKey?: string; baseURL?: string } = {}
-  if (apiKey) options.apiKey = apiKey
-  if (baseURL) options.baseURL = baseURL
+  const clientOptions: {
+    apiKey?: string
+    baseURL?: string
+    fetch?: ReturnType<typeof createTimedFetch>
+  } = {}
+  if (apiKey) clientOptions.apiKey = apiKey
+  if (baseURL) clientOptions.baseURL = baseURL
+  if (options?.timeoutMs) clientOptions.fetch = createTimedFetch(options.timeoutMs)
 
-  const providerOptions = Object.keys(options).length > 0 ? options : undefined
+  const providerOptions = Object.keys(clientOptions).length > 0 ? clientOptions : undefined
 
   switch (provider) {
     case 'openai':

@@ -1,10 +1,11 @@
-import { copyFile, readFile, writeFile } from 'node:fs/promises'
-import { constants as fsConstants, existsSync } from 'node:fs'
+import { readFile, writeFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 import process from 'node:process'
 import { spawnSync } from 'node:child_process'
 
+import { CreateBucketCommand, HeadBucketCommand, S3Client } from '@aws-sdk/client-s3'
 import { parse } from 'dotenv'
 import { exportJWK, generateKeyPair } from 'jose'
 
@@ -83,11 +84,7 @@ function ensureDockerReady() {
             '  3. 再执行：pnpm run dev:docker',
           ]
         : process.platform === 'win32'
-          ? [
-              '  1. 打开 Docker Desktop',
-              '  2. 等待托盘图标显示 Running',
-              '  3. 再执行：pnpm run dev:docker',
-            ]
+          ? ['  1. 打开 Docker Desktop', '  2. 等待托盘图标显示 Running', '  3. 再执行：pnpm run dev:docker']
           : [
               '  1. 启动 Docker 服务，例如：sudo systemctl start docker',
               '  2. 确认当前用户已加入 docker 组（或使用有权限的方式）',
@@ -111,11 +108,25 @@ function ensureDockerReady() {
 
 async function setupDev() {
   const source = path.join(devDir, '.env.example')
-  await copyFile(source, devEnv, fsConstants.COPYFILE_EXCL).catch((error: NodeJS.ErrnoException) => {
-    if (error.code === 'EEXIST') throw new Error('docker-compose/dev/.env 已存在，未覆盖')
-    throw error
-  })
-  console.log('✅ 已创建 docker-compose/dev/.env')
+  const template = await readFile(source, 'utf8')
+  const replacements: Record<string, string> = {
+    __GENERATE_POSTGRES_PASSWORD__: secret(24),
+    __GENERATE_RUSTFS_ACCESS_KEY__: secret(18),
+    __GENERATE_RUSTFS_SECRET__: secret(24),
+    __GENERATE_SEARXNG_SECRET__: secret(),
+  }
+  const contents = Object.entries(replacements).reduce(
+    (value, [placeholder, replacement]) => value.replace(placeholder, replacement),
+    template
+  )
+
+  await writeFile(devEnv, contents, { encoding: 'utf8', flag: 'wx', mode: 0o600 }).catch(
+    (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EEXIST') throw new Error('docker-compose/dev/.env 已存在，未覆盖')
+      throw error
+    }
+  )
+  console.log('✅ 已创建 docker-compose/dev/.env（已生成随机本地凭证）')
 }
 
 const secret = (bytes = 32) => randomBytes(bytes).toString('base64url')
@@ -154,19 +165,10 @@ async function setupDeploy() {
 
 async function upDev() {
   requireFile(devEnv, 'pnpm docker:setup:dev')
-  run('docker', [
-    ...composeArgs(devCompose, devEnv),
-    'up',
-    '-d',
-    '--wait',
-    'postgresql',
-    'redis',
-    'rustfs',
-    'searxng',
-  ])
-  run('docker', [...composeArgs(devCompose, devEnv), 'up', '--no-deps', 'rustfs-init'])
+  run('docker', [...composeArgs(devCompose, devEnv), 'up', '-d', '--wait', 'postgresql', 'redis', 'rustfs', 'searxng'])
 
   const values = parse(await readFile(devEnv, 'utf8'))
+  await ensureDevBucket(values)
   const bindAddress = values.DOCKER_BIND_ADDRESS || '127.0.0.1'
   const host = bindAddress === '0.0.0.0' ? 'localhost' : bindAddress
   const postgresPort = values.POSTGRES_PORT || '5432'
@@ -183,6 +185,56 @@ async function upDev() {
     rustfsS3Port,
     searxngPort,
   })
+}
+
+const isMissingBucket = (error: unknown) =>
+  ['NoSuchBucket', 'NotFound'].includes((error as { name?: string })?.name ?? '') ||
+  (error as { $metadata?: { httpStatusCode?: number } })?.$metadata?.httpStatusCode === 404
+
+const isAlreadyOwned = (error: unknown) =>
+  ['BucketAlreadyOwnedByYou', 'BucketAlreadyExists'].includes((error as { name?: string })?.name ?? '') ||
+  (error as { $metadata?: { httpStatusCode?: number } })?.$metadata?.httpStatusCode === 409
+
+async function ensureDevBucket(values: Record<string, string>) {
+  const port = values.RUSTFS_PORT || '9000'
+  const endpoint = `http://127.0.0.1:${port}`
+  const bucket = values.RUSTFS_BUCKET
+  const accessKeyId = values.RUSTFS_ACCESS_KEY
+  const secretAccessKey = values.RUSTFS_SECRET_KEY
+  if (!bucket || !accessKeyId || !secretAccessKey) throw new Error('开发 RustFS 凭证或 bucket 配置不完整')
+
+  const client = new S3Client({
+    credentials: { accessKeyId, secretAccessKey },
+    endpoint,
+    forcePathStyle: true,
+    region: 'us-east-1',
+  })
+
+  let lastError: unknown
+  for (let attempt = 1; attempt <= 30; attempt += 1) {
+    try {
+      await client.send(new HeadBucketCommand({ Bucket: bucket }))
+      return
+    } catch (error) {
+      lastError = error
+      if (isMissingBucket(error)) {
+        try {
+          await client.send(new CreateBucketCommand({ Bucket: bucket }))
+        } catch (createError) {
+          if (!isAlreadyOwned(createError)) lastError = createError
+        }
+        try {
+          await client.send(new HeadBucketCommand({ Bucket: bucket }))
+          return
+        } catch (verifyError) {
+          lastError = verifyError
+        }
+      }
+      if (attempt < 30) await new Promise((resolve) => setTimeout(resolve, 2_000))
+    }
+  }
+
+  throw lastError
 }
 
 function printDevReadySummary(ports: {
@@ -212,21 +264,13 @@ function printDevReadySummary(ports: {
     rustfsConsole,
     `${c.dim('控制台；S3 ')}${colorLink(rustfsS3)}${c.dim('；密钥 RUSTFS_* 见 docker-compose/dev/.env')}`
   )
-  printReadyLine(
-    'SearXNG',
-    searxng,
-    c.dim('联网搜索 UI / JSON API；SEARXNG_URL 见 .env.local')
-  )
+  printReadyLine('SearXNG', searxng, c.dim('联网搜索 UI / JSON API；SEARXNG_URL 见 .env.local'))
   console.log('')
 }
 
-const supportsColor =
-  !process.env.NO_COLOR && process.env.FORCE_COLOR !== '0' && Boolean(process.stdout.isTTY)
+const supportsColor = !process.env.NO_COLOR && process.env.FORCE_COLOR !== '0' && Boolean(process.stdout.isTTY)
 
-const wrap =
-  (open: string, close: string) =>
-  (text: string) =>
-    supportsColor ? `${open}${text}${close}` : text
+const wrap = (open: string, close: string) => (text: string) => (supportsColor ? `${open}${text}${close}` : text)
 
 const c = {
   bold: wrap('\x1b[1m', '\x1b[22m'),
@@ -247,6 +291,11 @@ function printReadyLine(label: string, value: string, note: string) {
 function downDev() {
   requireFile(devEnv, 'pnpm docker:setup:dev')
   run('docker', [...composeArgs(devCompose, devEnv), 'down'])
+}
+
+function deploy() {
+  requireFile(deployEnv, 'pnpm docker:setup:deploy')
+  run('docker', [...composeArgs(deployCompose, deployEnv), 'up', '-d', '--build', '--wait'])
 }
 
 async function confirmReset() {
@@ -293,6 +342,10 @@ async function main() {
     case 'setup-deploy':
       await setupDeploy()
       break
+    case 'deploy':
+      ensureDockerReady()
+      deploy()
+      break
     case 'up':
       ensureDockerReady()
       await upDev()
@@ -310,7 +363,7 @@ async function main() {
       validate()
       break
     default:
-      throw new Error('用法: bun scripts/docker.mts {setup-dev|setup-deploy|up|down|reset|validate}')
+      throw new Error('用法: pnpm exec tsx scripts/docker.mts {setup-dev|setup-deploy|deploy|up|down|reset|validate}')
   }
 }
 

@@ -9,7 +9,11 @@ import { COMMUNITY_PROVIDERS } from '@/const/community/providers'
 
 const ProviderPage = memo(() => {
   return (
-    <Scrollbar style={{ height: '100%', width: '100%' }}>
+    <Scrollbar
+      style={{ height: '100%', width: '100%' }}
+      viewStyle={{ paddingInlineEnd: 24 }}
+      wrapClassName='community-scroll-viewport'
+    >
       <Flexbox gap={32} style={{ width: '100%' }}>
         <ProviderList data={COMMUNITY_PROVIDERS} />
       </Flexbox>

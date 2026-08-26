@@ -188,4 +188,17 @@ describe('POST /api/chat PureChat model availability', () => {
     expect(response.status).toBe(400)
     expect(payload.cause).toBe(PURECHAT_MODEL_UNAVAILABLE_MESSAGE)
   })
+
+  it('redacts synchronous public Gateway error details', async () => {
+    streamText.mockImplementationOnce(() => {
+      throw new Error('https://gateway.example/v1?api_key=super-secret-provider-key')
+    })
+
+    const response = await POST(createRequest('gpt-5.2'))
+    const payload = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(payload.cause).toBe('模型服务暂不可用，请稍后重试。')
+    expect(JSON.stringify(payload)).not.toContain('super-secret-provider-key')
+  })
 })

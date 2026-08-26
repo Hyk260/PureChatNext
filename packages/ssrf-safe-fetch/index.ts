@@ -56,7 +56,7 @@ const readBodyWithCap = async (body: NodeJS.ReadableStream | null, cap: number):
  * @param url - The URL to fetch
  * @param options - Standard fetch options
  * @param ssrfOptions - Optional per-call SSRF configuration overrides
- * @see `SSRF_ALLOW_PRIVATE_IP_ADDRESS` / `SSRF_ALLOW_IP_ADDRESS_LIST` in docs/env-setup.zh-CN.md
+ * @see `SSRF_ALLOW_PRIVATE_IP_ADDRESS` / `SSRF_ALLOW_IP_ADDRESS_LIST` in docs/self-hosting/configuration/environment.md
  */
 export const ssrfSafeFetch = async (
   url: string,

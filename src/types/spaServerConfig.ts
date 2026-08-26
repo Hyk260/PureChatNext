@@ -12,6 +12,11 @@ export type SPAServerConfig = {
   enableSpeedInsights?: boolean
   /** React Scan Monitor API key (same as `REACT_SCAN_MONITOR_API_KEY`). */
   reactScanApiKey?: string
+  /** Whether server env has a provider API key. Booleans only — never the secret. */
+  providerEnvKeys?: {
+    deepseek?: boolean
+    openai?: boolean
+  }
 }
 
 declare global {

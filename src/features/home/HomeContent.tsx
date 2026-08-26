@@ -5,10 +5,15 @@ import { memo } from 'react'
 import { Flexbox } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import HomeChatInput from '@/features/home/components/HomeChatInput'
-// import RecommendationList from '@/features/home/components/RecommendationList'
-// import StarterList from '@/features/home/components/StarterList'
 
 const styles = createStaticStyles(({ css }) => ({
+  description: css`
+    margin: 0;
+    color: ${cssVar.colorTextSecondary};
+    font-size: clamp(14px, 1.6vw, 17px);
+    line-height: 1.7;
+    text-align: center;
+  `,
   title: css`
     margin: 0;
     color: ${cssVar.colorText};
@@ -25,11 +30,12 @@ const styles = createStaticStyles(({ css }) => ({
 
 const HomeContent = memo(() => {
   return (
-    <Flexbox className={'w-full'} gap={28}>
-      <h1 className={styles.title}>今天想聊点什么？</h1>
+    <Flexbox className='w-full' gap={24}>
+      <Flexbox align='center' gap={10}>
+        <h1 className={styles.title}>把你的 AI 助手接入微信和 QQ</h1>
+        <p className={styles.description}>自托管、多模型、联网搜索、文件处理，数据和密钥由你掌控。</p>
+      </Flexbox>
       <HomeChatInput />
-      {/* <StarterList /> */}
-      {/* <RecommendationList /> */}
     </Flexbox>
   )
 })

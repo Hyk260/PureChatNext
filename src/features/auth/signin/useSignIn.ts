@@ -1,4 +1,5 @@
 import { Form } from 'antd'
+import { localStg } from '@pure/utils/storage'
 import { useRouter, useSearchParams } from '@/utils/navigation'
 import { useEffect, useState } from 'react'
 import { message } from '@/components/AntdStaticMethods'
@@ -9,6 +10,7 @@ import {
   normalizeLoginIdentifier,
 } from '@/libs/better-auth/shared'
 import { checkUserByEmail, requestPasswordReset, signIn, useAuthConfig } from '@/libs/better-auth/client'
+import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 type Step = 'email' | 'password'
@@ -31,13 +33,7 @@ export const useSignIn = () => {
   const [email, setEmail] = useState('')
   const [accountLabel, setAccountLabel] = useState('')
   const [isSocialOnly, setIsSocialOnly] = useState(false)
-  const [lastAuthProvider] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem(LAST_AUTH_PROVIDER_KEY)
-    } catch {
-      return null
-    }
-  })
+  const [lastAuthProvider] = useState<string | null>(() => localStg.getString(LAST_AUTH_PROVIDER_KEY))
 
   const { enableEmailVerification, enableMagicLink, oAuthSSOProviders } = config
 
@@ -160,7 +156,13 @@ export const useSignIn = () => {
             }
           },
           // SPA in-app navigation — do not rely on Next server redirect
-          onSuccess: () => router.push(callbackUrl),
+          onSuccess: () => {
+            trackAcquisitionEvent('sign_in_completed', {
+              first: markFirstConversion('sign_in'),
+              method: 'email',
+            })
+            router.push(callbackUrl)
+          },
         }
       )
 
@@ -183,11 +185,8 @@ export const useSignIn = () => {
 
   const handleSocialSignIn = async (provider: string) => {
     try {
-      try {
-        localStorage.setItem(LAST_AUTH_PROVIDER_KEY, provider)
-      } catch {
-        // Ignore localStorage errors (e.g., quota exceeded, private mode)
-      }
+      trackAcquisitionEvent('sign_in_started', { method: provider })
+      localStg.setString(LAST_AUTH_PROVIDER_KEY, provider)
       const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'))
       const isBuiltin = (BUILTIN_BETTER_AUTH_PROVIDERS as readonly string[]).includes(provider)
       const result = isBuiltin

@@ -1,7 +1,7 @@
 'use client'
 
-import { Select, Spin } from 'antd'
-import { Alert, Button, confirmModal, Text, Flexbox } from '@pure/ui'
+import { Spin } from 'antd'
+import { Alert, Button, confirmModal, Select, Text, Flexbox } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
 import { isDev } from '@/libs/constants'
@@ -13,6 +13,7 @@ import useSWR from 'swr'
 
 import { fetchAgents } from '@/features/home/agentApi'
 import { useSession } from '@/libs/better-auth/client'
+import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 
 import {
   formatMessengerActiveAt,
@@ -205,6 +206,10 @@ const MessengerWeChatPage = memo(() => {
           runtimeStatus: 'starting',
         }
         await mutateStatus(startingStatus, { revalidate: true })
+        trackAcquisitionEvent('channel_connected', {
+          first: markFirstConversion('channel_connected'),
+          platform: 'wechat',
+        })
         message.success('凭证已保存，正在等待 Gateway')
       } catch (error) {
         message.error(error instanceof Error ? error.message : '绑定失败')

@@ -1,0 +1,8 @@
+{
+  "title": "自托管",
+  "description": "部署、配置和维护自己的 PureChatNext 实例。",
+  "icon": "ServerCog",
+  "root": true,
+  "pagesIndex": "README",
+  "pages": ["README", "configuration", "platform", "infrastructure", "features", "auth", "channels"]
+}

@@ -1,0 +1,5 @@
+{
+  "title": "前端样式",
+  "icon": "Palette",
+  "pages": ["tailwind-guidelines", "tailwind-migration"]
+}

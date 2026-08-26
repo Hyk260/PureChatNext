@@ -12,6 +12,7 @@ import {
   SITE_DEFAULT_URL,
   SITE_DESCRIPTION,
   SITE_DISCUSSIONS_URL,
+  SITE_DOCS_URL,
   SITE_ISSUES_URL,
   SITE_LICENSE_URL,
   SITE_NAME,
@@ -25,6 +26,7 @@ import Link from '@/utils/link'
 
 const VERSION_LABEL = `v${CURRENT_VERSION}`
 const WEBSITE_HOST = SITE_DEFAULT_URL.replace(/^https:\/\//, '')
+const DOCS_HOST = SITE_DOCS_URL.replace(/^https:\/\//, '')
 
 const styles = createStaticStyles(({ css }) => ({
   brand: css`
@@ -163,6 +165,12 @@ export function AboutSettingsContent() {
             key: 'website',
             label: '官网',
             value: <Text>{WEBSITE_HOST}</Text>,
+          },
+          {
+            action: <OpenAction href={SITE_DOCS_URL} label='打开文档' />,
+            key: 'docs',
+            label: '文档',
+            value: <Text>{DOCS_HOST}</Text>,
           },
         ]}
       />

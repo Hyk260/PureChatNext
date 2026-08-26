@@ -7,6 +7,8 @@ export const SITE_DESCRIPTION =
 
 export const SITE_DEFAULT_URL = 'https://next.purechat.cn'
 
+export const SITE_DOCS_URL = 'https://next-docs.purechat.cn'
+
 export const SITE_REPOSITORY_URL = 'https://github.com/Hyk260/PureChatNext'
 
 export const SITE_REPOSITORY_SLUG = 'Hyk260/PureChatNext'

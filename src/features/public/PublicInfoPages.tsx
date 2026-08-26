@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 
 import { SITE_DISCUSSIONS_URL, SITE_ISSUES_URL, SITE_REPOSITORY_URL } from '@/const/site'
-import Link from '@/utils/link'
+import { useRouter } from '@/utils/navigation'
 
 const UPDATED_AT = '2026 年 8 月 19 日'
 
@@ -29,13 +29,31 @@ const ExternalLink = ({ children, href }: { children: ReactNode; href: string })
   </a>
 )
 
+const BackLink = () => {
+  const router = useRouter()
+
+  return (
+    <button
+      className='w-fit cursor-pointer border-0 bg-transparent p-0 text-sm text-muted-foreground hover:text-foreground'
+      type='button'
+      onClick={() => {
+        if (typeof window !== 'undefined' && window.history.length > 1) {
+          router.back()
+          return
+        }
+        router.push('/')
+      }}
+    >
+      ← 返回上一级
+    </button>
+  )
+}
+
 const PublicInfoPage = ({ description, sections, title }: PublicInfoPageProps) => (
   <div className='h-full overflow-y-auto bg-background text-foreground'>
     <main className='mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-12 md:px-10 md:py-16'>
       <header className='flex flex-col gap-4 border-b border-border pb-8'>
-        <Link className='w-fit text-sm text-muted-foreground no-underline hover:text-foreground' href='/'>
-          ← 返回 PureChat
-        </Link>
+        <BackLink />
         <h1 className='m-0 text-3xl font-bold tracking-tight md:text-4xl'>{title}</h1>
         <p className='m-0 text-base leading-7 text-muted-foreground'>{description}</p>
         <p className='m-0 text-sm text-muted-foreground'>最后更新：{UPDATED_AT}</p>

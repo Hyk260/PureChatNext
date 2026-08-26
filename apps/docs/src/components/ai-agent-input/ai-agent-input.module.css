@@ -93,9 +93,8 @@
 
 .wrap {
   width: 100%;
-  max-width: 420px;
   min-width: 0;
-  margin: 0 auto 1rem;
+  padding: 0 10px 10px;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 

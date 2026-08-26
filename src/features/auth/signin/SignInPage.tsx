@@ -13,6 +13,7 @@ const SignInContent = () => {
   const {
     accountLabel,
     disableEmailPassword,
+    email,
     enableMagicLink,
     form,
     forgotPasswordLoading,
@@ -51,6 +52,7 @@ const SignInContent = () => {
       ) : (
         <SignInPasswordStep
           accountLabel={accountLabel}
+          email={email}
           enableMagicLink={enableMagicLink}
           forgotPasswordLoading={forgotPasswordLoading}
           form={form}

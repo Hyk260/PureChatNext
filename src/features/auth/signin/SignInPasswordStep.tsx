@@ -2,7 +2,7 @@
 
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
-import { Button, Icon, Input, Text } from '@pure/ui'
+import { Button, Icon, Input, Text, confirmModal } from '@pure/ui'
 import { Alert, Form } from 'antd'
 import type { FormInstance } from 'antd'
 import type { InputRef } from '@pure/ui'
@@ -17,6 +17,7 @@ interface SignInFormValues {
 
 interface SignInPasswordStepProps {
   accountLabel: string
+  email: string
   enableMagicLink?: boolean
   form: FormInstance<SignInFormValues>
   isSocialOnly?: boolean
@@ -31,6 +32,7 @@ interface SignInPasswordStepProps {
 
 export const SignInPasswordStep = ({
   accountLabel,
+  email,
   enableMagicLink,
   form,
   forgotPasswordLoading = false,
@@ -43,6 +45,18 @@ export const SignInPasswordStep = ({
   onSignIn,
 }: SignInPasswordStepProps) => {
   const passwordInputRef = useRef<InputRef>(null)
+
+  const handleForgotPasswordClick = () => {
+    if (forgotPasswordLoading || !email) return
+
+    confirmModal({
+      cancelText: '取消',
+      content: `我们将向 ${email} 发送密码重置链接，请查收邮件后完成重置。`,
+      okText: '发送邮件',
+      onOk: () => onForgotPassword(),
+      title: '重置密码',
+    })
+  }
 
   const providerHint = useMemo(() => {
     const labels = oAuthSSOProviders.map((p) => SSO_PROVIDER_LABELS[p] ?? p)
@@ -97,25 +111,15 @@ export const SignInPasswordStep = ({
     <AuthCard
       footer={
         <>
-          <Text type='secondary' style={{ fontSize: 13 }}>
-            <a
-              aria-disabled={forgotPasswordLoading}
-              style={{
-                color: 'inherit',
-                cursor: forgotPasswordLoading ? 'not-allowed' : 'pointer',
-                opacity: forgotPasswordLoading ? 0.6 : 1,
-                pointerEvents: forgotPasswordLoading ? 'none' : 'auto',
-                textDecoration: 'underline',
-              }}
-              onClick={(event) => {
-                event.preventDefault()
-                if (forgotPasswordLoading) return
-                onForgotPassword()
-              }}
-            >
-              {'忘记密码？'}
-            </a>
-          </Text>
+          <Button
+            className='self-start'
+            disabled={forgotPasswordLoading}
+            loading={forgotPasswordLoading}
+            type='link'
+            onClick={handleForgotPasswordClick}
+          >
+            忘记密码？
+          </Button>
           <Button icon={<ChevronLeft />} size='large' style={{ marginTop: 12 }} type='fill' onClick={onBack}>
             返回修改账号
           </Button>

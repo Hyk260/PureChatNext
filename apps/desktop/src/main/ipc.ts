@@ -102,4 +102,8 @@ export const registerIpcHandlers = async () => {
     if (typeof title !== 'string' || title.length === 0 || title.length > 200) throw new Error('通知标题无效')
     new Notification({ title, body: typeof body === 'string' ? body.slice(0, 1000) : undefined }).show()
   })
+
+  return {
+    getRemoteServerUrl: async () => (await store.read()).remoteServerUrl,
+  }
 }

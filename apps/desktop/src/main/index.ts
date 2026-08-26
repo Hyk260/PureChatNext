@@ -9,6 +9,7 @@ import {
   nativeImage,
   protocol,
   shell,
+  session,
   Tray,
 } from 'electron'
 
@@ -44,6 +45,48 @@ const isAllowedRendererUrl = (value: string) => {
 
 const rendererDir = () => path.resolve(mainDir, '../renderer')
 
+const isApiPath = (pathname: string) => pathname === '/api' || pathname.startsWith('/api/')
+
+const removeBrowserOriginHeaders = (headers: Headers) => {
+  for (const name of [
+    'connection',
+    'content-length',
+    'host',
+    'origin',
+    'referer',
+    'sec-fetch-dest',
+    'sec-fetch-mode',
+    'sec-fetch-site',
+    'sec-fetch-user',
+  ]) {
+    headers.delete(name)
+  }
+}
+
+const proxyApiRequest = async (request: Request, getRemoteServerUrl: () => Promise<string | null>) => {
+  const remoteServerUrl = await getRemoteServerUrl()
+  if (!remoteServerUrl) {
+    return Response.json({ error: '尚未配置远程服务地址' }, { status: 503 })
+  }
+
+  const requestUrl = new URL(request.url)
+  const targetUrl = new URL(`${requestUrl.pathname}${requestUrl.search}`, `${remoteServerUrl}/`)
+  const headers = new Headers(request.headers)
+  removeBrowserOriginHeaders(headers)
+
+  const init: RequestInit = {
+    credentials: 'include',
+    headers,
+    method: request.method,
+  }
+
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    init.body = await request.arrayBuffer()
+  }
+
+  return session.defaultSession.fetch(targetUrl.toString(), init)
+}
+
 const safeRendererFile = (pathname: string) => {
   const normalized = path.posix.normalize(pathname).replace(/^\/+/, '')
   const candidate = path.resolve(rendererDir(), normalized || 'index.html')
@@ -51,8 +94,10 @@ const safeRendererFile = (pathname: string) => {
   return candidate === path.resolve(rendererDir(), 'index.html') || candidate.startsWith(root) ? candidate : null
 }
 
-const handleAppProtocol = async (request: Request) => {
+const handleAppProtocol = async (request: Request, getRemoteServerUrl: () => Promise<string | null>) => {
   const url = new URL(request.url)
+  if (isApiPath(url.pathname)) return proxyApiRequest(request, getRemoteServerUrl)
+
   const filePath = safeRendererFile(url.pathname)
   if (!filePath) return new Response('Forbidden', { status: 403 })
 
@@ -126,7 +171,7 @@ const createWindow = async () => {
   if (app.isPackaged) {
     await mainWindow.loadURL(`${protocolScheme}://renderer/`)
   } else {
-    const devUrl = process.env.ELECTRON_RENDERER_URL || `http://127.0.0.1:${process.env.PURECHAT_DESKTOP_VITE_PORT || 5175}`
+    const devUrl = process.env.ELECTRON_RENDERER_URL || `http://127.0.0.1:${process.env.PURECHAT_DESKTOP_VITE_PORT || 5176}`
     await mainWindow.loadURL(devUrl)
   }
 }
@@ -146,8 +191,8 @@ const bootstrap = async () => {
   })
 
   await app.whenReady()
-  protocol.handle(protocolScheme, handleAppProtocol)
-  await registerIpcHandlers()
+  const { getRemoteServerUrl } = await registerIpcHandlers()
+  protocol.handle(protocolScheme, (request) => handleAppProtocol(request, getRemoteServerUrl))
   await createWindow()
   createTray()
 

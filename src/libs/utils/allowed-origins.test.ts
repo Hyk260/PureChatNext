@@ -34,4 +34,12 @@ describe('getAllowedOrigins / isAllowedOrigin', () => {
     const { isAllowedOrigin } = await import('./allowed-origins')
     expect(isAllowedOrigin('https://nottingham-beans-seeing-accessed.trycloudflare.com')).toBe(false)
   })
+
+  it('trusts Electron renderer origins', async () => {
+    const { isAllowedOrigin } = await import('./allowed-origins')
+
+    expect(isAllowedOrigin('http://localhost:5176')).toBe(true)
+    expect(isAllowedOrigin('http://127.0.0.1:5176')).toBe(true)
+    expect(isAllowedOrigin('purechat://renderer')).toBe(true)
+  })
 })

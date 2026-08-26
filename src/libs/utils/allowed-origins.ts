@@ -2,11 +2,13 @@ import { appEnv } from '@/envs/app'
 import { TRYCLOUDFLARE_TRUSTED_ORIGIN } from '@/envs/dev-tunnel'
 
 const LOCAL_DEV_ORIGINS = [
-  'http://localhost:3000',
+  'http://localhost:3000', // Next (`pnpm dev:next`)
   'http://localhost:5174', // Vite SPA (`pnpm dev:spa`)
-  'http://localhost:4173',
-  'http://localhost:8080',
-  'http://localhost:8038',
+  'http://localhost:5176', // Electron SPA (`pnpm dev:desktop`)
+  'http://127.0.0.1:5176', // Electron Vite 绑定 127.0.0.1，与 localhost 不是同一 Origin
+  'purechat://renderer', // 打包后 Electron 自定义协议
+  'http://localhost:8080', // PureChat Vue3
+  'http://localhost:8038', // PureChat Vue3 Electron
 ]
 
 /** 将 Origin / 通配模式转为可匹配的正则（支持 `https://*.trycloudflare.com`） */

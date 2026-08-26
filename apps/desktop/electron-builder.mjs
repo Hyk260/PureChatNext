@@ -12,6 +12,9 @@ export default {
     buildResources: path.join(desktopDir, 'build'),
     output: path.join(desktopDir, 'release'),
   },
+  electronDownload: {
+    mirror: 'https://npmmirror.com/mirrors/electron/',
+  },
   files: ['dist/**/*', 'package.json'],
   mac: {
     category: 'public.app-category.productivity',

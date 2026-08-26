@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @import './utilities.css';
 
+/* Electron renderer uses apps/desktop as Vite root; keep the shared SPA classes discoverable. */
+@source '../';
+
 :root {
   --background: #fff;
   --foreground: #171717;

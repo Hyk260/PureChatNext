@@ -43,7 +43,8 @@ describe('webRouter.config smoke', () => {
   })
 
   it('renders the shared 404 page for unmatched paths', () => {
-    expect(source).toContain("import('@/components/404')")
+    expect(source).toContain("import NotFound from '@/components/404'")
+    expect(source).not.toContain("import('@/components/404')")
     expect(source).not.toContain("redirectElement('/')")
   })
 })

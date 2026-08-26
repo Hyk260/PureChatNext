@@ -140,6 +140,7 @@ portable 与 ZIP 的核心区别是：
 
 - 只打包 `dist/**/*` 和 `package.json`。
 - 排除 `node_modules`、环境文件和 sourcemap。
+- 通过 `beforeBuild: () => false` 跳过 electron-builder 的原生 rebuild 和 pnpm workspace 依赖收集。
 - 生产构建 renderer，避免把开发服务器内容打入安装包。
 - 使用 ASAR 入口和 64 MiB 预算校验，防止依赖意外膨胀。
 - macOS 使用 `compression: 'maximum'`，以换取较小归档体积；代价是打包时间可能增加。

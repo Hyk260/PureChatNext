@@ -12,7 +12,6 @@ const config = {
   appId: 'com.purechat.desktop',
   productName: 'PureChat',
   directories: {
-    app: desktopDir,
     buildResources: path.join(desktopDir, 'build'),
     output: path.join(desktopDir, 'release'),
   },
@@ -20,8 +19,12 @@ const config = {
   electronDownload: {
     mirror: 'https://npmmirror.com/mirrors/electron/',
   },
-  // Main/preload bundle all application code; only Node/Electron imports remain external.
+  // Main/preload already bundle application code; only Node/Electron imports remain external.
   files: ['dist/**/*', 'package.json', '!node_modules', '!**/*.map'],
+  // Returning false marks node_modules as handled outside electron-builder, skipping native
+  // rebuild and pnpm workspace collection. Do not also set npmRebuild: false — that
+  // short-circuits beforeBuild and the monorepo collector still runs.
+  beforeBuild: () => false,
   extraResources: [
     { from: appIcon, to: 'purechat-appicon.png' },
     { from: trayIcon, to: 'tray.png' },

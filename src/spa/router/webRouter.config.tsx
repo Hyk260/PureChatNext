@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router'
 
+import NotFound from '@/components/404'
 import { dynamicElement, dynamicLayout } from '@/utils/router'
 
 /**
@@ -332,8 +333,9 @@ export const webRoutes: RouteObject[] = [
     : []),
 
   // —— Fallback ——
+  // 根路由 errorElement 已静态引入 404，这里再动态 import 无法拆 chunk。
   {
-    element: dynamicElement(() => import('@/components/404'), '404'),
+    element: <NotFound />,
     path: '*',
   },
 ]

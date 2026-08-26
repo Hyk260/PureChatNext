@@ -1,10 +1,12 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { verifyAfterPack } from './scripts/verify-package.mjs'
+
 const desktopDir = path.dirname(fileURLToPath(import.meta.url))
 
 /** @type {import('electron-builder').Configuration} */
-export default {
+const config = {
   appId: 'com.purechat.desktop',
   productName: 'PureChat',
   directories: {
@@ -15,7 +17,9 @@ export default {
   electronDownload: {
     mirror: 'https://npmmirror.com/mirrors/electron/',
   },
-  files: ['dist/**/*', 'package.json'],
+  // Main/preload bundle all application code; only Node/Electron imports remain external.
+  files: ['dist/**/*', 'package.json', '!node_modules', '!**/*.map'],
+  afterPack: verifyAfterPack,
   mac: {
     category: 'public.app-category.productivity',
     target: [
@@ -33,3 +37,5 @@ export default {
   },
   publish: null,
 }
+
+export default config

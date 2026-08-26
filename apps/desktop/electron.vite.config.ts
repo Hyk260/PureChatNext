@@ -5,6 +5,7 @@ import { defineConfig } from 'electron-vite'
 import { loadEnv, type PluginOption } from 'vite'
 
 import {
+  createSharedRolldownOutput,
   sharedOptimizeDeps,
   sharedRendererDefine,
   sharedRendererPlugins,
@@ -47,8 +48,11 @@ export default defineConfig({
     build: {
       outDir: path.resolve(desktopDir, 'dist/renderer'),
       emptyOutDir: true,
-      rollupOptions: {
+      reportCompressedSize: false,
+      chunkSizeWarningLimit: 1500,
+      rolldownOptions: {
         input: path.resolve(desktopDir, 'index.html'),
+        output: createSharedRolldownOutput({ strictExecutionOrder: true }),
       },
     },
     define: {

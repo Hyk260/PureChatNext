@@ -1,6 +1,5 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { promises as fs } from 'node:fs'
 
 import {
   app,
@@ -14,6 +13,8 @@ import {
 } from 'electron'
 
 import { registerIpcHandlers } from './ipc'
+import { createAppProtocolHandler } from './appProtocol'
+import { APP_RENDERER_URL, isSafeExternalUrl, isTrustedRendererUrl } from './rendererSecurity'
 
 const mainDir = path.dirname(fileURLToPath(import.meta.url))
 const protocolScheme = 'purechat'
@@ -28,101 +29,9 @@ protocol.registerSchemesAsPrivileged([
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 
-const isSafeExternalUrl = (value: string) => {
-  try {
-    const url = new URL(value)
-    return url.protocol === 'https:' || (url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname))
-  } catch {
-    return false
-  }
-}
-
-const isAllowedRendererUrl = (value: string) => {
-  if (value.startsWith(`${protocolScheme}://renderer`)) return true
-  if (!app.isPackaged && value.startsWith('http://127.0.0.1:')) return true
-  return false
-}
-
-const rendererDir = () => path.resolve(mainDir, '../renderer')
-
-const isApiPath = (pathname: string) => pathname === '/api' || pathname.startsWith('/api/')
-
-const removeBrowserOriginHeaders = (headers: Headers) => {
-  for (const name of [
-    'connection',
-    'content-length',
-    'host',
-    'origin',
-    'referer',
-    'sec-fetch-dest',
-    'sec-fetch-mode',
-    'sec-fetch-site',
-    'sec-fetch-user',
-  ]) {
-    headers.delete(name)
-  }
-}
-
-const proxyApiRequest = async (request: Request, getRemoteServerUrl: () => Promise<string | null>) => {
-  const remoteServerUrl = await getRemoteServerUrl()
-  if (!remoteServerUrl) {
-    return Response.json({ error: '尚未配置远程服务地址' }, { status: 503 })
-  }
-
-  const requestUrl = new URL(request.url)
-  const targetUrl = new URL(`${requestUrl.pathname}${requestUrl.search}`, `${remoteServerUrl}/`)
-  const headers = new Headers(request.headers)
-  removeBrowserOriginHeaders(headers)
-
-  const init: RequestInit = {
-    credentials: 'include',
-    headers,
-    method: request.method,
-  }
-
-  if (request.method !== 'GET' && request.method !== 'HEAD') {
-    init.body = await request.arrayBuffer()
-  }
-
-  return session.defaultSession.fetch(targetUrl.toString(), init)
-}
-
-const safeRendererFile = (pathname: string) => {
-  const normalized = path.posix.normalize(pathname).replace(/^\/+/, '')
-  const candidate = path.resolve(rendererDir(), normalized || 'index.html')
-  const root = `${path.resolve(rendererDir())}${path.sep}`
-  return candidate === path.resolve(rendererDir(), 'index.html') || candidate.startsWith(root) ? candidate : null
-}
-
-const handleAppProtocol = async (request: Request, getRemoteServerUrl: () => Promise<string | null>) => {
-  const url = new URL(request.url)
-  if (isApiPath(url.pathname)) return proxyApiRequest(request, getRemoteServerUrl)
-
-  const filePath = safeRendererFile(url.pathname)
-  if (!filePath) return new Response('Forbidden', { status: 403 })
-
-  let resolvedPath = filePath
-  try {
-    await fs.access(resolvedPath)
-  } catch {
-    resolvedPath = path.resolve(rendererDir(), 'index.html')
-  }
-
-  const content = await fs.readFile(resolvedPath)
-  const extension = path.extname(resolvedPath).toLowerCase()
-  const contentTypes: Record<string, string> = {
-    '.css': 'text/css; charset=utf-8',
-    '.html': 'text/html; charset=utf-8',
-    '.js': 'text/javascript; charset=utf-8',
-    '.json': 'application/json; charset=utf-8',
-    '.svg': 'image/svg+xml',
-    '.woff': 'font/woff',
-    '.woff2': 'font/woff2',
-  }
-  return new Response(content, {
-    headers: { 'Content-Type': contentTypes[extension] || 'application/octet-stream' },
-  })
-}
+const rendererUrl = app.isPackaged
+  ? APP_RENDERER_URL
+  : process.env.ELECTRON_RENDERER_URL || `http://127.0.0.1:${process.env.PURECHAT_DESKTOP_VITE_PORT || 5176}`
 
 const createTray = () => {
   tray = new Tray(
@@ -165,15 +74,13 @@ const createWindow = async () => {
     return { action: 'deny' }
   })
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (!isAllowedRendererUrl(url)) event.preventDefault()
+    if (!isTrustedRendererUrl(url, rendererUrl)) event.preventDefault()
+  })
+  mainWindow.webContents.on('will-redirect', (event, url) => {
+    if (!isTrustedRendererUrl(url, rendererUrl)) event.preventDefault()
   })
 
-  if (app.isPackaged) {
-    await mainWindow.loadURL(`${protocolScheme}://renderer/`)
-  } else {
-    const devUrl = process.env.ELECTRON_RENDERER_URL || `http://127.0.0.1:${process.env.PURECHAT_DESKTOP_VITE_PORT || 5176}`
-    await mainWindow.loadURL(devUrl)
-  }
+  await mainWindow.loadURL(rendererUrl)
 }
 
 const bootstrap = async () => {
@@ -191,8 +98,16 @@ const bootstrap = async () => {
   })
 
   await app.whenReady()
-  const { getRemoteServerUrl } = await registerIpcHandlers()
-  protocol.handle(protocolScheme, (request) => handleAppProtocol(request, getRemoteServerUrl))
+  if (!isTrustedRendererUrl(rendererUrl, rendererUrl)) throw new Error('非法的桌面渲染页地址')
+  const { getRemoteServerUrl } = await registerIpcHandlers({
+    getTrustedContents: () => mainWindow?.webContents ?? null,
+    rendererUrl,
+  })
+  protocol.handle(protocolScheme, createAppProtocolHandler({
+    fetch: (input, init) => session.defaultSession.fetch(input, init),
+    getRemoteServerUrl,
+    rendererDir: path.resolve(mainDir, '../renderer'),
+  }))
   await createWindow()
   createTray()
 

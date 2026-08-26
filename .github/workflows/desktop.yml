@@ -1,0 +1,33 @@
+name: Desktop package checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Desktop source checks
+        run: pnpm exec eslint apps/desktop/src/ apps/desktop/scripts/
+      - name: Desktop regression tests
+        run: pnpm --filter purechat-desktop test
+      - name: Build and verify unpacked desktop artifact
+        run: pnpm package:desktop

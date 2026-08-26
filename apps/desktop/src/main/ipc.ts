@@ -11,16 +11,12 @@ import {
 } from 'electron'
 
 import { createConfigStore, normalizeRemoteServerUrl } from './desktopConfig'
+import { assertTrustedIpcSender, isSafeExternalUrl } from './rendererSecurity'
 
 const allowedSecretKey = /^[a-zA-Z0-9._-]{1,100}$/
 
 const assertSecretKey = (key: string) => {
   if (!allowedSecretKey.test(key)) throw new Error('非法的安全存储键')
-}
-
-const isSafeExternalUrl = (value: string) => {
-  const url = new URL(value)
-  return url.protocol === 'https:' || (url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname))
 }
 
 const encryptSecret = (value: string) => {
@@ -30,18 +26,15 @@ const encryptSecret = (value: string) => {
   return `safe:${safeStorage.encryptString(value).toString('base64')}`
 }
 
-export const registerIpcHandlers = async () => {
+export const registerIpcHandlers = async (options: {
+  getTrustedContents: () => Electron.WebContents | null
+  rendererUrl: string
+}) => {
   const store = await createConfigStore(app.getPath('userData'))
-
-  const assertTrustedSender = (event: Electron.IpcMainInvokeEvent) => {
-    const url = event.sender.getURL()
-    const isTrusted = url.startsWith('purechat://renderer') || (!app.isPackaged && url.startsWith('http://127.0.0.1:'))
-    if (!isTrusted) throw new Error('未授权的桌面 IPC 调用')
-  }
 
   const secureHandle = (channel: string, handler: Parameters<typeof ipcMain.handle>[1]) => {
     ipcMain.handle(channel, (event, ...args) => {
-      assertTrustedSender(event)
+      assertTrustedIpcSender(event, options.getTrustedContents(), options.rendererUrl)
       return handler(event, ...args)
     })
   }

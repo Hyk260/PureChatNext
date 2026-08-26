@@ -464,6 +464,7 @@ html > body[data-scroll-locked] {
 
 .docs-ai-tool {
   display: inline-flex;
+  min-height: 1.25rem;
   align-items: center;
   gap: 0.375rem;
   color: var(--color-fd-muted-foreground);

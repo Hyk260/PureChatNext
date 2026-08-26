@@ -9,7 +9,14 @@ import type { ComponentProps } from 'react'
 import Markdown from 'react-markdown'
 import type { AskAIModelId, AskAISkillId } from '@/lib/ask-ai-config'
 import { DEFAULT_ASK_AI_MODEL } from '@/lib/ask-ai-config'
-import { loadAskAIMessages, saveAskAIMessages, toDocsRelativeHref } from '@/lib/ask-ai-session'
+import {
+  getAskAIBusyLabel,
+  hasPendingSearchDocs,
+  hasVisibleAskAIText,
+  loadAskAIMessages,
+  saveAskAIMessages,
+  toDocsRelativeHref,
+} from '@/lib/ask-ai-session'
 import { AIAgentInput } from './ai-agent-input'
 
 const suggestions = ['如何快速开始？', '如何使用 Docker 部署？', '在线搜索需要配置什么？']
@@ -36,6 +43,15 @@ export function AskAI() {
   const transport = useMemo(() => new DefaultChatTransport({ api: '/api/chat', body: { page: pathname } }), [pathname])
   const { clearError, error, messages, regenerate, sendMessage, setMessages, status, stop } = useChat({ transport })
   const pending = status === 'submitted' || status === 'streaming'
+  const lastMessage = messages.at(-1)
+  const lastAssistant = lastMessage?.role === 'assistant' ? lastMessage : undefined
+  const busyLabel = error
+    ? null
+    : getAskAIBusyLabel({
+        hasPendingSearch: lastAssistant ? hasPendingSearchDocs(lastAssistant) : false,
+        hasVisibleText: lastAssistant ? hasVisibleAskAIText(lastAssistant) : false,
+        status,
+      })
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -149,42 +165,35 @@ export function AskAI() {
             ) : null}
 
             {restored
-              ? messages.map((message) => (
-                  <article className='docs-ai-message' data-role={message.role} key={message.id}>
-                    {message.parts.map((part, index) => {
-                      if (part.type === 'text') {
+              ? messages.map((message) => {
+                  if (message.role === 'assistant' && !hasVisibleAskAIText(message)) return null
+
+                  return (
+                    <article className='docs-ai-message' data-role={message.role} key={message.id}>
+                      {message.parts.map((part, index) => {
+                        if (part.type !== 'text' || !part.text.trim()) return null
+
                         return (
                           <div className='docs-ai-markdown' key={`${message.id}-text-${index}`}>
                             <Markdown components={{ a: DocsMarkdownLink }}>{part.text}</Markdown>
                           </div>
                         )
-                      }
-
-                      if (part.type === 'tool-searchDocs' && part.state !== 'output-available') {
-                        return (
-                          <p className='docs-ai-tool' key={part.toolCallId}>
-                            <LoaderCircle aria-hidden className='size-3.5 animate-spin' />
-                            正在检索文档…
-                          </p>
-                        )
-                      }
-
-                      return null
-                    })}
-                  </article>
-                ))
+                      })}
+                    </article>
+                  )
+                })
               : null}
 
-            {status === 'submitted' ? (
+            {busyLabel ? (
               <p className='docs-ai-tool'>
                 <LoaderCircle aria-hidden className='size-3.5 animate-spin' />
-                正在思考…
+                {busyLabel}
               </p>
             ) : null}
 
             {error ? (
               <div className='docs-ai-error' role='alert'>
-                <span>Ask AI 暂时无法回答，请稍后重试。</span>
+                <span>{error.message || '文档助手暂时无法回答，请稍后重试。'}</span>
                 <button onClick={() => void regenerate({ body: lastRequestRef.current })} type='button'>
                   <RotateCcw aria-hidden className='size-3.5' />
                   重试

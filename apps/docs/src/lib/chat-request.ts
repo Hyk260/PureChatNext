@@ -87,6 +87,6 @@ export async function parseChatRequest(rawBody: string): Promise<ChatRequestResu
 export function getAIStreamErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : ''
   return /429|rate.?limit|too many requests/i.test(message)
-    ? 'Ask AI 请求较多，请稍后再试。'
-    : 'Ask AI 暂时无法回答，请稍后重试。'
+    ? '文档助手请求较多，请稍后再试。'
+    : '文档助手暂时无法回答，请稍后重试。'
 }

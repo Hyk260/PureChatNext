@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   ASK_AI_MESSAGES_KEY,
+  getAskAIBusyLabel,
+  hasPendingSearchDocs,
+  hasVisibleAskAIText,
   loadAskAIMessages,
   rewriteDocsMarkdownHrefs,
   saveAskAIMessages,
@@ -27,6 +30,50 @@ function installLocalStorage() {
     },
   })
 }
+
+describe('Ask AI reply rendering states', () => {
+  it('keeps a status label until assistant text is visible', () => {
+    expect(
+      getAskAIBusyLabel({ hasPendingSearch: false, hasVisibleText: false, status: 'submitted' }),
+    ).toBe('正在思考…')
+    expect(
+      getAskAIBusyLabel({ hasPendingSearch: true, hasVisibleText: false, status: 'streaming' }),
+    ).toBe('正在检索文档…')
+    expect(
+      getAskAIBusyLabel({ hasPendingSearch: false, hasVisibleText: false, status: 'streaming' }),
+    ).toBe('正在生成回答…')
+    expect(
+      getAskAIBusyLabel({ hasPendingSearch: false, hasVisibleText: true, status: 'streaming' }),
+    ).toBeNull()
+  })
+
+  it('treats empty assistant text as hidden content', () => {
+    expect(
+      hasVisibleAskAIText({
+        id: 'assistant-1',
+        parts: [
+          { text: '   ', type: 'text' },
+          { type: 'step-start' },
+        ],
+        role: 'assistant',
+      }),
+    ).toBe(false)
+    expect(
+      hasVisibleAskAIText({
+        id: 'assistant-2',
+        parts: [{ text: '可以先看快速开始。', type: 'text' }],
+        role: 'assistant',
+      }),
+    ).toBe(true)
+    expect(
+      hasPendingSearchDocs({
+        id: 'assistant-3',
+        parts: [{ input: { query: '快速开始' }, state: 'input-available', toolCallId: 'tool-1', type: 'tool-searchDocs' }],
+        role: 'assistant',
+      }),
+    ).toBe(true)
+  })
+})
 
 describe('Ask AI docs href rewriting', () => {
   it('turns production and local docs URLs into site-relative paths', () => {
@@ -96,6 +143,18 @@ describe('Ask AI local session storage', () => {
     saveAskAIMessages([])
     expect(memory.has(ASK_AI_MESSAGES_KEY)).toBe(false)
     await expect(loadAskAIMessages()).resolves.toEqual([])
+  })
+
+  it('does not persist empty assistant placeholders', async () => {
+    installLocalStorage()
+    saveAskAIMessages([
+      { id: 'message-1', parts: [{ text: '如何开始？', type: 'text' }], role: 'user' },
+      { id: 'assistant-1', parts: [{ text: '', type: 'text' }], role: 'assistant' },
+    ])
+
+    await expect(loadAskAIMessages()).resolves.toMatchObject([
+      { parts: [{ text: '如何开始？', type: 'text' }], role: 'user' },
+    ])
   })
 
   it('ignores invalid stored payloads', async () => {

@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 import { verifyAfterPack } from './scripts/verify-package.mjs'
 
 const desktopDir = path.dirname(fileURLToPath(import.meta.url))
+const appIcon = path.join(desktopDir, 'build/icon.png')
+const trayIcon = path.join(desktopDir, 'build/tray.png')
 
 /** @type {import('electron-builder').Configuration} */
 const config = {
@@ -14,14 +16,21 @@ const config = {
     buildResources: path.join(desktopDir, 'build'),
     output: path.join(desktopDir, 'release'),
   },
+  icon: appIcon,
   electronDownload: {
     mirror: 'https://npmmirror.com/mirrors/electron/',
   },
   // Main/preload bundle all application code; only Node/Electron imports remain external.
   files: ['dist/**/*', 'package.json', '!node_modules', '!**/*.map'],
+  extraResources: [
+    { from: appIcon, to: 'purechat-appicon.png' },
+    { from: trayIcon, to: 'tray.png' },
+  ],
   afterPack: verifyAfterPack,
+  protocols: [{ name: 'PureChat', schemes: ['purechat'] }],
   mac: {
     category: 'public.app-category.productivity',
+    icon: appIcon,
     compression: 'maximum',
     artifactName: '${productName}-${version}-${arch}.${ext}',
     target: [
@@ -33,6 +42,7 @@ const config = {
     artifactName: '${productName}-${version}-${arch}.${ext}',
   },
   win: {
+    icon: appIcon,
     target: [
       { target: 'nsis', arch: ['x64'] },
       { target: 'portable', arch: ['x64'] },

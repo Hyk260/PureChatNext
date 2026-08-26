@@ -31,6 +31,13 @@ export const verifyAfterPack = async (context) => {
     ? path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`, 'Contents', 'Resources')
     : path.join(context.appOutDir, 'resources')
   const result = await verifyPackage(path.join(resourcesDir, 'app.asar'))
+  for (const resource of ['purechat-appicon.png', 'tray.png']) {
+    try {
+      await stat(path.join(resourcesDir, resource))
+    } catch {
+      throw new Error(`桌面包缺少资源: ${resource}`)
+    }
+  }
   console.info(`Desktop package verified: ${(result.bytes / 1024 / 1024).toFixed(1)} MiB, ${result.entries} entries`)
 }
 

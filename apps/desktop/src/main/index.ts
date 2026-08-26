@@ -13,7 +13,9 @@ import {
 } from 'electron'
 
 import { registerIpcHandlers } from './ipc'
+import { installApplicationMenu } from './applicationMenu'
 import { createAppProtocolHandler } from './appProtocol'
+import { protocolLinksFromCommandLine, resolveProtocolLink } from './protocolLink'
 import { APP_RENDERER_URL, isSafeExternalUrl, isTrustedRendererUrl } from './rendererSecurity'
 
 const mainDir = path.dirname(fileURLToPath(import.meta.url))
@@ -28,30 +30,69 @@ protocol.registerSchemesAsPrivileged([
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
+let isQuitting = false
+const pendingProtocolLinks = protocolLinksFromCommandLine(process.argv)
+  .map(resolveProtocolLink)
+  .filter((url): url is string => Boolean(url))
+
+const focusMainWindow = () => {
+  if (!mainWindow) return
+  if (mainWindow.isMinimized()) mainWindow.restore()
+  mainWindow.show()
+  mainWindow.focus()
+}
+
+const openProtocolLinks = (links: readonly string[]) => {
+  const rendererLinks = links.map(resolveProtocolLink).filter((url): url is string => Boolean(url))
+  if (rendererLinks.length === 0) return
+
+  if (!mainWindow) {
+    pendingProtocolLinks.push(...rendererLinks)
+    return
+  }
+
+  focusMainWindow()
+  const url = rendererLinks.at(-1)
+  if (url) void mainWindow.loadURL(url)
+}
+
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  openProtocolLinks([url])
+})
 
 const rendererUrl = app.isPackaged
   ? APP_RENDERER_URL
   : process.env.ELECTRON_RENDERER_URL || `http://127.0.0.1:${process.env.PURECHAT_DESKTOP_VITE_PORT || 5176}`
 
+const getDesktopResourcePath = (name: string) => app.isPackaged
+  ? path.join(process.resourcesPath, name)
+  : path.resolve(mainDir, '../../build', name)
+
+const getAppIconPath = () => getDesktopResourcePath(app.isPackaged ? 'purechat-appicon.png' : 'icon.png')
+
+const getTrayImage = () => {
+  const image = nativeImage.createFromPath(getDesktopResourcePath('tray.png'))
+  // Keep the white mark as-is so it remains visible on a dark macOS menu bar.
+  return image.resize({ height: 16 })
+}
+
 const createTray = () => {
-  tray = new Tray(
-    nativeImage.createFromDataURL(
-      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
-    )
-  )
+  tray = new Tray(getTrayImage())
   tray.setToolTip('PureChat')
   tray.setContextMenu(
     Menu.buildFromTemplate([
-      { click: () => mainWindow?.show(), label: '打开 PureChat' },
-      { click: () => app.quit(), label: '退出' },
+      { click: focusMainWindow, label: '打开 PureChat' },
+      { click: () => app.quit(), label: '退出 PureChat' },
     ])
   )
-  tray.on('click', () => mainWindow?.show())
+  tray.on('click', focusMainWindow)
 }
 
 const createWindow = async () => {
   mainWindow = new BrowserWindow({
     height: 800,
+    icon: getAppIconPath(),
     minHeight: 520,
     minWidth: 860,
     show: false,
@@ -65,6 +106,12 @@ const createWindow = async () => {
     },
   })
 
+  mainWindow.on('close', (event) => {
+    if (!isQuitting && tray) {
+      event.preventDefault()
+      mainWindow?.hide()
+    }
+  })
   mainWindow.once('ready-to-show', () => mainWindow?.show())
   mainWindow.on('closed', () => {
     mainWindow = null
@@ -81,6 +128,16 @@ const createWindow = async () => {
   })
 
   await mainWindow.loadURL(rendererUrl)
+  const initialLink = pendingProtocolLinks.pop()
+  if (initialLink) await mainWindow.loadURL(initialLink)
+}
+
+const registerProtocolClient = () => {
+  if (process.defaultApp && process.argv[1]) {
+    app.setAsDefaultProtocolClient(protocolScheme, process.execPath, [path.resolve(process.argv[1])])
+  } else {
+    app.setAsDefaultProtocolClient(protocolScheme)
+  }
 }
 
 const bootstrap = async () => {
@@ -90,14 +147,17 @@ const bootstrap = async () => {
     return
   }
 
-  app.on('second-instance', () => {
-    if (!mainWindow) return
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    mainWindow.show()
-    mainWindow.focus()
+  app.on('second-instance', (_event, commandLine) => {
+    openProtocolLinks(protocolLinksFromCommandLine(commandLine))
+    focusMainWindow()
   })
 
   await app.whenReady()
+  installApplicationMenu()
+  app.on('before-quit', () => {
+    isQuitting = true
+  })
+  registerProtocolClient()
   if (!isTrustedRendererUrl(rendererUrl, rendererUrl)) throw new Error('非法的桌面渲染页地址')
   const { getRemoteServerUrl } = await registerIpcHandlers({
     getTrustedContents: () => mainWindow?.webContents ?? null,
@@ -120,5 +180,5 @@ const bootstrap = async () => {
 void bootstrap()
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
+  if (process.platform !== 'darwin' && !tray) app.quit()
 })

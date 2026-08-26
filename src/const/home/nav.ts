@@ -19,7 +19,7 @@ const RESOURCES_NAV_ITEM: HomeNavItem = {
 }
 
 export const HOME_TOP_NAV: HomeNavItem[] = [
-  { href: '#', icon: Search, key: 'search', title: '搜索' },
+  // { href: '#', icon: Search, key: 'search', title: '搜索' },
   { href: '/', icon: Home, key: 'home', title: '首页' },
   { href: '/community', icon: Users, key: 'community', title: '社区' },
   ...(isDev ? [RESOURCES_NAV_ITEM] : []),

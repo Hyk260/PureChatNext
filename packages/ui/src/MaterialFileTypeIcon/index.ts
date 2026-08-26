@@ -1,5 +1,5 @@
 /**
- * Bridge over `@lobehub/ui` MaterialFileTypeIcon.
+ * Expose the shared MaterialFileTypeIcon through the application UI package.
  * Call sites should import from `@pure/ui`; swap for a local implementation later.
  */
 export { MaterialFileTypeIcon, type MaterialFileTypeIconProps } from '@lobehub/ui'

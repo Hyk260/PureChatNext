@@ -32,6 +32,7 @@
     "package:desktop": "pnpm --filter purechat-desktop package:dir",
     "package:desktop:mac": "pnpm --filter purechat-desktop package:mac",
     "package:desktop:win": "pnpm --filter purechat-desktop package:win",
+    "package:desktop:win:portable": "pnpm --filter purechat-desktop package:win:portable",
     "build:docs": "pnpm --filter @pure/docs build",
     "build:docker:migrate": "node scripts/build-docker-migrate.mjs",
     "build:docker": "pnpm run build && pnpm run build:docker:migrate",

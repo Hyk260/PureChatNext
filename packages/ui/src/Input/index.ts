@@ -1,4 +1,4 @@
-/** Bridge over `@lobehub/ui` input primitives. */
+/** Expose the shared input primitives through the application UI package. */
 import { Input as LobeInput, InputOPT, InputPassword, TextArea } from '@lobehub/ui'
 import type { InputOPTProps, InputPasswordProps, InputProps, TextAreaProps } from '@lobehub/ui'
 import type { InputRef } from 'antd'

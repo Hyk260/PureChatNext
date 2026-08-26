@@ -1,4 +1,4 @@
-/** Bridge over `@lobehub/ui` checkbox primitives. */
+/** Expose the shared checkbox primitives through the application UI package. */
 export {
   Checkbox,
   CheckboxGroup,

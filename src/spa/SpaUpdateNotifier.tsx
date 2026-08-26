@@ -25,7 +25,7 @@ type SpaUpdateNotifierProps = {
  * or open any SPA URL with `?spaUpdatePreview=1`.
  *
  * Buttons use antd (not `@pure/ui`) because the notification portal sits outside
- * lobehub `ConfigProvider` / `MotionProvider`.
+ * the shared `ConfigProvider` / `MotionProvider`.
  */
 const SpaUpdateNotifier = ({
   preview = isSpaUpdatePreview(),

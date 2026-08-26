@@ -7,7 +7,7 @@ description: 将 PureChatNext 业务组件渐进迁移到 Tailwind CSS 的阶段
 
 ## 目标
 
-逐步将业务层从 LobeHub 风格的 `createStaticStyles` 迁移到 Tailwind CSS，同时保留复杂 CSS 的表达能力，避免视觉回归和一次性大规模重构。
+逐步将业务层从既有的 `createStaticStyles` 样式组织方式迁移到 Tailwind CSS，同时保留复杂 CSS 的表达能力，避免视觉回归和一次性大规模重构。
 
 迁移完成后的边界：
 
@@ -133,7 +133,7 @@ rg -l "cssVar" src packages --glob '*.{ts,tsx}' --glob '!**/*.test.*' | wc -l
 - 删除测试中仅用于这些模块的 `antd-style` mock。
 - 合并重复的 Tailwind utility 和语义 token。
 - 评估是否还有必要在业务层直接使用 `cssVar`。
-- 单独评估 `@pure/ui` 是否需要从 LobeHub 样式桥接迁移。
+- 单独评估 `@pure/ui` 是否需要从现有样式桥接迁移。
 
 不要因为业务层已大量使用 Tailwind，就直接删除 `antd-style`、`StyleProvider` 或 `ThemeProvider`。
 
@@ -168,4 +168,4 @@ rg -l "cssVar" src packages --glob '*.{ts,tsx}' --glob '!**/*.test.*' | wc -l
 - 新代码遵循 Tailwind 优先和静态 `className` 120 字符限制。
 - 存量 `createStaticStyles` 都有复杂性或公共组件边界上的合理原因。
 - 主题 token 只有一个可维护来源。
-- 业务层不再依赖 LobeHub 风格的样式组织方式来完成普通布局。
+- 业务层不再依赖既有 CSS-in-JS 样式组织方式来完成普通布局。

@@ -1,6 +1,6 @@
 /**
  * Sync community agents from the public agents-index CDN (npmmirror).
- * Data source package: `@lobehub/agents-index`（公开 npm 包，仅作社区内容索引）。
+ * Data source: the public community agents index package（仅作社区内容索引）。
  *
  * Usage: pnpm agents:sync
  */

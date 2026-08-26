@@ -1,5 +1,5 @@
 /**
- * Bridge over `@lobehub/ui` DropdownMenu family.
+ * Expose the shared DropdownMenu family through the application UI package.
  * Call sites should import from `@pure/ui`; swap for a local implementation later.
  */
 export {

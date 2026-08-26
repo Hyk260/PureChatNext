@@ -1,5 +1,5 @@
 /**
- * Bridge over `@lobehub/ui` content renderers.
+ * Expose the shared content renderers through the application UI package.
  * Call sites should import from `@pure/ui/Markdown`; swap for a local implementation later.
  */
 export { default as FileTypeIcon } from '@lobehub/ui/es/FileTypeIcon/index'

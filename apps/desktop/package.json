@@ -11,6 +11,7 @@
     "package:dir": "pnpm build && electron-builder --dir --config electron-builder.mjs --publish never",
     "package:mac": "pnpm build && electron-builder --mac --config electron-builder.mjs --publish never",
     "package:win": "pnpm build && electron-builder --win --config electron-builder.mjs --publish never",
+    "package:win:portable": "pnpm build && electron-builder --win portable --config electron-builder.mjs --publish never",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },

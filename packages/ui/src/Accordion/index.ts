@@ -1,5 +1,5 @@
 /**
- * Bridge over `@lobehub/ui` Accordion.
+ * Expose the shared Accordion component through the application UI package.
  * Call sites should import from `@pure/ui`; swap for a local implementation later.
  */
 export { Accordion, AccordionItem } from '@lobehub/ui'

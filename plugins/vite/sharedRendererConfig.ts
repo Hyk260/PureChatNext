@@ -32,7 +32,7 @@ function sharedManualChunks(id: string): string | undefined {
   // 且 antd 版本稳定时跨部署可复用缓存。
   if (isNodePackage(id, 'antd')) return 'vendor-antd'
 
-  // 注意：shiki / mermaid / katex / @lobehub/ui Markdown 仅被 chat 懒加载路由使用，
+  // 注意：shiki / mermaid / katex / Markdown 渲染器仅被 chat 懒加载路由使用，
   // 不可用 codeSplitting.groups 手动命名分包 —— rolldown 会将命名 chunk 全部
   // modulepreload（eager），导致首屏额外加载 ~2.3MB。保持 rolldown 默认拆分即可懒加载。
 
@@ -79,7 +79,7 @@ export const createSharedRolldownOutput = (options: SharedRolldownOutputOptions 
   codeSplitting: {
     groups: [
       {
-        // The @lobehub/ui root barrel eagerly imports every CSS-bearing component.
+        // The UI root barrel eagerly imports every CSS-bearing component.
         // Keep route-specific modules separate and cap each resulting vendor chunk.
         entriesAware: true,
         includeDependenciesRecursively: false,

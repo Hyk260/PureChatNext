@@ -1,4 +1,4 @@
-/** Bridge over `@lobehub/ui` Skeleton primitives. */
+/** Expose the shared Skeleton primitives through the application UI package. */
 import { Skeleton as AntSkeleton } from 'antd'
 import {
   Skeleton as LobeSkeleton,

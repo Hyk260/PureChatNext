@@ -51,6 +51,7 @@ dist/
 es/
 .next/
 public/_spa/
+release/
 logs/
 test-output/
 *.tsbuildinfo

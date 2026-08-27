@@ -96,11 +96,6 @@ const ModelRowContent = memo<ModelRowContentProps>(
         <Text ellipsis style={{ fontSize: 13, flex: 1, minWidth: 0 }}>
           {displayName}
         </Text>
-        {/* {isProModel(displayName) ? (
-        <Tag color='gold' size='small' style={{ fontSize: 12, margin: 0 }}>
-          Pro
-        </Tag>
-      ) : null} */}
         <div style={{ flexShrink: 0, maxWidth: 120 }}>
           <ModelFeatureTags
             abilities={abilities ?? card?.abilities}

@@ -17,6 +17,7 @@ const log = debug('providers:models')
 const BUILTIN_FALLBACK: Record<SupportedProviderId, Array<{ displayName: string; id: string }>> = {
   deepseek: [
     { displayName: 'DeepSeek V4 Flash', id: 'deepseek-v4-flash' },
+    { displayName: 'DeepSeek V4 Flash Vision Exp', id: 'deepseek-v4-flash-vision-exp' },
     { displayName: 'DeepSeek V4 Pro', id: 'deepseek-v4-pro' },
   ],
   openai: [

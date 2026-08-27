@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Flexbox, Icon, ModelIcon, SortableList, Switch, Tag, Text, Tooltip } from '@pure/ui'
+import { ActionIcon, Flexbox, Icon, ModelIcon, SortableList, Switch, Tag, Text, Tooltip, copyToClipboard } from '@pure/ui'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { formatTokenNumber } from '@pure/utils/client'
@@ -8,6 +8,7 @@ import { createStaticStyles, cssVar } from 'antd-style'
 import { Check, CircleX, Code2, Eye, Globe2, ImageIcon, Lightbulb, Loader2, Pencil, Trash2, Wrench } from 'lucide-react'
 import { memo } from 'react'
 
+import { useApp } from '@/components/AntdStaticMethods'
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
 import type { ProviderId, ProviderModelItem } from '../../types'
 
@@ -31,6 +32,7 @@ const styles = createStaticStyles(({ css }) => ({
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: copy;
     color: ${cssVar.colorTextDescription};
     font-size: 12px;
   `,
@@ -62,6 +64,7 @@ interface ModelItemProps {
 
 const ModelItem = memo<ModelItemProps>(
   ({ model, onDeleteCustomModel, onEditCustomModel, provider, showDragHandle = false }) => {
+    const { message } = useApp()
     const toggleModelEnabled = useProviderConfigStore((s) => s.toggleModelEnabled)
     const card = getAiModel(provider as ModelProviderId, model.id)
     const pricing = card?.pricing
@@ -107,7 +110,17 @@ const ModelItem = memo<ModelItemProps>(
               <Text ellipsis style={{ fontWeight: 500 }}>
                 {model.displayName}
               </Text>
-              <Tag className={styles.id}>{model.id}</Tag>
+              <Tooltip title='点击复制模型 ID'>
+                <Tag
+                  className={styles.id}
+                  onClick={async () => {
+                    await copyToClipboard(model.id)
+                    message.success('已复制模型 ID')
+                  }}
+                >
+                  {model.id}
+                </Tag>
+              </Tooltip>
             </Flexbox>
             {metadata.length > 0 ? <Text className={styles.metadata}>{metadata.join(' · ')}</Text> : null}
           </Flexbox>

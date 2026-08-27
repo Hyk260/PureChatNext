@@ -1,10 +1,5 @@
 import type { AiModelCard } from '../types/aiModel'
 
-/**
- * OpenAI 自配服务商模型 + USD 官方价量级（用于用量展示 / 成本估算，不扣 PureChat 积分）。
- * 阶梯/查表定价取首档单价；可按官方价再 diff。
- * 按 releasedAt 降序保留最近 25 个 chat 模型。
- */
 export const openaiChatModels: AiModelCard[] = [
   {
     id: 'gpt-5.6-luna',

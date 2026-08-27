@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import type { UIMessage } from 'ai'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import type { ChatPermissionMode } from '@pure/types'
 
 import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
 import { buildChatHref } from '@/features/chat/buildChatHref'
@@ -91,6 +92,7 @@ interface ChatViewProps {
   onCacheMessages: (topicId: string, messages: UIMessage[]) => void
   onBindActions: (actions: ChatViewActions) => void
   onTopicsRefresh: () => void
+  permissionMode?: ChatPermissionMode
   searchMode: ChatSearchMode
 }
 
@@ -103,6 +105,7 @@ const ChatView = memo<ChatViewProps>(
     onCacheMessages,
     onBindActions,
     onTopicsRefresh,
+    permissionMode,
     searchMode,
   }) => {
     const router = useRouter()
@@ -255,12 +258,21 @@ const ChatView = memo<ChatViewProps>(
       () => ({
         model: selectedModel,
         ...(selectedModelAbilities ? { modelAbilities: selectedModelAbilities } : {}),
+        ...(permissionMode ? { permissionMode } : {}),
         provider: selectedProvider,
         searchMode,
         ...(providerBaseURL ? { baseURL: providerBaseURL } : {}),
         ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
       }),
-      [activeAgent, providerBaseURL, searchMode, selectedModel, selectedModelAbilities, selectedProvider]
+      [
+        activeAgent,
+        permissionMode,
+        providerBaseURL,
+        searchMode,
+        selectedModel,
+        selectedModelAbilities,
+        selectedProvider,
+      ]
     )
 
     const sendWithBody = useCallback(
@@ -282,7 +294,7 @@ const ChatView = memo<ChatViewProps>(
       async (text: string, files: File[] = []) => {
         if (!topicId) {
           try {
-            const topic = await createTopic(agentId, buildTopicTitle(text, files))
+            const topic = await createTopic(agentId, buildTopicTitle(text, files), permissionMode)
             onCacheMessages(topic.id, EMPTY_MESSAGES)
             onTopicsRefresh()
             setPendingTopicSend(text)
@@ -296,7 +308,7 @@ const ChatView = memo<ChatViewProps>(
 
         await sendWithBody(text)
       },
-      [agentId, onCacheMessages, onTopicsRefresh, router, sendWithBody, topicId]
+      [agentId, onCacheMessages, onTopicsRefresh, permissionMode, router, sendWithBody, topicId]
     )
 
     const handleSend = useCallback(

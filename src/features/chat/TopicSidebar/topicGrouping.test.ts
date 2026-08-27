@@ -11,6 +11,7 @@ const topic = (id: string, createdAt: number, updatedAt = createdAt, patch: Part
   createdAt,
   favorite: false,
   id,
+  permissionMode: 'auto' as const,
   projectName: null,
   title: id,
   updatedAt,

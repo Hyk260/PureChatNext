@@ -74,6 +74,7 @@ describeIfDb('ChatTopicModel ownership', () => {
   it('allows owner findById', async () => {
     const topic = await new ChatTopicModel(userAId, db).findById(topicId)
     expect(topic?.id).toBe(topicId)
+    expect(topic?.permissionMode).toBe('auto')
     expect(topic?.title).toBe('A 的话题')
   })
 
@@ -106,6 +107,16 @@ describeIfDb('ChatTopicModel ownership', () => {
     const topic = await topicModelA.findById(topicId)
     expect(topic?.favorite).toBe(true)
     expect(topic?.projectName).toBe('PureChat')
+  })
+
+  it('persists permission changes for the owner only', async () => {
+    const topicModelA = new ChatTopicModel(userAId, db)
+    const updated = await topicModelA.update(topicId, { permissionMode: 'full' })
+    expect(updated?.permissionMode).toBe('full')
+
+    const blocked = await new ChatTopicModel(userBId, db).update(topicId, { permissionMode: 'ask' })
+    expect(blocked).toBeUndefined()
+    expect((await topicModelA.findById(topicId))?.permissionMode).toBe('full')
   })
 
   it('has no effect when another user delete', async () => {

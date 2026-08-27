@@ -30,6 +30,10 @@ const styles = createStaticStyles(({ css }) => ({
     padding-inline: 10px;
     border-radius: ${cssVar.borderRadius};
 
+    &:hover {
+      background: ${cssVar.colorFillTertiary};
+    }
+
     & .topic-actions {
       opacity: 0;
       transition: opacity 0.15s;

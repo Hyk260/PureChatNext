@@ -69,6 +69,13 @@ const createExternalRequest = (searchMode: 'auto' | 'off') =>
     method: 'POST',
   })
 
+const createPermissionRequest = (permissionMode: unknown) =>
+  new Request('http://localhost/api/chat', {
+    body: JSON.stringify({ messages: [], model: 'gpt-5.2', permissionMode, provider: 'purechat' }),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+  })
+
 describe('POST /api/chat PureChat model availability', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -171,6 +178,19 @@ describe('POST /api/chat PureChat model availability', () => {
 
     expect(response.status).toBe(400)
     expect(payload.cause).toBe('Invalid search mode')
+    expect(streamText).not.toHaveBeenCalled()
+  })
+
+  it('accepts valid permission modes and rejects invalid values', async () => {
+    const accepted = await POST(createPermissionRequest('full'))
+    expect(accepted.status).toBe(200)
+
+    vi.clearAllMocks()
+    const rejected = await POST(createPermissionRequest('unsafe'))
+    const payload = await rejected.json()
+
+    expect(rejected.status).toBe(400)
+    expect(payload.cause).toBe('Invalid permission mode')
     expect(streamText).not.toHaveBeenCalled()
   })
 

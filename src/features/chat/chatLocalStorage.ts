@@ -1,6 +1,9 @@
 import { sessionStg } from '@pure/utils/storage'
+import { CHAT_PERMISSION_MODES, DEFAULT_CHAT_PERMISSION_MODE } from '@pure/types'
+import type { ChatPermissionMode } from '@pure/types'
 
 export const PENDING_CHAT_TEXT_KEY = 'purechat:chat:v1:pending-text'
+export const PENDING_CHAT_PERMISSION_MODE_KEY = 'purechat:chat:v1:pending-permission-mode'
 export const PENDING_TOPIC_SEND_KEY = 'purechat:chat:v2:pending-topic-send'
 
 /** In-memory pending text for home → /chat handoff. */
@@ -39,6 +42,17 @@ export const setPendingChatFiles = (files: File[]): void => {
   pendingChatFilesMemory = files
 }
 
+export const setPendingChatPermissionMode = (mode: ChatPermissionMode): void => {
+  sessionStg.setString(PENDING_CHAT_PERMISSION_MODE_KEY, mode)
+}
+
+export const getPendingChatPermissionMode = (): ChatPermissionMode => {
+  const mode = sessionStg.getString(PENDING_CHAT_PERMISSION_MODE_KEY)
+  return CHAT_PERMISSION_MODES.includes(mode as ChatPermissionMode)
+    ? (mode as ChatPermissionMode)
+    : DEFAULT_CHAT_PERMISSION_MODE
+}
+
 export const claimPendingChatFiles = (): File[] => {
   const files = pendingChatFilesMemory
   pendingChatFilesMemory = []
@@ -66,6 +80,7 @@ export const claimPendingChatText = (): string | null => {
 
 export const finishPendingChatText = (_text: string): void => {
   pendingChatFilesMemory = []
+  sessionStg.remove(PENDING_CHAT_PERMISSION_MODE_KEY)
 }
 
 export const setPendingTopicSend = (text: string): void => {

@@ -1,6 +1,7 @@
-import { boolean, index, jsonb, pgTable, text, varchar } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
+import { boolean, check, index, jsonb, pgTable, text, varchar } from 'drizzle-orm/pg-core'
 
-import type { ChatMessageMetadata } from '@pure/types'
+import type { ChatMessageMetadata, ChatPermissionMode } from '@pure/types'
 
 import { idGenerator } from '../utils/idGenerator'
 import { timestamps } from './_helpers'
@@ -21,11 +22,13 @@ export const chatTopics = pgTable(
     /** 对应 `agents.id` */
     agentId: text('agent_id').notNull(),
     favorite: boolean('favorite').notNull().default(false),
+    permissionMode: text('permission_mode').$type<ChatPermissionMode>().notNull().default('auto'),
     projectName: text('project_name'),
     title: text('title').notNull(),
     ...timestamps,
   },
   (t) => [
+    check('chat_topics_permission_mode_check', sql`${t.permissionMode} in ('ask', 'auto', 'full')`),
     index('chat_topics_user_id_agent_id_idx').on(t.userId, t.agentId),
     index('chat_topics_user_id_updated_at_idx').on(t.userId, t.updatedAt.desc()),
   ]

@@ -21,8 +21,8 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   header: css`
     flex: none;
-    min-height: 56px;
-    padding: 8px 16px;
+    min-height: 44px;
+    padding: 0px 16px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
   `,
   headerTitle: css`
@@ -62,7 +62,7 @@ const FileEditor = memo(() => {
   return (
     <Flexbox className={styles.overlay} style={{ height: '100%' }}>
       <Flexbox horizontal align='center' className={styles.header} gap={4}>
-        <ActionIcon icon={ArrowLeft} onClick={handleBack} title='返回' />
+        <ActionIcon size='small' icon={ArrowLeft} onClick={handleBack} title='返回' />
         <Flexbox horizontal align='center' className={styles.headerTitle} flex={1} gap={8}>
           <Text strong className={styles.name} title={item.name}>
             {item.name}

@@ -16,19 +16,23 @@ import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { FileText, Paperclip, Plus, X } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { DEFAULT_CHAT_PERMISSION_MODE } from '@pure/types'
+import type { ChatPermissionMode } from '@pure/types'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import mechaCat from '@/assets/mascots/purechat-mecha-cat.png'
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import { CHAT_ATTACHMENT_ACCEPT, validateChatAttachments } from '@/features/chat/attachmentRules'
-import { setPendingChatFiles, setPendingChatText } from '@/features/chat/chatLocalStorage'
+import { setPendingChatFiles, setPendingChatPermissionMode, setPendingChatText } from '@/features/chat/chatLocalStorage'
 import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
+import PermissionModeSelector from '@/features/chat/PermissionModeSelector'
 import SendArea from '@/features/chat/SendArea'
 import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
 import HomeAgentSelect from '@/features/home/components/HomeAgentSelect'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { trackAcquisitionEvent } from '@/libs/analytics/acquisition'
+import { getDesktopApi } from '@/types/desktop'
 import { useRouter } from '@/utils/navigation'
 
 const mechaCatSrc = typeof mechaCat === 'string' ? mechaCat : mechaCat.src
@@ -153,9 +157,11 @@ const HomeChatInput = memo(() => {
   const [input, setInput] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [plusOpen, setPlusOpen] = useState(false)
+  const [permissionMode, setPermissionMode] = useState<ChatPermissionMode>(DEFAULT_CHAT_PERMISSION_MODE)
   const [sending, setSending] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const currentModel = useCurrentHomeModel()
+  const isDesktop = Boolean(getDesktopApi())
   const { onCompositionEnd, onCompositionStart, shouldIgnoreEnter } = useImeEnterGuard()
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
   const activeAgent = useHomeStore((s) => s.activeAgent)
@@ -243,6 +249,7 @@ const HomeChatInput = memo(() => {
 
       setPendingChatText(text)
       setPendingChatFiles(files)
+      if (isDesktop) setPendingChatPermissionMode(permissionMode)
       trackAcquisitionEvent('chat_intent', {
         agent: agentId,
         attachment_count: files.length,
@@ -329,6 +336,9 @@ const HomeChatInput = memo(() => {
               </DropdownMenuPositioner>
             </DropdownMenuPortal>
           </DropdownMenuRoot>
+          {isDesktop ? (
+            <PermissionModeSelector disabled={sending} value={permissionMode} onChange={setPermissionMode} />
+          ) : null}
         </Flexbox>
 
         <SendArea

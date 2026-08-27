@@ -15,6 +15,7 @@ import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { Check, ChevronRight, FileText, Globe, GlobeOff, LibraryBig, Plus, Settings2, X } from 'lucide-react'
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
+import type { ChatPermissionMode } from '@pure/types'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import {
@@ -23,6 +24,7 @@ import {
 } from '@/features/chat/attachmentRules'
 import ModelSelector from '@/features/chat/ModelSelector'
 import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
+import PermissionModeSelector from '@/features/chat/PermissionModeSelector'
 import { SendButton } from '@/features/chat/SendArea'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { ChatSearchMode } from '@/features/chat/types'
@@ -144,9 +146,11 @@ const styles = createStaticStyles(({ css }) => ({
 
 interface ChatInputProps {
   isBusy?: boolean
+  onPermissionModeChange?: (mode: ChatPermissionMode) => Promise<void> | void
   onSend: (text: string, files: File[]) => void | Promise<void>
   onSearchModeChange: (mode: ChatSearchMode) => void
   onStop?: () => void
+  permissionMode?: ChatPermissionMode
   searchMode: ChatSearchMode
 }
 
@@ -172,7 +176,16 @@ const MenuLabel = memo<{
 
 MenuLabel.displayName = 'MenuLabel'
 
-const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, onStop, searchMode }) => {
+const ChatInput = memo<ChatInputProps>((props) => {
+  const {
+    isBusy,
+    onPermissionModeChange,
+    onSearchModeChange,
+    onSend,
+    onStop,
+    permissionMode,
+    searchMode,
+  } = props
   const [input, setInput] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [plusOpen, setPlusOpen] = useState(false)
@@ -334,6 +347,9 @@ const ChatInput = memo<ChatInputProps>(({ isBusy, onSearchModeChange, onSend, on
               </DropdownMenuPositioner>
             </DropdownMenuPortal>
           </DropdownMenuRoot>
+          {permissionMode && onPermissionModeChange ? (
+            <PermissionModeSelector disabled={isBusy} value={permissionMode} onChange={onPermissionModeChange} />
+          ) : null}
         </Flexbox>
 
         <SendButton generating={isBusy} onClick={handleSend} onStop={handleStop} />

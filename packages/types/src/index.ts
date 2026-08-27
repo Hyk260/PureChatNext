@@ -1,4 +1,5 @@
 export * from './aiProvider'
+export * from './chat'
 export * from './fetch'
 export * from './files'
 export * from './message'

@@ -8,6 +8,7 @@ import { PURECHAT_PROVIDER_ID } from '@pure/const'
 import { getAiModel } from '@pure/model-bank'
 import { loadFile } from '@pure/file-loaders'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
+import { CHAT_PERMISSION_MODES } from '@pure/types'
 import { convertToModelMessages, createUIMessageStreamResponse, isStepCount, streamText, toUIMessageStream } from 'ai'
 import type { UIMessage } from 'ai'
 import debug from 'debug'
@@ -143,6 +144,7 @@ export async function POST(request: Request) {
     messages: UIMessage[]
     modelAbilities?: { vision?: boolean }
     model?: string
+    permissionMode?: unknown
     provider?: string
     searchMode?: unknown
     system?: string
@@ -164,6 +166,13 @@ export async function POST(request: Request) {
 
   if (requestBody.searchMode !== undefined && requestBody.searchMode !== 'off' && requestBody.searchMode !== 'auto') {
     return new ChatSDKError('bad_request:api', 'Invalid search mode').toResponse()
+  }
+
+  if (
+    requestBody.permissionMode !== undefined &&
+    !CHAT_PERMISSION_MODES.includes(requestBody.permissionMode as (typeof CHAT_PERMISSION_MODES)[number])
+  ) {
+    return new ChatSDKError('bad_request:api', 'Invalid permission mode').toResponse()
   }
 
   const searchMode = requestBody.searchMode === 'auto' ? 'auto' : 'off'

@@ -1,4 +1,5 @@
 import { and, desc, eq, sql } from 'drizzle-orm'
+import type { ChatPermissionMode } from '@pure/types'
 
 import { getServerDB } from '../core/db-adaptor'
 import { chatTopics } from '../schemas/chat'
@@ -8,6 +9,7 @@ const DEFAULT_TITLE = '新话题'
 
 export type ChatTopicUpdate = {
   favorite?: boolean
+  permissionMode?: ChatPermissionMode
   projectName?: string | null
   title?: string
 }
@@ -40,10 +42,18 @@ export class ChatTopicModel {
     })
   }
 
-  create = async ({ agentId, title }: { agentId: string; title?: string }) => {
+  create = async ({
+    agentId,
+    permissionMode,
+    title,
+  }: {
+    agentId: string
+    permissionMode?: ChatPermissionMode
+    title?: string
+  }) => {
     const [item] = await this.db
       .insert(chatTopics)
-      .values({ agentId, title: title ?? DEFAULT_TITLE, userId: this.userId })
+      .values({ agentId, permissionMode, title: title ?? DEFAULT_TITLE, userId: this.userId })
       .returning()
     return item!
   }

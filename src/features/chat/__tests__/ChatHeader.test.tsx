@@ -105,6 +105,7 @@ const topic: LocalChatTopic = {
   createdAt: 1,
   favorite: false,
   id: 'topic-1',
+  permissionMode: 'auto',
   projectName: null,
   title: '测试对话',
   updatedAt: 2,

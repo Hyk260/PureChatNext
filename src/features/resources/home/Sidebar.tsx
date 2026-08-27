@@ -37,7 +37,7 @@ const HomeSidebar = memo(() => {
       style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}
     >
       <ScrollShadow size={2} style={{ height: '100%', width: 240 }}>
-        <Flexbox gap={1} style={{ height: '100%', paddingBlock: 4 }}>
+        <Flexbox gap={1} style={{ height: '100%' }}>
           <SideBarHeaderLayout
             breadcrumb={[
               {

@@ -92,6 +92,37 @@ describe('/api/chat/topics', () => {
     expect(payload).toEqual(topics)
   })
 
+  it('creates a topic with a valid permission mode', async () => {
+    vi.mocked(getAuthenticatedUserId).mockResolvedValue('user-1')
+    const create = vi.fn().mockResolvedValue({ id: 'topic-1', permissionMode: 'full' })
+    vi.mocked(ChatTopicModel).mockImplementation(() => ({ create }) as unknown as ChatTopicModel)
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/chat/topics', {
+        body: JSON.stringify({ agentId: 'agent-1', permissionMode: 'full' }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(create).toHaveBeenCalledWith({ agentId: 'agent-1', permissionMode: 'full' })
+  })
+
+  it('rejects an invalid permission mode when creating a topic', async () => {
+    vi.mocked(getAuthenticatedUserId).mockResolvedValue('user-1')
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/chat/topics', {
+        body: JSON.stringify({ agentId: 'agent-1', permissionMode: 'unsafe' }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+    )
+
+    expect(response.status).toBe(400)
+  })
+
   it('bulk deletes unfavorited topics for the authenticated user and agent', async () => {
     vi.mocked(getAuthenticatedUserId).mockResolvedValue('user-1')
     const deleteByAgent = vi.fn().mockResolvedValue([{ id: 'topic-1' }, { id: 'topic-2' }])

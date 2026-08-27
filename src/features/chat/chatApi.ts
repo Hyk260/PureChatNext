@@ -1,4 +1,5 @@
 import type { UIMessage } from 'ai'
+import type { ChatPermissionMode } from '@pure/types'
 
 import { apiFetch } from '@/utils/apiFetch'
 
@@ -16,6 +17,7 @@ type ApiTopic = {
   agentId: string
   createdAt: string
   favorite: boolean
+  permissionMode: ChatPermissionMode
   projectName: string | null
   title: string
   updatedAt: string
@@ -26,6 +28,7 @@ const toLocalTopic = (t: ApiTopic): LocalChatTopic => ({
   agentId: t.agentId,
   createdAt: new Date(t.createdAt).getTime(),
   favorite: Boolean(t.favorite),
+  permissionMode: t.permissionMode,
   projectName: t.projectName ?? null,
   title: t.title,
   updatedAt: new Date(t.updatedAt).getTime(),
@@ -53,9 +56,13 @@ export const fetchTopics = async (agentId: string): Promise<LocalChatTopic[]> =>
   return request
 }
 
-export const createTopic = async (agentId: string, title?: string): Promise<LocalChatTopic> => {
+export const createTopic = async (
+  agentId: string,
+  title?: string,
+  permissionMode?: ChatPermissionMode
+): Promise<LocalChatTopic> => {
   const res = await apiFetch('/api/chat/topics', {
-    body: JSON.stringify({ agentId, title }),
+    body: JSON.stringify({ agentId, permissionMode, title }),
     headers: { 'Content-Type': 'application/json' },
     method: 'POST',
   })

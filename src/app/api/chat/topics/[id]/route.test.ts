@@ -69,6 +69,39 @@ describe('PATCH /api/chat/topics/[id]', () => {
     expect(update).toHaveBeenCalledWith('topic-1', { projectName: 'PureChat', title: '新标题' })
   })
 
+  it('updates a valid permission mode', async () => {
+    vi.mocked(getAuthenticatedUserId).mockResolvedValue('user-1')
+    const update = vi.fn().mockResolvedValue({ id: 'topic-1', permissionMode: 'ask' })
+    vi.mocked(ChatTopicModel).mockImplementation(() => ({ update }) as unknown as ChatTopicModel)
+
+    const response = await PATCH(
+      new NextRequest('http://localhost/api/chat/topics/topic-1', {
+        body: JSON.stringify({ permissionMode: 'ask' }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH',
+      }),
+      context
+    )
+
+    expect(response.status).toBe(200)
+    expect(update).toHaveBeenCalledWith('topic-1', { permissionMode: 'ask' })
+  })
+
+  it('rejects an invalid permission mode', async () => {
+    vi.mocked(getAuthenticatedUserId).mockResolvedValue('user-1')
+
+    const response = await PATCH(
+      new NextRequest('http://localhost/api/chat/topics/topic-1', {
+        body: JSON.stringify({ permissionMode: 'unsafe' }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH',
+      }),
+      context
+    )
+
+    expect(response.status).toBe(400)
+  })
+
   it('rejects an empty patch', async () => {
     vi.mocked(getAuthenticatedUserId).mockResolvedValue('user-1')
 

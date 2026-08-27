@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => {
   return {
     autoRenameTopic: vi.fn(),
     createTopic: vi.fn(),
+    desktop: false,
     fetchAgents: vi.fn(),
     fetchMessages: vi.fn(),
     fetchTopics: vi.fn(),
@@ -22,6 +23,7 @@ const mocks = vi.hoisted(() => {
     chatError: undefined as Error | undefined,
     clearChatError: vi.fn(),
     sendMessage: vi.fn().mockResolvedValue(undefined),
+    updateTopic: vi.fn(),
   }
 })
 
@@ -88,14 +90,33 @@ vi.mock('@/features/chat/chatApi', () => ({
   fetchMessages: mocks.fetchMessages,
   fetchTopics: mocks.fetchTopics,
   putMessages: vi.fn().mockResolvedValue(undefined),
-  updateTopic: vi.fn(),
+  updateTopic: mocks.updateTopic,
 }))
 
 vi.mock('@/features/chat/ChatInput', () => ({
-  default: ({ onSend }: { onSend: (text: string) => void }) => (
-    <button type='button' onClick={() => onSend('hello')}>
-      send
-    </button>
+  default: ({
+    onPermissionModeChange,
+    onSend,
+    permissionMode,
+  }: {
+    onPermissionModeChange?: (mode: 'ask') => void
+    onSend: (text: string) => void
+    permissionMode?: string
+  }) => (
+    <>
+      <button type='button' onClick={() => onSend('hello')}>
+        send
+      </button>
+      {permissionMode ? (
+        <button
+          aria-label={`权限模式：${permissionMode}`}
+          type='button'
+          onClick={() => onPermissionModeChange?.('ask')}
+        >
+          permission
+        </button>
+      ) : null}
+    </>
   ),
 }))
 
@@ -181,6 +202,8 @@ vi.mock('@/features/settings/provider/store/useProviderConfigStore', () => {
   return { useProviderConfigStore }
 })
 
+vi.mock('@/types/desktop', () => ({ getDesktopApi: () => (mocks.desktop ? {} : undefined) }))
+
 import ChatPage from '@/features/chat/ChatPage'
 
 const createdTopic = {
@@ -188,6 +211,7 @@ const createdTopic = {
   createdAt: 1,
   favorite: false,
   id: 'topic-new',
+  permissionMode: 'auto' as const,
   projectName: null,
   title: 'hello',
   updatedAt: 1,
@@ -199,9 +223,11 @@ describe('ChatPage message loading state', () => {
     mocks.navigation.listeners.clear()
     mocks.autoRenameTopic.mockReset()
     mocks.createTopic.mockReset().mockResolvedValue(createdTopic)
+    mocks.desktop = false
     mocks.fetchMessages.mockReset().mockReturnValue(new Promise(() => {}))
     mocks.fetchTopics.mockReset().mockResolvedValue([])
     mocks.fetchAgents.mockReset()
+    mocks.updateTopic.mockReset()
     mocks.sendMessage.mockClear()
     mocks.clearChatError.mockClear()
     mocks.chatError = undefined
@@ -224,6 +250,7 @@ describe('ChatPage message loading state', () => {
       { text: 'hello' },
       { body: expect.objectContaining({ searchMode: 'off' }) }
     )
+    expect(mocks.sendMessage.mock.calls.at(-1)?.[1]?.body).not.toHaveProperty('permissionMode')
   })
 
   it('keeps auto search enabled through the new-topic send handoff', async () => {
@@ -238,6 +265,36 @@ describe('ChatPage message loading state', () => {
         { body: expect.objectContaining({ searchMode: 'auto' }) }
       )
     )
+  })
+
+  it('passes desktop draft permissions into topic creation and chat requests', async () => {
+    mocks.desktop = true
+    render(<ChatPage />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'send' }))
+
+    await waitFor(() => expect(mocks.createTopic).toHaveBeenCalledWith('agt_inbox', 'hello', 'auto'))
+    await waitFor(() =>
+      expect(mocks.sendMessage).toHaveBeenCalledWith(
+        { text: 'hello' },
+        { body: expect.objectContaining({ permissionMode: 'auto' }) }
+      )
+    )
+  })
+
+  it('persists desktop permission changes for an existing topic', async () => {
+    const existingTopic = { ...createdTopic, id: 'topic-existing', permissionMode: 'full' as const }
+    mocks.desktop = true
+    mocks.navigation.query = 'agent=agt_inbox&topic=topic-existing'
+    mocks.fetchTopics.mockResolvedValue([existingTopic])
+    mocks.fetchMessages.mockResolvedValue([])
+    mocks.updateTopic.mockResolvedValue({ ...existingTopic, permissionMode: 'ask' })
+
+    render(<ChatPage />)
+    fireEvent.click(await screen.findByRole('button', { name: '权限模式：full' }))
+
+    await waitFor(() => expect(mocks.updateTopic).toHaveBeenCalledWith('topic-existing', { permissionMode: 'ask' }))
+    expect(await screen.findByRole('button', { name: '权限模式：ask' })).toBeTruthy()
   })
 
   it('keeps the message skeleton for an uncached existing topic', async () => {

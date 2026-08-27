@@ -3,22 +3,28 @@ import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
+import { CHAT_PERMISSION_MODES } from '@pure/types'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const updateSchema = z
   .object({
     favorite: z.boolean().optional(),
+    permissionMode: z.enum(CHAT_PERMISSION_MODES).optional(),
     projectName: z.string().trim().nullable().optional(),
     title: z.string().trim().min(1).optional(),
   })
   .refine(
-    (value) => value.favorite !== undefined || value.projectName !== undefined || value.title !== undefined,
+    (value) =>
+      value.favorite !== undefined ||
+      value.permissionMode !== undefined ||
+      value.projectName !== undefined ||
+      value.title !== undefined,
     'At least one field is required'
   )
 
 /**
  * PATCH /api/chat/topics/[id]
- * 更新 Topic（标题 / 收藏 / 项目名）
+ * 更新 Topic（标题 / 收藏 / 项目名 / 权限模式）
  * @param request - JSON body（至少一项字段）
  */
 export const PATCH = withAuth(async (request, { params, userId }) => {

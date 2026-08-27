@@ -1,0 +1,2 @@
+ALTER TABLE "chat_topics" ADD COLUMN "permission_mode" text DEFAULT 'auto' NOT NULL;--> statement-breakpoint
+ALTER TABLE "chat_topics" ADD CONSTRAINT "chat_topics_permission_mode_check" CHECK ("chat_topics"."permission_mode" in ('ask', 'auto', 'full'));

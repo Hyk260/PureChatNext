@@ -4,6 +4,8 @@ import {
   claimPendingChatText,
   claimPendingTopicSend,
   finishPendingTopicSend,
+  getPendingChatPermissionMode,
+  setPendingChatPermissionMode,
   setPendingChatText,
   setPendingTopicSend,
   truncateTitle,
@@ -24,6 +26,14 @@ describe('chatLocalStorage pending helpers', () => {
   it('ignores empty pending chat text', () => {
     setPendingChatText('   ')
     expect(claimPendingChatText()).toBeNull()
+  })
+
+  it('stores a valid pending permission mode and defaults invalid values', () => {
+    setPendingChatPermissionMode('full')
+    expect(getPendingChatPermissionMode()).toBe('full')
+
+    sessionStorage.setItem('purechat:chat:v1:pending-permission-mode', 'invalid')
+    expect(getPendingChatPermissionMode()).toBe('auto')
   })
 
   it('claims pending topic send once', () => {

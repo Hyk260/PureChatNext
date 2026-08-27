@@ -3,9 +3,11 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
+  desktop: false,
   messageError: vi.fn(),
   push: vi.fn(),
   setPendingChatFiles: vi.fn(),
+  setPendingChatPermissionMode: vi.fn(),
   setPendingChatText: vi.fn(),
   vision: true,
 }))
@@ -52,6 +54,7 @@ vi.mock('@/components/AntdStaticMethods', () => ({ useApp: () => ({ message: { e
 vi.mock('@/assets/mascots/purechat-mecha-cat.png', () => ({ default: '/mecha-cat.png' }))
 vi.mock('@/features/chat/chatLocalStorage', () => ({
   setPendingChatFiles: mocks.setPendingChatFiles,
+  setPendingChatPermissionMode: mocks.setPendingChatPermissionMode,
   setPendingChatText: mocks.setPendingChatText,
 }))
 vi.mock('@/features/chat/ModelSwitchMenu', () => ({
@@ -64,18 +67,25 @@ vi.mock('@/features/chat/SendArea', () => ({
     </button>
   ),
 }))
+vi.mock('@/features/chat/PermissionModeSelector', () => ({
+  default: ({ onChange, value }: { onChange: (value: 'full') => void; value: string }) => (
+    <button aria-label={`权限模式：${value}`} type='button' onClick={() => onChange('full')}>
+      permission
+    </button>
+  ),
+}))
 vi.mock('@/features/home/components/HomeAgentSelect', () => ({
   default: () => <div>选择助理</div>,
 }))
 vi.mock('@/features/home/store/useAgentsStore', () => ({
-  useAgentsStore: (selector: (state: unknown) => unknown) =>
-    selector({ agents: [], fetchAgents: vi.fn() }),
+  useAgentsStore: (selector: (state: unknown) => unknown) => selector({ agents: [], fetchAgents: vi.fn() }),
 }))
 vi.mock('@/features/home/store/useHomeStore', () => ({
   useHomeStore: (selector: (state: unknown) => unknown) =>
     selector({ activeAgent: null, selectedAgentId: 'pure-ai', setActiveAgent: vi.fn() }),
 }))
 vi.mock('@/utils/navigation', () => ({ useRouter: () => ({ push: mocks.push }) }))
+vi.mock('@/types/desktop', () => ({ getDesktopApi: () => (mocks.desktop ? {} : undefined) }))
 
 import HomeChatInput from './HomeChatInput'
 
@@ -84,6 +94,7 @@ const fileInput = () => document.querySelector('input[type="file"]') as HTMLInpu
 describe('HomeChatInput', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.desktop = false
     mocks.vision = true
     URL.createObjectURL = vi.fn(() => 'blob:preview')
     URL.revokeObjectURL = vi.fn()
@@ -102,6 +113,22 @@ describe('HomeChatInput', () => {
     expect(mocks.setPendingChatText).toHaveBeenCalledWith('你好')
     expect(mocks.setPendingChatFiles).toHaveBeenCalledWith([])
     expect(mocks.push).toHaveBeenCalledWith('/chat?agent=pure-ai')
+  })
+
+  it('shows desktop permissions and hands the selected mode to chat', () => {
+    mocks.desktop = true
+    render(<HomeChatInput />)
+
+    fireEvent.click(screen.getByRole('button', { name: '权限模式：auto' }))
+    fireEvent.change(screen.getByPlaceholderText('随心输入'), { target: { value: '执行任务' } })
+    fireEvent.click(screen.getByRole('button', { name: '发送' }))
+
+    expect(mocks.setPendingChatPermissionMode).toHaveBeenCalledWith('full')
+  })
+
+  it('does not show permission controls on web', () => {
+    render(<HomeChatInput />)
+    expect(screen.queryByRole('button', { name: /权限模式/ })).toBeNull()
   })
 
   it('supports attachment-only and text-with-attachment handoff', () => {

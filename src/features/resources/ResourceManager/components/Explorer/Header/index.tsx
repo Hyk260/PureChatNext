@@ -26,8 +26,8 @@ import SearchInput from './SearchInput'
 const styles = createStaticStyles(({ css }) => ({
   header: css`
     box-sizing: border-box;
-    min-height: 48px;
-    padding: 8px;
+    min-height: 40px;
+    padding: 0px 8px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
   `,
 }))

@@ -5,6 +5,8 @@ import { createStaticStyles } from 'antd-style'
 import type { UIMessage } from 'ai'
 import { useRouter, useSearchParams } from '@/utils/navigation'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { DEFAULT_CHAT_PERMISSION_MODE } from '@pure/types'
+import type { ChatPermissionMode } from '@pure/types'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
@@ -21,6 +23,7 @@ import {
 } from '@/features/chat/chatApi'
 import ChatInput from '@/features/chat/ChatInput'
 import ChatLayout from '@/features/chat/ChatLayout'
+import { getPendingChatPermissionMode } from '@/features/chat/chatLocalStorage'
 import ChatMessagesSkeleton from '@/features/chat/ChatMessagesSkeleton'
 import type { ChatViewActions } from '@/features/chat/ChatView'
 import ChatView from '@/features/chat/ChatView'
@@ -41,6 +44,7 @@ import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { isSettingsProviderId } from '@/features/settings/provider/const'
 import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
+import { getDesktopApi } from '@/types/desktop'
 
 const subscribeNoop = () => () => {}
 const getClientSnapshot = () => true
@@ -105,6 +109,9 @@ const ChatPage = memo(() => {
   const params: ChatLlmParams = paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS
 
   const [topics, setTopics] = useState<LocalChatTopic[]>([])
+  const [draftPermissionMode, setDraftPermissionMode] = useState<ChatPermissionMode>(() =>
+    typeof window === 'undefined' ? DEFAULT_CHAT_PERMISSION_MODE : getPendingChatPermissionMode()
+  )
   const [topicsLoadedAgentId, setTopicsLoadedAgentId] = useState<string | null>(null)
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>(EMPTY_MESSAGES)
   // Tracks which topicId the currently-loaded initialMessages belong to.
@@ -292,6 +299,7 @@ const ChatPage = memo(() => {
   const handleNewTopic = useCallback(() => {
     // Already on draft for this agent — no-op.
     if (activeTopicId === null) return
+    setDraftPermissionMode(DEFAULT_CHAT_PERMISSION_MODE)
     pushChatHref(agentId)
   }, [activeTopicId, agentId, pushChatHref])
 
@@ -305,6 +313,7 @@ const ChatPage = memo(() => {
         title: agent.title,
       })
       if (agent.id === agentId && activeTopicId === null) return
+      setDraftPermissionMode(DEFAULT_CHAT_PERMISSION_MODE)
       if (agent.id !== agentId) {
         setTopics([])
         setTopicsLoadedAgentId(null)
@@ -438,6 +447,25 @@ const ChatPage = memo(() => {
     [agentId, setSearchMode]
   )
 
+  const handlePermissionModeChange = useCallback(
+    async (mode: ChatPermissionMode) => {
+      if (!activeTopicId) {
+        setDraftPermissionMode(mode)
+        return
+      }
+
+      try {
+        const updated = await updateTopic(activeTopicId, { permissionMode: mode })
+        setTopics((previous) => previous.map((topic) => (topic.id === activeTopicId ? updated : topic)))
+      } catch (error) {
+        console.error('[chat] update permission mode failed', error)
+        message.error('权限模式保存失败')
+        throw error
+      }
+    },
+    [activeTopicId, message]
+  )
+
   const handleTopicsRefresh = useCallback(() => {
     refreshTopics()
   }, [refreshTopics])
@@ -454,6 +482,8 @@ const ChatPage = memo(() => {
     () => (activeTopicId ? (topics.find((topic) => topic.id === activeTopicId) ?? null) : null),
     [activeTopicId, topics]
   )
+  const isDesktop = isClient && Boolean(getDesktopApi())
+  const permissionMode = activeTopic?.permissionMode ?? draftPermissionMode
 
   return (
     <ChatLayout
@@ -501,6 +531,7 @@ const ChatPage = memo(() => {
               onBusyChange={handleBusyChange}
               onCacheMessages={handleCacheMessages}
               onTopicsRefresh={handleTopicsRefresh}
+              permissionMode={isDesktop ? permissionMode : undefined}
               searchMode={searchMode}
             />
           ) : (
@@ -511,7 +542,9 @@ const ChatPage = memo(() => {
           <WideScreenContainer fill={false}>
             <ChatInput
               isBusy={inputBusy}
+              permissionMode={isDesktop ? permissionMode : undefined}
               searchMode={searchMode}
+              onPermissionModeChange={isDesktop ? handlePermissionModeChange : undefined}
               onSearchModeChange={handleSearchModeChange}
               onSend={handleInputSend}
               onStop={handleInputStop}

@@ -148,6 +148,13 @@
       "when": 1786093800000,
       "tag": "0020_unified_channel_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1787795582641,
+      "tag": "0021_simple_sally_floyd",
+      "breakpoints": true
     }
   ]
 }

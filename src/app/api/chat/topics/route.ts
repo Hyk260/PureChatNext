@@ -3,10 +3,12 @@ import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
+import { CHAT_PERMISSION_MODES } from '@pure/types'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const createSchema = z.object({
   agentId: z.string().min(1),
+  permissionMode: z.enum(CHAT_PERMISSION_MODES).optional(),
   title: z.string().min(1).optional(),
 })
 
@@ -31,7 +33,7 @@ export const GET = withAuth(async (request, { userId }) => {
 /**
  * POST /api/chat/topics
  * 创建会话 Topic
- * @param request - JSON `{ agentId, title? }`
+ * @param request - JSON `{ agentId, title?, permissionMode? }`
  */
 export const POST = withAuth(async (request, { userId }) => {
   const body = await request.json()

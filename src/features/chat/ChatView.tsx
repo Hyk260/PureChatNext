@@ -40,6 +40,7 @@ import type { DesktopLocalToolRequest } from '@/types/desktop'
 const EMPTY_MESSAGES: UIMessage[] = []
 const LOCAL_TOOL_NAMES = new Set([
   'editFile',
+  'getSystemInfo',
   'getCommandOutput',
   'killCommand',
   'listFiles',
@@ -49,7 +50,7 @@ const LOCAL_TOOL_NAMES = new Set([
   'searchFiles',
   'writeFile',
 ])
-const SAFE_LOCAL_TOOL_NAMES = new Set(['getCommandOutput', 'listFiles', 'readFile', 'searchFiles'])
+const SAFE_LOCAL_TOOL_NAMES = new Set(['getCommandOutput', 'getSystemInfo', 'listFiles', 'readFile', 'searchFiles'])
 
 const fileToPart = (file: File): Promise<{ type: 'file'; mediaType: string; url: string; filename: string }> =>
   new Promise((resolve, reject) => {

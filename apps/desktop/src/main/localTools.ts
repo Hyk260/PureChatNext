@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { spawn } from 'node:child_process'
@@ -117,6 +118,18 @@ export const executeLocalTool = async (
         const filePath = await resolvePath(request, config, String(args.path ?? ''))
         const content = await fs.readFile(filePath, 'utf8')
         output = result(content.slice(0, MAX_FILE_BYTES), true, { path: filePath })
+        break
+      }
+      case 'getSystemInfo': {
+        output = result(
+          JSON.stringify({
+            arch: process.arch,
+            kernel: os.release(),
+            platform: process.platform,
+            system: os.type(),
+          }),
+          true
+        )
         break
       }
       case 'listFiles': {

@@ -131,6 +131,7 @@ export const registerIpcHandlers = async (options: {
     if (
       ![
         'editFile',
+        'getSystemInfo',
         'getCommandOutput',
         'killCommand',
         'listFiles',

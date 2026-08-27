@@ -141,6 +141,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
           'searchFiles',
           'writeFile',
           'editFile',
+          'getSystemInfo',
           'moveFile',
           'runCommand',
           'getCommandOutput',

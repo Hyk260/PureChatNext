@@ -16,6 +16,7 @@ export const CHAT_TOOL_CAPABILITIES: readonly ToolCapability[] = [
   { apiName: 'readFile', execution: 'desktop', identifier: 'desktop-local-system', risk: 'read' },
   { apiName: 'listFiles', execution: 'desktop', identifier: 'desktop-local-system', risk: 'read' },
   { apiName: 'searchFiles', execution: 'desktop', identifier: 'desktop-local-system', risk: 'read' },
+  { apiName: 'getSystemInfo', execution: 'desktop', identifier: 'desktop-local-system', risk: 'read' },
   { apiName: 'writeFile', execution: 'desktop', identifier: 'desktop-local-system', risk: 'write' },
   { apiName: 'editFile', execution: 'desktop', identifier: 'desktop-local-system', risk: 'write' },
   { apiName: 'moveFile', execution: 'desktop', identifier: 'desktop-local-system', risk: 'write' },

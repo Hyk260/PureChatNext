@@ -238,6 +238,7 @@ export async function POST(request: Request) {
         if (
           [
             'editFile',
+            'getSystemInfo',
             'getCommandOutput',
             'killCommand',
             'listFiles',

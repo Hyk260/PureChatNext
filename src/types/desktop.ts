@@ -29,6 +29,7 @@ export type DesktopLocalToolRequest = {
   toolCallId: string
   toolName:
     | 'editFile'
+    | 'getSystemInfo'
     | 'getCommandOutput'
     | 'killCommand'
     | 'listFiles'

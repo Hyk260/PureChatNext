@@ -18,6 +18,10 @@ export const desktopTools: ToolSet = {
     description: 'Search file names in a user-approved desktop directory.',
     inputSchema: z.object({ path: pathInput.default('.'), query: z.string().trim().min(1).max(200) }),
   }),
+  getSystemInfo: tool({
+    description: 'Read non-sensitive operating system and runtime information from the desktop.',
+    inputSchema: z.object({}),
+  }),
   writeFile: tool({
     description: 'Write text to a desktop file after the user approves the operation.',
     inputSchema: z.object({ content: z.string().max(500_000), path: pathInput }),

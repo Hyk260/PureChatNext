@@ -1,10 +1,10 @@
 import { sql } from 'drizzle-orm'
-import { boolean, check, index, jsonb, pgTable, text, varchar } from 'drizzle-orm/pg-core'
+import { boolean, check, index, jsonb, pgTable, text, uniqueIndex, varchar } from 'drizzle-orm/pg-core'
 
 import type { ChatMessageMetadata, ChatPermissionMode } from '@pure/types'
 
 import { idGenerator } from '../utils/idGenerator'
-import { timestamps } from './_helpers'
+import { timestamptz, timestamps } from './_helpers'
 import { users } from './user'
 
 /**
@@ -65,3 +65,41 @@ export const chatMessages = pgTable(
 
 export type NewChatMessage = typeof chatMessages.$inferInsert
 export type ChatMessageItem = typeof chatMessages.$inferSelect
+
+export const chatToolApprovals = pgTable(
+  'chat_tool_approvals',
+  {
+    id: text('id')
+      .$defaultFn(() => idGenerator('toolApprovals'))
+      .primaryKey(),
+    topicId: text('topic_id')
+      .references(() => chatTopics.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    toolCallId: text('tool_call_id').notNull(),
+    identifier: text('identifier').notNull(),
+    apiName: text('api_name').notNull(),
+    argsHash: text('args_hash').notNull(),
+    args: jsonb('args').$type<Record<string, unknown>>().notNull(),
+    status: text('status').notNull().default('pending'),
+    error: text('error'),
+    approvedAt: timestamptz('approved_at'),
+    completedAt: timestamptz('completed_at'),
+    ...timestamps,
+  },
+  (t) => [
+    check(
+      'chat_tool_approvals_status_check',
+      sql`${t.status} in ('pending', 'approved', 'denied', 'completed', 'failed')`
+    ),
+    index('chat_tool_approvals_topic_id_idx').on(t.topicId),
+    index('chat_tool_approvals_user_id_idx').on(t.userId),
+    // A tool call id is unique within a topic, making retries idempotent.
+    uniqueIndex('chat_tool_approvals_topic_tool_call_unique').on(t.topicId, t.toolCallId),
+  ]
+)
+
+export type NewChatToolApproval = typeof chatToolApprovals.$inferInsert
+export type ChatToolApprovalItem = typeof chatToolApprovals.$inferSelect

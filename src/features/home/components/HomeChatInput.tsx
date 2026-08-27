@@ -171,6 +171,14 @@ const HomeChatInput = memo(() => {
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
   const canSend = Boolean(input.trim() || files.length > 0) && !sending
 
+  const handlePermissionModeChange = useCallback(async (mode: ChatPermissionMode) => {
+    if (mode === 'full') {
+      const result = await getDesktopApi()?.requestFullAccess('draft')
+      if (result && !result.granted) throw new Error('完全访问权限未确认')
+    }
+    setPermissionMode(mode)
+  }, [])
+
   useEffect(() => {
     fetchAgentsList()
   }, [fetchAgentsList])
@@ -337,16 +345,16 @@ const HomeChatInput = memo(() => {
             </DropdownMenuPortal>
           </DropdownMenuRoot>
           {isDesktop ? (
-            <PermissionModeSelector disabled={sending} value={permissionMode} onChange={setPermissionMode} />
+            <PermissionModeSelector
+              disabled={sending}
+              topicId='draft'
+              value={permissionMode}
+              onChange={handlePermissionModeChange}
+            />
           ) : null}
         </Flexbox>
 
-        <SendArea
-          disabled={!canSend}
-          loading={sending}
-          modelLabelClassName={styles.modelLabel}
-          onClick={handleSend}
-        />
+        <SendArea disabled={!canSend} loading={sending} modelLabelClassName={styles.modelLabel} onClick={handleSend} />
       </Flexbox>
     </Block>
   )

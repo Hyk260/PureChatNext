@@ -16,6 +16,7 @@ import {
 import { memo, useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import type { ChatPermissionMode } from '@pure/types'
+import { getDesktopApi } from '@/types/desktop'
 
 type PermissionOption = {
   description: string
@@ -54,10 +55,11 @@ const RISKS = [
 interface PermissionModeSelectorProps {
   disabled?: boolean
   onChange: (mode: ChatPermissionMode) => Promise<void> | void
+  topicId?: string
   value: ChatPermissionMode
 }
 
-const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, onChange, value }) => {
+const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, onChange, topicId = 'draft', value }) => {
   const [open, setOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [savingMode, setSavingMode] = useState<ChatPermissionMode | null>(null)
@@ -93,6 +95,13 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
     if (await applyMode('full')) setConfirmOpen(false)
   }
 
+  const handleChooseScope = async () => {
+    const api = getDesktopApi()
+    const scope = await api?.chooseDirectory()
+    if (!scope) return
+    await api?.setPermissionScope(topicId, scope)
+  }
+
   const popoverContent = (
     <div className='w-[min(360px,calc(100vw-32px))] p-1'>
       <div className='px-3 pb-2 pt-1 text-sm font-medium text-muted-foreground'>PureChat 应如何请求批准？</div>
@@ -123,6 +132,14 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
           )
         })}
       </div>
+      <button
+        className='mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs text-muted-foreground hover:bg-secondary'
+        type='button'
+        onClick={() => void handleChooseScope()}
+      >
+        <Icon icon={Folder} size={16} />
+        选择工作目录
+      </button>
     </div>
   )
 

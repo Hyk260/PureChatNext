@@ -449,6 +449,10 @@ const ChatPage = memo(() => {
 
   const handlePermissionModeChange = useCallback(
     async (mode: ChatPermissionMode) => {
+      if (mode === 'full') {
+        const result = await getDesktopApi()?.requestFullAccess(activeTopicId ?? 'draft')
+        if (result && !result.granted) throw new Error('完全访问权限未确认')
+      }
       if (!activeTopicId) {
         setDraftPermissionMode(mode)
         return
@@ -544,6 +548,7 @@ const ChatPage = memo(() => {
               isBusy={inputBusy}
               permissionMode={isDesktop ? permissionMode : undefined}
               searchMode={searchMode}
+              topicId={activeTopicId}
               onPermissionModeChange={isDesktop ? handlePermissionModeChange : undefined}
               onSearchModeChange={handleSearchModeChange}
               onSend={handleInputSend}

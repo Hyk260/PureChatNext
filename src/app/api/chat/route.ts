@@ -1,7 +1,7 @@
 import { writeFile, unlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createDeepSeek } from '@ai-sdk/deepseek'
 import { PURECHAT_PROVIDER_ID } from '@pure/const'
@@ -10,13 +10,14 @@ import { loadFile } from '@pure/file-loaders'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
 import { CHAT_PERMISSION_MODES } from '@pure/types'
 import { convertToModelMessages, createUIMessageStreamResponse, isStepCount, streamText, toUIMessageStream } from 'ai'
-import type { UIMessage } from 'ai'
+import type { ToolExecutionEndEvent, UIMessage } from 'ai'
 import debug from 'debug'
 import { createNanoId } from '@pure/utils'
 
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 import { ChatSDKError } from '@/libs/errors'
 import { llmEnv, resolveAiGatewayApiKey, resolveAiGatewayBaseURL } from '@/envs/llm'
+import { toolsEnv } from '@/envs/tools'
 import {
   computeChatCost,
   getEnabledPureChatModel,
@@ -33,6 +34,8 @@ import {
 } from '@/server/purechat/gatewayError'
 import { buildChatRuntimeInstructions } from '@/server/chat/runtimeInstructions'
 import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
+import { desktopTools } from '@/server/chat/desktopTools'
+import { isToolApprovalRequired } from '@/server/chat/permissionPolicy'
 
 import { createMessageMetadata } from './messageMetadata'
 
@@ -144,6 +147,8 @@ export async function POST(request: Request) {
     messages: UIMessage[]
     modelAbilities?: { vision?: boolean }
     model?: string
+    clientCapabilities?: { desktop?: boolean }
+    topicId?: string
     permissionMode?: unknown
     provider?: string
     searchMode?: unknown
@@ -156,12 +161,22 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
 
-  const { baseURL, model, system } = requestBody
+  const { baseURL, model, system, topicId } = requestBody
   let messages = requestBody.messages
   const provider = requestBody.provider
 
   if (!Array.isArray(messages)) {
     return new ChatSDKError('bad_request:api').toResponse()
+  }
+
+  if (
+    requestBody.clientCapabilities !== undefined &&
+    (!requestBody.clientCapabilities ||
+      typeof requestBody.clientCapabilities !== 'object' ||
+      (requestBody.clientCapabilities.desktop !== undefined &&
+        typeof requestBody.clientCapabilities.desktop !== 'boolean'))
+  ) {
+    return new ChatSDKError('bad_request:api', 'Invalid client capabilities').toResponse()
   }
 
   if (requestBody.searchMode !== undefined && requestBody.searchMode !== 'off' && requestBody.searchMode !== 'auto') {
@@ -176,6 +191,25 @@ export async function POST(request: Request) {
   }
 
   const searchMode = requestBody.searchMode === 'auto' ? 'auto' : 'off'
+  const desktopClient = requestBody.clientCapabilities?.desktop === true
+  let topicPermissionMode = requestBody.permissionMode as (typeof CHAT_PERMISSION_MODES)[number] | undefined
+  let requestUserId: string | null = null
+
+  if (desktopClient) {
+    if (!toolsEnv.TOOL_APPROVAL_SECRET) {
+      return new ChatSDKError('bad_request:api', 'Desktop approval secret is not configured').toResponse()
+    }
+    if (!topicId) return new ChatSDKError('bad_request:api', 'Desktop chat requires topicId').toResponse()
+    requestUserId = await getAuthenticatedUserId()
+    if (!requestUserId) return new ChatSDKError('unauthorized:chat').toResponse()
+    const { ChatTopicModel } = await import('@pure/database/models/chatTopic')
+    const topic = await new ChatTopicModel(requestUserId).findById(topicId)
+    if (!topic) return new ChatSDKError('not_found:chat', 'Topic not found').toResponse()
+    topicPermissionMode = topic.permissionMode
+    if (requestBody.permissionMode !== undefined && requestBody.permissionMode !== topic.permissionMode) {
+      return new ChatSDKError('bad_request:api', 'Permission mode does not match topic').toResponse()
+    }
+  }
   const supportsVision = Boolean(
     requestBody.modelAbilities?.vision ??
     getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision
@@ -187,14 +221,96 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api', message).toResponse()
   }
   const toolContext = { channel: 'web', searchMode } as const
-  const tools = resolveChatTools(toolContext)
+  const tools = {
+    ...resolveChatTools(toolContext),
+    ...(desktopClient ? desktopTools : {}),
+  }
   const instructions = [system?.trim(), buildChatRuntimeInstructions(), ...resolveChatToolInstructions(toolContext)]
+    .concat(
+      desktopClient
+        ? ['桌面本地工具只可通过客户端执行；先说明计划并等待必要的用户审批，不要重复尝试被拒绝的调用。']
+        : []
+    )
     .filter(Boolean)
     .join('\n\n')
+  const toolApproval = desktopClient
+    ? async ({ toolCall }: { toolCall: { toolCallId?: string; toolName: string; input: unknown } }) => {
+        if (
+          [
+            'editFile',
+            'getCommandOutput',
+            'killCommand',
+            'listFiles',
+            'moveFile',
+            'readFile',
+            'runCommand',
+            'searchFiles',
+            'writeFile',
+          ].includes(toolCall.toolName)
+        ) {
+          return undefined
+        }
+        const input = toolCall.input && typeof toolCall.input === 'object' ? toolCall.input : undefined
+        const identifier =
+          toolCall.toolName === 'webSearch'
+            ? 'builtin-web-search'
+            : toolCall.toolName === 'getWeather'
+              ? 'builtin-weather'
+              : 'unknown'
+        if (requestUserId && topicId && toolCall.toolCallId && input) {
+          const { ChatToolApprovalModel } = await import('@pure/database/models/chatToolApproval')
+          await new ChatToolApprovalModel(requestUserId).upsertPending({
+            apiName: toolCall.toolName,
+            args: input as Record<string, unknown>,
+            argsHash: createHash('sha256').update(JSON.stringify(input)).digest('hex'),
+            identifier,
+            topicId,
+            toolCallId: toolCall.toolCallId,
+          })
+        }
+        const capability = isToolApprovalRequired({
+          apiName: toolCall.toolName,
+          args: input as Record<string, unknown> | undefined,
+          identifier,
+          mode: topicPermissionMode ?? 'auto',
+        })
+        if (capability.decision === 'user-approval') return 'user-approval' as const
+        if (capability.decision === 'denied') {
+          if (requestUserId && topicId && toolCall.toolCallId) {
+            const { ChatToolApprovalModel } = await import('@pure/database/models/chatToolApproval')
+            await new ChatToolApprovalModel(requestUserId).updateStatus(
+              topicId,
+              toolCall.toolCallId,
+              'denied',
+              capability.reason
+            )
+          }
+          return { reason: capability.reason, type: 'denied' as const }
+        }
+        return { reason: capability.reason, type: 'approved' as const }
+      }
+    : undefined
+
   const searchOptions =
     Object.keys(tools).length > 0
       ? {
           stopWhen: isStepCount(3),
+          ...(toolApproval ? { toolApproval } : {}),
+          ...(toolsEnv.TOOL_APPROVAL_SECRET ? { experimental_toolApprovalSecret: toolsEnv.TOOL_APPROVAL_SECRET } : {}),
+          ...(desktopClient && requestUserId && topicId
+            ? {
+                onToolExecutionEnd: async ({ toolCall, toolOutput }: ToolExecutionEndEvent) => {
+                  const { ChatToolApprovalModel } = await import('@pure/database/models/chatToolApproval')
+                  const failed = toolOutput?.type === 'tool-error'
+                  await new ChatToolApprovalModel(requestUserId).updateStatus(
+                    topicId,
+                    toolCall.toolCallId,
+                    failed ? 'failed' : 'completed',
+                    failed ? String(toolOutput.error ?? '工具执行失败') : undefined
+                  )
+                },
+              }
+            : {}),
           tools,
         }
       : {}
@@ -202,7 +318,7 @@ export async function POST(request: Request) {
   const resolvedProvider = provider ?? 'deepseek'
   const isPureChat = resolvedProvider === PURECHAT_PROVIDER_ID
 
-  let userId: string | null = null
+  let userId: string | null = requestUserId
   let settlementId: string | undefined
   let settlementPeriod: string | undefined
   let displayModel = model

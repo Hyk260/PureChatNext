@@ -139,3 +139,47 @@ export const putMessages = async (
   })
   if (!res.ok) throw new Error(`putMessages failed: ${res.status}`)
 }
+
+export type ToolApprovalStatus = 'approved' | 'denied' | 'completed' | 'failed'
+
+const hashArgs = async (args: Record<string, unknown>) => {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(args)))
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
+export const upsertToolApproval = async (
+  topicId: string,
+  input: {
+    apiName: string
+    args: Record<string, unknown>
+    identifier: string
+    toolCallId: string
+  }
+) => {
+  const argsHash = await hashArgs(input.args)
+  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(topicId)}/tool-approvals`, {
+    body: JSON.stringify({ ...input, argsHash }),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+  })
+  if (!res.ok) throw new Error(`upsertToolApproval failed: ${res.status}`)
+  return res.json()
+}
+
+export const updateToolApproval = async (
+  topicId: string,
+  toolCallId: string,
+  status: ToolApprovalStatus,
+  error?: string
+) => {
+  const res = await apiFetch(
+    `/api/chat/topics/${encodeURIComponent(topicId)}/tool-approvals/${encodeURIComponent(toolCallId)}`,
+    {
+      body: JSON.stringify({ error, status }),
+      headers: { 'Content-Type': 'application/json' },
+      method: 'PATCH',
+    }
+  )
+  if (!res.ok) throw new Error(`updateToolApproval failed: ${res.status}`)
+  return res.json()
+}

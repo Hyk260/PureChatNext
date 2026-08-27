@@ -18,10 +18,7 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import type { ChatPermissionMode } from '@pure/types'
 
 import { useApp } from '@/components/AntdStaticMethods'
-import {
-  CHAT_ATTACHMENT_ACCEPT,
-  validateChatAttachments,
-} from '@/features/chat/attachmentRules'
+import { CHAT_ATTACHMENT_ACCEPT, validateChatAttachments } from '@/features/chat/attachmentRules'
 import ModelSelector from '@/features/chat/ModelSelector'
 import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
 import PermissionModeSelector from '@/features/chat/PermissionModeSelector'
@@ -152,6 +149,7 @@ interface ChatInputProps {
   onStop?: () => void
   permissionMode?: ChatPermissionMode
   searchMode: ChatSearchMode
+  topicId?: string | null
 }
 
 const MenuLabel = memo<{
@@ -177,15 +175,8 @@ const MenuLabel = memo<{
 MenuLabel.displayName = 'MenuLabel'
 
 const ChatInput = memo<ChatInputProps>((props) => {
-  const {
-    isBusy,
-    onPermissionModeChange,
-    onSearchModeChange,
-    onSend,
-    onStop,
-    permissionMode,
-    searchMode,
-  } = props
+  const { isBusy, onPermissionModeChange, onSearchModeChange, onSend, onStop, permissionMode, searchMode, topicId } =
+    props
   const [input, setInput] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [plusOpen, setPlusOpen] = useState(false)
@@ -295,10 +286,20 @@ const ChatInput = memo<ChatInputProps>((props) => {
               horizontal
               align='center'
               gap={6}
-              style={{ background: 'var(--ant-color-fill-quaternary)', borderRadius: 8, maxWidth: 260, padding: '5px 8px' }}
+              style={{
+                background: 'var(--ant-color-fill-quaternary)',
+                borderRadius: 8,
+                maxWidth: 260,
+                padding: '5px 8px',
+              }}
             >
               {file.type.startsWith('image/') ? (
-                <img alt='' height={28} src={URL.createObjectURL(file)} style={{ borderRadius: 4, objectFit: 'cover', width: 28 }} />
+                <img
+                  alt=''
+                  height={28}
+                  src={URL.createObjectURL(file)}
+                  style={{ borderRadius: 4, objectFit: 'cover', width: 28 }}
+                />
               ) : (
                 <Icon icon={FileText} size={16} />
               )}
@@ -348,7 +349,12 @@ const ChatInput = memo<ChatInputProps>((props) => {
             </DropdownMenuPortal>
           </DropdownMenuRoot>
           {permissionMode && onPermissionModeChange ? (
-            <PermissionModeSelector disabled={isBusy} value={permissionMode} onChange={onPermissionModeChange} />
+            <PermissionModeSelector
+              disabled={isBusy}
+              topicId={topicId ?? 'draft'}
+              value={permissionMode}
+              onChange={onPermissionModeChange}
+            />
           ) : null}
         </Flexbox>
 

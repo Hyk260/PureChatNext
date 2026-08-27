@@ -29,7 +29,7 @@ describe('createConfigStore', () => {
     tempDirs.push(dir)
     const store = await createConfigStore(dir)
 
-    await store.write({ remoteServerUrl: 'https://example.com', secrets: {} })
+    await store.write({ remoteServerUrl: 'https://example.com', permissionScopes: {}, secrets: {} })
 
     expect((await store.read()).remoteServerUrl).toBe('https://example.com')
     expect(await readFile(store.configPath, 'utf8')).toContain('example.com')

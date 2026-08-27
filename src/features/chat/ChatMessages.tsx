@@ -20,6 +20,7 @@ import { getMessageReasoning, getMessageText } from '@/features/chat/messageText
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
 import WebSearchStatus, { getWebSearchStatusSignature, hasWebSearchToolPart } from '@/features/chat/WebSearchStatus'
+import ToolApprovalCard from '@/features/chat/ToolApprovalCard'
 import { CONVERSATION_MAX_WIDTH } from '@/features/chat/WideScreenContainer'
 
 export interface AgentMeta {
@@ -99,10 +100,12 @@ interface ChatMessageItemProps {
   onDelete: (id: string) => void
   onEdit: (id: string, text: string) => void | Promise<void>
   onRegenerate: (id: string) => void
+  onToolApproval?: (toolCallId: string, toolName: string, args: Record<string, unknown>, approved: boolean) => void
+  onServerToolApproval?: (approvalId: string, toolCallId: string, approved: boolean) => void
 }
 
 const ChatMessageItem = memo<ChatMessageItemProps>(
-  ({ message, agentMeta, isStreaming, onDelete, onEdit, onRegenerate }) => {
+  ({ message, agentMeta, isStreaming, onDelete, onEdit, onRegenerate, onServerToolApproval, onToolApproval }) => {
     const { message: antdMessage } = useApp()
     const [editing, setEditing] = useState(false)
     const text = getMessageText(message)
@@ -127,8 +130,46 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
     }, [message.id, onDelete])
 
     const hasAttachments = message.parts.some((part) => part.type === 'file')
+    const localApprovalParts = message.parts.filter(
+      (part) =>
+        typeof part.type === 'string' &&
+        part.type.startsWith('tool-') &&
+        (part as { state?: string }).state === 'input-available' &&
+        [
+          'readFile',
+          'listFiles',
+          'searchFiles',
+          'writeFile',
+          'editFile',
+          'moveFile',
+          'runCommand',
+          'getCommandOutput',
+          'killCommand',
+        ].includes(part.type.slice(5))
+    ) as Array<{ input?: Record<string, unknown>; state: string; toolCallId: string; type: string }>
+    const serverApprovalParts = message.parts.filter(
+      (part) =>
+        typeof part.type === 'string' &&
+        part.type.startsWith('tool-') &&
+        (part as { state?: string }).state === 'approval-requested'
+    ) as Array<{
+      approval?: { id: string }
+      input?: Record<string, unknown>
+      state: string
+      toolCallId: string
+      type: string
+    }>
 
-    if (!text && !reasoning && !hasWebSearch && !hasAttachments && !isStreaming) return null
+    if (
+      !text &&
+      !reasoning &&
+      !hasWebSearch &&
+      !hasAttachments &&
+      localApprovalParts.length === 0 &&
+      serverApprovalParts.length === 0 &&
+      !isStreaming
+    )
+      return null
 
     return (
       <div className={styles.row} data-role={message.role}>
@@ -148,6 +189,28 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
 
           <MessageAttachments message={message} />
 
+          {localApprovalParts.map((part) => (
+            <ToolApprovalCard
+              args={part.input ?? {}}
+              key={part.toolCallId}
+              toolName={part.type.slice(5)}
+              onDecision={(approved) =>
+                onToolApproval?.(part.toolCallId, part.type.slice(5), part.input ?? {}, approved)
+              }
+            />
+          ))}
+
+          {serverApprovalParts.map((part) => (
+            <ToolApprovalCard
+              args={part.input ?? {}}
+              key={part.toolCallId}
+              toolName={part.type.slice(5)}
+              onDecision={(approved) => {
+                if (part.approval?.id) onServerToolApproval?.(part.approval.id, part.toolCallId, approved)
+              }}
+            />
+          ))}
+
           {text ? (
             <MessageMarkdown
               className={cx(styles.markdown, isUser && styles.userMarkdown)}
@@ -159,9 +222,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
           ) : null}
         </div>
 
-        {!isUser && (metadata || isStreaming) ? (
-          <MessageUsage isStreaming={isStreaming} metadata={metadata} />
-        ) : null}
+        {!isUser && (metadata || isStreaming) ? <MessageUsage isStreaming={isStreaming} metadata={metadata} /> : null}
 
         <MessageActions
           isStreaming={isStreaming}
@@ -185,6 +246,8 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
     prev.onDelete === next.onDelete &&
     prev.onEdit === next.onEdit &&
     prev.onRegenerate === next.onRegenerate &&
+    prev.onToolApproval === next.onToolApproval &&
+    prev.onServerToolApproval === next.onServerToolApproval &&
     prev.agentMeta === next.agentMeta
 )
 
@@ -199,6 +262,8 @@ interface ChatMessagesProps {
   onDelete: (id: string) => void
   onEdit: (id: string, text: string) => void | Promise<void>
   onRegenerate: (id: string) => void
+  onToolApproval?: (toolCallId: string, toolName: string, args: Record<string, unknown>, approved: boolean) => void
+  onServerToolApproval?: (approvalId: string, toolCallId: string, approved: boolean) => void
 }
 
 const ChatMessages = memo<ChatMessagesProps>(
@@ -211,6 +276,8 @@ const ChatMessages = memo<ChatMessagesProps>(
     onDelete,
     onEdit,
     onRegenerate,
+    onToolApproval,
+    onServerToolApproval,
   }) => {
     const scrollbarRef = useRef<ScrollbarRef>(null)
     const wideScreen = useChatUiStore((state) => state.wideScreen)
@@ -272,6 +339,8 @@ const ChatMessages = memo<ChatMessagesProps>(
                 onDelete={onDelete}
                 onEdit={onEdit}
                 onRegenerate={onRegenerate}
+                onToolApproval={onToolApproval}
+                onServerToolApproval={onServerToolApproval}
               />
             )
           })}

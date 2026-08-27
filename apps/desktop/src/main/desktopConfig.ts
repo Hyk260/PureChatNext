@@ -2,11 +2,13 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
 export interface DesktopConfig {
+  permissionScopes: Record<string, string[]>
   remoteServerUrl: string | null
   secrets: Record<string, string>
 }
 
 export const DEFAULT_CONFIG: DesktopConfig = {
+  permissionScopes: {},
   remoteServerUrl: process.env.PURECHAT_DESKTOP_REMOTE_URL?.trim() || null,
   secrets: {},
 }
@@ -30,11 +32,13 @@ export const createConfigStore = async (userDataPath: string) => {
       const raw = await fs.readFile(configPath, 'utf8')
       const parsed = JSON.parse(raw) as Partial<DesktopConfig>
       return {
+        permissionScopes:
+          parsed.permissionScopes && typeof parsed.permissionScopes === 'object' ? parsed.permissionScopes : {},
         remoteServerUrl: parsed.remoteServerUrl ? normalizeRemoteServerUrl(parsed.remoteServerUrl) : null,
         secrets: parsed.secrets && typeof parsed.secrets === 'object' ? parsed.secrets : {},
       }
     } catch {
-      return { ...DEFAULT_CONFIG, secrets: {} }
+      return { ...DEFAULT_CONFIG, permissionScopes: {}, secrets: {} }
     }
   }
 

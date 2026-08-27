@@ -15,10 +15,11 @@ import { PermissionService } from '../services/PermissionService'
 import { IpcRegistry } from './IpcRegistry'
 
 export const registerDesktopIpc = async (options: {
+  config?: DesktopConfigService
   getTrustedContents: () => Electron.WebContents | null
   rendererUrl: string
 }) => {
-  const config = new DesktopConfigService(app.getPath('userData'))
+  const config = options.config ?? new DesktopConfigService(app.getPath('userData'))
   const permissions = new PermissionService(
     PermissionController.createConfirmation(),
     PermissionController.createToolConfirmation()

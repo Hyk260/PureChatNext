@@ -6,6 +6,8 @@ import { registerDesktopIpc } from '../ipc/register'
 import { protocolLinksFromCommandLine, resolveProtocolLink } from '../protocolLink'
 import { APP_RENDERER_URL, isTrustedRendererUrl } from '../rendererSecurity'
 import { installApplicationMenu } from '../ui/ApplicationMenu'
+import { DesktopConfigService } from '../services/DesktopConfigService'
+import { UpdateService } from '../services/UpdateService'
 import { ProtocolManager } from './ProtocolManager'
 import { TrayManager } from './TrayManager'
 import { WindowManager, resolvePreloadPath } from './WindowManager'
@@ -17,7 +19,9 @@ export class DesktopApp {
   private readonly windowManager: WindowManager
   private readonly trayManager: TrayManager
   private readonly protocolManager: ProtocolManager
+  private readonly updateService = new UpdateService()
   private readonly pendingProtocolLinks: string[]
+  private readonly config: DesktopConfigService
   private disposeIpc: (() => void) | null = null
   private isQuitting = false
 
@@ -29,12 +33,14 @@ export class DesktopApp {
     this.pendingProtocolLinks = protocolLinksFromCommandLine(process.argv)
       .map(resolveProtocolLink)
       .filter((url): url is string => Boolean(url))
+    this.config = new DesktopConfigService(app.getPath('userData'))
 
     this.windowManager = new WindowManager(
       this.rendererUrl,
       resolvePreloadPath(mainDir),
       this.getDesktopResourcePath(app.isPackaged ? 'purechat-appicon.png' : 'icon.png'),
-      () => !this.isQuitting && this.trayManager.exists
+      () => !this.isQuitting && this.trayManager.exists,
+      this.config
     )
     this.trayManager = new TrayManager(
       this.getDesktopResourcePath('tray.png'),
@@ -59,6 +65,7 @@ export class DesktopApp {
       this.isQuitting = true
       this.disposeIpc?.()
       this.disposeIpc = null
+      this.updateService.dispose()
       this.windowManager.close()
       this.trayManager.destroy()
     })
@@ -74,6 +81,7 @@ export class DesktopApp {
     }
 
     await app.whenReady()
+    this.updateService.start()
     installApplicationMenu()
     this.registerProtocolClient()
     if (!isTrustedRendererUrl(this.rendererUrl, this.rendererUrl)) {
@@ -81,6 +89,7 @@ export class DesktopApp {
     }
 
     const ipc = await registerDesktopIpc({
+      config: this.config,
       getTrustedContents: () => this.windowManager.trustedContents,
       rendererUrl: this.rendererUrl,
     })

@@ -5,12 +5,42 @@ export interface DesktopConfig {
   permissionScopes: Record<string, string[]>
   remoteServerUrl: string | null
   secrets: Record<string, string>
+  windowState?: DesktopWindowState | null
+}
+
+export interface DesktopWindowState {
+  height: number
+  isMaximized: boolean
+  width: number
+  x: number | null
+  y: number | null
 }
 
 export const DEFAULT_CONFIG: DesktopConfig = {
   permissionScopes: {},
   remoteServerUrl: process.env.PURECHAT_DESKTOP_REMOTE_URL?.trim() || null,
   secrets: {},
+  windowState: null,
+}
+
+const normalizeWindowState = (value: unknown): DesktopWindowState | null => {
+  if (!value || typeof value !== 'object') return null
+  const state = value as Partial<DesktopWindowState>
+  if (
+    typeof state.width !== 'number' ||
+    typeof state.height !== 'number' ||
+    !Number.isFinite(state.width) ||
+    !Number.isFinite(state.height)
+  ) {
+    return null
+  }
+  return {
+    height: Math.min(2160, Math.max(520, Math.round(state.height))),
+    isMaximized: state.isMaximized === true,
+    width: Math.min(3840, Math.max(860, Math.round(state.width))),
+    x: typeof state.x === 'number' && Number.isFinite(state.x) ? Math.round(state.x) : null,
+    y: typeof state.y === 'number' && Number.isFinite(state.y) ? Math.round(state.y) : null,
+  }
 }
 
 export const normalizeRemoteServerUrl = (value: string): string => {
@@ -39,6 +69,7 @@ export class DesktopConfigService {
           parsed.permissionScopes && typeof parsed.permissionScopes === 'object' ? parsed.permissionScopes : {},
         remoteServerUrl: parsed.remoteServerUrl ? normalizeRemoteServerUrl(parsed.remoteServerUrl) : null,
         secrets: parsed.secrets && typeof parsed.secrets === 'object' ? parsed.secrets : {},
+        windowState: normalizeWindowState(parsed.windowState),
       }
     } catch {
       return { ...DEFAULT_CONFIG, permissionScopes: {}, secrets: {} }
@@ -66,5 +97,10 @@ export class DesktopConfigService {
       permissionScopes: { ...config.permissionScopes, [topicId]: [scope] },
     })
     return { scope }
+  }
+
+  async setWindowState(windowState: DesktopWindowState) {
+    const config = await this.read()
+    await this.write({ ...config, windowState: normalizeWindowState(windowState) })
   }
 }

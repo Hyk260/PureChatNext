@@ -10,8 +10,7 @@ const trayIcon = path.join(desktopDir, 'build/tray.png')
 // pnpm 不会把 apps/desktop/.npmrc 的 electron_builder_binaries_mirror 注入进
 // electron-builder 子进程；不设的话 dmgbuild 会回落到 GitHub Releases，国内极慢。
 if (!process.env.ELECTRON_BUILDER_BINARIES_MIRROR) {
-  process.env.ELECTRON_BUILDER_BINARIES_MIRROR =
-    'https://npmmirror.com/mirrors/electron-builder-binaries/'
+  process.env.ELECTRON_BUILDER_BINARIES_MIRROR = 'https://npmmirror.com/mirrors/electron-builder-binaries/'
 }
 
 /** @type {import('electron-builder').Configuration} */
@@ -81,7 +80,10 @@ const config = {
   portable: {
     artifactName: '${productName}-${version}-portable.${ext}',
   },
-  publish: null,
+  // Set PURECHAT_DESKTOP_UPDATE_URL in release CI to enable generic-provider updates.
+  publish: process.env.PURECHAT_DESKTOP_UPDATE_URL
+    ? [{ provider: 'generic', url: process.env.PURECHAT_DESKTOP_UPDATE_URL }]
+    : null,
 }
 
 export default config

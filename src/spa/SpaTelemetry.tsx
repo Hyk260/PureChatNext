@@ -24,9 +24,7 @@ const SpaTelemetry = () => {
 
   return (
     <>
-      {config.enableVercelAnalytics ? (
-        <Analytics debug={config.debugVercelAnalytics} path={path} route={route} />
-      ) : null}
+      {config.enableVercelAnalytics ? (<Analytics debug={config.debugVercelAnalytics} path={path} route={route} />) : null}
       {config.enableSpeedInsights ? <SpeedInsights route={route} /> : null}
       {config.reactScanApiKey ? <ReactScan apiKey={config.reactScanApiKey} /> : null}
     </>

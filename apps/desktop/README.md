@@ -124,7 +124,7 @@ portable 与 ZIP 的核心区别是：
 - 排除 sourcemap，并在 `afterPack` 阶段校验入口、文件边界和 ASAR 体积。
 - 按平台和架构声明产物，而不是依赖 electron-builder 默认目标。
 - 为不同产物设置稳定、可读的 artifact name。
-- 将签名、公证、自动更新、发布服务器和多渠道作为后续发行阶段能力。
+- 将签名、公证、发布服务器和多渠道作为发行阶段能力。
 
 当前没有引入 Linux 目标、动态 publish provider、stable/nightly/canary 渠道、原生依赖复制、CLI 嵌入或 Electron Framework 本地化裁剪。当前应用尚未需要这些能力，提前加入会扩大构建和验收范围。
 
@@ -160,13 +160,14 @@ portable 与 ZIP 的核心区别是：
 
 ## 签名、公证、自动更新与 blockmap
 
-当前配置没有接入代码签名、公证或自动更新服务器：
+当前配置没有接入代码签名、公证或固定的自动更新服务器：
 
 - macOS 产物可以生成，但正式分发前仍需配置 Apple Developer 签名和 notarization。
 - Windows 产物可以生成，但正式分发前应配置代码签名证书。
-- `publish: null` 配合命令行 `--publish never` 表示只构建，不上传。
+- 未设置 `PURECHAT_DESKTOP_UPDATE_URL` 时，`publish: null` 配合命令行 `--publish never` 表示只构建，不上传。
 - `.blockmap` 是供差分更新使用的元数据，不代表应用已经具备自动更新能力。
-- 要启用自动更新，还需要更新客户端逻辑、发布服务器、签名、版本策略和端到端验收。
+- 客户端已接入 `electron-updater`：仅在打包版本启动时检查更新，下载完成后提示用户，退出时自动安装。
+- 要启用自动更新，发布构建需要设置 `PURECHAT_DESKTOP_UPDATE_URL`（Generic provider 地址），并同时配置签名、版本策略和端到端验收。
 
 ## 打包前验证
 

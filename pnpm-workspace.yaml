@@ -9,6 +9,8 @@ allowBuilds:
   esbuild: true
   electron: true
   electron-builder: true
+  # electron-builder 的 Squirrel 传递依赖；本仓库 Windows 包是 nsis/portable，不需要它的 install 脚本
+  electron-winstaller: false
   node-pty: true
   sharp: true
   unrs-resolver: true

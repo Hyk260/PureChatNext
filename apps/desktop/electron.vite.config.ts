@@ -26,6 +26,9 @@ const isDev = process.env.NODE_ENV !== 'production'
 export default defineConfig({
   main: {
     build: {
+      // electron-builder intentionally excludes node_modules; bundle the updater
+      // into the main entry so packaged apps can run without a dependency tree.
+      externalizeDeps: { exclude: ['electron-updater'] },
       outDir: path.resolve(desktopDir, 'dist/main'),
       sourcemap: process.env.NODE_ENV !== 'production',
     },

@@ -3,6 +3,7 @@ import path from 'node:path'
 import { BrowserWindow, shell } from 'electron'
 
 import { isSafeExternalUrl, isTrustedRendererUrl } from '../security/RendererSecurity'
+import type { DesktopConfigService, DesktopWindowState } from '../services/DesktopConfigService'
 
 export class WindowManager {
   private window: BrowserWindow | null = null
@@ -11,7 +12,8 @@ export class WindowManager {
     private readonly rendererUrl: string,
     private readonly preloadPath: string,
     private readonly iconPath: string,
-    private readonly shouldHideOnClose: () => boolean = () => false
+    private readonly shouldHideOnClose: () => boolean = () => false,
+    private readonly config?: DesktopConfigService
   ) {}
 
   get trustedContents() {
@@ -24,14 +26,17 @@ export class WindowManager {
 
   async create() {
     if (this.window) return this.window
+    const savedState = await this.config?.read().then((value) => value.windowState)
     const window = new BrowserWindow({
-      height: 800,
+      height: savedState?.height ?? 800,
       icon: this.iconPath,
       minHeight: 520,
       minWidth: 860,
       show: false,
       title: 'PureChat',
-      width: 1280,
+      width: savedState?.width ?? 1280,
+      ...(savedState?.x === null || savedState?.x === undefined ? {} : { x: savedState.x }),
+      ...(savedState?.y === null || savedState?.y === undefined ? {} : { y: savedState.y }),
       webPreferences: {
         contextIsolation: true,
         nodeIntegration: false,
@@ -40,11 +45,47 @@ export class WindowManager {
       },
     })
     this.window = window
+    if (savedState?.isMaximized) window.maximize()
+    let persistTimer: ReturnType<typeof setTimeout> | null = null
+    const persistState = () => {
+      if (!this.config || window.isDestroyed()) return
+      if (persistTimer) clearTimeout(persistTimer)
+      persistTimer = setTimeout(() => {
+        persistTimer = null
+        if (!this.config || window.isDestroyed()) return
+        const bounds = window.getNormalBounds()
+        const state: DesktopWindowState = {
+          height: bounds.height,
+          isMaximized: window.isMaximized(),
+          width: bounds.width,
+          x: bounds.x,
+          y: bounds.y,
+        }
+        void this.config.setWindowState(state)
+      }, 250)
+    }
+    const persistImmediately = () => {
+      if (!this.config || window.isDestroyed()) return
+      if (persistTimer) clearTimeout(persistTimer)
+      persistTimer = null
+      const bounds = window.getNormalBounds()
+      const state: DesktopWindowState = {
+        height: bounds.height,
+        isMaximized: window.isMaximized(),
+        width: bounds.width,
+        x: bounds.x,
+        y: bounds.y,
+      }
+      void this.config.setWindowState(state)
+    }
+    window.on('resize', persistState)
+    window.on('move', persistState)
     window.on('close', (event) => {
       if (this.shouldHideOnClose()) {
         event.preventDefault()
         window.hide()
       }
+      persistImmediately()
     })
     window.webContents.setWindowOpenHandler(({ url }) => {
       if (isSafeExternalUrl(url)) void shell.openExternal(url)

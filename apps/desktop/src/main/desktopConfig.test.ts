@@ -34,4 +34,20 @@ describe('createConfigStore', () => {
     expect((await store.read()).remoteServerUrl).toBe('https://example.com')
     expect(await readFile(store.configPath, 'utf8')).toContain('example.com')
   })
+
+  it('persists and clamps window state', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-desktop-'))
+    tempDirs.push(dir)
+    const store = new DesktopConfigService(dir)
+
+    await store.setWindowState({ height: 10, isMaximized: true, width: 10_000, x: 12.4, y: -8.8 })
+
+    expect((await store.read()).windowState).toEqual({
+      height: 520,
+      isMaximized: true,
+      width: 3840,
+      x: 12,
+      y: -9,
+    })
+  })
 })

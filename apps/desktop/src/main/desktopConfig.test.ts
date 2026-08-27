@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { createConfigStore, normalizeRemoteServerUrl } from './desktopConfig'
+import { DesktopConfigService, normalizeRemoteServerUrl } from './services/DesktopConfigService'
 
 const tempDirs: string[] = []
 
@@ -27,7 +27,7 @@ describe('createConfigStore', () => {
   it('persists the remote server without exposing an arbitrary file path', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-desktop-'))
     tempDirs.push(dir)
-    const store = await createConfigStore(dir)
+    const store = new DesktopConfigService(dir)
 
     await store.write({ remoteServerUrl: 'https://example.com', permissionScopes: {}, secrets: {} })
 

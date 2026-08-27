@@ -1,0 +1,4 @@
+export { CommandService } from './CommandService'
+export { DEFAULT_CONFIG, DesktopConfigService, normalizeRemoteServerUrl } from './DesktopConfigService'
+export { LocalToolService } from './LocalToolService'
+export { PermissionService } from './PermissionService'

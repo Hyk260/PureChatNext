@@ -1,53 +1,19 @@
-import { promises as fs } from 'node:fs'
-import path from 'node:path'
+/** @deprecated Configuration ownership moved to ./services/DesktopConfigService. */
+export {
+  DEFAULT_CONFIG,
+  DesktopConfigService as DesktopConfigStore,
+  normalizeRemoteServerUrl,
+} from './services/DesktopConfigService'
+export type { DesktopConfig } from './services/DesktopConfigService'
 
-export interface DesktopConfig {
-  permissionScopes: Record<string, string[]>
-  remoteServerUrl: string | null
-  secrets: Record<string, string>
-}
-
-export const DEFAULT_CONFIG: DesktopConfig = {
-  permissionScopes: {},
-  remoteServerUrl: process.env.PURECHAT_DESKTOP_REMOTE_URL?.trim() || null,
-  secrets: {},
-}
-
-export const normalizeRemoteServerUrl = (value: string): string => {
-  const url = new URL(value.trim())
-  if (!['http:', 'https:'].includes(url.protocol)) {
-    throw new Error('远程服务地址必须使用 http 或 https')
-  }
-  if (url.username || url.password || url.hash) {
-    throw new Error('远程服务地址不能包含凭据或 hash')
-  }
-  return url.toString().replace(/\/$/, '')
-}
+import { DesktopConfigService } from './services/DesktopConfigService'
+import type { DesktopConfig } from './services/DesktopConfigService'
 
 export const createConfigStore = async (userDataPath: string) => {
-  const configPath = path.join(userDataPath, 'config.json')
-
-  const read = async (): Promise<DesktopConfig> => {
-    try {
-      const raw = await fs.readFile(configPath, 'utf8')
-      const parsed = JSON.parse(raw) as Partial<DesktopConfig>
-      return {
-        permissionScopes:
-          parsed.permissionScopes && typeof parsed.permissionScopes === 'object' ? parsed.permissionScopes : {},
-        remoteServerUrl: parsed.remoteServerUrl ? normalizeRemoteServerUrl(parsed.remoteServerUrl) : null,
-        secrets: parsed.secrets && typeof parsed.secrets === 'object' ? parsed.secrets : {},
-      }
-    } catch {
-      return { ...DEFAULT_CONFIG, permissionScopes: {}, secrets: {} }
-    }
+  const service = new DesktopConfigService(userDataPath)
+  return {
+    configPath: service.configPath,
+    read: () => service.read(),
+    write: (config: DesktopConfig) => service.write(config),
   }
-
-  const write = async (config: DesktopConfig) => {
-    await fs.mkdir(userDataPath, { recursive: true })
-    const tempPath = `${configPath}.tmp`
-    await fs.writeFile(tempPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8')
-    await fs.rename(tempPath, configPath)
-  }
-
-  return { configPath, read, write }
 }

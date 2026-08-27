@@ -15,6 +15,7 @@
     "./Block": "./src/Block/index.tsx",
     "./Button": "./src/Button/index.ts",
     "./Checkbox": "./src/Checkbox/index.ts",
+    "./CodeBlock": "./src/CodeBlock/index.tsx",
     "./DropdownMenu": "./src/DropdownMenu/index.ts",
     "./Empty": "./src/Empty/index.ts",
     "./FileTypeIcon": "./src/FileTypeIcon/index.ts",

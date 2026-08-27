@@ -3,6 +3,7 @@
 
 /* Electron renderer uses apps/desktop as Vite root; keep the shared SPA classes discoverable. */
 @source '../';
+@source '../../packages/ui/src';
 
 :root {
   --background: #fff;
@@ -15,6 +16,17 @@
   --card: #fff;
   --border: #e5e5ea;
   --ring: #007aff;
+
+  --ink: #1c1917;
+  --ink-2: #44403c;
+  --ink-3: #a8a29e;
+  --accent-ink: #4f46e5;
+  --orange: #ea580c;
+  --green: #16a34a;
+  --red: #dc2626;
+  --surface: #fff;
+  --line: #e7e5e4;
+  --hover: #f5f5f4;
 }
 
 @theme inline {
@@ -28,6 +40,18 @@
   --color-card: var(--card);
   --color-border: var(--border);
   --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-hover: var(--hover);
+  --color-green: var(--green);
+  --color-red: var(--red);
+  --color-green-tint: color-mix(in srgb, var(--green) 10%, transparent);
+  --color-red-tint: color-mix(in srgb, var(--red) 10%, transparent);
+  --radius-card: 12px;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 4%), 0 10px 28px rgb(0 0 0 / 6%);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -43,6 +67,17 @@
   --card: #1c1c1e;
   --border: #3a3a3c;
   --ring: #2e8dff;
+
+  --ink: #f5f5f4;
+  --ink-2: #d6d3d1;
+  --ink-3: #a8a29e;
+  --accent-ink: #a5b4fc;
+  --orange: #fb923c;
+  --green: #4ade80;
+  --red: #f87171;
+  --surface: #1c1c1e;
+  --line: #3a3a3c;
+  --hover: #2c2c2e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -57,6 +92,17 @@
     --card: #1c1c1e;
     --border: #3a3a3c;
     --ring: #2e8dff;
+
+    --ink: #f5f5f4;
+    --ink-2: #d6d3d1;
+    --ink-3: #a8a29e;
+    --accent-ink: #a5b4fc;
+    --orange: #fb923c;
+    --green: #4ade80;
+    --red: #f87171;
+    --surface: #1c1c1e;
+    --line: #3a3a3c;
+    --hover: #2c2c2e;
   }
 }
 

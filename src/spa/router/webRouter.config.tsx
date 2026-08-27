@@ -326,6 +326,10 @@ export const webRoutes: RouteObject[] = [
               element: dynamicElement(() => import('@/features/dev/WechatConversationPage'), 'Dev > WechatConversation'),
               path: 'wechat-conversation',
             },
+            {
+              element: dynamicElement(() => import('@/features/dev/CodeBlockPage'), 'Dev > CodeBlock'),
+              path: 'code-block',
+            },
           ],
           path: 'dev',
         },

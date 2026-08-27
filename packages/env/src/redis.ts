@@ -10,13 +10,19 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface ProcessEnv {
+      /** Redis 数据库索引；默认使用 Redis 的 `0` 号数据库。 */
       REDIS_DATABASE?: string
+      /** Redis 认证密码。 */
       REDIS_PASSWORD?: string
+      /** Redis key 命名空间前缀；默认 `purechat`。 */
       REDIS_PREFIX?: string
+      /** 是否强制使用 TLS；连接 `rediss://` 或托管 Redis 时启用。 */
       REDIS_TLS?: string
+      /** Redis 连接字符串。 */
       REDIS_URL?: string
+      /** Redis 用户名。 */
       REDIS_USERNAME?: string
-      /** 是否禁用 Redis */
+      /** 是否禁用 Redis，即使已经配置 `REDIS_URL`。 */
       DISABLE_REDIS?: string
     }
   }
@@ -25,12 +31,19 @@ declare global {
 export const getRedisEnv = () => {
   return createEnv({
     server: {
+      /** Redis 数据库索引。 */
       REDIS_DATABASE: z.number().int().optional(),
+      /** Redis 认证密码。 */
       REDIS_PASSWORD: z.string().optional(),
+      /** Redis key 命名空间前缀；默认 `purechat`。 */
       REDIS_PREFIX: z.string(),
+      /** 是否强制使用 TLS；默认关闭。 */
       REDIS_TLS: z.boolean().default(false),
+      /** Redis 连接字符串。 */
       REDIS_URL: z.string().optional(),
+      /** Redis 用户名。 */
       REDIS_USERNAME: z.string().optional(),
+      /** 是否禁用 Redis，即使已经配置 `REDIS_URL`；默认关闭。 */
       DISABLE_REDIS: z.boolean().default(false),
     },
     runtimeEnv: {

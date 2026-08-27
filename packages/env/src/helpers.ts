@@ -39,3 +39,11 @@ export const optionalNumberEnv = (min: number, max: number) => {
     z.coerce.number().int().max(max).min(min).optional()
   )
 }
+
+/** Optional http(s) URL env; empty / null → undefined. */
+export const optionalUrlEnv = () => {
+  return z.preprocess(
+    (value) => (value === '' || value === null ? undefined : value),
+    z.url({ protocol: /^https?$/ }).optional()
+  )
+}

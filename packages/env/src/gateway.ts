@@ -21,6 +21,8 @@ declare global {
       WECHAT_GATEWAY_ENABLED?: string
       /** QQ 内部 gateway→webhook 转发鉴权；可选，未设则回退 `CRON_SECRET` */
       QQ_WEBHOOK_SECRET?: string
+      /** Vercel 平台注入的部署标识；在 Vercel 上会强制关闭常驻 Gateway。 */
+      VERCEL?: string
     }
   }
 }
@@ -28,11 +30,17 @@ declare global {
 export const getGatewayConfig = () => {
   return createEnv({
     server: {
+      /** 内置渠道 Gateway 总开关；本地默认关闭，Docker 需显式开启。 */
       CHANNEL_GATEWAY_ENABLED: z.boolean(),
+      /** Gateway 回调 Next Server 的内部地址；默认使用本机回环地址。 */
       CHANNEL_GATEWAY_INTERNAL_URL: z.string().url().optional(),
+      /** Gateway 回调内部 Webhook 的统一鉴权密钥。 */
       CHANNEL_GATEWAY_INTERNAL_SECRET: z.string().optional(),
+      /** 微信 webhook 转发鉴权；未设置时回退 `CRON_SECRET`。 */
       WECHAT_WEBHOOK_SECRET: z.string().optional(),
+      /** 本地或自托管常驻微信 Gateway；Vercel 上强制关闭。 */
       WECHAT_GATEWAY_ENABLED: z.boolean(),
+      /** QQ 内部 gateway→webhook 转发鉴权；未设置时回退 `CRON_SECRET`。 */
       QQ_WEBHOOK_SECRET: z.string().optional(),
     },
     runtimeEnv: {

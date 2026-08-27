@@ -20,9 +20,12 @@ declare global {
 export const getAnalyticsConfig = () => {
   return createEnv({
     server: {
+      /** 是否启用 Vercel Analytics。 */
       ENABLE_VERCEL_ANALYTICS: z.boolean(),
+      /** Vercel Analytics 调试模式。 */
       DEBUG_VERCEL_ANALYTICS: z.boolean(),
 
+      /** React Scan Monitor API Key，用于监控 React 应用性能。 */
       REACT_SCAN_MONITOR_API_KEY: z.string().optional(),
     },
     runtimeEnv: {

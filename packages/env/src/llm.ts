@@ -3,23 +3,54 @@ import { z } from 'zod'
 
 import { parseEnvBooleanDefaultTrue } from './helpers'
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace NodeJS {
+    interface ProcessEnv {
+      /** API Key 选择策略，例如 `random` 或 `turn`。 */
+      API_KEY_SELECT_MODE?: string
+      /** 是否启用 OpenAI Provider；默认开启。 */
+      ENABLED_OPENAI?: string
+      /** OpenAI API Key。 */
+      OPENAI_API_KEY?: string
+      /** DeepSeek API Key。 */
+      DEEPSEEK_API_KEY?: string
+      /** 是否启用 PureChat / Vercel AI Gateway；默认开启。 */
+      PURECHAT_ENABLED?: string
+      /** PureChat / Vercel AI Gateway API Key。 */
+      PURECHAT_API_KEY?: string
+      /** Vercel AI Gateway API Key，服务端使用，不暴露给浏览器。 */
+      AI_GATEWAY_API_KEY?: string
+      /** AI Gateway 请求地址；默认 `https://ai-gateway.vercel.sh/v1`。 */
+      AI_GATEWAY_BASE_URL?: string
+      /** Vercel OIDC Token，用于访问 Vercel AI Gateway。 */
+      VERCEL_OIDC_TOKEN?: string
+    }
+  }
+}
+
 export const getLLMConfig = () => {
   return createEnv({
     server: {
-      /** API Key 选择模式 */
+      /** API Key 选择策略，例如 `random` 或 `turn`。 */
       API_KEY_SELECT_MODE: z.string().optional(),
-      /** OpenAI */
+      /** 是否启用 OpenAI Provider；默认开启。 */
       ENABLED_OPENAI: z.boolean(),
+      /** OpenAI API Key。 */
       OPENAI_API_KEY: z.string().optional(),
-      /** Deepseek */
+      /** 是否启用 DeepSeek Provider；由 `DEEPSEEK_API_KEY` 是否存在决定。 */
       ENABLED_DEEPSEEK: z.boolean(),
+      /** DeepSeek API Key。 */
       DEEPSEEK_API_KEY: z.string().optional(),
-      /** PureChat */
+      /** 是否启用 PureChat / Vercel AI Gateway；默认开启。 */
       PURECHAT_ENABLED: z.boolean(),
+      /** PureChat / Vercel AI Gateway API Key。 */
       PURECHAT_API_KEY: z.string().optional(),
-      /** AI Gateway */
+      /** Vercel AI Gateway API Key，服务端使用，不暴露给浏览器。 */
       AI_GATEWAY_API_KEY: z.string().optional(),
+      /** AI Gateway 请求地址；默认 `https://ai-gateway.vercel.sh/v1`。 */
       AI_GATEWAY_BASE_URL: z.string().optional(),
+      /** Vercel OIDC Token，用于访问 Vercel AI Gateway。 */
       VERCEL_OIDC_TOKEN: z.string().optional(),
     },
     runtimeEnv: {

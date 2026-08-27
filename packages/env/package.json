@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test": "vitest",
-    "test:coverage": "vitest --coverage --silent='passed-only'"
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:coverage": "vitest --coverage --silent='passed-only' --config ./vitest.config.ts"
   },
   "exports": {
     "./*": "./src/*.ts"

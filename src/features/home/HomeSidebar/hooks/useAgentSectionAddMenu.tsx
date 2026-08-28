@@ -1,14 +1,11 @@
 'use client'
 
 import { Icon } from '@pure/ui'
-import type { MenuInfo, MenuProps } from '@pure/ui'
+import type { MenuProps } from '@pure/ui'
 import { BotIcon, StoreIcon } from 'lucide-react'
 import { useMemo } from 'react'
 
-const stopMenuEvent = (info: MenuInfo) => {
-  const event = info.domEvent as { stopPropagation?: () => void } | undefined
-  event?.stopPropagation?.()
-}
+import { stopMenuEvent } from '@/libs/utils/menu'
 
 export const useAgentSectionAddMenu = (options: {
   onCreateAgent: () => void

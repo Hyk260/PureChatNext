@@ -4,16 +4,13 @@ import debug from 'debug'
 import { NextResponse } from 'next/server'
 
 import { FileModel, FileStorageQuotaExceededError } from '@pure/database/models/file'
-import { fileEnv, fileStorageLimitBytes } from '@/envs/file'
+import { fileStorageLimitBytes } from '@/envs/file'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'
+import { isS3Configured } from '@/server/modules/S3/config'
 import { buildPublicS3Url, resolveFileAccessUrl } from '@/server/modules/S3/url'
 
 const log = debug('file:upload')
-
-function isS3Configured() {
-  return Boolean(fileEnv.S3_ACCESS_KEY_ID && fileEnv.S3_SECRET_ACCESS_KEY && fileEnv.S3_ENDPOINT && fileEnv.S3_BUCKET)
-}
 
 const quotaExceededResponse = (usedBytes: number, requestedBytes: number) =>
   NextResponse.json(

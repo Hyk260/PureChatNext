@@ -6,6 +6,8 @@ import { fileEnv } from '@/envs/file'
 import { UserModel } from '@pure/database/models/user'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'
+import { isS3Configured } from '@/server/modules/S3/config'
+import { buildPublicS3Url } from '@/server/modules/S3/url'
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024
 const ALLOWED_TYPES = new Set(['image/gif', 'image/jpeg', 'image/png', 'image/webp'])
@@ -15,22 +17,6 @@ const EXT_BY_TYPE: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
-}
-
-function isS3Configured() {
-  return Boolean(fileEnv.S3_ACCESS_KEY_ID && fileEnv.S3_SECRET_ACCESS_KEY && fileEnv.S3_ENDPOINT && fileEnv.S3_BUCKET)
-}
-
-function buildPublicS3Url(key: string) {
-  const endpoint = fileEnv.S3_ENDPOINT!.replace(/\/$/, '')
-  const bucket = fileEnv.S3_BUCKET!
-
-  if (fileEnv.S3_ENABLE_PATH_STYLE) {
-    return `${endpoint}/${bucket}/${key}`
-  }
-
-  const url = new URL(endpoint)
-  return `${url.protocol}//${bucket}.${url.host}/${key}`
 }
 
 function avatarPrefix(userId: string) {

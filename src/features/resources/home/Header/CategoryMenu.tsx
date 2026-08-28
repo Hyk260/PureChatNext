@@ -33,7 +33,7 @@ const CategoryMenu = memo(() => {
         const active = category === item.key
 
         return (
-          <Link key={item.key} href={href} style={{ color: 'inherit', textDecoration: 'none' }}>
+          <Link className='text-inherit no-underline' key={item.key} href={href}>
             <NavItem active={active} clickable icon={item.icon} title={item.label} />
           </Link>
         )

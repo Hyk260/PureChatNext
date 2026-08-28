@@ -60,7 +60,7 @@ const LibraryHierarchy = memo(() => {
         const active = pathname === href || pathname.startsWith(`${href}/`)
 
         return (
-          <Link key={folder.id} href={href} style={{ color: 'inherit', textDecoration: 'none' }}>
+          <Link className='text-inherit no-underline' key={folder.id} href={href}>
             <NavItem active={active} clickable icon={FolderIcon} title={folder.name} />
           </Link>
         )

@@ -3,6 +3,7 @@ import debug from 'debug'
 import urlJoin from 'url-join'
 
 import type { SearchServiceImpl } from '../type'
+import { getSearchTimeRangeDays } from '../../timeRange'
 import type { AnspireResponse, AnspireSearchParameters } from './type'
 
 const log = debug('search:Anspire')
@@ -30,22 +31,23 @@ export class AnspireImpl implements SearchServiceImpl {
       query,
       top_k: 20,
     }
+    const searchTimeRangeDays = getSearchTimeRangeDays(params.searchTimeRange)
 
     const body: AnspireSearchParameters = {
       ...defaultQueryParams,
-      ...(params?.searchTimeRange && params.searchTimeRange !== 'anytime'
-        ? (() => {
+      ...(searchTimeRangeDays === undefined
+        ? {}
+        : (() => {
             const now = Date.now()
-            const days = { day: 1, month: 30, week: 7, year: 365 }[params.searchTimeRange!]
-
-            if (days === undefined) return {}
 
             return {
-              FromTime: new Date(now - days * 86_400 * 1000).toISOString().slice(0, 19).replace('T', ' '),
+              FromTime: new Date(now - searchTimeRangeDays * 86_400 * 1000)
+                .toISOString()
+                .slice(0, 19)
+                .replace('T', ' '),
               ToTime: new Date(now).toISOString().slice(0, 19).replace('T', ' '),
             }
-          })()
-        : {}),
+          })()),
     }
 
     log('Constructed request body: %o', body)

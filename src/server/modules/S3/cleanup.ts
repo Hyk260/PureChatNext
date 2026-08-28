@@ -1,14 +1,10 @@
 import debug from 'debug'
 
-import { fileEnv } from '@/envs/file'
 import { FileS3 } from '@/server/modules/S3'
+import { isS3Configured } from '@/server/modules/S3/config'
 import { extractS3KeyFromUrl } from '@/server/modules/S3/url'
 
 const log = debug('file:s3-cleanup')
-
-function isS3Configured() {
-  return Boolean(fileEnv.S3_ACCESS_KEY_ID && fileEnv.S3_SECRET_ACCESS_KEY && fileEnv.S3_ENDPOINT && fileEnv.S3_BUCKET)
-}
 
 /** Delete S3 objects referenced by stored public URLs / keys. Throws when cleanup fails. */
 export async function deleteS3ObjectsByUrls(urls: Array<string | null | undefined>) {

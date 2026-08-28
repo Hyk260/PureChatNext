@@ -20,6 +20,7 @@ import {
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import type { LocalChatTopic } from '@/features/chat/types'
+import { stopMenuEvent } from '@/libs/utils/menu'
 
 const styles = createStaticStyles(({ css }) => ({
   item: css`
@@ -87,11 +88,6 @@ const styles = createStaticStyles(({ css }) => ({
     }
   `,
 }))
-
-const stopMenuEvent = (info: MenuInfo) => {
-  const event = info.domEvent as { stopPropagation?: () => void } | undefined
-  event?.stopPropagation?.()
-}
 
 type Props = {
   active: boolean

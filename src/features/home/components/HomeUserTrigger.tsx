@@ -102,7 +102,7 @@ const HomeUserTrigger = memo(() => {
               icon: <Icon icon={Settings2} />,
               key: 'setting',
               label: (
-                <Link href='/settings/profile' style={{ color: 'inherit' }}>
+                <Link className='text-inherit' href='/settings/profile'>
                   账号设置
                 </Link>
               ),
@@ -143,7 +143,7 @@ const HomeUserTrigger = memo(() => {
     <Flex className='flex-col gap-0.5 min-w-[300px]'>
       <UserInfoSection avatar={avatar} name='访客' />
       <Flex className='flex-col py-3 px-4 w-full'>
-        <Link href='/signin' style={{ color: 'inherit', textDecoration: 'none' }}>
+        <Link className='text-inherit no-underline' href='/signin'>
           <Button block type='primary' onClick={() => setOpen(false)}>
             登录或注册
           </Button>

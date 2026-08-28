@@ -83,7 +83,7 @@ const SettingsSidebar = memo(() => {
               >
                 <Flex className='flex-col gap-px py-px'>
                   {group.items.map((item) => (
-                    <Link href={item.href} key={item.key} style={{ color: 'inherit', textDecoration: 'none' }}>
+                    <Link className='text-inherit no-underline' href={item.href} key={item.key}>
                       <NavItem active={activeTab === item.key} clickable icon={item.icon} title={item.label} />
                     </Link>
                   ))}

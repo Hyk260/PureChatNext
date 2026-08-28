@@ -69,7 +69,7 @@ const CommunitySidebarHeader = memo(() => {
       />
       <Flex className='flex-col gap-px px-1'>
         {NAV_ITEMS.map((item) => (
-          <Link key={item.key} href={item.href} style={{ color: 'inherit', textDecoration: 'none' }}>
+          <Link className='text-inherit no-underline' key={item.key} href={item.href}>
             <NavItem active={activeTab === item.key} clickable icon={item.icon} title={item.title} />
           </Link>
         ))}

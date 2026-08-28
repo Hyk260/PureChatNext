@@ -3,6 +3,7 @@ import debug from 'debug'
 import urlJoin from 'url-join'
 
 import type { SearchServiceImpl } from '../type'
+import { getSearchTimeRangeDays } from '../../timeRange'
 import type { ExaResponse, ExaSearchParameters } from './type'
 
 const log = debug('search:Exa')
@@ -25,22 +26,20 @@ export class ExaImpl implements SearchServiceImpl {
       query,
       type: 'auto',
     }
+    const searchTimeRangeDays = getSearchTimeRangeDays(params.searchTimeRange)
 
     const body: ExaSearchParameters = {
       ...defaultQueryParams,
-      ...(params?.searchTimeRange && params.searchTimeRange !== 'anytime'
-        ? (() => {
+      ...(searchTimeRangeDays === undefined
+        ? {}
+        : (() => {
             const now = Date.now()
-            const days = { day: 1, month: 30, week: 7, year: 365 }[params.searchTimeRange!]
-
-            if (days === undefined) return {}
 
             return {
               endPublishedDate: new Date(now).toISOString(),
-              startPublishedDate: new Date(now - days * 86_400 * 1000).toISOString(),
+              startPublishedDate: new Date(now - searchTimeRangeDays * 86_400 * 1000).toISOString(),
             }
-          })()
-        : {}),
+          })()),
       // Exa only supports news type
       category: params?.searchCategories?.find((cat) => ['news'].includes(cat)),
     }

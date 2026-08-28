@@ -5,6 +5,7 @@ import { getRedisConfig } from '@/envs/redis'
 import { fileEnv } from '@/envs/file'
 import { toolsEnv } from '@/envs/tools'
 import { FileS3 } from '@/server/modules/S3'
+import { S3_REQUIRED_CONFIG_KEYS } from '@/server/modules/S3/config'
 import { initializeRedis } from '@/libs/redis'
 
 export type HealthDependencyStatus = 'ok' | 'skipped' | 'unhealthy'
@@ -85,12 +86,7 @@ async function checkRedis(parentSignal?: AbortSignal): Promise<HealthDependencyS
 }
 
 async function checkStorage(parentSignal?: AbortSignal): Promise<HealthDependencyStatus> {
-  const configuredValues = [
-    fileEnv.S3_ACCESS_KEY_ID,
-    fileEnv.S3_SECRET_ACCESS_KEY,
-    fileEnv.S3_ENDPOINT,
-    fileEnv.S3_BUCKET,
-  ]
+  const configuredValues = S3_REQUIRED_CONFIG_KEYS.map((key) => fileEnv[key])
   if (configuredValues.every((value) => !value)) return 'skipped'
   if (configuredValues.some((value) => !value)) return 'unhealthy'
 

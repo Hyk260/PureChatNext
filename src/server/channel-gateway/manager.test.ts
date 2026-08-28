@@ -4,7 +4,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
 vi.mock('@pure/database/models/channelBinding', () => ({ ChannelBindingModel: class {} }))
 vi.mock('@pure/database/models/channelEvent', () => ({ ChannelEventModel: class {} }))
-vi.mock('@pure/utils', () => ({ createNanoId: () => () => 'test-owner' }))
+vi.mock('@pure/utils', () => ({
+  abortableDelay: (ms: number, signal: AbortSignal) =>
+    new Promise<void>((resolve) => {
+      if (signal.aborted) {
+        resolve()
+        return
+      }
+
+      const timer = setTimeout(resolve, ms)
+      signal.addEventListener(
+        'abort',
+        () => {
+          clearTimeout(timer)
+          resolve()
+        },
+        { once: true }
+      )
+    }),
+  createNanoId: () => () => 'test-owner',
+}))
 vi.mock('@/libs/channels/wechat/processor', () => ({ runWechatProcessor: vi.fn().mockResolvedValue(undefined) }))
 vi.mock('./dbReady', () => ({ pingDatabase: vi.fn().mockResolvedValue(true) }))
 

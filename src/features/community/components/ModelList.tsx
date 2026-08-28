@@ -6,7 +6,7 @@ import { memo } from 'react'
 import type { DiscoverModelItem } from '@/features/community/types'
 
 import ModelCard from './ModelCard'
-import ModelEmpty from './ModelEmpty'
+import CommunityEmpty from './CommunityEmpty'
 
 export interface ModelListProps {
   data?: DiscoverModelItem[]
@@ -14,7 +14,9 @@ export interface ModelListProps {
 }
 
 const ModelList = memo<ModelListProps>(({ data = [], rows = 3 }) => {
-  if (data.length === 0) return <ModelEmpty />
+  if (data.length === 0) {
+    return <CommunityEmpty description='模型列表即将上线，敬请期待' title='暂无模型' />
+  }
 
   return (
     <Grid rows={rows} width='100%'>

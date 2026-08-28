@@ -6,9 +6,9 @@ import type { ProfileUser } from '@/features/settings/profile/ProfileContent'
 import { auth } from '@/auth'
 import { UserModel } from '@pure/database/models/user'
 import type { UserItem } from '@pure/database/schemas'
-import { fileEnv } from '@/envs/file'
 import { normalizeInterestsForStorage } from '@/features/settings/const/interests'
 import { withAuth } from '@/libs/auth/get-session-user'
+import { isS3Configured } from '@/server/modules/S3/config'
 
 function serializeUser(user: UserItem): ProfileUser {
   const { password: _password, ...rest } = user
@@ -22,10 +22,6 @@ function serializeUser(user: UserItem): ProfileUser {
     lastActiveAt: rest.lastActiveAt.toISOString(),
     updatedAt: rest.updatedAt.toISOString(),
   }
-}
-
-function isS3Configured() {
-  return Boolean(fileEnv.S3_ACCESS_KEY_ID && fileEnv.S3_SECRET_ACCESS_KEY && fileEnv.S3_ENDPOINT && fileEnv.S3_BUCKET)
 }
 
 /**

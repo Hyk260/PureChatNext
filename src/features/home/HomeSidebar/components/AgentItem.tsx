@@ -1,13 +1,14 @@
 'use client'
 
 import { Avatar, Center, confirmModal, DropdownMenu, Block, Icon, Text, Flex } from '@pure/ui'
-import type { MenuInfo, MenuProps } from '@pure/ui'
+import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { MoreHorizontal, Pencil, PinIcon, PinOff, Trash2 } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'
 import { useApp } from '@/components/AntdStaticMethods'
+import { stopMenuEvent } from '@/libs/utils/menu'
 
 const styles = createStaticStyles(({ css }) => ({
   agentItem: css`
@@ -65,11 +66,6 @@ const styles = createStaticStyles(({ css }) => ({
     color: ${cssVar.colorTextTertiary};
   `,
 }))
-
-const stopMenuEvent = (info: MenuInfo) => {
-  const event = info.domEvent as { stopPropagation?: () => void } | undefined
-  event?.stopPropagation?.()
-}
 
 interface AgentItemProps {
   agent: AgentListItem

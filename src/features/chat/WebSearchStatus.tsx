@@ -2,6 +2,7 @@
 
 import type { ChatWebSearchToolResult } from '@pure/types'
 import { Avatar } from '@pure/ui'
+import { isRecord } from '@pure/utils/object'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { getToolName, isToolUIPart } from 'ai'
 import type { ToolUIPart, UIMessage } from 'ai'
@@ -138,9 +139,6 @@ type MessagePart = UIMessage['parts'][number]
 
 const isWebSearchPart = (part: MessagePart): part is ToolUIPart =>
   isToolUIPart(part) && part.type !== 'dynamic-tool' && getToolName(part) === 'webSearch'
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
 
 const isWebSearchOutput = (value: unknown): value is ChatWebSearchToolResult => {
   if (!isRecord(value) || typeof value.query !== 'string' || typeof value.success !== 'boolean') return false

@@ -3,7 +3,7 @@
 import { ActionIcon, DropdownMenu, Flex, SearchBar, Text } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { Activity, CircleX, MoreVertical, Plus, RefreshCcwDot, RotateCcw, X } from 'lucide-react'
+import { Activity, CircleX, Ellipsis, Plus, RefreshCcwDot, RotateCcw, X } from 'lucide-react'
 import { memo, useMemo } from 'react'
 
 interface ModelTitleProps {
@@ -21,6 +21,9 @@ interface ModelTitleProps {
   searchKeyword: string
   showModelFetcher?: boolean
 }
+
+/** Match SearchBar middle height (32px). */
+const TOOLBAR_ACTION_ICON_SIZE = { blockSize: 32, border: 16 } as const
 
 const styles = createStaticStyles(({ css }) => ({
   actions: css`
@@ -107,7 +110,6 @@ const ModelTitle = memo<ModelTitleProps>(
     return (
       <Flex
         className='flex-col gap-3 py-2 w-full'
-
         style={{ background: cssVar.colorBgContainer, position: 'sticky', top: 0, zIndex: 15 }}
       >
         <Flex className={[styles.header, 'flex-between w-full']}>
@@ -130,22 +132,22 @@ const ModelTitle = memo<ModelTitleProps>(
               value={searchKeyword}
               onInputChange={onKeywordChange}
             />
-            {/* {onAddCustomModel ? (
+            {onAddCustomModel ? (
               <ActionIcon
-                variant={'outlined'}
-                icon={Plus}
-                size='small'
+                variant='outlined'
+                icon={<Plus size={16} />}
+                size={TOOLBAR_ACTION_ICON_SIZE}
                 title='添加自定义模型'
                 onClick={onAddCustomModel}
               />
-            ) : null} */}
+            ) : null}
             <DropdownMenu
               items={menuItems}
               nativeButton
               placement='bottomRight'
               triggerProps={{ className: 'size-8', title: '更多' }}
             >
-              <ActionIcon variant={'outlined'} icon={MoreVertical} size='small' />
+              <ActionIcon variant='outlined' icon={<Ellipsis size={16} />} size={TOOLBAR_ACTION_ICON_SIZE} />
             </DropdownMenu>
           </Flex>
         </Flex>

@@ -31,10 +31,10 @@ const styles = createStaticStyles(({ css }) => ({
 const HomeContent = memo(() => {
   return (
     <Flex className='w-full flex-col gap-6'>
-      <Flex className='flex-col items-center gap-2.5'>
+      {/* <Flex className='flex-col items-center gap-2.5'>
         <h1 className={styles.title}>把你的 AI 助手接入微信和 QQ</h1>
         <p className={styles.description}>自托管、多模型、联网搜索、文件处理，数据和密钥由你掌控。</p>
-      </Flex>
+      </Flex> */}
       <HomeChatInput />
     </Flex>
   )

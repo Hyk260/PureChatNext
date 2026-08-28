@@ -1,5 +1,6 @@
 import { WECHAT_RET_CODES, WechatApiClient } from '@pure/chat-adapter/wechat'
 import type { WechatRawMessage } from '@pure/chat-adapter/wechat'
+import { abortableDelay } from '@pure/utils'
 import debug from 'debug'
 
 import type { ChannelBindingItem } from '@pure/database/schemas/channel'
@@ -21,17 +22,6 @@ export type WechatPollOptions = {
   onSessionExpired?: () => void
   onStatus?: (event: { code?: string; message?: string; status: 'degraded' | 'online' }) => void
   signal: AbortSignal
-}
-
-function abortableDelay(ms: number, signal: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (signal.aborted) return reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))
-    const timer = setTimeout(resolve, ms)
-    signal.addEventListener('abort', () => {
-      clearTimeout(timer)
-      reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))
-    }, { once: true })
-  })
 }
 
 function errorDetails(error: unknown) {
@@ -81,7 +71,7 @@ export async function pollWechatUpdates(binding: ChannelBindingItem, options: We
       }
       log('poll failed binding=%s code=%s', binding.id, details.code)
       options.onStatus?.({ ...details, status: 'degraded' })
-      await abortableDelay(retryDelay, options.signal)
+      await abortableDelay(retryDelay, options.signal, { rejectOnAbort: true })
       retryDelay = Math.min(retryDelay * 2, MAX_RETRY_DELAY_MS)
     }
   }

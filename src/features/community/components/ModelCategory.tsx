@@ -1,7 +1,7 @@
 'use client'
 
 import { Icon, ProviderIcon, Tag, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import { cx } from 'antd-style'
 import { LayoutPanelTop } from 'lucide-react'
 import { memo, useCallback, useMemo } from 'react'
 
@@ -10,55 +10,7 @@ import { getModelProviderCounts } from '@/const/community/models'
 import { COMMUNITY_PROVIDERS } from '@/const/community/providers'
 import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
 
-const styles = createStaticStyles(({ css }) => ({
-  count: css`
-    margin-inline-start: auto;
-  `,
-  item: css`
-    cursor: pointer;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    background: transparent;
-    color: ${cssVar.colorTextSecondary};
-    font-size: 14px;
-    text-align: left;
-    transition:
-      background 0.15s ease,
-      color 0.15s ease;
-
-    &:hover {
-      background: ${cssVar.colorFillSecondary};
-      color: ${cssVar.colorText};
-    }
-
-    &:focus-visible {
-      outline: 2px solid ${cssVar.colorPrimary};
-      outline-offset: -2px;
-    }
-  `,
-  active: css`
-    && {
-      background: ${cssVar.colorPrimaryBg};
-      color: ${cssVar.colorPrimaryText};
-    }
-
-    &&:hover {
-      background: ${cssVar.colorPrimaryBgHover};
-    }
-  `,
-  root: css`
-    flex: none;
-    width: 220px;
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
-  `,
-}))
+import { communityCategoryStyles } from './communityCategoryStyles'
 
 const ALL_KEY = 'all'
 
@@ -85,11 +37,11 @@ const ModelCategory = memo(() => {
   )
 
   return (
-    <Flex className={[styles.root, 'flex-col']}>
+    <Flex className={[communityCategoryStyles.root, 'flex-col']}>
       <Scrollbar className='size-full'>
         <Flex className='flex-col gap-1'>
           <button
-            className={cx(styles.item, selected === ALL_KEY && styles.active)}
+            className={cx(communityCategoryStyles.item, selected === ALL_KEY && communityCategoryStyles.active)}
             type='button'
             onClick={() => handleSelect(ALL_KEY)}
           >
@@ -97,7 +49,7 @@ const ModelCategory = memo(() => {
             <Text ellipsis>全部</Text>
             {counts.all > 0 ? (
               <Tag
-                className={styles.count}
+                className={communityCategoryStyles.count}
                 size='small'
                 style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
               >
@@ -110,7 +62,7 @@ const ModelCategory = memo(() => {
             const count = counts[provider.id] ?? 0
             return (
               <button
-                className={cx(styles.item, isActive && styles.active)}
+                className={cx(communityCategoryStyles.item, isActive && communityCategoryStyles.active)}
                 key={provider.id}
                 type='button'
                 onClick={() => handleSelect(provider.id)}
@@ -119,7 +71,7 @@ const ModelCategory = memo(() => {
                 <Text ellipsis>{provider.name}</Text>
                 {count > 0 ? (
                   <Tag
-                    className={styles.count}
+                    className={communityCategoryStyles.count}
                     size='small'
                     style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
                   >

@@ -4,7 +4,7 @@ import debug from 'debug'
 
 import { ChannelBindingModel } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
-import { createNanoId } from '@pure/utils'
+import { abortableDelay, createNanoId } from '@pure/utils'
 
 import { pingDatabase } from './dbReady'
 import type {
@@ -50,17 +50,6 @@ type ManagerOptions = {
 function safeError(error: unknown): { code: string; message: string } {
   const code = String((error as { code?: string; name?: string })?.code || (error as Error)?.name || 'GATEWAY_ERROR')
   return { code: code.replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 100), message: 'Channel gateway unavailable' }
-}
-
-function abortableDelay(ms: number, signal: AbortSignal): Promise<void> {
-  return new Promise((resolve) => {
-    if (signal.aborted) return resolve()
-    const timer = setTimeout(resolve, ms)
-    signal.addEventListener('abort', () => {
-      clearTimeout(timer)
-      resolve()
-    }, { once: true })
-  })
 }
 
 export class ChannelGatewayManager {

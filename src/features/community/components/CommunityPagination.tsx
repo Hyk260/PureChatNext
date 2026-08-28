@@ -6,12 +6,12 @@ import { memo, useCallback } from 'react'
 
 import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
 
-const SCROLL_VIEWPORT_CLASS = 'community-scroll-viewport'
-const prefixCls = 'ant'
+const COMMUNITY_SCROLL_VIEWPORT_CLASS = 'community-scroll-viewport'
+const ANT_PREFIX_CLASS = 'ant'
 
-const styles = createStaticStyles(({ css, cssVar }) => ({
+const communityPaginationStyles = createStaticStyles(({ css, cssVar }) => ({
   page: css`
-    .${prefixCls}-pagination-item-active {
+    .${ANT_PREFIX_CLASS}-pagination-item-active {
       border-color: ${cssVar.colorFillSecondary};
       background: ${cssVar.colorFillSecondary};
 
@@ -23,13 +23,13 @@ const styles = createStaticStyles(({ css, cssVar }) => ({
   `,
 }))
 
-export interface AgentPaginationProps {
+export interface CommunityPaginationProps {
   currentPage: number
   pageSize: number
   total: number
 }
 
-const AgentPagination = memo<AgentPaginationProps>(({ currentPage, pageSize, total }) => {
+const CommunityPagination = memo<CommunityPaginationProps>(({ currentPage, pageSize, total }) => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -45,7 +45,7 @@ const AgentPagination = memo<AgentPaginationProps>(({ currentPage, pageSize, tot
       const query = next.toString()
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
 
-      const scrollableElement = document?.querySelector(`.${SCROLL_VIEWPORT_CLASS}`)
+      const scrollableElement = document?.querySelector(`.${COMMUNITY_SCROLL_VIEWPORT_CLASS}`)
       scrollableElement?.scrollTo({ behavior: 'smooth', top: 0 })
     },
     [pathname, router, searchParams]
@@ -55,7 +55,7 @@ const AgentPagination = memo<AgentPaginationProps>(({ currentPage, pageSize, tot
 
   return (
     <AntPagination
-      className={styles.page}
+      className={communityPaginationStyles.page}
       current={currentPage}
       pageSize={pageSize}
       showSizeChanger={false}
@@ -66,6 +66,6 @@ const AgentPagination = memo<AgentPaginationProps>(({ currentPage, pageSize, tot
   )
 })
 
-AgentPagination.displayName = 'AgentPagination'
+CommunityPagination.displayName = 'CommunityPagination'
 
-export default AgentPagination
+export default CommunityPagination

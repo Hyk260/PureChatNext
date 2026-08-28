@@ -47,7 +47,7 @@ const SidebarNav = memo(() => {
           }
 
           return (
-            <Link key={item.key} href={item.href} style={{ color: 'inherit', textDecoration: 'none' }}>
+            <Link className='text-inherit no-underline' key={item.key} href={item.href}>
               <NavItem active={active} clickable icon={item.icon} title={item.title} />
             </Link>
           )

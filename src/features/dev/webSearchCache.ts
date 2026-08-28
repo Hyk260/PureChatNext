@@ -1,3 +1,4 @@
+import { isRecord } from '@pure/utils/object'
 import { localStg } from '@pure/utils/storage'
 
 export type ActionMode = 'query' | 'webSearch' | 'crawlPages'
@@ -23,10 +24,6 @@ export type WebSearchCachedSlot<TPayload = unknown, TRunState = unknown> = {
 export type WebSearchCacheStore<TPayload = unknown, TRunState = unknown> = Partial<
   Record<ActionMode, WebSearchCachedSlot<TPayload, TRunState>>
 >
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
 
 const isActionMode = (value: unknown): value is ActionMode => {
   return value === 'query' || value === 'webSearch' || value === 'crawlPages'

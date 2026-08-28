@@ -47,7 +47,7 @@ const ProviderNavItem = memo<{ id: ProviderId; active: boolean; enabled: boolean
   const meta = getSettingsProviderMeta(id)
 
   return (
-    <Link href={`/settings/provider/${id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+    <Link className='text-inherit no-underline' href={`/settings/provider/${id}`}>
       <NavItem
         active={active}
         clickable
@@ -107,7 +107,7 @@ const ProviderSettingsNav = memo(() => {
       </Flex>
       <ScrollShadow size={2} style={{ flex: 1, minHeight: 0, width: '100%' }}>
         <Flex className='flex-col gap-1 px-1 py-[0_32px]' style={{ marginBlockStart: 8 }}>
-          <Link href='/settings/provider/all' style={{ color: 'inherit', textDecoration: 'none' }}>
+          <Link className='text-inherit no-underline' href='/settings/provider/all'>
             <NavItem active={isAllActive} clickable icon={LayoutGrid} title='全部' />
           </Link>
           <Accordion defaultExpandedKeys={['enabled', 'disabled']} gap={4}>

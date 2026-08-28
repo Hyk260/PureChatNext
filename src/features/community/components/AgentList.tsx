@@ -6,7 +6,7 @@ import { memo } from 'react'
 import type { DiscoverAgentItem } from '@/features/community/types'
 
 import AgentCard from './AgentCard'
-import AgentEmpty from './AgentEmpty'
+import CommunityEmpty from './CommunityEmpty'
 
 export interface AgentListProps {
   data?: DiscoverAgentItem[]
@@ -14,7 +14,9 @@ export interface AgentListProps {
 }
 
 const AgentList = memo<AgentListProps>(({ data = [], rows = 3 }) => {
-  if (data.length === 0) return <AgentEmpty />
+  if (data.length === 0) {
+    return <CommunityEmpty description='试试调整分类或搜索关键词' title='暂无匹配助理' />
+  }
 
   return (
     <Grid rows={rows} width='100%'>

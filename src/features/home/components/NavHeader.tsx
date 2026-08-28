@@ -32,11 +32,11 @@ const NavHeader = memo(() => {
       </Flex>
       {/* <Flex className='flex-row items-center gap-2'>
         {session?.user ? (
-          <Link href='/settings/profile' style={{ color: 'inherit', textDecoration: 'none' }}>
+          <Link className='text-inherit no-underline' href='/settings/profile'>
             <Avatar shape='circle' size={28}>{displayName.slice(0, 1).toUpperCase()}</Avatar>
           </Link>
         ) : (
-          <Link href='/signin' style={{ color: 'inherit', textDecoration: 'none' }}>
+          <Link className='text-inherit no-underline' href='/signin'>
             <Avatar shape='circle' size={28}>?</Avatar>
           </Link>
         )}

@@ -47,7 +47,7 @@ const LibraryList = memo(() => {
 
           return (
             <Flex className='flex-between' key={kb.id}>
-              <Link href={href} style={{ color: 'inherit', flex: 1, textDecoration: 'none' }}>
+              <Link className='flex-1 text-inherit no-underline' href={href}>
                 <NavItem active={active} clickable title={kb.name} />
               </Link>
               <ActionIcon

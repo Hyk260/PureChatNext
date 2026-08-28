@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { FileS3 } from '@/server/modules/S3'
+import { devError, getErrorMessage } from '../_utils'
 
 const DEV_S3_PREFIX = 'dev/'
 let fileS3: FileS3 | undefined
@@ -9,21 +10,13 @@ const getFileS3 = () => (fileS3 ??= new FileS3())
 
 const rejectOutsideDevelopment = () => {
   if (process.env.NODE_ENV === 'development') return
-  return NextResponse.json({ error: 'Not found', success: false }, { status: 404 })
+  return devError('Not found', 404)
 }
 
 // —— Helpers ——
 
-const badRequest = (error: string) => {
-  return NextResponse.json({ error, success: false }, { status: 400 })
-}
-
 const ok = (data: unknown) => {
   return NextResponse.json({ data, success: true }, { status: 200 })
-}
-
-const serverError = (error: string) => {
-  return NextResponse.json({ error, success: false }, { status: 500 })
 }
 
 const getAction = (searchParams: URLSearchParams) => {
@@ -58,7 +51,7 @@ export const POST = async (req: Request) => {
       const file = formData.get('file')
 
       if (!file || !(file instanceof File)) {
-        return badRequest('Missing or invalid file field')
+        return devError('Missing or invalid file field')
       }
 
       const key = toDevKey((formData.get('key') as string) || file.name)
@@ -76,7 +69,7 @@ export const POST = async (req: Request) => {
       const content = body.content as string | undefined
 
       if (!key || content === undefined) {
-        return badRequest('Missing "key" or "content"')
+        return devError('Missing "key" or "content"')
       }
 
       await getFileS3().uploadContent(key, content)
@@ -91,7 +84,7 @@ export const POST = async (req: Request) => {
       const contentType = body.contentType as string | undefined
 
       if (!key || content === undefined) {
-        return badRequest('Missing "key" or "content"')
+        return devError('Missing "key" or "content"')
       }
 
       const buffer = Buffer.from(content, 'utf-8')
@@ -105,7 +98,7 @@ export const POST = async (req: Request) => {
       const key = body.key ? toDevKey(body.key as string) : undefined
 
       if (!key) {
-        return badRequest('Missing "key"')
+        return devError('Missing "key"')
       }
 
       const result = await getFileS3().createPreSignedUpload(key)
@@ -113,9 +106,9 @@ export const POST = async (req: Request) => {
       return ok({ key, ...result })
     }
 
-    return badRequest(`Unknown action: ${action}`)
+    return devError(`Unknown action: ${action}`)
   } catch (error) {
-    return serverError(error instanceof Error ? error.message : 'Unknown error')
+    return devError(getErrorMessage(error, 'Unknown error'), 500)
   }
 }
 
@@ -147,7 +140,7 @@ export const GET = async (req: Request) => {
       const key = keyParam ? toDevKey(keyParam) : null
 
       if (!key) {
-        return badRequest('Missing "key"')
+        return devError('Missing "key"')
       }
 
       const metadata = await getFileS3().getFileMetadata(key)
@@ -160,7 +153,7 @@ export const GET = async (req: Request) => {
       const key = keyParam ? toDevKey(keyParam) : null
 
       if (!key) {
-        return badRequest('Missing "key"')
+        return devError('Missing "key"')
       }
 
       const expiresInRaw = url.searchParams.get('expiresIn')
@@ -170,9 +163,9 @@ export const GET = async (req: Request) => {
       return ok({ key, downloadUrl, expiresIn: expiresIn ?? 7200 })
     }
 
-    return badRequest(`Unknown action: ${action}`)
+    return devError(`Unknown action: ${action}`)
   } catch (error) {
-    return serverError(error instanceof Error ? error.message : 'Unknown error')
+    return devError(getErrorMessage(error, 'Unknown error'), 500)
   }
 }
 
@@ -195,7 +188,7 @@ export const DELETE = async (req: Request) => {
       const key = keyParam ? toDevKey(keyParam) : null
 
       if (!key) {
-        return badRequest('Missing "key"')
+        return devError('Missing "key"')
       }
 
       await getFileS3().deleteFile(key)
@@ -208,7 +201,7 @@ export const DELETE = async (req: Request) => {
       const keys = Array.isArray(body.keys) ? body.keys.map((key: unknown) => toDevKey(String(key))) : undefined
 
       if (!keys || !Array.isArray(keys) || keys.length === 0) {
-        return badRequest('Missing or invalid "keys" array')
+        return devError('Missing or invalid "keys" array')
       }
 
       await getFileS3().deleteFiles(keys)
@@ -216,9 +209,9 @@ export const DELETE = async (req: Request) => {
       return ok({ keys, deleted: true })
     }
 
-    return badRequest(`Unknown action: ${action}`)
+    return devError(`Unknown action: ${action}`)
   } catch (error) {
-    return serverError(error instanceof Error ? error.message : 'Unknown error')
+    return devError(getErrorMessage(error, 'Unknown error'), 500)
   }
 }
 
@@ -241,7 +234,7 @@ export const PUT = async (req: Request) => {
       const newKey = body.newKey ? toDevKey(body.newKey as string) : undefined
 
       if (!oldKey || !newKey) {
-        return badRequest('Missing "oldKey" or "newKey"')
+        return devError('Missing "oldKey" or "newKey"')
       }
 
       await getFileS3().copyObject(oldKey, newKey)
@@ -250,8 +243,8 @@ export const PUT = async (req: Request) => {
       return ok({ oldKey, newKey, renamed: true })
     }
 
-    return badRequest(`Unknown action: ${action}`)
+    return devError(`Unknown action: ${action}`)
   } catch (error) {
-    return serverError(error instanceof Error ? error.message : 'Unknown error')
+    return devError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
 }

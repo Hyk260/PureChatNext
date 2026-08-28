@@ -4,17 +4,22 @@ import { Center, Text } from '@pure/ui'
 import { Empty } from 'antd'
 import { memo } from 'react'
 
-const ModelEmpty = memo(() => {
+export interface CommunityEmptyProps {
+  description: string
+  title: string
+}
+
+const CommunityEmpty = memo<CommunityEmptyProps>(({ description, title }) => {
   return (
     <Center height='100%' style={{ minHeight: '50vh' }} width='100%'>
       <Empty
         image={Empty.PRESENTED_IMAGE_SIMPLE}
         description={
           <>
-            <Text strong>暂无模型</Text>
+            <Text strong>{title}</Text>
             <br />
             <Text type='secondary' style={{ fontSize: 14 }}>
-              模型列表即将上线，敬请期待
+              {description}
             </Text>
           </>
         }
@@ -24,6 +29,6 @@ const ModelEmpty = memo(() => {
   )
 })
 
-ModelEmpty.displayName = 'ModelEmpty'
+CommunityEmpty.displayName = 'CommunityEmpty'
 
-export default ModelEmpty
+export default CommunityEmpty

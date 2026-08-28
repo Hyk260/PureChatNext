@@ -62,7 +62,7 @@ const SidebarBody = memo(() => {
 
       const active = pathname.startsWith(section.href)
       return (
-        <Link key={key} href={section.href} style={{ color: 'inherit', textDecoration: 'none' }}>
+        <Link className='text-inherit no-underline' key={key} href={section.href}>
           <NavItem active={active} clickable icon={section.icon} title={section.title} />
         </Link>
       )
@@ -137,7 +137,7 @@ const SidebarBody = memo(() => {
         <Flex className='flex-col gap-px flex-none px-[4px_8px]'>{bottomContent}</Flex>
       ) : null}
       <Flex className='flex-row flex-none py-1 px-[4px_8px]'>
-        <Link href='/settings/profile' style={{ color: 'inherit', textDecoration: 'none' }}>
+        <Link className='text-inherit no-underline' href='/settings/profile'>
           <ActionIcon icon={Settings} size='small' title='设置' />
         </Link>
       </Flex>

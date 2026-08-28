@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 
 import { MessageState, MessageType } from '@pure/chat-adapter/wechat'
 import type { WechatRawMessage } from '@pure/chat-adapter/wechat'
+import { abortableDelay } from '@pure/utils'
 import debug from 'debug'
 
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
@@ -68,17 +69,6 @@ export async function ingestWechatWebhookBatch(binding: ChannelBindingItem, batc
   return inserted
 }
 
-function abortableDelay(ms: number, signal: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (signal.aborted) return reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))
-    const timer = setTimeout(resolve, ms)
-    signal.addEventListener('abort', () => {
-      clearTimeout(timer)
-      reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))
-    }, { once: true })
-  })
-}
-
 export async function forwardWechatBatch(applicationId: string, batch: WechatPollBatch, signal: AbortSignal) {
   const url = buildChannelGatewayWebhookUrl(`/api/channels/wechat/webhook/${encodeURIComponent(applicationId)}`)
   let lastError: unknown
@@ -99,7 +89,7 @@ export async function forwardWechatBatch(applicationId: string, batch: WechatPol
     } catch (error) {
       lastError = error
       if (signal.aborted) throw Object.assign(new Error('aborted'), { name: 'AbortError' })
-      if (attempt < 4) await abortableDelay(1000 * 2 ** attempt, signal)
+      if (attempt < 4) await abortableDelay(1000 * 2 ** attempt, signal, { rejectOnAbort: true })
     } finally {
       clearTimeout(timeout)
       signal.removeEventListener('abort', abort)

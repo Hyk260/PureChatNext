@@ -1,7 +1,7 @@
 'use client'
 
 import { Icon, Tag, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import { cx } from 'antd-style'
 import {
   BadgeDollarSignIcon,
   BriefcaseIcon,
@@ -31,55 +31,7 @@ import {
 } from '@/const/community/agents'
 import { AssistantCategory } from '@/features/community/types'
 
-const styles = createStaticStyles(({ css }) => ({
-  count: css`
-    margin-inline-start: auto;
-  `,
-  item: css`
-    cursor: pointer;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    background: transparent;
-    color: ${cssVar.colorTextSecondary};
-    font-size: 14px;
-    text-align: left;
-    transition:
-      background 0.15s ease,
-      color 0.15s ease;
-
-    &:hover {
-      background: ${cssVar.colorFillSecondary};
-      color: ${cssVar.colorText};
-    }
-
-    &:focus-visible {
-      outline: 2px solid ${cssVar.colorPrimary};
-      outline-offset: -2px;
-    }
-  `,
-  active: css`
-    && {
-      background: ${cssVar.colorPrimaryBg};
-      color: ${cssVar.colorPrimaryText};
-    }
-
-    &&:hover {
-      background: ${cssVar.colorPrimaryBgHover};
-    }
-  `,
-  root: css`
-    flex: none;
-    width: 220px;
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
-  `,
-}))
+import { communityCategoryStyles } from './communityCategoryStyles'
 
 const CATEGORY_ICONS: Record<AssistantCategory, LucideIcon> = {
   [AssistantCategory.All]: LayoutPanelTop,
@@ -124,14 +76,14 @@ const AgentCategory = memo(() => {
   )
 
   return (
-    <Flex className={[styles.root, 'flex-col']}>
+    <Flex className={[communityCategoryStyles.root, 'flex-col']}>
       <Scrollbar className='size-full'>
         <Flex className='flex-col gap-1'>
           {CATEGORY_KEYS.map((key) => {
             const isActive = selected === key
             return (
               <button
-                className={cx(styles.item, isActive && styles.active)}
+                className={cx(communityCategoryStyles.item, isActive && communityCategoryStyles.active)}
                 key={key}
                 type='button'
                 onClick={() => handleSelect(key)}
@@ -140,7 +92,7 @@ const AgentCategory = memo(() => {
                 <Text ellipsis>{ASSISTANT_CATEGORY_LABELS[key]}</Text>
                 {counts[key] > 0 ? (
                   <Tag
-                    className={styles.count}
+                    className={communityCategoryStyles.count}
                     size='small'
                     style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
                   >

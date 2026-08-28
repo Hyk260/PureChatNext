@@ -5,8 +5,9 @@ import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
 import { FileModel, FileStorageQuotaExceededError } from '@pure/database/models/file'
 import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import type { FileItem } from '@pure/database/schemas/file'
-import { fileEnv, fileStorageLimitBytes } from '@/envs/file'
+import { fileStorageLimitBytes } from '@/envs/file'
 import { FileS3 } from '@/server/modules/S3'
+import { isS3Configured } from '@/server/modules/S3/config'
 import { buildPublicS3Url, extractS3KeyFromUrl } from '@/server/modules/S3/url'
 
 export type WechatFileArtifact = {
@@ -29,9 +30,6 @@ export class WechatFileArtifactError extends Error {
   }
 }
 
-const isStorageConfigured = () =>
-  Boolean(fileEnv.S3_ACCESS_KEY_ID && fileEnv.S3_SECRET_ACCESS_KEY && fileEnv.S3_ENDPOINT && fileEnv.S3_BUCKET)
-
 const safeName = (name: string) => path.basename(name).replace(/[^\p{L}\p{N}._-]+/gu, '-') || 'wechat-file'
 
 export async function persistWechatFile(params: {
@@ -47,7 +45,7 @@ export async function persistWechatFile(params: {
   userId: string
   version?: number
 }): Promise<WechatFileArtifact> {
-  if (!isStorageConfigured()) {
+  if (!isS3Configured()) {
     throw new WechatFileArtifactError('FILE_STORAGE_UNAVAILABLE', '文件存储未配置，暂时无法长期保存或回传文件。')
   }
   const contentHash = createHash('sha256').update(params.buffer).digest('hex')

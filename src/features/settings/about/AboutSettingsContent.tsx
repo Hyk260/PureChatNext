@@ -62,7 +62,7 @@ const styles = createStaticStyles(({ css }) => ({
 
 function ExternalLink({ children, href }: { children: ReactNode; href: string }) {
   return (
-    <a href={href} rel='noreferrer' target='_blank' style={{ color: 'inherit', textDecoration: 'none' }}>
+    <a className='text-inherit no-underline' href={href} rel='noreferrer' target='_blank'>
       {children}
     </a>
   )
@@ -78,7 +78,7 @@ function OpenAction({ href, label }: { href: string; label: string }) {
 
 function InternalAction({ href, label }: { href: string; label: string }) {
   return (
-    <Link href={href} style={{ color: 'inherit', textDecoration: 'none' }}>
+    <Link className='text-inherit no-underline' href={href}>
       <Text style={{ cursor: 'pointer', fontSize: 13 }}>{label}</Text>
     </Link>
   )

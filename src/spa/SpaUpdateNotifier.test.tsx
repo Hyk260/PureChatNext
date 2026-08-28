@@ -1,4 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/react'
+import { isValidElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
@@ -30,6 +31,23 @@ function mockVersion(buildTime: string) {
       ok: true,
     })
   )
+}
+
+function latestOpenArgs() {
+  const args = mocks.notification.open.mock.calls.at(-1)?.[0]
+  if (!args) throw new Error('notification.open was not called')
+  return args
+}
+
+function clickLater() {
+  const { actions } = latestOpenArgs()
+  if (!isValidElement(actions)) throw new Error('expected actions element')
+
+  const children = (actions.props as { children?: unknown }).children
+  const later = Array.isArray(children) ? children[0] : null
+  if (!isValidElement(later)) throw new Error('expected 稍后再说 button')
+
+  ;(later.props as { onClick?: () => void }).onClick?.()
 }
 
 describe('SpaUpdateNotifier', () => {
@@ -71,7 +89,7 @@ describe('SpaUpdateNotifier', () => {
     expect(mocks.notification.open).not.toHaveBeenCalled()
   })
 
-  it('notifies when fingerprints differ', async () => {
+  it('notifies when fingerprints differ and stays until the user acts', async () => {
     mockVersion('remote-time')
     render(<SpaUpdateNotifier enabled preview={false} />)
 
@@ -80,9 +98,9 @@ describe('SpaUpdateNotifier', () => {
     await waitFor(() => {
       expect(mocks.notification.open).toHaveBeenCalledTimes(1)
     })
-    expect(mocks.notification.open.mock.calls[0]?.[0]).toMatchObject({
-      duration: 6,
-      message: '检测到系统有新版本发布，是否立即刷新页面？',
+    expect(latestOpenArgs()).toMatchObject({
+      duration: false,
+      title: '检测到系统有新版本发布，是否立即刷新页面？',
     })
   })
 
@@ -95,7 +113,7 @@ describe('SpaUpdateNotifier', () => {
       expect(mocks.notification.open).toHaveBeenCalledTimes(1)
     })
 
-    mocks.notification.open.mock.calls[0]?.[0].onClose()
+    latestOpenArgs().onClose()
     expect(sessionStorage.getItem(SPA_UPDATE_DISMISS_KEY)).toBe('remote-time')
 
     fireEvent(document, new Event('visibilitychange'))
@@ -105,11 +123,43 @@ describe('SpaUpdateNotifier', () => {
     expect(mocks.notification.open).toHaveBeenCalledTimes(1)
   })
 
+  it('notifies again when a newer fingerprint arrives after dismiss', async () => {
+    mockVersion('remote-v1')
+    render(<SpaUpdateNotifier enabled preview={false} />)
+
+    fireEvent(document, new Event('visibilitychange'))
+    await waitFor(() => {
+      expect(mocks.notification.open).toHaveBeenCalledTimes(1)
+    })
+
+    clickLater()
+    expect(sessionStorage.getItem(SPA_UPDATE_DISMISS_KEY)).toBe('remote-v1')
+    expect(mocks.notification.destroy).toHaveBeenCalled()
+
+    mockVersion('remote-v2')
+    fireEvent(document, new Event('visibilitychange'))
+    await waitFor(() => {
+      expect(mocks.notification.open).toHaveBeenCalledTimes(2)
+    })
+  })
+
   it('opens immediately in preview mode without fetching', () => {
     mockVersion('remote-time')
     render(<SpaUpdateNotifier enabled preview />)
 
     expect(mocks.notification.open).toHaveBeenCalledTimes(1)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('re-opens preview toast after close when the tab becomes visible', () => {
+    mockVersion('remote-time')
+    render(<SpaUpdateNotifier enabled preview />)
+    expect(mocks.notification.open).toHaveBeenCalledTimes(1)
+
+    latestOpenArgs().onClose()
+    fireEvent(document, new Event('visibilitychange'))
+
+    expect(mocks.notification.open).toHaveBeenCalledTimes(2)
     expect(fetch).not.toHaveBeenCalled()
   })
 })

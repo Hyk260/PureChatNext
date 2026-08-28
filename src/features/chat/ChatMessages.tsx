@@ -21,6 +21,7 @@ import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
 import WebSearchStatus, { getWebSearchStatusSignature, hasWebSearchToolPart } from '@/features/chat/WebSearchStatus'
 import ToolApprovalCard from '@/features/chat/ToolApprovalCard'
+import { getToolApprovalItems } from '@/features/chat/toolApprovalParts'
 import { CONVERSATION_MAX_WIDTH } from '@/features/chat/WideScreenContainer'
 
 export interface AgentMeta {
@@ -130,47 +131,11 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
     }, [message.id, onDelete])
 
     const hasAttachments = message.parts.some((part) => part.type === 'file')
-    const localApprovalParts = message.parts.filter(
-      (part) =>
-        typeof part.type === 'string' &&
-        part.type.startsWith('tool-') &&
-        (part as { state?: string }).state === 'input-available' &&
-        [
-          'readFile',
-          'listFiles',
-          'searchFiles',
-          'writeFile',
-          'editFile',
-          'getSystemInfo',
-          'moveFile',
-          'runCommand',
-          'getCommandOutput',
-          'killCommand',
-        ].includes(part.type.slice(5))
-    ) as Array<{ input?: Record<string, unknown>; state: string; toolCallId: string; type: string }>
-    const serverApprovalParts = message.parts.filter(
-      (part) =>
-        typeof part.type === 'string' &&
-        part.type.startsWith('tool-') &&
-        (part as { state?: string }).state === 'approval-requested'
-    ) as Array<{
-      approval?: { id: string }
-      input?: Record<string, unknown>
-      state: string
-      toolCallId: string
-      type: string
-    }>
+    const approvalItems = getToolApprovalItems(message.parts)
 
-    if (
-      !text &&
-      !reasoning &&
-      !hasWebSearch &&
-      !hasAttachments &&
-      localApprovalParts.length === 0 &&
-      serverApprovalParts.length === 0 &&
-      !isStreaming
-    )
+    if (!text && !reasoning && !hasWebSearch && !hasAttachments && approvalItems.length === 0 && !isStreaming) {
       return null
+    }
 
     return (
       <div className={styles.row} data-role={message.role}>
@@ -190,24 +155,17 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
 
           <MessageAttachments message={message} />
 
-          {localApprovalParts.map((part) => (
+          {approvalItems.map((item) => (
             <ToolApprovalCard
-              args={part.input ?? {}}
-              key={part.toolCallId}
-              toolName={part.type.slice(5)}
-              onDecision={(approved) =>
-                onToolApproval?.(part.toolCallId, part.type.slice(5), part.input ?? {}, approved)
-              }
-            />
-          ))}
-
-          {serverApprovalParts.map((part) => (
-            <ToolApprovalCard
-              args={part.input ?? {}}
-              key={part.toolCallId}
-              toolName={part.type.slice(5)}
+              args={item.args}
+              key={`${item.kind}-${item.toolCallId}`}
+              toolName={item.toolName}
               onDecision={(approved) => {
-                if (part.approval?.id) onServerToolApproval?.(part.approval.id, part.toolCallId, approved)
+                if (item.kind === 'local') {
+                  onToolApproval?.(item.toolCallId, item.toolName, item.args, approved)
+                  return
+                }
+                if (item.approvalId) onServerToolApproval?.(item.approvalId, item.toolCallId, approved)
               }}
             />
           ))}

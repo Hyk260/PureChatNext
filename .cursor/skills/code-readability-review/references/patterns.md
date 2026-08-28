@@ -257,6 +257,37 @@ className={cx(styles.row, active && styles.rowActive, disabled && styles.rowDisa
 
 ---
 
+## 8. 组件内长过滤 + 字面量名单 → 外提 helper
+
+**Before（难扫读）**
+
+```tsx
+const localApprovalParts = message.parts.filter(
+  (part) =>
+    typeof part.type === 'string' &&
+    part.type.startsWith('tool-') &&
+    (part as { state?: string }).state === 'input-available' &&
+    ['readFile', 'listFiles', 'searchFiles' /* ... */].includes(part.type.slice(5))
+) as Array<{ toolCallId: string; type: string /* ... */ }>
+```
+
+**After**
+
+```ts
+// localTools.ts / toolApprovalParts.ts
+export const LOCAL_TOOL_NAMES = new Set([...])
+export const getLocalApprovalParts = (parts: UIMessage['parts']) =>
+  parts.filter((part) => isToolPartWithState(part, 'input-available') && isLocalToolName(...))
+```
+
+```tsx
+const localApprovalParts = getLocalApprovalParts(message.parts)
+```
+
+何时用：过滤条件 ≥3 个子句、名单 ≥5 项、或带长 `as` 断言。正例见 `src/features/chat/toolApprovalParts.ts`。
+
+---
+
 ## 选择速查
 
 | 情况 | 首选 |
@@ -266,3 +297,4 @@ className={cx(styles.row, active && styles.rowActive, disabled && styles.rowDisa
 | 2×2 状态矩阵 className | helper 或扁平 `cx`/`cn` |
 | 单层、两侧很短 | 可保留内联三元 |
 | 逻辑出现在多个 JSX 属性/位置 | 提取命名变量或 helper |
+| 长 filter + 字面量名单 + 内联断言 | 模块级常量 + named helper |

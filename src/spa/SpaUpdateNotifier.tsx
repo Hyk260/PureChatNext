@@ -37,35 +37,44 @@ const SpaUpdateNotifier = ({
   useEffect(() => {
     if (!enabled) return
 
+    const rememberDismissed = (remote: string) => {
+      isShowingRef.current = false
+      if (preview) return
+      sessionStg.setString(SPA_UPDATE_DISMISS_KEY, remote)
+    }
+
     const notify = (remote: string) => {
       isShowingRef.current = true
       notification.open({
-        description: (
+        actions: (
           <Flex gap={8}>
-            <Button onClick={() => notification.destroy(SPA_UPDATE_NOTIFICATION_KEY)}>稍后再说</Button>
+            <Button
+              onClick={() => {
+                rememberDismissed(remote)
+                notification.destroy(SPA_UPDATE_NOTIFICATION_KEY)
+              }}
+            >
+              稍后再说
+            </Button>
             <Button type='primary' onClick={() => location.reload()}>
               立即刷新
             </Button>
           </Flex>
         ),
-        duration: 6,
+        duration: false,
         key: SPA_UPDATE_NOTIFICATION_KEY,
-        message: '检测到系统有新版本发布，是否立即刷新页面？',
-        onClose: () => {
-          isShowingRef.current = false
-          if (preview) return
-          sessionStg.setString(SPA_UPDATE_DISMISS_KEY, remote)
-        },
+        onClose: () => rememberDismissed(remote),
+        title: '检测到系统有新版本发布，是否立即刷新页面？',
       })
-    }
-
-    if (preview) {
-      notify('preview')
-      return
     }
 
     const runCheck = async () => {
       if (document.visibilityState !== 'visible') return
+
+      if (preview) {
+        if (!isShowingRef.current) notify('preview')
+        return
+      }
 
       const result = await checkForSpaUpdate({ isShowing: isShowingRef.current })
       if (!result.show || !result.remote) return
@@ -78,6 +87,8 @@ const SpaUpdateNotifier = ({
     }
 
     document.addEventListener('visibilitychange', onVisibilityChange)
+    if (preview) notify('preview')
+
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }

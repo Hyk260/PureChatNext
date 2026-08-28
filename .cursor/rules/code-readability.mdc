@@ -1,0 +1,67 @@
+---
+description: TypeScript/React 可读性：禁止难扫读的内联过滤、长字面量与嵌套分支
+globs: "**/*.{tsx,ts}"
+alwaysApply: false
+---
+
+# 代码可读性
+
+写能扫读的代码。行为正确但难读的结构，视为缺陷并改掉。
+
+更完整的审查流程与改写模式：`.cursor/skills/code-readability-review/SKILL.md`。
+
+## 禁止（渲染路径 / 业务函数体内）
+
+1. **长字面量名单内联**  
+   不要在 `.filter` / `.includes` / JSX 里塞 5+ 项字符串数组或 Set。提到模块顶层命名常量，或共享模块（如 `localTools.ts`）。
+
+2. **多层条件挤在一个回调里**  
+   不要写 `typeof x === 'string' && x.startsWith(...) && (x as T).state === '...' && LIST.includes(...)` 这种难扫读过滤。拆成：
+   - 命名 type guard / helper（`isToolPartWithState`）
+   - 命名集合（`LOCAL_TOOL_NAMES`）
+   - 顶层导出函数（`getLocalApprovalParts`）
+
+3. **内联类型断言承担语义**  
+   长 `as Array<{ ... }>` 挂在表达式末尾会挡住主逻辑。先定义命名类型，再在 helper 的返回类型或 type predicate 里表达。
+
+4. **嵌套三元做映射**（≥2 层）  
+   用 `Record` lookup、early return 小函数，或扁平布尔 + `cx`/`cn`。
+
+5. **巨型 JSX 属性表达式**  
+   `disabled={a && b && c && d}`、嵌套三元 label 等先算成命名变量再传入。
+
+## 正例
+
+```ts
+// ❌ 难读：名单、状态、断言全挤在组件里
+const parts = message.parts.filter(
+  (part) =>
+    typeof part.type === 'string' &&
+    part.type.startsWith('tool-') &&
+    (part as { state?: string }).state === 'input-available' &&
+    ['readFile', 'listFiles' /* ... */].includes(part.type.slice(5))
+) as Array<{ toolCallId: string; type: string /* ... */ }>
+
+// ✅ 可读：常量与 helper 外提后，调用处一行能懂
+const approvalItems = getToolApprovalItems(message.parts)
+```
+
+仓库正例：
+
+- `src/features/chat/toolApprovalParts.ts` + `localTools.ts`
+- `src/features/dev/WechatConversationPage.tsx` 的 `statusChip`（`Record` 映射）
+
+## 何时提取
+
+| 信号 | 动作 |
+|------|------|
+| 过滤条件 ≥3 个布尔子句 | 提取 helper / type guard |
+| 字符串名单 ≥5 项或跨文件复用 | 模块级 `Set` / `const` |
+| 同一断言类型出现 ≥2 次 | 命名 `type` / interface |
+| 空态判断变量 ≥4 个 | 合成 `hasXxx` 布尔再 early return |
+
+## 明确不做
+
+- 不为「看起来干净」做无关大重构
+- 单层、两侧很短的三元可以保留（`active ? 'a' : 'b'`）
+- API route handler 格式走 `.cursor/skills/api-route-readability/`

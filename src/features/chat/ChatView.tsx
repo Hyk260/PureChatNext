@@ -34,23 +34,11 @@ import { isSettingsProviderId } from '@/features/settings/provider/const'
 import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
 import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { useRouter } from '@/utils/navigation'
+import { LOCAL_TOOL_NAMES, SAFE_LOCAL_TOOL_NAMES } from '@/features/chat/localTools'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopLocalToolRequest } from '@/types/desktop'
 
 const EMPTY_MESSAGES: UIMessage[] = []
-const LOCAL_TOOL_NAMES = new Set([
-  'editFile',
-  'getSystemInfo',
-  'getCommandOutput',
-  'killCommand',
-  'listFiles',
-  'moveFile',
-  'readFile',
-  'runCommand',
-  'searchFiles',
-  'writeFile',
-])
-const SAFE_LOCAL_TOOL_NAMES = new Set(['getCommandOutput', 'getSystemInfo', 'listFiles', 'readFile', 'searchFiles'])
 
 const fileToPart = (file: File): Promise<{ type: 'file'; mediaType: string; url: string; filename: string }> =>
   new Promise((resolve, reject) => {

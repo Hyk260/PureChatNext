@@ -107,6 +107,7 @@ pnpm exec vitest run --silent='passed-only' '<test-file>'
 - Tailwind 细则见 `docs/development/styling/tailwind-guidelines.md` 与 `docs/development/styling/tailwind-migration.md`。
 - 单文件接近或超过 800 行时评估拆分，但不要为控制行数进行无关重构。
 - Debug 日志遵循 `.cursor/rules/debug-usage.md`，使用 `auth:*`、`db:*` 等领域命名空间。
+- **可读性（强制）**：不要在组件渲染路径里堆叠长字面量数组、多层 `&&` 过滤和内联 `as` 断言；提取命名常量 / helper / 类型后再调用。细则见 `.cursor/rules/code-readability.mdc`；审查流程见 `.cursor/skills/code-readability-review/SKILL.md`。
 
 ## 常用命令
 

@@ -41,7 +41,7 @@ export class ChannelAgentRuntime {
       agentModel: params.platform === 'qq' ? undefined : agent.model,
       agentProvider: params.platform === 'qq' ? undefined : agent.provider,
       channelName: params.platform,
-      fallbackProvider: params.platform === 'qq' ? 'purechat' : 'deepseek',
+      fallbackProvider: 'deepseek',
       model: params.model,
       provider: params.provider,
       providerPolicy: params.platform === 'qq' ? 'fallback' : 'strict',

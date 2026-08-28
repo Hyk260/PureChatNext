@@ -45,11 +45,9 @@ export function resolveQQChannelModel(params: {
     return { model, provider: params.provider }
   }
 
-  // QQ is an independent channel. Unless the user explicitly chose a provider
-  // or is reusing an existing binding, prefer the server-managed PureChat quota
-  // instead of inheriting the Agent's web-chat provider.
-  const fallbackRaw = params.previousProvider || 'purechat'
-  const provider = isQQProviderId(fallbackRaw) ? fallbackRaw : 'purechat'
+  // QQ 为独立渠道：未显式选择且无历史绑定时，与微信一致默认 DeepSeek。
+  const fallbackRaw = params.previousProvider || 'deepseek'
+  const provider = isQQProviderId(fallbackRaw) ? fallbackRaw : 'deepseek'
   const unavailable = qqChannelUnavailableReason(provider)
   if (unavailable) throw new QQBindingError(unavailable)
   const model = params.model || params.previousModel || defaultQQModel(provider)

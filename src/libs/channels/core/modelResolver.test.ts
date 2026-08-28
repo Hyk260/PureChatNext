@@ -36,10 +36,10 @@ describe('channel model resolver', () => {
     })
   })
 
-  it('supports a PureChat fallback for QQ without changing the general default', () => {
-    expect(resolveChannelModelConfig({ channelName: 'qq', fallbackProvider: 'purechat' })).toEqual({
-      model: defaultChannelModel('purechat'),
-      provider: 'purechat',
+  it('defaults QQ and WeChat to DeepSeek when no provider is set', () => {
+    expect(resolveChannelModelConfig({ channelName: 'qq', fallbackProvider: 'deepseek' })).toEqual({
+      model: defaultChannelModel('deepseek'),
+      provider: 'deepseek',
     })
     expect(resolveChannelModelConfig({ channelName: 'wechat' })).toEqual({
       model: defaultChannelModel('deepseek'),
@@ -47,7 +47,7 @@ describe('channel model resolver', () => {
     })
   })
 
-  it('preserves QQ fallback behavior and supports strict validation for other channels', () => {
+  it('supports strict validation for channels that reject unknown providers', () => {
     expect(resolveChannelModelConfig({ provider: 'unsupported' })).toEqual({
       model: defaultChannelModel('deepseek'),
       provider: 'deepseek',

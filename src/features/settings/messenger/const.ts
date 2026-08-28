@@ -11,8 +11,8 @@ export const MESSENGER_DEFAULT_MODELS: Record<MessengerProviderId, string> = {
   openai: 'gpt-5.4-mini',
   purechat: PURECHAT_DEFAULT_MODEL,
 }
-/** QQ defaults to the server-managed PureChat quota; WeChat keeps its legacy default below. */
-export const QQ_DEFAULT_PROVIDER: MessengerProviderId = 'purechat'
+/** QQ 与微信共用 DeepSeek 默认服务商。 */
+export const QQ_DEFAULT_PROVIDER: MessengerProviderId = MESSENGER_DEFAULT_PROVIDER
 export const QQ_DEFAULT_MODEL = MESSENGER_DEFAULT_MODELS[QQ_DEFAULT_PROVIDER]
 export const isMessengerProviderId = (id: string): id is MessengerProviderId =>
   MESSENGER_PROVIDER_IDS.includes(id as MessengerProviderId)

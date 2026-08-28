@@ -14,16 +14,18 @@ const styles = createStaticStyles(({ css }) => ({
     flex: none;
     color: ${cssVar.colorTextQuaternary};
   `,
+  // 与渠道页「绑定助手」Select 同为带边框触发器
   modelTrigger: css`
     cursor: pointer;
-    max-width: 360px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 300px;
+    min-height: 32px;
     padding-block: 4px;
-    padding-inline: 6px;
-    border-radius: 6px;
-
-    &:hover {
-      background: ${cssVar.colorFillTertiary};
-    }
+    padding-inline: 11px;
+    border: 1px solid ${cssVar.colorBorder};
+    border-radius: ${cssVar.borderRadius};
+    background: ${cssVar.colorBgContainer};
   `,
 }))
 
@@ -56,11 +58,10 @@ export const MessengerModelSwitch = memo<MessengerModelSwitchProps>(
         >
           <Flex
             className={[styles.modelTrigger, 'flex-row items-center gap-1.5']}
-
             style={{ opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? 'none' : undefined }}
           >
             <ModelIcon model={modelId} size={18} />
-            <Text ellipsis style={{ fontSize: 13, minWidth: 0 }}>
+            <Text ellipsis style={{ flex: 1, fontSize: 13, minWidth: 0 }}>
               {currentDisplayName}
             </Text>
             <ChevronDownIcon className={styles.chevron} size={14} />

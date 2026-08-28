@@ -348,7 +348,7 @@ const MessengerWeChatPage = memo(() => {
             <Select
               disabled={controlsDisabled}
               options={agents}
-              style={{ maxWidth: 360 }}
+              style={{ maxWidth: 300, width: '100%' }}
               value={agentId}
               onChange={(v) => void handleAgentChange(v)}
             />

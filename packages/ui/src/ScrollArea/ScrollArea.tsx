@@ -57,7 +57,10 @@ export const ScrollArea = forwardRef<ComponentRef<typeof ScrollAreaPrimitive.Roo
               className={cn('size-full rounded-[inherit]', viewportClassName)}
               data-slot='scroll-area-viewport'
             >
-              <ScrollAreaPrimitive.Content>{children}</ScrollAreaPrimitive.Content>
+              {/* Base UI defaults Content to minWidth: fit-content; vertical-only must not outgrow the viewport. */}
+              <ScrollAreaPrimitive.Content style={orientation === 'vertical' ? { minWidth: 0 } : undefined}>
+                {children}
+              </ScrollAreaPrimitive.Content>
             </ScrollAreaPrimitive.Viewport>
             {orientation !== 'horizontal' && <ScrollBar orientation='vertical' />}
             {orientation !== 'vertical' && <ScrollBar orientation='horizontal' />}

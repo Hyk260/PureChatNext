@@ -8,9 +8,10 @@ import {
 } from './const'
 
 describe('messenger provider defaults', () => {
-  it('uses PureChat for new QQ connections', () => {
-    expect(QQ_DEFAULT_PROVIDER).toBe('purechat')
-    expect(QQ_DEFAULT_MODEL).toBe(MESSENGER_DEFAULT_MODELS.purechat)
+  it('uses DeepSeek for new QQ connections, matching WeChat', () => {
+    expect(QQ_DEFAULT_PROVIDER).toBe('deepseek')
+    expect(QQ_DEFAULT_MODEL).toBe(MESSENGER_DEFAULT_MODELS.deepseek)
+    expect(QQ_DEFAULT_PROVIDER).toBe(MESSENGER_DEFAULT_PROVIDER)
   })
 
   it('keeps the existing WeChat default unchanged', () => {

@@ -77,7 +77,7 @@ const TopicSidebar = memo<Props>(
         <SideBarHeaderLayout
           collapsed={leftCollapsed}
           left={
-            <Flex className='flex-row items-center flex-1 gap-0.5 min-w-[0px]'>
+            <Flex className='flex-row items-center flex-1 gap-0.5 min-w-0'>
               <ActionIcon icon={ChevronLeft} size='small' title='返回首页' onClick={() => router.push('/')} />
               <AgentSwitcher agents={agents} currentAgentId={currentAgentId} onSelect={onAgentSelect} />
             </Flex>
@@ -85,13 +85,13 @@ const TopicSidebar = memo<Props>(
           showHomeIcon={false}
           onToggleCollapsed={toggleLeftCollapsed}
         />
-        <Flex className='flex-col flex-1 gap-2 min-h-[0px]'>
+        <Flex className='flex-col flex-1 gap-2 min-h-0'>
           <div style={{ paddingInline: 12 }}>
             <Button block icon={<MessageSquarePlus size={16} />} type='fill' onClick={onNewTopic}>
               开启新话题
             </Button>
           </div>
-          <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }} viewStyle={{ paddingInline: 12 }}>
+          <Scrollbar viewStyle={{ paddingInline: 12 }}>
             <Flex className='flex-col gap-2'>
               <Flex className='flex-between gap-1 min-h-[28px] px-2'>
                 <Flex className='flex-row items-center gap-[5px]'>

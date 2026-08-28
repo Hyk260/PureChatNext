@@ -27,6 +27,7 @@
   --surface: #fff;
   --line: #e7e5e4;
   --hover: #f5f5f4;
+  --overlay: 0 0 0;
 }
 
 @theme inline {
@@ -78,6 +79,7 @@
   --surface: #1c1c1e;
   --line: #3a3a3c;
   --hover: #2c2c2e;
+  --overlay: 255 255 255;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -103,6 +105,7 @@
     --surface: #1c1c1e;
     --line: #3a3a3c;
     --hover: #2c2c2e;
+    --overlay: 255 255 255;
   }
 }
 

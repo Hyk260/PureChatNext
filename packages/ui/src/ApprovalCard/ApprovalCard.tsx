@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -35,21 +35,21 @@ const EMPTY_PLAN: ApprovalPlanStep[] = [];
 const DEFAULT_PLAN_PREVIEW = 3;
 
 const VARIANT_TITLE: Record<ApprovalVariant, string> = {
-  command: "Run this command?",
-  plan: "Plan Overview",
-  questions: "Questions",
+  command: "运行这条命令？",
+  plan: "计划概览",
+  questions: "问题确认",
 };
 
 const VARIANT_APPROVE_LABEL: Record<ApprovalVariant, string> = {
-  command: "Run",
-  plan: "Approve",
-  questions: "Continue",
+  command: "运行",
+  plan: "批准",
+  questions: "继续",
 };
 
 const VARIANT_REJECT_LABEL: Record<ApprovalVariant, string> = {
-  command: "Skip",
-  plan: "View Plan",
-  questions: "Skip",
+  command: "跳过",
+  plan: "查看计划",
+  questions: "跳过",
 };
 
 const VARIANT_ICON: Record<ApprovalVariant, LucideIcon> = {
@@ -234,7 +234,7 @@ export function ApprovalCard({
     return Boolean(a) && !q.options.includes(a);
   };
 
-  const syncQuestionSlide = (animate: boolean) => {
+  const syncQuestionSlide = useCallback((animate: boolean) => {
     const item = questionRefs.current[safeStep];
     if (!item) return;
     const reduce =
@@ -243,14 +243,11 @@ export function ApprovalCard({
     setQViewportH(item.offsetHeight + 2);
     setQTrackY(item.offsetTop);
     setQAnimate(animate && !reduce);
-  };
+  }, [safeStep]);
 
   useLayoutEffect(() => {
     if (variant !== "questions") {
       qMeasured.current = false;
-      setQViewportH(undefined);
-      setQTrackY(0);
-      setQAnimate(false);
       return;
     }
     const animate = qMeasured.current;
@@ -269,6 +266,7 @@ export function ApprovalCard({
   const planRest = plan.slice(previewCount);
   const hasPlanMore = planRest.length > 0;
   const showPlanRest = planExpanded || !hasPlanMore;
+  const planMoreLabel = planExpanded ? "收起" : `还有 ${planRest.length} 项`;
 
   const resolvedPlanTitle = planTitle ?? "";
   const resolvedPlanSummary = planSummary ?? "";
@@ -411,7 +409,7 @@ export function ApprovalCard({
             <button
               type="button"
               className={styles.headAction}
-              aria-label="Download plan"
+              aria-label="下载计划"
               onClick={(e) => e.preventDefault()}
             >
               <Download className={styles.headActionIcon} strokeWidth={2} aria-hidden />
@@ -419,7 +417,7 @@ export function ApprovalCard({
             <button
               type="button"
               className={styles.headAction}
-              aria-label="Expand plan"
+              aria-label="展开计划"
               onClick={(e) => {
                 e.preventDefault();
                 setPlanExpanded(true);
@@ -585,7 +583,7 @@ export function ApprovalCard({
                   aria-hidden
                 />
               </span>
-              <span className={styles.todoTitle}>To-dos</span>
+              <span className={styles.todoTitle}>待办</span>
               <span className={styles.todoCount}>{plan.length}</span>
             </div>
             <ul className={styles.todoList}>
@@ -655,7 +653,7 @@ export function ApprovalCard({
                       )}
                     </svg>
                   </span>
-                  {planExpanded ? "Show less" : `${planRest.length} more`}
+                  {planMoreLabel}
                 </button>
               </>
             )}
@@ -667,12 +665,12 @@ export function ApprovalCard({
         {variant === "questions" ? (
           <div
             className={styles.stepNav}
-            aria-label={`Question ${safeStep + 1} of ${questions.length}`}
+            aria-label={`第 ${safeStep + 1} 题，共 ${questions.length} 题`}
           >
             <button
               type="button"
               className={styles.stepArrow}
-              aria-label="Previous question"
+              aria-label="上一题"
               disabled={safeStep <= 0}
               onClick={(e) => {
                 e.preventDefault();
@@ -691,7 +689,7 @@ export function ApprovalCard({
             <button
               type="button"
               className={styles.stepArrow}
-              aria-label="Next question"
+              aria-label="下一题"
               disabled={safeStep >= questions.length - 1}
               onClick={(e) => {
                 e.preventDefault();

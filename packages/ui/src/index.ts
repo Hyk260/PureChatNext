@@ -55,6 +55,7 @@ export { Button, confirmModal, ModalHost, type ButtonProps, type ModalConfirmCon
 export { EditableText, SortableList } from './SortableList'
 export { ConfigProvider, ThemeProvider } from './ThemeProvider'
 export { SearchBar, type SearchBarProps } from './SearchBar'
+export { ScrollArea, ScrollBar, type ScrollAreaProps } from './ScrollArea'
 export { Select, type SelectProps } from './Select'
 export {
   Skeleton,

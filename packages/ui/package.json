@@ -33,6 +33,7 @@
     "./ModalHost": "./src/ModalHost/index.ts",
     "./Popover": "./src/Popover/index.ts",
     "./SearchBar": "./src/SearchBar/index.ts",
+    "./ScrollArea": "./src/ScrollArea/index.ts",
     "./Select": "./src/Select/index.ts",
     "./Skeleton": "./src/Skeleton/index.ts",
     "./SortableList": "./src/SortableList/index.ts",
@@ -45,11 +46,14 @@
   },
   "main": "./src/index.ts",
   "peerDependencies": {
+    "@base-ui/react": "*",
     "@lobehub/icons": "^5.15.0",
     "@lobehub/ui": "^5.28.1",
     "antd": "*",
     "antd-style": "*",
+    "clsx": "*",
     "lucide-react": "*",
-    "react": "*"
+    "react": "*",
+    "tailwind-merge": "*"
   }
 }

@@ -2,7 +2,7 @@
 
 import { Avatar } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
-import { Block, Button, Icon, Menu, Popover, Text, Flexbox } from '@pure/ui'
+import { Block, Button, Icon, Menu, Popover, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronDownIcon, LogOut, Settings2 } from 'lucide-react'
 import Link from '@/utils/link'
@@ -41,11 +41,11 @@ interface UserInfoSectionProps {
 }
 
 const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planLabel }) => (
-  <Flexbox horizontal align='center' gap={12} style={{ paddingBlock: 12, paddingInline: 12 }}>
-    <Flexbox horizontal align='center' gap={10}>
+  <Flex className='flex-row items-center gap-3 py-3 px-3'>
+    <Flex className='flex-row items-center gap-2.5'>
       <Avatar size={36} src={avatar} style={{ background: cssVar.colorFill }} />
-      <Flexbox flex={1}>
-        <Flexbox horizontal align='center' gap={8}>
+      <Flex className='flex-col flex-1'>
+        <Flex className='flex-row items-center gap-2'>
           <Text as='span' style={{ lineHeight: 1.4 }} weight='bold'>
             {name}
           </Text>
@@ -65,15 +65,15 @@ const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planL
               {planLabel}
             </Text>
           ) : null}
-        </Flexbox>
+        </Flex>
         {email ? (
           <Text as='span' fontSize={12} type='secondary' style={{ lineHeight: 1.4 }}>
             {email}
           </Text>
         ) : null}
-      </Flexbox>
-    </Flexbox>
-  </Flexbox>
+      </Flex>
+    </Flex>
+  </Flex>
 ))
 
 UserInfoSection.displayName = 'UserInfoSection'
@@ -132,24 +132,24 @@ const HomeUserTrigger = memo(() => {
   )
 
   const menuContent = session?.user ? (
-    <Flexbox gap={2} style={{ minWidth: 300 }}>
+    <Flex className='flex-col gap-0.5 min-w-[300px]'>
       <UserInfoSection avatar={avatar} email={session.user.email} name={displayName} planLabel='免费版' />
       <DataStatistics />
       <FreeCreditsSummary onClick={() => setOpen(false)} />
       <div className={styles.divider} />
       <Menu compact items={menuItems} onClick={handleMenuClick} />
-    </Flexbox>
+    </Flex>
   ) : (
-    <Flexbox gap={2} style={{ minWidth: 300 }}>
+    <Flex className='flex-col gap-0.5 min-w-[300px]'>
       <UserInfoSection avatar={avatar} name='访客' />
-      <Flexbox style={{ paddingBlock: 12, paddingInline: 16, width: '100%' }}>
+      <Flex className='flex-col py-3 px-4 w-full'>
         <Link href='/signin' style={{ color: 'inherit', textDecoration: 'none' }}>
           <Button block type='primary' onClick={() => setOpen(false)}>
             登录或注册
           </Button>
         </Link>
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 
   return (
@@ -181,12 +181,12 @@ const HomeUserTrigger = memo(() => {
         }}
       >
         <Avatar shape='square' size={28} src={avatar} />
-        <Flexbox horizontal align='center' gap={4} style={{ overflow: 'hidden' }}>
+        <Flex className='flex-row items-center gap-1 overflow-hidden'>
           <Text as='span' ellipsis style={{ flex: 1 }} weight={500}>
             {displayName}
           </Text>
           <Icon color={cssVar.colorTextDescription} icon={ChevronDownIcon} />
-        </Flexbox>
+        </Flex>
       </Block>
     </Popover>
   )

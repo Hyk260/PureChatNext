@@ -1,6 +1,6 @@
 'use client'
 
-import { Center, Flexbox } from '@pure/ui'
+import { Center, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronDownIcon } from 'lucide-react'
 import { memo } from 'react'
@@ -40,10 +40,10 @@ const ModelLabel = memo(() => {
   return (
     <ModelSwitchMenu openOnHover={false}>
       <Center horizontal className={styles.trigger} height={28} paddingInline={6}>
-        <Flexbox horizontal align='center' gap={2}>
+        <Flex className='flex-row items-center gap-0.5'>
           <span className={styles.name}>{current.displayName}</span>
           <ChevronDownIcon className={styles.chevron} size={12} />
-        </Flexbox>
+        </Flex>
       </Center>
     </ModelSwitchMenu>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Icon, Flexbox } from '@pure/ui'
+import { Button, Icon, Flex } from '@pure/ui'
 import { cssVar } from 'antd-style'
 import { ChevronDownIcon } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -22,10 +22,10 @@ const ActionIconWithChevron = memo<ActionIconWithChevronProps>(
         title={title}
         type='text'
       >
-        <Flexbox horizontal align='center' gap={4}>
+        <Flex className='flex-row items-center gap-1'>
           <Icon color={cssVar.colorIcon} icon={icon} size={18} />
           <Icon color={cssVar.colorIcon} icon={ChevronDownIcon} size={14} />
-        </Flexbox>
+        </Flex>
       </Button>
     )
   }

@@ -3,7 +3,7 @@
 import { memo } from 'react'
 import type { ReactNode } from 'react'
 
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import ModelLabel from '@/features/chat/ModelLabel'
 
 import SendButton from './SendButton'
@@ -21,9 +21,20 @@ export interface SendAreaProps extends SendButtonProps {
  * Layout: ChatInput send area with model label on the right.
  */
 const SendArea = memo<SendAreaProps>(
-  ({ prefix, modelLabelClassName, showModelLabel = true, disabled, generating, loading, shape, size, onClick, onStop }) => {
+  ({
+    prefix,
+    modelLabelClassName,
+    showModelLabel = true,
+    disabled,
+    generating,
+    loading,
+    shape,
+    size,
+    onClick,
+    onStop,
+  }) => {
     return (
-      <Flexbox horizontal align='center' flex='none' gap={12}>
+      <Flex className='flex-row items-center flex-none gap-3'>
         {prefix}
         {showModelLabel ? (
           <span className={modelLabelClassName}>
@@ -38,7 +49,7 @@ const SendArea = memo<SendAreaProps>(
           onClick={onClick}
           onStop={onStop}
         />
-      </Flexbox>
+      </Flex>
     )
   }
 )

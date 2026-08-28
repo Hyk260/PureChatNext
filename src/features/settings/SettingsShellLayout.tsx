@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from '@/utils/navigation'
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import type { ReactNode } from 'react'
 
 import MainShellLayout from '@/layout/MainShellLayout'
@@ -19,19 +19,17 @@ const SettingsShellLayout = ({ children }: { children: ReactNode }) => {
       scrollable={!isProviderRoute}
       sidebar={<SettingsSidebar />}
     >
-      <Flexbox
-        flex={1}
+      <Flex
+        className='flex-col flex-1 h-full min-h-[0px] w-full'
+
         style={{
-          height: '100%',
           marginInline: isProviderRoute ? 0 : 'auto',
           maxWidth: isProviderRoute ? 'none' : 1024,
-          minHeight: 0,
           overflow: isProviderRoute ? 'hidden' : 'auto',
-          width: '100%',
         }}
       >
         {children}
-      </Flexbox>
+      </Flex>
     </MainShellLayout>
   )
 }

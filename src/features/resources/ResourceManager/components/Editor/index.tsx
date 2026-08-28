@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Text, Flexbox } from '@pure/ui'
+import { ActionIcon, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowLeft } from 'lucide-react'
 import { memo } from 'react'
@@ -60,19 +60,19 @@ const FileEditor = memo(() => {
   if (!item) return null
 
   return (
-    <Flexbox className={styles.overlay} style={{ height: '100%' }}>
-      <Flexbox horizontal align='center' className={styles.header} gap={4}>
+    <Flex className={[styles.overlay, 'flex-col h-full']}>
+      <Flex className={[styles.header, 'flex-row items-center gap-1']}>
         <ActionIcon size='small' icon={ArrowLeft} onClick={handleBack} title='返回' />
-        <Flexbox horizontal align='center' className={styles.headerTitle} flex={1} gap={8}>
+        <Flex className={[styles.headerTitle, 'flex-row items-center flex-1 gap-2']}>
           <Text strong className={styles.name} title={item.name}>
             {item.name}
           </Text>
-        </Flexbox>
-      </Flexbox>
-      <Flexbox className={styles.preview}>
+        </Flex>
+      </Flex>
+      <Flex className={[styles.preview, 'flex-col']}>
         <FileContent key={item.id} item={item} />
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

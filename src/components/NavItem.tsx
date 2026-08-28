@@ -1,8 +1,8 @@
 'use client'
 
-import { Block, Center, Icon, Text, Flexbox } from '@pure/ui'
+import { Block, Center, Icon, Text, Flex } from '@pure/ui'
 import type { BlockProps, IconProps } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { memo } from 'react'
 import type { ReactNode } from 'react'
 
@@ -32,7 +32,7 @@ const NavItem = memo<NavItemProps>(
       <Block
         horizontal
         align='center'
-        className={[styles.container, className].filter(Boolean).join(' ')}
+        className={cx(styles.container, className)}
         clickable={clickable ?? Boolean(onItemClick)}
         gap={8}
         height={36}
@@ -46,7 +46,7 @@ const NavItem = memo<NavItemProps>(
             <Icon color={iconColor} icon={icon} size={iconSize} />
           </Center>
         ) : null}
-        <Flexbox flex={1} style={{ overflow: 'hidden' }}>
+        <Flex className='flex-col flex-1 overflow-hidden'>
           <Text
             ellipsis
             title={typeof title === 'string' ? title : undefined}
@@ -54,7 +54,7 @@ const NavItem = memo<NavItemProps>(
           >
             {title}
           </Text>
-        </Flexbox>
+        </Flex>
       </Block>
     )
   }

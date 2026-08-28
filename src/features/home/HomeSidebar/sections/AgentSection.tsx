@@ -1,6 +1,6 @@
 'use client'
 
-import { AccordionItem, Flexbox, Skeleton, Text } from '@pure/ui'
+import { AccordionItem, Flex, Skeleton, Text } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { useRouter } from '@/utils/navigation'
@@ -150,7 +150,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
           </Text>
         }
       >
-        <Flexbox gap={1} style={{ paddingBlock: 1 }}>
+        <Flex className='flex-col gap-px py-px'>
           {!loaded && loading ? (
             Array.from({ length: 6 }).map((_, index) => (
               <div className={styles.skeletonRow} key={index}>
@@ -170,13 +170,13 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
               />
             ))
           ) : (
-            <Flexbox style={{ paddingBlock: 4, paddingInline: 12 }}>
+            <Flex className='flex-col py-1 px-3'>
               <Text className={styles.empty} style={{ fontSize: 12 }}>
                 暂无内容
               </Text>
-            </Flexbox>
+            </Flex>
           )}
-        </Flexbox>
+        </Flex>
       </AccordionItem>
 
       <AgentFormModal

@@ -36,7 +36,7 @@ vi.mock('@pure/ui', () => ({
   Block: ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => (
     <section onClick={onClick}>{children}</section>
   ),
-  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Grid: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Icon: () => null,
   ProviderCombine: () => null,

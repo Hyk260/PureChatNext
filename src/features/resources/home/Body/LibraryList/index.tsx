@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Button, confirmModal, Text, Flexbox } from '@pure/ui'
+import { ActionIcon, Button, confirmModal, Text, Flex } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Plus, Trash2 } from 'lucide-react'
 import Link from '@/utils/link'
@@ -29,13 +29,13 @@ const LibraryList = memo(() => {
   }
 
   return (
-    <Flexbox gap={4} style={{ paddingInline: 8 }}>
-      <Flexbox horizontal align='center' justify='space-between' style={{ paddingInline: 4 }}>
+    <Flex className='flex-col gap-1 px-2'>
+      <Flex className='flex-between px-1'>
         <Text type='secondary' style={{ fontSize: 12 }}>
           知识库
         </Text>
         <ActionIcon icon={Plus} onClick={handleCreate} size='small' title='新建' />
-      </Flexbox>
+      </Flex>
       {libraries.length === 0 ? (
         <Text type='secondary' style={{ fontSize: 12 }}>
           暂无知识库
@@ -46,7 +46,7 @@ const LibraryList = memo(() => {
           const active = pathname.startsWith(href)
 
           return (
-            <Flexbox horizontal key={kb.id} align='center' justify='space-between'>
+            <Flex className='flex-between' key={kb.id}>
               <Link href={href} style={{ color: 'inherit', flex: 1, textDecoration: 'none' }}>
                 <NavItem active={active} clickable title={kb.name} />
               </Link>
@@ -65,11 +65,11 @@ const LibraryList = memo(() => {
                   })
                 }
               />
-            </Flexbox>
+            </Flex>
           )
         })
       )}
-    </Flexbox>
+    </Flex>
   )
 })
 

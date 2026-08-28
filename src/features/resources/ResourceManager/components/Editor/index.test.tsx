@@ -12,7 +12,7 @@ vi.mock('@pure/ui', () => ({
   ActionIcon: ({ onClick, title }: { onClick?: () => void; title?: string }) => (
     <button aria-label={title} type='button' onClick={onClick} />
   ),
-  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }))
 

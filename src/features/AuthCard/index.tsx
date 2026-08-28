@@ -1,12 +1,12 @@
 /* eslint-disable react/display-name */
 'use client'
 
-import { Text, Flexbox } from '@pure/ui'
-import type { FlexboxProps } from '@pure/ui'
+import { Text, Flex } from '@pure/ui'
+import type { FlexProps } from '@pure/ui'
 import { memo } from 'react'
 import type { ReactNode } from 'react'
 
-export interface AuthCardProps extends Omit<FlexboxProps, 'title'> {
+export interface AuthCardProps extends Omit<FlexProps, 'title'> {
   footer?: ReactNode
   subtitle?: ReactNode
   title?: ReactNode
@@ -14,20 +14,18 @@ export interface AuthCardProps extends Omit<FlexboxProps, 'title'> {
 
 export const AuthCard = memo<AuthCardProps>(({ children, title, subtitle, footer, style, ...rest }) => {
   return (
-    <Flexbox {...rest} style={{ width: 'min(100%,440px)', ...style }}>
-      <Flexbox gap={16}>
+    <Flex className='flex-col w-[min(100%,440px)]' {...rest} style={{ ...style }}>
+      <Flex className='flex-col gap-4'>
         {title && <Text style={{ fontSize: 28, lineHeight: 1.4, fontWeight: 'bold' }}>{title}</Text>}
         {subtitle && (
           <Text type={'secondary'} style={{ fontSize: 18, lineHeight: 1.4, fontWeight: 500 }}>
             {subtitle}
           </Text>
         )}
-      </Flexbox>
-      <Flexbox gap={12} style={{ paddingBlock: '32px' }}>
-        {children}
-      </Flexbox>
+      </Flex>
+      <Flex className='flex-col gap-3 py-8'>{children}</Flex>
       {footer}
-    </Flexbox>
+    </Flex>
   )
 })
 

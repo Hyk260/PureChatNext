@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, DropdownMenu, Flexbox, SearchBar, Text } from '@pure/ui'
+import { ActionIcon, DropdownMenu, Flex, SearchBar, Text } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Activity, CircleX, MoreVertical, Plus, RefreshCcwDot, RotateCcw, X } from 'lucide-react'
@@ -105,28 +105,22 @@ const ModelTitle = memo<ModelTitleProps>(
     )
 
     return (
-      <Flexbox
-        gap={12}
-        style={{
-          background: cssVar.colorBgContainer,
-          paddingBlock: 8,
-          position: 'sticky',
-          top: 0,
-          width: '100%',
-          zIndex: 15,
-        }}
+      <Flex
+        className='flex-col gap-3 py-2 w-full'
+
+        style={{ background: cssVar.colorBgContainer, position: 'sticky', top: 0, zIndex: 15 }}
       >
-        <Flexbox horizontal align='center' className={styles.header} justify='space-between' width='100%'>
-          <Flexbox horizontal align='center' gap={4}>
+        <Flex className={[styles.header, 'flex-between w-full']}>
+          <Flex className='flex-row items-center gap-1'>
             <Text strong style={{ fontSize: 16 }}>
               模型列表
             </Text>
             {canClearRemoteModels && onClearRemoteModels ? (
               <ActionIcon icon={CircleX} size='small' title='清除获取的模型' onClick={onClearRemoteModels} />
             ) : null}
-          </Flexbox>
+          </Flex>
 
-          <Flexbox horizontal align='center' className={styles.actions} gap={4}>
+          <Flex className={[styles.actions, 'flex-row items-center gap-1']}>
             <SearchBar
               className='h-8'
               placeholder='搜索模型'
@@ -153,9 +147,9 @@ const ModelTitle = memo<ModelTitleProps>(
             >
               <ActionIcon variant={'outlined'} icon={MoreVertical} size='small' />
             </DropdownMenu>
-          </Flexbox>
-        </Flexbox>
-      </Flexbox>
+          </Flex>
+        </Flex>
+      </Flex>
     )
   }
 )

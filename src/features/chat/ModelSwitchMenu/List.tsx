@@ -19,7 +19,7 @@ import {
   ProviderIcon,
   Tag,
   Text,
-  Flexbox,
+  Flex,
 } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { Check, LucideArrowRight, LucideBolt } from 'lucide-react'
@@ -91,7 +91,7 @@ const ModelRowContent = memo<ModelRowContentProps>(
     const card = getAiModel(provider as ModelProviderId, model)
 
     return (
-      <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
+      <Flex className='flex-row items-center gap-2 min-w-[0px] w-full'>
         <ModelIcon model={model} size={20} />
         <Text ellipsis style={{ fontSize: 13, flex: 1, minWidth: 0 }}>
           {displayName}
@@ -102,7 +102,7 @@ const ModelRowContent = memo<ModelRowContentProps>(
             contextWindowTokens={contextWindowTokens ?? card?.contextWindowTokens}
           />
         </div>
-      </Flexbox>
+      </Flex>
     )
   }
 )
@@ -221,12 +221,12 @@ const MultiProviderModelRow = memo<MultiProviderModelRowProps>(
                       >
                         <DropdownMenuItemIcon>{isProviderActive ? <Check size={16} /> : null}</DropdownMenuItemIcon>
                         <DropdownMenuItemLabel>
-                          <Flexbox horizontal align='center' gap={8}>
+                          <Flex className='flex-row items-center gap-2'>
                             <ProviderIcon provider={provider.id} size={20} type='color' />
                             <Text ellipsis style={{ fontSize: 13 }}>
                               {provider.name}
                             </Text>
-                          </Flexbox>
+                          </Flex>
                         </DropdownMenuItemLabel>
                       </DropdownMenuItem>
                     )
@@ -266,12 +266,11 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
           switch (item.type) {
             case 'no-provider': {
               return (
-                <Flexbox
-                  horizontal
+                <Flex
                   key='no-provider'
-                  align='center'
-                  className={styles.menuItem}
-                  gap={8}
+
+                  className={[styles.menuItem, 'flex-row items-center gap-2']}
+
                   style={{ color: cssVar.colorTextTertiary, cursor: 'pointer' }}
                   onClick={() => {
                     onClose()
@@ -280,26 +279,23 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
                 >
                   前往配置服务商
                   <Icon icon={LucideArrowRight} size={14} />
-                </Flexbox>
+                </Flex>
               )
             }
 
             case 'group-header': {
               return (
-                <Flexbox
-                  horizontal
+                <Flex
                   key={`header-${item.provider.id}`}
-                  align='center'
-                  className={styles.groupHeader}
-                  justify='space-between'
-                  style={{ paddingBlock: '12px 4px', paddingInline: '12px 8px' }}
+
+                  className={[styles.groupHeader, 'flex-between py-[12px_4px] px-[12px_8px]']}
                 >
-                  <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0 }}>
+                  <Flex className='flex-row items-center gap-2 min-w-[0px]'>
                     <ProviderIcon provider={item.provider.id} size={18} type='color' />
                     <Text ellipsis style={{ fontSize: 12 }}>
                       {item.provider.name}
                     </Text>
-                  </Flexbox>
+                  </Flex>
                   <ActionIcon
                     icon={LucideBolt}
                     size='small'
@@ -311,18 +307,17 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
                       navigate(`/settings/provider/${item.provider.id}`)
                     }}
                   />
-                </Flexbox>
+                </Flex>
               )
             }
 
             case 'empty-model': {
               return (
-                <Flexbox
-                  horizontal
+                <Flex
                   key={`empty-${item.provider.id}`}
-                  align='center'
-                  className={styles.menuItem}
-                  gap={8}
+
+                  className={[styles.menuItem, 'flex-row items-center gap-2']}
+
                   style={{ color: cssVar.colorTextTertiary, cursor: 'pointer' }}
                   onClick={() => {
                     onClose()
@@ -331,7 +326,7 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
                 >
                   暂无启用模型
                   <Icon icon={LucideArrowRight} size={14} />
-                </Flexbox>
+                </Flex>
               )
             }
 

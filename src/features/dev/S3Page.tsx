@@ -580,7 +580,7 @@ export default function S3TestPage() {
                         setUploadFiles((prev) => [...prev, ...files])
                         if (files.length > 0 && !uploadKey) setUploadKey(files[0].name)
                       }}
-                      className='mt-2 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-6 transition hover:border-violet-400 hover:bg-violet-50/50'
+                      className='mt-2 flex cursor-pointer flex-col-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-6 transition hover:border-violet-400 hover:bg-violet-50/50'
                     >
                       <Upload className='size-8 text-slate-400' />
                       <span className='text-sm text-slate-500'>拖放文件到此处或点击选择</span>

@@ -1,7 +1,7 @@
 'use client'
 
 import { createStaticStyles, cssVar, cx } from 'antd-style'
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import { memo } from 'react'
 import type { ReactNode } from 'react'
 
@@ -88,14 +88,14 @@ const ChatLayout = memo<Props>(
     const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
 
     return (
-      <Flexbox horizontal style={{ height: '100dvh', width: '100%', overflow: 'hidden' }}>
+      <Flex className='flex-row h-[100dvh] w-full overflow-hidden'>
         <aside
           className={cx(styles.left, leftCollapsed && styles.leftCollapsed)}
           style={{ width: leftCollapsed ? 0 : LEFT_WIDTH }}
         >
           <div style={{ height: '100%', width: LEFT_WIDTH }}>{left}</div>
         </aside>
-        <Flexbox className={styles.main} style={{ height: '100%', minWidth: 0 }}>
+        <Flex className={[styles.main, 'flex-col h-full min-w-[0px]']}>
           <ChatHeader
             autoRenameDisabled={busy || autoRenamingTopicId !== null}
             autoRenaming={topic?.id === autoRenamingTopicId}
@@ -107,14 +107,14 @@ const ChatLayout = memo<Props>(
             onRename={onRenameTopic}
           />
           <div className={styles.content}>{children}</div>
-        </Flexbox>
+        </Flex>
         <aside
           className={cx(styles.right, rightCollapsed && styles.rightCollapsed)}
           style={{ width: rightCollapsed ? 0 : RIGHT_WIDTH }}
         >
           <div style={{ height: '100%', width: RIGHT_WIDTH }}>{right}</div>
         </aside>
-      </Flexbox>
+      </Flex>
     )
   }
 )

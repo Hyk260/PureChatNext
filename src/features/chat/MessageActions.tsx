@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, DropdownMenu, Flexbox } from '@pure/ui'
+import { ActionIcon, DropdownMenu, Flex } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { Copy, Edit, MoreHorizontal, Trash } from 'lucide-react'
@@ -60,14 +60,13 @@ const MessageActions = memo<MessageActionsProps>(({ isStreaming, isUser, onCopy,
   )
 
   return (
-    <Flexbox
-      horizontal
-      align='center'
+    <Flex
       aria-hidden={isStreaming || undefined}
-      className={cx(styles.actions, !isStreaming && styles.actionsVisible)}
+      className={[
+        cx(styles.actions, !isStreaming && styles.actionsVisible),
+        'flex-row items-center gap-0.5 justify-[undefined]',
+      ]}
       data-message-actions
-      gap={2}
-      justify={isUser ? 'flex-end' : 'flex-start'}
     >
       <ActionIcon icon={Copy} size='small' title='复制' onClick={onCopy} />
       <ActionIcon icon={Edit} size='small' title='编辑' onClick={onEdit} />
@@ -77,7 +76,7 @@ const MessageActions = memo<MessageActionsProps>(({ isStreaming, isUser, onCopy,
           <MoreHorizontal size={16} />
         </button>
       </DropdownMenu> */}
-    </Flexbox>
+    </Flex>
   )
 })
 

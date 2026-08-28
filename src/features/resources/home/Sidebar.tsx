@@ -1,6 +1,6 @@
 'use client'
 
-import { ScrollShadow, Flexbox } from '@pure/ui'
+import { ScrollShadow, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Suspense, memo } from 'react'
 
@@ -32,12 +32,12 @@ const HomeSidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flexbox
-      className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')}
-      style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}
+    <Flex
+      className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}
+      style={{ width: sidebarCollapsed ? 0 : 240 }}
     >
       <ScrollShadow size={2} style={{ height: '100%', width: 240 }}>
-        <Flexbox gap={1} style={{ height: '100%' }}>
+        <Flex className='flex-col gap-px h-full'>
           <SideBarHeaderLayout
             breadcrumb={[
               {
@@ -48,15 +48,15 @@ const HomeSidebar = memo(() => {
             homeHref='/'
             showHomeIcon
           />
-          <Flexbox flex={1} gap={16} style={{ paddingBlock: 8, overflow: 'auto' }}>
+          <Flex className='flex-col flex-1 gap-4 py-2 overflow-auto'>
             <Suspense fallback={null}>
               <CategoryMenu />
             </Suspense>
             {/* 知识库功能暂未开放 */}
-          </Flexbox>
-        </Flexbox>
+          </Flex>
+        </Flex>
       </ScrollShadow>
-    </Flexbox>
+    </Flex>
   )
 })
 

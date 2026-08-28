@@ -2,7 +2,7 @@
 
 import { memo } from 'react'
 
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import HomeChatInput from '@/features/home/components/HomeChatInput'
 
@@ -30,13 +30,13 @@ const styles = createStaticStyles(({ css }) => ({
 
 const HomeContent = memo(() => {
   return (
-    <Flexbox className='w-full' gap={24}>
-      <Flexbox align='center' gap={10}>
+    <Flex className='w-full flex-col gap-6'>
+      <Flex className='flex-col items-center gap-2.5'>
         <h1 className={styles.title}>把你的 AI 助手接入微信和 QQ</h1>
         <p className={styles.description}>自托管、多模型、联网搜索、文件处理，数据和密钥由你掌控。</p>
-      </Flexbox>
+      </Flex>
       <HomeChatInput />
-    </Flexbox>
+    </Flex>
   )
 })
 

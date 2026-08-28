@@ -1,12 +1,12 @@
 'use client'
 
 import MessengerPage from '@/features/settings/messenger/MessengerPage'
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 
 export default function Page() {
   return (
-    <Flexbox gap={20} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: '100%' }}>
+    <Flex className='flex-col gap-5 py-[24px_64px] px-6 w-full'>
       <MessengerPage />
-    </Flexbox>
+    </Flex>
   )
 }

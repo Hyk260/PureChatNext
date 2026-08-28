@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Button, confirmModal, DropdownMenu, Icon, Text, Flexbox } from '@pure/ui'
+import { ActionIcon, Button, confirmModal, DropdownMenu, Icon, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
   ArrowDownAZ,
@@ -127,8 +127,8 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
   )
 
   return (
-    <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
-      <Flexbox horizontal align='center' gap={8} style={{ minHeight: 32, overflow: 'hidden' }}>
+    <Flex className={[styles.header, 'flex-between']}>
+      <Flex className='flex-row items-center gap-2 min-h-[32px] overflow-hidden'>
         {sidebarCollapsed ? (
           <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
         ) : null}
@@ -157,8 +157,8 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
             {title ?? '资源'}
           </Text>
         )}
-      </Flexbox>
-      <Flexbox horizontal align='center' gap={4}>
+      </Flex>
+      <Flex className='flex-row items-center gap-1'>
         <SearchInput />
         <DropdownMenu items={sortMenuItems} nativeButton>
           <ActionIconWithChevron icon={ArrowDownAZ} title={currentSortLabel} />
@@ -166,13 +166,13 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
         <DropdownMenu items={viewMenuItems} nativeButton placement='bottomRight'>
           <ActionIconWithChevron icon={currentViewIcon} title={currentViewLabel} />
         </DropdownMenu>
-        <Flexbox style={{ marginInlineStart: 8 }}>
+        <Flex className='flex-col' style={{ marginInlineStart: 8 }}>
           <DropdownMenu items={addMenuItems} nativeButton placement='bottomRight'>
             <Button icon={<Plus />} type='primary'>
               添加
             </Button>
           </DropdownMenu>
-        </Flexbox>
+        </Flex>
         <input
           ref={fileInputRef}
           hidden
@@ -184,8 +184,8 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
             e.target.value = ''
           }}
         />
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

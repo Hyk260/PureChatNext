@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox, Skeleton } from '@pure/ui'
+import { Flex, Skeleton } from '@pure/ui'
 import { Navigate } from 'react-router'
 import useSWR from 'swr'
 
@@ -43,22 +43,22 @@ async function fetchProfile(_key: ProfileKey): Promise<ProfilePayload> {
 export default function SettingsProfilePage() {
   const { data: session, isPending } = useSession()
   const userId = session?.user?.id
-  const { data: payload, error: loadError, isLoading } = useSWR<ProfilePayload, ProfileApiError>(
-    userId ? ['user-profile', userId] : null,
-    fetchProfile,
-    {
-      dedupingInterval: 5_000,
-      revalidateOnFocus: false,
-      revalidateOnMount: true,
-      shouldRetryOnError: false,
-    }
-  )
+  const {
+    data: payload,
+    error: loadError,
+    isLoading,
+  } = useSWR<ProfilePayload, ProfileApiError>(userId ? ['user-profile', userId] : null, fetchProfile, {
+    dedupingInterval: 5_000,
+    revalidateOnFocus: false,
+    revalidateOnMount: true,
+    shouldRetryOnError: false,
+  })
 
   if (isPending) {
     return (
-      <Flexbox style={{ padding: 24 }}>
+      <Flex className='flex-col p-6'>
         <Skeleton active paragraph={{ rows: 8 }} />
-      </Flexbox>
+      </Flex>
     )
   }
 
@@ -67,14 +67,14 @@ export default function SettingsProfilePage() {
   }
 
   if (loadError) {
-    return <Flexbox style={{ padding: 24 }}>加载个人资料失败，请刷新重试。</Flexbox>
+    return <Flex className='flex-col p-6'>加载个人资料失败，请刷新重试。</Flex>
   }
 
   if (isLoading || !payload) {
     return (
-      <Flexbox style={{ padding: 24 }}>
+      <Flex className='flex-col p-6'>
         <Skeleton active paragraph={{ rows: 8 }} />
-      </Flexbox>
+      </Flex>
     )
   }
 

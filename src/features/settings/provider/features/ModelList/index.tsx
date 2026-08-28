@@ -1,7 +1,7 @@
 'use client'
 
 import { DEFAULT_MODEL_PROVIDER_LIST, getAiModel } from '@pure/model-bank'
-import { ActionIcon, confirmModal, Flexbox, SortableList, Tabs } from '@pure/ui'
+import { ActionIcon, confirmModal, Flex, SortableList, Tabs } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { apiFetch } from '@/utils/apiFetch'
 import { createStaticStyles, cssVar } from 'antd-style'
@@ -361,7 +361,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   }
 
   return (
-    <Flexbox gap={8} width='100%'>
+    <Flex className='flex-col gap-2 w-full'>
       <ModelTitle
         canClearRemoteModels={remoteModelCount > 0}
         healthLoading={healthLoading}
@@ -410,7 +410,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
       {filteredModels.length === 0 ? (
         <EmptyModels loading={loading} onFetch={handleFetch} />
       ) : (
-        <Flexbox gap={4} width='100%'>
+        <Flex className='flex-col gap-1 w-full'>
           {enabledModels.length > 0 ? (
             <>
               <ModelSectionHeader
@@ -437,9 +437,9 @@ const ModelList = memo<ModelListProps>(({ id }) => {
               {renderSortableModels(disabledModels)}
             </>
           ) : null}
-        </Flexbox>
+        </Flex>
       )}
-    </Flexbox>
+    </Flex>
   )
 })
 

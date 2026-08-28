@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import { Image } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import type { UIMessage } from 'ai'
@@ -48,7 +48,7 @@ const MessageAttachments = memo<{ message: UIMessage }>(({ message }) => {
   const otherFiles = files.filter((file) => !file.mediaType?.startsWith('image/'))
 
   return (
-    <Flexbox gap={8} style={{ marginBlockEnd: 4 }}>
+    <Flex className='flex-col gap-2' style={{ marginBlockEnd: 4 }}>
       {imageFiles.length > 0 ? (
         <Image.PreviewGroup>
           {imageFiles.map((file, index) => {
@@ -73,7 +73,7 @@ const MessageAttachments = memo<{ message: UIMessage }>(({ message }) => {
           </div>
         )
       })}
-    </Flexbox>
+    </Flex>
   )
 })
 

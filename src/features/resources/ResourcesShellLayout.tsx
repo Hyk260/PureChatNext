@@ -1,7 +1,7 @@
 'use client'
 
 import { createStaticStyles } from 'antd-style'
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import type { ReactNode } from 'react'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -13,12 +13,10 @@ const styles = createStaticStyles(({ css }) => ({
 
 const ResourcesShellLayout = ({ children, innerSidebar }: { children: ReactNode; innerSidebar?: ReactNode }) => {
   return (
-    <Flexbox horizontal className={styles.shell} style={{ height: '100%', width: '100%' }}>
+    <Flex className={[styles.shell, 'flex-row h-full w-full']}>
       {innerSidebar}
-      <Flexbox flex={1} style={{ height: '100%', overflow: 'hidden' }}>
-        {children}
-      </Flexbox>
-    </Flexbox>
+      <Flex className='flex-col flex-1 h-full overflow-hidden'>{children}</Flex>
+    </Flex>
   )
 }
 

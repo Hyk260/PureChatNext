@@ -1,6 +1,6 @@
 'use client'
 
-import { Icon, Tag, Text, Flexbox } from '@pure/ui'
+import { Icon, Tag, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import {
   BadgeDollarSignIcon,
@@ -124,9 +124,9 @@ const AgentCategory = memo(() => {
   )
 
   return (
-    <Flexbox className={styles.root}>
+    <Flex className={[styles.root, 'flex-col']}>
       <Scrollbar className='size-full'>
-        <Flexbox gap={4}>
+        <Flex className='flex-col gap-1'>
           {CATEGORY_KEYS.map((key) => {
             const isActive = selected === key
             return (
@@ -150,9 +150,9 @@ const AgentCategory = memo(() => {
               </button>
             )
           })}
-        </Flexbox>
+        </Flex>
       </Scrollbar>
-    </Flexbox>
+    </Flex>
   )
 })
 

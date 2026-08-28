@@ -35,7 +35,7 @@ vi.mock('@pure/ui', () => ({
   ),
   Block: ({ children }: { children?: React.ReactNode }) => <section>{children}</section>,
   Button: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
-  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Github: () => <span>GitHubIcon</span>,
   PureChatMark: () => <span>Logo</span>,
   Tag: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,

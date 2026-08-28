@@ -1,6 +1,6 @@
 'use client'
 
-import { Accordion, AccordionItem, Block, Icon, Flexbox } from '@pure/ui'
+import { Accordion, AccordionItem, Block, Icon, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { AtomIcon, Loader2Icon } from 'lucide-react'
 import { memo, useEffect, useState } from 'react'
@@ -64,7 +64,7 @@ const Thinking = memo<ThinkingProps>(({ text, thinking = false, duration }) => {
         paddingInline={4}
         styles={{ header: { maxWidth: '100%', width: 'fit-content' } }}
         title={
-          <Flexbox horizontal align='center' gap={6}>
+          <Flex className='flex-row items-center gap-1.5'>
             <Block
               align='center'
               flex='none'
@@ -84,7 +84,7 @@ const Thinking = memo<ThinkingProps>(({ text, thinking = false, duration }) => {
               />
             </Block>
             <span className={styles.thinkingLabel}>{label}</span>
-          </Flexbox>
+          </Flex>
         }
       >
         <MessageMarkdown className={styles.thinkingBody} isStreaming={thinking} text={text} />

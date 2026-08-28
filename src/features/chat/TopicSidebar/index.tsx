@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Button, Text, Flexbox } from '@pure/ui'
+import { ActionIcon, Button, Text, Flex } from '@pure/ui'
 import { ChevronLeft, MessageSquarePlus } from 'lucide-react'
 import { useRouter } from '@/utils/navigation'
 import { memo, useMemo } from 'react'
@@ -73,43 +73,37 @@ const TopicSidebar = memo<Props>(
     const unfavoritedCount = useMemo(() => topics.filter((topic) => !topic.favorite).length, [topics])
 
     return (
-      <Flexbox gap={8} style={{ height: '100%', overflow: 'hidden', width: 240 }}>
+      <Flex className='flex-col gap-2 h-full overflow-hidden w-[240px]'>
         <SideBarHeaderLayout
           collapsed={leftCollapsed}
           left={
-            <Flexbox horizontal align='center' flex={1} gap={2} style={{ minWidth: 0 }}>
+            <Flex className='flex-row items-center flex-1 gap-0.5 min-w-[0px]'>
               <ActionIcon icon={ChevronLeft} size='small' title='返回首页' onClick={() => router.push('/')} />
               <AgentSwitcher agents={agents} currentAgentId={currentAgentId} onSelect={onAgentSelect} />
-            </Flexbox>
+            </Flex>
           }
           showHomeIcon={false}
           onToggleCollapsed={toggleLeftCollapsed}
         />
-        <Flexbox flex={1} gap={8} style={{ minHeight: 0 }}>
+        <Flex className='flex-col flex-1 gap-2 min-h-[0px]'>
           <div style={{ paddingInline: 12 }}>
             <Button block icon={<MessageSquarePlus size={16} />} type='fill' onClick={onNewTopic}>
               开启新话题
             </Button>
           </div>
           <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }} viewStyle={{ paddingInline: 12 }}>
-            <Flexbox gap={8}>
-              <Flexbox
-                horizontal
-                align='center'
-                justify='space-between'
-                gap={4}
-                style={{ minHeight: 28, paddingInline: 8 }}
-              >
-                <Flexbox horizontal align='center' gap={5}>
+            <Flex className='flex-col gap-2'>
+              <Flex className='flex-between gap-1 min-h-[28px] px-2'>
+                <Flex className='flex-row items-center gap-[5px]'>
                   话题
                   {topics.length ? (
                     <Text type='secondary' style={{ fontSize: 11 }}>
                       {topics.length}
                     </Text>
                   ) : null}
-                </Flexbox>
+                </Flex>
 
-                <Flexbox horizontal align='center' gap={2}>
+                <Flex className='flex-row items-center gap-0.5'>
                   <TopicFilter
                     groupMode={groupMode}
                     sortBy={sortBy}
@@ -124,8 +118,8 @@ const TopicSidebar = memo<Props>(
                     onDelete={onDeleteTopics}
                     onPageSizeChange={setPageSize}
                   />
-                </Flexbox>
-              </Flexbox>
+                </Flex>
+              </Flex>
               <TopicList
                 activeTopicId={activeTopicId}
                 autoRenameDisabled={autoRenameDisabled}
@@ -143,10 +137,10 @@ const TopicSidebar = memo<Props>(
                 onSelect={onSelectTopic}
                 topics={topics}
               />
-            </Flexbox>
+            </Flex>
           </Scrollbar>
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
     )
   }
 )

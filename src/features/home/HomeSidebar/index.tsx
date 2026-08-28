@@ -1,7 +1,7 @@
 'use client'
 
 import { createStaticStyles, cssVar } from 'antd-style'
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import { memo } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
@@ -33,16 +33,16 @@ const HomeSidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flexbox
-      className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')}
-      style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}
+    <Flex
+      className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}
+      style={{ width: sidebarCollapsed ? 0 : 240 }}
     >
       <SidebarHeader />
-      <Flexbox flex={1} gap={1} style={{ minHeight: 0, width: 240 }}>
+      <Flex className='flex-col flex-1 gap-px min-h-[0px] w-[240px]'>
         <SidebarNav />
         <SidebarBody />
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

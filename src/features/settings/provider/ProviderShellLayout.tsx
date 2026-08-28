@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import type { ReactNode } from 'react'
 
 import ProviderSettingsNav from '@/features/settings/provider/ProviderSettingsNav'
@@ -10,14 +10,12 @@ import SettingsHeader from '@/features/settings/SettingsHeader'
 /** Provider settings split pane — shared by Next layout and SPA routes. */
 export default function ProviderShellLayout({ children }: { children: ReactNode }) {
   return (
-    <Flexbox horizontal height='100%' style={{ maxHeight: '100vh', minHeight: 0, overflow: 'hidden' }} width='100%'>
+    <Flex className='flex-row h-full max-h-[100vh] min-h-[0px] overflow-hidden w-full'>
       <ProviderSettingsNav />
-      <Flexbox flex={1} height='100%' style={{ maxHeight: '100vh', minWidth: 0 }} width='100%'>
+      <Flex className='flex-col flex-1 h-full max-h-[100vh] min-w-[0px] w-full'>
         <SettingsHeader />
-        <Scrollbar style={{ flex: 1, minHeight: 0, minWidth: 0, width: '100%' }}>
-          {children}
-        </Scrollbar>
-      </Flexbox>
-    </Flexbox>
+        <Scrollbar style={{ flex: 1, minHeight: 0, minWidth: 0, width: '100%' }}>{children}</Scrollbar>
+      </Flex>
+    </Flex>
   )
 }

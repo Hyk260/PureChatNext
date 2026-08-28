@@ -1,6 +1,6 @@
 'use client'
 
-import { Center, FileTypeIcon, Icon, Text, Flexbox } from '@pure/ui'
+import { Center, FileTypeIcon, Icon, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowUpIcon } from 'lucide-react'
 import { memo, useRef } from 'react'
@@ -74,12 +74,12 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
 
   return (
     <Center gap={24} height='100%' style={{ paddingBottom: 100 }} width='100%'>
-      <Flexbox justify='center' style={{ textAlign: 'center' }}>
+      <Flex className='flex-col justify-center' style={{ textAlign: 'center' }}>
         <Text>把文件或文件夹拖到这里</Text>
         <Text type='secondary'>或者</Text>
-      </Flexbox>
-      <Flexbox horizontal gap={12}>
-        <Flexbox className={styles.card} onClick={() => fileInputRef.current?.click()} style={{ padding: 16 }}>
+      </Flex>
+      <Flex className='flex-row gap-3'>
+        <Flex className={[styles.card, 'flex-col p-4']} onClick={() => fileInputRef.current?.click()}>
           <span className={styles.actionTitle}>上传文件</span>
           <div className={styles.glow} style={{ background: cssVar.gold }} />
           <FileTypeIcon
@@ -88,8 +88,8 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
             icon={<Icon color='#fff' icon={ArrowUpIcon} />}
             size={ICON_SIZE}
           />
-        </Flexbox>
-        <Flexbox className={styles.card} onClick={() => folderInputRef.current?.click()} style={{ padding: 16 }}>
+        </Flex>
+        <Flex className={[styles.card, 'flex-col p-4']} onClick={() => folderInputRef.current?.click()}>
           <span className={styles.actionTitle}>上传文件夹</span>
           <div className={styles.glow} style={{ background: cssVar.geekblue }} />
           <FileTypeIcon
@@ -99,8 +99,8 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
             size={ICON_SIZE}
             type='folder'
           />
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
       <input ref={fileInputRef} hidden multiple type='file' onChange={handleFileChange} />
       <input
         ref={folderInputRef}

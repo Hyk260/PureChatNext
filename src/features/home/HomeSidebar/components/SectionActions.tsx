@@ -1,6 +1,6 @@
 'use client'
 
-import { DropdownMenu, Icon, Flexbox } from '@pure/ui'
+import { DropdownMenu, Icon, Flex } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { MoreHorizontalIcon, PlusIcon } from 'lucide-react'
@@ -53,9 +53,9 @@ interface SectionActionsProps {
 
 const SectionActions = memo<SectionActionsProps>(({ addMenuItems, menuItems }) => {
   return (
-    <Flexbox
-      horizontal
-      gap={2}
+    <Flex
+      className='flex-row gap-0.5'
+
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
@@ -69,7 +69,7 @@ const SectionActions = memo<SectionActionsProps>(({ addMenuItems, menuItems }) =
           <span className={styles.srOnly}>添加</span>
         </DropdownMenu>
       ) : null}
-    </Flexbox>
+    </Flex>
   )
 })
 

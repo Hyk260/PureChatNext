@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, SortableList, Flexbox } from '@pure/ui'
+import { Button, SortableList, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Plus } from 'lucide-react'
 import { memo } from 'react'
@@ -30,7 +30,7 @@ const ConfigGroupContent = memo(() => {
   const updateAgentGroupSort = useHomeStore((s) => s.updateAgentGroupSort)
 
   return (
-    <Flexbox>
+    <Flex className='flex-col'>
       <SortableList
         items={agentGroups}
         renderItem={(item: HomeAgentGroup) => (
@@ -50,7 +50,7 @@ const ConfigGroupContent = memo(() => {
       <Button block icon={<Plus />} onClick={() => addAgentGroup(`分类 ${agentGroups.length + 1}`)}>
         新建分类
       </Button>
-    </Flexbox>
+    </Flex>
   )
 })
 

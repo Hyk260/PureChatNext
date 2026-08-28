@@ -2,7 +2,7 @@
 
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
-import { Icon, ModelIcon, Popover, Tooltip, Flexbox } from '@pure/ui'
+import { Icon, ModelIcon, Popover, Tooltip, Flex } from '@pure/ui'
 import type { ChatMessageMetadata } from '@pure/types'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { CircleHelpIcon, CoinsIcon } from 'lucide-react'
@@ -180,7 +180,7 @@ const MessageUsage = memo<MessageUsageProps>(({ isStreaming = false, metadata })
   if (!model && !hasDetail) return null
 
   const detailContent = (
-    <Flexbox className={styles.detail} gap={8}>
+    <Flex className={[styles.detail, 'flex-col gap-2']}>
       <div className={styles.detailTitle}>输出明细</div>
 
       {details.output.length > 0 ? (
@@ -214,7 +214,7 @@ const MessageUsage = memo<MessageUsageProps>(({ isStreaming = false, metadata })
           value={`${(ttft / 1000).toFixed(2)}s`}
         />
       ) : null}
-    </Flexbox>
+    </Flex>
   )
 
   return (

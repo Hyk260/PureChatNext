@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox, Skeleton } from '@pure/ui'
+import { Flex, Skeleton } from '@pure/ui'
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router'
@@ -34,9 +34,9 @@ export default function RequireAuth({ children, fallback }: RequireAuthProps) {
   if (isPending) {
     return (
       fallback ?? (
-        <Flexbox style={{ height: '100%', padding: 24 }}>
+        <Flex className='flex-col h-full p-6'>
           <Skeleton active paragraph={{ rows: 6 }} />
-        </Flexbox>
+        </Flex>
       )
     )
   }

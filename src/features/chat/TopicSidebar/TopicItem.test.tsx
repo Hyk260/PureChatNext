@@ -29,7 +29,7 @@ vi.mock('@pure/ui', () => ({
       })}
     </div>
   ),
-  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Icon: ({ icon, spin }: { icon: { displayName?: string }; spin?: boolean }) => (
     <span data-icon={icon.displayName} data-spin={String(Boolean(spin))} />
   ),

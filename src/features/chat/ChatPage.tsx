@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import { createStaticStyles } from 'antd-style'
 import type { UIMessage } from 'ai'
 import { useRouter, useSearchParams } from '@/utils/navigation'
@@ -524,7 +524,7 @@ const ChatPage = memo(() => {
       {!isClient ? (
         <div className={styles.shell} />
       ) : (
-        <Flexbox className={styles.page}>
+        <Flex className={[styles.page, 'flex-col']}>
           {messagesReady ? (
             <ChatView
               key={`${agentId}:${activeTopicId ?? 'draft'}`}
@@ -555,7 +555,7 @@ const ChatPage = memo(() => {
               onStop={handleInputStop}
             />
           </WideScreenContainer>
-        </Flexbox>
+        </Flex>
       )}
     </ChatLayout>
   )

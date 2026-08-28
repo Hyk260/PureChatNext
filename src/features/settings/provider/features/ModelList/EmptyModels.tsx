@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Empty, Flexbox, Text } from '@pure/ui'
+import { Button, Empty, Flex, Text } from '@pure/ui'
 import { memo } from 'react'
 
 interface EmptyModelsProps {
@@ -9,14 +9,14 @@ interface EmptyModelsProps {
 }
 
 const EmptyModels = memo<EmptyModelsProps>(({ loading, onFetch }) => (
-  <Flexbox align='center' gap={12} style={{ paddingBlock: 32 }} width='100%'>
+  <Flex className='flex-col items-center gap-3 py-8 w-full'>
     <Empty description={<Text type='secondary'>暂无模型</Text>} />
     {onFetch ? (
       <Button loading={loading} onClick={onFetch}>
         获取模型列表
       </Button>
     ) : null}
-  </Flexbox>
+  </Flex>
 ))
 
 EmptyModels.displayName = 'EmptyModels'

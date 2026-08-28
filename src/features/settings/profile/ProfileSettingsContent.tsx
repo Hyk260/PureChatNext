@@ -1,6 +1,6 @@
 'use client'
 
-import { Block, Flexbox } from '@pure/ui'
+import { Block, Flex } from '@pure/ui'
 import { Divider } from 'antd'
 import { Fragment, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -101,19 +101,19 @@ export function ProfileSettingsContent({
   ]
 
   return (
-    <Flexbox gap={24} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: '100%' }}>
+    <Flex className='flex-col gap-6 py-[24px_64px] px-6 w-full'>
       <Block gap={16} title='账户' variant='filled'>
-        <Flexbox style={{ padding: 16 }}>
+        <Flex className='flex-col p-4'>
           {accountRows.map((row, index) => (
             <Fragment key={row.key}>
               {index > 0 ? <Divider style={{ margin: 0 }} /> : null}
               {row.node}
             </Fragment>
           ))}
-        </Flexbox>
+        </Flex>
       </Block>
 
       {!s3Configured ? <p className='text-xs text-muted-foreground'>头像上传需配置 S3 环境变量</p> : null}
-    </Flexbox>
+    </Flex>
   )
 }

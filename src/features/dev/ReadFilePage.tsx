@@ -290,7 +290,7 @@ export default function ReadFileTestPage() {
                     }}
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={handleDrop}
-                    className={`flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center transition ${
+                    className={`flex min-h-48 cursor-pointer flex-col-center rounded-lg border border-dashed p-6 text-center transition ${
                       isDragging
                         ? 'border-emerald-400 bg-emerald-50'
                         : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-white'

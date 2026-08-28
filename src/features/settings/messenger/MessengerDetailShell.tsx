@@ -1,6 +1,6 @@
 'use client'
 
-import { Block, Icon, Text, Flexbox } from '@pure/ui'
+import { Block, Icon, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowLeftIcon } from 'lucide-react'
 import { memo } from 'react'
@@ -53,7 +53,7 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
     const navigate = useNavigate()
 
     return (
-      <Flexbox gap={20} style={{ width: '100%' }}>
+      <Flex className='flex-col gap-5 w-full'>
         <span
           className={styles.backButton}
           role='button'
@@ -70,22 +70,22 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
         </span>
 
         <Block className={styles.card}>
-          <Flexbox horizontal align='center' gap={16}>
+          <Flex className='flex-row items-center gap-4'>
             <PlatformAvatar platform={platform} size={48} />
-            <Flexbox flex={1} gap={2}>
+            <Flex className='flex-col flex-1 gap-0.5'>
               <Text strong style={{ fontSize: 15 }}>
                 {platformMeta.name}
               </Text>
               <Text type='secondary' style={{ fontSize: 13 }}>
                 {platformMeta.description}
               </Text>
-            </Flexbox>
+            </Flex>
             {headerAction}
-          </Flexbox>
+          </Flex>
         </Block>
 
         {children}
-      </Flexbox>
+      </Flex>
     )
   }
 )

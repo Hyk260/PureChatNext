@@ -1,6 +1,6 @@
 'use client'
 
-import { Center, Checkbox, Flexbox } from '@pure/ui'
+import { Center, Checkbox, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useCallback } from 'react'
 import type { MouseEvent, PointerEvent } from 'react'
@@ -62,7 +62,7 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
   }, [])
 
   return (
-    <Flexbox horizontal align='center' className={styles.header} style={{ paddingInline: 8 }}>
+    <Flex className={[styles.header, 'flex-row items-center px-2']}>
       <Center
         height={40}
         style={{ cursor: 'pointer', flexShrink: 0, overflow: 'hidden', paddingInline: 4 }}
@@ -71,15 +71,13 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
       >
         <Checkbox checked={allSelected} indeterminate={indeterminate} style={{ pointerEvents: 'none' }} />
       </Center>
-      <Flexbox
-        className={styles.headerItem}
-        justify='center'
+      <Flex
+        className={[styles.headerItem, 'flex-col justify-center px-5 pe-4']}
+
         style={{
           flexShrink: 0,
           maxWidth: columnWidths.name,
           minWidth: columnWidths.name,
-          paddingInline: 20,
-          paddingInlineEnd: 16,
           position: 'relative',
           width: columnWidths.name,
         }}
@@ -91,11 +89,11 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
           minWidth={200}
           onResize={(width) => updateColumnWidth('name', width)}
         />
-      </Flexbox>
-      <Flexbox
-        className={styles.headerItem}
-        justify='center'
-        style={{ flexShrink: 0, paddingInlineEnd: 16, position: 'relative', width: columnWidths.date }}
+      </Flex>
+      <Flex
+        className={[styles.headerItem, 'flex-col justify-center pe-4']}
+
+        style={{ flexShrink: 0, position: 'relative', width: columnWidths.date }}
       >
         创建时间
         <ColumnResizeHandle
@@ -104,15 +102,15 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
           minWidth={150}
           onResize={(width) => updateColumnWidth('date', width)}
         />
-      </Flexbox>
-      <Flexbox
-        className={styles.headerItem}
-        justify='center'
-        style={{ flexShrink: 0, paddingInlineEnd: 16, position: 'relative', width: columnWidths.size }}
+      </Flex>
+      <Flex
+        className={[styles.headerItem, 'flex-col justify-center pe-4']}
+
+        style={{ flexShrink: 0, position: 'relative', width: columnWidths.size }}
       >
         大小
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

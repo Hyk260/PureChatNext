@@ -1,7 +1,7 @@
 'use client'
 
 import { createStaticStyles, cssVar } from 'antd-style'
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import type { ReactNode } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
@@ -28,19 +28,17 @@ interface MainShellLayoutProps {
 
 const MainShellLayout = ({ children, header, scrollable = true, sidebar }: MainShellLayoutProps) => {
   return (
-    <Flexbox horizontal className={styles.shell} style={{ height: '100%', width: '100%' }}>
+    <Flex className={[styles.shell, 'flex-row h-full w-full']}>
       {sidebar}
-      <Flexbox className={styles.main} flex={1} style={{ height: '100%', minHeight: 0 }}>
+      <Flex className={[styles.main, 'flex-col flex-1 h-full min-h-[0px]']}>
         {header}
         {scrollable ? (
           <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }}>{children}</Scrollbar>
         ) : (
-          <Flexbox flex={1} style={{ minHeight: 0, overflow: 'hidden', width: '100%' }}>
-            {children}
-          </Flexbox>
+          <Flex className='flex-col flex-1 min-h-[0px] overflow-hidden w-full'>{children}</Flex>
         )}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 }
 

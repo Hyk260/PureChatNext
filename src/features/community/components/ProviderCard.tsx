@@ -1,6 +1,6 @@
 'use client'
 
-import { Block, MaskShadow, ModelTag, ProviderCombine, stopPropagation, ActionIcon, Text, Flexbox } from '@pure/ui'
+import { Block, MaskShadow, ModelTag, ProviderCombine, stopPropagation, ActionIcon, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { GlobeIcon } from 'lucide-react'
 import { memo } from 'react'
@@ -35,18 +35,18 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
         position: 'relative',
       }}
     >
-      <Flexbox horizontal align='flex-start' gap={16} justify='space-between' style={{ padding: 16, width: '100%' }}>
-        <Flexbox title={identifier} style={{ overflow: 'hidden' }}>
+      <Flex className='flex-row items-start gap-4 justify-between p-4 w-full'>
+        <Flex className='flex-col overflow-hidden' title={identifier}>
           <ProviderCombine provider={identifier} size={28} style={{ flex: 'none' }} />
           <div className={styles.author}>@{name}</div>
-        </Flexbox>
-        <Flexbox horizontal align='center'>
+        </Flex>
+        <Flex className='flex-row items-center'>
           <a href={url} rel='noopener noreferrer' target='_blank' onClick={stopPropagation}>
             <ActionIcon color={cssVar.colorTextDescription} icon={GlobeIcon} />
           </a>
-        </Flexbox>
-      </Flexbox>
-      <Flexbox flex={1} gap={12} style={{ paddingInline: 16 }}>
+        </Flex>
+      </Flex>
+      <Flex className='flex-col flex-1 gap-3 px-4'>
         {description ? (
           <Text
             as='p'
@@ -59,8 +59,8 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
             {description}
           </Text>
         ) : null}
-      </Flexbox>
-      <Flexbox horizontal align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>
+      </Flex>
+      <Flex className={[styles.footer, 'flex-between p-4']}>
         <MaskShadow horizontal gap={6} position='right' size={10} width='100%'>
           {models
             .slice(0, 6)
@@ -69,7 +69,7 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
               <ModelTag key={tag} model={tag} style={{ margin: 0 }} />
             ))}
         </MaskShadow>
-      </Flexbox>
+      </Flex>
     </Block>
   )
 })

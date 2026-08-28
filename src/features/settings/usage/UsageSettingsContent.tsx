@@ -2,7 +2,7 @@
 
 import { DatePicker, Pagination, Progress, Table } from 'antd'
 import type { TableProps } from 'antd'
-import { Block, Button, Empty, Grid, ModelIcon, SearchBar, Select, Skeleton, Tag, Text, Flexbox } from '@pure/ui'
+import { Block, Button, Empty, Grid, ModelIcon, SearchBar, Select, Skeleton, Tag, Text, Flex } from '@pure/ui'
 import { SHANGHAI_TIMEZONE } from '@pure/const'
 import { formatSize } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
@@ -142,14 +142,14 @@ const UsageMetric = ({ hint, label, limit, used, value }: UsageMetricProps) => {
   const percentage = getPercentage(used, limit)
 
   return (
-    <Flexbox horizontal align='center' className={styles.metric} justify='space-between'>
-      <Flexbox gap={4}>
+    <Flex className={[styles.metric, 'flex-between']}>
+      <Flex className='flex-col gap-1'>
         <Text className={styles.metricLabel}>{label}</Text>
         <Text className={styles.metricValue}>
           {value} ({percentage}%)
         </Text>
         {hint ? <Text className={styles.metricHint}>{hint}</Text> : null}
-      </Flexbox>
+      </Flex>
       <Progress
         percent={Math.min(100, percentage)}
         showInfo={false}
@@ -159,7 +159,7 @@ const UsageMetric = ({ hint, label, limit, used, value }: UsageMetricProps) => {
         railColor={cssVar.colorFillSecondary}
         type='circle'
       />
-    </Flexbox>
+    </Flex>
   )
 }
 
@@ -178,14 +178,14 @@ function renderTokenUsage(_value: unknown, record: UsageItem) {
   if (record.inputTokens == null && record.outputTokens == null) return EMPTY_CELL
 
   return (
-    <Flexbox horizontal align='center' gap={6} wrap='wrap'>
+    <Flex className='flex-row items-center gap-1.5 flex-wrap'>
       <Tag color={record.totalTokens >= 50_000 ? 'orange' : 'green'} size='small'>
         {numberFormat.format(record.totalTokens)}
       </Tag>
       <Text type='secondary'>
         = ↓ {numberFormat.format(record.inputTokens ?? 0)} + ↑ {numberFormat.format(record.outputTokens ?? 0)}
       </Text>
-    </Flexbox>
+    </Flex>
   )
 }
 
@@ -318,12 +318,12 @@ export function UsageSettingsContent() {
   const rangeEnd = Math.min(page * pageSize, total)
 
   return (
-    <Flexbox className={styles.page} gap={40}>
+    <Flex className={[styles.page, 'flex-col gap-10']}>
       <Block className={styles.section} gap={16} variant='filled'>
-        <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
+        <Flex className={[styles.header, 'flex-between']}>
           <Text className={styles.sectionTitle}>总览</Text>
           <Text className={styles.plan}>当前方案：免费版</Text>
-        </Flexbox>
+        </Flex>
         {loading && !data ? (
           <Block padding={16} variant='outlined'>
             <Skeleton active paragraph={{ rows: 2 }} />
@@ -356,7 +356,7 @@ export function UsageSettingsContent() {
       <Block className={styles.section} gap={16} variant='filled'>
         <Text className={styles.sectionTitle}>明细</Text>
         <Block className={styles.details} padding={0} variant='outlined'>
-          <Flexbox horizontal className={styles.toolbar} gap={10} wrap='wrap'>
+          <Flex className={[styles.toolbar, 'flex-row gap-2.5 flex-wrap']}>
             <SearchBar
               size='small'
               loading={loading}
@@ -376,7 +376,7 @@ export function UsageSettingsContent() {
               }}
             />
             <Select
-             size='small'
+              size='small'
               options={[
                 { label: '全部类型', value: 'all' },
                 { label: '聊天消息', value: 'chat' },
@@ -389,7 +389,7 @@ export function UsageSettingsContent() {
               }}
             />
             <RangePicker
-             size='small'
+              size='small'
               placeholder={['开始日期', '结束日期']}
               style={{ flex: '1 1 280px' }}
               value={range}
@@ -401,15 +401,15 @@ export function UsageSettingsContent() {
             <Button size='small' icon={RotateCcw} onClick={reset}>
               重置
             </Button>
-          </Flexbox>
+          </Flex>
 
           {error && data ? (
-            <Flexbox horizontal align='center' className={styles.error} gap={12}>
+            <Flex className={[styles.error, 'flex-row items-center gap-3']}>
               <Text type='danger'>{error}</Text>
               <Button size='small' onClick={retry}>
                 重试
               </Button>
-            </Flexbox>
+            </Flex>
           ) : null}
 
           <Table<UsageItem>
@@ -431,7 +431,7 @@ export function UsageSettingsContent() {
             }}
           />
 
-          <Flexbox horizontal align='center' className={styles.pagination} gap={16} justify='space-between'>
+          <Flex className={[styles.pagination, 'flex-between ']}>
             <Text type='secondary'>
               第 {rangeStart}-{rangeEnd} 条，共 {total} 条
             </Text>
@@ -447,9 +447,9 @@ export function UsageSettingsContent() {
                 setPageSize(nextPageSize)
               }}
             />
-          </Flexbox>
+          </Flex>
         </Block>
       </Block>
-    </Flexbox>
+    </Flex>
   )
 }

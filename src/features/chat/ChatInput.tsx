@@ -9,7 +9,7 @@ import {
   renderDropdownMenuItems,
   Block,
   Icon,
-  Flexbox,
+  Flex,
 } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
@@ -279,19 +279,13 @@ const ChatInput = memo<ChatInputProps>((props) => {
       />
 
       {files.length > 0 ? (
-        <Flexbox horizontal gap={8} style={{ flexWrap: 'wrap', marginBottom: 8 }}>
+        <Flex className='flex-row gap-2 flex-wrap' style={{ marginBottom: 8 }}>
           {files.map((file, index) => (
-            <Flexbox
+            <Flex
+              className='flex-row items-center gap-1.5 max-w-[260px] p-[5px_8px]'
               key={`${file.name}-${file.lastModified}-${index}`}
-              horizontal
-              align='center'
-              gap={6}
-              style={{
-                background: 'var(--ant-color-fill-quaternary)',
-                borderRadius: 8,
-                maxWidth: 260,
-                padding: '5px 8px',
-              }}
+
+              style={{ background: 'var(--ant-color-fill-quaternary)', borderRadius: 8 }}
             >
               {file.type.startsWith('image/') ? (
                 <img
@@ -312,9 +306,9 @@ const ChatInput = memo<ChatInputProps>((props) => {
               >
                 <Icon icon={X} size={14} />
               </button>
-            </Flexbox>
+            </Flex>
           ))}
-        </Flexbox>
+        </Flex>
       ) : null}
 
       <textarea
@@ -334,8 +328,8 @@ const ChatInput = memo<ChatInputProps>((props) => {
         }}
       />
 
-      <Flexbox horizontal align='center' justify='space-between' style={{ marginTop: 8 }}>
-        <Flexbox horizontal align='center' gap={4}>
+      <Flex className='flex-between' style={{ marginTop: 8 }}>
+        <Flex className='flex-row items-center gap-1'>
           <ModelSelector />
           <DropdownMenuRoot open={plusOpen} onOpenChange={setPlusOpen}>
             <DropdownMenuTrigger className={styles.plusTrigger} disabled={isBusy} nativeButton>
@@ -356,10 +350,10 @@ const ChatInput = memo<ChatInputProps>((props) => {
               onChange={onPermissionModeChange}
             />
           ) : null}
-        </Flexbox>
+        </Flex>
 
         <SendButton generating={isBusy} onClick={handleSend} onStop={handleStop} />
-      </Flexbox>
+      </Flex>
     </Block>
   )
 })

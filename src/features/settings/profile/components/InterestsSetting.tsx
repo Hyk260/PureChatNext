@@ -1,6 +1,6 @@
 'use client'
 
-import { Block, Icon, Input, Text, Flexbox } from '@pure/ui'
+import { Block, Icon, Input, Text, Flex } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { cssVar } from 'antd-style'
 import { BriefcaseIcon } from 'lucide-react'
@@ -72,8 +72,8 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
 
   return (
     <SettingRow label='兴趣领域'>
-      <Flexbox gap={12} style={{ opacity: saving ? 0.7 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
-        <Flexbox horizontal align='center' gap={8} wrap='wrap'>
+      <Flex className='flex-col gap-3' style={{ opacity: saving ? 0.7 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
+        <Flex className='flex-row items-center gap-2 flex-wrap'>
           {INTEREST_AREAS.map((item) => {
             const isSelected = normalizedInterests.includes(item.key)
             return (
@@ -132,7 +132,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
             <Icon color={cssVar.colorTextSecondary} icon={BriefcaseIcon} size={14} />
             <Text style={{ fontSize: 13, fontWeight: 500 }}>其他领域</Text>
           </Block>
-        </Flexbox>
+        </Flex>
         {showCustomInput ? (
           <Input
             onChange={(event) => setCustomInput(event.target.value)}
@@ -143,7 +143,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
             value={customInput}
           />
         ) : null}
-      </Flexbox>
+      </Flex>
     </SettingRow>
   )
 }

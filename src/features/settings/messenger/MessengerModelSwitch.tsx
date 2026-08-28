@@ -1,6 +1,6 @@
 'use client'
 
-import { ModelIcon, Text, Flexbox } from '@pure/ui'
+import { ModelIcon, Text, Flex } from '@pure/ui'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { createStaticStyles, cssVar } from 'antd-style'
@@ -41,7 +41,7 @@ export const MessengerModelSwitch = memo<MessengerModelSwitchProps>(
     const currentDisplayName = getAiModel(provider as ModelProviderId, modelId)?.displayName ?? modelId
 
     return (
-      <Flexbox gap={8}>
+      <Flex className='flex-col gap-2'>
         <Text type='secondary' style={{ fontSize: 13 }}>
           模型
         </Text>
@@ -54,11 +54,9 @@ export const MessengerModelSwitch = memo<MessengerModelSwitchProps>(
           selectedProvider={provider}
           onSelect={onSelect}
         >
-          <Flexbox
-            horizontal
-            align='center'
-            className={styles.modelTrigger}
-            gap={6}
+          <Flex
+            className={[styles.modelTrigger, 'flex-row items-center gap-1.5']}
+
             style={{ opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? 'none' : undefined }}
           >
             <ModelIcon model={modelId} size={18} />
@@ -66,9 +64,9 @@ export const MessengerModelSwitch = memo<MessengerModelSwitchProps>(
               {currentDisplayName}
             </Text>
             <ChevronDownIcon className={styles.chevron} size={14} />
-          </Flexbox>
+          </Flex>
         </ModelSwitchMenu>
-      </Flexbox>
+      </Flex>
     )
   }
 )

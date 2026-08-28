@@ -1,6 +1,6 @@
 'use client'
 
-import { Accordion, AccordionItem, Flexbox, Icon, ProviderIcon, ScrollShadow, SearchBar, Text } from '@pure/ui'
+import { Accordion, AccordionItem, Flex, Icon, ProviderIcon, ScrollShadow, SearchBar, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LayoutGrid, Search } from 'lucide-react'
 import Link from '@/utils/link'
@@ -52,13 +52,13 @@ const ProviderNavItem = memo<{ id: ProviderId; active: boolean; enabled: boolean
         active={active}
         clickable
         title={
-          <Flexbox horizontal align='center' gap={8} width='100%'>
+          <Flex className='flex-row items-center gap-2 w-full'>
             <ProviderIcon provider={id} size={18} type='color' />
             <Text ellipsis style={{ flex: 1, minWidth: 0 }}>
               {meta.name}
             </Text>
             {enabled ? <span className={styles.status} /> : null}
-          </Flexbox>
+          </Flex>
         }
       />
     </Link>
@@ -93,8 +93,8 @@ const ProviderSettingsNav = memo(() => {
   const disabledIds = filteredIds.filter((id) => !configs[id]?.enabled)
 
   return (
-    <Flexbox className={styles.menu} height='100vh'>
-      <Flexbox align='center' justify='center' className={styles.searchBar}>
+    <Flex className={[styles.menu, 'flex-col h-[100vh]']}>
+      <Flex className={[styles.searchBar, 'flex-col-center']}>
         <SearchBar
           allowClear
           placeholder='搜索服务商'
@@ -104,9 +104,9 @@ const ProviderSettingsNav = memo(() => {
           variant='borderless'
           onInputChange={setKeyword}
         />
-      </Flexbox>
+      </Flex>
       <ScrollShadow size={2} style={{ flex: 1, minHeight: 0, width: '100%' }}>
-        <Flexbox gap={4} paddingInline={4} style={{ paddingBlock: '0 32px', marginBlockStart: 8 }}>
+        <Flex className='flex-col gap-1 px-1 py-[0_32px]' style={{ marginBlockStart: 8 }}>
           <Link href='/settings/provider/all' style={{ color: 'inherit', textDecoration: 'none' }}>
             <NavItem active={isAllActive} clickable icon={LayoutGrid} title='全部' />
           </Link>
@@ -121,7 +121,7 @@ const ProviderSettingsNav = memo(() => {
                 </Text>
               }
             >
-              <Flexbox gap={1} paddingBlock={1}>
+              <Flex className='flex-col gap-px py-px'>
                 {enabledIds.length > 0 ? (
                   enabledIds.map((id) => <ProviderNavItem active={activeId === id} enabled id={id} key={id} />)
                 ) : (
@@ -129,7 +129,7 @@ const ProviderSettingsNav = memo(() => {
                     暂无
                   </Text>
                 )}
-              </Flexbox>
+              </Flex>
             </AccordionItem>
             <AccordionItem
               itemKey='disabled'
@@ -141,7 +141,7 @@ const ProviderSettingsNav = memo(() => {
                 </Text>
               }
             >
-              <Flexbox gap={1} paddingBlock={1}>
+              <Flex className='flex-col gap-px py-px'>
                 {disabledIds.length > 0 ? (
                   disabledIds.map((id) => <ProviderNavItem active={activeId === id} enabled={false} id={id} key={id} />)
                 ) : (
@@ -149,12 +149,12 @@ const ProviderSettingsNav = memo(() => {
                     暂无
                   </Text>
                 )}
-              </Flexbox>
+              </Flex>
             </AccordionItem>
           </Accordion>
-        </Flexbox>
+        </Flex>
       </ScrollShadow>
-    </Flexbox>
+    </Flex>
   )
 })
 

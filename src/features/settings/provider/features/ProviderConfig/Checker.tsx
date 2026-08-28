@@ -1,7 +1,7 @@
 'use client'
 
 import { CheckCircleFilled } from '@ant-design/icons'
-import { Alert, Button, Flexbox, ModelIcon, Select } from '@pure/ui'
+import { Alert, Button, Flex, ModelIcon, Select } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
@@ -124,16 +124,16 @@ const Checker = memo<CheckerProps>(({ provider }) => {
   }
 
   return (
-    <Flexbox gap={8} width='100%'>
-      <Flexbox horizontal gap={8} width='100%'>
+    <Flex className='flex-col gap-2 w-full'>
+      <Flex className='flex-row gap-2 w-full'>
         <Select
           className={styles.popup}
           options={sortedModelIds.map((id) => ({
             label: (
-              <Flexbox horizontal align='center' gap={6}>
+              <Flex className='flex-row items-center gap-1.5'>
                 <ModelIcon model={id} size={20} />
                 {id}
-              </Flexbox>
+              </Flex>
             ),
             value: id,
           }))}
@@ -161,7 +161,7 @@ const Checker = memo<CheckerProps>(({ provider }) => {
         >
           {pass ? '检查通过' : '检查'}
         </Button>
-      </Flexbox>
+      </Flex>
 
       {error ? (
         <Alert
@@ -178,7 +178,7 @@ const Checker = memo<CheckerProps>(({ provider }) => {
           type='error'
         />
       ) : null}
-    </Flexbox>
+    </Flex>
   )
 })
 

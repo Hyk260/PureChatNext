@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Flexbox } from '@pure/ui'
+import { ActionIcon, Flex } from '@pure/ui'
 import { Badge } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'

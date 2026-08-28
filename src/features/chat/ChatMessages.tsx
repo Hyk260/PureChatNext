@@ -1,6 +1,6 @@
 'use client'
 
-import { Avatar, copyToClipboard, Text, Flexbox } from '@pure/ui'
+import { Avatar, copyToClipboard, Text, Flex } from '@pure/ui'
 import type { ChatMessageMetadata } from '@pure/types'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
@@ -309,23 +309,22 @@ const ChatMessages = memo<ChatMessagesProps>(
           viewStyle={{ height: '100%', minHeight: '100%' }}
           onScroll={handleScroll}
         >
-          <Flexbox
-            align='center'
-            className={styles.content}
-            justify='center'
+          <Flex
+            className={[styles.content, 'flex-col-center']}
+
             style={{ width: wideScreen ? '100%' : `min(${CONVERSATION_MAX_WIDTH}px, 100%)` }}
           >
             <Text className={styles.empty}>开始对话吧</Text>
-          </Flexbox>
+          </Flex>
         </Scrollbar>
       )
     }
 
     return (
       <Scrollbar ref={scrollbarRef} className={styles.list} viewStyle={{ minHeight: '100%' }} onScroll={handleScroll}>
-        <Flexbox
-          className={styles.content}
-          gap={16}
+        <Flex
+          className={[styles.content, 'flex-col gap-4']}
+
           style={{ width: wideScreen ? '100%' : `min(${CONVERSATION_MAX_WIDTH}px, 100%)` }}
         >
           {messages.map((message, index) => {
@@ -345,7 +344,7 @@ const ChatMessages = memo<ChatMessagesProps>(
               />
             )
           })}
-        </Flexbox>
+        </Flex>
       </Scrollbar>
     )
   }

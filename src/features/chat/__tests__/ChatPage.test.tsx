@@ -69,7 +69,7 @@ vi.mock('ai', () => ({
 }))
 
 vi.mock('@pure/ui', () => ({
-  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }))
 

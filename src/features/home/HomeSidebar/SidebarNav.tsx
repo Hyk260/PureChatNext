@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import { Drawer } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Route } from 'lucide-react'
@@ -20,7 +20,7 @@ const SidebarNav = memo(() => {
 
   return (
     <>
-      <Flexbox gap={1} style={{ paddingInline: 4 }}>
+      <Flex className='flex-col gap-px px-1'>
         {HOME_TOP_NAV.map((item) => {
           const active = item.href === '/' ? pathname === '/' : Boolean(item.href && pathname.startsWith(item.href))
 
@@ -53,7 +53,7 @@ const SidebarNav = memo(() => {
           )
         })}
         {isDev ? <NavItem icon={Route} title='dev测试路由' onItemClick={() => setRouteNavOpen(true)} /> : null}
-      </Flexbox>
+      </Flex>
       {isDev ? (
         <Drawer
           onClose={() => setRouteNavOpen(false)}

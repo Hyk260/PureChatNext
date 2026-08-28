@@ -1,6 +1,6 @@
 'use client'
 
-import { Block, Button, Input, Text, Flexbox } from '@pure/ui'
+import { Block, Button, Input, Text, Flex } from '@pure/ui'
 import { RefreshCw } from 'lucide-react'
 
 import { useAuthConfig } from '@/libs/better-auth/client'
@@ -34,16 +34,16 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
   })
 
   return (
-    <Flexbox gap={16}>
+    <Flex className='flex-col gap-4'>
       <Block padding={24}>
         <Text style={{ textAlign: 'center' }}>
           验证码将在 {expirationText} 后过期；如未收到，请检查垃圾邮件文件夹。
         </Text>
       </Block>
 
-      <Flexbox align='center' justify='center'>
+      <Flex className='flex-col-center'>
         <Input.OTP length={6} size='large' value={otp} onChange={setOtp} />
-      </Flexbox>
+      </Flex>
 
       <Button block loading={verifying} onClick={handleVerify} size='large' type='primary'>
         验证邮箱
@@ -59,7 +59,7 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
       >
         重新发送验证码
       </Button>
-    </Flexbox>
+    </Flex>
   )
 }
 
@@ -67,7 +67,7 @@ const VerifyEmailLinkContent = ({ email, callbackUrl, mode }: VerifyEmailModeCon
   const { handleResend, resending } = useVerifyEmail({ callbackUrl, email, mode })
 
   return (
-    <Flexbox gap={16}>
+    <Flex className='flex-col gap-4'>
       <Block padding={24}>
         <Text style={{ textAlign: 'center' }}>如果没有收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送。</Text>
       </Block>
@@ -75,6 +75,6 @@ const VerifyEmailLinkContent = ({ email, callbackUrl, mode }: VerifyEmailModeCon
       <Button icon={<RefreshCw size={16} />} loading={resending} onClick={handleResend} size='large' type='default'>
         重新发送验证邮件
       </Button>
-    </Flexbox>
+    </Flex>
   )
 }

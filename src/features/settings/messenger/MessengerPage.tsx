@@ -1,6 +1,6 @@
 'use client'
 
-import { Block, Icon, Text, Flexbox } from '@pure/ui'
+import { Block, Icon, Text, Flex } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronRightIcon } from 'lucide-react'
@@ -83,27 +83,27 @@ const MessengerPage = memo(() => {
   }
 
   return (
-    <Flexbox gap={20} height='100%' width='100%'>
+    <Flex className='flex-col gap-5 h-full w-full'>
       <Text type='secondary'>{MESSENGER_SUBTITLE}</Text>
-      <Flexbox horizontal className={styles.list} gap={12}>
+      <Flex className={[styles.list, 'flex-row gap-3']}>
         {MESSENGER_PLATFORMS.map((item) => (
           <Block className={styles.card} key={item.id} onClick={() => handleSelectPlatform(item)}>
-            <Flexbox horizontal align='center' gap={16}>
+            <Flex className='flex-row items-center gap-4'>
               <PlatformAvatar platform={item.id} size={48} />
-              <Flexbox flex={1} gap={2}>
+              <Flex className='flex-col flex-1 gap-0.5'>
                 <Text strong style={{ fontSize: 15 }}>
                   {item.name}
                 </Text>
                 <Text type='secondary' style={{ fontSize: 13 }}>
                   {item.description}
                 </Text>
-              </Flexbox>
+              </Flex>
               <Icon icon={ChevronRightIcon} />
-            </Flexbox>
+            </Flex>
           </Block>
         ))}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

@@ -36,7 +36,7 @@ vi.mock('@pure/ui', () => ({
       )}
     </>
   ),
-  Flexbox: ({
+  Flex: ({
     children,
     align: _align,
     gap: _gap,

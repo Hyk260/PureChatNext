@@ -8,7 +8,7 @@ import {
   DropdownMenuPositioner,
   DropdownMenuRoot,
   DropdownMenuTrigger,
-  Flexbox,
+  Flex,
   Icon,
   renderDropdownMenuItems,
 } from '@pure/ui'
@@ -287,13 +287,11 @@ const HomeChatInput = memo(() => {
       />
 
       {files.length > 0 ? (
-        <Flexbox horizontal gap={8} style={{ flexWrap: 'wrap', marginBottom: 10 }}>
+        <Flex className='flex-row gap-2 flex-wrap' style={{ marginBottom: 10 }}>
           {files.map((file, index) => (
-            <Flexbox
-              horizontal
-              align='center'
-              className={styles.attachment}
-              gap={6}
+            <Flex
+              className={[styles.attachment, 'flex-row items-center gap-1.5']}
+
               key={`${file.name}-${file.lastModified}-${index}`}
             >
               {file.type.startsWith('image/') ? (
@@ -308,9 +306,9 @@ const HomeChatInput = memo(() => {
                 title={`删除 ${file.name}`}
                 onClick={() => setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index))}
               />
-            </Flexbox>
+            </Flex>
           ))}
-        </Flexbox>
+        </Flex>
       ) : null}
 
       <textarea
@@ -328,8 +326,8 @@ const HomeChatInput = memo(() => {
         }}
       />
 
-      <Flexbox horizontal align='center' className={styles.footer} justify='space-between' style={{ marginTop: 12 }}>
-        <Flexbox horizontal align='center' gap={8}>
+      <Flex className={[styles.footer, 'flex-between']} style={{ marginTop: 12 }}>
+        <Flex className='flex-row items-center gap-2'>
           <DropdownMenuRoot open={plusOpen} onOpenChange={setPlusOpen}>
             <DropdownMenuTrigger className={styles.plusTrigger} disabled={sending} nativeButton>
               <Icon icon={Plus} size={18} />
@@ -352,10 +350,10 @@ const HomeChatInput = memo(() => {
               onChange={handlePermissionModeChange}
             />
           ) : null}
-        </Flexbox>
+        </Flex>
 
         <SendArea disabled={!canSend} loading={sending} modelLabelClassName={styles.modelLabel} onClick={handleSend} />
-      </Flexbox>
+      </Flex>
     </Block>
   )
 })

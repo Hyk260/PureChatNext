@@ -1,6 +1,6 @@
 'use client'
 
-import { Block, Flexbox, ProviderCombine, Switch, Text } from '@pure/ui'
+import { Block, Flex, ProviderCombine, Switch, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { useRouter } from '@/utils/navigation'
 import { memo } from 'react'
@@ -53,18 +53,18 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
       width='100%'
       onClick={() => router.push(`/settings/provider/${id}`)}
     >
-      <Flexbox gap={12} width='100%'>
+      <Flex className='flex-col gap-3 w-full'>
         <ProviderCombine provider={id} size={28} style={{ flex: 'none' }} />
-        <Flexbox gap={6}>
+        <Flex className='flex-col gap-1.5'>
           <Text style={{ fontWeight: 600 }}>{meta.name}</Text>
           {meta.description ? (
             <Text as='p' className={styles.desc} ellipsis={{ rows: 2 }} style={{ marginBottom: 0, fontSize: 13 }}>
               {meta.description}
             </Text>
           ) : null}
-        </Flexbox>
-      </Flexbox>
-      <Flexbox horizontal align='center' className={styles.footer} justify='space-between' width='100%'>
+        </Flex>
+      </Flex>
+      <Flex className={[styles.footer, 'flex-between w-full']}>
         <Text type='secondary' style={{ fontSize: 12 }}>
           {isEnabled ? '已启用' : '未启用'}
         </Text>
@@ -80,7 +80,7 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
             onClick={(_, event) => event.stopPropagation()}
           />
         )}
-      </Flexbox>
+      </Flex>
     </Block>
   )
 })

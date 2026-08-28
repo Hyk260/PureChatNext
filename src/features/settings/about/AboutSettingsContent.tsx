@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Block, Button, copyToClipboard, Flexbox, Github, PureChatMark, Tag, Text } from '@pure/ui'
+import { ActionIcon, Block, Button, copyToClipboard, Flex, Github, PureChatMark, Tag, Text } from '@pure/ui'
 import { Divider } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Copy } from 'lucide-react'
@@ -94,7 +94,7 @@ function InfoSection({
   return (
     <Block variant='filled'>
       <Text className={styles.sectionTitle}>{title}</Text>
-      <Flexbox style={{ paddingInline: 16 }}>
+      <Flex className='flex-col px-4'>
         {rows.map((row, index) => (
           <Fragment key={row.key}>
             {index > 0 ? <Divider style={{ margin: 0 }} /> : null}
@@ -103,7 +103,7 @@ function InfoSection({
             </SettingRow>
           </Fragment>
         ))}
-      </Flexbox>
+      </Flex>
     </Block>
   )
 }
@@ -117,39 +117,37 @@ export function AboutSettingsContent() {
   }
 
   return (
-    <Flexbox gap={24} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: '100%' }}>
+    <Flex className='flex-col gap-6 py-[24px_64px] px-6 w-full'>
       <Block padding={16} variant='filled'>
-        <Flexbox horizontal align='center' gap={16} justify='space-between' wrap='wrap'>
-          <Flexbox horizontal align='center' className={styles.brand} gap={12}>
+        <Flex className='flex-between-wrap '>
+          <Flex className={[styles.brand, 'flex-row items-center gap-3']}>
             <div className={styles.mark}>
               <PureChatMark size={28} />
             </div>
-            <Flexbox gap={4} style={{ minWidth: 0 }}>
-              <Flexbox horizontal align='center' gap={8}>
+            <Flex className='flex-col gap-1 min-w-[0px]'>
+              <Flex className='flex-row items-center gap-2'>
                 <Text className={styles.name}>{SITE_NAME}</Text>
                 <Tag size='small'>{VERSION_LABEL}</Tag>
-              </Flexbox>
+              </Flex>
               <Text className={styles.description} type='secondary'>
                 {SITE_DESCRIPTION}
               </Text>
-            </Flexbox>
-          </Flexbox>
+            </Flex>
+          </Flex>
           <Button
             icon={<Github size={16} />}
             onClick={() => window.open(SITE_REPOSITORY_URL, '_blank', 'noopener,noreferrer')}
           >
             GitHub
           </Button>
-        </Flexbox>
+        </Flex>
       </Block>
 
       <InfoSection
         title='应用信息'
         rows={[
           {
-            action: (
-              <ActionIcon icon={Copy} size='small' title='复制版本号' onClick={() => void handleCopyVersion()} />
-            ),
+            action: <ActionIcon icon={Copy} size='small' title='复制版本号' onClick={() => void handleCopyVersion()} />,
             key: 'version',
             label: '版本',
             value: <Text>{VERSION_LABEL}</Text>,
@@ -184,10 +182,10 @@ export function AboutSettingsContent() {
             label: 'GitHub',
             value: (
               <ExternalLink href={SITE_REPOSITORY_URL}>
-                <Flexbox horizontal align='center' gap={8}>
+                <Flex className='flex-row items-center gap-2'>
                   <Github size={16} />
                   <Text>{SITE_REPOSITORY_SLUG}</Text>
-                </Flexbox>
+                </Flex>
               </ExternalLink>
             ),
           },
@@ -239,6 +237,6 @@ export function AboutSettingsContent() {
       <Text type='secondary' style={{ fontSize: 12 }}>
         {SITE_NAME} 是开源项目，源码按 MIT License 发布。
       </Text>
-    </Flexbox>
+    </Flex>
   )
 }

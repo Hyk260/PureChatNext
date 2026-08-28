@@ -1,6 +1,6 @@
 'use client'
 
-import { Icon, Popover, Tooltip, Flexbox } from '@pure/ui'
+import { Icon, Popover, Tooltip, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { ChevronDownIcon, InfinityIcon, MessageCircleIcon } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
@@ -78,39 +78,35 @@ const AgentModeButton = memo(() => {
   )
 
   const popoverContent = (
-    <Flexbox gap={4} style={{ maxWidth: 320, minWidth: 280 }}>
-      <Flexbox
-        horizontal
-        align='center'
-        className={cx(styles.option, currentMode === 'agent' && styles.activeOption)}
-        gap={12}
+    <Flex className='flex-col gap-1 max-w-[320px] min-w-[280px]'>
+      <Flex
+        className={[cx(styles.option, currentMode === 'agent' && styles.activeOption), 'flex-row items-center gap-3']}
+
         onClick={() => handleSelect('agent')}
       >
-        <Flexbox align='center' className={styles.optionIcon} justify='center' style={{ height: 32, width: 32 }}>
+        <Flex className={[styles.optionIcon, 'flex-col-center h-[32px] w-[32px]']}>
           <Icon icon={InfinityIcon} size={16} />
-        </Flexbox>
-        <Flexbox flex={1}>
+        </Flex>
+        <Flex className='flex-col flex-1'>
           <div className={styles.optionTitle}>智能</div>
           <div className={styles.optionDesc}>工具、联网、文件与环境</div>
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
 
-      <Flexbox
-        horizontal
-        align='center'
-        className={cx(styles.option, currentMode === 'chat' && styles.activeOption)}
-        gap={12}
+      <Flex
+        className={[cx(styles.option, currentMode === 'chat' && styles.activeOption), 'flex-row items-center gap-3']}
+
         onClick={() => handleSelect('chat')}
       >
-        <Flexbox align='center' className={styles.optionIcon} justify='center' style={{ height: 32, width: 32 }}>
+        <Flex className={[styles.optionIcon, 'flex-col-center h-[32px] w-[32px]']}>
           <Icon icon={MessageCircleIcon} size={16} />
-        </Flexbox>
-        <Flexbox flex={1}>
+        </Flex>
+        <Flex className='flex-col flex-1'>
           <div className={styles.optionTitle}>对话</div>
           <div className={styles.optionDesc}>快速问答与日常聊天</div>
-        </Flexbox>
-      </Flexbox>
-    </Flexbox>
+        </Flex>
+      </Flex>
+    </Flex>
   )
 
   const button = (

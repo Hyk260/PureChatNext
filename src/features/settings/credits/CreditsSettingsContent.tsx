@@ -1,7 +1,7 @@
 'use client'
 
 import { Progress, Spin } from 'antd'
-import { Text, Flexbox } from '@pure/ui'
+import { Text, Flex } from '@pure/ui'
 import { useEffect, useState } from 'react'
 
 type CreditsResponse = {
@@ -45,7 +45,7 @@ export function CreditsSettingsContent() {
   const percent = data ? Math.min(100, Math.round((data.used / Math.max(1, data.grant)) * 100)) : 0
 
   return (
-    <Flexbox gap={24} style={{ paddingBlock: '24px 64px', paddingInline: 24, width: '100%' }}>
+    <Flex className='flex-col gap-6 py-[24px_64px] px-6 w-full'>
       <Text type='secondary'>
         每月免费积分用于 PureChat 官方模型；用尽后可等待下月重置，或自行配置 OpenAI / DeepSeek API
         Key。本页不提供购买入口。
@@ -56,17 +56,17 @@ export function CreditsSettingsContent() {
       ) : error ? (
         <Text type='danger'>{error}</Text>
       ) : data ? (
-        <Flexbox gap={16} style={{ maxWidth: 480 }}>
-          <Flexbox gap={4}>
+        <Flex className='flex-col gap-4 max-w-[480px]'>
+          <Flex className='flex-col gap-1'>
             <Text style={{ fontSize: 28, fontWeight: 600 }}>{formatNumber(data.remaining)}</Text>
             <Text type='secondary'>剩余 / 本月额度 {formatNumber(data.grant)}</Text>
-          </Flexbox>
+          </Flex>
           <Progress percent={percent} showInfo format={() => `已用 ${formatNumber(data.used)}`} />
           <Text type='secondary'>
             计费周期 {data.period}（Asia/Shanghai）· 下次重置约 {data.resetIn.days} 天 {data.resetIn.hours} 小时
           </Text>
-        </Flexbox>
+        </Flex>
       ) : null}
-    </Flexbox>
+    </Flex>
   )
 }

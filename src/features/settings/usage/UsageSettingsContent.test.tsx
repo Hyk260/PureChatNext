@@ -26,7 +26,7 @@ vi.mock('antd', () => ({
 }))
 
 vi.mock('@pure/ui', () => ({
-  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Block: ({ children }: { children?: React.ReactNode }) => <section>{children}</section>,
   Button: ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => (
     <button onClick={onClick}>{children}</button>

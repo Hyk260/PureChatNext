@@ -1,7 +1,7 @@
 'use client'
 
 import Link from '@/utils/link'
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import { usePathname, useSearchParams } from '@/utils/navigation'
 import { memo } from 'react'
 
@@ -27,7 +27,7 @@ const CategoryMenu = memo(() => {
   if (!pathname.startsWith('/resources') || pathname.includes('/library/')) return null
 
   return (
-    <Flexbox gap={1} style={{ paddingInline: 8 }}>
+    <Flex className='flex-col gap-px px-2'>
       {CATEGORIES.map((item) => {
         const href = item.key === FilesTabs.All ? '/resources' : `/resources?category=${item.key}`
         const active = category === item.key
@@ -38,7 +38,7 @@ const CategoryMenu = memo(() => {
           </Link>
         )
       })}
-    </Flexbox>
+    </Flex>
   )
 })
 

@@ -1,7 +1,7 @@
 'use client'
 
 import AuthIcons from '@/components/AuthIcons'
-import { ActionIcon, confirmModal, DropdownMenu, Text, Flexbox } from '@pure/ui'
+import { ActionIcon, confirmModal, DropdownMenu, Text, Flex } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { ArrowRight, Plus, Unlink } from 'lucide-react'
@@ -160,15 +160,15 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
 
   return (
     <SettingRow label='已关联的账户'>
-      <Flexbox gap={8} style={{ width: '100%' }}>
+      <Flex className='flex-col gap-2 w-full'>
         {loading ? (
           <Text type='secondary'>加载中…</Text>
         ) : oauthAccounts.length === 0 ? (
           <Text type='secondary'>暂无关联的第三方账户</Text>
         ) : (
           oauthAccounts.map((account) => (
-            <Flexbox horizontal align='center' gap={8} justify='space-between' key={account.id}>
-              <Flexbox horizontal align='center' gap={6} style={{ fontSize: 12, minWidth: 0 }}>
+            <Flex className='flex-between ' key={account.id}>
+              <Flex className='flex-row items-center gap-1.5 min-w-[0px]' style={{ fontSize: 12 }}>
                 {AuthIcons(account.providerId, 16)}
                 <span>{getProviderLabel(account.providerId)}</span>
                 {userEmail ? (
@@ -176,32 +176,31 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
                     · {userEmail}
                   </Text>
                 ) : null}
-              </Flexbox>
+              </Flex>
               <ActionIcon
                 disabled={!allowUnlink || unlinkingId === account.id}
                 icon={Unlink}
                 onClick={() => confirmUnlink(account)}
                 size='small'
               />
-            </Flexbox>
+            </Flex>
           ))
         )}
 
         {availableProviders.length > 0 ? (
           <DropdownMenu items={linkMenuItems} popupProps={{ style: { maxWidth: 200 } }}>
-            <Flexbox
-              horizontal
-              align='center'
-              gap={6}
+            <Flex
+              className='flex-row items-center gap-1.5'
+
               style={{ cursor: linkingProvider ? 'wait' : 'pointer', fontSize: 12, opacity: linkingProvider ? 0.6 : 1 }}
             >
               <Plus size={14} />
               <span>关联账户</span>
               <ArrowRight size={14} />
-            </Flexbox>
+            </Flex>
           </DropdownMenu>
         ) : null}
-      </Flexbox>
+      </Flex>
     </SettingRow>
   )
 }

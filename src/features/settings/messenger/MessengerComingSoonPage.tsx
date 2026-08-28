@@ -1,6 +1,6 @@
 'use client'
 
-import { Text, Flexbox } from '@pure/ui'
+import { Text, Flex } from '@pure/ui'
 import { memo } from 'react'
 
 import { getMessengerPlatform } from './const'
@@ -17,12 +17,12 @@ const MessengerComingSoonPage = memo<MessengerComingSoonPageProps>(({ platform }
 
   return (
     <MessengerDetailShell platform={meta.id} platformMeta={meta}>
-      <Flexbox gap={8}>
+      <Flex className='flex-col gap-2'>
         <Text strong style={{ fontSize: 15 }}>
           连接 {meta.name}
         </Text>
         <div className={messengerDetailStyles.emptyRow}>即将推出，其它平台敬请期待。</div>
-      </Flexbox>
+      </Flex>
     </MessengerDetailShell>
   )
 })

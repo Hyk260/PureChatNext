@@ -7,7 +7,7 @@ export default function WelcomePage() {
   return (
     <>
       {isDev ? <RouteNavSidebar /> : null}
-      <main className='flex min-h-svh w-full flex-col items-center justify-center overflow-y-auto px-6 py-16 lg:px-8'>
+      <main className='flex min-h-svh w-full flex-col-center overflow-y-auto px-6 py-16 lg:px-8'>
         <div className='w-full max-w-2xl text-center'>
           <div className='mb-16 lg:mb-20'>
             <h1 className='text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.04em] leading-[0.92] mb-6'>

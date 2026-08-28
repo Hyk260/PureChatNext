@@ -1,7 +1,7 @@
 'use client'
 
 import { QRCode, Spin } from 'antd'
-import { Alert, Button, Modal, Text, Flexbox } from '@pure/ui'
+import { Alert, Button, Modal, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
@@ -175,7 +175,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
   const statusText = status === 'wait' ? '请使用微信扫一扫' : status === 'scaned' ? '已扫码，请在手机上确认' : ''
 
   return (
-    <Flexbox align='center' gap={16} style={{ paddingBlock: 16 }}>
+    <Flex className='flex-col items-center gap-4 py-4'>
       {loading && (
         // 预留与「二维码盒子 + 状态文字」等高的占位，避免加载完成时高度突变跳动
         <div
@@ -214,7 +214,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
           </Button>
         </div>
       )}
-    </Flexbox>
+    </Flex>
   )
 })
 

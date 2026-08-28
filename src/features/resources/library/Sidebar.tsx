@@ -12,7 +12,7 @@ import {
   useFetchResources,
   useResourceStore,
 } from '@/features/resources/store/resourceStore'
-import { Icon, Text, Flexbox } from '@pure/ui'
+import { Icon, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronLeft, FolderIcon } from 'lucide-react'
 
@@ -45,16 +45,16 @@ const LibraryHierarchy = memo(() => {
 
   if (folders.length === 0) {
     return (
-      <Flexbox style={{ padding: 12 }}>
+      <Flex className='flex-col p-3'>
         <Text type='secondary' style={{ fontSize: 12 }}>
           暂无文件夹
         </Text>
-      </Flexbox>
+      </Flex>
     )
   }
 
   return (
-    <Flexbox gap={1} style={{ paddingInline: 8 }}>
+    <Flex className='flex-col gap-px px-2'>
       {folders.map((folder) => {
         const href = `/resources/library/${libraryId}/${folder.slug ?? folder.id}`
         const active = pathname === href || pathname.startsWith(`${href}/`)
@@ -65,7 +65,7 @@ const LibraryHierarchy = memo(() => {
           </Link>
         )
       })}
-    </Flexbox>
+    </Flex>
   )
 })
 
@@ -80,17 +80,17 @@ const LibrarySidebar = memo(() => {
   useFetchKnowledgeBaseList()
 
   return (
-    <Flexbox className={styles.sidebar} style={{ height: '100%' }}>
-      <Flexbox horizontal align='center' className={styles.header} gap={8}>
+    <Flex className={[styles.sidebar, 'flex-col h-full']}>
+      <Flex className={[styles.header, 'flex-row items-center gap-2']}>
         <Icon icon={ChevronLeft} size={16} style={{ cursor: 'pointer' }} onClick={() => router.push('/resources')} />
         <Text ellipsis strong>
           {kb?.name ?? '知识库'}
         </Text>
-      </Flexbox>
-      <Flexbox flex={1} style={{ paddingBlock: 8, overflow: 'auto' }}>
+      </Flex>
+      <Flex className='flex-col flex-1 py-2 overflow-auto'>
         <LibraryHierarchy />
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

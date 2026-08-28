@@ -30,7 +30,7 @@ vi.mock('@pure/ui', () => ({
       {children}
     </button>
   ),
-  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Icon: () => <span />,
   renderDropdownMenuItems: (items: Array<Record<string, unknown>>) =>
     items.map((item) => (

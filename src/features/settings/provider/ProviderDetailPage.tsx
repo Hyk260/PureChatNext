@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Flexbox, ProviderIcon, Text } from '@pure/ui'
+import { ActionIcon, Flex, ProviderIcon, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from '@/utils/navigation'
@@ -37,8 +37,8 @@ const ProviderDetailPage = memo<ProviderDetailPageProps>(({ id }) => {
   const meta = getSettingsProviderMeta(id)
 
   return (
-    <Flexbox className={styles.page} gap={24} width='100%'>
-      <Flexbox horizontal align='center' className={localStyles.mobileHeader} gap={8}>
+    <Flex className={[styles.page, 'flex-col gap-6 w-full']}>
+      <Flex className={[localStyles.mobileHeader, 'flex-row items-center gap-2']}>
         <ActionIcon
           aria-label='返回全部服务商'
           icon={ArrowLeft}
@@ -48,10 +48,10 @@ const ProviderDetailPage = memo<ProviderDetailPageProps>(({ id }) => {
         />
         <ProviderIcon provider={id} size={20} type='color' />
         <Text strong>{meta.name}</Text>
-      </Flexbox>
+      </Flex>
       <ProviderConfig id={id} />
       <ModelList id={id} />
-    </Flexbox>
+    </Flex>
   )
 })
 

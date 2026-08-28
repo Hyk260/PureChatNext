@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmModal, DropdownMenu, Icon, Input, Modal, Text, Flexbox } from '@pure/ui'
+import { confirmModal, DropdownMenu, Icon, Input, Modal, Text, Flex } from '@pure/ui'
 import type { MenuInfo, MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import {
@@ -281,8 +281,8 @@ const TopicItem = memo<Props>(
 
     return (
       <>
-        <Flexbox horizontal className={cx(styles.item, active && styles.itemActive)} onClick={() => onSelect(topic.id)}>
-          <Flexbox horizontal align='center' gap={4} style={{ width: '100%' }}>
+        <Flex className={[cx(styles.item, active && styles.itemActive), 'flex-row']} onClick={() => onSelect(topic.id)}>
+          <Flex className='flex-row items-center gap-1 w-full'>
             <Icon
               aria-label={autoRenaming ? '正在智能重命名' : '话题'}
               color={autoRenaming ? cssVar.colorWarning : cssVar.colorTextTertiary}
@@ -305,10 +305,8 @@ const TopicItem = memo<Props>(
               {topic.title}
             </Text>
             {/* {topic.favorite ? <Icon color={cssVar.colorWarning} icon={Star} size={14} /> : null} */}
-            <Flexbox
-              horizontal
-              align='center'
-              className={cx('topic-actions')}
+            <Flex
+              className={[cx('topic-actions'), 'flex-row items-center']}
               data-open={menuOpen || undefined}
               onClick={(event) => event.stopPropagation()}
               onKeyDown={(event) => event.stopPropagation()}
@@ -324,9 +322,9 @@ const TopicItem = memo<Props>(
                 <Icon icon={MoreHorizontal} size='small' />
                 <span className={styles.srOnly}>更多</span>
               </DropdownMenu>
-            </Flexbox>
-          </Flexbox>
-        </Flexbox>
+            </Flex>
+          </Flex>
+        </Flex>
 
         <Modal
           cancelText='取消'
@@ -339,7 +337,7 @@ const TopicItem = memo<Props>(
           onCancel={() => setRenameOpen(false)}
           onOk={handleSubmitRename}
         >
-          <Flexbox gap={12} style={{ paddingBlock: 8 }}>
+          <Flex className='flex-col gap-3 py-2'>
             <Text type='secondary'>保持简短且易于识别。</Text>
             <Input
               autoFocus
@@ -348,7 +346,7 @@ const TopicItem = memo<Props>(
               placeholder='话题名称'
               value={draftTitle}
             />
-          </Flexbox>
+          </Flex>
         </Modal>
 
         <Modal
@@ -362,7 +360,7 @@ const TopicItem = memo<Props>(
           onCancel={() => setProjectOpen(false)}
           onOk={handleSubmitProject}
         >
-          <Flexbox gap={12} style={{ paddingBlock: 8 }}>
+          <Flex className='flex-col gap-3 py-2'>
             <Text type='secondary'>相同名称的话题会整理到同一项目分组。</Text>
             <Input
               autoFocus
@@ -371,7 +369,7 @@ const TopicItem = memo<Props>(
               placeholder='项目名称'
               value={draftProject}
             />
-          </Flexbox>
+          </Flex>
         </Modal>
       </>
     )

@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Flexbox, Input, Text } from '@pure/ui'
+import { Button, Flex, Input, Text } from '@pure/ui'
 import type { InputRef } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Loader2 } from 'lucide-react'
@@ -112,7 +112,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
 
   return (
     <SettingRow label='用户名'>
-      <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0, width: '100%' }}>
+      <Flex className='flex-row items-center gap-2 min-w-[0px] w-full'>
         {saving ? <Loader2 className='h-4 w-4 shrink-0 animate-spin' /> : null}
         {error ? (
           <Text type='danger' style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
@@ -149,7 +149,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
           style={{ flex: 1, maxWidth: 320 }}
           variant='filled'
         />
-      </Flexbox>
+      </Flex>
     </SettingRow>
   )
 }

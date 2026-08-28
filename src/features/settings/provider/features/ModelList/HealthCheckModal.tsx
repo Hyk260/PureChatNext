@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert, Flexbox, Input, Modal, Switch, Text } from '@pure/ui'
+import { Alert, Flex, Input, Modal, Switch, Text } from '@pure/ui'
 import { useMemo, useState } from 'react'
 
 import { getSettingsProviderMeta } from '../../const'
@@ -64,11 +64,11 @@ const HealthCheckModal = ({ enabledModelCount, loading, open, provider, onCancel
         onStart(Math.round(parsedTimeout * 1000), concurrencyEnabled ? parsedConcurrency : MIN_HEALTH_CHECK_CONCURRENCY)
       }}
     >
-      <Flexbox gap={16}>
+      <Flex className='flex-col gap-4'>
         <Alert showIcon type='warning' message='健康检查会发送真实请求，请谨慎使用。按次收费的模型可能产生额外费用。' />
         <Text type='secondary'>{description}</Text>
-        <Flexbox gap={12}>
-          <Flexbox horizontal align='center' justify='space-between'>
+        <Flex className='flex-col gap-3'>
+          <Flex className='flex-between'>
             <Text strong>超时时间</Text>
             <Input
               max={MAX_HEALTH_TIMEOUT_SECONDS}
@@ -79,16 +79,16 @@ const HealthCheckModal = ({ enabledModelCount, loading, open, provider, onCancel
               style={{ width: 160 }}
               onChange={(event) => setTimeoutSeconds(event.target.value)}
             />
-          </Flexbox>
+          </Flex>
           {!validTimeout ? <Text type='danger'>请输入 1–120 秒的超时时间</Text> : null}
-        </Flexbox>
+        </Flex>
 
-        <Flexbox gap={12}>
-          <Flexbox horizontal align='center' justify='space-between'>
+        <Flex className='flex-col gap-3'>
+          <Flex className='flex-between'>
             <Text strong>并发检测</Text>
             <Switch checked={concurrencyEnabled} onChange={setConcurrencyEnabled} />
-          </Flexbox>
-          <Flexbox horizontal align='center' justify='space-between'>
+          </Flex>
+          <Flex className='flex-between'>
             <Text strong type={!concurrencyEnabled ? 'secondary' : undefined}>
               并发数量
             </Text>
@@ -102,10 +102,10 @@ const HealthCheckModal = ({ enabledModelCount, loading, open, provider, onCancel
               style={{ width: 160 }}
               onChange={(event) => setConcurrencyValue(event.target.value)}
             />
-          </Flexbox>
+          </Flex>
           {concurrencyEnabled && !validConcurrency ? <Text type='danger'>请输入 1–4 个并发请求</Text> : null}
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
     </Modal>
   )
 }

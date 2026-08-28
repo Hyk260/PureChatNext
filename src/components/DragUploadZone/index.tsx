@@ -1,7 +1,7 @@
 'use client'
 
 import { createStaticStyles, cssVar } from 'antd-style'
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import { memo, useCallback, useRef, useState } from 'react'
 import type { DragEvent, ReactNode } from 'react'
 
@@ -85,9 +85,7 @@ const DragUploadZone = memo<DragUploadZoneProps>(({ children, disabled, onUpload
       onDrop={handleDrop}
     >
       {children}
-      <Flexbox align='center' className={[styles.overlay, active ? 'active' : ''].join(' ')} justify='center'>
-        释放以上传文件
-      </Flexbox>
+      <Flex className={[styles.overlay, active && 'active', 'flex-col-center']}>释放以上传文件</Flex>
     </div>
   )
 })

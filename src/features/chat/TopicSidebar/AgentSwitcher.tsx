@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Avatar, Block, Icon, Popover, Text, Flexbox } from '@pure/ui'
+import { ActionIcon, Avatar, Block, Icon, Popover, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { ChevronsUpDownIcon, PinIcon } from 'lucide-react'
 import { memo, useMemo, useState } from 'react'
@@ -45,15 +45,13 @@ const AgentSwitcher = memo<Props>(({ agents, currentAgentId, onSelect }) => {
 
   const content = (
     <Scrollbar maxHeight={420} style={{ height: 'auto', width: 240 }} viewStyle={{ padding: 4 }}>
-      <Flexbox gap={2}>
+      <Flex className='flex-col gap-0.5'>
         {agents.map((agent) => {
           const active = agent.id === currentAgentId
           return (
-            <Flexbox
-              horizontal
-              align='center'
-              className={cx(styles.item, active && styles.itemActive)}
-              gap={8}
+            <Flex
+              className={[cx(styles.item, active && styles.itemActive), 'flex-row items-center gap-2 p-1.5']}
+
               key={agent.id}
               role='button'
               tabIndex={0}
@@ -67,17 +65,16 @@ const AgentSwitcher = memo<Props>(({ agents, currentAgentId, onSelect }) => {
                 onSelect(agent)
                 setOpen(false)
               }}
-              style={{ padding: 6 }}
             >
               <Avatar avatar={agent.avatar} background={agent.backgroundColor ?? undefined} shape='square' size={28} />
               <Text ellipsis style={{ flex: 1, minWidth: 0 }} type={active ? undefined : 'secondary'}>
                 {agent.title}
               </Text>
               {agent.pinned ? <Icon color={cssVar.colorTextTertiary} icon={PinIcon} size={14} /> : null}
-            </Flexbox>
+            </Flex>
           )
         })}
-      </Flexbox>
+      </Flex>
     </Scrollbar>
   )
 

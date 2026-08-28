@@ -20,6 +20,7 @@
     "./Empty": "./src/Empty/index.ts",
     "./FileTypeIcon": "./src/FileTypeIcon/index.ts",
     "./Flexbox": "./src/Flexbox/index.ts",
+    "./Flex": "./src/Flex/index.tsx",
     "./HtmlPreview": "./src/HtmlPreview/index.ts",
     "./MaterialFileTypeIcon": "./src/MaterialFileTypeIcon/index.ts",
     "./Icon": "./src/Icon/index.tsx",

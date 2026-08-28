@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Text, Flexbox } from '@pure/ui'
+import { ActionIcon, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Slider, Switch } from 'antd'
 import { PanelRightClose } from 'lucide-react'
@@ -37,20 +37,20 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
   const toggleRightCollapsed = useChatUiStore((s) => s.toggleRightCollapsed)
 
   return (
-    <Flexbox style={{ height: '100%', overflow: 'hidden', width: 320 }}>
-      <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
+    <Flex className='flex-col h-full overflow-hidden w-[320px]'>
+      <Flex className={[styles.header, 'flex-between']}>
         <Text style={{ marginInlineStart: 8, fontWeight: 500 }}>高级设置</Text>
         <ActionIcon icon={PanelRightClose} size='small' title='折叠参数栏' onClick={toggleRightCollapsed} />
-      </Flexbox>
-      <Flexbox gap={16} style={{ padding: 16, minHeight: 0, overflow: 'auto' }}>
+      </Flex>
+      <Flex className='flex-col gap-4 p-4 min-h-[0px] overflow-auto'>
         {ROWS.map((row) => {
           const enabled = value[row.key] !== null
           const display = value[row.key] ?? DEFAULT_CHAT_LLM_PARAMS[row.key]!
 
           return (
-            <Flexbox key={row.key} gap={8}>
-              <Flexbox horizontal align='center' justify='space-between'>
-                <Flexbox horizontal align='center' gap={8}>
+            <Flex className='flex-col gap-2' key={row.key}>
+              <Flex className='flex-between'>
+                <Flex className='flex-row items-center gap-2'>
                   <Text>{row.label}</Text>
                   <Switch
                     checked={enabled}
@@ -61,9 +61,9 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
                       })
                     }
                   />
-                </Flexbox>
+                </Flex>
                 <Text type='secondary'>{enabled ? Number(display).toFixed(1) : '—'}</Text>
-              </Flexbox>
+              </Flex>
               <Slider
                 disabled={!enabled}
                 max={row.max}
@@ -72,11 +72,11 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
                 value={Number(display)}
                 onChange={(v) => onChange({ [row.key]: v })}
               />
-            </Flexbox>
+            </Flex>
           )
         })}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

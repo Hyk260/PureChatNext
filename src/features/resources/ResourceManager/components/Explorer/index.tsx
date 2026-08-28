@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import { Spin } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { memo, useCallback, useMemo } from 'react'
@@ -148,18 +148,18 @@ const Explorer = memo(() => {
   }, [clearSelection, message, resourceList, selectedFileIds])
 
   return (
-    <Flexbox flex={1} style={{ height: '100%', width: '100%' }}>
+    <Flex className='flex-col flex-1 h-full w-full'>
       <ExplorerHeader
         title={libraryId ? undefined : CATEGORY_TITLES[category]}
         onDelete={handleBatchDelete}
         onNewFolder={libraryId ? handleNewFolder : undefined}
         onUpload={(files) => handleUpload(files)}
       />
-      <Flexbox flex={1} style={{ overflow: 'auto' }}>
+      <Flex className='flex-col flex-1 overflow-auto'>
         {isLoading ? (
-          <Flexbox align='center' flex={1} justify='center'>
+          <Flex className='flex-col items-center flex-1 justify-center'>
             <Spin />
-          </Flexbox>
+          </Flex>
         ) : resourceList.length === 0 ? (
           <EmptyPlaceholder onUpload={handleUpload} />
         ) : viewMode === 'masonry' ? (
@@ -167,8 +167,8 @@ const Explorer = memo(() => {
         ) : (
           <ListView items={resourceList} onOpen={handleOpen} />
         )}
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

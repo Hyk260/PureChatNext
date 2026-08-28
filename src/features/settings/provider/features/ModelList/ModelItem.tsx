@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Flexbox, Icon, ModelIcon, SortableList, Switch, Tag, Text, Tooltip, copyToClipboard } from '@pure/ui'
+import { ActionIcon, Flex, Icon, ModelIcon, SortableList, Switch, Tag, Text, Tooltip, copyToClipboard } from '@pure/ui'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { formatTokenNumber } from '@pure/utils/client'
@@ -101,12 +101,12 @@ const ModelItem = memo<ModelItemProps>(
     )
 
     return (
-      <Flexbox horizontal align='center' className={styles.container} gap={16} justify='space-between' width='100%'>
-        <Flexbox horizontal align='center' className={styles.desc} gap={12}>
+      <Flex className={[styles.container, 'flex-between  w-full']}>
+        <Flex className={[styles.desc, 'flex-row items-center gap-3']}>
           {showDragHandle ? <SortableList.DragHandle size='small' title='拖动排序' /> : null}
           <ModelIcon model={model.id} size={32} />
-          <Flexbox className={styles.meta} gap={4}>
-            <Flexbox horizontal align='center' gap={8} style={{ minWidth: 0 }}>
+          <Flex className={[styles.meta, 'flex-col gap-1']}>
+            <Flex className='flex-row items-center gap-2 min-w-[0px]'>
               <Text ellipsis style={{ fontWeight: 500 }}>
                 {model.displayName}
               </Text>
@@ -121,15 +121,15 @@ const ModelItem = memo<ModelItemProps>(
                   {model.id}
                 </Tag>
               </Tooltip>
-            </Flexbox>
+            </Flex>
             {metadata.length > 0 ? <Text className={styles.metadata}>{metadata.join(' · ')}</Text> : null}
-          </Flexbox>
-        </Flexbox>
+          </Flex>
+        </Flex>
 
-        <Flexbox horizontal align='center' className='shrink-0' gap={8}>
+        <Flex className='shrink-0 flex-row items-center gap-2'>
           <ModelCapabilityTags abilities={abilities} contextWindowTokens={contextWindowTokens} />
           {model.source === 'custom' ? (
-            <Flexbox horizontal gap={2}>
+            <Flex className='flex-row gap-0.5'>
               {onEditCustomModel ? (
                 <ActionIcon
                   icon={Pencil}
@@ -147,7 +147,7 @@ const ModelItem = memo<ModelItemProps>(
                   onClick={() => onDeleteCustomModel(model)}
                 />
               ) : null}
-            </Flexbox>
+            </Flex>
           ) : null}
           <Tooltip title={healthLabel}>{healthStatus}</Tooltip>
           <Switch
@@ -156,8 +156,8 @@ const ModelItem = memo<ModelItemProps>(
             size='small'
             onChange={(next) => toggleModelEnabled(provider, model.id, next)}
           />
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
     )
   }
 )
@@ -192,7 +192,7 @@ const ModelCapabilityTags = ({
   }
 
   return (
-    <Flexbox horizontal gap={3}>
+    <Flex className='flex-row gap-[3px]'>
       {abilities?.functionCall ? (
         <Tooltip title='支持工具调用 Tool Calling'>
           <Tag color='blue' size='small'>
@@ -240,7 +240,7 @@ const ModelCapabilityTags = ({
           <Tag size='small'>{formatTokenNumber(contextWindowTokens)}</Tag>
         </Tooltip>
       ) : null}
-    </Flexbox>
+    </Flex>
   )
 }
 

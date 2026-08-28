@@ -1,6 +1,6 @@
 'use client'
 
-import { Accordion, AccordionItem, Flexbox, Icon, Skeleton, Text } from '@pure/ui'
+import { Accordion, AccordionItem, Flex, Icon, Skeleton, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Folder, Star } from 'lucide-react'
 import { memo, useMemo, useState } from 'react'
@@ -95,28 +95,28 @@ const TopicList = memo<Props>(
 
     if (loading) {
       return (
-        <Flexbox gap={1}>
+        <Flex className='flex-col gap-px'>
           {SKELETON_WIDTHS.map((width) => (
             <div className={styles.skeletonRow} key={width}>
               <Skeleton.Input active size='small' style={{ height: 16, width }} />
             </div>
           ))}
-        </Flexbox>
+        </Flex>
       )
     }
 
     if (topics.length === 0) {
       return (
-        <Flexbox style={{ paddingBlock: 4, paddingInline: 12 }}>
+        <Flex className='flex-col py-1 px-3'>
           <Text className={styles.empty} style={{ fontSize: 12 }}>
             暂无话题
           </Text>
-        </Flexbox>
+        </Flex>
       )
     }
 
     if (groupMode === 'flat') {
-      return <Flexbox gap={1}>{groups[0]?.topics.map(renderTopic)}</Flexbox>
+      return <Flex className='flex-col gap-px'>{groups[0]?.topics.map(renderTopic)}</Flex>
     }
 
     const groupIds = groups.map((group) => group.id)
@@ -129,17 +129,15 @@ const TopicList = memo<Props>(
             paddingBlock={4}
             paddingInline='8px 4px'
             title={
-              <Flexbox horizontal align='center' gap={6} style={{ minWidth: 0 }}>
+              <Flex className='flex-row items-center gap-1.5 min-w-[0px]'>
                 {getGroupTitleIcon(group.id, groupMode)}
                 <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
                   {group.title}
                 </Text>
-              </Flexbox>
+              </Flex>
             }
           >
-            <Flexbox gap={1} style={{ paddingBlock: 1 }}>
-              {group.topics.map(renderTopic)}
-            </Flexbox>
+            <Flex className='flex-col gap-px py-px'>{group.topics.map(renderTopic)}</Flex>
           </AccordionItem>
         ))}
       </Accordion>

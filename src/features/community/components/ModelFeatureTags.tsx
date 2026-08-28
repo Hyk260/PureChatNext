@@ -1,7 +1,7 @@
 'use client'
 
 import type { ModelAbilities } from '@pure/model-bank'
-import { Icon, Tag, Tooltip, Flexbox } from '@pure/ui'
+import { Icon, Tag, Tooltip, Flex } from '@pure/ui'
 import { formatTokenNumber } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { AtomIcon, EyeIcon, Globe2, ImageIcon, WrenchIcon } from 'lucide-react'
@@ -49,7 +49,7 @@ const ModelFeatureTags = memo<ModelFeatureTagsProps>(({ abilities, contextWindow
   }
 
   return (
-    <Flexbox horizontal gap={2} justify='flex-end' style={{ width: '100%' }}>
+    <Flex className='flex-row gap-0.5 justify-end w-full'>
       {showFunctionCall ? (
         <Tooltip title='该模型支持工具调用（Tool Calling）'>
           <Tag className={styles.tag} color='blue' size='small'>
@@ -92,7 +92,7 @@ const ModelFeatureTags = memo<ModelFeatureTagsProps>(({ abilities, contextWindow
           </Tag>
         </Tooltip>
       ) : null}
-    </Flexbox>
+    </Flex>
   )
 })
 

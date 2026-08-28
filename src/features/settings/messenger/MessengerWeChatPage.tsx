@@ -1,7 +1,7 @@
 'use client'
 
 import { Spin } from 'antd'
-import { Alert, Button, confirmModal, Select, Text, Flexbox } from '@pure/ui'
+import { Alert, Button, confirmModal, Select, Text, Flex } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
 import { isDev } from '@/libs/constants'
@@ -28,7 +28,13 @@ import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
 import QrCodeAuth from './QrCodeAuth'
 import type { WechatAuthCredentials } from './QrCodeAuth'
-import { bindWechat, fetchWechatStatus, retryFailedWechatEvents, unbindWechat, updateWechatConfiguration } from './wechatApi'
+import {
+  bindWechat,
+  fetchWechatStatus,
+  retryFailedWechatEvents,
+  unbindWechat,
+  updateWechatConfiguration,
+} from './wechatApi'
 import type { WechatConfiguration, WechatProviderId, WechatStatus } from './wechatApi'
 
 const STATUS_POLL_STARTING_MS = 1_000
@@ -141,16 +147,12 @@ const MessengerWeChatPage = memo(() => {
     error: statusError,
     isLoading: statusLoading,
     mutate: mutateStatus,
-  } = useSWR<WechatStatus>(
-    userId ? ['messenger-wechat-status', userId] : null,
-    () => fetchWechatStatus(),
-    {
-      refreshInterval: (latestStatus) => {
-        if (!latestStatus?.bound) return 0
-        return latestStatus.runtimeStatus === 'starting' ? STATUS_POLL_STARTING_MS : STATUS_POLL_MS
-      },
-    }
-  )
+  } = useSWR<WechatStatus>(userId ? ['messenger-wechat-status', userId] : null, () => fetchWechatStatus(), {
+    refreshInterval: (latestStatus) => {
+      if (!latestStatus?.bound) return 0
+      return latestStatus.runtimeStatus === 'starting' ? STATUS_POLL_STARTING_MS : STATUS_POLL_MS
+    },
+  })
   const {
     data: agentList,
     error: agentsError,
@@ -246,11 +248,14 @@ const MessengerWeChatPage = memo(() => {
     [message, refreshStatus, status]
   )
 
-  const handleAgentChange = useCallback((value: string) => {
-    const previous = { agentId, model: modelId, provider }
-    setAgentId(value)
-    void saveConfiguration({ ...previous, agentId: value }, previous)
-  }, [agentId, modelId, provider, saveConfiguration])
+  const handleAgentChange = useCallback(
+    (value: string) => {
+      const previous = { agentId, model: modelId, provider }
+      setAgentId(value)
+      void saveConfiguration({ ...previous, agentId: value }, previous)
+    },
+    [agentId, modelId, provider, saveConfiguration]
+  )
 
   const handleModelSelect = useCallback(
     (nextProvider: string, nextModel: string) => {
@@ -287,9 +292,9 @@ const MessengerWeChatPage = memo(() => {
   if (loading) {
     return (
       <MessengerDetailShell platform='wechat' platformMeta={platformMeta}>
-        <Flexbox align='center' justify='center' style={{ minHeight: 160 }}>
+        <Flex className='flex-col-center min-h-[160px]'>
           <Spin />
-        </Flexbox>
+        </Flex>
       </MessengerDetailShell>
     )
   }
@@ -305,7 +310,7 @@ const MessengerWeChatPage = memo(() => {
 
   // Gateway 不可用（Vercel / 未开启内置进程）时不展示连接配置与操作按钮。
   const headerAction = gatewaySupported ? (
-    <Flexbox horizontal align='center' gap={8}>
+    <Flex className='flex-row items-center gap-2'>
       {isDev ? (
         <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/dev/wechat-conversation')}>
           对话监控
@@ -318,7 +323,7 @@ const MessengerWeChatPage = memo(() => {
           断开
         </Button>
       )}
-    </Flexbox>
+    </Flex>
   ) : undefined
 
   return (
@@ -331,12 +336,12 @@ const MessengerWeChatPage = memo(() => {
           description='Vercel 无法运行常驻轮询进程。请使用开启内置 Gateway 的本地环境或 Docker Compose 部署。'
         />
       ) : (
-        <Flexbox gap={8}>
+        <Flex className='flex-col gap-2'>
           <Text strong style={{ fontSize: 15 }}>
             连接微信
           </Text>
 
-          <Flexbox gap={8}>
+          <Flex className='flex-col gap-2'>
             <Text type='secondary' style={{ fontSize: 13 }}>
               绑定助手
             </Text>
@@ -347,7 +352,7 @@ const MessengerWeChatPage = memo(() => {
               value={agentId}
               onChange={(v) => void handleAgentChange(v)}
             />
-          </Flexbox>
+          </Flex>
 
           <MessengerModelSwitch
             allowedProviders={allowedProviders}
@@ -362,7 +367,7 @@ const MessengerWeChatPage = memo(() => {
           )}
 
           {renderWechatStatusBanner({ bound, message, refreshStatus, showConnect, status: status ?? null })}
-        </Flexbox>
+        </Flex>
       )}
 
       <MessengerCommandList />

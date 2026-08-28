@@ -2,7 +2,7 @@
 
 import { memo } from 'react'
 
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import Scrollbar from '@/components/Scrollbar'
 import ProviderList from '@/features/community/components/ProviderList'
 import { COMMUNITY_PROVIDERS } from '@/const/community/providers'
@@ -14,9 +14,9 @@ const ProviderPage = memo(() => {
       viewStyle={{ paddingInlineEnd: 24 }}
       wrapClassName='community-scroll-viewport'
     >
-      <Flexbox gap={32} style={{ width: '100%' }}>
+      <Flex className='flex-col gap-8 w-full'>
         <ProviderList data={COMMUNITY_PROVIDERS} />
-      </Flexbox>
+      </Flex>
     </Scrollbar>
   )
 })

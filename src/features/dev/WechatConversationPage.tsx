@@ -39,10 +39,7 @@ import {
   sendWechatDevMessage,
 } from '@/features/dev/wechatConversationApi'
 import type { WechatDevMessage, WechatDevSession } from '@/features/dev/wechatConversationApi'
-import {
-  createWechatConversationExport,
-  createWechatExportFilename,
-} from '@/features/dev/wechatConversationExport'
+import { createWechatConversationExport, createWechatExportFilename } from '@/features/dev/wechatConversationExport'
 import type { WechatExportMode } from '@/features/dev/wechatConversationExport'
 import {
   getActiveWechatEventIds,
@@ -68,10 +65,7 @@ type PendingAttachment = {
   previewUrl: string | null
 }
 
-const STATUS_META: Record<
-  string,
-  { color: string; dot: string; label: string }
-> = {
+const STATUS_META: Record<string, { color: string; dot: string; label: string }> = {
   degraded: { color: 'text-amber-700', dot: 'bg-amber-500', label: '降级' },
   needs_rebind: { color: 'text-rose-700', dot: 'bg-rose-500', label: '需重绑' },
   offline: { color: 'text-rose-700', dot: 'bg-rose-500', label: '离线' },
@@ -244,19 +238,28 @@ function ExportDialog({
       <div className='flex max-h-[min(760px,90vh)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl'>
         <div className='flex items-center gap-3 border-b border-slate-100 px-5 py-4'>
           <div className='min-w-0 flex-1'>
-            <h2 id='wechat-export-title' className='text-base font-semibold'>导出会话</h2>
+            <h2 id='wechat-export-title' className='text-base font-semibold'>
+              导出会话
+            </h2>
             <p className='mt-0.5 truncate text-xs text-slate-500'>仅包含当前页面已加载的消息</p>
           </div>
-          <button aria-label='关闭' className='rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700' type='button' onClick={onClose}>
+          <button
+            aria-label='关闭'
+            className='rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700'
+            type='button'
+            onClick={onClose}
+          >
             <X className='size-4' />
           </button>
         </div>
 
         <div className='flex gap-1 border-b border-slate-100 bg-slate-50 px-5 py-3'>
-          {([
-            ['full', '完整 JSON'],
-            ['openai', 'OpenAI 兼容'],
-          ] as const).map(([value, label]) => (
+          {(
+            [
+              ['full', '完整 JSON'],
+              ['openai', 'OpenAI 兼容'],
+            ] as const
+          ).map(([value, label]) => (
             <button
               key={value}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${mode === value ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
@@ -275,11 +278,21 @@ function ExportDialog({
 
         <div className='flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 px-5 py-4'>
           {feedback ? <span className='mr-auto text-xs text-slate-500'>{feedback}</span> : null}
-          <button className='inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50' type='button' onClick={() => void handleCopy()}>
-            <Copy className='size-3.5' />复制 JSON
+          <button
+            className='inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'
+            type='button'
+            onClick={() => void handleCopy()}
+          >
+            <Copy className='size-3.5' />
+            复制 JSON
           </button>
-          <button className='inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800' type='button' onClick={() => downloadText(content, createWechatExportFilename(session))}>
-            <Download className='size-3.5' />下载文件
+          <button
+            className='inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800'
+            type='button'
+            onClick={() => downloadText(content, createWechatExportFilename(session))}
+          >
+            <Download className='size-3.5' />
+            下载文件
           </button>
         </div>
       </div>
@@ -342,11 +355,7 @@ function getAccessChipClass(canSend: boolean, active: boolean) {
   return active ? 'bg-white/10 text-slate-300' : 'bg-slate-100 text-slate-500'
 }
 
-function getComposerPlaceholder(
-  selectedId: string | null,
-  canSend: boolean,
-  isOwnBinding?: boolean,
-) {
+function getComposerPlaceholder(selectedId: string | null, canSend: boolean, isOwnBinding?: boolean) {
   if (!selectedId) return '先选择会话'
   if (canSend) return '以 Agent 身份发送文字或附件…（Enter 发送，Shift+Enter 换行）'
   if (isOwnBinding) return '仅可向扫码授权的微信账号代发（当前会话只读）'
@@ -398,7 +407,15 @@ function fileVisual(fileName?: string): FileVisual {
   return { Icon: File, iconClass: 'text-slate-500', wrapClass: 'bg-slate-50 ring-slate-200' }
 }
 
-function FileMessageCard({ fileName, fileSize, fileUrl }: { fileName?: string; fileSize?: number | null; fileUrl?: string }) {
+function FileMessageCard({
+  fileName,
+  fileSize,
+  fileUrl,
+}: {
+  fileName?: string
+  fileSize?: number | null
+  fileUrl?: string
+}) {
   const { Icon, iconClass, wrapClass } = fileVisual(fileName)
   const name = fileName || '未命名文件'
   const sizeLabel = typeof fileSize === 'number' ? formatSize(fileSize) : null
@@ -558,15 +575,18 @@ export default function WechatConversationPage() {
     return data
   }, [])
 
-  const bootstrap = useCallback(async (signal: AbortSignal) => {
-    try {
-      await Promise.all([refreshStatus(signal), refreshSessions(signal)])
-    } catch (err) {
-      if (!isAbortError(err)) setError(err instanceof Error ? err.message : '加载失败')
-    } finally {
-      if (!signal.aborted) setLoading(false)
-    }
-  }, [refreshSessions, refreshStatus])
+  const bootstrap = useCallback(
+    async (signal: AbortSignal) => {
+      try {
+        await Promise.all([refreshStatus(signal), refreshSessions(signal)])
+      } catch (err) {
+        if (!isAbortError(err)) setError(err instanceof Error ? err.message : '加载失败')
+      } finally {
+        if (!signal.aborted) setLoading(false)
+      }
+    },
+    [refreshSessions, refreshStatus]
+  )
 
   useEffect(() => {
     const controller = new AbortController()
@@ -989,9 +1009,7 @@ export default function WechatConversationPage() {
           </div>
         ) : null}
         {error ? (
-          <div className='border-t border-rose-100 bg-rose-50/80 px-4 py-2 text-xs text-rose-700 sm:px-6'>
-            {error}
-          </div>
+          <div className='border-t border-rose-100 bg-rose-50/80 px-4 py-2 text-xs text-rose-700 sm:px-6'>{error}</div>
         ) : null}
       </header>
 
@@ -1085,12 +1103,12 @@ export default function WechatConversationPage() {
             onScroll={handleScroll}
           >
             {!selectedId ? (
-              <div className='flex h-full flex-col items-center justify-center gap-3 text-slate-400'>
+              <div className='flex h-full flex-col-center gap-3 text-slate-400'>
                 <MessageSquare className='size-10 opacity-40' />
                 <p className='text-sm'>从左侧选择一个微信联系人</p>
               </div>
             ) : messages.length === 0 ? (
-              <div className='flex h-full flex-col items-center justify-center gap-2 text-slate-400'>
+              <div className='flex h-full flex-col-center gap-2 text-slate-400'>
                 <p className='text-sm'>当前对话版本暂无消息</p>
                 <p className='text-xs'>发送消息或切换 /new 后会显示在这里</p>
               </div>
@@ -1119,9 +1137,7 @@ export default function WechatConversationPage() {
                     </a>
                   )
                 } else if (isUser && msg.fileUrl) {
-                  content = (
-                    <FileMessageCard fileName={msg.fileName} fileSize={msg.fileSize} fileUrl={msg.fileUrl} />
-                  )
+                  content = <FileMessageCard fileName={msg.fileName} fileSize={msg.fileSize} fileUrl={msg.fileUrl} />
                 } else if (isUser) {
                   content = <div className='whitespace-pre-wrap wrap-break-word'>{msg.text}</div>
                 } else if (showTextBubble) {
@@ -1132,10 +1148,7 @@ export default function WechatConversationPage() {
                   content = null
                 }
                 return (
-                  <div
-                    key={msg.id}
-                    className={`flex flex-col gap-1 ${isRight ? 'items-end' : 'items-start'}`}
-                  >
+                  <div key={msg.id} className={`flex flex-col gap-1 ${isRight ? 'items-end' : 'items-start'}`}>
                     <div className='flex items-center gap-1.5 px-1'>
                       {isUser ? (
                         <User className='size-3 text-slate-400' />
@@ -1153,7 +1166,9 @@ export default function WechatConversationPage() {
                           {typeof msg.durationMs === 'number' ? ` · ${formatDuration(msg.durationMs)}` : ''}
                         </span>
                       ) : !isUser && msg.source === 'system' ? (
-                        <span className='rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500'>模型未知 / 系统</span>
+                        <span className='rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500'>
+                          模型未知 / 系统
+                        </span>
                       ) : null}
                       <span className='text-[10px] text-slate-300'>{formatDateTime(msg.createdAt)}</span>
                     </div>
@@ -1172,7 +1187,11 @@ export default function WechatConversationPage() {
                             type='button'
                             onClick={() => void handleCopyMessage(msg)}
                           >
-                            {copiedMessageId === msg.id ? <Check className='size-3.5 text-emerald-600' /> : <Copy className='size-3.5' />}
+                            {copiedMessageId === msg.id ? (
+                              <Check className='size-3.5 text-emerald-600' />
+                            ) : (
+                              <Copy className='size-3.5' />
+                            )}
                           </button>
                         ) : null}
                       </div>

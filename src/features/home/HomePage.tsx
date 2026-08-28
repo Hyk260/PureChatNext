@@ -2,32 +2,22 @@
 
 import { memo } from 'react'
 
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import NavHeader from '@/features/home/components/NavHeader'
 import WideScreenContainer from '@/features/home/components/WideScreenContainer'
 import HomeContent from '@/features/home/HomeContent'
 
 const HomePage = memo(() => {
   return (
-    <Flexbox flex={1} style={{ height: '100%', minHeight: 0, width: '100%' }}>
+    <Flex className='flex-col flex-1 h-full min-h-[0px] w-full'>
       <NavHeader />
-      <Flexbox
-        flex={1}
-        style={{
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: 0,
-          overflowY: 'auto',
-          paddingBlock: 24,
-          width: '100%',
-        }}
-      >
+      <Flex className='flex-col flex-1 items-center justify-center min-h-[0px] overflow-y-auto py-6 w-full'>
         <WideScreenContainer>
           <HomeContent />
         </WideScreenContainer>
-      </Flexbox>
+      </Flex>
       <div className='h-10'></div>
-    </Flexbox>
+    </Flex>
   )
 })
 

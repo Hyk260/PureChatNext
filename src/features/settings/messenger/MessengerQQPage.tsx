@@ -1,7 +1,7 @@
 'use client'
 
 import { Spin } from 'antd'
-import { Alert, Button, confirmModal, Select, Text, copyToClipboard, Flexbox } from '@pure/ui'
+import { Alert, Button, confirmModal, Select, Text, copyToClipboard, Flex } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
@@ -248,9 +248,9 @@ const MessengerQQPage = memo(() => {
   if (loading) {
     return (
       <MessengerDetailShell platform='qq' platformMeta={platformMeta}>
-        <Flexbox align='center' justify='center' style={{ minHeight: 160 }}>
+        <Flex className='flex-col-center min-h-[160px]'>
           <Spin />
-        </Flexbox>
+        </Flex>
       </MessengerDetailShell>
     )
   }
@@ -276,12 +276,12 @@ const MessengerQQPage = memo(() => {
 
   return (
     <MessengerDetailShell headerAction={headerAction} platform='qq' platformMeta={platformMeta}>
-      <Flexbox gap={12}>
+      <Flex className='flex-col gap-3'>
         <Text strong style={{ fontSize: 15 }}>
           连接 QQ
         </Text>
 
-        <Flexbox gap={8}>
+        <Flex className='flex-col gap-2'>
           <Text type='secondary' style={{ fontSize: 13 }}>
             绑定助手
           </Text>
@@ -292,7 +292,7 @@ const MessengerQQPage = memo(() => {
             value={agentId}
             onChange={(v) => void handleAgentChange(v)}
           />
-        </Flexbox>
+        </Flex>
 
         <MessengerModelSwitch
           disabled={controlsDisabled}
@@ -302,7 +302,7 @@ const MessengerQQPage = memo(() => {
         />
 
         {renderQqStatusBanner({ connected, gatewaySupported, message, showConnect, status: status ?? null })}
-      </Flexbox>
+      </Flex>
 
       <MessengerCommandList />
     </MessengerDetailShell>

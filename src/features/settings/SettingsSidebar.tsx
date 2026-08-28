@@ -1,6 +1,6 @@
 'use client'
 
-import { Accordion, AccordionItem, ScrollShadow, Text, Flexbox } from '@pure/ui'
+import { Accordion, AccordionItem, ScrollShadow, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import Link from '@/utils/link'
 import { usePathname } from '@/utils/navigation'
@@ -49,11 +49,11 @@ const SettingsSidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flexbox
-      className={[styles.sidebar, sidebarCollapsed ? styles.sidebarCollapsed : ''].join(' ')}
-      style={{ height: '100%', width: sidebarCollapsed ? 0 : 240 }}
+    <Flex
+      className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}
+      style={{ width: sidebarCollapsed ? 0 : 240 }}
     >
-      <Flexbox gap={1} style={{ height: '100%' }}>
+      <Flex className='flex-col gap-px h-full'>
         <SideBarHeaderLayout
           breadcrumb={[
             {
@@ -64,7 +64,7 @@ const SettingsSidebar = memo(() => {
           homeHref='/'
           showHomeIcon
         />
-        <Flexbox style={{ paddingInline: 4 }}>
+        <Flex className='flex-col px-1'>
           <Accordion
             defaultExpandedKeys={[SettingsGroupKey.General, SettingsGroupKey.Agent, SettingsGroupKey.System]}
             gap={8}
@@ -81,19 +81,19 @@ const SettingsSidebar = memo(() => {
                   </Text>
                 }
               >
-                <Flexbox gap={1} style={{ paddingBlock: 1 }}>
+                <Flex className='flex-col gap-px py-px'>
                   {group.items.map((item) => (
                     <Link href={item.href} key={item.key} style={{ color: 'inherit', textDecoration: 'none' }}>
                       <NavItem active={activeTab === item.key} clickable icon={item.icon} title={item.label} />
                     </Link>
                   ))}
-                </Flexbox>
+                </Flex>
               </AccordionItem>
             ))}
           </Accordion>
-        </Flexbox>
-      </Flexbox>
-    </Flexbox>
+        </Flex>
+      </Flex>
+    </Flex>
   )
 })
 

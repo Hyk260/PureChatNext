@@ -5,7 +5,7 @@ import type { FormInstance } from 'antd'
 import { ChevronRight, User } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
-import { Button, Flexbox, Icon, Input, Skeleton, Text } from '@pure/ui'
+import { Button, Flex, Icon, Input, Skeleton, Text } from '@pure/ui'
 import type { InputRef } from '@pure/ui'
 import AuthIcons from '@/components/AuthIcons'
 import { BRANDING_NAME } from '@/const/branding'
@@ -103,7 +103,7 @@ export const SignInEmailStep = ({
 
   return (
     <AuthCard title={`登录或注册你的 ${BRANDING_NAME} 账号`}>
-      <Flexbox gap={12}>
+      <Flex className='flex-col gap-3'>
         {!serverConfigInit && (
           <>
             <Skeleton.Button active block size='large' />
@@ -113,7 +113,7 @@ export const SignInEmailStep = ({
         )}
 
         {serverConfigInit && oAuthSSOProviders.length > 0 && (
-          <Flexbox gap={12} style={{ width: '100%' }}>
+          <Flex className='flex-col gap-3 w-full'>
             {oAuthSSOProviders.map((provider) => {
               const button = (
                 <Button
@@ -138,7 +138,7 @@ export const SignInEmailStep = ({
               )
             })}
             {!disableEmailPassword && divider}
-          </Flexbox>
+          </Flex>
         )}
 
         {serverConfigInit && disableEmailPassword && oAuthSSOProviders.length === 0 && (
@@ -186,7 +186,7 @@ export const SignInEmailStep = ({
         {isSocialOnly && <Alert showIcon message='此账户未设置密码，请使用第三方登录或魔法链接登录。' type='info' />}
 
         <AuthAgreement />
-      </Flexbox>
+      </Flex>
     </AuthCard>
   )
 }

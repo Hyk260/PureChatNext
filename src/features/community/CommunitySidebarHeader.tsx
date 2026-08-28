@@ -1,6 +1,6 @@
 'use client'
 
-import { ProviderIconLucide, Flexbox } from '@pure/ui'
+import { ProviderIconLucide, Flex } from '@pure/ui'
 import type { IconProps } from '@pure/ui'
 import { Bot, Brain } from 'lucide-react'
 import Link from '@/utils/link'
@@ -67,13 +67,13 @@ const CommunitySidebarHeader = memo(() => {
         homeHref='/'
         showHomeIcon
       />
-      <Flexbox gap={1} style={{ paddingInline: 4 }}>
+      <Flex className='flex-col gap-px px-1'>
         {NAV_ITEMS.map((item) => (
           <Link key={item.key} href={item.href} style={{ color: 'inherit', textDecoration: 'none' }}>
             <NavItem active={activeTab === item.key} clickable icon={item.icon} title={item.title} />
           </Link>
         ))}
-      </Flexbox>
+      </Flex>
     </>
   )
 })

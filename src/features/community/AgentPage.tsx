@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from 'react'
 
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import Scrollbar from '@/components/Scrollbar'
 import { COMMUNITY_AGENTS, filterCommunityAgents } from '@/const/community/agents'
 import { useSearchParams } from '@/utils/navigation'
@@ -30,19 +30,19 @@ const AgentPage = memo(() => {
   )
 
   return (
-    <Flexbox horizontal gap={24} style={{ height: '100%', minHeight: 0, overflow: 'hidden', width: '100%' }}>
+    <Flex className='flex-row gap-6 h-full min-h-[0px] overflow-hidden w-full'>
       <AgentCategory />
       <Scrollbar
         style={{ flex: 1, minHeight: 0, minWidth: 0 }}
         viewStyle={{ paddingInlineEnd: 24 }}
         wrapClassName='community-scroll-viewport'
       >
-        <Flexbox gap={32} style={{ width: '100%' }}>
+        <Flex className='flex-col gap-8 w-full'>
           <AgentList data={pageData} />
           <AgentPagination currentPage={currentPage} pageSize={PAGE_SIZE} total={total} />
-        </Flexbox>
+        </Flex>
       </Scrollbar>
-    </Flexbox>
+    </Flex>
   )
 })
 

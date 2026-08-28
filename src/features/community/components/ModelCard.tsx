@@ -1,6 +1,6 @@
 'use client'
 
-import { Block, Icon, ModelIcon, ProviderIcon, Text, Flexbox } from '@pure/ui'
+import { Block, Icon, ModelIcon, ProviderIcon, Text, Flex } from '@pure/ui'
 import { formatDate } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ClockIcon } from 'lucide-react'
@@ -48,19 +48,19 @@ const ModelCard = memo<DiscoverModelItem>(
           position: 'relative',
         }}
       >
-        <Flexbox horizontal align='flex-start' gap={16} justify='space-between' style={{ padding: 16, width: '100%' }}>
-          <Flexbox horizontal gap={12} title={identifier} style={{ overflow: 'hidden' }}>
+        <Flex className='flex-row items-start gap-4 justify-between p-4 w-full'>
+          <Flex className='flex-row gap-3 overflow-hidden' title={identifier}>
             <ModelIcon model={identifier} size={40} style={{ flex: 'none' }} type='avatar' />
-            <Flexbox flex={1} gap={2} style={{ overflow: 'hidden' }}>
+            <Flex className='flex-col flex-1 gap-0.5 overflow-hidden'>
               <Text ellipsis className={styles.title}>
                 {displayName}
               </Text>
               <div className={styles.author}>{identifier}</div>
-            </Flexbox>
-          </Flexbox>
+            </Flex>
+          </Flex>
           <ModelTypeIcon type={type} />
-        </Flexbox>
-        <Flexbox flex={1} gap={12} style={{ paddingInline: 16 }}>
+        </Flex>
+        <Flex className='flex-col flex-1 gap-3 px-4'>
           <ModelFeatureTags abilities={abilities} contextWindowTokens={contextWindowTokens} />
           {description ? (
             <Text
@@ -74,22 +74,22 @@ const ModelCard = memo<DiscoverModelItem>(
               {description}
             </Text>
           ) : null}
-        </Flexbox>
-        <Flexbox horizontal align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>
-          <Flexbox horizontal align='center' className={styles.secondaryDesc} gap={4}>
+        </Flex>
+        <Flex className={[styles.footer, 'flex-between p-4']}>
+          <Flex className={[styles.secondaryDesc, 'flex-row items-center gap-1']}>
             {releasedAt ? (
               <>
                 <Icon icon={ClockIcon} size={14} />
                 <span>{formatDate(releasedAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
               </>
             ) : null}
-          </Flexbox>
-          <Flexbox horizontal align='center' gap={6}>
+          </Flex>
+          <Flex className='flex-row items-center gap-1.5'>
             {providers.slice(0, 6).map((item) => (
               <ProviderIcon key={item} provider={item} size={14} type='mono' />
             ))}
-          </Flexbox>
-        </Flexbox>
+          </Flex>
+        </Flex>
       </Block>
     )
   }

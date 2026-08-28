@@ -16,7 +16,7 @@ vi.mock('@pure/ui', () => ({
   ActionIcon: ({ icon: _icon, title, ...props }: { icon: unknown; title?: string }) => (
     <button aria-label={title} type='button' {...props} />
   ),
-  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Icon: () => null,
   Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
   Modal: ({

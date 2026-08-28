@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Flexbox } from '@pure/ui'
+import { ActionIcon, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { PanelLeftOpen } from 'lucide-react'
 import { usePathname } from '@/utils/navigation'
@@ -18,17 +18,14 @@ const styles = createStaticStyles(({ css }) => ({
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
     background: ${cssVar.colorBgContainer};
   `,
-  search: css`
-    width: 100%;
-  `,
 }))
 
 const useSearchPlaceholder = () => {
   const pathname = usePathname()
 
   return useMemo(() => {
-    if (pathname.startsWith('/community/model')) return '搜索名称介绍或关键词...'
-    if (pathname.startsWith('/community/agent')) return '搜索名称、描述或关键词...'
+    if (pathname.startsWith('/community/model')) return '搜索名称介绍或关键词'
+    if (pathname.startsWith('/community/agent')) return '搜索名称、描述或关键词'
     return null
   }, [pathname])
 }
@@ -39,16 +36,16 @@ const CommunityHeader = memo(() => {
   const toggleSidebarCollapsed = useHomeStore((s) => s.toggleSidebarCollapsed)
 
   return (
-    <Flexbox horizontal align='center' className={styles.header} gap={8}>
+    <Flex className={[styles.header, 'flex-row items-center gap-2']}>
       {sidebarCollapsed ? (
         <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
       ) : null}
       {placeholder ? (
-        <Flexbox className={styles.search} flex={1}>
+        <Flex className={'flex-col flex-1 w-full'}>
           <AgentSearch placeholder={placeholder} />
-        </Flexbox>
+        </Flex>
       ) : null}
-    </Flexbox>
+    </Flex>
   )
 })
 

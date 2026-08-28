@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@pure/ui', () => ({
   Alert: ({ message }: { message?: React.ReactNode }) => <div>{message}</div>,
-  Flexbox: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Input: ({
     disabled,
     onChange,

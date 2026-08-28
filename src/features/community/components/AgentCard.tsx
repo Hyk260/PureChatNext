@@ -1,7 +1,7 @@
 'use client'
 
 import { useApp } from '@/components/AntdStaticMethods'
-import { Avatar, Block, Icon, Tag, Text, Flexbox } from '@pure/ui'
+import { Avatar, Block, Icon, Tag, Text, Flex } from '@pure/ui'
 import { formatDate } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { BookTextIcon, ClockIcon, CoinsIcon, GitForkIcon, PuzzleIcon } from 'lucide-react'
@@ -129,8 +129,8 @@ const AgentCard = memo<DiscoverAgentItem>(
         }}
         onClick={handleClick}
       >
-        <Flexbox horizontal align='flex-start' gap={16} justify='space-between' style={{ padding: 16, width: '100%' }}>
-          <Flexbox horizontal gap={12} title={identifier} style={{ overflow: 'hidden' }}>
+        <Flex className='flex-row items-start gap-4 justify-between p-4 w-full'>
+          <Flex className='flex-row gap-3 overflow-hidden' title={identifier}>
             <Avatar
               shape='square'
               size={40}
@@ -138,20 +138,20 @@ const AgentCard = memo<DiscoverAgentItem>(
               background={backgroundColor || 'transparent'}
               style={{ flex: 'none' }}
             />
-            <Flexbox flex={1} gap={2} style={{ overflow: 'hidden' }}>
+            <Flex className='flex-col flex-1 gap-0.5 overflow-hidden'>
               <Text className={styles.title} ellipsis>
                 {title}
               </Text>
               {/* <div className={styles.author}>{author}</div> */}
-            </Flexbox>
-          </Flexbox>
-        </Flexbox>
+            </Flex>
+          </Flex>
+        </Flex>
 
-        <Flexbox flex={1} gap={12} style={{ paddingInline: 16 }}>
+        <Flex className='flex-col flex-1 gap-3 px-4'>
           <Text as='p' className={styles.desc} ellipsis={{ rows: 3 }} style={{ marginBottom: 0 }}>
             {description}
           </Text>
-          <Flexbox horizontal align='center' gap={4}>
+          <Flex className='flex-row items-center gap-1'>
             {typeof tokenUsage === 'number' ? (
               <Tag className={styles.token} icon={<Icon icon={CoinsIcon} size={12} />} size='small'>
                 {formatNumber(tokenUsage)}
@@ -172,16 +172,16 @@ const AgentCard = memo<DiscoverAgentItem>(
                 {knowledgeCount}
               </Tag>
             ) : null}
-          </Flexbox>
-        </Flexbox>
+          </Flex>
+        </Flex>
 
-        <Flexbox horizontal align='center' className={styles.footer} justify='space-between' style={{ padding: 16 }}>
-          <Flexbox horizontal align='center' className={styles.secondaryDesc} gap={4}>
+        <Flex className={[styles.footer, 'flex-between p-4']}>
+          <Flex className={[styles.secondaryDesc, 'flex-row items-center gap-1']}>
             <Icon icon={ClockIcon} size={14} />
             <span>{formatDate(createdAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-          </Flexbox>
+          </Flex>
           <span className={styles.secondaryDesc}>{ASSISTANT_CATEGORY_LABELS[category]}</span>
-        </Flexbox>
+        </Flex>
       </Block>
     )
   }

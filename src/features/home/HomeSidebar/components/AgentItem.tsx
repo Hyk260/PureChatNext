@@ -1,6 +1,6 @@
 'use client'
 
-import { Avatar, Center, confirmModal, DropdownMenu, Block, Icon, Text, Flexbox } from '@pure/ui'
+import { Avatar, Center, confirmModal, DropdownMenu, Block, Icon, Text, Flex } from '@pure/ui'
 import type { MenuInfo, MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { MoreHorizontal, Pencil, PinIcon, PinOff, Trash2 } from 'lucide-react'
@@ -166,7 +166,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
       <Center flex='none' height={28} width={28}>
         <Avatar avatar={agent.avatar} background={agent.backgroundColor ?? undefined} size={28} />
       </Center>
-      <Flexbox flex={1} style={{ minWidth: 0, overflow: 'hidden' }}>
+      <Flex className='flex-col flex-1 min-w-[0px] overflow-hidden'>
         <Text
           title={agent.title}
           style={{
@@ -178,17 +178,15 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         >
           {agent.title}
         </Text>
-      </Flexbox>
+      </Flex>
       {isPinned ? (
         <Center className={styles.pinBadge} flex='none' height={24} title='已置顶' width={20}>
           <Icon icon={PinIcon} size={14} />
         </Center>
       ) : null}
       {canOperate ? (
-        <Flexbox
-          horizontal
-          align='center'
-          className={cx('agent-actions')}
+        <Flex
+          className={[cx('agent-actions'), 'flex-row items-center']}
           data-open={menuOpen || actionsMounted || undefined}
           onClick={(event) => event.stopPropagation()}
           onKeyDown={(event) => event.stopPropagation()}
@@ -204,7 +202,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
             <Icon icon={MoreHorizontal} size='small' />
             <span className={styles.srOnly}>更多</span>
           </DropdownMenu>
-        </Flexbox>
+        </Flex>
       ) : null}
     </Block>
   )

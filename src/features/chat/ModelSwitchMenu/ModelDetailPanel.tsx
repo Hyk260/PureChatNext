@@ -3,7 +3,7 @@
 import { CREDITS_PER_DOLLAR } from '@pure/const'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId, ModelTokenPricing } from '@pure/model-bank'
-import { Icon, Tag, Text, Flexbox } from '@pure/ui'
+import { Icon, Tag, Text, Flex } from '@pure/ui'
 import { formatTokenNumber } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
@@ -116,7 +116,7 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
       : null
 
   return (
-    <Flexbox className={styles.container} gap={4}>
+    <Flex className={[styles.container, 'flex-col gap-1']}>
       {description ? (
         <Text as='p' className={styles.description} fontSize={12} type='secondary'>
           {description}
@@ -124,24 +124,24 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
       ) : null}
 
       {contextLabel ? (
-        <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
-          <Flexbox horizontal align='center' gap={8}>
+        <Flex className={[styles.row, 'flex-between']}>
+          <Flex className='flex-row items-center gap-2'>
             <div className={styles.bar} style={{ background: '#1677ff' }} />
             <span className={styles.sectionTitle}>上下文长度</span>
-          </Flexbox>
+          </Flex>
           <Text fontSize={13} weight={500}>
             {contextLabel}
           </Text>
-        </Flexbox>
+        </Flex>
       ) : null}
 
       {hasAbilities ? (
-        <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
-          <Flexbox horizontal align='center' gap={8}>
+        <Flex className={[styles.row, 'flex-between']}>
+          <Flex className='flex-row items-center gap-2'>
             <div className={styles.bar} style={{ background: '#722ed1' }} />
             <span className={styles.sectionTitle}>能力</span>
-          </Flexbox>
-          <Flexbox horizontal gap={4}>
+          </Flex>
+          <Flex className='flex-row gap-1'>
             {abilities?.functionCall ? (
               <Tag className={styles.tag} color='blue' size='small'>
                 <Icon icon={Wrench} size={12} />
@@ -172,47 +172,47 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
                 <Icon icon={Code2} size={12} />
               </Tag>
             ) : null} */}
-          </Flexbox>
-        </Flexbox>
+          </Flex>
+        </Flex>
       ) : null}
 
       {pricing ? (
-        <Flexbox gap={2}>
-          <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
-            <Flexbox horizontal align='center' gap={8}>
+        <Flex className='flex-col gap-0.5'>
+          <Flex className={[styles.row, 'flex-between']}>
+            <Flex className='flex-row items-center gap-2'>
               <div className={styles.bar} style={{ background: '#fa8c16' }} />
               <span className={styles.sectionTitle}>价格</span>
-            </Flexbox>
+            </Flex>
             <Text fontSize={11} type='secondary'>
               {priceUnitLabel(pricing.currency)}
             </Text>
-          </Flexbox>
-          <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
-            <Flexbox horizontal align='center' gap={6}>
+          </Flex>
+          <Flex className={[styles.row, 'flex-between']}>
+            <Flex className='flex-row items-center gap-1.5'>
               <Icon icon={ArrowUpFromDot} size={12} />
               <span>输入</span>
-            </Flexbox>
+            </Flex>
             <span>{formatPriceValue(pricing, pricing.textInput)}</span>
-          </Flexbox>
-          <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
-            <Flexbox horizontal align='center' gap={6}>
+          </Flex>
+          <Flex className={[styles.row, 'flex-between']}>
+            <Flex className='flex-row items-center gap-1.5'>
               <Icon icon={ArrowDownToDot} size={12} />
               <span>输出</span>
-            </Flexbox>
+            </Flex>
             <span>{formatPriceValue(pricing, pricing.textOutput)}</span>
-          </Flexbox>
+          </Flex>
           {typeof pricing.textInputCacheRead === 'number' ? (
-            <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
-              <Flexbox horizontal align='center' gap={6}>
+            <Flex className={[styles.row, 'flex-between']}>
+              <Flex className='flex-row items-center gap-1.5'>
                 <Icon icon={CircleFadingArrowUp} size={12} />
                 <span>输入（缓存读取）</span>
-              </Flexbox>
+              </Flex>
               <span>{formatPriceValue(pricing, pricing.textInputCacheRead)}</span>
-            </Flexbox>
+            </Flex>
           ) : null}
-        </Flexbox>
+        </Flex>
       ) : null}
-    </Flexbox>
+    </Flex>
   )
 })
 

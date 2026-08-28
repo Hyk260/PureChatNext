@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Flexbox, Text } from '@pure/ui'
+import { Button, Flex, Text } from '@pure/ui'
 import { Spin } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Download } from 'lucide-react'
@@ -92,7 +92,7 @@ const PreviewMessage = memo<PreviewMessageProps>(({ description, fileName, url }
   const [downloading, setDownloading] = useState(false)
 
   return (
-    <Flexbox align='center' className={styles.centered} gap={12} justify='center'>
+    <Flex className={[styles.centered, 'flex-col-center ']}>
       <Text strong>{fileName}</Text>
       <Text type='secondary'>{description}</Text>
       {url && (
@@ -108,7 +108,7 @@ const PreviewMessage = memo<PreviewMessageProps>(({ description, fileName, url }
           下载文件
         </Button>
       )}
-    </Flexbox>
+    </Flex>
   )
 })
 
@@ -133,9 +133,9 @@ const LoadedTextPreview = ({ content, fileName, url }: { content: string; fileNa
     <div className={styles.source}>
       <Suspense
         fallback={
-          <Flexbox align='center' className={styles.centered} justify='center'>
+          <Flex className={[styles.centered, 'flex-col-center']}>
             <Spin />
-          </Flexbox>
+          </Flex>
         }
       >
         <SourcePreview content={content} fileName={fileName} />
@@ -169,9 +169,9 @@ const RemoteTextPreview = ({ fileName, url }: { fileName: string; url: string })
 
   if (requestState.url !== url) {
     return (
-      <Flexbox align='center' className={styles.centered} justify='center'>
+      <Flex className={[styles.centered, 'flex-col-center']}>
         <Spin />
-      </Flexbox>
+      </Flex>
     )
   }
 
@@ -202,7 +202,7 @@ const ImagePreview = memo<ImagePreviewProps>(({ fileName, onError, url }) => {
   const [loaded, setLoaded] = useState(false)
 
   return (
-    <Flexbox align='center' className={styles.centered} justify='center'>
+    <Flex className={[styles.centered, 'flex-col-center']}>
       {!loaded && <Spin />}
       {/* The preview URL may be authenticated or remote and has no known dimensions. */}
       <img
@@ -213,7 +213,7 @@ const ImagePreview = memo<ImagePreviewProps>(({ fileName, onError, url }) => {
         onError={onError}
         onLoad={() => setLoaded(true)}
       />
-    </Flexbox>
+    </Flex>
   )
 })
 
@@ -245,17 +245,17 @@ const FileContent = memo<FileContentProps>(({ item }) => {
 
   if (previewKind === 'video') {
     return (
-      <Flexbox align='center' className={styles.centered} justify='center'>
+      <Flex className={[styles.centered, 'flex-col-center']}>
         <video controls className={styles.video} src={item.url} onError={() => setMediaFailed(true)} />
-      </Flexbox>
+      </Flex>
     )
   }
 
   if (previewKind === 'audio') {
     return (
-      <Flexbox align='center' className={styles.centered} justify='center'>
+      <Flex className={[styles.centered, 'flex-col-center']}>
         <audio controls className={styles.audio} src={item.url} onError={() => setMediaFailed(true)} />
-      </Flexbox>
+      </Flex>
     )
   }
 

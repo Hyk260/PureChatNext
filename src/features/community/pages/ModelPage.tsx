@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from 'react'
 
-import { Flexbox } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import Scrollbar from '@/components/Scrollbar'
 import AgentPagination from '@/features/community/components/AgentPagination'
 import ModelCategory from '@/features/community/components/ModelCategory'
@@ -29,19 +29,19 @@ const ModelPage = memo(() => {
   )
 
   return (
-    <Flexbox horizontal gap={24} style={{ height: '100%', minHeight: 0, overflow: 'hidden', width: '100%' }}>
+    <Flex className='flex-row gap-6 h-full min-h-[0px] overflow-hidden w-full'>
       <ModelCategory />
       <Scrollbar
         style={{ flex: 1, minHeight: 0, minWidth: 0 }}
         viewStyle={{ paddingInlineEnd: 24 }}
         wrapClassName='community-scroll-viewport'
       >
-        <Flexbox gap={32} style={{ width: '100%' }}>
+        <Flex className='flex-col gap-8 w-full'>
           <ModelList data={pageData} />
           <AgentPagination currentPage={currentPage} pageSize={PAGE_SIZE} total={total} />
-        </Flexbox>
+        </Flex>
       </Scrollbar>
-    </Flexbox>
+    </Flex>
   )
 })
 

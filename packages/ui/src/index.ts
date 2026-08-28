@@ -5,9 +5,16 @@ export { Alert, type AlertProps } from './Alert'
 export { Avatar, type AvatarGroupProps, type AvatarProps } from './Avatar'
 export { Block, type BlockProps, type BlockVariant } from './Block'
 export { default as CodeBlock, type CodeBlockVariant } from './CodeBlock'
-export { Checkbox, CheckboxGroup, type CheckboxGroupOption, type CheckboxGroupProps, type CheckboxProps } from './Checkbox'
+export {
+  Checkbox,
+  CheckboxGroup,
+  type CheckboxGroupOption,
+  type CheckboxGroupProps,
+  type CheckboxProps,
+} from './Checkbox'
 export { FileTypeIcon, type FileTypeIconProps } from './FileTypeIcon'
 export { Flexbox, type FlexboxProps } from './Flexbox'
+export { Flex, type FlexClassName, type FlexProps } from './Flex'
 export { HtmlPreview, type HtmlPreviewProps } from './HtmlPreview'
 export { MaterialFileTypeIcon, type MaterialFileTypeIconProps } from './MaterialFileTypeIcon'
 export { Center, Grid, MaskShadow, ScrollShadow } from './Layout'

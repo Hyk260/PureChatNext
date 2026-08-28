@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Accordion, Flexbox } from '@pure/ui'
+import { ActionIcon, Accordion, Flex } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import Scrollbar from '@/components/Scrollbar'
 import { Settings } from 'lucide-react'
@@ -129,23 +129,19 @@ const SidebarBody = memo(() => {
   const bottomContent = useMemo(() => buildContent(bottomKeys), [buildContent, bottomKeys])
 
   return (
-    <Flexbox flex={1} gap={1} style={{ minHeight: 0 }}>
+    <Flex className='flex-col flex-1 gap-px min-h-[0px]'>
       <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }} viewStyle={{ paddingInline: '4px 8px' }}>
-        <Flexbox flex={1} gap={1} style={{ minHeight: '100%' }}>
-          {topContent}
-        </Flexbox>
+        <Flex className='flex-col flex-1 gap-px min-h-full'>{topContent}</Flex>
       </Scrollbar>
       {bottomContent.length > 0 ? (
-        <Flexbox gap={1} style={{ flex: 'none', paddingInline: '4px 8px' }}>
-          {bottomContent}
-        </Flexbox>
+        <Flex className='flex-col gap-px flex-none px-[4px_8px]'>{bottomContent}</Flex>
       ) : null}
-      <Flexbox horizontal style={{ flex: 'none', paddingBlock: 4, paddingInline: '4px 8px' }}>
+      <Flex className='flex-row flex-none py-1 px-[4px_8px]'>
         <Link href='/settings/profile' style={{ color: 'inherit', textDecoration: 'none' }}>
           <ActionIcon icon={Settings} size='small' title='设置' />
         </Link>
-      </Flexbox>
-    </Flexbox>
+      </Flex>
+    </Flex>
   )
 })
 

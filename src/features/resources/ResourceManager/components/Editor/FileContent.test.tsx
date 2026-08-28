@@ -23,7 +23,7 @@ vi.mock('@pure/ui', () => ({
       {children}
     </button>
   ),
-  Flexbox: ({ children, className }: { children?: React.ReactNode; className?: string }) => (
+  Flex: ({ children, className }: { children?: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>
   ),
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,

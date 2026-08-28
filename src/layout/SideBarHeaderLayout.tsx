@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Icon, Text, Flexbox } from '@pure/ui'
+import { ActionIcon, Icon, Text, Flex } from '@pure/ui'
 import { Breadcrumb } from 'antd'
 import type { BreadcrumbProps } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
@@ -100,7 +100,7 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     }))
 
     const leftContent = left ? (
-      <Flexbox horizontal align='center' flex={1} gap={2} style={{ overflow: 'hidden' }}>
+      <Flex className='flex-row items-center flex-1 gap-0.5 overflow-hidden'>
         {typeof left === 'string' ? (
           <Text ellipsis style={{ fontSize: 16, fontWeight: 500 }}>
             {left}
@@ -108,28 +108,21 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
         ) : (
           left
         )}
-      </Flexbox>
+      </Flex>
     ) : (
-      <Flexbox flex={1} style={{ paddingInline: 6 }}>
+      <Flex className='flex-col flex-1 px-1.5'>
         <Breadcrumb
           className={styles.breadcrumb}
           separator={<Icon color={cssVar.colorTextDescription} icon={ChevronRightIcon} size={12} />}
           items={breadcrumbItems}
         />
-      </Flexbox>
+      </Flex>
     )
 
     return (
-      <Flexbox
-        horizontal
-        align='center'
-        className={styles.container}
-        flex='none'
-        justify='space-between'
-        style={{ padding: '0px 6px', height: 40 }}
-      >
+      <Flex className={[styles.container, 'flex-between flex-none p-[0px_6px] h-[40px]']}>
         {leftContent}
-        <Flexbox horizontal align='center' flex='none' gap={2} justify='flex-end'>
+        <Flex className='flex-row items-center flex-none gap-0.5 justify-end'>
           {right}
           {showTogglePanelButton ? (
             <ActionIcon
@@ -143,8 +136,8 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
               }}
             />
           ) : null}
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
     )
   }
 )

@@ -5,7 +5,7 @@ import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 import useSWR from 'swr'
 
-import { Text, Flexbox } from '@pure/ui'
+import { Text, Flex } from '@pure/ui'
 
 import Link from '@/utils/link'
 import { apiFetch } from '@/utils/apiFetch'
@@ -63,13 +63,13 @@ const FreeCreditsSummary = memo<{ onClick?: () => void }>(({ onClick }) => {
 
   return (
     <Link className={styles.link} href='/settings/usage' onClick={onClick}>
-      <Flexbox horizontal align='center' className={styles.row} justify='space-between'>
+      <Flex className={[styles.row, 'flex-between']}>
         <Text type='secondary'>积分</Text>
-        <Flexbox horizontal align='center' gap={10}>
+        <Flex className='flex-row items-center gap-2.5'>
           <Text className={styles.value}>{value}</Text>
           <Progress percent={percent} showInfo={false} size={16} strokeWidth={12} type='circle' />
-        </Flexbox>
-      </Flexbox>
+        </Flex>
+      </Flex>
     </Link>
   )
 })

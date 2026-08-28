@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, confirmModal, copyToClipboard, DropdownMenu, Icon, Input, Modal, Text, Flexbox } from '@pure/ui'
+import { ActionIcon, confirmModal, copyToClipboard, DropdownMenu, Icon, Input, Modal, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
   Hash,
@@ -145,58 +145,58 @@ const ChatHeader = memo<Props>(
 
     const menuItems = useMemo(
       () => [
-      ...(topic
-        ? [
-            {
-              icon: <Icon icon={Star} />,
-              key: 'favorite',
-              label: topic.favorite ? '取消收藏' : '收藏',
-              onClick: () => void onFavorite(topic.id, !topic.favorite),
-            },
-            { type: 'divider' as const },
-            {
-              disabled: autoRenameDisabled,
-              icon: <Icon icon={Sparkles} />,
-              key: 'auto-rename',
-              label: autoRenaming ? '正在智能重命名…' : '智能重命名',
-              onClick: handleAutoRename,
-            },
-            {
-              icon: <Icon icon={Pencil} />,
-              key: 'rename',
-              label: '重命名',
-              onClick: handleOpenRename,
-            },
-            { type: 'divider' as const },
-            {
-              icon: <Icon icon={Hash} />,
-              key: 'copy-session-id',
-              label: '复制会话 ID',
-              onClick: () => void handleCopyId(),
-            },
-            { type: 'divider' as const },
-          ]
-        : []),
-      {
-        checked: wideScreen,
-        icon: <Icon icon={Maximize2} />,
-        key: 'full-width',
-        label: '全宽显示',
-        onCheckedChange: (checked: boolean) => toggleWideScreen(checked),
-        type: 'switch' as const,
-      },
-      ...(topic
-        ? [
-            { type: 'divider' as const },
-            {
-              danger: true,
-              icon: <Icon icon={Trash2} />,
-              key: 'delete',
-              label: '删除',
-              onClick: handleDelete,
-            },
-          ]
-        : []),
+        ...(topic
+          ? [
+              {
+                icon: <Icon icon={Star} />,
+                key: 'favorite',
+                label: topic.favorite ? '取消收藏' : '收藏',
+                onClick: () => void onFavorite(topic.id, !topic.favorite),
+              },
+              { type: 'divider' as const },
+              {
+                disabled: autoRenameDisabled,
+                icon: <Icon icon={Sparkles} />,
+                key: 'auto-rename',
+                label: autoRenaming ? '正在智能重命名…' : '智能重命名',
+                onClick: handleAutoRename,
+              },
+              {
+                icon: <Icon icon={Pencil} />,
+                key: 'rename',
+                label: '重命名',
+                onClick: handleOpenRename,
+              },
+              { type: 'divider' as const },
+              {
+                icon: <Icon icon={Hash} />,
+                key: 'copy-session-id',
+                label: '复制会话 ID',
+                onClick: () => void handleCopyId(),
+              },
+              { type: 'divider' as const },
+            ]
+          : []),
+        {
+          checked: wideScreen,
+          icon: <Icon icon={Maximize2} />,
+          key: 'full-width',
+          label: '全宽显示',
+          onCheckedChange: (checked: boolean) => toggleWideScreen(checked),
+          type: 'switch' as const,
+        },
+        ...(topic
+          ? [
+              { type: 'divider' as const },
+              {
+                danger: true,
+                icon: <Icon icon={Trash2} />,
+                key: 'delete',
+                label: '删除',
+                onClick: handleDelete,
+              },
+            ]
+          : []),
       ],
       [
         autoRenaming,
@@ -214,56 +214,56 @@ const ChatHeader = memo<Props>(
 
     return (
       <>
-      <Flexbox horizontal align='center' className={styles.header} justify='space-between'>
-        <Flexbox horizontal align='center' flex={1} gap={4} style={{ minWidth: 0, overflow: 'hidden' }}>
-          {leftCollapsed ? (
-            <ActionIcon icon={PanelLeftOpen} size='small' title='展开话题栏' onClick={toggleLeftCollapsed} />
-          ) : null}
-          <Text className={styles.title} ellipsis>
-            {title}
-          </Text>
-          <DropdownMenu
-            items={menuItems}
-            nativeButton
-            placement='bottomLeft'
-            triggerProps={{ className: styles.menuTrigger, title: '更多' }}
-          >
-            <MoreHorizontal size={16} />
-            <span className={styles.srOnly}>更多</span>
-          </DropdownMenu>
-        </Flexbox>
+        <Flex className={[styles.header, 'flex-between']}>
+          <Flex className='flex-row items-center flex-1 gap-1 min-w-[0px] overflow-hidden'>
+            {leftCollapsed ? (
+              <ActionIcon icon={PanelLeftOpen} size='small' title='展开话题栏' onClick={toggleLeftCollapsed} />
+            ) : null}
+            <Text className={styles.title} ellipsis>
+              {title}
+            </Text>
+            <DropdownMenu
+              items={menuItems}
+              nativeButton
+              placement='bottomLeft'
+              triggerProps={{ className: styles.menuTrigger, title: '更多' }}
+            >
+              <MoreHorizontal size={16} />
+              <span className={styles.srOnly}>更多</span>
+            </DropdownMenu>
+          </Flex>
 
-        <Flexbox horizontal align='center' flex='none' gap={2}>
-          {rightCollapsed ? (
-            <ActionIcon icon={PanelRightOpen} size='small' title='展开参数栏' onClick={toggleRightCollapsed} />
-          ) : null}
-        </Flexbox>
-      </Flexbox>
+          <Flex className='flex-row items-center flex-none gap-0.5'>
+            {rightCollapsed ? (
+              <ActionIcon icon={PanelRightOpen} size='small' title='展开参数栏' onClick={toggleRightCollapsed} />
+            ) : null}
+          </Flex>
+        </Flex>
 
-      <Modal
-        cancelText='取消'
-        confirmLoading={saving}
-        destroyOnHidden
-        okButtonProps={{ disabled: !draftTitle.trim() }}
-        okText='保存'
-        open={renameOpen}
-        title='重命名话题'
-        width={400}
-        onCancel={() => setRenameOpen(false)}
-        onOk={handleRename}
-      >
-        <Flexbox gap={12} style={{ paddingBlock: 8 }}>
-          <Text type='secondary'>保持简短且易于识别。</Text>
-          <Input
-            autoFocus
-            maxLength={100}
-            placeholder='话题名称'
-            value={draftTitle}
-            onChange={(event) => setDraftTitle(event.target.value)}
-            onPressEnter={handleRename}
-          />
-        </Flexbox>
-      </Modal>
+        <Modal
+          cancelText='取消'
+          confirmLoading={saving}
+          destroyOnHidden
+          okButtonProps={{ disabled: !draftTitle.trim() }}
+          okText='保存'
+          open={renameOpen}
+          title='重命名话题'
+          width={400}
+          onCancel={() => setRenameOpen(false)}
+          onOk={handleRename}
+        >
+          <Flex className='flex-col gap-3 py-2'>
+            <Text type='secondary'>保持简短且易于识别。</Text>
+            <Input
+              autoFocus
+              maxLength={100}
+              placeholder='话题名称'
+              value={draftTitle}
+              onChange={(event) => setDraftTitle(event.target.value)}
+              onPressEnter={handleRename}
+            />
+          </Flex>
+        </Modal>
       </>
     )
   }

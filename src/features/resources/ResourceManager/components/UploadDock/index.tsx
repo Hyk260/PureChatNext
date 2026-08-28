@@ -1,6 +1,6 @@
 'use client'
 
-import { Text, Flexbox } from '@pure/ui'
+import { Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useState } from 'react'
 
@@ -31,14 +31,14 @@ const UploadDock = memo(() => {
   if (items.length === 0) return null
 
   return (
-    <Flexbox className={styles.dock} gap={8}>
+    <Flex className={[styles.dock, 'flex-col gap-2']}>
       <Text strong>上传中</Text>
       {items.map((item) => (
         <Text key={item.id} style={{ fontSize: 12 }}>
           {item.name} — {item.progress}%
         </Text>
       ))}
-    </Flexbox>
+    </Flex>
   )
 })
 

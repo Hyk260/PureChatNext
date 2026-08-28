@@ -1,6 +1,6 @@
 'use client'
 
-import { Flexbox, Grid, Tag, Text } from '@pure/ui'
+import { Flex, Grid, Tag, Text } from '@pure/ui'
 import { createStaticStyles } from 'antd-style'
 import { memo, useMemo } from 'react'
 
@@ -37,11 +37,11 @@ const ProviderSection = memo<{
   ids: readonly ProviderId[]
   title: string
 }>(({ ids, title }) => (
-  <Flexbox gap={16}>
-    <Flexbox horizontal align='center' gap={8}>
+  <Flex className='flex-col gap-4'>
+    <Flex className='flex-row items-center gap-2'>
       <Text style={{ fontSize: 18, fontWeight: 600 }}>{title}</Text>
       <Tag>{ids.length}</Tag>
-    </Flexbox>
+    </Flex>
     {ids.length > 0 ? (
       <Grid className={styles.grid} gap={16} rows={3}>
         {ids.map((id) => (
@@ -51,7 +51,7 @@ const ProviderSection = memo<{
     ) : (
       <Text type='secondary'>暂无服务商</Text>
     )}
-  </Flexbox>
+  </Flex>
 ))
 
 ProviderSection.displayName = 'ProviderSection'
@@ -66,10 +66,10 @@ const ProviderAllPage = memo(() => {
   }, [configs])
 
   return (
-    <Flexbox className={styles.page} gap={32} width='100%'>
+    <Flex className={[styles.page, 'flex-col gap-8 w-full']}>
       <ProviderSection ids={enabledIds} title='已启用服务商' />
       <ProviderSection ids={disabledIds} title='未启用服务商' />
-    </Flexbox>
+    </Flex>
   )
 })
 

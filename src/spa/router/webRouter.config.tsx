@@ -330,6 +330,10 @@ export const webRoutes: RouteObject[] = [
               element: dynamicElement(() => import('@/features/dev/CodeBlockPage'), 'Dev > CodeBlock'),
               path: 'code-block',
             },
+            {
+              element: dynamicElement(() => import('@/features/dev/ApprovalCardPage'), 'Dev > ApprovalCard'),
+              path: 'approval-card',
+            },
           ],
           path: 'dev',
         },

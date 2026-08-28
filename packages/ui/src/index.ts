@@ -2,6 +2,13 @@ export { ActionIcon, type ActionIconProps, type ActionIconSize } from './ActionI
 export { ActionIconGroup, type ActionIconGroupEvent, type ActionIconGroupItemType } from './ActionIconGroup'
 export { Accordion, AccordionItem } from './Accordion'
 export { Alert, type AlertProps } from './Alert'
+export {
+  ApprovalCard,
+  type ApprovalCardProps,
+  type ApprovalPlanStep,
+  type ApprovalQuestion,
+  type ApprovalVariant,
+} from './ApprovalCard'
 export { Avatar, type AvatarGroupProps, type AvatarProps } from './Avatar'
 export { Block, type BlockProps } from './Block'
 export { default as CodeBlock, type CodeBlockVariant } from './CodeBlock'

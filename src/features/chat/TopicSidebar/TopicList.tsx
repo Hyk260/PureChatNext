@@ -98,7 +98,7 @@ const TopicList = memo<Props>(
         <Flex className='flex-col gap-px'>
           {SKELETON_WIDTHS.map((width) => (
             <div className={styles.skeletonRow} key={width}>
-              <Skeleton.Input active size='small' style={{ height: 16, width }} />
+              <Skeleton.Block active height={16} width={width} />
             </div>
           ))}
         </Flex>

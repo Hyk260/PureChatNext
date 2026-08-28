@@ -1,6 +1,7 @@
 'use client'
 
-import { Block, Flex, ProviderCombine, Switch, Text } from '@pure/ui'
+import { Block, Flex, ProviderCombine, Text } from '@pure/ui'
+import { Switch } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { useRouter } from '@/utils/navigation'
 import { memo } from 'react'

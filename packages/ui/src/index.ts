@@ -3,7 +3,7 @@ export { ActionIconGroup, type ActionIconGroupEvent, type ActionIconGroupItemTyp
 export { Accordion, AccordionItem } from './Accordion'
 export { Alert, type AlertProps } from './Alert'
 export { Avatar, type AvatarGroupProps, type AvatarProps } from './Avatar'
-export { Block, type BlockProps, type BlockVariant } from './Block'
+export { Block, type BlockProps } from './Block'
 export { default as CodeBlock, type CodeBlockVariant } from './CodeBlock'
 export {
   Checkbox,
@@ -66,11 +66,10 @@ export {
   type SkeletonTitleProps,
 } from './Skeleton'
 export { Text, type TextProps } from './Text'
-export { Switch, type SwitchProps, type SwitchSize } from './Switch'
 export { Tag, type TagProps } from './Tag'
 export { Tabs, type TabsProps } from './Tabs'
-export { Tooltip, type TooltipPlacement, type TooltipProps } from './Tooltip'
+export { Tooltip, type TooltipProps } from './Tooltip'
 export { copyToClipboard, stopPropagation } from './utils'
-export { Icon, calcIconSize, type IconProps, type IconSize, type IconSizeConfig, type IconSizeType } from './Icon'
+export { Icon, type IconProps, type IconSize } from './Icon'
 
 export { Github, ModelIcon, ModelTag, ProviderCombine, ProviderIcon, ProviderIconLucide, PureChatMark } from './icons'

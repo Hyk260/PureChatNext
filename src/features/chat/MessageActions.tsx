@@ -61,12 +61,11 @@ const MessageActions = memo<MessageActionsProps>(({ isStreaming, isUser, onCopy,
 
   return (
     <Flex
-      aria-hidden={isStreaming || undefined}
       className={[
         cx(styles.actions, !isStreaming && styles.actionsVisible),
-        'flex-row items-center gap-0.5 justify-[undefined]',
+        'flex-row items-center gap-0.5',
+        isUser ? 'justify-end' : 'justify-start',
       ]}
-      data-message-actions
     >
       <ActionIcon icon={Copy} size='small' title='复制' onClick={onCopy} />
       <ActionIcon icon={Edit} size='small' title='编辑' onClick={onEdit} />

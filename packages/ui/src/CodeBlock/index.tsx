@@ -5,11 +5,11 @@ import type { ReactNode } from 'react'
 
 /* ─────────────────────────────────────────────────────────
  * CODE BLOCK
- * A light editor panel with two versions (switch in the card):
- *   · Code — a line-numbered listing
- *   · Diff — a unified diff: old/new gutters, a green/red accent
- *     bar and row tint, plus word-level add/del highlights.
- * Both share syntax coloring, insets, and wrapping behavior.
+ * 轻量编辑器面板，卡片内可切换两种展示：
+ *   · Code — 带行号的代码列表
+ *   · Diff — 统一 diff：新旧行号槽、绿/红强调条与行底色，
+ *     以及单词级增删高亮。
+ * 两者共用语法着色、内边距与换行行为。
  * ───────────────────────────────────────────────────────── */
 
 const FILE = 'churn.ts'

@@ -1,9 +1,10 @@
 'use client'
 
-import { ActionIcon, Flex, Icon, ModelIcon, SortableList, Switch, Tag, Text, Tooltip, copyToClipboard } from '@pure/ui'
+import { ActionIcon, Flex, Icon, ModelIcon, SortableList, Tag, Text, Tooltip, copyToClipboard } from '@pure/ui'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { formatTokenNumber } from '@pure/utils/client'
+import { Switch } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Check, CircleX, Code2, Eye, Globe2, ImageIcon, Lightbulb, Loader2, Pencil, Trash2, Wrench } from 'lucide-react'
 import { memo } from 'react'

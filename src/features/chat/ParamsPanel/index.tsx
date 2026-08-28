@@ -42,7 +42,7 @@ const ParamsPanel = memo<Props>(({ value, onChange }) => {
         <Text style={{ marginInlineStart: 8, fontWeight: 500 }}>高级设置</Text>
         <ActionIcon icon={PanelRightClose} size='small' title='折叠参数栏' onClick={toggleRightCollapsed} />
       </Flex>
-      <Flex className='flex-col gap-4 p-4 min-h-[0px] overflow-auto'>
+      <Flex className='flex-col gap-4 p-4 min-h-0 overflow-auto'>
         {ROWS.map((row) => {
           const enabled = value[row.key] !== null
           const display = value[row.key] ?? DEFAULT_CHAT_LLM_PARAMS[row.key]!

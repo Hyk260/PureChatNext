@@ -1,6 +1,7 @@
 'use client'
 
-import { Flex, Input, InputPassword, ProviderCombine, Switch, Text } from '@pure/ui'
+import { Flex, Input, InputPassword, ProviderCombine, Text } from '@pure/ui'
+import { Switch } from 'antd'
 import { memo } from 'react'
 
 import { getSettingsProviderMeta, isServerManagedProvider, PROVIDER_DEFAULT_BASE_URLS } from '../../const'

@@ -25,6 +25,27 @@ vi.mock('@/components/NavItem', () => ({
   ),
 }))
 
+vi.mock('antd', () => ({
+  Switch: ({
+    checked,
+    onChange,
+    onClick,
+  }: {
+    checked?: boolean
+    onChange?: (checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void
+    onClick?: (checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void
+  }) => (
+    <button
+      aria-pressed={checked}
+      type='button'
+      onClick={(event) => {
+        onClick?.(Boolean(checked), event)
+        onChange?.(!checked, event)
+      }}
+    />
+  ),
+}))
+
 vi.mock('@pure/ui', () => ({
   Accordion: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   AccordionItem: ({ children, title }: { children?: React.ReactNode; title?: React.ReactNode }) => (
@@ -51,24 +72,6 @@ vi.mock('@pure/ui', () => ({
     placeholder?: string
     value?: string
   }) => <input placeholder={placeholder} value={value} onChange={(event) => onInputChange?.(event.target.value)} />,
-  Switch: ({
-    checked,
-    onChange,
-    onClick,
-  }: {
-    checked?: boolean
-    onChange?: (checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void
-    onClick?: (checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void
-  }) => (
-    <button
-      aria-pressed={checked}
-      type='button'
-      onClick={(event) => {
-        onClick?.(Boolean(checked), event)
-        onChange?.(!checked, event)
-      }}
-    />
-  ),
   Tag: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }))

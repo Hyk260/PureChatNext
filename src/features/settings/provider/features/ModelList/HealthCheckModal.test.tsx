@@ -2,6 +2,12 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+vi.mock('antd', () => ({
+  Switch: ({ checked, onChange }: { checked?: boolean; onChange?: (checked: boolean) => void }) => (
+    <button aria-label='concurrency-toggle' aria-pressed={checked} onClick={() => onChange?.(!checked)} type='button' />
+  ),
+}))
+
 vi.mock('@pure/ui', () => ({
   Alert: ({ message }: { message?: React.ReactNode }) => <div>{message}</div>,
   Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
@@ -31,9 +37,6 @@ vi.mock('@pure/ui', () => ({
       </button>
       {children}
     </div>
-  ),
-  Switch: ({ checked, onChange }: { checked?: boolean; onChange?: (checked: boolean) => void }) => (
-    <button aria-label='concurrency-toggle' aria-pressed={checked} onClick={() => onChange?.(!checked)} type='button' />
   ),
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }))

@@ -8,6 +8,7 @@ export const createDesktopApi = (): DesktopApi => ({
   deleteSecret: (key) => invoke('storage.deleteSecret', key),
   executeLocalTool: (request) => invoke('localSystem.execute', request),
   getAppInfo: () => invoke('app.getInfo'),
+  getPermissionScope: (topicId) => invoke('permission.getScope', topicId),
   getRemoteServer: () => invoke('config.getRemoteServer'),
   notify: (input) => invoke('notification.show', input),
   openExternal: (url) => invoke('window.openExternal', url),

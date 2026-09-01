@@ -13,9 +13,10 @@ import {
   SquareTerminal,
   TriangleAlert,
 } from 'lucide-react'
-import { memo, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import type { ChatPermissionMode } from '@pure/types'
+import { useApp } from '@/components/AntdStaticMethods'
 import { getDesktopApi } from '@/types/desktop'
 
 type PermissionOption = {
@@ -52,6 +53,10 @@ const RISKS = [
   { description: '访问网站、发送数据并使用已连接的应用', icon: Globe2, label: '互联网和已连接的应用' },
 ]
 
+function pathBasename(value: string) {
+  return value.split(/[/\\]/).filter(Boolean).at(-1) ?? value
+}
+
 interface PermissionModeSelectorProps {
   disabled?: boolean
   onChange: (mode: ChatPermissionMode) => Promise<void> | void
@@ -60,10 +65,34 @@ interface PermissionModeSelectorProps {
 }
 
 const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, onChange, topicId = 'draft', value }) => {
+  const { message } = useApp()
   const [open, setOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [savingMode, setSavingMode] = useState<ChatPermissionMode | null>(null)
+  const [choosingScope, setChoosingScope] = useState(false)
+  const [scopePath, setScopePath] = useState<string | null>(null)
   const current = OPTIONS.find((option) => option.mode === value) ?? OPTIONS[1]
+  const scopeLabel = scopePath ? pathBasename(scopePath) : null
+
+  useEffect(() => {
+    const api = getDesktopApi()
+    if (!api?.getPermissionScope) {
+      setScopePath(null)
+      return
+    }
+    let cancelled = false
+    void api
+      .getPermissionScope(topicId)
+      .then((result) => {
+        if (!cancelled) setScopePath(result.scope)
+      })
+      .catch(() => {
+        if (!cancelled) setScopePath(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [topicId])
 
   const applyMode = async (mode: ChatPermissionMode) => {
     setSavingMode(mode)
@@ -97,9 +126,28 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
 
   const handleChooseScope = async () => {
     const api = getDesktopApi()
-    const scope = await api?.chooseDirectory()
-    if (!scope) return
-    await api?.setPermissionScope(topicId, scope)
+    if (!api?.chooseDirectory || !api.setPermissionScope) {
+      message.error('当前环境不支持选择工作目录')
+      return
+    }
+
+    // 先关闭 Popover，再打开系统对话框，避免 macOS 焦点被浮层抢走后静默失败
+    setOpen(false)
+    setChoosingScope(true)
+    try {
+      await new Promise<void>((resolve) => {
+        window.requestAnimationFrame(() => resolve())
+      })
+      const scope = await api.chooseDirectory()
+      if (!scope) return
+      const result = await api.setPermissionScope(topicId, scope)
+      setScopePath(result.scope)
+      message.success(`已设置工作目录：${pathBasename(result.scope)}`)
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '设置工作目录失败')
+    } finally {
+      setChoosingScope(false)
+    }
   }
 
   const popoverContent = (
@@ -117,7 +165,7 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
                   ? 'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-red-500 hover:bg-red-500/10'
                   : 'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-foreground hover:bg-secondary'
               }
-              disabled={savingMode !== null}
+              disabled={savingMode !== null || choosingScope}
               key={option.mode}
               type='button'
               onClick={() => void handleSelect(option.mode)}
@@ -134,11 +182,15 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
       </div>
       <button
         className='mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs text-muted-foreground hover:bg-secondary'
+        disabled={choosingScope}
+        title={scopePath ?? undefined}
         type='button'
         onClick={() => void handleChooseScope()}
       >
         <Icon icon={Folder} size={16} />
-        选择工作目录
+        <span className='min-w-0 flex-1 truncate'>
+          {scopeLabel ? `工作目录：${scopeLabel}` : '选择工作目录'}
+        </span>
       </button>
     </div>
   )
@@ -151,7 +203,7 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
         placement='topLeft'
         styles={{ content: { border: `1px solid ${cssVar.colorBorderSecondary}`, padding: 0 } }}
         trigger='click'
-        onOpenChange={(nextOpen) => !disabled && setOpen(nextOpen)}
+        onOpenChange={(nextOpen) => !disabled && !choosingScope && setOpen(nextOpen)}
       >
         <button
           aria-expanded={open}

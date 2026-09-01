@@ -55,6 +55,7 @@ export interface DesktopApi {
   getRemoteServer: () => Promise<DesktopRemoteServer>
   notify: (input: DesktopNotificationInput) => Promise<void>
   executeLocalTool: (request: DesktopLocalToolRequest) => Promise<DesktopLocalToolResult>
+  getPermissionScope: (topicId: string) => Promise<{ scope: string | null }>
   requestFullAccess: (topicId: string) => Promise<{ granted: boolean }>
   setPermissionScope: (topicId: string, scope: string) => Promise<{ scope: string }>
   openExternal: (url: string) => Promise<void>

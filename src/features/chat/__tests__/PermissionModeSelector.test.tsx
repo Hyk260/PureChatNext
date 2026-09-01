@@ -1,6 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import React from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+const mocks = vi.hoisted(() => ({
+  chooseDirectory: vi.fn(),
+  getPermissionScope: vi.fn(),
+  message: { error: vi.fn(), success: vi.fn() },
+  setPermissionScope: vi.fn(),
+}))
 
 vi.mock('@pure/ui', () => ({
   Icon: () => <span aria-hidden />,
@@ -55,9 +62,28 @@ vi.mock('antd-style', () => ({
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
 }))
 
+vi.mock('@/components/AntdStaticMethods', () => ({
+  useApp: () => ({ message: mocks.message }),
+}))
+
+vi.mock('@/types/desktop', () => ({
+  getDesktopApi: () => ({
+    chooseDirectory: mocks.chooseDirectory,
+    getPermissionScope: mocks.getPermissionScope,
+    setPermissionScope: mocks.setPermissionScope,
+  }),
+}))
+
 import PermissionModeSelector from '../PermissionModeSelector'
 
 describe('PermissionModeSelector', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.getPermissionScope.mockResolvedValue({ scope: null })
+    mocks.chooseDirectory.mockResolvedValue('/Users/demo/Documents')
+    mocks.setPermissionScope.mockResolvedValue({ scope: '/Users/demo/Documents' })
+  })
+
   it('switches ordinary modes immediately', async () => {
     const onChange = vi.fn()
     render(<PermissionModeSelector value='auto' onChange={onChange} />)
@@ -105,5 +131,34 @@ describe('PermissionModeSelector', () => {
 
     await waitFor(() => expect(onChange).toHaveBeenCalledWith('full'))
     expect(screen.getByRole('dialog')).toBeTruthy()
+  })
+
+  it('saves the chosen work directory and surfaces success feedback', async () => {
+    const onChange = vi.fn()
+    render(<PermissionModeSelector topicId='topic-1' value='auto' onChange={onChange} />)
+
+    fireEvent.click(screen.getByRole('button', { name: '权限模式：帮我批准' }))
+    fireEvent.click(screen.getByRole('button', { name: '选择工作目录' }))
+
+    await waitFor(() => {
+      expect(mocks.chooseDirectory).toHaveBeenCalled()
+      expect(mocks.setPermissionScope).toHaveBeenCalledWith('topic-1', '/Users/demo/Documents')
+      expect(mocks.message.success).toHaveBeenCalledWith('已设置工作目录：Documents')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: '权限模式：帮我批准' }))
+    expect(screen.getByRole('button', { name: '工作目录：Documents' })).toBeTruthy()
+  })
+
+  it('surfaces errors when saving the work directory fails', async () => {
+    mocks.setPermissionScope.mockRejectedValue(new Error('权限范围无效'))
+    render(<PermissionModeSelector value='auto' onChange={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: '权限模式：帮我批准' }))
+    fireEvent.click(screen.getByRole('button', { name: '选择工作目录' }))
+
+    await waitFor(() => {
+      expect(mocks.message.error).toHaveBeenCalledWith('权限范围无效')
+    })
   })
 })

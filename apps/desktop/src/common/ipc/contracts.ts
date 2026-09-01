@@ -15,6 +15,7 @@ export interface DesktopIpcContractMap {
   'storage.storeSecret': { args: [key: string, value: string]; result: void }
   'dialog.chooseDirectory': { args: []; result: string | null }
   'dialog.chooseFile': { args: []; result: DesktopFileSelection | null }
+  'permission.getScope': { args: [topicId: string]; result: { scope: string | null } }
   'permission.requestFull': { args: [topicId: string]; result: { granted: boolean } }
   'permission.setScope': { args: [topicId: string, scope: string]; result: { scope: string } }
   'localSystem.execute': { args: [request: DesktopLocalToolRequest]; result: DesktopLocalToolResult }
@@ -32,7 +33,11 @@ export const DESKTOP_IPC_CHANNELS = {
   dialog: { chooseDirectory: 'dialog.chooseDirectory', chooseFile: 'dialog.chooseFile' },
   localSystem: { execute: 'localSystem.execute' },
   notification: { show: 'notification.show' },
-  permission: { requestFull: 'permission.requestFull', setScope: 'permission.setScope' },
+  permission: {
+    getScope: 'permission.getScope',
+    requestFull: 'permission.requestFull',
+    setScope: 'permission.setScope',
+  },
   storage: { deleteSecret: 'storage.deleteSecret', storeSecret: 'storage.storeSecret' },
   window: { openExternal: 'window.openExternal' },
 } as const

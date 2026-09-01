@@ -138,8 +138,8 @@ const ChatView = memo<ChatViewProps>(
     useEffect(() => {
       if (!desktopApi || permissionMode !== 'full' || !topicId || fullGrantTopicRef.current === topicId) return
       fullGrantTopicRef.current = topicId
-      void desktopApi.requestFullAccess(topicId).then((result) => {
-        if (!result.granted) fullGrantTopicRef.current = null
+      void desktopApi.requestFullAccess?.(topicId).then((result) => {
+        if (!result?.granted) fullGrantTopicRef.current = null
       })
     }, [desktopApi, permissionMode, topicId])
 

@@ -6,4 +6,4 @@ const Menu = memo<MenuProps>(({ selectable = false, ...rest }) => <LobeMenu sele
 
 Menu.displayName = 'Menu'
 
-export { Menu, type MenuProps }
+export { Menu }

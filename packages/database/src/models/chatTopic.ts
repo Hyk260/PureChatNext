@@ -45,15 +45,23 @@ export class ChatTopicModel {
   create = async ({
     agentId,
     permissionMode,
+    projectName,
     title,
   }: {
     agentId: string
     permissionMode?: ChatPermissionMode
+    projectName?: string | null
     title?: string
   }) => {
     const [item] = await this.db
       .insert(chatTopics)
-      .values({ agentId, permissionMode, title: title ?? DEFAULT_TITLE, userId: this.userId })
+      .values({
+        agentId,
+        permissionMode,
+        projectName: projectName?.trim() || null,
+        title: title ?? DEFAULT_TITLE,
+        userId: this.userId,
+      })
       .returning()
     return item!
   }

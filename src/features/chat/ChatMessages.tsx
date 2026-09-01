@@ -1,6 +1,6 @@
 'use client'
 
-import { Avatar, copyToClipboard, Text, Flex } from '@pure/ui'
+import { ApprovalCard, Avatar, copyToClipboard, Text, Flex } from '@pure/ui'
 import type { ChatMessageMetadata } from '@pure/types'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
@@ -20,8 +20,9 @@ import { getMessageReasoning, getMessageText } from '@/features/chat/messageText
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
 import WebSearchStatus, { getWebSearchStatusSignature, hasWebSearchToolPart } from '@/features/chat/WebSearchStatus'
-import ToolApprovalCard from '@/features/chat/ToolApprovalCard'
+import { getToolApprovalTitle } from '@/features/chat/localTools'
 import { getToolApprovalItems } from '@/features/chat/toolApprovalParts'
+import type { ToolApprovalItem } from '@/features/chat/toolApprovalParts'
 import { CONVERSATION_MAX_WIDTH } from '@/features/chat/WideScreenContainer'
 
 export interface AgentMeta {
@@ -105,6 +106,32 @@ interface ChatMessageItemProps {
   onServerToolApproval?: (approvalId: string, toolCallId: string, approved: boolean) => void
 }
 
+const formatApprovalCommand = (args: Record<string, unknown>) => {
+  if (typeof args.command === 'string') return args.command
+  return Object.entries(args)
+    .map(([key, value]) => `${key}: ${typeof value === 'string' ? value : JSON.stringify(value)}`)
+    .join('\n')
+}
+
+const getApprovalCwd = (args: Record<string, unknown>) => {
+  if (typeof args.cwd === 'string') return args.cwd
+  if (typeof args.path === 'string') return args.path
+  return ''
+}
+
+const applyToolApprovalDecision = (
+  item: ToolApprovalItem,
+  approved: boolean,
+  onToolApproval?: ChatMessageItemProps['onToolApproval'],
+  onServerToolApproval?: ChatMessageItemProps['onServerToolApproval']
+) => {
+  if (item.kind === 'local') {
+    onToolApproval?.(item.toolCallId, item.toolName, item.args, approved)
+    return
+  }
+  if (item.approvalId) onServerToolApproval?.(item.approvalId, item.toolCallId, approved)
+}
+
 const ChatMessageItem = memo<ChatMessageItemProps>(
   ({ message, agentMeta, isStreaming, onDelete, onEdit, onRegenerate, onServerToolApproval, onToolApproval }) => {
     const { message: antdMessage } = useApp()
@@ -156,17 +183,16 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
           <MessageAttachments message={message} />
 
           {approvalItems.map((item) => (
-            <ToolApprovalCard
-              args={item.args}
+            <ApprovalCard
               key={`${item.kind}-${item.toolCallId}`}
-              toolName={item.toolName}
-              onDecision={(approved) => {
-                if (item.kind === 'local') {
-                  onToolApproval?.(item.toolCallId, item.toolName, item.args, approved)
-                  return
-                }
-                if (item.approvalId) onServerToolApproval?.(item.approvalId, item.toolCallId, approved)
-              }}
+              variant='command'
+              title={getToolApprovalTitle(item.toolName)}
+              command={formatApprovalCommand(item.args)}
+              cwd={getApprovalCwd(item.args)}
+              approveLabel='批准'
+              rejectLabel='拒绝'
+              onApprove={() => applyToolApprovalDecision(item, true, onToolApproval, onServerToolApproval)}
+              onReject={() => applyToolApprovalDecision(item, false, onToolApproval, onServerToolApproval)}
             />
           ))}
 

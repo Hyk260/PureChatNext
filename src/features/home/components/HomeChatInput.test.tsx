@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   setPendingChatFiles: vi.fn(),
   setPendingChatPermissionMode: vi.fn(),
+  setPendingChatProject: vi.fn(),
   setPendingChatText: vi.fn(),
   vision: true,
 }))
@@ -55,7 +56,11 @@ vi.mock('@/assets/mascots/purechat-mecha-cat.png', () => ({ default: '/mecha-cat
 vi.mock('@/features/chat/chatLocalStorage', () => ({
   setPendingChatFiles: mocks.setPendingChatFiles,
   setPendingChatPermissionMode: mocks.setPendingChatPermissionMode,
+  setPendingChatProject: mocks.setPendingChatProject,
   setPendingChatText: mocks.setPendingChatText,
+}))
+vi.mock('@/features/home/components/HomeProjectBar', () => ({
+  default: () => <div>选择项目</div>,
 }))
 vi.mock('@/features/chat/ModelSwitchMenu', () => ({
   useCurrentHomeModel: () => ({ abilities: { vision: mocks.vision } }),
@@ -85,7 +90,15 @@ vi.mock('@/features/home/store/useHomeStore', () => ({
     selector({ activeAgent: null, selectedAgentId: 'pure-ai', setActiveAgent: vi.fn() }),
 }))
 vi.mock('@/utils/navigation', () => ({ useRouter: () => ({ push: mocks.push }) }))
-vi.mock('@/types/desktop', () => ({ getDesktopApi: () => (mocks.desktop ? {} : undefined) }))
+vi.mock('@/types/desktop', () => ({
+  getDesktopApi: () =>
+    mocks.desktop
+      ? {
+          requestFullAccess: vi.fn().mockResolvedValue({ granted: true }),
+          setPermissionScope: vi.fn().mockResolvedValue({ scope: '/tmp' }),
+        }
+      : undefined,
+}))
 
 import HomeChatInput from './HomeChatInput'
 
@@ -115,15 +128,19 @@ describe('HomeChatInput', () => {
     expect(mocks.push).toHaveBeenCalledWith('/chat?agent=pure-ai')
   })
 
-  it('shows desktop permissions and hands the selected mode to chat', () => {
+  it('shows desktop permissions and hands the selected mode to chat', async () => {
     mocks.desktop = true
     render(<HomeChatInput />)
 
+    expect(screen.getByText('选择项目')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: '权限模式：auto' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: '权限模式：full' })).toBeTruthy())
+
     fireEvent.change(screen.getByPlaceholderText('随心输入'), { target: { value: '执行任务' } })
     fireEvent.click(screen.getByRole('button', { name: '发送' }))
 
     expect(mocks.setPendingChatPermissionMode).toHaveBeenCalledWith('full')
+    expect(mocks.setPendingChatProject).toHaveBeenCalledWith(null)
   })
 
   it('does not show permission controls on web', () => {

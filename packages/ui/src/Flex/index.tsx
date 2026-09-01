@@ -1,7 +1,7 @@
 import { forwardRef } from 'react'
 import type { ComponentPropsWithoutRef } from 'react'
 
-export type FlexClassName = string | false | null | undefined | FlexClassName[]
+type FlexClassName = string | false | null | undefined | FlexClassName[]
 
 export type FlexProps = Omit<ComponentPropsWithoutRef<'div'>, 'className'> & {
   className?: FlexClassName

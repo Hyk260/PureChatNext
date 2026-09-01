@@ -31,6 +31,29 @@ describe('useChatUiStore search mode', () => {
 
     const migrated = (await migrate({ topicGroupMode: 'flat' }, 4)) as Record<string, unknown>
 
-    expect(migrated).toEqual({ searchModeByAgent: {}, topicGroupMode: 'flat' })
+    expect(migrated).toEqual({
+      searchModeByAgent: {},
+      topicGroupMode: 'flat',
+      workPanelActiveTab: 'params',
+      workPanelOpenTabs: ['overview', 'params'],
+    })
+  })
+
+  it('opens params panel and toggles closed when already active', () => {
+    useChatUiStore.setState({
+      rightCollapsed: true,
+      workPanelActiveTab: 'overview',
+      workPanelOpenTabs: ['overview'],
+    })
+
+    useChatUiStore.getState().openParamsPanel()
+    expect(useChatUiStore.getState()).toMatchObject({
+      rightCollapsed: false,
+      workPanelActiveTab: 'params',
+      workPanelOpenTabs: ['overview', 'params'],
+    })
+
+    useChatUiStore.getState().openParamsPanel()
+    expect(useChatUiStore.getState().rightCollapsed).toBe(true)
   })
 })

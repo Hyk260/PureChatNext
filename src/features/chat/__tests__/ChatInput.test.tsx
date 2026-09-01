@@ -54,7 +54,7 @@ vi.mock('@/features/chat/SendArea', () => ({
 }))
 vi.mock('@/features/chat/store/useChatUiStore', () => ({
   useChatUiStore: (selector: (state: unknown) => unknown) =>
-    selector({ rightCollapsed: true, toggleRightCollapsed: vi.fn() }),
+    selector({ openParamsPanel: vi.fn(), rightCollapsed: true }),
 }))
 
 import ChatInput from '../ChatInput'

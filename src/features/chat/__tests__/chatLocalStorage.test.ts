@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import {
+  claimPendingChatProject,
   claimPendingChatText,
   claimPendingTopicSend,
   finishPendingTopicSend,
   getPendingChatPermissionMode,
   setPendingChatPermissionMode,
+  setPendingChatProject,
   setPendingChatText,
   setPendingTopicSend,
   truncateTitle,
@@ -34,6 +36,18 @@ describe('chatLocalStorage pending helpers', () => {
 
     sessionStorage.setItem('purechat:chat:v1:pending-permission-mode', 'invalid')
     expect(getPendingChatPermissionMode()).toBe('auto')
+  })
+
+  it('claims pending chat project once', () => {
+    setPendingChatProject({ name: ' Demo ', rootPath: ' /tmp/demo ' })
+    expect(claimPendingChatProject()).toEqual({ name: 'Demo', rootPath: '/tmp/demo' })
+    expect(claimPendingChatProject()).toBeNull()
+  })
+
+  it('clears pending chat project when set to null', () => {
+    setPendingChatProject({ name: 'Demo', rootPath: '/tmp/demo' })
+    setPendingChatProject(null)
+    expect(claimPendingChatProject()).toBeNull()
   })
 
   it('claims pending topic send once', () => {

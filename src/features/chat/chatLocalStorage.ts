@@ -4,7 +4,13 @@ import type { ChatPermissionMode } from '@pure/types'
 
 export const PENDING_CHAT_TEXT_KEY = 'purechat:chat:v1:pending-text'
 export const PENDING_CHAT_PERMISSION_MODE_KEY = 'purechat:chat:v1:pending-permission-mode'
+export const PENDING_CHAT_PROJECT_KEY = 'purechat:chat:v1:pending-project'
 export const PENDING_TOPIC_SEND_KEY = 'purechat:chat:v2:pending-topic-send'
+
+export type PendingChatProject = {
+  name: string
+  rootPath: string
+}
 
 /** In-memory pending text for home → /chat handoff. */
 let pendingChatTextMemory: string | null = null
@@ -53,6 +59,32 @@ export const getPendingChatPermissionMode = (): ChatPermissionMode => {
     : DEFAULT_CHAT_PERMISSION_MODE
 }
 
+export const setPendingChatProject = (project: PendingChatProject | null): void => {
+  if (!project?.name.trim() || !project.rootPath.trim()) {
+    sessionStg.remove(PENDING_CHAT_PROJECT_KEY)
+    return
+  }
+  sessionStg.setString(
+    PENDING_CHAT_PROJECT_KEY,
+    JSON.stringify({ name: project.name.trim(), rootPath: project.rootPath.trim() } satisfies PendingChatProject)
+  )
+}
+
+export const claimPendingChatProject = (): PendingChatProject | null => {
+  const raw = sessionStg.getString(PENDING_CHAT_PROJECT_KEY)
+  sessionStg.remove(PENDING_CHAT_PROJECT_KEY)
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw) as Partial<PendingChatProject>
+    const name = typeof parsed.name === 'string' ? parsed.name.trim() : ''
+    const rootPath = typeof parsed.rootPath === 'string' ? parsed.rootPath.trim() : ''
+    if (!name || !rootPath) return null
+    return { name, rootPath }
+  } catch {
+    return null
+  }
+}
+
 export const claimPendingChatFiles = (): File[] => {
   const files = pendingChatFilesMemory
   pendingChatFilesMemory = []
@@ -81,6 +113,7 @@ export const claimPendingChatText = (): string | null => {
 export const finishPendingChatText = (_text: string): void => {
   pendingChatFilesMemory = []
   sessionStg.remove(PENDING_CHAT_PERMISSION_MODE_KEY)
+  sessionStg.remove(PENDING_CHAT_PROJECT_KEY)
 }
 
 export const setPendingTopicSend = (text: string): void => {

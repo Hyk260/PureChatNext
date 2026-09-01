@@ -12,7 +12,12 @@ import { PermissionService } from './services/PermissionService'
 const tempDirs: string[] = []
 const createTools = async (scope: string, confirm = false) => {
   const config = new DesktopConfigService(scope)
-  await config.write({ permissionScopes: { topic: [scope] }, remoteServerUrl: null, secrets: {} })
+  await config.write({
+    permissionScopes: { topic: [scope] },
+    projects: [],
+    remoteServerUrl: null,
+    secrets: {},
+  })
   const permissions = new PermissionService(async () => confirm)
   return new LocalToolService(config, permissions, new CommandService(permissions))
 }

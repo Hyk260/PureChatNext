@@ -148,7 +148,7 @@ vi.mock('@/features/chat/ChatMessagesSkeleton', () => ({
   default: () => <div data-testid='messages-skeleton' />,
 }))
 
-vi.mock('@/features/chat/ParamsPanel', () => ({ default: () => null }))
+vi.mock('@/features/chat/WorkPanel', () => ({ default: () => null }))
 vi.mock('@/features/chat/TopicSidebar', () => ({ default: () => null }))
 vi.mock('@/features/chat/WideScreenContainer', () => ({
   CONVERSATION_MAX_WIDTH: 960,
@@ -273,7 +273,7 @@ describe('ChatPage message loading state', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'send' }))
 
-    await waitFor(() => expect(mocks.createTopic).toHaveBeenCalledWith('agt_inbox', 'hello', 'auto'))
+    await waitFor(() => expect(mocks.createTopic).toHaveBeenCalledWith('agt_inbox', 'hello', 'auto', undefined))
     await waitFor(() =>
       expect(mocks.sendMessage).toHaveBeenCalledWith(
         { text: 'hello' },

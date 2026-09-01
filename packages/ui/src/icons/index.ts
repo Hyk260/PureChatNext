@@ -7,9 +7,9 @@
  * for `purechat`.
  */
 export { Github, ModelIcon, ModelTag } from '@lobehub/icons'
-export { default as ProviderCombine, type ProviderCombineProps } from './ProviderCombine'
-export { default as ProviderIcon, type ProviderIconProps } from './ProviderIcon'
-export { default as PureChatMark, type PureChatMarkProps, type PureChatMarkVariant } from './PureChatMark'
+export { default as ProviderCombine } from './ProviderCombine'
+export { default as ProviderIcon } from './ProviderIcon'
+export { default as PureChatMark } from './PureChatMark'
 
 /**
  * Expose messenger and platform icons through the application UI package.

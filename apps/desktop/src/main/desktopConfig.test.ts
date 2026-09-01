@@ -29,7 +29,12 @@ describe('createConfigStore', () => {
     tempDirs.push(dir)
     const store = new DesktopConfigService(dir)
 
-    await store.write({ remoteServerUrl: 'https://example.com', permissionScopes: {}, secrets: {} })
+    await store.write({
+      remoteServerUrl: 'https://example.com',
+      permissionScopes: {},
+      projects: [],
+      secrets: {},
+    })
 
     expect((await store.read()).remoteServerUrl).toBe('https://example.com')
     expect(await readFile(store.configPath, 'utf8')).toContain('example.com')
@@ -49,5 +54,20 @@ describe('createConfigStore', () => {
       x: 12,
       y: -9,
     })
+  })
+
+  it('creates and lists desktop projects', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-desktop-'))
+    tempDirs.push(dir)
+    const store = new DesktopConfigService(dir)
+    const rootPath = path.join(dir, 'workspace')
+
+    const project = await store.createProject({ name: ' Demo ', rootPath })
+
+    expect(project.name).toBe('Demo')
+    expect(project.rootPath).toBe(path.resolve(rootPath))
+    expect(await store.listProjects()).toEqual([project])
+    await store.deleteProject(project.id)
+    expect(await store.listProjects()).toEqual([])
   })
 })

@@ -23,16 +23,23 @@ import { useApp } from '@/components/AntdStaticMethods'
 import mechaCat from '@/assets/mascots/purechat-mecha-cat.png'
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import { CHAT_ATTACHMENT_ACCEPT, validateChatAttachments } from '@/features/chat/attachmentRules'
-import { setPendingChatFiles, setPendingChatPermissionMode, setPendingChatText } from '@/features/chat/chatLocalStorage'
+import {
+  setPendingChatFiles,
+  setPendingChatPermissionMode,
+  setPendingChatProject,
+  setPendingChatText,
+} from '@/features/chat/chatLocalStorage'
 import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
 import PermissionModeSelector from '@/features/chat/PermissionModeSelector'
 import SendArea from '@/features/chat/SendArea'
 import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
 import HomeAgentSelect from '@/features/home/components/HomeAgentSelect'
+import HomeProjectBar from '@/features/home/components/HomeProjectBar'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { getDesktopApi } from '@/types/desktop'
+import type { DesktopProject } from '@/types/desktop'
 import { useRouter } from '@/utils/navigation'
 
 const mechaCatSrc = typeof mechaCat === 'string' ? mechaCat : mechaCat.src
@@ -59,6 +66,19 @@ const styles = createStaticStyles(({ css }) => ({
     overflow: visible;
     border-radius: 20px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
+  `,
+  // 选择项目胶囊叠在输入框上沿，贴近 Codex 首页布局
+  projectDock: css`
+    position: absolute;
+    z-index: 2;
+    inset-block-start: 0;
+    inset-inline-start: 14px;
+    transform: translateY(-50%);
+  `,
+  composerWrap: css`
+    position: relative;
+    /* 给叠在上沿的项目胶囊留出半高空间，避免被父级裁切 */
+    padding-block-start: 14px;
   `,
   mascot: css`
     pointer-events: none;
@@ -158,6 +178,7 @@ const HomeChatInput = memo(() => {
   const [files, setFiles] = useState<File[]>([])
   const [plusOpen, setPlusOpen] = useState(false)
   const [permissionMode, setPermissionMode] = useState<ChatPermissionMode>(DEFAULT_CHAT_PERMISSION_MODE)
+  const [selectedProject, setSelectedProject] = useState<DesktopProject | null>(null)
   const [sending, setSending] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const currentModel = useCurrentHomeModel()
@@ -173,11 +194,26 @@ const HomeChatInput = memo(() => {
 
   const handlePermissionModeChange = useCallback(async (mode: ChatPermissionMode) => {
     if (mode === 'full') {
-      const result = await getDesktopApi()?.requestFullAccess('draft')
+      const result = await getDesktopApi()?.requestFullAccess?.('draft')
       if (result && !result.granted) throw new Error('完全访问权限未确认')
     }
     setPermissionMode(mode)
   }, [])
+
+  const handleProjectChange = useCallback(
+    async (project: DesktopProject | null) => {
+      setSelectedProject(project)
+      const api = getDesktopApi()
+      if (!api?.setPermissionScope) return
+      if (!project) return
+      try {
+        await api.setPermissionScope('draft', project.rootPath)
+      } catch (error) {
+        message.error(error instanceof Error ? error.message : '设置项目工作目录失败')
+      }
+    },
+    [message]
+  )
 
   useEffect(() => {
     fetchAgentsList()
@@ -257,7 +293,12 @@ const HomeChatInput = memo(() => {
 
       setPendingChatText(text)
       setPendingChatFiles(files)
-      if (isDesktop) setPendingChatPermissionMode(permissionMode)
+      if (isDesktop) {
+        setPendingChatPermissionMode(permissionMode)
+        setPendingChatProject(
+          selectedProject ? { name: selectedProject.name, rootPath: selectedProject.rootPath } : null
+        )
+      }
       trackAcquisitionEvent('chat_intent', {
         agent: agentId,
         attachment_count: files.length,
@@ -274,87 +315,98 @@ const HomeChatInput = memo(() => {
   }
 
   return (
-    <Block className={styles.shell} padding={12} variant='outlined'>
-      <img alt='' aria-hidden className={styles.mascot} src={mechaCatSrc} />
-      <input
-        ref={fileInputRef}
-        accept={CHAT_ATTACHMENT_ACCEPT}
-        className={styles.srOnly}
-        disabled={sending}
-        multiple
-        type='file'
-        onChange={handleFilesSelected}
-      />
-
-      {files.length > 0 ? (
-        <Flex className='flex-row gap-2 flex-wrap' style={{ marginBottom: 10 }}>
-          {files.map((file, index) => (
-            <Flex
-              className={[styles.attachment, 'flex-row items-center gap-1.5']}
-
-              key={`${file.name}-${file.lastModified}-${index}`}
-            >
-              {file.type.startsWith('image/') ? (
-                <AttachmentImagePreview file={file} />
-              ) : (
-                <Icon icon={FileText} size={16} />
-              )}
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
-              <ActionIcon
-                icon={X}
-                size={{ blockSize: 24, size: 14 }}
-                title={`删除 ${file.name}`}
-                onClick={() => setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index))}
-              />
-            </Flex>
-          ))}
-        </Flex>
+    <div className={styles.composerWrap}>
+      {isDesktop ? (
+        <div className={styles.projectDock}>
+          <HomeProjectBar
+            disabled={sending}
+            value={selectedProject}
+            onChange={(project) => void handleProjectChange(project)}
+          />
+        </div>
       ) : null}
 
-      <textarea
-        className={styles.input}
-        placeholder='随心输入'
-        value={input}
-        onChange={(event) => setInput(event.target.value)}
-        onCompositionEnd={onCompositionEnd}
-        onCompositionStart={onCompositionStart}
-        onKeyDown={(event) => {
-          if (event.key !== 'Enter' || event.shiftKey) return
-          if (shouldIgnoreEnter(event)) return
-          event.preventDefault()
-          handleSend()
-        }}
-      />
+      <Block className={styles.shell} padding={12} variant='outlined'>
+        <img alt='' aria-hidden className={styles.mascot} src={mechaCatSrc} />
+        <input
+          ref={fileInputRef}
+          accept={CHAT_ATTACHMENT_ACCEPT}
+          className={styles.srOnly}
+          disabled={sending}
+          multiple
+          type='file'
+          onChange={handleFilesSelected}
+        />
 
-      <Flex className={[styles.footer, 'flex-between']} style={{ marginTop: 12 }}>
-        <Flex className='flex-row items-center gap-2'>
-          <DropdownMenuRoot open={plusOpen} onOpenChange={setPlusOpen}>
-            <DropdownMenuTrigger className={styles.plusTrigger} disabled={sending} nativeButton>
-              <Icon icon={Plus} size={18} />
-              <span className={styles.srOnly}>添加</span>
-            </DropdownMenuTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuPositioner placement='topLeft'>
-                <DropdownMenuPopup className={styles.menuPopup}>
-                  <HomeAgentSelect onSelect={handleAgentSelected} />
-                  {plusMenuContent}
-                </DropdownMenuPopup>
-              </DropdownMenuPositioner>
-            </DropdownMenuPortal>
-          </DropdownMenuRoot>
-          {isDesktop ? (
-            <PermissionModeSelector
-              disabled={sending}
-              topicId='draft'
-              value={permissionMode}
-              onChange={handlePermissionModeChange}
-            />
-          ) : null}
+        {files.length > 0 ? (
+          <Flex className='flex-row gap-2 flex-wrap' style={{ marginBottom: 10 }}>
+            {files.map((file, index) => (
+              <Flex
+                className={[styles.attachment, 'flex-row items-center gap-1.5']}
+                key={`${file.name}-${file.lastModified}-${index}`}
+              >
+                {file.type.startsWith('image/') ? (
+                  <AttachmentImagePreview file={file} />
+                ) : (
+                  <Icon icon={FileText} size={16} />
+                )}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
+                <ActionIcon
+                  icon={X}
+                  size={{ blockSize: 24, size: 14 }}
+                  title={`删除 ${file.name}`}
+                  onClick={() => setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index))}
+                />
+              </Flex>
+            ))}
+          </Flex>
+        ) : null}
+
+        <textarea
+          className={styles.input}
+          placeholder='随心输入'
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          onCompositionEnd={onCompositionEnd}
+          onCompositionStart={onCompositionStart}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' || event.shiftKey) return
+            if (shouldIgnoreEnter(event)) return
+            event.preventDefault()
+            handleSend()
+          }}
+        />
+
+        <Flex className={[styles.footer, 'flex-between']} style={{ marginTop: 12 }}>
+          <Flex className='flex-row items-center gap-2'>
+            <DropdownMenuRoot open={plusOpen} onOpenChange={setPlusOpen}>
+              <DropdownMenuTrigger className={styles.plusTrigger} disabled={sending} nativeButton>
+                <Icon icon={Plus} size={18} />
+                <span className={styles.srOnly}>添加</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuPositioner placement='topLeft'>
+                  <DropdownMenuPopup className={styles.menuPopup}>
+                    <HomeAgentSelect onSelect={handleAgentSelected} />
+                    {plusMenuContent}
+                  </DropdownMenuPopup>
+                </DropdownMenuPositioner>
+              </DropdownMenuPortal>
+            </DropdownMenuRoot>
+            {isDesktop ? (
+              <PermissionModeSelector
+                disabled={sending}
+                topicId='draft'
+                value={permissionMode}
+                onChange={handlePermissionModeChange}
+              />
+            ) : null}
+          </Flex>
+
+          <SendArea disabled={!canSend} loading={sending} modelLabelClassName={styles.modelLabel} onClick={handleSend} />
         </Flex>
-
-        <SendArea disabled={!canSend} loading={sending} modelLabelClassName={styles.modelLabel} onClick={handleSend} />
-      </Flex>
-    </Block>
+      </Block>
+    </div>
   )
 })
 

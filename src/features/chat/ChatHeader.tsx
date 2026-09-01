@@ -235,7 +235,7 @@ const ChatHeader = memo<Props>(
 
           <Flex className='flex-row items-center flex-none gap-0.5'>
             {rightCollapsed ? (
-              <ActionIcon icon={PanelRightOpen} size='small' title='展开参数栏' onClick={toggleRightCollapsed} />
+              <ActionIcon icon={PanelRightOpen} size='small' title='展开工作面板' onClick={toggleRightCollapsed} />
             ) : null}
           </Flex>
         </Flex>

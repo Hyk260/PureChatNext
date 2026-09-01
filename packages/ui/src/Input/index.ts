@@ -1,6 +1,5 @@
 /** Expose the shared input primitives through the application UI package. */
 import { Input as LobeInput, InputOPT, InputPassword, TextArea } from '@lobehub/ui'
-import type { InputOPTProps, InputPasswordProps, InputProps, TextAreaProps } from '@lobehub/ui'
 import type { InputRef } from 'antd'
 
 type CompatibleInput = typeof LobeInput & {
@@ -15,12 +14,4 @@ const Input = Object.assign(LobeInput, {
   TextArea,
 }) as CompatibleInput
 
-export {
-  Input,
-  InputPassword,
-  type InputOPTProps,
-  type InputPasswordProps,
-  type InputProps,
-  type InputRef,
-  type TextAreaProps,
-}
+export { Input, InputPassword, type InputRef }

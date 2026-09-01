@@ -1,8 +1,17 @@
+import { randomUUID } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
+export interface DesktopProject {
+  createdAt: number
+  id: string
+  name: string
+  rootPath: string
+}
+
 export interface DesktopConfig {
   permissionScopes: Record<string, string[]>
+  projects: DesktopProject[]
   remoteServerUrl: string | null
   secrets: Record<string, string>
   windowState?: DesktopWindowState | null
@@ -18,9 +27,30 @@ export interface DesktopWindowState {
 
 export const DEFAULT_CONFIG: DesktopConfig = {
   permissionScopes: {},
+  projects: [],
   remoteServerUrl: process.env.PURECHAT_DESKTOP_REMOTE_URL?.trim() || null,
   secrets: {},
   windowState: null,
+}
+
+const normalizeProjects = (value: unknown): DesktopProject[] => {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return []
+    const project = item as Partial<DesktopProject>
+    if (
+      typeof project.id !== 'string' ||
+      typeof project.name !== 'string' ||
+      typeof project.rootPath !== 'string' ||
+      typeof project.createdAt !== 'number'
+    ) {
+      return []
+    }
+    const name = project.name.trim()
+    const rootPath = project.rootPath.trim()
+    if (!name || !rootPath || !path.isAbsolute(rootPath)) return []
+    return [{ createdAt: project.createdAt, id: project.id, name, rootPath }]
+  })
 }
 
 const normalizeWindowState = (value: unknown): DesktopWindowState | null => {
@@ -67,12 +97,13 @@ export class DesktopConfigService {
       return {
         permissionScopes:
           parsed.permissionScopes && typeof parsed.permissionScopes === 'object' ? parsed.permissionScopes : {},
+        projects: normalizeProjects(parsed.projects),
         remoteServerUrl: parsed.remoteServerUrl ? normalizeRemoteServerUrl(parsed.remoteServerUrl) : null,
         secrets: parsed.secrets && typeof parsed.secrets === 'object' ? parsed.secrets : {},
         windowState: normalizeWindowState(parsed.windowState),
       }
     } catch {
-      return { ...DEFAULT_CONFIG, permissionScopes: {}, secrets: {} }
+      return { ...DEFAULT_CONFIG, permissionScopes: {}, projects: [], secrets: {} }
     }
   }
 
@@ -97,6 +128,39 @@ export class DesktopConfigService {
       permissionScopes: { ...config.permissionScopes, [topicId]: [scope] },
     })
     return { scope }
+  }
+
+  async listProjects() {
+    return (await this.read()).projects
+  }
+
+  async createProject(input: { name: string; rootPath: string }) {
+    const name = input.name.trim()
+    const rootPath = path.resolve(input.rootPath.trim())
+    if (!name) throw new Error('项目名称不能为空')
+    if (name.length > 80) throw new Error('项目名称过长')
+    if (!path.isAbsolute(rootPath)) throw new Error('项目源文件夹路径无效')
+
+    const config = await this.read()
+    if (config.projects.some((project) => project.rootPath === rootPath)) {
+      throw new Error('该源文件夹已添加为项目')
+    }
+
+    const project: DesktopProject = {
+      createdAt: Date.now(),
+      id: randomUUID(),
+      name,
+      rootPath,
+    }
+    await this.write({ ...config, projects: [project, ...config.projects] })
+    return project
+  }
+
+  async deleteProject(id: string) {
+    const config = await this.read()
+    const projects = config.projects.filter((project) => project.id !== id)
+    if (projects.length === config.projects.length) throw new Error('项目不存在')
+    await this.write({ ...config, projects })
   }
 
   async setWindowState(windowState: DesktopWindowState) {

@@ -15,6 +15,7 @@ import { buildChatHref } from '@/features/chat/buildChatHref'
 import { createTopic, putMessages, updateToolApproval, upsertToolApproval } from '@/features/chat/chatApi'
 import {
   claimPendingChatFiles,
+  claimPendingChatProject,
   claimPendingChatText,
   claimPendingTopicSend,
   claimPendingTopicSendFiles,
@@ -364,7 +365,18 @@ const ChatView = memo<ChatViewProps>(
       async (text: string, files: File[] = []) => {
         if (!topicId) {
           try {
-            const topic = await createTopic(agentId, buildTopicTitle(text, files), permissionMode)
+            const pendingProject = claimPendingChatProject()
+            const topic = await createTopic(
+              agentId,
+              buildTopicTitle(text, files),
+              permissionMode,
+              pendingProject?.name
+            )
+            if (pendingProject?.rootPath) {
+              await getDesktopApi()?.setPermissionScope?.(topic.id, pendingProject.rootPath).catch((error) => {
+                console.error('[chat] setPermissionScope failed', error)
+              })
+            }
             onCacheMessages(topic.id, EMPTY_MESSAGES)
             onTopicsRefresh()
             setPendingTopicSend(text)

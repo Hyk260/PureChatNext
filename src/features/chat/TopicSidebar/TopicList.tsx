@@ -7,6 +7,7 @@ import { memo, useMemo, useState } from 'react'
 
 import type { LocalChatTopic, TopicGroupMode, TopicPageSize, TopicSortBy } from '@/features/chat/types'
 
+import ProjectGroupMenu from './ProjectGroupMenu'
 import TopicItem from './TopicItem'
 import { organizeTopics } from './topicGrouping'
 
@@ -50,6 +51,7 @@ type Props = {
   onDelete: (id: string) => void | Promise<void>
   onFavorite: (id: string, favorite: boolean) => void | Promise<void>
   onProjectChange: (id: string, projectName: string | null) => void | Promise<void>
+  onDeleteProject?: (projectName: string) => void | Promise<void>
 }
 
 const TopicList = memo<Props>(
@@ -69,6 +71,7 @@ const TopicList = memo<Props>(
     onDelete,
     onFavorite,
     onProjectChange,
+    onDeleteProject,
   }) => {
     const [groupingNow] = useState(() => Date.now())
     const groups = useMemo(
@@ -122,24 +125,38 @@ const TopicList = memo<Props>(
     const groupIds = groups.map((group) => group.id)
     return (
       <Accordion defaultExpandedKeys={groupIds} gap={2} key={`${groupMode}:${sortBy}:${groupIds.join('|')}`}>
-        {groups.map((group) => (
-          <AccordionItem
-            itemKey={group.id}
-            key={group.id}
-            paddingBlock={4}
-            paddingInline='8px 4px'
-            title={
-              <Flex className='flex-row items-center gap-1.5 min-w-[0px]'>
-                {getGroupTitleIcon(group.id, groupMode)}
-                <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
-                  {group.title}
-                </Text>
-              </Flex>
-            }
-          >
-            <Flex className='flex-col gap-px py-px'>{group.topics.map(renderTopic)}</Flex>
-          </AccordionItem>
-        ))}
+        {groups.map((group) => {
+          const projectName = group.id.startsWith('project:') ? group.id.slice('project:'.length) : null
+          const showProjectMenu = groupMode === 'byProject' && Boolean(projectName) && Boolean(onDeleteProject)
+
+          return (
+            <AccordionItem
+              itemKey={group.id}
+              key={group.id}
+              paddingBlock={4}
+              paddingInline='8px 4px'
+              title={
+                <Flex className='flex-row items-center gap-1 min-w-0 w-full'>
+                  <Flex className='flex-row items-center gap-1.5 min-w-0 flex-1'>
+                    {getGroupTitleIcon(group.id, groupMode)}
+                    <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+                      {group.title}
+                    </Text>
+                  </Flex>
+                  {showProjectMenu && projectName ? (
+                    <ProjectGroupMenu
+                      projectName={projectName}
+                      topicCount={group.topics.length}
+                      onDeleteProject={onDeleteProject!}
+                    />
+                  ) : null}
+                </Flex>
+              }
+            >
+              <Flex className='flex-col gap-px py-px'>{group.topics.map(renderTopic)}</Flex>
+            </AccordionItem>
+          )
+        })}
       </Accordion>
     )
   }

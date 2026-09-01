@@ -34,6 +34,59 @@ function run(program: string, args: string[], options?: { env?: EnvironmentOverr
 }
 
 const composeArgs = (composeFile: string, envFile: string) => ['compose', '--env-file', envFile, '-f', composeFile]
+const DEV_SERVICES = ['postgresql', 'redis', 'rustfs', 'searxng'] as const
+
+type ComposeServiceConfig = {
+  services: Record<string, { image?: string }>
+}
+
+function dockerOk(args: string[]) {
+  return spawnSync('docker', args, { cwd: root, stdio: 'ignore' }).status === 0
+}
+
+function readComposeConfig(composeFile: string, envFile: string): ComposeServiceConfig {
+  const result = spawnSync('docker', [...composeArgs(composeFile, envFile), 'config', '--format', 'json'], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  if (result.error) throw result.error
+  if (result.status !== 0) {
+    throw new Error((result.stderr || result.stdout || `docker compose config 失败 (exit ${result.status})`).trim())
+  }
+  return JSON.parse(result.stdout) as ComposeServiceConfig
+}
+
+function parsePinnedImage(image: string) {
+  const digestIndex = image.lastIndexOf('@')
+  if (digestIndex === -1) return { digest: undefined, nameTag: image }
+  return {
+    digest: image.slice(digestIndex + 1),
+    nameTag: image.slice(0, digestIndex),
+  }
+}
+
+/** 本地已有相同 digest 时补 tag，避免 Compose 因引用字符串不一致去拉 Docker Hub */
+function ensureLocalImage(image: string) {
+  if (dockerOk(['image', 'inspect', image])) return 'present'
+  const { digest, nameTag } = parsePinnedImage(image)
+  if (digest && dockerOk(['image', 'inspect', digest])) {
+    run('docker', ['tag', digest, nameTag])
+    return 'retagged'
+  }
+  return 'missing'
+}
+
+function ensureDevImages() {
+  const config = readComposeConfig(devCompose, devEnv)
+  const missingServices = DEV_SERVICES.filter((service) => {
+    const image = config.services[service]?.image
+    if (!image) throw new Error(`compose 未定义 ${service} 的 image`)
+    return ensureLocalImage(image) === 'missing'
+  })
+  if (missingServices.length === 0) return
+  run('docker', [...composeArgs(devCompose, devEnv), 'pull', ...missingServices])
+}
 
 function requireFile(filename: string, setupCommand: string) {
   if (!existsSync(filename)) {
@@ -165,7 +218,16 @@ async function setupDeploy() {
 
 async function upDev() {
   requireFile(devEnv, 'pnpm docker:setup:dev')
-  run('docker', [...composeArgs(devCompose, devEnv), 'up', '-d', '--wait', 'postgresql', 'redis', 'rustfs', 'searxng'])
+  ensureDevImages()
+  run('docker', [
+    ...composeArgs(devCompose, devEnv),
+    'up',
+    '-d',
+    '--wait',
+    '--pull',
+    'never',
+    ...DEV_SERVICES,
+  ])
 
   const values = parse(await readFile(devEnv, 'utf8'))
   await ensureDevBucket(values)

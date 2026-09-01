@@ -5,6 +5,7 @@ import {
   DialogController,
   LocalSystemController,
   PermissionController,
+  ProjectController,
   StorageController,
   SystemController,
 } from '../controllers'
@@ -32,6 +33,7 @@ export const registerDesktopIpc = async (options: {
   new StorageController(config).register(registry)
   new DialogController().register(registry)
   new PermissionController(config, permissions).register(registry)
+  new ProjectController(config).register(registry)
   new LocalSystemController(tools).register(registry)
   new SystemController().register(registry)
 

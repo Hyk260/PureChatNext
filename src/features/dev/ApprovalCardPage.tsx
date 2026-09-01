@@ -66,9 +66,18 @@ const DEMO_CARDS: Record<ApprovalVariant, ApprovalCardProps> = {
   },
 }
 
+const EMPTY_COMMAND_CARD: ApprovalCardProps = {
+  variant: 'command',
+  title: '允许读取系统信息？',
+  command: '',
+  cwd: '',
+  approveLabel: '批准',
+  rejectLabel: '拒绝',
+}
+
 const VARIANTS: VariantMeta[] = [
   { description: '多题单选、自定义其他、步进与继续', label: '问答', value: 'questions' },
-  { description: '工作目录、命令预览、运行 / 跳过', label: '命令', value: 'command' },
+  { description: '工作目录、命令预览；二者皆空时隐藏命令块', label: '命令', value: 'command' },
   { description: '待办折叠、30s 自动批准、批准 / 查看计划', label: '计划', value: 'plan' },
 ]
 
@@ -167,7 +176,19 @@ export default function ApprovalCardPage() {
           <p className='mt-2 text-xs text-slate-500'>{activeMeta?.description}</p>
 
           <div className='mt-5 grid gap-5 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:items-start'>
-            <ApprovalCard key={`${variant}-${instanceId}`} {...DEMO_CARDS[variant]} {...makeHandlers(variant)} />
+            <div className='flex flex-col gap-4'>
+              <ApprovalCard key={`${variant}-${instanceId}`} {...DEMO_CARDS[variant]} {...makeHandlers(variant)} />
+              {variant === 'command' ? (
+                <div className='flex flex-col gap-2'>
+                  <p className='text-xs text-slate-500'>无参工具：cwd / command 皆空时应隐藏命令块</p>
+                  <ApprovalCard
+                    key={`command-empty-${instanceId}`}
+                    {...EMPTY_COMMAND_CARD}
+                    {...makeHandlers('command')}
+                  />
+                </div>
+              ) : null}
+            </div>
 
             <div className='rounded-xl border border-slate-200 bg-slate-50 p-4'>
               <div className='flex items-center justify-between gap-2'>
@@ -217,7 +238,7 @@ export default function ApprovalCardPage() {
           <h2 className='font-medium text-slate-800'>对照清单</h2>
           <ul className='mt-3 list-disc space-y-1 pl-5'>
             <li>问答：选完自动进下一题；Other 输入后 Enter；未答完「继续」禁用；继续回调带 answers</li>
-            <li>命令：展示 cwd 与命令原文；运行 / 跳过触发回调</li>
+            <li>命令：展示 cwd 与命令原文；二者皆空时隐藏命令块（只留标题+按钮）；运行 / 跳过触发回调</li>
             <li>计划：默认预览 3 条，展开看剩余；倒计时 30s 自动批准；点 X 取消自动批准</li>
             <li>长标题/摘要应换行，而不是横向撑破卡片</li>
           </ul>

@@ -9,6 +9,7 @@ import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 const createSchema = z.object({
   agentId: z.string().min(1),
   permissionMode: z.enum(CHAT_PERMISSION_MODES).optional(),
+  projectName: z.string().trim().min(1).max(80).optional(),
   title: z.string().min(1).optional(),
 })
 
@@ -33,14 +34,19 @@ export const GET = withAuth(async (request, { userId }) => {
 /**
  * POST /api/chat/topics
  * 创建会话 Topic
- * @param request - JSON `{ agentId, title?, permissionMode? }`
+ * @param request - JSON `{ agentId, title?, permissionMode?, projectName? }`
  */
 export const POST = withAuth(async (request, { userId }) => {
   const body = await request.json()
   const parsed = createSchema.safeParse(body)
   if (!parsed.success) return jsonError(parsed.error.message)
 
-  const item = await new ChatTopicModel(userId).create(parsed.data)
+  const item = await new ChatTopicModel(userId).create({
+    agentId: parsed.data.agentId,
+    permissionMode: parsed.data.permissionMode,
+    projectName: parsed.data.projectName,
+    title: parsed.data.title,
+  })
   return NextResponse.json(item)
 })
 

@@ -184,7 +184,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
   const { message } = useApp()
   const currentModel = useCurrentHomeModel()
   const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
-  const toggleRightCollapsed = useChatUiStore((s) => s.toggleRightCollapsed)
+  const openParamsPanel = useChatUiStore((s) => s.openParamsPanel)
   const { onCompositionEnd, onCompositionStart, shouldIgnoreEnter } = useImeEnterGuard()
 
   const handleSend = useCallback(() => {
@@ -229,9 +229,9 @@ const ChatInput = memo<ChatInputProps>((props) => {
   }, [onStop])
 
   const handleToggleParams = useCallback(() => {
-    toggleRightCollapsed()
+    openParamsPanel()
     setPlusOpen(false)
-  }, [toggleRightCollapsed])
+  }, [openParamsPanel])
 
   const handleSearchModeChange = useCallback(() => {
     onSearchModeChange(searchMode === 'auto' ? 'off' : 'auto')
@@ -255,7 +255,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
       {
         icon: Settings2,
         key: 'params',
-        label: <MenuLabel active={!rightCollapsed} label='高级参数' />,
+        label: <MenuLabel active={!rightCollapsed} label='参数' />,
         onClick: handleToggleParams,
       },
     ],

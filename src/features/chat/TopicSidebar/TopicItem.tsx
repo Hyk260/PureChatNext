@@ -171,41 +171,41 @@ const TopicItem = memo<Props>(
             void onFavorite(topic.id, !topic.favorite)
           },
         },
-        {
-          children: [
-            ...projectNames.map((projectName) => ({
-              icon: topic.projectName === projectName ? <Icon icon={Check} /> : <span />,
-              key: `project-${projectName}`,
-              label: projectName,
-              onClick: (info: MenuInfo) => {
-                stopMenuEvent(info)
-                void onProjectChange(topic.id, projectName)
-              },
-            })),
-            ...(projectNames.length > 0 ? [{ type: 'divider' as const }] : []),
-            {
-              icon: topic.projectName === null ? <Icon icon={Check} /> : <span />,
-              key: 'project-none',
-              label: '无项目',
-              onClick: (info: MenuInfo) => {
-                stopMenuEvent(info)
-                void onProjectChange(topic.id, null)
-              },
-            },
-            {
-              icon: <Icon icon={FolderPlus} />,
-              key: 'project-new',
-              label: '新建项目标签…',
-              onClick: (info: MenuInfo) => {
-                stopMenuEvent(info)
-                handleOpenProject()
-              },
-            },
-          ],
-          icon: <Icon icon={FolderInput} />,
-          key: 'project',
-          label: '移动到项目',
-        },
+        // {
+        //   children: [
+        //     ...projectNames.map((projectName) => ({
+        //       icon: topic.projectName === projectName ? <Icon icon={Check} /> : <span />,
+        //       key: `project-${projectName}`,
+        //       label: projectName,
+        //       onClick: (info: MenuInfo) => {
+        //         stopMenuEvent(info)
+        //         void onProjectChange(topic.id, projectName)
+        //       },
+        //     })),
+        //     ...(projectNames.length > 0 ? [{ type: 'divider' as const }] : []),
+        //     {
+        //       icon: topic.projectName === null ? <Icon icon={Check} /> : <span />,
+        //       key: 'project-none',
+        //       label: '无项目',
+        //       onClick: (info: MenuInfo) => {
+        //         stopMenuEvent(info)
+        //         void onProjectChange(topic.id, null)
+        //       },
+        //     },
+        //     {
+        //       icon: <Icon icon={FolderPlus} />,
+        //       key: 'project-new',
+        //       label: '新建项目标签…',
+        //       onClick: (info: MenuInfo) => {
+        //         stopMenuEvent(info)
+        //         handleOpenProject()
+        //       },
+        //     },
+        //   ],
+        //   icon: <Icon icon={FolderInput} />,
+        //   key: 'project',
+        //   label: '移动到项目',
+        // },
         { type: 'divider' },
         {
           disabled: autoRenameDisabled,

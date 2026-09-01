@@ -18,6 +18,35 @@ vi.mock('@pure/ui', () => ({
   ActionIcon: ({ icon: _icon, title, ...props }: { icon: unknown; title: string }) => (
     <button aria-label={title} type='button' {...props} />
   ),
+  ApprovalCard: ({
+    approveLabel,
+    command,
+    cwd,
+    onApprove,
+    onReject,
+    rejectLabel,
+    title,
+  }: {
+    approveLabel?: string
+    command?: string
+    cwd?: string
+    onApprove?: () => void
+    onReject?: () => void
+    rejectLabel?: string
+    title?: string
+  }) => (
+    <div data-testid='approval-card'>
+      <span>{title}</span>
+      {cwd ? <span>{cwd}</span> : null}
+      <pre>{command}</pre>
+      <button type='button' onClick={() => onApprove?.()}>
+        {approveLabel ?? '批准'}
+      </button>
+      <button type='button' onClick={() => onReject?.()}>
+        {rejectLabel ?? '拒绝'}
+      </button>
+    </div>
+  ),
   Avatar: () => <span />,
   Block: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   DropdownMenu: ({
@@ -335,5 +364,74 @@ describe('ChatMessages message layout', () => {
 
     expect(getByText('正在联网搜索…')).toBeTruthy()
     expect(queryByTestId('pulse-dots')).toBeNull()
+  })
+
+  it('renders ApprovalCard for local tools and dispatches the decision', () => {
+    const onToolApproval = vi.fn()
+    const message = {
+      id: 'assistant-local-approval',
+      parts: [
+        {
+          input: { command: 'ls -la', cwd: '/tmp' },
+          state: 'input-available',
+          toolCallId: 'local-1',
+          type: 'tool-runCommand',
+        },
+      ],
+      role: 'assistant',
+    } as UIMessage
+
+    const { getByTestId, getByText } = render(
+      <ChatMessages
+        messages={[message]}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onRegenerate={vi.fn()}
+        onToolApproval={onToolApproval}
+      />
+    )
+
+    expect(getByTestId('approval-card')).toBeTruthy()
+    expect(getByText('允许运行这条命令？')).toBeTruthy()
+    expect(getByText('ls -la')).toBeTruthy()
+    expect(getByText('/tmp')).toBeTruthy()
+
+    fireEvent.click(getByText('批准'))
+    expect(onToolApproval).toHaveBeenCalledWith(
+      'local-1',
+      'runCommand',
+      { command: 'ls -la', cwd: '/tmp' },
+      true
+    )
+  })
+
+  it('dispatches server tool approval from ApprovalCard reject', () => {
+    const onServerToolApproval = vi.fn()
+    const message = {
+      id: 'assistant-server-approval',
+      parts: [
+        {
+          approval: { id: 'a1' },
+          input: { city: 'Shanghai' },
+          state: 'approval-requested',
+          toolCallId: 'server-1',
+          type: 'tool-weather',
+        },
+      ],
+      role: 'assistant',
+    } as UIMessage
+
+    const { getByText } = render(
+      <ChatMessages
+        messages={[message]}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onRegenerate={vi.fn()}
+        onServerToolApproval={onServerToolApproval}
+      />
+    )
+
+    fireEvent.click(getByText('拒绝'))
+    expect(onServerToolApproval).toHaveBeenCalledWith('a1', 'server-1', false)
   })
 })

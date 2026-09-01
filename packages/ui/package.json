@@ -11,7 +11,7 @@
     "./ActionIconGroup": "./src/ActionIconGroup/index.ts",
     "./Accordion": "./src/Accordion/index.ts",
     "./Alert": "./src/Alert/index.ts",
-    "./ApprovalCard": "./src/ApprovalCard/index.ts",
+    "./ApprovalCard": "./src/ApprovalCard/index.tsx",
     "./Avatar": "./src/Avatar/index.ts",
     "./Block": "./src/Block/index.tsx",
     "./Button": "./src/Button/index.ts",

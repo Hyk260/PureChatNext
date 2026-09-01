@@ -59,10 +59,16 @@ export const fetchTopics = async (agentId: string): Promise<LocalChatTopic[]> =>
 export const createTopic = async (
   agentId: string,
   title?: string,
-  permissionMode?: ChatPermissionMode
+  permissionMode?: ChatPermissionMode,
+  projectName?: string | null
 ): Promise<LocalChatTopic> => {
   const res = await apiFetch('/api/chat/topics', {
-    body: JSON.stringify({ agentId, permissionMode, title }),
+    body: JSON.stringify({
+      agentId,
+      permissionMode,
+      ...(projectName ? { projectName } : {}),
+      title,
+    }),
     headers: { 'Content-Type': 'application/json' },
     method: 'POST',
   })

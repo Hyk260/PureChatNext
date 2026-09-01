@@ -27,7 +27,7 @@ import { getPendingChatPermissionMode } from '@/features/chat/chatLocalStorage'
 import ChatMessagesSkeleton from '@/features/chat/ChatMessagesSkeleton'
 import type { ChatViewActions } from '@/features/chat/ChatView'
 import ChatView from '@/features/chat/ChatView'
-import ParamsPanel from '@/features/chat/ParamsPanel'
+import WorkPanel from '@/features/chat/WorkPanel'
 import TopicSidebar from '@/features/chat/TopicSidebar'
 import WideScreenContainer from '@/features/chat/WideScreenContainer'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
@@ -433,6 +433,37 @@ const ChatPage = memo(() => {
     [activeTopicId, agentId, message, pushChatHref]
   )
 
+  const handleDeleteProject = useCallback(
+    async (projectName: string) => {
+      const topicIds = topics.filter((topic) => topic.projectName === projectName).map((topic) => topic.id)
+      try {
+        await Promise.all(topicIds.map((id) => deleteTopic(id)))
+        const deleted = new Set(topicIds)
+        setMessagesCache((prev) => {
+          if (deleted.size === 0) return prev
+          const next = new Map(prev)
+          for (const id of deleted) next.delete(id)
+          return next
+        })
+        setTopics((prev) => prev.filter((topic) => !deleted.has(topic.id)))
+        if (activeTopicId && deleted.has(activeTopicId)) pushChatHref(agentId)
+
+        const api = getDesktopApi()
+        if (api?.listProjects && api.deleteProject) {
+          const desktopProject = (await api.listProjects()).find((project) => project.name === projectName)
+          if (desktopProject) await api.deleteProject(desktopProject.id)
+        }
+
+        message.success(`已删除项目「${projectName}」及 ${topicIds.length} 个话题`)
+      } catch (error) {
+        console.error('[chat] deleteProject failed', error)
+        message.error('删除项目失败')
+        throw error
+      }
+    },
+    [activeTopicId, agentId, message, pushChatHref, topics]
+  )
+
   const handleParamsChange = useCallback(
     (patch: Partial<ChatLlmParams>) => {
       setParams(agentId, patch)
@@ -510,10 +541,13 @@ const ChatPage = memo(() => {
           onRenameTopic={handleRenameTopic}
           onDeleteTopic={handleDeleteTopic}
           onDeleteTopics={handleDeleteTopics}
+          onDeleteProject={handleDeleteProject}
         />
       }
       topic={activeTopic}
-      right={<ParamsPanel value={params} onChange={handleParamsChange} />}
+      right={
+        <WorkPanel topic={activeTopic} topicTitle={topicTitle} value={params} onChange={handleParamsChange} />
+      }
       title={topicTitle}
       autoRenamingTopicId={autoRenamingTopicId}
       onAutoRenameTopic={handleAutoRenameTopic}

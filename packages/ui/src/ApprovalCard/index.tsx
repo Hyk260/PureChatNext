@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import styles from "./ApprovalCard.module.css";
+import styles from "./index.module.css";
 
 export type ApprovalVariant = "questions" | "command" | "plan";
 
@@ -273,6 +273,9 @@ export function ApprovalCard({
   const resolvedTitle = title ?? VARIANT_TITLE[variant];
   const resolvedApprove = approveLabel ?? VARIANT_APPROVE_LABEL[variant];
   const resolvedReject = rejectLabel ?? VARIANT_REJECT_LABEL[variant];
+  const trimmedCwd = cwd.trim();
+  const trimmedCommand = command.trim();
+  const hasCommandContent = Boolean(trimmedCwd || trimmedCommand);
 
   const canContinue = variant !== "questions" || allAnswered;
 
@@ -561,12 +564,12 @@ export function ApprovalCard({
         </div>
       )}
 
-      {variant === "command" && (
+      {variant === "command" && hasCommandContent ? (
         <div className={styles.cmdBlock}>
-          <div className={styles.cwd}>{cwd}</div>
-          <pre className={styles.cmd}>{command}</pre>
+          {trimmedCwd ? <div className={styles.cwd}>{trimmedCwd}</div> : null}
+          {trimmedCommand ? <pre className={styles.cmd}>{trimmedCommand}</pre> : null}
         </div>
-      )}
+      ) : null}
 
       {variant === "plan" && (
         <>

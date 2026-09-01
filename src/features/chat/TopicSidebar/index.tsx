@@ -33,6 +33,7 @@ type Props = {
   onDeleteTopics: (scope: TopicDeleteScope) => void | Promise<void>
   onFavoriteTopic: (id: string, favorite: boolean) => void | Promise<void>
   onProjectChange: (id: string, projectName: string | null) => void | Promise<void>
+  onDeleteProject?: (projectName: string) => void | Promise<void>
 }
 
 const TopicSidebar = memo<Props>(
@@ -53,6 +54,7 @@ const TopicSidebar = memo<Props>(
     onDeleteTopics,
     onFavoriteTopic,
     onProjectChange,
+    onDeleteProject,
   }) => {
     const router = useRouter()
     const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
@@ -131,6 +133,7 @@ const TopicSidebar = memo<Props>(
                 sortBy={sortBy}
                 onAutoRename={onAutoRenameTopic}
                 onDelete={onDeleteTopic}
+                onDeleteProject={onDeleteProject}
                 onFavorite={onFavoriteTopic}
                 onProjectChange={onProjectChange}
                 onRename={onRenameTopic}

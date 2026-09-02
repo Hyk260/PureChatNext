@@ -65,8 +65,3 @@ export type MessengerCommandItem = ChannelCommandCatalogItem
 
 /** QQ / 微信共用同一套指令目录（与网关 runChannelCommand 对齐）。 */
 export const MESSENGER_COMMANDS: readonly MessengerCommandItem[] = CHANNEL_COMMAND_CATALOG
-
-/** @deprecated 使用 MESSENGER_COMMANDS */
-export const QQ_COMMANDS = MESSENGER_COMMANDS
-/** @deprecated 使用 MESSENGER_COMMANDS */
-export const WECHAT_COMMANDS = MESSENGER_COMMANDS

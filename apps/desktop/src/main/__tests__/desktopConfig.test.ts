@@ -23,7 +23,7 @@ describe('normalizeRemoteServerUrl', () => {
   })
 })
 
-describe('createConfigStore', () => {
+describe('DesktopConfigService', () => {
   it('persists the remote server without exposing an arbitrary file path', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-desktop-'))
     tempDirs.push(dir)

@@ -74,7 +74,7 @@ export function buildChannelWelcomeText(
   agentTitle: string,
   options?: { bindHint?: string; helpHint?: string }
 ) {
-  const name = agentTitle.trim() || '助手'
+  const name = agentTitle.trim() || 'PureAI 助手'
   return [
     `你好，我是「${name}」。`,
     options?.bindHint ?? '绑定已成功，可以直接发消息和我对话。',

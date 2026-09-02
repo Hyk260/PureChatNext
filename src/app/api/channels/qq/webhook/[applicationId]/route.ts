@@ -63,6 +63,16 @@ function logQQWebhook(
   logger.info(summary, 'qq webhook inbound')
 }
 
+function logQQWebhookPost(
+  applicationId: string,
+  request: NextRequest,
+  payload: QQWebhookProbe | null,
+  bodyText: string,
+  extra: Record<string, unknown>
+) {
+  logQQWebhook(applicationId, request, payload, bodyText, { method: 'POST', ...extra })
+}
+
 async function readQQWebhookBody(
   request: NextRequest
 ): Promise<{ bodyText: string; payload: QQWebhookProbe | null }> {
@@ -126,8 +136,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { bodyText, payload } = await readQQWebhookBody(request)
     if (!bodyText) {
-      logQQWebhook(applicationId, request, payload, bodyText, {
-        method: 'POST',
+      logQQWebhookPost(applicationId, request, payload, bodyText, {
         reason: 'empty-body',
         status: 400,
       })
@@ -142,8 +151,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const binding = await model.findByApplicationId(QQ_PLATFORM, applicationId)
     const bindingLookupDuration = performance.now() - bindingLookupStartedAt
     if (!binding || !binding.enabled) {
-      logQQWebhook(applicationId, request, payload, bodyText, {
-        method: 'POST',
+      logQQWebhookPost(applicationId, request, payload, bodyText, {
         reason: 'binding-missing',
         status: 404,
       })
@@ -151,19 +159,21 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     const credentials = decryptCredentials(binding.credentials)
+    const botAppId = request.headers.get('X-Bot-Appid')
     const appIdMismatch =
-      Boolean(request.headers.get('X-Bot-Appid')) &&
-      request.headers.get('X-Bot-Appid') !== credentials.appId &&
-      request.headers.get('X-Bot-Appid') !== binding.applicationId
+      Boolean(botAppId) && botAppId !== credentials.appId && botAppId !== binding.applicationId
+    const authorizedLog = (extra: Record<string, unknown>) =>
+      logQQWebhookPost(applicationId, request, payload, bodyText, {
+        appIdMismatch,
+        connectionMode: credentials.connectionMode,
+        ...extra,
+      })
 
     if (isQQVerifyOp(payload?.op)) {
       const eventTs = asNonEmptyString(payload?.d?.event_ts)
       const plainToken = asNonEmptyString(payload?.d?.plain_token)
       if (!eventTs || !plainToken) {
-        logQQWebhook(applicationId, request, payload, bodyText, {
-          appIdMismatch,
-          connectionMode: credentials.connectionMode,
-          method: 'POST',
+        authorizedLog({
           reason: 'verify-missing-fields',
           secretLength: credentials.appSecret.length,
           status: 400,
@@ -177,10 +187,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         signature: signWebhookResponse(eventTs, plainToken, credentials.appSecret),
       })
       const signingDuration = performance.now() - signingStartedAt
-      logQQWebhook(applicationId, request, payload, bodyText, {
-        appIdMismatch,
-        connectionMode: credentials.connectionMode,
-        method: 'POST',
+      authorizedLog({
         reason: 'verify-signed',
         secretLength: credentials.appSecret.length,
         signingDuration,
@@ -194,13 +201,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     if (credentials.connectionMode === 'websocket' && !authorizeQQInternalWebhook(request)) {
-      logQQWebhook(applicationId, request, payload, bodyText, {
-        appIdMismatch,
-        connectionMode: credentials.connectionMode,
-        method: 'POST',
-        reason: 'internal-unauthorized',
-        status: 401,
-      })
+      authorizedLog({ reason: 'internal-unauthorized', status: 401 })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -212,10 +213,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         !timestamp ||
         !verifyWebhookSignature(bodyText, timestamp, signature, credentials.appSecret)
       ) {
-        logQQWebhook(applicationId, request, payload, bodyText, {
-          appIdMismatch,
-          connectionMode: credentials.connectionMode,
-          method: 'POST',
+        authorizedLog({
           reason: 'event-signature-invalid',
           secretLength: credentials.appSecret.length,
           status: 401,
@@ -224,13 +222,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       }
     }
 
-    logQQWebhook(applicationId, request, payload, bodyText, {
-      appIdMismatch,
-      connectionMode: credentials.connectionMode,
-      method: 'POST',
-      reason: 'dispatch',
-      status: 200,
-    })
+    authorizedLog({ reason: 'dispatch', status: 200 })
 
     const { getOrCreateQQChat } = await import('@/libs/channels/qq/chatBot')
 

@@ -2,12 +2,14 @@ import { getAiModel, getProviderChatModels } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 
 import {
+  CHANNEL_PROVIDER_IDS,
   channelProviderUnavailableReason,
   defaultChannelModel,
   isChannelProviderId,
   normalizeChannelProvider,
   validateChannelModel,
 } from '../core/modelResolver'
+import type { ChannelProviderId } from '../core/modelResolver'
 
 export function normalizeWechatAgentProvider(provider: string | null | undefined): string {
   return normalizeChannelProvider(provider)
@@ -19,8 +21,8 @@ export function resolveWechatAgentModelId(provider: string, model: string | null
   return defaultChannelModel(isChannelProviderId(provider) ? provider : 'deepseek')
 }
 
-export const WECHAT_PROVIDER_IDS = ['purechat', 'openai', 'deepseek'] as const
-export type WechatProviderId = (typeof WECHAT_PROVIDER_IDS)[number]
+export const WECHAT_PROVIDER_IDS = CHANNEL_PROVIDER_IDS
+export type WechatProviderId = ChannelProviderId
 
 export function isWechatProviderId(provider: string): provider is WechatProviderId {
   return isChannelProviderId(provider)

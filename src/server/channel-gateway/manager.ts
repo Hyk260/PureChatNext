@@ -52,6 +52,19 @@ function safeError(error: unknown): { code: string; message: string } {
   return { code: code.replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 100), message: 'Channel gateway unavailable' }
 }
 
+function resolveGatewaySummaryStatus(input: {
+  coreError?: string
+  degraded: boolean
+  running: boolean
+  waitingForDatabase: boolean
+}): ChannelGatewaySummary['status'] {
+  if (input.coreError) return 'unhealthy'
+  if (input.waitingForDatabase) return 'starting'
+  if (!input.running) return 'stopped'
+  if (input.degraded) return 'degraded'
+  return 'healthy'
+}
+
 export class ChannelGatewayManager {
   private readonly active = new Map<string, ActiveClient>()
   private readonly bindingModel: ChannelBindingModel
@@ -365,15 +378,12 @@ export class ChannelGatewayManager {
       ...(this.coreError ? { error: this.coreError } : {}),
       platforms,
       running: this.running,
-      status: this.coreError
-        ? 'unhealthy'
-        : this.waitingForDatabase
-          ? 'starting'
-          : !this.running
-            ? 'stopped'
-            : degraded
-              ? 'degraded'
-              : 'healthy',
+      status: resolveGatewaySummaryStatus({
+        coreError: this.coreError,
+        degraded,
+        running: this.running,
+        waitingForDatabase: this.waitingForDatabase,
+      }),
     }
   }
 

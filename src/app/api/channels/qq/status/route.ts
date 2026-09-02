@@ -30,6 +30,15 @@ function resolveQqRuntimeStatus(input: {
   return input.runtimeStatus
 }
 
+function resolveQqConnected(input: {
+  connectionMode: 'websocket' | 'webhook'
+  enabled: boolean
+  runtimeStatus: string
+}) {
+  if (input.connectionMode === 'webhook') return input.enabled
+  return input.runtimeStatus === 'online' || input.runtimeStatus === 'degraded'
+}
+
 /** GET /api/channels/qq/status — 当前用户 QQ 连接状态（不含 Secret） */
 export const GET = withAuth(async (_request, { userId }) => {
   void ensureChannelGatewayRunning().catch((error) => {
@@ -69,10 +78,11 @@ export const GET = withAuth(async (_request, { userId }) => {
     heartbeatFresh,
     runtimeStatus: binding.runtimeStatus,
   })
-  const connected =
-    connectionMode === 'webhook'
-      ? binding.enabled
-      : runtimeStatus === 'online' || runtimeStatus === 'degraded'
+  const connected = resolveQqConnected({
+    connectionMode,
+    enabled: binding.enabled,
+    runtimeStatus,
+  })
 
   return NextResponse.json({
     agentId: binding.agentId,

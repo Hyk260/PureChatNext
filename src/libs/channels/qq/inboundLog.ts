@@ -33,6 +33,13 @@ export function resolveQQInboundKind(input: { attachments?: Array<{ type?: strin
   return 'text'
 }
 
+function formatInboundVisibleContent(event: { content: string; messageKind: string }) {
+  if (event.messageKind === 'text' || event.messageKind === 'command') {
+    return `，内容=${JSON.stringify(event.content.replace(/[\r\n\t]+/g, ' ').slice(0, 200))}`
+  }
+  return QQ_KIND_PLACEHOLDER[event.messageKind] ?? ''
+}
+
 export function formatQQInboundLog(event: {
   applicationId: string
   content: string
@@ -40,9 +47,5 @@ export function formatQQInboundLog(event: {
   messageKind: string
 }) {
   const contactHash = createHash('sha256').update(event.externalUserId).digest('hex').slice(0, 10)
-  const visible =
-    event.messageKind === 'text' || event.messageKind === 'command'
-      ? `，内容=${JSON.stringify(event.content.replace(/[\r\n\t]+/g, ' ').slice(0, 200))}`
-      : (QQ_KIND_PLACEHOLDER[event.messageKind] ?? '')
-  return `[QQ Gateway] 收到${QQ_KIND_LABEL[event.messageKind] ?? '文本'}消息：应用=${event.applicationId}，联系人=sha256:${contactHash}，长度=${event.content.length}${visible}`
+  return `[QQ Gateway] 收到${QQ_KIND_LABEL[event.messageKind] ?? '文本'}消息：应用=${event.applicationId}，联系人=sha256:${contactHash}，长度=${event.content.length}${formatInboundVisibleContent(event)}`
 }

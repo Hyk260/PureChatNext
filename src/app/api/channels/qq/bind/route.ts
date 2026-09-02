@@ -21,6 +21,30 @@ function parseConnectionMode(value: unknown): QQConnectionMode {
   return value === 'webhook' ? 'webhook' : 'websocket'
 }
 
+async function persistQQConnectionMode(params: {
+  agentId: string
+  bindingModel: ChannelBindingModel
+  connectionMode: QQConnectionMode
+  existing: { applicationId: string; credentials: string }
+  model?: string | null
+  provider?: string | null
+  userId: string
+}) {
+  const creds = decryptCredentials(params.existing.credentials)
+  creds.connectionMode = params.connectionMode
+  const updated = await params.bindingModel.upsert({
+    agentId: params.agentId,
+    applicationId: params.existing.applicationId,
+    credentials: encryptCredentials(creds),
+    model: params.model,
+    platform: QQ_PLATFORM,
+    provider: params.provider,
+    userId: params.userId,
+  })
+  await requestGatewayReconcile()
+  return { creds, updated }
+}
+
 type ParsedQQChannelConfig =
   | { ok: true; agentId: string; model: string; provider: QQProviderId }
   | { ok: false; error: string; status: 400 }
@@ -111,11 +135,13 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     return jsonError('Invalid JSON body')
   }
 
-  const model = new ChannelBindingModel()
-  const existing = await model.findByUserAndPlatform(userId, QQ_PLATFORM)
+  const bindingModel = new ChannelBindingModel()
+  const existing = await bindingModel.findByUserAndPlatform(userId, QQ_PLATFORM)
   if (!existing) return jsonError('QQ not connected', 404)
 
-  if (body.connectionMode !== undefined && parseConnectionMode(body.connectionMode) === 'websocket' && !gatewayEnv.CHANNEL_GATEWAY_ENABLED) {
+  const nextConnectionMode =
+    body.connectionMode === undefined ? undefined : parseConnectionMode(body.connectionMode)
+  if (nextConnectionMode === 'websocket' && !gatewayEnv.CHANNEL_GATEWAY_ENABLED) {
     return jsonError('QQ WebSocket gateway is not supported in this deployment', 409)
   }
 
@@ -130,7 +156,7 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     const agent = await new AgentModel(userId).findVisibleById(channelConfig.agentId)
     if (!agent) return jsonError('Agent not found', 404)
 
-    const updated = await model.updateConfiguration({
+    const updated = await bindingModel.updateConfiguration({
       agentId: channelConfig.agentId,
       model: channelConfig.model,
       platform: QQ_PLATFORM,
@@ -139,19 +165,16 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     })
     if (!updated) return jsonError('QQ not connected', 404)
 
-    if (body.connectionMode !== undefined) {
-      const creds = decryptCredentials(existing.credentials)
-      creds.connectionMode = parseConnectionMode(body.connectionMode)
-      await model.upsert({
+    if (nextConnectionMode !== undefined) {
+      await persistQQConnectionMode({
         agentId: updated.agentId,
-        applicationId: existing.applicationId,
-        credentials: encryptCredentials(creds),
+        bindingModel,
+        connectionMode: nextConnectionMode,
+        existing,
         model: updated.model,
-        platform: QQ_PLATFORM,
         provider: updated.provider,
         userId,
       })
-      await requestGatewayReconcile()
     }
 
     return NextResponse.json({
@@ -167,22 +190,19 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     const agent = await new AgentModel(userId).findVisibleById(agentId)
     if (!agent) return jsonError('Agent not found', 404)
 
-    const updated = await model.updateAgent(userId, QQ_PLATFORM, agentId)
+    const updated = await bindingModel.updateAgent(userId, QQ_PLATFORM, agentId)
     if (!updated) return jsonError('QQ not connected', 404)
 
-    if (body.connectionMode !== undefined) {
-      const creds = decryptCredentials(existing.credentials)
-      creds.connectionMode = parseConnectionMode(body.connectionMode)
-      await model.upsert({
+    if (nextConnectionMode !== undefined) {
+      await persistQQConnectionMode({
         agentId: updated.agentId,
-        applicationId: existing.applicationId,
-        credentials: encryptCredentials(creds),
+        bindingModel,
+        connectionMode: nextConnectionMode,
+        existing,
         model: existing.model,
-        platform: QQ_PLATFORM,
         provider: existing.provider,
         userId,
       })
-      await requestGatewayReconcile()
     }
 
     return NextResponse.json({
@@ -191,19 +211,16 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     })
   }
 
-  if (body.connectionMode !== undefined) {
-    const creds = decryptCredentials(existing.credentials)
-    creds.connectionMode = parseConnectionMode(body.connectionMode)
-    const updated = await model.upsert({
+  if (nextConnectionMode !== undefined) {
+    const { creds, updated } = await persistQQConnectionMode({
       agentId: existing.agentId,
-      applicationId: existing.applicationId,
-      credentials: encryptCredentials(creds),
+      bindingModel,
+      connectionMode: nextConnectionMode,
+      existing,
       model: existing.model,
-      platform: QQ_PLATFORM,
       provider: existing.provider,
       userId,
     })
-    await requestGatewayReconcile()
     return NextResponse.json({
       agentId: updated.agentId,
       connectionMode: creds.connectionMode,

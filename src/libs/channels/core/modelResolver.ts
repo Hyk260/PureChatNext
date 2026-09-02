@@ -57,13 +57,10 @@ export class ChannelModelResolver {
   resolve(params: ChannelModelResolverParams): ChannelModelConfig {
     const fallbackProvider = params.fallbackProvider ?? 'deepseek'
     const providerRaw = normalizeChannelProvider(params.provider ?? params.agentProvider, fallbackProvider)
-    const provider = isChannelProviderId(providerRaw)
-      ? providerRaw
-      : params.providerPolicy === 'strict'
-        ? (() => {
-            throw new Error(`Channel provider "${providerRaw}" is not supported by the ${params.channelName ?? 'channel'}`)
-          })()
-        : fallbackProvider
+    if (!isChannelProviderId(providerRaw) && params.providerPolicy === 'strict') {
+      throw new Error(`Channel provider "${providerRaw}" is not supported by the ${params.channelName ?? 'channel'}`)
+    }
+    const provider = isChannelProviderId(providerRaw) ? providerRaw : fallbackProvider
     const model = params.model?.trim() || params.agentModel?.trim() || defaultChannelModel(provider)
     return { model, provider }
   }

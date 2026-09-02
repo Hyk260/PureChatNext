@@ -22,7 +22,7 @@ export const GET = withAuth(async (request: NextRequest) => {
     const status = await pollQrStatus(qrcode)
     // Never leak full bot_token to logs; client needs it once for bind
     return NextResponse.json(status)
-  } catch (error) {
+  } catch {
     return jsonError('查询扫码状态失败，请稍后重试', 502)
   }
 })

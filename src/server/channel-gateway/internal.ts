@@ -20,9 +20,13 @@ function derivedVaultSecret(): string | undefined {
   return createHash('sha256').update(`purechat:channel-gateway:${vaultSecret}`).digest('base64url')
 }
 
+const LEGACY_WEBHOOK_SECRETS: Record<LegacyPlatform, () => string | undefined> = {
+  qq: () => gatewayEnv.QQ_WEBHOOK_SECRET,
+  wechat: () => gatewayEnv.WECHAT_WEBHOOK_SECRET,
+}
+
 export function resolveChannelGatewayInternalSecret(platform?: LegacyPlatform): string {
-  const legacy =
-    platform === 'wechat' ? gatewayEnv.WECHAT_WEBHOOK_SECRET : platform === 'qq' ? gatewayEnv.QQ_WEBHOOK_SECRET : ''
+  const legacy = platform ? LEGACY_WEBHOOK_SECRETS[platform]() : ''
   return (
     gatewayEnv.CHANNEL_GATEWAY_INTERNAL_SECRET?.trim() ||
     legacy?.trim() ||

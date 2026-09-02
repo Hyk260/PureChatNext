@@ -35,16 +35,17 @@ export class ChannelAgentRuntime {
     const agent = await new AgentModel(params.userId).findVisibleById(params.agentId)
     if (!agent) throw new Error(`Agent not found: ${params.agentId}`)
 
+    const inheritAgentModel = params.platform !== 'qq'
     const { model: modelId, provider } = resolveChannelModelConfig({
       // QQ channel defaults must not inherit an Agent's web-chat provider.
       // Explicit channel provider/model values still win in the resolver.
-      agentModel: params.platform === 'qq' ? undefined : agent.model,
-      agentProvider: params.platform === 'qq' ? undefined : agent.provider,
+      agentModel: inheritAgentModel ? agent.model : undefined,
+      agentProvider: inheritAgentModel ? agent.provider : undefined,
       channelName: params.platform,
       fallbackProvider: 'deepseek',
       model: params.model,
       provider: params.provider,
-      providerPolicy: params.platform === 'qq' ? 'fallback' : 'strict',
+      providerPolicy: inheritAgentModel ? 'strict' : 'fallback',
     })
     const isPureChat = provider === PURECHAT_PROVIDER_ID
 

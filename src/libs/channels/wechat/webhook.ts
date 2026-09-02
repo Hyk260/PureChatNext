@@ -34,10 +34,44 @@ export function rawMessageToEvent(bindingId: string, message: WechatRawMessage) 
   }
   if (imageItem) return { ...common, content: encodeWechatImageContent(imageItem).slice(0, 40_000), messageKind: 'image' as const }
   if (fileItem) return { ...common, content: encodeWechatFileContent(fileItem).slice(0, 40_000), messageKind: 'file' as const }
-  if (content) return { ...common, content: content.slice(0, 40_000), messageKind: content.startsWith('/') ? 'command' as const : 'text' as const }
-  const summary = itemList.map((item) => `type=${String(item.type ?? '∅')}{${Object.keys(item).filter((key) => key !== 'type').join(',') || '∅'}}`).join(';')
-  log('unsupported inbound items binding=%s summary=%s', bindingId, summary || 'empty')
+  if (content) {
+    return {
+      ...common,
+      content: content.slice(0, 40_000),
+      messageKind: content.startsWith('/') ? 'command' as const : 'text' as const,
+    }
+  }
+  log('unsupported inbound items binding=%s summary=%s', bindingId, summarizeInboundItems(itemList) || 'empty')
   return { ...common, content: '[unsupported message]', messageKind: 'unsupported' as const }
+}
+
+function summarizeInboundItems(itemList: WechatRawMessage['item_list']) {
+  return itemList
+    .map((item) => {
+      const keys = Object.keys(item).filter((key) => key !== 'type').join(',') || '∅'
+      return `type=${String(item.type ?? '∅')}{${keys}}`
+    })
+    .join(';')
+}
+
+const WECHAT_KIND_LABEL: Record<string, string> = {
+  command: '指令',
+  file: '文件',
+  image: '图片',
+  text: '文本',
+  unsupported: '非文本',
+}
+
+const WECHAT_KIND_PLACEHOLDER: Record<string, string> = {
+  file: '，内容=[文件]',
+  image: '，内容=[图片]',
+}
+
+function formatInboundVisibleContent(event: { content: string; messageKind: string }) {
+  if (event.messageKind === 'text' || event.messageKind === 'command') {
+    return `，内容=${JSON.stringify(event.content.replace(/[\r\n\t]+/g, ' ').slice(0, 200))}`
+  }
+  return WECHAT_KIND_PLACEHOLDER[event.messageKind] ?? ''
 }
 
 export function formatWechatInboundLog(event: {
@@ -48,16 +82,9 @@ export function formatWechatInboundLog(event: {
   messageKind: string
 }) {
   const contactHash = createHash('sha256').update(event.externalUserId).digest('hex').slice(0, 10)
-  const labels: Record<string, string> = { command: '指令', file: '文件', image: '图片', text: '文本', unsupported: '非文本' }
-  const visible = event.messageKind === 'image'
-    ? '，内容=[图片]'
-    : event.messageKind === 'file'
-      ? '，内容=[文件]'
-      : event.messageKind === 'text' || event.messageKind === 'command'
-        ? `，内容=${JSON.stringify(event.content.replace(/[\r\n\t]+/g, ' ').slice(0, 200))}`
-        : ''
   const userName = event.externalUserName?.trim()
-  return `[微信 Gateway] 收到${labels[event.messageKind] ?? '文本'}消息：绑定=${event.bindingId}，联系人=sha256:${contactHash}${userName ? `，用户=${JSON.stringify(userName)}` : ''}，长度=${event.content.length}${visible}`
+  const userSuffix = userName ? `，用户=${JSON.stringify(userName)}` : ''
+  return `[微信 Gateway] 收到${WECHAT_KIND_LABEL[event.messageKind] ?? '文本'}消息：绑定=${event.bindingId}，联系人=sha256:${contactHash}${userSuffix}，长度=${event.content.length}${formatInboundVisibleContent(event)}`
 }
 
 export async function ingestWechatWebhookBatch(binding: ChannelBindingItem, batch: WechatPollBatch) {

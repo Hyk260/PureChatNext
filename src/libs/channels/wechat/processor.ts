@@ -85,6 +85,26 @@ type WechatEventResponse = Partial<Omit<WechatAgentReply, 'text'>> & { text: str
 
 const systemResponse = (text: string): WechatEventResponse => ({ text })
 
+function buildConversationFileContext(
+  conversationFiles: Awaited<ReturnType<typeof listWechatConversationFiles>>
+) {
+  if (!conversationFiles.length) return undefined
+  return [
+    '<wechat_conversation_files>',
+    ...conversationFiles.map(({ artifact, file }) =>
+      JSON.stringify({
+        direction: artifact.direction,
+        fileId: file.id,
+        filename: file.name,
+        summary: artifact.summary,
+        version: artifact.version,
+      })
+    ),
+    '</wechat_conversation_files>',
+    '用户说“这个文件/上面的文件”时，默认使用列表中最新的 output，否则使用最新 input。多个同等候选时先询问。',
+  ].join('\n')
+}
+
 async function buildResponse(event: ChannelEventItem): Promise<WechatEventResponse> {
   if (event.responseText) {
     return {
@@ -170,22 +190,7 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
       ]
     }
     const conversationFiles = await listWechatConversationFiles(event.sessionId, event.conversationVersion)
-    const attachmentContext = conversationFiles.length
-      ? [
-          '<wechat_conversation_files>',
-          ...conversationFiles.map(({ artifact, file }) =>
-            JSON.stringify({
-              direction: artifact.direction,
-              fileId: file.id,
-              filename: file.name,
-              summary: artifact.summary,
-              version: artifact.version,
-            })
-          ),
-          '</wechat_conversation_files>',
-          '用户说“这个文件/上面的文件”时，默认使用列表中最新的 output，否则使用最新 input。多个同等候选时先询问。',
-        ].join('\n')
-      : undefined
+    const attachmentContext = buildConversationFileContext(conversationFiles)
     const producedArtifacts: WechatToolArtifact[] = []
     stopTyping = startWechatTyping(api, event.externalUserId, contextToken)
     return await generateWechatAgentReply({
@@ -343,7 +348,7 @@ export async function processNextWechatEvent(owner = `processor-${createNanoId(1
     await sendResponse(event, owner, response.text)
     await model.complete(event.id, owner)
   } catch (error) {
-    if ((error as { name?: string })?.name === 'AbortError') {
+    if (error instanceof Error && error.name === 'AbortError') {
       await model.cancel(event.id)
     } else {
       const safe = safeError(error)

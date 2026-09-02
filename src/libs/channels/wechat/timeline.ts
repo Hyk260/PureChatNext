@@ -30,6 +30,11 @@ export type TimelineMessage = {
   text: string
 }
 
+const USER_KIND_TEXT: Record<string, string> = {
+  file: '[文件]',
+  image: '[图片]',
+}
+
 function parseFileSize(len?: string): number | null {
   if (!len) return null
   const n = Number(len)
@@ -76,6 +81,7 @@ export function expandEventsToMessages(events: ChannelTimelineEvent[]): Timeline
     const isImage = event.messageKind === 'image'
     const isFile = event.messageKind === 'file'
     const filePayload = isFile ? parseWechatFileContent(event.content) : null
+    const inboundText = USER_KIND_TEXT[event.messageKind] ?? event.content
 
     messages.push({
       createdAt: event.createdAt.toISOString(),
@@ -93,7 +99,7 @@ export function expandEventsToMessages(events: ChannelTimelineEvent[]): Timeline
       role: 'user',
       source: 'user',
       status: event.status,
-      text: isImage ? '[图片]' : isFile ? '[文件]' : event.content,
+      text: inboundText,
     })
     if (event.responseText) {
       const outputAttachments = mapOutputAttachments(event)

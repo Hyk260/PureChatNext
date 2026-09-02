@@ -10,7 +10,9 @@ type SerializedWechatTimelineCursor = {
 
 export function compareWechatTimelineCursors(a: WechatTimelineCursor, b: WechatTimelineCursor): number {
   const timeDifference = a.createdAt.getTime() - b.createdAt.getTime()
-  return timeDifference || (a.id === b.id ? 0 : a.id < b.id ? -1 : 1)
+  if (timeDifference) return timeDifference
+  if (a.id === b.id) return 0
+  return a.id < b.id ? -1 : 1
 }
 
 export function advanceWechatTimelineCursor(

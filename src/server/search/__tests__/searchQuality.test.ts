@@ -1,7 +1,7 @@
 import type { UniformSearchResult } from '@pure/types'
 import { describe, expect, it } from 'vitest'
 
-import { filterRelevantSearchResults } from './searchQuality'
+import { filterRelevantSearchResults } from '../searchQuality'
 
 const result = (title: string, content = ''): UniformSearchResult => ({
   content,

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { abortableDelay } from './async'
+import { abortableDelay } from '../async'
 
 afterEach(() => {
   vi.useRealTimers()

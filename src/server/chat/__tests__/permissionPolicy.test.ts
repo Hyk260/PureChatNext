@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isDangerousCommand, isToolApprovalRequired } from './permissionPolicy'
+import { isDangerousCommand, isToolApprovalRequired } from '../permissionPolicy'
 
 describe('permission policy', () => {
   it('approves safe reads in auto mode', () => {

@@ -10,7 +10,7 @@ const fileEnv = vi.hoisted(() => ({
 
 vi.mock('@/envs/file', () => ({ fileEnv }))
 
-import { buildPublicS3Url, extractS3KeyFromUrl, resolveFileAccessUrl } from './url'
+import { buildPublicS3Url, extractS3KeyFromUrl, resolveFileAccessUrl } from '../url'
 
 describe('S3 url helpers', () => {
   beforeEach(() => {

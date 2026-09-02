@@ -17,7 +17,7 @@ vi.mock('@pure/database/core/db-adaptor', () => ({
 vi.hoisted(() => {
   const { config: loadEnv } = require('dotenv') as typeof import('dotenv')
   const { resolve: resolvePath } = require('node:path') as typeof import('node:path')
-  loadEnv({ path: resolvePath(__dirname, '../../../../.env.local') })
+  loadEnv({ path: resolvePath(__dirname, '../../../../../.env.local') })
 })
 
 import { AgentModel } from '@pure/database/models/agent'
@@ -30,7 +30,7 @@ import { chatMessages, chatTopics } from '@pure/database/schemas/chat'
 import { users } from '@pure/database/schemas/user'
 import type { ChatDatabase } from '@pure/database/type'
 
-config({ path: resolve(__dirname, '../../../../.env.local') })
+config({ path: resolve(__dirname, '../../../../../.env.local') })
 
 const dbUrl = process.env.DATABASE_URL ?? process.env.DATABASE_TEST_URL
 const describeIfDb = dbUrl ? describe : describe.skip

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildChatRuntimeInstructions } from './runtimeInstructions'
+import { buildChatRuntimeInstructions } from '../runtimeInstructions'
 
 describe('buildChatRuntimeInstructions', () => {
   it('injects the current Shanghai date and time for relative-time questions', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isRecord, toTrimmedString } from './object'
+import { isRecord, toTrimmedString } from '../object'
 
 describe('object helpers', () => {
   it.each([

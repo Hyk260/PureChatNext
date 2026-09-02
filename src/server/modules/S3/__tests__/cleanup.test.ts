@@ -24,7 +24,7 @@ vi.mock('@/server/modules/S3/url', () => ({
   extractS3KeyFromUrl: mocks.extractS3KeyFromUrl,
 }))
 
-import { deleteS3ObjectsByUrls } from './cleanup'
+import { deleteS3ObjectsByUrls } from '../cleanup'
 
 describe('deleteS3ObjectsByUrls', () => {
   beforeEach(() => {

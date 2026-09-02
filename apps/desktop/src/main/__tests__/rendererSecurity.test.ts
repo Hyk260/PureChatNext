@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { APP_RENDERER_URL, assertTrustedIpcSender, isSafeExternalUrl, isTrustedRendererUrl } from './rendererSecurity'
+import { APP_RENDERER_URL, assertTrustedIpcSender, isSafeExternalUrl, isTrustedRendererUrl } from '../rendererSecurity'
 
 describe('renderer URL trust', () => {
   it.each(['/auth/signin', '/chat?topic=1#last'])('allows packaged routes: %s', (route) => {

@@ -5,7 +5,7 @@ import path from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createAppProtocolHandler } from './appProtocol'
+import { createAppProtocolHandler } from '../appProtocol'
 
 describe('packaged app protocol', () => {
   let rendererDir: string

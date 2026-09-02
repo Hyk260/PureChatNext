@@ -18,7 +18,7 @@ vi.mock('@/libs/channels/wechat/fileArtifacts', () => ({
   readWechatFile: mocks.readWechatFile,
 }))
 
-import { createEditExcelTool } from './editExcelTool'
+import { createEditExcelTool } from '../editExcelTool'
 
 describe('createEditExcelTool', () => {
   beforeEach(() => {

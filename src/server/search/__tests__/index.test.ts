@@ -4,12 +4,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { toolsEnv } from '@/envs/tools'
 
-import { createSearchServiceImpl, SearchImplType } from './impls'
-import { SearchService } from './index'
+import { createSearchServiceImpl, SearchImplType } from '../impls'
+import { SearchService } from '../index'
 
 // Mock dependencies
-vi.mock('./impls', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./impls')>()
+vi.mock('../impls', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../impls')>()
   return {
     ...actual,
     createSearchServiceImpl: vi.fn(),

@@ -10,7 +10,7 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { FileS3, S3 } from './index'
+import { FileS3, S3 } from '../index'
 
 // Mock AWS SDK
 vi.mock('@aws-sdk/client-s3')

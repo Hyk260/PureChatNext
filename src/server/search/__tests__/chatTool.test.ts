@@ -2,7 +2,7 @@
 import type { ChatWebSearchToolResult, UniformSearchResponse } from '@pure/types'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createWebSearchTool } from './chatTool'
+import { createWebSearchTool } from '../chatTool'
 
 const createResponse = (overrides: Partial<UniformSearchResponse> = {}): UniformSearchResponse => ({
   costTime: 10,

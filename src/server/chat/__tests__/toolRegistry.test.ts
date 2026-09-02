@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/server/search/chatTool', () => ({ webSearchTool: mocks.webSearchTool }))
 vi.mock('@/server/weather/chatTool', () => ({ weatherTool: mocks.weatherTool }))
 
-import { resolveChatToolInstructions, resolveChatTools } from './toolRegistry'
+import { resolveChatToolInstructions, resolveChatTools } from '../toolRegistry'
 
 describe('chat tool registry', () => {
   it('keeps structured weather available to web chat when search is off', () => {

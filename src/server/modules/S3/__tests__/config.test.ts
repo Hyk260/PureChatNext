@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 
-import { isS3Configured } from './config'
+import { isS3Configured } from '../config'
 
 const completeConfig = {
   S3_ACCESS_KEY_ID: 'access-key',

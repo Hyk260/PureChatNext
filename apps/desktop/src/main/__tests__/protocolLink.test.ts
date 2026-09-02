@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { protocolLinksFromCommandLine, resolveProtocolLink } from './protocolLink'
+import { protocolLinksFromCommandLine, resolveProtocolLink } from '../protocolLink'
 
 describe('desktop protocol links', () => {
   it('keeps internal renderer links on the trusted origin', () => {

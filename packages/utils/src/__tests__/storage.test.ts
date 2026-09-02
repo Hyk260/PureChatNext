@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createStorage, localStg, sessionStg } from './storage'
+import { createStorage, localStg, sessionStg } from '../storage'
 
 const clearBrowserStorage = () => {
   window.localStorage.clear()

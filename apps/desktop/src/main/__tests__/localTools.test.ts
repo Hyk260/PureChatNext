@@ -4,10 +4,10 @@ import path from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { CommandService } from './services/CommandService'
-import { DesktopConfigService } from './services/DesktopConfigService'
-import { LocalToolService } from './services/LocalToolService'
-import { PermissionService } from './services/PermissionService'
+import { CommandService } from '../services/CommandService'
+import { DesktopConfigService } from '../services/DesktopConfigService'
+import { LocalToolService } from '../services/LocalToolService'
+import { PermissionService } from '../services/PermissionService'
 
 const tempDirs: string[] = []
 const createTools = async (scope: string, confirm = false) => {

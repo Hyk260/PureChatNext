@@ -2,10 +2,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
-vi.mock('../core/db-adaptor', () => ({ getServerDB: vi.fn(), serverDB: {} }))
+vi.mock('../../core/db-adaptor', () => ({ getServerDB: vi.fn(), serverDB: {} }))
 
-import { ChannelBindingModel } from './channelBinding'
-import type { ChatDatabase } from '../type'
+import { ChannelBindingModel } from '../channelBinding'
+import type { ChatDatabase } from '../../type'
 
 type UpdateCall = { set: Record<string, unknown>; table: unknown }
 

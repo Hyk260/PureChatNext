@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { SEARCH_TIME_RANGE_DAYS, getSearchTimeRangeDays } from './timeRange'
+import { SEARCH_TIME_RANGE_DAYS, getSearchTimeRangeDays } from '../timeRange'
 
 describe('search time range', () => {
   it('exposes the shared day mapping', () => {

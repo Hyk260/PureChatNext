@@ -2,11 +2,11 @@
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
-vi.mock('../core/db-adaptor', () => ({ getServerDB: vi.fn(), serverDB: {} }))
+vi.mock('../../core/db-adaptor', () => ({ getServerDB: vi.fn(), serverDB: {} }))
 
-import type { ChatDatabase } from '../type'
-import { ChannelEventModel } from './channelEvent'
-import type { ChannelEventItem } from '../schemas/channel'
+import type { ChatDatabase } from '../../type'
+import { ChannelEventModel } from '../channelEvent'
+import type { ChannelEventItem } from '../../schemas/channel'
 
 function createDb(eventTransitioned: boolean) {
   const returning = vi.fn().mockResolvedValue(eventTransitioned ? [{ id: 'event-1' }] : [])

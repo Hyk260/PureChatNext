@@ -2,10 +2,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
-vi.mock('../core/db-adaptor', () => ({ getServerDB: vi.fn() }))
+vi.mock('../../core/db-adaptor', () => ({ getServerDB: vi.fn() }))
 
-import { CreditsModel } from './credits'
-import type { ChatDatabase } from '../type'
+import { CreditsModel } from '../credits'
+import type { ChatDatabase } from '../../type'
 
 type InsertedValue = Record<string, unknown>
 

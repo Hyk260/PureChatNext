@@ -2,8 +2,8 @@
 import * as xlsx from 'xlsx'
 import { describe, expect, it } from 'vitest'
 
-import { editExcelBuffer } from './editExcel'
-import type { ExcelEditError } from './editExcel'
+import { editExcelBuffer } from '../editExcel'
+import type { ExcelEditError } from '../editExcel'
 
 const workbookBuffer = () => {
   const workbook = xlsx.utils.book_new()

@@ -6,14 +6,18 @@ import { app, Notification, shell } from 'electron'
 import type { IpcRegistry } from '../ipc/IpcRegistry'
 import { assertNotSensitive } from '../security/PathPolicy'
 import { isSafeExternalUrl } from '../security/RendererSecurity'
+import { SystemToolsService } from '../services/SystemToolsService'
 
 export class SystemController {
+  constructor(private readonly systemTools = new SystemToolsService()) {}
+
   register(ipc: IpcRegistry) {
     ipc.register('app.getInfo', () => ({
       isPackaged: app.isPackaged,
       platform: process.platform,
       version: app.getVersion(),
     }))
+    ipc.register('app.getSystemTools', () => this.systemTools.getSystemTools())
     ipc.register('window.openExternal', async (url) => {
       if (!isSafeExternalUrl(url)) throw new Error('不允许打开该外部地址')
       await shell.openExternal(url)

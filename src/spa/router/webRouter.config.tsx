@@ -214,6 +214,13 @@ export const webRoutes: RouteObject[] = [
         path: 'about',
       },
       {
+        element: dynamicElement(
+          () => import('@/routes/settings/system-tools/page'),
+          'Settings > System Tools'
+        ),
+        path: 'system-tools',
+      },
+      {
         element: dynamicElement(() => import('@/routes/settings/messenger/page'), 'Settings > Messenger'),
         path: 'messenger',
       },

@@ -1,17 +1,36 @@
-import { execFile } from 'node:child_process'
-import { spawn, type ChildProcess } from 'node:child_process'
+import { execFile, spawn, type ChildProcess } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import { rm } from 'node:fs/promises'
 import net from 'node:net'
+import { homedir } from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
 
 import { parse } from 'dotenv'
+
+import {
+  collectAncestorPids,
+  collectKillTargets,
+  collectStaleDesktopProcesses,
+  isElectronAppCommand,
+  parsePsTable,
+  type ProcessRow,
+} from './lib/desktop-process'
 
 const execFileAsync = promisify(execFile)
 const isWindows = process.platform === 'win32'
 const rootDir = process.cwd()
 const desktopEnvPath = path.resolve(rootDir, 'apps/desktop/.env.desktop')
 const desktopEnvLocalPath = path.resolve(rootDir, 'apps/desktop/.env.desktop.local')
+
+/** Cursor/VS Code 点「重启任务」时，旧进程与新进程会交错；必须先杀干净再启动。 */
+const STALE_KILL_ROUNDS = 25
+const STALE_KILL_INTERVAL_MS = 80
+const PORT_FREE_WAIT_MS = 2_000
+const ELECTRON_READY_WAIT_MS = 12_000
+const MAX_ELECTRON_START_ATTEMPTS = 2
+const SHUTDOWN_WAIT_MS = 1_500
+const ELECTRON_SINGLETON_NAMES = ['SingletonLock', 'SingletonCookie', 'SingletonSocket'] as const
 
 const readEnvFile = (filePath: string) => {
   try {
@@ -48,12 +67,12 @@ const spawnProcess = (command: string, args: string[]) =>
     stdio: 'inherit',
   })
 
-const stopProcess = (child: ChildProcess | undefined) => {
+const stopProcess = (child: ChildProcess | undefined, signal: NodeJS.Signals = 'SIGTERM') => {
   if (!child?.pid) return
 
   if (!isWindows) {
     try {
-      process.kill(-child.pid, 'SIGTERM')
+      process.kill(-child.pid, signal)
       return
     } catch {
       // Fall through to the direct child pid.
@@ -62,7 +81,7 @@ const stopProcess = (child: ChildProcess | undefined) => {
 
   if (!child.killed) {
     try {
-      child.kill('SIGTERM')
+      child.kill(signal)
     } catch {
       // Already exited.
     }
@@ -71,6 +90,10 @@ const stopProcess = (child: ChildProcess | undefined) => {
 
 const waitForExit = (child: ChildProcess) =>
   new Promise<number>((resolve) => {
+    if (child.exitCode !== null) {
+      resolve(child.exitCode)
+      return
+    }
     child.once('exit', (code, signal) => resolve(code ?? (signal ? 1 : 0)))
   })
 
@@ -143,7 +166,7 @@ const freeRendererPort = async (port: number) => {
   console.log(`Clearing previous desktop renderer on port ${port} (PID ${pids.join(', ')})`)
   for (const pid of pids) signalPid(pid, 'SIGTERM')
 
-  const deadline = Date.now() + 5_000
+  const deadline = Date.now() + PORT_FREE_WAIT_MS
   while (Date.now() < deadline) {
     await wait(200)
     pids = await listListeningPids(port)
@@ -155,42 +178,181 @@ const freeRendererPort = async (port: number) => {
   await wait(200)
 }
 
-const listStaleDesktopPids = async (): Promise<number[]> => {
+const listProcessRows = async (): Promise<ProcessRow[]> => {
   if (isWindows) return []
 
   try {
-    // 覆盖 electron-vite、主进程入口，以及带 purechat-desktop userData / app-path 的 Electron Helper
-    const { stdout } = await execFileAsync(
-      'pgrep',
-      ['-f', 'electron-vite|apps/desktop/dist/main|purechat-desktop|app-path=.*/apps/desktop'],
-      { timeout: 2_000 }
-    )
-    return [
-      ...new Set(
-        stdout
-          .trim()
-          .split('\n')
-          .map((line) => Number(line))
-          .filter((pid) => Number.isInteger(pid) && pid > 0 && pid !== process.pid)
-      ),
-    ]
+    const { stdout } = await execFileAsync('ps', ['-axww', '-o', 'pid=,ppid=,pgid=,state=,command='], {
+      env: { ...process.env, COLUMNS: '512' },
+      timeout: 3_000,
+    })
+    return parsePsTable(stdout)
   } catch {
     return []
   }
 }
 
-/** 清掉上次未退出的 Electron / electron-vite，避免单实例锁与 write EIO 弹窗 */
+const inspectDesktopProcesses = async () => {
+  const rows = await listProcessRows()
+  const selfRow = rows.find((row) => row.pid === process.pid)
+  const protectedPids = collectAncestorPids(rows, process.pid)
+  if (selfRow) protectedPids.add(selfRow.pgid)
+  protectedPids.add(process.pid)
+  if (process.ppid) protectedPids.add(process.ppid)
+  return {
+    protectedPids,
+    stale: collectStaleDesktopProcesses(rows, { protectedPids, rootDir }),
+  }
+}
+
+/** 仅 Electron 应用进程（不含 electron-vite），用于判断窗口是否真正拉起 */
+const listElectronAppPids = async (): Promise<number[]> => {
+  const rows = await listProcessRows()
+  return rows
+    .filter((row) => !row.state.startsWith('Z') && isElectronAppCommand(row.command, rootDir))
+    .map((row) => row.pid)
+}
+
+const formatStaleProcess = (row: ProcessRow) => `${row.pid} (${row.command.slice(0, 80)})`
+
+const clearElectronSingletonLocks = async () => {
+  if (isWindows) return
+
+  const home = homedir()
+  const candidates = [
+    path.join(home, 'Library/Application Support/purechat-desktop'),
+    path.join(home, 'Library/Application Support/Electron'),
+  ]
+
+  for (const dir of candidates) {
+    await Promise.all(
+      ELECTRON_SINGLETON_NAMES.map((name) => rm(path.join(dir, name), { force: true }).catch(() => undefined))
+    )
+  }
+}
+
+const signalGroup = (pgid: number, signal: NodeJS.Signals) => {
+  try {
+    process.kill(-pgid, signal)
+  } catch {
+    // Already exited, or this process is not allowed to signal the group.
+  }
+}
+
+/**
+ * 清掉上次未退出的 Electron / electron-vite。
+ * 必须 SIGKILL 整棵进程组：SIGTERM 会给 electron-vite 机会重启主进程，留下白屏旧窗。
+ */
 const killStaleDesktopProcesses = async () => {
-  const pids = await listStaleDesktopPids()
-  if (pids.length === 0) return
+  let logged = false
 
-  console.log(`Stopping leftover desktop processes (PID ${pids.join(', ')})`)
-  for (const pid of pids) signalPid(pid, 'SIGTERM')
-  await wait(500)
+  for (let round = 0; round < STALE_KILL_ROUNDS; round++) {
+    const { protectedPids, stale } = await inspectDesktopProcesses()
+    if (stale.length === 0) return
 
-  const remaining = await listStaleDesktopPids()
-  for (const pid of remaining) signalPid(pid, 'SIGKILL')
-  if (remaining.length > 0) await wait(200)
+    if (!logged) {
+      console.log(`Stopping leftover desktop processes (PID ${stale.map((row) => row.pid).join(', ')})`)
+      logged = true
+    }
+
+    const { pgids, pids } = collectKillTargets(stale, protectedPids)
+    for (const pgid of pgids) signalGroup(pgid, 'SIGKILL')
+    for (const pid of pids) signalPid(pid, 'SIGKILL')
+    await wait(STALE_KILL_INTERVAL_MS)
+  }
+
+  const remaining = (await inspectDesktopProcesses()).stale
+  if (remaining.length === 0) return
+
+  throw new Error(`无法结束残留桌面进程: ${remaining.map(formatStaleProcess).join('; ')}`)
+}
+
+/** 重启前确保旧 Electron 与 renderer 端口都已退出，释放单实例锁 */
+const prepareCleanDesktopStart = async () => {
+  await killStaleDesktopProcesses()
+  await freeRendererPort(rendererPort)
+  await clearElectronSingletonLocks()
+
+  const portDeadline = Date.now() + PORT_FREE_WAIT_MS
+  while (Date.now() < portDeadline && (await isPortOpen(rendererPort))) {
+    await freeRendererPort(rendererPort)
+    await wait(200)
+  }
+
+  await wait(150)
+}
+
+const waitForElectronApp = async (timeoutMs: number, existingPids: ReadonlySet<number>) => {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    const pids = await listElectronAppPids()
+    if (pids.some((pid) => !existingPids.has(pid))) return true
+    await wait(300)
+  }
+  return false
+}
+
+const startElectronDev = async (
+  track: (child: ChildProcess | undefined) => void,
+  isCancelled: () => boolean
+) => {
+  const assertRunning = (child?: ChildProcess) => {
+    if (!isCancelled()) return
+    if (child) stopProcess(child, 'SIGKILL')
+    track(undefined)
+    throw new Error('Desktop startup cancelled')
+  }
+
+  for (let attempt = 1; attempt <= MAX_ELECTRON_START_ATTEMPTS; attempt++) {
+    assertRunning()
+    if (attempt > 1) {
+      console.log(`Retrying Electron desktop start (attempt ${attempt}/${MAX_ELECTRON_START_ATTEMPTS})...`)
+      await prepareCleanDesktopStart()
+      assertRunning()
+    }
+
+    const existingAppPids = new Set(await listElectronAppPids())
+    console.log(`Starting Electron renderer on http://127.0.0.1:${rendererPort}`)
+    const child = spawnProcess('pnpm', ['--dir', 'apps/desktop', 'dev'])
+    assertRunning(child)
+    track(child)
+
+    const result = await Promise.race([
+      waitForExit(child).then((code) => ({ kind: 'exit' as const, code })),
+      waitForPort(rendererPort, ELECTRON_READY_WAIT_MS)
+        .then(async () => {
+          const ready = await waitForElectronApp(ELECTRON_READY_WAIT_MS, existingAppPids)
+          return ready ? ({ kind: 'ready' as const } as const) : ({ kind: 'no-app' as const } as const)
+        })
+        .catch(() => ({ kind: 'no-renderer' as const })),
+    ])
+
+    assertRunning(child)
+    if (result.kind === 'ready') return child
+
+    const reason =
+      result.kind === 'exit'
+        ? `process exited (code ${result.code})`
+        : result.kind === 'no-renderer'
+          ? `renderer port ${rendererPort} did not open`
+          : 'Electron app process did not appear (possible single-instance lock)'
+
+    console.warn(
+      `Electron desktop start failed on attempt ${attempt}: ${reason}. ` +
+        'Usually caused by a leftover process or lock after task restart.'
+    )
+    stopProcess(child, 'SIGKILL')
+    track(undefined)
+    await killStaleDesktopProcesses()
+    await clearElectronSingletonLocks()
+    await wait(300)
+
+    if (attempt === MAX_ELECTRON_START_ATTEMPTS) {
+      throw new Error('Electron desktop failed to stay running after restart cleanup')
+    }
+  }
+
+  throw new Error('Electron desktop failed to start')
 }
 
 const main = async () => {
@@ -198,23 +360,36 @@ const main = async () => {
   let electronProcess: ChildProcess | undefined
   let shuttingDown = false
 
-  const cleanup = () => {
+  const cleanup = async () => {
     if (shuttingDown) return
     shuttingDown = true
-    stopProcess(electronProcess)
+    // 只结束本会话拉起的进程组。不要全局 pgrep，否则任务重启时会误杀新实例。
+    stopProcess(electronProcess, 'SIGKILL')
     stopProcess(nextProcess)
+
+    await Promise.race([
+      Promise.all([
+        electronProcess ? waitForExit(electronProcess) : Promise.resolve(0),
+        nextProcess ? waitForExit(nextProcess) : Promise.resolve(0),
+      ]),
+      wait(SHUTDOWN_WAIT_MS),
+    ])
+
+    stopProcess(electronProcess, 'SIGKILL')
+    stopProcess(nextProcess, 'SIGKILL')
   }
 
-  process.once('SIGINT', () => {
-    cleanup()
-  })
-  process.once('SIGTERM', () => {
-    cleanup()
-  })
+  const handleSignal = () => {
+    void cleanup().finally(() => {
+      process.exit(0)
+    })
+  }
+
+  process.once('SIGINT', handleSignal)
+  process.once('SIGTERM', handleSignal)
 
   try {
-    await killStaleDesktopProcesses()
-    await freeRendererPort(rendererPort)
+    await prepareCleanDesktopStart()
 
     if (await isPortOpen(nextPort)) {
       console.log(`Reusing shared Next.js BFF at http://localhost:${nextPort}`)
@@ -224,16 +399,17 @@ const main = async () => {
     }
     await waitForPort(nextPort)
 
-    console.log(`Starting Electron renderer on http://127.0.0.1:${rendererPort}`)
-    electronProcess = spawnProcess('pnpm', ['--dir', 'apps/desktop', 'dev'])
+    electronProcess = await startElectronDev((child) => {
+      electronProcess = child
+    }, () => shuttingDown)
 
     const exitPromises = [waitForExit(electronProcess)]
     if (nextProcess) exitPromises.push(waitForExit(nextProcess))
     const exitCode = await Promise.race(exitPromises)
-    cleanup()
+    await cleanup()
     process.exitCode = exitCode
   } catch (error) {
-    cleanup()
+    await cleanup()
     console.error(error instanceof Error ? error.message : error)
     process.exitCode = 1
   }

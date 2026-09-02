@@ -1,5 +1,6 @@
 export * from './encrypt'
 export * from './agentBridge'
 export * from './chatBot'
+export * from './commands'
 export * from './gateway'
 export * from './webhookAuth'

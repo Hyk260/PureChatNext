@@ -4,9 +4,16 @@ import { BrowserWindow, shell } from 'electron'
 
 import { isSafeExternalUrl, isTrustedRendererUrl } from '../security/RendererSecurity'
 import type { DesktopConfigService, DesktopWindowState } from '../services/DesktopConfigService'
+import {
+  getRendererReloadDelayMs,
+  MAX_RENDERER_RELOAD_ATTEMPTS,
+  shouldRetryRendererLoad,
+} from './rendererLoadRetry'
 
 export class WindowManager {
   private window: BrowserWindow | null = null
+  private rendererReloadAttempts = 0
+  private rendererReloadTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor(
     private readonly rendererUrl: string,
@@ -98,7 +105,35 @@ export class WindowManager {
       if (!isTrustedRendererUrl(url, this.rendererUrl)) event.preventDefault()
     })
     window.on('closed', () => {
+      if (this.rendererReloadTimer) {
+        clearTimeout(this.rendererReloadTimer)
+        this.rendererReloadTimer = null
+      }
       if (this.window === window) this.window = null
+    })
+    window.webContents.on('did-finish-load', () => {
+      this.rendererReloadAttempts = 0
+    })
+    window.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      if (!isMainFrame || window.isDestroyed()) return
+      if (validatedURL && !isTrustedRendererUrl(validatedURL, this.rendererUrl)) return
+
+      if (!shouldRetryRendererLoad(errorCode, this.rendererReloadAttempts)) {
+        console.error('Renderer failed to load', errorCode, errorDescription, validatedURL)
+        if (!window.isVisible()) window.show()
+        return
+      }
+
+      this.rendererReloadAttempts += 1
+      const delayMs = getRendererReloadDelayMs(this.rendererReloadAttempts)
+      console.warn(
+        `Renderer load failed (${errorCode} ${errorDescription}); retry ${this.rendererReloadAttempts}/${MAX_RENDERER_RELOAD_ATTEMPTS} in ${delayMs}ms`
+      )
+      if (this.rendererReloadTimer) clearTimeout(this.rendererReloadTimer)
+      this.rendererReloadTimer = setTimeout(() => {
+        this.rendererReloadTimer = null
+        if (!window.isDestroyed()) void window.loadURL(this.rendererUrl)
+      }, delayMs)
     })
     window.once('ready-to-show', () => window.show())
     await window.loadURL(this.rendererUrl)

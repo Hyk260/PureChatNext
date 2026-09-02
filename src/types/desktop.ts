@@ -6,6 +6,27 @@ export interface DesktopAppInfo {
   version: string
 }
 
+export interface DesktopBuiltinTool {
+  description: string
+  id: string
+  name: string
+  version: string
+}
+
+export interface DesktopRuntimeTool {
+  available: boolean
+  description: string
+  id: string
+  name: string
+  path: string | null
+  version: string | null
+}
+
+export interface DesktopSystemTools {
+  builtin: DesktopBuiltinTool[]
+  runtime: DesktopRuntimeTool[]
+}
+
 export interface DesktopRemoteServer {
   url: string | null
 }
@@ -71,6 +92,7 @@ export interface DesktopApi {
   deleteProject: (id: string) => Promise<void>
   deleteSecret: (key: string) => Promise<void>
   getAppInfo: () => Promise<DesktopAppInfo>
+  getSystemTools: () => Promise<DesktopSystemTools>
   getRemoteServer: () => Promise<DesktopRemoteServer>
   listProjectEntries: (input: { projectId: string; relativePath?: string }) => Promise<DesktopProjectEntries>
   listProjects: () => Promise<DesktopProject[]>

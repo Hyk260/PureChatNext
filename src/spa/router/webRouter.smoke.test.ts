@@ -20,6 +20,7 @@ describe('webRouter.config smoke', () => {
       "path: 'settings'",
       "path: 'profile'",
       "path: 'appearance'",
+      "path: 'system-tools'",
       "path: 'provider'",
       "path: 'community'",
       "path: 'agent'",

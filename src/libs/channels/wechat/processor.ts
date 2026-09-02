@@ -8,10 +8,11 @@ import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
 import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import { createNanoId } from '@pure/utils'
 import type { WechatToolArtifact } from '@/server/chat/toolRegistry'
+import { runChannelCommand } from '../core/commands'
 import { generateWechatAgentReply } from './agentBridge'
 import type { WechatAgentReply } from './agentBridge'
 import { wechatModelSupportsVision } from './agentSupport'
-import { buildWechatWelcomeText, parseWechatCommand, WECHAT_HELP_TEXT } from './commands'
+import { buildWechatWelcomeText, WECHAT_HELP_TEXT } from './commands'
 import { decryptContextToken, decryptCredentials } from './encrypt'
 import { getWechatHistoryTokenBudget, trimWechatHistory } from './history'
 import { sendWithValidWechatEventLease } from './leaseGuard'
@@ -38,61 +39,36 @@ function splitText(text: string): string[] {
   return chunks.length ? chunks : ['（空回复）']
 }
 
-async function handleAgentsCommand(event: ChannelEventItem, argument: string) {
+async function handleCommand(event: ChannelEventItem): Promise<string> {
   const binding = await new ChannelBindingModel().findById(event.bindingId)
   if (!binding) throw new Error('Binding no longer exists')
-  const credentials = decryptCredentials(binding.credentials)
-  if (!credentials.userId || credentials.userId !== event.externalUserId) {
-    return '该指令仅限扫码授权的微信账号使用。'
-  }
-
   const eventModel = new ChannelEventModel()
   const session = await eventModel.getSession(event.sessionId)
   if (!session) throw new Error('Channel session not found')
-  const agents = await new AgentModel(binding.userId).listVisible()
 
-  if (!argument) {
-    const current = session.activeAgentId || binding.agentId
-    return [
-      '可用助手：',
-      ...agents.map((agent, index) => {
-        const marker = agent.id === current ? '（当前）' : ''
-        return `${index + 1}. ${agent.title} [${agent.id}]${marker}`
-      }),
-      '',
-      '发送 /agents <序号|agentId> 切换助手。',
-    ].join('\n')
-  }
-
-  const index = /^\d+$/.test(argument) ? Number(argument) - 1 : -1
-  const target = index >= 0 ? agents[index] : agents.find((agent) => agent.id === argument)
-  if (!target) return '未找到该助手。发送 /agents 查看列表。'
-  await eventModel.startNewConversation(event.sessionId, target.id, event.id)
-  abortActiveGeneration(event.bindingId, event.externalUserId)
-  return `已切换到「${target.title}」，并创建新对话。`
-}
-
-async function handleCommand(event: ChannelEventItem): Promise<string> {
-  const command = parseWechatCommand(event.content)
-  if (!command) return WECHAT_HELP_TEXT
-  const model = new ChannelEventModel()
-
-  switch (command.name) {
-    case 'help':
-      return WECHAT_HELP_TEXT
-    case 'new':
-      abortActiveGeneration(event.bindingId, event.externalUserId)
-      await model.startNewConversation(event.sessionId, undefined, event.id)
-      return '已创建新对话，后续消息不会使用旧对话上下文。'
-    case 'stop': {
-      const stopped = abortActiveGeneration(event.bindingId, event.externalUserId)
-      return stopped ? '已停止当前生成。' : '当前没有正在生成的回复。'
-    }
-    case 'agents':
-      return handleAgentsCommand(event, command.argument)
-    default:
-      return `未知指令 /${command.name}。\n\n${WECHAT_HELP_TEXT}`
-  }
+  const reply = await runChannelCommand(
+    event.content,
+    {
+      abortActiveGeneration: () => abortActiveGeneration(event.bindingId, event.externalUserId),
+      assertAgentsAllowed: async () => {
+        const credentials = decryptCredentials(binding.credentials)
+        if (!credentials.userId || credentials.userId !== event.externalUserId) {
+          return '该指令仅限扫码授权的微信账号使用。'
+        }
+        return null
+      },
+      getCurrentAgentId: async () => session.activeAgentId || binding.agentId,
+      listAgents: async () => {
+        const agents = await new AgentModel(binding.userId).listVisible()
+        return agents.map((agent) => ({ id: agent.id, title: agent.title }))
+      },
+      startNewConversation: async (agentId) => {
+        await eventModel.startNewConversation(event.sessionId, agentId, event.id)
+      },
+    },
+    { helpText: WECHAT_HELP_TEXT }
+  )
+  return reply ?? WECHAT_HELP_TEXT
 }
 
 export function abortActiveGeneration(bindingId: string, externalUserId: string): boolean {

@@ -109,9 +109,14 @@ export class DesktopConfigService {
 
   async write(config: DesktopConfig) {
     await fs.mkdir(this.userDataPath, { recursive: true })
-    const tempPath = `${this.configPath}.tmp`
+    const tempPath = path.join(this.userDataPath, `config.${randomUUID()}.tmp`)
     await fs.writeFile(tempPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8')
-    await fs.rename(tempPath, this.configPath)
+    try {
+      await fs.rename(tempPath, this.configPath)
+    } catch (error) {
+      await fs.unlink(tempPath).catch(() => undefined)
+      throw error
+    }
   }
 
   async setRemoteServer(value: string) {

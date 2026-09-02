@@ -7,10 +7,12 @@ import type {
   DesktopProject,
   DesktopProjectEntries,
   DesktopRemoteServer,
+  DesktopSystemTools,
 } from '../../../../../src/types/desktop'
 
 export interface DesktopIpcContractMap {
   'app.getInfo': { args: []; result: DesktopAppInfo }
+  'app.getSystemTools': { args: []; result: DesktopSystemTools }
   'config.getRemoteServer': { args: []; result: DesktopRemoteServer }
   'config.setRemoteServer': { args: [value: string]; result: DesktopRemoteServer }
   'storage.deleteSecret': { args: [key: string]; result: void }
@@ -38,7 +40,7 @@ export type DesktopIpcArgs<C extends DesktopIpcChannel> = DesktopIpcContractMap[
 export type DesktopIpcResult<C extends DesktopIpcChannel> = DesktopIpcContractMap[C]['result']
 
 export const DESKTOP_IPC_CHANNELS = {
-  app: { getInfo: 'app.getInfo' },
+  app: { getInfo: 'app.getInfo', getSystemTools: 'app.getSystemTools' },
   config: { getRemoteServer: 'config.getRemoteServer', setRemoteServer: 'config.setRemoteServer' },
   dialog: { chooseDirectory: 'dialog.chooseDirectory', chooseFile: 'dialog.chooseFile' },
   localSystem: { execute: 'localSystem.execute' },

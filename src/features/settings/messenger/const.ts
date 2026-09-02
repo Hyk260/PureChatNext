@@ -1,6 +1,9 @@
 import { PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
 import { formatDateTime } from '@pure/utils/client'
 
+import { CHANNEL_COMMAND_CATALOG } from '@/libs/channels/core/commands'
+import type { ChannelCommandCatalogItem } from '@/libs/channels/core/commands'
+
 export type MessengerPlatformId = 'slack' | 'telegram' | 'discord' | 'wechat' | 'qq'
 
 export const MESSENGER_PROVIDER_IDS = ['purechat', 'openai', 'deepseek'] as const
@@ -58,54 +61,12 @@ export const MESSENGER_PLATFORMS: readonly MessengerPlatformMeta[] = [
 export const getMessengerPlatform = (id: string): MessengerPlatformMeta | undefined =>
   MESSENGER_PLATFORMS.find((p) => p.id === id)
 
-export type MessengerCommandItem = {
-  command: string
-  description: string
-  icon: 'agents' | 'new' | 'stop' | 'feedback' | 'help'
-}
+export type MessengerCommandItem = ChannelCommandCatalogItem
 
-export const QQ_COMMANDS: readonly MessengerCommandItem[] = [
-  {
-    command: '/agents',
-    description: '列出你的 Agent 并切换当前激活 Agent',
-    icon: 'agents',
-  },
-  {
-    command: '/new',
-    description: '开启新对话',
-    icon: 'new',
-  },
-  {
-    command: '/stop',
-    description: '停止当前执行',
-    icon: 'stop',
-  },
-  {
-    command: '/help',
-    description: '在机器人中查看全部指令',
-    icon: 'help',
-  },
-] as const
+/** QQ / 微信共用同一套指令目录（与网关 runChannelCommand 对齐）。 */
+export const MESSENGER_COMMANDS: readonly MessengerCommandItem[] = CHANNEL_COMMAND_CATALOG
 
-export const WECHAT_COMMANDS: readonly MessengerCommandItem[] = [
-  {
-    command: '/agents',
-    description: '列出你的 Agent 并切换当前激活 Agent',
-    icon: 'agents',
-  },
-  {
-    command: '/new',
-    description: '开启新对话',
-    icon: 'new',
-  },
-  {
-    command: '/stop',
-    description: '停止当前执行',
-    icon: 'stop',
-  },
-  {
-    command: '/help（/h）',
-    description: '在机器人中查看全部指令',
-    icon: 'help',
-  },
-] as const
+/** @deprecated 使用 MESSENGER_COMMANDS */
+export const QQ_COMMANDS = MESSENGER_COMMANDS
+/** @deprecated 使用 MESSENGER_COMMANDS */
+export const WECHAT_COMMANDS = MESSENGER_COMMANDS

@@ -304,7 +304,7 @@ const MessengerQQPage = memo(() => {
         {renderQqStatusBanner({ connected, gatewaySupported, message, showConnect, status: status ?? null })}
       </Flex>
 
-      <MessengerCommandList />
+      <MessengerCommandList platform='qq' />
     </MessengerDetailShell>
   )
 })

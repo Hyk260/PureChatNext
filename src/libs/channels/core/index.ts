@@ -5,6 +5,20 @@ export {
   ChatBotRegistry,
 } from './chatBotRegistry'
 export {
+  buildChannelHelpText,
+  buildChannelWelcomeText,
+  CHANNEL_COMMAND_CATALOG,
+  parseChannelCommand,
+  runChannelCommand,
+} from './commands'
+export type {
+  ChannelCommandAgent,
+  ChannelCommandCatalogItem,
+  ChannelCommandEffects,
+  ChannelCommandName,
+  ParsedChannelCommand,
+} from './commands'
+export {
   CHANNEL_PROVIDER_IDS,
   channelProviderUnavailableReason,
   defaultChannelModel,

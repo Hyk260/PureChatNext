@@ -370,7 +370,7 @@ const MessengerWeChatPage = memo(() => {
         </Flex>
       )}
 
-      <MessengerCommandList />
+      <MessengerCommandList platform='wechat' />
     </MessengerDetailShell>
   )
 })

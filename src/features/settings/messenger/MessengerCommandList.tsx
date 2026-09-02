@@ -7,8 +7,8 @@ import { BotIcon, CircleStopIcon, HelpCircleIcon, MegaphoneIcon, SquarePlusIcon 
 import type { LucideIcon } from 'lucide-react'
 import { Fragment, memo } from 'react'
 
-import { WECHAT_COMMANDS } from './const'
-import type { MessengerCommandItem } from './const'
+import { MESSENGER_COMMANDS } from './const'
+import type { MessengerCommandItem, MessengerPlatformId } from './const'
 
 const styles = createStaticStyles(({ css }) => ({
   icon: css`
@@ -36,18 +36,29 @@ const COMMAND_ICONS: Record<MessengerCommandItem['icon'], LucideIcon> = {
   stop: CircleStopIcon,
 }
 
-const MessengerCommandList = memo(() => {
+const PLATFORM_HINT: Partial<Record<MessengerPlatformId, string>> = {
+  qq: '在与机器人的私信或群 @ 中发送以下指令。',
+  wechat: '在与机器人的私信中发送以下指令。',
+}
+
+type MessengerCommandListProps = {
+  platform?: MessengerPlatformId
+}
+
+const MessengerCommandList = memo(({ platform }: MessengerCommandListProps) => {
+  const hint = (platform && PLATFORM_HINT[platform]) || '在与机器人的私信中发送以下指令。'
+
   return (
     <Flex className='flex-col gap-2 w-full'>
       <Text strong style={{ fontSize: 15 }}>
         指令
       </Text>
       <Text type='secondary' style={{ fontSize: 13 }}>
-        在与机器人的私信中发送以下指令。
+        {hint}
       </Text>
 
       <Block className={styles.list} variant='outlined'>
-        {WECHAT_COMMANDS.map((item, index) => (
+        {MESSENGER_COMMANDS.map((item, index) => (
           <Fragment key={item.command}>
             {index > 0 && <Divider style={{ margin: 0 }} />}
             <Flex className='flex-row items-center gap-3 py-3.5 px-4'>

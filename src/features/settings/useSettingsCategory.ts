@@ -19,8 +19,11 @@ import {
   MessageCircleIcon,
   PaletteIcon,
   Sparkles,
+  Wrench,
 } from 'lucide-react'
 import { useMemo } from 'react'
+
+import { getDesktopApi } from '@/types/desktop'
 
 export enum SettingsGroupKey {
   Agent = 'agent',
@@ -46,6 +49,7 @@ export enum SettingsTab {
   Skill = 'skill',
   Stats = 'stats',
   Storage = 'storage',
+  SystemTools = 'system-tools',
   Usage = 'usage',
 }
 
@@ -68,6 +72,7 @@ export const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
   [SettingsTab.Skill]: '技能',
   [SettingsTab.Stats]: '数据统计',
   [SettingsTab.Storage]: '数据存储',
+  [SettingsTab.SystemTools]: '系统工具',
   [SettingsTab.Usage]: '用量',
 }
 
@@ -109,6 +114,8 @@ export const SETTINGS_EMPTY_TABS = [
 ] as const
 
 export function useSettingsCategory(): SettingsCategoryGroup[] {
+  const isDesktop = Boolean(getDesktopApi())
+
   return useMemo(
     () => [
       {
@@ -221,6 +228,16 @@ export function useSettingsCategory(): SettingsCategoryGroup[] {
           //   key: SettingsTab.Storage,
           //   label: '数据存储',
           // },
+          ...(isDesktop
+            ? [
+                {
+                  href: tabHref(SettingsTab.SystemTools),
+                  icon: Wrench,
+                  key: SettingsTab.SystemTools,
+                  label: '系统工具',
+                },
+              ]
+            : []),
           // {
           //   href: tabHref(SettingsTab.Advanced),
           //   icon: EllipsisIcon,
@@ -238,6 +255,6 @@ export function useSettingsCategory(): SettingsCategoryGroup[] {
         title: '系统',
       },
     ],
-    []
+    [isDesktop]
   )
 }

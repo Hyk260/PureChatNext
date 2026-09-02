@@ -20,9 +20,6 @@ export const SSO_PROVIDER_LABELS: Record<string, string> = {
   wechat: '微信',
 }
 
-/** SSO providers shown on sign-in UI (GitHub + WeChat only). */
-export const AUTH_UI_SSO_PROVIDERS = ['github', 'wechat'] as const
-
 /** Email OTP 过期时间（秒），与 Better Auth emailOTP 插件配置保持一致 */
 export const OTP_EXPIRES_IN = 300
 

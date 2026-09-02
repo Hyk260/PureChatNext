@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import { message } from '@/components/AntdStaticMethods'
 
 import {
-  AUTH_UI_SSO_PROVIDERS,
   BUILTIN_BETTER_AUTH_PROVIDERS,
   normalizeLoginIdentifier,
 } from '@/libs/better-auth/shared'
@@ -245,14 +244,13 @@ export const useSignIn = () => {
     }
   }
 
-  const uiProviders = oAuthSSOProviders.filter((p) => (AUTH_UI_SSO_PROVIDERS as readonly string[]).includes(p))
   const sortedProviders = lastAuthProvider
-    ? [...uiProviders].sort((a, b) => {
+    ? [...oAuthSSOProviders].sort((a, b) => {
         if (a === lastAuthProvider) return -1
         if (b === lastAuthProvider) return 1
         return 0
       })
-    : uiProviders
+    : oAuthSSOProviders
 
   return {
     accountLabel,

@@ -90,6 +90,13 @@ export const updateTopic = async (id: string, patch: TopicUpdate): Promise<Local
 
 export const renameTopic = async (id: string, title: string): Promise<LocalChatTopic> => updateTopic(id, { title })
 
+export const createTopicShare = async (topicId: string): Promise<{ shareId: string }> => {
+  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(topicId)}/share`, { method: 'POST' })
+  if (!res.ok) throw new Error(`createTopicShare failed: ${res.status}`)
+
+  return (await res.json()) as { shareId: string }
+}
+
 export const autoRenameTopic = async (
   id: string,
   { apiKey, baseURL, model, provider }: AutoRenameTopicConfig

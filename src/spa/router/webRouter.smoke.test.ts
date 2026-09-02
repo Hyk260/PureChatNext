@@ -26,6 +26,7 @@ describe('webRouter.config smoke', () => {
       "path: 'agent'",
       "path: 'resources'",
       "path: 'library/:id'",
+      "path: 'share/t/:id'",
       "path: '*'",
     ]
 

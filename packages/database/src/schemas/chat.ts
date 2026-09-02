@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import { boolean, check, index, jsonb, pgTable, text, uniqueIndex, varchar } from 'drizzle-orm/pg-core'
 
 import type { ChatMessageMetadata, ChatPermissionMode } from '@pure/types'
+import { createNanoId } from '@pure/utils'
 
 import { idGenerator } from '../utils/idGenerator'
 import { timestamptz, timestamps } from './_helpers'
@@ -36,6 +37,31 @@ export const chatTopics = pgTable(
 
 export type NewChatTopic = typeof chatTopics.$inferInsert
 export type ChatTopicItem = typeof chatTopics.$inferSelect
+
+/** 话题公开分享记录。每个话题最多保留一个分享链接。 */
+export const chatTopicShares = pgTable(
+  'chat_topic_shares',
+  {
+    id: text('id')
+      .$defaultFn(() => createNanoId(8)())
+      .primaryKey(),
+    topicId: text('topic_id')
+      .references(() => chatTopics.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    visibility: text('visibility').notNull().default('link'),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('chat_topic_shares_topic_id_unique').on(t.topicId),
+    index('chat_topic_shares_user_id_idx').on(t.userId),
+  ]
+)
+
+export type NewChatTopicShare = typeof chatTopicShares.$inferInsert
+export type ChatTopicShareItem = typeof chatTopicShares.$inferSelect
 
 export const chatMessages = pgTable(
   'chat_messages',

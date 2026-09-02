@@ -18,6 +18,7 @@ import { memo, useCallback, useMemo, useState } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
+import { createTopicShare } from '@/features/chat/chatApi'
 import type { LocalChatTopic } from '@/features/chat/types'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -135,8 +136,9 @@ const ChatHeader = memo<Props>(
 
     const handleShare = useCallback(async () => {
       if (!topic) return
-      const url = window.location.href
       try {
+        const { shareId } = await createTopicShare(topic.id)
+        const url = `${window.location.origin}/share/t/${shareId}`
         await copyToClipboard(url)
         message.success('分享链接已复制')
       } catch (error) {

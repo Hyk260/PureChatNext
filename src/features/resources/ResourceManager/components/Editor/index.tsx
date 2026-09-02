@@ -21,7 +21,7 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   header: css`
     flex: none;
-    min-height: 44px;
+    min-height: 40px;
     padding: 0px 16px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
   `,

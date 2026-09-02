@@ -51,7 +51,7 @@ export class FreePlanLimitError extends Error {
 
 const clampRemaining = (grant: number, used: number) => Math.max(0, grant - used)
 
-const newLedgerId = () => createNanoId(21)()
+const newLedgerId = createNanoId(21)
 
 /**
  * 免费积分账本：懒发放 / 懒重置、预检、原子扣减 + messageId 幂等。

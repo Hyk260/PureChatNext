@@ -7,6 +7,7 @@ import type { LocalChatTopic } from '@/features/chat/types'
 const mocks = vi.hoisted(() => ({
   confirm: vi.fn(),
   copyToClipboard: vi.fn().mockResolvedValue(undefined),
+  createTopicShare: vi.fn().mockResolvedValue({ shareId: 'share-1' }),
   error: vi.fn(),
   success: vi.fn(),
   toggleWideScreen: vi.fn(),
@@ -98,6 +99,8 @@ vi.mock('@/features/chat/store/useChatUiStore', () => ({
     }),
 }))
 
+vi.mock('@/features/chat/chatApi', () => ({ createTopicShare: mocks.createTopicShare }))
+
 import ChatHeader from '../ChatHeader'
 
 const topic: LocalChatTopic = {
@@ -115,6 +118,7 @@ const renderHeader = (overrides?: Partial<React.ComponentProps<typeof ChatHeader
   const props: React.ComponentProps<typeof ChatHeader> = {
     autoRenameDisabled: false,
     autoRenaming: false,
+    hasMessages: false,
     title: overrides?.topic?.title ?? '新话题',
     topic: null,
     onAutoRename: vi.fn(),
@@ -163,6 +167,16 @@ describe('ChatHeader menu', () => {
     expect(mocks.confirm).toHaveBeenCalledWith(expect.objectContaining({ title: '删除该话题？' }))
     await mocks.confirm.mock.calls[0][0].onOk()
     expect(props.onDelete).toHaveBeenCalledWith(topic.id)
+  })
+
+  it('creates and copies a topic share link', async () => {
+    renderHeader({ hasMessages: true, topic, title: topic.title })
+
+    fireEvent.click(screen.getByRole('button', { name: '分享' }))
+
+    await waitFor(() => expect(mocks.createTopicShare).toHaveBeenCalledWith(topic.id))
+    expect(mocks.copyToClipboard).toHaveBeenCalledWith(`${window.location.origin}/share/t/share-1`)
+    expect(mocks.success).toHaveBeenCalledWith('分享链接已复制')
   })
 
   it('renames from the modal and disables smart rename while busy', async () => {

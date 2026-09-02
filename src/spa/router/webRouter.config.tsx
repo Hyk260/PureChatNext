@@ -126,6 +126,10 @@ export const webRoutes: RouteObject[] = [
     ),
     path: 'terms',
   },
+  {
+    element: dynamicElement(() => import('@/routes/share/t/$id/page'), 'Share > Topic'),
+    path: 'share/t/:id',
+  },
 
   // —— Settings ——
   {

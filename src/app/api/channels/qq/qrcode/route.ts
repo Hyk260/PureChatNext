@@ -47,7 +47,7 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
     const model = body.model?.trim()
     const provider = body.provider?.trim()
     const config = model || provider ? { model, provider } : undefined
-    return NextResponse.json(await startQQQrSession(userId, agentId, config))
+    return NextResponse.json(await startQQQrSession(userId, agentId, config, request.signal))
   } catch {
     return jsonError('获取 QQ 二维码失败，请稍后重试', 502)
   }

@@ -9,7 +9,7 @@ vi.mock('@pure/database/models/channelBinding', () => ({
 vi.mock('@pure/database/models/channelEvent', () => ({ ChannelEventModel: class {} }))
 vi.mock('@/envs/serverDB', () => ({ serverDBEnv: { KEY_VAULTS_SECRET: 'poller-test-secret' } }))
 
-import { formatWechatInboundLog, rawMessageToEvent } from '../poller'
+import { formatWechatInboundLog, rawMessageToEvent } from '../webhook'
 
 const message = (patch: Partial<WechatRawMessage> = {}): WechatRawMessage => ({
   client_id: 'client-1',

@@ -142,8 +142,10 @@ const QQConnectContent = memo<QQConnectContentProps>(
       setError(undefined)
       setQrStatus(undefined)
       setSelectedAppId(undefined)
+      const controller = new AbortController()
+      abortRef.current = controller
       try {
-        const result = await startQQQrLogin({ agentId, model, provider })
+        const result = await startQQQrLogin({ agentId, model, provider }, controller.signal)
         if (attemptRef.current !== attempt) {
           void cancelQQQrLogin(result.sessionId)
           return

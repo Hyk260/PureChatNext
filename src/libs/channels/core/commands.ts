@@ -70,17 +70,53 @@ export function buildChannelHelpText(options?: { footer?: string }) {
   return lines.join('\n')
 }
 
+/** 首次绑定欢迎语默认开启；预留设置页通过 `enabled` 控制。 */
+export const DEFAULT_CHANNEL_FIRST_BIND_WELCOME_ENABLED = true
+
+/** 欢迎语与首条 Agent 回复之间的分隔符。 */
+export const CHANNEL_FIRST_BIND_WELCOME_SEPARATOR = '\n\n---\n\n'
+
+export type ChannelFirstBindWelcomeOptions = {
+  /** 是否启用首次绑定提示，默认 true。 */
+  enabled?: boolean
+  helpHint?: string
+}
+
+/** QQ / 微信共用的首次绑定欢迎语。 */
 export function buildChannelWelcomeText(
   agentTitle: string,
-  options?: { bindHint?: string; helpHint?: string }
-) {
-  const name = agentTitle.trim() || 'PureAI 助手'
-  return [
-    `你好，我是「${name}」。`,
-    options?.bindHint ?? '绑定已成功，可以直接发消息和我对话。',
-    '',
-    options?.helpHint ?? '发送 /h 查看全部指令。',
-  ].join('\n')
+  options?: ChannelFirstBindWelcomeOptions
+): string | null {
+  if (options?.enabled === false) return null
+  const name = agentTitle.trim() || '助手'
+  return [`「${name}」已接入，直接发消息即可。`, options?.helpHint ?? '发送 /h 查看全部指令。'].join('\n')
+}
+
+export function prependChannelFirstBindWelcome(reply: string, welcome: string | null): string {
+  if (!welcome) return reply
+  return `${welcome}${CHANNEL_FIRST_BIND_WELCOME_SEPARATOR}${reply}`
+}
+
+/** 消费 pendingWelcome 并将欢迎语拼到首条出站回复前（iLink / QQ 均无法绑定时主动推送）。 */
+export async function applyChannelFirstBindWelcome(params: {
+  agentTitle: string
+  bindingId: string
+  clearPendingWelcome: (id: string) => Promise<{ id: string } | null>
+  enabled?: boolean
+  pendingWelcome: boolean
+  reply: string
+}): Promise<string> {
+  if (!params.pendingWelcome) return params.reply
+  const welcome = buildChannelWelcomeText(params.agentTitle, {
+    enabled: params.enabled ?? DEFAULT_CHANNEL_FIRST_BIND_WELCOME_ENABLED,
+  })
+  if (!welcome) {
+    await params.clearPendingWelcome(params.bindingId)
+    return params.reply
+  }
+  const cleared = await params.clearPendingWelcome(params.bindingId)
+  if (!cleared) return params.reply
+  return prependChannelFirstBindWelcome(params.reply, welcome)
 }
 
 export function parseChannelCommand(input: string): ParsedChannelCommand | null {

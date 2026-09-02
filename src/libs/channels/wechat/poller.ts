@@ -76,6 +76,3 @@ export async function pollWechatUpdates(binding: ChannelBindingItem, options: We
     }
   }
 }
-
-export { WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
-export { formatWechatInboundLog, rawMessageToEvent } from './webhook'

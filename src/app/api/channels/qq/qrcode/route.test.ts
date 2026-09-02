@@ -67,20 +67,27 @@ describe('/api/channels/qq/qrcode', () => {
   })
 
   it('starts a QR session for a visible agent', async () => {
-    const response = await POST(postRequest({ agentId: 'agent-1' }))
+    const request = postRequest({ agentId: 'agent-1' })
+    const response = await POST(request)
 
     expect(response.status).toBe(200)
-    expect(mocks.startQQQrSession).toHaveBeenCalledWith('user-1', 'agent-1')
+    expect(mocks.startQQQrSession).toHaveBeenCalledWith('user-1', 'agent-1', undefined, request.signal)
   })
 
   it('forwards the selected channel model into the QR session', async () => {
-    const response = await POST(postRequest({ agentId: 'agent-1', model: 'gpt-5.4-mini', provider: 'openai' }))
+    const request = postRequest({ agentId: 'agent-1', model: 'gpt-5.4-mini', provider: 'openai' })
+    const response = await POST(request)
 
     expect(response.status).toBe(200)
-    expect(mocks.startQQQrSession).toHaveBeenCalledWith('user-1', 'agent-1', {
-      model: 'gpt-5.4-mini',
-      provider: 'openai',
-    })
+    expect(mocks.startQQQrSession).toHaveBeenCalledWith(
+      'user-1',
+      'agent-1',
+      {
+        model: 'gpt-5.4-mini',
+        provider: 'openai',
+      },
+      request.signal
+    )
   })
 
   it('rejects QR login when the persistent gateway is unavailable', async () => {

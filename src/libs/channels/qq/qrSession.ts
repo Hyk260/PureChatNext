@@ -40,6 +40,14 @@ function getStore(): Map<string, QQQrSession> {
   return globalStore[STORE_KEY]
 }
 
+function abortError() {
+  return new DOMException('Aborted', 'AbortError')
+}
+
+function throwIfAborted(signal?: AbortSignal) {
+  if (signal?.aborted) throw abortError()
+}
+
 function disposeSession(session: QQQrSession, remove = true) {
   if (remove) getStore().delete(session.id)
   if (session.ttlTimer) clearTimeout(session.ttlTimer)
@@ -93,12 +101,11 @@ async function completeSingleCredential(session: QQQrSession, credential: QrConn
 export async function startQQQrSession(
   userId: string,
   agentId: string,
-  config?: { model?: string; provider?: string }
+  config?: { model?: string; provider?: string },
+  signal?: AbortSignal
 ) {
+  throwIfAborted(signal)
   cleanupExpiredSessions()
-  for (const session of getStore().values()) {
-    if (session.userId === userId) disposeSession(session)
-  }
 
   const session: QQQrSession = {
     agentId,
@@ -114,10 +121,23 @@ export async function startQQQrSession(
   session.ttlTimer = setTimeout(() => disposeSession(session), SESSION_TTL_MS)
   session.ttlTimer.unref?.()
 
+  let abortHandler: (() => void) | undefined
   const firstQr = new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('获取 QQ 二维码超时')), QR_START_TIMEOUT_MS)
     timeout.unref?.()
     let displayed = false
+    const onAbort = () => {
+      clearTimeout(timeout)
+      disposeSession(session)
+      reject(abortError())
+    }
+    abortHandler = onAbort
+
+    if (signal?.aborted) {
+      onAbort()
+      return
+    }
+    signal?.addEventListener('abort', onAbort, { once: true })
 
     session.stop = startQrConnect(
       {
@@ -131,6 +151,7 @@ export async function startQQQrSession(
           session.publicStatus = { message: 'QQ 扫码连接失败，请重试', status: 'failed' }
         },
         onQrDisplayed(url) {
+          if (!getStore().has(session.id)) return
           const previousVersion = session.publicStatus.status === 'waiting' ? session.publicStatus.qrVersion : 0
           session.publicStatus = { qrCodeUrl: url, qrVersion: previousVersion + 1, status: 'waiting' }
           if (!displayed) {
@@ -158,10 +179,13 @@ export async function startQQQrSession(
 
   try {
     await firstQr
+    throwIfAborted(signal)
     return { sessionId: session.id, ...session.publicStatus }
   } catch (error) {
     disposeSession(session)
     throw error
+  } finally {
+    if (abortHandler) signal?.removeEventListener('abort', abortHandler)
   }
 }
 

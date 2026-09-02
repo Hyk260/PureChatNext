@@ -8,11 +8,11 @@ import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
 import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import { createNanoId } from '@pure/utils'
 import type { WechatToolArtifact } from '@/server/chat/toolRegistry'
-import { runChannelCommand } from '../core/commands'
+import { applyChannelFirstBindWelcome, runChannelCommand } from '../core/commands'
 import { generateWechatAgentReply } from './agentBridge'
 import type { WechatAgentReply } from './agentBridge'
 import { wechatModelSupportsVision } from './agentSupport'
-import { buildWechatWelcomeText, WECHAT_HELP_TEXT } from './commands'
+import { WECHAT_HELP_TEXT } from './commands'
 import { decryptContextToken, decryptCredentials } from './encrypt'
 import { getWechatHistoryTokenBudget, trimWechatHistory } from './history'
 import { sendWithValidWechatEventLease } from './leaseGuard'
@@ -221,54 +221,29 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
   }
 }
 
-/** 扫码绑定后首次具备 context_token 时发送欢迎语（iLink 无法在绑定时主动推送）。 */
-async function maybeSendPendingWelcome(params: {
-  api: WechatApiClient
-  binding: NonNullable<Awaited<ReturnType<ChannelBindingModel['findById']>>>
-  contextToken: string
-  event: ChannelEventItem
-  owner: string
-}) {
-  if (!params.binding.pendingWelcome) return
-  // 先 CAS 清除，避免并发事件或发送失败重试导致重复欢迎。
-  const cleared = await new ChannelBindingModel().clearPendingWelcome(params.binding.id)
-  if (!cleared) return
-
-  const agent = await new AgentModel(params.binding.userId).findVisibleById(params.binding.agentId)
-  const welcome = buildWechatWelcomeText(agent?.title ?? '助手')
-  const model = new ChannelEventModel()
-  try {
-    for (const chunk of splitText(welcome)) {
-      await sendWithValidWechatEventLease({
-        eventId: params.event.id,
-        hasValidLease: model.hasValidLease,
-        owner: params.owner,
-        send: () =>
-          params.api.sendItem(
-            params.event.externalUserId,
-            { text_item: { text: chunk }, type: MessageItemType.TEXT },
-            params.contextToken
-          ),
-      })
-    }
-    log('sent welcome binding=%s agent=%s', params.binding.id, params.binding.agentId)
-  } catch (error) {
-    log('welcome send failed binding=%s: %O', params.binding.id, error)
-    throw error
-  }
-}
-
 async function sendResponse(event: ChannelEventItem, owner: string, responseText: string) {
-  const binding = await new ChannelBindingModel().findById(event.bindingId)
+  const bindingModel = new ChannelBindingModel()
+  const binding = await bindingModel.findById(event.bindingId)
   if (!binding?.enabled) throw new Error('Binding is inactive')
   const credentials = decryptCredentials(binding.credentials)
   const contextToken = decryptContextToken(event.encryptedContextToken)
   const api = new WechatApiClient(credentials.botToken, credentials.botId)
-  // 首条出站前先发欢迎语；仅当 sentChunkCount=0 时发送，避免分片重试时重复欢迎。
-  if (event.sentChunkCount === 0) {
-    await maybeSendPendingWelcome({ api, binding, contextToken, event, owner })
+  let outboundText = responseText
+  // 首条出站时将欢迎语拼入同一条回复；iLink 无法在绑定时主动推送。
+  if (event.sentChunkCount === 0 && binding.pendingWelcome) {
+    const agent = await new AgentModel(binding.userId).findVisibleById(binding.agentId)
+    outboundText = await applyChannelFirstBindWelcome({
+      agentTitle: agent?.title ?? '助手',
+      bindingId: binding.id,
+      clearPendingWelcome: (id) => bindingModel.clearPendingWelcome(id),
+      pendingWelcome: binding.pendingWelcome,
+      reply: responseText,
+    })
+    if (outboundText !== responseText) {
+      log('prepended welcome binding=%s agent=%s', binding.id, binding.agentId)
+    }
   }
-  const chunks = splitText(responseText)
+  const chunks = splitText(outboundText)
   const model = new ChannelEventModel()
   for (let index = event.sentChunkCount; index < chunks.length; index += 1) {
     await sendWithValidWechatEventLease({

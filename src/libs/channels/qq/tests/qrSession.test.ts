@@ -3,20 +3,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   bindQQCredentials: vi.fn(),
-  callbacks: undefined as
-    | {
-        onFailure: (error: Error) => void
-        onQrDisplayed?: (url: string) => void
-        onSuccess: (credentials: Array<{ appId: string; appSecret: string }>) => void
-      }
-    | undefined,
+  callbacks: [] as Array<{
+    onFailure: (error: Error) => void
+    onQrDisplayed?: (url: string) => void
+    onSuccess: (credentials: Array<{ appId: string; appSecret: string }>) => void
+  }>,
+  autoDisplay: true,
   stop: vi.fn(),
 }))
 
 vi.mock('@tencent-connect/qqbot-connector', () => ({
   startQrConnect: vi.fn((callbacks) => {
-    mocks.callbacks = callbacks
-    queueMicrotask(() => callbacks.onQrDisplayed?.('https://q.qq.com/qr/one'))
+    mocks.callbacks.push(callbacks)
+    if (mocks.autoDisplay) queueMicrotask(() => callbacks.onQrDisplayed?.('https://q.qq.com/qr/one'))
     return mocks.stop
   }),
 }))
@@ -35,7 +34,8 @@ describe('QQ QR sessions', () => {
   beforeEach(() => {
     clearQQQrSessionsForTests()
     vi.clearAllMocks()
-    mocks.callbacks = undefined
+    mocks.callbacks = []
+    mocks.autoDisplay = true
     mocks.bindQQCredentials.mockResolvedValue({ applicationId: 'app-1', ok: true })
   })
 
@@ -47,12 +47,22 @@ describe('QQ QR sessions', () => {
     expect(cancelQQQrSession('user-2', started.sessionId)).toBe(false)
   })
 
-  it('cancels the previous session when the same user starts again', async () => {
-    const first = await startQQQrSession('user-1', 'agent-1')
-    const second = await startQQQrSession('user-1', 'agent-1')
+  it('aborts only the request-owned session when starts overlap', async () => {
+    mocks.autoDisplay = false
+    const controller = new AbortController()
+    const firstPromise = startQQQrSession('user-1', 'agent-1', undefined, controller.signal)
+    await vi.waitFor(() => expect(mocks.callbacks).toHaveLength(1))
+
+    const secondPromise = startQQQrSession('user-1', 'agent-1')
+    await vi.waitFor(() => expect(mocks.callbacks).toHaveLength(2))
+
+    controller.abort()
+    await expect(firstPromise).rejects.toMatchObject({ name: 'AbortError' })
+
+    mocks.callbacks[1].onQrDisplayed?.('https://q.qq.com/qr/two')
+    const second = await secondPromise
 
     expect(mocks.stop).toHaveBeenCalledTimes(1)
-    expect(getQQQrSessionStatus('user-1', first.sessionId)).toBeUndefined()
     expect(getQQQrSessionStatus('user-1', second.sessionId)?.status).toBe('waiting')
   })
 
@@ -67,7 +77,7 @@ describe('QQ QR sessions', () => {
 
   it('automatically binds a single returned bot without exposing its secret', async () => {
     const started = await startQQQrSession('user-1', 'agent-1')
-    mocks.callbacks?.onSuccess([{ appId: 'app-1', appSecret: 'top-secret' }])
+    mocks.callbacks[0]?.onSuccess([{ appId: 'app-1', appSecret: 'top-secret' }])
     await vi.waitFor(() => expect(getQQQrSessionStatus('user-1', started.sessionId)?.status).toBe('connected'))
 
     expect(mocks.bindQQCredentials).toHaveBeenCalledWith({
@@ -82,7 +92,7 @@ describe('QQ QR sessions', () => {
 
   it('requires an explicit selection when multiple bots are returned', async () => {
     const started = await startQQQrSession('user-1', 'agent-1')
-    mocks.callbacks?.onSuccess([
+    mocks.callbacks[0]?.onSuccess([
       { appId: 'app-1', appSecret: 'secret-1' },
       { appId: 'app-2', appSecret: 'secret-2' },
     ])
@@ -95,7 +105,7 @@ describe('QQ QR sessions', () => {
 
   it('publishes a sanitized connector failure', async () => {
     const started = await startQQQrSession('user-1', 'agent-1')
-    mocks.callbacks?.onFailure(new Error('internal upstream detail'))
+    mocks.callbacks[0]?.onFailure(new Error('internal upstream detail'))
 
     expect(getQQQrSessionStatus('user-1', started.sessionId)).toEqual({
       message: 'QQ 扫码连接失败，请重试',

@@ -70,15 +70,19 @@ export async function bindQQ(params: {
   }
 }
 
-export async function startQQQrLogin(params: {
-  agentId: string
-  model?: string
-  provider?: QQProviderId
-}): Promise<QQQrStartResult> {
+export async function startQQQrLogin(
+  params: {
+    agentId: string
+    model?: string
+    provider?: QQProviderId
+  },
+  signal?: AbortSignal
+): Promise<QQQrStartResult> {
   const res = await apiFetch('/api/channels/qq/qrcode', {
     body: JSON.stringify(params),
     headers: { 'Content-Type': 'application/json' },
     method: 'POST',
+    signal,
   })
   if (!res.ok) throw await readApiError(res, `qrcode failed: ${res.status}`)
   return res.json() as Promise<QQQrStartResult>

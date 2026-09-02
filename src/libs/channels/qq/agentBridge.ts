@@ -1,6 +1,10 @@
 import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
+import { AgentModel } from '@pure/database/models/agent'
+import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
+
+import { applyChannelFirstBindWelcome } from '../core/commands'
 import { generateChannelAgentReply } from '../core/agentRuntime'
 import {
   beginQQGeneration,
@@ -12,6 +16,20 @@ import { formatQQInboundLog, resolveQQInboundKind } from './inboundLog'
 
 const log = debug('channel:qq:bridge')
 const inboundLog = debug('channel:qq:webhook')
+
+async function finalizeQQOutbound(params: { agentId: string; reply: string; userId: string }): Promise<string> {
+  const bindingModel = new ChannelBindingModel()
+  const binding = await bindingModel.findByUserAndPlatform(params.userId, QQ_PLATFORM)
+  if (!binding) return params.reply
+  const agent = await new AgentModel(params.userId).findVisibleById(params.agentId)
+  return applyChannelFirstBindWelcome({
+    agentTitle: agent?.title ?? '助手',
+    bindingId: binding.id,
+    clearPendingWelcome: (id) => bindingModel.clearPendingWelcome(id),
+    pendingWelcome: binding.pendingWelcome,
+    reply: params.reply,
+  })
+}
 
 /**
  * Generate a text reply using the bound agent (env-level provider keys or PureChat).
@@ -76,7 +94,7 @@ export async function handleQQMention(params: {
       userId,
     })
     if (commandReply) {
-      await thread.post({ markdown: commandReply })
+      await thread.post({ markdown: await finalizeQQOutbound({ agentId, reply: commandReply, userId }) })
       await flushQQChatInvalidation(applicationId).catch((error) => {
         log('invalidate after command failed app=%s: %O', applicationId, error)
       })
@@ -93,7 +111,7 @@ export async function handleQQMention(params: {
         userId,
         userText,
       })
-      await thread.post({ markdown: reply })
+      await thread.post({ markdown: await finalizeQQOutbound({ agentId, reply, userId }) })
     } finally {
       endQQGeneration(applicationId, externalUserId, abortController)
     }

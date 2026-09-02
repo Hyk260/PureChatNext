@@ -23,7 +23,7 @@ import {
 } from '@/features/chat/chatApi'
 import ChatInput from '@/features/chat/ChatInput'
 import ChatLayout from '@/features/chat/ChatLayout'
-import { getPendingChatPermissionMode } from '@/features/chat/chatLocalStorage'
+import { getPendingChatPermissionMode, setPendingChatProject } from '@/features/chat/chatLocalStorage'
 import ChatMessagesSkeleton from '@/features/chat/ChatMessagesSkeleton'
 import type { ChatViewActions } from '@/features/chat/ChatView'
 import ChatView from '@/features/chat/ChatView'
@@ -303,6 +303,19 @@ const ChatPage = memo(() => {
     pushChatHref(agentId)
   }, [activeTopicId, agentId, pushChatHref])
 
+  const handleNewTopicInProject = useCallback(
+    (projectName: string) => {
+      if (activeTopicId === null) {
+        setPendingChatProject({ name: projectName })
+        return
+      }
+      setPendingChatProject({ name: projectName })
+      setDraftPermissionMode(DEFAULT_CHAT_PERMISSION_MODE)
+      pushChatHref(agentId)
+    },
+    [activeTopicId, agentId, pushChatHref]
+  )
+
   const handleAgentSelect = useCallback(
     (agent: AgentListItem) => {
       setSelectedAgentId(agent.id)
@@ -523,6 +536,7 @@ const ChatPage = memo(() => {
   return (
     <ChatLayout
       busy={isBusy}
+      hasMessages={initialMessages.length > 0}
       left={
         <TopicSidebar
           activeTopicId={activeTopicId}
@@ -536,6 +550,7 @@ const ChatPage = memo(() => {
           onAutoRenameTopic={handleAutoRenameTopic}
           onFavoriteTopic={handleFavoriteTopic}
           onNewTopic={handleNewTopic}
+          onNewTopicInProject={handleNewTopicInProject}
           onProjectChange={handleProjectChange}
           onSelectTopic={handleSelectTopic}
           onRenameTopic={handleRenameTopic}

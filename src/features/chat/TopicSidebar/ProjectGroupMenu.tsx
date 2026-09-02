@@ -2,7 +2,7 @@
 
 import { ActionIcon, confirmModal, DropdownMenu, Icon } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
-import { FolderOpen, MoreHorizontal, Trash2 } from 'lucide-react'
+import { FolderOpen, MessageSquarePlus, MoreHorizontal, Trash2 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
@@ -10,12 +10,13 @@ import { getDesktopApi } from '@/types/desktop'
 
 type Props = {
   disabled?: boolean
+  onDeleteProject?: (projectName: string) => void | Promise<void>
+  onNewTopicInProject?: (projectName: string) => void
   projectName: string
   topicCount: number
-  onDeleteProject: (projectName: string) => void | Promise<void>
 }
 
-const ProjectGroupMenu = memo<Props>(({ disabled, projectName, topicCount, onDeleteProject }) => {
+const ProjectGroupMenu = memo<Props>(({ disabled, projectName, topicCount, onDeleteProject, onNewTopicInProject }) => {
   const { message } = useApp()
   const [open, setOpen] = useState(false)
   const isDesktop = Boolean(getDesktopApi())
@@ -54,6 +55,17 @@ const ProjectGroupMenu = memo<Props>(({ disabled, projectName, topicCount, onDel
 
   const items = useMemo<MenuProps['items']>(() => {
     const next: MenuProps['items'] = []
+    if (onNewTopicInProject) {
+      next.push({
+        icon: <Icon icon={MessageSquarePlus} />,
+        key: 'new-topic-in-project',
+        label: '在此项目中开启新话题',
+        onClick: () => {
+          setOpen(false)
+          onNewTopicInProject(projectName)
+        },
+      })
+    }
     if (isDesktop) {
       next.push({
         icon: <Icon icon={FolderOpen} />,
@@ -62,15 +74,17 @@ const ProjectGroupMenu = memo<Props>(({ disabled, projectName, topicCount, onDel
         onClick: () => void handleOpenFolder(),
       })
     }
-    next.push({
-      danger: true,
-      icon: <Icon icon={Trash2} />,
-      key: 'delete-project',
-      label: '删除整个项目',
-      onClick: handleDeleteProject,
-    })
+    if (onDeleteProject) {
+      next.push({
+        danger: true,
+        icon: <Icon icon={Trash2} />,
+        key: 'delete-project',
+        label: '删除整个项目',
+        onClick: handleDeleteProject,
+      })
+    }
     return next
-  }, [handleDeleteProject, handleOpenFolder, isDesktop])
+  }, [handleDeleteProject, handleOpenFolder, isDesktop, onDeleteProject, onNewTopicInProject, projectName])
 
   return (
     <span

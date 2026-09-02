@@ -9,7 +9,7 @@ export const PENDING_TOPIC_SEND_KEY = 'purechat:chat:v2:pending-topic-send'
 
 export type PendingChatProject = {
   name: string
-  rootPath: string
+  rootPath?: string
 }
 
 /** In-memory pending text for home → /chat handoff. */
@@ -60,13 +60,13 @@ export const getPendingChatPermissionMode = (): ChatPermissionMode => {
 }
 
 export const setPendingChatProject = (project: PendingChatProject | null): void => {
-  if (!project?.name.trim() || !project.rootPath.trim()) {
+  if (!project?.name.trim()) {
     sessionStg.remove(PENDING_CHAT_PROJECT_KEY)
     return
   }
   sessionStg.setString(
     PENDING_CHAT_PROJECT_KEY,
-    JSON.stringify({ name: project.name.trim(), rootPath: project.rootPath.trim() } satisfies PendingChatProject)
+    JSON.stringify({ name: project.name.trim(), rootPath: project.rootPath?.trim() } satisfies PendingChatProject)
   )
 }
 
@@ -77,9 +77,9 @@ export const claimPendingChatProject = (): PendingChatProject | null => {
   try {
     const parsed = JSON.parse(raw) as Partial<PendingChatProject>
     const name = typeof parsed.name === 'string' ? parsed.name.trim() : ''
-    const rootPath = typeof parsed.rootPath === 'string' ? parsed.rootPath.trim() : ''
-    if (!name || !rootPath) return null
-    return { name, rootPath }
+    const rootPath = typeof parsed.rootPath === 'string' ? parsed.rootPath.trim() : undefined
+    if (!name) return null
+    return { name, ...(rootPath ? { rootPath } : {}) }
   } catch {
     return null
   }

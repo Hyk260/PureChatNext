@@ -124,7 +124,7 @@ export function AboutSettingsContent() {
             <div className={styles.mark}>
               <PureChatMark size={28} />
             </div>
-            <Flex className='flex-col gap-1 min-w-[0px]'>
+            <Flex className='flex-col gap-1 min-w-0'>
               <Flex className='flex-row items-center gap-2'>
                 <Text className={styles.name}>{SITE_NAME}</Text>
                 <Tag size='small'>{VERSION_LABEL}</Tag>

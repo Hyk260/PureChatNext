@@ -91,7 +91,7 @@ const ModelRowContent = memo<ModelRowContentProps>(
     const card = getAiModel(provider as ModelProviderId, model)
 
     return (
-      <Flex className='flex-row items-center gap-2 min-w-[0px] w-full'>
+      <Flex className='flex-row items-center gap-2 min-w-0 w-full'>
         <ModelIcon model={model} size={20} />
         <Text ellipsis style={{ fontSize: 13, flex: 1, minWidth: 0 }}>
           {displayName}
@@ -290,7 +290,7 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
 
                   className={[styles.groupHeader, 'flex-between py-[12px_4px] px-[12px_8px]']}
                 >
-                  <Flex className='flex-row items-center gap-2 min-w-[0px]'>
+                  <Flex className='flex-row items-center gap-2 min-w-0'>
                     <ProviderIcon provider={item.provider.id} size={18} type='color' />
                     <Text ellipsis style={{ fontSize: 12 }}>
                       {item.provider.name}

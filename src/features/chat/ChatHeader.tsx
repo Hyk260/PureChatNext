@@ -9,6 +9,7 @@ import {
   PanelLeftOpen,
   PanelRightOpen,
   Pencil,
+  Share2,
   Sparkles,
   Star,
   Trash2,
@@ -74,6 +75,7 @@ const styles = createStaticStyles(({ css }) => ({
 type Props = {
   autoRenameDisabled: boolean
   autoRenaming: boolean
+  hasMessages: boolean
   title: string
   topic: LocalChatTopic | null
   onAutoRename: (id: string) => void | Promise<void>
@@ -83,7 +85,7 @@ type Props = {
 }
 
 const ChatHeader = memo<Props>(
-  ({ autoRenameDisabled, autoRenaming, title, topic, onAutoRename, onDelete, onFavorite, onRename }) => {
+  ({ autoRenameDisabled, autoRenaming, hasMessages, title, topic, onAutoRename, onDelete, onFavorite, onRename }) => {
     const { message } = useApp()
     const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
     const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
@@ -128,6 +130,18 @@ const ChatHeader = memo<Props>(
       } catch (error) {
         console.error('[chat] copy topic id failed', error)
         message.error('复制会话 ID 失败')
+      }
+    }, [message, topic])
+
+    const handleShare = useCallback(async () => {
+      if (!topic) return
+      const url = window.location.href
+      try {
+        await copyToClipboard(url)
+        message.success('分享链接已复制')
+      } catch (error) {
+        console.error('[chat] share failed', error)
+        message.error('复制分享链接失败')
       }
     }, [message, topic])
 
@@ -215,7 +229,7 @@ const ChatHeader = memo<Props>(
     return (
       <>
         <Flex className={[styles.header, 'flex-between']}>
-          <Flex className='flex-row items-center flex-1 gap-1 min-w-[0px] overflow-hidden'>
+          <Flex className='flex-row items-center flex-1 gap-1 min-w-0 overflow-hidden'>
             {leftCollapsed ? (
               <ActionIcon icon={PanelLeftOpen} size='small' title='展开话题栏' onClick={toggleLeftCollapsed} />
             ) : null}
@@ -234,6 +248,9 @@ const ChatHeader = memo<Props>(
           </Flex>
 
           <Flex className='flex-row items-center flex-none gap-0.5'>
+            {hasMessages && topic ? (
+              <ActionIcon icon={Share2} size='small' title='分享' onClick={handleShare} />
+            ) : null}
             {rightCollapsed ? (
               <ActionIcon icon={PanelRightOpen} size='small' title='展开工作面板' onClick={toggleRightCollapsed} />
             ) : null}

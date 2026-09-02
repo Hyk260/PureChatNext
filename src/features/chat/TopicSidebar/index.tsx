@@ -34,6 +34,7 @@ type Props = {
   onFavoriteTopic: (id: string, favorite: boolean) => void | Promise<void>
   onProjectChange: (id: string, projectName: string | null) => void | Promise<void>
   onDeleteProject?: (projectName: string) => void | Promise<void>
+  onNewTopicInProject?: (projectName: string) => void
 }
 
 const TopicSidebar = memo<Props>(
@@ -55,6 +56,7 @@ const TopicSidebar = memo<Props>(
     onFavoriteTopic,
     onProjectChange,
     onDeleteProject,
+    onNewTopicInProject,
   }) => {
     const router = useRouter()
     const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
@@ -88,11 +90,11 @@ const TopicSidebar = memo<Props>(
           onToggleCollapsed={toggleLeftCollapsed}
         />
         <Flex className='flex-col flex-1 gap-2 min-h-0'>
-          <div style={{ paddingInline: 12 }}>
+          <Flex className='px-2'>
             <Button block icon={<MessageSquarePlus size={16} />} type='fill' onClick={onNewTopic}>
               开启新话题
             </Button>
-          </div>
+          </Flex>
           <Scrollbar viewStyle={{ paddingInline: 12 }}>
             <Flex className='flex-col gap-2'>
               <Flex className='flex-between gap-1 min-h-[28px] px-2'>
@@ -135,6 +137,7 @@ const TopicSidebar = memo<Props>(
                 onDelete={onDeleteTopic}
                 onDeleteProject={onDeleteProject}
                 onFavorite={onFavoriteTopic}
+                onNewTopicInProject={onNewTopicInProject}
                 onProjectChange={onProjectChange}
                 onRename={onRenameTopic}
                 onSelect={onSelectTopic}

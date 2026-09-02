@@ -59,6 +59,7 @@ const styles = createStaticStyles(({ css }) => ({
 type Props = {
   autoRenamingTopicId: string | null
   busy: boolean
+  hasMessages: boolean
   left: ReactNode
   right: ReactNode
   topic: LocalChatTopic | null
@@ -74,6 +75,7 @@ const ChatLayout = memo<Props>(
   ({
     autoRenamingTopicId,
     busy,
+    hasMessages,
     left,
     right,
     topic,
@@ -95,10 +97,11 @@ const ChatLayout = memo<Props>(
         >
           <div style={{ height: '100%', width: LEFT_WIDTH }}>{left}</div>
         </aside>
-        <Flex className={[styles.main, 'flex-col h-full min-w-[0px]']}>
+        <Flex className={[styles.main, 'flex-col h-full min-w-0']}>
           <ChatHeader
             autoRenameDisabled={busy || autoRenamingTopicId !== null}
             autoRenaming={topic?.id === autoRenamingTopicId}
+            hasMessages={hasMessages}
             title={title}
             topic={topic}
             onAutoRename={onAutoRenameTopic}

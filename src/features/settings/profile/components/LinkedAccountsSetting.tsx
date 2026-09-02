@@ -168,7 +168,7 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
         ) : (
           oauthAccounts.map((account) => (
             <Flex className='flex-between ' key={account.id}>
-              <Flex className='flex-row items-center gap-1.5 min-w-[0px]' style={{ fontSize: 12 }}>
+              <Flex className='flex-row items-center gap-1.5 min-w-0' style={{ fontSize: 12 }}>
                 {AuthIcons(account.providerId, 16)}
                 <span>{getProviderLabel(account.providerId)}</span>
                 {userEmail ? (

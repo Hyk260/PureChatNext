@@ -15,12 +15,6 @@ const styles = createStaticStyles(({ css }) => ({
   empty: css`
     color: ${cssVar.colorTextQuaternary};
   `,
-  skeletonRow: css`
-    display: flex;
-    align-items: center;
-    height: 36px;
-    padding-inline: 10px;
-  `,
 }))
 
 const SKELETON_WIDTHS = [128, 164, 112, 148, 136, 156]
@@ -52,6 +46,7 @@ type Props = {
   onFavorite: (id: string, favorite: boolean) => void | Promise<void>
   onProjectChange: (id: string, projectName: string | null) => void | Promise<void>
   onDeleteProject?: (projectName: string) => void | Promise<void>
+  onNewTopicInProject?: (projectName: string) => void
 }
 
 const TopicList = memo<Props>(
@@ -72,6 +67,7 @@ const TopicList = memo<Props>(
     onFavorite,
     onProjectChange,
     onDeleteProject,
+    onNewTopicInProject,
   }) => {
     const [groupingNow] = useState(() => Date.now())
     const groups = useMemo(
@@ -100,9 +96,9 @@ const TopicList = memo<Props>(
       return (
         <Flex className='flex-col gap-px'>
           {SKELETON_WIDTHS.map((width) => (
-            <div className={styles.skeletonRow} key={width}>
+            <Flex className='items-center h-9 px-2.5' key={width}>
               <Skeleton.Block active height={16} width={width} />
-            </div>
+            </Flex>
           ))}
         </Flex>
       )
@@ -127,29 +123,30 @@ const TopicList = memo<Props>(
       <Accordion defaultExpandedKeys={groupIds} gap={2} key={`${groupMode}:${sortBy}:${groupIds.join('|')}`}>
         {groups.map((group) => {
           const projectName = group.id.startsWith('project:') ? group.id.slice('project:'.length) : null
-          const showProjectMenu = groupMode === 'byProject' && Boolean(projectName) && Boolean(onDeleteProject)
+          const showProjectMenu = groupMode === 'byProject' && Boolean(projectName) && (Boolean(onDeleteProject) || Boolean(onNewTopicInProject))
 
           return (
             <AccordionItem
+              action={
+                showProjectMenu && projectName ? (
+                  <ProjectGroupMenu
+                    projectName={projectName}
+                    topicCount={group.topics.length}
+                    onDeleteProject={onDeleteProject}
+                    onNewTopicInProject={onNewTopicInProject}
+                  />
+                ) : null
+              }
               itemKey={group.id}
               key={group.id}
               paddingBlock={4}
               paddingInline='8px 4px'
               title={
-                <Flex className='flex-row items-center gap-1 min-w-0 w-full'>
-                  <Flex className='flex-row items-center gap-1.5 min-w-0 flex-1'>
-                    {getGroupTitleIcon(group.id, groupMode)}
-                    <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
-                      {group.title}
-                    </Text>
-                  </Flex>
-                  {showProjectMenu && projectName ? (
-                    <ProjectGroupMenu
-                      projectName={projectName}
-                      topicCount={group.topics.length}
-                      onDeleteProject={onDeleteProject!}
-                    />
-                  ) : null}
+                <Flex className='flex-row items-center gap-1.5 min-w-0'>
+                  {getGroupTitleIcon(group.id, groupMode)}
+                  <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+                    {group.title}
+                  </Text>
                 </Flex>
               }
             >

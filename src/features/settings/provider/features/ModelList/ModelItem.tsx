@@ -107,7 +107,7 @@ const ModelItem = memo<ModelItemProps>(
           {showDragHandle ? <SortableList.DragHandle size='small' title='拖动排序' /> : null}
           <ModelIcon model={model.id} size={32} />
           <Flex className={[styles.meta, 'flex-col gap-1']}>
-            <Flex className='flex-row items-center gap-2 min-w-[0px]'>
+            <Flex className='flex-row items-center gap-2 min-w-0'>
               <Text ellipsis style={{ fontWeight: 500 }}>
                 {model.displayName}
               </Text>

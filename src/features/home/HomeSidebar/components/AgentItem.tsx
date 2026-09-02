@@ -162,7 +162,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
       <Center flex='none' height={28} width={28}>
         <Avatar avatar={agent.avatar} background={agent.backgroundColor ?? undefined} size={28} />
       </Center>
-      <Flex className='flex-col flex-1 min-w-[0px] overflow-hidden'>
+      <Flex className='flex-col flex-1 min-w-0 overflow-hidden'>
         <Text
           title={agent.title}
           style={{

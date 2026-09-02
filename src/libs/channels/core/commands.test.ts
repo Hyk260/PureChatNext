@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import type { ChannelCommandEffects } from './commands'
 import {
   buildChannelHelpText,
   buildChannelWelcomeText,
   CHANNEL_COMMAND_CATALOG,
   parseChannelCommand,
   runChannelCommand,
-  type ChannelCommandEffects,
 } from './commands'
 
 const createEffects = (overrides?: Partial<ChannelCommandEffects>): ChannelCommandEffects => ({

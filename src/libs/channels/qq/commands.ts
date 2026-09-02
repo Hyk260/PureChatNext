@@ -1,7 +1,8 @@
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 
-import { buildChannelHelpText, runChannelCommand, type ChannelCommandEffects } from '../core/commands'
+import type { ChannelCommandEffects } from '../core/commands'
+import { buildChannelHelpText, runChannelCommand } from '../core/commands'
 import { invalidateQQChat } from './chatBot'
 
 export const QQ_HELP_TEXT = buildChannelHelpText({

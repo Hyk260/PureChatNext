@@ -3,12 +3,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+import type { WorkPanelTabId } from '@/features/chat/WorkPanel/tabs'
 import {
   DEFAULT_WORK_PANEL_ACTIVE_TAB,
   DEFAULT_WORK_PANEL_OPEN_TABS,
   WORK_PANEL_TAB_BY_ID,
   isWorkPanelTabId,
-  type WorkPanelTabId,
 } from '@/features/chat/WorkPanel/tabs'
 import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
 import type { ChatLlmParams, ChatSearchMode, TopicGroupMode, TopicPageSize, TopicSortBy } from '@/features/chat/types'

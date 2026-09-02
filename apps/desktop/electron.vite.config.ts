@@ -2,7 +2,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { defineConfig } from 'electron-vite'
-import { loadEnv, type PluginOption } from 'vite'
+import type { PluginOption } from 'vite'
+import { loadEnv } from 'vite'
 
 import {
   createSharedRolldownOutput,

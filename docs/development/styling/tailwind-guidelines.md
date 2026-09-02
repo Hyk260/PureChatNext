@@ -91,7 +91,7 @@ const styles = createStaticStyles(({ css }) => ({
 <div className='flex-between-wrap w-full max-w-[720px] gap-6'>...</div>
 ```
 
-`@pure/ui` 的 `Flexbox` 是例外：其 `flex`、`width`、`height`、`padding` 等属性由 `--lobe-flex-*` CSS 变量控制。不要依赖普通 Tailwind 工具类覆盖这些属性；应使用 `Flexbox` 自身 props，或者由原生 HTML 元素承担 Tailwind 布局。
+布局优先使用 `@pure/ui` 的 `Flex`：它是 Tailwind-first 的 flex 容器，可直接用普通工具类控制 `gap`、`width`、`height`、`padding` 等。
 
 ## 主题与颜色
 

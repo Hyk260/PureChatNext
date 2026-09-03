@@ -40,7 +40,7 @@ type IngestEvent = {
   content: string
   encryptedContextToken: string
   externalUserId: string
-  messageKind: 'command' | 'file' | 'image' | 'text' | 'unsupported'
+  messageKind: 'audio' | 'command' | 'file' | 'image' | 'text' | 'unsupported' | 'video'
   platformMessageId: string
 }
 

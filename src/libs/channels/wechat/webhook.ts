@@ -26,6 +26,8 @@ export function rawMessageToEvent(bindingId: string, message: WechatRawMessage) 
   const content = texts.join('\n')
   const imageItem = itemList.find((item) => item.image_item)?.image_item
   const fileItem = itemList.find((item) => item.file_item)?.file_item
+  const hasAudio = itemList.some((item) => item.voice_item)
+  const hasVideo = itemList.some((item) => item.video_item)
   const common = {
     bindingId,
     encryptedContextToken: encryptContextToken(message.context_token || ''),
@@ -34,6 +36,8 @@ export function rawMessageToEvent(bindingId: string, message: WechatRawMessage) 
   }
   if (imageItem) return { ...common, content: encodeWechatImageContent(imageItem).slice(0, 40_000), messageKind: 'image' as const }
   if (fileItem) return { ...common, content: encodeWechatFileContent(fileItem).slice(0, 40_000), messageKind: 'file' as const }
+  if (hasAudio) return { ...common, content: '[unsupported audio message]', messageKind: 'audio' as const }
+  if (hasVideo) return { ...common, content: '[unsupported video message]', messageKind: 'video' as const }
   if (content) {
     return {
       ...common,
@@ -55,16 +59,20 @@ function summarizeInboundItems(itemList: WechatRawMessage['item_list']) {
 }
 
 const WECHAT_KIND_LABEL: Record<string, string> = {
+  audio: '语音',
   command: '指令',
   file: '文件',
   image: '图片',
   text: '文本',
   unsupported: '非文本',
+  video: '视频',
 }
 
 const WECHAT_KIND_PLACEHOLDER: Record<string, string> = {
+  audio: '，内容=[语音]',
   file: '，内容=[文件]',
   image: '，内容=[图片]',
+  video: '，内容=[视频]',
 }
 
 function formatInboundVisibleContent(event: { content: string; messageKind: string }) {

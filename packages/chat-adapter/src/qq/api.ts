@@ -8,6 +8,13 @@ const API_BASE_URL = 'https://api.sgroup.qq.com'
 const REQUEST_TIMEOUT_MS = 15_000
 const NETWORK_RETRY_COUNT = 2
 const MAX_TEXT_LENGTH = 2000
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
+
+function retryDelayMs(response: Response, attempt: number): number {
+  const retryAfter = Number(response.headers.get('retry-after'))
+  if (Number.isFinite(retryAfter) && retryAfter >= 0) return Math.min(retryAfter * 1000, 30_000)
+  return 500 * 2 ** attempt
+}
 
 export class QQApiClient {
   private readonly appId: string
@@ -20,10 +27,13 @@ export class QQApiClient {
 
     for (let attempt = 0; attempt <= NETWORK_RETRY_COUNT; attempt++) {
       try {
-        return await fetch(url, {
+        const response = await fetch(url, {
           ...init,
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         })
+        if (!RETRYABLE_STATUS_CODES.has(response.status) || attempt === NETWORK_RETRY_COUNT) return response
+        await response.body?.cancel()
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs(response, attempt)))
       } catch (error) {
         lastError = error
         if (attempt === NETWORK_RETRY_COUNT) break

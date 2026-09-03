@@ -114,8 +114,9 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
       text: event.responseText,
     }
   }
-  if (event.messageKind === 'unsupported') {
-    return systemResponse('当前版本仅支持文本消息。')
+  if (event.messageKind === 'audio' || event.messageKind === 'video' || event.messageKind === 'unsupported') {
+    const kindLabel = event.messageKind === 'audio' ? '语音' : event.messageKind === 'video' ? '视频' : '该类型'
+    return systemResponse(`当前版本暂不支持${kindLabel}消息，请发送文本、图片或文件。`)
   }
   if (event.messageKind === 'command' || event.content.startsWith('/')) {
     return systemResponse(await handleCommand(event))

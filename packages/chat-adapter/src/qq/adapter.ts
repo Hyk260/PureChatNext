@@ -26,6 +26,7 @@ import type {
   QQAdapterConfig,
   QQAttachment,
   QQRawMessage,
+  QQSendMessageResponse,
   QQThreadId,
   QQWebhookEventData,
   QQWebhookPayload,
@@ -35,6 +36,20 @@ import type {
 type PendingReplyContext = {
   msgId: string
   msgSeq: number
+}
+
+type QQOutboundMedia = {
+  fileType: 1 | 2 | 3 | 4
+  name?: string
+  url: string
+}
+
+/** 按 MIME 前缀映射 QQ 富媒体文件类型：1 图片 / 2 视频 / 3 音频 / 4 其它。 */
+const toQQMediaFileType = (mimeType: string): QQOutboundMedia['fileType'] => {
+  if (mimeType.startsWith('image/')) return 1
+  if (mimeType.startsWith('video/')) return 2
+  if (mimeType.startsWith('audio/')) return 3
+  return 4
 }
 
 /** `@pure/chat-adapter/qq` 的 QQ Bot 适配器（Vercel Chat SDK）。 */
@@ -239,29 +254,28 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   async postMessage(threadId: string, message: AdapterPostableMessage): Promise<RawMessage<QQRawMessage>> {
     const { type, id, guildId } = this.decodeThreadId(threadId)
     const text = this.formatConverter.renderPostable(message)
-    const replyOpts = this.consumeReplyOptions(threadId)
+    const media = this.collectOutboundMedia(message)
 
     let response
-    switch (type) {
-      case 'group': {
-        response = await this.api.sendGroupMessage(id, text, replyOpts)
+    if (text.trim()) {
+      const replyOpts = this.consumeReplyOptions(threadId)
+      response = await this.sendTextMessage(type, id, guildId, text, replyOpts)
+    }
+
+    for (const item of media) {
+      if (type !== 'group' && type !== 'c2c') {
+        this.logger.warn('QQ media delivery is unsupported for thread type=%s', type)
         break
       }
-      case 'guild': {
-        response = await this.api.sendGuildMessage(id, text, replyOpts)
-        break
-      }
-      case 'c2c': {
-        response = await this.api.sendC2CMessage(id, text, replyOpts)
-        break
-      }
-      case 'dms': {
-        response = await this.api.sendDmsMessage(guildId || id, text, replyOpts)
-        break
-      }
-      default: {
-        throw new Error(`Unknown thread type: ${type}`)
-      }
+      const uploaded = await this.uploadRichMedia(type, id, item)
+      const replyOpts = this.consumeReplyOptions(threadId)
+      response = await this.sendRichMedia(type, id, uploaded.file_info, replyOpts)
+    }
+
+    // 文本与媒体均未发出时补发空格，保证会话有可感知的响应。
+    if (!response) {
+      const replyOpts = this.consumeReplyOptions(threadId)
+      response = await this.sendTextMessage(type, id, guildId, ' ', replyOpts)
     }
 
     return {
@@ -274,6 +288,69 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
       } as QQRawMessage,
       threadId,
     }
+  }
+
+  /** 按线程类型发送文本消息；回复被动窗口参数随 `replyOpts` 透传。 */
+  private async sendTextMessage(
+    type: QQThreadId['type'],
+    targetId: string,
+    guildId: string | undefined,
+    content: string,
+    replyOpts?: { msgId?: string; msgSeq?: number }
+  ): Promise<QQSendMessageResponse> {
+    switch (type) {
+      case 'group': {
+        return this.api.sendGroupMessage(targetId, content, replyOpts)
+      }
+      case 'guild': {
+        return this.api.sendGuildMessage(targetId, content, replyOpts)
+      }
+      case 'c2c': {
+        return this.api.sendC2CMessage(targetId, content, replyOpts)
+      }
+      case 'dms': {
+        return this.api.sendDmsMessage(guildId || targetId, content, replyOpts)
+      }
+      default: {
+        throw new Error(`Unknown thread type: ${type}`)
+      }
+    }
+  }
+
+  /** 上传单个出站媒体到 QQ CDN（仅群聊 / C2C 通道，调用点已做类型校验）。 */
+  private async uploadRichMedia(
+    type: QQThreadId['type'],
+    targetId: string,
+    item: QQOutboundMedia
+  ): Promise<{ file_info: string; ttl?: number }> {
+    if (type === 'group') {
+      return this.api.uploadGroupRichMedia(targetId, item.fileType, item.url)
+    }
+    return this.api.uploadC2CRichMedia(targetId, item.fileType, item.url)
+  }
+
+  /** 发送已上传的富媒体消息（仅群聊 / C2C 通道，调用点已做类型校验）。 */
+  private async sendRichMedia(
+    type: QQThreadId['type'],
+    targetId: string,
+    fileInfo: string,
+    replyOpts?: { msgId?: string; msgSeq?: number }
+  ): Promise<QQSendMessageResponse> {
+    if (type === 'group') {
+      return this.api.sendGroupMedia(targetId, fileInfo, replyOpts)
+    }
+    return this.api.sendC2CMedia(targetId, fileInfo, replyOpts)
+  }
+
+  private collectOutboundMedia(message: AdapterPostableMessage): QQOutboundMedia[] {
+    if (typeof message === 'string' || !('attachments' in message) || !Array.isArray(message.attachments)) {
+      return []
+    }
+
+    return message.attachments.flatMap((attachment) => {
+      if (!attachment.url) return []
+      return [{ fileType: toQQMediaFileType(attachment.mimeType || ''), name: attachment.name, url: attachment.url }]
+    })
   }
 
   /**
@@ -476,22 +553,14 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
    * 当字节检测与声明值不一致时打 warn，帮助运营发现平台元数据被伪造/错误标记，
    * 不会中断返回的 buffer（元数据仍以声明值为准）。
    */
-  private async fetchAttachmentData(
-    url: string,
-    declaredMimeType?: string,
-    filename?: string
-  ): Promise<Buffer> {
+  private async fetchAttachmentData(url: string, declaredMimeType?: string, filename?: string): Promise<Buffer> {
     const response = await fetch(url, { signal: AbortSignal.timeout(30_000) })
     if (!response.ok) {
       throw new Error(`Failed to fetch QQ attachment: ${response.status}`)
     }
     const buffer = Buffer.from(await response.arrayBuffer())
     const detectedMime = await resolveMimeTypeFromBytes(declaredMimeType ?? null, buffer)
-    if (
-      declaredMimeType &&
-      detectedMime !== 'application/octet-stream' &&
-      detectedMime !== declaredMimeType
-    ) {
+    if (declaredMimeType && detectedMime !== 'application/octet-stream' && detectedMime !== declaredMimeType) {
       this.logger.warn(
         'QQ attachment MIME mismatch: declared=%s detected=%s filename=%s url=%s',
         declaredMimeType,

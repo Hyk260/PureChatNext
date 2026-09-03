@@ -27,7 +27,13 @@ export type WechatPollOptions = {
 function errorDetails(error: unknown) {
   const code = String((error as { code?: number | string; name?: string })?.code ?? (error as Error)?.name ?? 'POLL_ERROR')
   const raw = error instanceof Error ? error.message : 'WeChat polling failed'
-  return { code, message: raw.replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]').slice(0, 500) }
+  const cause = error instanceof Error && error.cause instanceof Error ? error.cause.message : undefined
+  const message = raw.replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]').slice(0, 500)
+  return {
+    cause: cause?.replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]').slice(0, 500),
+    code,
+    message,
+  }
 }
 
 function resolvePollTimeoutMs(serverTimeoutMs?: number): number | undefined {
@@ -46,11 +52,14 @@ export async function pollWechatUpdates(binding: ChannelBindingItem, options: We
   let pollTimeoutMs: number | undefined = DEFAULT_POLL_TIMEOUT_MS
   let retryDelay = 1_000
   let ready = false
+  let phase: 'forward' | 'poll' = 'poll'
 
   while (!options.signal.aborted) {
     try {
+      phase = 'poll'
       const response = await api.getUpdates(cursor, options.signal, pollTimeoutMs)
       const nextCursor = response.get_updates_buf || cursor
+      phase = 'forward'
       await options.forwardBatch({ cursor: nextCursor, messages: response.msgs ?? [] }, options.signal)
       cursor = nextCursor
       pollTimeoutMs = resolvePollTimeoutMs(response.longpolling_timeout_ms) ?? DEFAULT_POLL_TIMEOUT_MS
@@ -69,7 +78,14 @@ export async function pollWechatUpdates(binding: ChannelBindingItem, options: We
         options.onSessionExpired?.()
         return
       }
-      log('poll failed binding=%s code=%s', binding.id, details.code)
+      log(
+        'poll failed binding=%s phase=%s code=%s message=%s cause=%s',
+        binding.id,
+        phase,
+        details.code,
+        details.message,
+        details.cause ?? '-',
+      )
       options.onStatus?.({ ...details, status: 'degraded' })
       await abortableDelay(retryDelay, options.signal, { rejectOnAbort: true })
       retryDelay = Math.min(retryDelay * 2, MAX_RETRY_DELAY_MS)

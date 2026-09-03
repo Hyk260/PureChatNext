@@ -128,10 +128,14 @@ describe('rawMessageToEvent', () => {
     expect(JSON.parse(event!.content).file_name).toBe('sheet.xlsx')
   })
 
-  it('persists other non-text messages as unsupported instead of dropping them', () => {
-    expect(rawMessageToEvent('binding-1', message({ item_list: [{ type: MessageItemType.VOICE }] }))).toMatchObject({
-      content: '[unsupported message]',
-      messageKind: 'unsupported',
+  it('persists voice and video messages with their specific kinds', () => {
+    expect(rawMessageToEvent('binding-1', message({ item_list: [{ type: MessageItemType.VOICE, voice_item: {} }] }))).toMatchObject({
+      content: '[unsupported audio message]',
+      messageKind: 'audio',
+    })
+    expect(rawMessageToEvent('binding-1', message({ item_list: [{ type: MessageItemType.VIDEO, video_item: {} }] }))).toMatchObject({
+      content: '[unsupported video message]',
+      messageKind: 'video',
     })
   })
 

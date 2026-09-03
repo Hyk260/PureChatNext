@@ -16,6 +16,8 @@ import { formatQQAttachmentContext, formatQQInboundLog, resolveQQInboundKind } f
 
 const log = debug('channel:qq:bridge')
 const inboundLog = debug('channel:qq:webhook')
+export const QQ_UNSUPPORTED_MESSAGE = '当前版本暂不支持语音或视频消息，请发送文本、图片或文件。'
+const QQ_FAILURE_MESSAGE = '消息处理失败，请稍后重试。'
 
 function buildQQUserText(message: Message, text?: string): string | undefined {
   const attachmentText = formatQQAttachmentContext(message.attachments)
@@ -79,14 +81,21 @@ export async function handleQQMention(params: {
 
   const userText = buildQQUserText(message, message.text?.trim())
   const externalUserId = message.author?.userId || 'unknown'
+  const messageKind = resolveQQInboundKind({ attachments: message.attachments, text: userText })
   inboundLog(
     formatQQInboundLog({
       applicationId,
       content: userText || '',
       externalUserId,
-      messageKind: resolveQQInboundKind({ attachments: message.attachments, text: userText }),
+      messageKind,
     })
   )
+  if (messageKind === 'audio' || messageKind === 'video') {
+    await thread.post({ markdown: QQ_UNSUPPORTED_MESSAGE }).catch((error) => {
+      log('unsupported message reply failed app=%s: %O', applicationId, error)
+    })
+    return
+  }
   if (!userText) return
   if (message.attachments?.length) {
     log('processing attachments agent=%s count=%d', agentId, message.attachments.length)
@@ -131,11 +140,10 @@ export async function handleQQMention(params: {
       return
     }
     log('handleMention failed agent=%s: %O', agentId, error)
-    const errMsg = error instanceof Error ? error.message : '处理失败'
     try {
-      await thread.post({ markdown: `⚠️ ${errMsg}` })
-    } catch {
-      /* ignore send failure */
+      await thread.post({ markdown: QQ_FAILURE_MESSAGE })
+    } catch (sendError) {
+      log('failure reply failed app=%s: %O', applicationId, sendError)
     }
   }
 }

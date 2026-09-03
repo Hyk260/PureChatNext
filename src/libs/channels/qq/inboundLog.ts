@@ -33,6 +33,21 @@ export function resolveQQInboundKind(input: { attachments?: Array<{ type?: strin
   return 'text'
 }
 
+export function formatQQAttachmentContext(
+  attachments?: Array<{ mimeType?: string; name?: string; size?: number; type?: string }>
+): string | undefined {
+  if (!attachments?.length) return undefined
+
+  return attachments
+    .map((attachment) => {
+      const details = [attachment.name, attachment.mimeType || attachment.type, attachment.size ? `${attachment.size} bytes` : undefined]
+        .filter(Boolean)
+        .join(', ')
+      return `[附件${details ? `: ${details}` : ''}]`
+    })
+    .join('\n')
+}
+
 function formatInboundVisibleContent(event: { content: string; messageKind: string }) {
   if (event.messageKind === 'text' || event.messageKind === 'command') {
     return `，内容=${JSON.stringify(event.content.replace(/[\r\n\t]+/g, ' ').slice(0, 200))}`

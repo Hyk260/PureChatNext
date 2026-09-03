@@ -5,6 +5,8 @@ import type { QQAccessTokenResponse, QQGatewayUrlResponse, QQSendMessageParams, 
 
 const AUTH_URL = 'https://bots.qq.com/app/getAppAccessToken'
 const API_BASE_URL = 'https://api.sgroup.qq.com'
+const REQUEST_TIMEOUT_MS = 15_000
+const NETWORK_RETRY_COUNT = 2
 const MAX_TEXT_LENGTH = 2000
 
 export class QQApiClient {
@@ -12,6 +14,27 @@ export class QQApiClient {
   private readonly clientSecret: string
   private cachedToken?: string
   private tokenExpiresAt = 0
+
+  private async fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+    let lastError: unknown
+
+    for (let attempt = 0; attempt <= NETWORK_RETRY_COUNT; attempt++) {
+      try {
+        return await fetch(url, {
+          ...init,
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        })
+      } catch (error) {
+        lastError = error
+        if (attempt === NETWORK_RETRY_COUNT) break
+        await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt))
+      }
+    }
+
+    throw new Error(`QQ network request failed after ${NETWORK_RETRY_COUNT + 1} attempts`, {
+      cause: lastError,
+    })
+  }
 
   /** 创建使用指定 QQ 应用凭据的 OpenAPI 客户端。 */
   constructor(appId: string, clientSecret: string) {
@@ -26,7 +49,7 @@ export class QQApiClient {
       return this.cachedToken
     }
 
-    const response = await fetch(AUTH_URL, {
+    const response = await this.fetchWithRetry(AUTH_URL, {
       body: JSON.stringify({
         appId: this.appId,
         clientSecret: this.clientSecret,
@@ -65,7 +88,7 @@ export class QQApiClient {
       init.body = JSON.stringify(body)
     }
 
-    const response = await fetch(url, init)
+    const response = await this.fetchWithRetry(url, init)
 
     if (!response.ok) {
       const text = await response.text()

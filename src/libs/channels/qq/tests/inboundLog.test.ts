@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatQQInboundLog, resolveQQInboundKind } from '../inboundLog'
+import { formatQQAttachmentContext, formatQQInboundLog, resolveQQInboundKind } from '../inboundLog'
 
 describe('resolveQQInboundKind', () => {
   it('prefers attachments over caption text', () => {
@@ -50,5 +50,17 @@ describe('formatQQInboundLog', () => {
         messageKind: 'command',
       })
     ).toContain('收到指令消息')
+  })
+})
+
+describe('formatQQAttachmentContext', () => {
+  it('formats attachment metadata for agent input', () => {
+    expect(
+      formatQQAttachmentContext([{ mimeType: 'application/pdf', name: 'report.pdf', size: 2048, type: 'file' }])
+    ).toBe('[附件: report.pdf, application/pdf, 2048 bytes]')
+  })
+
+  it('returns undefined for an empty attachment list', () => {
+    expect(formatQQAttachmentContext()).toBeUndefined()
   })
 })

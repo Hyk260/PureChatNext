@@ -77,7 +77,6 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   composerWrap: css`
     position: relative;
-    /* 给叠在上沿的项目胶囊留出半高空间，避免被父级裁切 */
     padding-block-start: 14px;
   `,
   mascot: css`
@@ -327,7 +326,7 @@ const HomeChatInput = memo(() => {
       ) : null}
 
       <Block className={styles.shell} padding={12} variant='outlined'>
-        <img alt='' aria-hidden className={styles.mascot} src={mechaCatSrc} />
+        {/* <img alt='' aria-hidden className={styles.mascot} src={mechaCatSrc} /> */}
         <input
           ref={fileInputRef}
           accept={CHAT_ATTACHMENT_ACCEPT}

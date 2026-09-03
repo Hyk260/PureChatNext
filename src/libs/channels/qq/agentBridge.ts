@@ -12,10 +12,17 @@ import {
   flushQQChatInvalidation,
   tryHandleQQCommand,
 } from './commands'
-import { formatQQInboundLog, resolveQQInboundKind } from './inboundLog'
+import { formatQQAttachmentContext, formatQQInboundLog, resolveQQInboundKind } from './inboundLog'
 
 const log = debug('channel:qq:bridge')
 const inboundLog = debug('channel:qq:webhook')
+
+function buildQQUserText(message: Message, text?: string): string | undefined {
+  const attachmentText = formatQQAttachmentContext(message.attachments)
+
+  const userText = [text, attachmentText].filter(Boolean).join('\n')
+  return userText || undefined
+}
 
 async function finalizeQQOutbound(params: { agentId: string; reply: string; userId: string }): Promise<string> {
   const bindingModel = new ChannelBindingModel()
@@ -70,7 +77,7 @@ export async function handleQQMention(params: {
 
   if (message.author?.isBot === true) return
 
-  const userText = message.text?.trim()
+  const userText = buildQQUserText(message, message.text?.trim())
   const externalUserId = message.author?.userId || 'unknown'
   inboundLog(
     formatQQInboundLog({
@@ -81,6 +88,9 @@ export async function handleQQMention(params: {
     })
   )
   if (!userText) return
+  if (message.attachments?.length) {
+    log('processing attachments agent=%s count=%d', agentId, message.attachments.length)
+  }
 
   try {
     await thread.startTyping().catch(() => {

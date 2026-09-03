@@ -9,6 +9,7 @@ import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'
 import { isS3Configured } from '@/server/modules/S3/config'
 import { buildPublicS3Url, resolveFileAccessUrl } from '@/server/modules/S3/url'
+import { resolveMimeTypeFromBytes } from '@pure/utils'
 
 const log = debug('file:upload')
 
@@ -57,6 +58,8 @@ export const POST = withAuth(async (request, { userId }) => {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer())
+  // 基于字节魔数校验真实 MIME；file.type 是浏览器声明值（可伪造），仅作 fallback
+  const detectedFileType = await resolveMimeTypeFromBytes(file.type || null, buffer)
   const fileHash = createHash('sha256').update(buffer).digest('hex')
   const key = `resources/${userId}/${Date.now()}-${file.name}`
   const fileS3 = new FileS3()
@@ -65,13 +68,14 @@ export const POST = withAuth(async (request, { userId }) => {
   let committed = false
 
   try {
-    await fileS3.uploadMedia(key, buffer)
+    // 复用 route 已完成的字节检测结果作为 S3 Content-Type，避免 uploadMedia 内二次扫描
+    await fileS3.uploadMedia(key, buffer, detectedFileType)
     uploaded = true
 
     const result = await model.createWithinStorageLimit(
       {
         fileHash,
-        fileType: file.type || 'application/octet-stream',
+        fileType: detectedFileType,
         knowledgeBaseId,
         name: file.name,
         parentId: parentId || null,

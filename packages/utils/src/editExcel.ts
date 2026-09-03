@@ -39,12 +39,25 @@ const cellValue = (cell: xlsx.CellObject | undefined): string | number | boolean
   return cell.v as string | number | boolean
 }
 
+/**
+ * 同步校验 .xlsx 文件是否具备合法 ZIP 魔数（PK\x03\x04）。
+ * OOXML .xlsx 本质上是 ZIP 压缩包，没有合法 ZIP 头的必定不是真实 xlsx。
+ * 注意：扩展名可能被伪造，这一步做字节级快速拦截；xlsx.read 还会在后续做更深校验。
+ */
+function looksLikeZipMagic(buffer: Buffer): boolean {
+  return buffer.length >= 4 && buffer[0] === 0x50 && buffer[1] === 0x4b && buffer[2] === 0x03 && buffer[3] === 0x04
+}
+
 export function editExcelBuffer(
   input: Buffer,
   filename: string,
   operations: ExcelEditOperation[]
 ): ExcelEditResult {
   if (path.extname(filename).toLowerCase() !== '.xlsx') {
+    throw new ExcelEditError('INVALID_FILE', '首版仅支持 .xlsx 文件。')
+  }
+  // 字节级魔数校验：避免把扩展名改为 .xlsx 的非 xlsx 文件直接丢给 xlsx.read
+  if (!looksLikeZipMagic(input)) {
     throw new ExcelEditError('INVALID_FILE', '首版仅支持 .xlsx 文件。')
   }
 

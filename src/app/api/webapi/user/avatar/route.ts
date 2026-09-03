@@ -8,6 +8,7 @@ import { withAuth } from '@/libs/auth/get-session-user'
 import { FileS3 } from '@/server/modules/S3'
 import { isS3Configured } from '@/server/modules/S3/config'
 import { buildPublicS3Url } from '@/server/modules/S3/url'
+import { inferImageMimeTypeFromBytes } from '@pure/utils'
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024
 const ALLOWED_TYPES = new Set(['image/gif', 'image/jpeg', 'image/png', 'image/webp'])
@@ -50,10 +51,8 @@ export const POST = withAuth(async (req, { userId }) => {
     return NextResponse.json({ error: 'Missing or invalid file field' }, { status: 400 })
   }
 
-  if (!ALLOWED_TYPES.has(file.type)) {
-    return NextResponse.json({ error: 'Unsupported image type' }, { status: 400 })
-  }
-
+  // 注意：不信任客户端声明的 file.type（可伪造，且为空串时会误伤合法图片）。
+  // 统一以字节魔数检测结果为唯一权威，仅放行白名单内的真实图片格式。
   if (file.size > MAX_AVATAR_SIZE) {
     return NextResponse.json({ error: 'Image must be smaller than 2MB' }, { status: 400 })
   }
@@ -64,14 +63,21 @@ export const POST = withAuth(async (req, { userId }) => {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
-  const ext = EXT_BY_TYPE[file.type] ?? 'png'
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const detectedImageType = await inferImageMimeTypeFromBytes(buffer)
+  // detectedImageType 仅在字节确认为 image/* 时非空（不会 fallback 到声明值），
+  // 可执行文件 / HTML / 伪造魔数的内容在此直接拒绝。
+  if (!detectedImageType || !ALLOWED_TYPES.has(detectedImageType)) {
+    return NextResponse.json({ error: 'Unsupported image type' }, { status: 400 })
+  }
+
+  const ext = EXT_BY_TYPE[detectedImageType] ?? 'png'
   const filename = `${crypto.randomUUID()}.${ext}`
   const s3Key = `user/avatar/${user.userId}/${filename}`
 
   try {
     const fileS3 = new FileS3()
-    const buffer = Buffer.from(await file.arrayBuffer())
-    await fileS3.uploadBuffer(s3Key, buffer, file.type)
+    await fileS3.uploadBuffer(s3Key, buffer, detectedImageType)
 
     const avatar = fileEnv.S3_SET_ACL
       ? buildPublicS3Url(s3Key)

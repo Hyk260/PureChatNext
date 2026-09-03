@@ -14,7 +14,7 @@ import mime from 'mime'
 import { z } from 'zod'
 
 import { fileEnv } from '@/envs/file'
-import { YEAR } from '@pure/utils'
+import { YEAR, resolveMimeTypeFromBytes } from '@pure/utils'
 
 export const fileSchema = z.object({
   Key: z.string(),
@@ -208,16 +208,20 @@ export class S3 {
   }
 
   /**
-   * Upload media file (images only) with long-term cache
+   * Upload media file (images only) with long-term cache.
+   * 默认基于字节魔数检测真实 Content-Type，回退到按 key 的扩展名推断；
+   * 若调用方已通过字节检测得到可信类型（如 resources/upload 路由），
+   * 可传入 contentType 直接复用，避免对同一 buffer 重复扫描。
    */
-  public async uploadMedia(key: string, buffer: Buffer) {
-    const contentType = mime.getType(key) || 'application/octet-stream'
+  public async uploadMedia(key: string, buffer: Buffer, contentType?: string) {
+    const declaredByKey = mime.getType(key) || 'application/octet-stream'
+    const resolvedContentType = contentType ?? (await resolveMimeTypeFromBytes(declaredByKey, buffer))
     const command = new PutObjectCommand({
       ACL: this.setAcl ? 'public-read' : undefined,
       Body: buffer,
       Bucket: this.bucket,
       CacheControl: `public, max-age=${YEAR}`,
-      ContentType: contentType,
+      ContentType: resolvedContentType,
       Key: key,
     })
 

@@ -16,6 +16,10 @@ import type {
   WebhookOptions,
 } from 'chat'
 import mime from 'mime'
+import {
+  resolveImageMimeTypeFromBytes,
+  resolveMimeTypeFromBytes,
+} from '@pure/utils'
 
 import { WechatApiClient, WechatUploadMediaType } from './api'
 import { WechatFormatConverter } from './format-converter'
@@ -182,9 +186,12 @@ export async function downloadMediaFromRawMessage(
         case MessageItemType.VOICE: {
           if (!hasCdnMedia(item) || !item.voice_item?.media) break
           const voiceBuf = await api.downloadCdnMedia(item.voice_item.media)
+          // file-type 无法识别 SILK，实际恒回退到声明的 audio/silk；若未来 CDN 返回
+          // mp3 等可识别格式，则如实返回对应 MIME
+          const voiceMime = await resolveMimeTypeFromBytes('audio/silk', voiceBuf)
           attachments.push({
             buffer: voiceBuf,
-            mimeType: 'audio/silk',
+            mimeType: voiceMime,
             type: 'audio',
             url: '',
           } as Attachment)
@@ -194,13 +201,14 @@ export async function downloadMediaFromRawMessage(
           if (!hasCdnMedia(item) || !item.file_item?.media) break
           const fileBuf = await api.downloadCdnMedia(item.file_item.media)
           const fileName = item.file_item?.file_name
-          const fileMimeType = (fileName && mime.getType(fileName)) || 'application/octet-stream'
+          const declaredMimeType = (fileName && mime.getType(fileName)) || 'application/octet-stream'
+          const fileMimeType = await resolveMimeTypeFromBytes(declaredMimeType, fileBuf)
           attachments.push({
             buffer: fileBuf,
             mimeType: fileMimeType,
             name: fileName,
             size: parseOptionalNumber(item.file_item?.len),
-            type: 'file',
+            type: inferAttachmentTypeFromMime(fileMimeType),
             url: '',
           } as Attachment)
           break
@@ -208,9 +216,10 @@ export async function downloadMediaFromRawMessage(
         case MessageItemType.VIDEO: {
           if (!hasCdnMedia(item) || !item.video_item?.media) break
           const videoBuf = await api.downloadCdnMedia(item.video_item.media)
+          const videoMime = await resolveMimeTypeFromBytes('video/mp4', videoBuf)
           attachments.push({
             buffer: videoBuf,
-            mimeType: 'video/mp4',
+            mimeType: videoMime,
             size: parseOptionalNumber(item.video_item?.video_size),
             type: 'video',
             url: '',
@@ -244,10 +253,11 @@ async function downloadImageItemFromRaw(
   if (imageItem.media?.encrypt_query_param) {
     try {
       const buf = await api.downloadCdnMedia(imageItem.media, imageItem.aeskey)
+      const imageMime = (await resolveImageMimeTypeFromBytes('image/jpeg', buf)) ?? 'image/jpeg'
       return {
         buffer: buf,
-        mimeType: 'image/jpeg',
-        name: 'image.jpg',
+        mimeType: imageMime,
+        name: `image.${preferredImageExtension(imageMime)}`,
         type: 'image',
         url: '',
       } as Attachment
@@ -260,10 +270,11 @@ async function downloadImageItemFromRaw(
   if (imageItem.thumb_media?.encrypt_query_param) {
     try {
       const buf = await api.downloadCdnMedia(imageItem.thumb_media, imageItem.aeskey)
+      const imageMime = (await resolveImageMimeTypeFromBytes('image/jpeg', buf)) ?? 'image/jpeg'
       return {
         buffer: buf,
-        mimeType: 'image/jpeg',
-        name: 'image.jpg',
+        mimeType: imageMime,
+        name: `image.${preferredImageExtension(imageMime)}`,
         type: 'image',
         url: '',
       } as Attachment
@@ -280,11 +291,12 @@ async function downloadImageItemFromRaw(
       })
       if (response.ok) {
         const buf = Buffer.from(await response.arrayBuffer())
-        const contentType = response.headers.get('content-type') || 'image/jpeg'
+        const declared = response.headers.get('content-type') || 'image/jpeg'
+        const imageMime = (await resolveImageMimeTypeFromBytes(declared, buf)) ?? declared
         return {
           buffer: buf,
-          mimeType: contentType,
-          name: 'image.jpg',
+          mimeType: imageMime,
+          name: `image.${preferredImageExtension(imageMime)}`,
           type: 'image',
           url: '',
         } as Attachment
@@ -297,6 +309,34 @@ async function downloadImageItemFromRaw(
 
   warn('No image source available (no CDN media, no thumb, no url)')
   return undefined
+}
+
+/** 将规范化的图片 MIME 映射为更常用的文件扩展名（用于生成 name）。 */
+function preferredImageExtension(mimeType: string): string {
+  switch (mimeType) {
+    case 'image/jpeg':
+      return 'jpg'
+    case 'image/png':
+      return 'png'
+    case 'image/gif':
+      return 'gif'
+    case 'image/webp':
+      return 'webp'
+    case 'image/bmp':
+      return 'bmp'
+    default: {
+      const short = mime.getExtension(mimeType)
+      return short || 'jpg'
+    }
+  }
+}
+
+/** 依据 MIME 字符串推断 chat-sdk 的 Attachment.type 分类（基于声明值，轻量同步版本）。 */
+function inferAttachmentTypeFromMime(mimeType: string): 'image' | 'file' | 'video' | 'audio' {
+  if (mimeType.startsWith('image/')) return 'image'
+  if (mimeType.startsWith('video/')) return 'video'
+  if (mimeType.startsWith('audio/')) return 'audio'
+  return 'file'
 }
 
 /**
@@ -356,17 +396,6 @@ async function blobOrBufferToBuffer(data: Buffer | Blob | ArrayBuffer): Promise<
     return Buffer.from(await data.arrayBuffer())
   }
   return undefined
-}
-
-/**
- * 仅有 FileUpload（无 type 字段）时，根据文件名或 mime 推断 chat-sdk Attachment.type。
- */
-function inferAttachmentType(filename: string, mimeType?: string): 'image' | 'file' | 'video' | 'audio' {
-  const resolvedMime = mimeType || mime.getType(filename) || ''
-  if (resolvedMime.startsWith('image/')) return 'image'
-  if (resolvedMime.startsWith('video/')) return 'video'
-  if (resolvedMime.startsWith('audio/')) return 'audio'
-  return 'file'
 }
 
 function mapToUploadMediaType(type: 'image' | 'file' | 'video' | 'audio'): WechatUploadMediaType {
@@ -549,22 +578,26 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
     for (const attachment of attachments) {
       const buffer = await loadAttachmentBuffer(attachment, this.logger)
       if (!buffer) continue
+      // 字节级 MIME 检测优先于声明值；检测结果顺便更正 type 分类
+      const detectedMime = await resolveMimeTypeFromBytes(attachment.mimeType ?? null, buffer)
       specs.push({
         buffer,
-        mimeType: attachment.mimeType,
+        mimeType: detectedMime,
         name: attachment.name,
-        type: attachment.type,
+        type: attachment.type ?? inferAttachmentTypeFromMime(detectedMime),
       })
     }
 
     for (const file of files) {
       const buffer = await fileUploadToBuffer(file)
       if (!buffer) continue
+      const detectedMime = await resolveMimeTypeFromBytes(file.mimeType ?? null, buffer)
       specs.push({
         buffer,
-        mimeType: file.mimeType,
+        mimeType: detectedMime,
         name: file.filename,
-        type: inferAttachmentType(file.filename, file.mimeType),
+        // 字节检测 MIME 确定后，再基于真实 MIME 推断附件分类
+        type: inferAttachmentTypeFromMime(detectedMime),
       })
     }
 

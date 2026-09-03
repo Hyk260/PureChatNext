@@ -54,10 +54,7 @@ export const getFileConfig = () => {
       S3_SET_ACL: z.boolean(),
     },
     runtimeEnv: {
-      FILE_STORAGE_LIMIT_MB:
-        process.env.FILE_STORAGE_LIMIT_MB === undefined || process.env.FILE_STORAGE_LIMIT_MB === ''
-          ? 15
-          : Number(process.env.FILE_STORAGE_LIMIT_MB),
+      FILE_STORAGE_LIMIT_MB: parseEnvInt(process.env.FILE_STORAGE_LIMIT_MB, 15),
       // S3
       S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID,
       S3_BUCKET: process.env.S3_BUCKET,

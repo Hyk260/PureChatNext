@@ -15,6 +15,7 @@ import type {
   WebhookOptions,
 } from 'chat'
 import mime from 'mime'
+import { resolveMimeTypeFromBytes } from '@pure/utils'
 
 import { QQApiClient } from './api'
 import { signWebhookResponse } from './crypto'
@@ -348,7 +349,6 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     }
 
     const attachments = this.mapQQAttachments(raw.attachments)
-
     return new Message({
       attachments,
       author: {
@@ -426,6 +426,9 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   /**
    * 将 QQ 附件转换为 Chat SDK 的 `Attachment` 对象。
    * QQ 会为媒体文件提供可直接访问的 URL。
+   *
+   * 元数据阶段使用声明值（content_type + 文件名）推断 MIME；
+   * 真正下载时会基于字节魔数做二次校验（见 fetchAttachmentData）。
    */
   private mapQQAttachments(qqAttachments?: QQAttachment[]): Attachment[] {
     if (!qqAttachments || qqAttachments.length === 0) return []
@@ -435,14 +438,14 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
       // 粗粒度的 `"file"`。如果原样使用，会把 `.m4a` 错判为 `"file"` 而不是
       // `audio/mp4`，也会绕过 `ingestAttachment` 基于文件名的 MIME 类型恢复。
       // 因此，当 `content_type` 不可用时，回退到文件名推断类型。
-      const mimeType = this.resolveMimeType(a.content_type, a.filename)
+      const declaredMimeType = this.resolveMimeType(a.content_type, a.filename)
       return {
-        fetchData: () => this.fetchAttachmentData(a.url),
+        fetchData: () => this.fetchAttachmentData(a.url, declaredMimeType, a.filename),
         height: a.height,
-        mimeType,
+        mimeType: declaredMimeType,
         name: a.filename,
         size: a.size,
-        type: this.resolveAttachmentType(mimeType),
+        type: this.resolveAttachmentType(declaredMimeType),
         url: a.url,
         width: a.width,
       } as Attachment
@@ -450,7 +453,7 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   }
 
   /**
-   * 从 QQ 的 `content_type` 解析可用的 MIME 类型。
+   * 从 QQ 的 `content_type` 解析可用的 MIME 类型（声明值，仅做元数据推断）。
    * 当 QQ 返回 `"file"` 等非 MIME 值时，回退到根据文件名推断类型。
    */
   private resolveMimeType(contentType: string | undefined, filename?: string): string {
@@ -465,12 +468,39 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     return 'file'
   }
 
-  private async fetchAttachmentData(url: string): Promise<Buffer> {
+  /**
+   * 下载 QQ 附件数据，并基于字节魔数检测 MIME 类型真实性。
+   *
+   * 注意：Attachment 的 mimeType/type 在 mapQQAttachments 构造时已定死，
+   * fetchData 惰性调用无法回写元数据，因此这里仅做「观测告警」——
+   * 当字节检测与声明值不一致时打 warn，帮助运营发现平台元数据被伪造/错误标记，
+   * 不会中断返回的 buffer（元数据仍以声明值为准）。
+   */
+  private async fetchAttachmentData(
+    url: string,
+    declaredMimeType?: string,
+    filename?: string
+  ): Promise<Buffer> {
     const response = await fetch(url, { signal: AbortSignal.timeout(30_000) })
     if (!response.ok) {
       throw new Error(`Failed to fetch QQ attachment: ${response.status}`)
     }
-    return Buffer.from(await response.arrayBuffer())
+    const buffer = Buffer.from(await response.arrayBuffer())
+    const detectedMime = await resolveMimeTypeFromBytes(declaredMimeType ?? null, buffer)
+    if (
+      declaredMimeType &&
+      detectedMime !== 'application/octet-stream' &&
+      detectedMime !== declaredMimeType
+    ) {
+      this.logger.warn(
+        'QQ attachment MIME mismatch: declared=%s detected=%s filename=%s url=%s',
+        declaredMimeType,
+        detectedMime,
+        filename ?? '<unknown>',
+        url
+      )
+    }
+    return buffer
   }
 
   // ------------------------------------------------------------------

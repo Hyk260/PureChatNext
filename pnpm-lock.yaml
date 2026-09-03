@@ -445,6 +445,9 @@ importers:
 
   packages/chat-adapter:
     dependencies:
+      '@pure/utils':
+        specifier: workspace:*
+        version: link:../utils
       mime:
         specifier: ^4.1.0
         version: 4.1.0

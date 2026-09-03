@@ -18,6 +18,7 @@
     "chat": "^4.31.0"
   },
   "dependencies": {
+    "@pure/utils": "workspace:*",
     "mime": "^4.1.0"
   },
   "devDependencies": {

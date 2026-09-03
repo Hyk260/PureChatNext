@@ -42,6 +42,7 @@ const ProjectGroupMenu = memo<Props>(({ disabled, projectName, topicCount, onDel
   }, [message, projectName])
 
   const handleDeleteProject = useCallback(() => {
+    if (!onDeleteProject) return
     setOpen(false)
     confirmModal({
       cancelText: '取消',

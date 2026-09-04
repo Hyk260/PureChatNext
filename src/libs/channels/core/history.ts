@@ -6,20 +6,23 @@ const DEFAULT_CONTEXT_WINDOW_TOKENS = 128_000
 const MAX_CONVERSATION_TOKENS = 12_000
 const OUTPUT_SAFETY_TOKENS = 4096
 
-export type WechatHistoryTurn = { content: string; responseText: string | null }
+export type ChannelHistoryTurn = {
+  content: string
+  responseText: string | null
+}
 
-export function getWechatHistoryTokenBudget(provider: string, modelId: string, userText: string): number {
+export function getChannelHistoryTokenBudget(provider: string, modelId: string, userText: string): number {
   const contextWindow =
     getAiModel(provider as ModelProviderId, modelId)?.contextWindowTokens ?? DEFAULT_CONTEXT_WINDOW_TOKENS
   const conversationBudget = Math.min(MAX_CONVERSATION_TOKENS, Math.floor(contextWindow * 0.1))
   return Math.max(0, conversationBudget - estimateTokenCount(userText) - OUTPUT_SAFETY_TOKENS)
 }
 
-function countTurnTokens(turn: WechatHistoryTurn): number {
+function countTurnTokens(turn: ChannelHistoryTurn): number {
   return estimateTokenCount(turn.content) + estimateTokenCount(turn.responseText ?? '')
 }
 
-function tailTruncateTurn(turn: WechatHistoryTurn, budget: number): WechatHistoryTurn {
+function tailTruncateTurn(turn: ChannelHistoryTurn, budget: number): ChannelHistoryTurn {
   const responseText = turn.responseText ?? ''
   const responseTokens = estimateTokenCount(responseText)
   if (responseTokens >= budget) {
@@ -33,12 +36,11 @@ function tailTruncateTurn(turn: WechatHistoryTurn, budget: number): WechatHistor
   }
 }
 
-/** Keeps recent complete turns; only a newest turn that cannot fit alone may be tail-truncated. */
-export function trimWechatHistory(rows: WechatHistoryTurn[], budget: number): WechatHistoryTurn[] {
+export function trimChannelHistory(rows: ChannelHistoryTurn[], budget: number): ChannelHistoryTurn[] {
   let remaining = Math.max(0, Math.floor(budget))
   if (!remaining) return []
 
-  const selected: WechatHistoryTurn[] = []
+  const selected: ChannelHistoryTurn[] = []
   for (let index = rows.length - 1; index >= 0; index -= 1) {
     const row = rows[index]!
     const tokens = countTurnTokens(row)

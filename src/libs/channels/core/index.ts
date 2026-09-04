@@ -1,5 +1,7 @@
 export * from './agentRuntime'
 export * from './chatBotRegistry'
 export * from './commands'
+export * from './context'
+export * from './history'
 export * from './modelResolver'
 export type * from './types'

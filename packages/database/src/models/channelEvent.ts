@@ -259,16 +259,20 @@ export class ChannelEventModel {
     })
   }
 
-  claimNext = async (owner: string, leaseMs: number): Promise<ChannelEventItem | null> => {
+  claimNext = async (owner: string, leaseMs: number, platform = 'wechat'): Promise<ChannelEventItem | null> => {
     return this.db.transaction(async (tx) => {
       const now = new Date()
       const [candidate] = await tx
         .select()
         .from(channelEvents)
+        .innerJoin(channelBindings, eq(channelEvents.bindingId, channelBindings.id))
         .where(
-          or(
-            and(inArray(channelEvents.status, ['pending', 'retry']), lte(channelEvents.availableAt, now)),
-            and(eq(channelEvents.status, 'processing'), lt(channelEvents.leaseExpiresAt, now))
+          and(
+            eq(channelBindings.platform, platform),
+            or(
+              and(inArray(channelEvents.status, ['pending', 'retry']), lte(channelEvents.availableAt, now)),
+              and(eq(channelEvents.status, 'processing'), lt(channelEvents.leaseExpiresAt, now))
+            )
           )
         )
         .orderBy(asc(channelEvents.availableAt), asc(channelEvents.createdAt))
@@ -284,7 +288,7 @@ export class ChannelEventModel {
           status: 'processing',
           updatedAt: now,
         })
-        .where(eq(channelEvents.id, candidate.id))
+        .where(eq(channelEvents.id, candidate.channel_events.id))
         .returning()
       return claimed ?? null
     })

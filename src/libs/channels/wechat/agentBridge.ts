@@ -8,6 +8,7 @@ import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/too
 import type { WechatToolArtifact, WechatToolContext } from '@/server/chat/toolRegistry'
 
 import { generateChannelAgentReply } from '../core/agentRuntime'
+import { buildChannelContextMessages } from '../core/context'
 import type { ChannelGenerationOptions } from '../core/types'
 
 const log = debug('channel:wechat:bridge')
@@ -58,11 +59,7 @@ export async function generateWechatAgentReply(params: {
   const toolContext = { channel: 'wechat' as const, searchMode: 'auto' as const, wechat: params.wechatToolContext }
   const tools = resolveChatTools(toolContext)
 
-  const messages: ModelMessage[] = []
-  for (const turn of params.history ?? []) {
-    if (turn.content) messages.push({ content: turn.content, role: 'user' })
-    if (turn.responseText) messages.push({ content: turn.responseText, role: 'assistant' })
-  }
+  const messages: ModelMessage[] = buildChannelContextMessages(params.history ?? [])
   messages.push({ content: params.userContent ?? params.userText, role: 'user' })
   const generation: ChannelGenerationOptions = {
     instructions: [

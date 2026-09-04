@@ -9,12 +9,12 @@ import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import { createNanoId } from '@pure/utils'
 import type { WechatToolArtifact } from '@/server/chat/toolRegistry'
 import { applyChannelFirstBindWelcome, runChannelCommand } from '../core/commands'
+import { getChannelHistoryTokenBudget, trimChannelHistory } from '../core/history'
 import { generateWechatAgentReply } from './agentBridge'
 import type { WechatAgentReply } from './agentBridge'
 import { wechatModelSupportsVision } from './agentSupport'
 import { WECHAT_HELP_TEXT } from './commands'
 import { decryptContextToken, decryptCredentials } from './encrypt'
-import { getWechatHistoryTokenBudget, trimWechatHistory } from './history'
 import { sendWithValidWechatEventLease } from './leaseGuard'
 import { listWechatConversationFiles, persistWechatFile, readWechatFile } from './fileArtifacts'
 import { startWechatTyping } from './typing'
@@ -139,9 +139,9 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
     const provider = binding.provider
     const modelId = binding.model
     if (!provider || !modelId) throw new Error('Binding model configuration is missing')
-    const history = trimWechatHistory(
+    const history = trimChannelHistory(
       await eventModel.findContext(event.sessionId, event.conversationVersion),
-      getWechatHistoryTokenBudget(provider, modelId, event.content)
+      getChannelHistoryTokenBudget(provider, modelId, event.content)
     )
     const credentials = decryptCredentials(binding.credentials)
     const contextToken = decryptContextToken(event.encryptedContextToken)
@@ -315,7 +315,7 @@ function safeError(error: unknown) {
 
 export async function processNextWechatEvent(owner = `processor-${createNanoId(10)()}`): Promise<boolean> {
   const model = new ChannelEventModel()
-  const event = await model.claimNext(owner, EVENT_LEASE_MS)
+  const event = await model.claimNext(owner, EVENT_LEASE_MS, 'wechat')
   if (!event) return false
   try {
     const response = await buildResponse(event)
@@ -328,7 +328,7 @@ export async function processNextWechatEvent(owner = `processor-${createNanoId(1
       await model.cancel(event.id)
     } else {
       const safe = safeError(error)
-      log('event failed id=%s code=%s', event.id, safe.code)
+      log('event failed id=%s code=%s message=%s', event.id, safe.code, safe.message)
       await model.retryOrFail(event, owner, safe.code, safe.message)
     }
   }

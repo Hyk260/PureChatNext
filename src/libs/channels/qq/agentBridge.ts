@@ -1,3 +1,4 @@
+import type { ModelMessage } from 'ai'
 import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
@@ -7,6 +8,9 @@ import { ChannelEventModel } from '@pure/database/models/channelEvent'
 
 import { applyChannelFirstBindWelcome } from '../core/commands'
 import { generateChannelAgentReply } from '../core/agentRuntime'
+import { buildChannelContextMessages } from '../core/context'
+import { getChannelHistoryTokenBudget, trimChannelHistory } from '../core/history'
+import { resolveChannelModelConfig } from '../core/modelResolver'
 import {
   beginQQGeneration,
   endQQGeneration,
@@ -48,6 +52,7 @@ async function finalizeQQOutbound(params: { agentId: string; reply: string; user
 export async function generateQQAgentReply(params: {
   abortSignal?: AbortSignal
   agentId: string
+  history?: ModelMessage[]
   model?: string | null
   provider?: string | null
   userId: string
@@ -56,6 +61,7 @@ export async function generateQQAgentReply(params: {
   const result = await generateChannelAgentReply({
     abortSignal: params.abortSignal,
     agentId: params.agentId,
+    history: params.history,
     model: params.model,
     platform: 'qq',
     provider: params.provider,
@@ -167,11 +173,25 @@ export async function handleQQMention(params: {
 
     const abortController = beginQQGeneration(applicationId, externalUserId)
     try {
+      const { model: resolvedModel, provider: resolvedProvider } = resolveChannelModelConfig({
+        channelName: 'QQ',
+        fallbackProvider: 'deepseek',
+        model,
+        provider,
+      })
+      const historyRows = await eventModel.findContext(event.sessionId, event.conversationVersion)
+      const history = buildChannelContextMessages(
+        trimChannelHistory(
+          historyRows,
+          getChannelHistoryTokenBudget(resolvedProvider, resolvedModel, userText)
+        )
+      )
       const reply = await generateQQAgentReply({
         abortSignal: abortController.signal,
         agentId,
-        model,
-        provider,
+        history,
+        model: resolvedModel,
+        provider: resolvedProvider,
         userId,
         userText,
       })

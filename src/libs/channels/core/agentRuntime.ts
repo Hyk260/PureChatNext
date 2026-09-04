@@ -30,6 +30,11 @@ function generationInstructions(generation?: ChannelGenerationOptions, systemRol
   return [systemRole, generation?.instructions].filter(Boolean).join('\n\n') || undefined
 }
 
+function generationToolNames(generation?: ChannelGenerationOptions): string[] {
+  if (!generation?.tools || typeof generation.tools !== 'object') return []
+  return Object.keys(generation.tools)
+}
+
 type RuntimeModel = {
   languageModel: LanguageModel
   settlement?: PureChatSettlement
@@ -96,8 +101,6 @@ export class ChannelAgentRuntime {
     })
     const { languageModel, settlement } = await resolveRuntimeModel(params.userId, modelId, provider, params.platform)
 
-    log('reply agent=%s platform=%s provider=%s model=%s', agent.id, params.platform, provider, modelId)
-
     const startedAt = Date.now()
     let result: Awaited<ReturnType<typeof generateText>>
     try {
@@ -115,6 +118,21 @@ export class ChannelAgentRuntime {
     }
 
     const durationMs = Date.now() - startedAt
+    const text = result.text?.trim() || '（模型未返回内容）'
+    log('reply generated %O', {
+      agentId: agent.id,
+      aiOutput: text,
+      contextMessageCount: generationMessages(params, params.generation).length,
+      durationMs,
+      model: modelId,
+      platform: params.platform,
+      provider,
+      tools: {
+        available: generationToolNames(params.generation),
+        called: result.toolCalls?.map((toolCall) => toolCall.toolName) ?? [],
+      },
+    })
+
     if (settlement) {
       await settlePureChatUsage({
         agentId: agent.id,
@@ -126,7 +144,6 @@ export class ChannelAgentRuntime {
       })
     }
 
-    const text = result.text?.trim()
     return {
       artifacts: [],
       durationMs,

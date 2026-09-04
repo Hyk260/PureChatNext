@@ -5,7 +5,7 @@ import { editExcelBuffer, ExcelEditError } from '@pure/utils'
 import { tool } from 'ai'
 import { z } from 'zod'
 
-import type { WechatToolArtifact, WechatToolContext } from './toolRegistry'
+import type { ChannelToolArtifact, ChannelToolContext } from './toolRegistry'
 
 const operationSchema = z.discriminatedUnion('type', [
   z.object({
@@ -30,7 +30,7 @@ const outputName = (sourceName: string, version: number) => {
   return `${stem}-v${version}.xlsx`
 }
 
-export const createEditExcelTool = (context: WechatToolContext) =>
+export const createEditExcelTool = (context: ChannelToolContext) =>
   tool({
     description:
       'Edit a persisted .xlsx file from the current WeChat conversation and create a new version. Use this only after the user clearly requests an Excel modification. Never claim success unless this tool returns success=true. If fileId is omitted, the most recent Excel file is used.',
@@ -40,10 +40,7 @@ export const createEditExcelTool = (context: WechatToolContext) =>
     }),
     execute: async ({ fileId, operations }) => {
       try {
-        const { listWechatConversationFiles, persistWechatFile, readWechatFile } = await import(
-          '@/libs/channels/wechat/fileArtifacts'
-        )
-        const available = await listWechatConversationFiles(context.sessionId, context.conversationVersion)
+        const available = await context.files.list(context.sessionId, context.conversationVersion)
         const candidates = available.filter(({ file }) => path.extname(file.name).toLowerCase() === '.xlsx')
         const selected = fileId
           ? candidates.find(({ file }) => file.id === fileId)
@@ -52,7 +49,7 @@ export const createEditExcelTool = (context: WechatToolContext) =>
           return { error: '当前会话没有可编辑的 .xlsx 文件，请先上传文件。', success: false as const }
         }
 
-        const source = await readWechatFile(context.userId, selected.file.id)
+        const source = await context.files.read(context.userId, selected.file.id)
         const edited = editExcelBuffer(source.buffer, source.file.name, operations)
         const version = selected.artifact.version + 1
         const summary = edited.changes
@@ -62,7 +59,7 @@ export const createEditExcelTool = (context: WechatToolContext) =>
         const operationHash = createHash('sha256')
           .update(JSON.stringify({ operations, sourceFileId: selected.file.id }))
           .digest('hex')
-        const artifact = await persistWechatFile({
+        const artifact = await context.files.persist({
           buffer: edited.buffer,
           contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           direction: 'output',
@@ -74,7 +71,7 @@ export const createEditExcelTool = (context: WechatToolContext) =>
           userId: context.userId,
           version,
         })
-        const toolArtifact: WechatToolArtifact = {
+        const toolArtifact: ChannelToolArtifact = {
           artifactId: artifact.artifactId,
           fileId: artifact.file.id,
           filename: artifact.file.name,

@@ -30,7 +30,7 @@ export class PptxLoader implements FileLoaderInterface {
 
     try {
       // --- File Extraction Step ---
-      const slidesRegex = /ppt\/slides\/slide\d+\.xml/g
+      const slidesRegex = /ppt\/slides\/slide\d+\.xml/
       const slideNumberRegex = /slide(\d+)\.xml/
 
       log('Extracting slide XML files from PPTX')
@@ -150,16 +150,15 @@ export class PptxLoader implements FileLoaderInterface {
   /**
    * Aggregates the content from all DocumentPages (slides).
    *
-   * Prepends each slide's content with a "## Slide: N" header.
-   * Joins the content of slides with a standard separator.
+   * Wraps each valid slide in `<slide_page>` markup and joins the blocks
+   * with a blank line. Error-only results collapse to an empty string.
    *
    * @param pages An array of `DocumentPage` objects obtained from `loadPages`.
    * @returns A Promise resolving to the aggregated content string.
    */
   async aggregateContent(pages: DocumentPage[]): Promise<string> {
     log('Aggregating content from', pages.length, 'PPTX pages')
-    // Ensure pages array is valid and non-empty before proceeding
-    // Filter out error pages before aggregation unless we want to include error messages
+    // Drop error pages from aggregation; keep them only as the last fallback.
     const validPages = pages.filter((page) => !page.metadata?.error)
     log(
       `Found ${validPages.length} valid pages for aggregation (${pages.length - validPages.length} error pages filtered out)`
@@ -174,13 +173,13 @@ export class PptxLoader implements FileLoaderInterface {
     const result = validPages
       .map((page) => {
         const slideNumber = page.metadata?.slideNumber
-        // Use Markdown H2 for slide headers
+        // Use a structural slide_page wrapper rather than a Markdown header.
         const header = slideNumber ? `<slide_page pageNumber="${slideNumber}">` : '<slide_page>' // Fallback header
         return `${header}
 ${page.pageContent}
 </slide_page>`
       })
-      .join('\n\n') // Use Markdown horizontal rule as separator
+      .join('\n\n') // Separate slide blocks with a blank line
 
     log('PPTX content aggregated successfully, length:', result.length)
     return result

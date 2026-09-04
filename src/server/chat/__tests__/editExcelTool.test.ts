@@ -50,6 +50,11 @@ describe('createEditExcelTool', () => {
     const excelTool = createEditExcelTool({
       conversationVersion: 1,
       event: { conversationVersion: 1, id: 'event-1', sessionId: 'session-1' },
+      files: {
+        list: mocks.listWechatConversationFiles,
+        persist: mocks.persistWechatFile,
+        read: mocks.readWechatFile,
+      },
       producedArtifacts: producedArtifacts as never[],
       sessionId: 'session-1',
       userId: 'user-1',
@@ -73,6 +78,11 @@ describe('createEditExcelTool', () => {
     const excelTool = createEditExcelTool({
       conversationVersion: 1,
       event: { conversationVersion: 1, id: 'event-1', sessionId: 'session-1' },
+      files: {
+        list: mocks.listWechatConversationFiles,
+        persist: mocks.persistWechatFile,
+        read: mocks.readWechatFile,
+      },
       producedArtifacts: [],
       sessionId: 'session-1',
       userId: 'user-1',

@@ -73,4 +73,19 @@ describe('loadFile', () => {
     expect(doc.filename).toBe('override.txt')
     expect(doc.fileType).toBe('custom')
   })
+
+  it('surfaces loader page errors in document metadata', async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), 'file-loaders-'))
+    try {
+      const file = path.join(tempDir, 'broken.pdf')
+      await writeFile(file, 'this is not a valid pdf')
+
+      const doc = await loadFile(file)
+
+      expect(doc.pages?.[0].metadata.error).toContain('Failed to load or parse PDF file')
+      expect(doc.metadata.error).toContain('Failed to load or parse PDF file')
+    } finally {
+      await rm(tempDir, { force: true, recursive: true })
+    }
+  })
 })

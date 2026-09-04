@@ -1,0 +1,49 @@
+{
+  "exportedAt": "2026-09-04T06:13:35.449Z",
+  "messages": [
+    {
+      "attachments": [
+        {
+          "deliveryStatus": "available",
+          "fileName": "LAPTOP-R3Q5BVKH电脑硬件信息 - 腾讯电脑管家检测结果.txt",
+          "fileSize": 4544,
+          "fileUrl": "https://grouptalk.c2c.qq.com/asn.com/qqdownloadftnv5?fileType=4001&isthumb=0&rkey=oAYCsgauAgqOAUQ2RUFRQUJGQ042OXhOc0pFaFJoUVJqSW4zVzRVMklOQ2NJUDdSTFh3QkVBQUJqQUl5Q2hIeWpldnVuVUJqQUFPQUJBQTBnQ2RlMWU3MTliaZjk1YjA5ZGY0ZGUzNWVhMWM3ODNjMzY4Xzc0NGJhYTA2LWE4MjYtMTFmMS04ODE2LWM1YTg3MWFiaNDFlMFoSFGFBGMiafdbhTYg0JwgictEtfAEQAAGAAg3r3E2wkowCMwoR84ia7DysgdCQMq1ibkWNOh0X3y48lyTibAPkCgS5lwgoL0WLFB60IaPtjthL7zGcBHddS7dgibvxfc7qHBicIPQ7qhqWRlYCCLZj0FKDkZUTjVLPWYzYmQzYjZjUN6ib6dQGWhduamMtZG93bmxvYWQuZnRuLnFxLmNvbXAA&rkeycodec=base62&ver=2",
+          "id": "che_IsykbmqRDqGW:attachment:0",
+          "version": 1
+        }
+      ],
+      "content": "[文件]",
+      "createdAt": "2026-09-04T06:04:15.869Z",
+      "eventId": "che_IsykbmqRDqGW",
+      "fileName": "LAPTOP-R3Q5BVKH电脑硬件信息 - 腾讯电脑管家检测结果.txt",
+      "fileSize": 4544,
+      "fileUrl": "https://grouptalk.c2c.qq.com/asn.com/qqdownloadftnv5?fileType=4001&isthumb=0&rkey=oAYCsgauAgqOAUQ2RUFRQUJGQ042OXhOc0pFaFJoUVJqSW4zVzRVMklOQ2NJUDdSTFh3QkVBQUJqQUl5Q2hIeWpldnVuVUJqQUFPQUJBQTBnQ2RlMWU3MTliaZjk1YjA5ZGY0ZGUzNWVhMWM3ODNjMzY4Xzc0NGJhYTA2LWE4MjYtMTFmMS04ODE2LWM1YTg3MWFiaNDFlMFoSFGFBGMiafdbhTYg0JwgictEtfAEQAAGAAg3r3E2wkowCMwoR84ia7DysgdCQMq1ibkWNOh0X3y48lyTibAPkCgS5lwgoL0WLFB60IaPtjthL7zGcBHddS7dgibvxfc7qHBicIPQ7qhqWRlYCCLZj0FKDkZUTjVLPWYzYmQzYjZjUN6ib6dQGWhduamMtZG93bmxvYWQuZnRuLnFxLmNvbXAA&rkeycodec=base62&ver=2",
+      "id": "che_IsykbmqRDqGW:user",
+      "messageKind": "file",
+      "role": "user",
+      "source": "user",
+      "status": "completed"
+    },
+    {
+      "content": "我看到了你上传了一个文本附件，但当前会话里读取失败了，系统返回的是：\n\n- `当前会话没有可读取的文件。`\n\n这通常表示文件没有成功挂载到可读文件列表，或者文件标识不可用。\n\n你可以这样做：\n1. 重新上传一次该文件；\n2. 或直接把内容粘贴到聊天里；\n3. 如果你想让我帮你分析硬件信息，也可以告诉我你最关心的点，比如：\n   - CPU/显卡是否够用\n   - 电脑是否适合打游戏\n   - 是否需要升级内存/硬盘\n   - 这台电脑值不值得买\n\n你重新发一次后，我可以继续帮你解读。",
+      "createdAt": "2026-09-04T06:04:15.869Z",
+      "eventId": "che_IsykbmqRDqGW",
+      "id": "che_IsykbmqRDqGW:assistant",
+      "messageKind": "file",
+      "model": "gpt-5.4-mini",
+      "provider": "purechat",
+      "role": "assistant",
+      "source": "model",
+      "status": "completed"
+    }
+  ],
+  "session": {
+    "agentId": "agt_inbox",
+    "agentTitle": "Pure AI",
+    "conversationVersion": 4,
+    "externalUserId": "qq:c2c:A367D8BF2BB8667981DAB614B443ED80",
+    "externalUserName": "QQ 单聊 A367D8BF2BB8667981DAB614B443ED80",
+    "id": "chs_AMgammJ6OgJb"
+  },
+  "version": "1.0"
+}

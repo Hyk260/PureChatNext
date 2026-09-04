@@ -1,5 +1,6 @@
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
+import type { ChannelEventModel } from '@pure/database/models/channelEvent'
 
 import type { ChannelCommandEffects } from '../core/commands'
 import { buildChannelHelpText, runChannelCommand } from '../core/commands'
@@ -42,17 +43,24 @@ export function endQQGeneration(applicationId: string, externalUserId: string, c
   }
 }
 
-/** 指令回复发出后再失效 Chat 实例，避免处理过程中关掉当前 bot。 */
+/** 在当前 Chat handler 返回后失效实例，避免 SDK 收尾时访问已断开的 state。 */
 export async function flushQQChatInvalidation(applicationId: string): Promise<void> {
   if (!pendingChatInvalidations.has(applicationId)) return
   pendingChatInvalidations.delete(applicationId)
   const { invalidateQQChat } = await import('./chatBot')
-  await invalidateQQChat(applicationId)
+  await new Promise<void>((resolve, reject) => {
+    setImmediate(() => {
+      invalidateQQChat(applicationId).then(resolve, reject)
+    })
+  })
 }
 
 function createQQCommandEffects(params: {
   applicationId: string
   externalUserId: string
+  eventId?: string
+  eventModel?: ChannelEventModel
+  sessionId?: string
   userId: string
 }): ChannelCommandEffects {
   const bindingModel = new ChannelBindingModel()
@@ -73,6 +81,10 @@ function createQQCommandEffects(params: {
         const updated = await bindingModel.updateAgent(params.userId, QQ_PLATFORM, agentId)
         if (!updated) throw new Error('Binding no longer exists')
       }
+      if (params.eventModel && params.sessionId) {
+        const updated = await params.eventModel.startNewConversation(params.sessionId, agentId, params.eventId)
+        if (!updated) throw new Error('Conversation no longer exists')
+      }
       // 延迟 invalidate：等指令回复发出后再重建 Chat（新 agentId 会进 fingerprint）
       pendingChatInvalidations.add(params.applicationId)
     },
@@ -82,7 +94,10 @@ function createQQCommandEffects(params: {
 /** 若为指令则返回回复文案，否则返回 null。 */
 export async function tryHandleQQCommand(params: {
   applicationId: string
+  eventId?: string
+  eventModel?: ChannelEventModel
   externalUserId: string
+  sessionId?: string
   text: string
   userId: string
 }): Promise<string | null> {
@@ -91,6 +106,9 @@ export async function tryHandleQQCommand(params: {
     createQQCommandEffects({
       applicationId: params.applicationId,
       externalUserId: params.externalUserId,
+      eventId: params.eventId,
+      eventModel: params.eventModel,
+      sessionId: params.sessionId,
       userId: params.userId,
     }),
     { helpText: QQ_HELP_TEXT }

@@ -40,8 +40,9 @@ export class PdfLoader implements FileLoaderInterface {
 
   async loadPages(filePath: string): Promise<DocumentPage[]> {
     log('Starting to load PDF pages from:', filePath)
+    let pdf: PDFDocumentProxy | null = null
     try {
-      const pdf: PDFDocumentProxy = await this.getPDFFile(filePath)
+      pdf = await this.getPDFFile(filePath)
 
       const pages: DocumentPage[] = []
       log(`Processing ${pdf.numPages} PDF pages`)
@@ -97,6 +98,7 @@ export class PdfLoader implements FileLoaderInterface {
       // Clean up document resources
       log('Cleaning up PDF document resources')
       await pdf.destroy()
+      pdf = null
 
       log(`PDF loading completed for ${filePath}, total pages:`, pages.length)
       return pages
@@ -115,6 +117,12 @@ export class PdfLoader implements FileLoaderInterface {
       }
       log('Created error page for failed PDF loading')
       return [errorPage]
+    } finally {
+      if (pdf) {
+        await pdf.destroy().catch((error: unknown) => {
+          log('Failed to destroy PDF document: %O', error)
+        })
+      }
     }
   }
 
@@ -139,28 +147,33 @@ export class PdfLoader implements FileLoaderInterface {
   async attachDocumentMetadata(filePath: string): Promise<any> {
     log('Attaching document metadata for PDF:', filePath)
     const pdf: PDFDocumentProxy = await this.getPDFFile(filePath)
+    try {
+      log('Getting PDF metadata')
+      const pdfMetadata =
+        (await pdf.getMetadata().catch((err) => {
+          log('Error retrieving PDF metadata')
+          console.error(`Error getting PDF metadata: ${err.message}`)
+          return null
+        })) ?? null
 
-    log('Getting PDF metadata')
-    const pdfMetadata =
-      (await pdf.getMetadata().catch((err) => {
-        log('Error retrieving PDF metadata')
-        console.error(`Error getting PDF metadata: ${err.message}`)
-        return null
-      })) ?? null
+      const pdfInfo = pdfMetadata?.info ?? {}
+      const metadata = pdfMetadata?.metadata ?? null
+      log('PDF metadata retrieved:', {
+        hasInfo: !!Object.keys(pdfInfo).length,
+        hasMetadata: !!metadata,
+      })
 
-    const pdfInfo = pdfMetadata?.info ?? {}
-    const metadata = pdfMetadata?.metadata ?? null
-    log('PDF metadata retrieved:', {
-      hasInfo: !!Object.keys(pdfInfo).length,
-      hasMetadata: !!metadata,
-    })
-
-    return {
-      pdfInfo,
-      // PDF info (Author, Title, etc.)
-      pdfMetadata: metadata,
-      // PDF metadata
-      pdfVersion: version,
+      return {
+        pdfInfo,
+        // PDF info (Author, Title, etc.)
+        pdfMetadata: metadata,
+        // PDF metadata
+        pdfVersion: version,
+      }
+    } finally {
+      await pdf.destroy().catch((error: unknown) => {
+        log('Failed to destroy PDF document: %O', error)
+      })
     }
   }
 }

@@ -3,17 +3,12 @@ import type { Tool, ToolSet } from 'ai'
 import { webSearchTool } from '@/server/search/chatTool'
 import { weatherTool } from '@/server/weather/chatTool'
 import { createEditExcelTool } from './editExcelTool'
+import { createReadFileTool } from './readFileTool'
 
-export type ChatToolChannel = 'web' | 'wechat'
+export type ChatToolChannel = 'web' | 'qq' | 'wechat'
 export type ChatToolSearchMode = 'auto' | 'off'
 
-export interface ChatToolContext {
-  channel: ChatToolChannel
-  searchMode: ChatToolSearchMode
-  wechat?: WechatToolContext
-}
-
-export type WechatToolArtifact = {
+export type ChannelToolArtifact = {
   artifactId: string
   fileId: string
   filename: string
@@ -21,12 +16,36 @@ export type WechatToolArtifact = {
   summary: string
 }
 
-export type WechatToolContext = {
+export type ChannelToolContext = {
   conversationVersion: number
   event: { conversationVersion: number; id: string; sessionId: string }
-  producedArtifacts: WechatToolArtifact[]
+  files: {
+    list: (sessionId: string, conversationVersion: number) => Promise<
+      Array<{ artifact: { direction: string; version: number }; file: { id: string; name: string } }>
+    >
+    persist: (params: {
+      buffer: Buffer
+      contentType: string
+      direction: 'input' | 'output'
+      event: { conversationVersion: number; id: string; sessionId: string }
+      filename: string
+      operationHash?: string
+      sourceFileId?: string
+      summary?: string
+      userId: string
+      version?: number
+    }) => Promise<{ artifactId: string; file: { id: string; name: string; size: number } }>
+    read: (userId: string, fileId: string) => Promise<{ buffer: Buffer; file: { id: string; name: string } }>
+  }
+  producedArtifacts: ChannelToolArtifact[]
   sessionId: string
   userId: string
+}
+
+export interface ChatToolContext {
+  channel: ChatToolChannel
+  searchMode: ChatToolSearchMode
+  channelContext?: ChannelToolContext
 }
 
 interface ChatToolRegistration {
@@ -61,12 +80,21 @@ const registrations: ChatToolRegistration[] = [
   },
   {
     apiName: 'editExcel',
-    enabled: ({ channel, wechat }) => channel === 'wechat' && Boolean(wechat),
+    enabled: ({ channel, channelContext }) => Boolean(channelContext) && (channel === 'qq' || channel === 'wechat'),
     identifier: 'builtin-edit-excel',
     modelName: 'editExcel',
     systemInstruction:
       '用户明确要求修改当前会话中的 .xlsx 时使用 editExcel。只有工具返回 success=true 才能说文件已修改或已生成；失败时如实说明并根据错误追问。',
-    tool: (context) => createEditExcelTool(context.wechat!),
+    tool: (context) => createEditExcelTool(context.channelContext!),
+  },
+  {
+    apiName: 'readFile',
+    enabled: ({ channel, channelContext }) => Boolean(channelContext) && (channel === 'qq' || channel === 'wechat'),
+    identifier: 'builtin-read-file',
+    modelName: 'readFile',
+    systemInstruction:
+      '用户询问当前会话中已上传的文件时使用 readFile 读取内容，尤其是 PDF 或 TXT。只有工具返回 success=true 才能依据文件内容回答；如果没有文件或解析失败，应如实说明。',
+    tool: (context) => createReadFileTool(context.channelContext!),
   },
 ]
 

@@ -7,7 +7,7 @@ import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
 import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import { createNanoId } from '@pure/utils'
-import type { WechatToolArtifact } from '@/server/chat/toolRegistry'
+import type { ChannelToolArtifact } from '@/server/chat/toolRegistry'
 import { applyChannelFirstBindWelcome, runChannelCommand } from '../core/commands'
 import { getChannelHistoryTokenBudget, trimChannelHistory } from '../core/history'
 import { generateWechatAgentReply } from './agentBridge'
@@ -116,7 +116,7 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
   }
   if (event.messageKind === 'audio' || event.messageKind === 'video' || event.messageKind === 'unsupported') {
     const kindLabel = event.messageKind === 'audio' ? '语音' : event.messageKind === 'video' ? '视频' : '该类型'
-    return systemResponse(`当前版本暂不支持${kindLabel}消息，请发送文本、图片或文件。`)
+    return systemResponse(`当前版本暂不支持${kindLabel}消息`)
   }
   if (event.messageKind === 'command' || event.content.startsWith('/')) {
     return systemResponse(await handleCommand(event))
@@ -192,7 +192,7 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
     }
     const conversationFiles = await listWechatConversationFiles(event.sessionId, event.conversationVersion)
     const attachmentContext = buildConversationFileContext(conversationFiles)
-    const producedArtifacts: WechatToolArtifact[] = []
+    const producedArtifacts: ChannelToolArtifact[] = []
     stopTyping = startWechatTyping(api, event.externalUserId, contextToken)
     return await generateWechatAgentReply({
       abortSignal: abortController.signal,
@@ -212,6 +212,7 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
           sessionId: event.sessionId,
         },
         producedArtifacts,
+        files: { list: listWechatConversationFiles, persist: persistWechatFile, read: readWechatFile },
         sessionId: event.sessionId,
         userId: binding.userId,
       },

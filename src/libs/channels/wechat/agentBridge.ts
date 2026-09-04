@@ -5,11 +5,12 @@ import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
 import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
-import type { WechatToolArtifact, WechatToolContext } from '@/server/chat/toolRegistry'
+import type { ChannelToolArtifact, ChannelToolContext } from '@/server/chat/toolRegistry'
 
 import { generateChannelAgentReply } from '../core/agentRuntime'
 import { buildChannelContextMessages } from '../core/context'
 import type { ChannelGenerationOptions } from '../core/types'
+import { listWechatConversationFiles, persistWechatFile, readWechatFile } from './fileArtifacts'
 
 const log = debug('channel:wechat:bridge')
 const MAX_GENERATION_STEPS = 5
@@ -22,7 +23,7 @@ type WechatUserContent =
     >
 
 export type WechatAgentReply = {
-  artifacts: WechatToolArtifact[]
+  artifacts: ChannelToolArtifact[]
   durationMs: number
   model: string
   provider: string
@@ -54,9 +55,13 @@ export async function generateWechatAgentReply(params: {
   userText: string
   userContent?: WechatUserContent
   attachmentContext?: string
-  wechatToolContext?: WechatToolContext
+  wechatToolContext?: ChannelToolContext
 }): Promise<WechatAgentReply> {
-  const toolContext = { channel: 'wechat' as const, searchMode: 'auto' as const, wechat: params.wechatToolContext }
+  const toolContext = {
+    channel: 'wechat' as const,
+    channelContext: params.wechatToolContext,
+    searchMode: 'auto' as const,
+  }
   const tools = resolveChatTools(toolContext)
 
   const messages: ModelMessage[] = buildChannelContextMessages(params.history ?? [])

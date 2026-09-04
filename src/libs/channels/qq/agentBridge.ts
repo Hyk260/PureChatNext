@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
 
-import { isStepCount } from 'ai'
 import type { ModelMessage } from 'ai'
 import type { Message, Thread } from 'chat'
 import debug from 'debug'
@@ -12,7 +11,7 @@ import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/too
 import type { ChannelToolArtifact, ChannelToolContext } from '@/server/chat/toolRegistry'
 
 import { applyChannelFirstBindWelcome } from '../core/commands'
-import { generateChannelAgentReply } from '../core/agentRuntime'
+import { createChannelGenerationControls, generateChannelAgentReply } from '../core/agentRuntime'
 import { buildChannelContextMessages } from '../core/context'
 import { getChannelHistoryTokenBudget, trimChannelHistory } from '../core/history'
 import { resolveChannelModelConfig } from '../core/modelResolver'
@@ -20,14 +19,11 @@ import { listWechatConversationFiles, persistWechatFile, readWechatFile } from '
 import { prepareQQFileForAgent } from './inboundMedia'
 import type { PreparedQQFile } from './inboundMedia'
 import { beginQQGeneration, endQQGeneration, flushQQChatInvalidation, tryHandleQQCommand } from './commands'
-import { formatQQAttachmentContext, formatQQInboundLog, resolveQQInboundKind } from './inboundLog'
+import { formatQQAttachmentContext, formatQQUnsupportedMessage, logQQInbound, resolveQQInboundKind } from './inboundLog'
 import { buildQQPlatformPayload, resolveQQSessionLabel, resolveQQThreadType } from './thread'
 
 const log = debug('channel:qq:bridge')
-const inboundLog = debug('channel:qq:webhook')
-const MAX_GENERATION_STEPS = 5
-const FINAL_ANSWER_STEP = 3
-export const QQ_UNSUPPORTED_MESSAGE = '当前版本暂不支持语音或视频消息，请发送文本、图片或文件。'
+export const QQ_UNSUPPORTED_MESSAGE = formatQQUnsupportedMessage
 const QQ_FAILURE_MESSAGE = '消息处理失败，请稍后重试。'
 
 function buildQQUserText(message: Message, text?: string): string | undefined {
@@ -80,26 +76,7 @@ export async function generateQQAgentReply(params: {
     generation: {
       instructions,
       messages: [...(params.history ?? []), { content: params.userContent ?? params.userText, role: 'user' }],
-      onStepEnd: (event) => {
-        const step = event as {
-          finishReason?: string
-          stepNumber?: number
-          toolCalls?: Array<{ toolName: string }>
-          toolResults?: unknown[]
-        }
-        log(
-          'step platform=qq step=%d finish=%s tools=%s results=%d',
-          step.stepNumber ?? 0,
-          step.finishReason ?? '-',
-          step.toolCalls?.map((call) => call.toolName).join(',') || '-',
-          step.toolResults?.length ?? 0
-        )
-      },
-      prepareStep: (event) => {
-        const stepNumber = (event as { stepNumber?: number }).stepNumber ?? 0
-        return stepNumber >= FINAL_ANSWER_STEP ? { activeTools: [], toolChoice: 'none' as const } : undefined
-      },
-      stopWhen: isStepCount(MAX_GENERATION_STEPS),
+      ...createChannelGenerationControls('qq'),
       tools,
     },
     history: params.history,
@@ -237,14 +214,12 @@ export async function handleQQMention(params: {
   const userText = buildQQUserText(message, message.text?.trim())
   const externalUserId = thread.id
   const messageKind = resolveQQInboundKind({ attachments: message.attachments, text: userText })
-  inboundLog(
-    formatQQInboundLog({
-      applicationId,
-      content: userText || '',
-      externalUserId: message.author?.userId || 'unknown',
-      messageKind,
-    })
-  )
+  logQQInbound({
+    applicationId,
+    content: userText || '',
+    externalUserId: message.author?.userId || 'unknown',
+    messageKind,
+  })
 
   const eventModel = new ChannelEventModel()
   const threadType = resolveQQThreadType(thread.id)
@@ -256,9 +231,10 @@ export async function handleQQMention(params: {
   })
 
   if (messageKind === 'audio' || messageKind === 'video') {
+    const unsupportedMessage = QQ_UNSUPPORTED_MESSAGE(messageKind)
     const { event, inserted } = await eventModel.ingestQQInbound({
       bindingId,
-      content: userText || QQ_UNSUPPORTED_MESSAGE,
+      content: userText || unsupportedMessage,
       externalUserId,
       externalUserName: resolveQQSessionLabel(thread, message),
       messageKind,
@@ -267,11 +243,11 @@ export async function handleQQMention(params: {
       threadType,
     })
     if (!inserted) return
-    await thread.post({ markdown: QQ_UNSUPPORTED_MESSAGE }).catch((error) => {
+    await thread.post({ markdown: unsupportedMessage }).catch((error) => {
       log('unsupported message reply failed app=%s: %O', applicationId, error)
     })
     await eventModel
-      .saveQQResponse(event.id, { text: QQ_UNSUPPORTED_MESSAGE })
+      .saveQQResponse(event.id, { text: unsupportedMessage })
       .catch((saveError) => log('save unsupported event failed app=%s: %O', applicationId, saveError))
     return
   }

@@ -1,4 +1,4 @@
-import { generateText } from 'ai'
+import { generateText, isStepCount } from 'ai'
 import type { LanguageModel, ModelMessage } from 'ai'
 import debug from 'debug'
 
@@ -18,9 +18,41 @@ import type { PureChatSettlement } from '@/server/purechat'
 import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 
 import { resolveChannelModelConfig } from './modelResolver'
-import type { ChannelAgentRequest, ChannelAgentResponse, ChannelGenerationOptions } from './types'
+import type { ChannelAgentRequest, ChannelAgentResponse, ChannelGenerationOptions, ChannelPlatform } from './types'
 
 const log = debug('channel:core:agent')
+
+export const CHANNEL_MAX_GENERATION_STEPS = 5
+export const CHANNEL_FINAL_ANSWER_STEP = 3
+
+export function createChannelGenerationControls(platform: ChannelPlatform): Pick<
+  ChannelGenerationOptions,
+  'onStepEnd' | 'prepareStep' | 'stopWhen'
+> {
+  return {
+    onStepEnd: (event) => {
+      const step = event as {
+        finishReason?: string
+        stepNumber?: number
+        toolCalls?: Array<{ toolName: string }>
+        toolResults?: unknown[]
+      }
+      log(
+        'step platform=%s step=%d finish=%s tools=%s results=%d',
+        platform,
+        step.stepNumber ?? 0,
+        step.finishReason ?? '-',
+        step.toolCalls?.map((call) => call.toolName).join(',') || '-',
+        step.toolResults?.length ?? 0
+      )
+    },
+    prepareStep: (event) => {
+      const stepNumber = (event as { stepNumber?: number }).stepNumber ?? 0
+      return stepNumber >= CHANNEL_FINAL_ANSWER_STEP ? { activeTools: [], toolChoice: 'none' as const } : undefined
+    },
+    stopWhen: isStepCount(CHANNEL_MAX_GENERATION_STEPS),
+  }
+}
 
 function generationMessages(params: ChannelAgentRequest, generation?: ChannelGenerationOptions): ModelMessage[] {
   return generation?.messages ?? params.history ?? [{ content: params.text, role: 'user' }]

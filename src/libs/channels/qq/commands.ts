@@ -4,43 +4,26 @@ import type { ChannelEventModel } from '@pure/database/models/channelEvent'
 
 import type { ChannelCommandEffects } from '../core/commands'
 import { buildChannelHelpText, runChannelCommand } from '../core/commands'
+import { channelGenerationRegistry } from '../core/generation'
 
 export const QQ_HELP_TEXT = buildChannelHelpText({
   footer: '支持私聊，或在群内 @ 机器人后发送指令。',
 })
 
-type ActiveGeneration = { abortController: AbortController }
-const activeGenerations = new Map<string, ActiveGeneration>()
 const pendingChatInvalidations = new Set<string>()
 
 const sessionKey = (applicationId: string, externalUserId: string) => `${applicationId}:${externalUserId}`
 
 export function abortQQGeneration(applicationId: string, externalUserId: string): boolean {
-  const key = sessionKey(applicationId, externalUserId)
-  const active = activeGenerations.get(key)
-  if (!active) return false
-  active.abortController.abort()
-  activeGenerations.delete(key)
-  return true
+  return channelGenerationRegistry.abort(sessionKey(applicationId, externalUserId))
 }
 
 export function beginQQGeneration(applicationId: string, externalUserId: string): AbortController {
-  const key = sessionKey(applicationId, externalUserId)
-  const existing = activeGenerations.get(key)
-  if (existing) {
-    existing.abortController.abort()
-    activeGenerations.delete(key)
-  }
-  const abortController = new AbortController()
-  activeGenerations.set(key, { abortController })
-  return abortController
+  return channelGenerationRegistry.begin(sessionKey(applicationId, externalUserId))
 }
 
 export function endQQGeneration(applicationId: string, externalUserId: string, controller: AbortController) {
-  const key = sessionKey(applicationId, externalUserId)
-  if (activeGenerations.get(key)?.abortController === controller) {
-    activeGenerations.delete(key)
-  }
+  channelGenerationRegistry.end(sessionKey(applicationId, externalUserId), controller)
 }
 
 /** 在当前 Chat handler 返回后失效实例，避免 SDK 收尾时访问已断开的 state。 */

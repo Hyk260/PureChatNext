@@ -1,5 +1,4 @@
 import { SHANGHAI_TIMEZONE } from '@pure/const'
-import { isStepCount } from 'ai'
 import type { ModelMessage } from 'ai'
 import type { Message, Thread } from 'chat'
 import debug from 'debug'
@@ -7,14 +6,13 @@ import debug from 'debug'
 import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
 import type { ChannelToolArtifact, ChannelToolContext } from '@/server/chat/toolRegistry'
 
-import { generateChannelAgentReply } from '../core/agentRuntime'
+import { createChannelGenerationControls, generateChannelAgentReply } from '../core/agentRuntime'
 import { buildChannelContextMessages } from '../core/context'
 import type { ChannelGenerationOptions } from '../core/types'
 import { listWechatConversationFiles, persistWechatFile, readWechatFile } from './fileArtifacts'
 
 const log = debug('channel:wechat:bridge')
-const MAX_GENERATION_STEPS = 5
-const FINAL_ANSWER_STEP = 3
+
 type WechatUserContent =
   | string
   | Array<
@@ -73,26 +71,7 @@ export async function generateWechatAgentReply(params: {
       params.attachmentContext,
     ].filter(Boolean).join('\n\n'),
     messages,
-    onStepEnd: (event) => {
-      const step = event as {
-        finishReason?: string
-        stepNumber?: number
-        toolCalls?: Array<{ toolName: string }>
-        toolResults?: unknown[]
-      }
-      log(
-        'step platform=wechat step=%d finish=%s tools=%s results=%d',
-        step.stepNumber ?? 0,
-        step.finishReason ?? '-',
-        step.toolCalls?.map((call) => call.toolName).join(',') || '-',
-        step.toolResults?.length ?? 0
-      )
-    },
-    prepareStep: (event) => {
-      const stepNumber = (event as { stepNumber?: number }).stepNumber ?? 0
-      return stepNumber >= FINAL_ANSWER_STEP ? { activeTools: [], toolChoice: 'none' as const } : undefined
-    },
-    stopWhen: isStepCount(MAX_GENERATION_STEPS),
+    ...createChannelGenerationControls('wechat'),
     tools,
   }
   const result = await generateChannelAgentReply({

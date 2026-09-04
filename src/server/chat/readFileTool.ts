@@ -27,7 +27,7 @@ export const createReadFileTool = (context: ChannelToolContext) =>
       const source = await context.files.read(context.userId, selected.file.id)
       const fileName = path.basename(source.file.name || 'conversation-file') || 'conversation-file'
       const tempDir = await mkdtemp(path.join(os.tmpdir(), 'purechat-file-'))
-      const filePath = path.join(tempDir, fileName)
+      const filePath = path.join(/* turbopackIgnore: true */ tempDir, fileName)
       try {
         await writeFile(filePath, source.buffer)
         const document = await loadFile(filePath, { filename: fileName, fileType: path.extname(fileName).slice(1) })

@@ -8,7 +8,6 @@ import { authorizeQQInternalWebhook } from '@/libs/channels/qq/webhookAuth'
 import { logger } from '@/libs/logger'
 
 export const maxDuration = 300
-export const preferredRegion = 'sin1'
 export const runtime = 'nodejs'
 
 type RouteContext = { params: Promise<{ applicationId: string }> }

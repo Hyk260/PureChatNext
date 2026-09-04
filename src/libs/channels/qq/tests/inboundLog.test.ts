@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatQQAttachmentContext, formatQQInboundLog, resolveQQInboundKind } from '../inboundLog'
+import { formatQQAttachmentContext, formatQQInboundLog, formatQQUnsupportedMessage, resolveQQInboundKind } from '../inboundLog'
+
+describe('QQ_UNSUPPORTED_MESSAGE', () => {
+  it('builds a message for the actual unsupported media type', () => {
+    expect(formatQQUnsupportedMessage('audio')).toContain('不支持语音消息')
+    expect(formatQQUnsupportedMessage('video')).toContain('不支持视频消息')
+  })
+})
 
 describe('resolveQQInboundKind', () => {
   it('prefers attachments over caption text', () => {

@@ -9,6 +9,7 @@ import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import { createNanoId } from '@pure/utils'
 import type { ChannelToolArtifact } from '@/server/chat/toolRegistry'
 import { applyChannelFirstBindWelcome, runChannelCommand } from '../core/commands'
+import { channelGenerationRegistry } from '../core/generation'
 import { getChannelHistoryTokenBudget, trimChannelHistory } from '../core/history'
 import { generateWechatAgentReply } from './agentBridge'
 import type { WechatAgentReply } from './agentBridge'
@@ -25,9 +26,6 @@ const EVENT_LEASE_MS = 3 * 60_000
 const IDLE_DELAY_MS = 500
 const MAX_TEXT_LENGTH = 2000
 const SUPPORTED_IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp'])
-
-type ActiveGeneration = { abortController: AbortController; eventId: string }
-const activeGenerations = new Map<string, ActiveGeneration>()
 
 const sessionKey = (bindingId: string, externalUserId: string) => `${bindingId}:${externalUserId}`
 
@@ -72,13 +70,7 @@ async function handleCommand(event: ChannelEventItem): Promise<string> {
 }
 
 export function abortActiveGeneration(bindingId: string, externalUserId: string): boolean {
-  const key = sessionKey(bindingId, externalUserId)
-  const active = activeGenerations.get(key)
-  if (!active) return false
-  active.abortController.abort()
-  void new ChannelEventModel().cancel(active.eventId)
-  activeGenerations.delete(key)
-  return true
+  return channelGenerationRegistry.abort(sessionKey(bindingId, externalUserId))
 }
 
 type WechatEventResponse = Partial<Omit<WechatAgentReply, 'text'>> & { text: string }
@@ -130,9 +122,11 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
   if (session.conversationVersion !== event.conversationVersion) throw new Error('Conversation changed')
 
   const key = sessionKey(event.bindingId, event.externalUserId)
-  if (activeGenerations.has(key)) throw new Error('A reply is already being generated')
-  const abortController = new AbortController()
-  activeGenerations.set(key, { abortController, eventId: event.id })
+  if (channelGenerationRegistry.has(key)) throw new Error('A reply is already being generated')
+  const abortController = channelGenerationRegistry.begin(key, {
+    eventId: event.id,
+    onAbort: () => void new ChannelEventModel().cancel(event.id),
+  })
   let stopTyping = () => {}
   try {
     const agentId = session.activeAgentId || binding.agentId
@@ -219,7 +213,7 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
     })
   } finally {
     stopTyping()
-    if (activeGenerations.get(key)?.eventId === event.id) activeGenerations.delete(key)
+    channelGenerationRegistry.end(key, abortController)
   }
 }
 

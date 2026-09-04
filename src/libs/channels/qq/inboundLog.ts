@@ -1,5 +1,9 @@
 import { createHash } from 'node:crypto'
 
+import debug from 'debug'
+
+const log = debug('channel:qq:webhook')
+
 const QQ_ATTACHMENT_KIND = {
   audio: 'audio',
   file: 'file',
@@ -25,6 +29,11 @@ const QQ_KIND_PLACEHOLDER: Record<string, string> = {
 }
 
 export type QQInboundKind = 'audio' | 'command' | 'file' | 'image' | 'text' | 'unsupported' | 'video'
+
+export function formatQQUnsupportedMessage(messageKind: 'audio' | 'video'): string {
+  const kindLabel = messageKind === 'audio' ? '语音' : '视频'
+  return `当前版本暂不支持${kindLabel}消息，请发送文本、图片或文件。`
+}
 
 export function resolveQQInboundKind(input: { attachments?: Array<{ type?: string }>; text?: string | null }): QQInboundKind {
   const attachmentType = input.attachments?.find((item) => item.type)?.type
@@ -65,4 +74,8 @@ export function formatQQInboundLog(event: {
 }) {
   const contactHash = createHash('sha256').update(event.externalUserId).digest('hex').slice(0, 10)
   return `[QQ Gateway] 收到${QQ_KIND_LABEL[event.messageKind] ?? '文本'}消息：应用=${event.applicationId}，联系人=sha256:${contactHash}，长度=${event.content.length}${formatInboundVisibleContent(event)}`
+}
+
+export function logQQInbound(event: Parameters<typeof formatQQInboundLog>[0]): void {
+  log(formatQQInboundLog(event))
 }

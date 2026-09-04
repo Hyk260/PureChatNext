@@ -35,7 +35,6 @@ const HomeSidebar = memo(() => {
   return (
     <Flex
       className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}
-      style={{ width: sidebarCollapsed ? 0 : 240 }}
     >
       <SidebarHeader />
       <Flex className='flex-col flex-1 gap-px min-h-[0px] w-[240px]'>

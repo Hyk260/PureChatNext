@@ -2,7 +2,6 @@
 
 import { QRCode, Spin } from 'antd'
 import { Alert, Button, Modal, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
@@ -18,33 +17,6 @@ const QR_SIZE = 240
 // 加载/二维码/状态文字的合计占位高度，用于各状态保持一致高度避免跳动
 // qrWrap: QR_SIZE(240) + padding(14*2) + border(1*2) = 270；+ gap(16) + 状态行(~22) ≈ 308
 const QR_PLACEHOLDER_HEIGHT = QR_SIZE + 28 + 2 + 16 + 22
-
-const styles = createStaticStyles(({ css }) => ({
-  // 二维码中间叠平台 Logo
-  qrIconOverlay: css`
-    pointer-events: none;
-
-    position: absolute;
-    z-index: 1;
-    inset-block-start: 50%;
-    inset-inline-start: 50%;
-    transform: translate(-50%, -50%);
-
-    border: 3px solid ${cssVar.colorBgContainer};
-    border-radius: 50%;
-
-    line-height: 0;
-  `,
-  qrWrap: css`
-    position: relative;
-
-    padding: 14px;
-    border: 1px solid ${cssVar.colorBorderSecondary};
-    border-radius: 16px;
-
-    background: ${cssVar.colorBgContainer};
-  `,
-}))
 
 export type WechatAuthCredentials = {
   botId: string
@@ -178,41 +150,36 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
     <Flex className='flex-col items-center gap-4 py-4'>
       {loading && (
         // 预留与「二维码盒子 + 状态文字」等高的占位，避免加载完成时高度突变跳动
-        <div
+        <Flex
+          className='flex-col items-center justify-center'
           style={{
             height: QR_PLACEHOLDER_HEIGHT,
-            display: 'grid',
-            placeItems: 'center',
           }}
         >
           <Spin size='large' />
-        </div>
+        </Flex>
       )}
       {qrImgUrl && !error && (
-        <div className={styles.qrWrap}>
+        <Flex className='relative rounded-2xl border border-line bg-surface p-[14px]'>
           <QRCode bordered={false} size={QR_SIZE} value={qrImgUrl} />
-          <div className={styles.qrIconOverlay}>
+          <Flex className='pointer-events-none absolute-center z-[1] rounded-full border-[3px] border-surface'>
             <PlatformAvatar platform='wechat' size={44} />
-          </div>
-        </div>
+          </Flex>
+        </Flex>
       )}
       {statusText && !error && <Text type='secondary'>{statusText}</Text>}
       {error && (
-        <div
+        <Flex
+          className='flex-col items-center justify-center gap-4'
           style={{
             minHeight: QR_PLACEHOLDER_HEIGHT,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: 16,
           }}
         >
           <Alert showIcon title={error} type='warning' />
           <Button icon={<RefreshCw size={16} />} onClick={() => void handleRefresh()}>
             刷新二维码
           </Button>
-        </div>
+        </Flex>
       )}
     </Flex>
   )

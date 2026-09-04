@@ -51,7 +51,6 @@ const SettingsSidebar = memo(() => {
   return (
     <Flex
       className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}
-      style={{ width: sidebarCollapsed ? 0 : 240 }}
     >
       <Flex className='flex-col gap-px h-full'>
         <SideBarHeaderLayout

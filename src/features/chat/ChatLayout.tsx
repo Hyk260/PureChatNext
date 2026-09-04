@@ -93,9 +93,8 @@ const ChatLayout = memo<Props>(
       <Flex className='flex-row h-[100dvh] w-full overflow-hidden'>
         <aside
           className={cx(styles.left, leftCollapsed && styles.leftCollapsed)}
-          style={{ width: leftCollapsed ? 0 : LEFT_WIDTH }}
         >
-          <div style={{ height: '100%', width: LEFT_WIDTH }}>{left}</div>
+          <Flex className='h-full w-[240px]'>{left}</Flex>
         </aside>
         <Flex className={[styles.main, 'flex-col h-full min-w-0']}>
           <ChatHeader
@@ -113,9 +112,8 @@ const ChatLayout = memo<Props>(
         </Flex>
         <aside
           className={cx(styles.right, rightCollapsed && styles.rightCollapsed)}
-          style={{ width: rightCollapsed ? 0 : RIGHT_WIDTH }}
         >
-          <div style={{ height: '100%', width: RIGHT_WIDTH }}>{right}</div>
+          <Flex className='h-full w-[320px]'>{right}</Flex>
         </aside>
       </Flex>
     )

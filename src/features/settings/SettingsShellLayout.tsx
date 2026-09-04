@@ -20,13 +20,10 @@ const SettingsShellLayout = ({ children }: { children: ReactNode }) => {
       sidebar={<SettingsSidebar />}
     >
       <Flex
-        className='flex-col flex-1 h-full min-h-[0px] w-full'
-
-        style={{
-          marginInline: isProviderRoute ? 0 : 'auto',
-          maxWidth: isProviderRoute ? 'none' : 1024,
-          overflow: isProviderRoute ? 'hidden' : 'auto',
-        }}
+        className={[
+          'flex-col flex-1 h-full min-h-[0px] w-full',
+          isProviderRoute ? 'm-0 max-w-none overflow-hidden' : 'mx-auto max-w-[1024px] overflow-auto',
+        ]}
       >
         {children}
       </Flex>

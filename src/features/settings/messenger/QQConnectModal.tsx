@@ -2,7 +2,6 @@
 
 import { Button as AntButton, QRCode, Radio, Spin } from 'antd'
 import { Alert, Button, Flex, Input, Select, Text } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
@@ -27,26 +26,6 @@ const MAX_SESSION_MISSING_RETRIES = 2
 const QR_PLACEHOLDER_HEIGHT = 318
 
 type ConnectMode = 'qr' | QQConnectionMode
-
-const styles = createStaticStyles(({ css }) => ({
-  qrIcon: css`
-    pointer-events: none;
-    position: absolute;
-    inset-block-start: 50%;
-    inset-inline-start: 50%;
-    transform: translate(-50%, -50%);
-    border: 3px solid ${cssVar.colorBgContainer};
-    border-radius: 50%;
-    line-height: 0;
-  `,
-  qrWrap: css`
-    position: relative;
-    padding: 12px;
-    border: 1px solid ${cssVar.colorBorderSecondary};
-    border-radius: 14px;
-    background: ${cssVar.colorBgContainer};
-  `,
-}))
 
 interface QQConnectContentProps {
   agentId: string
@@ -239,12 +218,12 @@ const QQConnectContent = memo<QQConnectContentProps>(
             ) : null}
             {qrStatus?.status === 'waiting' && (
               <>
-                <div className={styles.qrWrap}>
+                <Flex className='relative rounded-[14px] border border-line bg-surface p-3'>
                   <QRCode bordered={false} size={QR_SIZE} value={qrStatus.qrCodeUrl} />
-                  <div className={styles.qrIcon}>
+                  <Flex className='pointer-events-none absolute-center z-[1] rounded-full border-[3px] border-surface'>
                     <PlatformAvatar platform='qq' size={42} />
-                  </div>
-                </div>
+                  </Flex>
+                </Flex>
                 <Text type='secondary'>请使用手机 QQ 扫描二维码并确认连接</Text>
               </>
             )}

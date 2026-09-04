@@ -28,6 +28,7 @@ export type ChannelTimelineEvent = {
   lastErrorMessage: string | null
   messageKind: string
   model: string | null
+  platformPayload?: Record<string, unknown> | null
   provider: string | null
   responseText: string | null
   status: string
@@ -42,6 +43,17 @@ type IngestEvent = {
   externalUserId: string
   messageKind: 'audio' | 'command' | 'file' | 'image' | 'text' | 'unsupported' | 'video'
   platformMessageId: string
+}
+
+type QQInboundEvent = {
+  bindingId: string
+  content: string
+  externalUserId: string
+  externalUserName: string | null
+  messageKind: 'audio' | 'command' | 'file' | 'image' | 'text' | 'unsupported' | 'video'
+  platformMessageId: string
+  platformPayload: Record<string, unknown>
+  threadType: string
 }
 
 async function ensureSession(tx: Transaction, event: IngestEvent) {
@@ -113,6 +125,137 @@ export class ChannelEventModel {
         })
         .where(eq(channelBindings.id, bindingId))
       return inserted
+    })
+  }
+
+  /** QQ 入站事件幂等落库；返回是否首次写入，用于避免 gateway/webhook 重试重复回复。 */
+  ingestQQInbound = async (
+    event: QQInboundEvent
+  ): Promise<{ event: ChannelEventItem; inserted: boolean }> => {
+    return this.db.transaction(async (tx) => {
+      const now = new Date()
+      const [session] = await tx
+        .insert(channelSessions)
+        .values({
+          bindingId: event.bindingId,
+          externalUserId: event.externalUserId,
+          externalUserName: event.externalUserName,
+          lastActiveAt: now,
+          threadType: event.threadType,
+        })
+        .onConflictDoUpdate({
+          set: {
+            externalUserName: event.externalUserName,
+            lastActiveAt: now,
+            threadType: event.threadType,
+            updatedAt: now,
+          },
+          target: [channelSessions.bindingId, channelSessions.externalUserId],
+        })
+        .returning()
+      const [inserted] = await tx
+        .insert(channelEvents)
+        .values({
+          bindingId: event.bindingId,
+          content: event.content,
+          conversationVersion: session!.conversationVersion,
+          encryptedContextToken: '',
+          externalUserId: event.externalUserId,
+          messageKind: event.messageKind,
+          platformMessageId: event.platformMessageId,
+          platformPayload: event.platformPayload,
+          sessionId: session!.id,
+        })
+        .onConflictDoNothing({ target: [channelEvents.bindingId, channelEvents.platformMessageId] })
+        .returning()
+
+      if (inserted) {
+        await tx
+          .update(channelBindings)
+          .set({ lastActiveAt: now, updatedAt: now })
+          .where(eq(channelBindings.id, event.bindingId))
+        return { event: inserted, inserted: true }
+      }
+
+      const [existing] = await tx
+        .select()
+        .from(channelEvents)
+        .where(
+          and(
+            eq(channelEvents.bindingId, event.bindingId),
+            eq(channelEvents.platformMessageId, event.platformMessageId)
+          )
+        )
+        .limit(1)
+      if (!existing) throw new Error('QQ event conflict without existing row')
+      return { event: existing, inserted: false }
+    })
+  }
+
+  /** 写回 QQ 生成结果；不依赖微信 event lease。 */
+  saveQQResponse = async (
+    id: string,
+    response: {
+      durationMs?: number
+      errorCode?: string
+      errorMessage?: string
+      model?: string
+      provider?: string
+      status?: 'completed' | 'failed'
+      text: string
+    }
+  ) => {
+    const now = new Date()
+    await this.db
+      .update(channelEvents)
+      .set({
+        ...(response.durationMs === undefined ? {} : { durationMs: response.durationMs }),
+        ...(response.errorCode === undefined ? {} : { lastErrorCode: response.errorCode }),
+        ...(response.errorMessage === undefined ? {} : { lastErrorMessage: response.errorMessage.slice(0, 500) }),
+        ...(response.model ? { model: response.model } : {}),
+        ...(response.provider ? { provider: response.provider } : {}),
+        ...(response.status === 'completed' ? { completedAt: now } : {}),
+        responseText: response.text,
+        status: response.status ?? 'completed',
+        updatedAt: now,
+      })
+      .where(eq(channelEvents.id, id))
+  }
+
+  /** 记录网页代发的 QQ 文本消息；出站状态流转复用 completeOutbound / failOutbound。 */
+  insertQQOutbound = async (params: {
+    bindingId: string
+    conversationVersion: number
+    externalUserId: string
+    platformMessageId: string
+    platformPayload: Record<string, unknown>
+    responseText: string
+    sessionId: string
+  }) => {
+    const now = new Date()
+    return this.db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(channelEvents)
+        .values({
+          bindingId: params.bindingId,
+          completedAt: null,
+          content: '',
+          conversationVersion: params.conversationVersion,
+          encryptedContextToken: '',
+          externalUserId: params.externalUserId,
+          messageKind: 'outbound',
+          platformMessageId: params.platformMessageId,
+          platformPayload: params.platformPayload,
+          responseText: params.responseText,
+          sessionId: params.sessionId,
+          status: 'processing',
+        })
+        .returning()
+      await tx
+        .update(channelSessions)
+        .set({ lastActiveAt: now, updatedAt: now })
+        .where(eq(channelSessions.id, params.sessionId))
+      return row!
     })
   }
 
@@ -368,6 +511,7 @@ export class ChannelEventModel {
         externalUserName: channelSessions.externalUserName,
         id: channelSessions.id,
         lastActiveAt: channelSessions.lastActiveAt,
+        threadType: channelSessions.threadType,
       })
       .from(channelSessions)
       .where(eq(channelSessions.bindingId, bindingId))
@@ -389,6 +533,7 @@ export class ChannelEventModel {
         externalUserName: channelSessions.externalUserName,
         id: channelSessions.id,
         lastActiveAt: channelSessions.lastActiveAt,
+        threadType: channelSessions.threadType,
       })
       .from(channelSessions)
       .innerJoin(channelBindings, eq(channelSessions.bindingId, channelBindings.id))
@@ -444,6 +589,7 @@ export class ChannelEventModel {
         lastErrorMessage: channelEvents.lastErrorMessage,
         messageKind: channelEvents.messageKind,
         model: channelEvents.model,
+        platformPayload: channelEvents.platformPayload,
         provider: channelEvents.provider,
         responseText: channelEvents.responseText,
         status: channelEvents.status,

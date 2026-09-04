@@ -231,6 +231,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       appId: credentials.appId,
       appSecret: credentials.appSecret,
       applicationId: binding.applicationId,
+      bindingId: binding.id,
       model: binding.model,
       provider: binding.provider,
       userId: binding.userId,

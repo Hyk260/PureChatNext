@@ -14,6 +14,7 @@ export type QQChatContext = {
   appId: string
   appSecret: string
   applicationId: string
+  bindingId: string
   model?: string | null
   provider?: string | null
   userId: string
@@ -26,6 +27,7 @@ function registerHandlers(chat: Chat, ctx: QQChatContext): void {
     await handleQQMention({
       agentId: ctx.agentId,
       applicationId: ctx.applicationId,
+      bindingId: ctx.bindingId,
       message,
       model: ctx.model,
       provider: ctx.provider,

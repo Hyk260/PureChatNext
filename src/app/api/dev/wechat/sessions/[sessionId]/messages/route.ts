@@ -293,6 +293,7 @@ export const POST = withAuth<{ sessionId: string }>(async (request, { params, us
       lastErrorMessage: event.lastErrorMessage,
       messageKind: event.messageKind,
       model: event.model,
+      platformPayload: event.platformPayload,
       provider: event.provider,
       responseText: event.responseText,
       status: 'completed',

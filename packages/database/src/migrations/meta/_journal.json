@@ -169,6 +169,13 @@
       "when": 1788330959692,
       "tag": "0023_tranquil_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1788424466058,
+      "tag": "0024_nifty_outlaw_kid",
+      "breakpoints": true
     }
   ]
 }

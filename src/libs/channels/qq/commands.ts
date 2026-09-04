@@ -3,7 +3,6 @@ import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelB
 
 import type { ChannelCommandEffects } from '../core/commands'
 import { buildChannelHelpText, runChannelCommand } from '../core/commands'
-import { invalidateQQChat } from './chatBot'
 
 export const QQ_HELP_TEXT = buildChannelHelpText({
   footer: '支持私聊，或在群内 @ 机器人后发送指令。',
@@ -47,6 +46,7 @@ export function endQQGeneration(applicationId: string, externalUserId: string, c
 export async function flushQQChatInvalidation(applicationId: string): Promise<void> {
   if (!pendingChatInvalidations.has(applicationId)) return
   pendingChatInvalidations.delete(applicationId)
+  const { invalidateQQChat } = await import('./chatBot')
   await invalidateQQChat(applicationId)
 }
 

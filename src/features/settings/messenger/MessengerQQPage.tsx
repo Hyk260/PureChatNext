@@ -5,9 +5,11 @@ import { Alert, Button, confirmModal, Select, Text, copyToClipboard, Flex } from
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
-import { Trash2Icon } from 'lucide-react'
+import { isDev } from '@/libs/constants'
+import { MessagesSquareIcon, Trash2Icon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 import useSWR from 'swr'
 
 import { useSession } from '@/libs/better-auth/client'
@@ -121,6 +123,7 @@ const DISCONNECTED_STATUS: QQStatus = {
 
 const MessengerQQPage = memo(() => {
   const { message } = useApp()
+  const navigate = useNavigate()
   const platformMeta = getMessengerPlatform('qq')!
   const { data: session } = useSession()
   const userId = session?.user?.id
@@ -260,18 +263,27 @@ const MessengerQQPage = memo(() => {
   const showConnect = !status?.applicationId
   const controlsDisabled = binding || saving
 
-  const headerAction = showConnect ? (
-    <QQConnectButton
-      agentId={agentId}
-      gatewaySupported={gatewaySupported}
-      model={modelId}
-      provider={provider}
-      onConnected={handleConnected}
-    />
-  ) : (
-    <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>
-      断开
-    </Button>
+  const headerAction = (
+    <Flex className='flex-row items-center gap-2'>
+      {isDev ? (
+        <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/dev/qq-conversation')}>
+          对话监控
+        </Button>
+      ) : null}
+      {showConnect ? (
+        <QQConnectButton
+          agentId={agentId}
+          gatewaySupported={gatewaySupported}
+          model={modelId}
+          provider={provider}
+          onConnected={handleConnected}
+        />
+      ) : (
+        <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>
+          断开
+        </Button>
+      )}
+    </Flex>
   )
 
   return (

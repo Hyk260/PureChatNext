@@ -24,9 +24,11 @@ const QQ_KIND_PLACEHOLDER: Record<string, string> = {
   video: '，内容=[视频]',
 }
 
-export function resolveQQInboundKind(input: { attachments?: Array<{ type?: string }>; text?: string | null }) {
+export type QQInboundKind = 'audio' | 'command' | 'file' | 'image' | 'text' | 'unsupported' | 'video'
+
+export function resolveQQInboundKind(input: { attachments?: Array<{ type?: string }>; text?: string | null }): QQInboundKind {
   const attachmentType = input.attachments?.find((item) => item.type)?.type
-  if (attachmentType && attachmentType in QQ_ATTACHMENT_KIND) return attachmentType
+  if (attachmentType && attachmentType in QQ_ATTACHMENT_KIND) return attachmentType as QQInboundKind
   const text = input.text?.trim()
   if (!text) return 'unsupported'
   if (text.startsWith('/')) return 'command'

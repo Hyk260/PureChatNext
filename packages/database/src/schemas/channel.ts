@@ -63,6 +63,8 @@ export const channelSessions = pgTable(
       .notNull(),
     externalUserId: varchar255('external_user_id').notNull(),
     externalUserName: varchar255('external_user_name'),
+    /** QQ 会话线程类型（group / c2c / guild / dms），微信保持 null。 */
+    threadType: varchar255('thread_type'),
     activeAgentId: text('active_agent_id'),
     conversationVersion: integer('conversation_version').notNull().default(1),
     lastActiveAt: timestamptz('last_active_at').notNull().defaultNow(),
@@ -95,6 +97,8 @@ export const channelEvents = pgTable(
     encryptedContextToken: text('encrypted_context_token').notNull(),
     status: varchar255('status').notNull().default('pending'),
     responseText: text('response_text'),
+    /** 平台专属载荷，例如 QQ 线程与附件元数据；不向客户端下发敏感凭据。 */
+    platformPayload: jsonb('platform_payload').$type<Record<string, unknown>>(),
     provider: varchar255('provider'),
     model: varchar255('model'),
     durationMs: integer('duration_ms'),

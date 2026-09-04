@@ -14,22 +14,16 @@ import {
 } from './modelResolver'
 
 describe('channel model resolver', () => {
-  it('uses the explicit provider and model before Agent defaults', () => {
+  it('uses the explicit channel provider and model', () => {
     expect(
       resolveChannelModelConfig({
-        agentModel: 'agent-model',
-        agentProvider: 'openai',
         model: 'channel-model',
         provider: 'deepseek',
       })
     ).toEqual({ model: 'channel-model', provider: 'deepseek' })
   })
 
-  it('falls back to the Agent configuration and then the provider default', () => {
-    expect(resolveChannelModelConfig({ agentModel: 'agent-model', agentProvider: 'openai' })).toEqual({
-      model: 'agent-model',
-      provider: 'openai',
-    })
+  it('falls back to the provider default when the channel has no model', () => {
     expect(resolveChannelModelConfig({ provider: 'deepseek' })).toEqual({
       model: defaultChannelModel('deepseek'),
       provider: 'deepseek',
@@ -47,18 +41,11 @@ describe('channel model resolver', () => {
     })
   })
 
-  it('supports strict validation for channels that reject unknown providers', () => {
+  it('falls back when the channel provider is unknown', () => {
     expect(resolveChannelModelConfig({ provider: 'unsupported' })).toEqual({
       model: defaultChannelModel('deepseek'),
       provider: 'deepseek',
     })
-    expect(() =>
-      resolveChannelModelConfig({
-        channelName: 'wechat',
-        provider: 'unsupported',
-        providerPolicy: 'strict',
-      })
-    ).toThrow('wechat')
   })
 
   it('recognizes only providers supported by the channel runtime', () => {

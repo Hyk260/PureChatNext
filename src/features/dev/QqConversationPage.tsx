@@ -1,24 +1,28 @@
 'use client'
 
 import {
+  ArrowLeft,
   Bot,
-  Check,
-  Copy,
   Download,
   ExternalLink,
   Loader2,
   MessageSquare,
   Send,
   User,
-  Wifi,
-  WifiOff,
-  X,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { formatDateTime, formatSize } from '@pure/utils/client'
+import { ActionIcon } from '@pure/ui'
 
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
+import {
+  ConversationExportDialog,
+  CopyMessageButton,
+  LoadingConversation,
+  StatusChip,
+} from '@/features/dev/ConversationShared'
 import {
   fetchQQDevSessionMessages,
   fetchQQDevSessions,
@@ -26,7 +30,6 @@ import {
 } from '@/features/dev/qqConversationApi'
 import type { QQDevMessage, QQDevSession } from '@/features/dev/qqConversationApi'
 import { createQQConversationExport, createQQExportFilename } from '@/features/dev/qqConversationExport'
-import type { QQExportMode } from '@/features/dev/qqConversationExport'
 import {
   getActiveQQEventIds,
   hasActiveQQMessages,
@@ -43,114 +46,6 @@ const STATUS_POLL_MS = 30_000
 function truncateId(id: string, head = 8, tail = 4) {
   if (id.length <= head + tail + 1) return id
   return `${id.slice(0, head)}…${id.slice(-tail)}`
-}
-
-function statusChip(status?: string) {
-  if (!status || status === 'completed') return null
-  const label: Record<string, string> = {
-    canceled: '已取消',
-    failed: '失败',
-    pending: '排队',
-    processing: '处理中',
-    retry: '重试',
-  }
-  const color: Record<string, string> = {
-    canceled: 'bg-slate-100 text-slate-600',
-    failed: 'bg-rose-50 text-rose-700 ring-rose-200',
-    pending: 'bg-sky-50 text-sky-700 ring-sky-200',
-    processing: 'bg-amber-50 text-amber-700 ring-amber-200',
-    retry: 'bg-orange-50 text-orange-700 ring-orange-200',
-  }
-  return (
-    <span
-      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${color[status] ?? 'bg-slate-100 text-slate-600'}`}
-    >
-      {label[status] ?? status}
-    </span>
-  )
-}
-
-function ExportDialog({
-  messages,
-  onClose,
-  session,
-}: {
-  messages: QQDevMessage[]
-  onClose: () => void
-  session: QQDevSession
-}) {
-  const [mode, setMode] = useState<QQExportMode>('full')
-  const [feedback, setFeedback] = useState<string | null>(null)
-  const content = useMemo(
-    () => JSON.stringify(createQQConversationExport(mode, messages, session), null, 2),
-    [messages, mode, session]
-  )
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(content)
-      setFeedback('JSON 已复制')
-    } catch {
-      setFeedback('复制失败，请手动复制预览内容')
-    }
-  }
-
-  const download = () => {
-    const url = URL.createObjectURL(new Blob([content], { type: 'application/json;charset=utf-8' }))
-    const link = document.createElement('a')
-    link.download = createQQExportFilename(session)
-    link.href = url
-    link.click()
-    URL.revokeObjectURL(url)
-  }
-
-  return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm'>
-      <div className='flex max-h-[min(760px,90vh)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl'>
-        <div className='flex items-center gap-3 border-b border-slate-100 px-5 py-4'>
-          <div className='min-w-0 flex-1'>
-            <h2 className='text-base font-semibold'>导出 QQ 会话</h2>
-            <p className='mt-0.5 truncate text-xs text-slate-500'>仅包含当前页面已加载的消息</p>
-          </div>
-          <button className='rounded-lg p-2 text-slate-400 hover:bg-slate-100' type='button' onClick={onClose}>
-            <X className='size-4' />
-          </button>
-        </div>
-        <div className='flex gap-1 border-b border-slate-100 bg-slate-50 px-5 py-3'>
-          {(
-            [
-              ['full', '完整 JSON'],
-              ['openai', 'OpenAI 兼容'],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium ${mode === value ? 'bg-white text-slate-900 ring-1 ring-slate-200' : 'text-slate-500'}`}
-              type='button'
-              onClick={() => {
-                setMode(value)
-                setFeedback(null)
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <pre className='min-h-0 flex-1 overflow-auto bg-slate-950 p-5 text-xs leading-5 text-slate-200'>{content}</pre>
-        <div className='flex items-center justify-end gap-2 border-t border-slate-100 px-5 py-4'>
-          {feedback ? <span className='mr-auto text-xs text-slate-500'>{feedback}</span> : null}
-          <button className='rounded-lg px-3 py-2 text-xs ring-1 ring-slate-200' type='button' onClick={copy}>
-            <Copy className='mr-1 inline size-3.5' />
-            复制 JSON
-          </button>
-          <button className='rounded-lg bg-slate-900 px-3 py-2 text-xs text-white' type='button' onClick={download}>
-            <Download className='mr-1 inline size-3.5' />
-            下载文件
-          </button>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 function AttachmentCard({ attachment }: { attachment: NonNullable<QQDevMessage['attachments']>[number] }) {
@@ -172,6 +67,7 @@ function AttachmentCard({ attachment }: { attachment: NonNullable<QQDevMessage['
 }
 
 export default function QqConversationPage() {
+  const navigate = useNavigate()
   const [status, setStatus] = useState<QQStatus | null>(null)
   const [sessions, setSessions] = useState<QQDevSession[]>([])
   const [bound, setBound] = useState(false)
@@ -341,29 +237,46 @@ export default function QqConversationPage() {
   }
 
   if (loading) {
-    return (
-      <div className='flex h-screen items-center justify-center bg-slate-50 text-slate-500'>
-        <Loader2 className='mr-2 size-4 animate-spin' />
-        加载 QQ 会话
-      </div>
-    )
+    return <LoadingConversation label='加载 QQ 会话' />
   }
 
   const connected = Boolean(status?.connected)
 
   return (
-    <div className='flex h-screen bg-slate-50 text-slate-900'>
-      <aside className='flex w-[320px] flex-col border-r border-slate-200 bg-white'>
-        <div className='flex items-center gap-2 border-b border-slate-100 px-4 py-4'>
-          <div className='min-w-0 flex-1'>
-            <h1 className='text-sm font-semibold'>QQ 对话</h1>
-            <div className='mt-1 flex items-center gap-1.5 text-xs text-slate-500'>
-              {connected ? <Wifi className='size-3.5 text-emerald-500' /> : <WifiOff className='size-3.5 text-rose-500' />}
-              {connected ? '已连接' : '未连接'}
+    <main className='flex h-screen flex-col bg-[#f0f2f5] text-slate-900'>
+      <header className='shrink-0 border-b border-slate-200/80 bg-white/90 backdrop-blur-md'>
+        <div className='mx-auto flex w-full max-w-[1400px] items-center gap-3 px-4 py-3 sm:px-6'>
+          <ActionIcon
+            aria-label='返回上一页'
+            icon={ArrowLeft}
+            size='small'
+            title='返回上一页'
+            onClick={() => navigate(-1)}
+          />
+          <div className='flex items-center gap-2'>
+            <div className='flex size-9 items-center justify-center rounded-xl bg-sky-50 text-sky-600 ring-1 ring-sky-100'>
+              <MessageSquare className='size-4' />
+            </div>
+            <div>
+              <h1 className='text-sm font-semibold tracking-tight'>QQ 对话监控</h1>
+              <p className='text-[11px] text-slate-500'>Agent ↔ QQ 用户 · Dev</p>
             </div>
           </div>
+          <span className={`ml-2 inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium ring-1 ring-slate-200 ${connected ? 'text-emerald-700' : 'text-rose-700'}`}>
+            <span className={`size-1.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+            {connected ? '已连接' : '未连接'}
+          </span>
+          <span className='ml-auto text-[11px] text-slate-500'>会话 {sessions.length}</span>
         </div>
-        <div className='min-h-0 flex-1 overflow-auto p-2'>
+      </header>
+
+      <div className='mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 gap-0 overflow-hidden px-0 sm:gap-3 sm:px-4 sm:py-3 lg:px-6'>
+      <aside className='flex h-full min-h-0 w-[280px] shrink-0 flex-col overflow-hidden border-r border-slate-200/80 bg-white sm:rounded-2xl sm:border'>
+        <div className='flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3'>
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500'>会话</span>
+          <span className='rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600'>{sessions.length}</span>
+        </div>
+        <div className='min-h-0 flex-1 overflow-y-auto p-2'>
           {sessions.length === 0 ? (
             <div className='flex flex-col items-center gap-3 px-6 py-14 text-center text-slate-400'>
               <MessageSquare className='size-8' />
@@ -373,21 +286,18 @@ export default function QqConversationPage() {
             sessions.map((session) => (
               <button
                 key={session.id}
-                className={`mb-1 flex w-full flex-col gap-1 rounded-xl px-3 py-2.5 text-left ${
-                  session.id === selectedId ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'
-                }`}
+                className={`mb-1 flex w-full flex-col gap-1 rounded-xl px-3 py-2.5 text-left transition ${session.id === selectedId ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-50'}`}
                 type='button'
                 onClick={() => void loadSession(session.id)}
               >
                 <div className='flex items-center gap-2'>
                   <User className='size-3.5 shrink-0 opacity-60' />
-                  <span className='min-w-0 flex-1 truncate text-xs font-medium'>
-                    {session.externalUserName || truncateId(session.externalUserId, 10, 6)}
-                  </span>
+                  <span className='min-w-0 flex-1 truncate text-xs font-medium'>{session.externalUserName || truncateId(session.externalUserId, 10, 6)}</span>
+                  <span className={`rounded px-1 py-0.5 text-[10px] font-medium ${session.canSend ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{session.canSend ? '可代发' : '只读'}</span>
                 </div>
                 <div className='flex items-center justify-between gap-2 text-[10px] text-slate-400'>
                   <span className='truncate'>{session.agentTitle ?? session.agentId}</span>
-                  <span>{formatDateTime(session.lastActiveAt)}</span>
+                  <span className='shrink-0'>{formatDateTime(session.lastActiveAt)}</span>
                 </div>
               </button>
             ))
@@ -395,8 +305,8 @@ export default function QqConversationPage() {
         </div>
       </aside>
 
-      <main className='flex min-w-0 flex-1 flex-col'>
-        <div className='flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3'>
+      <main className='flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white sm:rounded-2xl sm:border sm:border-slate-200/80'>
+        <div className='flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3'>
           <div className='min-w-0'>
             <div className='truncate text-sm font-semibold'>
               {sessionMeta?.externalUserName || truncateId(sessionMeta?.externalUserId ?? '', 12, 6) || '选择会话'}
@@ -431,9 +341,9 @@ export default function QqConversationPage() {
         />
 
         {sessionMeta ? (
-          <div className='flex items-end gap-2 border-t border-slate-200 bg-white p-3'>
+          <div className='flex shrink-0 items-end gap-2 border-t border-slate-100 px-4 py-3 sm:px-6'>
             <textarea
-              className='min-h-[52px] flex-1 resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500'
+              className='min-h-[44px] flex-1 resize-none rounded-xl bg-slate-50 px-3 py-2.5 text-sm outline-none ring-1 ring-slate-200 focus:bg-white focus:ring-slate-300'
               placeholder={sessionMeta.canSend ? '以 Agent 身份发送文字…' : '当前会话仅可查看'}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
@@ -445,7 +355,7 @@ export default function QqConversationPage() {
               }}
             />
             <button
-              className='rounded-xl bg-slate-900 px-4 py-2 text-white disabled:opacity-40'
+              className='inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-sky-600 px-3.5 text-sm font-medium text-white transition hover:bg-sky-500 disabled:opacity-50'
               disabled={!sessionMeta.canSend || !draft.trim() || sending}
               type='button'
               onClick={() => void send()}
@@ -457,9 +367,18 @@ export default function QqConversationPage() {
       </main>
 
       {exportOpen && sessionMeta ? (
-        <ExportDialog messages={messages} onClose={() => setExportOpen(false)} session={sessionMeta} />
+        <ConversationExportDialog
+          createExport={createQQConversationExport}
+          createFilename={createQQExportFilename}
+          exportMode='full'
+          messages={messages}
+          onClose={() => setExportOpen(false)}
+          session={sessionMeta}
+          title='导出 QQ 会话'
+        />
       ) : null}
     </div>
+    </main>
   )
 }
 
@@ -501,24 +420,20 @@ function MessageList({
   }
 
   return (
-    <div className='min-h-0 flex-1 overflow-auto px-4 py-4' ref={scrollRef}>
+    <div className='min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6' ref={scrollRef}>
       {messages.map((message) => {
         const isUser = message.role === 'user'
+        const hasMedia = Boolean(message.fileUrl || message.attachments?.length)
         return (
-          <div key={message.id} className={`mb-3 flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[78%] ${isUser ? 'bg-slate-900 text-white' : 'bg-white ring-1 ring-slate-200'} rounded-2xl px-3.5 py-2.5`}>
-              <div className='mb-1 flex items-center gap-2 text-[10px] text-slate-400'>
-                {isUser ? <User className='size-3' /> : <Bot className='size-3' />}
-                {formatDateTime(message.createdAt)}
-                {statusChip(message.status)}
-                <button
-                  className='ml-auto text-slate-400 hover:text-slate-600'
-                  type='button'
-                  onClick={() => void onCopy(message.text, message.id)}
-                >
-                  {copiedMessageId === message.id ? <Check className='size-3' /> : <Copy className='size-3' />}
-                </button>
-              </div>
+          <div key={message.id} className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
+            <div className='flex items-center gap-1.5 px-1'>
+              {isUser ? <User className='size-3 text-slate-400' /> : <Bot className='size-3 text-sky-600' />}
+              <span className='text-[10px] font-medium text-slate-400'>{isUser ? 'QQ 用户' : 'Agent'}</span>
+              <StatusChip status={message.status} />
+              <span className='text-[10px] text-slate-300'>{formatDateTime(message.createdAt)}</span>
+            </div>
+            <div className={`group flex max-w-[92%] items-end gap-1.5 ${isUser ? 'flex-row-reverse' : ''}`}>
+              <div className={`max-w-[min(720px,100%)] rounded-2xl text-sm leading-relaxed shadow-sm ${isUser ? 'rounded-br-md bg-slate-900 px-3.5 py-2.5 text-white' : 'rounded-bl-md bg-slate-50 px-3.5 py-2.5 text-slate-800 ring-1 ring-slate-200/80'}`}>
               {isUser ? (
                 <div className='whitespace-pre-wrap text-sm'>{message.text}</div>
               ) : (
@@ -542,6 +457,12 @@ function MessageList({
                     version: 1,
                   }}
                 />
+              ) : null}
+              </div>
+              {!hasMedia && message.text.trim() ? (
+                <span className='mb-0.5 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100'>
+                  <CopyMessageButton copied={copiedMessageId === message.id} onCopy={() => void onCopy(message.text, message.id)} />
+                </span>
               ) : null}
             </div>
           </div>

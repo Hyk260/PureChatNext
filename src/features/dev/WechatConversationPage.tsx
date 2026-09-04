@@ -3,9 +3,8 @@
 import {
   AlertCircle,
   ArrowLeftRight,
+  ArrowLeft,
   Bot,
-  Check,
-  Copy,
   Download,
   File,
   FileArchive,
@@ -28,11 +27,13 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { formatDateTime, formatSize } from '@pure/utils/client'
+import { ActionIcon } from '@pure/ui'
 
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
+import { ConversationExportDialog, CopyMessageButton, StatusChip } from '@/features/dev/ConversationShared'
 import {
   fetchWechatDevSessionMessages,
   fetchWechatDevSessions,
@@ -40,7 +41,6 @@ import {
 } from '@/features/dev/wechatConversationApi'
 import type { WechatDevMessage, WechatDevSession } from '@/features/dev/wechatConversationApi'
 import { createWechatConversationExport, createWechatExportFilename } from '@/features/dev/wechatConversationExport'
-import type { WechatExportMode } from '@/features/dev/wechatConversationExport'
 import {
   getActiveWechatEventIds,
   hasActiveWechatMessages,
@@ -181,148 +181,6 @@ function formatDuration(durationMs: number): string {
 
 async function copyText(text: string): Promise<void> {
   await navigator.clipboard.writeText(text)
-}
-
-function downloadText(content: string, filename: string) {
-  const url = URL.createObjectURL(new Blob([content], { type: 'application/json;charset=utf-8' }))
-  const link = document.createElement('a')
-  link.download = filename
-  link.href = url
-  link.click()
-  URL.revokeObjectURL(url)
-}
-
-function ExportDialog({
-  messages,
-  onClose,
-  session,
-}: {
-  messages: WechatDevMessage[]
-  onClose: () => void
-  session: WechatDevSession
-}) {
-  const [mode, setMode] = useState<WechatExportMode>('full')
-  const [feedback, setFeedback] = useState<string | null>(null)
-  const content = useMemo(
-    () => JSON.stringify(createWechatConversationExport(mode, messages, session), null, 2),
-    [messages, mode, session]
-  )
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
-
-  const handleCopy = async () => {
-    try {
-      await copyText(content)
-      setFeedback('JSON 已复制')
-    } catch {
-      setFeedback('复制失败，请手动复制预览内容')
-    }
-  }
-
-  return (
-    <div
-      aria-labelledby='wechat-export-title'
-      aria-modal='true'
-      className='fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm'
-      role='dialog'
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
-    >
-      <div className='flex max-h-[min(760px,90vh)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl'>
-        <div className='flex items-center gap-3 border-b border-slate-100 px-5 py-4'>
-          <div className='min-w-0 flex-1'>
-            <h2 id='wechat-export-title' className='text-base font-semibold'>
-              导出会话
-            </h2>
-            <p className='mt-0.5 truncate text-xs text-slate-500'>仅包含当前页面已加载的消息</p>
-          </div>
-          <button
-            aria-label='关闭'
-            className='rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700'
-            type='button'
-            onClick={onClose}
-          >
-            <X className='size-4' />
-          </button>
-        </div>
-
-        <div className='flex gap-1 border-b border-slate-100 bg-slate-50 px-5 py-3'>
-          {(
-            [
-              ['full', '完整 JSON'],
-              ['openai', 'OpenAI 兼容'],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${mode === value ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
-              type='button'
-              onClick={() => {
-                setMode(value)
-                setFeedback(null)
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <pre className='min-h-0 flex-1 overflow-auto bg-slate-950 p-5 text-xs leading-5 text-slate-200'>{content}</pre>
-
-        <div className='flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 px-5 py-4'>
-          {feedback ? <span className='mr-auto text-xs text-slate-500'>{feedback}</span> : null}
-          <button
-            className='inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'
-            type='button'
-            onClick={() => void handleCopy()}
-          >
-            <Copy className='size-3.5' />
-            复制 JSON
-          </button>
-          <button
-            className='inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800'
-            type='button'
-            onClick={() => downloadText(content, createWechatExportFilename(session))}
-          >
-            <Download className='size-3.5' />
-            下载文件
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function statusChip(status?: string) {
-  if (!status || status === 'completed') return null
-  const map: Record<string, string> = {
-    canceled: 'bg-slate-100 text-slate-600',
-    failed: 'bg-rose-50 text-rose-700 ring-rose-200',
-    pending: 'bg-sky-50 text-sky-700 ring-sky-200',
-    processing: 'bg-amber-50 text-amber-700 ring-amber-200',
-    retry: 'bg-orange-50 text-orange-700 ring-orange-200',
-  }
-  const label: Record<string, string> = {
-    canceled: '已取消',
-    failed: '失败',
-    pending: '排队',
-    processing: '处理中',
-    retry: '重试',
-  }
-  return (
-    <span
-      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${map[status] ?? 'bg-slate-100 text-slate-600'}`}
-    >
-      {label[status] ?? status}
-    </span>
-  )
 }
 
 const KIND_LABEL: Record<string, string> = {
@@ -525,6 +383,7 @@ function renderSessionListBody({
 }
 
 export default function WechatConversationPage() {
+  const navigate = useNavigate()
   const [status, setStatus] = useState<WechatStatus | null>(null)
   const [sessions, setSessions] = useState<WechatDevSession[]>([])
   const [bound, setBound] = useState(false)
@@ -925,6 +784,13 @@ export default function WechatConversationPage() {
       {/* Status bar */}
       <header className='shrink-0 border-b border-slate-200/80 bg-white/90 backdrop-blur-md'>
         <div className='mx-auto flex w-full max-w-[1400px] flex-wrap items-center gap-3 px-4 py-3 sm:px-6'>
+          <ActionIcon
+            aria-label='返回上一页'
+            icon={ArrowLeft}
+            size='small'
+            title='返回上一页'
+            onClick={() => navigate(-1)}
+          />
           <div className='mr-2 flex items-center gap-2'>
             <div className='flex size-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100'>
               <Radio className='size-4' />
@@ -1159,7 +1025,7 @@ export default function WechatConversationPage() {
                         {isUser ? externalUserLabel : 'Agent'}
                       </span>
                       {kindChip(msg.messageKind)}
-                      {statusChip(msg.status)}
+                      <StatusChip status={msg.status} />
                       {!isUser && msg.source === 'model' ? (
                         <span className='rounded bg-emerald-50 px-1.5 py-0.5 font-mono text-[10px] text-emerald-700 ring-1 ring-inset ring-emerald-200'>
                           {msg.provider} / {msg.model}
@@ -1180,19 +1046,12 @@ export default function WechatConversationPage() {
                           {content}
                         </div>
                         {!hasMedia && msg.text.trim() && msg.text !== '[附件]' ? (
-                          <button
-                            aria-label='复制消息'
-                            className='mb-0.5 rounded-lg p-1.5 text-slate-300 opacity-0 transition hover:bg-slate-100 hover:text-slate-600 focus:opacity-100 group-hover:opacity-100'
-                            title={copiedMessageId === msg.id ? '已复制' : '复制'}
-                            type='button'
-                            onClick={() => void handleCopyMessage(msg)}
-                          >
-                            {copiedMessageId === msg.id ? (
-                              <Check className='size-3.5 text-emerald-600' />
-                            ) : (
-                              <Copy className='size-3.5' />
-                            )}
-                          </button>
+                          <span className='mb-0.5 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100'>
+                            <CopyMessageButton
+                              copied={copiedMessageId === msg.id}
+                              onCopy={() => void handleCopyMessage(msg)}
+                            />
+                          </span>
                         ) : null}
                       </div>
                     ) : null}
@@ -1328,7 +1187,15 @@ export default function WechatConversationPage() {
         </section>
       </div>
       {exportOpen && selectedSession ? (
-        <ExportDialog messages={messages} session={selectedSession} onClose={() => setExportOpen(false)} />
+        <ConversationExportDialog
+          createExport={createWechatConversationExport}
+          createFilename={createWechatExportFilename}
+          exportMode='full'
+          messages={messages}
+          onClose={() => setExportOpen(false)}
+          session={selectedSession}
+          title='导出微信会话'
+        />
       ) : null}
     </main>
   )

@@ -30,42 +30,71 @@ function generationInstructions(generation?: ChannelGenerationOptions, systemRol
   return [systemRole, generation?.instructions].filter(Boolean).join('\n\n') || undefined
 }
 
+type RuntimeModel = {
+  languageModel: LanguageModel
+  settlement?: PureChatSettlement
+}
+
+async function resolveRuntimeModel(
+  userId: string,
+  modelId: string,
+  provider: string,
+  platform: string
+): Promise<RuntimeModel> {
+  if (provider === PURECHAT_PROVIDER_ID) {
+    const settlement = await assertPureChatCanChat(userId, modelId)
+    const languageModel = createPureChatLanguageModel(modelId)
+    if (!languageModel) throw new Error('PureChat temporarily unavailable')
+
+    return { languageModel, settlement }
+  }
+
+  if (!isSupportedProviderId(provider)) {
+    throw new Error(`Channel provider "${provider}" is not supported by the ${platform} gateway`)
+  }
+
+  const apiKey = resolveProviderApiKey(provider, undefined, undefined)
+  if (!apiKey) {
+    throw new Error(`No API key for provider "${provider}". Set OPENAI_API_KEY or DEEPSEEK_API_KEY for ${platform} replies.`)
+  }
+
+  return { languageModel: createProviderLanguageModel(provider, modelId, apiKey, undefined) }
+}
+
+async function settlePureChatUsage(params: {
+  agentId: string
+  durationMs: number
+  model: string
+  result: Awaited<ReturnType<typeof generateText>>
+  settlement: PureChatSettlement
+  userId: string
+}): Promise<void> {
+  try {
+    await chargePureChatGenerateUsage({
+      durationMs: params.durationMs,
+      model: params.model,
+      result: params.result,
+      settlementId: params.settlement.settlementId,
+      settlementPeriod: params.settlement.settlementPeriod,
+      userId: params.userId,
+    })
+  } catch (error) {
+    log('charge usage failed agent=%s: %O', params.agentId, error)
+  }
+}
+
 export class ChannelAgentRuntime {
   async generate(params: ChannelAgentRequest): Promise<ChannelAgentResponse> {
     const agent = await new AgentModel(params.userId).findVisibleById(params.agentId)
     if (!agent) throw new Error(`Agent not found: ${params.agentId}`)
 
-    const inheritAgentModel = params.platform !== 'qq'
     const { model: modelId, provider } = resolveChannelModelConfig({
-      // QQ channel defaults must not inherit an Agent's web-chat provider.
-      // Explicit channel provider/model values still win in the resolver.
-      agentModel: inheritAgentModel ? agent.model : undefined,
-      agentProvider: inheritAgentModel ? agent.provider : undefined,
       channelName: params.platform,
       fallbackProvider: 'deepseek',
       model: params.model,
       provider: params.provider,
-      providerPolicy: inheritAgentModel ? 'strict' : 'fallback',
     })
-    const isPureChat = provider === PURECHAT_PROVIDER_ID
-
-    let languageModel: LanguageModel
-    let settlement: PureChatSettlement | undefined
-    if (isPureChat) {
-      settlement = await assertPureChatCanChat(params.userId, modelId)
-      const pureChatModel = createPureChatLanguageModel(modelId)
-      if (!pureChatModel) throw new Error('PureChat temporarily unavailable')
-      languageModel = pureChatModel
-    } else {
-      if (!isSupportedProviderId(provider)) {
-        throw new Error(`Channel provider "${provider}" is not supported by the ${params.platform} gateway`)
-      }
-      const apiKey = resolveProviderApiKey(provider, undefined, undefined)
-      if (!apiKey) {
-        throw new Error(`No API key for provider "${provider}". Set OPENAI_API_KEY or DEEPSEEK_API_KEY for ${params.platform} replies.`)
-      }
-      languageModel = createProviderLanguageModel(provider, modelId, apiKey, undefined)
-    }
+    const { languageModel, settlement } = await resolveRuntimeModel(params.userId, modelId, provider, params.platform)
 
     log('reply agent=%s platform=%s provider=%s model=%s', agent.id, params.platform, provider, modelId)
 
@@ -86,19 +115,15 @@ export class ChannelAgentRuntime {
     }
 
     const durationMs = Date.now() - startedAt
-    if (isPureChat && settlement) {
-      try {
-        await chargePureChatGenerateUsage({
-          durationMs,
-          model: modelId,
-          result,
-          settlementId: settlement.settlementId,
-          settlementPeriod: settlement.settlementPeriod,
-          userId: params.userId,
-        })
-      } catch (error) {
-        log('charge usage failed agent=%s: %O', agent.id, error)
-      }
+    if (settlement) {
+      await settlePureChatUsage({
+        agentId: agent.id,
+        durationMs,
+        model: modelId,
+        result,
+        settlement,
+        userId: params.userId,
+      })
     }
 
     const text = result.text?.trim()

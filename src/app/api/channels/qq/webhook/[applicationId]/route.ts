@@ -1,5 +1,4 @@
 import { waitUntil } from '@vercel/functions'
-import debug from 'debug'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -11,8 +10,6 @@ import { logger } from '@/libs/logger'
 export const maxDuration = 300
 export const preferredRegion = 'sin1'
 export const runtime = 'nodejs'
-
-const log = debug('channel:qq:webhook')
 
 type RouteContext = { params: Promise<{ applicationId: string }> }
 
@@ -37,7 +34,9 @@ function isQQVerifyOp(op: unknown): boolean {
 function summarizeQQWebhookRequest(request: NextRequest, payload: QQWebhookProbe | null, bodyText: string) {
   return {
     bodyBytes: Buffer.byteLength(bodyText),
-    bodyPreview: bodyText.slice(0, 500),
+    ...(process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development'
+      ? { bodyPreview: payload }
+      : {}),
     contentLength: request.headers.get('content-length'),
     contentType: request.headers.get('content-type'),
     eventTsType: payload?.d?.event_ts === undefined ? 'missing' : typeof payload.d.event_ts,
@@ -59,7 +58,6 @@ function logQQWebhook(
   extra: Record<string, unknown>
 ) {
   const summary = { applicationId, ...summarizeQQWebhookRequest(request, payload, bodyText), ...extra }
-  log('inbound %O', summary)
   logger.info(summary, 'qq webhook inbound')
 }
 

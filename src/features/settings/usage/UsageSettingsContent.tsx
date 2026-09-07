@@ -37,98 +37,98 @@ const formatResetHint = (days: number, hours: number) => {
   return '即将重置'
 }
 
-// const styles = createStaticStyles(({ css }) => ({
-//   details: css`
-//     overflow: hidden;
-//   `,
-//   error: css`
-//     padding: 10px 16px;
-//     border-bottom: 1px solid ${cssVar.colorBorderSecondary};
-//   `,
-//   header: css`
-//     width: 100%;
-//   `,
-//   metric: css`
-//     min-width: 0;
-//     padding: 16px 20px;
+const styles = createStaticStyles(({ css }) => ({
+  details: css`
+    overflow: hidden;
+  `,
+  error: css`
+    padding: 10px 16px;
+    border-bottom: 1px solid ${cssVar.colorBorderSecondary};
+  `,
+  header: css`
+    width: 100%;
+  `,
+  metric: css`
+    min-width: 0;
+    padding: 16px 20px;
 
-//     & + & {
-//       border-inline-start: 1px solid ${cssVar.colorBorderSecondary};
-//     }
+    & + & {
+      border-inline-start: 1px solid ${cssVar.colorBorderSecondary};
+    }
 
-//     @media (width <= 640px) {
-//       & + & {
-//         border-block-start: 1px solid ${cssVar.colorBorderSecondary};
-//         border-inline-start: 0;
-//       }
-//     }
-//   `,
-//   metricGrid: css`
-//     width: 100%;
-//   `,
-//   metricHint: css`
-//     color: ${cssVar.colorTextTertiary};
-//     font-size: 13px;
-//   `,
-//   metricLabel: css`
-//     color: ${cssVar.colorTextSecondary};
-//     font-size: 14px;
-//   `,
-//   metricValue: css`
-//     font-size: 16px;
-//     font-variant-numeric: tabular-nums;
-//     font-weight: 500;
-//   `,
-//   model: css`
-//     display: inline-flex;
-//     align-items: center;
-//     gap: 7px;
-//     min-width: 0;
-//   `,
-//   page: css`
-//     width: 100%;
-//     padding: 24px 24px 64px;
-//   `,
-//   pagination: css`
-//     padding: 10px 16px;
-//     border-top: 1px solid ${cssVar.colorBorderSecondary};
+    @media (width <= 640px) {
+      & + & {
+        border-block-start: 1px solid ${cssVar.colorBorderSecondary};
+        border-inline-start: 0;
+      }
+    }
+  `,
+  metricGrid: css`
+    width: 100%;
+  `,
+  metricHint: css`
+    color: ${cssVar.colorTextTertiary};
+    font-size: 13px;
+  `,
+  metricLabel: css`
+    color: ${cssVar.colorTextSecondary};
+    font-size: 14px;
+  `,
+  metricValue: css`
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  `,
+  model: css`
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+  `,
+  page: css`
+    width: 100%;
+    padding: 24px 24px 64px;
+  `,
+  pagination: css`
+    padding: 10px 16px;
+    border-top: 1px solid ${cssVar.colorBorderSecondary};
 
-//     @media (width <= 640px) {
-//       align-items: flex-start !important;
-//       flex-direction: column;
+    @media (width <= 640px) {
+      align-items: flex-start !important;
+      flex-direction: column;
 
-//       .ant-pagination-options {
-//         display: none;
-//       }
-//     }
-//   `,
-//   plan: css`
-//     color: ${cssVar.colorTextSecondary};
-//     font-size: 13px;
-//   `,
-//   section: css`
-//     padding: 16px;
-//   `,
-//   sectionTitle: css`
-//     font-size: 18px;
-//     font-weight: 600;
-//   `,
-//   table: css`
-//     .ant-table-thead > tr > th {
-//       padding-block: 10px;
-//       font-weight: 600;
-//       background: ${cssVar.colorBgContainer};
-//     }
+      .ant-pagination-options {
+        display: none;
+      }
+    }
+  `,
+  plan: css`
+    color: ${cssVar.colorTextSecondary};
+    font-size: 13px;
+  `,
+  section: css`
+    padding: 16px;
+  `,
+  sectionTitle: css`
+    font-size: 18px;
+    font-weight: 600;
+  `,
+  table: css`
+    .ant-table-thead > tr > th {
+      padding-block: 10px;
+      font-weight: 600;
+      background: ${cssVar.colorBgContainer};
+    }
 
-//     .ant-table-tbody > tr > td {
-//       padding-block: 8px;
-//     }
-//   `,
-//   toolbar: css`
-//     padding: 10px 16px;
-//     border-bottom: 1px solid ${cssVar.colorBorderSecondary};
-//   `,
-// }))
+    .ant-table-tbody > tr > td {
+      padding-block: 8px;
+    }
+  `,
+  toolbar: css`
+    padding: 10px 16px;
+    border-bottom: 1px solid ${cssVar.colorBorderSecondary};
+  `,
+}))
 
 type UsageMetricProps = {
   hint?: string

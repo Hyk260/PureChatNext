@@ -105,13 +105,18 @@ RouterRoot.displayName = 'RouterRoot'
 
 /**
  * Data router with AppLayer (Theme / nuqs) inside RouterProvider context.
+ * errorElement sits on a pathless child so RouterRoot (ThemeProviders) still wraps 404 / Error.
  */
 export function createAppRouter(routes: RouteObject[], options?: CreateAppRouterOptions) {
   return createBrowserRouter(
     [
       {
-        children: routes,
-        errorElement: <RouterErrorElement />,
+        children: [
+          {
+            children: routes,
+            errorElement: <RouterErrorElement />,
+          },
+        ],
         element: <RouterRoot />,
         path: '/',
       },

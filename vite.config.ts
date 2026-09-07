@@ -67,6 +67,14 @@ export default defineConfig(({ mode }) => {
           target: nextTarget,
           changeOrigin: true,
         },
+        '/manifest.webmanifest': {
+          target: nextTarget,
+          changeOrigin: true,
+        },
+        '/logos': {
+          target: nextTarget,
+          changeOrigin: true,
+        },
       },
       warmup: {
         // Only client-safe modules — avoid `src/libs/**` (DB / IM / better-auth server).

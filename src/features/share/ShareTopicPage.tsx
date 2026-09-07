@@ -42,7 +42,7 @@ const ShareTopicPage = memo(() => {
   if (!data) return <NotFound />
 
   return (
-    <div className='h-[100dvh] overflow-y-auto bg-background text-foreground'>
+    <div className='h-dvh overflow-y-auto bg-background text-foreground'>
       <main className='mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10'>
         <header className='flex items-center gap-3 border-b border-border pb-5'>
           <Avatar avatar={data.agent.avatar ?? '✨'} size={36} />

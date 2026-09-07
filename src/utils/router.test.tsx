@@ -11,6 +11,15 @@ import { RouterErrorElement } from './router'
 
 type LinkProps = { children?: ReactNode; href?: string; className?: string }
 
+vi.mock('@pure/ui', () => ({
+  Button: ({ children, onClick }: { children?: ReactNode; onClick?: () => void }) => (
+    <button type='button' onClick={onClick}>
+      {children}
+    </button>
+  ),
+  Flex: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+}))
+
 vi.mock('@/spa/AppLayer', () => ({
   default: ({ children }: { children?: ReactNode }) => <>{children}</>,
 }))

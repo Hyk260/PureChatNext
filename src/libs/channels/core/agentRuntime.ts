@@ -4,16 +4,13 @@ import debug from 'debug'
 
 import { PURECHAT_PROVIDER_ID } from '@pure/const'
 import { AgentModel } from '@pure/database/models/agent'
+import type { CreditUsageTrigger } from '@pure/database/schemas'
 import {
   createProviderLanguageModel,
   isSupportedProviderId,
   resolveProviderApiKey,
 } from '@/libs/ai-providers/resolveClient'
-import {
-  assertPureChatCanChat,
-  chargePureChatGenerateUsage,
-  createPureChatLanguageModel,
-} from '@/server/purechat'
+import { assertPureChatCanChat, chargePureChatGenerateUsage, createPureChatLanguageModel } from '@/server/purechat'
 import type { PureChatSettlement } from '@/server/purechat'
 import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 
@@ -22,13 +19,17 @@ import type { ChannelAgentRequest, ChannelAgentResponse, ChannelGenerationOption
 
 const log = debug('channel:core:agent')
 
+function resolveUsageTrigger(platform: string): CreditUsageTrigger {
+  if (platform === 'qq' || platform === 'wechat') return platform
+  return 'web'
+}
+
 export const CHANNEL_MAX_GENERATION_STEPS = 5
 export const CHANNEL_FINAL_ANSWER_STEP = 3
 
-export function createChannelGenerationControls(platform: ChannelPlatform): Pick<
-  ChannelGenerationOptions,
-  'onStepEnd' | 'prepareStep' | 'stopWhen'
-> {
+export function createChannelGenerationControls(
+  platform: ChannelPlatform
+): Pick<ChannelGenerationOptions, 'onStepEnd' | 'prepareStep' | 'stopWhen'> {
   return {
     onStepEnd: (event) => {
       const step = event as {
@@ -92,7 +93,9 @@ async function resolveRuntimeModel(
 
   const apiKey = resolveProviderApiKey(provider, undefined, undefined)
   if (!apiKey) {
-    throw new Error(`No API key for provider "${provider}". Set OPENAI_API_KEY or DEEPSEEK_API_KEY for ${platform} replies.`)
+    throw new Error(
+      `No API key for provider "${provider}". Set OPENAI_API_KEY or DEEPSEEK_API_KEY for ${platform} replies.`
+    )
   }
 
   return { languageModel: createProviderLanguageModel(provider, modelId, apiKey, undefined) }
@@ -102,6 +105,7 @@ async function settlePureChatUsage(params: {
   agentId: string
   durationMs: number
   model: string
+  trigger: CreditUsageTrigger
   result: Awaited<ReturnType<typeof generateText>>
   settlement: PureChatSettlement
   userId: string
@@ -113,6 +117,7 @@ async function settlePureChatUsage(params: {
       result: params.result,
       settlementId: params.settlement.settlementId,
       settlementPeriod: params.settlement.settlementPeriod,
+      trigger: params.trigger,
       userId: params.userId,
     })
   } catch (error) {
@@ -172,6 +177,7 @@ export class ChannelAgentRuntime {
         model: modelId,
         result,
         settlement,
+        trigger: resolveUsageTrigger(params.platform),
         userId: params.userId,
       })
     }

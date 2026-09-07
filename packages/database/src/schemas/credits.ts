@@ -31,6 +31,7 @@ export const userCredits = pgTable(
 )
 
 export type CreditLedgerReason = 'grant' | 'reset' | 'chat_usage' | 'adjust'
+export type CreditUsageTrigger = 'web' | 'wechat' | 'qq'
 
 /** 积分流水；同一 `message_id` + `reason=chat_usage` 只入账一次。 */
 export const creditLedger = pgTable(
@@ -46,6 +47,7 @@ export const creditLedger = pgTable(
     reason: varchar('reason', { length: 32 }).$type<CreditLedgerReason>().notNull(),
     provider: text('provider'),
     model: text('model'),
+    trigger: varchar('trigger', { length: 32 }).$type<CreditUsageTrigger>().notNull().default('web'),
     messageId: text('message_id'),
     /** 模型返回的输入 Token；历史流水为空。 */
     inputTokens: integer('input_tokens'),

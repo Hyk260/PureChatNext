@@ -176,6 +176,13 @@
       "when": 1788424466058,
       "tag": "0024_nifty_outlaw_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1788748509670,
+      "tag": "0025_bright_talos",
+      "breakpoints": true
     }
   ]
 }

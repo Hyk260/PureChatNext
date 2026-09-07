@@ -1,12 +1,8 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { PURECHAT_PROVIDER_ID } from '@pure/const'
 import { CreditsModel } from '@pure/database/models/credits'
-import {
-  computeChatCost,
-  getEnabledPureChatModel,
-  getPureChatModel,
-  resolvePureChatGatewayId,
-} from '@pure/model-bank'
+import type { CreditUsageTrigger } from '@pure/database/schemas'
+import { computeChatCost, getEnabledPureChatModel, getPureChatModel, resolvePureChatGatewayId } from '@pure/model-bank'
 import { createNanoId } from '@pure/utils'
 import type { LanguageModel } from 'ai'
 
@@ -28,8 +24,7 @@ export type PureChatUsageSource = {
 }
 
 /** PureChat 渠道是否已启用且配置了 AI Gateway 密钥。 */
-export const isPureChatRuntimeAvailable = () =>
-  Boolean(llmEnv.PURECHAT_ENABLED && resolveAiGatewayApiKey()?.trim())
+export const isPureChatRuntimeAvailable = () => Boolean(llmEnv.PURECHAT_ENABLED && resolveAiGatewayApiKey()?.trim())
 
 export const createPureChatLanguageModel = (displayModel: string): LanguageModel | null => {
   const gatewayId = resolvePureChatGatewayId(displayModel)
@@ -43,10 +38,7 @@ export const createPureChatLanguageModel = (displayModel: string): LanguageModel
  * PureChat 发请求前预检：开关、模型、Gateway Key、积分余额。
  * 失败抛 Error / FreePlanLimitError（文案可直接展示）。
  */
-export async function assertPureChatCanChat(
-  userId: string,
-  model: string
-): Promise<PureChatSettlement> {
+export async function assertPureChatCanChat(userId: string, model: string): Promise<PureChatSettlement> {
   if (!llmEnv.PURECHAT_ENABLED) {
     throw new Error('PureChat is disabled')
   }
@@ -69,6 +61,7 @@ export async function chargePureChatGenerateUsage(params: {
   result: PureChatUsageSource
   settlementId: string
   settlementPeriod: string
+  trigger?: CreditUsageTrigger
   userId: string
 }): Promise<void> {
   const card = getPureChatModel(params.model)
@@ -96,6 +89,7 @@ export async function chargePureChatGenerateUsage(params: {
     outputTokens,
     period: params.settlementPeriod,
     provider: PURECHAT_PROVIDER_ID,
+    trigger: params.trigger ?? 'web',
     userId: params.userId,
   })
 }

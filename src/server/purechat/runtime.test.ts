@@ -115,6 +115,7 @@ describe('purechat runtime', () => {
         messageId: 'settlement-1',
         model: 'gpt-5.4-mini',
         provider: 'purechat',
+        trigger: 'web',
         userId: 'user-1',
       })
     )

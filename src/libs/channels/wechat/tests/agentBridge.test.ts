@@ -141,6 +141,7 @@ describe('generateWechatAgentReply', () => {
         model: 'gpt-5.4-mini',
         settlementId: 'settlement-1',
         settlementPeriod: '2026-08',
+        trigger: 'wechat',
         userId: 'user-1',
       })
     )

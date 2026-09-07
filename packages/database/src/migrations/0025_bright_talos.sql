@@ -1,0 +1,1 @@
+ALTER TABLE "credit_ledger" ADD COLUMN "trigger" varchar(32) DEFAULT 'web' NOT NULL;

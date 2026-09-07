@@ -4,7 +4,7 @@ import { createNanoId } from '@pure/utils'
 
 import { getServerDB } from '../core/db-adaptor'
 import { creditLedger, userCredits } from '../schemas/credits'
-import type { UserCreditsItem } from '../schemas/credits'
+import type { CreditUsageTrigger, UserCreditsItem } from '../schemas/credits'
 import type { ChatDatabase } from '../type'
 
 export type CreditsBalance = {
@@ -24,6 +24,7 @@ export type ChargeChatUsageInput = {
   outputTokens?: number
   period: string
   provider: string
+  trigger?: CreditUsageTrigger
   userId: string
 }
 
@@ -191,6 +192,7 @@ export class CreditsModel {
         period: input.period,
         provider: input.provider,
         reason: 'chat_usage',
+        trigger: input.trigger ?? 'web',
         userId: input.userId,
       })
 
@@ -230,6 +232,7 @@ export class CreditsModel {
           model: creditLedger.model,
           outputTokens: creditLedger.outputTokens,
           provider: creditLedger.provider,
+          trigger: creditLedger.trigger,
           totalTokens,
         })
         .from(creditLedger)

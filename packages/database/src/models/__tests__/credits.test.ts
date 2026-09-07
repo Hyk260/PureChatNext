@@ -73,6 +73,7 @@ describe('CreditsModel chargeChatUsage', () => {
         messageId: 'message-1',
         outputTokens: 300,
         reason: 'chat_usage',
+        trigger: 'web',
       })
     )
   })

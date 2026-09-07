@@ -48,6 +48,38 @@ function truncateId(id: string, head = 8, tail = 4) {
   return `${id.slice(0, head)}…${id.slice(-tail)}`
 }
 
+function isQQGroupSession(session: QQDevSession | null) {
+  return session?.threadType === 'group' || Boolean(session?.externalUserId.startsWith('qq:group:'))
+}
+
+function qqGroupOpenId(externalUserId: string) {
+  return externalUserId.replace(/^qq:group:/, '')
+}
+
+function qqSessionTitle(session: QQDevSession | null) {
+  if (!session) return '选择会话'
+  if (isQQGroupSession(session)) return `QQ 群聊 ${truncateId(qqGroupOpenId(session.externalUserId), 8, 4)}`
+  return session.externalUserName?.trim() || truncateId(session.externalUserId, 12, 6) || '选择会话'
+}
+
+function qqMessageUserLabel(message: QQDevMessage, session: QQDevSession | null) {
+  const name = message.authorName?.trim()
+  if (name) return name
+  if (message.authorId?.trim()) return truncateId(message.authorId, 8, 4)
+  if (isQQGroupSession(session)) return 'QQ 用户'
+  return session?.externalUserName?.trim() || 'QQ 用户'
+}
+
+function qqComposerPlaceholder(session: QQDevSession) {
+  if (!session.canSend) return '当前会话仅可查看'
+  if (isQQGroupSession(session)) return '以 Agent 身份回复（需用户 5 分钟内 @ 过机器人）'
+  return '以 Agent 身份发送文字…'
+}
+
+function logQQUserData(message: QQDevMessage, session: QQDevSession | null) {
+  console.log('[QQ 用户数据]', { message, session })
+}
+
 function AttachmentCard({ attachment }: { attachment: NonNullable<QQDevMessage['attachments']>[number] }) {
   const sizeLabel = typeof attachment.fileSize === 'number' ? formatSize(attachment.fileSize) : '未知大小'
   return (
@@ -292,7 +324,9 @@ export default function QqConversationPage() {
               >
                 <div className='flex items-center gap-2'>
                   <User className='size-3.5 shrink-0 opacity-60' />
-                  <span className='min-w-0 flex-1 truncate text-xs font-medium'>{session.externalUserName || truncateId(session.externalUserId, 10, 6)}</span>
+                  <span className='min-w-0 flex-1 truncate text-xs font-medium'>
+                    {qqSessionTitle(session)}
+                  </span>
                   <span className={`rounded px-1 py-0.5 text-[10px] font-medium ${session.canSend ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{session.canSend ? '可代发' : '只读'}</span>
                 </div>
                 <div className='flex items-center justify-between gap-2 text-[10px] text-slate-400'>
@@ -309,7 +343,7 @@ export default function QqConversationPage() {
         <div className='flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3'>
           <div className='min-w-0'>
             <div className='truncate text-sm font-semibold'>
-              {sessionMeta?.externalUserName || truncateId(sessionMeta?.externalUserId ?? '', 12, 6) || '选择会话'}
+              {qqSessionTitle(sessionMeta)}
             </div>
             <div className='text-xs text-slate-400'>
               {sessionMeta ? `会话版本 v${sessionMeta.conversationVersion} · ${sessionMeta.agentTitle ?? sessionMeta.agentId}` : '请在左侧选择会话'}
@@ -344,7 +378,7 @@ export default function QqConversationPage() {
           <div className='flex shrink-0 items-end gap-2 border-t border-slate-100 px-4 py-3 sm:px-6'>
             <textarea
               className='min-h-[44px] flex-1 resize-none rounded-xl bg-slate-50 px-3 py-2.5 text-sm outline-none ring-1 ring-slate-200 focus:bg-white focus:ring-slate-300'
-              placeholder={sessionMeta.canSend ? '以 Agent 身份发送文字…' : '当前会话仅可查看'}
+              placeholder={qqComposerPlaceholder(sessionMeta)}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
@@ -428,12 +462,15 @@ function MessageList({
           <div key={message.id} className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
             <div className='flex items-center gap-1.5 px-1'>
               {isUser ? <User className='size-3 text-slate-400' /> : <Bot className='size-3 text-sky-600' />}
-              <span className='text-[10px] font-medium text-slate-400'>{isUser ? 'QQ 用户' : 'Agent'}</span>
+              <span className='text-[10px] font-medium text-slate-400'>{isUser ? qqMessageUserLabel(message, sessionMeta) : 'Agent'}</span>
               <StatusChip status={message.status} />
               <span className='text-[10px] text-slate-300'>{formatDateTime(message.createdAt)}</span>
             </div>
             <div className={`group flex max-w-[92%] items-end gap-1.5 ${isUser ? 'flex-row-reverse' : ''}`}>
-              <div className={`max-w-[min(720px,100%)] rounded-2xl text-sm leading-relaxed shadow-sm ${isUser ? 'rounded-br-md bg-slate-900 px-3.5 py-2.5 text-white' : 'rounded-bl-md bg-slate-50 px-3.5 py-2.5 text-slate-800 ring-1 ring-slate-200/80'}`}>
+              <div
+                className={`max-w-[min(720px,100%)] cursor-pointer rounded-2xl text-sm leading-relaxed shadow-sm ${isUser ? 'rounded-br-md bg-slate-900 px-3.5 py-2.5 text-white' : 'rounded-bl-md bg-slate-50 px-3.5 py-2.5 text-slate-800 ring-1 ring-slate-200/80'}`}
+                onClick={() => logQQUserData(message, sessionMeta)}
+              >
               {isUser ? (
                 <div className='whitespace-pre-wrap text-sm'>{message.text}</div>
               ) : (

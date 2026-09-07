@@ -29,6 +29,8 @@ export function createQQConversationExport(
     exportedAt: exportedAt ?? new Date().toISOString(),
     messages: exportableMessages.map((message) => ({
       attachments: message.attachments,
+      authorId: message.authorId,
+      authorName: message.authorName,
       content: message.text,
       createdAt: message.createdAt,
       durationMs: message.durationMs,

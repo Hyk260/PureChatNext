@@ -44,6 +44,35 @@ describe('expandQQEventsToMessages', () => {
     })
   })
 
+  it('keeps per-message group authors instead of the session label', () => {
+    const messages = expandQQEventsToMessages([
+      event({
+        content: '1',
+        id: 'event-1',
+        platformPayload: {
+          authorId: 'user-a',
+          authorName: '临江仙',
+          threadId: 'qq:group:group-1',
+          threadType: 'group',
+        },
+      }),
+      event({
+        content: '2',
+        createdAt: new Date('2026-08-01T00:01:00.000Z'),
+        id: 'event-2',
+        platformPayload: {
+          authorId: 'user-b',
+          authorName: '染忆',
+          threadId: 'qq:group:group-1',
+          threadType: 'group',
+        },
+      }),
+    ])
+
+    expect(messages[0]).toMatchObject({ authorId: 'user-a', authorName: '临江仙', text: '1' })
+    expect(messages[1]).toMatchObject({ authorId: 'user-b', authorName: '染忆', text: '2' })
+  })
+
   it('maps QQ attachment metadata to remote links', () => {
     const messages = expandQQEventsToMessages([
       event({

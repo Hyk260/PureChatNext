@@ -25,6 +25,7 @@ import { QQ_EVENT_TYPES, QQ_OP_CODES } from './types'
 import type {
   QQAdapterConfig,
   QQAttachment,
+  QQAuthor,
   QQRawMessage,
   QQSendMessageResponse,
   QQThreadId,
@@ -42,6 +43,14 @@ type QQOutboundMedia = {
   fileType: 1 | 2 | 3 | 4
   name?: string
   url: string
+}
+
+const resolveQQAuthorId = (author?: QQAuthor) =>
+  author?.id || author?.user_openid || author?.member_openid || 'unknown'
+
+const resolveQQAuthorDisplayName = (author?: QQAuthor) => {
+  const username = author?.username?.trim()
+  return username || resolveQQAuthorId(author)
 }
 
 /** 按 MIME 前缀映射 QQ 富媒体文件类型：1 图片 / 2 视频 / 3 音频 / 4 其它。 */
@@ -193,8 +202,9 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
         return this.encodeThreadId({ id: data.group_openid, type: 'group' })
       }
       case QQ_EVENT_TYPES.C2C_MESSAGE_CREATE: {
-        if (!data.author?.id) return null
-        return this.encodeThreadId({ id: data.author.id, type: 'c2c' })
+        const authorId = resolveQQAuthorId(data.author)
+        if (authorId === 'unknown') return null
+        return this.encodeThreadId({ id: authorId, type: 'c2c' })
       }
       case QQ_EVENT_TYPES.AT_MESSAGE_CREATE: {
         if (!data.channel_id) return null
@@ -422,18 +432,19 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
         type: 'guild',
       })
     } else {
-      threadId = this.encodeThreadId({ id: raw.author.id, type: 'c2c' })
+      threadId = this.encodeThreadId({ id: resolveQQAuthorId(raw.author), type: 'c2c' })
     }
 
     const attachments = this.mapQQAttachments(raw.attachments)
+    const displayName = resolveQQAuthorDisplayName(raw.author)
     return new Message({
       attachments,
       author: {
-        fullName: 'Unknown',
+        fullName: displayName,
         isBot: false,
         isMe: false,
-        userId: raw.author.id,
-        userName: 'unknown',
+        userId: resolveQQAuthorId(raw.author),
+        userName: displayName,
       },
       formatted,
       id: raw.id,
@@ -456,21 +467,22 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     const cleanText = this.formatConverter.cleanMentions(content)
     const formatted = parseMarkdown(cleanText)
 
-    const authorId = data.author?.id || 'unknown'
+    const authorId = resolveQQAuthorId(data.author)
+    const displayName = resolveQQAuthorDisplayName(data.author)
     // Webhook 消息事件来自用户，而不是机器人自身。
     const isBot = false
 
     const author: Author = {
-      fullName: authorId,
+      fullName: displayName,
       isBot,
       isMe: isBot && authorId === this._botUserId,
       userId: authorId,
-      userName: authorId,
+      userName: displayName,
     }
 
     const raw: QQRawMessage = {
       attachments: data.attachments,
-      author: data.author || { id: 'unknown' },
+      author: data.author || { id: authorId },
       channel_id: data.channel_id,
       content,
       group_openid: data.group_openid,

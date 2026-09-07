@@ -77,16 +77,22 @@ describe('sendQQDevOutbound', () => {
   })
 
   it('routes c2c threads to sendC2CMessage', async () => {
-    await sendQQDevOutbound({ binding, session, text: 'hello' })
-    expect(mocks.sendC2CMessage).toHaveBeenCalledWith('user-1', 'hello')
-  })
-
-  it('routes group threads to sendGroupMessage', async () => {
     await sendQQDevOutbound({
       binding,
+      reply: { msgId: 'msg-1', msgSeq: 1 },
+      session,
+      text: 'hello',
+    })
+    expect(mocks.sendC2CMessage).toHaveBeenCalledWith('user-1', 'hello', { msgId: 'msg-1', msgSeq: 1 })
+  })
+
+  it('routes group threads to sendGroupMessage with a passive reply', async () => {
+    await sendQQDevOutbound({
+      binding,
+      reply: { msgId: 'msg-2', msgSeq: 2 },
       session: groupSession,
       text: 'hello',
     })
-    expect(mocks.sendGroupMessage).toHaveBeenCalledWith('group-1', 'hello')
+    expect(mocks.sendGroupMessage).toHaveBeenCalledWith('group-1', 'hello', { msgId: 'msg-2', msgSeq: 2 })
   })
 })

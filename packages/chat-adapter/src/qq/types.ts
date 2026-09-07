@@ -20,12 +20,18 @@ export interface QQThreadId {
 
 /** QQ 消息作者的开放 ID 信息。 */
 export interface QQAuthor {
+  /** 是否为机器人账号。 */
+  bot?: boolean
   /** 作者的 QQ OpenID。 */
-  id: string
+  id?: string
   /** 群成员 OpenID。 */
   member_openid?: string
   /** 跨场景联合 OpenID。 */
   union_openid?: string
+  /** 单聊用户 OpenID。 */
+  user_openid?: string
+  /** 用户在 QQ 中展示的昵称。 */
+  username?: string
 }
 
 /** QQ 消息附件。 */

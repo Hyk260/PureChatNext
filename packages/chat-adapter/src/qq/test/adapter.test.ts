@@ -345,6 +345,21 @@ describe('QQAdapter', () => {
       expect(message?.attachments).toEqual([])
     })
 
+    it('should map username from group webhook events', async () => {
+      const payload = makeWebhookPayload(QQ_EVENT_TYPES.GROUP_AT_MESSAGE_CREATE, {
+        author: { id: '24B45D69', member_openid: '24B45D69', username: '染忆' },
+        content: '1',
+      })
+      await adapter.handleWebhook(makeRequest(payload))
+
+      const factory = vi.mocked(mockChat.processMessage).mock.calls[0]?.[2]
+      const message = await factory?.()
+
+      expect(message?.author.userName).toBe('染忆')
+      expect(message?.author.fullName).toBe('染忆')
+      expect(message?.author.userId).toBe('24B45D69')
+    })
+
     it('should store attachments in raw message', async () => {
       const attachment = makeAttachment()
       const payload = makeWebhookPayload(QQ_EVENT_TYPES.GROUP_AT_MESSAGE_CREATE, {
@@ -402,6 +417,26 @@ describe('QQAdapter', () => {
       const raw = makeQQRawMessage()
       const message = adapter.parseMessage(raw)
       expect(message.threadId).toBe('qq:c2c:user_123')
+    })
+
+    it('should map QQ username onto the chat author', () => {
+      const raw = makeQQRawMessage({
+        author: { id: '24B45D69', username: '染忆' },
+        group_openid: 'g1',
+      })
+      const message = adapter.parseMessage(raw)
+
+      expect(message.author.userName).toBe('染忆')
+      expect(message.author.fullName).toBe('染忆')
+      expect(message.author.userId).toBe('24B45D69')
+    })
+
+    it('should build c2c thread from user_openid when id is missing', () => {
+      const raw = makeQQRawMessage({ author: { user_openid: 'openid_1', username: '染忆' } })
+      const message = adapter.parseMessage(raw)
+
+      expect(message.threadId).toBe('qq:c2c:openid_1')
+      expect(message.author.userName).toBe('染忆')
     })
   })
 

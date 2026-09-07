@@ -10,6 +10,8 @@ export type QQTimelineMessage = {
     summary?: string
     version: number
   }>
+  authorId?: string
+  authorName?: string
   createdAt: string
   durationMs?: number
   eventId: string
@@ -58,6 +60,16 @@ function readQQAttachments(payload: Record<string, unknown> | null | undefined):
   }))
 }
 
+function readQQAuthor(payload: Record<string, unknown> | null | undefined) {
+  if (!payload) return {}
+  const authorId = typeof payload.authorId === 'string' ? payload.authorId.trim() : ''
+  const authorName = typeof payload.authorName === 'string' ? payload.authorName.trim() : ''
+  return {
+    ...(authorId ? { authorId } : {}),
+    ...(authorName ? { authorName } : {}),
+  }
+}
+
 function mapQQAttachments(event: ChannelTimelineEvent) {
   return readQQAttachments(event.platformPayload)
     .filter((attachment) => Boolean(attachment.url))
@@ -102,6 +114,7 @@ export function expandQQEventsToMessages(events: ChannelTimelineEvent[]): QQTime
 
     messages.push({
       ...(attachments.length ? { attachments } : {}),
+      ...readQQAuthor(event.platformPayload),
       createdAt: event.createdAt.toISOString(),
       eventId: event.id,
       ...(isImage && firstImage

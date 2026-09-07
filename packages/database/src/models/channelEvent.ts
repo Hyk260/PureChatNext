@@ -311,6 +311,40 @@ export class ChannelEventModel {
     return rows.reverse()
   }
 
+  /** 取会话当前版本最近一条入站事件，供 QQ 被动回复挂 msg_id。 */
+  findLatestInboundBySession = async (sessionId: string, conversationVersion: number) => {
+    const [row] = await this.db
+      .select()
+      .from(channelEvents)
+      .where(
+        and(
+          eq(channelEvents.sessionId, sessionId),
+          eq(channelEvents.conversationVersion, conversationVersion),
+          ne(channelEvents.messageKind, 'outbound')
+        )
+      )
+      .orderBy(desc(channelEvents.createdAt), desc(channelEvents.id))
+      .limit(1)
+    return row ?? null
+  }
+
+  /** 统计某条入站之后已成功发出的网页代发条数，用于递增 msg_seq。 */
+  countCompletedOutboundAfter = async (sessionId: string, conversationVersion: number, after: Date) => {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(channelEvents)
+      .where(
+        and(
+          eq(channelEvents.sessionId, sessionId),
+          eq(channelEvents.conversationVersion, conversationVersion),
+          eq(channelEvents.messageKind, 'outbound'),
+          eq(channelEvents.status, 'completed'),
+          gt(channelEvents.createdAt, after)
+        )
+      )
+    return row?.count ?? 0
+  }
+
   /** 取会话最近一条带加密 context token 的事件（入站优先于 outbound 复制源）。 */
   findLatestEncryptedContextToken = async (sessionId: string): Promise<string | null> => {
     const [row] = await this.db

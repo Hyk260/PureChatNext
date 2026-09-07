@@ -6,6 +6,7 @@ import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { canSendQQDevOutbound, sendQQDevOutbound } from '@/libs/channels/qq/outbound'
+import { resolveQQPassiveReply } from '@/libs/channels/qq/passiveReply'
 import { expandQQEventsToMessages } from '@/libs/channels/qq/timeline'
 import { resolveQQThreadType } from '@/libs/channels/qq/thread'
 import {
@@ -130,6 +131,19 @@ export const POST = withAuth<{ sessionId: string }>(async (request, { params, us
   if (!session || session.bindingId !== binding.id) return jsonError('Session not found', 404)
   if (!canSendQQDevOutbound(binding, session)) return jsonError('仅可向本人绑定的 QQ 会话代发', 403)
 
+  const inbound = await eventModel.findLatestInboundBySession(session.id, session.conversationVersion)
+  const outboundCount = inbound
+    ? await eventModel.countCompletedOutboundAfter(session.id, session.conversationVersion, inbound.createdAt)
+    : 0
+  const reply = resolveQQPassiveReply({
+    hasAgentReply: Boolean(inbound?.responseText?.trim()),
+    inboundCreatedAt: inbound?.createdAt,
+    outboundCount,
+    platformMessageId: inbound?.platformMessageId,
+    threadType: resolveQQThreadType(session.externalUserId),
+  })
+  if (!reply.ok) return jsonError(reply.error, 409)
+
   const platformMessageId = `web-outbound:${requestId}`
   let event = await eventModel.findByPlatformMessageId(binding.id, platformMessageId)
   if (event && event.sessionId !== session.id) return jsonError('Invalid requestId', 400)
@@ -155,7 +169,7 @@ export const POST = withAuth<{ sessionId: string }>(async (request, { params, us
   }
 
   try {
-    await sendQQDevOutbound({ binding, session, text })
+    await sendQQDevOutbound({ binding, reply: reply.reply, session, text })
     await eventModel.completeOutbound(event.id)
   } catch (error) {
     await eventModel.failOutbound(event.id, error instanceof Error ? error.message : 'Send failed')

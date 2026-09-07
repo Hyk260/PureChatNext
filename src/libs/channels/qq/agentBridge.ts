@@ -20,7 +20,7 @@ import { prepareQQFileForAgent } from './inboundMedia'
 import type { PreparedQQFile } from './inboundMedia'
 import { beginQQGeneration, endQQGeneration, flushQQChatInvalidation, tryHandleQQCommand } from './commands'
 import { formatQQAttachmentContext, formatQQUnsupportedMessage, logQQInbound, resolveQQInboundKind } from './inboundLog'
-import { buildQQPlatformPayload, resolveQQSessionLabel, resolveQQThreadType } from './thread'
+import { buildQQPlatformPayload, resolveQQAuthorLabel, resolveQQSessionLabel, resolveQQThreadType } from './thread'
 
 const log = debug('channel:qq:bridge')
 export const QQ_UNSUPPORTED_MESSAGE = formatQQUnsupportedMessage
@@ -228,6 +228,7 @@ export async function handleQQMention(params: {
   const platformPayload = buildQQPlatformPayload({
     attachments: message.attachments,
     authorId: message.author?.userId || 'unknown',
+    authorName: resolveQQAuthorLabel(message),
     threadId: thread.id,
     threadType,
   })

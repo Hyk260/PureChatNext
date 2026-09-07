@@ -1,15 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { Segmented } from 'antd'
 import {
-  AlertCircle,
-  CheckCircle2,
   Clipboard,
   Code2,
   Compass,
   FileJson,
   Globe2,
-  Loader2,
   RefreshCcw,
   Search,
   Sparkles,
@@ -17,6 +15,7 @@ import {
 } from 'lucide-react'
 
 import type { CrawlUniformResult, UniformSearchResponse } from '@pure/types'
+import { ActionIcon, Alert, Button, Checkbox, Input, Select } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 
 import Scrollbar from '@/components/Scrollbar'
@@ -52,6 +51,11 @@ type ApiFailure = {
 
 type SearXNGConfig = {
   engines: Array<{ categories: string[]; enabled: boolean; name: string; timeRangeSupport: boolean }>
+}
+
+type WebSearchConfigResponse = {
+  configuredProviders?: string[]
+  searxng?: SearXNGConfig | null
 }
 
 type RunState = {
@@ -99,6 +103,43 @@ const CRAWLER_IMPLS = [
   { label: 'Tavily', value: 'tavily' },
 ] as const
 
+const EMPTY_SELECT_VALUE = '__empty__'
+
+const AUTO_PROVIDER_OPTION = {
+  label: '自动 · SEARCH_PROVIDERS 链式降级',
+  value: EMPTY_SELECT_VALUE,
+} as const
+
+const SEARCH_CATEGORY_OPTIONS = [
+  { label: '通用 · general', value: 'general' },
+  { label: '新闻 · news', value: 'news' },
+  { label: '图片 · images', value: 'images' },
+  { label: '视频 · videos', value: 'videos' },
+  { label: '科学 · science', value: 'science' },
+  { label: '文件 · files', value: 'files' },
+  { label: '音乐 · music', value: 'music' },
+  { label: '社交媒体 · social media', value: 'social media' },
+  { label: '地图 · map', value: 'map' },
+  { label: 'IT · it', value: 'it' },
+] as const
+
+const SEARCH_TIME_RANGE_OPTIONS = [
+  { label: '不限 · anytime', value: EMPTY_SELECT_VALUE },
+  { label: '一天 · day', value: 'day' },
+  { label: '一周 · week', value: 'week' },
+  { label: '一月 · month', value: 'month' },
+  { label: '一年 · year', value: 'year' },
+] as const
+
+const ENGINE_ALL_OPTION = { label: '全部 · All', value: EMPTY_SELECT_VALUE } as const
+
+const segmentedIconLabel = (Icon: typeof Search, text: string, title?: string) => (
+  <span className='inline-flex items-center gap-1.5' title={title}>
+    <Icon className='size-4 shrink-0' />
+    {text}
+  </span>
+)
+
 const examples = {
   crawlPages: {
     urls: 'https://vercel.com/\nhttps://nextjs.org',
@@ -131,6 +172,16 @@ const actionOptions: Array<{
     label: 'Crawl Pages',
     value: 'crawlPages',
   },
+]
+
+const ACTION_SEGMENTED_OPTIONS = actionOptions.map((option) => ({
+  label: segmentedIconLabel(option.icon, option.label, option.description),
+  value: option.value,
+}))
+
+const RESULT_VIEW_OPTIONS = [
+  { label: segmentedIconLabel(FileJson, '摘要'), value: 'summary' },
+  { label: segmentedIconLabel(Code2, 'JSON'), value: 'json' },
 ]
 
 const parseList = (value: string) => {
@@ -221,6 +272,69 @@ const defaultQueryForAction = (nextAction: ActionMode) => {
   return examples.webSearch
 }
 
+const isConfiguredProviderValue = (value: string, configured: ReadonlySet<string>) => {
+  return value === '' || configured.has(value)
+}
+
+const resolveProviderValue = (value: string, configured: ReadonlySet<string> | null) => {
+  if (!configured) {
+    return value
+  }
+
+  return isConfiguredProviderValue(value, configured) ? value : ''
+}
+
+const selectValue = (value: string) => value || EMPTY_SELECT_VALUE
+
+const fromSelectValue = (value: unknown) => {
+  const next = String(value)
+  return next === EMPTY_SELECT_VALUE ? '' : next
+}
+
+const buildProviderOptions = (configured: ReadonlySet<string>) => [
+  AUTO_PROVIDER_OPTION,
+  ...SEARCH_PROVIDERS.map((item) => ({
+    disabled: !configured.has(item.value),
+    label: `${item.label} · ${item.value} · ${item.tag}`,
+    value: item.value,
+  })),
+]
+
+const buildEngineOptions = (engines: SearXNGConfig['engines']) => [
+  ENGINE_ALL_OPTION,
+  ...engines.map((engine) => ({
+    label: engine.timeRangeSupport ? `${engine.name} · time-range` : engine.name,
+    value: engine.name,
+  })),
+]
+
+const crawlerImplClassName = (checked: boolean) => {
+  if (checked) {
+    return 'flex cursor-pointer items-center gap-2 rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-sm text-cyan-900 transition'
+  }
+
+  return 'flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition hover:border-slate-300 hover:bg-white'
+}
+
+const requestStatusAlert = (error: string | null, completedAction?: ActionMode) => {
+  if (error) {
+    return <Alert showIcon description={error} title='请求失败' type='error' />
+  }
+
+  if (completedAction) {
+    return (
+      <Alert
+        showIcon
+        description={`${completedAction} 返回成功，下面可查看摘要与原始 JSON。`}
+        title='请求完成'
+        type='success'
+      />
+    )
+  }
+
+  return <Alert showIcon description='选择方法并填写参数后发送请求，响应会显示在这里。' title='等待请求' type='info' />
+}
+
 export default function WebSearchTestPage() {
   const [action, setAction] = useState<ActionMode>('webSearch')
   const [view, setView] = useState<ResultView>('summary')
@@ -237,8 +351,14 @@ export default function WebSearchTestPage() {
   const [error, setError] = useState<string | null>(null)
   const [copyState, setCopyState] = useState<CopyState>('idle')
   const [searxngConfig, setSearxngConfig] = useState<SearXNGConfig | null>(null)
+  const [configuredProviders, setConfiguredProviders] = useState<string[] | null>(null)
 
   const selectedImpls = useMemo(() => new Set(parseList(impls)), [impls])
+  const configuredProviderSet = useMemo(
+    () => (configuredProviders ? new Set(configuredProviders) : new Set<string>()),
+    [configuredProviders]
+  )
+  const providerOptions = useMemo(() => buildProviderOptions(configuredProviderSet), [configuredProviderSet])
   const availableEngines = useMemo(() => {
     const source = searxngConfig?.engines ?? STATIC_SEARXNG_ENGINES
     return source.filter((engine) => {
@@ -248,6 +368,7 @@ export default function WebSearchTestPage() {
       return true
     })
   }, [categories, searxngConfig, timeRange])
+  const engineOptions = useMemo(() => buildEngineOptions(availableEngines), [availableEngines])
 
   const requestBody = useMemo(
     () => buildRequestBody(action, { categories, engines, impls, provider, query, timeRange, urls }),
@@ -266,7 +387,7 @@ export default function WebSearchTestPage() {
       setQuery(form.query)
     }
     if (typeof form.provider === 'string') {
-      setProvider(form.provider)
+      setProvider(resolveProviderValue(form.provider, configuredProviders ? configuredProviderSet : null))
     }
     if (typeof form.categories === 'string') {
       setCategories(form.categories)
@@ -304,12 +425,25 @@ export default function WebSearchTestPage() {
 
   useEffect(() => {
     void fetch('/api/dev/web-search')
-      .then(async (response) => (response.ok ? ((await response.json()) as { searxng?: SearXNGConfig | null }).searxng : null))
+      .then(async (response) =>
+        response.ok ? ((await response.json()) as WebSearchConfigResponse) : null
+      )
       .then((config) => {
-        if (config) setSearxngConfig(config)
+        const nextConfigured = Array.isArray(config?.configuredProviders)
+          ? config.configuredProviders.filter((item): item is string => typeof item === 'string')
+          : []
+        const configured = new Set(nextConfigured)
+
+        if (config?.searxng) {
+          setSearxngConfig(config.searxng)
+        }
+
+        setConfiguredProviders(nextConfigured)
+        setProvider((current) => resolveProviderValue(current, configured))
       })
       .catch(() => {
-        // Keep the static engine list when SearXNG is unavailable.
+        setConfiguredProviders([])
+        setProvider((current) => resolveProviderValue(current, new Set()))
       })
 
     const store = readWebSearchCache<ApiSuccess, RunState>()
@@ -457,6 +591,20 @@ export default function WebSearchTestPage() {
     }
   }
 
+  const currentActionOption = actionOptions.find((option) => option.value === action)
+  const resultSummaryItems: Array<[string, string | number | undefined]> = [
+    ['Action', payload?.action ?? action],
+    ['服务商', searchResult?.provider ?? (provider || undefined)],
+    [
+      '结果数',
+      searchResult ? (searchResult.resultNumbers ?? searchResult.results.length) : crawlResult?.results.length,
+    ],
+    ['Provider 耗时', searchResult ? `${formatNumber(searchResult.costTime)} ms` : undefined],
+    ['HTTP 耗时', runState ? `${runState.durationMs.toLocaleString()} ms` : undefined],
+  ]
+
+  const requestStatus = requestStatusAlert(error, payload?.action)
+
   return (
     <main className='h-screen overflow-x-hidden overflow-y-auto bg-[#f5f7fb] text-slate-950'>
       <div className='mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8'>
@@ -472,28 +620,12 @@ export default function WebSearchTestPage() {
             </p>
           </div>
 
-          <div className='grid grid-cols-3 gap-2 rounded-lg bg-white p-1 shadow-sm ring-1 ring-slate-200'>
-            {actionOptions.map((option) => {
-              const Icon = option.icon
-
-              return (
-                <button
-                  key={option.value}
-                  type='button'
-                  onClick={() => selectAction(option.value)}
-                  title={option.description}
-                  className={`inline-flex min-w-0 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-                    action === option.value
-                      ? 'bg-slate-950 text-white shadow-sm'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-950'
-                  }`}
-                >
-                  <Icon className='size-4 shrink-0' />
-                  <span className='truncate'>{option.label}</span>
-                </button>
-              )
-            })}
-          </div>
+          <Segmented
+            className='shrink-0'
+            options={ACTION_SEGMENTED_OPTIONS}
+            value={action}
+            onChange={(value) => selectAction(value as ActionMode)}
+          />
         </header>
 
         <div className='grid min-w-0 flex-1 items-start gap-6 lg:grid-cols-[410px_minmax(0,1fr)]'>
@@ -502,12 +634,8 @@ export default function WebSearchTestPage() {
               <div className='flex items-start gap-3 rounded-lg border border-cyan-200 bg-cyan-50 p-3 text-cyan-900'>
                 <Globe2 className='mt-0.5 size-5 shrink-0' />
                 <div>
-                  <div className='text-sm font-semibold'>
-                    {actionOptions.find((option) => option.value === action)?.label}
-                  </div>
-                  <div className='mt-1 text-sm leading-5'>
-                    {actionOptions.find((option) => option.value === action)?.description}
-                  </div>
+                  <div className='text-sm font-semibold'>{currentActionOption?.label}</div>
+                  <div className='mt-1 text-sm leading-5'>{currentActionOption?.description}</div>
                 </div>
               </div>
 
@@ -517,16 +645,16 @@ export default function WebSearchTestPage() {
                     <label className='text-sm font-medium text-slate-800' htmlFor='web-search-urls'>
                       URL 列表 · URLs
                     </label>
-                    <textarea
+                    <Input.TextArea
                       id='web-search-urls'
+                      className='mt-2'
+                      placeholder='https://example.com'
+                      rows={6}
                       value={urls}
                       onChange={(event) => {
                         setUrls(event.target.value)
                         setError(null)
                       }}
-                      rows={6}
-                      placeholder='https://example.com'
-                      className='mt-2 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
                     />
                     <p className='mt-2 text-xs leading-5 text-slate-500'>每行或逗号分隔一个 URL。</p>
                   </div>
@@ -544,25 +672,25 @@ export default function WebSearchTestPage() {
                         const checked = selectedImpls.has(item.value)
 
                         return (
-                          <label
+                          <div
                             key={item.value}
-                            className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
-                              checked
-                                ? 'border-cyan-300 bg-cyan-50 text-cyan-900'
-                                : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white'
-                            }`}
+                            aria-checked={checked}
+                            className={crawlerImplClassName(checked)}
+                            role='checkbox'
+                            tabIndex={0}
+                            onClick={() => toggleImpl(item.value)}
+                            onKeyDown={(event) => {
+                              if (event.key !== 'Enter' && event.key !== ' ') return
+                              event.preventDefault()
+                              toggleImpl(item.value)
+                            }}
                           >
-                            <input
-                              type='checkbox'
-                              checked={checked}
-                              onChange={() => toggleImpl(item.value)}
-                              className='size-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-200'
-                            />
+                            <Checkbox checked={checked} style={{ pointerEvents: 'none' }} />
                             <span className='min-w-0'>
                               <span className='font-medium'>{item.label}</span>
                               <span className='ml-1 font-mono text-xs text-slate-500'>{item.value}</span>
                             </span>
-                          </label>
+                          </div>
                         )
                       })}
                     </div>
@@ -577,16 +705,16 @@ export default function WebSearchTestPage() {
                     <label className='text-sm font-medium text-slate-800' htmlFor='web-search-query'>
                       搜索关键词 · Query
                     </label>
-                    <textarea
+                    <Input.TextArea
                       id='web-search-query'
+                      className='mt-2'
+                      placeholder='输入搜索关键词'
+                      rows={3}
                       value={query}
                       onChange={(event) => {
                         setQuery(event.target.value)
                         setError(null)
                       }}
-                      rows={3}
-                      placeholder='输入搜索关键词'
-                      className='mt-2 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
                     />
                   </div>
 
@@ -594,19 +722,14 @@ export default function WebSearchTestPage() {
                     <label className='text-sm font-medium text-slate-800' htmlFor='web-search-provider'>
                       搜索服务商 · Provider
                     </label>
-                    <select
-                      id='web-search-provider'
-                      value={provider}
-                      onChange={(event) => setProvider(event.target.value)}
-                      className='mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
-                    >
-                      <option value=''>自动 · SEARCH_PROVIDERS 链式降级</option>
-                      {SEARCH_PROVIDERS.map((item) => (
-                        <option key={item.value} value={item.value}>
-                          {item.label} · {item.value} · {item.tag}
-                        </option>
-                      ))}
-                    </select>
+                    <Select
+                      aria-label='搜索服务商'
+                      className='mt-2 w-full'
+                      options={[...providerOptions]}
+                      style={{ width: '100%' }}
+                      value={selectValue(provider)}
+                      onChange={(value) => setProvider(fromSelectValue(value))}
+                    />
                     <p className='mt-2 text-xs leading-5 text-slate-500'>
                       选择后仅调用该服务商；留空则按环境变量顺序尝试并 fallback。
                     </p>
@@ -617,48 +740,30 @@ export default function WebSearchTestPage() {
                       <label className='text-sm font-medium text-slate-800' htmlFor='web-search-categories'>
                         分类 · Categories
                       </label>
-                      <select
-                        id='web-search-categories'
+                      <Select
+                        aria-label='分类'
+                        className='mt-2 w-full'
+                        options={[...SEARCH_CATEGORY_OPTIONS]}
+                        style={{ width: '100%' }}
                         value={categories}
-                        onChange={(event) => {
-                          setCategories(event.target.value)
+                        onChange={(value) => {
+                          setCategories(String(value))
                           setEngines('')
                         }}
-                        className='mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
-                      >
-                        <option value='general'>通用 · general</option>
-                        <option value='news'>新闻 · news</option>
-                        <option value='images'>图片 · images</option>
-                        <option value='videos'>视频 · videos</option>
-                        <option value='science'>科学 · science</option>
-                        <option value='files'>文件 · files</option>
-                        <option value='music'>音乐 · music</option>
-                        <option value='social media'>社交媒体 · social media</option>
-                        <option value='map'>地图 · map</option>
-                        <option value='it'>IT · it</option>
-                      </select>
+                      />
                     </div>
                     <div>
                       <label className='text-sm font-medium text-slate-800' htmlFor='web-search-engines'>
                         搜索引擎 · Engines
                       </label>
-                      <select
-                        id='web-search-engines'
-                        value={engines}
-                        onChange={(event) => setEngines(event.target.value)}
-                        className='mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
-                      >
-                        <option value=''>全部 · All</option>
-                        {availableEngines.map((engine) => (
-                          <option key={engine.name} value={engine.name}>
-                            {engine.name}
-                            {engine.timeRangeSupport ? ' · time-range' : ''}
-                          </option>
-                        ))}
-                        <option value='x' disabled>
-                          X (Twitter) · 当前镜像不可用
-                        </option>
-                      </select>
+                      <Select
+                        aria-label='搜索引擎'
+                        className='mt-2 w-full'
+                        options={[...engineOptions]}
+                        style={{ width: '100%' }}
+                        value={selectValue(engines)}
+                        onChange={(value) => setEngines(fromSelectValue(value))}
+                      />
                     </div>
                   </div>
 
@@ -666,53 +771,37 @@ export default function WebSearchTestPage() {
                     <label className='text-sm font-medium text-slate-800' htmlFor='web-search-time-range'>
                       时间范围 · Time range
                     </label>
-                      <select
-                        id='web-search-time-range'
-                        value={timeRange}
-                        onChange={(event) => {
-                          setTimeRange(event.target.value)
-                          setEngines('')
-                        }}
-                      className='mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
-                    >
-                      <option value=''>不限 · anytime</option>
-                      <option value='day'>一天 · day</option>
-                      <option value='week'>一周 · week</option>
-                      <option value='month'>一月 · month</option>
-                      <option value='year'>一年 · year</option>
-                    </select>
+                    <Select
+                      aria-label='时间范围'
+                      className='mt-2 w-full'
+                      options={[...SEARCH_TIME_RANGE_OPTIONS]}
+                      style={{ width: '100%' }}
+                      value={selectValue(timeRange)}
+                      onChange={(value) => {
+                        setTimeRange(fromSelectValue(value))
+                        setEngines('')
+                      }}
+                    />
                   </div>
                 </div>
               )}
 
               <div className='mt-4 grid grid-cols-[1fr_auto_auto] gap-2'>
-                <button
-                  type='button'
-                  disabled={!canSubmit || isLoading}
-                  onClick={submit}
-                  className='inline-flex items-center justify-center gap-2 rounded-md bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300'
+                <Button
+                  disabled={!canSubmit}
+                  icon={<Sparkles className='size-4' />}
+                  loading={isLoading}
+                  type='primary'
+                  onClick={() => void submit()}
                 >
-                  {isLoading ? <Loader2 className='size-4 animate-spin' /> : <Sparkles className='size-4' />}
                   发送请求
-                </button>
-                <button
-                  type='button'
-                  onClick={clearCache}
-                  className='grid size-10 place-items-center rounded-md border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-red-50 hover:text-red-700'
-                  aria-label='清理缓存'
+                </Button>
+                <ActionIcon
+                  icon={Trash2}
                   title='清理缓存（结果与服务商/分类/引擎/时间范围/impls）'
-                >
-                  <Trash2 className='size-4' />
-                </button>
-                <button
-                  type='button'
-                  onClick={reset}
-                  className='grid size-10 place-items-center rounded-md border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-950'
-                  aria-label='重置测试'
-                  title='重置测试'
-                >
-                  <RefreshCcw className='size-4' />
-                </button>
+                  onClick={clearCache}
+                />
+                <ActionIcon icon={RefreshCcw} title='重置测试' onClick={reset} />
               </div>
             </div>
 
@@ -747,14 +836,9 @@ export default function WebSearchTestPage() {
             <div className='rounded-lg border border-slate-200 bg-white p-4 shadow-sm'>
               <div className='flex items-center justify-between gap-3'>
                 <h2 className='text-sm font-semibold text-slate-950'>请求体</h2>
-                <button
-                  type='button'
-                  onClick={copyRequestJson}
-                  className='inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50'
-                >
-                  <Clipboard className='size-3.5' />
+                <Button icon={<Clipboard className='size-3.5' />} size='small' onClick={() => void copyRequestJson()}>
                   {COPY_LABEL[copyState]}
-                </button>
+                </Button>
               </div>
               <div className='mt-3'>
                 <Scrollbar maxHeight='16rem' className='overflow-hidden rounded-lg ring-1 ring-slate-200'>
@@ -776,45 +860,10 @@ export default function WebSearchTestPage() {
 
           <section className='flex min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm'>
             <div className='shrink-0 border-b border-slate-200 p-4'>
-              {error ? (
-                <div className='flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-red-800'>
-                  <AlertCircle className='mt-0.5 size-5 shrink-0' />
-                  <div className='min-w-0'>
-                    <div className='text-sm font-semibold'>请求失败</div>
-                    <div className='mt-1 text-sm leading-5 break-words'>{error}</div>
-                  </div>
-                </div>
-              ) : payload ? (
-                <div className='flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800'>
-                  <CheckCircle2 className='mt-0.5 size-5 shrink-0' />
-                  <div>
-                    <div className='text-sm font-semibold'>请求完成</div>
-                    <div className='mt-1 text-sm leading-5'>{payload.action} 返回成功，下面可查看摘要与原始 JSON。</div>
-                  </div>
-                </div>
-              ) : (
-                <div className='flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-slate-600'>
-                  <FileJson className='mt-0.5 size-5 shrink-0' />
-                  <div>
-                    <div className='text-sm font-semibold text-slate-900'>等待请求</div>
-                    <div className='mt-1 text-sm leading-5'>选择方法并填写参数后发送请求，响应会显示在这里。</div>
-                  </div>
-                </div>
-              )}
+              {requestStatus}
 
               <div className='mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5'>
-                {[
-                  ['Action', payload?.action ?? action],
-                  ['服务商', searchResult?.provider ?? (provider || undefined)],
-                  [
-                    '结果数',
-                    searchResult
-                      ? (searchResult.resultNumbers ?? searchResult.results.length)
-                      : crawlResult?.results.length,
-                  ],
-                  ['Provider 耗时', searchResult ? `${formatNumber(searchResult.costTime)} ms` : undefined],
-                  ['HTTP 耗时', runState ? `${runState.durationMs.toLocaleString()} ms` : undefined],
-                ].map(([label, value]) => (
+                {resultSummaryItems.map(([label, value]) => (
                   <div key={label} className='rounded-lg border border-slate-200 bg-slate-50 p-3'>
                     <div className='text-xs font-medium text-slate-500'>{label}</div>
                     <div className='mt-1 truncate text-sm font-semibold text-slate-950'>{value ?? 'N/A'}</div>
@@ -824,24 +873,13 @@ export default function WebSearchTestPage() {
             </div>
 
             <div className='flex shrink-0 flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between'>
-              <div className='grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1'>
-                {[
-                  ['summary', '摘要'],
-                  ['json', 'JSON'],
-                ].map(([key, label]) => (
-                  <button
-                    key={key}
-                    type='button'
-                    onClick={() => setView(key as ResultView)}
-                    className={`inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-                      view === key ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    {key === 'json' ? <Code2 className='size-4' /> : <FileJson className='size-4' />}
-                    {label}
-                  </button>
-                ))}
-              </div>
+              <Segmented
+                className='shrink-0'
+                options={RESULT_VIEW_OPTIONS}
+                size='small'
+                value={view}
+                onChange={(value) => setView(value as ResultView)}
+              />
             </div>
 
             <Scrollbar maxHeight='min(100vh, 60rem)' className='min-h-0'>

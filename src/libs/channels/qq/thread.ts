@@ -32,21 +32,37 @@ export function resolveQQThreadType(threadId: string): QQThreadType {
   return parseQQThreadId(threadId).type
 }
 
+const QQ_PLACEHOLDER_NAMES = new Set(['unknown', 'Unknown'])
+
+/** 单条消息的发言者展示名；群聊里不能复用会话级 externalUserName。 */
+export function resolveQQAuthorLabel(message: Message): string | null {
+  const username = message.author?.userName?.trim() || message.author?.fullName?.trim()
+  if (username && !QQ_PLACEHOLDER_NAMES.has(username)) return username
+  const userId = message.author?.userId?.trim()
+  if (userId && userId !== 'unknown') return userId
+  return null
+}
+
+/** 会话标题：群/频道用线程身份，单聊才用发言者昵称。 */
 export function resolveQQSessionLabel(thread: Thread, message: Message): string {
   const { id, type } = parseQQThreadId(thread.id)
-  const authorId = message.author?.userId || id
   if (type === 'group') return `${QQ_THREAD_TYPE_LABEL.group} ${id}`
-  if (type === 'c2c') return `${QQ_THREAD_TYPE_LABEL.c2c} ${authorId}`
-  if (type === 'dms') return `${QQ_THREAD_TYPE_LABEL.dms} ${id}`
-  return `${QQ_THREAD_TYPE_LABEL.guild} ${id}`
+  if (type === 'guild') return `${QQ_THREAD_TYPE_LABEL.guild} ${id}`
+
+  const username = message.author?.userName?.trim() || message.author?.fullName?.trim()
+  if (username && !QQ_PLACEHOLDER_NAMES.has(username)) return username
+  if (type === 'c2c') return `${QQ_THREAD_TYPE_LABEL.c2c} ${id}`
+  return `${QQ_THREAD_TYPE_LABEL.dms} ${id}`
 }
 
 export function buildQQPlatformPayload(params: {
   attachments: Array<{ mimeType?: string; name?: string; size?: number; type?: string; url?: string }>
   authorId: string
+  authorName?: string | null
   threadId: string
   threadType: QQThreadType
 }): Record<string, unknown> {
+  const authorName = params.authorName?.trim()
   return {
     attachments: params.attachments.map(({ mimeType, name, size, type, url }) => ({
       mimeType,
@@ -56,6 +72,7 @@ export function buildQQPlatformPayload(params: {
       url,
     })),
     authorId: params.authorId,
+    ...(authorName ? { authorName } : {}),
     threadId: params.threadId,
     threadType: params.threadType,
   }

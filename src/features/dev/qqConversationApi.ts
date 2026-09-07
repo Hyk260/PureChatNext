@@ -33,6 +33,8 @@ export type QQDevMessage = {
     summary?: string
     version: number
   }>
+  authorId?: string
+  authorName?: string
   createdAt: string
   durationMs?: number
   eventId: string

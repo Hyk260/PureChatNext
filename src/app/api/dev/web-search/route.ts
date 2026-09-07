@@ -42,6 +42,15 @@ const parseProvider = (value: unknown): SearchImplType | undefined | 'invalid' =
   return isSearchImplType(provider) ? provider : 'invalid'
 }
 
+const parseConfiguredProviders = () => {
+  const envValue = (toolsEnv.SEARCH_PROVIDERS ?? '').replaceAll('，', ',').trim()
+
+  return envValue
+    .split(',')
+    .map((item) => item.trim())
+    .filter(isSearchImplType)
+}
+
 /**
  * 联网搜索测试 API（仅开发环境）
  * POST /api/dev/web-search
@@ -166,6 +175,7 @@ export const GET = async () => {
   return NextResponse.json(
     {
       actions: availableActions,
+      configuredProviders: parseConfiguredProviders(),
       message: 'Web search API',
       providers: SEARCH_IMPL_TYPES,
       searxng,

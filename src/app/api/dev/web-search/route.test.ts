@@ -1,9 +1,17 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { toolsEnv } from '@/envs/tools'
 import { searchService } from '@/server/search'
 
 import { GET, POST } from './route'
+
+vi.mock('@/envs/tools', () => ({
+  toolsEnv: {
+    SEARCH_PROVIDERS: 'searxng,tavily',
+    SEARXNG_URL: undefined,
+  },
+}))
 
 vi.mock('@/server/search', () => ({
   searchService: {
@@ -26,6 +34,7 @@ const postJson = (body: unknown) => {
 describe('/api/dev/web-search', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(toolsEnv).SEARCH_PROVIDERS = 'searxng,tavily'
   })
 
   it('returns available actions from GET', async () => {
@@ -34,8 +43,18 @@ describe('/api/dev/web-search', () => {
 
     expect(response.status).toBe(200)
     expect(payload.actions).toEqual(['query', 'webSearch', 'crawlPages'])
+    expect(payload.configuredProviders).toEqual(['searxng', 'tavily'])
     expect(payload.providers).toContain('searxng')
     expect(payload.providers).toContain('tavily')
+  })
+
+  it('parses full-width commas in SEARCH_PROVIDERS', async () => {
+    vi.mocked(toolsEnv).SEARCH_PROVIDERS = 'searxng，brave ， exa'
+
+    const response = await GET()
+    const payload = await response.json()
+
+    expect(payload.configuredProviders).toEqual(['searxng', 'brave', 'exa'])
   })
 
   it('dispatches query action to searchService.query', async () => {

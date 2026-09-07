@@ -65,6 +65,7 @@ export async function generateQQAgentReply(params: {
   const channelContext = params.toolContext
   const tools = resolveChatTools({ channel: 'qq', channelContext, searchMode: 'auto' })
   const instructions = [
+    '调用工具后必须用中文直接回答用户，不要只回复“正在查询”，不要输出工具调用、XML 或 DSML 标记。',
     resolveChatToolInstructions({ channel: 'qq', channelContext, searchMode: 'auto' }).join('\n\n'),
     params.attachmentContext,
   ]

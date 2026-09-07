@@ -461,6 +461,46 @@ describe('SearchService', () => {
       expect(result.provider).toBe(SearchImplType.Exa)
     })
 
+    it('should fall back when news relevance filtering rejects encyclopedias', async () => {
+      const encyclopediaResponse = {
+        ...successResponse,
+        results: [
+          {
+            ...successResponse.results[0],
+            parsedUrl: 'en.wikipedia.org',
+            title: '2026 - Wikipedia',
+            url: 'https://en.wikipedia.org/wiki/2026',
+          },
+        ],
+      }
+      const newsResponse = {
+        ...successResponse,
+        results: [
+          {
+            ...successResponse.results[0],
+            parsedUrl: 'news.cctv.com',
+            title: '国内要闻',
+            url: 'https://news.cctv.com/china/',
+          },
+        ],
+      }
+      const mockImpl1 = { query: vi.fn().mockResolvedValue(encyclopediaResponse) }
+      const mockImpl2 = { query: vi.fn().mockResolvedValue(newsResponse) }
+
+      vi.mocked(createSearchServiceImpl)
+        .mockReturnValueOnce(mockImpl1 as any)
+        .mockReturnValueOnce(mockImpl2 as any)
+      vi.mocked(toolsEnv).SEARCH_PROVIDERS = 'searxng,exa'
+      searchService = new SearchService()
+
+      const result = await searchService.webSearch({ query: '今日新闻' }, { filterIrrelevant: true })
+
+      expect(mockImpl1.query).toHaveBeenCalledTimes(2)
+      expect(mockImpl2.query).toHaveBeenCalledTimes(1)
+      expect(result.results[0]?.title).toBe('国内要闻')
+      expect(result.provider).toBe(SearchImplType.Exa)
+    })
+
     it('should try all providers in order and return empty when all fail', async () => {
       const mockImpl1 = { query: vi.fn().mockResolvedValue(emptyResponse) }
       const mockImpl2 = { query: vi.fn().mockResolvedValue(emptyResponse) }

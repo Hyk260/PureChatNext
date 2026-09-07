@@ -34,8 +34,9 @@ describe('chat tool registry', () => {
 
   it('only emits instructions for enabled tools', () => {
     expect(resolveChatToolInstructions({ channel: 'web', searchMode: 'off' }).join('\n')).toMatch(/getWeather/)
-    expect(resolveChatToolInstructions({ channel: 'wechat', searchMode: 'auto' }).join('\n')).toMatch(
-      /webSearch[\s\S]*getWeather/
-    )
+    const wechatInstructions = resolveChatToolInstructions({ channel: 'wechat', searchMode: 'auto' }).join('\n')
+    expect(wechatInstructions).toMatch(/webSearch[\s\S]*getWeather/)
+    expect(wechatInstructions).toMatch(/不要把当前日历日期写进关键词/)
+    expect(wechatInstructions).toMatch(/必须直接作答/)
   })
 })

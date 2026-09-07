@@ -56,7 +56,8 @@ outgoing:
   max_request_timeout: 10.0
   pool_connections: 100
   pool_maxsize: 20
-  enable_http2: true
+  # Some upstream search endpoints reset HTTP/2 connections from Docker.
+  enable_http2: false
 
 categories_as_tabs:
   general:
@@ -72,16 +73,21 @@ categories_as_tabs:
 engines:
   - name: bing
     disabled: false
-    base_url: https://cn.bing.com
-    timeout: 6.0
+    enable_http2: false
+    base_url: https://www.bing.com
+    timeout: 12.0
+    # bing news' AJAX endpoint times out here; reuse bing-web for the news tab.
+    categories: [general, web, news]
 
   - name: bing images
     disabled: false
     timeout: 6.0
 
   - name: bing news
-    disabled: false
-    timeout: 6.0
+    # `/news/infinitescrollajax` times out from this network, then SearXNG suspends it.
+    disabled: true
+    enable_http2: false
+    timeout: 12.0
 
   - name: bing videos
     disabled: false
@@ -103,7 +109,8 @@ engines:
     timeout: 8.0
 
   - name: google news
-    disabled: false
+    # Returns CAPTCHA from typical CN/datacenter IPs; 24h suspension empties the news tab.
+    disabled: true
     categories: [news]
     timeout: 8.0
 

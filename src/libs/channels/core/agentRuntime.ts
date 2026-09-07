@@ -15,12 +15,21 @@ import type { PureChatSettlement } from '@/server/purechat'
 import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 
 import { resolveChannelModelConfig } from './modelResolver'
+import { CHANNEL_FINAL_ANSWER_INSTRUCTION, resolveChannelReplyText } from './replyText'
 import type { ChannelAgentRequest, ChannelAgentResponse, ChannelGenerationOptions, ChannelPlatform } from './types'
 
 const log = debug('channel:core:agent')
 
 export const CHANNEL_MAX_GENERATION_STEPS = 5
 export const CHANNEL_FINAL_ANSWER_STEP = 3
+
+type PrepareStepEvent = {
+  initialInstructions?: unknown
+  instructions?: unknown
+  stepNumber?: number
+}
+
+const instructionText = (value: unknown) => (typeof value === 'string' ? value : '')
 
 export function createChannelGenerationControls(
   platform: ChannelPlatform
@@ -43,8 +52,19 @@ export function createChannelGenerationControls(
       )
     },
     prepareStep: (event) => {
-      const stepNumber = (event as { stepNumber?: number }).stepNumber ?? 0
-      return stepNumber >= CHANNEL_FINAL_ANSWER_STEP ? { activeTools: [], toolChoice: 'none' as const } : undefined
+      const step = event as PrepareStepEvent
+      const stepNumber = step.stepNumber ?? 0
+      if (stepNumber < CHANNEL_FINAL_ANSWER_STEP) return undefined
+      if (stepNumber > CHANNEL_FINAL_ANSWER_STEP) {
+        return { activeTools: [], toolChoice: 'none' as const }
+      }
+
+      const currentInstructions = instructionText(step.instructions) || instructionText(step.initialInstructions)
+      return {
+        activeTools: [],
+        instructions: [currentInstructions, CHANNEL_FINAL_ANSWER_INSTRUCTION].filter(Boolean).join('\n\n'),
+        toolChoice: 'none' as const,
+      }
     },
     stopWhen: isStepCount(CHANNEL_MAX_GENERATION_STEPS),
   }
@@ -150,10 +170,12 @@ export class ChannelAgentRuntime {
     }
 
     const durationMs = Date.now() - startedAt
-    const text = result.text?.trim() || '（模型未返回内容）'
+    const rawText = result.text ?? ''
+    const text = resolveChannelReplyText(rawText, (result.toolCalls?.length ?? 0) > 0)
     log('reply generated %O', {
       agentId: agent.id,
       aiOutput: text,
+      ...(rawText !== text ? { rawOutput: rawText.slice(0, 400) } : {}),
       contextMessageCount: generationMessages(params, params.generation).length,
       durationMs,
       model: modelId,
@@ -182,7 +204,7 @@ export class ChannelAgentRuntime {
       durationMs,
       model: modelId,
       provider,
-      text: text || '（模型未返回内容）',
+      text,
     }
   }
 }

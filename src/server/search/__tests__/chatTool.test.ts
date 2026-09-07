@@ -1,8 +1,8 @@
 // @vitest-environment node
-import type { ChatWebSearchToolResult, UniformSearchResponse } from '@pure/types'
+import type { ChatWebSearchToolResult, SearchQuery, UniformSearchResponse } from '@pure/types'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createWebSearchTool } from '../chatTool'
+import { createWebSearchTool, sanitizeWebSearchQuery } from '../chatTool'
 
 const createResponse = (overrides: Partial<UniformSearchResponse> = {}): UniformSearchResponse => ({
   costTime: 10,
@@ -13,17 +13,35 @@ const createResponse = (overrides: Partial<UniformSearchResponse> = {}): Uniform
 })
 
 const executeTool = async (
-  webSearch: (input: { query: string }) => Promise<UniformSearchResponse>,
-  query = 'test query'
+  webSearch: (input: SearchQuery, options?: { filterIrrelevant?: boolean }) => Promise<UniformSearchResponse>,
+  input: { query: string; searchCategories?: Array<'news' | 'general'>; searchTimeRange?: 'day' | 'week' } = {
+    query: 'test query',
+  }
 ) => {
   const searchTool = createWebSearchTool({ webSearch })
   if (!searchTool.execute) throw new Error('Expected executable web search tool')
 
-  return (await searchTool.execute(
-    { query },
-    { abortSignal: undefined, context: {}, messages: [], toolCallId: 'call-1' }
-  )) as ChatWebSearchToolResult
+  return (await searchTool.execute(input, {
+    abortSignal: undefined,
+    context: {},
+    messages: [],
+    toolCallId: 'call-1',
+  })) as ChatWebSearchToolResult
 }
+
+describe('sanitizeWebSearchQuery', () => {
+  it('strips calendar dates that models copy from the runtime clock', () => {
+    expect(sanitizeWebSearchQuery('2026年9月7日 中文 今日 新闻 头条 最新')).toBe('中文 今日 新闻 头条 最新')
+    expect(sanitizeWebSearchQuery('2026-09-07 news headlines China world latest')).toBe(
+      'news headlines China world latest'
+    )
+    expect(sanitizeWebSearchQuery('2026/09/07 热点 新闻')).toBe('热点 新闻')
+  })
+
+  it('keeps the original query when stripping would leave nothing', () => {
+    expect(sanitizeWebSearchQuery('2026年9月7日')).toBe('2026年9月7日')
+  })
+})
 
 describe('webSearchTool', () => {
   it('limits results, trims content, and excludes unsafe URLs', async () => {
@@ -48,6 +66,22 @@ describe('webSearchTool', () => {
     expect(new Set(output.results.map((result) => result.url)).size).toBe(5)
     expect(output.results[0].content.length).toBeLessThanOrEqual(600)
     expect(output.results[0].content).not.toMatch(/\s{2,}/)
+  })
+
+  it('sanitizes calendar dates and forwards optional news filters', async () => {
+    const webSearch = vi.fn().mockResolvedValue(createResponse())
+
+    const output = await executeTool(webSearch, {
+      query: '2026年9月7日 中国 今日新闻',
+      searchCategories: ['news'],
+      searchTimeRange: 'week',
+    })
+
+    expect(webSearch).toHaveBeenCalledWith(
+      { query: '中国 今日新闻', searchCategories: ['news'], searchTimeRange: 'week' },
+      { filterIrrelevant: true }
+    )
+    expect(output).toEqual({ query: '中国 今日新闻', results: [], success: true })
   })
 
   it('returns an empty successful result when no source matches', async () => {

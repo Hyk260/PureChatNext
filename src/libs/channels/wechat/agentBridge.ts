@@ -37,7 +37,7 @@ export const buildWechatRuntimeInstructions = (now = new Date()) => {
 
   return [
     `当前服务器时间：${currentTime}（${SHANGHAI_TIMEZONE}）。涉及“今天、明天、现在”等相对时间时，以此为准。`,
-    '调用工具后必须给出完整最终回答，不要只回复“正在查询”或“稍等”。引用网页资料时附上来源 URL。',
+    '调用工具后必须给出完整最终回答，不要只回复“正在查询”或“稍等”。引用网页资料时附上来源 URL。不得输出 XML、DSML 或工具调用标记。',
     '不得声称已修改、生成或发送文件，除非相应文件工具明确返回 success=true。',
   ].join('\n')
 }

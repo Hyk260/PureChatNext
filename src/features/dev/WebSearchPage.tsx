@@ -77,14 +77,14 @@ const SEARCH_PROVIDERS = [
 ] as const
 
 const STATIC_SEARXNG_ENGINES = [
-  { categories: ['general', 'web'], enabled: true, name: 'bing', timeRangeSupport: false },
-  { categories: ['news'], enabled: true, name: 'bing news', timeRangeSupport: true },
+  { categories: ['general', 'web', 'news'], enabled: true, name: 'bing', timeRangeSupport: false },
+  { categories: ['news'], enabled: false, name: 'bing news', timeRangeSupport: true },
   { categories: ['images', 'web'], enabled: true, name: 'bing images', timeRangeSupport: true },
   { categories: ['videos', 'web'], enabled: true, name: 'bing videos', timeRangeSupport: true },
   { categories: ['science', 'scientific publications'], enabled: true, name: 'arxiv', timeRangeSupport: false },
   { categories: ['it', 'repos'], enabled: true, name: 'github', timeRangeSupport: false },
   { categories: ['general'], enabled: true, name: 'google', timeRangeSupport: false },
-  { categories: ['news'], enabled: true, name: 'google news', timeRangeSupport: false },
+  { categories: ['news'], enabled: false, name: 'google news', timeRangeSupport: false },
   { categories: ['videos'], enabled: true, name: 'bilibili', timeRangeSupport: true },
   { categories: ['general', 'news'], enabled: true, name: 'sogou wechat', timeRangeSupport: false },
 ] satisfies SearXNGConfig['engines']
@@ -103,7 +103,7 @@ const examples = {
   crawlPages: {
     urls: 'https://vercel.com/\nhttps://nextjs.org',
   },
-  query: 'Next.js 16 App Router',
+  query: '今日新闻',
   webSearch: 'web search',
 }
 

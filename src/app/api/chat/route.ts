@@ -295,7 +295,7 @@ export async function POST(request: Request) {
   const searchOptions =
     Object.keys(tools).length > 0
       ? {
-          stopWhen: isStepCount(3),
+          stopWhen: isStepCount(5),
           ...(toolApproval ? { toolApproval } : {}),
           ...(toolsEnv.TOOL_APPROVAL_SECRET ? { experimental_toolApprovalSecret: toolsEnv.TOOL_APPROVAL_SECRET } : {}),
           ...(desktopClient && requestUserId && topicId

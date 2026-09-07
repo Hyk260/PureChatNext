@@ -106,7 +106,12 @@ describe('generateWechatAgentReply', () => {
 
     const options = mocks.generateText.mock.calls[0]![0]
     expect(options.prepareStep({ stepNumber: 2 })).toBeUndefined()
-    expect(options.prepareStep({ stepNumber: 3 })).toEqual({ activeTools: [], toolChoice: 'none' })
+    expect(options.prepareStep({ stepNumber: 3 })).toEqual({
+      activeTools: [],
+      instructions: expect.stringContaining('禁止输出 XML、DSML'),
+      toolChoice: 'none',
+    })
+    expect(options.prepareStep({ stepNumber: 4 })).toEqual({ activeTools: [], toolChoice: 'none' })
   })
 
   it('uses PureChat gateway model and charges usage', async () => {
@@ -188,6 +193,31 @@ describe('generateWechatAgentReply', () => {
 
     expect(mocks.generateText).not.toHaveBeenCalled()
     expect(mocks.chargePureChatGenerateUsage).not.toHaveBeenCalled()
+  })
+
+  it('does not send leaked DeepSeek tool markup as the user-facing reply', async () => {
+    mocks.generateText.mockResolvedValueOnce({
+      finishReason: 'stop',
+      steps: [{ finishReason: 'stop' }],
+      text: '<｜｜DSML｜｜tool_calls><｜｜DSML｜｜invoke name="webSearch"></｜｜DSML｜｜invoke></｜｜DSML｜｜tool_calls>',
+      toolCalls: [{ toolName: 'webSearch' }],
+      usage: {
+        inputTokenDetails: { cacheReadTokens: undefined },
+        inputTokens: 10,
+        outputTokens: 5,
+      },
+    })
+
+    const reply = await generateWechatAgentReply({
+      agentId: 'agent-1',
+      model: 'deepseek-v4-flash',
+      provider: 'deepseek',
+      userId: 'user-1',
+      userText: '今日新闻',
+    })
+
+    expect(reply.text).toBe('刚才检索到了资料，但没有整理成可读回复。请再发一次同样的问题。')
+    expect(reply.text).not.toContain('DSML')
   })
 
   it('injects an explicit Shanghai date for relative-time questions', () => {

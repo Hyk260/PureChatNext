@@ -9,7 +9,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
 import type { ScrollbarRef } from '@/components/Scrollbar'
-import { PulseDots } from '@/components/Loading'
+import { PulseDots, LoadingState } from '@/components/Loading'
 import MessageActions from '@/features/chat/MessageActions'
 import MessageAttachments from '@/features/chat/MessageAttachments'
 import MessageEditorModal from '@/features/chat/MessageEditorModal'
@@ -168,7 +168,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
       <div className={styles.row} data-role={message.role}>
         {!isUser && agentMeta ? (
           <div className={styles.header}>
-            <Avatar avatar={agentMeta.avatar} background={cssVar.colorFillSecondary} size={28} />
+            <Avatar avatar={agentMeta.avatar} size={28} />
             <span className={styles.title}>{agentMeta.title}</span>
           </div>
         ) : null}
@@ -195,7 +195,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
               onReject={() => applyToolApprovalDecision(item, false, onToolApproval, onServerToolApproval)}
             />
           ))}
-
+          {/* <LoadingState /> */}
           {text ? (
             <MessageMarkdown
               className={cx(styles.markdown, isUser && styles.userMarkdown)}
@@ -203,7 +203,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
               text={text}
             />
           ) : isStreaming && !reasoning && !hasWebSearch ? (
-            <PulseDots />
+            <LoadingState />
           ) : null}
         </div>
 

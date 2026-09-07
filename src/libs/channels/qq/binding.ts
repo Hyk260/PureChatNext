@@ -58,19 +58,21 @@ export function resolveQQChannelModel(params: {
 
 /** Shared binding path for manual credentials and QR authorization. */
 export async function bindQQCredentials(params: BindQQCredentialsParams) {
+  const appId = params.appId.trim()
+  const appSecret = params.appSecret.trim()
   const agent = await new AgentModel(params.userId).findVisibleById(params.agentId)
   if (!agent) throw new QQBindingError('Agent not found', 404)
 
   try {
-    await new QQApiClient(params.appId, params.appSecret).getAccessToken()
+    await new QQApiClient(appId, appSecret).getAccessToken()
   } catch (error) {
     const message = error instanceof Error ? error.message : 'QQ auth failed'
     throw new QQBindingError(`Invalid QQ credentials: ${message}`)
   }
 
   const credentials: QQCredentials = {
-    appId: params.appId,
-    appSecret: params.appSecret,
+    appId,
+    appSecret,
     connectionMode: params.connectionMode,
   }
   const model = new ChannelBindingModel()
@@ -86,7 +88,7 @@ export async function bindQQCredentials(params: BindQQCredentialsParams) {
 
   const binding = await model.upsert({
     agentId: params.agentId,
-    applicationId: params.appId,
+    applicationId: appId,
     credentials: encryptCredentials(credentials),
     model: channelModel.model,
     platform: QQ_PLATFORM,

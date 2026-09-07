@@ -104,6 +104,7 @@ describe('purechat runtime', () => {
       },
       settlementId: 'settlement-1',
       settlementPeriod: '2026-08',
+      trigger: 'web',
       userId: 'user-1',
     })
 

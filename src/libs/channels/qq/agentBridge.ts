@@ -83,6 +83,7 @@ export async function generateQQAgentReply(params: {
     model: params.model,
     platform: 'qq',
     provider: params.provider,
+    trigger: 'qq',
     text: params.userText,
     userId: params.userId,
   })

@@ -274,6 +274,7 @@ export async function POST(request: Request) {
         result: { usage: totalUsage },
         settlementId: pureChatContext.settlementId,
         settlementPeriod: pureChatContext.settlementPeriod,
+        trigger: 'web',
         userId: pureChatContext.userId,
       }).catch((error) => log('purechat health check charge failed: %o', error))
     }

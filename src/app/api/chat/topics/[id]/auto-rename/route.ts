@@ -17,11 +17,7 @@ import {
   resolveProviderApiKey,
 } from '@/libs/ai-providers/resolveClient'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
-import {
-  assertPureChatCanChat,
-  chargePureChatGenerateUsage,
-  createPureChatLanguageModel,
-} from '@/server/purechat'
+import { assertPureChatCanChat, chargePureChatGenerateUsage, createPureChatLanguageModel } from '@/server/purechat'
 import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 
 export const maxDuration = 30
@@ -166,6 +162,7 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
           result,
           settlementId,
           settlementPeriod,
+          trigger: 'web',
           userId,
         })
       } catch (error) {

@@ -195,13 +195,20 @@ const triggerLabels: Record<UsageItem['trigger'], string> = {
   wechat: '微信网关',
 }
 
+const triggerFilterOptions = [
+  { label: '全部来源', value: 'all' },
+  { label: triggerLabels.web, value: 'web' },
+  { label: triggerLabels.wechat, value: 'wechat' },
+  { label: triggerLabels.qq, value: 'qq' },
+] as const
+
 export function UsageSettingsContent() {
   const [data, setData] = useState<UsageResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [model, setModel] = useState('')
   const [modelQuery, setModelQuery] = useState('')
-  const [type, setType] = useState('all')
+  const [trigger, setTrigger] = useState('all')
   const [range, setRange] = useState<DateRange | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -212,7 +219,13 @@ export function UsageSettingsContent() {
 
   useEffect(() => {
     let cancelled = false
-    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), sortBy, sortOrder, type })
+    const params = new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+      sortBy,
+      sortOrder,
+      trigger,
+    })
     if (modelQuery) params.set('model', modelQuery)
     if (range) {
       params.set('startDate', range[0].format('YYYY-MM-DD'))
@@ -241,7 +254,7 @@ export function UsageSettingsContent() {
     return () => {
       cancelled = true
     }
-  }, [modelQuery, page, pageSize, range, reloadNonce, sortBy, sortOrder, type])
+  }, [modelQuery, page, pageSize, range, reloadNonce, sortBy, sortOrder, trigger])
 
   const retry = () => {
     setLoading(true)
@@ -251,7 +264,7 @@ export function UsageSettingsContent() {
   const reset = () => {
     setModel('')
     setModelQuery('')
-    setType('all')
+    setTrigger('all')
     setRange(null)
     setPage(1)
     setPageSize(10)
@@ -284,7 +297,7 @@ export function UsageSettingsContent() {
       {
         dataIndex: 'trigger',
         key: 'trigger',
-        render: (value: UsageItem['trigger']) => triggerLabels[value] ?? '网页聊天',
+        render: (value: UsageItem['trigger']) => triggerLabels[value] ?? EMPTY_CELL,
         title: '触发方式',
         width: 90,
       },
@@ -389,14 +402,11 @@ export function UsageSettingsContent() {
             />
             <Select
               size='small'
-              options={[
-                { label: '全部类型', value: 'all' },
-                { label: '聊天消息', value: 'chat' },
-              ]}
+              options={[...triggerFilterOptions]}
               style={{ flex: '0 1 180px' }}
-              value={type}
+              value={trigger}
               onChange={(value) => {
-                setType(String(value))
+                setTrigger(String(value))
                 setPage(1)
               }}
             />

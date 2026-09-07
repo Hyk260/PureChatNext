@@ -170,6 +170,7 @@ describe('POST /api/chat PureChat model availability', () => {
     })
 
     expect(chargeChatUsage).toHaveBeenCalledOnce()
+    expect(chargeChatUsage).toHaveBeenCalledWith(expect.objectContaining({ trigger: 'web' }))
   })
 
   it('rejects an invalid search mode before starting generation', async () => {

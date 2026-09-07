@@ -69,7 +69,9 @@ export async function generateWechatAgentReply(params: {
       buildWechatRuntimeInstructions(),
       ...resolveChatToolInstructions(toolContext),
       params.attachmentContext,
-    ].filter(Boolean).join('\n\n'),
+    ]
+      .filter(Boolean)
+      .join('\n\n'),
     messages,
     ...createChannelGenerationControls('wechat'),
     tools,
@@ -81,6 +83,7 @@ export async function generateWechatAgentReply(params: {
     model: params.model,
     platform: 'wechat',
     provider: params.provider,
+    trigger: 'wechat',
     text: params.userText,
     userId: params.userId,
   })

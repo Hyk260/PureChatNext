@@ -24,7 +24,7 @@ export type ChargeChatUsageInput = {
   outputTokens?: number
   period: string
   provider: string
-  trigger?: CreditUsageTrigger
+  trigger: CreditUsageTrigger
   userId: string
 }
 
@@ -38,6 +38,7 @@ export type UsageQuery = {
   sortBy: UsageSortBy
   sortOrder: 'asc' | 'desc'
   startAt?: Date
+  trigger?: CreditUsageTrigger
   userId: string
 }
 
@@ -192,7 +193,7 @@ export class CreditsModel {
         period: input.period,
         provider: input.provider,
         reason: 'chat_usage',
-        trigger: input.trigger ?? 'web',
+        trigger: input.trigger,
         userId: input.userId,
       })
 
@@ -208,6 +209,9 @@ export class CreditsModel {
     const filters = [...scopeFilters]
     if (query.model) {
       filters.push(or(ilike(creditLedger.model, `%${query.model}%`), ilike(creditLedger.provider, `%${query.model}%`))!)
+    }
+    if (query.trigger) {
+      filters.push(eq(creditLedger.trigger, query.trigger))
     }
     const where = and(...filters)
     const totalTokens = sql<number>`coalesce(${creditLedger.inputTokens}, 0) + coalesce(${creditLedger.outputTokens}, 0)`

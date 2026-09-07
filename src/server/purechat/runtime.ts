@@ -61,7 +61,7 @@ export async function chargePureChatGenerateUsage(params: {
   result: PureChatUsageSource
   settlementId: string
   settlementPeriod: string
-  trigger?: CreditUsageTrigger
+  trigger: CreditUsageTrigger
   userId: string
 }): Promise<void> {
   const card = getPureChatModel(params.model)
@@ -89,7 +89,7 @@ export async function chargePureChatGenerateUsage(params: {
     outputTokens,
     period: params.settlementPeriod,
     provider: PURECHAT_PROVIDER_ID,
-    trigger: params.trigger ?? 'web',
+    trigger: params.trigger,
     userId: params.userId,
   })
 }

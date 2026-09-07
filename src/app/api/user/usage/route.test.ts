@@ -73,6 +73,7 @@ describe('GET /api/user/usage', () => {
     'sortBy=model',
     'sortOrder=sideways',
     'type=image',
+    'trigger=desktop',
   ])('rejects invalid query: %s', async (query) => {
     const response = await GET(new NextRequest(`http://localhost/api/user/usage?${query}`))
     expect(response.status).toBe(400)
@@ -82,7 +83,7 @@ describe('GET /api/user/usage', () => {
   it('passes filters, paging, and sorting to the model', async () => {
     const response = await GET(
       new NextRequest(
-        'http://localhost/api/user/usage?startDate=2026-07-02&endDate=2026-07-03&model=sonnet&page=2&pageSize=5&sortBy=credits&sortOrder=asc&type=chat'
+        'http://localhost/api/user/usage?startDate=2026-07-02&endDate=2026-07-03&model=sonnet&page=2&pageSize=5&sortBy=credits&sortOrder=asc&type=chat&trigger=wechat'
       )
     )
 
@@ -96,6 +97,7 @@ describe('GET /api/user/usage', () => {
         sortBy: 'credits',
         sortOrder: 'asc',
         startAt: new Date('2026-07-01T16:00:00.000Z'),
+        trigger: 'wechat',
       })
     )
   })

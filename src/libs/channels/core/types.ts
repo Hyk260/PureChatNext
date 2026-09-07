@@ -1,6 +1,7 @@
 import type { ModelMessage } from 'ai'
 
 export type ChannelPlatform = 'qq' | 'wechat' | (string & {})
+export type ChannelUsageTrigger = 'web' | 'wechat' | 'qq'
 
 export type ChannelTransport = 'polling' | 'webhook' | 'websocket'
 
@@ -32,6 +33,7 @@ export type ChannelAgentRequest = {
   model?: string | null
   platform: ChannelPlatform
   provider?: string | null
+  trigger: ChannelUsageTrigger
   sessionId?: string
   text: string
   userId: string

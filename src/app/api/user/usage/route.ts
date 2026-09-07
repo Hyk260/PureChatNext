@@ -1,5 +1,6 @@
 import { CreditsModel } from '@pure/database/models/credits'
 import type { UsageSortBy } from '@pure/database/models/credits'
+import type { CreditUsageTrigger } from '@pure/database/schemas'
 import { FileModel } from '@pure/database/models/file'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
@@ -10,6 +11,7 @@ import { formatResetCountdown, getShanghaiBillingPeriod } from '@/server/purecha
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const SORT_FIELDS = new Set<UsageSortBy>(['createdAt', 'credits', 'durationMs', 'totalTokens'])
+const USAGE_TRIGGERS = new Set<CreditUsageTrigger>(['web', 'wechat', 'qq'])
 
 const isValidDate = (value: string) => {
   if (!DATE_RE.test(value)) return false
@@ -36,6 +38,7 @@ export const GET = withAuth(async (request: NextRequest, { userId }) => {
   const sortBy = (params.get('sortBy') ?? 'createdAt') as UsageSortBy
   const sortOrder = params.get('sortOrder') ?? 'desc'
   const type = params.get('type') ?? 'all'
+  const trigger = params.get('trigger') ?? 'all'
   const model = params.get('model')?.trim() || undefined
   const hasCompleteDateRange = startDate !== null && endDate !== null
   const dateSpan =
@@ -53,6 +56,7 @@ export const GET = withAuth(async (request: NextRequest, { userId }) => {
     !SORT_FIELDS.has(sortBy) ||
     !['asc', 'desc'].includes(sortOrder) ||
     !['all', 'chat'].includes(type) ||
+    !(trigger === 'all' || USAGE_TRIGGERS.has(trigger as CreditUsageTrigger)) ||
     (model?.length ?? 0) > 100
   ) {
     return NextResponse.json({ error: 'Invalid usage query parameters' }, { status: 400 })
@@ -74,6 +78,7 @@ export const GET = withAuth(async (request: NextRequest, { userId }) => {
       pageSize,
       sortBy,
       sortOrder: sortOrder as 'asc' | 'desc',
+      ...(trigger !== 'all' ? { trigger: trigger as CreditUsageTrigger } : {}),
       userId,
     }),
     fileModel.getStorageUsage(),

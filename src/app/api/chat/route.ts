@@ -410,6 +410,7 @@ export async function POST(request: Request) {
               outputTokens,
               period: settlementPeriod,
               provider: PURECHAT_PROVIDER_ID,
+              trigger: 'web',
               userId,
             })
             log('purechat charged: %o', charged)

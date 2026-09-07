@@ -19,11 +19,6 @@ import type { ChannelAgentRequest, ChannelAgentResponse, ChannelGenerationOption
 
 const log = debug('channel:core:agent')
 
-function resolveUsageTrigger(platform: string): CreditUsageTrigger {
-  if (platform === 'qq' || platform === 'wechat') return platform
-  return 'web'
-}
-
 export const CHANNEL_MAX_GENERATION_STEPS = 5
 export const CHANNEL_FINAL_ANSWER_STEP = 3
 
@@ -177,7 +172,7 @@ export class ChannelAgentRuntime {
         model: modelId,
         result,
         settlement,
-        trigger: resolveUsageTrigger(params.platform),
+        trigger: params.trigger,
         userId: params.userId,
       })
     }

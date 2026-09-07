@@ -60,6 +60,7 @@ describe('CreditsModel chargeChatUsage', () => {
       outputTokens: 300,
       period: '2026-07',
       provider: 'purechat',
+      trigger: 'web',
       userId: 'user-1',
     })
 
@@ -78,6 +79,22 @@ describe('CreditsModel chargeChatUsage', () => {
     )
   })
 
+  it('persists wechat and qq usage triggers', async () => {
+    const { db, inserted } = createChargeDb()
+    await new CreditsModel(db).chargeChatUsage({
+      credits: 10,
+      durationMs: 100,
+      messageId: 'wechat-1',
+      model: 'gpt-5.4-mini',
+      period: '2026-07',
+      provider: 'purechat',
+      trigger: 'wechat',
+      userId: 'user-1',
+    })
+
+    expect(inserted).toContainEqual(expect.objectContaining({ trigger: 'wechat' }))
+  })
+
   it('does not charge or insert another ledger row for a duplicate message', async () => {
     const { db, inserted, tx } = createChargeDb({ duplicate: true })
     const result = await new CreditsModel(db).chargeChatUsage({
@@ -87,6 +104,7 @@ describe('CreditsModel chargeChatUsage', () => {
       model: 'claude-sonnet',
       period: '2026-07',
       provider: 'purechat',
+      trigger: 'web',
       userId: 'user-1',
     })
 

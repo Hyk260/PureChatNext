@@ -19,6 +19,7 @@ import { BotIcon, Check, ChevronRight } from 'lucide-react'
 import { memo, useEffect, useMemo } from 'react'
 
 import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
+import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
@@ -62,12 +63,7 @@ const HomeAgentSelect = memo<HomeAgentSelectProps>(({ onSelect }) => {
   const selectAgent = (agentId: string) => {
     const agent = agents.find((item) => item.id === agentId) ?? DEFAULT_PURE_AI_META
     setSelectedAgentId(agent.id)
-    setActiveAgent({
-      avatar: agent.avatar,
-      identifier: agent.id,
-      systemRole: agent.systemRole,
-      title: agent.title,
-    })
+    setActiveAgent(toActiveCommunityAgent(agent))
     onSelect?.()
   }
 

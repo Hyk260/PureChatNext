@@ -7,6 +7,7 @@ import { useRouter } from '@/utils/navigation'
 import { memo, useCallback, useEffect, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'
+import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 import { createAgent, deleteAgent, updateAgent } from '@/features/home/agentApi'
 import AgentItem from '@/features/home/HomeSidebar/components/AgentItem'
 import SectionActions from '@/features/home/HomeSidebar/components/SectionActions'
@@ -66,12 +67,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
   const applyAgent = useCallback(
     (agent: AgentListItem) => {
       setSelectedAgentId(agent.id)
-      setActiveAgent({
-        avatar: agent.avatar,
-        identifier: agent.id,
-        systemRole: agent.systemRole,
-        title: agent.title,
-      })
+      setActiveAgent(toActiveCommunityAgent(agent))
       router.push(`/chat?agent=${encodeURIComponent(agent.id)}`)
     },
     [router, setActiveAgent, setSelectedAgentId]
@@ -100,12 +96,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
       const agent = await updateAgent(editing.id, values)
       upsertLocal(agent)
       if (selectedAgentId === agent.id) {
-        setActiveAgent({
-          avatar: agent.avatar,
-          identifier: agent.id,
-          systemRole: agent.systemRole,
-          title: agent.title,
-        })
+        setActiveAgent(toActiveCommunityAgent(agent))
       }
       setEditing(null)
       message.success('已保存')

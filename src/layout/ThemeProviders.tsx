@@ -2,8 +2,12 @@
 
 import { ConfigProvider, ThemeProvider } from '@pure/ui/ThemeProvider'
 import { ModalHost } from '@pure/ui/ModalHost'
+import { ConfigProvider as AntdConfigProvider } from 'antd'
+import zhCN from 'antd/locale/zh_CN'
 import { StyleProvider } from 'antd-style'
 import type { ThemeMode } from 'antd-style'
+import dayjs from 'dayjs'
+import 'dayjs/locale/zh-cn'
 import { LazyMotion, domAnimation } from 'motion/react'
 import * as m from 'motion/react-m'
 import { useCallback, useEffect, useState } from 'react'
@@ -19,6 +23,8 @@ import {
   serializeThemeMode,
   THEME_STORAGE_KEY,
 } from '@/layout/themeMode'
+
+dayjs.locale('zh-cn')
 
 /**
  * Client theme stack shared by Vite SPA AppLayer (and legacy Next root if needed).
@@ -43,23 +49,25 @@ const ThemeProviders = ({ children }: PropsWithChildren) => {
 
   return (
     <StyleProvider ssrInline={false} speedy>
-      <ThemeProvider
-        appearance={appearance}
-        defaultAppearance='light'
-        defaultThemeMode='auto'
-        onThemeModeChange={handleThemeModeChange}
-        themeMode={themeMode}
-        style={{ height: '100%' }}
-        theme={{ cssVar: { key: 'pure-vars' } }}
-      >
-        <AntdStaticMethods />
-        <LazyMotion features={domAnimation}>
-          <ConfigProvider motion={m}>
-            <ModalHost />
-            {children}
-          </ConfigProvider>
-        </LazyMotion>
-      </ThemeProvider>
+      <AntdConfigProvider locale={zhCN}>
+        <ThemeProvider
+          appearance={appearance}
+          defaultAppearance='light'
+          defaultThemeMode='auto'
+          onThemeModeChange={handleThemeModeChange}
+          themeMode={themeMode}
+          style={{ height: '100%' }}
+          theme={{ cssVar: { key: 'pure-vars' } }}
+        >
+          <AntdStaticMethods />
+          <LazyMotion features={domAnimation}>
+            <ConfigProvider motion={m}>
+              <ModalHost />
+              {children}
+            </ConfigProvider>
+          </LazyMotion>
+        </ThemeProvider>
+      </AntdConfigProvider>
     </StyleProvider>
   )
 }

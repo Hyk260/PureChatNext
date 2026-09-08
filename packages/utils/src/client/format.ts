@@ -1,10 +1,29 @@
+import { SECOND } from '../units'
+
 const isNumber = (value: unknown): value is number => typeof value === 'number' && !Number.isNaN(value)
+
+/** Empty table / metric placeholder. */
+export const EMPTY_PLACEHOLDER = '--'
+
+const zhNumberFormat = new Intl.NumberFormat('zh-CN')
+
+/** Format a number with zh-CN grouping, e.g. `13111` → `13,111`. */
+export const formatNumber = (value: number): string => zhNumberFormat.format(value)
+
+/** Milliseconds → `1.23s`. Null / non-finite → `fallback` (default `'--'`). */
+export const formatDuration = (durationMs: number | null | undefined, fallback = EMPTY_PLACEHOLDER): string => {
+  if (durationMs == null || !Number.isFinite(durationMs)) return fallback
+  return `${(durationMs / SECOND).toFixed(2)}s`
+}
+
+/** `used / limit` as a rounded percent. `limit <= 0` is treated as `1`. */
+export const getPercentage = (used: number, limit: number): number => Math.round((used / Math.max(1, limit)) * 100)
 
 /**
  * Format large numbers as K / M / B / T; smaller values get thousand separators.
  */
 export const formatShortenNumber = (num: unknown): string | number => {
-  if (!num && num !== 0) return '--'
+  if (!num && num !== 0) return EMPTY_PLACEHOLDER
   if (!isNumber(num)) return num as string | number
 
   const formattedWithComma = new Intl.NumberFormat('en-US').format(num)
@@ -32,7 +51,7 @@ export const formatShortenNumber = (num: unknown): string | number => {
  * 小窗口按 1024 取整；低于约 41K 或达到 128K 及以上时按 1000 取整，避免出现 400.0K 这类小数。
  */
 export const formatTokenNumber = (num: number): string => {
-  if (!num && num !== 0) return '--'
+  if (!num && num !== 0) return EMPTY_PLACEHOLDER
 
   if (num > 0 && num < 1024) return '1K'
 
@@ -79,6 +98,16 @@ const DEFAULT_DATE_OPTIONS: Intl.DateTimeFormatOptions = {
   year: 'numeric',
 }
 
+/** Compact zh-CN datetime without year, e.g. `9月8 16:08:00`. */
+const COMPACT_DATETIME_OPTIONS: Intl.DateTimeFormatOptions = {
+  day: 'numeric',
+  hour: '2-digit',
+  hourCycle: 'h23',
+  minute: '2-digit',
+  month: 'numeric',
+  second: '2-digit',
+}
+
 const resolveDate = (value: FormatDateInput, fallback: string): { date: Date } | { text: string } => {
   if (value == null || value === '') return { text: fallback }
   const date = value instanceof Date ? value : new Date(value)
@@ -88,12 +117,20 @@ const resolveDate = (value: FormatDateInput, fallback: string): { date: Date } |
   return { date }
 }
 
-/** Format as locale date + time. Null / empty → `fallback` (default `'-'`). */
+const omitUndefinedOptions = (options: Intl.DateTimeFormatOptions): Intl.DateTimeFormatOptions => {
+  const next = { ...options }
+  for (const key of Object.keys(next) as (keyof Intl.DateTimeFormatOptions)[]) {
+    if (next[key] === undefined) delete next[key]
+  }
+  return next
+}
+
+/** Format as locale date + time. Null / empty → `fallback` (default `'-'`). Pass `year: undefined` to omit year. */
 export const formatDateTime = (value: FormatDateInput, options?: FormatDateOptions): string => {
   const { fallback = '-', locale = 'zh-CN', ...formatOptions } = options ?? {}
   const resolved = resolveDate(value, fallback)
   if ('text' in resolved) return resolved.text
-  return resolved.date.toLocaleString(locale, { ...DEFAULT_DATETIME_OPTIONS, ...formatOptions })
+  return resolved.date.toLocaleString(locale, omitUndefinedOptions({ ...DEFAULT_DATETIME_OPTIONS, ...formatOptions }))
 }
 
 /** Format as locale date only. Null / empty → `fallback` (default `'-'`). */
@@ -101,5 +138,21 @@ export const formatDate = (value: FormatDateInput, options?: FormatDateOptions):
   const { fallback = '-', locale = 'zh-CN', ...formatOptions } = options ?? {}
   const resolved = resolveDate(value, fallback)
   if ('text' in resolved) return resolved.text
-  return resolved.date.toLocaleDateString(locale, { ...DEFAULT_DATE_OPTIONS, ...formatOptions })
+  return resolved.date.toLocaleDateString(locale, omitUndefinedOptions({ ...DEFAULT_DATE_OPTIONS, ...formatOptions }))
+}
+
+/** Compact table datetime (no year, strip `日`). Null / empty → `fallback` (default `'--'`). */
+export const formatCompactDateTime = (value: FormatDateInput, options?: FormatDateOptions): string => {
+  const { fallback = EMPTY_PLACEHOLDER, locale = 'zh-CN', ...formatOptions } = options ?? {}
+  const resolved = resolveDate(value, fallback)
+  if ('text' in resolved) return resolved.text
+  return resolved.date.toLocaleString(locale, { ...COMPACT_DATETIME_OPTIONS, ...formatOptions }).replaceAll('日', '')
+}
+
+/** Full locale datetime (`dateStyle: full` + `timeStyle: long`), e.g. runtime clock in prompts. */
+export const formatFullDateTime = (value: FormatDateInput, options?: FormatDateOptions): string => {
+  const { fallback = '-', locale = 'zh-CN', ...formatOptions } = options ?? {}
+  const resolved = resolveDate(value, fallback)
+  if ('text' in resolved) return resolved.text
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'full', timeStyle: 'long', ...formatOptions }).format(resolved.date)
 }

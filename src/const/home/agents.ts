@@ -7,6 +7,9 @@ export interface AgentListItem {
   description?: string | null
   id: string
   isBuiltin?: boolean
+  marketIdentifier?: string | null
+  openingMessage?: string | null
+  openingQuestions?: string[] | null
   pinned?: boolean | null
   slug?: string
   systemRole: string

@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatDate, formatDateTime, formatSize, formatTokenNumber } from './format'
+import {
+  formatCompactDateTime,
+  formatDate,
+  formatDateTime,
+  formatDuration,
+  formatFullDateTime,
+  formatNumber,
+  formatSize,
+  formatTokenNumber,
+  getPercentage,
+} from './format'
 
 describe('formatTokenNumber', () => {
   it('formats small and mid context windows', () => {
@@ -51,5 +61,51 @@ describe('formatDateTime / formatDate', () => {
     const value = new Date('2026-07-27T08:30:00+08:00')
     expect(formatDateTime(value, { locale: 'en-US' })).toMatch(/2026/)
     expect(formatDate(value, { locale: 'en-US' })).toMatch(/2026/)
+  })
+
+  it('omits year when year is explicitly undefined', () => {
+    const value = new Date('2026-07-27T08:30:00Z')
+    expect(formatDateTime(value, { locale: 'en-US', timeZone: 'UTC', year: undefined })).not.toMatch(/2026/)
+  })
+})
+
+describe('formatCompactDateTime', () => {
+  it('formats Shanghai time without year or 日', () => {
+    const value = new Date('2026-09-08T08:08:00+08:00')
+    const text = formatCompactDateTime(value, { timeZone: 'Asia/Shanghai' })
+    expect(text).toContain('08:08:00')
+    expect(text).not.toContain('2026')
+    expect(text).not.toContain('日')
+  })
+
+  it('returns the empty placeholder for missing values', () => {
+    expect(formatCompactDateTime(null)).toBe('--')
+  })
+})
+
+describe('formatFullDateTime', () => {
+  it('formats a full Shanghai datetime', () => {
+    const value = new Date('2026-08-14T04:30:00.000Z')
+    const text = formatFullDateTime(value, { timeZone: 'Asia/Shanghai' })
+    expect(text).toContain('2026年8月14日')
+    expect(text).toContain('12:30:00')
+  })
+})
+
+describe('formatNumber / formatDuration / getPercentage', () => {
+  it('groups numbers in zh-CN', () => {
+    expect(formatNumber(13_111)).toBe('13,111')
+  })
+
+  it('formats milliseconds as seconds', () => {
+    expect(formatDuration(null)).toBe('--')
+    expect(formatDuration(1234)).toBe('1.23s')
+    expect(formatDuration(1000)).toBe('1.00s')
+    expect(formatDuration(Number.NaN, 'n/a')).toBe('n/a')
+  })
+
+  it('computes rounded percents', () => {
+    expect(getPercentage(13, 100)).toBe(13)
+    expect(getPercentage(0, 0)).toBe(0)
   })
 })

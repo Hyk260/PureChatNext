@@ -40,6 +40,7 @@ const ModelCard = memo<DiscoverModelItem>(
     return (
       <Block
         data-testid='model-item'
+        className='flex flex-col'
         height='100%'
         variant='outlined'
         width='100%'

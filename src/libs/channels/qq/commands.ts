@@ -57,7 +57,12 @@ function createQQCommandEffects(params: {
     },
     listAgents: async () => {
       const agents = await new AgentModel(params.userId).listVisible()
-      return agents.map((agent) => ({ id: agent.id, title: agent.title }))
+      return agents.map((agent) => ({
+        id: agent.id,
+        openingMessage: agent.openingMessage,
+        openingQuestions: agent.openingQuestions,
+        title: agent.title,
+      }))
     },
     startNewConversation: async (agentId) => {
       if (agentId) {

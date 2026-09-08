@@ -8,6 +8,9 @@ import { writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { mapDetailToDiscoverFields } from './map-community-agent-detail'
+import type { DetailAgent, DiscoverAgentExample } from './map-community-agent-detail'
+
 const AGENTS_INDEX_URL = 'https://registry.npmmirror.com/@lobehub/agents-index/v1/files/public'
 const LOCALE = 'zh-CN'
 const PER_CATEGORY = 30
@@ -39,30 +42,32 @@ type IndexAgent = {
   knowledgeCount?: number
   meta?: {
     avatar?: string
+    backgroundColor?: string
     category?: string
     description?: string
+    tags?: string[]
     title?: string
   }
   pluginCount?: number
   tokenUsage?: number
 }
 
-type DetailAgent = {
-  config?: {
-    systemRole?: string
-  }
-}
-
 type DiscoverAgentItem = {
   author: string
   avatar: string
+  backgroundColor?: string
   category: BusinessCategory
   createdAt: string
   description: string
+  examples?: DiscoverAgentExample[]
   identifier: string
   knowledgeCount?: number
+  openingMessage?: string
+  openingQuestions?: string[]
   pluginCount?: number
+  summary?: string
   systemRole: string
+  tags?: string[]
   title: string
   tokenUsage?: number
 }
@@ -100,14 +105,13 @@ async function fetchJson<T>(url: string): Promise<T> {
   return (await res.json()) as T
 }
 
-async function fetchSystemRole(identifier: string): Promise<string> {
+async function fetchAgentDetail(identifier: string): Promise<DetailAgent | null> {
   const url = `${AGENTS_INDEX_URL}/${identifier}.${LOCALE}.json`
   try {
-    const detail = await fetchJson<DetailAgent>(url)
-    return detail.config?.systemRole ?? ''
+    return await fetchJson<DetailAgent>(url)
   } catch (error) {
     console.warn(`[agents:sync] detail failed for ${identifier}:`, error)
-    return ''
+    return null
   }
 }
 
@@ -135,17 +139,22 @@ async function main() {
       throw new Error(`unexpected category for ${agent.identifier}: ${category}`)
     }
 
-    const systemRole = await fetchSystemRole(agent.identifier)
+    const detail = await fetchAgentDetail(agent.identifier)
+    const detailFields = mapDetailToDiscoverFields(detail ?? {})
+    const indexBg = agent.meta?.backgroundColor
+    const indexTags = agent.meta?.tags?.filter((tag) => tag.trim().length > 0)
 
     const item: DiscoverAgentItem = {
       author: agent.author ?? 'unknown',
-      avatar: agent.meta?.avatar ?? '🤖',
+      avatar: agent.meta?.avatar ?? detail?.meta?.avatar ?? '🤖',
       category,
       createdAt: agent.createdAt ?? '',
-      description: agent.meta?.description ?? '',
+      description: agent.meta?.description ?? detail?.meta?.description ?? '',
       identifier: agent.identifier,
-      systemRole,
-      title: agent.meta?.title ?? agent.identifier,
+      title: agent.meta?.title ?? detail?.meta?.title ?? agent.identifier,
+      ...detailFields,
+      ...(indexBg ? { backgroundColor: indexBg } : {}),
+      ...(indexTags && indexTags.length > 0 && !detailFields.tags ? { tags: indexTags } : {}),
     }
 
     if (typeof agent.knowledgeCount === 'number') item.knowledgeCount = agent.knowledgeCount

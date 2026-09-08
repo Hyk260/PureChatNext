@@ -27,6 +27,8 @@ import { CONVERSATION_MAX_WIDTH } from '@/features/chat/WideScreenContainer'
 
 export interface AgentMeta {
   avatar: string
+  openingMessage?: string | null
+  openingQuestions?: string[] | null
   title: string
 }
 
@@ -49,6 +51,34 @@ const styles = createStaticStyles(({ css }) => ({
   empty: css`
     color: ${cssVar.colorTextQuaternary};
     text-align: center;
+  `,
+  openingMessage: css`
+    max-width: 640px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: ${cssVar.colorText};
+    text-align: center;
+    white-space: pre-wrap;
+  `,
+  questionChip: css`
+    max-width: 100%;
+    padding-block: 8px;
+    padding-inline: 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    color: ${cssVar.colorTextSecondary};
+    background: ${cssVar.colorFillTertiary};
+    transition: background 0.2s ${cssVar.motionEaseInOut};
+
+    &:hover {
+      background: ${cssVar.colorFillSecondary};
+      color: ${cssVar.colorText};
+    }
+  `,
+  questionsTitle: css`
+    margin: 0;
+    font-size: 13px;
+    color: ${cssVar.colorTextDescription};
   `,
   header: css`
     display: flex;
@@ -247,6 +277,7 @@ interface ChatMessagesProps {
   onDelete: (id: string) => void
   onEdit: (id: string, text: string) => void | Promise<void>
   onRegenerate: (id: string) => void
+  onSelectOpeningQuestion?: (question: string) => void
   onToolApproval?: (toolCallId: string, toolName: string, args: Record<string, unknown>, approved: boolean) => void
   onServerToolApproval?: (approvalId: string, toolCallId: string, approved: boolean) => void
 }
@@ -261,6 +292,7 @@ const ChatMessages = memo<ChatMessagesProps>(
     onDelete,
     onEdit,
     onRegenerate,
+    onSelectOpeningQuestion,
     onToolApproval,
     onServerToolApproval,
   }) => {
@@ -271,6 +303,9 @@ const ChatMessages = memo<ChatMessagesProps>(
     const lastReasoning = lastMessage ? getMessageReasoning(lastMessage) : ''
     const lastWebSearchStatus = lastMessage ? getWebSearchStatusSignature(lastMessage) : ''
     const lastAttachmentCount = lastMessage ? lastMessage.parts.filter((part) => part.type === 'file').length : 0
+
+    const openingMessage = agentMeta?.openingMessage?.trim() || ''
+    const openingQuestions = (agentMeta?.openingQuestions ?? []).filter((q) => q.trim().length > 0).slice(0, 5)
 
     const getScrollElement = useCallback(() => scrollbarRef.current?.wrapRef ?? null, [])
     const { handleScroll, resetScrollLock } = useAutoScroll<HTMLDivElement>({
@@ -286,6 +321,8 @@ const ChatMessages = memo<ChatMessagesProps>(
     }, [isStreaming, resetScrollLock])
 
     if (messages.length === 0) {
+      const hasWelcome = Boolean(openingMessage || openingQuestions.length > 0)
+
       return (
         <Scrollbar
           ref={scrollbarRef}
@@ -294,11 +331,40 @@ const ChatMessages = memo<ChatMessagesProps>(
           onScroll={handleScroll}
         >
           <Flex
-            className={[styles.content, 'flex-col-center']}
-
+            className={[styles.content, 'flex-col-center gap-6']}
             style={{ width: wideScreen ? '100%' : `min(${CONVERSATION_MAX_WIDTH}px, 100%)` }}
           >
-            <Text className={styles.empty}>开始对话吧</Text>
+            {hasWelcome ? (
+              <>
+                {agentMeta ? (
+                  <Flex className='flex-col-center gap-2'>
+                    <Avatar avatar={agentMeta.avatar} size={48} />
+                    <Text className={styles.title}>{agentMeta.title}</Text>
+                  </Flex>
+                ) : null}
+                {openingMessage ? <Text className={styles.openingMessage}>{openingMessage}</Text> : null}
+                {openingQuestions.length > 0 ? (
+                  <Flex className='flex-col-center gap-2' style={{ maxWidth: 640, width: '100%' }}>
+                    <p className={styles.questionsTitle}>试试这些问题</p>
+                    <Flex className='flex-row flex-wrap justify-center gap-2'>
+                      {openingQuestions.map((question) => (
+                        <button
+                          className={styles.questionChip}
+                          disabled={disabled || !onSelectOpeningQuestion}
+                          key={question}
+                          type='button'
+                          onClick={() => onSelectOpeningQuestion?.(question)}
+                        >
+                          {question}
+                        </button>
+                      ))}
+                    </Flex>
+                  </Flex>
+                ) : null}
+              </>
+            ) : (
+              <Text className={styles.empty}>开始对话吧</Text>
+            )}
           </Flex>
         </Scrollbar>
       )

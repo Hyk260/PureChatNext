@@ -7,6 +7,9 @@ export type ApiAgent = {
   description: string | null
   id: string
   isBuiltin: boolean
+  marketIdentifier?: string | null
+  openingMessage?: string | null
+  openingQuestions?: string[] | null
   pinned: boolean | null
   slug: string
   systemRole: string | null
@@ -18,6 +21,8 @@ export type AgentCreateBody = {
   backgroundColor?: string
   description?: string
   marketIdentifier?: string
+  openingMessage?: string | null
+  openingQuestions?: string[] | null
   systemRole?: string
   title: string
 }
@@ -33,6 +38,9 @@ const toListItem = (a: ApiAgent): AgentListItem => ({
   description: a.description,
   id: a.id,
   isBuiltin: a.isBuiltin,
+  marketIdentifier: a.marketIdentifier ?? null,
+  openingMessage: a.openingMessage,
+  openingQuestions: a.openingQuestions,
   pinned: a.pinned,
   slug: a.slug,
   systemRole: a.systemRole ?? '',

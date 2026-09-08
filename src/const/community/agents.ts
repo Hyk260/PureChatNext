@@ -25,6 +25,7 @@ export type AssistantBusinessCategory = (typeof ASSISTANT_BUSINESS_CATEGORIES)[n
 
 export const ASSISTANT_CATEGORY_LABELS: Record<AssistantCategory, string> = {
   [AssistantCategory.All]: '全部',
+  [AssistantCategory.Custom]: '自定义',
   [AssistantCategory.Academic]: '学术',
   [AssistantCategory.Career]: '职业',
   [AssistantCategory.CopyWriting]: '文案',
@@ -66,6 +67,8 @@ export const filterCommunityAgents = (
 ): DiscoverAgentItem[] => {
   const category = options.category ?? AssistantCategory.All
   const query = options.q?.trim().toLowerCase() ?? ''
+
+  if (category === AssistantCategory.Custom) return []
 
   return agents.filter((agent) => {
     const matchCategory = category === AssistantCategory.All || agent.category === category

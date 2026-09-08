@@ -58,7 +58,12 @@ async function handleCommand(event: ChannelEventItem): Promise<string> {
       getCurrentAgentId: async () => session.activeAgentId || binding.agentId,
       listAgents: async () => {
         const agents = await new AgentModel(binding.userId).listVisible()
-        return agents.map((agent) => ({ id: agent.id, title: agent.title }))
+        return agents.map((agent) => ({
+          id: agent.id,
+          openingMessage: agent.openingMessage,
+          openingQuestions: agent.openingQuestions,
+          title: agent.title,
+        }))
       },
       startNewConversation: async (agentId) => {
         await eventModel.startNewConversation(event.sessionId, agentId, event.id)

@@ -9,6 +9,7 @@ export enum AssistantCategory {
   All = 'all',
   Career = 'career',
   CopyWriting = 'copywriting',
+  Custom = 'custom',
   Design = 'design',
   Education = 'education',
   Emotions = 'emotions',
@@ -21,6 +22,8 @@ export enum AssistantCategory {
   Programming = 'programming',
   Translation = 'translation',
 }
+
+export type AssistantMarketCategory = Exclude<AssistantCategory, AssistantCategory.All | AssistantCategory.Custom>
 
 export interface DiscoverProviderItem {
   description: string
@@ -51,6 +54,11 @@ export interface DiscoverModelItem {
   type: DiscoverModelType
 }
 
+export interface DiscoverAgentExample {
+  content: string
+  role: 'assistant' | 'user'
+}
+
 export interface DiscoverAgentItem {
   author: string
   avatar: string
@@ -58,11 +66,16 @@ export interface DiscoverAgentItem {
   category: Exclude<AssistantCategory, AssistantCategory.All>
   createdAt: string
   description: string
+  examples?: DiscoverAgentExample[]
   forkCount?: number
   identifier: string
   knowledgeCount?: number
+  openingMessage?: string
+  openingQuestions?: string[]
   pluginCount?: number
+  summary?: string
   systemRole: string
+  tags?: string[]
   title: string
   tokenUsage?: number
 }
@@ -70,6 +83,8 @@ export interface DiscoverAgentItem {
 export interface ActiveCommunityAgent {
   avatar: string
   identifier: string
+  openingMessage?: string | null
+  openingQuestions?: string[] | null
   systemRole: string
   title: string
 }

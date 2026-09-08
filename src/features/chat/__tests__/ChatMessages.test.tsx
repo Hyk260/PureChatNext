@@ -89,6 +89,7 @@ vi.mock('@/components/AntdStaticMethods', () => ({
 }))
 
 vi.mock('@/components/Loading', () => ({
+  LoadingState: () => <span data-testid='loading-state' />,
   PulseDots: () => <span data-testid='pulse-dots' />,
 }))
 
@@ -433,5 +434,38 @@ describe('ChatMessages message layout', () => {
 
     fireEvent.click(getByText('拒绝'))
     expect(onServerToolApproval).toHaveBeenCalledWith('a1', 'server-1', false)
+  })
+})
+
+describe('ChatMessages empty welcome', () => {
+  it('shows default empty copy without opening content', () => {
+    const { getByText } = render(
+      <ChatMessages messages={[]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />
+    )
+    expect(getByText('开始对话吧')).toBeTruthy()
+  })
+
+  it('renders opening message and clickable questions', () => {
+    const onSelectOpeningQuestion = vi.fn()
+    const { getByText } = render(
+      <ChatMessages
+        agentMeta={{
+          avatar: '😈',
+          openingMessage: '你好，我是越狱模式',
+          openingQuestions: ['问题一', '问题二'],
+          title: '越狱模式',
+        }}
+        messages={[]}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onRegenerate={vi.fn()}
+        onSelectOpeningQuestion={onSelectOpeningQuestion}
+      />
+    )
+
+    expect(getByText('你好，我是越狱模式')).toBeTruthy()
+    expect(getByText('试试这些问题')).toBeTruthy()
+    fireEvent.click(getByText('问题一'))
+    expect(onSelectOpeningQuestion).toHaveBeenCalledWith('问题一')
   })
 })

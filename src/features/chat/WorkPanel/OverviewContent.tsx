@@ -1,6 +1,7 @@
 'use client'
 
 import { Text, Flex } from '@pure/ui'
+import { formatDateTime } from '@pure/utils/client'
 import { memo, useMemo } from 'react'
 
 import type { LocalChatTopic } from '@/features/chat/types'
@@ -10,24 +11,14 @@ type Props = {
   topicTitle: string
 }
 
-function formatTime(value: number) {
-  return new Date(value).toLocaleString('zh-CN', {
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-}
-
 const OverviewContent = memo<Props>(({ topic, topicTitle }) => {
   const rows = useMemo(() => {
     const items: { label: string; value: string }[] = [{ label: '话题', value: topicTitle || '新话题' }]
     if (topic?.projectName) items.push({ label: '项目', value: topic.projectName })
     else items.push({ label: '项目', value: '未绑定项目' })
     if (topic) {
-      items.push({ label: '创建时间', value: formatTime(topic.createdAt) })
-      items.push({ label: '更新时间', value: formatTime(topic.updatedAt) })
+      items.push({ label: '创建时间', value: formatDateTime(topic.createdAt) })
+      items.push({ label: '更新时间', value: formatDateTime(topic.updatedAt) })
     }
     return items
   }, [topic, topicTitle])

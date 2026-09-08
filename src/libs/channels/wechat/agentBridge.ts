@@ -1,4 +1,5 @@
 import { SHANGHAI_TIMEZONE } from '@pure/const'
+import { formatFullDateTime } from '@pure/utils'
 import type { ModelMessage } from 'ai'
 import type { Message, Thread } from 'chat'
 import debug from 'debug'
@@ -29,11 +30,7 @@ export type WechatAgentReply = {
 }
 
 export const buildWechatRuntimeInstructions = (now = new Date()) => {
-  const currentTime = new Intl.DateTimeFormat('zh-CN', {
-    dateStyle: 'full',
-    timeStyle: 'long',
-    timeZone: SHANGHAI_TIMEZONE,
-  }).format(now)
+  const currentTime = formatFullDateTime(now, { timeZone: SHANGHAI_TIMEZONE })
 
   return [
     `当前服务器时间：${currentTime}（${SHANGHAI_TIMEZONE}）。涉及“今天、明天、现在”等相对时间时，以此为准。`,

@@ -23,6 +23,8 @@ export const agents = pgTable(
     avatar: text('avatar'),
     backgroundColor: text('background_color'),
     systemRole: text('system_role'),
+    openingMessage: text('opening_message'),
+    openingQuestions: jsonb('opening_questions').$type<string[]>().default([]),
     model: text('model'),
     provider: text('provider'),
     params: jsonb('params').$type<Record<string, unknown>>().default({}),

@@ -1,5 +1,5 @@
 /**
- * Expose the shared Block component through the application UI package.
- * Call sites should import from `@pure/ui`; swap for a local implementation later.
+ * Local Block: variant chrome without lobe-flex, so Tailwind layout className works.
  */
-export { Block, type BlockProps } from '@lobehub/ui'
+export { Block, type BlockProps, type BlockVariant } from './Block'
+export { default } from './Block'

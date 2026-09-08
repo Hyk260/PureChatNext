@@ -3,7 +3,7 @@
 import { ActionIcon, Flex, Icon, ModelIcon, SortableList, Tag, Text, Tooltip, copyToClipboard } from '@pure/ui'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
-import { formatTokenNumber } from '@pure/utils/client'
+import { formatDuration, formatTokenNumber } from '@pure/utils/client'
 import { Switch } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Check, CircleX, Code2, Eye, Globe2, ImageIcon, Lightbulb, Loader2, Pencil, Trash2, Wrench } from 'lucide-react'
@@ -170,8 +170,6 @@ const formatPrice = (currency: 'CNY' | 'USD', amount: number) => {
     .replace(/(\.\d*?)0+$/, '$1')
   return `${currency === 'USD' ? '$' : '¥'}${value}`
 }
-
-const formatDuration = (durationMs: number) => `${(durationMs / 1000).toFixed(2)}s`
 
 const ModelCapabilityTags = ({
   abilities,

@@ -183,6 +183,13 @@
       "when": 1788748509670,
       "tag": "0025_bright_talos",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1788828555902,
+      "tag": "0026_typical_slyde",
+      "breakpoints": true
     }
   ]
 }

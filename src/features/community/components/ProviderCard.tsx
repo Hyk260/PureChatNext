@@ -27,6 +27,7 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
   return (
     <Block
       data-testid='provider-item'
+      className='flex flex-col'
       height='100%'
       variant='outlined'
       width='100%'

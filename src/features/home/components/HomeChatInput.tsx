@@ -35,6 +35,7 @@ import SendArea from '@/features/chat/SendArea'
 import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
 import HomeAgentSelect from '@/features/home/components/HomeAgentSelect'
 import HomeProjectBar from '@/features/home/components/HomeProjectBar'
+import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { trackAcquisitionEvent } from '@/libs/analytics/acquisition'
@@ -274,20 +275,10 @@ const HomeChatInput = memo(() => {
       const listed = agents.find((agent) => agent.id === agentId)
 
       if (listed) {
-        setActiveAgent({
-          avatar: listed.avatar,
-          identifier: listed.id,
-          systemRole: listed.systemRole,
-          title: listed.title,
-        })
+        setActiveAgent(toActiveCommunityAgent(listed))
       } else if (activeAgent?.identifier !== agentId) {
         const fallback = agents[0] ?? DEFAULT_PURE_AI_META
-        setActiveAgent({
-          avatar: fallback.avatar,
-          identifier: fallback.id,
-          systemRole: fallback.systemRole,
-          title: fallback.title,
-        })
+        setActiveAgent(toActiveCommunityAgent(fallback))
       }
 
       setPendingChatText(text)

@@ -2,6 +2,7 @@
 
 import { Progress, Spin } from 'antd'
 import { Text, Flex } from '@pure/ui'
+import { formatNumber, getPercentage } from '@pure/utils/client'
 import { useEffect, useState } from 'react'
 
 type CreditsResponse = {
@@ -12,8 +13,6 @@ type CreditsResponse = {
   resetIn: { days: number; hours: number }
   used: number
 }
-
-const formatNumber = (n: number) => n.toLocaleString('zh-CN')
 
 export function CreditsSettingsContent() {
   const [data, setData] = useState<CreditsResponse | null>(null)
@@ -42,7 +41,7 @@ export function CreditsSettingsContent() {
     }
   }, [])
 
-  const percent = data ? Math.min(100, Math.round((data.used / Math.max(1, data.grant)) * 100)) : 0
+  const percent = data ? Math.min(100, getPercentage(data.used, data.grant)) : 0
 
   return (
     <Flex className='flex-col gap-6 py-[24px_64px] px-6 w-full'>

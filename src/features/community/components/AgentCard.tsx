@@ -1,23 +1,17 @@
 'use client'
 
-import { useApp } from '@/components/AntdStaticMethods'
-import { Avatar, Block, Icon, Tag, Text, Flex } from '@pure/ui'
+import { Avatar, Block, Button, Icon, Tag, Text, Flex } from '@pure/ui'
 import { formatDate } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { BookTextIcon, ClockIcon, CoinsIcon, GitForkIcon, PuzzleIcon } from 'lucide-react'
-import { useRouter } from '@/utils/navigation'
-import { memo, useCallback, useState } from 'react'
+import { memo, useCallback } from 'react'
+import type { MouseEvent } from 'react'
 
 import { ASSISTANT_CATEGORY_LABELS } from '@/const/community/agents'
 import type { DiscoverAgentItem } from '@/features/community/types'
-import { createAgent } from '@/features/home/agentApi'
-import { useAgentsStore } from '@/features/home/store/useAgentsStore'
-import { useHomeStore } from '@/features/home/store/useHomeStore'
+import { useAddCommunityAgent } from '@/features/community/hooks/useAddCommunityAgent'
 
 const styles = createStaticStyles(({ css }) => ({
-  author: css`
-    color: ${cssVar.colorTextDescription};
-  `,
   desc: css`
     flex: 1;
     margin: 0 !important;
@@ -47,9 +41,12 @@ const styles = createStaticStyles(({ css }) => ({
 
 const formatNumber = (value: number) => value.toLocaleString('en-US')
 
-const AgentCard = memo<DiscoverAgentItem>(
-  ({
-    author,
+export interface AgentCardProps extends DiscoverAgentItem {
+  onOpenDetail: (identifier: string) => void
+}
+
+const AgentCard = memo<AgentCardProps>(({ onOpenDetail, ...item }) => {
+  const {
     avatar,
     backgroundColor,
     category,
@@ -59,133 +56,104 @@ const AgentCard = memo<DiscoverAgentItem>(
     identifier,
     knowledgeCount,
     pluginCount,
-    systemRole,
     title,
     tokenUsage,
-  }) => {
-    const { message } = useApp()
-    const router = useRouter()
-    const [adding, setAdding] = useState(false)
-    const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
-    const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
-    const upsertLocal = useAgentsStore((s) => s.upsertLocal)
+  } = item
 
-    const handleClick = useCallback(async () => {
-      if (adding) return
-      setAdding(true)
+  const { addAgent, adding } = useAddCommunityAgent()
 
-      try {
-        const agent = await createAgent({
-          avatar,
-          backgroundColor,
-          description,
-          marketIdentifier: identifier,
-          systemRole,
-          title,
-        })
-        upsertLocal(agent)
-        setSelectedAgentId(agent.id)
-        setActiveAgent({
-          avatar: agent.avatar,
-          identifier: agent.id,
-          systemRole: agent.systemRole,
-          title: agent.title,
-        })
-        message.success(`已添加「${agent.title}」到助理列表`)
-        router.push(`/chat?agent=${encodeURIComponent(agent.id)}`)
-      } catch (error) {
-        console.error('[community] add agent failed:', error)
-        message.error('添加助理失败，请先登录后再试')
-      } finally {
-        setAdding(false)
-      }
-    }, [
-      adding,
-      avatar,
-      backgroundColor,
-      description,
-      identifier,
-      message,
-      router,
-      setActiveAgent,
-      setSelectedAgentId,
-      systemRole,
-      title,
-      upsertLocal,
-    ])
+  const handleOpenDetail = useCallback(() => {
+    if (adding) return
+    onOpenDetail(identifier)
+  }, [adding, identifier, onOpenDetail])
 
-    return (
-      <Block
-        clickable
-        data-testid='assistant-item'
-        height='100%'
-        variant='outlined'
-        width='100%'
-        style={{
-          cursor: adding ? 'wait' : 'pointer',
-          opacity: adding ? 0.7 : 1,
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-        onClick={handleClick}
-      >
-        <Flex className='flex-row items-start gap-4 justify-between p-4 w-full'>
-          <Flex className='flex-row gap-3 overflow-hidden' title={identifier}>
-            <Avatar
-              shape='square'
-              size={40}
-              avatar={avatar}
-              background={backgroundColor || 'transparent'}
-              style={{ flex: 'none' }}
-            />
-            <Flex className='flex-col flex-1 gap-0.5 overflow-hidden'>
-              <Text className={styles.title} ellipsis>
-                {title}
-              </Text>
-              {/* <div className={styles.author}>{author}</div> */}
-            </Flex>
-          </Flex>
-        </Flex>
-
-        <Flex className='flex-col flex-1 gap-3 px-4'>
-          <Text as='p' className={styles.desc} ellipsis={{ rows: 3 }} style={{ marginBottom: 0 }}>
-            {description}
-          </Text>
-          <Flex className='flex-row items-center gap-1'>
-            {typeof tokenUsage === 'number' ? (
-              <Tag className={styles.token} icon={<Icon icon={CoinsIcon} size={12} />} size='small'>
-                {formatNumber(tokenUsage)}
-              </Tag>
-            ) : null}
-            {forkCount ? (
-              <Tag className={styles.token} icon={<Icon icon={GitForkIcon} size={12} />} size='small'>
-                {formatNumber(forkCount)}
-              </Tag>
-            ) : null}
-            {pluginCount ? (
-              <Tag className={styles.token} icon={<Icon icon={PuzzleIcon} size={12} />} size='small'>
-                {pluginCount}
-              </Tag>
-            ) : null}
-            {knowledgeCount ? (
-              <Tag className={styles.token} icon={<Icon icon={BookTextIcon} size={12} />} size='small'>
-                {knowledgeCount}
-              </Tag>
-            ) : null}
-          </Flex>
-        </Flex>
-
-        <Flex className={[styles.footer, 'flex-between p-4']}>
-          <Flex className={[styles.secondaryDesc, 'flex-row items-center gap-1']}>
-            <Icon icon={ClockIcon} size={14} />
-            <span>{formatDate(createdAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-          </Flex>
-          <span className={styles.secondaryDesc}>{ASSISTANT_CATEGORY_LABELS[category]}</span>
-        </Flex>
-      </Block>
-    )
+  const handleUse = (event: MouseEvent) => {
+    event.stopPropagation()
+    void addAgent(item)
   }
-)
+
+  return (
+    <Block
+      clickable
+      className='flex flex-col'
+      data-testid='assistant-item'
+      height='100%'
+      variant='outlined'
+      width='100%'
+      style={{
+        cursor: adding ? 'wait' : 'pointer',
+        opacity: adding ? 0.7 : 1,
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+      onClick={handleOpenDetail}
+    >
+      <Flex className='flex-row items-start gap-4 justify-between p-4 w-full'>
+        <Flex className='flex-row gap-3 overflow-hidden' title={identifier}>
+          <Avatar
+            shape='square'
+            size={40}
+            avatar={avatar}
+            background={backgroundColor || 'transparent'}
+            style={{ flex: 'none' }}
+          />
+          <Flex className='flex-col flex-1 gap-0.5 overflow-hidden'>
+            <Text className={styles.title} ellipsis>
+              {title}
+            </Text>
+          </Flex>
+        </Flex>
+      </Flex>
+
+      <Flex className='flex-col flex-1 gap-3 px-4'>
+        <Text as='p' className={styles.desc} ellipsis={{ rows: 3 }} style={{ marginBottom: 0 }}>
+          {description}
+        </Text>
+        <Flex className='flex-row items-center gap-1'>
+          {typeof tokenUsage === 'number' ? (
+            <Tag className={styles.token} icon={<Icon icon={CoinsIcon} size={12} />} size='small'>
+              {formatNumber(tokenUsage)}
+            </Tag>
+          ) : null}
+          {forkCount ? (
+            <Tag className={styles.token} icon={<Icon icon={GitForkIcon} size={12} />} size='small'>
+              {formatNumber(forkCount)}
+            </Tag>
+          ) : null}
+          {pluginCount ? (
+            <Tag className={styles.token} icon={<Icon icon={PuzzleIcon} size={12} />} size='small'>
+              {pluginCount}
+            </Tag>
+          ) : null}
+          {knowledgeCount ? (
+            <Tag className={styles.token} icon={<Icon icon={BookTextIcon} size={12} />} size='small'>
+              {knowledgeCount}
+            </Tag>
+          ) : null}
+        </Flex>
+      </Flex>
+
+      <Flex className={[styles.footer, 'flex-between p-4']}>
+        <Flex className={[styles.secondaryDesc, 'flex-row items-center gap-1']}>
+          <Icon icon={ClockIcon} size={14} />
+          <span>{formatDate(createdAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        </Flex>
+        <Flex className='flex-row items-center gap-2'>
+          <span className={styles.secondaryDesc}>{ASSISTANT_CATEGORY_LABELS[category]}</span>
+          {/* <Button
+            data-testid='assistant-use-button'
+            loading={adding}
+            size='small'
+            type='primary'
+            onClick={handleUse}
+          >
+            使用助理
+          </Button> */}
+        </Flex>
+      </Flex>
+    </Block>
+  )
+})
 
 AgentCard.displayName = 'AgentCard'
 

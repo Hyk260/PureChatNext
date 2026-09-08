@@ -133,8 +133,8 @@ describe('UsageSettingsContent', () => {
     fireEvent.keyDown(search, { key: 'Enter' })
     await waitFor(() => expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain('model=sonnet'))
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'chat' } })
-    await waitFor(() => expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain('type=chat'))
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'web' } })
+    await waitFor(() => expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain('trigger=web'))
 
     fireEvent.click(screen.getByText('积分排序'))
     await waitFor(() => expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain('sortBy=credits'))
@@ -147,7 +147,7 @@ describe('UsageSettingsContent', () => {
       const url = String(fetchMock.mock.calls.at(-1)?.[0])
       expect(url).toContain('pageSize=10')
       expect(url).toContain('sortBy=createdAt')
-      expect(url).toContain('type=all')
+      expect(url).toContain('trigger=all')
       expect(url).not.toContain('model=')
     })
   })

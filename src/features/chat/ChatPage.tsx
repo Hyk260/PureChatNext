@@ -12,6 +12,7 @@ import { useApp } from '@/components/AntdStaticMethods'
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import type { AgentListItem } from '@/const/home/agents'
 import { buildChatHref } from '@/features/chat/buildChatHref'
+import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 import {
   autoRenameTopic,
   deleteTopic,
@@ -198,23 +199,13 @@ const ChatPage = memo(() => {
         if (cancelled) return
         upsertLocalAgent(agent)
         setSelectedAgentId(agent.id)
-        setActiveAgent({
-          avatar: agent.avatar,
-          identifier: agent.id,
-          systemRole: agent.systemRole,
-          title: agent.title,
-        })
+        setActiveAgent(toActiveCommunityAgent(agent))
       } catch (error) {
         console.error('[chat] fetchAgent failed', error)
         if (cancelled) return
         const fallback = DEFAULT_PURE_AI_META
         setSelectedAgentId(fallback.id)
-        setActiveAgent({
-          avatar: fallback.avatar,
-          identifier: fallback.id,
-          systemRole: fallback.systemRole,
-          title: fallback.title,
-        })
+        setActiveAgent(toActiveCommunityAgent(fallback))
       }
     })()
 
@@ -319,12 +310,7 @@ const ChatPage = memo(() => {
   const handleAgentSelect = useCallback(
     (agent: AgentListItem) => {
       setSelectedAgentId(agent.id)
-      setActiveAgent({
-        avatar: agent.avatar,
-        identifier: agent.id,
-        systemRole: agent.systemRole,
-        title: agent.title,
-      })
+      setActiveAgent(toActiveCommunityAgent(agent))
       if (agent.id === agentId && activeTopicId === null) return
       setDraftPermissionMode(DEFAULT_CHAT_PERMISSION_MODE)
       if (agent.id !== agentId) {

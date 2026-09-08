@@ -4,7 +4,14 @@ import { DatePicker, Pagination, Progress, Table } from 'antd'
 import type { TableProps } from 'antd'
 import { Block, Button, Empty, Grid, ModelIcon, SearchBar, Select, Skeleton, Tag, Text, Flex } from '@pure/ui'
 import { SHANGHAI_TIMEZONE } from '@pure/const'
-import { formatSize } from '@pure/utils/client'
+import {
+  EMPTY_PLACEHOLDER,
+  formatCompactDateTime,
+  formatDuration,
+  formatNumber,
+  formatSize,
+  getPercentage,
+} from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { MessageSquareText, RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -16,21 +23,7 @@ const { RangePicker } = DatePicker
 type PickerValue = Exclude<NonNullable<ComponentProps<typeof RangePicker>['value']>[number], null | undefined>
 type DateRange = [PickerValue, PickerValue]
 
-const numberFormat = new Intl.NumberFormat('zh-CN')
-const EMPTY_CELL = '--'
-const dateTimeFormat = new Intl.DateTimeFormat('zh-CN', {
-  day: 'numeric',
-  hour: '2-digit',
-  hourCycle: 'h23',
-  minute: '2-digit',
-  month: 'numeric',
-  second: '2-digit',
-  timeZone: SHANGHAI_TIMEZONE,
-})
-
-const formatDuration = (value: number | null) => (value == null ? EMPTY_CELL : `${(value / 1000).toFixed(2)}s`)
-const formatDateTime = (value: string) => dateTimeFormat.format(new Date(value)).replace('日', '')
-const getPercentage = (used: number, limit: number) => Math.round((used / Math.max(1, limit)) * 100)
+const formatUsageDateTime = (value: string) => formatCompactDateTime(value, { timeZone: SHANGHAI_TIMEZONE })
 const formatResetHint = (days: number, hours: number) => {
   if (days > 0) return `${days} 天后重置`
   if (hours > 0) return `${hours} 小时后重置`
@@ -164,7 +157,7 @@ const UsageMetric = ({ hint, label, limit, used, value }: UsageMetricProps) => {
 }
 
 function renderModel(value: string | null) {
-  if (!value) return EMPTY_CELL
+  if (!value) return EMPTY_PLACEHOLDER
 
   return (
     <span className={styles.model}>
@@ -175,15 +168,15 @@ function renderModel(value: string | null) {
 }
 
 function renderTokenUsage(_value: unknown, record: UsageItem) {
-  if (record.inputTokens == null && record.outputTokens == null) return EMPTY_CELL
+  if (record.inputTokens == null && record.outputTokens == null) return EMPTY_PLACEHOLDER
 
   return (
     <Flex className='flex-row items-center gap-1.5 flex-wrap'>
       <Tag color={record.totalTokens >= 50_000 ? 'orange' : 'green'} size='small'>
-        {numberFormat.format(record.totalTokens)}
+        {formatNumber(record.totalTokens)}
       </Tag>
       <Text type='secondary'>
-        = ↓ {numberFormat.format(record.inputTokens ?? 0)} + ↑ {numberFormat.format(record.outputTokens ?? 0)}
+        = ↓ {formatNumber(record.inputTokens ?? 0)} + ↑ {formatNumber(record.outputTokens ?? 0)}
       </Text>
     </Flex>
   )
@@ -201,6 +194,10 @@ const triggerFilterOptions = [
   { label: triggerLabels.wechat, value: 'wechat' },
   { label: triggerLabels.qq, value: 'qq' },
 ] as const
+
+const ANTD_SORT_ORDER = { asc: 'ascend', desc: 'descend' } as const
+/** 升降序循环，不含取消。默认时间倒序时，悬停提示为「点击升序」。 */
+const TABLE_SORT_DIRECTIONS: Array<'ascend' | 'descend'> = ['descend', 'ascend', 'descend']
 
 export function UsageSettingsContent() {
   const [data, setData] = useState<UsageResponse | null>(null)
@@ -273,7 +270,7 @@ export function UsageSettingsContent() {
   }
 
   const activeSortOrder = useCallback(
-    (key: string) => (sortBy === key ? (sortOrder === 'asc' ? 'ascend' : 'descend') : null),
+    (key: string) => (sortBy === key ? ANTD_SORT_ORDER[sortOrder] : null),
     [sortBy, sortOrder]
   )
 
@@ -282,7 +279,7 @@ export function UsageSettingsContent() {
       {
         dataIndex: 'createdAt',
         key: 'createdAt',
-        render: formatDateTime,
+        render: formatUsageDateTime,
         sortOrder: activeSortOrder('createdAt'),
         sorter: true,
         title: '时间',
@@ -297,7 +294,7 @@ export function UsageSettingsContent() {
       {
         dataIndex: 'trigger',
         key: 'trigger',
-        render: (value: UsageItem['trigger']) => triggerLabels[value] ?? EMPTY_CELL,
+        render: (value: UsageItem['trigger']) => triggerLabels[value] ?? EMPTY_PLACEHOLDER,
         title: '触发方式',
         width: 90,
       },
@@ -319,7 +316,7 @@ export function UsageSettingsContent() {
       {
         dataIndex: 'credits',
         key: 'credits',
-        render: (value: number) => numberFormat.format(value),
+        render: (value: number) => formatNumber(value),
         sortOrder: activeSortOrder('credits'),
         sorter: true,
         title: '消耗积分',
@@ -328,7 +325,7 @@ export function UsageSettingsContent() {
       {
         dataIndex: 'durationMs',
         key: 'durationMs',
-        render: formatDuration,
+        render: (value: number | null) => formatDuration(value),
         sortOrder: activeSortOrder('durationMs'),
         sorter: true,
         title: '耗时',
@@ -365,7 +362,7 @@ export function UsageSettingsContent() {
                 label='积分'
                 limit={data.balance.grant}
                 used={data.balance.used}
-                value={`${numberFormat.format(data.balance.used)} / ${numberFormat.format(data.balance.grant)}`}
+                value={`${formatNumber(data.balance.used)} / ${formatNumber(data.balance.grant)}`}
               />
               <UsageMetric
                 label='文件使用量'
@@ -412,7 +409,8 @@ export function UsageSettingsContent() {
             />
             <RangePicker
               size='small'
-              placeholder={['开始日期', '结束日期']}
+              showTime={{ format: 'HH:mm' }}
+              format="YYYY-MM-DD HH:mm"
               style={{ flex: '1 1 280px' }}
               value={range}
               onChange={(value) => {
@@ -441,7 +439,8 @@ export function UsageSettingsContent() {
             locale={{ emptyText: <Empty description='暂无用量明细' /> }}
             pagination={false}
             rowKey='id'
-            scroll={{ x: 1017 }}
+            sortDirections={TABLE_SORT_DIRECTIONS}
+            // scroll={{ x: 1017 }}
             onChange={(_pagination, _filters, sorter) => {
               const current = Array.isArray(sorter) ? sorter[0] : sorter
               if (current?.columnKey && current.order) {

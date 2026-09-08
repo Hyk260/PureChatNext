@@ -18,10 +18,11 @@ import {
   PencilIcon,
   PrinterIcon,
   TerminalSquareIcon,
+  UserRound,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useCallback, useEffect, useMemo } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
 import {
@@ -29,12 +30,15 @@ import {
   ASSISTANT_CATEGORY_LABELS,
   getAssistantCategoryCounts,
 } from '@/const/community/agents'
+import { countCustomAgents } from '@/features/community/customAgents'
 import { AssistantCategory } from '@/features/community/types'
+import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 
 import { communityCategoryStyles } from './communityCategoryStyles'
 
 const CATEGORY_ICONS: Record<AssistantCategory, LucideIcon> = {
   [AssistantCategory.All]: LayoutPanelTop,
+  [AssistantCategory.Custom]: UserRound,
   [AssistantCategory.Academic]: MicroscopeIcon,
   [AssistantCategory.Career]: BriefcaseIcon,
   [AssistantCategory.CopyWriting]: PencilIcon,
@@ -51,14 +55,27 @@ const CATEGORY_ICONS: Record<AssistantCategory, LucideIcon> = {
   [AssistantCategory.Translation]: LanguagesIcon,
 }
 
-const CATEGORY_KEYS: AssistantCategory[] = [AssistantCategory.All, ...ASSISTANT_BUSINESS_CATEGORIES]
+const CATEGORY_KEYS: AssistantCategory[] = [
+  AssistantCategory.All,
+  AssistantCategory.Custom,
+  ...ASSISTANT_BUSINESS_CATEGORIES,
+]
 
 const AgentCategory = memo(() => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const selected = (searchParams.get('category') as AssistantCategory | null) ?? AssistantCategory.All
-  const counts = useMemo(() => getAssistantCategoryCounts(), [])
+  const customCount = useAgentsStore((s) => countCustomAgents(s.agents))
+  const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
+  const counts = useMemo(
+    () => ({ ...getAssistantCategoryCounts(), [AssistantCategory.Custom]: customCount }),
+    [customCount]
+  )
+
+  useEffect(() => {
+    fetchAgentsList()
+  }, [fetchAgentsList])
 
   const handleSelect = useCallback(
     (key: AssistantCategory) => {

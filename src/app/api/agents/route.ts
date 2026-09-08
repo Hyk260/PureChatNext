@@ -10,6 +10,8 @@ const createSchema = z.object({
   description: z.string().optional(),
   marketIdentifier: z.string().min(1).optional(),
   model: z.string().optional(),
+  openingMessage: z.string().nullable().optional(),
+  openingQuestions: z.array(z.string()).nullable().optional(),
   params: z.record(z.string(), z.unknown()).optional(),
   pinned: z.boolean().optional(),
   provider: z.string().optional(),

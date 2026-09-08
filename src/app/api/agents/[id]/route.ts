@@ -9,6 +9,8 @@ const updateSchema = z.object({
   backgroundColor: z.string().optional(),
   description: z.string().nullable().optional(),
   model: z.string().nullable().optional(),
+  openingMessage: z.string().nullable().optional(),
+  openingQuestions: z.array(z.string()).nullable().optional(),
   params: z.record(z.string(), z.unknown()).optional(),
   pinned: z.boolean().optional(),
   provider: z.string().nullable().optional(),

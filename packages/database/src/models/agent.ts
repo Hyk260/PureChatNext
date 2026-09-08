@@ -13,6 +13,8 @@ export type AgentCreateInput = {
   description?: string
   marketIdentifier?: string
   model?: string
+  openingMessage?: string | null
+  openingQuestions?: string[] | null
   params?: Record<string, unknown>
   pinned?: boolean
   provider?: string
@@ -28,6 +30,8 @@ export type AgentUpdateInput = Partial<
     | 'backgroundColor'
     | 'description'
     | 'model'
+    | 'openingMessage'
+    | 'openingQuestions'
     | 'params'
     | 'pinned'
     | 'provider'
@@ -82,12 +86,29 @@ export class AgentModel {
   }
 
   create = async (params: AgentCreateInput) => {
-    // 同一用户从市场重复添加时复用已有行
+    // 同一用户从市场重复添加时复用已有行；缺开场字段时补齐
     if (params.marketIdentifier) {
       const existing = await this.db.query.agents.findFirst({
         where: and(eq(agents.userId, this.userId), eq(agents.marketIdentifier, params.marketIdentifier)),
       })
-      if (existing) return existing
+      if (existing) {
+        const needsOpeningBackfill =
+          (params.openingMessage && !existing.openingMessage) ||
+          (params.openingQuestions &&
+            params.openingQuestions.length > 0 &&
+            (!existing.openingQuestions || existing.openingQuestions.length === 0))
+
+        if (needsOpeningBackfill) {
+          return (
+            (await this.update(existing.id, {
+              openingMessage: params.openingMessage ?? existing.openingMessage,
+              openingQuestions: params.openingQuestions ?? existing.openingQuestions,
+            })) ?? existing
+          )
+        }
+
+        return existing
+      }
     }
 
     const values: NewAgent = {
@@ -97,6 +118,8 @@ export class AgentModel {
       isBuiltin: false,
       marketIdentifier: params.marketIdentifier,
       model: params.model,
+      openingMessage: params.openingMessage ?? null,
+      openingQuestions: params.openingQuestions ?? [],
       params: params.params ?? {},
       pinned: params.pinned ?? false,
       provider: params.provider,
@@ -124,6 +147,8 @@ export class AgentModel {
     if (data.avatar !== undefined) patch.avatar = data.avatar
     if (data.backgroundColor !== undefined) patch.backgroundColor = data.backgroundColor
     if (data.systemRole !== undefined) patch.systemRole = data.systemRole
+    if (data.openingMessage !== undefined) patch.openingMessage = data.openingMessage
+    if (data.openingQuestions !== undefined) patch.openingQuestions = data.openingQuestions
     if (data.model !== undefined) patch.model = data.model
     if (data.provider !== undefined) patch.provider = data.provider
     if (data.params !== undefined) patch.params = data.params

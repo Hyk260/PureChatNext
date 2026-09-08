@@ -42,6 +42,8 @@ export const CHANNEL_COMMAND_CATALOG: readonly ChannelCommandCatalogItem[] = [
 
 export type ChannelCommandAgent = {
   id: string
+  openingMessage?: string | null
+  openingQuestions?: string[] | null
   title: string
 }
 
@@ -53,6 +55,49 @@ export type ChannelCommandEffects = {
   listAgents: () => Promise<ChannelCommandAgent[]>
   /** 开启新对话；传入 agentId 时同时切换助手。 */
   startNewConversation: (agentId?: string) => Promise<void>
+}
+
+/** 切换助手回复中展示的推荐问题条数，取值夹在 1–4。 */
+export const DEFAULT_CHANNEL_AGENT_SWITCH_QUESTION_COUNT = 2
+
+const FALLBACK_AGENT_SWITCH_QUESTIONS = ['你能帮我做什么？', '我们从哪里开始比较好？'] as const
+
+function clampQuestionCount(count: number | undefined): number {
+  const raw = count ?? DEFAULT_CHANNEL_AGENT_SWITCH_QUESTION_COUNT
+  if (!Number.isFinite(raw)) return DEFAULT_CHANNEL_AGENT_SWITCH_QUESTION_COUNT
+  return Math.min(4, Math.max(1, Math.trunc(raw)))
+}
+
+function resolveSwitchIntro(agent: ChannelCommandAgent): string {
+  const opening = agent.openingMessage?.trim()
+  if (opening) return opening
+  const name = agent.title.trim() || '助手'
+  return `「${name}」已就绪，直接发消息即可开始。`
+}
+
+function resolveSwitchQuestions(agent: ChannelCommandAgent, count: number): string[] {
+  const fromAgent = (agent.openingQuestions ?? []).map((q) => q.trim()).filter(Boolean)
+  const source = fromAgent.length > 0 ? fromAgent : [...FALLBACK_AGENT_SWITCH_QUESTIONS]
+  return source.slice(0, count)
+}
+
+/** `/agents` 切换成功后的回复：标题 + 介绍 + 推荐问题。 */
+export function buildAgentSwitchReply(
+  agent: ChannelCommandAgent,
+  options?: { questionCount?: number }
+): string {
+  const questionCount = clampQuestionCount(options?.questionCount)
+  const questions = resolveSwitchQuestions(agent, questionCount)
+  const questionLines = questions.map((question, index) => `${index + 1}. ${question}`)
+
+  return [
+    `已切换到「${agent.title}」，并创建新对话。`,
+    '',
+    resolveSwitchIntro(agent),
+    '',
+    '你可以试试：',
+    ...questionLines,
+  ].join('\n')
 }
 
 export function buildChannelHelpText(options?: { footer?: string }) {
@@ -156,7 +201,7 @@ async function handleAgentsCommand(argument: string, effects: ChannelCommandEffe
 
   await effects.startNewConversation(target.id)
   effects.abortActiveGeneration()
-  return `已切换到「${target.title}」，并创建新对话。`
+  return buildAgentSwitchReply(target)
 }
 
 /**

@@ -3,10 +3,12 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ChannelCommandEffects } from './commands'
 import {
   applyChannelFirstBindWelcome,
+  buildAgentSwitchReply,
   buildChannelHelpText,
   buildChannelWelcomeText,
   CHANNEL_COMMAND_CATALOG,
   CHANNEL_FIRST_BIND_WELCOME_SEPARATOR,
+  DEFAULT_CHANNEL_AGENT_SWITCH_QUESTION_COUNT,
   DEFAULT_CHANNEL_FIRST_BIND_WELCOME_ENABLED,
   parseChannelCommand,
   prependChannelFirstBindWelcome,
@@ -121,12 +123,27 @@ describe('runChannelCommand', () => {
   })
 
   it('lists and switches agents', async () => {
-    const effects = createEffects()
+    const effects = createEffects({
+      listAgents: vi.fn(async () => [
+        { id: 'agt_a', title: '助手 A' },
+        {
+          id: 'agt_b',
+          openingMessage: '您好！我是 Next.js 专家顾问。',
+          openingQuestions: ['我如何提升性能？', '有哪些 SEO 实践？', '如何调试 hydration？'],
+          title: '助手 B',
+        },
+      ]),
+    })
     const list = await runChannelCommand('/agents', effects)
     expect(list).toContain('助手 A')
     expect(list).toContain('（当前）')
 
-    await expect(runChannelCommand('/agents 2', effects)).resolves.toContain('助手 B')
+    const switched = await runChannelCommand('/agents 2', effects)
+    expect(switched).toContain('已切换到「助手 B」')
+    expect(switched).toContain('您好！我是 Next.js 专家顾问。')
+    expect(switched).toContain('1. 我如何提升性能？')
+    expect(switched).toContain('2. 有哪些 SEO 实践？')
+    expect(switched).not.toContain('如何调试 hydration？')
     expect(effects.startNewConversation).toHaveBeenCalledWith('agt_b')
     expect(effects.abortActiveGeneration).toHaveBeenCalled()
   })
@@ -136,5 +153,35 @@ describe('runChannelCommand', () => {
       assertAgentsAllowed: vi.fn(async () => '该指令仅限授权账号使用。'),
     })
     await expect(runChannelCommand('/agents', effects)).resolves.toBe('该指令仅限授权账号使用。')
+  })
+})
+
+describe('buildAgentSwitchReply', () => {
+  it('defaults to two questions and clamps questionCount to 1–4', () => {
+    expect(DEFAULT_CHANNEL_AGENT_SWITCH_QUESTION_COUNT).toBe(2)
+
+    const agent = {
+      id: 'agt_x',
+      openingMessage: '介绍文案',
+      openingQuestions: ['Q1', 'Q2', 'Q3', 'Q4', 'Q5'],
+      title: '顾问',
+    }
+
+    expect(buildAgentSwitchReply(agent)).toContain('1. Q1')
+    expect(buildAgentSwitchReply(agent)).toContain('2. Q2')
+    expect(buildAgentSwitchReply(agent)).not.toContain('3. Q3')
+
+    expect(buildAgentSwitchReply(agent, { questionCount: 1 })).not.toContain('2. Q2')
+    expect(buildAgentSwitchReply(agent, { questionCount: 4 })).toContain('4. Q4')
+    expect(buildAgentSwitchReply(agent, { questionCount: 4 })).not.toContain('5. Q5')
+    expect(buildAgentSwitchReply(agent, { questionCount: 99 })).toContain('4. Q4')
+  })
+
+  it('uses fallback intro and questions when agent fields are missing', () => {
+    const text = buildAgentSwitchReply({ id: 'agt_y', title: '纯净助手' })
+    expect(text).toContain('已切换到「纯净助手」')
+    expect(text).toContain('「纯净助手」已就绪，直接发消息即可开始。')
+    expect(text).toContain('1. 你能帮我做什么？')
+    expect(text).toContain('2. 我们从哪里开始比较好？')
   })
 })

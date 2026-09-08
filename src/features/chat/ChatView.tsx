@@ -494,9 +494,26 @@ const ChatView = memo<ChatViewProps>(
     const agentMeta = useMemo(() => {
       const a = agents.find((x) => x.id === agentId)
       return a
-        ? { avatar: a.avatar, title: a.title }
-        : { avatar: DEFAULT_PURE_AI_META.avatar, title: DEFAULT_PURE_AI_META.title }
+        ? {
+            avatar: a.avatar,
+            openingMessage: a.openingMessage,
+            openingQuestions: a.openingQuestions,
+            title: a.title,
+          }
+        : {
+            avatar: DEFAULT_PURE_AI_META.avatar,
+            openingMessage: DEFAULT_PURE_AI_META.openingMessage,
+            openingQuestions: DEFAULT_PURE_AI_META.openingQuestions,
+            title: DEFAULT_PURE_AI_META.title,
+          }
     }, [agents, agentId])
+
+    const handleSelectOpeningQuestion = useCallback(
+      (question: string) => {
+        void handleSend(question)
+      },
+      [handleSend]
+    )
 
     const handleRegenerate = useCallback(
       async (id: string) => {
@@ -529,6 +546,7 @@ const ChatView = memo<ChatViewProps>(
           onDelete={handleDelete}
           onEdit={handleEdit}
           onRegenerate={handleRegenerate}
+          onSelectOpeningQuestion={handleSelectOpeningQuestion}
           onToolApproval={handleToolApproval}
           onServerToolApproval={handleServerToolApproval}
         />

@@ -1,6 +1,6 @@
 'use client'
 
-import { Input, Text, Modal, Flex } from '@pure/ui'
+import { EmojiPicker, Input, Text, Modal, Flex } from '@pure/ui'
 import { memo, useEffect, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'
@@ -71,22 +71,27 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
       <Flex className='flex-col gap-3 py-2'>
         <Flex className='flex-col gap-1'>
           <Text type='secondary' style={{ fontSize: 12 }}>
+            头像
+          </Text>
+          <EmojiPicker
+            allowDelete={Boolean(values.avatar)}
+            defaultAvatar='🤖'
+            locale='zh-CN'
+            shape='square'
+            size={48}
+            value={values.avatar}
+            onChange={(emoji) => setValues((prev) => ({ ...prev, avatar: emoji || '🤖' }))}
+            onDelete={() => setValues((prev) => ({ ...prev, avatar: '🤖' }))}
+          />
+        </Flex>
+        <Flex className='flex-col gap-1'>
+          <Text type='secondary' style={{ fontSize: 12 }}>
             名称
           </Text>
           <Input
             placeholder='助理名称'
             value={values.title}
             onChange={(event) => setValues((prev) => ({ ...prev, title: event.target.value }))}
-          />
-        </Flex>
-        <Flex className='flex-col gap-1'>
-          <Text type='secondary' style={{ fontSize: 12 }}>
-            头像（emoji 或 URL）
-          </Text>
-          <Input
-            placeholder='✨'
-            value={values.avatar}
-            onChange={(event) => setValues((prev) => ({ ...prev, avatar: event.target.value }))}
           />
         </Flex>
         <Flex className='flex-col gap-1'>

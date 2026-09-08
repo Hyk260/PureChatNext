@@ -3,7 +3,10 @@ import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
+  antdConfigProviderProps: null as Record<string, unknown> | null,
+  dayjsLocale: null as string | null,
   themeProviderProps: null as Record<string, unknown> | null,
+  zhCN: { locale: 'zh-cn' },
 }))
 
 vi.mock('@pure/ui/ThemeProvider', () => ({
@@ -13,6 +16,25 @@ vi.mock('@pure/ui/ThemeProvider', () => ({
     return <>{children}</>
   },
 }))
+
+vi.mock('antd', () => ({
+  ConfigProvider: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => {
+    mocks.antdConfigProviderProps = props
+    return <>{children}</>
+  },
+}))
+
+vi.mock('antd/locale/zh_CN', () => ({ default: mocks.zhCN }))
+
+vi.mock('dayjs', () => ({
+  default: {
+    locale: (locale: string) => {
+      mocks.dayjsLocale = locale
+    },
+  },
+}))
+
+vi.mock('dayjs/locale/zh-cn', () => ({}))
 
 vi.mock('@pure/ui/ModalHost', () => ({
   ModalHost: () => null,
@@ -41,6 +63,8 @@ describe('ThemeProviders', () => {
     isDark = false
     listeners.clear()
     localStorage.clear()
+    mocks.antdConfigProviderProps = null
+    mocks.themeProviderProps = null
     document.documentElement.removeAttribute('data-theme')
     media = {
       get matches() {
@@ -54,6 +78,13 @@ describe('ThemeProviders', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+  })
+
+  it('applies the Chinese antd locale globally', () => {
+    render(<ThemeProviders>content</ThemeProviders>)
+
+    expect(mocks.dayjsLocale).toBe('zh-cn')
+    expect(mocks.antdConfigProviderProps?.locale).toBe(mocks.zhCN)
   })
 
   it('reads the stored mode and updates data-theme and storage when changed', () => {

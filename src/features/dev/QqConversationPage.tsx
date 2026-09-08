@@ -65,8 +65,9 @@ function qqSessionTitle(session: QQDevSession | null) {
 function qqMessageUserLabel(message: QQDevMessage, session: QQDevSession | null) {
   const name = message.authorName?.trim()
   if (name) return name
-  if (message.authorId?.trim()) return truncateId(message.authorId, 8, 4)
-  if (isQQGroupSession(session)) return 'QQ 用户'
+  if (isQQGroupSession(session)) {
+    return message.authorId?.trim() ? `用户 ${truncateId(message.authorId, 6, 4)}` : 'QQ 用户'
+  }
   return session?.externalUserName?.trim() || 'QQ 用户'
 }
 

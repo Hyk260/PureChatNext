@@ -47,7 +47,8 @@ describe('resolveQQAuthorLabel', () => {
     expect(resolveQQAuthorLabel(message({ fullName: '染忆', userId: '24B45D69', userName: '染忆' }))).toBe('染忆')
   })
 
-  it('falls back to the author id', () => {
-    expect(resolveQQAuthorLabel(message({ userId: '24B45D69' }))).toBe('24B45D69')
+  it('ignores openid fallbacks that are not nicknames', () => {
+    expect(resolveQQAuthorLabel(message({ fullName: '24B45D69', userId: '24B45D69', userName: '24B45D69' }))).toBeNull()
+    expect(resolveQQAuthorLabel(message({ userId: '24B45D69' }))).toBeNull()
   })
 })

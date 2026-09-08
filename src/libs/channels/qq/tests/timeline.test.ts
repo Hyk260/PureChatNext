@@ -73,6 +73,65 @@ describe('expandQQEventsToMessages', () => {
     expect(messages[1]).toMatchObject({ authorId: 'user-b', authorName: '染忆', text: '2' })
   })
 
+  it('reuses a later nickname for earlier messages from the same group member', () => {
+    const messages = expandQQEventsToMessages([
+      event({
+        content: '1',
+        id: 'event-1',
+        platformPayload: {
+          authorId: 'user-a',
+          threadId: 'qq:group:group-1',
+          threadType: 'group',
+        },
+      }),
+      event({
+        content: '3',
+        createdAt: new Date('2026-08-01T00:02:00.000Z'),
+        id: 'event-3',
+        platformPayload: {
+          authorId: 'user-a',
+          authorName: '临江仙',
+          threadId: 'qq:group:group-1',
+          threadType: 'group',
+        },
+      }),
+    ])
+
+    expect(messages[0]).toMatchObject({ authorId: 'user-a', authorName: '临江仙', text: '1' })
+    expect(messages[1]).toMatchObject({ authorId: 'user-a', authorName: '临江仙', text: '3' })
+  })
+
+  it('uses the session nickname for the latest unnamed group speaker', () => {
+    const messages = expandQQEventsToMessages(
+      [
+        event({
+          content: '1',
+          id: 'event-1',
+          platformPayload: {
+            authorId: 'user-a',
+            threadId: 'qq:group:group-1',
+            threadType: 'group',
+          },
+        }),
+        event({
+          content: '2',
+          createdAt: new Date('2026-08-01T00:01:00.000Z'),
+          id: 'event-2',
+          platformPayload: {
+            authorId: 'user-b',
+            threadId: 'qq:group:group-1',
+            threadType: 'group',
+          },
+        }),
+      ],
+      { sessionUserName: '临江仙' }
+    )
+
+    expect(messages[0]).toMatchObject({ authorId: 'user-a', text: '1' })
+    expect(messages[0]?.authorName).toBeUndefined()
+    expect(messages[1]).toMatchObject({ authorId: 'user-b', authorName: '临江仙', text: '2' })
+  })
+
   it('maps QQ attachment metadata to remote links', () => {
     const messages = expandQQEventsToMessages([
       event({

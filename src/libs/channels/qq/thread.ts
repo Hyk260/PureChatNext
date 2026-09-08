@@ -34,13 +34,17 @@ export function resolveQQThreadType(threadId: string): QQThreadType {
 
 const QQ_PLACEHOLDER_NAMES = new Set(['unknown', 'Unknown'])
 
-/** 单条消息的发言者展示名；群聊里不能复用会话级 externalUserName。 */
+function isQQAuthorNickname(username: string, userId?: string) {
+  if (!username || QQ_PLACEHOLDER_NAMES.has(username)) return false
+  return !userId || username !== userId
+}
+
+/** 单条消息的发言者昵称；群聊里不能把 openid 或会话标题当成昵称。 */
 export function resolveQQAuthorLabel(message: Message): string | null {
-  const username = message.author?.userName?.trim() || message.author?.fullName?.trim()
-  if (username && !QQ_PLACEHOLDER_NAMES.has(username)) return username
   const userId = message.author?.userId?.trim()
-  if (userId && userId !== 'unknown') return userId
-  return null
+  const username = message.author?.userName?.trim() || message.author?.fullName?.trim()
+  if (!username || !isQQAuthorNickname(username, userId)) return null
+  return username
 }
 
 /** 会话标题：群/频道用线程身份，单聊才用发言者昵称。 */
@@ -72,7 +76,7 @@ export function buildQQPlatformPayload(params: {
       url,
     })),
     authorId: params.authorId,
-    ...(authorName ? { authorName } : {}),
+    ...(authorName && authorName !== params.authorId ? { authorName } : {}),
     threadId: params.threadId,
     threadType: params.threadType,
   }

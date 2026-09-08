@@ -56,6 +56,31 @@ type QQInboundEvent = {
   threadType: string
 }
 
+function readQQPayloadAuthor(payload: Record<string, unknown>) {
+  const authorId = typeof payload.authorId === 'string' ? payload.authorId.trim() : ''
+  const authorName = typeof payload.authorName === 'string' ? payload.authorName.trim() : ''
+  if (!authorId || !authorName || authorName === authorId) return null
+  return { authorId, authorName }
+}
+
+async function backfillQQAuthorName(
+  tx: Transaction,
+  sessionId: string,
+  authorId: string,
+  authorName: string,
+  now: Date
+) {
+  await tx
+    .update(channelEvents)
+    .set({
+      platformPayload: sql`jsonb_set(coalesce(${channelEvents.platformPayload}, '{}'::jsonb), '{authorName}', to_jsonb(${authorName}::text), true)`,
+      updatedAt: now,
+    })
+    .where(
+      and(eq(channelEvents.sessionId, sessionId), sql`${channelEvents.platformPayload}->>'authorId' = ${authorId}`)
+    )
+}
+
 async function ensureSession(tx: Transaction, event: IngestEvent) {
   const now = new Date()
   const [session] = await tx
@@ -170,6 +195,10 @@ export class ChannelEventModel {
         .returning()
 
       if (inserted) {
+        const author = readQQPayloadAuthor(event.platformPayload)
+        if (author) {
+          await backfillQQAuthorName(tx, session!.id, author.authorId, author.authorName, now)
+        }
         await tx
           .update(channelBindings)
           .set({ lastActiveAt: now, updatedAt: now })

@@ -63,11 +63,37 @@ function readQQAttachments(payload: Record<string, unknown> | null | undefined):
 function readQQAuthor(payload: Record<string, unknown> | null | undefined) {
   if (!payload) return {}
   const authorId = typeof payload.authorId === 'string' ? payload.authorId.trim() : ''
-  const authorName = typeof payload.authorName === 'string' ? payload.authorName.trim() : ''
+  const rawName = typeof payload.authorName === 'string' ? payload.authorName.trim() : ''
+  const authorName = rawName && rawName !== authorId ? rawName : ''
   return {
     ...(authorId ? { authorId } : {}),
     ...(authorName ? { authorName } : {}),
   }
+}
+
+const QQ_THREAD_TITLE_PREFIXES = ['QQ 群聊', 'QQ 单聊', 'QQ 频道私信', 'QQ 频道'] as const
+
+function isQQPersonName(name: string) {
+  return Boolean(name) && !QQ_THREAD_TITLE_PREFIXES.some((prefix) => name.startsWith(prefix))
+}
+
+function collectQQAuthorNames(
+  events: ChannelTimelineEvent[],
+  sessionUserName?: string | null
+): Map<string, string> {
+  const names = new Map<string, string>()
+  let lastAuthorId = ''
+  for (const event of events) {
+    if (event.messageKind === 'outbound') continue
+    const author = readQQAuthor(event.platformPayload)
+    if (author.authorId) lastAuthorId = author.authorId
+    if (author.authorId && author.authorName) names.set(author.authorId, author.authorName)
+  }
+  const hint = sessionUserName?.trim()
+  if (hint && isQQPersonName(hint) && lastAuthorId && !names.has(lastAuthorId)) {
+    names.set(lastAuthorId, hint)
+  }
+  return names
 }
 
 function mapQQAttachments(event: ChannelTimelineEvent) {
@@ -84,8 +110,12 @@ function mapQQAttachments(event: ChannelTimelineEvent) {
 }
 
 /** 将 QQ channel_events 时间线展开为 Dev 会话气泡；附件直接使用 QQ 原始 URL。 */
-export function expandQQEventsToMessages(events: ChannelTimelineEvent[]): QQTimelineMessage[] {
+export function expandQQEventsToMessages(
+  events: ChannelTimelineEvent[],
+  options?: { sessionUserName?: string | null }
+): QQTimelineMessage[] {
   const messages: QQTimelineMessage[] = []
+  const authorNames = collectQQAuthorNames(events, options?.sessionUserName)
   for (const event of events) {
     if (event.messageKind === 'outbound') {
       const text = event.responseText?.trim() || ''
@@ -104,6 +134,8 @@ export function expandQQEventsToMessages(events: ChannelTimelineEvent[]): QQTime
     }
 
     const attachments = mapQQAttachments(event)
+    const author = readQQAuthor(event.platformPayload)
+    const authorName = author.authorName || (author.authorId ? authorNames.get(author.authorId) : undefined)
     const firstImage = attachments.find(({ fileName }) =>
       (fileName || '').match(/\.(jpe?g|png|gif|webp|bmp)$/i)
     ) ?? attachments[0]
@@ -114,7 +146,8 @@ export function expandQQEventsToMessages(events: ChannelTimelineEvent[]): QQTime
 
     messages.push({
       ...(attachments.length ? { attachments } : {}),
-      ...readQQAuthor(event.platformPayload),
+      ...(author.authorId ? { authorId: author.authorId } : {}),
+      ...(authorName ? { authorName } : {}),
       createdAt: event.createdAt.toISOString(),
       eventId: event.id,
       ...(isImage && firstImage

@@ -77,7 +77,9 @@ export const GET = withAuth<{ sessionId: string }>(async (request, { params, use
       events.map(({ createdAt, id }) => ({ createdAt, id }))
     ) ?? { createdAt: new Date(0), id: '' }
   )
-  const expandedMessages = expandQQEventsToMessages(events)
+  const expandedMessages = expandQQEventsToMessages(events, {
+    sessionUserName: session.externalUserName,
+  })
 
   return NextResponse.json({
     cursor: responseCursor,

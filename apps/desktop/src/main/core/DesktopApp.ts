@@ -45,6 +45,7 @@ export class DesktopApp {
     this.trayManager = new TrayManager(
       this.getDesktopResourcePath('tray.png'),
       () => this.focusWindow(),
+      () => this.windowManager.toggleDevTools(),
       () => app.quit()
     )
     this.protocolManager = new ProtocolManager(path.resolve(mainDir, '../renderer'), async () => null)

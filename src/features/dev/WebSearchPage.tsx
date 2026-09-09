@@ -145,7 +145,7 @@ const examples = {
     urls: 'https://vercel.com/\nhttps://nextjs.org',
   },
   query: '今日新闻',
-  webSearch: 'web search',
+  webSearch: '今日新闻',
 }
 
 const actionOptions: Array<{

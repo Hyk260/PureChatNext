@@ -152,6 +152,11 @@ export class WindowManager {
     this.window.focus()
   }
 
+  toggleDevTools() {
+    this.focus()
+    this.window?.webContents.toggleDevTools()
+  }
+
   close() {
     this.window?.close()
     this.window = null

@@ -6,6 +6,7 @@ export class TrayManager {
   constructor(
     private readonly trayImagePath: string,
     private readonly focusWindow: () => void,
+    private readonly toggleDevTools: () => void,
     private readonly quit: () => void
   ) {}
 
@@ -16,6 +17,8 @@ export class TrayManager {
     this.tray.setContextMenu(
       Menu.buildFromTemplate([
         { click: this.focusWindow, label: '打开 PureChat' },
+        { click: this.toggleDevTools, label: '切换开发者工具' },
+        { type: 'separator' },
         { click: this.quit, label: '退出 PureChat' },
       ])
     )

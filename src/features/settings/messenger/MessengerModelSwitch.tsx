@@ -30,7 +30,6 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 export interface MessengerModelSwitchProps {
-  allowedProviders?: readonly string[]
   disabled?: boolean
   modelId: string
   onSelect: (provider: string, model: string) => void
@@ -39,7 +38,7 @@ export interface MessengerModelSwitchProps {
 
 /** 渠道设置页共用的模型切换入口（与 /chat 同一套 ModelSwitchMenu）。 */
 export const MessengerModelSwitch = memo<MessengerModelSwitchProps>(
-  ({ allowedProviders, disabled, modelId, onSelect, provider }) => {
+  ({ disabled, modelId, onSelect, provider }) => {
     const currentDisplayName = getAiModel(provider as ModelProviderId, modelId)?.displayName ?? modelId
 
     return (
@@ -48,7 +47,6 @@ export const MessengerModelSwitch = memo<MessengerModelSwitchProps>(
           模型
         </Text>
         <ModelSwitchMenu
-          allowedProviders={allowedProviders}
           disabled={disabled}
           openOnHover={false}
           placement='bottomLeft'

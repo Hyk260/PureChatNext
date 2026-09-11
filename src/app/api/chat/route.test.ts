@@ -24,6 +24,10 @@ vi.mock('@pure/database/models/credits', () => ({
 vi.mock('@/libs/auth/get-session-user', () => ({
   getAuthenticatedUserId: vi.fn().mockResolvedValue('user-1'),
 }))
+vi.mock('@/libs/ai-providers/userSecrets', () => ({
+  MISSING_USER_PROVIDER_SECRET_MESSAGE: '请先在设置中保存该服务商 API Key',
+  resolveUserProviderCredentials: vi.fn(async () => ({ apiKey: 'user-key' })),
+}))
 vi.mock('@/envs/llm', () => ({
   llmEnv: { PURECHAT_ENABLED: true },
   resolveAiGatewayApiKey: () => 'gateway-test-key',

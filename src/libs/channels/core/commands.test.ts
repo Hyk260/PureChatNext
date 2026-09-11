@@ -53,13 +53,13 @@ describe('buildChannelHelpText', () => {
 describe('buildChannelWelcomeText', () => {
   it('introduces the agent and points users to /h without greeting phrasing', () => {
     const text = buildChannelWelcomeText('旅行助手')
-    expect(text).toContain('「旅行助手」已接入')
+    expect(text).toContain('「旅行助手」已绑定')
     expect(text).not.toContain('你好')
     expect(text).toContain('/h')
   })
 
   it('falls back when the agent title is blank', () => {
-    expect(buildChannelWelcomeText('  ')).toContain('「助手」已接入')
+    expect(buildChannelWelcomeText('  ')).toContain('「助手」已绑定')
   })
 
   it('returns null when disabled', () => {
@@ -88,7 +88,7 @@ describe('applyChannelFirstBindWelcome', () => {
       pendingWelcome: true,
       reply: '这是回复',
     })
-    expect(merged).toContain('「旅行助手」已接入')
+    expect(merged).toContain('「旅行助手」已绑定')
     expect(merged).toContain('这是回复')
     expect(clearPendingWelcome).toHaveBeenCalledWith('binding-1')
   })
@@ -146,6 +146,28 @@ describe('runChannelCommand', () => {
     expect(switched).not.toContain('如何调试 hydration？')
     expect(effects.startNewConversation).toHaveBeenCalledWith('agt_b')
     expect(effects.abortActiveGeneration).toHaveBeenCalled()
+  })
+
+  it('lists available agents when the target is missing', async () => {
+    const effects = createEffects()
+    const missing = await runChannelCommand('/agents 9', effects)
+    expect(missing).toContain('未找到「9」。')
+    expect(missing).toContain('可用助手：')
+    expect(missing).toContain('助手 A')
+    expect(missing).toContain('助手 B')
+    expect(missing).toContain('/agents <序号|agentId>')
+    expect(effects.startNewConversation).not.toHaveBeenCalled()
+  })
+
+  it('says there are no agents when the list is empty', async () => {
+    const effects = createEffects({
+      getCurrentAgentId: vi.fn(async () => ''),
+      listAgents: vi.fn(async () => []),
+    })
+    await expect(runChannelCommand('/agents', effects)).resolves.toBe('当前没有可用助手。')
+    await expect(runChannelCommand('/agents foo', effects)).resolves.toBe(
+      '未找到「foo」。\n当前没有可用助手。'
+    )
   })
 
   it('respects assertAgentsAllowed', async () => {

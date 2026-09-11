@@ -17,14 +17,37 @@ const log = debug('redis:debug')
 
 const REDIS_CONNECT_TIMEOUT_MS = 10_000
 const REDIS_COMMAND_TIMEOUT_MS = 10_000
+const REDIS_RETRY_MAX_DELAY_MS = 2000
+const FATAL_REDIS_AUTH_RE = /WRONGPASS|invalid username-password|user is disabled/i
+
+export const isFatalRedisAuthError = (error: unknown): boolean => {
+  const message = error instanceof Error ? error.message : String(error)
+  return FATAL_REDIS_AUTH_RE.test(message)
+}
+
+const nonEmpty = (value: string | undefined): string | undefined => {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : undefined
+}
+
+const ioredisAuthOptions = (config: RedisConfig) => {
+  const password = nonEmpty(config.password)
+  const username = nonEmpty(config.username)
+  return {
+    ...(password ? { password } : {}),
+    ...(username ? { username } : {}),
+  }
+}
 
 export class IoRedisRedisProvider implements BaseRedisProvider {
   private client: Redis | null = null
+  private loggedFatalAuth = false
 
   constructor(private config: RedisConfig) {}
 
   async initialize() {
     const IORedis = await import('ioredis')
+    let stopReconnect = false
 
     this.client = new IORedis.default(this.config.url, {
       commandTimeout: REDIS_COMMAND_TIMEOUT_MS,
@@ -33,19 +56,56 @@ export class IoRedisRedisProvider implements BaseRedisProvider {
       keyPrefix: this.config.prefix ? `${this.config.prefix}:` : undefined,
       lazyConnect: true,
       maxRetriesPerRequest: 2,
-      password: this.config.password,
+      retryStrategy: (times) => {
+        if (stopReconnect) return null
+        return Math.min(times * 50, REDIS_RETRY_MAX_DELAY_MS)
+      },
       tls: this.config.tls ? {} : undefined,
-      username: this.config.username,
+      ...ioredisAuthOptions(this.config),
     })
 
-    await this.client.connect()
-    await this.client.ping()
+    this.client.on('error', (error) => {
+      if (!isFatalRedisAuthError(error)) {
+        log('Redis client error: %O', error)
+        return
+      }
+
+      stopReconnect = true
+      if (this.loggedFatalAuth) return
+      this.loggedFatalAuth = true
+      console.error('[redis] authentication failed; stopped reconnecting. Check REDIS_USERNAME / REDIS_PASSWORD.')
+      log('Redis authentication failed: %O', error)
+    })
+
+    try {
+      await this.client.connect()
+      await this.client.ping()
+    } catch (error) {
+      if (isFatalRedisAuthError(error)) stopReconnect = true
+      this.stopClient()
+      throw error
+    }
 
     log('Connected to Redis provider with prefix "%s"', this.config.prefix)
   }
 
   async disconnect() {
-    await this.client?.quit()
+    const client = this.client
+    this.client = null
+    if (!client) return
+
+    try {
+      await client.quit()
+    } catch (error) {
+      log('Redis quit failed, forcing disconnect: %O', error)
+      client.disconnect()
+    }
+  }
+
+  private stopClient() {
+    const client = this.client
+    this.client = null
+    client?.disconnect()
   }
 
   private ensureClient(): Redis {

@@ -6,7 +6,7 @@ import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelB
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials, encryptCredentials, invalidateQQChat } from '@/libs/channels/qq'
 import type { QQConnectionMode } from '@/libs/channels/qq'
-import { isQQProviderId, qqChannelUnavailableReason, validateQQModel } from '@/libs/channels/qq/agentSupport'
+import { isQQProviderId, qqChannelByokUnavailableReason, validateQQModel } from '@/libs/channels/qq/agentSupport'
 import type { QQProviderId } from '@/libs/channels/qq/agentSupport'
 import { bindQQCredentials, QQBindingError } from '@/libs/channels/qq/binding'
 import { gatewayEnv } from '@/envs/gateway'
@@ -49,17 +49,20 @@ type ParsedQQChannelConfig =
   | { ok: true; agentId: string; model: string; provider: QQProviderId }
   | { ok: false; error: string; status: 400 }
 
-function parseChannelConfig(body: {
-  agentId?: string
-  model?: string
-  provider?: string
-}): ParsedQQChannelConfig | null {
+async function parseChannelConfig(
+  userId: string,
+  body: {
+    agentId?: string
+    model?: string
+    provider?: string
+  }
+): Promise<ParsedQQChannelConfig | null> {
   const agentId = body.agentId?.trim()
   const model = body.model?.trim()
   const provider = body.provider?.trim()
   if (!agentId || !model || !provider) return null
   if (!isQQProviderId(provider)) return { ok: false, error: '该 Provider 不支持 QQ 渠道', status: 400 }
-  const unavailable = qqChannelUnavailableReason(provider)
+  const unavailable = await qqChannelByokUnavailableReason(userId, provider)
   if (unavailable) return { ok: false, error: unavailable, status: 400 }
   const modelError = validateQQModel(provider, model)
   if (modelError) return { ok: false, error: modelError, status: 400 }
@@ -149,7 +152,7 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     await invalidateQQChat(existing.applicationId)
   }
 
-  const channelConfig = parseChannelConfig(body)
+  const channelConfig = await parseChannelConfig(userId, body)
   if (channelConfig?.ok === false) return jsonError(channelConfig.error, channelConfig.status)
 
   if (channelConfig) {

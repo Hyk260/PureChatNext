@@ -141,7 +141,7 @@ export function defineConfig() {
     },
     // 应用对外 URL，用于生成回调链接与 Cookie 域
     baseURL: appEnv.APP_URL,
-    // sign-out 等带 Cookie 的请求会校验 Origin；需与 CORS 的 ALLOWED_ORIGINS 保持一致
+    // sign-out 等带 Cookie 的请求会校验 Origin；与 CORS 共用 getAllowedOrigins（含 APP_URL）
     trustedOrigins: getAllowedOrigins(),
     // 会话签名与加密密钥
     secret: authEnv.AUTH_SECRET,

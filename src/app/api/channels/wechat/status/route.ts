@@ -5,7 +5,6 @@ import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/chan
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { isWechatGatewaySupported } from '@/libs/channels/wechat'
-import { getWechatProviderAvailability } from '@/libs/channels/wechat/agentSupport'
 import { ensureChannelGatewayRunning } from '@/server/channel-gateway'
 
 const log = debug('channel:wechat:status')
@@ -46,7 +45,6 @@ export const GET = withAuth(async (_request, { userId }) => {
       failedEventCount: 0,
       gatewaySupported,
       needsRebind: false,
-      providerAvailability: getWechatProviderAvailability(),
       runtimeStatus: 'stopped',
     })
   }
@@ -82,7 +80,6 @@ export const GET = withAuth(async (_request, { userId }) => {
     needsRebind: binding.needsRebind,
     model: binding.model,
     provider: binding.provider,
-    providerAvailability: getWechatProviderAvailability(),
     runtimeStatus,
   })
 })

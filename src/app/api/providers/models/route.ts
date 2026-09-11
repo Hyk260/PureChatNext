@@ -5,9 +5,10 @@ import {
   isSupportedProviderId,
   resolveApiKeyFromHeader,
   resolveModelsListBaseURL,
-  resolveProviderApiKey,
 } from '@/libs/ai-providers/resolveClient'
 import type { SupportedProviderId } from '@/libs/ai-providers/resolveClient'
+import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
+import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 import { ChatSDKError } from '@/libs/errors'
 
 export const maxDuration = 30
@@ -31,7 +32,7 @@ const BUILTIN_FALLBACK: Record<SupportedProviderId, Array<{ displayName: string;
 /**
  * POST /api/providers/models
  * 列出 Provider 模型（OpenAI 兼容 /models）
- * @param request - JSON `{ provider, apiKey?, baseURL? }`；可选 Header `Authorization: Bearer <api-key>`
+ * @param request - JSON `{ provider, baseURL? }`；密钥来自账号金库，可选 Header `Authorization: Bearer <api-key>` 或服务端 env
  */
 export async function POST(request: Request) {
   let body: {
@@ -51,17 +52,26 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api', 'Unsupported provider').toResponse()
   }
 
-  const apiKey = resolveProviderApiKey(provider, resolveApiKeyFromHeader(request), body.apiKey)
-  const baseURL = resolveModelsListBaseURL(provider, body.baseURL)
+  const userId = await getAuthenticatedUserId()
+  const credentials = await resolveUserProviderCredentials({
+    allowEnvFallback: true,
+    headerKey: resolveApiKeyFromHeader(request),
+    provider,
+    requestBaseURL: body.baseURL,
+    userId,
+  })
 
-  if (!apiKey) {
-    return new ChatSDKError('bad_request:api', `Missing API key for provider "${provider}"`).toResponse()
+  if (!credentials) {
+    const message = userId ? MISSING_USER_PROVIDER_SECRET_MESSAGE : `Missing API key for provider "${provider}"`
+    return new ChatSDKError('bad_request:api', message).toResponse()
   }
+
+  const baseURL = resolveModelsListBaseURL(provider, credentials.baseURL ?? body.baseURL)
 
   log('list models provider=%o baseURL=%o', provider, baseURL)
 
   try {
-    const models = await fetchOpenAICompatibleModels({ apiKey, baseURL })
+    const models = await fetchOpenAICompatibleModels({ apiKey: credentials.apiKey, baseURL })
     return Response.json({ fallback: false, models })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)

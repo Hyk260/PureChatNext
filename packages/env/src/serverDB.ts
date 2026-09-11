@@ -15,7 +15,7 @@ declare global {
       DATABASE_TEST_URL?: string
       /** PostgreSQL 连接字符串，用于 Drizzle 迁移与运行时连接。 */
       DATABASE_URL?: string
-      /** 敏感配置加密密钥，用于渠道凭证、`context_token` 与 API key 哈希。 */
+      /** 敏感配置加密密钥，用于渠道凭证、`context_token`、用户服务商密钥与 API key 哈希。 */
       KEY_VAULTS_SECRET?: string
       /** 遗留 Supabase 客户端项目 URL；仅调试时需要。 */
       NEXT_PUBLIC_SUPABASE_URL?: string
@@ -36,7 +36,7 @@ export type ServerDBEnv = {
   DATABASE_TEST_URL?: string
   /** PostgreSQL 连接字符串，用于 Drizzle 迁移与运行时连接 */
   DATABASE_URL?: string
-  /** 敏感配置加密密钥，用于渠道凭证、`context_token` 与 API key 哈希 */
+  /** 敏感配置加密密钥，用于渠道凭证、`context_token`、用户服务商密钥与 API key 哈希 */
   KEY_VAULTS_SECRET?: string
   /** 遗留 Supabase 客户端项目 URL；仅调试时需要 */
   NEXT_PUBLIC_SUPABASE_URL?: string

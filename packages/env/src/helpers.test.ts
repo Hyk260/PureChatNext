@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { optionalUrlEnv } from './helpers'
+import { nonEmptyEnv, optionalUrlEnv } from './helpers'
 
 describe('optionalUrlEnv', () => {
   const schema = optionalUrlEnv()
@@ -21,5 +21,18 @@ describe('optionalUrlEnv', () => {
     expect(() => schema.parse('localhost:8180')).toThrow()
     expect(() => schema.parse('ftp://searxng:8080')).toThrow()
     expect(() => schema.parse('not-a-url')).toThrow()
+  })
+})
+
+describe('nonEmptyEnv', () => {
+  it('treats missing, empty, and whitespace as undefined', () => {
+    expect(nonEmptyEnv(undefined)).toBeUndefined()
+    expect(nonEmptyEnv('')).toBeUndefined()
+    expect(nonEmptyEnv('   ')).toBeUndefined()
+  })
+
+  it('returns trimmed non-empty values', () => {
+    expect(nonEmptyEnv('purechat')).toBe('purechat')
+    expect(nonEmptyEnv('  secret  ')).toBe('secret')
   })
 })

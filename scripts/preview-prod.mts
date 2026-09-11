@@ -6,7 +6,7 @@
  * - Env 文件加载顺序（后者覆盖前者）：
  *   `.env` → `.env.production` → `.env.local` → `.env.production.local`
  * - 调用方显式传入的环境变量优先于 Env 文件
- * - 强制覆写本地可访问地址：`APP_URL=http://localhost:<port>`，并确保 `ALLOWED_ORIGINS` 含该 origin
+ * - 强制覆写本地可访问地址：`APP_URL=http://localhost:<port>`（CORS 会自动包含该 origin）
  * - 默认端口 `3210`（与 `pnpm start` 一致）
  * - 默认顺序：build → 校验构建产物 → db:migrate → next start → /api/health 就绪检测
  *

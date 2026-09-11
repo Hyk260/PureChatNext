@@ -3,8 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   getAiModel: vi.fn(),
-  isPureChatRuntimeAvailable: vi.fn(),
-  resolveProviderApiKey: vi.fn(),
 }))
 
 vi.mock('@pure/model-bank', async (importOriginal) => {
@@ -15,28 +13,24 @@ vi.mock('@pure/model-bank', async (importOriginal) => {
   }
 })
 vi.mock('@/server/purechat', () => ({
-  isPureChatRuntimeAvailable: mocks.isPureChatRuntimeAvailable,
+  isPureChatRuntimeAvailable: vi.fn(() => true),
 }))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
   isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek',
-  resolveProviderApiKey: mocks.resolveProviderApiKey,
+}))
+vi.mock('@pure/database/models/userProviderSecret', () => ({
+  UserProviderSecretModel: class {},
 }))
 
 import {
-  isWechatAgentUsable,
   normalizeWechatAgentProvider,
   resolveWechatAgentModelId,
-  wechatAgentUnavailableReason,
   wechatModelSupportsVision,
 } from '../agentSupport'
 
 describe('wechat agentSupport', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.isPureChatRuntimeAvailable.mockReturnValue(true)
-    mocks.resolveProviderApiKey.mockImplementation((provider: string) =>
-      provider === 'openai' || provider === 'deepseek' ? `${provider}-key` : undefined
-    )
     mocks.getAiModel.mockReturnValue({ abilities: { vision: true } })
   })
 
@@ -51,19 +45,6 @@ describe('wechat agentSupport', () => {
     expect(resolveWechatAgentModelId('openai', undefined)).toBe('gpt-5.4-mini')
     expect(resolveWechatAgentModelId('deepseek', '')).toBe('deepseek-v4-flash')
     expect(resolveWechatAgentModelId('purechat', 'claude-sonnet-4-6')).toBe('claude-sonnet-4-6')
-  })
-
-  it('marks purechat usable only when runtime is available', () => {
-    expect(isWechatAgentUsable('purechat')).toBe(true)
-    mocks.isPureChatRuntimeAvailable.mockReturnValue(false)
-    expect(isWechatAgentUsable('purechat')).toBe(false)
-    expect(wechatAgentUnavailableReason('purechat')).toBe('服务器未启用 PureChat 或未配置 AI Gateway 密钥')
-  })
-
-  it('rejects unsupported providers on bind', () => {
-    expect(wechatAgentUnavailableReason('anthropic')).toBe('该 Agent 的 Provider 不支持微信渠道')
-    expect(wechatAgentUnavailableReason('purechat')).toBeNull()
-    expect(wechatAgentUnavailableReason('openai')).toBeNull()
   })
 
   it('checks vision ability by model card', () => {

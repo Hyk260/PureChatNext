@@ -3,7 +3,7 @@ import type { ModelProviderId } from '@pure/model-bank'
 
 import {
   CHANNEL_PROVIDER_IDS,
-  channelProviderUnavailableReason,
+  channelProviderByokUnavailableReason,
   defaultChannelModel,
   isChannelProviderId,
   normalizeChannelProvider,
@@ -28,15 +28,6 @@ export function isWechatProviderId(provider: string): provider is WechatProvider
   return isChannelProviderId(provider)
 }
 
-export function getWechatProviderAvailability(): Record<WechatProviderId, { available: boolean; reason?: string }> {
-  return Object.fromEntries(
-    WECHAT_PROVIDER_IDS.map((provider) => {
-      const reason = wechatAgentUnavailableReason(provider)
-      return [provider, { available: !reason, ...(reason ? { reason } : {}) }]
-    })
-  ) as Record<WechatProviderId, { available: boolean; reason?: string }>
-}
-
 export function validateWechatModel(provider: WechatProviderId, model: string): string | null {
   return validateChannelModel(provider, model)
 }
@@ -45,15 +36,10 @@ export function getEnabledWechatModels(provider: WechatProviderId) {
   return getProviderChatModels(provider as ModelProviderId).filter((model) => model.enabled !== false)
 }
 
-export function isWechatAgentUsable(provider: string | null | undefined): boolean {
-  return !wechatAgentUnavailableReason(provider)
-}
-
-export function wechatAgentUnavailableReason(provider: string | null | undefined): string | null {
-  const reason = channelProviderUnavailableReason(provider, '微信渠道')
-  return reason === '该 Provider 不支持微信渠道' ? '该 Agent 的 Provider 不支持微信渠道' : reason
-}
-
 export function wechatModelSupportsVision(provider: string, modelId: string): boolean {
   return Boolean(getAiModel(provider as ModelProviderId, modelId)?.abilities?.vision)
+}
+
+export function wechatChannelByokUnavailableReason(userId: string, provider: string | null | undefined) {
+  return channelProviderByokUnavailableReason(userId, provider, '微信渠道')
 }

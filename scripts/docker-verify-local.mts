@@ -10,6 +10,7 @@ import { exportJWK, generateKeyPair } from 'jose'
 
 const root = path.resolve(import.meta.dirname, '..')
 const composeFile = path.join(root, 'docker-compose/deploy/docker-compose.yml')
+const verifyComposeFile = path.join(root, 'docker-compose/deploy/docker-compose.verify.yml')
 const templateFile = path.join(root, 'docker-compose/deploy/.env.example')
 const keep = process.argv.includes('--keep')
 const skipBuild = process.argv.includes('--skip-build')
@@ -24,10 +25,20 @@ const platform =
 const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'purechat-docker-verify-'))
 const envFile = path.join(tempRoot, '.env')
 const project = `purechat-verify-${randomBytes(6).toString('hex')}`
-const persistenceKey = `docker-verify-${randomBytes(8).toString('hex')}`
 let composeEnv: NodeJS.ProcessEnv | undefined
 
 type CommandOptions = { allowFailure?: boolean; capture?: boolean; redact?: string[] }
+
+const composeBaseArgs = (...args: string[]) => [
+  'compose',
+  '--project-name',
+  project,
+  '--env-file',
+  envFile,
+  '--file',
+  composeFile,
+  ...args,
+]
 
 const composeArgs = (...args: string[]) => [
   'compose',
@@ -37,6 +48,8 @@ const composeArgs = (...args: string[]) => [
   envFile,
   '--file',
   composeFile,
+  '--file',
+  verifyComposeFile,
   ...args,
 ]
 
@@ -98,15 +111,12 @@ async function createEnv() {
     __GENERATE_KEY_VAULTS_SECRET__: secret(),
     __GENERATE_POSTGRES_PASSWORD__: secret(),
     __GENERATE_REDIS_PASSWORD__: secret(),
-    __GENERATE_RUSTFS_ACCESS_KEY__: `verify-${secret(12)}`,
-    __GENERATE_RUSTFS_SECRET__: secret(),
-    __GENERATE_SEARXNG_SECRET__: secret(),
   }
   let contents = Object.entries(replacements).reduce(
     (value, [placeholder, replacement]) => value.replaceAll(placeholder, replacement),
     template
   )
-  contents = `${contents}\nDEPLOY_ENV_FILE=${envFile}\nAPP_PORT=${port}\nAPP_URL=http://127.0.0.1:${port}\nALLOWED_ORIGINS=http://127.0.0.1:${port}\nCHANNEL_GATEWAY_ENABLED=0\n`
+  contents = `${contents}\nDEPLOY_ENV_FILE=${envFile}\nAPP_PORT=${port}\nAPP_URL=http://127.0.0.1:${port}\nCHANNEL_GATEWAY_ENABLED=0\n`
   await writeFile(envFile, contents, { encoding: 'utf8', mode: 0o600 })
   await chmod(envFile, 0o600)
   const isolatedEnv = Object.fromEntries(
@@ -160,155 +170,82 @@ function inspectContainer(service: string) {
   }
 }
 
-function serviceNetworkNames(networks: unknown) {
-  return Array.isArray(networks) ? networks : Object.keys(networks ?? {})
-}
-
 function assertComposeDefinition() {
-  const config = JSON.parse(output('docker', composeArgs('config', '--format', 'json'))) as {
-    services: Record<string, { container_name?: string; networks?: unknown; image?: string }>
+  const production = JSON.parse(output('docker', composeBaseArgs('config', '--format', 'json'))) as {
+    services: Record<string, { extra_hosts?: string[] | Record<string, string>; networks?: unknown }>
     networks: Record<string, { internal?: boolean }>
   }
-  for (const [service, definition] of Object.entries(config.services)) {
+  const serviceNames = Object.keys(production.services).sort()
+  if (serviceNames.join(',') !== 'app') {
+    throw new Error(`生产 Compose 只能包含 app，实际为: ${serviceNames.join(',')}`)
+  }
+  const extraHosts = production.services.app?.extra_hosts
+  const extraHostValues = Array.isArray(extraHosts)
+    ? extraHosts
+    : Object.entries(extraHosts ?? {}).map(([host, ip]) => `${host}:${ip}`)
+  if (!extraHostValues.some((host) => String(host).startsWith('host.docker.internal'))) {
+    throw new Error('app 必须配置 extra_hosts host.docker.internal')
+  }
+  if (production.networks['data-network']) throw new Error('生产 Compose 不应再包含 data-network')
+  if (production.networks['app-network']?.internal) throw new Error('app-network 必须允许应用出网（云 S3 / 搜索 API）')
+
+  const stacked = JSON.parse(output('docker', composeArgs('config', '--format', 'json'))) as {
+    services: Record<string, { container_name?: string; networks?: unknown; image?: string }>
+  }
+  for (const [service, definition] of Object.entries(stacked.services)) {
     if (definition.container_name) throw new Error(`${service} 不得设置 container_name`)
   }
-  const dataMembers = Object.entries(config.services)
-    .filter(([, definition]) => serviceNetworkNames(definition.networks).includes('data-network'))
-    .map(([service]) => service)
-    .sort()
-  const appMembers = Object.entries(config.services)
-    .filter(([, definition]) => serviceNetworkNames(definition.networks).includes('app-network'))
-    .map(([service]) => service)
-    .sort()
-  if (dataMembers.join(',') !== 'app,postgresql,redis,rustfs') throw new Error(`data-network 成员错误: ${dataMembers}`)
-  if (appMembers.join(',') !== 'app,searxng') throw new Error(`app-network 成员错误: ${appMembers}`)
-  if (!config.networks['data-network']?.internal) throw new Error('data-network 必须 internal')
-  if (config.networks['app-network']?.internal) throw new Error('app-network 必须允许 app 到搜索服务的出网')
-  for (const service of ['postgresql', 'redis', 'rustfs', 'searxng']) {
-    if (!config.services[service]?.image?.includes('@sha256:')) {
-      throw new Error(`${service} 的生产镜像必须固定多架构 digest`)
+  const stackedNames = Object.keys(stacked.services).sort()
+  if (stackedNames.join(',') !== 'app,postgresql,redis') {
+    throw new Error(`验证 overlay 服务错误: ${stackedNames.join(',')}`)
+  }
+  for (const service of ['postgresql', 'redis']) {
+    if (!stacked.services[service]?.image?.includes('@sha256:')) {
+      throw new Error(`${service} 的验证镜像必须固定多架构 digest`)
     }
   }
 }
 
 async function assertSecurity(contents: string, port: number) {
-  const expectedUsers: Record<string, string> = {
-    app: '1001:1001',
-    redis: 'redis',
-    rustfs: 'rustfs:rustfs',
-    searxng: 'searxng:searxng',
+  const app = inspectContainer('app')
+  const host = app.value.HostConfig
+  if (app.value.Config.User !== '1001:1001') throw new Error(`app user=${app.value.Config.User}，期望 1001:1001`)
+  if (host.Privileged) throw new Error('app 不得以 privileged 运行')
+  if (!host.ReadonlyRootfs) throw new Error('app rootfs 不是只读')
+  if (!host.CapDrop?.some((cap) => cap.toUpperCase() === 'ALL')) throw new Error('app 未 drop ALL capabilities')
+  if (!host.SecurityOpt?.some((option) => option === 'no-new-privileges:true')) {
+    throw new Error('app 未启用 no-new-privileges')
   }
-  for (const service of ['app', 'postgresql', 'redis', 'rustfs', 'searxng']) {
-    const container = inspectContainer(service)
-    const host = container.value.HostConfig
-    if (service === 'postgresql') {
-      if (container.value.Config.User !== '0:0') throw new Error('PostgreSQL 必须由官方 entrypoint 短暂以 root 启动')
-    } else if (container.value.Config.User !== expectedUsers[service]) {
-      throw new Error(`${service} user=${container.value.Config.User}，期望 ${expectedUsers[service]}`)
-    }
-    if (host.Privileged) throw new Error(`${service} 不得以 privileged 运行`)
-    if (!host.ReadonlyRootfs) throw new Error(`${service} rootfs 不是只读`)
-    if (!host.CapDrop?.some((cap) => cap.toUpperCase() === 'ALL'))
-      throw new Error(`${service} 未 drop ALL capabilities`)
-    if (!host.SecurityOpt?.some((option) => option === 'no-new-privileges:true')) {
-      throw new Error(`${service} 未启用 no-new-privileges`)
-    }
-    if (
-      !host.Memory ||
-      host.Memory <= 0 ||
-      !host.NanoCpus ||
-      host.NanoCpus <= 0 ||
-      !host.PidsLimit ||
-      host.PidsLimit <= 0
-    ) {
-      throw new Error(`${service} 未配置有效资源上限`)
-    }
-    if (container.value.Config.Env?.some((item) => item.includes('__GENERATE_'))) {
-      throw new Error(`${service} 仍包含环境变量占位符`)
-    }
+  if (!host.Memory || host.Memory !== 512 * 1024 * 1024) throw new Error('app memory limit 与 2g 默认档案不符')
+  if (!host.NanoCpus || host.NanoCpus <= 0 || !host.PidsLimit || host.PidsLimit <= 0) {
+    throw new Error('app 未配置有效资源上限')
+  }
+  if (app.value.Config.Env?.some((item) => item.includes('__GENERATE_'))) {
+    throw new Error('app 仍包含环境变量占位符')
   }
 
-  const expectedMemory: Record<string, number> = {
-    app: 1024 * 1024 * 1024,
-    postgresql: 1024 * 1024 * 1024,
-    redis: 768 * 1024 * 1024,
-    rustfs: 768 * 1024 * 1024,
-    searxng: 768 * 1024 * 1024,
+  const appBindings = app.value.NetworkSettings?.Ports?.['3210/tcp'] ?? []
+  if (appBindings.length !== 1 || appBindings[0]?.HostIp !== '127.0.0.1' || appBindings[0]?.HostPort !== String(port)) {
+    throw new Error(`app 端口未唯一限制到 127.0.0.1:${port}`)
   }
-  for (const service of Object.keys(expectedMemory)) {
-    if (inspectContainer(service).value.HostConfig.Memory !== expectedMemory[service]) {
-      throw new Error(`${service} memory limit 与生产基线不符`)
-    }
+  if (output('docker', composeArgs('exec', '-T', 'app', 'id', '-u')) !== '1001') {
+    throw new Error('app runtime UID 不是 1001')
   }
 
-  const postgresCaps = inspectContainer('postgresql').value.HostConfig.CapAdd ?? []
-  const allowedPostgresCaps = ['CHOWN', 'DAC_OVERRIDE', 'FOWNER', 'SETGID', 'SETUID']
-  if (postgresCaps.some((cap) => !allowedPostgresCaps.includes(cap.toUpperCase().replace(/^CAP_/, '')))) {
-    throw new Error(`PostgreSQL capabilities 超出最小集合: ${postgresCaps}`)
-  }
-  const redis = inspectContainer('redis').value
-  const redisCommand = redis.Config.Cmd?.join(' ') ?? ''
-  if (
-    !redisCommand.includes('REDIS_PASSWORD') ||
-    !redisCommand.includes('noeviction') ||
-    !redisCommand.includes('384mb')
-  ) {
-    throw new Error('Redis 未通过 shell 环境变量启用密码、384mb noeviction')
-  }
-  if (!redisCommand.includes('--requirepass')) throw new Error('Redis 未启用 requirepass')
-  const searx = inspectContainer('searxng').value
-  if (!searx.Config.Env?.includes('FORCE_OWNERSHIP=false')) throw new Error('SearXNG 未设置 FORCE_OWNERSHIP=false')
-  if (!searx.Mounts?.some((mount) => mount.Destination === '/var/cache/searxng' && mount.RW)) {
-    throw new Error('SearXNG 缓存未使用持久化可写卷')
-  }
-
-  for (const service of ['postgresql', 'redis', 'rustfs', 'searxng']) {
+  for (const service of ['postgresql', 'redis']) {
     const ports = inspectContainer(service).value.NetworkSettings?.Ports ?? {}
     if (Object.values(ports).some((bindings) => bindings && bindings.length > 0)) {
       throw new Error(`${service} 不应发布任何端口到宿主机`)
     }
   }
-  const appBindings = inspectContainer('app').value.NetworkSettings?.Ports?.['3210/tcp'] ?? []
-  if (appBindings.length !== 1 || appBindings[0]?.HostIp !== '127.0.0.1' || appBindings[0]?.HostPort !== String(port)) {
-    throw new Error(`app 端口未唯一限制到 127.0.0.1:${port}`)
-  }
 
-  const runtimeUid = (service: string) => output('docker', composeArgs('exec', '-T', service, 'id', '-u'))
-  if (runtimeUid('app') !== '1001') throw new Error('app runtime UID 不是 1001')
-  if (runtimeUid('redis') !== '999') throw new Error('redis runtime UID 不是 999')
-  if (runtimeUid('rustfs') !== '10001') throw new Error('rustfs runtime UID 不是 10001')
-  if (runtimeUid('searxng') !== '977') throw new Error('searxng runtime UID 不是 977')
-  const postgresTop = output('docker', ['top', inspectContainer('postgresql').id, '-eo', 'pid,uid,user,args'])
-  if (!postgresTop.split('\n').some((line) => /^\s*\d+\s+70\s+/.test(line) && /postgres/i.test(line))) {
-    throw new Error(`PostgreSQL 主进程未以 UID 70 运行:\n${postgresTop}`)
-  }
-
-  const dataNetwork =
-    JSON.parse(output('docker', ['network', 'inspect', `${project}_data-network`]))[0]?.Containers ?? {}
-  if (Object.keys(dataNetwork).length !== 4) throw new Error('data-network 成员不符合分段预期')
-  const appNetwork = JSON.parse(output('docker', ['network', 'inspect', `${project}_app-network`]))[0]?.Containers ?? {}
-  if (Object.keys(appNetwork).length !== 2) throw new Error('app-network 成员不符合分段预期')
-
-  const requiredSecrets = [
-    'AUTH_SECRET',
-    'KEY_VAULTS_SECRET',
-    'JWKS_KEY',
-    'CRON_SECRET',
-    'POSTGRES_PASSWORD',
-    'REDIS_PASSWORD',
-    'RUSTFS_SECRET_KEY',
-    'SEARXNG_SECRET',
-  ]
+  const requiredSecrets = ['AUTH_SECRET', 'KEY_VAULTS_SECRET', 'JWKS_KEY', 'CRON_SECRET', 'POSTGRES_PASSWORD', 'REDIS_PASSWORD']
   for (const name of requiredSecrets) envValue(contents, name)
-  const secrets = ['REDIS_PASSWORD', 'RUSTFS_ACCESS_KEY', 'RUSTFS_SECRET_KEY'].map((name) => envValue(contents, name))
-  for (const service of ['app', 'postgresql', 'redis', 'rustfs', 'searxng']) {
-    const commandLine = inspectContainer(service).value.Config.Cmd?.join(' ') ?? ''
-    if (secrets.some((value) => commandLine.includes(value))) {
-      throw new Error(`${service} 的 Config.Cmd 暴露了运行时凭证`)
-    }
-  }
+  const redisPassword = envValue(contents, 'REDIS_PASSWORD')
+  const commandLine = inspectContainer('app').value.Config.Cmd?.join(' ') ?? ''
+  if (commandLine.includes(redisPassword)) throw new Error('app 的 Config.Cmd 暴露了 Redis 凭证')
   const logs = output('docker', composeArgs('logs', '--no-color'))
-  if (secrets.some((value) => logs.includes(value))) throw new Error('容器日志暴露了 Redis/RustFS 凭证')
+  if (logs.includes(redisPassword)) throw new Error('容器日志暴露了 Redis 凭证')
   const mode = (await stat(envFile)).mode & 0o777
   if (mode !== 0o600) throw new Error(`临时环境文件权限为 ${mode.toString(8)}，期望 600`)
 }
@@ -328,11 +265,10 @@ async function fetchHealth(port: number) {
     throw new Error(`健康检查未返回 status=ok: ${JSON.stringify(payload)}`)
   }
   const checks = (payload as { checks?: Record<string, string> }).checks
-  for (const dependency of ['database', 'redis', 'storage', 'search']) {
-    if (checks?.[dependency] !== 'ok') {
-      throw new Error(`健康检查依赖 ${dependency} 未返回 ok: ${JSON.stringify(checks?.[dependency])}`)
-    }
-  }
+  if (checks?.database !== 'ok') throw new Error(`健康检查 database 未返回 ok: ${JSON.stringify(checks?.database)}`)
+  if (checks?.redis !== 'ok') throw new Error(`健康检查 redis 未返回 ok: ${JSON.stringify(checks?.redis)}`)
+  if (checks?.storage !== 'skipped') throw new Error(`生产默认不捆绑对象存储，storage 应为 skipped: ${JSON.stringify(checks?.storage)}`)
+  if (checks?.search !== 'skipped') throw new Error(`生产默认不捆绑 SearXNG，search 应为 skipped: ${JSON.stringify(checks?.search)}`)
   const gateway = (payload as { gateway?: { enabled?: boolean } }).gateway
   if (gateway?.enabled !== false) throw new Error(`隔离验证必须关闭 Channel Gateway: ${JSON.stringify(gateway)}`)
   return payload
@@ -431,52 +367,17 @@ function assertPostgresData() {
   if (value !== 'ok') throw new Error(`PostgreSQL 数据未持久化: ${value}`)
 }
 
-function s3Command(mode: 'write' | 'read' | 'delete', key: string) {
-  command(
-    'docker',
-    composeArgs(
-      'exec',
-      '-T',
-      '-e',
-      `S3_VERIFY_MODE=${mode}`,
-      '-e',
-      `S3_VERIFY_OBJECT=${key}`,
-      'app',
-      'node',
-      '/app/docker-s3-init.mjs'
-    )
-  )
-}
-
-function assertSearch() {
-  command(
-    'docker',
-    composeArgs(
-      'exec',
-      '-T',
-      'app',
-      'node',
-      '-e',
-      "fetch('http://searxng:8080/search?q=purechat&format=json').then(async (response) => { const body = await response.text(); if (!response.ok) throw new Error(body); JSON.parse(body) })"
-    )
-  )
-}
-
 function scoutGate() {
-  for (const service of ['app', 'postgresql', 'redis', 'rustfs', 'searxng']) {
-    const { id } = inspectContainer(service)
-    const image = output('docker', ['inspect', id, '--format', '{{.Config.Image}}'])
-    command('docker', ['scout', 'cves', '--only-severity', 'critical,high', '--exit-code', `local://${image}`])
-  }
+  const { id } = inspectContainer('app')
+  const image = output('docker', ['inspect', id, '--format', '{{.Config.Image}}'])
+  command('docker', ['scout', 'cves', '--only-severity', 'critical,high', '--exit-code', `local://${image}`])
 }
 
-async function smokeAndPersistence(contents: string, port: number, key: string) {
+async function smokeAndPersistence(contents: string, port: number) {
   await waitForHealth(port)
   const count = migrationCount()
   const password = envValue(contents, 'REDIS_PASSWORD')
   assertRedisAuth(password)
-  s3Command('write', key)
-  assertSearch()
   writePostgresData()
 
   command('docker', composeArgs('restart'))
@@ -485,8 +386,6 @@ async function smokeAndPersistence(contents: string, port: number, key: string) 
   if (migrationCount() !== count) throw new Error('PostgreSQL 迁移记录在重启后发生变化')
   if (redisCli(password, 'get', 'docker-verify:persistence').stdout !== 'ok') throw new Error('Redis 数据未持久化')
   assertPostgresData()
-  s3Command('read', key)
-  s3Command('delete', key)
 }
 
 async function main() {
@@ -500,7 +399,7 @@ async function main() {
     started = true
     command('docker', composeArgs('up', '-d', '--wait'))
     await assertSecurity(contents, port)
-    await smokeAndPersistence(contents, port, persistenceKey)
+    await smokeAndPersistence(contents, port)
     if (skipScan) {
       console.warn('⚠️ 已显式跳过镜像漏洞门禁；此选项仅供隔离环境排障，不得用于生产验收')
     } else if (externalScan) {

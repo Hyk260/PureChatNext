@@ -53,8 +53,6 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 export interface ModelSwitchMenuProps {
-  /** Limit listed providers (e.g. channel availability). Unset = all enabled settings providers. */
-  allowedProviders?: readonly string[]
   children: ReactNode
   disabled?: boolean
   openOnHover?: boolean
@@ -70,7 +68,6 @@ export interface ModelSwitchMenuProps {
  */
 const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
   ({
-    allowedProviders,
     children,
     disabled,
     openOnHover = true,
@@ -95,7 +92,6 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
       const groups: EnabledProviderGroup[] = []
 
       for (const providerId of SETTINGS_PROVIDER_IDS) {
-        if (allowedProviders && !allowedProviders.includes(providerId)) continue
         const config = configs[providerId]
         if (!config?.enabled) continue
 
@@ -120,7 +116,6 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
       }
 
       if (groups.length === 0) {
-        if (allowedProviders) return []
         return [
           {
             id: DEFAULT_HOME_MODEL.provider,
@@ -133,7 +128,7 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
       }
 
       return groups
-    }, [allowedProviders, configs])
+    }, [configs])
 
     const availableModels = useMemo(() => enabledProviders.flatMap((group) => group.models), [enabledProviders])
 

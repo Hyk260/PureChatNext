@@ -5,11 +5,12 @@ import { Alert, Button, Flex, ModelIcon, Select } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
+import { apiFetch } from '@/utils/apiFetch'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useEffect, useMemo, useState } from 'react'
 
-import { getSettingsProviderMeta, PROVIDER_ENV_API_KEY_NAME } from '../../const'
-import { loadProviderEnvKeyFlags, providerHasEnvApiKey } from '../../envKeys'
+import { getSettingsProviderMeta } from '../../const'
+import { secretForProvider, useProviderSecrets } from '../../secretsApi'
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
 import type { ProviderId } from '../../types'
 
@@ -20,15 +21,18 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 interface CheckerProps {
+  ensureSecret?: () => Promise<boolean>
   provider: ProviderId
 }
 
-const Checker = memo<CheckerProps>(({ provider }) => {
+const Checker = memo<CheckerProps>(({ ensureSecret, provider }) => {
   const { modal } = useApp()
   const config = useProviderConfigStore((s) => s.configs[provider])
   const setCheckModel = useProviderConfigStore((s) => s.setCheckModel)
   const meta = getSettingsProviderMeta(provider)
 
+  const { data: secrets } = useProviderSecrets()
+  const hasVaultKey = Boolean(secretForProvider(secrets, provider))
   const models = useMemo(() => config?.models ?? [], [config?.models])
   const persistedCheckModel = config?.checkModel ?? models[0]?.id ?? ''
 
@@ -43,10 +47,6 @@ const Checker = memo<CheckerProps>(({ provider }) => {
     setError(undefined)
   }, [persistedCheckModel, provider])
 
-  useEffect(() => {
-    void loadProviderEnvKeyFlags().catch(() => {})
-  }, [])
-
   const sortedModelIds = useMemo(() => {
     const next = [...models]
     next.sort((a, b) => {
@@ -59,18 +59,13 @@ const Checker = memo<CheckerProps>(({ provider }) => {
   }, [checkModel, models])
 
   const checkConnection = async () => {
-    const apiKey = config?.apiKey.trim() ?? ''
-    const hasBrowserKey = Boolean(apiKey)
-
-    if (!hasBrowserKey) {
-      const hasEnvKey = await providerHasEnvApiKey(provider)
-      if (hasEnvKey === false) {
-        modal.error({
-          title: '缺少 API Key',
-          content: `浏览器与环境变量均未配置 ${meta.name} API Key。请先填写，或在服务端设置 ${PROVIDER_ENV_API_KEY_NAME[provider]}。`,
-        })
-        return
-      }
+    const hasSavedKey = ensureSecret ? await ensureSecret() : hasVaultKey
+    if (!hasSavedKey) {
+      modal.error({
+        title: '缺少 API Key',
+        content: `尚未保存 ${meta.name} API Key。请先填写，离开输入框后会自动保存。`,
+      })
+      return
     }
 
     setPass(false)
@@ -79,19 +74,14 @@ const Checker = memo<CheckerProps>(({ provider }) => {
 
     try {
       const baseURL = config?.baseURL.trim() ?? ''
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      }
-      if (apiKey) headers.Authorization = `Bearer ${apiKey}`
-
-      const response = await fetch('/api/providers/check', {
+      const response = await apiFetch('/api/providers/check', {
         body: JSON.stringify({
           baseURL: baseURL || undefined,
           model: checkModel,
           provider,
           timeoutMs: DEFAULT_PROVIDER_CHECK_TIMEOUT_MS,
         }),
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       })
 

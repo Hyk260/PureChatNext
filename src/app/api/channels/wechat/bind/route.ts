@@ -10,7 +10,7 @@ import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import {
   isWechatProviderId,
   validateWechatModel,
-  wechatAgentUnavailableReason,
+  wechatChannelByokUnavailableReason,
 } from '@/libs/channels/wechat/agentSupport'
 import {
   encryptCredentials,
@@ -47,7 +47,7 @@ async function validateConfiguration(userId: string, config: z.infer<typeof patc
   const agent = await new AgentModel(userId).findVisibleById(config.agentId)
   if (!agent) return { error: 'Agent not found', status: 404 } as const
   if (!isWechatProviderId(config.provider)) return { error: '该 Provider 不支持微信渠道', status: 400 } as const
-  const unavailable = wechatAgentUnavailableReason(config.provider)
+  const unavailable = await wechatChannelByokUnavailableReason(userId, config.provider)
   if (unavailable) return { error: unavailable, status: 400 } as const
   const modelError = validateWechatModel(config.provider, config.model)
   if (modelError) return { error: modelError, status: 400 } as const

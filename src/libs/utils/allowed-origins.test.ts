@@ -42,4 +42,24 @@ describe('getAllowedOrigins / isAllowedOrigin', () => {
     expect(isAllowedOrigin('http://127.0.0.1:5176')).toBe(true)
     expect(isAllowedOrigin('purechat://renderer')).toBe(true)
   })
+
+  it('treats APP_URL as an allowed origin when ALLOWED_ORIGINS is omitted', async () => {
+    mocks.appEnv.APP_URL = 'http://localhost:3210'
+    const { getAllowedOrigins, isAllowedOrigin } = await import('./allowed-origins')
+
+    expect(getAllowedOrigins()).toContain('http://localhost:3210')
+    expect(isAllowedOrigin('http://localhost:3210')).toBe(true)
+  })
+
+  it('merges extra ALLOWED_ORIGINS without replacing APP_URL', async () => {
+    mocks.appEnv.APP_URL = 'https://chat.example.com'
+    mocks.appEnv.ALLOWED_ORIGINS = 'https://www.example.com'
+    const { getAllowedOrigins, isAllowedOrigin } = await import('./allowed-origins')
+
+    expect(isAllowedOrigin('https://chat.example.com')).toBe(true)
+    expect(isAllowedOrigin('https://www.example.com')).toBe(true)
+    expect(getAllowedOrigins()).toEqual(
+      expect.arrayContaining(['https://chat.example.com', 'https://www.example.com'])
+    )
+  })
 })

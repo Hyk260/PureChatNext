@@ -1,8 +1,10 @@
+import { UserProviderSecretModel } from '@pure/database/models/userProviderSecret'
 import { PURECHAT_PROVIDER_ID } from '@pure/const'
 import { getAiModel, PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 
-import { isSupportedProviderId, resolveProviderApiKey } from '@/libs/ai-providers/resolveClient'
+import { isSupportedProviderId } from '@/libs/ai-providers/resolveClient'
+import { MISSING_USER_PROVIDER_SECRET_MESSAGE } from '@/libs/ai-providers/userSecrets'
 import { isPureChatRuntimeAvailable } from '@/server/purechat'
 
 export const CHANNEL_PROVIDER_IDS = ['purechat', 'openai', 'deepseek'] as const
@@ -48,7 +50,16 @@ export class ChannelModelResolver {
     if (!isChannelProviderId(normalized) || !isSupportedProviderId(normalized)) {
       return `该 Provider 不支持${channelName}`
     }
-    return resolveProviderApiKey(normalized, undefined, undefined) ? null : `服务器未配置 ${normalized} 渠道密钥`
+    return null
+  }
+
+  async byokUnavailableReason(userId: string, provider: string | null | undefined, channelName = '渠道') {
+    const structural = this.unavailableReason(provider, channelName)
+    if (structural) return structural
+    const normalized = normalizeChannelProvider(provider)
+    if (normalized === PURECHAT_PROVIDER_ID) return null
+    const hasSecret = await new UserProviderSecretModel().has(userId, normalized)
+    return hasSecret ? null : MISSING_USER_PROVIDER_SECRET_MESSAGE
   }
 
   resolve(params: ChannelModelResolverParams): ChannelModelConfig {
@@ -67,6 +78,14 @@ export function channelProviderUnavailableReason(
   channelName = '渠道'
 ): string | null {
   return channelModelResolver.unavailableReason(provider, channelName)
+}
+
+export function channelProviderByokUnavailableReason(
+  userId: string,
+  provider: string | null | undefined,
+  channelName = '渠道'
+): Promise<string | null> {
+  return channelModelResolver.byokUnavailableReason(userId, provider, channelName)
 }
 
 export function resolveChannelModelConfig(params: ChannelModelResolverParams): ChannelModelConfig {

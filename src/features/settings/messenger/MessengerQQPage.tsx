@@ -27,6 +27,7 @@ import {
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
+import { MessengerProviderSecretHint } from './MessengerProviderSecretHint'
 import { QQConnectButton } from './QQConnectModal'
 import { fetchQQStatus, unbindQQ, updateQQConfiguration } from './qqApi'
 import type { QQProviderId, QQStatus } from './qqApi'
@@ -312,6 +313,7 @@ const MessengerQQPage = memo(() => {
           provider={provider}
           onSelect={handleModelSelect}
         />
+        <MessengerProviderSecretHint provider={provider} />
 
         {renderQqStatusBanner({ connected, gatewaySupported, message, showConnect, status: status ?? null })}
       </Flex>

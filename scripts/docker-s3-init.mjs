@@ -20,6 +20,11 @@ const sleep = (duration) => new Promise((resolve) => setTimeout(resolve, duratio
 
 const autoCreateBucket = /^(1|true)$/i.test(process.env.S3_AUTO_CREATE_BUCKET || '')
 
+if (!process.env.S3_ENDPOINT) {
+  console.log('[S3] S3_ENDPOINT is not set; skipping bucket initialization')
+  process.exit(0)
+}
+
 if (!autoCreateBucket) {
   console.log('[S3] automatic bucket creation is disabled')
   process.exit(0)

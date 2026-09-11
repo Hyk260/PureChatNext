@@ -6,7 +6,6 @@ const mocks = vi.hoisted(() => ({
   countFailed: vi.fn(),
   ensureChannelGatewayRunning: vi.fn().mockResolvedValue(undefined),
   findByUserAndPlatform: vi.fn(),
-  getWechatProviderAvailability: vi.fn(),
 }))
 
 vi.mock('@/libs/auth/get-session-user', () => ({
@@ -26,9 +25,6 @@ vi.mock('@pure/database/models/channelEvent', () => ({
   },
 }))
 vi.mock('@/libs/channels/wechat', () => ({ isWechatGatewaySupported: vi.fn(() => true) }))
-vi.mock('@/libs/channels/wechat/agentSupport', () => ({
-  getWechatProviderAvailability: mocks.getWechatProviderAvailability,
-}))
 vi.mock('@/server/channel-gateway', () => ({
   ensureChannelGatewayRunning: mocks.ensureChannelGatewayRunning,
 }))
@@ -39,11 +35,6 @@ describe('GET /api/channels/wechat/status', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.countFailed.mockResolvedValue(0)
-    mocks.getWechatProviderAvailability.mockReturnValue({
-      deepseek: { available: true },
-      openai: { available: false, reason: '服务端未配置 OpenAI API Key' },
-      purechat: { available: true },
-    })
     mocks.findByUserAndPlatform.mockResolvedValue({
       agentId: 'agent-1',
       applicationId: 'wechat-app',
@@ -58,7 +49,7 @@ describe('GET /api/channels/wechat/status', () => {
     })
   })
 
-  it('returns the saved provider and model with provider availability', async () => {
+  it('returns the saved provider and model', async () => {
     const response = await GET(new NextRequest('http://localhost/api/channels/wechat/status'))
 
     expect(mocks.ensureChannelGatewayRunning).toHaveBeenCalledOnce()
@@ -66,9 +57,6 @@ describe('GET /api/channels/wechat/status', () => {
     await expect(response.json()).resolves.toMatchObject({
       model: 'gpt-5.4-mini',
       provider: 'openai',
-      providerAvailability: {
-        openai: { available: false, reason: '服务端未配置 OpenAI API Key' },
-      },
     })
   })
 

@@ -81,19 +81,13 @@ const ModelList = memo<ModelListProps>(({ id }) => {
 
     setLoading(true)
     try {
-      const apiKey = config?.apiKey.trim() ?? ''
       const baseURL = config?.baseURL.trim() ?? ''
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      }
-      if (apiKey) headers.Authorization = `Bearer ${apiKey}`
-
-      const response = await fetch('/api/providers/models', {
+      const response = await apiFetch('/api/providers/models', {
         body: JSON.stringify({
           baseURL: baseURL || undefined,
           provider: id,
         }),
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       })
 
@@ -286,7 +280,6 @@ const ModelList = memo<ModelListProps>(({ id }) => {
 
     let successCount = 0
     let failureCount = 0
-    const apiKey = config?.apiKey.trim() ?? ''
     const baseURL = config?.baseURL.trim() ?? ''
 
     await runWithConcurrency(
@@ -296,9 +289,6 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         setModelHealth(id, model.id, { status: 'checking' })
 
         try {
-          const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-          if (apiKey) headers.Authorization = `Bearer ${apiKey}`
-
           const response = await apiFetch('/api/providers/check', {
             body: JSON.stringify({
               baseURL: baseURL || undefined,
@@ -306,7 +296,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
               provider: id,
               timeoutMs,
             }),
-            headers,
+            headers: { 'Content-Type': 'application/json' },
             method: 'POST',
             signal: controller.signal,
           })

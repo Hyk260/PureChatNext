@@ -1,5 +1,5 @@
 {
   "title": "部署平台",
   "icon": "Container",
-  "pages": ["docker"]
+  "pages": ["docker", "1panel"]
 }

@@ -1,0 +1,7 @@
+# 在线安装覆盖：从 GHCR 拉取应用镜像，不在目标主机构建。
+# 由 install.sh（检测到本文件且无离线 manifest）或显式 --online 加载。
+# 用法：docker compose -f docker-compose.yml -f docker-compose.online.yml --env-file .env up -d --no-build
+services:
+  app:
+    image: ${PURECHAT_IMAGE:-ghcr.io/hyk260/purechat-next:latest}
+    pull_policy: always

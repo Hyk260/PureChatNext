@@ -134,7 +134,7 @@ export function buildChannelWelcomeText(
 ): string | null {
   if (options?.enabled === false) return null
   const name = agentTitle.trim() || '助手'
-  return [`「${name}」已接入，直接发消息即可。`, options?.helpHint ?? '发送 /h 查看全部指令。'].join('\n')
+  return [`「${name}」已绑定，直接发消息即可开始。`, options?.helpHint ?? '发送 /h 查看全部指令。'].join('\n')
 }
 
 export function prependChannelFirstBindWelcome(reply: string, welcome: string | null): string {
@@ -174,6 +174,32 @@ export function parseChannelCommand(input: string): ParsedChannelCommand | null 
   }
 }
 
+const AGENTS_SWITCH_HINT = '发送 /agents <序号|agentId> 切换助手。'
+
+function formatAgentListItem(agent: ChannelCommandAgent, index: number, currentId: string): string {
+  const marker = agent.id === currentId ? '（当前）' : ''
+  return `${index + 1}. ${agent.title} [${agent.id}]${marker}`
+}
+
+function buildAgentsListReply(
+  agents: ChannelCommandAgent[],
+  currentId: string,
+  intro?: string
+): string {
+  if (agents.length === 0) {
+    const empty = '当前没有可用助手。'
+    return intro ? `${intro}\n${empty}` : empty
+  }
+
+  const lines = [
+    '可用助手：',
+    ...agents.map((agent, index) => formatAgentListItem(agent, index, currentId)),
+    '',
+    AGENTS_SWITCH_HINT,
+  ]
+  return intro ? [intro, '', ...lines].join('\n') : lines.join('\n')
+}
+
 async function handleAgentsCommand(argument: string, effects: ChannelCommandEffects) {
   if (effects.assertAgentsAllowed) {
     const denied = await effects.assertAgentsAllowed()
@@ -183,21 +209,11 @@ async function handleAgentsCommand(argument: string, effects: ChannelCommandEffe
   const agents = await effects.listAgents()
   const current = await effects.getCurrentAgentId()
 
-  if (!argument) {
-    return [
-      '可用助手：',
-      ...agents.map((agent, index) => {
-        const marker = agent.id === current ? '（当前）' : ''
-        return `${index + 1}. ${agent.title} [${agent.id}]${marker}`
-      }),
-      '',
-      '发送 /agents <序号|agentId> 切换助手。',
-    ].join('\n')
-  }
+  if (!argument) return buildAgentsListReply(agents, current)
 
   const index = /^\d+$/.test(argument) ? Number(argument) - 1 : -1
   const target = index >= 0 ? agents[index] : agents.find((agent) => agent.id === argument)
-  if (!target) return '未找到该助手。发送 /agents 查看列表。'
+  if (!target) return buildAgentsListReply(agents, current, `未找到「${argument}」。`)
 
   await effects.startNewConversation(target.id)
   effects.abortActiveGeneration()

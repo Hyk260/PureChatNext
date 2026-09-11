@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   getAuthenticatedUserId: vi.fn(),
   resolveApiKeyFromHeader: vi.fn(),
   resolveOptionalBaseURL: vi.fn((value?: string) => value?.trim() || undefined),
-  resolveProviderApiKey: vi.fn(),
+  resolveUserProviderCredentials: vi.fn(),
   withHealthTimeout: vi.fn(),
 }))
 
@@ -23,7 +23,10 @@ vi.mock('@/libs/ai-providers/resolveClient', () => ({
   isSupportedProviderId: (id: string) => id === 'openai' || id === 'deepseek',
   resolveApiKeyFromHeader: mocks.resolveApiKeyFromHeader,
   resolveOptionalBaseURL: mocks.resolveOptionalBaseURL,
-  resolveProviderApiKey: mocks.resolveProviderApiKey,
+}))
+vi.mock('@/libs/ai-providers/userSecrets', () => ({
+  MISSING_USER_PROVIDER_SECRET_MESSAGE: '请先在设置中保存该服务商 API Key',
+  resolveUserProviderCredentials: mocks.resolveUserProviderCredentials,
 }))
 vi.mock('@/libs/auth/get-session-user', () => ({
   getAuthenticatedUserId: mocks.getAuthenticatedUserId,
@@ -49,7 +52,7 @@ const requestFor = (body: unknown, headers?: HeadersInit) =>
 describe('POST /api/providers/check', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.resolveProviderApiKey.mockReturnValue('test-key')
+    mocks.resolveUserProviderCredentials.mockResolvedValue({ apiKey: 'test-key' })
     mocks.chargePureChatGenerateUsage.mockResolvedValue(undefined)
     mocks.withHealthTimeout.mockImplementation(async (task: (signal: AbortSignal) => Promise<unknown>) => {
       return task(new AbortController().signal)
@@ -198,7 +201,7 @@ describe('POST /api/providers/check', () => {
   })
 
   it('does not expose provider secrets in upstream error messages', async () => {
-    mocks.resolveProviderApiKey.mockReturnValue('sk-secret')
+    mocks.resolveUserProviderCredentials.mockResolvedValue({ apiKey: 'sk-secret' })
     mocks.generateText.mockRejectedValue(new Error('upstream failed with sk-secret'))
 
     const response = await POST(requestFor({ model: 'gpt-test', provider: 'openai', apiKey: 'sk-secret' }))

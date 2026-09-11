@@ -1,19 +1,33 @@
 // @vitest-environment node
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/server/purechat', () => ({ isPureChatRuntimeAvailable: () => true }))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
   isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek',
-  resolveProviderApiKey: () => 'test-key',
+}))
+vi.mock('@pure/database/models/userProviderSecret', () => ({
+  UserProviderSecretModel: class {
+    has = mocks.hasSecret
+  },
+}))
+
+const mocks = vi.hoisted(() => ({
+  hasSecret: vi.fn(),
 }))
 
 import {
+  channelProviderByokUnavailableReason,
   defaultChannelModel,
   isChannelProviderId,
   resolveChannelModelConfig,
 } from './modelResolver'
 
 describe('channel model resolver', () => {
+  beforeEach(() => {
+    mocks.hasSecret.mockReset()
+    mocks.hasSecret.mockResolvedValue(true)
+  })
+
   it('uses the explicit channel provider and model', () => {
     expect(
       resolveChannelModelConfig({
@@ -52,5 +66,16 @@ describe('channel model resolver', () => {
     expect(isChannelProviderId('purechat')).toBe(true)
     expect(isChannelProviderId('openai')).toBe(true)
     expect(isChannelProviderId('anthropic')).toBe(false)
+  })
+
+  it('requires a saved user vault key for BYOK channel providers', async () => {
+    mocks.hasSecret.mockResolvedValue(false)
+    await expect(channelProviderByokUnavailableReason('user-1', 'deepseek', '微信渠道')).resolves.toBe(
+      '请先在设置中保存该服务商 API Key'
+    )
+  })
+
+  it('allows BYOK when the user vault already has a key', async () => {
+    await expect(channelProviderByokUnavailableReason('user-1', 'openai')).resolves.toBeNull()
   })
 })

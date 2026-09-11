@@ -22,12 +22,11 @@ DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.
 # 连接池（推荐）：
 # DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
 
-# 应用对外地址（本地统一 SPA 端口）
+# 应用对外地址（本地统一 SPA 端口；CORS 默认允许该地址）
 APP_URL=http://localhost:5174
 
-# CORS 配置
-# 允许的源（多个用逗号分隔，* 表示允许所有源）
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5174
+# CORS 额外来源，逗号分隔。省略时使用 APP_URL（本地开发端口已内置）
+# ALLOWED_ORIGINS=https://www.example.com
 
 # Node 环境
 NODE_ENV=development
@@ -74,6 +73,10 @@ NODE_ENV=development
 
 修改后需重启 Next（`pnpm dev:next` 或 `pnpm dev`）。
 
+### ALLOWED\_ORIGINS
+
+CORS 与 Better Auth `trustedOrigins` 的**额外**允许来源，逗号分隔。`APP_URL` 始终会被加入，因此生产环境前后端同域时可以省略；只需在有额外前端域名时再配置。不要使用 `*`。
+
 ### 本地生产预览
 
 发布前若要在本地跑「生产构建 + 生产密钥」形态：
@@ -95,7 +98,7 @@ pnpm preview:prod -- --skip-build --skip-migrate
 pnpm preview:prod -- --port 3211
 ```
 
-`preview:prod` 会关闭 Bun 默认的 Env 自动加载，再由脚本按 `.env` → `.env.production` → `.env.local` → `.env.production.local` 的顺序加载 Env 文件，后者覆盖前者，调用命令显式传入的环境变量优先级最高。随后将 `APP_URL` 覆写为 `http://localhost:3210`（可用 `-p` / `--port` 或调用方 `PORT` 改端口），并确保 `ALLOWED_ORIGINS` 含该地址。
+`preview:prod` 会关闭 Bun 默认的 Env 自动加载，再由脚本按 `.env` → `.env.production` → `.env.local` → `.env.production.local` 的顺序加载 Env 文件，后者覆盖前者，调用命令显式传入的环境变量优先级最高。随后将 `APP_URL` 覆写为 `http://localhost:3210`（可用 `-p` / `--port` 或调用方 `PORT` 改端口）；CORS 会自动包含该地址。
 
 启动顺序为：校验配置与端口 → 生产构建 → 校验 `.next/BUILD_ID` → `db:migrate` → `next start` → `/api/health` 就绪检测。迁移失败时不会启动服务；健康检查返回降级或 `503` 时会醒目告警，但保留已经启动的预览进程供排查。浏览器打开最终打印出的本地 URL（同域 SPA + API）。
 
@@ -149,7 +152,7 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 
 - 本地 Docker：`postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat`（密码以 `docker-compose/dev/.env` 为准）
 - 云托管（Supabase 免费 Postgres、Neon 等）：`postgresql://postgres:[密码]@db.[项目引用].supabase.co:5432/postgres`
-- 生产 Docker：由 Compose 注入 `postgresql:5432` 内部地址，不应在宿主机 `.env.local` 中改写为该服务名
+- 生产 Docker：`install.sh` 在宿主机 PostgreSQL 中创建用户和数据库 `purechat`，Compose 注入 `postgresql://purechat:…@<容器名>:5432/purechat`。不要把连接串写成公网域名。
 - 云托管常支持直连（5432）或连接池（6543）；本地实例使用 5432
 
 ### DATABASE\_DRIVER
@@ -161,11 +164,21 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 
 本地 Docker 启停与连接说明见 [本地 PostgreSQL 管理](../infrastructure/postgresql.md)。
 
+### KEY\_VAULTS\_SECRET
+
+敏感配置加密密钥（AES-256-GCM）。用于微信 / QQ 渠道凭证与 `context_token`，以及用户在设置页保存的服务商 API Key / 代理地址。生成：`openssl rand -base64 32`。未配置时无法加密保存用户密钥，渠道绑定也会失败。
+
 ### Docker 内部服务地址
 
-开发时从宿主机运行应用，因此 PostgreSQL、Redis、RustFS 与 SearXNG 使用 `127.0.0.1` 加映射端口。生产应用与依赖位于同一 Compose 网络，使用 `postgresql:5432`、`redis:6379`、`rustfs:9000` 与 `searxng:8080`；这些端口不会发布到宿主机。
+开发时从宿主机运行应用，因此 PostgreSQL、Redis、RustFS 与 SearXNG 使用 `127.0.0.1` 加映射端口（见 `pnpm dev:docker`）。生产只运行应用容器：PostgreSQL 与 Redis 使用宿主机已有实例（`install.sh` 将应用加入共享 Docker 网络，主机名为容器名）；文件与搜索走云端配置。
 
-生产密钥与内部 URL 由 `pnpm docker:setup:deploy` 和生产 Compose 管理，不要把 `docker-compose/deploy/.env` 提交到仓库。完整说明见 [Docker 自托管与数据迁移](../platform/docker.md)。
+生产密钥与内部 URL 由 `pnpm docker:setup:deploy` 或离线包里的 `install.sh` 生成，不要把 `docker-compose/deploy/.env` 提交到仓库。默认应用 `2g` 资源档案，见 [云服务器部署](../platform/1panel.md)。完整说明见 [Docker 自托管与数据迁移](../platform/docker.md)。
+
+云服务器改完 `/opt/purechat/docker-compose/deploy/.env` 后必须重建容器，`docker restart` / 1Panel「重启」无效：
+
+```bash
+sudo ./install.sh up --force-recreate
+```
 
 ### S3 对象存储
 
@@ -193,6 +206,8 @@ S3_ENABLE_PATH_STYLE=1
 S3_SET_ACL=0
 ```
 
+生产 Docker 请填写对象存储服务的 Endpoint 与密钥，不要使用上述 localhost 地址。
+
 #### `S3_SET_ACL`
 
 控制上传时是否给对象打 **`public-read` ACL**，以及客户端如何拿到文件 URL。
@@ -215,7 +230,7 @@ S3_SET_ACL=0
 
 ### 微信 iLink 渠道
 
-见 [微信渠道](../channels/wechat/setup.md)。`KEY_VAULTS_SECRET` 为必填，用于加密凭证与 `context_token`；回复还需服务端模型密钥。本地需显式设置 `CHANNEL_GATEWAY_ENABLED=1`；Docker 在单一 Next 容器内启用；Vercel 不支持。
+见 [微信渠道](../channels/wechat/setup.md)。`KEY_VAULTS_SECRET` 为必填。回复使用用户在设置页保存的服务商密钥，不读取 `OPENAI_API_KEY` / `DEEPSEEK_API_KEY`。本地需显式设置 `CHANNEL_GATEWAY_ENABLED=1`；Docker 在单一 Next 容器内启用；Vercel 不支持。
 
 ### QQ 开放平台渠道
 

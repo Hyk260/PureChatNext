@@ -22,7 +22,7 @@ const buildRedisConfig = (): RedisConfig | null => {
 
 const loadRedisProvider = async () => (await import('../redis')).IoRedisRedisProvider
 
-const createMockedProvider = async () => {
+const createMockedProvider = async (config: Partial<RedisConfig> = {}) => {
   const instances: Array<{ options: Record<PropertyKey, unknown>; url: string }> = []
 
   const createPipelineMock = () => {
@@ -54,8 +54,10 @@ const createMockedProvider = async () => {
 
   const mocks = {
     connect: vi.fn().mockResolvedValue(undefined),
+    disconnect: vi.fn(),
+    on: vi.fn(),
     ping: vi.fn().mockResolvedValue('PONG'),
-    quit: vi.fn().mockResolvedValue(undefined),
+    quit: vi.fn().mockResolvedValue('OK'),
     call: vi.fn().mockResolvedValue('OK'),
     get: vi.fn().mockResolvedValue('mock-value'),
     set: vi.fn().mockResolvedValue('OK'),
@@ -86,6 +88,8 @@ const createMockedProvider = async () => {
         instances.push({ options, url })
       }
       connect = mocks.connect
+      disconnect = mocks.disconnect
+      on = mocks.on
       ping = mocks.ping
       quit = mocks.quit
       call = mocks.call
@@ -117,6 +121,7 @@ const createMockedProvider = async () => {
     prefix: 'mock',
     tls: false,
     url: 'redis://localhost:6379',
+    ...config,
   })
 
   await provider.initialize()
@@ -132,6 +137,17 @@ afterEach(() => {
   vi.clearAllMocks()
   vi.resetModules()
   vi.unmock('ioredis')
+})
+
+describe('isFatalRedisAuthError', () => {
+  it('detects WRONGPASS replies and ignores connection errors', async () => {
+    const { isFatalRedisAuthError } = await import('../redis')
+
+    expect(
+      isFatalRedisAuthError(new Error('WRONGPASS invalid username-password pair or user is disabled.'))
+    ).toBe(true)
+    expect(isFatalRedisAuthError(new Error('ECONNREFUSED'))).toBe(false)
+  })
 })
 
 describe('integrated', (test) => {
@@ -169,7 +185,7 @@ describe('integrated', (test) => {
 
 describe('mocked', () => {
   it('sets bounded ioredis connection and command timeouts', async () => {
-    const { instances, provider } = await createMockedProvider()
+    const { instances, mocks, provider } = await createMockedProvider()
 
     expect(instances).toHaveLength(1)
     expect(instances[0]).toMatchObject({
@@ -180,6 +196,68 @@ describe('mocked', () => {
       },
       url: 'redis://localhost:6379',
     })
+    expect(typeof instances[0]?.options.retryStrategy).toBe('function')
+    expect(mocks.on).toHaveBeenCalledWith('error', expect.any(Function))
+
+    await provider.disconnect()
+  })
+
+  it('omits blank username and password when creating ioredis', async () => {
+    const { instances, provider } = await createMockedProvider({
+      password: '  ',
+      username: '',
+    })
+
+    expect(instances[0]?.options).not.toHaveProperty('password')
+    expect(instances[0]?.options).not.toHaveProperty('username')
+
+    await provider.disconnect()
+  })
+
+  it('forwards non-empty redis credentials to ioredis', async () => {
+    const { instances, provider } = await createMockedProvider({
+      password: 'secret',
+      username: 'purechat',
+    })
+
+    expect(instances[0]?.options).toMatchObject({
+      password: 'secret',
+      username: 'purechat',
+    })
+
+    await provider.disconnect()
+  })
+
+  it('stops reconnecting after WRONGPASS', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const { instances, mocks, provider } = await createMockedProvider()
+    const retryStrategy = instances[0]?.options.retryStrategy as (times: number) => number | null
+    const onError = mocks.on.mock.calls.find(([event]) => event === 'error')?.[1] as (error: Error) => void
+
+    expect(retryStrategy(1)).toBe(50)
+    onError(new Error('WRONGPASS invalid username-password pair or user is disabled.'))
+    expect(retryStrategy(2)).toBeNull()
+    expect(consoleError).toHaveBeenCalledTimes(1)
+
+    consoleError.mockRestore()
+    await provider.disconnect()
+  })
+
+  it('disconnects the client when initialize authentication fails', async () => {
+    const authError = new Error('WRONGPASS invalid username-password pair or user is disabled.')
+    const { mocks, provider } = await createMockedProvider()
+
+    mocks.connect.mockRejectedValueOnce(authError)
+    const { IoRedisRedisProvider } = await import('../redis')
+    const failing = new IoRedisRedisProvider({
+      enabled: true,
+      prefix: 'mock',
+      tls: false,
+      url: 'redis://localhost:6379',
+    })
+
+    await expect(failing.initialize()).rejects.toThrow(/WRONGPASS/)
+    expect(mocks.disconnect).toHaveBeenCalled()
 
     await provider.disconnect()
   })

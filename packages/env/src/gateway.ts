@@ -1,9 +1,11 @@
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 
-import { parseEnvBoolean } from './helpers'
+import { optionalUrlEnv, parseEnvBoolean } from './helpers'
 
 const IS_VERCEL = parseEnvBoolean(process.env.VERCEL)
+const wechatGatewayEnabled = parseEnvBoolean(process.env.WECHAT_GATEWAY_ENABLED)
+const channelGatewayEnabled = parseEnvBoolean(process.env.CHANNEL_GATEWAY_ENABLED, wechatGatewayEnabled)
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -33,7 +35,7 @@ export const getGatewayConfig = () => {
       /** 内置渠道 Gateway 总开关；本地默认关闭，Docker 需显式开启。 */
       CHANNEL_GATEWAY_ENABLED: z.boolean(),
       /** Gateway 回调 Next Server 的内部地址；默认使用本机回环地址。 */
-      CHANNEL_GATEWAY_INTERNAL_URL: z.string().url().optional(),
+      CHANNEL_GATEWAY_INTERNAL_URL: optionalUrlEnv(),
       /** Gateway 回调内部 Webhook 的统一鉴权密钥。 */
       CHANNEL_GATEWAY_INTERNAL_SECRET: z.string().optional(),
       /** 微信 webhook 转发鉴权；未设置时回退 `CRON_SECRET`。 */
@@ -44,13 +46,11 @@ export const getGatewayConfig = () => {
       QQ_WEBHOOK_SECRET: z.string().optional(),
     },
     runtimeEnv: {
-      CHANNEL_GATEWAY_ENABLED: IS_VERCEL
-        ? false
-        : parseEnvBoolean(process.env.CHANNEL_GATEWAY_ENABLED, parseEnvBoolean(process.env.WECHAT_GATEWAY_ENABLED)),
+      CHANNEL_GATEWAY_ENABLED: !IS_VERCEL && channelGatewayEnabled,
       CHANNEL_GATEWAY_INTERNAL_URL: process.env.CHANNEL_GATEWAY_INTERNAL_URL,
       CHANNEL_GATEWAY_INTERNAL_SECRET: process.env.CHANNEL_GATEWAY_INTERNAL_SECRET,
       WECHAT_WEBHOOK_SECRET: process.env.WECHAT_WEBHOOK_SECRET,
-      WECHAT_GATEWAY_ENABLED: IS_VERCEL ? false : parseEnvBoolean(process.env.WECHAT_GATEWAY_ENABLED),
+      WECHAT_GATEWAY_ENABLED: !IS_VERCEL && wechatGatewayEnabled,
       QQ_WEBHOOK_SECRET: process.env.QQ_WEBHOOK_SECRET,
     },
   })

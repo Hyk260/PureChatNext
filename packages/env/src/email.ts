@@ -58,9 +58,7 @@ export const getEmailConfig = () => {
       SMTP_SECURE: parseEnvBoolean(process.env.SMTP_SECURE),
       SMTP_USER: process.env.SMTP_USER,
       SMTP_PASS: process.env.SMTP_PASS,
-      EMAIL_SERVICE_PROVIDER: process.env.EMAIL_SERVICE_PROVIDER
-        ? process.env.EMAIL_SERVICE_PROVIDER.toLowerCase()
-        : undefined,
+      EMAIL_SERVICE_PROVIDER: process.env.EMAIL_SERVICE_PROVIDER?.toLowerCase(),
       RESEND_API_KEY: process.env.RESEND_API_KEY,
       RESEND_FROM: process.env.RESEND_FROM,
     },

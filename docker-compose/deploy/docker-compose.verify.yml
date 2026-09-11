@@ -1,0 +1,98 @@
+# 仅供 `pnpm docker:verify:local` / CI 冒烟。生产安装不加载本文件。
+# 生产默认连接宿主机 PostgreSQL（及可选 Redis），不内置这些服务。
+name: purechat-deploy
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-file: '3'
+    max-size: 10m
+
+services:
+  app:
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-purechat}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DB:-purechat}
+      REDIS_URL: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_USERNAME: ${REDIS_USERNAME:-}
+      REDIS_PREFIX: ${REDIS_PREFIX:-purechat}
+      S3_AUTO_CREATE_BUCKET: '0'
+      SEARCH_PROVIDERS: ''
+      SEARXNG_URL: ''
+    networks:
+      app-network: {}
+      verify-data: {}
+
+  postgresql:
+    image: postgres:17.10-alpine3.24@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+    pull_policy: missing
+    user: '0:0'
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+      - /var/run/postgresql:rw,nosuid,size=16m,uid=70,gid=70,mode=1770
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-purechat}
+      POSTGRES_USER: ${POSTGRES_USER:-purechat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    mem_limit: ${POSTGRES_MEMORY_LIMIT:-320m}
+    cpus: ${POSTGRES_CPUS:-0.75}
+    pids_limit: ${POSTGRES_PIDS_LIMIT:-128}
+    logging: *default-logging
+    networks: [verify-data]
+
+  redis:
+    image: redis:8.8.1-alpine3.23@sha256:8096655e437712b07503796fb64d81359256cfcff0ab29d95a7da72863786efb
+    pull_policy: missing
+    user: redis
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        exec redis-server --requirepass "$${REDIS_PASSWORD}" --save 60 1000 \
+          --appendonly yes --maxmemory "${REDIS_MAXMEMORY:-96mb}" --maxmemory-policy noeviction
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli --no-auth-warning -a "$$REDIS_PASSWORD" ping']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: ${REDIS_MEMORY_LIMIT:-128m}
+    cpus: ${REDIS_CPUS:-0.5}
+    pids_limit: ${REDIS_PIDS_LIMIT:-128}
+    logging: *default-logging
+    networks: [verify-data]
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  verify-data:
+    driver: bridge
+    internal: true

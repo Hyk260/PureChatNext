@@ -21,8 +21,9 @@ description: 在 PureChatNext 中配置微信 iLink 渠道、模型凭证和运�
 CHANNEL_GATEWAY_ENABLED=1
 DATABASE_URL=postgresql://...
 KEY_VAULTS_SECRET=replace-with-a-random-secret
-OPENAI_API_KEY=... # 或受支持的其他服务端模型密钥
 ```
+
+微信回复使用账号在设置页保存的 OpenAI / DeepSeek 密钥（AES-GCM 加密入库），不读取服务端 `OPENAI_API_KEY` / `DEEPSEEK_API_KEY`。`purechat` 仍走官方积分与 AI Gateway。
 
 可选配置：
 

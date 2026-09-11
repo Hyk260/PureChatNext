@@ -21,11 +21,11 @@ import {
   isMessengerProviderId,
   MESSENGER_DEFAULT_MODELS,
   MESSENGER_DEFAULT_PROVIDER,
-  MESSENGER_PROVIDER_IDS,
 } from './const'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
+import { MessengerProviderSecretHint } from './MessengerProviderSecretHint'
 import QrCodeAuth from './QrCodeAuth'
 import type { WechatAuthCredentials } from './QrCodeAuth'
 import {
@@ -304,9 +304,6 @@ const MessengerWeChatPage = memo(() => {
   const needsRebind = Boolean(status?.needsRebind) || (bound && status?.enabled === false)
   const showConnect = !bound || needsRebind
   const controlsDisabled = binding || saving
-  const allowedProviders = MESSENGER_PROVIDER_IDS.filter(
-    (id) => status?.providerAvailability?.[id]?.available !== false
-  )
 
   // Gateway 不可用（Vercel / 未开启内置进程）时不展示连接配置与操作按钮。
   const headerAction = gatewaySupported ? (
@@ -355,12 +352,12 @@ const MessengerWeChatPage = memo(() => {
           </Flex>
 
           <MessengerModelSwitch
-            allowedProviders={allowedProviders}
             disabled={controlsDisabled}
             modelId={modelId}
             provider={provider}
             onSelect={handleModelSelect}
           />
+          <MessengerProviderSecretHint provider={provider} />
 
           {needsRebind && (
             <Alert showIcon type='warning' title='微信会话已过期或需要重新连接' description='请再次扫码绑定。' />

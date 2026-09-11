@@ -6,8 +6,6 @@ import { apiFetch } from '@/utils/apiFetch'
 import type { LocalChatTopic, TopicDeleteScope, TopicUpdate } from './types'
 
 export type AutoRenameTopicConfig = {
-  apiKey?: string
-  baseURL?: string
   model: string
   provider: string
 }
@@ -99,18 +97,14 @@ export const createTopicShare = async (topicId: string): Promise<{ shareId: stri
 
 export const autoRenameTopic = async (
   id: string,
-  { apiKey, baseURL, model, provider }: AutoRenameTopicConfig
+  { model, provider }: AutoRenameTopicConfig
 ): Promise<LocalChatTopic> => {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (apiKey?.trim()) headers.Authorization = `Bearer ${apiKey.trim()}`
-
   const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}/auto-rename`, {
     body: JSON.stringify({
-      ...(baseURL?.trim() ? { baseURL: baseURL.trim() } : {}),
       model,
       provider,
     }),
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     method: 'POST',
   })
   if (!res.ok) throw new Error(`autoRenameTopic failed: ${res.status}`)

@@ -46,7 +46,6 @@ pnpm db:migrate
 
 ```dotenv
 APP_URL=http://localhost:5174
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5174
 NODE_ENV=development
 
 # 本地 Docker PostgreSQL（与 docker-compose/dev/.env 一致）
@@ -110,7 +109,7 @@ pnpm dev:spa
 
 浏览器访问 **http://localhost:5174**（SPA）。Next `:3000` 只作 API / BFF，不要当主 UI 入口。
 
-> CORS：`.env.local` 的 `ALLOWED_ORIGINS` 需包含 `http://localhost:5174`（见上文示例）。\
+> CORS：未额外配置时会允许 `APP_URL` 以及本地开发端口。\
 > 修改 `APP_URL` 后需重启 `dev:next`。\
 > `dev:inspect` / `CODE_INSPECTOR=1`：Alt+Shift 点击页面元素可在 Cursor 中打开对应源码；默认关闭以降低编译开销。\
 > `VITE_DEVTOOLS=1`：启用 Vite DevTools 浮动面板；默认关闭。临时：`VITE_DEVTOOLS=1 pnpm dev:spa`。
@@ -166,7 +165,7 @@ curl -X GET http://localhost:3000/api/auth/me \
 
 ### Q: CORS 错误
 
-**A**: 检查 `.env.local` 中的 `ALLOWED_ORIGINS` 是否包含你的前端地址。
+**A**: 确认 `APP_URL` 指向你的前端地址；若还有额外域名，再检查 `ALLOWED_ORIGINS`。
 
 ### Q: Token 过期
 

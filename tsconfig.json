@@ -32,5 +32,5 @@
     "**/*.mts",
     "eslint.config.mjs"
   ],
-  "exclude": ["node_modules", "apps/docs"]
+  "exclude": ["node_modules", "apps/desktop", "apps/docs"]
 }

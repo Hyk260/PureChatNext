@@ -1,11 +1,17 @@
-# Docker 工作流：校验 Compose 配置、运行健康检查，并构建 amd64/arm64 镜像进行安全验证。
+# Docker 工作流：校验 Compose、冒烟测试，并在 main / tag / 手动触发时推送多架构镜像到 GHCR。
 name: Docker
 
 on:
   pull_request:
   push:
     branches: [main]
+    tags: ['v*']
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Push multi-arch image to GHCR
+        type: boolean
+        default: true
 
 concurrency:
   group: docker-${{ github.workflow }}-${{ github.ref }}
@@ -14,6 +20,9 @@ concurrency:
 env:
   # docker/build-push-action 的内置摘要不可本地化，改由工作流写入中文摘要。
   DOCKER_BUILD_SUMMARY: false
+  REGISTRY: ghcr.io
+  # 包名固定为 purechat-next（小写）；metadata-action 会规范化 owner。
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/purechat-next
 
 jobs:
   config-and-unit:
@@ -34,8 +43,6 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Validate Compose
-        env:
-          SEARXNG_SECRET: ci-compose-validation-secret
         run: pnpm docker:validate
       - name: Test health helpers and route
         run: pnpm exec vitest run src/app/api/health/route.test.ts src/server/health/dependencies.test.ts
@@ -100,10 +107,17 @@ jobs:
         # 最终镜像中的 OS/Node 依赖由 amd64 Trivy 门禁补充扫描。
         run: pnpm audit --prod --no-optional --audit-level high
 
-  multi-platform-build:
-    name: Build ${{ matrix.platform }}
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+  publish-platform:
+    name: Publish ${{ matrix.platform }}
+    needs: [config-and-unit, amd64-smoke, production-audit]
+    if: |
+      (github.event_name == 'workflow_dispatch' && inputs.publish == true) ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')))
+    permissions:
+      contents: read
+      packages: write
     strategy:
+      fail-fast: false
       matrix:
         include:
           - platform: linux/amd64
@@ -114,21 +128,44 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v4
-      - name: Build without publishing
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Normalize image name
+        id: image
+        run: echo "name=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+      - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ matrix.platform }}
-          push: false
-          cache-from: type=gha,scope=${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
-      - name: 写入中文构建摘要
+          push: true
+          provenance: false
+          outputs: type=image,name=${{ steps.image.outputs.name }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=publish-${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=publish-${{ matrix.platform }}
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.platform }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+      - name: 写入平台构建摘要
         if: always()
         env:
           BUILD_DIGEST: ${{ steps.build.outputs.digest }}
           BUILD_OUTCOME: ${{ steps.build.outcome }}
           TARGET_PLATFORM: ${{ matrix.platform }}
+          IMAGE: ${{ steps.image.outputs.name }}
         run: |
           case "${BUILD_OUTCOME}" in
             success) result='✅ 成功' ;;
@@ -139,13 +176,91 @@ jobs:
           esac
           digest="${BUILD_DIGEST:-未生成}"
           {
-            echo '## Docker 镜像构建摘要'
+            echo "## Docker 发布摘要（${TARGET_PLATFORM}）"
             echo
             echo '| 项目 | 内容 |'
             echo '| --- | --- |'
             echo "| 目标平台 | \`${TARGET_PLATFORM}\` |"
             echo "| 构建结果 | ${result} |"
-            echo '| 发布镜像 | 否（仅执行构建验证） |'
+            echo '| 发布镜像 | 是（按 digest 推送） |'
+            echo "| 镜像 | \`${IMAGE}\` |"
             echo "| 镜像摘要 | \`${digest}\` |"
-            echo '| 构建缓存 | GitHub Actions 缓存 |'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  publish-manifest:
+    name: Merge multi-arch manifest
+    needs: publish-platform
+    if: |
+      (github.event_name == 'workflow_dispatch' && inputs.publish == true) ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')))
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Normalize image name
+        id: image
+        run: echo "name=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=tag
+      - name: Create manifest list
+        working-directory: /tmp/digests
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+          mapfile -t digests < <(printf '%s\n' *)
+          [[ ${#digests[@]} -gt 0 ]] || { echo "未找到 digest 产物"; exit 1; }
+          tag_args=()
+          while IFS= read -r tag; do
+            [[ -n "$tag" ]] || continue
+            tag_args+=(-t "$tag")
+          done <<< "$TAGS"
+          [[ ${#tag_args[@]} -gt 0 ]] || { echo "metadata-action 未生成任何 tag"; exit 1; }
+          sources=()
+          for d in "${digests[@]}"; do
+            sources+=("${IMAGE}@sha256:${d}")
+          done
+          docker buildx imagetools create "${tag_args[@]}" "${sources[@]}"
+      - name: 写入 manifest 摘要
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          {
+            echo '## GHCR 多架构 Manifest'
+            echo
+            echo "| 镜像 | \`${IMAGE}\` |"
+            echo
+            echo '### Tags'
+            echo
+            echo '```'
+            echo "${TAGS}"
+            echo '```'
+            echo
+            echo '首次推送后请到 GitHub Packages 将 `purechat-next` 设为 Public，否则匿名 `docker pull` 会失败。'
           } >> "${GITHUB_STEP_SUMMARY}"

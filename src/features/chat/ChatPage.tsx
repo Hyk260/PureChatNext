@@ -43,8 +43,6 @@ import type {
 import { fetchAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
-import { isSettingsProviderId } from '@/features/settings/provider/const'
-import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
 import { getDesktopApi } from '@/types/desktop'
 
 const subscribeNoop = () => () => {}
@@ -93,9 +91,6 @@ const ChatPage = memo(() => {
   const selectedProvider = useHomeStore((s) => s.selectedProvider)
   const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
-  const providerConfig = useProviderConfigStore((s) =>
-    isSettingsProviderId(selectedProvider) ? s.configs[selectedProvider] : undefined
-  )
 
   const agentId = agentFromQuery ?? activeAgent?.identifier ?? selectedAgentId ?? PURE_AI_AGENT_ID
 
@@ -364,8 +359,6 @@ const ChatPage = memo(() => {
         if (cachedMessages) await putMessages(id, cachedMessages)
 
         const updated = await autoRenameTopic(id, {
-          ...(selectedProvider !== 'purechat' && providerConfig?.apiKey ? { apiKey: providerConfig.apiKey } : {}),
-          ...(selectedProvider !== 'purechat' && providerConfig?.baseURL ? { baseURL: providerConfig.baseURL } : {}),
           model: selectedModel,
           provider: selectedProvider,
         })
@@ -379,7 +372,7 @@ const ChatPage = memo(() => {
         setAutoRenamingTopicId((currentId) => (currentId === id ? null : currentId))
       }
     },
-    [isBusy, message, messagesCache, providerConfig, selectedModel, selectedProvider]
+    [isBusy, message, messagesCache, selectedModel, selectedProvider]
   )
 
   const handleProjectChange = useCallback(

@@ -14,7 +14,6 @@ export type WechatStatus = {
   needsRebind: boolean
   model?: string | null
   provider?: WechatProviderId | null
-  providerAvailability?: Record<WechatProviderId, { available: boolean; reason?: string }>
   runtimeStatus?: 'starting' | 'online' | 'degraded' | 'reconnecting' | 'offline' | 'needs_rebind' | 'stopped'
 }
 

@@ -1,4 +1,5 @@
-FROM node:22.23.2-bookworm-slim@sha256:d649c27dae7ba0137b3cef5dd75baa422c08dc3d9e3fc0c23dfb172dc3cc6436 AS base
+ARG NODE_BASE_IMAGE=node:22.23.2-bookworm-slim@sha256:d649c27dae7ba0137b3cef5dd75baa422c08dc3d9e3fc0c23dfb172dc3cc6436
+FROM ${NODE_BASE_IMAGE} AS base
 
 ARG USE_CN_MIRROR
 ARG DEBIAN_MIRROR="https://mirrors.aliyun.com"
@@ -14,6 +15,7 @@ RUN set -e; \
 
 FROM base AS deps
 WORKDIR /app
+ARG USE_CN_MIRROR
 ARG NPM_REGISTRY
 
 # node-pty may fall back to node-gyp when an architecture-specific prebuild is unavailable.
@@ -50,7 +52,8 @@ RUN AUTH_SECRET="docker-build-placeholder-not-a-secret" \
     KEY_VAULTS_SECRET="docker-build-placeholder-not-a-secret" \
     pnpm run build:docker
 
-FROM node:22.23.2-bookworm-slim@sha256:d649c27dae7ba0137b3cef5dd75baa422c08dc3d9e3fc0c23dfb172dc3cc6436 AS runner
+ARG NODE_BASE_IMAGE=node:22.23.2-bookworm-slim@sha256:d649c27dae7ba0137b3cef5dd75baa422c08dc3d9e3fc0c23dfb172dc3cc6436
+FROM ${NODE_BASE_IMAGE} AS runner
 WORKDIR /app
 
 ENV DATABASE_DRIVER="node" \

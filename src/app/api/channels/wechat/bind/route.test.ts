@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   upsert: vi.fn(),
   updateConfiguration: vi.fn(),
   validateWechatModel: vi.fn(),
-  wechatAgentUnavailableReason: vi.fn(),
+  wechatChannelByokUnavailableReason: vi.fn(),
 }))
 
 vi.mock('@/libs/auth/get-session-user', () => ({
@@ -36,7 +36,7 @@ vi.mock('@pure/database/models/channelBinding', () => ({
 vi.mock('@/libs/channels/wechat/agentSupport', () => ({
   isWechatProviderId: mocks.isWechatProviderId,
   validateWechatModel: mocks.validateWechatModel,
-  wechatAgentUnavailableReason: mocks.wechatAgentUnavailableReason,
+  wechatChannelByokUnavailableReason: mocks.wechatChannelByokUnavailableReason,
 }))
 vi.mock('@/libs/channels/wechat', () => ({
   encryptCredentials: vi.fn(),
@@ -72,7 +72,7 @@ describe('/api/channels/wechat/bind', () => {
     mocks.findVisibleById.mockResolvedValue({ id: 'agent-1' })
     mocks.isWechatProviderId.mockReturnValue(true)
     mocks.validateWechatModel.mockReturnValue(null)
-    mocks.wechatAgentUnavailableReason.mockReturnValue(null)
+    mocks.wechatChannelByokUnavailableReason.mockResolvedValue(null)
     mocks.findByUserAndPlatform.mockResolvedValue(null)
     mocks.upsert.mockResolvedValue({ id: 'binding-1', runtimeStatus: 'starting' })
     mocks.updateConfiguration.mockResolvedValue({
@@ -142,14 +142,6 @@ describe('/api/channels/wechat/bind', () => {
 
   it('rejects a model that does not belong to the selected provider', async () => {
     mocks.validateWechatModel.mockReturnValue('所选模型不属于该服务商或已停用')
-    const response = await PATCH(patchRequest(validConfig))
-
-    expect(response.status).toBe(400)
-    expect(mocks.updateConfiguration).not.toHaveBeenCalled()
-  })
-
-  it('rejects a provider whose server key is unavailable', async () => {
-    mocks.wechatAgentUnavailableReason.mockReturnValue('服务端未配置 OpenAI API Key')
     const response = await PATCH(patchRequest(validConfig))
 
     expect(response.status).toBe(400)

@@ -24,7 +24,13 @@ vi.mock('@pure/database/models/agent', () => ({
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
   createProviderLanguageModel: mocks.createProviderLanguageModel,
   isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek',
-  resolveProviderApiKey: () => 'test-api-key',
+}))
+vi.mock('@/libs/ai-providers/userSecrets', () => ({
+  MISSING_USER_PROVIDER_SECRET_MESSAGE: '请先在设置中保存该服务商 API Key',
+  resolveUserProviderCredentials: vi.fn(async () => ({ apiKey: 'test-api-key' })),
+}))
+vi.mock('@pure/database/models/userProviderSecret', () => ({
+  UserProviderSecretModel: class {},
 }))
 vi.mock('@/server/purechat', () => ({
   assertPureChatCanChat: mocks.assertPureChatCanChat,

@@ -47,7 +47,12 @@ vi.mock('@/libs/ai-providers/resolveClient', () => ({
   isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek',
   resolveApiKeyFromHeader: (request: Request) => request.headers.get('authorization')?.replace('Bearer ', ''),
   resolveOptionalBaseURL: (baseURL?: string) => baseURL,
-  resolveProviderApiKey: (_provider: string, headerKey?: string) => headerKey,
+}))
+vi.mock('@/libs/ai-providers/userSecrets', () => ({
+  MISSING_USER_PROVIDER_SECRET_MESSAGE: '请先在设置中保存该服务商 API Key',
+  resolveUserProviderCredentials: vi.fn(async ({ headerKey, requestBaseURL }: { headerKey?: string; requestBaseURL?: string }) =>
+    headerKey ? { apiKey: headerKey, baseURL: requestBaseURL } : null
+  ),
 }))
 vi.mock('@/server/purechat', () => ({
   assertPureChatCanChat: mocks.assertPureChatCanChat,

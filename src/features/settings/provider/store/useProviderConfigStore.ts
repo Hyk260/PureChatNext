@@ -101,6 +101,12 @@ const normalizePersistedHealth = (configs: ProviderConfigs): ProviderConfigs => 
   return next
 }
 
+const stripSecretFields = (configs: ProviderConfigs): ProviderConfigs => ({
+  deepseek: { ...configs.deepseek, apiKey: '', baseURL: '' },
+  openai: { ...configs.openai, apiKey: '', baseURL: '' },
+  purechat: { ...configs.purechat, apiKey: '', baseURL: '' },
+})
+
 export const useProviderConfigStore = create<ProviderConfigState>()(
   persist(
     (set, get) => ({
@@ -384,7 +390,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
           return { configs: DEFAULT_PROVIDER_CONFIGS }
         }
 
-        const next = normalizePersistedConfigs(configs)
+        const next = stripSecretFields(normalizePersistedConfigs(configs))
 
         // version < 2 also needs empty baseURL migration (handled in mergeProviderConfig).
         void version
@@ -394,12 +400,12 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
         const state = persisted as { configs?: Partial<ProviderConfigs> } | undefined
         return {
           ...current,
-          configs: normalizePersistedHealth(normalizePersistedConfigs(state?.configs)),
+          configs: stripSecretFields(normalizePersistedHealth(normalizePersistedConfigs(state?.configs))),
         }
       },
       name: 'purechat:provider:v1',
-      partialize: (state) => ({ configs: normalizePersistedHealth(state.configs) }),
-      version: 9,
+      partialize: (state) => ({ configs: stripSecretFields(normalizePersistedHealth(state.configs)) }),
+      version: 10,
     }
   )
 )

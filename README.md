@@ -133,9 +133,8 @@ cp .env.example .env.local
 编辑 `.env.local`，至少准备：
 
 ```env
-# 本地必须指向 SPA 端口
+# 本地必须指向 SPA 端口；CORS 默认允许该地址，不必再配相同的 ALLOWED_ORIGINS
 APP_URL=http://localhost:5174
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5174
 
 # 数据库（云数据库也可以）
 DATABASE_DRIVER=neon
@@ -211,7 +210,7 @@ pnpm dev:docker:reset  # 确认后删除开发数据并重建
 1. 安装命令：`pnpm install`
 2. 构建命令：`pnpm build`
 3. 配置生产环境变量，至少包含数据库、认证密钥、`APP_URL` 和模型 Provider 密钥
-4. 将 `ALLOWED_ORIGINS` 设置为正式前端域名，不要在生产环境使用 `*`
+4. 生产前后端同域时不必再配 `ALLOWED_ORIGINS`；有额外前端域名时再设置，不要使用 `*`
 5. 在部署前或 CI 中执行 `pnpm db:migrate`
 
 构建流程为 `build:spa` → 复制 SPA 产物 → `next build`。部署后的静态资源位于 `/_spa/**`，未匹配的 UI 路径会回退到 SPA HTML 壳。
@@ -225,9 +224,24 @@ pnpm docker:setup:deploy
 pnpm docker:deploy
 ```
 
-首次生成配置后，请修改正式域名、`ALLOWED_ORIGINS` 和模型密钥。生产 Compose 会在应用启动前自动执行数据库迁移，健康检查地址为 `/api/health`。
+首次生成配置后，请修改正式域名和模型密钥。生产 Compose 会在应用启动前自动执行数据库迁移，健康检查地址为 `/api/health`。
 
-完整说明见 [Docker 自托管](./docs/self-hosting/platform/docker.md)。
+云服务器在线安装（拉 GHCR，无需本机打包）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Hyk260/PureChatNext/main/docker-compose/deploy/install-online.sh \
+  | sudo APP_URL=https://chat.example.com bash
+```
+
+不便拉镜像时，改用离线包：
+
+```bash
+pnpm docker:pack
+pnpm docker:upload
+# 上传后：sudo APP_URL=https://chat.example.com /opt/purechat/install.sh
+```
+
+完整说明见 [Docker 自托管](./docs/self-hosting/platform/docker.md)。云服务器与 1Panel 见 [云服务器部署](./docs/self-hosting/platform/1panel.md)。
 
 ## 环境变量
 
@@ -235,13 +249,13 @@ pnpm docker:deploy
 
 | 变量 | 用途 | 说明 |
 | --- | --- | --- |
-| `APP_URL` | 应用对外地址 | 本地使用 `http://localhost:5174`，生产使用正式域名 |
-| `ALLOWED_ORIGINS` | CORS 允许来源 | 本地通常包含 `http://localhost:3000,http://localhost:5174` |
+| `APP_URL` | 应用对外地址 | 本地使用 `http://localhost:5174`，生产使用正式域名；CORS 默认允许该地址 |
+| `ALLOWED_ORIGINS` | CORS 额外来源 | 可选；省略时使用 `APP_URL`。不要使用 `*` |
 | `DATABASE_DRIVER` | 数据库连接模式 | 云数据库使用 `neon`；本地 / Docker PostgreSQL 使用 `node` |
 | `DATABASE_URL` | PostgreSQL 连接字符串 | Supabase、Neon 或本地 PostgreSQL 均可 |
-| `KEY_VAULTS_SECRET` | 敏感配置加密密钥 | 使用随机高强度密钥 |
+| `KEY_VAULTS_SECRET` | 敏感配置加密密钥 | 渠道凭证与用户服务商密钥；使用随机高强度密钥 |
 | `AUTH_SECRET` / `JWKS_KEY` | 认证与 JWT 密钥 | 生成方式见 `.env.example` |
-| `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` | 模型 Provider 密钥 | 至少配置一个可用 Provider |
+| `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` | 模型 Provider 密钥 | 网页聊天可选兜底；微信 / QQ 需在设置页保存用户密钥 |
 | `SEARCH_PROVIDERS` / `CRAWLER_IMPLS` | 搜索与爬虫链 | 不需要联网搜索时可以不配置 |
 | `REDIS_URL` | 缓存与队列 | 使用 Docker 或托管 Redis 时配置 |
 | `S3_*` | 文件对象存储 | 使用 RustFS、MinIO、S3 等兼容服务时配置 |

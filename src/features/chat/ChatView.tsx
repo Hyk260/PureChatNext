@@ -76,15 +76,6 @@ const messagesSignature = (messages: UIMessage[]) =>
 const chatTransport = new DefaultChatTransport({
   api: '/api/chat',
   credentials: 'include',
-  headers: (): Record<string, string> => {
-    const provider = useHomeStore.getState().selectedProvider
-    if (!isSettingsProviderId(provider) || provider === 'purechat') return {}
-
-    const apiKey = useProviderConfigStore.getState().configs[provider]?.apiKey.trim() ?? ''
-    if (!apiKey) return {}
-
-    return { Authorization: `Bearer ${apiKey}` }
-  },
 })
 
 export type ChatViewActions = {
@@ -120,11 +111,6 @@ const ChatView = memo<ChatViewProps>(
     const selectedModel = useHomeStore((s) => s.selectedModel)
     const selectedProvider = useHomeStore((s) => s.selectedProvider)
     const activeAgent = useHomeStore((s) => s.activeAgent)
-    const providerBaseURL = useProviderConfigStore((s) =>
-      isSettingsProviderId(selectedProvider) && selectedProvider !== 'purechat'
-        ? (s.configs[selectedProvider]?.baseURL.trim() ?? '')
-        : ''
-    )
     const selectedModelConfig = useProviderConfigStore((s) =>
       isSettingsProviderId(selectedProvider)
         ? s.configs[selectedProvider]?.models.find((model) => model.id === selectedModel)
@@ -330,14 +316,12 @@ const ChatView = memo<ChatViewProps>(
         ...(permissionMode ? { permissionMode } : {}),
         provider: selectedProvider,
         searchMode,
-        ...(providerBaseURL ? { baseURL: providerBaseURL } : {}),
         ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
       }),
       [
         activeAgent,
         desktopApi,
         permissionMode,
-        providerBaseURL,
         searchMode,
         selectedModel,
         selectedModelAbilities,

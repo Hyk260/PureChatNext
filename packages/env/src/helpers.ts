@@ -47,3 +47,9 @@ export const optionalUrlEnv = () => {
     z.url({ protocol: /^https?$/ }).optional()
   )
 }
+
+/** Trimmed non-empty string; blank / missing → undefined. */
+export const nonEmptyEnv = (value?: string): string | undefined => {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : undefined
+}

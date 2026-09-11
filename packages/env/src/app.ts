@@ -9,7 +9,7 @@ declare global {
     interface ProcessEnv {
       /** 对外访问地址，用于 Better Auth、邮件和 OAuth 回调；本地应使用 Vite SPA 的 `5174` 端口。 */
       APP_URL?: string
-      /** CORS 允许的来源，逗号分隔（本地需含 Vite `5174`） */
+      /** CORS 额外允许来源，逗号分隔；省略时使用 `APP_URL` */
       ALLOWED_ORIGINS?: string
       /** 本地 cloudflared TryCloudflare 隧道；同时放开 Vite Host 与 Auth/CORS Origin */
       ALLOW_TRYCLOUDFLARE?: string
@@ -41,7 +41,7 @@ export const getAppConfig = () => {
       APP_URL: z.string().optional(),
       /** Vercel Edge Config 连接字符串。 */
       VERCEL_EDGE_CONFIG: z.string().optional(),
-      /** CORS 允许的来源，逗号分隔（本地需含 Vite `5174`）。 */
+      /** CORS 额外允许来源，逗号分隔；省略时使用 `APP_URL`。 */
       ALLOWED_ORIGINS: z.string().optional(),
       /** 本地是否启用 cloudflared TryCloudflare 隧道；默认关闭。 */
       ALLOW_TRYCLOUDFLARE: z.boolean(),

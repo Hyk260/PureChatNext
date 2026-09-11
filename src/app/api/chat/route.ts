@@ -14,6 +14,8 @@ import type { ToolExecutionEndEvent, UIMessage } from 'ai'
 import debug from 'debug'
 import { createNanoId } from '@pure/utils'
 
+import { isSupportedProviderId } from '@/libs/ai-providers/resolveClient'
+import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 import { ChatSDKError } from '@/libs/errors'
 import { llmEnv, resolveAiGatewayApiKey, resolveAiGatewayBaseURL } from '@/envs/llm'
@@ -139,7 +141,7 @@ const resolveModel = (
  * POST /api/chat
  *
  * PureChat：需登录；使用服务端 AI_GATEWAY_API_KEY；按 usage 扣免费积分。
- * 自配 openai / deepseek：不扣积分；可选 Authorization Bearer 覆盖 env Key。
+ * 自配 openai / deepseek：不扣积分；优先账号金库，其次 Authorization Bearer / 服务端 env。
  */
 export async function POST(request: Request) {
   let requestBody: {
@@ -442,20 +444,27 @@ export async function POST(request: Request) {
     }
   }
 
-  const apiKey = resolveApiKeyFromHeader(request)
-  const resolvedBaseURL = typeof baseURL === 'string' && baseURL.trim() ? baseURL.trim() : undefined
+  if (!isSupportedProviderId(resolvedProvider)) {
+    return new ChatSDKError('bad_request:api', `Unsupported provider "${resolvedProvider}"`).toResponse()
+  }
 
-  // Fail fast with a JSON error so the client can surface it (streamText would
-  // otherwise return 200 with a broken stream when the env key is missing).
-  if (!apiKey) {
-    const envKey = resolvedProvider === 'openai' ? process.env.OPENAI_API_KEY : process.env.DEEPSEEK_API_KEY
-    if (!envKey?.trim()) {
-      return new ChatSDKError('bad_request:api', `Missing API key for provider "${resolvedProvider}"`).toResponse()
-    }
+  if (!userId) userId = await getAuthenticatedUserId()
+
+  const credentials = await resolveUserProviderCredentials({
+    allowEnvFallback: true,
+    headerKey: resolveApiKeyFromHeader(request),
+    provider: resolvedProvider,
+    requestBaseURL: typeof baseURL === 'string' ? baseURL : undefined,
+    userId,
+  })
+
+  if (!credentials) {
+    const message = userId ? MISSING_USER_PROVIDER_SECRET_MESSAGE : `Missing API key for provider "${resolvedProvider}"`
+    return new ChatSDKError('bad_request:api', message).toResponse()
   }
 
   try {
-    const resolvedModel = resolveModel(provider, model, apiKey, resolvedBaseURL)
+    const resolvedModel = resolveModel(provider, model, credentials.apiKey, credentials.baseURL)
 
     log('modelId: %o, provider: %o', resolvedModel.modelId, resolvedModel.provider)
 

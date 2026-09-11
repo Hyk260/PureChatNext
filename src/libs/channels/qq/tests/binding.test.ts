@@ -4,17 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('@/server/purechat', () => ({
   isPureChatRuntimeAvailable: () => true,
 }))
-
-const { apiKeys } = vi.hoisted(() => ({
-  apiKeys: {
-    deepseek: 'test-key' as string | undefined,
-    openai: 'test-key' as string | undefined,
-  },
-}))
-
-vi.mock('@/libs/ai-providers/resolveClient', () => ({
-  isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek',
-  resolveProviderApiKey: (provider: string) => apiKeys[provider as keyof typeof apiKeys],
+vi.mock('@pure/database/models/userProviderSecret', () => ({
+  UserProviderSecretModel: class {},
 }))
 
 vi.mock('@pure/chat-adapter/qq', () => ({ QQApiClient: class {} }))
@@ -40,14 +31,10 @@ describe('QQ channel model binding', () => {
     })
   })
 
-  it('keeps explicit DeepSeek selection strict when the channel key is missing', () => {
-    apiKeys.deepseek = undefined
-    try {
-      expect(() => resolveQQChannelModel({ model: 'deepseek-v4-flash', provider: 'deepseek' })).toThrow(
-        '服务器未配置 deepseek 渠道密钥'
-      )
-    } finally {
-      apiKeys.deepseek = 'test-key'
-    }
+  it('keeps an explicit DeepSeek selection without consulting env keys', () => {
+    expect(resolveQQChannelModel({ model: 'deepseek-v4-flash', provider: 'deepseek' })).toEqual({
+      model: 'deepseek-v4-flash',
+      provider: 'deepseek',
+    })
   })
 })

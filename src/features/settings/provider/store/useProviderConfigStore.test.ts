@@ -59,7 +59,7 @@ describe('PureChat provider config migration', () => {
       durationMs: 120,
       status: 'success',
     })
-    expect(useProviderConfigStore.persist.getOptions().version).toBe(9)
+    expect(useProviderConfigStore.persist.getOptions().version).toBe(10)
   })
 
   it('does not persist an active health check state', () => {
@@ -70,6 +70,17 @@ describe('PureChat provider config migration', () => {
     }
 
     expect(partialized.configs.purechat.models[0]?.health).toEqual({ status: 'idle' })
+  })
+
+  it('does not persist apiKey or baseURL', () => {
+    useProviderConfigStore.getState().patchConfig('deepseek', { apiKey: 'sk-secret', baseURL: 'https://proxy.example' })
+
+    const partialized = useProviderConfigStore.persist.getOptions().partialize?.(useProviderConfigStore.getState()) as {
+      configs: ProviderConfigs
+    }
+
+    expect(partialized.configs.deepseek.apiKey).toBe('')
+    expect(partialized.configs.deepseek.baseURL).toBe('')
   })
 
   it('supports custom models, remote cleanup, bulk toggles, and ordering', () => {

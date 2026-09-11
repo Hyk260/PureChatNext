@@ -2,7 +2,7 @@ import { createEnv } from '@t3-oss/env-core'
 import type { RedisConfig } from '@pure/types'
 import { z } from 'zod'
 
-import { parseEnvBoolean, parseEnvInt } from './helpers'
+import { nonEmptyEnv, parseEnvBoolean, parseEnvInt } from './helpers'
 
 export type { RedisConfig } from '@pure/types'
 
@@ -61,7 +61,8 @@ export const getRedisEnv = () => {
 export const redisEnv = getRedisEnv()
 
 export const getRedisConfig = (): RedisConfig => {
-  if (!redisEnv.REDIS_URL) {
+  const url = nonEmptyEnv(redisEnv.REDIS_URL)
+  if (!url) {
     return {
       enabled: false,
       prefix: redisEnv.REDIS_PREFIX,
@@ -73,10 +74,10 @@ export const getRedisConfig = (): RedisConfig => {
   return {
     database: redisEnv.REDIS_DATABASE,
     enabled: true,
-    password: redisEnv.REDIS_PASSWORD,
+    password: nonEmptyEnv(redisEnv.REDIS_PASSWORD),
     prefix: redisEnv.REDIS_PREFIX,
     tls: redisEnv.REDIS_TLS,
-    url: redisEnv.REDIS_URL,
-    username: redisEnv.REDIS_USERNAME,
+    url,
+    username: nonEmptyEnv(redisEnv.REDIS_USERNAME),
   }
 }

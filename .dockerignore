@@ -18,6 +18,8 @@ logs
 docker-compose
 docs
 tests
+apps/desktop
+apps/docs
 
 **/*.spec.*
 **/*.test.*

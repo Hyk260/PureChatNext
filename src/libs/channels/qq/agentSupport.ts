@@ -1,6 +1,6 @@
 import {
   CHANNEL_PROVIDER_IDS,
-  channelProviderUnavailableReason,
+  channelProviderByokUnavailableReason,
   defaultChannelModel,
   isChannelProviderId,
   validateChannelModel,
@@ -22,6 +22,6 @@ export function validateQQModel(provider: QQProviderId, model: string): string |
   return validateChannelModel(provider, model)
 }
 
-export function qqChannelUnavailableReason(provider: string | null | undefined): string | null {
-  return channelProviderUnavailableReason(provider, 'QQ 渠道')
+export function qqChannelByokUnavailableReason(userId: string, provider: string | null | undefined) {
+  return channelProviderByokUnavailableReason(userId, provider, 'QQ 渠道')
 }

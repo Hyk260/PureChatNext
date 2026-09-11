@@ -43,6 +43,8 @@
     "docker:setup:dev": "bun scripts/docker.mts setup-dev",
     "docker:setup:deploy": "bun scripts/docker.mts setup-deploy",
     "docker:deploy": "bun scripts/docker.mts deploy",
+    "docker:pack": "bun scripts/docker.mts pack",
+    "docker:upload": "bash scripts/upload-offline.sh",
     "docker:validate": "bun scripts/docker.mts validate",
     "docker:verify:local": "bun scripts/docker-verify-local.mts",
     "agents:sync": "bun scripts/fetch-community-agents.ts",

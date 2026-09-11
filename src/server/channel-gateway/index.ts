@@ -45,9 +45,5 @@ export function getChannelGatewaySummary(): ChannelGatewaySummary {
   }
 }
 
-export type {
-  ChannelGatewayClient,
-  ChannelGatewayPlatformDefinition,
-  ChannelGatewaySummary,
-} from './types'
-export { ChannelGatewayManager } from './manager'
+export type * from './types'
+export * from './manager'

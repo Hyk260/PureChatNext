@@ -5,11 +5,8 @@ import debug from 'debug'
 import { PURECHAT_PROVIDER_ID } from '@pure/const'
 import { AgentModel } from '@pure/database/models/agent'
 import type { CreditUsageTrigger } from '@pure/database/schemas'
-import {
-  createProviderLanguageModel,
-  isSupportedProviderId,
-  resolveProviderApiKey,
-} from '@/libs/ai-providers/resolveClient'
+import { createProviderLanguageModel, isSupportedProviderId } from '@/libs/ai-providers/resolveClient'
+import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { assertPureChatCanChat, chargePureChatGenerateUsage, createPureChatLanguageModel } from '@/server/purechat'
 import type { PureChatSettlement } from '@/server/purechat'
 import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
@@ -106,14 +103,18 @@ async function resolveRuntimeModel(
     throw new Error(`Channel provider "${provider}" is not supported by the ${platform} gateway`)
   }
 
-  const apiKey = resolveProviderApiKey(provider, undefined, undefined)
-  if (!apiKey) {
-    throw new Error(
-      `No API key for provider "${provider}". Set OPENAI_API_KEY or DEEPSEEK_API_KEY for ${platform} replies.`
-    )
+  const credentials = await resolveUserProviderCredentials({
+    allowEnvFallback: false,
+    provider,
+    userId,
+  })
+  if (!credentials) {
+    throw new Error(`${MISSING_USER_PROVIDER_SECRET_MESSAGE}（${platform}）`)
   }
 
-  return { languageModel: createProviderLanguageModel(provider, modelId, apiKey, undefined) }
+  return {
+    languageModel: createProviderLanguageModel(provider, modelId, credentials.apiKey, credentials.baseURL),
+  }
 }
 
 async function settlePureChatUsage(params: {

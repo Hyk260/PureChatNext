@@ -11,8 +11,8 @@ import {
   isSupportedProviderId,
   resolveApiKeyFromHeader,
   resolveOptionalBaseURL,
-  resolveProviderApiKey,
 } from '@/libs/ai-providers/resolveClient'
+import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 import { ChatSDKError } from '@/libs/errors'
 import { withHealthTimeout } from '@/server/health/dependencies'
@@ -130,7 +130,7 @@ const failedResponse = (model: string, provider: string, message: string, status
 /**
  * POST /api/providers/check
  * 检测 Provider 连通性（发起一次最小生成请求）
- * @param request - JSON `{ provider, model, apiKey?, baseURL? }`；可选 Header `Authorization: Bearer <api-key>`
+ * @param request - JSON `{ provider, model, baseURL? }`；密钥来自账号金库，可选 Header `Authorization: Bearer <api-key>` 或服务端 env
  */
 export async function POST(request: Request) {
   let body: {
@@ -194,13 +194,23 @@ export async function POST(request: Request) {
       )
     }
   } else {
-    const apiKey = resolveProviderApiKey(provider, resolveApiKeyFromHeader(request), body.apiKey)
+    const userId = await getAuthenticatedUserId()
+    const credentials = await resolveUserProviderCredentials({
+      allowEnvFallback: true,
+      headerKey: resolveApiKeyFromHeader(request),
+      provider,
+      requestBaseURL: body.baseURL,
+      userId,
+    })
 
-    if (!apiKey) {
-      return new ChatSDKError('bad_request:api', `Missing API key for provider "${provider}"`).toResponse()
+    if (!credentials) {
+      const message = userId ? MISSING_USER_PROVIDER_SECRET_MESSAGE : `Missing API key for provider "${provider}"`
+      return new ChatSDKError('bad_request:api', message).toResponse()
     }
 
-    languageModel = createProviderLanguageModel(provider, model, apiKey, baseURL, { timeoutMs })
+    languageModel = createProviderLanguageModel(provider, model, credentials.apiKey, credentials.baseURL ?? baseURL, {
+      timeoutMs,
+    })
   }
 
   log('check provider=%o model=%o baseURL=%o timeoutMs=%o', provider, model, baseURL ?? '(default)', timeoutMs)

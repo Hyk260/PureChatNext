@@ -189,6 +189,7 @@ sudo ./install.sh up --force-recreate
 | `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | 访问密钥 |
 | `S3_BUCKET` | 桶名 |
 | `S3_ENDPOINT` | API 端点（本地 RustFS 一般为 `http://localhost:9000`） |
+| `S3_PUBLIC_DOMAIN` | 浏览器访问用的自定义域名（如 `https://cdn.example.com`）；不能当作 `S3_ENDPOINT` |
 | `S3_REGION` | 区域；本地可填 `us-east-1` |
 | `S3_ENABLE_PATH_STYLE` | `1` 时使用 path-style（`endpoint/bucket/key`）；RustFS / MinIO 通常需要 |
 | `S3_SET_ACL` | 是否上传时设置对象 `public-read` ACL（见下） |
@@ -208,6 +209,30 @@ S3_SET_ACL=0
 
 生产 Docker 请填写对象存储服务的 Endpoint 与密钥，不要使用上述 localhost 地址。
 
+#### 腾讯云 COS
+
+用 `@aws-sdk/client-s3` 访问 COS 时，`S3_ENDPOINT` 必须是地域 API 地址，**不能**填自定义源站 / CDN 域名：
+
+```dotenv
+S3_ACCESS_KEY_ID=<CAM SecretId>
+S3_SECRET_ACCESS_KEY=<CAM SecretKey>
+S3_BUCKET=<bucket>-<APPID>
+S3_ENDPOINT=https://cos.ap-shanghai.myqcloud.com
+S3_REGION=ap-shanghai
+S3_ENABLE_PATH_STYLE=0
+S3_SET_ACL=0
+```
+
+SDK 会按 virtual-hosted 访问 `https://<bucket>.cos.<region>.myqcloud.com`。`cdn.example.com` 这类自定义域名只用于浏览器下载，PutObject / ListObjects 仍走上面的 API 地址。应用侧已关闭默认 CRC32 校验（COS 不支持）。
+
+头像走自定义域名时额外设置：
+
+```dotenv
+S3_PUBLIC_DOMAIN=https://cdn.purechat.cn
+```
+
+并在 COS 桶策略中允许匿名 `GetObject`（至少 `user/avatar/*`）。对象仍私有时浏览器会 403，此时不要设 `S3_PUBLIC_DOMAIN`，头像会回退到同域代理 `/api/webapi/user/avatar/...`。
+
 #### `S3_SET_ACL`
 
 控制上传时是否给对象打 **`public-read` ACL**，以及客户端如何拿到文件 URL。
@@ -215,7 +240,7 @@ S3_SET_ACL=0
 | 值 | 上传行为 | 访问方式 |
 | -- | -------- | -------- |
 | `1` | PutObject / 预签名上传带 `ACL: public-read` | 客户端直接使用 S3 公网 URL |
-| `0` | 不设置 ACL，对象保持私有 | 经应用鉴权代理，如 `/api/resources/files/:id/content`、头像代理路由 |
+| `0` | 不设置 ACL，对象保持私有 | 资源经应用代理；头像在设置了 `S3_PUBLIC_DOMAIN` 时走自定义域名，否则走 `/api/webapi/user/avatar/...` |
 
 推荐：
 

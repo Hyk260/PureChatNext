@@ -18,9 +18,14 @@ function decodeS3KeyFromPathname(pathname: string): string {
 }
 
 export function buildPublicS3Url(key: string): string {
+  const encodedKey = encodeS3KeyForUrl(key)
+  const publicDomain = fileEnv.S3_PUBLIC_DOMAIN?.replace(/\/$/, '')
+  if (publicDomain) {
+    return `${publicDomain}/${encodedKey}`
+  }
+
   const endpoint = fileEnv.S3_ENDPOINT!.replace(/\/$/, '')
   const bucket = fileEnv.S3_BUCKET!
-  const encodedKey = encodeS3KeyForUrl(key)
 
   if (fileEnv.S3_ENABLE_PATH_STYLE) {
     return `${endpoint}/${bucket}/${encodedKey}`

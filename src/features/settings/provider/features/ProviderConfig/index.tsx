@@ -2,6 +2,7 @@
 
 import { Flex, Input, InputPassword, ProviderCombine, Text } from '@pure/ui'
 import { Switch } from 'antd'
+import { Loader2 } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FocusEvent, FormEvent } from 'react'
 
@@ -81,7 +82,6 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
           }
           draftDirtyRef.current = false
           patchConfig(id, { baseURL: item.baseURL })
-          message.success('已加密保存到账号')
           return true
         } catch (error) {
           message.error(error instanceof Error ? error.message : '保存失败')
@@ -109,6 +109,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
   }
 
   const handleApiKeyBlur = (event: FocusEvent<HTMLInputElement>) => {
+    if (saving) return
     const next = event.relatedTarget
     if (next instanceof Node && apiKeyWrapRef.current?.contains(next)) return
     const apiKey = resolveApiKey()
@@ -121,6 +122,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
   }
 
   const handleBaseURLBlur = () => {
+    if (saving) return
     if ((saved?.baseURL ?? '') === baseURL) return
     const apiKey = resolveApiKey()
     if (!saved && !apiKey) {
@@ -137,27 +139,42 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
   }
 
   const handleApiKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (saving) return
     draftDirtyRef.current = true
     setApiKeyDraft(event.target.value)
   }
 
   const handleApiKeyInput = (event: FormEvent<HTMLDivElement>) => {
+    if (saving) return
     const target = event.target
     if (!(target instanceof HTMLInputElement)) return
     draftDirtyRef.current = true
     setApiKeyDraft(target.value)
   }
 
+  const savingStatus = saving ? (
+    <Flex className='flex-row items-center gap-1 text-muted-foreground'>
+      <Loader2 aria-hidden className='h-4 w-4 animate-spin' />
+      <Text type='secondary' style={{ fontSize: 12 }}>
+        保存中
+      </Text>
+    </Flex>
+  ) : null
+
   return (
-    <Flex className='flex-col gap-2 w-full'>
+    <Flex aria-busy={saving} className='flex-col gap-2 w-full'>
       <Flex className='flex-between py-2 w-full'>
         <ProviderCombine provider={id} size={32} />
         {serverManaged ? null : (
-          <Switch
-            aria-label={`${enabled ? '停用' : '启用'} ${meta.name}`}
-            checked={enabled}
-            onChange={(checked) => setEnabled(id, checked)}
-          />
+          <Flex className='flex-row items-center gap-2'>
+            {savingStatus}
+            <Switch
+              aria-label={`${enabled ? '停用' : '启用'} ${meta.name}`}
+              checked={enabled}
+              disabled={saving}
+              onChange={(checked) => setEnabled(id, checked)}
+            />
+          </Flex>
         )}
       </Flex>
 
@@ -186,7 +203,13 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
                   disabled={saving}
                   placeholder={`${meta.name} API Key`}
                   value={apiKeyDraft}
-                  visibilityToggle={{ onVisibleChange: setKeyVisible, visible: keyVisible }}
+                  visibilityToggle={{
+                    onVisibleChange: (visible) => {
+                      if (saving) return
+                      setKeyVisible(visible)
+                    },
+                    visible: keyVisible,
+                  }}
                   onBlur={handleApiKeyBlur}
                   onChange={handleApiKeyChange}
                   onPressEnter={(event) => {
@@ -211,7 +234,10 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
                 placeholder={PROVIDER_DEFAULT_BASE_URLS[id]}
                 value={baseURL}
                 onBlur={handleBaseURLBlur}
-                onChange={(event) => patchConfig(id, { baseURL: event.target.value })}
+                onChange={(event) => {
+                  if (saving) return
+                  patchConfig(id, { baseURL: event.target.value })
+                }}
                 onPressEnter={(event) => {
                   event.preventDefault()
                   event.currentTarget.blur()
@@ -228,7 +254,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
               </Text>
             </Flex>
             <div className={styles.rowBody}>
-              <Checker ensureSecret={ensureSecretForCheck} provider={id} />
+              <Checker disabled={saving} ensureSecret={ensureSecretForCheck} provider={id} />
             </div>
           </div>
 

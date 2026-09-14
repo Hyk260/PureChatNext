@@ -68,6 +68,7 @@ export class S3 {
       endpoint,
       forcePathStyle: options?.forcePathStyle,
       region: options?.region || DEFAULT_S3_REGION,
+      // AWS SDK v3.729+ 默认附加 CRC32；腾讯云 COS / MinIO / RustFS 会拒绝
       requestChecksumCalculation: 'WHEN_REQUIRED',
       responseChecksumValidation: 'WHEN_REQUIRED',
     })
@@ -232,20 +233,30 @@ export class S3 {
    * List files in the bucket with an optional prefix
    */
   public async listFiles(prefix?: string): Promise<FileType[]> {
-    const command = new ListObjectsV2Command({
-      Bucket: this.bucket,
-      ...(prefix ? { Prefix: prefix } : {}),
-    })
+    const files: FileType[] = []
+    let continuationToken: string | undefined
 
-    const response = await this.client.send(command)
+    do {
+      const response = await this.client.send(
+        new ListObjectsV2Command({
+          Bucket: this.bucket,
+          ContinuationToken: continuationToken,
+          ...(prefix ? { Prefix: prefix } : {}),
+        })
+      )
 
-    return (
-      response.Contents?.map((obj) => ({
-        Key: obj.Key ?? '',
-        LastModified: obj.LastModified ?? new Date(0),
-        Size: obj.Size ?? 0,
-      })) ?? []
-    )
+      for (const obj of response.Contents ?? []) {
+        files.push({
+          Key: obj.Key ?? '',
+          LastModified: obj.LastModified ?? new Date(0),
+          Size: obj.Size ?? 0,
+        })
+      }
+
+      continuationToken = response.IsTruncated ? response.NextContinuationToken : undefined
+    } while (continuationToken)
+
+    return files
   }
 
   /**

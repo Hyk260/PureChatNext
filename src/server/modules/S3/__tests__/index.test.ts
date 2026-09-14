@@ -4,6 +4,7 @@ import {
   DeleteObjectsCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3'
@@ -530,6 +531,36 @@ describe('FileS3', () => {
           Key: 'animation.gif',
         })
       )
+    })
+  })
+
+  describe('listFiles', () => {
+    it('paginates truncated listings', async () => {
+      const s3 = new FileS3()
+      mockS3ClientSend
+        .mockResolvedValueOnce({
+          Contents: [{ Key: 'user/avatar/a.jpg', LastModified: new Date('2026-01-01'), Size: 10 }],
+          IsTruncated: true,
+          NextContinuationToken: 'page-2',
+        })
+        .mockResolvedValueOnce({
+          Contents: [{ Key: 'user/avatar/b.jpg', LastModified: new Date('2026-01-02'), Size: 20 }],
+          IsTruncated: false,
+        })
+
+      const files = await s3.listFiles('user/avatar/')
+
+      expect(ListObjectsV2Command).toHaveBeenNthCalledWith(1, {
+        Bucket: 'test-bucket',
+        ContinuationToken: undefined,
+        Prefix: 'user/avatar/',
+      })
+      expect(ListObjectsV2Command).toHaveBeenNthCalledWith(2, {
+        Bucket: 'test-bucket',
+        ContinuationToken: 'page-2',
+        Prefix: 'user/avatar/',
+      })
+      expect(files.map((file) => file.Key)).toEqual(['user/avatar/a.jpg', 'user/avatar/b.jpg'])
     })
   })
 })

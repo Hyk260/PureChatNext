@@ -40,6 +40,8 @@ const client = new S3Client({
   endpoint,
   forcePathStyle: process.env.S3_ENABLE_PATH_STYLE !== '0',
   region: process.env.S3_REGION || 'us-east-1',
+  requestChecksumCalculation: 'WHEN_REQUIRED',
+  responseChecksumValidation: 'WHEN_REQUIRED',
 })
 
 const isMissingBucket = (error) =>

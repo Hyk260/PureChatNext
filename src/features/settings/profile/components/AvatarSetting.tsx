@@ -65,7 +65,7 @@ export function AvatarSetting({ avatar, displayName, initials, onUploaded, s3Con
       type='button'
     >
       {avatar ? (
-        <img alt={displayName} className='h-10 w-10 rounded-lg object-cover' src={avatar} />
+        <img alt={displayName} className='h-10 w-10 rounded-lg object-cover' key={avatar} src={avatar} />
       ) : (
         <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-sm font-semibold text-primary'>
           {initials}

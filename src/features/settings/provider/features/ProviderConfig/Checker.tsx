@@ -21,11 +21,12 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 interface CheckerProps {
+  disabled?: boolean
   ensureSecret?: () => Promise<boolean>
   provider: ProviderId
 }
 
-const Checker = memo<CheckerProps>(({ ensureSecret, provider }) => {
+const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
   const { modal } = useApp()
   const config = useProviderConfigStore((s) => s.configs[provider])
   const setCheckModel = useProviderConfigStore((s) => s.setCheckModel)
@@ -59,6 +60,7 @@ const Checker = memo<CheckerProps>(({ ensureSecret, provider }) => {
   }, [checkModel, models])
 
   const checkConnection = async () => {
+    if (disabled) return
     const hasSavedKey = ensureSecret ? await ensureSecret() : hasVaultKey
     if (!hasSavedKey) {
       modal.error({
@@ -118,6 +120,7 @@ const Checker = memo<CheckerProps>(({ ensureSecret, provider }) => {
       <Flex className='flex-row gap-2 w-full'>
         <Select
           className={styles.popup}
+          disabled={disabled}
           options={sortedModelIds.map((id) => ({
             label: (
               <Flex className='flex-row items-center gap-1.5'>
@@ -130,6 +133,7 @@ const Checker = memo<CheckerProps>(({ ensureSecret, provider }) => {
           style={{ flex: 1, minWidth: 0 }}
           value={checkModel || undefined}
           onChange={(value) => {
+            if (disabled) return
             setLocalCheckModel(value)
             setCheckModel(provider, value)
             setPass(false)
@@ -137,6 +141,7 @@ const Checker = memo<CheckerProps>(({ ensureSecret, provider }) => {
           }}
         />
         <Button
+          disabled={disabled}
           icon={pass ? <CheckCircleFilled style={{ color: cssVar.colorSuccess }} /> : undefined}
           loading={loading}
           style={

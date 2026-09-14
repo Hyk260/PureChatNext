@@ -5,6 +5,7 @@ const fileEnv = vi.hoisted(() => ({
   S3_BUCKET: 'purechat',
   S3_ENABLE_PATH_STYLE: true,
   S3_ENDPOINT: 'http://localhost:9000',
+  S3_PUBLIC_DOMAIN: undefined as string | undefined,
   S3_SET_ACL: false,
 }))
 
@@ -17,6 +18,7 @@ describe('S3 url helpers', () => {
     fileEnv.S3_BUCKET = 'purechat'
     fileEnv.S3_ENABLE_PATH_STYLE = true
     fileEnv.S3_ENDPOINT = 'http://localhost:9000'
+    fileEnv.S3_PUBLIC_DOMAIN = undefined
     fileEnv.S3_SET_ACL = false
   })
 
@@ -34,6 +36,15 @@ describe('S3 url helpers', () => {
     const legacyUrl = `http://localhost:9000/purechat/${key}`
 
     expect(extractS3KeyFromUrl(legacyUrl)).toBe(key)
+  })
+
+  it('prefers the custom public domain when configured', () => {
+    fileEnv.S3_PUBLIC_DOMAIN = 'https://cdn.purechat.cn/'
+    fileEnv.S3_ENABLE_PATH_STYLE = false
+
+    const key = 'user/avatar/huangyk/photo.jpg'
+    expect(buildPublicS3Url(key)).toBe('https://cdn.purechat.cn/user/avatar/huangyk/photo.jpg')
+    expect(extractS3KeyFromUrl(buildPublicS3Url(key))).toBe(key)
   })
 
   it('supports virtual-hosted-style endpoints', () => {

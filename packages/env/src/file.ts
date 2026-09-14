@@ -17,6 +17,8 @@ declare global {
       S3_ENABLE_PATH_STYLE?: string
       /** S3 兼容服务的请求端点。 */
       S3_ENDPOINT?: string
+      /** 浏览器访问对象的自定义域名（如 COS 自定义源站），不能当作 API Endpoint。 */
+      S3_PUBLIC_DOMAIN?: string
       /** 预览 URL 的有效期，单位为秒；默认 `7200`。 */
       S3_PREVIEW_URL_EXPIRE_IN?: string
       /** S3 区域，例如 `us-west-1`。 */
@@ -44,6 +46,8 @@ export const getFileConfig = () => {
       S3_ENABLE_PATH_STYLE: z.boolean(),
       /** S3 兼容服务的请求端点。 */
       S3_ENDPOINT: optionalUrlEnv(),
+      /** 浏览器访问对象的自定义域名（如 COS 自定义源站）。 */
+      S3_PUBLIC_DOMAIN: optionalUrlEnv(),
       /** 预览 URL 的有效期，单位为秒；默认 `7200`。 */
       S3_PREVIEW_URL_EXPIRE_IN: z.number(),
       /** S3 区域，例如 `us-west-1`。 */
@@ -60,6 +64,7 @@ export const getFileConfig = () => {
       S3_BUCKET: process.env.S3_BUCKET,
       S3_ENABLE_PATH_STYLE: parseEnvBoolean(process.env.S3_ENABLE_PATH_STYLE),
       S3_ENDPOINT: process.env.S3_ENDPOINT,
+      S3_PUBLIC_DOMAIN: process.env.S3_PUBLIC_DOMAIN,
       S3_PREVIEW_URL_EXPIRE_IN: parseEnvInt(process.env.S3_PREVIEW_URL_EXPIRE_IN, 7200) ?? 7200,
       S3_REGION: process.env.S3_REGION,
       S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,

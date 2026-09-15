@@ -22,7 +22,7 @@ const ActionIconWithChevron = memo<ActionIconWithChevronProps>(
         title={title}
         type='text'
       >
-        <Flex className='flex-row items-center gap-1'>
+        <Flex className='items-center gap-1'>
           <Icon color={cssVar.colorIcon} icon={icon} size={18} />
           <Icon color={cssVar.colorIcon} icon={ChevronDownIcon} size={14} />
         </Flex>

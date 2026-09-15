@@ -50,7 +50,7 @@ const AgentSwitcher = memo<Props>(({ agents, currentAgentId, onSelect }) => {
           const active = agent.id === currentAgentId
           return (
             <Flex
-              className={[cx(styles.item, active && styles.itemActive), 'flex-row items-center gap-2 p-1.5']}
+              className={[cx(styles.item, active && styles.itemActive), 'items-center gap-2 p-1.5']}
 
               key={agent.id}
               role='button'

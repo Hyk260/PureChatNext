@@ -85,7 +85,7 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
         styles.container,
         index % 2 === 0 && styles.evenRow,
         selected && styles.selected,
-        'flex-row items-center h-[48px] px-2',
+        'items-center h-[48px] px-2',
       ]}
       onClick={() => onOpen(item)}
     >
@@ -98,7 +98,7 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
         <Checkbox checked={selected} style={{ pointerEvents: 'none' }} />
       </Center>
       <Flex
-        className={[styles.item, 'flex-row items-center gap-2 px-2']}
+        className={[styles.item, 'items-center gap-2 px-2']}
 
         style={{ flexShrink: 0, maxWidth: columnWidths.name, minWidth: columnWidths.name, width: columnWidths.name }}
       >

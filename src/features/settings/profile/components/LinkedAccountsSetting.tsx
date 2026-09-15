@@ -167,8 +167,8 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
           <Text type='secondary'>暂无关联的第三方账户</Text>
         ) : (
           oauthAccounts.map((account) => (
-            <Flex className='flex-between ' key={account.id}>
-              <Flex className='flex-row items-center gap-1.5 min-w-0' style={{ fontSize: 12 }}>
+            <Flex className='flex-between' key={account.id}>
+              <Flex className='items-center gap-1.5 min-w-0' style={{ fontSize: 12 }}>
                 {AuthIcons(account.providerId, 16)}
                 <span>{getProviderLabel(account.providerId)}</span>
                 {userEmail ? (
@@ -190,7 +190,7 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
         {availableProviders.length > 0 ? (
           <DropdownMenu items={linkMenuItems} popupProps={{ style: { maxWidth: 200 } }}>
             <Flex
-              className='flex-row items-center gap-1.5'
+              className='items-center gap-1.5'
 
               style={{ cursor: linkingProvider ? 'wait' : 'pointer', fontSize: 12, opacity: linkingProvider ? 0.6 : 1 }}
             >

@@ -329,10 +329,10 @@ const HomeChatInput = memo(() => {
         />
 
         {files.length > 0 ? (
-          <Flex className='flex-row gap-2 flex-wrap' style={{ marginBottom: 10 }}>
+          <Flex className='gap-2 flex-wrap' style={{ marginBottom: 10 }}>
             {files.map((file, index) => (
               <Flex
-                className={[styles.attachment, 'flex-row items-center gap-1.5']}
+                className={[styles.attachment, 'items-center gap-1.5']}
                 key={`${file.name}-${file.lastModified}-${index}`}
               >
                 {file.type.startsWith('image/') ? (
@@ -368,7 +368,7 @@ const HomeChatInput = memo(() => {
         />
 
         <Flex className={[styles.footer, 'flex-between']} style={{ marginTop: 12 }}>
-          <Flex className='flex-row items-center gap-2'>
+          <Flex className='items-center gap-2'>
             <DropdownMenuRoot open={plusOpen} onOpenChange={setPlusOpen}>
               <DropdownMenuTrigger className={styles.plusTrigger} disabled={sending} nativeButton>
                 <Icon icon={Plus} size={18} />

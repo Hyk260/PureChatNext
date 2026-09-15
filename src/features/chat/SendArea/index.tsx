@@ -34,7 +34,7 @@ const SendArea = memo<SendAreaProps>(
     onStop,
   }) => {
     return (
-      <Flex className='flex-row items-center flex-none gap-3'>
+      <Flex className='items-center flex-none gap-3'>
         {prefix}
         {showModelLabel ? (
           <span className={modelLabelClassName}>

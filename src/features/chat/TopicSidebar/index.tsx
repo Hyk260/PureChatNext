@@ -81,7 +81,7 @@ const TopicSidebar = memo<Props>(
         <SideBarHeaderLayout
           collapsed={leftCollapsed}
           left={
-            <Flex className='flex-row items-center flex-1 gap-0.5 min-w-0'>
+            <Flex className='items-center flex-1 gap-0.5 min-w-0'>
               <ActionIcon icon={ChevronLeft} size='small' title='返回首页' onClick={() => router.push('/')} />
               <AgentSwitcher agents={agents} currentAgentId={currentAgentId} onSelect={onAgentSelect} />
             </Flex>
@@ -98,7 +98,7 @@ const TopicSidebar = memo<Props>(
           <Scrollbar viewStyle={{ paddingInline: 12 }}>
             <Flex className='flex-col gap-2'>
               <Flex className='flex-between gap-1 min-h-[28px] px-2'>
-                <Flex className='flex-row items-center gap-[5px]'>
+                <Flex className='items-center gap-[5px]'>
                   话题
                   {topics.length ? (
                     <Text type='secondary' style={{ fontSize: 11 }}>
@@ -107,7 +107,7 @@ const TopicSidebar = memo<Props>(
                   ) : null}
                 </Flex>
 
-                <Flex className='flex-row items-center gap-0.5'>
+                <Flex className='items-center gap-0.5'>
                   <TopicFilter
                     groupMode={groupMode}
                     sortBy={sortBy}

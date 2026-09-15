@@ -70,7 +70,7 @@ const DemoChat = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
     <Block className='flex flex-col gap-3 p-4' variant='outlined'>
       {messages.map((item, index) => (
         <Flex
-          className={item.role === 'user' ? 'flex-row justify-end gap-2' : 'flex-row gap-2'}
+          className={item.role === 'user' ? 'justify-end gap-2' : 'gap-2'}
           key={`${item.role}-${index}`}
         >
           {item.role === 'assistant' ? (
@@ -140,7 +140,7 @@ const IntroTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
           <Block className='p-4' variant='outlined' style={{ maxHeight: 360, overflow: 'auto' }}>
             <MessageMarkdown text={systemRole} />
             {agent.tags && agent.tags.length > 0 ? (
-              <Flex className='mt-3 flex-row flex-wrap gap-1'>
+              <Flex className='mt-3 flex-wrap gap-1'>
                 {agent.tags.map((tag) => (
                   <Tag className={styles.tag} key={tag} size='small'>
                     {tag}
@@ -157,7 +157,7 @@ const IntroTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
           <Text as='h3' className={styles.sectionTitle}>
             开场消息
           </Text>
-          <Block className='flex flex-row items-start gap-3 p-4' variant='outlined'>
+          <Block className='flex items-start gap-3 p-4' variant='outlined'>
             <Icon color={cssVar.colorError} icon={MessageCircleHeartIcon} size={20} style={{ marginTop: 2 }} />
             <MessageMarkdown text={agent.openingMessage.trimEnd()} />
           </Block>
@@ -166,7 +166,7 @@ const IntroTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
 
       {agent.openingQuestions && agent.openingQuestions.length > 0 ? (
         <Flex className='flex-col gap-2'>
-          <Flex className='flex-row items-center gap-2'>
+          <Flex className='items-center gap-2'>
             <Text as='h3' className={styles.sectionTitle}>
               开场问题
             </Text>
@@ -174,7 +174,7 @@ const IntroTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
           </Flex>
           <Flex className='flex-col gap-2'>
             {agent.openingQuestions.map((question) => (
-              <Block className='flex flex-row items-start gap-3 p-4' key={question} variant='outlined'>
+              <Block className='flex items-start gap-3 p-4' key={question} variant='outlined'>
                 <Icon color={cssVar.colorWarning} icon={MessageCircleQuestionIcon} size={20} style={{ marginTop: 2 }} />
                 <Text style={{ whiteSpace: 'pre-wrap' }}>{question}</Text>
               </Block>
@@ -215,8 +215,8 @@ const AgentDetailModal = memo<AgentDetailModalProps>(({ agent, onClose, onEdit, 
       onCancel={onClose}
     >
       <Flex className='flex-col gap-4'>
-        <Flex className='flex-row items-start justify-between gap-4'>
-          <Flex className='flex-row items-start gap-3 overflow-hidden'>
+        <Flex className='items-start justify-between gap-4'>
+          <Flex className='items-start gap-3 overflow-hidden'>
             <Avatar
               avatar={agent.avatar}
               background={agent.backgroundColor || 'transparent'}
@@ -227,7 +227,7 @@ const AgentDetailModal = memo<AgentDetailModalProps>(({ agent, onClose, onEdit, 
               <Text as='h2' ellipsis style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>
                 {agent.title}
               </Text>
-              <Flex className='mt-1 flex-row flex-wrap gap-1'>
+              <Flex className='mt-1 flex-wrap gap-1'>
                 <Tag size='small'>{ASSISTANT_CATEGORY_LABELS[agent.category]}</Tag>
                 {agent.tags?.slice(0, 3).map((tag) => (
                   <Tag key={tag} size='small'>
@@ -237,7 +237,7 @@ const AgentDetailModal = memo<AgentDetailModalProps>(({ agent, onClose, onEdit, 
               </Flex>
             </Flex>
           </Flex>
-          <Flex className='flex-row items-center gap-2'>
+          <Flex className='items-center gap-2'>
             {onEdit ? (
               <Button onClick={onEdit}>编辑</Button>
             ) : null}

@@ -61,9 +61,9 @@ const FileEditor = memo(() => {
 
   return (
     <Flex className={[styles.overlay, 'flex-col h-full']}>
-      <Flex className={[styles.header, 'flex-row items-center gap-1']}>
+      <Flex className={[styles.header, 'items-center gap-1']}>
         <ActionIcon size='small' icon={ArrowLeft} onClick={handleBack} title='返回' />
-        <Flex className={[styles.headerTitle, 'flex-row items-center flex-1 gap-2']}>
+        <Flex className={[styles.headerTitle, 'items-center flex-1 gap-2']}>
           <Text strong className={styles.name} title={item.name}>
             {item.name}
           </Text>

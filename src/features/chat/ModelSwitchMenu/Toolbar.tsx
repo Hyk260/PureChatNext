@@ -34,7 +34,7 @@ export interface ToolbarProps {
 }
 
 const Toolbar = memo<ToolbarProps>(({ groupMode, keyword, onGroupModeChange, onKeywordChange }) => (
-  <Flex className={[styles.toolbar, 'flex-row items-center gap-1 py-2 px-2']}>
+  <Flex className={[styles.toolbar, 'items-center gap-1 py-2 px-2']}>
     <SearchBar
       placeholder='搜索模型...'
       size='small'
@@ -44,7 +44,7 @@ const Toolbar = memo<ToolbarProps>(({ groupMode, keyword, onGroupModeChange, onK
       onInputChange={onKeywordChange}
       onKeyDown={stopPropagation}
     />
-    <Flex className='flex-row gap-0.5' style={{ flexShrink: 0 }}>
+    <Flex className='gap-0.5' style={{ flexShrink: 0 }}>
       <Tooltip title='按模型'>
         <ActionIcon
           className={cx(styles.modeBtn, groupMode === 'byModel' && styles.modeBtnActive)}

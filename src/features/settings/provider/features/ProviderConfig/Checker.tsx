@@ -117,13 +117,13 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
 
   return (
     <Flex className='flex-col gap-2 w-full'>
-      <Flex className='flex-row gap-2 w-full'>
+      <Flex className='gap-2 w-full'>
         <Select
           className={styles.popup}
           disabled={disabled}
           options={sortedModelIds.map((id) => ({
             label: (
-              <Flex className='flex-row items-center gap-1.5'>
+              <Flex className='items-center gap-1.5'>
                 <ModelIcon model={id} size={20} />
                 {id}
               </Flex>

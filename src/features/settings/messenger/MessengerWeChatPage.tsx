@@ -306,7 +306,7 @@ const MessengerWeChatPage = memo(() => {
 
   // Gateway 不可用（Vercel / 未开启内置进程）时不展示连接配置与操作按钮。
   const headerAction = gatewaySupported ? (
-    <Flex className='flex-row items-center gap-2'>
+    <Flex className='items-center gap-2'>
       {isDev ? (
         <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/dev/wechat-conversation')}>
           对话监控

@@ -25,12 +25,12 @@ const NavHeader = memo(() => {
 
   return (
     <Flex className={[styles.header, 'flex-between h-[40px] p-2']}>
-      <Flex className='flex-row items-center gap-0.5'>
+      <Flex className='items-center gap-0.5'>
         {sidebarCollapsed ? (
           <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
         ) : null}
       </Flex>
-      {/* <Flex className='flex-row items-center gap-2'>
+      {/* <Flex className='items-center gap-2'>
         {session?.user ? (
           <Link className='text-inherit no-underline' href='/settings/profile'>
             <Avatar shape='circle' size={28}>{displayName.slice(0, 1).toUpperCase()}</Avatar>

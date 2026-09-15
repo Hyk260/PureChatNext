@@ -158,7 +158,7 @@ const FilesContent = memo<Props>(({ topic }) => {
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
         />
-        <Flex className='flex-row items-center gap-1 min-w-0'>
+        <Flex className='items-center gap-1 min-w-0'>
           {relativePath ? (
             <ActionIcon icon={FolderOpen} size='small' title='返回上级' onClick={() => void handleGoUp()} />
           ) : null}

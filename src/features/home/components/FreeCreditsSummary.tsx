@@ -65,7 +65,7 @@ const FreeCreditsSummary = memo<{ onClick?: () => void }>(({ onClick }) => {
     <Link className={styles.link} href='/settings/usage' onClick={onClick}>
       <Flex className={[styles.row, 'flex-between']}>
         <Text type='secondary'>积分</Text>
-        <Flex className='flex-row items-center gap-2.5'>
+        <Flex className='items-center gap-2.5'>
           <Text className={styles.value}>{value}</Text>
           <Progress percent={percent} showInfo={false} size={16} strokeWidth={12} type='circle' />
         </Flex>

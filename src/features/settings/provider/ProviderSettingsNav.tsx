@@ -52,7 +52,7 @@ const ProviderNavItem = memo<{ id: ProviderId; active: boolean; enabled: boolean
         active={active}
         clickable
         title={
-          <Flex className='flex-row items-center gap-2 w-full'>
+          <Flex className='items-center gap-2 w-full'>
             <ProviderIcon provider={id} size={18} type='color' />
             <Text ellipsis style={{ flex: 1, minWidth: 0 }}>
               {meta.name}

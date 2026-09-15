@@ -61,7 +61,7 @@ const MessengerCommandList = memo(({ platform }: MessengerCommandListProps) => {
         {MESSENGER_COMMANDS.map((item, index) => (
           <Fragment key={item.command}>
             {index > 0 && <Divider style={{ margin: 0 }} />}
-            <Flex className='flex-row items-center gap-3 py-3.5 px-4'>
+            <Flex className='items-center gap-3 py-3.5 px-4'>
               <Flex className={[styles.icon, 'flex-center']}>
                 <Icon icon={COMMAND_ICONS[item.icon]} size={18} />
               </Flex>

@@ -72,7 +72,7 @@ const SidebarSortableItemRow = memo<SidebarSortableItemProps>(({ hiddenSections,
       justify='space-between'
       style={{ opacity: isHidden ? 0.5 : undefined }}
     >
-      <Flex className='flex-row items-center gap-2'>
+      <Flex className='items-center gap-2'>
         <SortableList.DragHandle />
         {section.icon ? <Icon icon={section.icon} size={18} /> : null}
         <Text>{section.title}</Text>
@@ -93,7 +93,7 @@ const SidebarSortableItemRow = memo<SidebarSortableItemProps>(({ hiddenSections,
 SidebarSortableItemRow.displayName = 'SidebarSortableItemRow'
 
 const BoundSpacerItem = memo(() => (
-  <Flex className={[styles.item, 'flex-row items-center gap-2']}>
+  <Flex className={[styles.item, 'items-center gap-2']}>
     <Icon icon={ArrowDownToLine} size={14} style={{ color: cssVar.colorTextQuaternary }} />
     <div className={styles.spacerLine} />
     <Text type='secondary' style={{ fontSize: 12 }}>

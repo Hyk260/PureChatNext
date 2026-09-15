@@ -78,7 +78,7 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
         <Text>把文件或文件夹拖到这里</Text>
         <Text type='secondary'>或者</Text>
       </Flex>
-      <Flex className='flex-row gap-3'>
+      <Flex className='gap-3'>
         <Flex className={[styles.card, 'flex-col p-4']} onClick={() => fileInputRef.current?.click()}>
           <span className={styles.actionTitle}>上传文件</span>
           <div className={styles.glow} style={{ background: cssVar.gold }} />

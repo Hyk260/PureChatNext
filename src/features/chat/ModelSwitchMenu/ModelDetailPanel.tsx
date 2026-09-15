@@ -125,7 +125,7 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
 
       {contextLabel ? (
         <Flex className={[styles.row, 'flex-between']}>
-          <Flex className='flex-row items-center gap-2'>
+          <Flex className='items-center gap-2'>
             <div className={styles.bar} style={{ background: '#1677ff' }} />
             <span className={styles.sectionTitle}>上下文长度</span>
           </Flex>
@@ -137,11 +137,11 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
 
       {hasAbilities ? (
         <Flex className={[styles.row, 'flex-between']}>
-          <Flex className='flex-row items-center gap-2'>
+          <Flex className='items-center gap-2'>
             <div className={styles.bar} style={{ background: '#722ed1' }} />
             <span className={styles.sectionTitle}>能力</span>
           </Flex>
-          <Flex className='flex-row gap-1'>
+          <Flex className='gap-1'>
             {abilities?.functionCall ? (
               <Tag className={styles.tag} color='blue' size='small'>
                 <Icon icon={Wrench} size={12} />
@@ -179,7 +179,7 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
       {pricing ? (
         <Flex className='flex-col gap-0.5'>
           <Flex className={[styles.row, 'flex-between']}>
-            <Flex className='flex-row items-center gap-2'>
+            <Flex className='items-center gap-2'>
               <div className={styles.bar} style={{ background: '#fa8c16' }} />
               <span className={styles.sectionTitle}>价格</span>
             </Flex>
@@ -188,14 +188,14 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
             </Text>
           </Flex>
           <Flex className={[styles.row, 'flex-between']}>
-            <Flex className='flex-row items-center gap-1.5'>
+            <Flex className='items-center gap-1.5'>
               <Icon icon={ArrowUpFromDot} size={12} />
               <span>输入</span>
             </Flex>
             <span>{formatPriceValue(pricing, pricing.textInput)}</span>
           </Flex>
           <Flex className={[styles.row, 'flex-between']}>
-            <Flex className='flex-row items-center gap-1.5'>
+            <Flex className='items-center gap-1.5'>
               <Icon icon={ArrowDownToDot} size={12} />
               <span>输出</span>
             </Flex>
@@ -203,7 +203,7 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
           </Flex>
           {typeof pricing.textInputCacheRead === 'number' ? (
             <Flex className={[styles.row, 'flex-between']}>
-              <Flex className='flex-row items-center gap-1.5'>
+              <Flex className='items-center gap-1.5'>
                 <Icon icon={CircleFadingArrowUp} size={12} />
                 <span>输入（缓存读取）</span>
               </Flex>

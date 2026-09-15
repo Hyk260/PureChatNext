@@ -49,7 +49,7 @@ const ModelFeatureTags = memo<ModelFeatureTagsProps>(({ abilities, contextWindow
   }
 
   return (
-    <Flex className='flex-row gap-0.5 justify-end w-full'>
+    <Flex className='gap-0.5 justify-end w-full'>
       {showFunctionCall ? (
         <Tooltip title='该模型支持工具调用（Tool Calling）'>
           <Tag className={styles.tag} color='blue' size='small'>

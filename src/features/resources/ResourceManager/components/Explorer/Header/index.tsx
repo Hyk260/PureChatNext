@@ -128,7 +128,7 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
 
   return (
     <Flex className={[styles.header, 'flex-between']}>
-      <Flex className='flex-row items-center gap-2 min-h-[32px] overflow-hidden'>
+      <Flex className='items-center gap-2 min-h-[32px] overflow-hidden'>
         {sidebarCollapsed ? (
           <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
         ) : null}
@@ -158,7 +158,7 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
           </Text>
         )}
       </Flex>
-      <Flex className='flex-row items-center gap-1'>
+      <Flex className='items-center gap-1'>
         <SearchInput />
         <DropdownMenu items={sortMenuItems} nativeButton>
           <ActionIconWithChevron icon={ArrowDownAZ} title={currentSortLabel} />

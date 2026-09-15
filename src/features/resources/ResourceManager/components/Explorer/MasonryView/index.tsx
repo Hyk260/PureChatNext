@@ -135,7 +135,7 @@ const MasonryHeader = memo<MasonryHeaderProps>(({ data }) => {
   }, [])
 
   return (
-    <Flex className={[styles.toolbar, 'flex-row items-center gap-2']}>
+    <Flex className={[styles.toolbar, 'items-center gap-2']}>
       <Center
         height={24}
         style={{ cursor: 'pointer', paddingInline: 2 }}

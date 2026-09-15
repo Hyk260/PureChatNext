@@ -54,7 +54,7 @@ interface SectionActionsProps {
 const SectionActions = memo<SectionActionsProps>(({ addMenuItems, menuItems }) => {
   return (
     <Flex
-      className='flex-row gap-0.5'
+      className='gap-0.5'
 
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}

@@ -277,8 +277,8 @@ const TopicItem = memo<Props>(
 
     return (
       <>
-        <Flex className={[cx(styles.item, active && styles.itemActive), 'flex-row']} onClick={() => onSelect(topic.id)}>
-          <Flex className='flex-row items-center gap-1 w-full'>
+        <Flex className={[cx(styles.item, active && styles.itemActive)]} onClick={() => onSelect(topic.id)}>
+          <Flex className='items-center gap-1 w-full'>
             <Icon
               aria-label={autoRenaming ? '正在智能重命名' : '话题'}
               color={autoRenaming ? cssVar.colorWarning : cssVar.colorTextTertiary}
@@ -302,7 +302,7 @@ const TopicItem = memo<Props>(
             </Text>
             {/* {topic.favorite ? <Icon color={cssVar.colorWarning} icon={Star} size={14} /> : null} */}
             <Flex
-              className={[cx('topic-actions'), 'flex-row items-center']}
+              className={[cx('topic-actions'), 'items-center']}
               data-open={menuOpen || undefined}
               onClick={(event) => event.stopPropagation()}
               onKeyDown={(event) => event.stopPropagation()}

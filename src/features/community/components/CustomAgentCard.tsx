@@ -42,7 +42,7 @@ const CustomAgentCard = memo<CustomAgentCardProps>(({ agent, onEdit, onOpenDetai
       width='100%'
       onClick={() => onOpenDetail(agent.id)}
     >
-      <Flex className='w-full flex-row items-start gap-3 overflow-hidden p-4'>
+      <Flex className='w-full items-start gap-3 overflow-hidden p-4'>
         <Avatar
           avatar={agent.avatar}
           background={agent.backgroundColor || 'transparent'}
@@ -65,7 +65,7 @@ const CustomAgentCard = memo<CustomAgentCardProps>(({ agent, onEdit, onOpenDetai
 
       <Flex className='mt-4 flex-between border-t border-dashed border-border p-4'>
         <span className='text-xs text-muted-foreground'>自定义</span>
-        <Flex className='flex-row items-center gap-2'>
+        <Flex className='items-center gap-2'>
           <Button size='small' onClick={handleEdit}>
             编辑
           </Button>

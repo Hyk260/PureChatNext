@@ -346,7 +346,7 @@ const ChatMessages = memo<ChatMessagesProps>(
                 {openingQuestions.length > 0 ? (
                   <Flex className='flex-col-center gap-2' style={{ maxWidth: 640, width: '100%' }}>
                     <p className={styles.questionsTitle}>试试这些问题</p>
-                    <Flex className='flex-row flex-wrap justify-center gap-2'>
+                    <Flex className='flex-wrap justify-center gap-2'>
                       {openingQuestions.map((question) => (
                         <button
                           className={styles.questionChip}

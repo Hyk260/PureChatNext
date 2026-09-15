@@ -43,9 +43,9 @@ function RuntimeToolRow({
     : 'text-[var(--ant-color-text-tertiary)]'
 
   return (
-    <Flex className='flex-row items-center gap-3 min-h-[64px] py-3 w-full min-w-0'>
+    <Flex className='items-center gap-3 min-h-[64px] py-3 w-full min-w-0'>
       <Flex className='flex-col gap-1 flex-1 min-w-0'>
-        <Flex className='flex-row items-center gap-2 min-w-0'>
+        <Flex className='items-center gap-2 min-w-0'>
           <Text strong>{tool.name}</Text>
           {tool.version ? (
             <Tag color='blue' size='small'>
@@ -58,14 +58,14 @@ function RuntimeToolRow({
         </Text>
       </Flex>
       {tool.path ? (
-        <Flex className='flex-row items-center gap-1 shrink-0 max-w-[240px] min-w-0'>
+        <Flex className='items-center gap-1 shrink-0 max-w-[240px] min-w-0'>
           <Text className='truncate text-[12px]' title={tool.path} type='secondary'>
             {truncatePath(tool.path)}
           </Text>
           <ActionIcon icon={Copy} size='small' title='复制路径' onClick={() => onCopyPath(tool.path!)} />
         </Flex>
       ) : null}
-      <Flex className={['flex-row items-center gap-1 shrink-0', statusClassName]}>
+      <Flex className={['items-center gap-1 shrink-0', statusClassName]}>
         <StatusIcon size={14} />
         <Text className={statusClassName} style={{ fontSize: 13 }}>
           {statusLabel}
@@ -78,7 +78,7 @@ function RuntimeToolRow({
 function BuiltinToolRow({ tool }: { tool: DesktopBuiltinTool }) {
   return (
     <Flex className='flex-col gap-1 min-h-[64px] justify-center py-3 w-full min-w-0'>
-      <Flex className='flex-row items-center gap-2 min-w-0'>
+      <Flex className='items-center gap-2 min-w-0'>
         <Text strong>{tool.name}</Text>
         <Tag color='blue' size='small'>
           {tool.version}
@@ -149,7 +149,7 @@ export function SystemToolsSettingsContent() {
 
       {state === 'error' ? (
         <Block padding={16} variant='filled'>
-          <Flex className='flex-row items-center justify-between gap-3'>
+          <Flex className='items-center justify-between gap-3'>
             <Text type='secondary'>无法加载系统工具信息</Text>
             <Button icon={<RefreshCw size={14} />} onClick={() => void load()}>
               重试

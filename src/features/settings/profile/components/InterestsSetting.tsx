@@ -73,7 +73,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
   return (
     <SettingRow label='兴趣领域'>
       <Flex className='flex-col gap-3' style={{ opacity: saving ? 0.7 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
-        <Flex className='flex-row items-center gap-2 flex-wrap'>
+        <Flex className='items-center gap-2 flex-wrap'>
           {INTEREST_AREAS.map((item) => {
             const isSelected = normalizedInterests.includes(item.key)
             return (

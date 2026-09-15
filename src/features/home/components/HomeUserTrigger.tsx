@@ -41,30 +41,14 @@ interface UserInfoSectionProps {
 }
 
 const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planLabel }) => (
-  <Flex className='flex-row items-center gap-3 py-3 px-3'>
-    <Flex className='flex-row items-center gap-2.5'>
-      <Avatar size={36} src={avatar} style={{ background: cssVar.colorFill }} />
+  <Flex className='items-center gap-3 py-3 px-3'>
+    <Flex className='items-center gap-2.5'>
+      <Avatar size={36} src={avatar}> {name.slice(0, 3).toUpperCase()} </Avatar>
       <Flex className='flex-col flex-1'>
-        <Flex className='flex-row items-center gap-2'>
+        <Flex className='items-center gap-2'>
           <Text as='span' style={{ lineHeight: 1.4 }} weight='bold'>
             {name}
           </Text>
-          {/* {planLabel ? (
-            <Text
-              as='span'
-              fontSize={12}
-              noWrap
-              type='secondary'
-              style={{
-                background: cssVar.colorFillTertiary,
-                borderRadius: 999,
-                lineHeight: '22px',
-                paddingInline: 8,
-              }}
-            >
-              {planLabel}
-            </Text>
-          ) : null} */}
         </Flex>
         {email ? (
           <Text as='span' fontSize={12} type='secondary' style={{ lineHeight: 1.4 }}>
@@ -180,8 +164,8 @@ const HomeUserTrigger = memo(() => {
           paddingInlineStart: 2,
         }}
       >
-        <Avatar shape='square' size={28} src={avatar} />
-        <Flex className='flex-row items-center gap-1 overflow-hidden'>
+        <Avatar shape='square' size={28} src={avatar} >{displayName.slice(0, 3).toUpperCase()}</Avatar>
+        <Flex className='items-center gap-1 overflow-hidden'>
           <Text as='span' ellipsis style={{ flex: 1 }} weight={500}>
             {displayName}
           </Text>

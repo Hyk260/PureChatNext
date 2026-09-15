@@ -264,7 +264,7 @@ const MessengerQQPage = memo(() => {
   const controlsDisabled = binding || saving
 
   const headerAction = (
-    <Flex className='flex-row items-center gap-2'>
+    <Flex className='items-center gap-2'>
       {isDev ? (
         <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/dev/qq-conversation')}>
           对话监控

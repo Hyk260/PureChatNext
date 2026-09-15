@@ -49,8 +49,8 @@ const ModelCard = memo<DiscoverModelItem>(
           position: 'relative',
         }}
       >
-        <Flex className='flex-row items-start gap-4 justify-between p-4 w-full'>
-          <Flex className='flex-row gap-3 overflow-hidden' title={identifier}>
+        <Flex className='items-start gap-4 justify-between p-4 w-full'>
+          <Flex className='gap-3 overflow-hidden' title={identifier}>
             <ModelIcon model={identifier} size={40} style={{ flex: 'none' }} type='avatar' />
             <Flex className='flex-col flex-1 gap-0.5 overflow-hidden'>
               <Text ellipsis className={styles.title}>
@@ -77,7 +77,7 @@ const ModelCard = memo<DiscoverModelItem>(
           ) : null}
         </Flex>
         <Flex className={[styles.footer, 'flex-between p-4']}>
-          <Flex className={[styles.secondaryDesc, 'flex-row items-center gap-1']}>
+          <Flex className={[styles.secondaryDesc, 'items-center gap-1']}>
             {releasedAt ? (
               <>
                 <Icon icon={ClockIcon} size={14} />
@@ -85,7 +85,7 @@ const ModelCard = memo<DiscoverModelItem>(
               </>
             ) : null}
           </Flex>
-          <Flex className='flex-row items-center gap-1.5'>
+          <Flex className='items-center gap-1.5'>
             {providers.slice(0, 6).map((item) => (
               <ProviderIcon key={item} provider={item} size={14} type='mono' />
             ))}

@@ -74,7 +74,7 @@ const CommunityHeader = memo(() => {
 
   return (
     <>
-      <Flex className={[styles.header, 'flex-row items-center gap-2']}>
+      <Flex className={[styles.header, 'items-center gap-2']}>
         {sidebarCollapsed ? (
           <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
         ) : null}

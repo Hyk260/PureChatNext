@@ -230,7 +230,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
           {projects.map((project) => {
             const active = value?.id === project.id
             return (
-              <Flex className={[styles.projectRow, 'flex-row items-center gap-1 px-2 py-1.5']} key={project.id}>
+              <Flex className={[styles.projectRow, 'items-center gap-1 px-2 py-1.5']} key={project.id}>
                 <Button
                   className={styles.selectButton}
                   type='text'

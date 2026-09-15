@@ -142,7 +142,7 @@ const TopicList = memo<Props>(
               paddingBlock={4}
               paddingInline='8px 4px'
               title={
-                <Flex className='flex-row items-center gap-1.5 min-w-0'>
+                <Flex className='items-center gap-1.5 min-w-0'>
                   {getGroupTitleIcon(group.id, groupMode)}
                   <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
                     {group.title}

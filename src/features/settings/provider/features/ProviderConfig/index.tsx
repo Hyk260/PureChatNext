@@ -9,7 +9,7 @@ import type { ChangeEvent, FocusEvent, FormEvent } from 'react'
 import { useApp } from '@/components/AntdStaticMethods'
 
 import { getSettingsProviderMeta, isServerManagedProvider, PROVIDER_DEFAULT_BASE_URLS } from '../../const'
-import { saveProviderSecret, secretForProvider, useProviderSecrets } from '../../secretsApi'
+import { deleteProviderSecret, saveProviderSecret, secretForProvider, useProviderSecrets } from '../../secretsApi'
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
 import { providerDetailStyles as styles } from '../../styles'
 import type { ProviderId } from '../../types'
@@ -22,8 +22,6 @@ interface ProviderConfigProps {
 const AES_GCM_HINT = '你的密钥与代理地址等将使用 AES-GCM 加密算法进行加密'
 
 const isByokProvider = (id: ProviderId): id is 'openai' | 'deepseek' => id === 'openai' || id === 'deepseek'
-
-const readInputValue = (root: HTMLElement | null) => root?.querySelector('input')?.value.trim() ?? ''
 
 const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
   const { message } = useApp()
@@ -101,11 +99,44 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
     [id, message, mutate, patchConfig]
   )
 
+  const clearSecrets = useCallback(async () => {
+    if (!isByokProvider(id)) return false
+    if (persistInflightRef.current) return persistInflightRef.current
+
+    const run = (async () => {
+      setSaving(true)
+      try {
+        await deleteProviderSecret(id)
+        await mutate((current) => (current ?? []).filter((entry) => entry.providerId !== id), { revalidate: false })
+        setApiKeyDraft('')
+        setKeyVisible(true)
+        draftDirtyRef.current = false
+        return true
+      } catch (error) {
+        message.error(error instanceof Error ? error.message : '删除密钥失败')
+        setApiKeyDraft(savedApiKey)
+        return false
+      } finally {
+        setSaving(false)
+      }
+    })()
+
+    persistInflightRef.current = run
+    try {
+      return await run
+    } finally {
+      if (persistInflightRef.current === run) persistInflightRef.current = null
+    }
+  }, [id, message, mutate, savedApiKey])
+
   const resolveApiKey = () => {
-    const fromDom = readInputValue(apiKeyWrapRef.current)
-    const next = fromDom || apiKeyDraft.trim()
-    if (fromDom && fromDom !== apiKeyDraft) setApiKeyDraft(fromDom)
-    return next
+    const input = apiKeyWrapRef.current?.querySelector('input')
+    if (input) {
+      const fromDom = input.value.trim()
+      if (fromDom !== apiKeyDraft) setApiKeyDraft(fromDom)
+      return fromDom
+    }
+    return apiKeyDraft.trim()
   }
 
   const handleApiKeyBlur = (event: FocusEvent<HTMLInputElement>) => {
@@ -114,7 +145,11 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
     if (next instanceof Node && apiKeyWrapRef.current?.contains(next)) return
     const apiKey = resolveApiKey()
     if (!apiKey) {
-      setApiKeyDraft(savedApiKey)
+      if (!savedApiKey) {
+        setApiKeyDraft('')
+        return
+      }
+      void clearSecrets()
       return
     }
     if (apiKey === savedApiKey) return
@@ -126,7 +161,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
     if ((saved?.baseURL ?? '') === baseURL) return
     const apiKey = resolveApiKey()
     if (!saved && !apiKey) {
-      message.info('请先填写 API Key，离开输入框后会自动保存')
+      message.info('请先填写 API Key')
       return
     }
     void persistSecrets({ apiKey: apiKey || undefined, baseURL })
@@ -153,7 +188,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
   }
 
   const savingStatus = saving ? (
-    <Flex className='flex-row items-center gap-1 text-muted-foreground'>
+    <Flex className='items-center gap-1 text-muted-foreground'>
       <Loader2 aria-hidden className='h-4 w-4 animate-spin' />
       <Text type='secondary' style={{ fontSize: 12 }}>
         保存中
@@ -166,7 +201,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
       <Flex className='flex-between py-2 w-full'>
         <ProviderCombine provider={id} size={32} />
         {serverManaged ? null : (
-          <Flex className='flex-row items-center gap-2'>
+          <Flex className='items-center gap-2'>
             {savingStatus}
             <Switch
               aria-label={`${enabled ? '停用' : '启用'} ${meta.name}`}
@@ -230,6 +265,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
             </Flex>
             <div className={styles.rowBody}>
               <Input
+                allowClear
                 disabled={saving}
                 placeholder={PROVIDER_DEFAULT_BASE_URLS[id]}
                 value={baseURL}

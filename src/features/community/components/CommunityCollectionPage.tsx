@@ -33,7 +33,7 @@ export function CommunityCollectionPage<T>({
   )
 
   return (
-    <Flex className='flex-row gap-6 h-full min-h-[0px] overflow-hidden w-full'>
+    <Flex className='gap-6 h-full min-h-[0px] overflow-hidden w-full'>
       {sidebar}
       <Scrollbar
         style={{ flex: 1, minHeight: 0, minWidth: 0 }}

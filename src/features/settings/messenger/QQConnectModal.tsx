@@ -247,7 +247,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
               </Flex>
             )}
             {error && (
-              <Flex className='flex-col-center '>
+              <Flex className='flex-col-center'>
                 <Alert showIcon type='warning' title={error} />
                 <AntButton icon={<RefreshCw size={16} />} onClick={() => void startQr()}>
                   重新获取二维码
@@ -269,7 +269,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
                 : '保存后将在设置页显示需要配置到 QQ 开放平台的回调地址。'}
             </Text>
             {error && <Alert showIcon type='warning' title={error} />}
-            <Flex className='flex-row justify-end gap-2'>
+            <Flex className='justify-end gap-2'>
               <AntButton onClick={close}>取消</AntButton>
               <AntButton loading={loading} type='primary' onClick={() => void handleManualBind()}>
                 注册

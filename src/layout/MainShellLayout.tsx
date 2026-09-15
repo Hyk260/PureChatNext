@@ -28,7 +28,7 @@ interface MainShellLayoutProps {
 
 const MainShellLayout = ({ children, header, scrollable = true, sidebar }: MainShellLayoutProps) => {
   return (
-    <Flex className={[styles.shell, 'flex-row h-full w-full']}>
+    <Flex className={[styles.shell, 'h-full w-full']}>
       {sidebar}
       <Flex className={[styles.main, 'flex-col flex-1 h-full min-h-[0px]']}>
         {header}

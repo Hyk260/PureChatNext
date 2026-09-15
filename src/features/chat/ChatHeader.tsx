@@ -231,7 +231,7 @@ const ChatHeader = memo<Props>(
     return (
       <>
         <Flex className={[styles.header, 'flex-between']}>
-          <Flex className='flex-row items-center flex-1 gap-1 min-w-0 overflow-hidden'>
+          <Flex className='items-center flex-1 gap-1 min-w-0 overflow-hidden'>
             {leftCollapsed ? (
               <ActionIcon icon={PanelLeftOpen} size='small' title='展开话题栏' onClick={toggleLeftCollapsed} />
             ) : null}
@@ -249,7 +249,7 @@ const ChatHeader = memo<Props>(
             </DropdownMenu>
           </Flex>
 
-          <Flex className='flex-row items-center flex-none gap-0.5'>
+          <Flex className='items-center flex-none gap-0.5'>
             {hasMessages && topic ? (
               <ActionIcon icon={Share2} size='small' title='分享' onClick={handleShare} />
             ) : null}

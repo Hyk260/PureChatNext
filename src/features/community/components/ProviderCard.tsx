@@ -36,12 +36,12 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
         position: 'relative',
       }}
     >
-      <Flex className='flex-row items-start gap-4 justify-between p-4 w-full'>
+      <Flex className='items-start gap-4 justify-between p-4 w-full'>
         <Flex className='flex-col overflow-hidden' title={identifier}>
           <ProviderCombine provider={identifier} size={28} style={{ flex: 'none' }} />
           <div className={styles.author}>@{name}</div>
         </Flex>
-        <Flex className='flex-row items-center'>
+        <Flex className='items-center'>
           <a href={url} rel='noopener noreferrer' target='_blank' onClick={stopPropagation}>
             <ActionIcon color={cssVar.colorTextDescription} icon={GlobeIcon} />
           </a>

@@ -70,7 +70,7 @@ const DataStatistics = memo(() => {
   const messages = renderCount(data?.messages)
 
   return (
-    <Flex className='flex-row items-center gap-1 px-2 w-full' style={{ marginBottom: 8 }}>
+    <Flex className='items-center gap-1 px-2 w-full' style={{ marginBottom: 8 }}>
       <StatCard count={agents} title='助理' />
       <StatCard count={topics} title='话题' />
       <StatCard count={messages} title='消息' />

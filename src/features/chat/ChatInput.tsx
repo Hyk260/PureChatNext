@@ -279,10 +279,10 @@ const ChatInput = memo<ChatInputProps>((props) => {
       />
 
       {files.length > 0 ? (
-        <Flex className='flex-row gap-2 flex-wrap' style={{ marginBottom: 8 }}>
+        <Flex className='gap-2 flex-wrap' style={{ marginBottom: 8 }}>
           {files.map((file, index) => (
             <Flex
-              className='flex-row items-center gap-1.5 max-w-[260px] p-[5px_8px]'
+              className='items-center gap-1.5 max-w-[260px] p-[5px_8px]'
               key={`${file.name}-${file.lastModified}-${index}`}
 
               style={{ background: 'var(--ant-color-fill-quaternary)', borderRadius: 8 }}
@@ -329,7 +329,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
       />
 
       <Flex className='flex-between' style={{ marginTop: 8 }}>
-        <Flex className='flex-row items-center gap-1'>
+        <Flex className='items-center gap-1'>
           <ModelSelector />
           <DropdownMenuRoot open={plusOpen} onOpenChange={setPlusOpen}>
             <DropdownMenuTrigger className={styles.plusTrigger} disabled={isBusy} nativeButton>

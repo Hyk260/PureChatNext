@@ -171,7 +171,7 @@ function renderTokenUsage(_value: unknown, record: UsageItem) {
   if (record.inputTokens == null && record.outputTokens == null) return EMPTY_PLACEHOLDER
 
   return (
-    <Flex className='flex-row items-center gap-1.5 flex-wrap'>
+    <Flex className='items-center gap-1.5 flex-wrap'>
       <Tag color={record.totalTokens >= 50_000 ? 'orange' : 'green'} size='small'>
         {formatNumber(record.totalTokens)}
       </Tag>
@@ -378,7 +378,7 @@ export function UsageSettingsContent() {
       <Block className={styles.section} gap={16} variant='filled'>
         <Text className={styles.sectionTitle}>明细</Text>
         <Block className={styles.details} padding={0} variant='outlined'>
-          <Flex className={[styles.toolbar, 'flex-row gap-2.5 flex-wrap']}>
+          <Flex className={[styles.toolbar, 'gap-2.5 flex-wrap']}>
             <SearchBar
               size='small'
               loading={loading}
@@ -424,7 +424,7 @@ export function UsageSettingsContent() {
           </Flex>
 
           {error && data ? (
-            <Flex className={[styles.error, 'flex-row items-center gap-3']}>
+            <Flex className={[styles.error, 'items-center gap-3']}>
               <Text type='danger'>{error}</Text>
               <Button size='small' onClick={retry}>
                 重试
@@ -451,7 +451,7 @@ export function UsageSettingsContent() {
             }}
           />
 
-          <Flex className={[styles.pagination, 'flex-between ']}>
+          <Flex className={[styles.pagination, 'flex-between']}>
             <Text type='secondary'>
               第 {rangeStart}-{rangeEnd} 条，共 {total} 条
             </Text>

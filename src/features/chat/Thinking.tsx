@@ -64,7 +64,7 @@ const Thinking = memo<ThinkingProps>(({ text, thinking = false, duration }) => {
         paddingInline={4}
         styles={{ header: { maxWidth: '100%', width: 'fit-content' } }}
         title={
-          <Flex className='flex-row items-center gap-1.5'>
+          <Flex className='items-center gap-1.5'>
             <Block
               align='center'
               flex='none'

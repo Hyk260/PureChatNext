@@ -85,10 +85,10 @@ const MessengerPage = memo(() => {
   return (
     <Flex className='flex-col gap-5 h-full w-full'>
       <Text type='secondary'>{MESSENGER_SUBTITLE}</Text>
-      <Flex className={[styles.list, 'flex-row gap-3']}>
+      <Flex className={[styles.list, 'gap-3']}>
         {MESSENGER_PLATFORMS.map((item) => (
           <Block className={styles.card} key={item.id} onClick={() => handleSelectPlatform(item)}>
-            <Flex className='flex-row items-center gap-4'>
+            <Flex className='items-center gap-4'>
               <PlatformAvatar platform={item.id} size={48} />
               <Flex className='flex-col flex-1 gap-0.5'>
                 <Text strong style={{ fontSize: 15 }}>

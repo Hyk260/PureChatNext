@@ -182,7 +182,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
       ) : null}
       {canOperate ? (
         <Flex
-          className={[cx('agent-actions'), 'flex-row items-center']}
+          className={[cx('agent-actions'), 'items-center']}
           data-open={menuOpen || actionsMounted || undefined}
           onClick={(event) => event.stopPropagation()}
           onKeyDown={(event) => event.stopPropagation()}

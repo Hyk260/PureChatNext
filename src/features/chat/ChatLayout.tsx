@@ -90,7 +90,7 @@ const ChatLayout = memo<Props>(
     const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
 
     return (
-      <Flex className='flex-row h-[100dvh] w-full overflow-hidden'>
+      <Flex className='h-[100dvh] w-full overflow-hidden'>
         <aside
           className={cx(styles.left, leftCollapsed && styles.leftCollapsed)}
         >

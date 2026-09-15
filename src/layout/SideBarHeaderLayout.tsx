@@ -100,7 +100,7 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     }))
 
     const leftContent = left ? (
-      <Flex className='flex-row items-center flex-1 gap-0.5 overflow-hidden'>
+      <Flex className='items-center flex-1 gap-0.5 overflow-hidden'>
         {typeof left === 'string' ? (
           <Text ellipsis style={{ fontSize: 16, fontWeight: 500 }}>
             {left}
@@ -122,7 +122,7 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     return (
       <Flex className={[styles.container, 'flex-between flex-none p-[0px_6px] h-[40px]']}>
         {leftContent}
-        <Flex className='flex-row items-center flex-none gap-0.5 justify-end'>
+        <Flex className='items-center flex-none gap-0.5 justify-end'>
           {right}
           {showTogglePanelButton ? (
             <ActionIcon

@@ -62,7 +62,7 @@ const ListViewHeader = memo<ListViewHeaderProps>(({ data }) => {
   }, [])
 
   return (
-    <Flex className={[styles.header, 'flex-row items-center px-2']}>
+    <Flex className={[styles.header, 'items-center px-2']}>
       <Center
         height={40}
         style={{ cursor: 'pointer', flexShrink: 0, overflow: 'hidden', paddingInline: 4 }}

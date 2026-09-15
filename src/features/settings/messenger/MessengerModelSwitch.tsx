@@ -55,7 +55,7 @@ export const MessengerModelSwitch = memo<MessengerModelSwitchProps>(
           onSelect={onSelect}
         >
           <Flex
-            className={[styles.modelTrigger, 'flex-row items-center gap-1.5']}
+            className={[styles.modelTrigger, 'items-center gap-1.5']}
             style={{ opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? 'none' : undefined }}
           >
             <ModelIcon model={modelId} size={18} />

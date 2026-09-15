@@ -88,8 +88,8 @@ const AgentCard = memo<AgentCardProps>(({ onOpenDetail, ...item }) => {
       }}
       onClick={handleOpenDetail}
     >
-      <Flex className='flex-row items-start gap-4 justify-between p-4 w-full'>
-        <Flex className='flex-row gap-3 overflow-hidden' title={identifier}>
+      <Flex className='items-start gap-4 justify-between p-4 w-full'>
+        <Flex className='gap-3 overflow-hidden' title={identifier}>
           <Avatar
             shape='square'
             size={40}
@@ -109,7 +109,7 @@ const AgentCard = memo<AgentCardProps>(({ onOpenDetail, ...item }) => {
         <Text as='p' className={styles.desc} ellipsis={{ rows: 3 }} style={{ marginBottom: 0 }}>
           {description}
         </Text>
-        <Flex className='flex-row items-center gap-1'>
+        <Flex className='items-center gap-1'>
           {typeof tokenUsage === 'number' ? (
             <Tag className={styles.token} icon={<Icon icon={CoinsIcon} size={12} />} size='small'>
               {formatNumber(tokenUsage)}
@@ -134,11 +134,11 @@ const AgentCard = memo<AgentCardProps>(({ onOpenDetail, ...item }) => {
       </Flex>
 
       <Flex className={[styles.footer, 'flex-between p-4']}>
-        <Flex className={[styles.secondaryDesc, 'flex-row items-center gap-1']}>
+        <Flex className={[styles.secondaryDesc, 'items-center gap-1']}>
           <Icon icon={ClockIcon} size={14} />
           <span>{formatDate(createdAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         </Flex>
-        <Flex className='flex-row items-center gap-2'>
+        <Flex className='items-center gap-2'>
           <span className={styles.secondaryDesc}>{ASSISTANT_CATEGORY_LABELS[category]}</span>
           {/* <Button
             data-testid='assistant-use-button'

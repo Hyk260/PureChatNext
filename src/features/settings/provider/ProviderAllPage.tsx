@@ -38,7 +38,7 @@ const ProviderSection = memo<{
   title: string
 }>(({ ids, title }) => (
   <Flex className='flex-col gap-4'>
-    <Flex className='flex-row items-center gap-2'>
+    <Flex className='items-center gap-2'>
       <Text style={{ fontSize: 18, fontWeight: 600 }}>{title}</Text>
       <Tag>{ids.length}</Tag>
     </Flex>

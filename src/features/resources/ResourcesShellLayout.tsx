@@ -13,7 +13,7 @@ const styles = createStaticStyles(({ css }) => ({
 
 const ResourcesShellLayout = ({ children, innerSidebar }: { children: ReactNode; innerSidebar?: ReactNode }) => {
   return (
-    <Flex className={[styles.shell, 'flex-row h-full w-full']}>
+    <Flex className={[styles.shell, 'h-full w-full']}>
       {innerSidebar}
       <Flex className='flex-col flex-1 h-full overflow-hidden'>{children}</Flex>
     </Flex>

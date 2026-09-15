@@ -91,7 +91,7 @@ const ModelRowContent = memo<ModelRowContentProps>(
     const card = getAiModel(provider as ModelProviderId, model)
 
     return (
-      <Flex className='flex-row items-center gap-2 min-w-0 w-full'>
+      <Flex className='items-center gap-2 min-w-0 w-full'>
         <ModelIcon model={model} size={20} />
         <Text ellipsis style={{ fontSize: 13, flex: 1, minWidth: 0 }}>
           {displayName}
@@ -221,7 +221,7 @@ const MultiProviderModelRow = memo<MultiProviderModelRowProps>(
                       >
                         <DropdownMenuItemIcon>{isProviderActive ? <Check size={16} /> : null}</DropdownMenuItemIcon>
                         <DropdownMenuItemLabel>
-                          <Flex className='flex-row items-center gap-2'>
+                          <Flex className='items-center gap-2'>
                             <ProviderIcon provider={provider.id} size={20} type='color' />
                             <Text ellipsis style={{ fontSize: 13 }}>
                               {provider.name}
@@ -268,9 +268,7 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
               return (
                 <Flex
                   key='no-provider'
-
-                  className={[styles.menuItem, 'flex-row items-center gap-2']}
-
+                  className={[styles.menuItem, 'items-center gap-2']}
                   style={{ color: cssVar.colorTextTertiary, cursor: 'pointer' }}
                   onClick={() => {
                     onClose()
@@ -287,10 +285,9 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
               return (
                 <Flex
                   key={`header-${item.provider.id}`}
-
                   className={[styles.groupHeader, 'flex-between py-[12px_4px] px-[12px_8px]']}
                 >
-                  <Flex className='flex-row items-center gap-2 min-w-0'>
+                  <Flex className='items-center gap-2 min-w-0'>
                     <ProviderIcon provider={item.provider.id} size={18} type='color' />
                     <Text ellipsis style={{ fontSize: 12 }}>
                       {item.provider.name}
@@ -315,9 +312,7 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
               return (
                 <Flex
                   key={`empty-${item.provider.id}`}
-
-                  className={[styles.menuItem, 'flex-row items-center gap-2']}
-
+                  className={[styles.menuItem, 'items-center gap-2']}
                   style={{ color: cssVar.colorTextTertiary, cursor: 'pointer' }}
                   onClick={() => {
                     onClose()

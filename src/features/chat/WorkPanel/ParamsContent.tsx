@@ -30,7 +30,7 @@ const ParamsContent = memo<Props>(({ value, onChange }) => (
       return (
         <Flex className='flex-col gap-2' key={row.key}>
           <Flex className='flex-between'>
-            <Flex className='flex-row items-center gap-2'>
+            <Flex className='items-center gap-2'>
               <Text>{row.label}</Text>
               <Switch
                 checked={enabled}

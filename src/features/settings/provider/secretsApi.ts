@@ -41,6 +41,17 @@ export async function saveProviderSecret(params: {
   return json.item
 }
 
+export async function deleteProviderSecret(provider: ProviderSecretId): Promise<void> {
+  const res = await apiFetch('/api/providers/secrets', {
+    body: JSON.stringify({ provider }),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'DELETE',
+  })
+  const json = (await res.json().catch(() => ({}))) as { error?: string }
+  if (res.status === 401) throw new Error('请先登录后再删除密钥')
+  if (!res.ok) throw new Error(json.error || `删除密钥失败: ${res.status}`)
+}
+
 export function secretForProvider(items: ProviderSecretPublic[] | undefined, provider: string) {
   return items?.find((item) => item.providerId === provider)
 }

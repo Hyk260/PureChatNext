@@ -81,7 +81,7 @@ const LibrarySidebar = memo(() => {
 
   return (
     <Flex className={[styles.sidebar, 'flex-col h-full']}>
-      <Flex className={[styles.header, 'flex-row items-center gap-2']}>
+      <Flex className={[styles.header, 'items-center gap-2']}>
         <Icon icon={ChevronLeft} size={16} style={{ cursor: 'pointer' }} onClick={() => router.push('/resources')} />
         <Text ellipsis strong>
           {kb?.name ?? '知识库'}

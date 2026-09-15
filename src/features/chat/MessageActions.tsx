@@ -63,7 +63,7 @@ const MessageActions = memo<MessageActionsProps>(({ isStreaming, isUser, onCopy,
     <Flex
       className={[
         cx(styles.actions, !isStreaming && styles.actionsVisible),
-        'flex-row items-center gap-0.5',
+        'items-center gap-0.5',
         isUser ? 'justify-end' : 'justify-start',
       ]}
     >

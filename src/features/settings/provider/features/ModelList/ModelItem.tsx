@@ -103,11 +103,11 @@ const ModelItem = memo<ModelItemProps>(
 
     return (
       <Flex className={[styles.container, 'flex-between  w-full']}>
-        <Flex className={[styles.desc, 'flex-row items-center gap-3']}>
+        <Flex className={[styles.desc, 'items-center gap-3']}>
           {showDragHandle ? <SortableList.DragHandle size='small' title='拖动排序' /> : null}
           <ModelIcon model={model.id} size={32} />
           <Flex className={[styles.meta, 'flex-col gap-1']}>
-            <Flex className='flex-row items-center gap-2 min-w-0'>
+            <Flex className='items-center gap-2 min-w-0'>
               <Text ellipsis style={{ fontWeight: 500 }}>
                 {model.displayName}
               </Text>
@@ -127,10 +127,10 @@ const ModelItem = memo<ModelItemProps>(
           </Flex>
         </Flex>
 
-        <Flex className='shrink-0 flex-row items-center gap-2'>
+        <Flex className='shrink-0 items-center gap-2'>
           <ModelCapabilityTags abilities={abilities} contextWindowTokens={contextWindowTokens} />
           {model.source === 'custom' ? (
-            <Flex className='flex-row gap-0.5'>
+            <Flex className='gap-0.5'>
               {onEditCustomModel ? (
                 <ActionIcon
                   icon={Pencil}
@@ -191,7 +191,7 @@ const ModelCapabilityTags = ({
   }
 
   return (
-    <Flex className='flex-row gap-[3px]'>
+    <Flex className='gap-[3px]'>
       {abilities?.functionCall ? (
         <Tooltip title='支持工具调用 Tool Calling'>
           <Tag color='blue' size='small'>

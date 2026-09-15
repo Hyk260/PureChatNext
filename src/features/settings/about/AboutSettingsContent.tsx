@@ -119,13 +119,13 @@ export function AboutSettingsContent() {
   return (
     <Flex className='flex-col gap-6 py-[24px_64px] px-6 w-full'>
       <Block padding={16} variant='filled'>
-        <Flex className='flex-between-wrap '>
-          <Flex className={[styles.brand, 'flex-row items-center gap-3']}>
+        <Flex className='flex-between-wrap'>
+          <Flex className={[styles.brand, 'items-center gap-3']}>
             <div className={styles.mark}>
               <PureChatMark size={28} />
             </div>
             <Flex className='flex-col gap-1 min-w-0'>
-              <Flex className='flex-row items-center gap-2'>
+              <Flex className='items-center gap-2'>
                 <Text className={styles.name}>{SITE_NAME}</Text>
                 <Tag size='small'>{VERSION_LABEL}</Tag>
               </Flex>
@@ -182,7 +182,7 @@ export function AboutSettingsContent() {
             label: 'GitHub',
             value: (
               <ExternalLink href={SITE_REPOSITORY_URL}>
-                <Flex className='flex-row items-center gap-2'>
+                <Flex className='items-center gap-2'>
                   <Github size={16} />
                   <Text>{SITE_REPOSITORY_SLUG}</Text>
                 </Flex>

@@ -80,7 +80,7 @@ const AgentModeButton = memo(() => {
   const popoverContent = (
     <Flex className='flex-col gap-1 max-w-[320px] min-w-[280px]'>
       <Flex
-        className={[cx(styles.option, currentMode === 'agent' && styles.activeOption), 'flex-row items-center gap-3']}
+        className={[cx(styles.option, currentMode === 'agent' && styles.activeOption), 'items-center gap-3']}
 
         onClick={() => handleSelect('agent')}
       >
@@ -94,7 +94,7 @@ const AgentModeButton = memo(() => {
       </Flex>
 
       <Flex
-        className={[cx(styles.option, currentMode === 'chat' && styles.activeOption), 'flex-row items-center gap-3']}
+        className={[cx(styles.option, currentMode === 'chat' && styles.activeOption), 'items-center gap-3']}
 
         onClick={() => handleSelect('chat')}
       >

@@ -70,7 +70,7 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
         </span>
 
         <Block className={styles.card}>
-          <Flex className='flex-row items-center gap-4'>
+          <Flex className='items-center gap-4'>
             <PlatformAvatar platform={platform} size={48} />
             <Flex className='flex-col flex-1 gap-0.5'>
               <Text strong style={{ fontSize: 15 }}>

@@ -2,6 +2,7 @@
 
 import { Spin } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
+import { Avatar, Button, Center, Icon } from '@pure/ui'
 import { Loader2, Pencil } from 'lucide-react'
 import { useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
@@ -57,26 +58,20 @@ export function AvatarSetting({ avatar, displayName, initials, onUploaded, s3Con
   }
 
   const avatarContent = (
-    <button
-      className='group relative shrink-0 cursor-pointer overflow-hidden rounded-lg disabled:cursor-not-allowed disabled:opacity-50'
+    <Button
+      className='relative size-10 shrink-0 overflow-hidden p-0'
       disabled={!s3Configured || uploading}
-      onClick={() => inputRef.current?.click()}
       title={s3Configured ? '点击上传头像' : '头像上传需配置 S3'}
-      type='button'
+      type='text'
+      onClick={() => inputRef.current?.click()}
     >
-      {avatar ? (
-        <img alt={displayName} className='h-10 w-10 rounded-lg object-cover' key={avatar} src={avatar} />
-      ) : (
-        <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-sm font-semibold text-primary'>
-          {initials}
-        </div>
-      )}
+      <Avatar alt={displayName} avatar={avatar || initials} key={avatar} size={40} shape='square'/>
       {s3Configured ? (
-        <div className='absolute inset-0 flex items-center justify-center rounded-lg bg-black/45 opacity-0 transition-opacity group-hover:opacity-100'>
-          <Pencil className='h-4 w-4 text-white' />
-        </div>
+        <Center className='absolute inset-0 bg-black/45 opacity-0 transition-opacity group-hover:opacity-100'>
+          <Icon color='#fff' icon={Pencil} size={16} />
+        </Center>
       ) : null}
-    </button>
+    </Button>
   )
 
   return (

@@ -136,7 +136,7 @@ const SidebarBody = memo(() => {
       {bottomContent.length > 0 ? (
         <Flex className='flex-col gap-px flex-none px-[4px_8px]'>{bottomContent}</Flex>
       ) : null}
-      <Flex className='flex-row flex-none py-1 px-[4px_8px]'>
+      <Flex className='flex-none py-1 px-[4px_8px]'>
         <Link className='text-inherit no-underline' href='/settings/profile'>
           <ActionIcon icon={Settings} size='small' title='设置' />
         </Link>

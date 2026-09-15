@@ -37,7 +37,7 @@ const SettingsHeader = memo(() => {
   const title = useMemo(() => getSettingsTabLabel(pathname.split('/')[2]), [pathname])
 
   return (
-    <Flex className={[styles.header, 'flex-row items-center']}>
+    <Flex className={[styles.header, 'items-center']}>
       {sidebarCollapsed ? (
         <ActionIcon
           className={styles.toggle}

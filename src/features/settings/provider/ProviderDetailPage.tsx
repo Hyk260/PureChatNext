@@ -38,7 +38,7 @@ const ProviderDetailPage = memo<ProviderDetailPageProps>(({ id }) => {
 
   return (
     <Flex className={[styles.page, 'flex-col gap-6 w-full']}>
-      <Flex className={[localStyles.mobileHeader, 'flex-row items-center gap-2']}>
+      <Flex className={[localStyles.mobileHeader, 'items-center gap-2']}>
         <ActionIcon
           aria-label='返回全部服务商'
           icon={ArrowLeft}

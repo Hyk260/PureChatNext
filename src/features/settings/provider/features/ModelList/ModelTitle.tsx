@@ -113,7 +113,7 @@ const ModelTitle = memo<ModelTitleProps>(
         style={{ background: cssVar.colorBgContainer, position: 'sticky', top: 0, zIndex: 15 }}
       >
         <Flex className={[styles.header, 'flex-between w-full']}>
-          <Flex className='flex-row items-center gap-1'>
+          <Flex className='items-center gap-1'>
             <Text strong style={{ fontSize: 16 }}>
               模型列表
             </Text>
@@ -122,7 +122,7 @@ const ModelTitle = memo<ModelTitleProps>(
             ) : null}
           </Flex>
 
-          <Flex className={[styles.actions, 'flex-row items-center gap-1']}>
+          <Flex className={[styles.actions, 'items-center gap-1']}>
             <SearchBar
               className='h-8'
               placeholder='搜索模型'

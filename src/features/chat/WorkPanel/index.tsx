@@ -109,8 +109,8 @@ const WorkPanel = memo<Props>(({ value, onChange, topic, topicTitle }) => {
 
   return (
     <Flex className='flex-col h-full overflow-hidden w-[320px]'>
-      <Flex className={[styles.header, 'flex-row items-center gap-1']}>
-        <Flex className={[styles.tabs, 'flex-1 flex-row items-center gap-1']}>
+      <Flex className={[styles.header, 'items-center gap-1']}>
+        <Flex className={[styles.tabs, 'flex-1 items-center gap-1']}>
           {openTabs.map((tabId) => {
             const meta = WORK_PANEL_TAB_BY_ID[tabId]
             return (

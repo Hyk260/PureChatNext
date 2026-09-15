@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 静态检查：SPA/客户端源码不得 import 服务端 env / supabase。
+ * 静态检查：SPA/客户端源码不得 import 服务端 env。
  * 与 eslint.config.mjs 的 no-restricted-imports 互补；供 CI 单独跑，不受其它 lint 规则干扰。
  *
  * 用法：`pnpm run lint:spa-env-imports`
@@ -31,7 +31,6 @@ const ANALYTICS_ALLOW = path.normalize('src/components/Analytics')
 const FORBIDDEN = [
   { re: /from\s+['"]@\/envs(?:\/[^'"]*)?['"]/g, label: '@/envs' },
   { re: /from\s+['"]@pure\/env(?:\/[^'"]*)?['"]/g, label: '@pure/env' },
-  { re: /from\s+['"]@\/libs\/supabase(?:\/[^'"]*)?['"]/g, label: '@/libs/supabase' },
   { re: /import\s*\(\s*['"]@\/envs(?:\/[^'"]*)?['"]\s*\)/g, label: '@/envs (dynamic)' },
   { re: /import\s*\(\s*['"]@pure\/env(?:\/[^'"]*)?['"]\s*\)/g, label: '@pure/env (dynamic)' },
 ]
@@ -93,7 +92,7 @@ function main() {
   console.log(`🔍 SPA env import check: ${files.length} files`)
 
   if (hits.length > 0) {
-    console.error('❌ 客户端源码禁止导入服务端 env / supabase：')
+    console.error('❌ 客户端源码禁止导入服务端 env：')
     for (const hit of hits) {
       console.error(`  - ${hit.file}:${hit.line} [${hit.label}] ${hit.match}`)
     }

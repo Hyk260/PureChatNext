@@ -17,10 +17,6 @@ declare global {
       DATABASE_URL?: string
       /** 敏感配置加密密钥，用于渠道凭证、`context_token`、用户服务商密钥与 API key 哈希。 */
       KEY_VAULTS_SECRET?: string
-      /** 遗留 Supabase 客户端项目 URL；仅调试时需要。 */
-      NEXT_PUBLIC_SUPABASE_URL?: string
-      /** 遗留 Supabase 匿名/公开密钥；仅调试时需要。 */
-      NEXT_PUBLIC_SUPABASE_ANON_KEY?: string
     }
   }
 }
@@ -38,19 +34,10 @@ export type ServerDBEnv = {
   DATABASE_URL?: string
   /** 敏感配置加密密钥，用于渠道凭证、`context_token`、用户服务商密钥与 API key 哈希 */
   KEY_VAULTS_SECRET?: string
-  /** 遗留 Supabase 客户端项目 URL；仅调试时需要 */
-  NEXT_PUBLIC_SUPABASE_URL?: string
-  /** 遗留 Supabase 匿名/公开密钥；仅调试时需要 */
-  NEXT_PUBLIC_SUPABASE_ANON_KEY?: string
 }
 
 export const getServerDBConfig = (): ServerDBEnv => {
   return createEnv({
-    clientPrefix: 'NEXT_PUBLIC_',
-    client: {
-      NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
-    },
     server: {
       DATABASE_DRIVER: z.enum(['neon', 'node']),
       DATABASE_TEST_URL: z.string().optional(),
@@ -61,12 +48,7 @@ export const getServerDBConfig = (): ServerDBEnv => {
       DATABASE_DRIVER: process.env.DATABASE_DRIVER || 'neon',
       DATABASE_TEST_URL: process.env.DATABASE_TEST_URL,
       DATABASE_URL: process.env.DATABASE_URL,
-
       KEY_VAULTS_SECRET: process.env.KEY_VAULTS_SECRET,
-
-      // supabase config
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     },
   })
 }

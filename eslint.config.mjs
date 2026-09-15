@@ -18,9 +18,6 @@ const spaClientFiles = [
 const serverEnvImportMessage =
   '禁止在 SPA/客户端代码中导入服务端 env（@/envs、@pure/env）。公开配置走 window.__SERVER_CONFIG__ 或 API。'
 
-const supabaseClientImportMessage =
-  '禁止在 SPA/客户端代码中导入 @/libs/supabase（其依赖 serverDB，含 DATABASE_URL 等）。'
-
 const serverEnvModules = [
   '@/envs/app',
   '@/envs/auth',
@@ -57,12 +54,6 @@ const restrictedServerEnvPathsExceptAnalytics = serverEnvModules
     message: serverEnvImportMessage,
   }))
 
-const restrictedSupabasePaths = [
-  { name: '@/libs/supabase', message: supabaseClientImportMessage },
-  { name: '@/libs/supabase/client', message: supabaseClientImportMessage },
-  { name: '@/libs/supabase/server', message: supabaseClientImportMessage },
-]
-
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -86,7 +77,7 @@ const eslintConfig = defineConfig([
       '@typescript-eslint/no-unused-vars': 'off',
     },
   },
-  // SPA 入口与业务 UI：禁止全部服务端 env / supabase 客户端
+  // SPA 入口与业务 UI：禁止全部服务端 env
   {
     files: spaClientFiles,
     rules: {
@@ -95,15 +86,11 @@ const eslintConfig = defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          paths: [...restrictedServerEnvPaths, ...restrictedSupabasePaths],
+          paths: restrictedServerEnvPaths,
           patterns: [
             {
               group: ['@/envs/*', '@pure/env/*'],
               message: serverEnvImportMessage,
-            },
-            {
-              group: ['@/libs/supabase', '@/libs/supabase/*'],
-              message: supabaseClientImportMessage,
             },
           ],
         },
@@ -118,15 +105,11 @@ const eslintConfig = defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          paths: [...restrictedServerEnvPaths, ...restrictedSupabasePaths],
+          paths: restrictedServerEnvPaths,
           patterns: [
             {
               group: ['@/envs/*', '@pure/env/*'],
               message: serverEnvImportMessage,
-            },
-            {
-              group: ['@/libs/supabase', '@/libs/supabase/*'],
-              message: supabaseClientImportMessage,
             },
           ],
         },
@@ -140,7 +123,7 @@ const eslintConfig = defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          paths: [...restrictedServerEnvPathsExceptAnalytics, ...restrictedSupabasePaths],
+          paths: restrictedServerEnvPathsExceptAnalytics,
         },
       ],
     },

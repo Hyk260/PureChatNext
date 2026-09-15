@@ -3,18 +3,17 @@ import './load-env'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-import { serverDBEnv } from '@/envs/serverDB'
-
 export function createMigrationClient() {
-  const { DATABASE_URL, DATABASE_DRIVER } = serverDBEnv
+  const databaseUrl = process.env.DATABASE_URL
+  const databaseDriver = process.env.DATABASE_DRIVER || 'neon'
 
-  if (!DATABASE_URL) {
+  if (!databaseUrl) {
     throw new Error('DATABASE_URL 未定义')
   }
 
-  const connection = postgres(DATABASE_URL, {
+  const connection = postgres(databaseUrl, {
     max: 1,
-    ssl: DATABASE_DRIVER === 'neon' ? 'require' : false,
+    ssl: databaseDriver === 'neon' ? 'require' : false,
   })
 
   return { connection, db: drizzle(connection) }

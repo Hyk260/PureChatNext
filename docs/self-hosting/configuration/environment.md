@@ -21,6 +21,8 @@ DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.
 # DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
 # 连接池（推荐）：
 # DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
+# Neon 示例：
+# DATABASE_URL=postgresql://user:password@ep-xxx.region.aws.neon.tech/dbname?sslmode=require
 
 # 应用对外地址（本地统一 SPA 端口；CORS 默认允许该地址）
 APP_URL=http://localhost:5174
@@ -30,25 +32,18 @@ APP_URL=http://localhost:5174
 
 # Node 环境
 NODE_ENV=development
-
-# 可选：仅调试遗留 Supabase 客户端时需要（非必填）
-# NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-# NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-## 可选：使用 Supabase 免费 Postgres
+## 可选：使用 Supabase 或 Neon 免费 Postgres
 
-应用不依赖完整 Supabase 栈；可将 [Supabase](https://supabase.com) 仅当作免费 Postgres：
+应用只需要 PostgreSQL 连接串，可将 [Supabase](https://supabase.com) 或 [Neon](https://neon.tech) 当作免费 Postgres：
 
 1. 登录并创建项目
-2. 进入项目设置（Settings）→ **Database**
-3. 在 **Connection string** 选择 **URI** 或 **Transaction mode**（连接池）
-4. 复制连接字符串并替换密码占位符 → `DATABASE_URL`
-   - 直连示例：`postgresql://postgres:[YOUR-PASSWORD]@db.xxxxx.supabase.co:5432/postgres`
-   - 连接池：`postgresql://postgres.xxxxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres`
-5. 云托管通常设置 `DATABASE_DRIVER=neon`
-
-`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` 与数据库无关，仅测试用，见下方说明。
+2. 复制 Postgres 连接字符串 → `DATABASE_URL`
+   - Supabase 直连：`postgresql://postgres:[YOUR-PASSWORD]@db.xxxxx.supabase.co:5432/postgres`
+   - Supabase 连接池：`postgresql://postgres.xxxxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres`
+   - Neon：`postgresql://user:password@ep-xxx.region.aws.neon.tech/dbname?sslmode=require`
+3. 云托管通常设置 `DATABASE_DRIVER=neon`
 
 ## 配置说明
 
@@ -127,15 +122,6 @@ pnpm preview:prod -- --port 3211
 - 默认关闭（开发环境本来就不会做部署指纹检测）
 - 临时开启：`VITE_SPA_UPDATE_PREVIEW=1 pnpm dev:spa`（或写入 `.env.local` 后重启）
 - 也可不改 env：浏览器打开任意 SPA 路径并加上 `?spaUpdatePreview=1`
-
-### NEXT\_PUBLIC\_SUPABASE\_URL / NEXT\_PUBLIC\_SUPABASE\_ANON\_KEY
-
-**非必填**，仅用于调试遗留 Supabase 客户端代码；日常开发与 better-auth 认证不需要。
-
-- `NEXT_PUBLIC_SUPABASE_URL`：项目 URL，格式通常是 `https://xxxxx.supabase.co`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`：匿名/公开密钥
-
-若只用 Supabase 提供的 Postgres，配置 `DATABASE_URL` 即可，不必设置这两项。
 
 ### ALLOWED\_ORIGINS
 

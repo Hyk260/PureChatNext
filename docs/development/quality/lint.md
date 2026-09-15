@@ -73,7 +73,7 @@ eslint src/ tests/ --concurrency=auto
 
 规则 glob 写了 `**/*.{ts,tsx}`（含 `packages/**`），但 CLI **只传入** `src/` 与 `tests/`，未传入的目录不会被检查。`packages/` 上仍有存量 TypeScript ESLint 报错（`no-explicit-any`、`no-unsafe-function-type`、`ban-ts-comment` 等），因此尚未扩扫描范围。`scripts/` 也不在范围内。
 
-SPA 客户端另有 `no-restricted-imports`，禁止从 `@/envs`、`@pure/env`、`@/libs/supabase` 导入；与下面的专用脚本互补。
+SPA 客户端另有 `no-restricted-imports`，禁止从 `@/envs`、`@pure/env` 导入；与下面的专用脚本互补。
 
 ### `lint:spa-env-imports`
 

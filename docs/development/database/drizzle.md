@@ -10,7 +10,7 @@ description: 配置 PureChatNext 数据库并执行 Drizzle schema 检查、迁�
 ## 📋 前置要求
 
 1. 已安装项目依赖：`pnpm install`
-2. 已准备 PostgreSQL 17（本地实例，或 [Supabase](https://supabase.com) 免费 Postgres 服务均可）
+2. 已准备 PostgreSQL 17（本地实例，或 [Supabase](https://supabase.com)、[Neon](https://neon.tech) 等云托管 Postgres 均可）
 3. 已配置 `.env.local` 文件（参考 [环境变量配置](../../self-hosting/configuration/environment.md)）
 
 ## 🔧 配置步骤
@@ -22,7 +22,15 @@ description: 配置 PureChatNext 数据库并执行 Drizzle schema 检查、迁�
 使用 Supabase 免费 Postgres 时：
 
 ```dotenv
+DATABASE_DRIVER=neon
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
+```
+
+使用 Neon 时：
+
+```dotenv
+DATABASE_DRIVER=neon
+DATABASE_URL=postgresql://user:password@ep-xxx.region.aws.neon.tech/dbname?sslmode=require
 ```
 
 本地实例使用：
@@ -120,7 +128,7 @@ Docker 生产镜像会在启动应用前自动执行同一组迁移；Vercel 构
 - 确认 PostgreSQL 实例已启动（本地 Docker 先执行 `pnpm dev:docker`）
 - 验证 `DATABASE_URL` 与密码是否正确
 - 确认网络连接是否正常
-- 云托管（如 Supabase）若启用了 IP 白名单，检查是否放行当前出口 IP
+- 云托管（如 Supabase、Neon）若启用了 IP 白名单，检查是否放行当前出口 IP
 
 ### 迁移失败
 

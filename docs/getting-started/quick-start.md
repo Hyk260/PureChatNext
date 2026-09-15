@@ -13,7 +13,7 @@ pnpm install
 
 ## 2. 配置数据库
 
-应用认证使用 better-auth，只需可用的 PostgreSQL（本地 Docker，或云托管如 [Supabase](https://supabase.com) 免费 Postgres、Neon 等均可）。
+应用认证使用 better-auth，只需可用的 PostgreSQL（本地 Docker，或云托管如 [Supabase](https://supabase.com) 免费 Postgres、[Neon](https://neon.tech) 等均可）。
 
 ### 2.1 推荐：本地 Docker
 
@@ -32,10 +32,10 @@ pnpm db:migrate
 
 ### 2.2 可选：云托管 Postgres
 
-也可使用 Supabase 免费 Postgres（或其它云托管实例）：
+也可使用 Supabase 免费 Postgres、Neon 或其它云托管实例：
 
-1. 访问 <https://supabase.com> 创建项目（或使用 Neon 等）
-2. 在项目设置 → Database → Connection string 复制 URI
+1. 访问 <https://supabase.com> 或 <https://neon.tech> 创建项目
+2. 在项目设置中复制 Postgres 连接串（Supabase：Database → Connection string）
 3. 将连接串写入 `.env.local` 的 `DATABASE_URL`（云托管通常设 `DATABASE_DRIVER=neon`）
 
 更细的连接说明见 [环境变量配置](../self-hosting/configuration/environment.md) 与 [Drizzle 指南](../development/database/drizzle.md)。
@@ -88,10 +88,6 @@ pnpm dev:docker:reset  # 清空卷后重建并执行 db:migrate
 ```
 
 `dev:docker:reset` 会要求输入确认并永久删除全部开发卷。旧本机数据迁移和生产部署见 [Docker 自托管与数据迁移](../self-hosting/platform/docker.md)；服务说明见 [本地 PostgreSQL](../self-hosting/infrastructure/postgresql.md)、[本地 Redis](../self-hosting/infrastructure/redis.md)、[联网搜索](../self-hosting/features/online-search.md)。
-
-### 3.1 可选：Supabase 客户端变量（仅测试）
-
-`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` **非必填**，仅在调试遗留 Supabase 客户端代码时需要，日常开发与认证流程可不配置。
 
 ## 4. 启动开发服务器
 
@@ -158,10 +154,6 @@ curl -X GET http://localhost:3000/api/auth/me \
 ### Q: 提示缺少 `DATABASE_URL` 或无法连接数据库
 
 **A**: 确认已配置 `.env.local` 中的 `DATABASE_URL`，本地 Docker 需先执行 `pnpm dev:docker`，云托管需检查连接串与 `DATABASE_DRIVER`。
-
-### Q: 提示 "Missing Supabase environment variables"
-
-**A**: 这两个变量仅测试用、非必填。若未主动调用 Supabase 客户端，可忽略；需要时再在 `.env.local` 中配置 `NEXT_PUBLIC_SUPABASE_URL` 与 `NEXT_PUBLIC_SUPABASE_ANON_KEY`。
 
 ### Q: CORS 错误
 

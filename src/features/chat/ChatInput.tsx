@@ -91,21 +91,6 @@ const styles = createStaticStyles(({ css }) => ({
   shell: css`
     border-radius: 16px;
   `,
-  srOnly: css`
-    position: absolute;
-
-    overflow: hidden;
-
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    border: 0;
-
-    white-space: nowrap;
-
-    clip: rect(0, 0, 0, 0);
-  `,
   submenuChevron: css`
     flex: none;
     color: ${cssVar.colorTextQuaternary};
@@ -271,7 +256,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
       <input
         ref={fileInputRef}
         accept={CHAT_ATTACHMENT_ACCEPT}
-        className={styles.srOnly}
+        className='sr-only'
         disabled={isBusy}
         multiple
         type='file'
@@ -334,7 +319,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
           <DropdownMenuRoot open={plusOpen} onOpenChange={setPlusOpen}>
             <DropdownMenuTrigger className={styles.plusTrigger} disabled={isBusy} nativeButton>
               <Icon icon={Plus} size={18} />
-              <span className={styles.srOnly}>添加</span>
+              <span className='sr-only'>添加</span>
             </DropdownMenuTrigger>
             <DropdownMenuPortal>
               <DropdownMenuPositioner placement='topLeft'>

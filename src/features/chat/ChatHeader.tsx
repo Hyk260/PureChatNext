@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, confirmModal, copyToClipboard, DropdownMenu, Icon, Input, Modal, Text, Flex } from '@pure/ui'
+import { ActionIcon, copyToClipboard, DropdownMenu, Icon, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
   Hash,
@@ -14,12 +14,13 @@ import {
   Star,
   Trash2,
 } from 'lucide-react'
-import { memo, useCallback, useMemo, useState } from 'react'
+import { memo, useCallback, useMemo } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
-import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { createTopicShare } from '@/features/chat/chatApi'
+import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { LocalChatTopic } from '@/features/chat/types'
+import TopicRenameModal, { confirmDeleteTopic, useTopicRename } from '@/features/chat/TopicRenameModal'
 
 const styles = createStaticStyles(({ css }) => ({
   header: css`
@@ -51,20 +52,6 @@ const styles = createStaticStyles(({ css }) => ({
       background: ${cssVar.colorFillSecondary};
     }
   `,
-  srOnly: css`
-    position: absolute;
-
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    border: 0;
-
-    white-space: nowrap;
-  `,
   title: css`
     min-width: 0;
     margin-inline-start: 4px;
@@ -94,29 +81,12 @@ const ChatHeader = memo<Props>(
     const toggleLeftCollapsed = useChatUiStore((s) => s.toggleLeftCollapsed)
     const toggleRightCollapsed = useChatUiStore((s) => s.toggleRightCollapsed)
     const toggleWideScreen = useChatUiStore((s) => s.toggleWideScreen)
-    const [renameOpen, setRenameOpen] = useState(false)
-    const [draftTitle, setDraftTitle] = useState('')
-    const [saving, setSaving] = useState(false)
+    const rename = useTopicRename((title) => (topic ? onRename(topic.id, title) : undefined))
 
     const handleOpenRename = useCallback(() => {
       if (!topic) return
-      setDraftTitle(topic.title)
-      setRenameOpen(true)
-    }, [topic])
-
-    const handleRename = async () => {
-      if (!topic || saving) return
-      const nextTitle = draftTitle.trim()
-      if (!nextTitle) return
-
-      setSaving(true)
-      try {
-        await onRename(topic.id, nextTitle)
-        setRenameOpen(false)
-      } finally {
-        setSaving(false)
-      }
-    }
+      rename.openRename(topic.title)
+    }, [rename, topic])
 
     const handleAutoRename = useCallback(() => {
       if (!topic || autoRenameDisabled) return
@@ -149,14 +119,7 @@ const ChatHeader = memo<Props>(
 
     const handleDelete = useCallback(() => {
       if (!topic) return
-      confirmModal({
-        cancelText: '取消',
-        content: '话题下的所有消息将一并删除。',
-        okButtonProps: { danger: true },
-        okText: '删除',
-        onOk: () => onDelete(topic.id),
-        title: '删除该话题？',
-      })
+      confirmDeleteTopic(() => onDelete(topic.id))
     }, [onDelete, topic])
 
     const menuItems = useMemo(
@@ -245,7 +208,7 @@ const ChatHeader = memo<Props>(
               triggerProps={{ className: styles.menuTrigger, title: '更多' }}
             >
               <MoreHorizontal size={16} />
-              <span className={styles.srOnly}>更多</span>
+              <span className='sr-only'>更多</span>
             </DropdownMenu>
           </Flex>
 
@@ -259,30 +222,14 @@ const ChatHeader = memo<Props>(
           </Flex>
         </Flex>
 
-        <Modal
-          cancelText='取消'
-          confirmLoading={saving}
-          destroyOnHidden
-          okButtonProps={{ disabled: !draftTitle.trim() }}
-          okText='保存'
-          open={renameOpen}
-          title='重命名话题'
-          width={400}
-          onCancel={() => setRenameOpen(false)}
-          onOk={handleRename}
-        >
-          <Flex className='flex-col gap-3 py-2'>
-            <Text type='secondary'>保持简短且易于识别。</Text>
-            <Input
-              autoFocus
-              maxLength={100}
-              placeholder='话题名称'
-              value={draftTitle}
-              onChange={(event) => setDraftTitle(event.target.value)}
-              onPressEnter={handleRename}
-            />
-          </Flex>
-        </Modal>
+        <TopicRenameModal
+          open={rename.open}
+          draftTitle={rename.draftTitle}
+          saving={rename.saving}
+          onDraftTitleChange={rename.setDraftTitle}
+          onCancel={rename.close}
+          onOk={rename.submit}
+        />
       </>
     )
   }

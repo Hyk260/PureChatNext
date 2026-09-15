@@ -11,7 +11,6 @@ import {
   ArrowUpFromDot,
   AtomIcon,
   CircleFadingArrowUp,
-  Code2,
   Eye,
   Globe2,
   ImageIcon,
@@ -65,6 +64,14 @@ const trimNumber = (value: number) => {
   else if (value >= 10) digits = 1
   return value.toFixed(digits).replace(/\.?0+$/, '')
 }
+
+const ABILITY_TAG_MAP = [
+  { key: 'functionCall', color: 'blue', icon: Wrench },
+  { key: 'vision', color: 'geekblue', icon: Eye },
+  { key: 'reasoning', color: 'purple', icon: AtomIcon },
+  { key: 'webSearch', color: 'cyan', icon: Globe2 },
+  { key: 'imageGeneration', color: 'magenta', icon: ImageIcon },
+] as const
 
 const formatPriceValue = (pricing: ModelTokenPricing, amount: number) => {
   if (pricing.currency === 'USD') {
@@ -142,36 +149,13 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
             <span className={styles.sectionTitle}>能力</span>
           </Flex>
           <Flex className='gap-1'>
-            {abilities?.functionCall ? (
-              <Tag className={styles.tag} color='blue' size='small'>
-                <Icon icon={Wrench} size={12} />
-              </Tag>
-            ) : null}
-            {abilities?.vision ? (
-              <Tag className={styles.tag} color='geekblue' size='small'>
-                <Icon icon={Eye} size={12} />
-              </Tag>
-            ) : null}
-            {abilities?.reasoning ? (
-              <Tag className={styles.tag} color='purple' size='small'>
-                <Icon icon={AtomIcon} size={12} />
-              </Tag>
-            ) : null}
-            {abilities?.webSearch ? (
-              <Tag className={styles.tag} color='cyan' size='small'>
-                <Icon icon={Globe2} size={12} />
-              </Tag>
-            ) : null}
-            {abilities?.imageGeneration ? (
-              <Tag className={styles.tag} color='magenta' size='small'>
-                <Icon icon={ImageIcon} size={12} />
-              </Tag>
-            ) : null}
-            {/* {abilities?.structuredOutput ? (
-              <Tag className={styles.tag} color='green' size='small'>
-                <Icon icon={Code2} size={12} />
-              </Tag>
-            ) : null} */}
+            {ABILITY_TAG_MAP.map(({ key, color, icon }) =>
+              abilities?.[key] ? (
+                <Tag className={styles.tag} color={color} key={key} size='small'>
+                  <Icon icon={icon} size={12} />
+                </Tag>
+              ) : null
+            )}
           </Flex>
         </Flex>
       ) : null}

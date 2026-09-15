@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmModal, DropdownMenu, Icon, Input, Modal, Text, Flex } from '@pure/ui'
+import { DropdownMenu, Icon, Input, Modal, Text, Flex } from '@pure/ui'
 import type { MenuInfo, MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import {
@@ -20,6 +20,7 @@ import {
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import type { LocalChatTopic } from '@/features/chat/types'
+import TopicRenameModal, { confirmDeleteTopic, useTopicRename } from '@/features/chat/TopicRenameModal'
 import { stopMenuEvent } from '@/libs/utils/menu'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -49,20 +50,6 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   itemActive: css`
     background: ${cssVar.colorFillTertiary};
-  `,
-  srOnly: css`
-    position: absolute;
-
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    border: 0;
-
-    white-space: nowrap;
   `,
   trigger: css`
     cursor: pointer;
@@ -118,29 +105,14 @@ const TopicItem = memo<Props>(
     onProjectChange,
   }) => {
     const [menuOpen, setMenuOpen] = useState(false)
-    const [renameOpen, setRenameOpen] = useState(false)
     const [projectOpen, setProjectOpen] = useState(false)
-    const [draftTitle, setDraftTitle] = useState(topic.title)
     const [draftProject, setDraftProject] = useState('')
-    const [saving, setSaving] = useState(false)
+    const [projectSaving, setProjectSaving] = useState(false)
+    const rename = useTopicRename((title) => onRename(topic.id, title))
 
     const handleOpenRename = useCallback(() => {
-      setDraftTitle(topic.title)
-      setRenameOpen(true)
-    }, [topic.title])
-
-    const handleSubmitRename = async () => {
-      const next = draftTitle.trim()
-      if (!next || saving) return
-
-      setSaving(true)
-      try {
-        await onRename(topic.id, next)
-        setRenameOpen(false)
-      } finally {
-        setSaving(false)
-      }
-    }
+      rename.openRename(topic.title)
+    }, [rename, topic.title])
 
     const handleOpenProject = useCallback(() => {
       setDraftProject('')
@@ -149,14 +121,14 @@ const TopicItem = memo<Props>(
 
     const handleSubmitProject = async () => {
       const next = draftProject.trim()
-      if (!next || saving) return
+      if (!next || projectSaving) return
 
-      setSaving(true)
+      setProjectSaving(true)
       try {
         await onProjectChange(topic.id, next)
         setProjectOpen(false)
       } finally {
-        setSaving(false)
+        setProjectSaving(false)
       }
     }
 
@@ -248,14 +220,7 @@ const TopicItem = memo<Props>(
           label: '删除',
           onClick: (info) => {
             stopMenuEvent(info)
-            confirmModal({
-              cancelText: '取消',
-              content: '话题下的所有消息将一并删除。',
-              okButtonProps: { danger: true },
-              okText: '删除',
-              onOk: () => onDelete(topic.id),
-              title: '删除该话题？',
-            })
+            confirmDeleteTopic(() => onDelete(topic.id))
           },
         },
       ],
@@ -316,38 +281,24 @@ const TopicItem = memo<Props>(
                 onOpenChange={setMenuOpen}
               >
                 <Icon icon={MoreHorizontal} size='small' />
-                <span className={styles.srOnly}>更多</span>
+                <span className='sr-only'>更多</span>
               </DropdownMenu>
             </Flex>
           </Flex>
         </Flex>
 
-        <Modal
-          cancelText='取消'
-          confirmLoading={saving}
-          destroyOnHidden
-          okText='保存'
-          open={renameOpen}
-          title='重命名话题'
-          width={400}
-          onCancel={() => setRenameOpen(false)}
-          onOk={handleSubmitRename}
-        >
-          <Flex className='flex-col gap-3 py-2'>
-            <Text type='secondary'>保持简短且易于识别。</Text>
-            <Input
-              autoFocus
-              onChange={(event) => setDraftTitle(event.target.value)}
-              onPressEnter={handleSubmitRename}
-              placeholder='话题名称'
-              value={draftTitle}
-            />
-          </Flex>
-        </Modal>
+        <TopicRenameModal
+          open={rename.open}
+          draftTitle={rename.draftTitle}
+          saving={rename.saving}
+          onDraftTitleChange={rename.setDraftTitle}
+          onCancel={rename.close}
+          onOk={rename.submit}
+        />
 
         <Modal
           cancelText='取消'
-          confirmLoading={saving}
+          confirmLoading={projectSaving}
           destroyOnHidden
           okText='创建并移动'
           open={projectOpen}

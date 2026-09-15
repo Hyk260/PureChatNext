@@ -11,37 +11,45 @@ import { createMigrationClient } from './lib/db'
 
 const log = debug('db:migrate')
 
+// 与 scripts/docker-migrate.mjs 相同，避免 Vercel 并发构建和 Docker 启动抢着改 schema。
+const MIGRATION_LOCK_ID = 1_938_477_201
+
 const migrationsFolder = path.join(path.dirname(fileURLToPath(import.meta.url)), '../packages/database/src/migrations')
 
 async function runMigrate() {
   const { connection, db } = createMigrationClient()
 
   try {
-    await assertMigrationStateHealthy(connection, migrationsFolder)
+    await connection`SELECT pg_advisory_lock(${MIGRATION_LOCK_ID})`
+    try {
+      await assertMigrationStateHealthy(connection, migrationsFolder)
 
-    const before = await getMigrationSummary(connection, migrationsFolder)
-    log('迁移前状态: %O', before)
+      const before = await getMigrationSummary(connection, migrationsFolder)
+      log('迁移前状态: %O', before)
 
-    if (before.pendingCount > 0) {
-      console.log(`⏳ 运行迁移... (待执行 ${before.pendingCount} 条)`)
-      console.log(`  ${before.pendingTags.join(', ')}`)
-    } else {
-      console.log('⏳ 运行迁移... (无待执行)')
-    }
+      if (before.pendingCount > 0) {
+        console.log(`⏳ 运行迁移... (待执行 ${before.pendingCount} 条)`)
+        console.log(`  ${before.pendingTags.join(', ')}`)
+      } else {
+        console.log('⏳ 运行迁移... (无待执行)')
+      }
 
-    const start = Date.now()
-    await migrate(db, { migrationsFolder })
-    const elapsed = Date.now() - start
+      const start = Date.now()
+      await migrate(db, { migrationsFolder })
+      const elapsed = Date.now() - start
 
-    const after = await getMigrationSummary(connection, migrationsFolder)
-    log('迁移后状态: %O', after)
+      const after = await getMigrationSummary(connection, migrationsFolder)
+      log('迁移后状态: %O', after)
 
-    console.log(`✅ 迁移已完成，用时 ${elapsed} ms`)
+      console.log(`✅ 迁移已完成，用时 ${elapsed} ms`)
 
-    const newlyApplied = before.pendingTags.filter((tag) => !after.pendingTags.includes(tag))
+      const newlyApplied = before.pendingTags.filter((tag) => !after.pendingTags.includes(tag))
 
-    if (newlyApplied.length > 0) {
-      console.log(`  新应用: ${newlyApplied.join(', ')}`)
+      if (newlyApplied.length > 0) {
+        console.log(`  新应用: ${newlyApplied.join(', ')}`)
+      }
+    } finally {
+      await connection`SELECT pg_advisory_unlock(${MIGRATION_LOCK_ID})`.catch(() => undefined)
     }
   } finally {
     await connection.end()

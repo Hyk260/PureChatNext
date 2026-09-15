@@ -36,7 +36,7 @@
     "build:docs": "pnpm --filter @pure/docs build",
     "build:docker:migrate": "node scripts/build-docker-migrate.mjs",
     "build:docker": "pnpm run build && pnpm run build:docker:migrate",
-    "build:vercel": "pnpm build",
+    "build:vercel": "tsx scripts/migrate.ts && pnpm build",
     "start": "next start -p 3210",
     "preview:prod": "bun --no-env-file scripts/preview-prod.mts",
     "gateway": "bun scripts/gateway.ts",

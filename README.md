@@ -208,12 +208,12 @@ pnpm dev:docker:reset  # 确认后删除开发数据并重建
 项目按单个 Next.js 项目部署，仓库已包含 `vercel.json`。配置以下内容后即可上线：
 
 1. 安装命令：`pnpm install`
-2. 构建命令：`pnpm build`
+2. 构建命令：`pnpm build:vercel`（先迁移数据库再构建；`vercel.json` 已写入）
 3. 配置生产环境变量，至少包含数据库、认证密钥、`APP_URL` 和模型 Provider 密钥
 4. 生产前后端同域时不必再配 `ALLOWED_ORIGINS`；有额外前端域名时再设置，不要使用 `*`
-5. 在部署前或 CI 中执行 `pnpm db:migrate`
+5. 将 `DATABASE_URL`（及云托管时的 `DATABASE_DRIVER=neon`）勾选到 Production / Preview 的 **Build**，不要设成仅 Runtime
 
-构建流程为 `build:spa` → 复制 SPA 产物 → `next build`。部署后的静态资源位于 `/_spa/**`，未匹配的 UI 路径会回退到 SPA HTML 壳。
+构建流程为迁移 → `build:spa` → 复制 SPA 产物 → `next build`。迁移失败则部署失败。部署后的静态资源位于 `/_spa/**`，未匹配的 UI 路径会回退到 SPA HTML 壳。
 
 ### Docker 自托管
 

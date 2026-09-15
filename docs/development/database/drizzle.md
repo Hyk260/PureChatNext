@@ -83,7 +83,7 @@ pnpm db:studio
 
 Schema 位于 `packages/database/src/schemas/`，覆盖用户与 Better Auth、聊天主题/消息、Agent、文件与知识库、渠道绑定和积分账本。迁移文件位于 `packages/database/src/migrations/`，以该目录的 journal 为应用顺序依据。
 
-Docker 生产镜像会在启动应用前自动执行同一组迁移，并使用 PostgreSQL advisory lock 避免多个容器同时修改 schema。Vercel 部署仍需在发布流程中单独执行 `pnpm db:migrate`。
+Docker 生产镜像会在启动应用前自动执行同一组迁移；Vercel 构建命令 `pnpm build:vercel` 会先跑同一套 `scripts/migrate.ts`。两边都使用 PostgreSQL advisory lock，避免并发部署同时改 schema。`DATABASE_URL` 必须对 Vercel 的 Build 阶段可见，迁移失败则整次部署失败。
 
 ## 📝 常用命令
 

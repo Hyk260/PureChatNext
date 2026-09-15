@@ -10,7 +10,7 @@ import { loadFile } from '@pure/file-loaders'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
 import { CHAT_PERMISSION_MODES } from '@pure/types'
 import { convertToModelMessages, createUIMessageStreamResponse, isStepCount, streamText, toUIMessageStream } from 'ai'
-import type { ToolExecutionEndEvent, UIMessage } from 'ai'
+import type { ToolExecutionEndEvent, ToolSet, UIMessage } from 'ai'
 import debug from 'debug'
 import { createNanoId } from '@pure/utils'
 
@@ -37,7 +37,7 @@ import {
 import { buildChatRuntimeInstructions } from '@/server/chat/runtimeInstructions'
 import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
 import { desktopTools } from '@/server/chat/desktopTools'
-import { isToolApprovalRequired } from '@/server/chat/permissionPolicy'
+import { CHAT_TOOL_CAPABILITIES, isToolApprovalRequired } from '@/server/chat/permissionPolicy'
 
 import { createMessageMetadata } from './messageMetadata'
 
@@ -47,6 +47,31 @@ const log = debug('chat:route')
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024
 const MAX_ATTACHMENTS = 8
 const MAX_EXTRACTED_CHARS = 40_000
+const DESKTOP_CLIENT_INSTRUCTION =
+  '桌面本地工具只可通过客户端执行；先说明计划并等待必要的用户审批，不要重复尝试被拒绝的调用。'
+const RATE_LIMIT_PUBLIC_MESSAGE = '上游限流，请稍后重试。'
+
+type ChatPermissionMode = (typeof CHAT_PERMISSION_MODES)[number]
+
+type ChatRequestBody = {
+  baseURL?: string
+  messages: UIMessage[]
+  modelAbilities?: { vision?: boolean }
+  model?: string
+  clientCapabilities?: { desktop?: boolean }
+  topicId?: string
+  permissionMode?: unknown
+  provider?: string
+  searchMode?: unknown
+  system?: string
+}
+
+type ChatFilePart = Extract<UIMessage['parts'][number], { type: 'file' }> & {
+  filename?: string
+  name?: string
+}
+
+type ToolApprovalCall = { toolCallId?: string; toolName: string; input: unknown }
 
 const dataUrlToBuffer = (url: string) => {
   const match = /^data:([^;,]+);base64,(.+)$/s.exec(url)
@@ -60,7 +85,7 @@ const normalizeAttachmentMessages = async (messages: UIMessage[], supportsVision
 
   const tempPaths: string[] = []
   try {
-    return (await Promise.all(
+    return await Promise.all(
       messages.map(async (message) => {
         const parts: UIMessage['parts'] = []
         for (const part of message.parts) {
@@ -69,7 +94,7 @@ const normalizeAttachmentMessages = async (messages: UIMessage[], supportsVision
             continue
           }
 
-          const filePart = part as typeof part & { filename?: string; name?: string }
+          const filePart = part as ChatFilePart
           const filename = filePart.filename ?? filePart.name ?? 'attachment'
           const { buffer, mediaType } = dataUrlToBuffer(part.url)
           if (buffer.byteLength > MAX_ATTACHMENT_BYTES) throw new Error(`附件「${filename}」超过 10MB 限制`)
@@ -88,7 +113,7 @@ const normalizeAttachmentMessages = async (messages: UIMessage[], supportsVision
         }
         return { ...message, parts }
       })
-    )) as UIMessage[]
+    )
   } finally {
     await Promise.all(tempPaths.map((path) => unlink(path).catch(() => {})))
   }
@@ -136,6 +161,170 @@ const resolveModel = (
   }
 }
 
+const isInvalidClientCapabilities = (value: unknown) => {
+  if (value === undefined) return false
+  if (!value || typeof value !== 'object') return true
+  const desktop = (value as { desktop?: unknown }).desktop
+  return desktop !== undefined && typeof desktop !== 'boolean'
+}
+
+const resolveToolIdentifier = (toolName: string) =>
+  CHAT_TOOL_CAPABILITIES.find((capability) => capability.apiName === toolName)?.identifier ?? 'unknown'
+
+const loadToolApprovalModel = async (userId: string) => {
+  const { ChatToolApprovalModel } = await import('@pure/database/models/chatToolApproval')
+  return new ChatToolApprovalModel(userId)
+}
+
+const createDesktopToolApproval = (context: {
+  requestUserId: string | null
+  topicId?: string
+  topicPermissionMode?: ChatPermissionMode
+}) => {
+  const { requestUserId, topicId, topicPermissionMode } = context
+
+  return async ({ toolCall }: { toolCall: ToolApprovalCall }) => {
+    if (Object.hasOwn(desktopTools, toolCall.toolName)) return undefined
+
+    const input = toolCall.input && typeof toolCall.input === 'object' ? toolCall.input : undefined
+    const identifier = resolveToolIdentifier(toolCall.toolName)
+
+    if (requestUserId && topicId && toolCall.toolCallId && input) {
+      const approvals = await loadToolApprovalModel(requestUserId)
+      await approvals.upsertPending({
+        apiName: toolCall.toolName,
+        args: input as Record<string, unknown>,
+        argsHash: createHash('sha256').update(JSON.stringify(input)).digest('hex'),
+        identifier,
+        topicId,
+        toolCallId: toolCall.toolCallId,
+      })
+    }
+
+    const capability = isToolApprovalRequired({
+      apiName: toolCall.toolName,
+      args: input as Record<string, unknown> | undefined,
+      identifier,
+      mode: topicPermissionMode ?? 'auto',
+    })
+
+    if (capability.decision === 'user-approval') return 'user-approval' as const
+    if (capability.decision === 'denied') {
+      if (requestUserId && topicId && toolCall.toolCallId) {
+        const approvals = await loadToolApprovalModel(requestUserId)
+        await approvals.updateStatus(topicId, toolCall.toolCallId, 'denied', capability.reason)
+      }
+      return { reason: capability.reason, type: 'denied' as const }
+    }
+    return { reason: capability.reason, type: 'approved' as const }
+  }
+}
+
+const createToolExecutionEndHandler = (userId: string, topicId: string) => {
+  return async ({ toolCall, toolOutput }: ToolExecutionEndEvent) => {
+    const failed = toolOutput?.type === 'tool-error'
+    const approvals = await loadToolApprovalModel(userId)
+    await approvals.updateStatus(
+      topicId,
+      toolCall.toolCallId,
+      failed ? 'failed' : 'completed',
+      failed ? String(toolOutput.error ?? '工具执行失败') : undefined
+    )
+  }
+}
+
+const buildSearchOptions = ({
+  desktopClient,
+  requestUserId,
+  topicId,
+  toolApproval,
+  tools,
+}: {
+  desktopClient: boolean
+  requestUserId: string | null
+  topicId?: string
+  toolApproval: ReturnType<typeof createDesktopToolApproval> | undefined
+  tools: ToolSet
+}) => {
+  if (Object.keys(tools).length === 0) return {}
+
+  return {
+    stopWhen: isStepCount(5),
+    ...(toolApproval ? { toolApproval } : {}),
+    ...(toolsEnv.TOOL_APPROVAL_SECRET ? { experimental_toolApprovalSecret: toolsEnv.TOOL_APPROVAL_SECRET } : {}),
+    ...(desktopClient && requestUserId && topicId
+      ? { onToolExecutionEnd: createToolExecutionEndHandler(requestUserId, topicId) }
+      : {}),
+    tools,
+  }
+}
+
+const chargePureChatUsage = async ({
+  cachedInputTokens,
+  displayModel,
+  inputTokens,
+  outputTokens,
+  settlementId,
+  settlementPeriod,
+  usageStartedAt,
+  userId,
+}: {
+  cachedInputTokens: number | undefined
+  displayModel: string
+  inputTokens: number | undefined
+  outputTokens: number | undefined
+  settlementId: string
+  settlementPeriod: string
+  usageStartedAt: number
+  userId: string
+}) => {
+  const cardForCost = getPureChatModel(displayModel)
+  if (!cardForCost) return
+
+  if (inputTokens == null && outputTokens == null) {
+    log('purechat onEnd: no usage, skip charge')
+    return
+  }
+
+  const { totalCredits } = computeChatCost(cardForCost.pricing, {
+    cachedInputTokens,
+    inputTokens,
+    outputTokens,
+  })
+
+  try {
+    const charged = await new CreditsModel().chargeChatUsage({
+      cachedInputTokens,
+      credits: totalCredits,
+      durationMs: Date.now() - usageStartedAt,
+      inputTokens,
+      messageId: settlementId,
+      model: displayModel,
+      outputTokens,
+      period: settlementPeriod,
+      provider: PURECHAT_PROVIDER_ID,
+      trigger: 'web',
+      userId,
+    })
+    log('purechat charged: %o', charged)
+  } catch (error) {
+    log('purechat charge failed: %o', error)
+  }
+}
+
+const toPureChatErrorResponse = (error: unknown) => {
+  log('purechat streamText failed: %o', error)
+  if (isPureChatRestrictedModelError(error)) {
+    return new ChatSDKError('bad_request:api', PURECHAT_MODEL_UNAVAILABLE_MESSAGE).toResponse()
+  }
+  // 上游鉴权失败等：不扣积分（尚未 onEnd）
+  const publicMessage = getPublicGatewayErrorMessage(error)
+  if (publicMessage === RATE_LIMIT_PUBLIC_MESSAGE) {
+    return new ChatSDKError('rate_limit:chat', publicMessage).toResponse()
+  }
+  return new ChatSDKError('bad_request:api', publicMessage).toResponse()
+}
+
 /**
  * chat API
  * POST /api/chat
@@ -144,18 +333,7 @@ const resolveModel = (
  * 自配 openai / deepseek：不扣积分；优先账号金库，其次 Authorization Bearer / 服务端 env。
  */
 export async function POST(request: Request) {
-  let requestBody: {
-    baseURL?: string
-    messages: UIMessage[]
-    modelAbilities?: { vision?: boolean }
-    model?: string
-    clientCapabilities?: { desktop?: boolean }
-    topicId?: string
-    permissionMode?: unknown
-    provider?: string
-    searchMode?: unknown
-    system?: string
-  }
+  let requestBody: ChatRequestBody
 
   try {
     requestBody = await request.json()
@@ -170,31 +348,22 @@ export async function POST(request: Request) {
   if (!Array.isArray(messages)) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
-
-  if (
-    requestBody.clientCapabilities !== undefined &&
-    (!requestBody.clientCapabilities ||
-      typeof requestBody.clientCapabilities !== 'object' ||
-      (requestBody.clientCapabilities.desktop !== undefined &&
-        typeof requestBody.clientCapabilities.desktop !== 'boolean'))
-  ) {
+  if (isInvalidClientCapabilities(requestBody.clientCapabilities)) {
     return new ChatSDKError('bad_request:api', 'Invalid client capabilities').toResponse()
   }
-
   if (requestBody.searchMode !== undefined && requestBody.searchMode !== 'off' && requestBody.searchMode !== 'auto') {
     return new ChatSDKError('bad_request:api', 'Invalid search mode').toResponse()
   }
-
   if (
     requestBody.permissionMode !== undefined &&
-    !CHAT_PERMISSION_MODES.includes(requestBody.permissionMode as (typeof CHAT_PERMISSION_MODES)[number])
+    !CHAT_PERMISSION_MODES.includes(requestBody.permissionMode as ChatPermissionMode)
   ) {
     return new ChatSDKError('bad_request:api', 'Invalid permission mode').toResponse()
   }
 
   const searchMode = requestBody.searchMode === 'auto' ? 'auto' : 'off'
   const desktopClient = requestBody.clientCapabilities?.desktop === true
-  let topicPermissionMode = requestBody.permissionMode as (typeof CHAT_PERMISSION_MODES)[number] | undefined
+  let topicPermissionMode = requestBody.permissionMode as ChatPermissionMode | undefined
   let requestUserId: string | null = null
 
   if (desktopClient) {
@@ -212,9 +381,10 @@ export async function POST(request: Request) {
       return new ChatSDKError('bad_request:api', 'Permission mode does not match topic').toResponse()
     }
   }
+
   const supportsVision = Boolean(
     requestBody.modelAbilities?.vision ??
-    getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision
+      getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision
   )
   try {
     messages = await normalizeAttachmentMessages(messages, supportsVision)
@@ -222,127 +392,39 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : '附件解析失败'
     return new ChatSDKError('bad_request:api', message).toResponse()
   }
+
   const toolContext = { channel: 'web', searchMode } as const
   const tools = {
     ...resolveChatTools(toolContext),
     ...(desktopClient ? desktopTools : {}),
   }
-  const instructions = [system?.trim(), buildChatRuntimeInstructions(), ...resolveChatToolInstructions(toolContext)]
-    .concat(
-      desktopClient
-        ? ['桌面本地工具只可通过客户端执行；先说明计划并等待必要的用户审批，不要重复尝试被拒绝的调用。']
-        : []
-    )
-    .filter(Boolean)
-    .join('\n\n')
+  const instructionParts = [system?.trim(), buildChatRuntimeInstructions(), ...resolveChatToolInstructions(toolContext)]
+  if (desktopClient) instructionParts.push(DESKTOP_CLIENT_INSTRUCTION)
+  const instructions = instructionParts.filter(Boolean).join('\n\n')
   const toolApproval = desktopClient
-    ? async ({ toolCall }: { toolCall: { toolCallId?: string; toolName: string; input: unknown } }) => {
-        if (
-          [
-            'editFile',
-            'getSystemInfo',
-            'getCommandOutput',
-            'killCommand',
-            'listFiles',
-            'moveFile',
-            'readFile',
-            'runCommand',
-            'searchFiles',
-            'writeFile',
-          ].includes(toolCall.toolName)
-        ) {
-          return undefined
-        }
-        const input = toolCall.input && typeof toolCall.input === 'object' ? toolCall.input : undefined
-        const identifier =
-          toolCall.toolName === 'webSearch'
-            ? 'builtin-web-search'
-            : toolCall.toolName === 'getWeather'
-              ? 'builtin-weather'
-              : 'unknown'
-        if (requestUserId && topicId && toolCall.toolCallId && input) {
-          const { ChatToolApprovalModel } = await import('@pure/database/models/chatToolApproval')
-          await new ChatToolApprovalModel(requestUserId).upsertPending({
-            apiName: toolCall.toolName,
-            args: input as Record<string, unknown>,
-            argsHash: createHash('sha256').update(JSON.stringify(input)).digest('hex'),
-            identifier,
-            topicId,
-            toolCallId: toolCall.toolCallId,
-          })
-        }
-        const capability = isToolApprovalRequired({
-          apiName: toolCall.toolName,
-          args: input as Record<string, unknown> | undefined,
-          identifier,
-          mode: topicPermissionMode ?? 'auto',
-        })
-        if (capability.decision === 'user-approval') return 'user-approval' as const
-        if (capability.decision === 'denied') {
-          if (requestUserId && topicId && toolCall.toolCallId) {
-            const { ChatToolApprovalModel } = await import('@pure/database/models/chatToolApproval')
-            await new ChatToolApprovalModel(requestUserId).updateStatus(
-              topicId,
-              toolCall.toolCallId,
-              'denied',
-              capability.reason
-            )
-          }
-          return { reason: capability.reason, type: 'denied' as const }
-        }
-        return { reason: capability.reason, type: 'approved' as const }
-      }
+    ? createDesktopToolApproval({ requestUserId, topicId, topicPermissionMode })
     : undefined
-
-  const searchOptions =
-    Object.keys(tools).length > 0
-      ? {
-          stopWhen: isStepCount(5),
-          ...(toolApproval ? { toolApproval } : {}),
-          ...(toolsEnv.TOOL_APPROVAL_SECRET ? { experimental_toolApprovalSecret: toolsEnv.TOOL_APPROVAL_SECRET } : {}),
-          ...(desktopClient && requestUserId && topicId
-            ? {
-                onToolExecutionEnd: async ({ toolCall, toolOutput }: ToolExecutionEndEvent) => {
-                  const { ChatToolApprovalModel } = await import('@pure/database/models/chatToolApproval')
-                  const failed = toolOutput?.type === 'tool-error'
-                  await new ChatToolApprovalModel(requestUserId).updateStatus(
-                    topicId,
-                    toolCall.toolCallId,
-                    failed ? 'failed' : 'completed',
-                    failed ? String(toolOutput.error ?? '工具执行失败') : undefined
-                  )
-                },
-              }
-            : {}),
-          tools,
-        }
-      : {}
+  const searchOptions = buildSearchOptions({ desktopClient, requestUserId, topicId, toolApproval, tools })
 
   const resolvedProvider = provider ?? 'deepseek'
   const isPureChat = resolvedProvider === PURECHAT_PROVIDER_ID
-
-  let userId: string | null = requestUserId
-  let settlementId: string | undefined
-  let settlementPeriod: string | undefined
-  let displayModel = model
 
   if (isPureChat) {
     if (!llmEnv.PURECHAT_ENABLED) {
       return new ChatSDKError('bad_request:api', 'PureChat is disabled').toResponse()
     }
 
-    userId = await getAuthenticatedUserId()
+    const userId = await getAuthenticatedUserId()
     if (!userId) {
       return new ChatSDKError('unauthorized:chat').toResponse()
     }
 
-    const resolvedDisplayModel = model?.trim() || PURECHAT_DEFAULT_MODEL
-    displayModel = resolvedDisplayModel
-    const card = getPureChatModel(resolvedDisplayModel)
+    const displayModel = model?.trim() || PURECHAT_DEFAULT_MODEL
+    const card = getPureChatModel(displayModel)
     if (!card) {
-      return new ChatSDKError('bad_request:api', `Unknown PureChat model "${resolvedDisplayModel}"`).toResponse()
+      return new ChatSDKError('bad_request:api', `Unknown PureChat model "${displayModel}"`).toResponse()
     }
-    if (!getEnabledPureChatModel(resolvedDisplayModel)) {
+    if (!getEnabledPureChatModel(displayModel)) {
       return new ChatSDKError('bad_request:api', PURECHAT_MODEL_UNAVAILABLE_MESSAGE).toResponse()
     }
 
@@ -352,8 +434,8 @@ export async function POST(request: Request) {
       return new ChatSDKError('bad_request:api', 'PureChat temporarily unavailable').toResponse()
     }
 
-    settlementPeriod = getShanghaiBillingPeriod()
-    settlementId = createNanoId(24)()
+    const settlementPeriod = getShanghaiBillingPeriod()
+    const settlementId = createNanoId(24)()
 
     try {
       await new CreditsModel().assertCanChat(userId, settlementPeriod)
@@ -368,7 +450,7 @@ export async function POST(request: Request) {
       const usageStartedAt = Date.now()
       const resolvedModel = resolveModel(
         PURECHAT_PROVIDER_ID,
-        resolvedDisplayModel,
+        displayModel,
         gatewayKey,
         resolveAiGatewayBaseURL()
       )
@@ -381,66 +463,29 @@ export async function POST(request: Request) {
         ...searchOptions,
         instructions,
         async onEnd({ usage }) {
-          if (!userId || !settlementId || !settlementPeriod || !displayModel) return
-
-          const cardForCost = getPureChatModel(displayModel)
-          if (!cardForCost) return
-
-          const inputTokens = usage.inputTokens
-          const outputTokens = usage.outputTokens
-          const cachedInputTokens = usage.inputTokenDetails.cacheReadTokens
-
-          if (inputTokens == null && outputTokens == null) {
-            log('purechat onEnd: no usage, skip charge')
-            return
-          }
-
-          const { totalCredits } = computeChatCost(cardForCost.pricing, {
-            cachedInputTokens,
-            inputTokens,
-            outputTokens,
+          await chargePureChatUsage({
+            cachedInputTokens: usage.inputTokenDetails.cacheReadTokens,
+            displayModel,
+            inputTokens: usage.inputTokens,
+            outputTokens: usage.outputTokens,
+            settlementId,
+            settlementPeriod,
+            usageStartedAt,
+            userId,
           })
-
-          try {
-            const charged = await new CreditsModel().chargeChatUsage({
-              cachedInputTokens,
-              credits: totalCredits,
-              durationMs: Date.now() - usageStartedAt,
-              inputTokens,
-              messageId: settlementId,
-              model: displayModel,
-              outputTokens,
-              period: settlementPeriod,
-              provider: PURECHAT_PROVIDER_ID,
-              trigger: 'web',
-              userId,
-            })
-            log('purechat charged: %o', charged)
-          } catch (error) {
-            log('purechat charge failed: %o', error)
-          }
         },
       })
 
       return createUIMessageStreamResponse({
         stream: toUIMessageStream({
-          messageMetadata: createMessageMetadata(resolvedDisplayModel, PURECHAT_PROVIDER_ID),
+          messageMetadata: createMessageMetadata(displayModel, PURECHAT_PROVIDER_ID),
           onError: getPureChatStreamErrorMessage,
           sendReasoning: true,
           stream: result.stream,
         }),
       })
     } catch (error) {
-      log('purechat streamText failed: %o', error)
-      if (isPureChatRestrictedModelError(error)) {
-        return new ChatSDKError('bad_request:api', PURECHAT_MODEL_UNAVAILABLE_MESSAGE).toResponse()
-      }
-      // 上游鉴权失败等：不扣积分（尚未 onEnd）
-      const publicMessage = getPublicGatewayErrorMessage(error)
-      if (publicMessage === '上游限流，请稍后重试。') {
-        return new ChatSDKError('rate_limit:chat', publicMessage).toResponse()
-      }
-      return new ChatSDKError('bad_request:api', publicMessage).toResponse()
+      return toPureChatErrorResponse(error)
     }
   }
 
@@ -448,8 +493,7 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api', `Unsupported provider "${resolvedProvider}"`).toResponse()
   }
 
-  if (!userId) userId = await getAuthenticatedUserId()
-
+  const userId = requestUserId ?? (await getAuthenticatedUserId())
   const credentials = await resolveUserProviderCredentials({
     allowEnvFallback: true,
     headerKey: resolveApiKeyFromHeader(request),

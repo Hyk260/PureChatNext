@@ -25,7 +25,6 @@ import {
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
-import { MessengerProviderSecretHint } from './MessengerProviderSecretHint'
 import QrCodeAuth from './QrCodeAuth'
 import type { WechatAuthCredentials } from './QrCodeAuth'
 import {
@@ -357,7 +356,6 @@ const MessengerWeChatPage = memo(() => {
             provider={provider}
             onSelect={handleModelSelect}
           />
-          <MessengerProviderSecretHint provider={provider} />
 
           {needsRebind && (
             <Alert showIcon type='warning' title='微信会话已过期或需要重新连接' description='请再次扫码绑定。' />

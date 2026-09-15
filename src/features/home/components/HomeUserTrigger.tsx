@@ -49,7 +49,7 @@ const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planL
           <Text as='span' style={{ lineHeight: 1.4 }} weight='bold'>
             {name}
           </Text>
-          {planLabel ? (
+          {/* {planLabel ? (
             <Text
               as='span'
               fontSize={12}
@@ -64,7 +64,7 @@ const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planL
             >
               {planLabel}
             </Text>
-          ) : null}
+          ) : null} */}
         </Flex>
         {email ? (
           <Text as='span' fontSize={12} type='secondary' style={{ lineHeight: 1.4 }}>

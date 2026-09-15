@@ -66,9 +66,14 @@ ENV DATABASE_DRIVER="node" \
 
 COPY --from=base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 --ingroup nodejs nextjs && \
-    dpkg --purge --force-depends --force-remove-essential perl-base && \
+RUN set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get -o Acquire::Retries=5 update; \
+    apt-get -o Acquire::Retries=5 upgrade -y --no-install-recommends; \
+    rm -rf /var/lib/apt/lists/*; \
+    addgroup --system --gid 1001 nodejs; \
+    adduser --system --uid 1001 --ingroup nodejs nextjs; \
+    dpkg --purge --force-depends --force-remove-essential perl-base; \
     rm -rf \
       /usr/local/lib/node_modules/corepack \
       /usr/local/lib/node_modules/npm \

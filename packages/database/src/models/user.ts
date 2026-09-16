@@ -35,9 +35,13 @@ export type UserDeletionPreviewUser = {
 }
 
 export class UserModel {
-  private static readonly db: ChatDatabase = getServerDB()
+  private readonly db: ChatDatabase
 
-  private static normalizeUniqueUserFields = <
+  constructor(db: ChatDatabase = getServerDB()) {
+    this.db = db
+  }
+
+  private normalizeUniqueUserFields = <
     T extends { email?: string | null; phone?: string | null; userId?: string | null },
   >(
     value: T
@@ -54,12 +58,12 @@ export class UserModel {
     }
   }
 
-  private static excludePassword(user: UserItem): UserWithoutPassword {
+  private excludePassword = (user: UserItem): UserWithoutPassword => {
     const { password: _password, ...userWithoutPassword } = user
     return userWithoutPassword
   }
 
-  private static findCredentialAccountPassword = async (authUserId: string) => {
+  private findCredentialAccountPassword = async (authUserId: string) => {
     const [credentialAccount] = await this.db
       .select({ password: account.password })
       .from(account)
@@ -69,10 +73,10 @@ export class UserModel {
     return credentialAccount?.password ?? null
   }
 
-  private static async toUserWithoutPasswordIfPasswordOk(
+  private toUserWithoutPasswordIfPasswordOk = async (
     user: UserItem | undefined,
     plainPassword: string
-  ): Promise<UserWithoutPassword | null> {
+  ): Promise<UserWithoutPassword | null> => {
     if (!user) return null
 
     const storedHash = await this.findCredentialAccountPassword(user.id)
@@ -84,7 +88,7 @@ export class UserModel {
   }
 
   /** 按 Better Auth 主键 id 更新资料字段（全名、兴趣等） */
-  static updateProfileById = async (id: string, value: { fullName?: string | null; interests?: string[] }) => {
+  updateProfileById = async (id: string, value: { fullName?: string | null; interests?: string[] }) => {
     return this.db
       .update(users)
       .set({ ...value, updatedAt: new Date() })
@@ -96,28 +100,28 @@ export class UserModel {
       })
   }
 
-  static findById = async (id: string) => {
+  findById = async (id: string) => {
     return this.db.query.users.findFirst({ where: eq(users.id, id) })
   }
 
-  static findByUserId = async (userId: string) => {
+  findByUserId = async (userId: string) => {
     return this.db.query.users.findFirst({ where: eq(users.userId, userId) })
   }
 
-  static findByUserIdAndPassword = async (userId: string, password: string) => {
+  findByUserIdAndPassword = async (userId: string, password: string) => {
     const user = await this.findByUserId(userId)
     return this.toUserWithoutPasswordIfPasswordOk(user, password)
   }
 
-  static findByEmail = async (email: string) => {
+  findByEmail = async (email: string) => {
     return this.db.query.users.findFirst({ where: eq(users.email, email) })
   }
 
-  static findByUsername = async (username: string) => {
+  findByUsername = async (username: string) => {
     return this.db.query.users.findFirst({ where: eq(users.username, username) })
   }
 
-  static findSignInCheck = async (lookup: { email: string } | { username: string }) => {
+  findSignInCheck = async (lookup: { email: string } | { username: string }) => {
     const user = 'email' in lookup ? await this.findByEmail(lookup.email) : await this.findByUsername(lookup.username)
     if (!user) return null
 
@@ -129,11 +133,11 @@ export class UserModel {
     }
   }
 
-  private static getVerificationIdentifiers = (user: UserItem) => {
+  private getVerificationIdentifiers = (user: UserItem) => {
     return [user.email, user.phone].filter((value): value is string => Boolean(value))
   }
 
-  private static countRelatedRecords = async (authId: string, identifiers: string[]): Promise<UserRelatedCounts> => {
+  private countRelatedRecords = async (authId: string, identifiers: string[]): Promise<UserRelatedCounts> => {
     const [sessionsResult, accountsResult, twoFactorResult, passkeysResult, verificationsResult] = await Promise.all([
       this.db.select({ count: count() }).from(session).where(eq(session.userId, authId)),
       this.db.select({ count: count() }).from(account).where(eq(account.userId, authId)),
@@ -153,7 +157,7 @@ export class UserModel {
     }
   }
 
-  private static toDeletionPreviewUser = (user: UserItem): UserDeletionPreviewUser => {
+  private toDeletionPreviewUser = (user: UserItem): UserDeletionPreviewUser => {
     return {
       createdAt: user.createdAt,
       email: user.email,
@@ -165,7 +169,7 @@ export class UserModel {
     }
   }
 
-  static getUserDeletionPreview = async (email: string) => {
+  getUserDeletionPreview = async (email: string) => {
     const normalizedEmail = email.trim()
     const user = await this.findByEmail(normalizedEmail)
 
@@ -183,7 +187,7 @@ export class UserModel {
     }
   }
 
-  static deleteUserByEmail = async (email: string) => {
+  deleteUserByEmail = async (email: string) => {
     const normalizedEmail = email.trim()
     const user = await this.findByEmail(normalizedEmail)
 
@@ -210,7 +214,7 @@ export class UserModel {
   }
 
   /** 删除创建超过 maxAgeMs 且仍未验证邮箱的用户（释放占坑邮箱） */
-  static deleteUnverifiedOlderThan = async (maxAgeMs: number) => {
+  deleteUnverifiedOlderThan = async (maxAgeMs: number) => {
     const cutoff = new Date(Date.now() - maxAgeMs)
     const staleUsers = await this.db
       .select({
@@ -239,12 +243,12 @@ export class UserModel {
     return { cutoff, deleted: ids.length }
   }
 
-  static findByEmailAndPassword = async (email: string, password: string) => {
+  findByEmailAndPassword = async (email: string, password: string) => {
     const user = await this.findByEmail(email)
     return this.toUserWithoutPasswordIfPasswordOk(user, password)
   }
 
-  static createUser = async (params: Partial<User> & { password?: string | null }) => {
+  createUser = async (params: Partial<User> & { password?: string | null }) => {
     const { password: plainPassword, ...userFields } = params
     const normalizedParams = this.normalizeUniqueUserFields(userFields)
 

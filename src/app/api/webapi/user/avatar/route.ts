@@ -78,7 +78,7 @@ export const POST = withAuth(async (req, { userId }) => {
     return NextResponse.json({ error: 'Image must be smaller than 2MB' }, { status: 400 })
   }
 
-  const user = await UserModel.findById(userId)
+  const user = await new UserModel().findById(userId)
 
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })

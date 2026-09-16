@@ -67,7 +67,7 @@ export class CreditsModel {
   }
 
   /** 确保当前 period 行存在；跨月不滚存，新 period 重新发放。 */
-  async ensurePeriod(userId: string, period: string, grant = MONTHLY_FREE_CREDITS): Promise<UserCreditsItem> {
+  ensurePeriod = async (userId: string, period: string, grant = MONTHLY_FREE_CREDITS): Promise<UserCreditsItem> => {
     const [existing] = await this.db
       .select()
       .from(userCredits)
@@ -110,7 +110,7 @@ export class CreditsModel {
     return again
   }
 
-  async getBalance(userId: string, period: string): Promise<CreditsBalance> {
+  getBalance = async (userId: string, period: string): Promise<CreditsBalance> => {
     const row = await this.ensurePeriod(userId, period)
     return {
       grant: row.grant,
@@ -124,7 +124,7 @@ export class CreditsModel {
    * beforeChat 预检：余额不足或低于 MIN_RESERVE 则抛 FreePlanLimitError。
    * V1 不做金额预扣锁。
    */
-  async assertCanChat(userId: string, period: string, minReserve = MIN_RESERVE_CREDITS): Promise<CreditsBalance> {
+  assertCanChat = async (userId: string, period: string, minReserve = MIN_RESERVE_CREDITS): Promise<CreditsBalance> => {
     const balance = await this.getBalance(userId, period)
     if (balance.remaining <= 0 || balance.remaining < minReserve) {
       throw new FreePlanLimitError('免费积分已用尽。请等待下月重置，或自行配置模型 API Key 继续使用。')
@@ -136,7 +136,7 @@ export class CreditsModel {
    * onChatFinal：按实际 usage 扣减。同一 messageId 的 chat_usage 只入账一次。
    * 并发打穿时 used 夹逼至 grant，不出现负余额。
    */
-  async chargeChatUsage(input: ChargeChatUsageInput): Promise<{ charged: number; skipped: boolean }> {
+  chargeChatUsage = async (input: ChargeChatUsageInput): Promise<{ charged: number; skipped: boolean }> => {
     const credits = Math.max(0, Math.round(input.credits))
     if (credits <= 0) return { charged: 0, skipped: true }
 
@@ -201,7 +201,7 @@ export class CreditsModel {
     })
   }
 
-  async getUsage(query: UsageQuery) {
+  getUsage = async (query: UsageQuery) => {
     const scopeFilters = [eq(creditLedger.userId, query.userId), eq(creditLedger.reason, 'chat_usage')]
     if (query.startAt && query.endAt) {
       scopeFilters.push(gte(creditLedger.createdAt, query.startAt), lte(creditLedger.createdAt, query.endAt))

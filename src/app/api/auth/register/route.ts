@@ -33,8 +33,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '密码长度至少为 6 个字符' }, { status: 400 })
     }
 
+    const userModel = new UserModel()
+
     if (email) {
-      const existingEmail = await UserModel.findByEmail(email)
+      const existingEmail = await userModel.findByEmail(email)
       if (existingEmail) {
         return NextResponse.json(
           {
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 创建用户
-    const newUser = await UserModel.createUser({
+    const newUser = await userModel.createUser({
       email,
       password,
     })

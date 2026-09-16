@@ -7,7 +7,11 @@ import type { NewChannelEventFile } from '../schemas/channel'
 import type { ChatDatabase } from '../type'
 
 export class ChannelEventFileModel {
-  constructor(private readonly db: ChatDatabase = getServerDB()) {}
+  private readonly db: ChatDatabase
+
+  constructor(db: ChatDatabase = getServerDB()) {
+    this.db = db
+  }
 
   findByOperation = async (eventId: string, direction: string, operationHash: string) => {
     const [row] = await this.db

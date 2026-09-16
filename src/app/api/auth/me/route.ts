@@ -16,7 +16,7 @@ export const GET = async (req: NextRequest) => {
     return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 })
   }
 
-  const user = await UserModel.findByUserId(jwtPayload.userId)
+  const user = await new UserModel().findByUserId(jwtPayload.userId)
 
   if (!user) {
     return NextResponse.json({ error: '用户不存在' }, { status: 404 })

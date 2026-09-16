@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid username', taken: false }, { status: 400 })
     }
 
-    const existing = await UserModel.findByUsername(identifier.value)
+    const existing = await new UserModel().findByUsername(identifier.value)
     return NextResponse.json({ taken: Boolean(existing) } satisfies CheckUsernameResponseData)
   } catch (error) {
     console.error('Error checking username:', error)

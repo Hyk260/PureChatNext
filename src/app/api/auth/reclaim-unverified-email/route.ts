@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    await UserModel.deleteUserByEmail(email)
+    await new UserModel().deleteUserByEmail(email)
 
     return NextResponse.json({ reclaimed: true } satisfies ReclaimUnverifiedEmailResponse)
   } catch (error) {

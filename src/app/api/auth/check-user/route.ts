@@ -30,10 +30,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or username', exists: false }, { status: 400 })
     }
 
+    const userModel = new UserModel()
     const user =
       identifier.kind === 'email'
-        ? await UserModel.findSignInCheck({ email: identifier.value })
-        : await UserModel.findSignInCheck({ username: identifier.value })
+        ? await userModel.findSignInCheck({ email: identifier.value })
+        : await userModel.findSignInCheck({ username: identifier.value })
 
     if (!user) {
       return NextResponse.json({ exists: false })

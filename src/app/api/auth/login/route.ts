@@ -24,8 +24,9 @@ export async function POST(request: NextRequest) {
     }
 
     let user: UserWithoutPassword | null = null
+    const userModel = new UserModel()
     if (email) {
-      user = await UserModel.findByEmailAndPassword(email, password)
+      user = await userModel.findByEmailAndPassword(email, password)
       if (!user) {
         return NextResponse.json(
           {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
         )
       }
     } else if (userId) {
-      user = await UserModel.findByUserIdAndPassword(userId, password)
+      user = await userModel.findByUserIdAndPassword(userId, password)
       if (!user) {
         return NextResponse.json(
           {

@@ -95,7 +95,11 @@ async function ensureSession(tx: Transaction, event: IngestEvent) {
 }
 
 export class ChannelEventModel {
-  constructor(private readonly db: ChatDatabase = getServerDB()) {}
+  private readonly db: ChatDatabase
+
+  constructor(db: ChatDatabase = getServerDB()) {
+    this.db = db
+  }
 
   /** 入站事件与 poll cursor 必须在同一事务中提交。 */
   ingestAndAdvanceCursor = async (

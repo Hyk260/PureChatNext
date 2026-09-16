@@ -1,14 +1,17 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { UserModel } from '@pure/database/models/user'
-
 import { GET, POST } from './route'
 
+const mocks = vi.hoisted(() => ({
+  deleteUserByEmail: vi.fn(),
+  getUserDeletionPreview: vi.fn(),
+}))
+
 vi.mock('@pure/database/models/user', () => ({
-  UserModel: {
-    deleteUserByEmail: vi.fn(),
-    getUserDeletionPreview: vi.fn(),
+  UserModel: class {
+    deleteUserByEmail = mocks.deleteUserByEmail
+    getUserDeletionPreview = mocks.getUserDeletionPreview
   },
 }))
 
@@ -71,7 +74,7 @@ describe('/api/dev/delete-user', () => {
   })
 
   it('returns lookup preview when user exists', async () => {
-    vi.mocked(UserModel.getUserDeletionPreview).mockResolvedValue({
+    vi.mocked(mocks.getUserDeletionPreview).mockResolvedValue({
       found: true,
       relatedCounts,
       user: previewUser,
@@ -84,11 +87,11 @@ describe('/api/dev/delete-user', () => {
     expect(payload.success).toBe(true)
     expect(payload.action).toBe('lookup')
     expect(payload.result.found).toBe(true)
-    expect(UserModel.getUserDeletionPreview).toHaveBeenCalledWith('user@example.com')
+    expect(mocks.getUserDeletionPreview).toHaveBeenCalledWith('user@example.com')
   })
 
   it('returns lookup not found result', async () => {
-    vi.mocked(UserModel.getUserDeletionPreview).mockResolvedValue({ found: false })
+    vi.mocked(mocks.getUserDeletionPreview).mockResolvedValue({ found: false })
 
     const response = await postJson({ action: 'lookup', email: 'missing@example.com' })
     const payload = await response.json()
@@ -118,7 +121,7 @@ describe('/api/dev/delete-user', () => {
   })
 
   it('deletes user when confirmation matches', async () => {
-    vi.mocked(UserModel.deleteUserByEmail).mockResolvedValue({
+    vi.mocked(mocks.deleteUserByEmail).mockResolvedValue({
       deleted: {
         relatedCounts,
         user: previewUser,
@@ -137,6 +140,6 @@ describe('/api/dev/delete-user', () => {
     expect(payload.success).toBe(true)
     expect(payload.action).toBe('delete')
     expect(payload.result.found).toBe(true)
-    expect(UserModel.deleteUserByEmail).toHaveBeenCalledWith('user@example.com')
+    expect(mocks.deleteUserByEmail).toHaveBeenCalledWith('user@example.com')
   })
 })

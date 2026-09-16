@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await UserModel.deleteUnverifiedOlderThan(UNVERIFIED_USER_TTL_MS)
+    const result = await new UserModel().deleteUnverifiedOlderThan(UNVERIFIED_USER_TTL_MS)
     logger.info({ cutoff: result.cutoff.toISOString(), deleted: result.deleted }, 'cleanup-unverified-users')
     return NextResponse.json({
       cutoff: result.cutoff.toISOString(),

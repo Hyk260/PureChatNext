@@ -7,8 +7,8 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@pure/database/models/user', () => ({
-  UserModel: {
-    findByUsername: mocks.findByUsername,
+  UserModel: class {
+    findByUsername = mocks.findByUsername
   },
 }))
 

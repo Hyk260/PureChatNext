@@ -30,7 +30,7 @@ export class UserService {
     authUserId: string,
     profile: EnsureIMAccountProfile = {}
   ): Promise<RegisterAccountResult> => {
-    const user = await UserModel.findById(authUserId)
+    const user = await new UserModel().findById(authUserId)
     if (!user?.userId) {
       throw new Error(`User ${authUserId} not found for IM registration`)
     }

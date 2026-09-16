@@ -7,10 +7,13 @@ import type { ChatDatabase } from '../type'
 export type ChatToolApprovalStatus = 'pending' | 'approved' | 'denied' | 'completed' | 'failed'
 
 export class ChatToolApprovalModel {
-  constructor(
-    private readonly userId: string,
-    private readonly db: ChatDatabase = getServerDB()
-  ) {}
+  private readonly userId: string
+  private readonly db: ChatDatabase
+
+  constructor(userId: string, db: ChatDatabase = getServerDB()) {
+    this.userId = userId
+    this.db = db
+  }
 
   find = async (topicId: string, toolCallId: string) =>
     this.db.query.chatToolApprovals.findFirst({

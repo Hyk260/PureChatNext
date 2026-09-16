@@ -29,7 +29,7 @@ function serializeUser(user: UserItem): ProfileUser {
  * SPA / 客户端设置页用户资料引导数据
  */
 export const GET = withAuth(async (_request, { userId }) => {
-  const user = await UserModel.findById(userId)
+  const user = await new UserModel().findById(userId)
 
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -86,7 +86,7 @@ export const PATCH = withAuth(async (request, { userId }) => {
   }
 
   try {
-    const [updated] = await UserModel.updateProfileById(userId, patch)
+    const [updated] = await new UserModel().updateProfileById(userId, patch)
 
     if (!updated) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })

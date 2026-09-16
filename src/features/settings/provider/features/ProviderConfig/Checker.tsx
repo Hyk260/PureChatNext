@@ -9,6 +9,8 @@ import { apiFetch } from '@/utils/apiFetch'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useEffect, useMemo, useState } from 'react'
 
+import { getAiModel } from '@pure/model-bank'
+
 import { getSettingsProviderMeta } from '../../const'
 import { secretForProvider, useProviderSecrets } from '../../secretsApi'
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
@@ -35,7 +37,14 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
   const { data: secrets } = useProviderSecrets()
   const hasVaultKey = Boolean(secretForProvider(secrets, provider))
   const models = useMemo(() => config?.models ?? [], [config?.models])
-  const persistedCheckModel = config?.checkModel ?? models[0]?.id ?? ''
+  const availableModelIds = useMemo(
+    () => models.filter((model) => getAiModel(provider, model.id)?.enabled !== false).map((model) => model.id),
+    [models, provider]
+  )
+  const persistedCheckModel = useMemo(() => {
+    const stored = config?.checkModel ?? ''
+    return stored && availableModelIds.includes(stored) ? stored : (availableModelIds[0] ?? '')
+  }, [availableModelIds, config?.checkModel])
 
   const [loading, setLoading] = useState(false)
   const [pass, setPass] = useState(false)
@@ -49,7 +58,7 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
   }, [persistedCheckModel, provider])
 
   const sortedModelIds = useMemo(() => {
-    const next = [...models]
+    const next = models.filter((model) => availableModelIds.includes(model.id))
     next.sort((a, b) => {
       if (a.id === checkModel) return -1
       if (b.id === checkModel) return 1
@@ -57,7 +66,7 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
       return a.id.localeCompare(b.id)
     })
     return next.map((model) => model.id)
-  }, [checkModel, models])
+  }, [availableModelIds, checkModel, models])
 
   const checkConnection = async () => {
     if (disabled) return

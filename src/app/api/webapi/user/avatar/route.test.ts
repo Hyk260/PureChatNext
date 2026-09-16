@@ -29,7 +29,9 @@ vi.mock('@/envs/file', () => ({
   },
 }))
 vi.mock('@pure/database/models/user', () => ({
-  UserModel: { findById: mocks.findById },
+  UserModel: class {
+    findById = mocks.findById
+  },
 }))
 vi.mock('@/server/modules/S3', () => ({
   FileS3: class {

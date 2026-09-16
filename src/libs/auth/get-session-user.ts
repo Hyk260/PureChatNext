@@ -9,7 +9,7 @@ export async function getAuthenticatedUserId() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user?.id) return null
 
-  const user = await UserModel.findById(session.user.id)
+  const user = await new UserModel().findById(session.user.id)
   return user?.id ?? null
 }
 

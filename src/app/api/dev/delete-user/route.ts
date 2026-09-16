@@ -44,8 +44,9 @@ export const POST = async (req: Request) => {
   }
 
   try {
+    const userModel = new UserModel()
     if (action === 'lookup') {
-      const result = await UserModel.getUserDeletionPreview(email)
+      const result = await userModel.getUserDeletionPreview(email)
 
       return devActionSuccess(action, result)
     }
@@ -60,7 +61,7 @@ export const POST = async (req: Request) => {
       return devError('confirmEmail must match email')
     }
 
-    const result = await UserModel.deleteUserByEmail(email)
+    const result = await userModel.deleteUserByEmail(email)
 
     return devActionSuccess(action, result)
   } catch (error) {

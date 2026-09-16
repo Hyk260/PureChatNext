@@ -2,8 +2,8 @@
 
 import { login } from '@/libs/utils/api-client'
 import { Card } from 'antd'
-import Link from '@/utils/link'
-import { useRouter } from '@/utils/navigation'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Button, Input } from '@pure/ui'

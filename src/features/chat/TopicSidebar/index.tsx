@@ -2,7 +2,7 @@
 
 import { ActionIcon, Button, Text, Flex } from '@pure/ui'
 import { ChevronLeft, MessageSquarePlus } from 'lucide-react'
-import { useRouter } from '@/utils/navigation'
+import { useRouter } from 'next/navigation'
 import { memo, useMemo } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'

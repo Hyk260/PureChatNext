@@ -1,7 +1,7 @@
 'use client'
 
-import Link from '@/utils/link'
-import { useRouter } from '@/utils/navigation'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { formatDateTime } from '@pure/utils/client'
 import { useState } from 'react'
 import type { ReactNode } from 'react'

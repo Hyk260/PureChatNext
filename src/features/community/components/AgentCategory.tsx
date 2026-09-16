@@ -21,7 +21,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { memo, useCallback, useEffect, useMemo } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'

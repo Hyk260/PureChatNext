@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname } from '@/utils/navigation'
+import { usePathname } from 'next/navigation'
 import { Flex } from '@pure/ui'
 import type { ReactNode } from 'react'
 

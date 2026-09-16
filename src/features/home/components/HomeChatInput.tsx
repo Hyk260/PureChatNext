@@ -41,7 +41,7 @@ import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopProject } from '@/types/desktop'
-import { useRouter } from '@/utils/navigation'
+import { useRouter } from 'next/navigation'
 
 const mechaCatSrc = typeof mechaCat === 'string' ? mechaCat : mechaCat.src
 

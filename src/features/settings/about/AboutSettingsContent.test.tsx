@@ -65,7 +65,7 @@ vi.mock('@/features/settings/profile/components/SettingRow', () => ({
   ),
 }))
 
-vi.mock('@/utils/link', () => ({
+vi.mock('next/link', () => ({
   default: ({ children, href }: { children?: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
 }))
 

@@ -1,6 +1,6 @@
 'use client'
 
-import Link from '@/utils/link'
+import Link from 'next/link'
 
 import { useSession } from '@/libs/better-auth/client'
 

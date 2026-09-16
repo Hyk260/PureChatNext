@@ -5,7 +5,7 @@ import { useApp } from '@/components/AntdStaticMethods'
 import { Block, Button, Icon, Menu, Popover, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronDownIcon, LogOut, Settings2 } from 'lucide-react'
-import Link from '@/utils/link'
+import Link from 'next/link'
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import { signOut, useSession } from '@/libs/better-auth/client'

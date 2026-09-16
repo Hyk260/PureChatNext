@@ -1,4 +1,4 @@
-import { useRouter } from '@/utils/navigation'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'

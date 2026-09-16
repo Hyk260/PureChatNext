@@ -3,7 +3,7 @@
 import { ActionIcon, Flex, ProviderIcon, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowLeft } from 'lucide-react'
-import { useRouter } from '@/utils/navigation'
+import { useRouter } from 'next/navigation'
 import { memo } from 'react'
 
 import { getSettingsProviderMeta } from './const'

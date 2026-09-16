@@ -3,7 +3,7 @@
 import { Flex } from '@pure/ui'
 import { createStaticStyles } from 'antd-style'
 import type { UIMessage } from 'ai'
-import { useRouter, useSearchParams } from '@/utils/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { DEFAULT_CHAT_PERMISSION_MODE } from '@pure/types'
 import type { ChatPermissionMode } from '@pure/types'

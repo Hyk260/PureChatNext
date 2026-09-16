@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { me, logout } from '@/libs/utils/api-client'
 import { formatDateTime } from '@pure/utils/client'
-import { useRouter } from '@/utils/navigation'
+import { useRouter } from 'next/navigation'
 
 interface UserData {
   id: string

@@ -3,7 +3,7 @@
 import { Block, Flex, ProviderCombine, Text } from '@pure/ui'
 import { Switch } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { useRouter } from '@/utils/navigation'
+import { useRouter } from 'next/navigation'
 import { memo } from 'react'
 
 import { getSettingsProviderMeta, isServerManagedProvider } from './const'

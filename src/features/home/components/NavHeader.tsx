@@ -4,7 +4,7 @@ import { Avatar } from 'antd'
 import { ActionIcon, Flex } from '@pure/ui'
 import { createStaticStyles } from 'antd-style'
 import { PanelLeftOpen } from 'lucide-react'
-import Link from '@/utils/link'
+import Link from 'next/link'
 import { memo } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'

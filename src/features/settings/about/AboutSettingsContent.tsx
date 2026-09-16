@@ -22,7 +22,7 @@ import {
 } from '@/const/site'
 import { CURRENT_VERSION } from '@/const/version'
 import { SettingRow } from '@/features/settings/profile/components/SettingRow'
-import Link from '@/utils/link'
+import Link from 'next/link'
 
 const VERSION_LABEL = `v${CURRENT_VERSION}`
 const WEBSITE_HOST = SITE_DEFAULT_URL.replace(/^https:\/\//, '')

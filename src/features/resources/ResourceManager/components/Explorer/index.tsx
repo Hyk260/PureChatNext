@@ -4,7 +4,7 @@ import { Flex } from '@pure/ui'
 import { Spin } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { memo, useCallback, useMemo } from 'react'
-import { useRouter } from '@/utils/navigation'
+import { useRouter } from 'next/navigation'
 import { useQueryState } from 'nuqs'
 import { useShallow } from 'zustand/react/shallow'
 

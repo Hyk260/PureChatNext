@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 
 import { SITE_DISCUSSIONS_URL, SITE_ISSUES_URL, SITE_REPOSITORY_URL } from '@/const/site'
-import { useRouter } from '@/utils/navigation'
+import { useRouter } from 'next/navigation'
 
 const UPDATED_AT = '2026 年 8 月 19 日'
 

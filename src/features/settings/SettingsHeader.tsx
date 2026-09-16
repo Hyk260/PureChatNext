@@ -7,7 +7,7 @@ import { memo, useMemo } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { getSettingsTabLabel } from '@/features/settings/useSettingsCategory'
-import { usePathname } from '@/utils/navigation'
+import { usePathname } from 'next/navigation'
 
 const styles = createStaticStyles(({ css }) => ({
   header: css`

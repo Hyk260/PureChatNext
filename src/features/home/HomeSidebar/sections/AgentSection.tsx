@@ -3,7 +3,7 @@
 import { AccordionItem, Flex, Skeleton, Text } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { useRouter } from '@/utils/navigation'
+import { useRouter } from 'next/navigation'
 import { memo, useCallback, useEffect, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'

@@ -6,7 +6,7 @@ import { COMMUNITY_AGENTS, filterCommunityAgents } from '@/const/community/agent
 import { filterCustomAgents } from '@/features/community/customAgents'
 import { AssistantCategory } from '@/features/community/types'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
-import { useSearchParams } from '@/utils/navigation'
+import { useSearchParams } from 'next/navigation'
 
 import AgentCategory from './components/AgentCategory'
 import { CommunityCollectionPage } from './components/CommunityCollectionPage'

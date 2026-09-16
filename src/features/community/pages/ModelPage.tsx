@@ -6,7 +6,7 @@ import ModelCategory from '@/features/community/components/ModelCategory'
 import ModelList from '@/features/community/components/ModelList'
 import { CommunityCollectionPage } from '@/features/community/components/CommunityCollectionPage'
 import { COMMUNITY_MODELS, filterCommunityModels } from '@/const/community/models'
-import { useSearchParams } from '@/utils/navigation'
+import { useSearchParams } from 'next/navigation'
 
 const ModelPage = memo(() => {
   const searchParams = useSearchParams()

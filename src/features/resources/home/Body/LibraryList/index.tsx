@@ -3,8 +3,8 @@
 import { ActionIcon, Button, confirmModal, Text, Flex } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Plus, Trash2 } from 'lucide-react'
-import Link from '@/utils/link'
-import { usePathname } from '@/utils/navigation'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { memo } from 'react'
 
 import NavItem from '@/components/NavItem'

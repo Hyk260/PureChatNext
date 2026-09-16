@@ -7,7 +7,7 @@ import NotFound from '@/components/404'
 import Loading from '@/components/Loading/BrandTextLoading'
 import { getMessageText } from '@/features/chat/messageText'
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
-import { useParams } from '@/utils/navigation'
+import { useParams } from 'next/navigation'
 
 import { fetchPublicTopicShare } from './shareApi'
 import type { PublicTopicShare } from './shareApi'

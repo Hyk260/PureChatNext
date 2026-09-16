@@ -13,8 +13,8 @@ import AgentSection from '@/features/home/HomeSidebar/sections/AgentSection'
 import RecentsSection from '@/features/home/HomeSidebar/sections/RecentsSection'
 import { pickAccordionExpandedKeys } from '@/features/home/store/sidebarDefaults'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
-import Link from '@/utils/link'
-import { usePathname } from '@/utils/navigation'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 const sectionComponents = {
   agents: AgentSection,

@@ -1,6 +1,6 @@
 import { Form } from 'antd'
 import { localStg } from '@pure/utils/storage'
-import { useRouter, useSearchParams } from '@/utils/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { message } from '@/components/AntdStaticMethods'
 

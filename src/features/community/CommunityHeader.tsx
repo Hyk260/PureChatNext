@@ -3,7 +3,7 @@
 import { ActionIcon, Button, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { PanelLeftOpen, Plus } from 'lucide-react'
-import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { memo, useMemo, useState } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'

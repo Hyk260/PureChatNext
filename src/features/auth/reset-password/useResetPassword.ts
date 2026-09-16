@@ -1,4 +1,4 @@
-import { useRouter, useSearchParams } from '@/utils/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'

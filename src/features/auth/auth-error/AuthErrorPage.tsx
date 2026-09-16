@@ -2,8 +2,8 @@
 
 import { Button, Text, Flex } from '@pure/ui'
 import { cssVar } from 'antd-style'
-import Link from '@/utils/link'
-import { useSearchParams } from '@/utils/navigation'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Suspense, memo } from 'react'
 
 import { AuthPageContainer } from '@/components/AuthPageContainer'

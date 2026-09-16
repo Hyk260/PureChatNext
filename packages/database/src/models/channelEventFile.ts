@@ -9,10 +9,6 @@ import type { ChatDatabase } from '../type'
 export class ChannelEventFileModel {
   constructor(private readonly db: ChatDatabase = getServerDB()) {}
 
-  assertReady = async () => {
-    await this.db.select({ id: channelEventFiles.id }).from(channelEventFiles).limit(1)
-  }
-
   findByOperation = async (eventId: string, direction: string, operationHash: string) => {
     const [row] = await this.db
       .select({ artifact: channelEventFiles, file: files })

@@ -12,7 +12,7 @@ import AgentFormModal from '@/features/home/HomeSidebar/modals/AgentFormModal'
 import type { AgentFormValues } from '@/features/home/HomeSidebar/modals/AgentFormModal'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
-import { useRouter } from '@/utils/navigation'
+import { useRouter } from 'next/navigation'
 
 import AgentDetailModal from './AgentDetailModal'
 import CommunityEmpty from './CommunityEmpty'

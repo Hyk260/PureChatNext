@@ -3,7 +3,7 @@
 import { Text } from '@pure/ui'
 import { memo } from 'react'
 
-import Link from '@/utils/link'
+import Link from 'next/link'
 
 const AuthAgreement = memo(() => {
   return (

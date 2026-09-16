@@ -5,7 +5,7 @@ import { useMemo } from 'react'
 
 import { Flex } from '@pure/ui'
 import Scrollbar from '@/components/Scrollbar'
-import { useSearchParams } from '@/utils/navigation'
+import { useSearchParams } from 'next/navigation'
 
 import CommunityPagination from './CommunityPagination'
 import { COMMUNITY_PAGE_SIZE } from '../constants'

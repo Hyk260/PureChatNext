@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams, usePathname } from '@/utils/navigation'
+import { useParams, usePathname } from 'next/navigation'
 
 /** Next catch-all `slug` is string[]; react-router splat is `params['*']`. */
 function resolveSlugParts(params: { slug?: string | string[]; '*'?: string }): string[] {

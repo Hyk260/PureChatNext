@@ -4,7 +4,7 @@ import type { ResultProps } from 'antd'
 import { Button, Flex } from '@pure/ui'
 import { Result } from 'antd'
 
-import Link from '@/utils/link'
+import Link from 'next/link'
 
 export const StatusHomeButton = () => (
   <Link href='/'>

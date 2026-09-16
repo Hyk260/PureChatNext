@@ -46,6 +46,23 @@ const restrictedServerEnvPaths = serverEnvModules.map((name) => ({
   message: serverEnvImportMessage,
 }))
 
+/** SPA 直连 next/navigation、next/link；Vite alias 到 shim。禁止转手层和服务端导航 API。 */
+const restrictedSpaNavigationPaths = [
+  {
+    importNames: ['redirect', 'notFound', 'permanentRedirect', 'forbidden', 'unauthorized'],
+    message: 'SPA 客户端不要用 Next 服务端导航 API；用 useRouter().push / replace。',
+    name: 'next/navigation',
+  },
+  {
+    message: '直接从 next/navigation 导入；Vite 会 alias 到 shim。',
+    name: '@/utils/navigation',
+  },
+  {
+    message: '直接从 next/link 导入；Vite 会 alias 到 shim。',
+    name: '@/utils/link',
+  },
+]
+
 /** components：允许 Analytics 读 @/envs/analytics（Next layout）；其余 server env 仍禁止。 */
 const restrictedServerEnvPathsExceptAnalytics = serverEnvModules
   .filter((name) => !name.endsWith('/analytics'))
@@ -86,7 +103,7 @@ const eslintConfig = defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          paths: restrictedServerEnvPaths,
+          paths: [...restrictedServerEnvPaths, ...restrictedSpaNavigationPaths],
           patterns: [
             {
               group: ['@/envs/*', '@pure/env/*'],
@@ -105,7 +122,7 @@ const eslintConfig = defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          paths: restrictedServerEnvPaths,
+          paths: [...restrictedServerEnvPaths, ...restrictedSpaNavigationPaths],
           patterns: [
             {
               group: ['@/envs/*', '@pure/env/*'],
@@ -123,7 +140,7 @@ const eslintConfig = defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          paths: restrictedServerEnvPathsExceptAnalytics,
+          paths: [...restrictedServerEnvPathsExceptAnalytics, ...restrictedSpaNavigationPaths],
         },
       ],
     },

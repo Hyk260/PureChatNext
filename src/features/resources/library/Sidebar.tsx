@@ -1,7 +1,7 @@
 'use client'
 
-import Link from '@/utils/link'
-import { useParams, usePathname, useRouter } from '@/utils/navigation'
+import Link from 'next/link'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 import { memo } from 'react'
 
 import NavItem from '@/components/NavItem'

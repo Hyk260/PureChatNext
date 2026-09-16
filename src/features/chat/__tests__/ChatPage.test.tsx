@@ -27,7 +27,7 @@ const mocks = vi.hoisted(() => {
   }
 })
 
-vi.mock('@/utils/navigation', () => ({
+vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: (href: string) => {
       mocks.navigation.query = href.split('?')[1] ?? ''

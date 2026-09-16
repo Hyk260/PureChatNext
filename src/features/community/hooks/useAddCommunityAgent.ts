@@ -7,7 +7,7 @@ import type { DiscoverAgentItem } from '@/features/community/types'
 import { createAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
-import { useRouter } from '@/utils/navigation'
+import { useRouter } from 'next/navigation'
 
 import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 

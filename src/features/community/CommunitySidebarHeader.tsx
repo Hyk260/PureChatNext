@@ -3,8 +3,8 @@
 import { ProviderIconLucide, Flex } from '@pure/ui'
 import type { IconProps } from '@pure/ui'
 import { Bot, Brain } from 'lucide-react'
-import Link from '@/utils/link'
-import { usePathname } from '@/utils/navigation'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { memo, useMemo } from 'react'
 
 import NavItem from '@/components/NavItem'

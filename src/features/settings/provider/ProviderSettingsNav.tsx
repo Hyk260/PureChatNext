@@ -3,8 +3,8 @@
 import { Accordion, AccordionItem, Flex, Icon, ProviderIcon, ScrollShadow, SearchBar, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LayoutGrid, Search } from 'lucide-react'
-import Link from '@/utils/link'
-import { usePathname } from '@/utils/navigation'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { memo, useMemo, useState } from 'react'
 
 import NavItem from '@/components/NavItem'

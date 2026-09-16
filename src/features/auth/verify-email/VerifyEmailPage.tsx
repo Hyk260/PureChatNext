@@ -1,8 +1,8 @@
 'use client'
 
 import { ChevronLeft } from 'lucide-react'
-import Link from '@/utils/link'
-import { useSearchParams } from '@/utils/navigation'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
 import Loading from '@/components/Loading/BrandTextLoading'

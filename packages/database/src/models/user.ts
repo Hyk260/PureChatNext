@@ -83,17 +83,6 @@ export class UserModel {
     return this.excludePassword(user)
   }
 
-  static updateUser = async (value: Partial<UserItem>) => {
-    const { password: _password, ...rest } = value
-    const nextValue = UserModel.normalizeUniqueUserFields(rest)
-    if (value.userId) {
-      return this.db
-        .update(users)
-        .set({ ...nextValue, updatedAt: new Date() })
-        .where(eq(users.userId, value.userId))
-    }
-  }
-
   /** 按 Better Auth 主键 id 更新资料字段（全名、兴趣等） */
   static updateProfileById = async (id: string, value: { fullName?: string | null; interests?: string[] }) => {
     return this.db
@@ -105,10 +94,6 @@ export class UserModel {
         id: users.id,
         interests: users.interests,
       })
-  }
-
-  static deleteUser = async (id: string) => {
-    return this.db.delete(users).where(eq(users.userId, id))
   }
 
   static findById = async (id: string) => {
@@ -290,6 +275,6 @@ export class UserModel {
       })
     }
 
-    return { duplicate: false as const, user: this.excludePassword(user) }
+    return { user: this.excludePassword(user) }
   }
 }

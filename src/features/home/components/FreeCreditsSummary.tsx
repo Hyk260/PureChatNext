@@ -7,7 +7,7 @@ import useSWR from 'swr'
 
 import { Text, Flex } from '@pure/ui'
 
-import Link from '@/utils/link'
+import Link from 'next/link'
 import { apiFetch } from '@/utils/apiFetch'
 
 type CreditsSummary = {

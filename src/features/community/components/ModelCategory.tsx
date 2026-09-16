@@ -8,7 +8,7 @@ import { memo, useCallback, useMemo } from 'react'
 import Scrollbar from '@/components/Scrollbar'
 import { getModelProviderCounts } from '@/const/community/models'
 import { COMMUNITY_PROVIDERS } from '@/const/community/providers'
-import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { communityCategoryStyles } from './communityCategoryStyles'
 

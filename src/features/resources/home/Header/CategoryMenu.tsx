@@ -1,8 +1,8 @@
 'use client'
 
-import Link from '@/utils/link'
+import Link from 'next/link'
 import { Flex } from '@pure/ui'
-import { usePathname, useSearchParams } from '@/utils/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { memo } from 'react'
 
 import { FileText, ImageIcon, LayoutPanelTopIcon, Mic2, SquarePlay } from 'lucide-react'

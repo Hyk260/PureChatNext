@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronLeft } from 'lucide-react'
-import Link from '@/utils/link'
+import Link from 'next/link'
 import { Suspense } from 'react'
 
 import { AuthPageContainer } from '@/components/AuthPageContainer'

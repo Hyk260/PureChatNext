@@ -4,7 +4,7 @@ import { Pagination as AntPagination } from 'antd'
 import { createStaticStyles } from 'antd-style'
 import { memo, useCallback } from 'react'
 
-import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 const COMMUNITY_SCROLL_VIEWPORT_CLASS = 'community-scroll-viewport'
 const ANT_PREFIX_CLASS = 'ant'

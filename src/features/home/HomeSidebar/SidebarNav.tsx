@@ -10,8 +10,8 @@ import NavItem from '@/components/NavItem'
 import { HOME_TOP_NAV } from '@/const/home/nav'
 import { RouteNavContent } from '@/features/auth/welcome/RouteNavSidebar'
 import { isDev } from '@/libs/constants'
-import Link from '@/utils/link'
-import { usePathname } from '@/utils/navigation'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 const SidebarNav = memo(() => {
   const pathname = usePathname()

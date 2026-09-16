@@ -1,7 +1,7 @@
 'use client'
 
 import { SearchBar } from '@pure/ui'
-import { usePathname, useRouter, useSearchParams } from '@/utils/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { memo, useCallback, useEffect, useState, useTransition } from 'react'
 
 export interface AgentSearchProps {

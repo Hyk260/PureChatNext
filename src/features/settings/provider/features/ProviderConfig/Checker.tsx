@@ -5,7 +5,7 @@ import { Alert, Button, Flex, ModelIcon, Select } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useEffect, useMemo, useState } from 'react'
 
@@ -85,16 +85,12 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
 
     try {
       const baseURL = config?.baseURL.trim() ?? ''
-      const response = await apiFetch('/api/providers/check', {
-        body: JSON.stringify({
-          baseURL: baseURL || undefined,
-          model: checkModel,
-          provider,
-          timeoutMs: DEFAULT_PROVIDER_CHECK_TIMEOUT_MS,
-        }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      })
+      const response = await apiFetch('/api/providers/check', jsonInit({
+        baseURL: baseURL || undefined,
+        model: checkModel,
+        provider,
+        timeoutMs: DEFAULT_PROVIDER_CHECK_TIMEOUT_MS,
+      }, { method: 'POST' }))
 
       const json = (await response.json()) as {
         error?: { body?: unknown; message?: string }

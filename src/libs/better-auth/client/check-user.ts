@@ -1,12 +1,8 @@
 import type { CheckUserResponseData } from '@/app/api/auth/check-user/route'
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 export async function checkUserByEmail(email: string): Promise<CheckUserResponseData & { error?: string }> {
-  const response = await apiFetch('/api/auth/check-user', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
-  })
+  const response = await apiFetch('/api/auth/check-user', jsonInit({ email }, { method: 'POST' }))
 
   const data = (await response.json()) as CheckUserResponseData & { error?: string }
 

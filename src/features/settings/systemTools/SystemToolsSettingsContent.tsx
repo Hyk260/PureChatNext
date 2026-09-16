@@ -99,11 +99,7 @@ export function SystemToolsSettingsContent() {
 
   const load = useCallback(async () => {
     const api = getDesktopApi()
-    if (!api?.getSystemTools) {
-      setState('idle')
-      setData(null)
-      return
-    }
+    if (!api?.getSystemTools) return
     setState('loading')
     try {
       const result = await api.getSystemTools()
@@ -116,8 +112,25 @@ export function SystemToolsSettingsContent() {
   }, [])
 
   useEffect(() => {
-    void load()
-  }, [load])
+    let cancelled = false
+    const api = getDesktopApi()
+    if (!api?.getSystemTools) return
+    void api
+      .getSystemTools()
+      .then((result) => {
+        if (cancelled) return
+        setData(result)
+        setState('ready')
+      })
+      .catch(() => {
+        if (cancelled) return
+        setData(null)
+        setState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const handleCopyPath = async (path: string) => {
     await copyToClipboard(path)

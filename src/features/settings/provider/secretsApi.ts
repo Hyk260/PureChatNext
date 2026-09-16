@@ -1,4 +1,4 @@
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 import { useSession } from '@/libs/better-auth/client'
 import useSWR from 'swr'
 
@@ -29,11 +29,7 @@ export async function saveProviderSecret(params: {
   baseURL?: string
   provider: ProviderSecretId
 }): Promise<ProviderSecretPublic> {
-  const res = await apiFetch('/api/providers/secrets', {
-    body: JSON.stringify(params),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'PUT',
-  })
+  const res = await apiFetch('/api/providers/secrets', jsonInit(params, { method: 'PUT' }))
   const json = (await res.json().catch(() => ({}))) as { error?: string; item?: ProviderSecretPublic }
   if (res.status === 401) throw new Error('请先登录后再保存密钥')
   if (!res.ok) throw new Error(json.error || `保存密钥失败: ${res.status}`)
@@ -42,11 +38,7 @@ export async function saveProviderSecret(params: {
 }
 
 export async function deleteProviderSecret(provider: ProviderSecretId): Promise<void> {
-  const res = await apiFetch('/api/providers/secrets', {
-    body: JSON.stringify({ provider }),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'DELETE',
-  })
+  const res = await apiFetch('/api/providers/secrets', jsonInit({ provider }, { method: 'DELETE' }))
   const json = (await res.json().catch(() => ({}))) as { error?: string }
   if (res.status === 401) throw new Error('请先登录后再删除密钥')
   if (!res.ok) throw new Error(json.error || `删除密钥失败: ${res.status}`)

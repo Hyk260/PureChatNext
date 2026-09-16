@@ -1,4 +1,4 @@
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 export type WechatDevSession = {
   activeAgentId: string | null
@@ -98,20 +98,20 @@ export async function sendWechatDevMessage(
   const files = resolved.files ?? []
   const requestId = resolved.requestId ?? crypto.randomUUID()
   const hasFiles = files.length > 0
+  const url = `/api/dev/wechat/sessions/${encodeURIComponent(sessionId)}/messages`
 
-  const res = await apiFetch(`/api/dev/wechat/sessions/${encodeURIComponent(sessionId)}/messages`, {
-    body: hasFiles
-      ? (() => {
+  const res = hasFiles
+    ? await apiFetch(url, {
+        body: (() => {
           const form = new FormData()
           if (text) form.set('text', text)
           form.set('requestId', requestId)
           for (const file of files) form.append('files', file)
           return form
-        })()
-      : JSON.stringify({ requestId, text }),
-    ...(hasFiles ? {} : { headers: { 'Content-Type': 'application/json' } }),
-    method: 'POST',
-  })
+        })(),
+        method: 'POST',
+      })
+    : await apiFetch(url, jsonInit({ requestId, text }, { method: 'POST' }))
   if (!res.ok) {
     const data = (await res.json().catch(() => null)) as { error?: string } | null
     throw new Error(data?.error || `send failed: ${res.status}`)

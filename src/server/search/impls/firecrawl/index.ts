@@ -7,12 +7,30 @@ import type { FirecrawlResponse, FirecrawlSearchParameters } from './type'
 
 const log = debug('search:Firecrawl')
 
-const timeRangeMapping = {
+const TIME_RANGE_TO_TBS: Record<string, string> = {
   day: 'qdr:d',
   month: 'qdr:m',
   week: 'qdr:w',
   year: 'qdr:y',
 }
+
+const resolveTbs = (range: string | undefined): string | undefined =>
+  range && range !== 'anytime' ? TIME_RANGE_TO_TBS[range] : undefined
+
+const toSearchResult = (
+  item: { title: string; url: string },
+  category: string,
+  content: string,
+  url: string
+): UniformSearchResult => ({
+  category,
+  content,
+  engines: ['firecrawl'],
+  parsedUrl: item.url ? new URL(item.url).hostname : '',
+  score: 1,
+  title: item.title || '',
+  url,
+})
 
 /**
  * Firecrawl implementation of the search service
@@ -45,10 +63,7 @@ export class FirecrawlImpl implements SearchServiceImpl {
 
     const body: FirecrawlSearchParameters = {
       ...defaultQueryParams,
-      tbs:
-        params?.searchTimeRange && params.searchTimeRange !== 'anytime'
-          ? (timeRangeMapping[params.searchTimeRange as keyof typeof timeRangeMapping] ?? undefined)
-          : undefined,
+      tbs: resolveTbs(params?.searchTimeRange),
     }
 
     log('Constructed request body: %o', body)
@@ -58,12 +73,11 @@ export class FirecrawlImpl implements SearchServiceImpl {
     let costTime: number
     try {
       log('Sending request to endpoint: %s', endpoint)
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (this.apiKey) headers.Authorization = `Bearer ${this.apiKey}`
       response = await fetch(endpoint, {
         body: JSON.stringify(body),
-        headers: {
-          Authorization: this.apiKey ? `Bearer ${this.apiKey}` : '',
-          'Content-Type': 'application/json',
-        },
+        headers,
         method: 'POST',
       })
       log('Received response with status: %d', response.status)
@@ -85,45 +99,21 @@ export class FirecrawlImpl implements SearchServiceImpl {
     try {
       const firecrawlResponse = (await response.json()) as FirecrawlResponse
 
-      log('Parsed Firecrawl response: %o', firecrawlResponse)
-
       // V2 API returns data as object with web/images/news arrays
-      const webResults = firecrawlResponse.data.web || []
-      const imageResults = firecrawlResponse.data.images || []
-      const newsResults = firecrawlResponse.data.news || []
+      const { web: webResults = [], images: imageResults = [], news: newsResults = [] } = firecrawlResponse.data
+      log('Parsed Firecrawl response: web=%d news=%d images=%d', webResults.length, newsResults.length, imageResults.length)
 
-      // Map web results
-      const mappedWebResults = webResults.map((result): UniformSearchResult => ({
-        category: 'general',
-        content: result.description || result.markdown || '',
-        engines: ['firecrawl'],
-        parsedUrl: result.url ? new URL(result.url).hostname : '',
-        score: 1,
-        title: result.title || '',
-        url: result.url,
-      }))
+      const mappedWebResults = webResults.map((result) =>
+        toSearchResult(result, 'general', result.description || result.markdown || '', result.url)
+      )
 
-      // Map news results
-      const mappedNewsResults = newsResults.map((result): UniformSearchResult => ({
-        category: 'news',
-        content: result.snippet || result.markdown || '',
-        engines: ['firecrawl'],
-        parsedUrl: result.url ? new URL(result.url).hostname : '',
-        score: 1,
-        title: result.title || '',
-        url: result.url,
-      }))
+      const mappedNewsResults = newsResults.map((result) =>
+        toSearchResult(result, 'news', result.snippet || result.markdown || '', result.url)
+      )
 
-      // Map image results
-      const mappedImageResults = imageResults.map((result): UniformSearchResult => ({
-        category: 'images',
-        content: result.title || '',
-        engines: ['firecrawl'],
-        parsedUrl: result.url ? new URL(result.url).hostname : '',
-        score: 1,
-        title: result.title || '',
-        url: result.imageUrl, // Use imageUrl for images
-      }))
+      const mappedImageResults = imageResults.map((result) =>
+        toSearchResult(result, 'images', result.title || '', result.imageUrl)
+      )
 
       // Combine all results
       const allResults = [...mappedWebResults, ...mappedNewsResults, ...mappedImageResults]

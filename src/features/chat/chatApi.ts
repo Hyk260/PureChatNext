@@ -1,7 +1,7 @@
 import type { UIMessage } from 'ai'
 import type { ChatPermissionMode } from '@pure/types'
 
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 import type { LocalChatTopic, TopicDeleteScope, TopicUpdate } from './types'
 
@@ -60,27 +60,19 @@ export const createTopic = async (
   permissionMode?: ChatPermissionMode,
   projectName?: string | null
 ): Promise<LocalChatTopic> => {
-  const res = await apiFetch('/api/chat/topics', {
-    body: JSON.stringify({
-      agentId,
-      permissionMode,
-      ...(projectName ? { projectName } : {}),
-      title,
-    }),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'POST',
-  })
+  const res = await apiFetch('/api/chat/topics', jsonInit({
+    agentId,
+    permissionMode,
+    ...(projectName ? { projectName } : {}),
+    title,
+  }, { method: 'POST' }))
   if (!res.ok) throw new Error(`createTopic failed: ${res.status}`)
 
   return toLocalTopic((await res.json()) as ApiTopic)
 }
 
 export const updateTopic = async (id: string, patch: TopicUpdate): Promise<LocalChatTopic> => {
-  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}`, {
-    body: JSON.stringify(patch),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'PATCH',
-  })
+  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}`, jsonInit(patch, { method: 'PATCH' }))
   if (!res.ok) throw new Error(`updateTopic failed: ${res.status}`)
 
   return toLocalTopic((await res.json()) as ApiTopic)
@@ -99,14 +91,10 @@ export const autoRenameTopic = async (
   id: string,
   { model, provider }: AutoRenameTopicConfig
 ): Promise<LocalChatTopic> => {
-  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}/auto-rename`, {
-    body: JSON.stringify({
-      model,
-      provider,
-    }),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'POST',
-  })
+  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}/auto-rename`, jsonInit({
+    model,
+    provider,
+  }, { method: 'POST' }))
   if (!res.ok) throw new Error(`autoRenameTopic failed: ${res.status}`)
 
   return toLocalTopic((await res.json()) as ApiTopic)
@@ -138,12 +126,10 @@ export const putMessages = async (
   messages: UIMessage[],
   init?: { signal?: AbortSignal }
 ): Promise<void> => {
-  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(topicId)}/messages`, {
-    body: JSON.stringify({ messages }),
-    headers: { 'Content-Type': 'application/json' },
+  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(topicId)}/messages`, jsonInit({ messages }, {
     method: 'PUT',
     signal: init?.signal,
-  })
+  }))
   if (!res.ok) throw new Error(`putMessages failed: ${res.status}`)
 }
 
@@ -164,11 +150,7 @@ export const upsertToolApproval = async (
   }
 ) => {
   const argsHash = await hashArgs(input.args)
-  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(topicId)}/tool-approvals`, {
-    body: JSON.stringify({ ...input, argsHash }),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'POST',
-  })
+  const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(topicId)}/tool-approvals`, jsonInit({ ...input, argsHash }, { method: 'POST' }))
   if (!res.ok) throw new Error(`upsertToolApproval failed: ${res.status}`)
   return res.json()
 }
@@ -181,11 +163,7 @@ export const updateToolApproval = async (
 ) => {
   const res = await apiFetch(
     `/api/chat/topics/${encodeURIComponent(topicId)}/tool-approvals/${encodeURIComponent(toolCallId)}`,
-    {
-      body: JSON.stringify({ error, status }),
-      headers: { 'Content-Type': 'application/json' },
-      method: 'PATCH',
-    }
+    jsonInit({ error, status }, { method: 'PATCH' })
   )
   if (!res.ok) throw new Error(`updateToolApproval failed: ${res.status}`)
   return res.json()

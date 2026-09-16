@@ -1,5 +1,5 @@
 import type { AgentListItem } from '@/const/home/agents'
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 export type ApiAgent = {
   avatar: string | null
@@ -61,21 +61,13 @@ export const fetchAgent = async (id: string): Promise<AgentListItem> => {
 }
 
 export const createAgent = async (body: AgentCreateBody): Promise<AgentListItem> => {
-  const res = await apiFetch('/api/agents', {
-    body: JSON.stringify(body),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'POST',
-  })
+  const res = await apiFetch('/api/agents', jsonInit(body, { method: 'POST' }))
   if (!res.ok) throw new Error(`createAgent failed: ${res.status}`)
   return toListItem((await res.json()) as ApiAgent)
 }
 
 export const updateAgent = async (id: string, body: AgentUpdateBody): Promise<AgentListItem> => {
-  const res = await apiFetch(`/api/agents/${encodeURIComponent(id)}`, {
-    body: JSON.stringify(body),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'PATCH',
-  })
+  const res = await apiFetch(`/api/agents/${encodeURIComponent(id)}`, jsonInit(body, { method: 'PATCH' }))
   if (!res.ok) throw new Error(`updateAgent failed: ${res.status}`)
   return toListItem((await res.json()) as ApiAgent)
 }

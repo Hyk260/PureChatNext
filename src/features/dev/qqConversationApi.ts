@@ -1,4 +1,4 @@
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 export type QQDevSession = {
   activeAgentId: string | null
@@ -98,11 +98,7 @@ export async function sendQQDevMessage(
   const text = resolved.text?.trim() ?? ''
   const requestId = resolved.requestId ?? crypto.randomUUID()
 
-  const res = await apiFetch(`/api/dev/qq/sessions/${encodeURIComponent(sessionId)}/messages`, {
-    body: JSON.stringify({ requestId, text }),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'POST',
-  })
+  const res = await apiFetch(`/api/dev/qq/sessions/${encodeURIComponent(sessionId)}/messages`, jsonInit({ requestId, text }, { method: 'POST' }))
   if (!res.ok) {
     const data = (await res.json().catch(() => null)) as { error?: string } | null
     throw new Error(data?.error || `send failed: ${res.status}`)

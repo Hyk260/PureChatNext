@@ -1,12 +1,8 @@
 import type { ReclaimUnverifiedEmailResponse } from '@/app/api/auth/reclaim-unverified-email/route'
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 export async function reclaimUnverifiedEmail(email: string): Promise<ReclaimUnverifiedEmailResponse> {
-  const response = await apiFetch('/api/auth/reclaim-unverified-email', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
-  })
+  const response = await apiFetch('/api/auth/reclaim-unverified-email', jsonInit({ email }, { method: 'POST' }))
 
   const data = (await response.json()) as ReclaimUnverifiedEmailResponse
 

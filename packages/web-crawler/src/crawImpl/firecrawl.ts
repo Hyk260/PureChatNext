@@ -58,19 +58,19 @@ export const firecrawl: CrawlImpl = async (url) => {
 
   try {
     res = await withTimeout(
-      (signal) =>
-        fetch(`${baseUrl}/scrape`, {
+      (signal) => {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (apiKey) headers.Authorization = `Bearer ${apiKey}`
+        return fetch(`${baseUrl}/scrape`, {
           body: JSON.stringify({
             formats: ['markdown'], // ["markdown", "html"]
             url,
           }),
-          headers: {
-            Authorization: !apiKey ? '' : `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
+          headers,
           method: 'POST',
           signal,
-        }),
+        })
+      },
       DEFAULT_TIMEOUT
     )
   } catch (e) {

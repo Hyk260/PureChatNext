@@ -4,7 +4,7 @@ import type { SearchImplType } from '@/server/search/impls'
 import { NextResponse } from 'next/server'
 
 import { isRecord, toTrimmedString } from '@pure/utils/object'
-import { searchService } from '@/server/search'
+import { searchService, parseImplEnv } from '@/server/search'
 import { SEARCH_IMPL_TYPES, isSearchImplType } from '@/server/search/impls'
 import { toolsEnv } from '@/envs/tools'
 import { devActionSuccess, devError } from '../_utils'
@@ -43,12 +43,7 @@ const parseProvider = (value: unknown): SearchImplType | undefined | 'invalid' =
 }
 
 const parseConfiguredProviders = () => {
-  const envValue = (toolsEnv.SEARCH_PROVIDERS ?? '').replaceAll('，', ',').trim()
-
-  return envValue
-    .split(',')
-    .map((item) => item.trim())
-    .filter(isSearchImplType)
+  return parseImplEnv(toolsEnv.SEARCH_PROVIDERS).filter(isSearchImplType)
 }
 
 /**

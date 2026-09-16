@@ -1,6 +1,6 @@
 'use client'
 
-import { Checkbox, Input, Modal, Text } from '@pure/ui'
+import { Checkbox, Flex, Input, Modal, Text } from '@pure/ui'
 import { Slider } from 'antd'
 import type { ModelAbilities } from '@pure/model-bank'
 import { memo, useEffect, useMemo, useState } from 'react'
@@ -12,6 +12,9 @@ import {
   MAX_CONTEXT_WINDOW,
   nearestContextWindowStepIndex,
 } from './contextWindowSlider'
+
+const clampContextWindowTokens = (raw: number) =>
+  Number.isFinite(raw) ? Math.min(MAX_CONTEXT_WINDOW, Math.max(0, Math.round(raw))) : 0
 
 const ABILITY_OPTIONS: Array<{ description: string; key: keyof ModelAbilities; label: string }> = [
   {
@@ -39,12 +42,52 @@ const ABILITY_OPTIONS: Array<{ description: string; key: keyof ModelAbilities; l
     key: 'imageGeneration',
     label: '支持图片生成',
   },
-  {
-    description: '标记模型支持结构化 JSON 输出。',
-    key: 'structuredOutput',
-    label: '支持结构化输出',
-  },
+  // {
+  //   description: '标记模型支持结构化 JSON 输出。',
+  //   key: 'structuredOutput',
+  //   label: '支持结构化输出',
+  // },
 ]
+
+interface AbilityOptionProps {
+  checked: boolean
+  description: string
+  label: string
+  onToggle: (next: boolean) => void
+}
+
+const AbilityOption = memo<AbilityOptionProps>(({ checked, description, label, onToggle }) => {
+  const toggle = () => onToggle(!checked)
+
+  return (
+    <div
+      aria-checked={checked}
+      className='flex w-full cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-(--ant-color-fill-quaternary)'
+      role='checkbox'
+      tabIndex={0}
+      onClick={toggle}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        toggle()
+      }}
+    >
+      {/* Custom Checkbox is not a native input, so label association cannot toggle it. */}
+      <span
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
+        <Checkbox checked={checked} onChange={onToggle} />
+      </span>
+      <Flex className='-mt-0.5 min-w-0 flex-1 flex-col gap-1'>
+        <span className='text-sm font-medium'>{label}</span>
+        <Text type='secondary'>{description}</Text>
+      </Flex>
+    </div>
+  )
+})
+
+AbilityOption.displayName = 'AbilityOption'
 
 export interface CustomModelFormValues {
   abilities: ModelAbilities
@@ -137,7 +180,7 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
         <div className='pt-2 text-right text-sm font-medium'>
           <span className='mr-1 text-red-500'>*</span>模型 ID
         </div>
-        <div className='flex flex-col gap-1'>
+        <Flex className='flex-col gap-1'>
           <Input
             autoFocus={!model}
             disabled={Boolean(model)}
@@ -148,21 +191,21 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
           />
           <Text type='secondary'>{model ? '模型 ID 创建后不可修改。' : '创建后模型 ID 将作为请求中的模型标识。'}</Text>
           {duplicate ? <Text type='danger'>该模型 ID 已存在</Text> : null}
-        </div>
+        </Flex>
 
         <div className='pt-2 text-right text-sm font-medium'>模型展示名称</div>
-        <div className='flex flex-col gap-1'>
+        <Flex className='flex-col gap-1'>
           <Input
             placeholder='请输入模型展示名称，例如 DeepSeek Chat、DeepSeek Reasoner 等'
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
           />
           <Text type='secondary'>留空时使用模型 ID 作为展示名称。</Text>
-        </div>
+        </Flex>
 
         <div className='pt-2 text-right text-sm font-medium'>最大上下文窗口</div>
-        <div className='flex min-w-0 flex-col gap-2'>
-          <div className='flex items-start gap-4'>
+        <Flex className='min-w-0 flex-col gap-2'>
+          <Flex className='items-start gap-4'>
             <Slider
               className='min-w-0 flex-1 pb-5'
               marks={contextWindowMarks}
@@ -176,60 +219,32 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
                 setContextWindowTokens(CONTEXT_WINDOW_STEPS[index] ?? 0)
               }}
             />
-            <div className='flex shrink-0 items-center gap-2 pt-0.5'>
+            <Flex className='shrink-0 items-center gap-2 pt-0.5'>
               <Input
                 className='w-28'
                 max={MAX_CONTEXT_WINDOW}
                 min={0}
                 type='number'
                 value={contextWindowTokens}
-                onChange={(event) => {
-                  const value = Number(event.target.value)
-                  setContextWindowTokens(
-                    Number.isFinite(value) ? Math.min(MAX_CONTEXT_WINDOW, Math.max(0, Math.round(value))) : 0
-                  )
-                }}
+                onChange={(event) => setContextWindowTokens(clampContextWindowTokens(Number(event.target.value)))}
               />
-            </div>
-          </div>
+            </Flex>
+          </Flex>
           <Text type='secondary'>设置模型支持的最大 Token 数，设为 0 表示不指定。</Text>
-        </div>
+        </Flex>
 
         <div className='pt-2 text-right text-sm font-medium'>模型能力</div>
-        <div className='flex w-full flex-col gap-1'>
-          {ABILITY_OPTIONS.map(({ description, key, label }) => {
-            const checked = Boolean(abilities[key])
-            const toggle = () => handleAbilityChange(key, !checked)
-
-            return (
-              <div
-                aria-checked={checked}
-                className='flex w-full cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-(--ant-color-fill-quaternary)'
-                key={key}
-                role='checkbox'
-                tabIndex={0}
-                onClick={toggle}
-                onKeyDown={(event) => {
-                  if (event.key !== 'Enter' && event.key !== ' ') return
-                  event.preventDefault()
-                  toggle()
-                }}
-              >
-                {/* Custom Checkbox is not a native input, so label association cannot toggle it. */}
-                <span
-                  onClick={(event) => event.stopPropagation()}
-                  onKeyDown={(event) => event.stopPropagation()}
-                >
-                  <Checkbox checked={checked} onChange={(next) => handleAbilityChange(key, next)} />
-                </span>
-                <span className='-mt-0.5 flex min-w-0 flex-1 flex-col gap-1'>
-                  <span className='text-sm font-medium'>{label}</span>
-                  <Text type='secondary'>{description}</Text>
-                </span>
-              </div>
-            )
-          })}
-        </div>
+        <Flex className='w-full flex-col gap-1'>
+          {ABILITY_OPTIONS.map(({ description, key, label }) => (
+            <AbilityOption
+              checked={Boolean(abilities[key])}
+              description={description}
+              key={key}
+              label={label}
+              onToggle={(next) => handleAbilityChange(key, next)}
+            />
+          ))}
+        </Flex>
       </div>
     </Modal>
   )

@@ -1,4 +1,4 @@
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 export type QQConnectionMode = 'websocket' | 'webhook'
 export type QQProviderId = 'purechat' | 'openai' | 'deepseek'
@@ -60,11 +60,7 @@ export async function bindQQ(params: {
   model?: string
   provider?: QQProviderId
 }): Promise<void> {
-  const res = await apiFetch('/api/channels/qq/bind', {
-    body: JSON.stringify(params),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'POST',
-  })
+  const res = await apiFetch('/api/channels/qq/bind', jsonInit(params, { method: 'POST' }))
   if (!res.ok) {
     throw await readApiError(res, `bind failed: ${res.status}`)
   }
@@ -78,12 +74,7 @@ export async function startQQQrLogin(
   },
   signal?: AbortSignal
 ): Promise<QQQrStartResult> {
-  const res = await apiFetch('/api/channels/qq/qrcode', {
-    body: JSON.stringify(params),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'POST',
-    signal,
-  })
+  const res = await apiFetch('/api/channels/qq/qrcode', jsonInit(params, { method: 'POST', signal }))
   if (!res.ok) throw await readApiError(res, `qrcode failed: ${res.status}`)
   return res.json() as Promise<QQQrStartResult>
 }
@@ -95,11 +86,7 @@ export async function pollQQQrLogin(sessionId: string, signal?: AbortSignal): Pr
 }
 
 export async function completeQQQrLogin(sessionId: string, appId: string): Promise<void> {
-  const res = await apiFetch('/api/channels/qq/qrcode', {
-    body: JSON.stringify({ action: 'complete', appId, sessionId }),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'POST',
-  })
+  const res = await apiFetch('/api/channels/qq/qrcode', jsonInit({ action: 'complete', appId, sessionId }, { method: 'POST' }))
   if (!res.ok) throw await readApiError(res, `qrcode complete failed: ${res.status}`)
 }
 
@@ -113,22 +100,14 @@ export async function unbindQQ(): Promise<void> {
 }
 
 export async function updateQQAgent(agentId: string): Promise<void> {
-  const res = await apiFetch('/api/channels/qq/bind', {
-    body: JSON.stringify({ agentId }),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'PATCH',
-  })
+  const res = await apiFetch('/api/channels/qq/bind', jsonInit({ agentId }, { method: 'PATCH' }))
   if (!res.ok) {
     throw await readApiError(res, `update agent failed: ${res.status}`)
   }
 }
 
 export async function updateQQConfiguration(config: QQConfiguration): Promise<void> {
-  const res = await apiFetch('/api/channels/qq/bind', {
-    body: JSON.stringify(config),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'PATCH',
-  })
+  const res = await apiFetch('/api/channels/qq/bind', jsonInit(config, { method: 'PATCH' }))
   if (!res.ok) {
     throw await readApiError(res, `update configuration failed: ${res.status}`)
   }

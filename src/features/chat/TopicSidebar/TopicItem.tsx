@@ -114,11 +114,6 @@ const TopicItem = memo<Props>(
       rename.openRename(topic.title)
     }, [rename, topic.title])
 
-    const handleOpenProject = useCallback(() => {
-      setDraftProject('')
-      setProjectOpen(true)
-    }, [])
-
     const handleSubmitProject = async () => {
       const next = draftProject.trim()
       if (!next || projectSaving) return
@@ -227,16 +222,12 @@ const TopicItem = memo<Props>(
       [
         autoRenameDisabled,
         autoRenaming,
-        handleOpenProject,
         handleOpenRename,
         onAutoRename,
         onDelete,
         onFavorite,
-        onProjectChange,
-        projectNames,
         topic.favorite,
         topic.id,
-        topic.projectName,
       ]
     )
 

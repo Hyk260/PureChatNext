@@ -129,7 +129,7 @@ const SidebarBody = memo(() => {
   const bottomContent = useMemo(() => buildContent(bottomKeys), [buildContent, bottomKeys])
 
   return (
-    <Flex className='flex-col flex-1 gap-px min-h-[0px]'>
+    <Flex className='flex-col flex-1 gap-px min-h-0'>
       <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }} viewStyle={{ paddingInline: '4px 8px' }}>
         <Flex className='flex-col flex-1 gap-px min-h-full'>{topContent}</Flex>
       </Scrollbar>

@@ -1,11 +1,7 @@
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 export async function patchUserProfile(body: { fullName?: string | null; interests?: string[] }) {
-  const response = await apiFetch('/api/webapi/user/profile', {
-    body: JSON.stringify(body),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'PATCH',
-  })
+  const response = await apiFetch('/api/webapi/user/profile', jsonInit(body, { method: 'PATCH' }))
 
   if (!response.ok) {
     const data = (await response.json().catch(() => null)) as { error?: string } | null

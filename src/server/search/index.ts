@@ -52,11 +52,12 @@ export class SearchService {
   }
 
   constructor() {
-    const impls = this.searchImpls
-    this.searchImpList =
-      impls.length > 0
-        ? impls.map((type) => ({ impl: createSearchServiceImpl(type), type }))
-        : [{ impl: createSearchServiceImpl(), type: SearchImplType.SearXNG }]
+    const configured = this.searchImpls
+    const implTypes = configured.length > 0 ? configured : [SearchImplType.SearXNG]
+    this.searchImpList = implTypes.map((type) => ({
+      impl: createSearchServiceImpl(type),
+      type,
+    }))
   }
 
   async crawlPages(input: { impls?: CrawlImplType[]; urls: string[] }) {

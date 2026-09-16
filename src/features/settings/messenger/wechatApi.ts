@@ -1,4 +1,4 @@
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 export type WechatStatus = {
   agentId?: string
@@ -68,11 +68,7 @@ export async function bindWechat(params: WechatConfiguration & {
   botToken: string
   userId: string
 }): Promise<void> {
-  const res = await apiFetch('/api/channels/wechat/bind', {
-    body: JSON.stringify(params),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'POST',
-  })
+  const res = await apiFetch('/api/channels/wechat/bind', jsonInit(params, { method: 'POST' }))
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string }
     throw new Error(body.error || `bind failed: ${res.status}`)
@@ -85,11 +81,7 @@ export async function unbindWechat(): Promise<void> {
 }
 
 export async function updateWechatConfiguration(config: WechatConfiguration): Promise<void> {
-  const res = await apiFetch('/api/channels/wechat/bind', {
-    body: JSON.stringify(config),
-    headers: { 'Content-Type': 'application/json' },
-    method: 'PATCH',
-  })
+  const res = await apiFetch('/api/channels/wechat/bind', jsonInit(config, { method: 'PATCH' }))
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string }
     throw new Error(body.error || `update agent failed: ${res.status}`)

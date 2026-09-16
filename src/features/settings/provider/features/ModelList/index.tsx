@@ -3,7 +3,7 @@
 import { DEFAULT_MODEL_PROVIDER_LIST, getAiModel } from '@pure/model-bank'
 import { ActionIcon, confirmModal, Flex, SortableList, Tabs } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
-import { apiFetch } from '@/utils/apiFetch'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ArrowDownUp, Eye, EyeOff } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -82,14 +82,10 @@ const ModelList = memo<ModelListProps>(({ id }) => {
     setLoading(true)
     try {
       const baseURL = config?.baseURL.trim() ?? ''
-      const response = await apiFetch('/api/providers/models', {
-        body: JSON.stringify({
-          baseURL: baseURL || undefined,
-          provider: id,
-        }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      })
+      const response = await apiFetch('/api/providers/models', jsonInit({
+        baseURL: baseURL || undefined,
+        provider: id,
+      }, { method: 'POST' }))
 
       const json = (await response.json()) as {
         cause?: string
@@ -289,17 +285,12 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         setModelHealth(id, model.id, { status: 'checking' })
 
         try {
-          const response = await apiFetch('/api/providers/check', {
-            body: JSON.stringify({
-              baseURL: baseURL || undefined,
-              model: model.id,
-              provider: id,
-              timeoutMs,
-            }),
-            headers: { 'Content-Type': 'application/json' },
-            method: 'POST',
-            signal: controller.signal,
-          })
+          const response = await apiFetch('/api/providers/check', jsonInit({
+            baseURL: baseURL || undefined,
+            model: model.id,
+            provider: id,
+            timeoutMs,
+          }, { method: 'POST', signal: controller.signal }))
           const json = (await response.json()) as {
             durationMs?: number
             error?: { message?: string }

@@ -1,11 +1,13 @@
 ---
 title: Docker 自托管
-description: 本地开发依赖与生产应用容器的 Docker 部署方式。
+description: 本地开发依赖、生产应用容器，以及 pnpm Docker 命令与参数说明。
 ---
 
 # Docker 自托管
 
 PureChatNext 同时支持 Vercel 与 Docker 自托管。本地开发用 Compose 启动 PostgreSQL、Redis、RustFS 和 SearXNG。生产只运行应用容器，连接宿主机已有的 PostgreSQL（必须）和 Redis（可选）；文件使用云对象存储，联网搜索使用云 API。HTTPS 由宿主机 Nginx 或 Caddy 提供。默认资源档案为 `2g`。
+
+相关 `pnpm` 脚本的用途与参数见 [命令参考](#命令参考)。向脚本传参时，标志写在 `--` 后面，例如 `pnpm docker:pack -- --skip-build`。
 
 ## 本地开发依赖
 
@@ -128,6 +130,123 @@ docker exec -T postgresql pg_dump -U purechat -d purechat --format=custom --no-o
 能在本机构建时，升级前先备份，再拉取代码并执行 `pnpm docker:deploy`。云服务器在线安装用 `install-online.sh up`（或 `PURECHAT_REFRESH=1` 刷新编排）；离线主机使用 `pnpm docker:pack` 与 `./install.sh up`，见 [云服务器部署](./1panel.md)。
 
 不要对生产 Compose 执行 `down -v`，也不要运行全局 `docker system prune --volumes`。
+
+## 命令参考
+
+| 命令 | 用途 |
+| --- | --- |
+| `docker:setup:dev` | 生成 `docker-compose/dev/.env`（随机本地凭证；已有文件不覆盖） |
+| `dev:docker` | 启动 PostgreSQL、Redis、RustFS、SearXNG，并确保 RustFS bucket 存在 |
+| `dev:docker:down` | 停止开发依赖，保留 named volume |
+| `dev:docker:reset` | 删卷后重建，并执行 `db:migrate` |
+| `build:docker` | 镜像 builder：SPA + Next + 容器启动用的迁移入口 |
+| `build:docker:migrate` | 把迁移 / S3 初始化入口打成单文件 |
+| `docker:setup:deploy` | 生成生产 `docker-compose/deploy/.env` |
+| `docker:deploy` | 本机构建并启动生产 Compose |
+| `docker:pack` | 打离线包（仅应用镜像） |
+| `docker:upload` | 把离线包 SCP 到服务器 |
+| `docker:validate` | 校验 Compose 配置与安装脚本语法 |
+| `docker:verify:local` | 隔离环境冒烟：安全基线、健康检查、持久化 |
+
+### 本地开发
+
+`docker:setup:dev`、`dev:docker`、`dev:docker:down` 无额外参数。不要手抄 `docker-compose/dev/.env.example`。
+
+`dev:docker:reset`：
+
+| 参数 | 说明 |
+| --- | --- |
+| `--yes` | 跳过「输入 `DELETE`」确认。非 TTY（CI）必须带上，否则会失败 |
+
+```bash
+pnpm dev:docker:reset -- --yes
+```
+
+### 镜像构建
+
+`build:docker` / `build:docker:migrate` 无额外参数。由 `Dockerfile` 的 builder 阶段调用，本地一般不用手跑。说明见上文 [镜像构建命令](#镜像构建命令)。
+
+### 生产配置与启动
+
+`docker:setup:deploy` 已有 `docker-compose/deploy/.env` 时不会覆盖。
+
+| 参数 | 默认 | 说明 |
+| --- | --- | --- |
+| `--profile NAME` | `2g` | 叠加 `docker-compose/deploy/profiles/<NAME>.env`。仓库目前只有 `2g`（应用内存上限 512m） |
+
+```bash
+pnpm docker:setup:deploy
+pnpm docker:setup:deploy -- --profile 2g
+```
+
+`docker:deploy` 默认 `docker compose up -d --build --wait`。
+
+| 参数 | 说明 |
+| --- | --- |
+| `--no-build` | 不构建、不 pull，使用本机已有镜像（例如刚 `docker:pack` 打出的 `purechat-next:local`） |
+
+```bash
+pnpm docker:deploy -- --no-build
+```
+
+### 离线包
+
+`docker:pack` 产物默认是 `dist/docker-offline/purechat-next-offline.tar`。打包步骤见 [云服务器部署 · 离线包](./1panel.md#方式二离线包)。
+
+| 参数 | 默认 | 说明 |
+| --- | --- | --- |
+| `--platform` | `linux/amd64` | 导出架构。云服务器通常是 amd64；Apple Silicon 上默认仍按 amd64 重建 |
+| `--skip-build` | 关 | 只导出已有 `purechat-next:local`，**不**按当前源码重建。升级不要加这个参数 |
+| `--no-cn-mirror` | 关 | 不走 Docker Hub / GHCR 国内镜像站 |
+| `--output DIR` | `dist/docker-offline` | 离线包输出目录 |
+| `--app-only` | 可省略 | 生产包本来就只含应用镜像，加上只打印提示 |
+
+```bash
+pnpm docker:pack
+pnpm docker:pack -- --skip-build
+pnpm docker:pack -- --platform linux/amd64 --output dist/docker-offline
+pnpm docker:pack -- --no-cn-mirror
+```
+
+拉基础镜像时可用环境变量覆盖镜像站：`DOCKER_HUB_MIRROR`（默认 `docker.m.daocloud.io`）、`GHCR_MIRROR`（默认 `ghcr.nju.edu.cn`）。
+
+`docker:upload` 读取 `docker-compose/deploy/upload.env`（或当前 shell 里已 export 的变量），不要把 SSH 私钥写进应用 `.env`。连接变量见 [云服务器部署 · 上传](./1panel.md#2-上传)。
+
+| 参数 | 说明 |
+| --- | --- |
+| `--file PATH` | 本地 tar，默认 `dist/docker-offline/purechat-next-offline.tar` |
+| `--env-file PATH` | SSH 配置文件，默认 `docker-compose/deploy/upload.env` |
+| `--host` / `--user` / `--port` | 覆盖 SSH 目标 |
+| `--extract` | 上传后解压到 `PURECHAT_HOME`，不覆盖已有 `.env` |
+| `--up` | 解压后执行 `install.sh up`（升级；服务器上须已有 `.env`） |
+| `--dry-run` | 只打印将执行的命令 |
+
+```bash
+pnpm docker:upload
+pnpm docker:upload -- --extract
+pnpm docker:upload -- --up
+pnpm docker:upload -- --host 203.0.113.10 --user root --dry-run
+```
+
+### 校验与冒烟
+
+`docker:validate` 无参数。检查开发 / 生产 / 在线 overlay / 验证 overlay 的 Compose `config`，以及 `install.sh`、`install-online.sh`、`start-ip.sh` 的 bash 语法。CI 每次 PR 都会跑。
+
+`docker:verify:local` 用临时 `.env` 和 `docker-compose.verify.yml` 拉起隔离的 app + PostgreSQL + Redis，检查安全基线、`GET /api/health`、迁移记录和重启后数据是否还在。默认会构建镜像，并用 Docker Scout 扫描 High/Critical。这是本机 / CI 冒烟，不是生产安装路径。
+
+| 参数 | 说明 |
+| --- | --- |
+| `--skip-build` | 使用已有 `purechat-next:local`，不在验证里再构建 |
+| `--platform ARCH` | 设 `DOCKER_DEFAULT_PLATFORM`，例如 `linux/amd64` |
+| `--skip-scan` | 跳过 Scout 门禁，仅供隔离排障，不要当生产验收 |
+| `--external-scan` | 跳过 Scout，改由外部扫描（CI 用 Trivy） |
+| `--keep` | 结束后不删验证 project，便于看日志 |
+
+```bash
+pnpm docker:verify:local
+pnpm docker:verify:local -- --keep
+pnpm docker:verify:local -- --skip-build --external-scan --platform linux/amd64
+```
 
 ## 故障排查
 

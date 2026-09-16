@@ -52,7 +52,7 @@ DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.
 pnpm dev:docker         # up -d --wait
 pnpm db:migrate
 pnpm dev:docker:down    # down（保留 named volume）
-pnpm dev:docker:reset   # down -v 后重建，并执行 db:migrate
+pnpm dev:docker:reset   # down -v 后重建，并执行 db:migrate（CI 用 -- --yes）
 ```
 
 查看状态与日志：

@@ -78,7 +78,7 @@ pnpm install
 pnpm docker:pack
 ```
 
-默认导出 **linux/amd64** 离线包。Apple Silicon 上若本地镜像是 arm64，打包时会按 amd64 重新构建，并默认经镜像站拉取基础镜像（可用 `DOCKER_HUB_MIRROR`、`GHCR_MIRROR` 覆盖）。`--no-cn-mirror` 会跳过镜像站。离线包只含应用镜像，PostgreSQL 与 Redis 使用目标主机上已有的实例。
+默认导出 **linux/amd64** 离线包。Apple Silicon 上若本地镜像是 arm64，打包时会按 amd64 重新构建，并默认经镜像站拉取基础镜像（可用 `DOCKER_HUB_MIRROR`、`GHCR_MIRROR` 覆盖）。`--no-cn-mirror` 会跳过镜像站。离线包只含应用镜像，PostgreSQL 与 Redis 使用目标主机上已有的实例。完整参数（`--platform`、`--output` 等）见 [Docker 自托管 · 命令参考](./docker.md#离线包)。
 
 `--skip-build` 只导出本机已有的 `purechat-next:local`，**不会**根据当前源码重建。刚打完包、只想再导出一次时才用：
 

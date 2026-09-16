@@ -304,15 +304,23 @@ export const webRoutes: RouteObject[] = [
     path: 'community',
   },
 
+  // —— Admin ——
+  {
+    children: [
+      {
+        element: dynamicElement(() => import('@/features/dev/WebSearchPage'), 'Admin > WebSearch'),
+        path: 'web-search',
+      },
+    ],
+    element: dynamicLayout(() => import('@/routes/admin/_layout'), 'AdminLayout'),
+    path: 'admin',
+  },
+
   // —— Dev (dev-only; production can 404 later) ——
   ...(import.meta.env.DEV
     ? ([
         {
           children: [
-            {
-              element: dynamicElement(() => import('@/features/dev/WebSearchPage'), 'Dev > WebSearch'),
-              path: 'web-search',
-            },
             {
               element: dynamicElement(() => import('@/features/dev/EmailServicePage'), 'Dev > EmailService'),
               path: 'email-service',

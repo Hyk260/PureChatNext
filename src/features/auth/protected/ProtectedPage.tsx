@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { me, logout } from '@/libs/utils/api-client'
 import { formatDateTime } from '@pure/utils/client'
 import { useRouter } from 'next/navigation'
+import { getUserRoleLabel } from '@/const/auth'
 
 interface UserData {
   id: string
@@ -61,7 +62,7 @@ export default function ProtectedPage() {
     { label: 'User ID', value: user.userId },
     { label: '邮箱', value: user.email || '-' },
     { label: '手机', value: user.phone || '-' },
-    { label: '角色', value: user.role || '普通用户' },
+    { label: '角色', value: getUserRoleLabel(user.role) },
   ]
 
   const handleLogout = async () => {

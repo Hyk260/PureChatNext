@@ -27,7 +27,7 @@ pnpm dev
 - 包管理器只使用 pnpm；开发脚本可由本机 Bun 执行。
 - 共享逻辑优先放入 `packages/`，环境变量统一定义在 `packages/env/src/`。
 - 只修改与目标相关的代码，不在同一 PR 中混入无关重构。
-- 新行为应补充测试；新增环境变量时同步更新 `.env.example` 与文档。
+- 有逻辑分支或边界行为时补充测试；简单页面与薄封装不要写测试，见 [测试范围](./docs/development/quality/testing.md)。新增环境变量时同步更新 `.env.example` 与文档。
 - 提交信息建议使用中文描述和 conventional 前缀，例如 `feat:`、`fix:`、`docs:`。
 
 ## 提交前检查

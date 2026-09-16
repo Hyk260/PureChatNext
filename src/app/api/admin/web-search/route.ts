@@ -1,5 +1,6 @@
 import type { CrawlImplType } from '@pure/web-crawler'
 import type { SearchImplType } from '@/server/search/impls'
+import type { NextRequest } from 'next/server'
 
 import { NextResponse } from 'next/server'
 
@@ -7,7 +8,8 @@ import { isRecord, toTrimmedString } from '@pure/utils/object'
 import { searchService, parseImplEnv } from '@/server/search'
 import { SEARCH_IMPL_TYPES, isSearchImplType } from '@/server/search/impls'
 import { toolsEnv } from '@/envs/tools'
-import { devActionSuccess, devError } from '../_utils'
+import { withAdmin } from '@/libs/auth/get-session-user'
+import { devActionSuccess, devError } from '../../dev/_utils'
 
 type WebSearchAction = 'query' | 'webSearch' | 'crawlPages'
 
@@ -47,10 +49,10 @@ const parseConfiguredProviders = () => {
 }
 
 /**
- * 联网搜索测试 API（仅开发环境）
- * POST /api/dev/web-search
+ * 联网搜索测试 API（仅管理员）
+ * POST /api/admin/web-search
  */
-export const POST = async (req: Request) => {
+export const POST = withAdmin(async (req: NextRequest) => {
   let body: unknown
 
   try {
@@ -135,13 +137,13 @@ export const POST = async (req: Request) => {
 
     return devError(message, 500)
   }
-}
+})
 
 /**
- * 联网搜索测试 API（仅开发环境）
- * GET /api/dev/web-search
+ * 联网搜索测试 API（仅管理员）
+ * GET /api/admin/web-search
  */
-export const GET = async () => {
+export const GET = withAdmin(async () => {
   let searxng: { engines: Array<{ categories: string[]; enabled: boolean; name: string; timeRangeSupport: boolean }> } | null = null
 
   if (toolsEnv.SEARXNG_URL) {
@@ -177,4 +179,4 @@ export const GET = async () => {
     },
     { status: 200 }
   )
-}
+})

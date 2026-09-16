@@ -4,7 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { toolsEnv } from '@/envs/tools'
 import { searchService } from '@/server/search'
 
-import { GET, POST } from './route'
+vi.mock('@/libs/auth/get-session-user', () => ({
+  withAdmin: (handler: unknown) => handler,
+}))
 
 vi.mock('@/envs/tools', () => ({
   toolsEnv: {
@@ -14,6 +16,12 @@ vi.mock('@/envs/tools', () => ({
 }))
 
 vi.mock('@/server/search', () => ({
+  parseImplEnv: (envString = '') =>
+    envString
+      .replaceAll('，', ',')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean),
   searchService: {
     crawlPages: vi.fn(),
     query: vi.fn(),
@@ -21,24 +29,26 @@ vi.mock('@/server/search', () => ({
   },
 }))
 
+import { GET, POST } from './route'
+
 const postJson = (body: unknown) => {
   return POST(
-    new Request('http://localhost/api/dev/web-search', {
+    new Request('http://localhost/api/admin/web-search', {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
       method: 'POST',
-    })
+    }) as never
   )
 }
 
-describe('/api/dev/web-search', () => {
+describe('/api/admin/web-search', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(toolsEnv).SEARCH_PROVIDERS = 'searxng,tavily'
   })
 
   it('returns available actions from GET', async () => {
-    const response = await GET()
+    const response = await GET(undefined as never)
     const payload = await response.json()
 
     expect(response.status).toBe(200)
@@ -51,7 +61,7 @@ describe('/api/dev/web-search', () => {
   it('parses full-width commas in SEARCH_PROVIDERS', async () => {
     vi.mocked(toolsEnv).SEARCH_PROVIDERS = 'searxng，brave ， exa'
 
-    const response = await GET()
+    const response = await GET(undefined as never)
     const payload = await response.json()
 
     expect(payload.configuredProviders).toEqual(['searxng', 'brave', 'exa'])
@@ -200,11 +210,11 @@ describe('/api/dev/web-search', () => {
 
   it('returns 400 for invalid JSON', async () => {
     const response = await POST(
-      new Request('http://localhost/api/dev/web-search', {
+      new Request('http://localhost/api/admin/web-search', {
         body: '{',
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
-      })
+      }) as never
     )
     const payload = await response.json()
 

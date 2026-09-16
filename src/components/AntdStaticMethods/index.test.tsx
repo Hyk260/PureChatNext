@@ -45,9 +45,4 @@ describe('EntryComponent', () => {
       content: 'x',
     })
   })
-
-  it('should render without crashing', () => {
-    const { container } = render(<EntryComponent />)
-    expect(container).toBeDefined()
-  })
 })

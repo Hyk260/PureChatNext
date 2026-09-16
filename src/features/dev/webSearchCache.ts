@@ -3,7 +3,7 @@ import { localStg } from '@pure/utils/storage'
 
 export type ActionMode = 'query' | 'webSearch' | 'crawlPages'
 
-export const WEB_SEARCH_CACHE_KEY = 'purechat:dev:web-search:v1'
+export const WEB_SEARCH_CACHE_KEY = 'purechat:admin:web-search:v1'
 
 export type WebSearchCachedForm = {
   categories?: string

@@ -19,6 +19,7 @@ import { ActionIcon, Alert, Button, Checkbox, Input, Select } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 
 import Scrollbar from '@/components/Scrollbar'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 import type { ActionMode, WebSearchCachedForm, WebSearchCachedSlot } from './webSearchCache'
 import { clearWebSearchCache, readWebSearchCache, writeWebSearchCacheSlot } from './webSearchCache'
@@ -424,7 +425,7 @@ export default function WebSearchTestPage() {
   }
 
   useEffect(() => {
-    void fetch('/api/dev/web-search')
+    void apiFetch('/api/admin/web-search')
       .then(async (response) =>
         response.ok ? ((await response.json()) as WebSearchConfigResponse) : null
       )
@@ -514,11 +515,7 @@ export default function WebSearchTestPage() {
     const submittedAt = new Date().toLocaleString()
 
     try {
-      const response = await fetch('/api/dev/web-search', {
-        body: JSON.stringify(requestBody),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      })
+      const response = await apiFetch('/api/admin/web-search', jsonInit(requestBody, { method: 'POST' }))
       const data = (await response.json()) as ApiSuccess | ApiFailure
 
       const nextRunState: RunState = {
@@ -810,7 +807,7 @@ export default function WebSearchTestPage() {
               <dl className='mt-3 grid gap-3 text-sm'>
                 <div className='flex items-center justify-between gap-4'>
                   <dt className='text-slate-500'>Endpoint</dt>
-                  <dd className='font-mono text-xs text-slate-900'>POST /api/dev/web-search</dd>
+                  <dd className='font-mono text-xs text-slate-900'>POST /api/admin/web-search</dd>
                 </div>
                 <div className='flex items-center justify-between gap-4'>
                   <dt className='text-slate-500'>Action</dt>

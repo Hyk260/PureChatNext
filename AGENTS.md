@@ -25,7 +25,6 @@
 - 主应用的 Next.js 16 只负责 API、认证和生产 SPA HTML 壳；不要把新业务页面迁回 Next.js 页面路由。`apps/docs/` 是独立部署的公开文档站，不属于主应用页面路由。
 - 本地开发访问 `http://localhost:5174`；Vite 将 `/api` 代理到 `http://localhost:3000` 的 Next BFF。
 - 本地 `APP_URL` 使用 `http://localhost:5174`；生产环境使用正式同域地址。
-- 请求边界使用 `src/proxy.ts` 处理 CORS 和 `/api/rest-api` JWT，不要改回 `middleware.ts`。
 - 生产 SPA 产物位于 `public/_spa/**`，HTML 由 `src/app/spa/[[...path]]/route.ts` 注入 `__SERVER_CONFIG__`。
 - Monorepo 共享逻辑优先放入 `packages/`，内部包命名为 `@pure/<name>`，依赖使用 `workspace:*`。
 - 聊天能力使用 Vercel AI SDK，服务端入口位于 `src/app/api/chat/route.ts`。
@@ -74,6 +73,8 @@
 - API 错误优先复用 `src/libs/errors.ts` 中的 `ChatSDKError` 等现有类型。
 
 ## 测试与验证
+
+简单页面、布局壳和路由 gate（如 `RequireAuth`、`RequireAdmin`）不要写组件测试：mock 掉 UI 后只断言骨架 / 文案 / children，改布局就要重写。逻辑抽到 helper 或 API 边界再测。详见 [docs/development/quality/testing.md](docs/development/quality/testing.md)。
 
 ### 测试文件组织
 

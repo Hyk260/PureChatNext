@@ -14,6 +14,7 @@ description: 面向 PureChatNext 贡献者的数据库、质量检查与前端�
 ## 质量检查
 
 - [Lint 与类型检查](./quality/lint.md)
+- [测试范围](./quality/testing.md)
 
 ## 前端样式
 

@@ -23,6 +23,7 @@ describe('webRouter.config smoke', () => {
       "path: 'system-tools'",
       "path: 'provider'",
       "path: 'community'",
+      "path: 'admin'",
       "path: 'agent'",
       "path: 'resources'",
       "path: 'library/:id'",

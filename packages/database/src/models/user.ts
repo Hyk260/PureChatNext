@@ -1,3 +1,5 @@
+import { USER_ROLE } from '@pure/const'
+import type { UserRole } from '@pure/const'
 import { createNanoId, generateCompactUuid } from '@pure/utils'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { and, count, eq, inArray, lt } from 'drizzle-orm'
@@ -248,6 +250,18 @@ export class UserModel {
     return this.toUserWithoutPasswordIfPasswordOk(user, password)
   }
 
+  countUsers = async () => {
+    const [row] = await this.db.select({ n: count() }).from(users)
+    return Number(row?.n ?? 0)
+  }
+
+  /** First account becomes admin; everyone after is a regular user. */
+  resolveSignupRole = async (): Promise<UserRole> => {
+    // ponytail: concurrent first signups can both become admin; fix in DB if it happens
+    const total = await this.countUsers()
+    return total === 0 ? USER_ROLE.Admin : USER_ROLE.User
+  }
+
   createUser = async (params: Partial<User> & { password?: string | null }) => {
     const { password: plainPassword, ...userFields } = params
     const normalizedParams = this.normalizeUniqueUserFields(userFields)
@@ -259,6 +273,10 @@ export class UserModel {
     if (normalizedParams.id == null) {
       // 与 Better Auth advanced.database.generateId 对齐（本路径绕过 BA）
       normalizedParams.id = generateAuthUserId()
+    }
+
+    if (normalizedParams.role == null || normalizedParams.role === '') {
+      normalizedParams.role = await this.resolveSignupRole()
     }
 
     const [user] = await this.db

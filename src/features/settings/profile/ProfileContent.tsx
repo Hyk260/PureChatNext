@@ -7,6 +7,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 
 import type { UserWithoutPassword } from '@pure/database/schemas'
+import { getUserRoleLabel } from '@/const/auth'
 import { signOut } from '@/libs/better-auth/client'
 
 type DateKeys = 'accessedAt' | 'banExpires' | 'createdAt' | 'emailVerifiedAt' | 'lastActiveAt' | 'updatedAt'
@@ -133,7 +134,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
             <InfoRow label='邮箱' value={user.email || '-'} />
             <InfoRow label='User ID' value={user.userId} />
             <InfoRow label='手机' value={user.phone || '未绑定'} />
-            <InfoRow label='角色' value={user.role || '普通用户'} />
+            <InfoRow label='角色' value={getUserRoleLabel(user.role)} />
           </SectionCard>
 
           <SectionCard title='安全'>

@@ -7,6 +7,8 @@ import { Drawer } from 'antd'
 import { Menu } from 'lucide-react'
 
 import { FRONTEND_ROUTE_GROUPS } from '@/const/frontend-routes'
+import { isAdminRole } from '@/const/auth'
+import { useSession } from '@/libs/better-auth/client'
 import { Button } from '@pure/ui'
 
 const isActiveRoute = (pathname: string, href: string) => {
@@ -23,9 +25,12 @@ export type RouteNavContentProps = {
 }
 
 export function RouteNavContent({ pathname, onNavigate }: RouteNavContentProps) {
+  const { data: session } = useSession()
+  const groups = FRONTEND_ROUTE_GROUPS.filter((group) => !group.adminOnly || isAdminRole(session?.user?.role))
+
   return (
     <nav aria-label='前端路由导航' className='-mx-6 -mt-4 flex-1 overflow-y-auto px-3 py-4'>
-      {FRONTEND_ROUTE_GROUPS.map((group) => (
+      {groups.map((group) => (
         <section className='mb-5 last:mb-0' key={group.title}>
           <h2 className='mb-2 px-2 text-xs font-medium text-muted-foreground'>{group.title}</h2>
           <ul className='space-y-0.5'>

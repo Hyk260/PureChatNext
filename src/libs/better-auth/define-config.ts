@@ -10,6 +10,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import * as schema from '@pure/database/schemas'
 import { serverDB } from '@pure/database/core/db-adaptor'
 import { generateAuthUserId } from '@pure/database/utils/idGenerator'
+import { USER_ROLE } from '@pure/const'
 import debug from 'debug'
 
 import {
@@ -263,23 +264,12 @@ export function defineConfig() {
     databaseHooks: {
       user: {
         create: {
-          // 写入前：确保业务侧 userId（无连字符 UUID）存在
+          // 写入前：首个用户为 admin，其余为 user
           before: async (user) => {
             log('user create before: %O', user)
-            // const userData = {
-            //   name: '123456',
-            //   email: '123456@qq.com',
-            //   emailVerified: false,
-            //   image: null,
-            //   createdAt: new Date(),
-            //   updatedAt: new Date(),
-            //   role: 'user',
-            //   banned: false,
-            //   banReason: null,
-            //   banExpires: null,
-            //   userId: '',
-            //   id: '',
-            // }
+            const { UserModel } = await import('@pure/database/models/user')
+            const role = await new UserModel().resolveSignupRole()
+            return { data: { ...user, role } }
           },
           // 写入后：懒发放积分由 CreditsModel.ensurePeriod 在首次 PureChat 请求时完成；
           // 此处保留 hook 供后续扩展（如显式 grant）。
@@ -331,7 +321,7 @@ export function defineConfig() {
     socialProviders,
     // 敏感邮件端点限流，防止滥发（短窗口 customRules + 验证类 IP 日限 customStorage）
     rateLimit: buildRateLimitConfig(),
-    plugins: [admin(), ...buildOptionalAuthPlugins()],
+    plugins: [admin({ adminRoles: [USER_ROLE.Admin], defaultRole: USER_ROLE.User }), ...buildOptionalAuthPlugins()],
   }
 
   // log('Better Auth Config: %O', options)

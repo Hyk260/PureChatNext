@@ -3,20 +3,24 @@
 import { Flex } from '@pure/ui'
 import { Drawer } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
-import { Route } from 'lucide-react'
+import { Globe2, Route } from 'lucide-react'
 import { memo, useState } from 'react'
 
 import NavItem from '@/components/NavItem'
+import { isAdminRole } from '@/const/auth'
 import { HOME_TOP_NAV } from '@/const/home/nav'
 import { RouteNavContent } from '@/features/auth/welcome/RouteNavSidebar'
+import { useSession } from '@/libs/better-auth/client'
 import { isDev } from '@/libs/constants'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const SidebarNav = memo(() => {
   const pathname = usePathname()
+  const { data: session } = useSession()
   const { message } = useApp()
   const [routeNavOpen, setRouteNavOpen] = useState(false)
+  const showAdminWebSearch = isAdminRole(session?.user?.role)
 
   return (
     <>
@@ -52,6 +56,16 @@ const SidebarNav = memo(() => {
             </Link>
           )
         })}
+        {showAdminWebSearch ? (
+          <Link className='text-inherit no-underline' href='/admin/web-search'>
+            <NavItem
+              active={pathname.startsWith('/admin/web-search')}
+              clickable
+              icon={Globe2}
+              title='联网搜索'
+            />
+          </Link>
+        ) : null}
         {isDev ? <NavItem icon={Route} title='dev测试路由' onItemClick={() => setRouteNavOpen(true)} /> : null}
       </Flex>
       {isDev ? (

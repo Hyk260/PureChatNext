@@ -18,7 +18,9 @@ type SearchProviderEntry = {
   type: SearchImplType
 }
 
-const parseImplEnv = (envString: string = '') => {
+type FallbackLevel = NonNullable<UniformSearchResponse['fallback']>['level']
+
+export const parseImplEnv = (envString: string = '') => {
   const envValue = envString.replaceAll('，', ',').trim()
   return envValue
     .split(',')
@@ -239,7 +241,7 @@ export class SearchService {
         data = { ...data, resultNumbers: results.length, results }
       }
 
-      let fallbackLevel: NonNullable<UniformSearchResponse['fallback']>['level'] = 'none'
+      let fallbackLevel: FallbackLevel = 'none'
 
       // 第一次重试：如果没有结果，移除搜索引擎限制
       if (data.results.length === 0 && searchEngines && searchEngines?.length > 0) {
@@ -269,23 +271,16 @@ export class SearchService {
 
       // 如果此提供者返回了结果，直接使用
       if (data.results.length > 0) {
+        if (fallbackLevel === 'none') {
+          return data
+        }
         return {
           ...data,
-          ...(fallbackLevel === 'none'
-            ? {}
-            : {
-                fallback: {
-                  applied:
-                    fallbackLevel === 'engine-removed'
-                      ? {
-                          ...(searchCategories ? { searchCategories } : {}),
-                          ...(searchTimeRange ? { searchTimeRange } : {}),
-                        }
-                      : {},
-                  level: fallbackLevel,
-                  requested: requestedFilters,
-                },
-              }),
+          fallback: {
+            applied: buildAppliedFilters(fallbackLevel, searchCategories, searchTimeRange),
+            level: fallbackLevel,
+            requested: requestedFilters,
+          },
         }
       }
     }
@@ -299,6 +294,18 @@ export class SearchService {
       resultNumbers: 0,
       results: [],
     }
+  }
+}
+
+const buildAppliedFilters = (
+  level: Exclude<FallbackLevel, 'none'>,
+  searchCategories?: string[],
+  searchTimeRange?: string
+): SearchParams => {
+  if (level === 'all-filters-removed') return {}
+  return {
+    ...(searchCategories ? { searchCategories } : {}),
+    ...(searchTimeRange ? { searchTimeRange } : {}),
   }
 }
 

@@ -4,6 +4,7 @@ export type FrontendRoute = {
 }
 
 export type FrontendRouteGroup = {
+  adminOnly?: boolean
   title: string
   routes: FrontendRoute[]
 }
@@ -40,13 +41,17 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
     ],
   },
   {
+    adminOnly: true,
+    title: '管理',
+    routes: [{ href: '/admin/web-search', label: '联网搜索' }],
+  },
+  {
     title: '开发',
     routes: [
       { href: '/dev/email-service', label: '邮件服务' },
       { href: '/dev/email-templates', label: '邮件模板' },
       { href: '/dev/read-file', label: '文件读取' },
       { href: '/dev/s3', label: 'S3 测试' },
-      { href: '/dev/web-search', label: '联网搜索' },
       { href: '/dev/delete-user', label: '删除用户' },
       { href: '/dev/wechat-conversation', label: '微信对话' },
       { href: '/dev/qq-conversation', label: 'QQ 对话' },

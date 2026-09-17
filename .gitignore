@@ -111,6 +111,7 @@ CLAUDE.*.md
 .firecrawl/
 
 .worktrees/
+.workbuddy
 .local-backups/
 
 # Private notes / personal reference (contains credentials, subscription tokens, etc.)

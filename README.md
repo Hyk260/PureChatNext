@@ -8,13 +8,15 @@
 
 面向中文用户和小团队的开源自托管 AI 工作台，支持多模型、联网搜索、文件处理和私有部署。
 
-[在线体验][online-demo-link] · [Vercel 部署][vercel-deploy-link] · [Docker 自托管](./docs/self-hosting/platform/docker.md) · [文档站][docs-site-link] · [讨论区][github-discussions-link]
+[在线体验(vercel)][online-demo-link] · [腾讯云备用][tencent-cloud-demo-link] · [Vercel 部署][vercel-deploy-link] · [Docker 自托管](./docs/self-hosting/platform/docker.md) · [文档站][docs-site-link] · [讨论区][github-discussions-link]
 
-[![][github-release-shield]][github-release-link]
-[![][github-license-shield]][github-license-link]
-[![][github-stars-shield]][github-stars-link]
-[![][github-issues-shield]][github-issues-link]
-[![][github-discussions-shield]][github-discussions-link]
+[![Docs][docs-shield]][docs-site-link]
+[![GitHub license][github-license-shield]][github-license-link]
+[![Deploy][vercel-deploy-shield]][vercel-deploy-link]
+[![Release][github-release-shield]][github-release-link]
+[![Stars][github-stars-shield]][github-stars-link]
+[![Issues][github-issues-shield]][github-issues-link]
+[![Discussions][github-discussions-shield]][github-discussions-link]
 
 </div>
 
@@ -347,18 +349,21 @@ pnpm exec vitest run --silent='passed-only'
 
 Copyright © 2025–2026 [Hyk260][profile-link].
 
-[github-discussions-link]: https://github.com/Hyk260/PureChatNext/discussions
-[github-discussions-shield]: https://img.shields.io/github/discussions/Hyk260/PureChatNext?color=c084fc&labelColor=black&style=flat-square
-[github-issues-link]: https://github.com/Hyk260/PureChatNext/issues
-[github-issues-shield]: https://img.shields.io/github/issues/Hyk260/PureChatNext?color=ff80eb&labelColor=black&style=flat-square
-[github-license-link]: https://github.com/Hyk260/PureChatNext/blob/main/LICENSE
-[github-license-shield]: https://img.shields.io/badge/license-MIT-white?labelColor=black&style=flat-square
-[github-release-link]: https://github.com/Hyk260/PureChatNext/releases
-[github-release-shield]: https://img.shields.io/github/v/release/Hyk260/PureChatNext?color=369eff&labelColor=black&logo=github&style=flat-square
-[github-stars-link]: https://github.com/Hyk260/PureChatNext/stargazers
-[github-stars-shield]: https://img.shields.io/github/stars/Hyk260/PureChatNext?color=ffcb47&labelColor=black&style=flat-square
-[online-demo-link]: https://next.purechat.cn
+[docs-shield]: https://img.shields.io/badge/PureChat-%E6%96%87%E6%A1%A3-blue
 [docs-site-link]: https://next-docs.purechat.cn
+[github-discussions-link]: https://github.com/Hyk260/PureChatNext/discussions
+[github-discussions-shield]: https://img.shields.io/github/discussions/Hyk260/PureChatNext
+[github-issues-link]: https://github.com/Hyk260/PureChatNext/issues
+[github-issues-shield]: https://img.shields.io/github/issues/Hyk260/PureChatNext
+[github-license-link]: https://github.com/Hyk260/PureChatNext/blob/main/LICENSE
+[github-license-shield]: https://img.shields.io/github/license/Hyk260/PureChatNext
+[github-release-link]: https://github.com/Hyk260/PureChatNext/releases
+[github-release-shield]: https://img.shields.io/github/v/release/Hyk260/PureChatNext?logo=github
+[github-stars-link]: https://github.com/Hyk260/PureChatNext/stargazers
+[github-stars-shield]: https://img.shields.io/github/stars/Hyk260/PureChatNext
+[online-demo-link]: https://next.purechat.cn
 [profile-link]: https://github.com/Hyk260
+[tencent-cloud-demo-link]: https://app.purechat.cn
 [repo-link]: https://github.com/Hyk260/PureChatNext
 [vercel-deploy-link]: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHyk260%2FPureChatNext
+[vercel-deploy-shield]: https://img.shields.io/badge/Deploy-Vercel-000000?style=flat&labelColor=555&logo=vercel&logoColor=fff

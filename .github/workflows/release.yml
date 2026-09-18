@@ -1,4 +1,9 @@
-# 推送 v* tag 时创建 GitHub Release；同 tag 已存在则跳过，不覆盖。
+# 推送 vX.Y.Z tag 时创建 GitHub Release；同 tag 已存在则跳过，不覆盖。
+# tag 必须等于 package.json version，且 CHANGELOG.md 必须有对应「## X.Y.Z」章节。
+#
+# 触发方法：
+#   git tag v0.2.8
+#   git push origin v0.2.8
 name: Release
 
 on:
@@ -18,8 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       - name: Create release if missing
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -29,4 +32,5 @@ jobs:
             echo "Release ${tag} already exists, skip"
             exit 0
           fi
-          gh release create "$tag" --generate-notes --verify-tag
+          node scripts/github-release-notes.mjs "$tag" > "${RUNNER_TEMP}/release-notes.md"
+          gh release create "$tag" --verify-tag --title "$tag" --notes-file "${RUNNER_TEMP}/release-notes.md"

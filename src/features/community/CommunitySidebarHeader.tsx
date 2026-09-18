@@ -2,7 +2,7 @@
 
 import { ProviderIconLucide, Flex } from '@pure/ui'
 import type { IconProps } from '@pure/ui'
-import { Bot, Brain } from 'lucide-react'
+import { Bot, Brain, Wrench } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { memo, useMemo } from 'react'
@@ -31,6 +31,12 @@ const NAV_ITEMS: NavItemConfig[] = [
     icon: Brain,
     key: DiscoverTab.Model,
     title: '模型',
+  },
+  {
+    href: '/community/skill',
+    icon: Wrench,
+    key: DiscoverTab.Skill,
+    title: 'Skills',
   },
   {
     href: '/community/agent',

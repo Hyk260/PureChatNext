@@ -6,9 +6,11 @@ import { Block, Button, Icon, Menu, Popover, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { ChevronDownIcon, LogOut, Settings2 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { memo, useCallback, useMemo, useState } from 'react'
 
-import { signOut, useSession } from '@/libs/better-auth/client'
+import { signOutWorkspace } from '@/features/auth/signOutWorkspace'
+import { useSession } from '@/libs/better-auth/client'
 
 import DataStatistics from './DataStatistics'
 import FreeCreditsSummary from './FreeCreditsSummary'
@@ -64,6 +66,7 @@ UserInfoSection.displayName = 'UserInfoSection'
 
 const HomeUserTrigger = memo(() => {
   const { message } = useApp()
+  const router = useRouter()
   const { data: session } = useSession()
   const [open, setOpen] = useState(false)
 
@@ -73,10 +76,11 @@ const HomeUserTrigger = memo(() => {
   const avatar = session?.user?.image || avatarFallback
 
   const handleSignOut = useCallback(async () => {
-    await signOut()
+    await signOutWorkspace()
     setOpen(false)
     message.success('已退出登录')
-  }, [message])
+    router.replace('/signin')
+  }, [message, router])
 
   const menuItems = useMemo(
     () =>

@@ -197,6 +197,13 @@
       "when": 1789004105863,
       "tag": "0027_bouncy_doctor_octopus",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1789613422120,
+      "tag": "0028_pretty_shriek",
+      "breakpoints": true
     }
   ]
 }

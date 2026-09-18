@@ -18,6 +18,7 @@ next-env.d.ts
 *.snap
 *.sql
 packages/database/src/migrations/**
+src/const/community/skills.readme.data.json
 
 # AI / editor tooling
 .agents

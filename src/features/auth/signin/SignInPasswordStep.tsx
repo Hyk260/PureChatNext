@@ -2,7 +2,7 @@
 
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
-import { Button, Icon, Input, Text, confirmModal } from '@pure/ui'
+import { Button, Icon, InputPassword, Text, confirmModal } from '@pure/ui'
 import { Alert, Form } from 'antd'
 import type { FormInstance } from 'antd'
 import type { InputRef } from '@pure/ui'
@@ -130,7 +130,7 @@ export const SignInPasswordStep = ({
       <Text style={{ fontSize: 20 }}>{accountLabel}</Text>
       <Form form={form} layout='vertical' onFinish={onSignIn}>
         <Form.Item name='password' rules={[{ message: '请输入密码', required: true }]} style={{ marginBottom: 0 }}>
-          <Input.Password
+          <InputPassword
             placeholder='请输入密码'
             ref={passwordInputRef}
             size='large'

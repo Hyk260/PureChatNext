@@ -16,6 +16,8 @@ const prefixes = {
   channelEventFiles: 'cef',
   toolApprovals: 'tapp',
   providerSecrets: 'ups',
+  userSkills: 'usk',
+  userSkillFiles: 'usf',
 } as const
 
 /**

@@ -1,7 +1,7 @@
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 
-import { parseEnvBoolean } from './helpers'
+import { optionalUrlEnv, parseEnvBoolean } from './helpers'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -21,6 +21,8 @@ declare global {
       VERCEL?: string
       /** Vercel 平台注入的当前部署域名，用于拼接默认 `APP_URL`。 */
       VERCEL_URL?: string
+      /** GitHub 静态资源镜像前缀，例如 `https://ghfast.top/`。 */
+      GITHUB_PROXY?: string
     }
   }
 }
@@ -47,6 +49,8 @@ export const getAppConfig = () => {
       ALLOW_TRYCLOUDFLARE: z.boolean(),
       /** Vercel Cron / 内部定时任务鉴权密钥。 */
       CRON_SECRET: z.string().optional(),
+      /** GitHub 静态资源镜像前缀；未设置时接口会与内置国内镜像竞速。 */
+      GITHUB_PROXY: optionalUrlEnv(),
     },
     runtimeEnv: {
       APP_URL,
@@ -54,6 +58,7 @@ export const getAppConfig = () => {
       ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
       ALLOW_TRYCLOUDFLARE: parseEnvBoolean(process.env.ALLOW_TRYCLOUDFLARE),
       CRON_SECRET: process.env.CRON_SECRET,
+      GITHUB_PROXY: process.env.GITHUB_PROXY,
     },
   })
 }

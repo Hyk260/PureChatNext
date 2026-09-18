@@ -3,7 +3,7 @@
 import { BRANDING_NAME } from '@/const/branding'
 import AuthAgreement from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
-import { Button, Icon, Input, Text } from '@pure/ui'
+import { Button, Icon, Input, InputPassword, Text } from '@pure/ui'
 import { Form } from 'antd'
 import type { InputRef } from '@pure/ui'
 import { Lock, Mail } from 'lucide-react'
@@ -88,7 +88,7 @@ const SignUpFormContent = () => {
             },
           ]}
         >
-          <Input.Password
+          <InputPassword
             placeholder='请输入密码'
             ref={passwordInputRef}
             size='large'
@@ -118,7 +118,7 @@ const SignUpFormContent = () => {
             }),
           ]}
         >
-          <Input.Password
+          <InputPassword
             placeholder='请确认密码'
             size='large'
             prefix={

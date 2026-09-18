@@ -1,7 +1,7 @@
 'use client'
 
 import { Button as AntButton, QRCode, Radio, Spin } from 'antd'
-import { Alert, Button, Flex, Input, Select, Text } from '@pure/ui'
+import { Alert, Button, Flex, Input, InputPassword, Select, Text } from '@pure/ui'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
@@ -258,7 +258,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
         ) : (
           <Flex className='flex-col gap-3'>
             <Input placeholder='QQ 机器人 App ID' value={appId} onChange={(event) => setAppId(event.target.value)} />
-            <Input.Password
+            <InputPassword
               placeholder='QQ 机器人 App Secret'
               value={appSecret}
               onChange={(event) => setAppSecret(event.target.value)}

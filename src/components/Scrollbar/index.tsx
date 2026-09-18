@@ -12,7 +12,10 @@ const OVERFLOW_THRESHOLD = 1
 const styles = createStaticStyles(({ css }) => ({
   root: css`
     position: relative;
+    display: flex;
+    flex-direction: column;
     height: 100%;
+    min-height: 0;
     overflow: hidden;
 
     &:hover .pure-scrollbar-bar,
@@ -21,7 +24,8 @@ const styles = createStaticStyles(({ css }) => ({
     }
   `,
   wrap: css`
-    height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: auto;
 
     &.hidden-native {
@@ -406,16 +410,21 @@ const Scrollbar = memo(
         }
       }, [dragging])
 
+      const resolvedHeight = toCssSize(height) ?? style?.height
+      const resolvedMaxHeight = toCssSize(maxHeight) ?? style?.maxHeight
+      const resolvedMinHeight = style?.minHeight
+
       const rootStyle: CSSProperties = {
         ...style,
-        height: toCssSize(height) ?? style?.height,
-        maxHeight: toCssSize(maxHeight) ?? style?.maxHeight,
+        height: resolvedHeight,
+        maxHeight: resolvedMaxHeight,
       }
 
-      // 高度约束必须同时作用于真正的滚动容器，否则 auto 高度父级中的 100% 高度无法触发滚动。
+      // 高度约束必须同时作用于真正的滚动容器，否则 style.maxHeight 只裁根节点、内部无法滚动。
       const wrapStyleMerged: CSSProperties = {
-        ...(height !== undefined ? { height: toCssSize(height) } : {}),
-        ...(maxHeight !== undefined ? { maxHeight: toCssSize(maxHeight) } : {}),
+        ...(resolvedHeight !== undefined ? { height: resolvedHeight } : {}),
+        ...(resolvedMaxHeight !== undefined ? { maxHeight: resolvedMaxHeight } : {}),
+        ...(resolvedMinHeight !== undefined ? { minHeight: resolvedMinHeight } : {}),
         ...wrapStyle,
       }
 

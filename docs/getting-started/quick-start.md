@@ -112,11 +112,12 @@ pnpm dev:spa
 
 ## 5. 测试认证功能
 
+本地登录统一使用测试账号 `test@example.com` / `123456Qwer`（详见 [测试范围](../development/quality/testing.md)）。账号不存在时先在 `http://localhost:5174/signup` 注册一次。
+
 1. 打开浏览器访问：`http://localhost:5174/signin`（或首页引导）
-2. 尝试注册一个新账号
-3. 注册成功后会自动登录
-4. 测试获取当前用户信息
-5. 测试登出功能
+2. 使用上面的测试账号登录；没有该用户则先注册
+3. 登录成功后测试获取当前用户信息
+4. 测试登出功能
 
 ## 6. API 接口测试
 
@@ -127,7 +128,7 @@ pnpm dev:spa
 ```bash
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
+  -d '{"email":"test@example.com","password":"123456Qwer"}'
 ```
 
 ### 登录
@@ -135,7 +136,7 @@ curl -X POST http://localhost:3000/api/auth/register \
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
+  -d '{"email":"test@example.com","password":"123456Qwer"}'
 ```
 
 ### 获取当前用户（需要 token）

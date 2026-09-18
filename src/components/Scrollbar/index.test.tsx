@@ -50,6 +50,18 @@ describe('Scrollbar', () => {
     vi.unstubAllGlobals()
   })
 
+  it('forwards style maxHeight and minHeight onto the scroll wrap', () => {
+    const { container } = render(
+      <Scrollbar style={{ maxHeight: 200, minHeight: 80 }}>
+        <div>content</div>
+      </Scrollbar>
+    )
+
+    const wrap = getWrap(container)
+    expect(wrap.style.maxHeight).toBe('200px')
+    expect(wrap.style.minHeight).toBe('80px')
+  })
+
   it('skips custom measurement in native mode but keeps onScroll callbacks', () => {
     const onScroll = vi.fn()
     const { container } = render(

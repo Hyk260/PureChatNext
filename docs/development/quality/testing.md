@@ -22,3 +22,14 @@ description: 哪些代码需要测试，哪些简单页面不要写测试。
 - 纯函数 / helper（如 `isAdminRole`、`resolveCallbackUrl`）。
 - API 与鉴权边界（如 `withAdmin`、route handler）。
 - 有状态、副作用或用户交互的逻辑（store、fetch、表单校验、错误边界分流）。
+
+## 本地测试账号
+
+浏览器、curl 和后续端到端登录统一用这个账号。仅限本地开发，不要用于生产。本地没有该用户时，先在 `http://localhost:5174/signup` 注册一次。
+
+| 字段 | 值                 |
+| ---- | ------------------ |
+| 邮箱 | `test@example.com` |
+| 密码 | `123456Qwer`       |
+
+密码需至少 8 位，且同时包含字母和数字。

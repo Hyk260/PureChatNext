@@ -2,6 +2,43 @@ export enum DiscoverTab {
   Agent = 'agent',
   Model = 'model',
   Provider = 'provider',
+  Skill = 'skill',
+}
+
+export enum SkillCategory {
+  AgentToAgentProtocols = 'agent-to-agent-protocols',
+  AILLMs = 'ai-llms',
+  All = 'all',
+  AppleAppsServices = 'apple-apps-services',
+  BrowserAutomation = 'browser-automation',
+  CalendarScheduling = 'calendar-scheduling',
+  ClawdbotTools = 'clawdbot-tools',
+  CLIUtilities = 'cli-utilities',
+  CodingAgentsIDEs = 'coding-agents-ides',
+  Communication = 'communication',
+  DataAnalytics = 'data-analytics',
+  DevOpsCloud = 'devops-cloud',
+  Finance = 'finance',
+  Gaming = 'gaming',
+  GitGitHub = 'git-github',
+  HealthFitness = 'health-fitness',
+  ImageVideoGeneration = 'image-video-generation',
+  IOSMacOSDevelopment = 'ios-macos-development',
+  MarketingSales = 'marketing-sales',
+  MediaStreaming = 'media-streaming',
+  Moltbook = 'moltbook',
+  NotesPKM = 'notes-pkm',
+  PDFDocuments = 'pdf-documents',
+  PersonalDevelopment = 'personal-development',
+  ProductivityTasks = 'productivity-tasks',
+  SearchResearch = 'search-research',
+  SecurityPasswords = 'security-passwords',
+  SelfHostedAutomation = 'self-hosted-automation',
+  ShoppingEcommerce = 'shopping-ecommerce',
+  SmartHomeIoT = 'smart-home-iot',
+  SpeechTranscription = 'speech-transcription',
+  Transportation = 'transportation',
+  WebFrontendDevelopment = 'web-frontend-development',
 }
 
 export enum AssistantCategory {
@@ -88,3 +125,26 @@ export interface ActiveCommunityAgent {
   systemRole: string
   title: string
 }
+
+export interface DiscoverSkillItem {
+  author: string
+  category: Exclude<SkillCategory, SkillCategory.All>
+  commentCount?: number
+  createdAt?: string
+  description: string
+  github?: { forks?: number; stars?: number; url?: string; watchers?: number }
+  homepage?: string
+  icon?: string
+  identifier: string
+  installCount?: number
+  isFeatured?: boolean
+  license?: string
+  name: string
+  ratingAvg?: number
+  resourcesCount?: number
+  tags?: string[]
+  updatedAt: string
+  version?: string
+}
+
+export type SkillMarketCategory = Exclude<SkillCategory, SkillCategory.All>

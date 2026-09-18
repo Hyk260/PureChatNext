@@ -105,7 +105,6 @@ export const SETTINGS_EMPTY_TABS = [
   SettingsTab.Hotkey,
   SettingsTab.Notification,
   SettingsTab.ServiceModel,
-  SettingsTab.Skill,
   SettingsTab.Connector,
   SettingsTab.Memory,
   SettingsTab.Creds,

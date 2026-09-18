@@ -1,17 +1,8 @@
 /** Expose the shared input primitives through the application UI package. */
-import { Input as LobeInput, InputOPT, InputPassword, TextArea } from '@lobehub/ui'
-import type { InputRef } from 'antd'
+import { Input as AntdInput } from 'antd'
 
-type CompatibleInput = typeof LobeInput & {
-  OTP: typeof InputOPT
-  Password: typeof InputPassword
-  TextArea: typeof TextArea
-}
+export { Input, InputPassword, TextArea } from '@lobehub/ui'
+export type { InputRef } from 'antd'
 
-const Input = Object.assign(LobeInput, {
-  OTP: InputOPT,
-  Password: InputPassword,
-  TextArea,
-}) as CompatibleInput
-
-export { Input, InputPassword, type InputRef }
+/** lobehub InputOPT 的 [class*='ant-otp-input'] 会误伤 wrapper，格子双边框。 */
+export const InputOPT = AntdInput.OTP

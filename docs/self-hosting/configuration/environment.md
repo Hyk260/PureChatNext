@@ -132,6 +132,14 @@ pnpm preview:prod -- --port 3211
 - 开发环境：`http://localhost:3000,http://localhost:5174`（需同时包含 Next 与 SPA）
 - 生产环境：`https://yourdomain.com,https://www.yourdomain.com`
 
+### GITHUB\_PROXY
+
+可选。GitHub 静态资源（技能头像等）的下载镜像前缀，例如 `https://ghfast.top/`。浏览器不会直连 `github.com`，而是请求同源 `/api/proxy/github-asset`；服务端再用该前缀去拉图。
+
+- 未设置时：服务端会同时尝试 `avatars.githubusercontent.com`、[wsrv.nl](https://wsrv.nl/) 图片 CDN 和原始 GitHub 地址，谁先返回有效图片用谁
+- 国内自托管若仍不稳定，可显式设置该前缀（格式为 `https://example/` + 原始 GitHub URL）
+- 海外（如 Vercel）可省略
+
 ### DATABASE\_URL
 
 PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操作。

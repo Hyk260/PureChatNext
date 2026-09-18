@@ -1,6 +1,6 @@
 {
   "name": "pure-chat-next",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "把 AI 助手接入 Web、微信与 QQ 的开源自托管平台，支持多模型、联网搜索、文件处理和私有部署。",
   "homepage": "https://next.purechat.cn",
   "repository": {
@@ -48,6 +48,7 @@
     "docker:validate": "bun scripts/docker.mts validate",
     "docker:verify:local": "bun scripts/docker-verify-local.mts",
     "agents:sync": "bun scripts/fetch-community-agents.ts",
+    "skills:sync": "bun scripts/fetch-community-skills.ts",
     "db:check": "drizzle-kit check",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun scripts/migrate.ts",

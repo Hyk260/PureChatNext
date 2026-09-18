@@ -3,8 +3,7 @@
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 
-import { Flex } from '@pure/ui'
-import Scrollbar from '@/components/Scrollbar'
+import { Flex, ScrollArea } from '@pure/ui'
 import { useSearchParams } from 'next/navigation'
 
 import CommunityPagination from './CommunityPagination'
@@ -33,18 +32,14 @@ export function CommunityCollectionPage<T>({
   )
 
   return (
-    <Flex className='gap-6 h-full min-h-[0px] overflow-hidden w-full'>
+    <Flex className='gap-6 h-full min-h-0 overflow-hidden w-full'>
       {sidebar}
-      <Scrollbar
-        style={{ flex: 1, minHeight: 0, minWidth: 0 }}
-        viewStyle={{ paddingInlineEnd: 24 }}
-        wrapClassName='community-scroll-viewport'
-      >
+      <ScrollArea className='min-h-0 min-w-0 flex-1' viewportClassName='community-scroll-viewport pe-6'>
         <Flex className='flex-col gap-8 w-full'>
           {children(pageData)}
           <CommunityPagination currentPage={currentPage} pageSize={pageSize} total={total} />
         </Flex>
-      </Scrollbar>
+      </ScrollArea>
     </Flex>
   )
 }

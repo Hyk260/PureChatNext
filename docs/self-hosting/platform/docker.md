@@ -83,9 +83,9 @@ curl -fsSL https://raw.githubusercontent.com/Hyk260/PureChatNext/main/docker-com
 
 ```bash
 pnpm docker:pack
-pnpm docker:upload   # 连接信息见 docker-compose/deploy/upload.env.example
-# 上传 dist/docker-offline/purechat-next-offline.tar 后：
-# sudo APP_URL=https://chat.example.com /opt/purechat/install.sh
+# 连接信息见 docker-compose/deploy/upload.env.example
+pnpm docker:upload -- --install --app-url https://chat.example.com   # 首次
+pnpm docker:upload -- --up                                           # 升级
 ```
 
 完整步骤见 [云服务器部署](./1panel.md)。
@@ -144,7 +144,7 @@ docker exec -T postgresql pg_dump -U purechat -d purechat --format=custom --no-o
 | `docker:setup:deploy` | 生成生产 `docker-compose/deploy/.env` |
 | `docker:deploy` | 本机构建并启动生产 Compose |
 | `docker:pack` | 打离线包（仅应用镜像） |
-| `docker:upload` | 把离线包 SCP 到服务器 |
+| `docker:upload` | 上传离线包；`--install` 首次安装，`--up` 一键升级 |
 | `docker:validate` | 校验 Compose 配置与安装脚本语法 |
 | `docker:verify:local` | 隔离环境冒烟：安全基线、健康检查、持久化 |
 
@@ -218,19 +218,22 @@ pnpm docker:pack -- --no-cn-mirror
 | `--env-file PATH` | SSH 配置文件，默认 `docker-compose/deploy/upload.env` |
 | `--host` / `--user` / `--port` | 覆盖 SSH 目标 |
 | `--extract` | 上传后解压到 `PURECHAT_HOME`，不覆盖已有 `.env` |
+| `--install` | 解压后执行 `install.sh`（首次安装；配合 `--app-url`） |
+| `--app-url URL` | 传给远端 `install.sh`，请与 `--install` 一起用 |
 | `--up` | 解压后执行 `install.sh up`（升级；服务器上须已有 `.env`） |
 | `--dry-run` | 只打印将执行的命令 |
 
 ```bash
 pnpm docker:upload
 pnpm docker:upload -- --extract
+pnpm docker:upload -- --install --app-url https://chat.example.com
 pnpm docker:upload -- --up
 pnpm docker:upload -- --host 203.0.113.10 --user root --dry-run
 ```
 
 ### 校验与冒烟
 
-`docker:validate` 无参数。检查开发 / 生产 / 在线 overlay / 验证 overlay 的 Compose `config`，以及 `install.sh`、`install-online.sh`、`start-ip.sh` 的 bash 语法。CI 每次 PR 都会跑。
+`docker:validate` 无参数。检查开发 / 生产 / 在线 overlay / 验证 overlay 的 Compose `config`，以及 `install.sh`、`install-online.sh`、`start-ip.sh`、`upload-offline.sh` 的 bash 语法。CI 每次 PR 都会跑。
 
 `docker:verify:local` 用临时 `.env` 和 `docker-compose.verify.yml` 拉起隔离的 app + PostgreSQL + Redis，检查安全基线、`GET /api/health`、迁移记录和重启后数据是否还在。默认会构建镜像，并用 Docker Scout 扫描 High/Critical。这是本机 / CI 冒烟，不是生产安装路径。
 

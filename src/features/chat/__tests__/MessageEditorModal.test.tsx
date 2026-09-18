@@ -3,11 +3,9 @@ import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@pure/ui', () => ({
-  Input: {
-    TextArea: ({ onChange, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
-      <textarea {...props} onChange={onChange} />
-    ),
-  },
+  TextArea: ({ onChange, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
+    <textarea {...props} onChange={onChange} />
+  ),
   Modal: ({
     cancelText,
     children,

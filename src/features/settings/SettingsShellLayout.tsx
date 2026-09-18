@@ -12,17 +12,19 @@ import SettingsSidebar from './SettingsSidebar'
 const SettingsShellLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname()
   const isProviderRoute = pathname.startsWith('/settings/provider')
+  const isSkillRoute = pathname.startsWith('/settings/skill')
+  const isFullBleed = isProviderRoute || isSkillRoute
 
   return (
     <MainShellLayout
-      header={isProviderRoute ? undefined : <SettingsHeader />}
-      scrollable={!isProviderRoute}
+      header={isFullBleed ? undefined : <SettingsHeader />}
+      scrollable={!isFullBleed}
       sidebar={<SettingsSidebar />}
     >
       <Flex
         className={[
           'flex-col flex-1 h-full min-h-[0px] w-full',
-          isProviderRoute ? 'm-0 max-w-none overflow-hidden' : 'mx-auto max-w-[1024px] overflow-auto',
+          isFullBleed ? 'm-0 max-w-none overflow-hidden' : 'mx-auto max-w-[1024px] overflow-auto',
         ]}
       >
         {children}

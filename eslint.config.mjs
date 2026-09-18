@@ -153,7 +153,14 @@ const eslintConfig = defineConfig([
     },
   },
   // Override default ignores of eslint-config-next.
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'src/app/spa/spaHtmlTemplate.generated.ts']),
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
+    'src/app/spa/spaHtmlTemplate.generated.ts',
+    'src/const/community/skills.readme.data.json',
+  ]),
 ])
 
 export default eslintConfig

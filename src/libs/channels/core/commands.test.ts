@@ -42,6 +42,8 @@ describe('buildChannelHelpText', () => {
   it('documents every catalog command', () => {
     const help = buildChannelHelpText({ footer: '仅支持私聊文本' })
     for (const command of ['/h', '/help', '/new', '/stop', '/agents']) expect(help).toContain(command)
+    expect(help).toContain('/agents 2 — 按序号切换助手（例如切换第 2 个）')
+    expect(help).not.toContain('agentId')
     expect(help).toContain('仅支持私聊文本')
   })
 
@@ -137,6 +139,7 @@ describe('runChannelCommand', () => {
     const list = await runChannelCommand('/agents', effects)
     expect(list).toContain('助手 A')
     expect(list).toContain('（当前）')
+    expect(list).toContain('发送 /agents 2 切换「助手 B」。')
 
     const switched = await runChannelCommand('/agents 2', effects)
     expect(switched).toContain('已切换到「助手 B」')
@@ -146,6 +149,18 @@ describe('runChannelCommand', () => {
     expect(switched).not.toContain('如何调试 hydration？')
     expect(effects.startNewConversation).toHaveBeenCalledWith('agt_b')
     expect(effects.abortActiveGeneration).toHaveBeenCalled()
+
+    const switchedById = await runChannelCommand('/agents agt_b', effects)
+    expect(switchedById).toContain('已切换到「助手 B」')
+  })
+
+  it('hints the only listed agent by number', async () => {
+    const effects = createEffects({
+      listAgents: vi.fn(async () => [{ id: 'agt_a', title: '助手 A' }]),
+    })
+    await expect(runChannelCommand('/agents', effects)).resolves.toContain(
+      '发送 /agents 1 切换「助手 A」。'
+    )
   })
 
   it('lists available agents when the target is missing', async () => {
@@ -155,7 +170,7 @@ describe('runChannelCommand', () => {
     expect(missing).toContain('可用助手：')
     expect(missing).toContain('助手 A')
     expect(missing).toContain('助手 B')
-    expect(missing).toContain('/agents <序号|agentId>')
+    expect(missing).toContain('发送 /agents 2 切换「助手 B」。')
     expect(effects.startNewConversation).not.toHaveBeenCalled()
   })
 

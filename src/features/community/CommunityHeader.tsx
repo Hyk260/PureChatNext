@@ -31,6 +31,7 @@ const useSearchPlaceholder = () => {
 
   return useMemo(() => {
     if (pathname.startsWith('/community/model')) return '搜索名称介绍或关键词'
+    if (pathname.startsWith('/community/skill')) return '搜索技能名称、描述或关键词'
     if (pathname.startsWith('/community/agent')) return '搜索名称、描述或关键词'
     return null
   }, [pathname])

@@ -47,9 +47,19 @@ const toListItem = (a: ApiAgent): AgentListItem => ({
   title: a.title,
 })
 
+export class AgentRequestError extends Error {
+  readonly status: number
+
+  constructor(action: string, status: number) {
+    super(`${action} failed: ${status}`)
+    this.name = 'AgentRequestError'
+    this.status = status
+  }
+}
+
 export const fetchAgents = async (): Promise<AgentListItem[]> => {
   const res = await apiFetch('/api/agents')
-  if (!res.ok) throw new Error(`fetchAgents failed: ${res.status}`)
+  if (!res.ok) throw new AgentRequestError('fetchAgents', res.status)
   const items = (await res.json()) as ApiAgent[]
   return items.map(toListItem)
 }

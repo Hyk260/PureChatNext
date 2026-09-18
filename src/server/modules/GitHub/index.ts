@@ -17,11 +17,34 @@ export interface GitHubRawFileInfo extends GitHubRepoInfo {
   filePath: string
 }
 
+export interface GitHubContentItem {
+  name: string
+  path: string
+  sha: string
+  size: number
+  type: 'dir' | 'file' | 'submodule' | 'symlink'
+}
+
 export class GitHub {
   private readonly userAgent: string
 
   constructor(options?: { userAgent?: string }) {
     this.userAgent = options?.userAgent || 'PureChat'
+  }
+
+  private async request(url: string, init?: RequestInit) {
+    try {
+      return await fetch(url, {
+        ...init,
+        headers: {
+          'User-Agent': this.userAgent,
+          ...init?.headers,
+        },
+      })
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'network error'
+      throw new GitHubDownloadError(`Failed to request GitHub: ${detail}`)
+    }
   }
 
   /**
@@ -143,11 +166,7 @@ export class GitHub {
     const zipUrl = this.buildRepoZipUrl(info)
     log('downloadRepoZip: fetching url=%s', zipUrl)
 
-    const response = await fetch(zipUrl, {
-      headers: {
-        'User-Agent': this.userAgent,
-      },
-    })
+    const response = await this.request(zipUrl)
 
     log('downloadRepoZip: response status=%d, ok=%s', response.status, response.ok)
 
@@ -172,11 +191,7 @@ export class GitHub {
   async downloadRawFile(info: GitHubRawFileInfo): Promise<string> {
     const rawUrl = this.buildRawFileUrl(info)
 
-    const response = await fetch(rawUrl, {
-      headers: {
-        'User-Agent': this.userAgent,
-      },
-    })
+    const response = await this.request(rawUrl)
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -194,11 +209,7 @@ export class GitHub {
   async downloadRawFileBuffer(info: GitHubRawFileInfo): Promise<Buffer> {
     const rawUrl = this.buildRawFileUrl(info)
 
-    const response = await fetch(rawUrl, {
-      headers: {
-        'User-Agent': this.userAgent,
-      },
-    })
+    const response = await this.request(rawUrl)
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -209,6 +220,45 @@ export class GitHub {
 
     const arrayBuffer = await response.arrayBuffer()
     return Buffer.from(arrayBuffer)
+  }
+
+  buildContentsUrl(info: GitHubRepoInfo, dirPath = info.path ?? ''): string {
+    const encodedPath = dirPath
+      .split('/')
+      .filter(Boolean)
+      .map((segment) => encodeURIComponent(segment))
+      .join('/')
+    const base = `https://api.github.com/repos/${info.owner}/${info.repo}/contents`
+    const pathPart = encodedPath ? `/${encodedPath}` : ''
+    return `${base}${pathPart}?ref=${encodeURIComponent(info.branch)}`
+  }
+
+  async listDirectoryContents(info: GitHubRepoInfo, dirPath = info.path ?? ''): Promise<GitHubContentItem[]> {
+    const url = this.buildContentsUrl(info, dirPath)
+    log('listDirectoryContents: fetching url=%s', url)
+
+    const response = await this.request(url, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+      },
+    })
+
+    if (response.status === 403) {
+      throw new GitHubRateLimitError(`GitHub rate limited: ${info.owner}/${info.repo}@${info.branch}`)
+    }
+    if (response.status === 404) {
+      throw new GitHubNotFoundError(`Directory not found: ${info.owner}/${info.repo}@${info.branch}/${dirPath}`)
+    }
+    if (!response.ok) {
+      throw new GitHubDownloadError(`Failed to list directory: ${response.status} ${response.statusText}`)
+    }
+
+    const json: unknown = await response.json()
+    if (!Array.isArray(json)) {
+      throw new GitHubDownloadError(`Expected a directory, got a file: ${dirPath || '/'}`)
+    }
+
+    return json as GitHubContentItem[]
   }
 }
 
@@ -237,6 +287,13 @@ export class GitHubDownloadError extends GitHubError {
   constructor(message: string) {
     super(message)
     this.name = 'GitHubDownloadError'
+  }
+}
+
+export class GitHubRateLimitError extends GitHubError {
+  constructor(message: string) {
+    super(message)
+    this.name = 'GitHubRateLimitError'
   }
 }
 

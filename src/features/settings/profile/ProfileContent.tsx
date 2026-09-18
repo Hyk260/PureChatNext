@@ -8,7 +8,7 @@ import type { ReactNode } from 'react'
 
 import type { UserWithoutPassword } from '@pure/database/schemas'
 import { getUserRoleLabel } from '@/const/auth'
-import { signOut } from '@/libs/better-auth/client'
+import { signOutWorkspace } from '@/features/auth/signOutWorkspace'
 
 type DateKeys = 'accessedAt' | 'banExpires' | 'createdAt' | 'emailVerifiedAt' | 'lastActiveAt' | 'updatedAt'
 
@@ -73,8 +73,8 @@ export function ProfileContent({ user }: ProfileContentProps) {
   const handleSignOut = async () => {
     setSigningOut(true)
     try {
-      await signOut()
-      router.push('/')
+      await signOutWorkspace()
+      router.replace('/signin')
     } finally {
       setSigningOut(false)
     }

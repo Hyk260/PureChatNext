@@ -16,6 +16,7 @@ const styles = createStaticStyles(({ css }) => ({
     height: 40px;
     padding-inline: 8px;
     background: ${cssVar.colorBgContainer};
+    border-block-end: 1px solid ${cssVar.colorBorderSecondary};
   `,
   title: css`
     position: absolute;

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 
 import type { CrawlUniformResult, UniformSearchResponse } from '@pure/types'
-import { ActionIcon, Alert, Button, Checkbox, Input, Select } from '@pure/ui'
+import { ActionIcon, Alert, Button, Checkbox, Select, TextArea } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 
 import Scrollbar from '@/components/Scrollbar'
@@ -642,7 +642,7 @@ export default function WebSearchTestPage() {
                     <label className='text-sm font-medium text-slate-800' htmlFor='web-search-urls'>
                       URL 列表 · URLs
                     </label>
-                    <Input.TextArea
+                    <TextArea
                       id='web-search-urls'
                       className='mt-2'
                       placeholder='https://example.com'
@@ -702,7 +702,7 @@ export default function WebSearchTestPage() {
                     <label className='text-sm font-medium text-slate-800' htmlFor='web-search-query'>
                       搜索关键词 · Query
                     </label>
-                    <Input.TextArea
+                    <TextArea
                       id='web-search-query'
                       className='mt-2'
                       placeholder='输入搜索关键词'

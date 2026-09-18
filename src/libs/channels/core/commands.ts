@@ -107,7 +107,7 @@ export function buildChannelHelpText(options?: { footer?: string }) {
     '/new — 取消当前生成并开始新对话',
     '/stop — 停止当前生成',
     '/agents — 查看可用助手',
-    '/agents <序号|agentId> — 切换助手并开始新对话',
+    '/agents 2 — 按序号切换助手（例如切换第 2 个）',
   ]
   if (options?.footer) {
     lines.push('', options.footer)
@@ -174,11 +174,17 @@ export function parseChannelCommand(input: string): ParsedChannelCommand | null 
   }
 }
 
-const AGENTS_SWITCH_HINT = '发送 /agents <序号|agentId> 切换助手。'
-
 function formatAgentListItem(agent: ChannelCommandAgent, index: number, currentId: string): string {
   const marker = agent.id === currentId ? '（当前）' : ''
   return `${index + 1}. ${agent.title} [${agent.id}]${marker}`
+}
+
+function buildAgentsSwitchHint(agents: ChannelCommandAgent[], currentId: string): string {
+  const otherIndex = agents.findIndex((agent) => agent.id !== currentId)
+  const index = otherIndex >= 0 ? otherIndex : 0
+  const agent = agents[index]!
+  const name = agent.title.trim() || '助手'
+  return `发送 /agents ${index + 1} 切换「${name}」。`
 }
 
 function buildAgentsListReply(
@@ -195,7 +201,7 @@ function buildAgentsListReply(
     '可用助手：',
     ...agents.map((agent, index) => formatAgentListItem(agent, index, currentId)),
     '',
-    AGENTS_SWITCH_HINT,
+    buildAgentsSwitchHint(agents, currentId),
   ]
   return intro ? [intro, '', ...lines].join('\n') : lines.join('\n')
 }

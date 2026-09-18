@@ -45,6 +45,16 @@ describe('webRouter.config smoke', () => {
     expect(source).toContain("import('@/routes/chat/_layout')")
   })
 
+  it('gates home, settings, and resources layouts with RequireAuth', () => {
+    const routesDir = path.resolve(path.dirname(configPath), '../../routes')
+    const layoutFiles = ['main/_layout.tsx', 'settings/_layout.tsx', 'resources/_layout.tsx', 'chat/_layout.tsx']
+
+    for (const file of layoutFiles) {
+      const layoutSource = readFileSync(path.join(routesDir, file), 'utf-8')
+      expect(layoutSource).toContain("import RequireAuth from '@/spa/auth/RequireAuth'")
+    }
+  })
+
   it('renders the shared 404 page for unmatched paths', () => {
     expect(source).toContain("import NotFound from '@/components/404'")
     expect(source).not.toContain("import('@/components/404')")

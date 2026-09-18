@@ -241,10 +241,7 @@ export const webRoutes: RouteObject[] = [
         path: 'connector',
       },
       {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.SkillPage })),
-          'Settings > Skill'
-        ),
+        element: dynamicElement(() => import('@/routes/settings/skill/page'), 'Settings > Skill'),
         path: 'skill',
       },
       {
@@ -294,6 +291,10 @@ export const webRoutes: RouteObject[] = [
       {
         element: dynamicElement(() => import('@/routes/community/model/page'), 'Community > Model'),
         path: 'model',
+      },
+      {
+        element: dynamicElement(() => import('@/routes/community/skill/page'), 'Community > Skill'),
+        path: 'skill',
       },
       {
         element: dynamicElement(() => import('@/routes/community/provider/page'), 'Community > Provider'),

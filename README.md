@@ -237,8 +237,8 @@ curl -fsSL https://raw.githubusercontent.com/Hyk260/PureChatNext/main/docker-com
 
 ```bash
 pnpm docker:pack
-pnpm docker:upload
-# 上传后：sudo APP_URL=https://chat.example.com /opt/purechat/install.sh
+pnpm docker:upload -- --install --app-url https://chat.example.com   # 首次
+pnpm docker:upload -- --up                                           # 升级
 ```
 
 完整说明见 [Docker 自托管](./docs/self-hosting/platform/docker.md)。云服务器与 1Panel 见 [云服务器部署](./docs/self-hosting/platform/1panel.md)。

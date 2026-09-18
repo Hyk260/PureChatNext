@@ -1,9 +1,11 @@
 'use client'
 
-import { EmojiPicker, Input, Text, Modal, Flex } from '@pure/ui'
-import { memo, useEffect, useState } from 'react'
+import { Avatar, Input, Text, TextArea, Modal, Flex } from '@pure/ui'
+import { lazy, memo, Suspense, useEffect, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'
+
+const EmojiPicker = lazy(() => import('@pure/ui/EmojiPicker'))
 
 export type AgentFormValues = {
   avatar: string
@@ -29,10 +31,25 @@ const emptyValues: AgentFormValues = {
 
 const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCancel, onSubmit, open }) => {
   const [values, setValues] = useState<AgentFormValues>(emptyValues)
+  const [uploading, setUploading] = useState(false)
   const isEdit = Boolean(agent)
+
+  const handleUpload = (file: File) => {
+    setUploading(true)
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setUploading(false)
+      if (typeof reader.result !== 'string' || !reader.result) return
+      const avatar = reader.result
+      setValues((prev) => ({ ...prev, avatar }))
+    }
+    reader.onerror = () => setUploading(false)
+    reader.readAsDataURL(file)
+  }
 
   useEffect(() => {
     if (!open) return
+    setUploading(false)
     if (agent) {
       setValues({
         avatar: agent.avatar || '🤖',
@@ -73,16 +90,21 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
           <Text type='secondary' style={{ fontSize: 12 }}>
             头像
           </Text>
-          <EmojiPicker
-            allowDelete={Boolean(values.avatar)}
-            defaultAvatar='🤖'
-            locale='zh-CN'
-            shape='square'
-            size={48}
-            value={values.avatar}
-            onChange={(emoji) => setValues((prev) => ({ ...prev, avatar: emoji || '🤖' }))}
-            onDelete={() => setValues((prev) => ({ ...prev, avatar: '🤖' }))}
-          />
+          <Suspense fallback={<Avatar avatar={values.avatar} loading shape='square' size={48} />}>
+            <EmojiPicker
+              allowUpload
+              allowDelete={Boolean(values.avatar)}
+              defaultAvatar='🤖'
+              locale='zh-CN'
+              loading={uploading}
+              shape='square'
+              size={48}
+              value={values.avatar}
+              onChange={(emoji) => setValues((prev) => ({ ...prev, avatar: emoji || '🤖' }))}
+              onDelete={() => setValues((prev) => ({ ...prev, avatar: '🤖' }))}
+              onUpload={handleUpload}
+            />
+          </Suspense>
         </Flex>
         <Flex className='flex-col gap-1'>
           <Text type='secondary' style={{ fontSize: 12 }}>
@@ -108,7 +130,7 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
           <Text type='secondary' style={{ fontSize: 12 }}>
             系统提示词
           </Text>
-          <Input.TextArea
+          <TextArea
             placeholder='系统提示词'
             rows={6}
             value={values.systemRole}

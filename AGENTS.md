@@ -98,6 +98,7 @@ pnpm exec vitest run --silent='passed-only' '<test-file>'
 - 根 `vitest.config.ts` 不执行 `packages/**` 测试；package 测试应在对应目录按其 `package.json` 脚本和 Vitest 配置（如有）运行。
 - 优先使用 `vi.spyOn`，避免无必要的大范围 `vi.mock`。
 - 修改行为时优先运行直接相关测试，再根据影响范围扩大验证。
+- 本地浏览器登录使用 [docs/development/quality/testing.md](docs/development/quality/testing.md) 中的测试账号。
 - 交付前运行 `pnpm lint`；该命令只检查，不自动格式化。检查说明见 `docs/development/quality/lint.md`。
 
 ## 代码风格

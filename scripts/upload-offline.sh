@@ -19,11 +19,13 @@ DEFAULT_HOME="/opt/purechat"
 LOCAL_TAR="$DEFAULT_TAR"
 ENV_FILE="$DEFAULT_ENV_FILE"
 EXTRACT=0
+INSTALL=0
 UP=0
 DRY_RUN=0
 CLI_HOST=""
 CLI_USER=""
 CLI_PORT=""
+INSTALL_APP_URL=""
 key_tmp=""
 
 usage() {
@@ -31,6 +33,7 @@ usage() {
 用法:
   pnpm docker:upload
   pnpm docker:upload -- --extract
+  pnpm docker:upload -- --install --app-url https://chat.example.com
   pnpm docker:upload -- --up
   bash scripts/upload-offline.sh --dry-run
 
@@ -56,6 +59,8 @@ usage() {
   --user USER       覆盖 PURECHAT_SSH_USER
   --port PORT       覆盖 PURECHAT_SSH_PORT
   --extract         上传后解压到 PURECHAT_HOME（不覆盖已有 .env）
+  --install         解压后执行 ./install.sh（首次安装）
+  --app-url URL     传给远端 install.sh（请与 --install 一起用）
   --up              解压后执行 ./install.sh up（升级；服务器上须已有 .env）
   --dry-run         只打印将执行的命令
   -h, --help        显示帮助
@@ -93,6 +98,20 @@ while [[ $# -gt 0 ]]; do
       ;;
     --extract)
       EXTRACT=1
+      shift
+      ;;
+    --install)
+      EXTRACT=1
+      INSTALL=1
+      shift
+      ;;
+    --app-url)
+      need_value "$@"
+      INSTALL_APP_URL="$2"
+      shift 2
+      ;;
+    --app-url=*)
+      INSTALL_APP_URL="${1#*=}"
       shift
       ;;
     --up)
@@ -154,6 +173,13 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [[ "$INSTALL" -eq 1 && "$UP" -eq 1 ]]; then
+  die "--install 与 --up 不能同时使用。首次安装用 --install，升级用 --up"
+fi
+if [[ -n "$INSTALL_APP_URL" && "$INSTALL" -eq 0 ]]; then
+  die "--app-url 请与 --install 一起使用。升级请用 --up"
+fi
 
 # 已 export 的值优先于配置文件
 PRESERVE_HOST="${PURECHAT_SSH_HOST-}"
@@ -369,6 +395,19 @@ if [[ "$EXTRACT" -eq 1 ]]; then
   echo "✅ 已解压到 ${PURECHAT_HOME}（不会覆盖已有 docker-compose/deploy/.env）"
 fi
 
+if [[ "$INSTALL" -eq 1 ]]; then
+  echo "执行首次 install.sh…"
+  install_cmd="cd $PURECHAT_HOME && ./install.sh"
+  if [[ -n "$INSTALL_APP_URL" ]]; then
+    install_cmd+=" --app-url $(printf '%q' "$INSTALL_APP_URL")"
+  else
+    echo "未指定 --app-url，远端将使用 .env.example 的 APP_URL（localhost）。正式环境请加 --app-url https://你的域名"
+  fi
+  run "${ssh_conn[@]}" "$(remote_bash "$install_cmd")"
+  echo "✅ 已在服务器执行首次安装"
+  exit 0
+fi
+
 if [[ "$UP" -eq 1 ]]; then
   echo "执行 install.sh up…"
   run "${ssh_conn[@]}" "$(remote_bash "cd $PURECHAT_HOME && ./install.sh up")"
@@ -376,16 +415,16 @@ if [[ "$UP" -eq 1 ]]; then
   exit 0
 fi
 
+echo
+echo "接下来在服务器执行："
 if [[ "$EXTRACT" -eq 0 ]]; then
-  echo
-  echo "接下来在服务器执行："
   echo "  sudo mkdir -p $PURECHAT_HOME && sudo tar -xf $PURECHAT_REMOTE_TAR -C $PURECHAT_HOME"
-  echo "  # 首次安装（把 APP_URL 换成你的 HTTPS 地址）："
-  echo "  sudo APP_URL=https://chat.example.com $PURECHAT_HOME/install.sh"
-  echo "  # 升级："
-  echo "  sudo $PURECHAT_HOME/install.sh up"
-  echo
-  echo "也可本机一条命令解压 / 升级："
-  echo "  pnpm docker:upload -- --extract"
-  echo "  pnpm docker:upload -- --up"
 fi
+echo "  # 首次安装（把 APP_URL 换成你的 HTTPS 地址）："
+echo "  sudo APP_URL=https://chat.example.com $PURECHAT_HOME/install.sh"
+echo "  # 升级："
+echo "  sudo $PURECHAT_HOME/install.sh up"
+echo
+echo "也可本机一条命令首次安装 / 升级："
+echo "  pnpm docker:upload -- --install --app-url https://chat.example.com"
+echo "  pnpm docker:upload -- --up"

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import type { AgentListItem } from '@/const/home/agents'
-import { fetchAgents } from '@/features/home/agentApi'
+import { AgentRequestError, fetchAgents } from '@/features/home/agentApi'
 
 type FetchAgentsOptions = {
   /** Bypass cache and in-flight reuse (e.g. after pin/unpin). */
@@ -17,31 +17,49 @@ interface AgentsStoreState {
   fetchAgents: (options?: FetchAgentsOptions) => Promise<AgentListItem[]>
   findById: (id: string) => AgentListItem | undefined
   removeLocal: (id: string) => void
+  reset: () => void
   upsertLocal: (agent: AgentListItem) => void
 }
 
-/** Share one list request across Strict Mode remounts / multi-mount callers. */
-let agentsInflight: Promise<AgentListItem[]> | null = null
-
-export const useAgentsStore = create<AgentsStoreState>((set, get) => ({
+const createInitialAgentsState = () => ({
   agents: [DEFAULT_PURE_AI_META],
-  error: null,
+  error: null as string | null,
   loaded: false,
   loading: false,
+})
+
+/** Share one list request across Strict Mode remounts / multi-mount callers. */
+let agentsInflight: Promise<AgentListItem[]> | null = null
+let agentsFetchGeneration = 0
+
+function isUnauthorizedAgentError(error: unknown): error is AgentRequestError {
+  return error instanceof AgentRequestError && error.status === 401
+}
+
+export const useAgentsStore = create<AgentsStoreState>((set, get) => ({
+  ...createInitialAgentsState(),
 
   fetchAgents: async (options) => {
     const force = options?.force === true
     if (!force && get().loaded) return get().agents
     if (!force && agentsInflight) return agentsInflight
 
+    const generation = ++agentsFetchGeneration
+
     const run = async () => {
       set({ loading: true, error: null })
       try {
         const agents = await fetchAgents()
+        if (generation !== agentsFetchGeneration) return get().agents
         set({ agents, loaded: true, loading: false })
         return agents
       } catch (error) {
         console.error('[agents] fetch failed:', error)
+        if (generation !== agentsFetchGeneration) return get().agents
+        if (isUnauthorizedAgentError(error)) {
+          get().reset()
+          return get().agents
+        }
         set({
           error: error instanceof Error ? error.message : 'fetch failed',
           loading: false,
@@ -64,6 +82,12 @@ export const useAgentsStore = create<AgentsStoreState>((set, get) => ({
     set((state) => ({
       agents: state.agents.filter((agent) => agent.id !== id),
     }))
+  },
+
+  reset: () => {
+    agentsFetchGeneration += 1
+    agentsInflight = null
+    set(createInitialAgentsState())
   },
 
   upsertLocal: (agent) => {

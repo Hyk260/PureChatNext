@@ -1,6 +1,6 @@
 'use client'
 
-import { Input, Modal } from '@pure/ui'
+import { Modal, TextArea } from '@pure/ui'
 import { memo, useEffect, useState } from 'react'
 
 interface MessageEditorModalProps {
@@ -51,7 +51,7 @@ const MessageEditorModal = memo<MessageEditorModalProps>(({ onCancel, onSubmit, 
       onCancel={onCancel}
       onOk={handleSubmit}
     >
-      <Input.TextArea
+      <TextArea
         aria-label='消息内容'
         autoFocus
         value={draft}

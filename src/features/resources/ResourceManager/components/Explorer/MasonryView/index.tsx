@@ -34,7 +34,7 @@ const styles = createStaticStyles(({ css }) => ({
     z-index: 1;
     inset-block-start: 0;
 
-    padding-block: 12px;
+    padding-block: 8px;
     padding-inline: 16px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
 

@@ -63,9 +63,8 @@ sudo PURECHAT_IMAGE=ghcr.io/hyk260/purechat-next:latest ./install.sh --online up
 
 ```text
 本机 pnpm docker:pack
-  ↓ pnpm docker:upload
-服务器 APP_URL=https://chat.example.com ./install.sh
-  ↓
+  ↓ 首次 pnpm docker:upload -- --install --app-url https://chat.example.com
+  ↓ 升级 pnpm docker:upload -- --up
 反代 HTTPS → 127.0.0.1:3210
 ```
 
@@ -102,7 +101,7 @@ pnpm docker:pack -- --skip-build
 cp docker-compose/deploy/upload.env.example docker-compose/deploy/upload.env
 chmod 600 docker-compose/deploy/upload.env
 # 填写 PURECHAT_SSH_HOST，以及 PURECHAT_SSH_KEY_FILE 或 PURECHAT_SSH_KEY
-pnpm docker:upload
+pnpm docker:upload -- --install --app-url https://chat.example.com
 ```
 
 也可不建文件，直接 export：
@@ -112,7 +111,7 @@ export PURECHAT_SSH_HOST=203.0.113.10
 export PURECHAT_SSH_USER=root
 export PURECHAT_SSH_KEY_FILE="$HOME/.ssh/id_ed25519"
 # 或：export PURECHAT_SSH_KEY="$(cat ~/.ssh/id_ed25519)"
-pnpm docker:upload
+pnpm docker:upload -- --install --app-url https://chat.example.com
 ```
 
 已安装过、只更新镜像时：
@@ -121,7 +120,7 @@ pnpm docker:upload
 pnpm docker:upload -- --up
 ```
 
-`--up` 会上传、解压到 `/opt/purechat` 并执行 `install.sh up`，**不会覆盖**已有 `.env`。只上传不解压用默认命令；`--extract` 只解压、不重启容器。
+`--install` 会上传、解压到 `/opt/purechat` 并执行 `install.sh`。`--up` 同样上传并解压，再执行 `install.sh up`，**不会覆盖**已有 `.env`。只上传不解压用默认命令；`--extract` 只解压、不启动容器。
 
 | 变量 | 必填 | 说明 |
 | --- | --- | --- |
@@ -160,7 +159,7 @@ SSH 账号需要：
 
 - 公钥登录（脚本使用 `BatchMode`，不支持交互输密码）
 - **root**：可直接写 `/opt`、调用 Docker（1Panel 常见）
-- **非 root**：对目标目录可写（tar 默认 `/tmp`），并且 `sudo -n` 免密，以便 `--extract` / `--up` 解压到 `/opt/purechat` 和执行 `install.sh`
+- **非 root**：对目标目录可写（tar 默认 `/tmp`），并且 `sudo -n` 免密，以便 `--extract` / `--install` / `--up` 解压到 `/opt/purechat` 和执行 `install.sh`
 - 运行 `install.sh` 时能连接 Docker（用户在 `docker` 组，或使用 sudo）
 
 建议：关闭密码登录，只放行你的 IP 访问 SSH，磁盘至少留出离线包两倍空间（约 300MB 量级，镜像解开后更大）。

@@ -96,7 +96,7 @@ SMTP_SECURE=false
 在 Vercel Project Settings → Environment Variables → **Production** 配置：
 
 ```bash
-APP_URL=https://next.purechat.cn
+APP_URL=https://your-domain.com
 EMAIL_SERVICE_PROVIDER=nodemailer
 SMTP_HOST=gz-smtp.qcloudmail.com
 SMTP_PORT=465
@@ -108,7 +108,7 @@ SMTP_FROM=PureChat <noreply@purechat.cn>
 
 删除或留空 `RESEND_API_KEY`、`RESEND_FROM`，避免误用 Resend。
 
-`APP_URL` 必须设为生产域名 `https://next.purechat.cn`，否则认证邮件中的链接会指向 `*.vercel.app` 预览域。
+`APP_URL` 必须设为生产域名（例如 `https://your-domain.com`），否则认证邮件中的链接会指向 `*.vercel.app` 预览域。
 
 本地开发请设 `APP_URL=http://localhost:5174`（与 SPA 同源；`/api` 经 Vite 代理到 Next），不要用 `:3000`。详见 [环境变量 · APP\_URL](../configuration/environment.md#app_url)。
 

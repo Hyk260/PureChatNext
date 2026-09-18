@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Segmented } from 'antd'
+import { useNavigate } from 'react-router'
 import {
+  ArrowLeft,
   Clipboard,
   Code2,
   Compass,
@@ -337,6 +339,7 @@ const requestStatusAlert = (error: string | null, completedAction?: ActionMode) 
 }
 
 export default function WebSearchTestPage() {
+  const navigate = useNavigate()
   const [action, setAction] = useState<ActionMode>('webSearch')
   const [view, setView] = useState<ResultView>('summary')
   const [query, setQuery] = useState(examples.webSearch)
@@ -607,9 +610,18 @@ export default function WebSearchTestPage() {
       <div className='mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8'>
         <header className='flex flex-col justify-between gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end'>
           <div>
-            <div className='mb-3 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-sm font-medium text-cyan-700 ring-1 ring-cyan-200'>
-              <Sparkles className='size-4' />
-              web-search API tester
+            <div className='mb-3 flex items-center gap-2'>
+              <ActionIcon
+                aria-label='返回上一页'
+                icon={ArrowLeft}
+                size='small'
+                title='返回上一页'
+                onClick={() => navigate(-1)}
+              />
+              <div className='inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-sm font-medium text-cyan-700 ring-1 ring-cyan-200'>
+                <Sparkles className='size-4' />
+                web-search API tester
+              </div>
             </div>
             <h1 className='text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl'>联网搜索功能测试台</h1>
             <p className='mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base'>

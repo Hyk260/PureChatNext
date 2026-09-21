@@ -2,7 +2,11 @@ import { createHash } from 'node:crypto'
 import debug from 'debug'
 
 import { getRedisConfig } from '@/envs/redis'
-import { VERIFICATION_DAILY_IP_MAX, VERIFICATION_DAILY_IP_WINDOW_SECONDS } from '@/libs/better-auth/shared'
+import {
+  SIGNUP_DAILY_RATE_LIMIT_PATH,
+  VERIFICATION_DAILY_IP_MAX,
+  VERIFICATION_DAILY_IP_WINDOW_SECONDS,
+} from '@/libs/better-auth/shared'
 import { initializeRedis, isRedisEnabled, resetRedisClient } from '@/libs/redis'
 import type { BaseRedisProvider } from '@/libs/redis'
 
@@ -147,6 +151,10 @@ function writeMemoryRecord(key: string, next: RateLimitRecord, windowSeconds: nu
     expiresAt: now + windowSeconds * 1000,
   })
   return true
+}
+
+function isFailClosedPath(path: string | undefined) {
+  return Boolean(path && (VERIFICATION_SEND_PATHS.has(path) || path === SIGNUP_DAILY_RATE_LIMIT_PATH))
 }
 
 function consumeMemory(key: string, rule: RateLimitRule): ConsumeResult {
@@ -305,13 +313,14 @@ export function createVerificationDailyRateLimitStorage(options: StorageOptions 
     async consume(key: string, rule: RateLimitRule): Promise<ConsumeResult> {
       const parsed = parseRateLimitKey(key)
       const verificationRequest = Boolean(parsed && VERIFICATION_SEND_PATHS.has(parsed.path))
+      const failClosed = isFailClosedPath(parsed?.path)
       const redis = await getRedisClient().catch(async (error) => {
-        await handleRedisFailure(error, verificationRequest)
+        await handleRedisFailure(error, failClosed)
         return null
       })
 
       if (!redis) {
-        if (useRedis && verificationRequest) {
+        if (useRedis && failClosed) {
           return { allowed: false, retryAfter: REDIS_FAILURE_RETRY_AFTER_SECONDS }
         }
         return verificationRequest && parsed ? consumeVerificationMemory(key, parsed, rule) : consumeMemory(key, rule)
@@ -339,7 +348,7 @@ export function createVerificationDailyRateLimitStorage(options: StorageOptions 
         const result = await redis.eval(CONSUME_LUA, redisKeys.length, ...redisKeys, ...args)
         return parseRedisConsumeResult(result)
       } catch (error) {
-        const failure = await handleRedisFailure(error, verificationRequest)
+        const failure = await handleRedisFailure(error, failClosed)
         if (failure) return failure
         return consumeMemory(key, rule)
       }

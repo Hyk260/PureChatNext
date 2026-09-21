@@ -4,9 +4,9 @@ import type { ModelProviderId } from '@pure/model-bank'
 import {
   CHANNEL_PROVIDER_IDS,
   channelProviderByokUnavailableReason,
-  defaultChannelModel,
   isChannelProviderId,
   normalizeChannelProvider,
+  resolveAvailableChannelModel,
   validateChannelModel,
 } from '../core/modelResolver'
 import type { ChannelProviderId } from '../core/modelResolver'
@@ -16,9 +16,7 @@ export function normalizeWechatAgentProvider(provider: string | null | undefined
 }
 
 export function resolveWechatAgentModelId(provider: string, model: string | null | undefined): string {
-  const trimmed = model?.trim()
-  if (trimmed) return trimmed
-  return defaultChannelModel(isChannelProviderId(provider) ? provider : 'deepseek')
+  return resolveAvailableChannelModel(isChannelProviderId(provider) ? provider : 'deepseek', model)
 }
 
 export const WECHAT_PROVIDER_IDS = CHANNEL_PROVIDER_IDS

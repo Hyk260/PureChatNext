@@ -312,6 +312,10 @@ export const webRoutes: RouteObject[] = [
         element: dynamicElement(() => import('@/features/admin/UsersPage'), 'Admin > Users'),
         path: 'users',
       },
+      {
+        element: dynamicElement(() => import('@/features/dev/EmailServicePage'), 'Admin > EmailService'),
+        path: 'email-service',
+      },
     ],
     element: dynamicLayout(() => import('@/routes/admin/_layout'), 'AdminLayout'),
     path: 'admin',
@@ -322,10 +326,6 @@ export const webRoutes: RouteObject[] = [
     ? ([
         {
           children: [
-            {
-              element: dynamicElement(() => import('@/features/dev/EmailServicePage'), 'Dev > EmailService'),
-              path: 'email-service',
-            },
             {
               element: dynamicElement(() => import('@/features/dev/EmailTemplatesPage'), 'Dev > EmailTemplates'),
               path: 'email-templates',

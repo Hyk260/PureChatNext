@@ -17,17 +17,18 @@ import {
 const addedModels = [
   ['gpt-5.2', 'openai/gpt-5.2'],
   ['claude-3-haiku', 'anthropic/claude-3-haiku'],
-  ['deepseek-v3.2-thinking', 'deepseek/deepseek-v3.2-thinking'],
   ['qwen3.5-plus', 'alibaba/qwen3.5-plus'],
   ['nova-2-lite', 'amazon/nova-2-lite'],
-  ['kimi-k2.5', 'moonshotai/kimi-k2.5'],
   ['grok-4.1-fast-reasoning', 'xai/grok-4.1-fast-reasoning'],
   ['grok-4.1-fast-non-reasoning', 'xai/grok-4.1-fast-non-reasoning'],
-  ['glm-5-turbo', 'zai/glm-5-turbo'],
   ['minimax-m2.7', 'minimax/minimax-m2.7'],
 ] as const
 
 const restrictedModels = [
+  'gpt-5.4-mini',
+  'deepseek-v3.2-thinking',
+  'kimi-k2.5',
+  'glm-5-turbo',
   'gpt-5.5',
   'claude-sonnet-4-6',
   'claude-haiku-4-5',
@@ -36,6 +37,7 @@ const restrictedModels = [
   'deepseek-v4-pro',
   'deepseek-v4-flash',
   'glm-5.2',
+  'minimax-m3',
 ] as const
 
 describe('model-bank purechat', () => {
@@ -66,7 +68,7 @@ describe('model-bank purechat', () => {
     for (const modelId of PURECHAT_PLAN_CARD_MODELS) {
       expect(getEnabledPureChatModel(modelId)).toBeDefined()
     }
-    expect(purechatEnabledChatModels).toHaveLength(24)
+    expect(purechatEnabledChatModels).toHaveLength(18)
   })
 
   it('computeChatCost matches gpt-5.4-mini sample', () => {

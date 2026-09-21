@@ -24,6 +24,7 @@ import { allocateUniqueUsername, OTP_EXPIRES_IN } from '@/libs/better-auth/share
 import { initBetterAuthSSOProviders, parseSSOProviders } from '@/libs/better-auth/sso'
 import { createSecondaryStorage } from './server/create-secondary-storage'
 import { createVerificationDailyRateLimitStorage } from './server/rate-limit-storage'
+import { assertSignupIpAllowed } from './server/signup-ip-limit'
 
 const log = debug('better-auth:define-config')
 
@@ -114,12 +115,12 @@ function buildRateLimitCustomRules() {
   return rules
 }
 
-function buildRateLimitConfig(): NonNullable<BetterAuthOptions['rateLimit']> {
+function buildRateLimitConfig(customStorage = createVerificationDailyRateLimitStorage()) {
   return {
     enabled: true,
     customRules: buildRateLimitCustomRules(),
     // 验证类端点在 customRules 短窗口限流之外，同一 IP 24h 内最多 VERIFICATION_DAILY_IP_MAX 次
-    customStorage: createVerificationDailyRateLimitStorage(),
+    customStorage,
   }
 }
 
@@ -128,6 +129,7 @@ function buildRateLimitConfig(): NonNullable<BetterAuthOptions['rateLimit']> {
  * 集中定义账户关联、邮箱登录、会话、数据库适配与用户字段映射等配置。
  */
 export function defineConfig() {
+  const rateLimitStorage = createVerificationDailyRateLimitStorage()
   const options: BetterAuthOptions = {
     // 账户关联：同邮箱下合并 OAuth 与本地密码账户
     account: {
@@ -264,9 +266,10 @@ export function defineConfig() {
     databaseHooks: {
       user: {
         create: {
-          // 写入前：首个用户为 admin，其余为 user
-          before: async (user) => {
+          // 写入前：同 IP 日限 + 首个用户为 admin，其余为 user
+          before: async (user, context) => {
             log('user create before: %O', user)
+            await assertSignupIpAllowed(rateLimitStorage, context)
             const { UserModel } = await import('@pure/database/models/user')
             const userModel = new UserModel()
             const preferredName = typeof user.name === 'string' ? user.name : ''
@@ -327,7 +330,7 @@ export function defineConfig() {
     // 内置社交登录（GitHub、Google 等，由 AUTH_SSO_PROVIDERS 控制）
     socialProviders,
     // 敏感邮件端点限流，防止滥发（短窗口 customRules + 验证类 IP 日限 customStorage）
-    rateLimit: buildRateLimitConfig(),
+    rateLimit: buildRateLimitConfig(rateLimitStorage),
     plugins: [admin({ adminRoles: [USER_ROLE.Admin], defaultRole: USER_ROLE.User }), ...buildOptionalAuthPlugins()],
   }
 

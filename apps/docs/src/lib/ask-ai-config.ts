@@ -1,20 +1,20 @@
 export const ASK_AI_MODEL_IDS = [
-  'openai/gpt-5.4-mini',
+  'openai/gpt-5.4-nano',
   'openai/gpt-5.2',
   'alibaba/qwen3.5-plus',
 ] as const
 
 export type AskAIModelId = (typeof ASK_AI_MODEL_IDS)[number]
 
-export const DEFAULT_ASK_AI_MODEL: AskAIModelId = 'openai/gpt-5.4-mini'
+export const DEFAULT_ASK_AI_MODEL: AskAIModelId = 'openai/gpt-5.4-nano'
 
 export const ASK_AI_MODELS = [
   {
     brand: 'openai',
     context: '400K context window',
     description: '响应更快、成本更低，适合日常文档问答与操作指引。',
-    id: 'openai/gpt-5.4-mini',
-    name: 'GPT 5.4 Mini',
+    id: 'openai/gpt-5.4-nano',
+    name: 'GPT 5.4 Nano',
   },
   {
     brand: 'openai',

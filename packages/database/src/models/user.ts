@@ -2,7 +2,7 @@ import { isAdminRole, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { createNanoId, generateCompactUuid } from '@pure/utils'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
-import { and, count, desc, eq, ilike, inArray, or } from 'drizzle-orm'
+import { and, asc, count, desc, eq, ilike, inArray, or } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { account, passkey, session, twoFactor, users, verification } from '../schemas'
@@ -99,6 +99,21 @@ const adminUserColumns = {
   role: users.role,
   userId: users.userId,
   username: users.username,
+}
+
+const ADMIN_USER_SORT_COLUMNS = {
+  lastActiveAt: users.lastActiveAt,
+  role: users.role,
+} as const
+
+export type AdminUserSortBy = keyof typeof ADMIN_USER_SORT_COLUMNS
+
+export type AdminUserListQuery = {
+  page: number
+  pageSize: number
+  q?: string
+  sortBy?: AdminUserSortBy
+  sortOrder?: 'asc' | 'desc'
 }
 
 export class UserModel {
@@ -290,19 +305,23 @@ export class UserModel {
     return Number(row?.n ?? 0)
   }
 
-  listUsers = async (query: { page: number; pageSize: number; q?: string }) => {
+  listUsers = async (query: AdminUserListQuery) => {
     const search = query.q?.trim()
     const pattern = search ? `%${search}%` : undefined
     const where = pattern
       ? or(ilike(users.email, pattern), ilike(users.username, pattern), ilike(users.fullName, pattern))
       : undefined
 
+    const sortColumn = query.sortBy ? ADMIN_USER_SORT_COLUMNS[query.sortBy] : undefined
+    const sortFn = query.sortOrder === 'asc' ? asc : desc
+    const orderByClause = sortColumn ? sortFn(sortColumn) : desc(users.createdAt)
+
     const [items, [totalRow]] = await Promise.all([
       this.db
         .select(adminUserColumns)
         .from(users)
         .where(where)
-        .orderBy(desc(users.createdAt))
+        .orderBy(orderByClause, desc(users.id))
         .limit(query.pageSize)
         .offset((query.page - 1) * query.pageSize),
       this.db.select({ n: count() }).from(users).where(where),

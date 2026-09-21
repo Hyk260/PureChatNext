@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { VERIFICATION_DAILY_IP_MAX } from '@/libs/better-auth/shared'
+import { SIGNUP_DAILY_RATE_LIMIT_PATH, VERIFICATION_DAILY_IP_MAX } from '@/libs/better-auth/shared'
 
 import { createVerificationDailyRateLimitStorage, resetVerificationRateLimitMemoryForTests } from './rate-limit-storage'
 
@@ -93,6 +93,18 @@ describe('createVerificationDailyRateLimitStorage', () => {
     const storage = createVerificationDailyRateLimitStorage({ redis: redis as never })
 
     await expect(storage.consume('1.2.3.4|/send-verification-email', SHORT_RULE)).resolves.toEqual({
+      allowed: false,
+      retryAfter: 60,
+    })
+  })
+
+  it('fails closed for signup when Redis is unavailable', async () => {
+    const redis = {
+      eval: vi.fn().mockRejectedValue(new Error('Redis unavailable')),
+    }
+    const storage = createVerificationDailyRateLimitStorage({ redis: redis as never })
+
+    await expect(storage.consume(`1.2.3.4|${SIGNUP_DAILY_RATE_LIMIT_PATH}`, SHORT_RULE)).resolves.toEqual({
       allowed: false,
       retryAfter: 60,
     })

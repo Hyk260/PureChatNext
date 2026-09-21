@@ -25,8 +25,15 @@ describe('QQ channel model binding', () => {
   })
 
   it('preserves the existing provider when reconnecting', () => {
+    expect(resolveQQChannelModel({ previousModel: 'gpt-5.4-nano', previousProvider: 'openai' })).toEqual({
+      model: 'gpt-5.4-nano',
+      provider: 'openai',
+    })
+  })
+
+  it('remaps a previously bound catalog-disabled model to the provider default', () => {
     expect(resolveQQChannelModel({ previousModel: 'gpt-5.4-mini', previousProvider: 'openai' })).toEqual({
-      model: 'gpt-5.4-mini',
+      model: 'gpt-5.4-nano',
       provider: 'openai',
     })
   })

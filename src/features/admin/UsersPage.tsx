@@ -2,11 +2,13 @@
 
 import { Form, Pagination, Select, Table } from 'antd'
 import type { TableProps } from 'antd'
-import { Block, Button, Checkbox, confirmModal, Flex, Input, InputPassword, Modal, SearchBar, Tag, Text } from '@pure/ui'
+import { ActionIcon, Block, Button, Checkbox, confirmModal, Flex, Input, InputPassword, Modal, SearchBar, Tag, Text } from '@pure/ui'
 import { SHANGHAI_TIMEZONE, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { EMPTY_PLACEHOLDER, formatCompactDateTime } from '@pure/utils/client'
+import { ArrowLeft } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import { getUserRoleLabel } from '@/const/auth'
@@ -18,7 +20,7 @@ import {
   fetchAdminUsers,
   updateAdminUser,
 } from './users'
-import type { AdminUser, CreateAdminUserInput } from './users'
+import type { AdminUser, AdminUserSortBy, CreateAdminUserInput } from './users'
 
 type UserFormMode = 'create' | 'edit'
 
@@ -33,6 +35,8 @@ type UserFormValues = {
 }
 
 const PAGE_SIZE = 20
+const ANTD_SORT_ORDER = { asc: 'ascend', desc: 'descend' } as const
+const TABLE_SORT_DIRECTIONS: Array<'ascend' | 'descend'> = ['descend', 'ascend', 'descend']
 const formatUserDateTime = (value: string) => formatCompactDateTime(value, { timeZone: SHANGHAI_TIMEZONE })
 
 const renderUserStatus = (banned: boolean) =>
@@ -61,8 +65,18 @@ const toEditValues = (user: AdminUser): UserFormValues => ({
 
 export default function AdminUsersPage() {
   const { message } = useApp()
+  const navigate = useNavigate()
   const { data: session } = useSession()
   const actorId = session?.user?.id
+
+  const goBack = () => {
+    const idx = window.history.state?.idx
+    if (typeof idx === 'number' && idx > 0) {
+      navigate(-1)
+      return
+    }
+    navigate('/')
+  }
 
   const [form] = Form.useForm<UserFormValues>()
   const banned = Form.useWatch('banned', form)
@@ -76,12 +90,14 @@ export default function AdminUsersPage() {
   const [saving, setSaving] = useState(false)
   const [formMode, setFormMode] = useState<UserFormMode | null>(null)
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
+  const [sortBy, setSortBy] = useState<AdminUserSortBy>()
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
   const loadUsers = useCallback(
     async (signal?: AbortSignal) => {
       setLoading(true)
       try {
-        const result = await fetchAdminUsers({ page, pageSize, q: query }, signal)
+        const result = await fetchAdminUsers({ page, pageSize, q: query, sortBy, sortOrder }, signal)
         setItems(result.items)
         setTotal(result.total)
       } catch (error) {
@@ -91,7 +107,7 @@ export default function AdminUsersPage() {
         if (!signal?.aborted) setLoading(false)
       }
     },
-    [message, page, pageSize, query]
+    [message, page, pageSize, query, sortBy, sortOrder]
   )
 
   useEffect(() => {
@@ -199,11 +215,14 @@ export default function AdminUsersPage() {
     },
     {
       dataIndex: 'role',
+      key: 'role',
       render: (value: string | null) => (
         <Tag color={value === USER_ROLE.Admin ? 'red' : 'blue'} size='small'>
           {getUserRoleLabel(value)}
         </Tag>
       ),
+      sortOrder: sortBy === 'role' ? ANTD_SORT_ORDER[sortOrder] : null,
+      sorter: true,
       title: '角色',
       width: 100,
     },
@@ -217,6 +236,15 @@ export default function AdminUsersPage() {
       dataIndex: 'createdAt',
       render: formatUserDateTime,
       title: '创建时间',
+      width: 160,
+    },
+    {
+      dataIndex: 'lastActiveAt',
+      key: 'lastActiveAt',
+      render: formatUserDateTime,
+      sortOrder: sortBy === 'lastActiveAt' ? ANTD_SORT_ORDER[sortOrder] : null,
+      sorter: true,
+      title: '最近活跃',
       width: 160,
     },
     {
@@ -239,6 +267,15 @@ export default function AdminUsersPage() {
     },
   ]
 
+  const handleTableChange: TableProps<AdminUser>['onChange'] = (_pagination, _filters, sorter) => {
+    const current = Array.isArray(sorter) ? sorter[0] : sorter
+    const key = current?.columnKey
+    if ((key !== 'role' && key !== 'lastActiveAt') || !current?.order) return
+    setSortBy(key)
+    setSortOrder(current.order === 'ascend' ? 'asc' : 'desc')
+    setPage(1)
+  }
+
   const formTitle = formMode === 'create' ? '新建用户' : '编辑用户'
   const editingSelf = Boolean(editingUser && editingUser.id === actorId)
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1
@@ -248,9 +285,18 @@ export default function AdminUsersPage() {
     <main className='h-screen overflow-y-auto'>
       <Flex className='mx-auto w-full max-w-6xl flex-col gap-4 px-6 py-6'>
         <Flex className='flex-between gap-3 flex-wrap'>
-          <Flex className='flex-col gap-1'>
-            <Text className='text-xl font-semibold'>用户管理</Text>
-            <Text type='secondary'>管理员可创建、编辑、封禁和删除用户</Text>
+          <Flex className='items-center gap-2'>
+            <ActionIcon
+              aria-label='返回上一页'
+              icon={ArrowLeft}
+              size='small'
+              title='返回上一页'
+              onClick={goBack}
+            />
+            <Flex className='flex-col gap-1'>
+              <Text className='text-xl font-semibold'>用户管理</Text>
+              <Text type='secondary'>管理员可创建、编辑、封禁和删除用户</Text>
+            </Flex>
           </Flex>
           <Button type='primary' onClick={openCreate}>
             新建用户
@@ -283,7 +329,9 @@ export default function AdminUsersPage() {
             loading={loading}
             pagination={false}
             rowKey='id'
-            scroll={{ x: 880 }}
+            scroll={{ x: 1040 }}
+            sortDirections={TABLE_SORT_DIRECTIONS}
+            onChange={handleTableChange}
           />
 
           <Flex className='flex-between border-t border-border px-4 py-2.5'>

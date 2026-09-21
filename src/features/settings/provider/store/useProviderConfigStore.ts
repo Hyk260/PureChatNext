@@ -67,12 +67,15 @@ export const mergeProviderConfig = (
     if (!knownIds.has(builtin.id)) models.push(builtin)
   }
 
+  const requestedCheckModel =
+    typeof partial.checkModel === 'string' && partial.checkModel.trim() ? partial.checkModel.trim() : ''
+  const checkModelEnabled = requestedCheckModel ? catalogById.get(requestedCheckModel)?.enabled !== false : false
+
   return {
     ...defaults,
     ...partial,
     baseURL,
-    checkModel:
-      typeof partial.checkModel === 'string' && partial.checkModel.trim() ? partial.checkModel : defaults.checkModel,
+    checkModel: checkModelEnabled ? requestedCheckModel : defaults.checkModel,
     // PureChat 等官方托管服务商默认启用且不可关闭。
     enabled: isServerManagedProvider(id) ? true : (partial.enabled ?? defaults.enabled),
     models,

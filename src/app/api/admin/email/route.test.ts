@@ -1,9 +1,9 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { EmailImplType, EmailService } from '@/server/services/email'
-
-import { GET, POST } from './route'
+vi.mock('@/libs/auth/get-session-user', () => ({
+  withAdmin: (handler: unknown) => handler,
+}))
 
 vi.mock('@/libs/better-auth/email-templates/preview', () => ({
   parseEmailTemplateKey: (value: unknown) => {
@@ -37,17 +37,21 @@ vi.mock('@/server/services/email', () => ({
   EmailService: vi.fn(),
 }))
 
+import { EmailImplType, EmailService } from '@/server/services/email'
+
+import { GET, POST } from './route'
+
 const postJson = (body: unknown) => {
   return POST(
-    new Request('http://localhost/api/dev/email', {
+    new Request('http://localhost/api/admin/email', {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
       method: 'POST',
-    })
+    }) as never
   )
 }
 
-describe('/api/dev/email', () => {
+describe('/api/admin/email', () => {
   const mockVerify = vi.fn()
   const mockSendMail = vi.fn()
 
@@ -68,7 +72,7 @@ describe('/api/dev/email', () => {
   })
 
   it('returns available actions from GET', async () => {
-    const response = await GET()
+    const response = await GET(undefined as never)
     const payload = await response.json()
 
     expect(response.status).toBe(200)
@@ -221,11 +225,11 @@ describe('/api/dev/email', () => {
 
   it('returns 400 for invalid JSON', async () => {
     const response = await POST(
-      new Request('http://localhost/api/dev/email', {
+      new Request('http://localhost/api/admin/email', {
         body: '{',
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
-      })
+      }) as never
     )
     const payload = await response.json()
 

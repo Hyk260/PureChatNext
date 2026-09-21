@@ -32,6 +32,11 @@ describe('PureChat provider config migration', () => {
     expect(config.enabled).toBe(true)
   })
 
+  it('remaps a persisted check model that the catalog has disabled', () => {
+    const config = mergeProviderConfig('openai', { checkModel: 'gpt-5.4-mini' })
+    expect(config.checkModel).toBe('gpt-5.4-nano')
+  })
+
   it('does not restore an interrupted health check as active', () => {
     const config = mergeProviderConfig('purechat', {
       models: [

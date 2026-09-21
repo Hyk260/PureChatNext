@@ -27,7 +27,7 @@ vi.mock('@/libs/auth/get-session-user', () => ({
 
 vi.mock('ai', () => ({ generateText: mocks.generateText }))
 vi.mock('@pure/model-bank', () => ({
-  PURECHAT_DEFAULT_MODEL: 'gpt-5.4-mini',
+  PURECHAT_DEFAULT_MODEL: 'gpt-5.4-nano',
   getEnabledPureChatModel: mocks.getEnabledPureChatModel,
 }))
 vi.mock('@pure/database/models/credits', () => ({
@@ -122,11 +122,11 @@ describe('POST /api/agents/generate-profile', () => {
     const response = await POST(request({ description: '本地写作助手' }))
 
     expect(response.status).toBe(200)
-    expect(mocks.assertPureChatCanChat).toHaveBeenCalledWith('user-1', 'gpt-5.4-mini')
-    expect(mocks.createPureChatLanguageModel).toHaveBeenCalledWith('gpt-5.4-mini')
+    expect(mocks.assertPureChatCanChat).toHaveBeenCalledWith('user-1', 'gpt-5.4-nano')
+    expect(mocks.createPureChatLanguageModel).toHaveBeenCalledWith('gpt-5.4-nano')
     expect(mocks.chargePureChatGenerateUsage).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'gpt-5.4-mini',
+        model: 'gpt-5.4-nano',
         settlementId: 'settlement-1',
         userId: 'user-1',
       })

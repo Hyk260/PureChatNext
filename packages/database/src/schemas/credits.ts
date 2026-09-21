@@ -13,7 +13,7 @@ export const userCredits = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     /** 计费周期，如 `2026-07`（上海时区） */
     period: varchar('period', { length: 7 }).notNull(),
-    /** 本周期发放额；V1 恒为 500_000 */
+    /** 本周期发放额；V1 恒为 300_000 */
     grant: integer('grant').notNull(),
     /** 本周期已用积分 */
     used: integer('used').notNull().default(0),

@@ -2,7 +2,7 @@
 export const CREDITS_PER_DOLLAR = 1_000_000
 
 /** 每月免费积分发放额（自然月，Asia/Shanghai）。 */
-export const MONTHLY_FREE_CREDITS = 500_000
+export const MONTHLY_FREE_CREDITS = 300_000
 
 /**
  * beforeChat 最小预留：余额低于此值拒绝发往 PureChat，避免无意义打上游。

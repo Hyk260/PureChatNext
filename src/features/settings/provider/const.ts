@@ -33,7 +33,7 @@ export const LEGACY_PROVIDER_DEFAULT_BASE_URLS: Record<ProviderId, string> = {
 
 export const PROVIDER_CHECK_MODELS: Record<ProviderId, string> = {
   deepseek: 'deepseek-v4-flash',
-  openai: 'gpt-5.4-mini',
+  openai: 'gpt-5.4-nano',
   purechat: PURECHAT_DEFAULT_MODEL,
 }
 

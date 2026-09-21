@@ -11,7 +11,7 @@ export type MessengerProviderId = (typeof MESSENGER_PROVIDER_IDS)[number]
 export const MESSENGER_DEFAULT_PROVIDER: MessengerProviderId = 'deepseek'
 export const MESSENGER_DEFAULT_MODELS: Record<MessengerProviderId, string> = {
   deepseek: 'deepseek-v4-flash',
-  openai: 'gpt-5.4-mini',
+  openai: 'gpt-5.4-nano',
   purechat: PURECHAT_DEFAULT_MODEL,
 }
 /** QQ 与微信共用 DeepSeek 默认服务商。 */

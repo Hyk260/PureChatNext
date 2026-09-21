@@ -5,6 +5,7 @@ import { USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { isRecord, toTrimmedString } from '@pure/utils/object'
 import { isAdminUserError, UserModel } from '@pure/database/models/user'
+import type { AdminUserSortBy } from '@pure/database/models/user'
 
 import { jsonError, withAdmin } from '@/libs/auth/get-session-user'
 import {
@@ -17,6 +18,7 @@ import { deleteAdminUserWithStorage, UserStorageCleanupError } from '@/server/se
 const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 20
 const MAX_PAGE_SIZE = 100
+const ADMIN_USER_SORT_FIELDS = new Set<AdminUserSortBy>(['lastActiveAt', 'role'])
 const PASSWORD_MIN_LENGTH = 8
 const PASSWORD_MAX_LENGTH = 64
 
@@ -90,17 +92,29 @@ const parseJsonBody = async (request: NextRequest) => {
   }
 }
 
+const parseSortBy = (value: string | null): AdminUserSortBy | undefined => {
+  if (value && ADMIN_USER_SORT_FIELDS.has(value as AdminUserSortBy)) return value as AdminUserSortBy
+  return undefined
+}
+
 /**
  * GET /api/admin/users
- * 分页列出用户，支持邮箱 / 用户名 / 全名搜索。
+ * 分页列出用户，支持邮箱 / 用户名 / 全名搜索，以及按角色 / 最近活跃排序。
  */
 export const GET = withAdmin(async (request) => {
   const url = new URL(request.url)
   const page = parsePositiveInt(url.searchParams.get('page'), DEFAULT_PAGE, Number.MAX_SAFE_INTEGER)
   const pageSize = parsePositiveInt(url.searchParams.get('pageSize'), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
   const q = toTrimmedString(url.searchParams.get('q')) ?? undefined
+  const sortBy = parseSortBy(url.searchParams.get('sortBy'))
+  const sortOrder = url.searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc'
 
-  const { items, total } = await new UserModel().listUsers({ page, pageSize, q })
+  const { items, total } = await new UserModel().listUsers({
+    page,
+    pageSize,
+    q,
+    ...(sortBy ? { sortBy, sortOrder } : {}),
+  })
 
   return NextResponse.json({
     items: items.map(serializeAdminUser),

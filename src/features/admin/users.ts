@@ -3,6 +3,8 @@ import type { UserRole } from '@pure/const'
 
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
+export type AdminUserSortBy = 'lastActiveAt' | 'role'
+
 export type AdminUser = {
   banned: boolean
   banReason: string | null
@@ -54,12 +56,19 @@ const readError = async (response: Response, fallback: string) => {
   return payload?.error || fallback
 }
 
-export async function fetchAdminUsers(params: { page: number; pageSize: number; q: string }, signal?: AbortSignal) {
+export async function fetchAdminUsers(
+  params: { page: number; pageSize: number; q: string; sortBy?: AdminUserSortBy; sortOrder?: 'asc' | 'desc' },
+  signal?: AbortSignal
+) {
   const search = new URLSearchParams({
     page: String(params.page),
     pageSize: String(params.pageSize),
   })
   if (params.q) search.set('q', params.q)
+  if (params.sortBy) {
+    search.set('sortBy', params.sortBy)
+    search.set('sortOrder', params.sortOrder ?? 'desc')
+  }
 
   const response = await apiFetch(`/api/admin/users?${search}`, { signal })
   if (!response.ok) throw new Error(await readError(response, '加载用户失败'))

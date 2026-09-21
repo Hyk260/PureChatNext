@@ -20,13 +20,23 @@ export function normalizeChannelProvider(provider: string | null | undefined, fa
 
 export function defaultChannelModel(provider: ChannelProviderId): string {
   if (provider === PURECHAT_PROVIDER_ID) return PURECHAT_DEFAULT_MODEL
-  if (provider === 'openai') return 'gpt-5.4-mini'
+  if (provider === 'openai') return 'gpt-5.4-nano'
   return 'deepseek-v4-flash'
 }
 
 export function validateChannelModel(provider: ChannelProviderId, model: string): string | null {
   const item = getAiModel(provider as ModelProviderId, model)
   return !item || item.enabled === false ? '所选模型不属于该服务商或已停用' : null
+}
+
+/** Catalog-disabled models fall back to the provider default; custom ids are kept. */
+export function resolveAvailableChannelModel(provider: ChannelProviderId, model?: string | null): string {
+  const requested = model?.trim()
+  if (requested) {
+    const item = getAiModel(provider as ModelProviderId, requested)
+    if (!item || item.enabled !== false) return requested
+  }
+  return defaultChannelModel(provider)
 }
 
 export type ChannelModelConfig = {
@@ -66,7 +76,7 @@ export class ChannelModelResolver {
     const fallbackProvider = params.fallbackProvider ?? 'deepseek'
     const providerRaw = normalizeChannelProvider(params.provider, fallbackProvider)
     const provider = isChannelProviderId(providerRaw) ? providerRaw : fallbackProvider
-    const model = params.model?.trim() || defaultChannelModel(provider)
+    const model = resolveAvailableChannelModel(provider, params.model)
     return { model, provider }
   }
 }

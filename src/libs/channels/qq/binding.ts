@@ -3,7 +3,8 @@ import { QQApiClient } from '@pure/chat-adapter/qq'
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 
-import { defaultQQModel, isQQProviderId, qqChannelByokUnavailableReason, validateQQModel } from './agentSupport'
+import { resolveAvailableChannelModel } from '../core/modelResolver'
+import { isQQProviderId, qqChannelByokUnavailableReason, validateQQModel } from './agentSupport'
 import type { QQProviderId } from './agentSupport'
 import { invalidateQQChat } from './chatBot'
 import { encryptCredentials } from './encrypt'
@@ -37,7 +38,7 @@ export function resolveQQChannelModel(params: {
 }): { model: string; provider: QQProviderId } {
   if (params.provider) {
     if (!isQQProviderId(params.provider)) throw new QQBindingError('该 Provider 不支持 QQ 渠道')
-    const model = params.model || defaultQQModel(params.provider)
+    const model = resolveAvailableChannelModel(params.provider, params.model)
     const modelError = validateQQModel(params.provider, model)
     if (modelError) throw new QQBindingError(modelError)
     return { model, provider: params.provider }
@@ -46,7 +47,7 @@ export function resolveQQChannelModel(params: {
   // QQ 为独立渠道：未显式选择且无历史绑定时，与微信一致默认 DeepSeek。
   const fallbackRaw = params.previousProvider || 'deepseek'
   const provider = isQQProviderId(fallbackRaw) ? fallbackRaw : 'deepseek'
-  const model = params.model || params.previousModel || defaultQQModel(provider)
+  const model = resolveAvailableChannelModel(provider, params.model || params.previousModel)
   const modelError = validateQQModel(provider, model)
   if (modelError) throw new QQBindingError(modelError)
   return { model, provider }

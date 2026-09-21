@@ -26,5 +26,11 @@ export const OTP_EXPIRES_IN = 300
 /** 同一 IP 24 小时滚动窗口内最多发送验证类邮件次数 */
 export const VERIFICATION_DAILY_IP_MAX = 10
 
-/** 验证类邮件 IP 日限窗口（秒） */
+/** 验证类邮件 / 注册 IP 日限窗口（秒） */
 export const VERIFICATION_DAILY_IP_WINDOW_SECONDS = 86_400
+
+/** 同一 IP 24 小时滚动窗口内最多新建账号次数（含邮箱与 SSO） */
+export const SIGNUP_DAILY_IP_MAX = 3
+
+/** Better Auth rate-limit key 中跨注册入口共享 IP 日限的 path */
+export const SIGNUP_DAILY_RATE_LIMIT_PATH = '__signup_daily__'

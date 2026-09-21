@@ -4,7 +4,7 @@ import type { AiModelCard } from '../types/aiModel'
  * PureChat 模型 + Gateway USD 定价。
  * 定价来自 AI Gateway `/v1/models`（每 token USD → 百万 tokens）；
  * 阶梯价取基础档。含核心名单 + 适合 $5 免费额度联调的廉价 tool-use 扩展模型。
- * 免费层可用性最后核验：2026-07-28，来源 https://vercel.com/ai-gateway/models?freeTier=true
+ * 免费层可用性最后核验：2026-09-21，来源 https://vercel.com/ai-gateway/models?freeTier=true
  */
 export const purechatChatModels: AiModelCard[] = [
   {
@@ -12,8 +12,7 @@ export const purechatChatModels: AiModelCard[] = [
     displayName: 'GPT 5.4 Mini',
     gatewayId: 'openai/gpt-5.4-mini',
     description: 'OpenAI 的 GPT-5.4 Mini —— 性能与成本的高效平衡。',
-    enabled: true,
-    recommended: true,
+    enabled: false,
     family: 'gpt',
     contextWindowTokens: 400_000,
     maxOutput: 128_000,
@@ -36,6 +35,7 @@ export const purechatChatModels: AiModelCard[] = [
     gatewayId: 'openai/gpt-5.4-nano',
     description: 'OpenAI 的 GPT-5.4 Nano —— 超轻量模型，适用于高吞吐任务。',
     enabled: true,
+    recommended: true,
     family: 'gpt',
     contextWindowTokens: 400_000,
     maxOutput: 128_000,
@@ -269,7 +269,7 @@ export const purechatChatModels: AiModelCard[] = [
       textInputCacheWrite: 0.375,
     },
   },
-  // Vercel AI Gateway 免费层暂不可用（最后核验：2026-07-28）。
+  // Vercel AI Gateway 免费层暂不可用（最后核验：2026-09-21）。
   // 保留卡片与定价用于历史记录，恢复时只需重新启用。
   {
     id: 'gpt-5.5',
@@ -477,7 +477,7 @@ export const purechatChatModels: AiModelCard[] = [
     displayName: 'MiniMax M3',
     gatewayId: 'minimax/minimax-m3',
     description: 'MiniMax M3——最新的MiniMax模型，支持视觉功能，具有强大的推理能力和改进的工具使用。',
-    enabled: true,
+    enabled: false,
     family: 'minimax',
     contextWindowTokens: 1_000_000,
     maxOutput: 1_000_000,
@@ -707,9 +707,9 @@ export const purechatChatModels: AiModelCard[] = [
   },
 ]
 
-export const PURECHAT_DEFAULT_MODEL = 'gpt-5.4-mini'
+export const PURECHAT_DEFAULT_MODEL = 'gpt-5.4-nano'
 
-export const PURECHAT_PLAN_CARD_MODELS = ['gpt-5.2', 'qwen3.5-plus', 'kimi-k2.5', 'grok-4.1-fast-reasoning'] as const
+export const PURECHAT_PLAN_CARD_MODELS = ['gpt-5.2', 'qwen3.5-plus', 'minimax-m2.7', 'grok-4.1-fast-reasoning'] as const
 
 const byId = new Map(purechatChatModels.map((m) => [m.id, m]))
 const byGatewayId = new Map(purechatChatModels.filter((m) => m.gatewayId).map((m) => [m.gatewayId!, m]))

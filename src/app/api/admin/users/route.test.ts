@@ -95,6 +95,31 @@ describe('/api/admin/users', () => {
     expect(mocks.listUsers).toHaveBeenCalledWith({ page: 1, pageSize: 20, q: 'demo' })
   })
 
+  it('passes sort params from GET to listUsers', async () => {
+    mocks.listUsers.mockResolvedValue({ items: [listUser], total: 1 })
+
+    const response = await GET(
+      new Request('http://localhost/api/admin/users?page=1&pageSize=20&sortBy=lastActiveAt&sortOrder=asc') as never
+    )
+
+    expect(response.status).toBe(200)
+    expect(mocks.listUsers).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 20,
+      q: undefined,
+      sortBy: 'lastActiveAt',
+      sortOrder: 'asc',
+    })
+  })
+
+  it('ignores unknown sortBy on GET', async () => {
+    mocks.listUsers.mockResolvedValue({ items: [], total: 0 })
+
+    await GET(new Request('http://localhost/api/admin/users?sortBy=email&sortOrder=asc') as never)
+
+    expect(mocks.listUsers).toHaveBeenCalledWith({ page: 1, pageSize: 20, q: undefined })
+  })
+
   it('rejects create without email', async () => {
     const response = await POST(
       new Request('http://localhost/api/admin/users', {

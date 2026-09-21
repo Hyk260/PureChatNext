@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { isRecord, toTrimmedString } from '@pure/utils/object'
 import {
@@ -6,9 +7,10 @@ import {
   parseEmailTemplateParams,
   renderEmailTemplate,
 } from '@/libs/better-auth/email-templates/preview'
+import { withAdmin } from '@/libs/auth/get-session-user'
 import { EmailImplType, EmailService } from '@/server/services/email'
 import type { EmailPayload } from '@/server/services/email/impls'
-import { devActionSuccess, devError, getErrorMessage } from '../_utils'
+import { devActionSuccess, devError, getErrorMessage } from '../../dev/_utils'
 
 type EmailAction = 'verify' | 'sendMail' | 'renderTemplate'
 
@@ -78,10 +80,10 @@ const parseSendMailPayload = (rawPayload: unknown): EmailPayload | undefined => 
 }
 
 /**
- * 邮件服务测试 API（仅开发环境）
- * POST /api/dev/email
+ * POST /api/admin/email
+ * 邮件服务测试（仅管理员）
  */
-export const POST = async (req: Request) => {
+export const POST = withAdmin(async (req: NextRequest) => {
   let body: unknown
 
   try {
@@ -122,7 +124,7 @@ export const POST = async (req: Request) => {
     try {
       const result = renderEmailTemplate(template, params)
 
-        return devActionSuccess(action, result)
+      return devActionSuccess(action, result)
     } catch (error) {
       const message = getErrorMessage(error)
 
@@ -178,13 +180,13 @@ export const POST = async (req: Request) => {
 
     return devError(message, 500)
   }
-}
+})
 
 /**
- * 邮件服务测试 API（仅开发环境）
- * GET /api/dev/email
+ * GET /api/admin/email
+ * 邮件服务测试（仅管理员）
  */
-export const GET = async () => {
+export const GET = withAdmin(async () => {
   return NextResponse.json(
     {
       actions: availableActions,
@@ -193,4 +195,4 @@ export const GET = async () => {
     },
     { status: 200 }
   )
-}
+})

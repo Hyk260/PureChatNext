@@ -62,6 +62,17 @@ describe('channel model resolver', () => {
     })
   })
 
+  it('remaps catalog-disabled models to the provider default', () => {
+    expect(resolveChannelModelConfig({ model: 'gpt-5.4-mini', provider: 'openai' })).toEqual({
+      model: defaultChannelModel('openai'),
+      provider: 'openai',
+    })
+    expect(resolveChannelModelConfig({ model: 'minimax-m3', provider: 'purechat' })).toEqual({
+      model: defaultChannelModel('purechat'),
+      provider: 'purechat',
+    })
+  })
+
   it('recognizes only providers supported by the channel runtime', () => {
     expect(isChannelProviderId('purechat')).toBe(true)
     expect(isChannelProviderId('openai')).toBe(true)

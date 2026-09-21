@@ -41,10 +41,10 @@ describe('wechat agentSupport', () => {
   })
 
   it('resolves default model ids per provider', () => {
-    expect(resolveWechatAgentModelId('purechat', null)).toBe('gpt-5.4-mini')
-    expect(resolveWechatAgentModelId('openai', undefined)).toBe('gpt-5.4-mini')
+    expect(resolveWechatAgentModelId('purechat', null)).toBe('gpt-5.4-nano')
+    expect(resolveWechatAgentModelId('openai', undefined)).toBe('gpt-5.4-nano')
     expect(resolveWechatAgentModelId('deepseek', '')).toBe('deepseek-v4-flash')
-    expect(resolveWechatAgentModelId('purechat', 'claude-sonnet-4-6')).toBe('claude-sonnet-4-6')
+    expect(resolveWechatAgentModelId('purechat', 'gpt-5.2')).toBe('gpt-5.2')
   })
 
   it('checks vision ability by model card', () => {

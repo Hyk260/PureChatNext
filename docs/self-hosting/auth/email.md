@@ -137,7 +137,7 @@ SMTP_FROM=PureChat <noreply@purechat.cn>
 
 复制 `.env.example` 中邮件相关变量到 `.env.local`，填入真实 `SMTP_PASS` 后启动 `pnpm dev`。
 
-访问 `/dev/email-service`：
+访问 `/admin/email-service`：
 
 1. Provider 选 **Nodemailer**
 2. 点击 **Verify** 验证 SMTP 连接
@@ -146,10 +146,12 @@ SMTP_FROM=PureChat <noreply@purechat.cn>
 或通过 API：
 
 ```bash
-curl -X POST http://localhost:3000/api/dev/email \
+curl -X POST http://localhost:3000/api/admin/email \
   -H "Content-Type: application/json" \
   -d '{"action":"verify","impl":"nodemailer"}'
 ```
+
+该接口仅管理员可调用，curl 需带管理员 session cookie。
 
 ## 邮箱验证
 

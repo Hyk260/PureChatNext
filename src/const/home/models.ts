@@ -24,7 +24,7 @@ export const HOME_MODELS: HomeModelItem[] = (
 )
 
 export const DEFAULT_HOME_MODEL: HomeModelItem = {
-  displayName: getAiModel(ModelProvider.PureChat, PURECHAT_DEFAULT_MODEL)?.displayName ?? 'GPT-5.4 Mini',
+  displayName: getAiModel(ModelProvider.PureChat, PURECHAT_DEFAULT_MODEL)?.displayName ?? 'GPT-5.4 Nano',
   model: PURECHAT_DEFAULT_MODEL,
   provider: ModelProvider.PureChat,
 }

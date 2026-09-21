@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 
 import type { RenderedEmailTemplate } from '@/libs/better-auth/email-templates/preview'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 import { EmailTemplateComposer } from './EmailTemplateComposer'
 import { EmailTemplatePreviewBlock } from './EmailTemplatePreviewBlock'
@@ -237,11 +238,7 @@ export default function EmailServiceTestPage() {
     const submittedAt = new Date().toLocaleString()
 
     try {
-      const response = await fetch('/api/dev/email', {
-        body: JSON.stringify(requestBody),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      })
+      const response = await apiFetch('/api/admin/email', jsonInit(requestBody, { method: 'POST' }))
       const data = (await response.json()) as ApiSuccess | ApiFailure
 
       setRunState({
@@ -636,7 +633,7 @@ export default function EmailServiceTestPage() {
               <dl className='mt-3 grid gap-3 text-sm'>
                 <div className='flex items-center justify-between gap-4'>
                   <dt className='text-slate-500'>Endpoint</dt>
-                  <dd className='font-mono text-xs text-slate-900'>POST /api/dev/email</dd>
+                  <dd className='font-mono text-xs text-slate-900'>POST /api/admin/email</dd>
                 </div>
                 <div className='flex items-center justify-between gap-4'>
                   <dt className='text-slate-500'>Action</dt>

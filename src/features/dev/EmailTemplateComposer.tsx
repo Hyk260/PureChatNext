@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { EMAIL_TEMPLATE_CATALOG, EMAIL_TEMPLATE_PREVIEW_MOCK } from '@/libs/better-auth/email-templates/preview'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 import type {
   EmailTemplateKey,
   EmailTemplateParamField,
@@ -84,15 +85,17 @@ export function EmailTemplateComposer({ onRendered, onRenderError, onRenderState
       onRenderErrorRef.current?.(null)
 
       try {
-        const response = await fetch('/api/dev/email', {
-          body: JSON.stringify({
-            action: 'renderTemplate',
-            params,
-            template: activeTemplate,
-          }),
-          headers: { 'Content-Type': 'application/json' },
-          method: 'POST',
-        })
+        const response = await apiFetch(
+          '/api/admin/email',
+          jsonInit(
+            {
+              action: 'renderTemplate',
+              params,
+              template: activeTemplate,
+            },
+            { method: 'POST' }
+          )
+        )
         const data = (await response.json()) as RenderTemplateSuccess | RenderTemplateFailure
 
         if (cancelled) {

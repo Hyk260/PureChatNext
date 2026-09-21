@@ -8,12 +8,13 @@ import type { AgentListItem } from '@/const/home/agents'
 
 export interface CustomAgentCardProps {
   agent: AgentListItem
+  onDelete: (agent: AgentListItem) => void
   onEdit: (agent: AgentListItem) => void
   onOpenDetail: (id: string) => void
   onUse: (agent: AgentListItem) => void
 }
 
-const CustomAgentCard = memo<CustomAgentCardProps>(({ agent, onEdit, onOpenDetail, onUse }) => {
+const CustomAgentCard = memo<CustomAgentCardProps>(({ agent, onDelete, onEdit, onOpenDetail, onUse }) => {
   const description = agent.description?.trim() || '暂无描述'
 
   const handleUse = useCallback(
@@ -30,6 +31,14 @@ const CustomAgentCard = memo<CustomAgentCardProps>(({ agent, onEdit, onOpenDetai
       onEdit(agent)
     },
     [agent, onEdit]
+  )
+
+  const handleDelete = useCallback(
+    (event: MouseEvent) => {
+      event.stopPropagation()
+      onDelete(agent)
+    },
+    [agent, onDelete]
   )
 
   return (
@@ -66,6 +75,9 @@ const CustomAgentCard = memo<CustomAgentCardProps>(({ agent, onEdit, onOpenDetai
       <Flex className='mt-4 flex-between border-t border-dashed border-border p-4'>
         <span className='text-xs text-muted-foreground'>自定义</span>
         <Flex className='items-center gap-2'>
+          <Button danger size='small' onClick={handleDelete}>
+            删除
+          </Button>
           <Button size='small' onClick={handleEdit}>
             编辑
           </Button>

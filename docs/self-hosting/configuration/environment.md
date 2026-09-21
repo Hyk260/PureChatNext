@@ -134,10 +134,10 @@ pnpm preview:prod -- --port 3211
 
 ### GITHUB\_PROXY
 
-可选。GitHub 静态资源（技能头像等）的下载镜像前缀，例如 `https://ghfast.top/`。浏览器不会直连 `github.com`，而是请求同源 `/api/proxy/github-asset`；服务端再用该前缀去拉图。
+可选。GitHub 下载镜像前缀，例如 `https://ghfast.top/`。技能安装拉仓库文件、以及技能头像等静态图都会先走该前缀，失败再回 GitHub 源站。浏览器不会直连 `github.com` 拉图，而是请求同源 `/api/proxy/github-asset`。
 
-- 未设置时：服务端会同时尝试 `avatars.githubusercontent.com`、[wsrv.nl](https://wsrv.nl/) 图片 CDN 和原始 GitHub 地址，谁先返回有效图片用谁
-- 国内自托管若仍不稳定，可显式设置该前缀（格式为 `https://example/` + 原始 GitHub URL）
+- 未设置时：图片会同时尝试 `avatars.githubusercontent.com`、[wsrv.nl](https://wsrv.nl/) 和原始地址；技能安装只直连 GitHub
+- 国内自托管建议设置（格式为 `https://example/` + 原始 GitHub URL）
 - 海外（如 Vercel）可省略
 
 ### DATABASE\_URL

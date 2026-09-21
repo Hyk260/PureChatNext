@@ -6,6 +6,7 @@ import { serverDB } from '@pure/database/core/db-adaptor'
 import { UserModel } from '@pure/database/models/user'
 import { users } from '@pure/database/schemas/user'
 import { logger } from '@/libs/logger'
+import { cleanupUserS3Assets, collectUserStorageRefs } from '@/server/services/user/cleanup-storage'
 
 export interface ReclaimUnverifiedEmailResponse {
   error?: string
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
       .select({
         emailVerified: users.emailVerified,
         id: users.id,
+        userId: users.userId,
       })
       .from(users)
       .where(eq(users.email, email))
@@ -54,7 +56,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const fileRefs = await collectUserStorageRefs(user.id)
     await new UserModel().deleteUserByEmail(email)
+    try {
+      await cleanupUserS3Assets({ authUserId: user.id, businessUserId: user.userId }, fileRefs)
+    } catch (error) {
+      logger.error(error, 'Reclaim unverified email S3 cleanup failed:')
+    }
 
     return NextResponse.json({ reclaimed: true } satisfies ReclaimUnverifiedEmailResponse)
   } catch (error) {

@@ -21,7 +21,7 @@ declare global {
       VERCEL?: string
       /** Vercel 平台注入的当前部署域名，用于拼接默认 `APP_URL`。 */
       VERCEL_URL?: string
-      /** GitHub 静态资源镜像前缀，例如 `https://ghfast.top/`。 */
+      /** GitHub 下载镜像前缀，例如 `https://ghfast.top/`。技能安装与头像代理都会先走该前缀。 */
       GITHUB_PROXY?: string
     }
   }
@@ -49,7 +49,7 @@ export const getAppConfig = () => {
       ALLOW_TRYCLOUDFLARE: z.boolean(),
       /** Vercel Cron / 内部定时任务鉴权密钥。 */
       CRON_SECRET: z.string().optional(),
-      /** GitHub 静态资源镜像前缀；未设置时接口会与内置国内镜像竞速。 */
+      /** GitHub 下载镜像前缀；技能安装先镜像后回源，图片代理还会与内置 CDN 竞速。 */
       GITHUB_PROXY: optionalUrlEnv(),
     },
     runtimeEnv: {

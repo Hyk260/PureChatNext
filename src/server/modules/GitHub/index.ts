@@ -1,5 +1,8 @@
 import debug from 'debug'
 
+import { githubSourceFetchUrls } from '@/const/community/githubAssetUrl'
+import { appEnv } from '@/envs/app'
+
 const log = debug('module:github')
 
 export interface GitHubRepoInfo {
@@ -33,18 +36,32 @@ export class GitHub {
   }
 
   private async request(url: string, init?: RequestInit) {
-    try {
-      return await fetch(url, {
-        ...init,
-        headers: {
-          'User-Agent': this.userAgent,
-          ...init?.headers,
-        },
-      })
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : 'network error'
-      throw new GitHubDownloadError(`Failed to request GitHub: ${detail}`)
+    const candidates = githubSourceFetchUrls(url, appEnv.GITHUB_PROXY)
+    let lastResponse: Response | undefined
+    let lastNetworkError: unknown
+
+    for (const candidate of candidates) {
+      try {
+        const response = await fetch(candidate, {
+          ...init,
+          headers: {
+            'User-Agent': this.userAgent,
+            ...init?.headers,
+          },
+        })
+        if (response.ok) return response
+        lastResponse = response
+        log('request not ok candidate=%s status=%d', candidate, response.status)
+      } catch (error) {
+        lastNetworkError = error
+        log('request failed candidate=%s error=%O', candidate, error)
+      }
     }
+
+    if (lastResponse) return lastResponse
+
+    const detail = lastNetworkError instanceof Error ? lastNetworkError.message : 'network error'
+    throw new GitHubDownloadError(`Failed to request GitHub: ${detail}`)
   }
 
   /**

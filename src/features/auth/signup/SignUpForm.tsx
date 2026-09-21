@@ -1,7 +1,7 @@
 'use client'
 
 import { BRANDING_NAME } from '@/const/branding'
-import AuthAgreement from '@/features/AuthAgreement'
+import AuthAgreement, { withAuthAgreement } from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
 import { Button, Icon, Input, InputPassword, Text } from '@pure/ui'
 import { Form } from 'antd'
@@ -45,9 +45,15 @@ const SignUpFormContent = () => {
     </Text>
   )
 
+  const handleFinish = (values: SignUpFormValues) => {
+    withAuthAgreement(() => {
+      void onSubmit(values)
+    })
+  }
+
   return (
     <AuthCard footer={footer} title={`创建 ${BRANDING_NAME} 账号`}>
-      <Form form={form} layout='vertical' onFinish={onSubmit}>
+      <Form form={form} layout='vertical' onFinish={handleFinish}>
         <Form.Item
           name='email'
           rules={[
@@ -133,12 +139,15 @@ const SignUpFormContent = () => {
         </Form.Item>
 
         <Form.Item>
+          <AuthAgreement />
+        </Form.Item>
+
+        <Form.Item>
           <Button block htmlType='submit' loading={loading} size='large' type='primary'>
             注册
           </Button>
         </Form.Item>
       </Form>
-      <AuthAgreement />
     </AuthCard>
   )
 }

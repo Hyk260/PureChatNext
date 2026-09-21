@@ -9,7 +9,7 @@ import { Button, Flex, Icon, Input, Skeleton, Text } from '@pure/ui'
 import type { InputRef } from '@pure/ui'
 import AuthIcons from '@/components/AuthIcons'
 import { BRANDING_NAME } from '@/const/branding'
-import AuthAgreement from '@/features/AuthAgreement'
+import AuthAgreement, { withAuthAgreement } from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS, normalizeLoginIdentifier } from '@/libs/better-auth/shared'
 
@@ -124,7 +124,9 @@ export const SignInEmailStep = ({
                   size='large'
                   type='fill'
                   onClick={() => {
-                    handleProviderClick(provider)
+                    withAuthAgreement(() => {
+                      void handleProviderClick(provider)
+                    })
                   }}
                 >
                   {getProviderLabel(provider)}
@@ -146,7 +148,15 @@ export const SignInEmailStep = ({
         )}
 
         {!disableEmailPassword && (
-          <Form form={form} layout='vertical' onFinish={onCheckUser}>
+          <Form
+            form={form}
+            layout='vertical'
+            onFinish={(values) => {
+              withAuthAgreement(() => {
+                void onCheckUser(values)
+              })
+            }}
+          >
             <Form.Item
               name='email'
               rules={[

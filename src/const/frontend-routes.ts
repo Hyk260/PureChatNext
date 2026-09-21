@@ -14,7 +14,6 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
     title: '主要',
     routes: [
       { href: '/', label: '首页' },
-      { href: '/welcome', label: '欢迎页' },
       { href: '/chat', label: '聊天' },
       { href: '/community', label: '社区' },
       { href: '/resources', label: '资源' },
@@ -43,7 +42,10 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
   {
     adminOnly: true,
     title: '管理',
-    routes: [{ href: '/admin/web-search', label: '联网搜索' }],
+    routes: [
+      { href: '/admin/web-search', label: '联网搜索' },
+      { href: '/admin/users', label: '用户管理' },
+    ],
   },
   {
     title: '开发',
@@ -52,7 +54,6 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
       { href: '/dev/email-templates', label: '邮件模板' },
       { href: '/dev/read-file', label: '文件读取' },
       { href: '/dev/s3', label: 'S3 测试' },
-      { href: '/dev/delete-user', label: '删除用户' },
       { href: '/dev/wechat-conversation', label: '微信对话' },
       { href: '/dev/qq-conversation', label: 'QQ 对话' },
       { href: '/dev/code-block', label: 'CodeBlock' },

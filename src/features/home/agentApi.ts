@@ -32,6 +32,17 @@ export type AgentUpdateBody = Partial<AgentCreateBody> & {
   sort?: number
 }
 
+export type AgentGenerateProfileBody = {
+  description: string
+  systemRole?: string
+  title?: string
+}
+
+export type AgentGeneratedProfile = {
+  openingMessage: string
+  openingQuestions: string[]
+}
+
 const toListItem = (a: ApiAgent): AgentListItem => ({
   avatar: a.avatar ?? '🤖',
   backgroundColor: a.backgroundColor,
@@ -86,4 +97,13 @@ export const deleteAgent = async (id: string): Promise<void> => {
   const res = await apiFetch(`/api/agents/${encodeURIComponent(id)}`, { method: 'DELETE' })
   if (res.status === 403) throw new Error('BUILTIN')
   if (!res.ok) throw new Error(`deleteAgent failed: ${res.status}`)
+}
+
+export const generateAgentProfile = async (body: AgentGenerateProfileBody): Promise<AgentGeneratedProfile> => {
+  const res = await apiFetch('/api/agents/generate-profile', jsonInit(body, { method: 'POST' }))
+  if (!res.ok) {
+    const payload = (await res.json().catch(() => null)) as { error?: string } | null
+    throw new Error(payload?.error || `generateAgentProfile failed: ${res.status}`)
+  }
+  return (await res.json()) as AgentGeneratedProfile
 }

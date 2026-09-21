@@ -90,6 +90,7 @@ interface ChatViewProps {
   onBusyChange: (busy: boolean) => void
   onCacheMessages: (topicId: string, messages: UIMessage[]) => void
   onBindActions: (actions: ChatViewActions) => void
+  onSelectOpeningQuestion?: (question: string) => void
   onTopicsRefresh: () => void
   permissionMode?: ChatPermissionMode
   searchMode: ChatSearchMode
@@ -103,6 +104,7 @@ const ChatView = memo<ChatViewProps>(
     onBusyChange,
     onCacheMessages,
     onBindActions,
+    onSelectOpeningQuestion,
     onTopicsRefresh,
     permissionMode,
     searchMode,
@@ -492,13 +494,6 @@ const ChatView = memo<ChatViewProps>(
           }
     }, [agents, agentId])
 
-    const handleSelectOpeningQuestion = useCallback(
-      (question: string) => {
-        void handleSend(question)
-      },
-      [handleSend]
-    )
-
     const handleRegenerate = useCallback(
       async (id: string) => {
         const idx = messagesRef.current.findIndex((m) => m.id === id)
@@ -530,7 +525,7 @@ const ChatView = memo<ChatViewProps>(
           onDelete={handleDelete}
           onEdit={handleEdit}
           onRegenerate={handleRegenerate}
-          onSelectOpeningQuestion={handleSelectOpeningQuestion}
+          onSelectOpeningQuestion={onSelectOpeningQuestion}
           onToolApproval={handleToolApproval}
           onServerToolApproval={handleServerToolApproval}
         />

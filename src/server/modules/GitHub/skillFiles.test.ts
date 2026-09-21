@@ -12,6 +12,7 @@ import {
   skillReadmeRepoPath,
   skillRootPrefix,
   toSkillRelativePath,
+  userSkillsPrefix,
 } from './skillFiles'
 
 const file = (path: string, size = 12): GitHubContentItem => {
@@ -46,6 +47,7 @@ describe('sanitizeSkillRelativePath', () => {
 
 describe('skill object keys', () => {
   it('prefixes user and skill ids', () => {
+    expect(userSkillsPrefix('user_1')).toBe('skills/user_1/')
     expect(buildSkillObjectKey('user_1', 'usk_1', 'scripts/run.sh')).toBe('skills/user_1/usk_1/scripts/run.sh')
     expect(skillRootPrefix('user_1', 'usk_1')).toBe('skills/user_1/usk_1/')
   })

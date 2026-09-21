@@ -74,6 +74,13 @@ export const joinGithubProxy = (proxy: string, assetUrl: string) => {
   return `${base}${assetUrl}`
 }
 
+/** Server-side GitHub content fetch: GITHUB_PROXY first, then origin. */
+export const githubSourceFetchUrls = (originUrl: string, proxy?: string) => {
+  const trimmed = proxy?.trim()
+  if (!trimmed) return [originUrl]
+  return [...new Set([joinGithubProxy(trimmed, originUrl), originUrl])]
+}
+
 /** Server-side fetch candidates: avatar CDN, image CDN, optional GITHUB_PROXY, then origin. */
 export const githubAssetFetchUrls = (assetUrl: string, proxy?: string) => {
   const parsed = parseGithubAssetUrl(assetUrl)

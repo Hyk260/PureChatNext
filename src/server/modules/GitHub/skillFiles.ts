@@ -46,7 +46,9 @@ export const skillReadmeRepoPath = (info: GitHubRepoInfo) =>
 export const buildSkillObjectKey = (userId: string, skillId: string, relativePath: string) =>
   `skills/${userId}/${skillId}/${sanitizeSkillRelativePath(relativePath)}`
 
-export const skillRootPrefix = (userId: string, skillId: string) => `skills/${userId}/${skillId}/`
+export const userSkillsPrefix = (userId: string) => `skills/${userId}/`
+
+export const skillRootPrefix = (userId: string, skillId: string) => `${userSkillsPrefix(userId)}${skillId}/`
 
 export const toSkillRelativePath = (repoPath: string, skillRoot?: string) => {
   if (!skillRoot) return repoPath

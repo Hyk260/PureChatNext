@@ -65,9 +65,11 @@ const styles = createStaticStyles(({ css }) => ({
     &:hover {
       background: ${cssVar.colorFillTertiary};
     }
-  `,
-  listItemActive: css`
-    background: ${cssVar.colorFillSecondary};
+
+    &[data-active='true'],
+    &[data-active='true']:hover {
+      background: ${cssVar.colorFillSecondary};
+    }
   `,
   pane: css`
     min-width: 0;
@@ -94,9 +96,11 @@ const styles = createStaticStyles(({ css }) => ({
     &:hover {
       background: ${cssVar.colorFillTertiary};
     }
-  `,
-  treeButtonActive: css`
-    background: ${cssVar.colorFillSecondary};
+
+    &[data-active='true'],
+    &[data-active='true']:hover {
+      background: ${cssVar.colorFillSecondary};
+    }
   `,
 }))
 
@@ -121,7 +125,6 @@ const SkillTreeNode = ({
   const isFolder = Boolean(node.children)
   const [open, setOpen] = useState(true)
   const isActive = !isFolder && selectedPath === node.path
-  const className = isActive ? `${styles.treeButton} ${styles.treeButtonActive}` : styles.treeButton
 
   if (isFolder) {
     return (
@@ -146,7 +149,13 @@ const SkillTreeNode = ({
   }
 
   return (
-    <button className={className} type='button' onClick={() => onSelect(node.path)}>
+    <button
+      aria-current={isActive ? 'true' : undefined}
+      className={styles.treeButton}
+      data-active={isActive ? 'true' : undefined}
+      type='button'
+      onClick={() => onSelect(node.path)}
+    >
       <Flex className='items-center gap-1 min-w-0'>
         <FileIcon fileName={node.name} size={16} />
         <Text ellipsis>{node.name}</Text>
@@ -156,30 +165,50 @@ const SkillTreeNode = ({
 }
 
 const SkillTextPreview = ({ path, skillId }: { path: string; skillId: string }) => {
-  const kind = getSkillFilePreviewKind(path)
-  const [text, setText] = useState<string | null>(null)
-  const [error, setError] = useState(false)
+  const requestKey = `${skillId}:${path}`
+  const [shown, setShown] = useState<{ path: string; skillId: string; text: string } | null>(null)
+  const [failedKey, setFailedKey] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     const controller = new AbortController()
     void fetch(fileUrl(skillId, path), { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error('file')
-        setText(await response.text())
+        const next = await response.text()
+        if (!cancelled) {
+          setFailedKey((current) => (current === requestKey ? null : current))
+          setShown({ path, skillId, text: next })
+        }
       })
       .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === 'AbortError') return
-        setError(true)
+        if (cancelled || (cause instanceof DOMException && cause.name === 'AbortError')) return
+        setFailedKey(requestKey)
       })
-    return () => controller.abort()
-  }, [path, skillId])
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [path, requestKey, skillId])
 
-  if (error) return <Text type='secondary'>无法加载文件</Text>
-  if (text === null) return <Text type='secondary'>正在加载…</Text>
-  if (kind === 'markdown') return <MessageMarkdown text={text} />
+  if (failedKey === requestKey) return <Text type='secondary'>无法加载文件</Text>
+  if (!shown) return <Text type='secondary'>正在加载…</Text>
 
-  const language = getSkillFileExtension(path) || 'txt'
-  return <Highlighter language={language}>{text}</Highlighter>
+  const kind = getSkillFilePreviewKind(shown.path)
+  if (kind === 'markdown') return <MessageMarkdown text={shown.text} />
+
+  const language = getSkillFileExtension(shown.path) || 'txt'
+  return (
+    <Highlighter
+      animated={false}
+      key={`${shown.skillId}:${shown.path}`}
+      language={language}
+      showLanguage={false}
+      variant='borderless'
+    >
+      {shown.text}
+    </Highlighter>
+  )
 }
 
 const SkillFilePreview = ({ path, skillId }: { path: string; skillId: string }) => {
@@ -192,7 +221,7 @@ const SkillFilePreview = ({ path, skillId }: { path: string; skillId: string }) 
     )
   }
   if (kind === 'image') return <img alt={path} className='max-w-full' src={fileUrl(skillId, path)} />
-  return <SkillTextPreview key={path} path={path} skillId={skillId} />
+  return <SkillTextPreview path={path} skillId={skillId} />
 }
 
 const SkillDetailPane = ({ skillId }: { skillId: string }) => {
@@ -201,19 +230,24 @@ const SkillDetailPane = ({ skillId }: { skillId: string }) => {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     const controller = new AbortController()
     void fetch(`/api/user/skills/${encodeURIComponent(skillId)}`, { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error('detail')
         const payload = (await response.json()) as SkillDetail
+        if (cancelled) return
         setDetail(payload)
         setSelectedPath(payload.files.map((file) => file.path).find((path) => !isHiddenSkillFile(path)) ?? null)
       })
       .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === 'AbortError') return
+        if (cancelled || (error instanceof DOMException && error.name === 'AbortError')) return
         message.error('无法加载技能详情')
       })
-    return () => controller.abort()
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
   }, [message, skillId])
 
   const tree = useMemo(() => buildFileTree(detail?.files.map((file) => file.path) ?? []), [detail])
@@ -362,10 +396,14 @@ export default function SkillSettingsPage() {
             {communityOpen
               ? skills.map((skill) => {
                   const isActive = skill.id === selectedId
-                  const className = isActive ? `${styles.listItem} ${styles.listItemActive}` : styles.listItem
                   return (
-                    <Flex className={[className, 'group items-center gap-1']} key={skill.id}>
+                    <Flex
+                      className={[styles.listItem, 'group items-center gap-1']}
+                      data-active={isActive ? 'true' : undefined}
+                      key={skill.id}
+                    >
                       <button
+                        aria-current={isActive ? 'true' : undefined}
                         className='flex flex-1 items-center gap-2 min-w-0 border-0 bg-transparent p-0 text-start cursor-pointer'
                         type='button'
                         onClick={() => setSelectedId(skill.id)}
@@ -399,7 +437,7 @@ export default function SkillSettingsPage() {
       <Flex className={[styles.pane, 'flex-col flex-1 min-w-0']}>
         <SettingsHeader />
         {selectedId ? (
-          <SkillDetailPane key={selectedId} skillId={selectedId} />
+          <SkillDetailPane skillId={selectedId} />
         ) : (
           <Flex className='items-center justify-center flex-1'>
             <Empty description='从技能商店安装' />

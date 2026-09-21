@@ -20,7 +20,7 @@ import {
   getVerificationEmailTemplate,
   getVerificationOTPEmailTemplate,
 } from '@/libs/better-auth/email-templates'
-import { OTP_EXPIRES_IN } from '@/libs/better-auth/shared'
+import { allocateUniqueUsername, OTP_EXPIRES_IN } from '@/libs/better-auth/shared'
 import { initBetterAuthSSOProviders, parseSSOProviders } from '@/libs/better-auth/sso'
 import { createSecondaryStorage } from './server/create-secondary-storage'
 import { createVerificationDailyRateLimitStorage } from './server/rate-limit-storage'
@@ -268,8 +268,15 @@ export function defineConfig() {
           before: async (user) => {
             log('user create before: %O', user)
             const { UserModel } = await import('@pure/database/models/user')
-            const role = await new UserModel().resolveSignupRole()
-            return { data: { ...user, role } }
+            const userModel = new UserModel()
+            const preferredName = typeof user.name === 'string' ? user.name : ''
+            const [role, name] = await Promise.all([
+              userModel.resolveSignupRole(),
+              allocateUniqueUsername(preferredName, async (username) =>
+                Boolean(await userModel.findByUsername(username))
+              ),
+            ])
+            return { data: { ...user, name, role } }
           },
           // 写入后：懒发放积分由 CreditsModel.ensurePeriod 在首次 PureChat 请求时完成；
           // 此处保留 hook 供后续扩展（如显式 grant）。

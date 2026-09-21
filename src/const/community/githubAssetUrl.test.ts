@@ -5,6 +5,7 @@ import {
   githubAssetAvatar,
   githubAssetFetchUrls,
   githubAssetUrl,
+  githubSourceFetchUrls,
   parseGithubAssetUrl,
 } from './githubAssetUrl'
 
@@ -62,6 +63,21 @@ describe('githubAssetFetchUrls', () => {
       'https://avatars.githubusercontent.com/openclaw',
       'https://wsrv.nl/?url=github.com%2Fopenclaw.png',
       'https://github.com/openclaw.png',
+    ])
+  })
+})
+
+describe('githubSourceFetchUrls', () => {
+  it('uses the configured mirror first, then origin', () => {
+    expect(githubSourceFetchUrls('https://raw.githubusercontent.com/o/r/main/SKILL.md', 'https://ghfast.top')).toEqual([
+      'https://ghfast.top/https://raw.githubusercontent.com/o/r/main/SKILL.md',
+      'https://raw.githubusercontent.com/o/r/main/SKILL.md',
+    ])
+  })
+
+  it('keeps origin only when no proxy is set', () => {
+    expect(githubSourceFetchUrls('https://api.github.com/repos/o/r/contents')).toEqual([
+      'https://api.github.com/repos/o/r/contents',
     ])
   })
 })

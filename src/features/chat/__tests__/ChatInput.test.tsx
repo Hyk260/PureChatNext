@@ -99,6 +99,24 @@ describe('ChatInput web search mode', () => {
     expect((textarea as HTMLTextAreaElement).value).toBe('asd')
   })
 
+  it('prefills textarea without sending', () => {
+    const onSend = vi.fn()
+    const { rerender } = render(
+      <ChatInput prefill='问题一' prefillKey={1} searchMode='off' onSearchModeChange={vi.fn()} onSend={onSend} />
+    )
+
+    const textarea = screen.getByPlaceholderText('随心输入') as HTMLTextAreaElement
+    expect(textarea.value).toBe('问题一')
+    expect(onSend).not.toHaveBeenCalled()
+
+    fireEvent.change(textarea, { target: { value: '改过了' } })
+    rerender(
+      <ChatInput prefill='问题一' prefillKey={2} searchMode='off' onSearchModeChange={vi.fn()} onSend={onSend} />
+    )
+    expect(textarea.value).toBe('问题一')
+    expect(onSend).not.toHaveBeenCalled()
+  })
+
   it('sends on Enter when IME is idle', () => {
     const onSend = vi.fn()
     render(<ChatInput searchMode='off' onSearchModeChange={vi.fn()} onSend={onSend} />)

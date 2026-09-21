@@ -16,7 +16,7 @@ import {
 } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
 import { Pagination, Segmented } from 'antd'
-import { Box, Ellipsis, Plus } from 'lucide-react'
+import { Box, Ellipsis, Loader2, Plus } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
@@ -114,7 +114,14 @@ const StoreSkillRow = memo(function StoreSkillRow({
         </span>
       ) : (
         <span onClick={stopPropagation} onKeyDown={stopPropagation}>
-          <ActionIcon disabled={installing} icon={Plus} size='small' title='安装' onClick={onInstall} />
+          <ActionIcon
+            disabled={installing}
+            icon={installing ? Loader2 : Plus}
+            size='small'
+            spin={installing}
+            title={installing ? '安装中' : '安装'}
+            onClick={onInstall}
+          />
         </span>
       )}
     </Block>

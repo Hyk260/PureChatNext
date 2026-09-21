@@ -68,4 +68,4 @@ export const users = pgTable(
 export type User = typeof users.$inferInsert
 export type UserItem = typeof users.$inferSelect
 
-export type UserWithoutPassword = Omit<User, 'password'>
+export type UserWithoutPassword = Omit<UserItem, 'password'>

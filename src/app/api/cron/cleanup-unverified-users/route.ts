@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 import { UNVERIFIED_USER_TTL_MS } from '@/const/auth'
-import { UserModel } from '@pure/database/models/user'
 import { logger } from '@/libs/logger'
+import { deleteUnverifiedUsersWithStorage } from '@/server/services/user/cleanup-storage'
 
 /**
  * GET /api/cron/cleanup-unverified-users
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await new UserModel().deleteUnverifiedOlderThan(UNVERIFIED_USER_TTL_MS)
+    const result = await deleteUnverifiedUsersWithStorage(UNVERIFIED_USER_TTL_MS)
     logger.info({ cutoff: result.cutoff.toISOString(), deleted: result.deleted }, 'cleanup-unverified-users')
     return NextResponse.json({
       cutoff: result.cutoff.toISOString(),

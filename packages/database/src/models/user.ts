@@ -1,8 +1,8 @@
-import { USER_ROLE } from '@pure/const'
+import { isAdminRole, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { createNanoId, generateCompactUuid } from '@pure/utils'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
-import { and, count, eq, inArray, lt } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, inArray, lt, or } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { account, passkey, session, twoFactor, users, verification } from '../schemas'
@@ -34,6 +34,71 @@ export type UserDeletionPreviewUser = {
   role: string | null
   userId: string
   username: string | null
+}
+
+export type AdminUserListItem = {
+  banned: boolean | null
+  banReason: string | null
+  createdAt: Date
+  email: string | null
+  emailVerified: boolean
+  fullName: string | null
+  id: string
+  lastActiveAt: Date
+  role: string | null
+  userId: string
+  username: string | null
+}
+
+export type AdminUserPatch = {
+  banReason?: string | null
+  banned?: boolean
+  fullName?: string | null
+  role?: UserRole
+  username?: string
+}
+
+export class AdminUserError extends Error {
+  constructor(
+    message: string,
+    public readonly code: 'conflict' | 'last_admin' | 'self'
+  ) {
+    super(message)
+    this.name = 'AdminUserError'
+  }
+}
+
+export function isAdminUserError(error: unknown): error is AdminUserError {
+  return error instanceof AdminUserError
+}
+
+export function assertAdminUserMutationAllowed(input: {
+  actorId: string
+  activeAdminCount: number
+  targetId: string
+  targetRole: string | null | undefined
+}) {
+  if (input.actorId === input.targetId) {
+    throw new AdminUserError('不能对自己执行该操作', 'self')
+  }
+
+  if (isAdminRole(input.targetRole) && input.activeAdminCount <= 1) {
+    throw new AdminUserError('不能移除最后一个管理员', 'last_admin')
+  }
+}
+
+const adminUserColumns = {
+  banned: users.banned,
+  banReason: users.banReason,
+  createdAt: users.createdAt,
+  email: users.email,
+  emailVerified: users.emailVerified,
+  fullName: users.fullName,
+  id: users.id,
+  lastActiveAt: users.lastActiveAt,
+  role: users.role,
+  userId: users.userId,
+  username: users.username,
 }
 
 export class UserModel {
@@ -189,14 +254,7 @@ export class UserModel {
     }
   }
 
-  deleteUserByEmail = async (email: string) => {
-    const normalizedEmail = email.trim()
-    const user = await this.findByEmail(normalizedEmail)
-
-    if (!user) {
-      return { found: false as const }
-    }
-
+  private deleteUserRecord = async (user: UserItem) => {
     const identifiers = this.getVerificationIdentifiers(user)
     const relatedCounts = await this.countRelatedRecords(user.id, identifiers)
 
@@ -215,17 +273,120 @@ export class UserModel {
     }
   }
 
-  /** 删除创建超过 maxAgeMs 且仍未验证邮箱的用户（释放占坑邮箱） */
-  deleteUnverifiedOlderThan = async (maxAgeMs: number) => {
+  deleteUserByEmail = async (email: string) => {
+    const user = await this.findByEmail(email.trim())
+    if (!user) {
+      return { found: false as const }
+    }
+
+    return this.deleteUserRecord(user)
+  }
+
+  countActiveAdmins = async () => {
+    const [row] = await this.db
+      .select({ n: count() })
+      .from(users)
+      .where(and(eq(users.role, USER_ROLE.Admin), eq(users.banned, false)))
+    return Number(row?.n ?? 0)
+  }
+
+  listUsers = async (query: { page: number; pageSize: number; q?: string }) => {
+    const search = query.q?.trim()
+    const pattern = search ? `%${search}%` : undefined
+    const where = pattern
+      ? or(ilike(users.email, pattern), ilike(users.username, pattern), ilike(users.fullName, pattern))
+      : undefined
+
+    const [items, [totalRow]] = await Promise.all([
+      this.db
+        .select(adminUserColumns)
+        .from(users)
+        .where(where)
+        .orderBy(desc(users.createdAt))
+        .limit(query.pageSize)
+        .offset((query.page - 1) * query.pageSize),
+      this.db.select({ n: count() }).from(users).where(where),
+    ])
+
+    return { items, total: Number(totalRow?.n ?? 0) }
+  }
+
+  updateByAdmin = async (id: string, actorId: string, patch: AdminUserPatch) => {
+    const user = await this.findById(id)
+    if (!user) return null
+
+    const isDemote = patch.role === USER_ROLE.User && isAdminRole(user.role)
+    const isBan = patch.banned === true && user.banned !== true
+    if (isDemote || isBan) {
+      assertAdminUserMutationAllowed({
+        actorId,
+        activeAdminCount: await this.countActiveAdmins(),
+        targetId: id,
+        targetRole: user.role,
+      })
+    }
+
+    if (patch.username !== undefined && patch.username !== user.username) {
+      const taken = await this.findByUsername(patch.username)
+      if (taken && taken.id !== id) {
+        throw new AdminUserError('用户名已被占用', 'conflict')
+      }
+    }
+
+    const values: Partial<User> = { updatedAt: new Date() }
+    if (patch.username !== undefined) values.username = patch.username
+    if (patch.fullName !== undefined) values.fullName = patch.fullName
+    if (patch.role !== undefined) values.role = patch.role
+    if (patch.banned !== undefined) {
+      values.banned = patch.banned
+      if (patch.banned) {
+        if (patch.banReason !== undefined) values.banReason = patch.banReason
+      } else {
+        values.banExpires = null
+        values.banReason = null
+      }
+    } else if (patch.banReason !== undefined) {
+      values.banReason = patch.banReason
+    }
+
+    const [updated] = await this.db.update(users).set(values).where(eq(users.id, id)).returning(adminUserColumns)
+    return updated ?? null
+  }
+
+  deleteUserByIdForAdmin = async (id: string, actorId: string) => {
+    const user = await this.findById(id)
+    if (!user) {
+      return { found: false as const }
+    }
+
+    assertAdminUserMutationAllowed({
+      actorId,
+      activeAdminCount: await this.countActiveAdmins(),
+      targetId: id,
+      targetRole: user.role,
+    })
+
+    return this.deleteUserRecord(user)
+  }
+
+  listUnverifiedOlderThan = async (maxAgeMs: number) => {
     const cutoff = new Date(Date.now() - maxAgeMs)
     const staleUsers = await this.db
       .select({
         email: users.email,
         id: users.id,
         phone: users.phone,
+        userId: users.userId,
       })
       .from(users)
       .where(and(eq(users.emailVerified, false), lt(users.createdAt, cutoff)))
+
+    return { cutoff, users: staleUsers }
+  }
+
+  /** 删除创建超过 maxAgeMs 且仍未验证邮箱的用户（释放占坑邮箱） */
+  deleteUnverifiedOlderThan = async (maxAgeMs: number) => {
+    const { cutoff, users: staleUsers } = await this.listUnverifiedOlderThan(maxAgeMs)
 
     if (staleUsers.length === 0) {
       return { cutoff, deleted: 0 }

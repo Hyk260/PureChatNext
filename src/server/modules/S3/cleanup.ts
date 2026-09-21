@@ -26,3 +26,20 @@ export async function deleteS3ObjectsByUrls(urls: Array<string | null | undefine
     throw error
   }
 }
+
+/** Delete every object under a key prefix. Throws when cleanup fails. */
+export async function deleteS3Prefix(prefix: string) {
+  if (!prefix) return
+  if (!isS3Configured()) throw new Error('S3 文件存储未配置，无法清理对象')
+
+  const s3 = new FileS3()
+  const keys = [...new Set((await s3.listFiles(prefix)).map((file) => file.Key).filter(Boolean))]
+  if (keys.length === 0) return
+
+  try {
+    await s3.deleteFiles(keys)
+  } catch (error) {
+    log('清理 prefix=%s 的 %d 个 S3 对象失败，原因=%O', prefix, keys.length, error)
+    throw error
+  }
+}

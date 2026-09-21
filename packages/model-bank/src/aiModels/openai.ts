@@ -141,7 +141,7 @@ export const openaiChatModels: AiModelCard[] = [
     id: 'gpt-5.4-mini',
     displayName: 'GPT-5.4 mini',
     description: 'OpenAI 的 GPT-5.4 Mini —— 性能与成本的高效平衡。',
-    enabled: true,
+    enabled: false,
     family: 'gpt',
     generation: 'gpt-5.4',
     contextWindowTokens: 400_000,

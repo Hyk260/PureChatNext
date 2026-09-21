@@ -1,13 +1,13 @@
 'use client'
 
-import { Center, Grid, Text } from '@pure/ui'
+import { Center, confirmModal, Grid, Text } from '@pure/ui'
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
 import { toDiscoverAgentFromListItem } from '@/features/community/customAgents'
 import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
-import { updateAgent } from '@/features/home/agentApi'
+import { deleteAgent, updateAgent } from '@/features/home/agentApi'
 import AgentFormModal from '@/features/home/HomeSidebar/modals/AgentFormModal'
 import type { AgentFormValues } from '@/features/home/HomeSidebar/modals/AgentFormModal'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
@@ -33,6 +33,8 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
   const loaded = useAgentsStore((s) => s.loaded)
   const error = useAgentsStore((s) => s.error)
   const upsertLocal = useAgentsStore((s) => s.upsertLocal)
+  const removeLocal = useAgentsStore((s) => s.removeLocal)
+  const agents = useAgentsStore((s) => s.agents)
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
   const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
@@ -85,6 +87,40 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
     [editing, message, selectedAgentId, setActiveAgent, upsertLocal]
   )
 
+  const handleDelete = useCallback(
+    (agent: AgentListItem) => {
+      confirmModal({
+        cancelText: '取消',
+        content: '删除后不可恢复，该助理下的话题也会一并删除。',
+        okButtonProps: { danger: true },
+        okText: '删除',
+        onOk: async () => {
+          try {
+            await deleteAgent(agent.id)
+            removeLocal(agent.id)
+            if (detailAgentId === agent.id) setDetailAgentId(null)
+            if (editing?.id === agent.id) setEditing(null)
+            message.success('已删除')
+            if (selectedAgentId === agent.id) {
+              const next = agents.find((item) => item.id !== agent.id)
+              if (next) {
+                setSelectedAgentId(next.id)
+                setActiveAgent(toActiveCommunityAgent(next))
+              }
+            }
+          } catch (error) {
+            const code = error instanceof Error ? error.message : ''
+            if (code === 'BUILTIN') message.error('系统内置助理不可删除')
+            else message.error('删除失败')
+            throw error
+          }
+        },
+        title: '删除该助理？',
+      })
+    },
+    [agents, detailAgentId, editing, message, removeLocal, selectedAgentId, setActiveAgent, setSelectedAgentId]
+  )
+
   const handleEditFromDetail = useCallback(() => {
     if (!detailAgent) return
     setDetailAgentId(null)
@@ -115,6 +151,7 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
           <CustomAgentCard
             key={agent.id}
             agent={agent}
+            onDelete={handleDelete}
             onEdit={setEditing}
             onOpenDetail={handleOpenDetail}
             onUse={handleUse}

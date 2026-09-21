@@ -86,3 +86,38 @@ describe('FileModel storage quota', () => {
     expect(tx.insert).not.toHaveBeenCalled()
   })
 })
+
+describe('FileModel storage refs', () => {
+  it('lists owned url and hash refs', async () => {
+    const rows = [{ fileHash: 'h1', url: 'https://storage.example/a.png' }]
+    const db = {
+      select: vi.fn(() => createSelectChain(rows)),
+    } as unknown as ChatDatabase
+
+    await expect(new FileModel('user-1', db).listOwnedStorageRefs()).resolves.toEqual(rows)
+  })
+
+  it('deletes global files whose hashes are no longer referenced', async () => {
+    const where = vi.fn(async () => undefined)
+    const db = {
+      delete: vi.fn(() => ({ where })),
+      select: vi.fn(() => createSelectChain([{ fileHash: 'keep' }])),
+    } as unknown as ChatDatabase
+
+    await new FileModel('user-1', db).deleteOrphanGlobalFiles(['keep', 'gone', 'gone', null])
+
+    expect(db.delete).toHaveBeenCalled()
+    expect(where).toHaveBeenCalled()
+  })
+
+  it('skips global file delete when hashes are still referenced', async () => {
+    const db = {
+      delete: vi.fn(),
+      select: vi.fn(() => createSelectChain([{ fileHash: 'keep' }])),
+    } as unknown as ChatDatabase
+
+    await new FileModel('user-1', db).deleteOrphanGlobalFiles(['keep'])
+
+    expect(db.delete).not.toHaveBeenCalled()
+  })
+})

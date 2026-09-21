@@ -16,10 +16,17 @@ interface SignUpErrorLike {
   code?: string
   details?: {
     cause?: {
-      code?: string
+      constraint_name?: string
     }
   }
   message?: string
+}
+
+const isEmailDuplicateSignupError = (error: SignUpErrorLike) => {
+  if (error.code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' || error.code === 'USER_ALREADY_EXISTS') {
+    return true
+  }
+  return error.details?.cause?.constraint_name === 'users_email_unique'
 }
 
 const redirectToSignIn = (
@@ -69,11 +76,8 @@ export const useSignUp = () => {
 
       if (error) {
         const signUpError = error as SignUpErrorLike
-        const isEmailDuplicate =
-          signUpError.code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' ||
-          (signUpError.code === 'FAILED_TO_CREATE_USER' && signUpError.details?.cause?.code === '23505')
 
-        if (isEmailDuplicate) {
+        if (isEmailDuplicateSignupError(signUpError)) {
           message.info('该邮箱已注册，请前往登录')
           redirectToSignIn(router, searchParams, email)
           return

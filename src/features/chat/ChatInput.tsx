@@ -14,7 +14,7 @@ import {
 import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { Check, ChevronRight, FileText, Globe, GlobeOff, LibraryBig, Plus, Settings2, X } from 'lucide-react'
-import { memo, useCallback, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatPermissionMode } from '@pure/types'
 
 import { useApp } from '@/components/AntdStaticMethods'
@@ -133,6 +133,8 @@ interface ChatInputProps {
   onSearchModeChange: (mode: ChatSearchMode) => void
   onStop?: () => void
   permissionMode?: ChatPermissionMode
+  prefill?: string
+  prefillKey?: number
   searchMode: ChatSearchMode
   topicId?: string | null
 }
@@ -160,17 +162,34 @@ const MenuLabel = memo<{
 MenuLabel.displayName = 'MenuLabel'
 
 const ChatInput = memo<ChatInputProps>((props) => {
-  const { isBusy, onPermissionModeChange, onSearchModeChange, onSend, onStop, permissionMode, searchMode, topicId } =
-    props
+  const {
+    isBusy,
+    onPermissionModeChange,
+    onSearchModeChange,
+    onSend,
+    onStop,
+    permissionMode,
+    prefill,
+    prefillKey,
+    searchMode,
+    topicId,
+  } = props
   const [input, setInput] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [plusOpen, setPlusOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { message } = useApp()
   const currentModel = useCurrentHomeModel()
   const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
   const openParamsPanel = useChatUiStore((s) => s.openParamsPanel)
   const { onCompositionEnd, onCompositionStart, shouldIgnoreEnter } = useImeEnterGuard()
+
+  useEffect(() => {
+    if (!prefill) return
+    setInput(prefill)
+    textareaRef.current?.focus()
+  }, [prefill, prefillKey])
 
   const handleSend = useCallback(() => {
     const text = input.trim()
@@ -297,6 +316,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
       ) : null}
 
       <textarea
+        ref={textareaRef}
         className={styles.input}
         placeholder='随心输入'
         rows={1}

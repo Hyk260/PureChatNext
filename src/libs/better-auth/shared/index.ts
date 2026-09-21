@@ -8,4 +8,5 @@ export {
 } from './constants'
 export { LOGIN_USERNAME_REGEX, normalizeLoginIdentifier } from './login-identifier'
 export type { LoginIdentifier } from './login-identifier'
+export { allocateUniqueUsername, sanitizeUsername } from './unique-username'
 export type { AuthServerConfig, EmailVerificationMode } from './types'

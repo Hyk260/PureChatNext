@@ -3,13 +3,13 @@
 import { Flex } from '@pure/ui'
 import { Drawer } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
-import { Globe2, Route } from 'lucide-react'
+import { Globe2, Route, Users } from 'lucide-react'
 import { memo, useState } from 'react'
 
 import NavItem from '@/components/NavItem'
 import { isAdminRole } from '@/const/auth'
 import { HOME_TOP_NAV } from '@/const/home/nav'
-import { RouteNavContent } from '@/features/auth/welcome/RouteNavSidebar'
+import { RouteNavContent } from '@/features/dev/RouteNavContent'
 import { useSession } from '@/libs/better-auth/client'
 import { isDev } from '@/libs/constants'
 import Link from 'next/link'
@@ -20,7 +20,7 @@ const SidebarNav = memo(() => {
   const { data: session } = useSession()
   const { message } = useApp()
   const [routeNavOpen, setRouteNavOpen] = useState(false)
-  const showAdminWebSearch = isAdminRole(session?.user?.role)
+  const showAdminNav = isAdminRole(session?.user?.role)
 
   return (
     <>
@@ -56,15 +56,25 @@ const SidebarNav = memo(() => {
             </Link>
           )
         })}
-        {showAdminWebSearch ? (
-          <Link className='text-inherit no-underline' href='/admin/web-search'>
-            <NavItem
-              active={pathname.startsWith('/admin/web-search')}
-              clickable
-              icon={Globe2}
-              title='联网搜索'
-            />
-          </Link>
+        {showAdminNav ? (
+          <>
+            <Link className='text-inherit no-underline' href='/admin/users'>
+              <NavItem
+                active={pathname.startsWith('/admin/users')}
+                clickable
+                icon={Users}
+                title='用户管理'
+              />
+            </Link>
+            <Link className='text-inherit no-underline' href='/admin/web-search'>
+              <NavItem
+                active={pathname.startsWith('/admin/web-search')}
+                clickable
+                icon={Globe2}
+                title='联网搜索'
+              />
+            </Link>
+          </>
         ) : null}
         {isDev ? <NavItem icon={Route} title='dev测试路由' onItemClick={() => setRouteNavOpen(true)} /> : null}
       </Flex>

@@ -119,6 +119,8 @@ const ChatPage = memo(() => {
     isClient ? activeTopicId : undefined
   )
   const [isBusy, setIsBusy] = useState(false)
+  const [inputPrefill, setInputPrefill] = useState('')
+  const [inputPrefillKey, setInputPrefillKey] = useState(0)
   const [autoRenamingTopicId, setAutoRenamingTopicId] = useState<string | null>(null)
   // Per-topic message cache. Lets topic switches
   // paint immediately instead of blanking the shell while fetchMessages resolves.
@@ -169,6 +171,11 @@ const ChatPage = memo(() => {
 
   const handleInputStop = useCallback(() => {
     chatActionsRef.current.stop()
+  }, [])
+
+  const handleSelectOpeningQuestion = useCallback((question: string) => {
+    setInputPrefill(question)
+    setInputPrefillKey((key) => key + 1)
   }, [])
 
   const refreshTopics = useCallback(async () => {
@@ -562,6 +569,7 @@ const ChatPage = memo(() => {
               onBindActions={handleBindActions}
               onBusyChange={handleBusyChange}
               onCacheMessages={handleCacheMessages}
+              onSelectOpeningQuestion={handleSelectOpeningQuestion}
               onTopicsRefresh={handleTopicsRefresh}
               permissionMode={isDesktop ? permissionMode : undefined}
               searchMode={searchMode}
@@ -575,6 +583,8 @@ const ChatPage = memo(() => {
             <ChatInput
               isBusy={inputBusy}
               permissionMode={isDesktop ? permissionMode : undefined}
+              prefill={inputPrefill}
+              prefillKey={inputPrefillKey}
               searchMode={searchMode}
               topicId={activeTopicId}
               onPermissionModeChange={isDesktop ? handlePermissionModeChange : undefined}

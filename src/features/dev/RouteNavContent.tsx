@@ -1,15 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useState } from 'react'
-import { Drawer } from 'antd'
-import { Menu } from 'lucide-react'
 
-import { FRONTEND_ROUTE_GROUPS } from '@/const/frontend-routes'
 import { isAdminRole } from '@/const/auth'
+import { FRONTEND_ROUTE_GROUPS } from '@/const/frontend-routes'
 import { useSession } from '@/libs/better-auth/client'
-import { Button } from '@pure/ui'
 
 const isActiveRoute = (pathname: string, href: string) => {
   if (href === '/') {
@@ -57,36 +52,5 @@ export function RouteNavContent({ pathname, onNavigate }: RouteNavContentProps) 
         </section>
       ))}
     </nav>
-  )
-}
-
-export function RouteNavSidebar() {
-  const pathname = usePathname()
-  const [open, setOpen] = useState(false)
-
-  return (
-    <>
-      <Button
-        aria-label='打开页面导航'
-        className='fixed left-4 top-4 z-40'
-        icon={<Menu size={16} />}
-        onClick={() => setOpen(true)}
-        type='default'
-      />
-      <Drawer
-        onClose={() => setOpen(false)}
-        open={open}
-        placement='left'
-        title={
-          <div>
-            <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>页面导航</p>
-            <p className='mt-1 text-base font-semibold'>PureChat 路由</p>
-          </div>
-        }
-        size={224}
-      >
-        <RouteNavContent onNavigate={() => setOpen(false)} pathname={pathname} />
-      </Drawer>
-    </>
   )
 }

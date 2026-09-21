@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     S3_ENDPOINT: 'https://storage.example',
     S3_SECRET_ACCESS_KEY: 'secret',
   },
+  listFiles: vi.fn(),
 }))
 
 vi.mock('@/envs/file', () => ({
@@ -18,18 +19,20 @@ vi.mock('@/envs/file', () => ({
 vi.mock('@/server/modules/S3', () => ({
   FileS3: class {
     deleteFiles = mocks.deleteFiles
+    listFiles = mocks.listFiles
   },
 }))
 vi.mock('@/server/modules/S3/url', () => ({
   extractS3KeyFromUrl: mocks.extractS3KeyFromUrl,
 }))
 
-import { deleteS3ObjectsByUrls } from '../cleanup'
+import { deleteS3ObjectsByUrls, deleteS3Prefix } from '../cleanup'
 
 describe('deleteS3ObjectsByUrls', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.deleteFiles.mockResolvedValue(undefined)
+    mocks.listFiles.mockResolvedValue([])
     mocks.fileEnv.S3_ACCESS_KEY_ID = 'access'
   })
 
@@ -57,5 +60,29 @@ describe('deleteS3ObjectsByUrls', () => {
     mocks.deleteFiles.mockRejectedValue(new Error('boom'))
 
     await expect(deleteS3ObjectsByUrls(['https://storage.example/resources/a.png'])).rejects.toThrow('boom')
+  })
+})
+
+describe('deleteS3Prefix', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.deleteFiles.mockResolvedValue(undefined)
+    mocks.listFiles.mockResolvedValue([])
+    mocks.fileEnv.S3_ACCESS_KEY_ID = 'access'
+  })
+
+  it('lists the prefix and deletes unique keys', async () => {
+    mocks.listFiles.mockResolvedValue([{ Key: 'user/avatar/u1/a.png' }, { Key: 'user/avatar/u1/a.png' }, { Key: '' }])
+
+    await deleteS3Prefix('user/avatar/u1/')
+
+    expect(mocks.listFiles).toHaveBeenCalledWith('user/avatar/u1/')
+    expect(mocks.deleteFiles).toHaveBeenCalledWith(['user/avatar/u1/a.png'])
+  })
+
+  it('skips delete when the prefix is empty', async () => {
+    await deleteS3Prefix('user/avatar/u1/')
+
+    expect(mocks.deleteFiles).not.toHaveBeenCalled()
   })
 })

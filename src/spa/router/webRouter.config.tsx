@@ -92,10 +92,6 @@ export const webRoutes: RouteObject[] = [
     path: 'auth-error',
   },
   {
-    element: dynamicElement(() => import('@/routes/welcome/page'), 'Welcome'),
-    path: 'welcome',
-  },
-  {
     element: dynamicElement(() => import('@/routes/profile/page'), 'Profile'),
     path: 'profile',
   },
@@ -312,6 +308,10 @@ export const webRoutes: RouteObject[] = [
         element: dynamicElement(() => import('@/features/dev/WebSearchPage'), 'Admin > WebSearch'),
         path: 'web-search',
       },
+      {
+        element: dynamicElement(() => import('@/features/admin/UsersPage'), 'Admin > Users'),
+        path: 'users',
+      },
     ],
     element: dynamicLayout(() => import('@/routes/admin/_layout'), 'AdminLayout'),
     path: 'admin',
@@ -337,10 +337,6 @@ export const webRoutes: RouteObject[] = [
             {
               element: dynamicElement(() => import('@/features/dev/ReadFilePage'), 'Dev > ReadFile'),
               path: 'read-file',
-            },
-            {
-              element: dynamicElement(() => import('@/features/dev/DeleteUserPage'), 'Dev > DeleteUser'),
-              path: 'delete-user',
             },
             {
               element: dynamicElement(() => import('@/features/dev/WechatConversationPage'), 'Dev > WechatConversation'),

@@ -1,6 +1,16 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+const env = vi.hoisted(() => ({ GITHUB_PROXY: undefined as string | undefined }))
+
+vi.mock('@/envs/app', () => ({
+  appEnv: {
+    get GITHUB_PROXY() {
+      return env.GITHUB_PROXY
+    },
+  },
+}))
+
 import { GitHub, github, GitHubDownloadError, GitHubNotFoundError, GitHubParseError } from './index'
 
 describe('GitHub', () => {
@@ -200,6 +210,8 @@ describe('GitHub', () => {
     const mockFetch = vi.fn()
 
     beforeEach(() => {
+      env.GITHUB_PROXY = undefined
+      mockFetch.mockReset()
       vi.stubGlobal('fetch', mockFetch)
     })
 
@@ -287,6 +299,8 @@ describe('GitHub', () => {
     const mockFetch = vi.fn()
 
     beforeEach(() => {
+      env.GITHUB_PROXY = undefined
+      mockFetch.mockReset()
       vi.stubGlobal('fetch', mockFetch)
     })
 
@@ -316,6 +330,51 @@ describe('GitHub', () => {
       })
     })
 
+    it('tries GITHUB_PROXY first and falls back to origin', async () => {
+      env.GITHUB_PROXY = 'https://ghfast.top'
+      mockFetch
+        .mockRejectedValueOnce(new Error('mirror down'))
+        .mockResolvedValueOnce({
+          ok: true,
+          text: () => Promise.resolve('# fallback'),
+        })
+
+      const result = await gh.downloadRawFile({
+        branch: 'main',
+        filePath: 'README.md',
+        owner: 'Hyk260',
+        repo: 'PureChat',
+      })
+
+      expect(result).toBe('# fallback')
+      expect(mockFetch.mock.calls.map((call) => call[0])).toEqual([
+        'https://ghfast.top/https://raw.githubusercontent.com/Hyk260/PureChat/main/README.md',
+        'https://raw.githubusercontent.com/Hyk260/PureChat/main/README.md',
+      ])
+    })
+
+    it('does not fall back when the mirror succeeds', async () => {
+      env.GITHUB_PROXY = 'https://ghfast.top'
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve('# mirrored'),
+      })
+
+      const result = await gh.downloadRawFile({
+        branch: 'main',
+        filePath: 'README.md',
+        owner: 'Hyk260',
+        repo: 'PureChat',
+      })
+
+      expect(result).toBe('# mirrored')
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://ghfast.top/https://raw.githubusercontent.com/Hyk260/PureChat/main/README.md',
+        expect.any(Object)
+      )
+    })
+
     it('should throw GitHubNotFoundError for 404', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -339,6 +398,8 @@ describe('GitHub', () => {
     const mockFetch = vi.fn()
 
     beforeEach(() => {
+      env.GITHUB_PROXY = undefined
+      mockFetch.mockReset()
       vi.stubGlobal('fetch', mockFetch)
     })
 

@@ -46,7 +46,7 @@
 
 ## 项目简介
 
-PureChat（仓库名：[PureChatNext][repo-link]）让同一个 AI 助手同时服务于 **Web、微信和 QQ**。你可以直接使用 [在线体验][online-demo-link]，也可以把数据库、模型密钥、文件和聊天记录完整部署在自己的环境中。
+PureChat（仓库名：[PureChatNext][repo-link]）让同一个 AI 助手同时服务于 **Web、微信和 QQ**。你可以直接使用 [在线体验][online-demo-link] 或 [腾讯云备用][tencent-cloud-demo-link]，也可以把数据库、模型密钥、文件和聊天记录完整部署在自己的环境中。
 
 与通用 ChatGPT Clone 相比，PureChat 优先解决中文用户的三个具体问题：
 

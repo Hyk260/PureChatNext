@@ -125,6 +125,25 @@ export class FileModel {
     return Boolean(item)
   }
 
+  listOwnedStorageRefs = async () => {
+    return this.db.select({ fileHash: files.fileHash, url: files.url }).from(files).where(this.ownership())
+  }
+
+  deleteOrphanGlobalFiles = async (hashes: Array<string | null | undefined>) => {
+    const uniqueHashes = [...new Set(hashes.filter((hash): hash is string => Boolean(hash)))]
+    if (uniqueHashes.length === 0) return
+
+    const remaining = await this.db
+      .select({ fileHash: files.fileHash })
+      .from(files)
+      .where(inArray(files.fileHash, uniqueHashes))
+    const remainingSet = new Set(remaining.map((row) => row.fileHash).filter(Boolean))
+    const orphans = uniqueHashes.filter((hash) => !remainingSet.has(hash))
+    if (orphans.length === 0) return
+
+    await this.db.delete(globalFiles).where(inArray(globalFiles.hashId, orphans))
+  }
+
   update = async (id: string, data: Partial<Pick<FileItem, 'name' | 'parentId' | 'metadata'>>) => {
     const [item] = await this.db
       .update(files)

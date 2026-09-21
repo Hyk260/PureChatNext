@@ -2,7 +2,7 @@ import { isAdminRole, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { createNanoId, generateCompactUuid } from '@pure/utils'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
-import { and, count, desc, eq, ilike, inArray, lt, or } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, inArray, or } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { account, passkey, session, twoFactor, users, verification } from '../schemas'
@@ -367,43 +367,6 @@ export class UserModel {
     })
 
     return this.deleteUserRecord(user)
-  }
-
-  listUnverifiedOlderThan = async (maxAgeMs: number) => {
-    const cutoff = new Date(Date.now() - maxAgeMs)
-    const staleUsers = await this.db
-      .select({
-        email: users.email,
-        id: users.id,
-        phone: users.phone,
-        userId: users.userId,
-      })
-      .from(users)
-      .where(and(eq(users.emailVerified, false), lt(users.createdAt, cutoff)))
-
-    return { cutoff, users: staleUsers }
-  }
-
-  /** 删除创建超过 maxAgeMs 且仍未验证邮箱的用户（释放占坑邮箱） */
-  deleteUnverifiedOlderThan = async (maxAgeMs: number) => {
-    const { cutoff, users: staleUsers } = await this.listUnverifiedOlderThan(maxAgeMs)
-
-    if (staleUsers.length === 0) {
-      return { cutoff, deleted: 0 }
-    }
-
-    const identifiers = staleUsers
-      .flatMap((user) => [user.email, user.phone])
-      .filter((value): value is string => Boolean(value))
-
-    if (identifiers.length > 0) {
-      await this.db.delete(verification).where(inArray(verification.identifier, identifiers))
-    }
-
-    const ids = staleUsers.map((user) => user.id)
-    await this.db.delete(users).where(inArray(users.id, ids))
-
-    return { cutoff, deleted: ids.length }
   }
 
   findByEmailAndPassword = async (email: string, password: string) => {

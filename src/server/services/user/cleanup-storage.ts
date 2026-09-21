@@ -67,25 +67,3 @@ export async function deleteAdminUserWithStorage(id: string, actorId: string) {
 
   return result
 }
-
-export async function deleteUnverifiedUsersWithStorage(maxAgeMs: number) {
-  const userModel = new UserModel()
-  const { users } = await userModel.listUnverifiedOlderThan(maxAgeMs)
-  const pending = await Promise.all(
-    users.map(async (user) => ({
-      fileRefs: await collectUserStorageRefs(user.id),
-      user,
-    }))
-  )
-  const result = await userModel.deleteUnverifiedOlderThan(maxAgeMs)
-
-  for (const item of pending) {
-    try {
-      await cleanupUserS3Assets({ authUserId: item.user.id, businessUserId: item.user.userId }, item.fileRefs)
-    } catch (error) {
-      log('S3 cleanup failed after deleting unverified user %s: %O', item.user.id, error)
-    }
-  }
-
-  return result
-}

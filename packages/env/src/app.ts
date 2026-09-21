@@ -13,7 +13,7 @@ declare global {
       ALLOWED_ORIGINS?: string
       /** 本地 cloudflared TryCloudflare 隧道；同时放开 Vite Host 与 Auth/CORS Origin */
       ALLOW_TRYCLOUDFLARE?: string
-      /** Vercel Cron / 内部定时任务鉴权（`Authorization: Bearer …`） */
+      /** Channel Gateway 内部鉴权回退密钥；未设 `CHANNEL_GATEWAY_INTERNAL_SECRET` 时使用。 */
       CRON_SECRET?: string
       /** Vercel Edge Config 连接字符串。 */
       VERCEL_EDGE_CONFIG?: string
@@ -47,7 +47,7 @@ export const getAppConfig = () => {
       ALLOWED_ORIGINS: z.string().optional(),
       /** 本地是否启用 cloudflared TryCloudflare 隧道；默认关闭。 */
       ALLOW_TRYCLOUDFLARE: z.boolean(),
-      /** Vercel Cron / 内部定时任务鉴权密钥。 */
+      /** Channel Gateway 内部鉴权回退密钥。 */
       CRON_SECRET: z.string().optional(),
       /** GitHub 下载镜像前缀；技能安装先镜像后回源，图片代理还会与内置 CDN 竞速。 */
       GITHUB_PROXY: optionalUrlEnv(),

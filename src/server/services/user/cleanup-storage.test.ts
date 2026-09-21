@@ -5,13 +5,11 @@ const mocks = vi.hoisted(() => ({
   deleteOrphanGlobalFiles: vi.fn(),
   deleteS3ObjectsByUrls: vi.fn(),
   deleteS3Prefix: vi.fn(),
-  deleteUnverifiedOlderThan: vi.fn(),
   deleteUserByIdForAdmin: vi.fn(),
   findById: vi.fn(),
   hasUrlReference: vi.fn(),
   isS3Configured: vi.fn(),
   listOwnedStorageRefs: vi.fn(),
-  listUnverifiedOlderThan: vi.fn(),
 }))
 
 vi.mock('@pure/database/models/file', () => ({
@@ -24,10 +22,8 @@ vi.mock('@pure/database/models/file', () => ({
 
 vi.mock('@pure/database/models/user', () => ({
   UserModel: class {
-    deleteUnverifiedOlderThan = mocks.deleteUnverifiedOlderThan
     deleteUserByIdForAdmin = mocks.deleteUserByIdForAdmin
     findById = mocks.findById
-    listUnverifiedOlderThan = mocks.listUnverifiedOlderThan
   },
 }))
 

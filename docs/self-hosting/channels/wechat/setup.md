@@ -13,8 +13,6 @@ description: 在 PureChatNext 中配置微信 iLink 渠道、模型凭证和运�
 - Docker：生产 Compose 已显式开启，单一 `app` 容器同时运行 Next 与 Gateway。
 - Vercel：不支持持久连接；设置页保留入口但禁用扫码和绑定。
 
-不要再启动 `wechat-gateway.ts`，也不要使用旧版手动 Cron。`/api/cron/wechat-gateway` 保持禁用。
-
 ## 必需配置
 
 ```dotenv

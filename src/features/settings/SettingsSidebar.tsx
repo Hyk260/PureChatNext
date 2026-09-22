@@ -7,8 +7,10 @@ import { usePathname } from 'next/navigation'
 import { memo, useMemo } from 'react'
 
 import NavItem from '@/components/NavItem'
+import { isAdminRole } from '@/const/auth'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
+import { useSession } from '@/libs/better-auth/client'
 
 import { SettingsGroupKey, SettingsTab, useSettingsCategory } from './useSettingsCategory'
 
@@ -44,7 +46,8 @@ function useActiveSettingsTab(): SettingsTab {
 }
 
 const SettingsSidebar = memo(() => {
-  const categoryGroups = useSettingsCategory()
+  const { data: session } = useSession()
+  const categoryGroups = useSettingsCategory(isAdminRole(session?.user?.role))
   const activeTab = useActiveSettingsTab()
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
@@ -65,7 +68,12 @@ const SettingsSidebar = memo(() => {
         />
         <Flex className='flex-col px-1'>
           <Accordion
-            defaultExpandedKeys={[SettingsGroupKey.General, SettingsGroupKey.Agent, SettingsGroupKey.System]}
+            defaultExpandedKeys={[
+              SettingsGroupKey.General,
+              SettingsGroupKey.Agent,
+              SettingsGroupKey.System,
+              SettingsGroupKey.Manage,
+            ]}
             gap={8}
           >
             {categoryGroups.map((group) => (

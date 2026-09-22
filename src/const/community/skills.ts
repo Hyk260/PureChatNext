@@ -75,7 +75,7 @@ export const SKILL_CATEGORY_LABELS: Record<SkillCategory, string> = {
   [SkillCategory.WebFrontendDevelopment]: 'Web 与前端开发',
 }
 
-/** 社区技能快照（`pnpm skills:sync` 更新） */
+/** 手选的社区技能目录。草稿来自 `pnpm skills:sync`，脚本不会覆盖。 */
 export const COMMUNITY_SKILLS: DiscoverSkillItem[] = COMMUNITY_SKILLS_DATA
 
 export const findCommunitySkill = (identifier: string) =>

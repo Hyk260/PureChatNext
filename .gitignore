@@ -79,6 +79,9 @@ coverage/
 public/sw*
 public/swe-worker*
 
+# Community sync drafts. Curated catalogs stay in src/const/community/.
+scripts/community/generated/
+
 # Generated files
 public/*.js
 public/sitemap.xml

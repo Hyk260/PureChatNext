@@ -32,12 +32,12 @@ const NAV_ITEMS: NavItemConfig[] = [
     key: DiscoverTab.Model,
     title: '模型',
   },
-  // {
-  //   href: '/community/skill',
-  //   icon: Wrench,
-  //   key: DiscoverTab.Skill,
-  //   title: 'Skills',
-  // },
+  {
+    href: '/community/skill',
+    icon: Wrench,
+    key: DiscoverTab.Skill,
+    title: 'Skills',
+  },
   {
     href: '/community/agent',
     icon: Bot,

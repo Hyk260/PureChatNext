@@ -10,15 +10,18 @@ import {
   Coins,
   Database,
   EllipsisIcon,
+  Globe2,
   Info,
   KeyboardIcon,
   KeyRound,
   Languages,
+  Mail,
   UserIcon,
   Link2,
   MessageCircleIcon,
   PaletteIcon,
   Sparkles,
+  Users,
   Wrench,
 } from 'lucide-react'
 import { useMemo } from 'react'
@@ -28,6 +31,7 @@ import { getDesktopApi } from '@/types/desktop'
 export enum SettingsGroupKey {
   Agent = 'agent',
   General = 'general',
+  Manage = 'manage',
   System = 'system',
 }
 
@@ -51,6 +55,9 @@ export enum SettingsTab {
   Storage = 'storage',
   SystemTools = 'system-tools',
   Usage = 'usage',
+  Users = 'users',
+  WebSearch = 'web-search',
+  Email = 'email-service',
 }
 
 /** Page titles for SettingsHeader (covers nav + empty/hidden tabs). */
@@ -74,6 +81,9 @@ export const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
   [SettingsTab.Storage]: '数据存储',
   [SettingsTab.SystemTools]: '系统工具',
   [SettingsTab.Usage]: '用量',
+  [SettingsTab.Users]: '用户管理',
+  [SettingsTab.WebSearch]: '联网搜索',
+  [SettingsTab.Email]: '邮件服务',
 }
 
 export function getSettingsTabLabel(tab: string | undefined): string {
@@ -98,6 +108,31 @@ export interface SettingsCategoryGroup {
 
 const tabHref = (tab: SettingsTab) => `/settings/${tab}`
 
+const MANAGE_GROUP: SettingsCategoryGroup = {
+  items: [
+    {
+      href: tabHref(SettingsTab.Users),
+      icon: Users,
+      key: SettingsTab.Users,
+      label: '用户管理',
+    },
+    {
+      href: tabHref(SettingsTab.WebSearch),
+      icon: Globe2,
+      key: SettingsTab.WebSearch,
+      label: '联网搜索',
+    },
+    {
+      href: tabHref(SettingsTab.Email),
+      icon: Mail,
+      key: SettingsTab.Email,
+      label: '邮件服务',
+    },
+  ],
+  key: SettingsGroupKey.Manage,
+  title: '管理',
+}
+
 export const SETTINGS_EMPTY_TABS = [
   SettingsTab.Stats,
   SettingsTab.Appearance,
@@ -112,7 +147,7 @@ export const SETTINGS_EMPTY_TABS = [
   SettingsTab.Advanced,
 ] as const
 
-export function useSettingsCategory(): SettingsCategoryGroup[] {
+export function useSettingsCategory(isAdmin = false): SettingsCategoryGroup[] {
   const isDesktop = Boolean(getDesktopApi())
 
   return useMemo(
@@ -253,7 +288,8 @@ export function useSettingsCategory(): SettingsCategoryGroup[] {
         key: SettingsGroupKey.System,
         title: '系统',
       },
+      ...(isAdmin ? [MANAGE_GROUP] : []),
     ],
-    [isDesktop]
+    [isAdmin, isDesktop]
   )
 }

@@ -27,4 +27,19 @@ describe('useSettingsCategory system tools', () => {
     const webSystemGroup = web.current.find((group) => group.title === '系统')
     expect(webSystemGroup?.items.some((item) => item.key === SettingsTab.SystemTools)).toBe(false)
   })
+
+  it('includes the manage group only for admins', () => {
+    mocks.getDesktopApi.mockReturnValue(undefined)
+    const { result: user } = renderHook(() => useSettingsCategory())
+    expect(user.current.some((group) => group.title === '管理')).toBe(false)
+
+    const { result: admin } = renderHook(() => useSettingsCategory(true))
+    const manage = admin.current.find((group) => group.title === '管理')
+    expect(manage?.items.map((item) => item.label)).toEqual(['用户管理', '联网搜索', '邮件服务'])
+    expect(manage?.items.map((item) => item.href)).toEqual([
+      '/settings/users',
+      '/settings/web-search',
+      '/settings/email-service',
+    ])
+  })
 })

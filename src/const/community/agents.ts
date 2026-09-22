@@ -42,7 +42,7 @@ export const ASSISTANT_CATEGORY_LABELS: Record<AssistantCategory, string> = {
   [AssistantCategory.Translation]: '翻译',
 }
 
-/** 社区助手快照（`pnpm agents:sync` 更新） */
+/** 手选的社区助手目录。草稿来自 `pnpm agents:sync`，脚本不会覆盖。 */
 export const COMMUNITY_AGENTS: DiscoverAgentItem[] = COMMUNITY_AGENTS_DATA
 
 export const getAssistantCategoryCounts = (

@@ -221,6 +221,18 @@ export const webRoutes: RouteObject[] = [
         path: 'system-tools',
       },
       {
+        element: dynamicElement(() => import('@/routes/settings/users/page'), 'Settings > Users'),
+        path: 'users',
+      },
+      {
+        element: dynamicElement(() => import('@/routes/settings/web-search/page'), 'Settings > Web Search'),
+        path: 'web-search',
+      },
+      {
+        element: dynamicElement(() => import('@/routes/settings/email-service/page'), 'Settings > Email'),
+        path: 'email-service',
+      },
+      {
         element: dynamicElement(() => import('@/routes/settings/messenger/page'), 'Settings > Messenger'),
         path: 'messenger',
       },

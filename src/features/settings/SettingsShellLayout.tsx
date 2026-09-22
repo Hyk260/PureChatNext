@@ -9,11 +9,17 @@ import MainShellLayout from '@/layout/MainShellLayout'
 import SettingsHeader from './SettingsHeader'
 import SettingsSidebar from './SettingsSidebar'
 
+const FULL_BLEED_PREFIXES = [
+  '/settings/provider',
+  '/settings/skill',
+  '/settings/users',
+  '/settings/web-search',
+  '/settings/email-service',
+]
+
 const SettingsShellLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname()
-  const isProviderRoute = pathname.startsWith('/settings/provider')
-  const isSkillRoute = pathname.startsWith('/settings/skill')
-  const isFullBleed = isProviderRoute || isSkillRoute
+  const isFullBleed = FULL_BLEED_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 
   return (
     <MainShellLayout

@@ -5,7 +5,7 @@ import type { TableProps } from 'antd'
 import { ActionIcon, Block, Button, Checkbox, confirmModal, Flex, Input, InputPassword, Modal, SearchBar, Tag, Text } from '@pure/ui'
 import { SHANGHAI_TIMEZONE, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
-import { EMPTY_PLACEHOLDER, formatCompactDateTime } from '@pure/utils/client'
+import { EMPTY_PLACEHOLDER, formatCompactDateTime, formatNumber } from '@pure/utils/client'
 import { ArrowLeft } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -38,6 +38,12 @@ const PAGE_SIZE = 20
 const ANTD_SORT_ORDER = { asc: 'ascend', desc: 'descend' } as const
 const TABLE_SORT_DIRECTIONS: Array<'ascend' | 'descend'> = ['descend', 'ascend', 'descend']
 const formatUserDateTime = (value: string) => formatCompactDateTime(value, { timeZone: SHANGHAI_TIMEZONE })
+
+const formatUserCredits = (credits: AdminUser['credits']) => {
+  if (!credits) return EMPTY_PLACEHOLDER
+  const percent = credits.grant <= 0 ? 0 : Math.round((credits.remaining / credits.grant) * 100)
+  return `${formatNumber(credits.remaining)} / ${formatNumber(credits.grant)} · 剩余 ${percent}%`
+}
 
 const renderUserStatus = (banned: boolean) =>
   banned ? (
@@ -233,6 +239,12 @@ export default function AdminUsersPage() {
       width: 90,
     },
     {
+      key: 'credits',
+      render: (_value: unknown, user) => formatUserCredits(user.credits),
+      title: '剩余 / 总额',
+      width: 240,
+    },
+    {
       dataIndex: 'createdAt',
       render: formatUserDateTime,
       title: '创建时间',
@@ -329,7 +341,7 @@ export default function AdminUsersPage() {
             loading={loading}
             pagination={false}
             rowKey='id'
-            scroll={{ x: 1040 }}
+            scroll={{ x: 1280 }}
             sortDirections={TABLE_SORT_DIRECTIONS}
             onChange={handleTableChange}
           />

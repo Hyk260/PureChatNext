@@ -5,10 +5,16 @@ import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 export type AdminUserSortBy = 'lastActiveAt' | 'role'
 
+export type AdminUserCredits = {
+  grant: number
+  remaining: number
+}
+
 export type AdminUser = {
   banned: boolean
   banReason: string | null
   createdAt: string
+  credits?: AdminUserCredits
   email: string | null
   emailVerified: boolean
   fullName: string | null

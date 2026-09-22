@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { USER_ROLE } from '@pure/const'
+import { MONTHLY_FREE_CREDITS, USER_ROLE } from '@pure/const'
 
 const { AdminUserError, UserStorageCleanupError, mocks } = vi.hoisted(() => {
   class AdminUserError extends Error {
@@ -30,6 +30,7 @@ const { AdminUserError, UserStorageCleanupError, mocks } = vi.hoisted(() => {
       deleteAdminUserWithStorage: vi.fn(),
       findByEmail: vi.fn(),
       findByUsername: vi.fn(),
+      listPeriodBalances: vi.fn(),
       listUsers: vi.fn(),
       updateByAdmin: vi.fn(),
     },
@@ -40,6 +41,12 @@ vi.mock('@/libs/auth/get-session-user', () => ({
   jsonError: (message: string, status = 400) => NextResponse.json({ error: message }, { status }),
   withAdmin: (handler: (request: Request, context: { params: Promise<Record<string, string>>; userId: string }) => unknown) => {
     return (request: Request) => handler(request, { params: Promise.resolve({}), userId: 'admin-1' })
+  },
+}))
+
+vi.mock('@pure/database/models/credits', () => ({
+  CreditsModel: class {
+    listPeriodBalances = mocks.listPeriodBalances
   },
 }))
 
@@ -81,6 +88,7 @@ describe('/api/admin/users', () => {
     vi.clearAllMocks()
     mocks.findByEmail.mockResolvedValue(null)
     mocks.findByUsername.mockResolvedValue(null)
+    mocks.listPeriodBalances.mockResolvedValue(new Map())
   })
 
   it('lists users from GET', async () => {
@@ -93,6 +101,18 @@ describe('/api/admin/users', () => {
     expect(payload.total).toBe(1)
     expect(payload.items[0]).toMatchObject({ email: 'user@example.com', username: 'demo' })
     expect(mocks.listUsers).toHaveBeenCalledWith({ page: 1, pageSize: 20, q: 'demo' })
+  })
+
+  it('attaches current-period credits, using the default grant when unissued', async () => {
+    const unissued = { ...listUser, email: 'new@example.com', id: 'user-2' }
+    mocks.listUsers.mockResolvedValue({ items: [listUser, unissued], total: 2 })
+    mocks.listPeriodBalances.mockResolvedValue(new Map([['user-1', { grant: 300_000, remaining: 120_000 }]]))
+
+    const response = await GET(new Request('http://localhost/api/admin/users') as never)
+    const payload = await response.json()
+
+    expect(payload.items[0].credits).toEqual({ grant: 300_000, remaining: 120_000 })
+    expect(payload.items[1].credits).toEqual({ grant: MONTHLY_FREE_CREDITS, remaining: MONTHLY_FREE_CREDITS })
   })
 
   it('passes sort params from GET to listUsers', async () => {

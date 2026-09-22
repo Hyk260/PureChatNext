@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { USER_ROLE } from '@pure/const'
+import { MONTHLY_FREE_CREDITS, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { isRecord, toTrimmedString } from '@pure/utils/object'
+import { CreditsModel } from '@pure/database/models/credits'
 import { isAdminUserError, UserModel } from '@pure/database/models/user'
 import type { AdminUserSortBy } from '@pure/database/models/user'
 
@@ -13,6 +14,7 @@ import {
   LOGIN_USERNAME_REGEX,
   normalizeLoginIdentifier,
 } from '@/libs/better-auth/shared'
+import { getShanghaiBillingPeriod } from '@/server/purechat/period'
 import { deleteAdminUserWithStorage, UserStorageCleanupError } from '@/server/services/user/cleanup-storage'
 
 const DEFAULT_PAGE = 1
@@ -22,10 +24,22 @@ const ADMIN_USER_SORT_FIELDS = new Set<AdminUserSortBy>(['lastActiveAt', 'role']
 const PASSWORD_MIN_LENGTH = 8
 const PASSWORD_MAX_LENGTH = 64
 
+type AdminUserCreditsJson = {
+  grant: number
+  remaining: number
+}
+
+/** 本月尚未懒发放时按默认额度展示，不写库。 */
+const UNGRANTED_PERIOD_CREDITS: AdminUserCreditsJson = {
+  grant: MONTHLY_FREE_CREDITS,
+  remaining: MONTHLY_FREE_CREDITS,
+}
+
 type AdminUserJson = {
   banned: boolean
   banReason: string | null
   createdAt: string
+  credits?: AdminUserCreditsJson
   email: string | null
   emailVerified: boolean
   fullName: string | null
@@ -115,9 +129,16 @@ export const GET = withAdmin(async (request) => {
     q,
     ...(sortBy ? { sortBy, sortOrder } : {}),
   })
+  const balances = await new CreditsModel().listPeriodBalances(
+    items.map((user) => user.id),
+    getShanghaiBillingPeriod()
+  )
 
   return NextResponse.json({
-    items: items.map(serializeAdminUser),
+    items: items.map((user) => ({
+      ...serializeAdminUser(user),
+      credits: balances.get(user.id) ?? UNGRANTED_PERIOD_CREDITS,
+    })),
     page,
     pageSize,
     total,

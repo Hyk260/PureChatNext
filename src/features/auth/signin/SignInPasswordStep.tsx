@@ -89,7 +89,7 @@ export const SignInPasswordStep = ({
               ? `请返回上一步，或使用 ${providerHint} / 魔法链接登录。`
               : `请返回上一步，使用 ${providerHint} 登录。`
           }
-          message='此账户未设置密码'
+          title='此账户未设置密码'
         />
         {enableMagicLink && onSendMagicLink && (
           <Button

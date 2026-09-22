@@ -2,7 +2,9 @@
 
 import { Alert, Badge, Divider, Form } from 'antd'
 import type { FormInstance } from 'antd'
-import { ChevronRight, User } from 'lucide-react'
+import { User } from 'lucide-react'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Button, Flex, Icon, Input, Skeleton, Text } from '@pure/ui'
@@ -33,7 +35,6 @@ interface SignInEmailStepProps {
 
 const PROVIDER_ICON_STYLE: CSSProperties = { left: 12, position: 'absolute', top: 13 }
 const INPUT_ICON_STYLE: CSSProperties = { marginInline: 6 }
-const EMAIL_INPUT_STYLE: CSSProperties = { padding: 6 }
 const LAST_USED_BADGE_STYLES = {
   root: { display: 'block', paddingTop: 8, width: '100%' },
 }
@@ -66,6 +67,9 @@ export const SignInEmailStep = ({
   const emailInputRef = useRef<InputRef>(null)
   const pendingProviderRef = useRef<string | null>(null)
   const [pendingProvider, setPendingProvider] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+  const query = searchParams.toString()
+  const signupHref = query ? `/signup?${query}` : '/signup'
 
   const canShowLastUsedBadge = useMemo(
     () => oAuthSSOProviders.length > 1 || (oAuthSSOProviders.length === 1 && !disableEmailPassword),
@@ -144,7 +148,7 @@ export const SignInEmailStep = ({
         )}
 
         {serverConfigInit && disableEmailPassword && oAuthSSOProviders.length === 0 && (
-          <Alert showIcon message='未配置可用的第三方登录方式' type='warning' />
+          <Alert showIcon title='未配置可用的第三方登录方式' type='warning' />
         )}
 
         {!disableEmailPassword && (
@@ -178,24 +182,25 @@ export const SignInEmailStep = ({
                 prefix={<Icon icon={User} style={INPUT_ICON_STYLE} />}
                 ref={emailInputRef}
                 size='large'
-                style={EMAIL_INPUT_STYLE}
-                suffix={
-                  <Button
-                    icon={ChevronRight}
-                    loading={loading}
-                    title='下一步'
-                    type='fill'
-                    onClick={() => form.submit()}
-                  />
-                }
+                onPressEnter={() => form.submit()}
               />
             </Form.Item>
           </Form>
         )}
 
-        {isSocialOnly && <Alert showIcon message='此账户未设置密码，请使用第三方登录或魔法链接登录。' type='info' />}
+        {isSocialOnly && (
+          <Alert showIcon title='此账户未设置密码，请使用第三方登录或魔法链接登录。' type='info' />
+        )}
 
         <AuthAgreement />
+        {!disableEmailPassword && (
+          <Button block loading={loading} size='large' type='primary' onClick={() => form.submit()}>
+            下一步
+          </Button>
+        )}
+        <Text className='w-full text-center'>
+          还没有账号？ <Link href={signupHref}>创建账号</Link>
+        </Text>
       </Flex>
     </AuthCard>
   )

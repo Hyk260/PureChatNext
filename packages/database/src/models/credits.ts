@@ -1,5 +1,5 @@
 import { MONTHLY_FREE_CREDITS, MIN_RESERVE_CREDITS } from '@pure/const'
-import { and, asc, count, desc, eq, gte, ilike, lte, or, sql, sum } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or, sql, sum } from 'drizzle-orm'
 import { createNanoId } from '@pure/utils'
 
 import { getServerDB } from '../core/db-adaptor'
@@ -108,6 +108,22 @@ export class CreditsModel {
 
     if (!again) throw new Error(`Failed to ensure credits period for user ${userId}`)
     return again
+  }
+
+  /** 只读当前 period 余额；没有行的用户不在结果里，调用方自行决定默认额度。 */
+  listPeriodBalances = async (userIds: string[], period: string) => {
+    const balances = new Map<string, { grant: number; remaining: number }>()
+    if (userIds.length === 0) return balances
+
+    const rows = await this.db
+      .select({ grant: userCredits.grant, used: userCredits.used, userId: userCredits.userId })
+      .from(userCredits)
+      .where(and(eq(userCredits.period, period), inArray(userCredits.userId, userIds)))
+
+    for (const row of rows) {
+      balances.set(row.userId, { grant: row.grant, remaining: clampRemaining(row.grant, row.used) })
+    }
+    return balances
   }
 
   getBalance = async (userId: string, period: string): Promise<CreditsBalance> => {

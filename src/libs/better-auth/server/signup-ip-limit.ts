@@ -7,6 +7,7 @@ import {
   SIGNUP_DAILY_RATE_LIMIT_PATH,
   VERIFICATION_DAILY_IP_WINDOW_SECONDS,
 } from '@/libs/better-auth/shared'
+import { isDev } from '@/libs/constants'
 
 const log = debug('auth:signup')
 
@@ -38,6 +39,10 @@ export const headersFromAuthContext = (context: AuthRequestContext) =>
   context?.headers ?? context?.request?.headers ?? null
 
 export async function assertSignupIpAllowed(storage: SignupRateLimitStorage, context: AuthRequestContext) {
+  // 开发环境跳过。本地常无客户端 IP，请求会记到 unknown，同一 IP 24h 内满 SIGNUP_DAILY_IP_MAX（3）次即 429。
+  // 生产仍按 IP 滚动窗口计数。排查限流时看本分支，以及 DEBUG=auth:signup 的 blocked 日志。
+  if (isDev) return
+
   const ip = resolveSignupIp(headersFromAuthContext(context))
   const result = await storage.consume(`${ip}|${SIGNUP_DAILY_RATE_LIMIT_PATH}`, SIGNUP_IP_RATE_LIMIT)
   if (result.allowed) return

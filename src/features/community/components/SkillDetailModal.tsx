@@ -1,8 +1,9 @@
 'use client'
 
-import { Accordion, AccordionItem, Avatar, Button, Flex, Icon, Modal, Tag, Text } from '@pure/ui'
+import { Avatar, Button, Flex, Icon, Modal, Tag, Text } from '@pure/ui'
+import { Collapse } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { DotIcon, StarIcon } from 'lucide-react'
+import { DotIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { memo, useCallback, useEffect, useState } from 'react'
@@ -30,13 +31,6 @@ const styles = createStaticStyles(({ css }) => ({
   `,
 }))
 
-const formatCompactNumber = (num?: number): string => {
-  if (!num) return '0'
-  if (num < 1000) return num.toString()
-  if (num < 1000000) return `${(num / 1000).toFixed(1)}k`
-  return `${(num / 1000000).toFixed(1)}M`
-}
-
 type ReadmeState = { error: true } | { loading: true } | { markdown: string }
 
 type InstalledSkillRef = {
@@ -47,7 +41,6 @@ type InstalledSkillRef = {
 const readmeCache = new Map<string, string>()
 const readmeInflight = new Map<string, Promise<string>>()
 const installedIdCache = new Map<string, string>()
-const SKILL_ACCORDION_KEYS = ['skill']
 
 const getInstallErrorMessage = (status: number) => {
   if (status === 401) return '请先登录后再安装'
@@ -325,22 +318,7 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
         </Flex>
 
         <Flex className='items-center gap-3 flex-wrap' style={{ color: cssVar.colorTextDescription }}>
-          {/* {typeof skill.ratingAvg === 'number' ? (
-            <Flex className='items-center gap-1'>
-              <Icon fill={cssVar.colorWarning} icon={StarIcon} size={14} />
-              <Text style={{ fontWeight: 500 }}>{skill.ratingAvg.toFixed(1)}</Text>
-            </Flex>
-          ) : null} */}
-          {/* <Icon icon={DotIcon} size={8} /> */}
           <span className={styles.meta}>{skill.author}</span>
-          {/* <Icon icon={DotIcon} size={8} /> */}
-          {/* <span className={styles.meta}>{formatCompactNumber(skill.installCount)} 下载</span> */}
-          {/* {skill.version ? (
-            <>
-              <Icon icon={DotIcon} size={8} />
-              <span className={styles.meta}>v{skill.version}</span>
-            </>
-          ) : null} */}
           {skill.homepage ? (
             <>
               <Icon icon={DotIcon} size={8} />
@@ -367,13 +345,21 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
           </Flex>
         ) : null}
 
-        <Accordion defaultExpandedKeys={SKILL_ACCORDION_KEYS} indicatorPlacement='end' variant='outlined'>
-          <AccordionItem itemKey='skill' title='SKILL.md'>
-            <div className='min-h-40 max-h-[40vh] overflow-auto'>
-              <SkillReadme key={skill.identifier} identifier={skill.identifier} />
-            </div>
-          </AccordionItem>
-        </Accordion>
+        <Collapse
+          defaultActiveKey={['skill']}
+          expandIconPlacement='end'
+          items={[
+            {
+              children: (
+                <div className='max-h-[40vh] min-h-40 overflow-auto'>
+                  <SkillReadme key={skill.identifier} identifier={skill.identifier} />
+                </div>
+              ),
+              key: 'skill',
+              label: 'SKILL.md',
+            },
+          ]}
+        />
 
         {skill.tags && skill.tags.length > 0 ? (
           <Flex className='flex-col gap-2'>

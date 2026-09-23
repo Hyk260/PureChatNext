@@ -38,18 +38,14 @@ export type SkillMarketCategory = (typeof SKILL_MARKET_CATEGORIES)[number]
 export type DiscoverSkillItem = {
   author: string
   category: SkillMarketCategory
-  commentCount?: number
-  createdAt?: string
   description: string
-  github?: { forks?: number; stars?: number; url?: string; watchers?: number }
+  github?: { stars?: number; url?: string }
   homepage?: string
   icon?: string
   identifier: string
-  installCount?: number
   isFeatured?: boolean
   license?: string
   name: string
-  ratingAvg?: number
   resourcesCount?: number
   tags?: string[]
   updatedAt: string
@@ -98,10 +94,8 @@ const mapGithub = (github: MarketGithub | undefined): DiscoverSkillItem['github'
 
   const url = asNonEmptyString(github.url)
   const mapped = {
-    ...(typeof github.forks === 'number' ? { forks: github.forks } : {}),
     ...(typeof github.stars === 'number' ? { stars: github.stars } : {}),
     ...(url ? { url } : {}),
-    ...(typeof github.watchers === 'number' ? { watchers: github.watchers } : {}),
   }
 
   return Object.keys(mapped).length > 0 ? mapped : undefined
@@ -118,14 +112,10 @@ export function mapMarketSkillToDiscoverItem(item: MarketSkillListItem): Discove
 
   const tags = item.tags?.map((tag) => tag.trim()).filter((tag) => tag.length > 0)
   const github = mapGithub(item.github)
-  const createdAt = asNonEmptyString(item.createdAt)
   const homepage = asNonEmptyString(item.homepage)
   const icon = asNonEmptyString(item.icon)
   const license = asNonEmptyString(item.license)
   const version = asNonEmptyString(item.version)
-  const commentCount = asFiniteNumber(item.commentCount)
-  const installCount = asFiniteNumber(item.installCount)
-  const ratingAvg = asFiniteNumber(item.ratingAvg)
   const resourcesCount = asFiniteNumber(item.resourcesCount)
 
   return {
@@ -135,15 +125,11 @@ export function mapMarketSkillToDiscoverItem(item: MarketSkillListItem): Discove
     identifier,
     name,
     updatedAt,
-    ...(commentCount !== undefined ? { commentCount } : {}),
-    ...(createdAt ? { createdAt } : {}),
     ...(github ? { github } : {}),
     ...(homepage ? { homepage } : {}),
     ...(icon ? { icon } : {}),
-    ...(installCount !== undefined ? { installCount } : {}),
     ...(item.isFeatured ? { isFeatured: true } : {}),
     ...(license ? { license } : {}),
-    ...(ratingAvg !== undefined ? { ratingAvg } : {}),
     ...(resourcesCount !== undefined ? { resourcesCount } : {}),
     ...(tags && tags.length > 0 ? { tags } : {}),
     ...(version ? { version } : {}),

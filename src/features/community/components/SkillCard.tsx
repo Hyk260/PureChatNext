@@ -56,7 +56,6 @@ const SkillCard = memo<SkillCardProps>(({ onOpenDetail, ...item }) => {
     icon,
     identifier,
     name,
-    ratingAvg,
     resourcesCount,
     updatedAt,
   } = item
@@ -92,15 +91,7 @@ const SkillCard = memo<SkillCardProps>(({ onOpenDetail, ...item }) => {
             <Text className={styles.title} ellipsis>
               {name}
             </Text>
-            <Flex className='items-center gap-2'>
-              {/* {typeof ratingAvg === 'number' ? (
-                <Flex className='items-center gap-1' style={{ fontSize: 13, color: cssVar.colorTextDescription }}>
-                  <Icon fill={cssVar.colorWarning} icon={StarIcon} size={12} />
-                  {ratingAvg.toFixed(1)}
-                </Flex>
-              ) : null} */}
-              <span className={styles.secondaryDesc}>{author}</span>
-            </Flex>
+            <span className={styles.secondaryDesc}>{author}</span>
           </Flex>
         </Flex>
         {github?.url ? (

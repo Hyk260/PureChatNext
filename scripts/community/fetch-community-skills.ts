@@ -13,7 +13,7 @@ import { promisify } from 'node:util'
 
 import { mapMarketSkillToDiscoverItem, SKILL_MARKET_CATEGORIES } from '../map-community-skill'
 import type { DiscoverSkillItem, MarketSkillListItem } from '../map-community-skill'
-import { GitHub } from '../../src/server/modules/GitHub'
+import { GitHub, GitHubNotFoundError, GitHubParseError } from '../../src/server/modules/GitHub'
 import { skillReadmeRepoPath } from '../../src/server/modules/GitHub/skillFiles'
 
 const execFileAsync = promisify(execFile)
@@ -135,34 +135,57 @@ const writeReadmeData = (readmes: Record<string, string>) => {
   console.log(`[skills:sync] wrote ${Object.keys(readmes).length} readmes → ${README_OUT_PATH}`)
 }
 
-const fetchSkillReadme = async (skill: DiscoverSkillItem): Promise<string | undefined> => {
+type SkillReadmeFetch = { markdown: string; status: 'ok' } | { status: 'missing' } | { status: 'failed' }
+
+/** Missing or unparsable GitHub source cannot be installed; transient errors stay in the catalog. */
+const fetchSkillReadme = async (skill: DiscoverSkillItem): Promise<SkillReadmeFetch> => {
   const sourceUrl = skillSourceUrl(skill)
-  if (!sourceUrl) return undefined
+  if (!sourceUrl) return { status: 'missing' }
 
   try {
     const repo = github.parseRepoUrl(sourceUrl)
-    return await github.downloadRawFile({ ...repo, filePath: skillReadmeRepoPath(repo) })
+    const markdown = await github.downloadRawFile({ ...repo, filePath: skillReadmeRepoPath(repo) })
+    return { markdown, status: 'ok' }
   } catch (error) {
+    if (error instanceof GitHubNotFoundError || error instanceof GitHubParseError) {
+      return { status: 'missing' }
+    }
     const detail = error instanceof Error ? error.message : error
     console.warn(`[skills:sync] readme skipped ${skill.identifier}: ${detail}`)
-    return undefined
+    return { status: 'failed' }
   }
 }
 
-const fetchReadmes = async (skills: DiscoverSkillItem[]) => {
+const fetchReadmes = async (skills: DiscoverSkillItem[], dropMissing: boolean) => {
   console.log(`[skills:sync] fetching ${skills.length} SKILL.md (concurrency=${README_CONCURRENCY})…`)
-  const readmes: Record<string, string> = {}
-  let fetched = 0
-
-  await mapPool(skills, README_CONCURRENCY, async (skill) => {
-    const markdown = await fetchSkillReadme(skill)
-    if (!markdown) return
-    readmes[skill.identifier] = markdown
-    fetched += 1
-    if (fetched % 40 === 0) console.log(`[skills:sync] readmes ${fetched}/${skills.length}`)
+  let done = 0
+  const results = await mapPool(skills, README_CONCURRENCY, async (skill) => {
+    const result = await fetchSkillReadme(skill)
+    done += 1
+    if (done % 40 === 0) console.log(`[skills:sync] readmes ${done}/${skills.length}`)
+    return result
   })
 
-  return readmes
+  const readmes: Record<string, string> = {}
+  const kept: DiscoverSkillItem[] = []
+  let dropped = 0
+
+  for (const [index, skill] of skills.entries()) {
+    const result = results[index]
+    if (result.status === 'missing' && dropMissing) {
+      dropped += 1
+      console.warn(`[skills:sync] drop ${skill.identifier}: source SKILL.md missing`)
+      continue
+    }
+    if (result.status === 'missing') {
+      console.warn(`[skills:sync] readme skipped ${skill.identifier}: SKILL.md not found`)
+    }
+    kept.push(skill)
+    if (result.status === 'ok') readmes[skill.identifier] = result.markdown
+  }
+
+  console.log(`[skills:sync] readmes ${Object.keys(readmes).length}/${skills.length}, dropped ${dropped}`)
+  return { kept, readmes }
 }
 
 async function main() {
@@ -173,14 +196,15 @@ async function main() {
     const { COMMUNITY_SKILLS_DATA } = await import('../../src/const/community/skills.data')
     selected = COMMUNITY_SKILLS_DATA
     console.log(`[skills:sync] --readmes-only, using ${selected.length} existing skills`)
-  } else {
-    const fetched = await fetchMarketSkills()
-    selected = fetched.selected
-    writeSkillsData(selected)
-    console.log('[skills:sync] per category:', fetched.counts)
+    writeReadmeData((await fetchReadmes(selected, false)).readmes)
+    return
   }
 
-  writeReadmeData(await fetchReadmes(selected))
+  const fetched = await fetchMarketSkills()
+  console.log('[skills:sync] per category:', fetched.counts)
+  const { kept, readmes } = await fetchReadmes(fetched.selected, true)
+  writeSkillsData(kept)
+  writeReadmeData(readmes)
 }
 
 main().catch((error) => {

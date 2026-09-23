@@ -129,18 +129,14 @@ export interface ActiveCommunityAgent {
 export interface DiscoverSkillItem {
   author: string
   category: Exclude<SkillCategory, SkillCategory.All>
-  commentCount?: number
-  createdAt?: string
   description: string
-  github?: { forks?: number; stars?: number; url?: string; watchers?: number }
+  github?: { stars?: number; url?: string }
   homepage?: string
   icon?: string
   identifier: string
-  installCount?: number
   isFeatured?: boolean
   license?: string
   name: string
-  ratingAvg?: number
   resourcesCount?: number
   tags?: string[]
   updatedAt: string

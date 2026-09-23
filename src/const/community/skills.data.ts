@@ -8,88 +8,19 @@ export const COMMUNITY_SKILLS_DATA = [
   {
     "author": "openclaw",
     "category": "coding-agents-ides",
-    "description": "Captures learnings, errors, and corrections to enable continuous improvement. Use when: (1) A command or operation fails unexpectedly, (2) User corrects Claude ('No, that's wrong...', 'Actually...'), (3) User requests a capability that doesn't exist, (4) An external API or tool fails, (5) Claude realizes its knowledge is outdated or incorrect, (6) A better approach is discovered for a recurring task. Also review learnings before major tasks.",
-    "identifier": "openclaw-skills-self-improving-agent-1-0-0",
-    "name": "self-improvement",
-    "updatedAt": "2026-09-16T23:37:18.192Z",
-    "commentCount": 116,
-    "createdAt": "2026-02-17T04:12:47.272Z",
-    "github": {
-      "forks": 758,
-      "stars": 2596,
-      "url": "https://github.com/openclaw/skills",
-      "watchers": 28
-    },
-    "homepage": "https://github.com/openclaw/skills/tree/main/skills/dc-acronym/self-improving-agent-1-0-0",
-    "icon": "https://github.com/openclaw.png",
-    "installCount": 1887,
-    "ratingAvg": 4.88,
-    "resourcesCount": 3,
-    "version": "1.0.4"
-  },
-  {
-    "author": "openclaw",
-    "category": "coding-agents-ides",
     "description": "创建、编辑、改进或审计 AgentSkills。在从头创建新技能时，或在被要求改进、审查、审计、整理或清理现有技能或 SKILL.md 文件时使用。也用于编辑或重构技能目录（将文件移动到 references/ 或 scripts/、删除过时内容、根据 AgentSkills 规范进行验证）。在出现类似“创建技能”、“撰写技能”、“整理技能”、“改进此技能”、“审查该技能”、“清理该技能”、“审计该技能”等短语时触发。",
     "identifier": "openclaw-openclaw-skill-creator",
     "name": "skill-creator",
     "updatedAt": "2026-09-22T04:55:49.606Z",
-    "commentCount": 37,
-    "createdAt": "2026-02-12T12:42:48.903Z",
     "github": {
-      "forks": 67078,
       "stars": 340209,
-      "url": "https://github.com/openclaw/openclaw",
-      "watchers": 1688
+      "url": "https://github.com/openclaw/openclaw"
     },
     "homepage": "https://github.com/openclaw/openclaw/tree/main/skills/skill-creator",
     "icon": "https://github.com/openclaw.png",
-    "installCount": 1522,
     "license": "Apache-2.0",
-    "ratingAvg": 4.93,
     "resourcesCount": 6,
     "version": "1.0.2"
-  },
-  {
-    "author": "affaan-m",
-    "category": "web-frontend-development",
-    "description": "创建具有高设计质量的、可投入生产的前端界面。适用于用户要求构建网页组件、页面或应用程序，并且视觉方向与代码质量同等重要的场景。",
-    "identifier": "affaan-m-everything-claude-code-frontend-design",
-    "name": "frontend-design",
-    "updatedAt": "2026-09-16T23:37:33.156Z",
-    "commentCount": 103,
-    "createdAt": "2026-04-06T22:01:44.578Z",
-    "github": {
-      "forks": 21687,
-      "stars": 142573,
-      "url": "https://github.com/affaan-m/everything-claude-code",
-      "watchers": 780
-    },
-    "homepage": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/frontend-design",
-    "icon": "https://github.com/affaan-m.png",
-    "installCount": 1724,
-    "ratingAvg": 4.92,
-    "version": "1.0.2"
-  },
-  {
-    "author": "Patvscode",
-    "category": "devops-cloud",
-    "description": "在变更进行中决定多频繁重新检查关键工作（服务、代理、运行时）的轻量级分诊工具。用于避免忘记脆弱的任务。",
-    "identifier": "patvscode-all_openclaw_agents-reliability-checkback",
-    "name": "reliability-checkback",
-    "updatedAt": "2026-09-16T18:57:59.299Z",
-    "commentCount": 0,
-    "createdAt": "2026-03-03T15:40:56.681Z",
-    "github": {
-      "forks": 0,
-      "stars": 1,
-      "url": "https://github.com/Patvscode/All_Openclaw_agents",
-      "watchers": 0
-    },
-    "homepage": "https://github.com/Patvscode/All_Openclaw_agents/tree/main/snapshots/20260302_214359/workspace-max/skills/reliability-checkback",
-    "icon": "https://github.com/Patvscode.png",
-    "installCount": 510,
-    "version": "1.0.405"
   },
   {
     "author": "Panniantong",
@@ -98,18 +29,27 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "panniantong-agent-reach-skill",
     "name": "agent-reach",
     "updatedAt": "2026-09-16T23:37:25.441Z",
-    "commentCount": 38,
-    "createdAt": "2026-03-08T06:32:21.139Z",
     "github": {
-      "forks": 735,
       "stars": 10205,
-      "url": "https://github.com/Panniantong/Agent-Reach",
-      "watchers": 29
+      "url": "https://github.com/Panniantong/Agent-Reach"
     },
     "homepage": "https://github.com/Panniantong/Agent-Reach/tree/main/agent_reach/skill",
     "icon": "https://github.com/Panniantong.png",
-    "installCount": 1886,
-    "ratingAvg": 4.37,
+    "version": "1.0.2"
+  },
+  {
+    "author": "firecrawl",
+    "category": "search-research",
+    "description": "带有整页内容提取的网页搜索。每当用户要求搜索网络、查找文章、研究某个主题、查阅信息、寻找最新新闻、发现来源，或者说“搜索”、“帮我找”、“查一下”、“人们在说什么”或“查找关于……的文章”时，请使用此技能。返回真实的搜索结果并可选择整页 Markdown —— 不仅仅是片段。提供比 Claude 内置 WebSearch 更强的功能。",
+    "identifier": "firecrawl-cli-firecrawl-search",
+    "name": "firecrawl-search",
+    "updatedAt": "2026-09-20T22:09:47.729Z",
+    "github": {
+      "stars": 191,
+      "url": "https://github.com/firecrawl/cli"
+    },
+    "homepage": "https://github.com/firecrawl/cli/tree/main/skills/firecrawl-search",
+    "icon": "https://github.com/firecrawl.png",
     "version": "1.0.2"
   },
   {
@@ -119,42 +59,14 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "vercel-labs-agent-browser-agent-browser",
     "name": "agent-browser",
     "updatedAt": "2026-09-16T17:20:47.665Z",
-    "commentCount": 7,
-    "createdAt": "2026-02-12T13:35:02.501Z",
     "github": {
-      "forks": 1161,
       "stars": 19847,
-      "url": "https://github.com/vercel-labs/agent-browser",
-      "watchers": 52
+      "url": "https://github.com/vercel-labs/agent-browser"
     },
     "homepage": "https://github.com/vercel-labs/agent-browser/tree/main/skills/agent-browser",
     "icon": "https://github.com/vercel-labs.png",
-    "installCount": 1385,
-    "ratingAvg": 4.88,
     "resourcesCount": 10,
     "version": "1.0.3"
-  },
-  {
-    "author": "firecrawl",
-    "category": "browser-automation",
-    "description": "通过 Firecrawl CLI 实现的网页爬取、搜索、抓取和浏览器自动化。每当用户想要在网上搜索、查找文章、研究某个主题、在线查资料、抓取网页、从 URL 获取内容、从网站提取数据、爬取文档、下载站点，或与需要点击或登录的页面交互时，都应使用此技能。也在他们说“抓取此页面”、“从……提取内容”、“获取 https:// 开头的页面”或提到对外部网站进行抓取时使用。该工具提供实时网页搜索、整页内容抽取和云端浏览器自动化——是 Claude 原生内置工具无法实现的能力。不要在本地文件操作、git 命令、部署或代码编辑任务时触发。",
-    "identifier": "firecrawl-cli-firecrawl-cli",
-    "name": "firecrawl",
-    "updatedAt": "2026-09-21T17:55:38.740Z",
-    "commentCount": 2,
-    "createdAt": "2026-02-17T11:41:31.419Z",
-    "github": {
-      "forks": 28,
-      "stars": 191,
-      "url": "https://github.com/firecrawl/cli",
-      "watchers": 2
-    },
-    "homepage": "https://github.com/firecrawl/cli/tree/main/skills/firecrawl-cli",
-    "icon": "https://github.com/firecrawl.png",
-    "installCount": 339,
-    "ratingAvg": 4.5,
-    "resourcesCount": 2,
-    "version": "1.0.4"
   },
   {
     "author": "MiniMax-AI",
@@ -163,44 +75,15 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "minimax-ai-skills-pptx-generator",
     "name": "pptx-generator",
     "updatedAt": "2026-09-22T03:39:16.016Z",
-    "commentCount": 5,
-    "createdAt": "2026-03-22T15:11:22.040Z",
     "github": {
-      "forks": 54,
       "stars": 1157,
-      "url": "https://github.com/MiniMax-AI/skills",
-      "watchers": 3
+      "url": "https://github.com/MiniMax-AI/skills"
     },
     "homepage": "https://github.com/MiniMax-AI/skills/tree/main/skills/pptx-generator",
     "icon": "https://github.com/MiniMax-AI.png",
-    "installCount": 902,
     "license": "MIT",
-    "ratingAvg": 4.57,
     "resourcesCount": 5,
     "version": "1.0.1"
-  },
-  {
-    "author": "openclaw",
-    "category": "ai-llms",
-    "description": "Transform AI agents from task-followers into proactive partners that anticipate needs and continuously improve. Now with WAL Protocol, Working Buffer, Autonomous Crons, and battle-tested patterns. Part of the Hal Stack 🦞",
-    "identifier": "openclaw-skills-proactive-agent",
-    "name": "proactive-agent",
-    "updatedAt": "2026-09-16T23:48:29.020Z",
-    "commentCount": 69,
-    "createdAt": "2026-02-17T13:56:39.856Z",
-    "github": {
-      "forks": 759,
-      "stars": 2600,
-      "url": "https://github.com/openclaw/skills",
-      "watchers": 28
-    },
-    "homepage": "https://github.com/openclaw/skills/tree/main/skills/halthelobster/proactive-agent",
-    "icon": "https://github.com/openclaw.png",
-    "installCount": 1627,
-    "isFeatured": true,
-    "ratingAvg": 4.88,
-    "resourcesCount": 13,
-    "version": "3.1.0"
   },
   {
     "author": "davila7",
@@ -209,41 +92,29 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "davila7-claude-code-templates-markitdown",
     "name": "markitdown",
     "updatedAt": "2026-09-19T02:51:57.375Z",
-    "commentCount": 1,
-    "createdAt": "2026-02-12T13:24:14.137Z",
     "github": {
-      "forks": 2083,
       "stars": 22008,
-      "url": "https://github.com/davila7/claude-code-templates",
-      "watchers": 144
+      "url": "https://github.com/davila7/claude-code-templates"
     },
     "homepage": "https://github.com/davila7/claude-code-templates/tree/main/cli-tool/components/skills/scientific/markitdown",
     "icon": "https://github.com/davila7.png",
-    "installCount": 252,
     "license": "MIT",
-    "ratingAvg": 5,
     "resourcesCount": 12,
     "version": "1.0.2"
   },
   {
     "author": "bytedance",
     "category": "cli-utilities",
-    "description": "Helps users discover and install agent skills when they ask questions like \"how do I do X\", \"find a skill for X\", \"is there a skill that can...\", or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable skill.",
+    "description": "当用户询问「我该如何做某事」「找一个能做某事的技能」「有没有技能可以……」，或表示想扩展能力时，帮助发现并安装 Agent 技能。用户在寻找可能以可安装技能形式存在的功能时使用此技能。",
     "identifier": "bytedance-deer-flow-find-skills",
     "name": "find-skills",
     "updatedAt": "2026-09-17T01:16:25.294Z",
-    "commentCount": 86,
-    "createdAt": "2026-03-11T20:35:15.793Z",
     "github": {
-      "forks": 3496,
       "stars": 29267,
-      "url": "https://github.com/bytedance/deer-flow",
-      "watchers": 143
+      "url": "https://github.com/bytedance/deer-flow"
     },
     "homepage": "https://github.com/bytedance/deer-flow/tree/main/skills/public/find-skills",
     "icon": "https://github.com/bytedance.png",
-    "installCount": 1918,
-    "ratingAvg": 4.78,
     "resourcesCount": 1,
     "version": "1.0.1"
   },
@@ -254,19 +125,13 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "openclaw-openclaw-weather",
     "name": "weather",
     "updatedAt": "2026-09-21T08:35:58.827Z",
-    "commentCount": 7,
-    "createdAt": "2026-02-12T13:11:45.212Z",
     "github": {
-      "forks": 67078,
       "stars": 340209,
-      "url": "https://github.com/openclaw/openclaw",
-      "watchers": 1688
+      "url": "https://github.com/openclaw/openclaw"
     },
     "homepage": "https://github.com/openclaw/openclaw/tree/main/skills/weather",
     "icon": "https://github.com/openclaw.png",
-    "installCount": 760,
     "isFeatured": true,
-    "ratingAvg": 4.89,
     "version": "1.0.2"
   },
   {
@@ -276,83 +141,44 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "openclaw-openclaw-github",
     "name": "github",
     "updatedAt": "2026-09-16T18:44:36.244Z",
-    "commentCount": 2,
-    "createdAt": "2026-02-12T13:12:10.959Z",
     "github": {
-      "forks": 67078,
       "stars": 340209,
-      "url": "https://github.com/openclaw/openclaw",
-      "watchers": 1688
+      "url": "https://github.com/openclaw/openclaw"
     },
     "homepage": "https://github.com/openclaw/openclaw/tree/main/skills/github",
     "icon": "https://github.com/openclaw.png",
-    "installCount": 791,
     "isFeatured": true,
-    "ratingAvg": 4.25,
-    "version": "1.0.2"
-  },
-  {
-    "author": "openclaw",
-    "category": "image-video-generation",
-    "description": "通过 Gemini 3 Pro Image（Nano Banana Pro）生成或编辑图像。",
-    "identifier": "openclaw-openclaw-nano-banana-pro",
-    "name": "nano-banana-pro",
-    "updatedAt": "2026-09-16T05:40:08.977Z",
-    "commentCount": 5,
-    "createdAt": "2026-02-12T13:11:43.602Z",
-    "github": {
-      "forks": 49371,
-      "stars": 257537,
-      "url": "https://github.com/openclaw/openclaw",
-      "watchers": 1342
-    },
-    "homepage": "https://github.com/openclaw/openclaw/tree/main/skills/nano-banana-pro",
-    "icon": "https://github.com/openclaw.png",
-    "installCount": 1070,
-    "isFeatured": true,
-    "ratingAvg": 4.2,
-    "resourcesCount": 1,
     "version": "1.0.2"
   },
   {
     "author": "davila7",
     "category": "communication",
-    "description": "Remove signs of AI-generated writing from text. Use when editing or reviewing\ntext to make it sound more natural and human-written. Based on Wikipedia's\ncomprehensive \"Signs of AI writing\" guide. Detects and fixes patterns including:\ninflated symbolism, promotional language, superficial -ing analyses, vague\nattributions, em dash overuse, rule of three, AI vocabulary words, negative\nparallelisms, and excessive conjunctive phrases.\n\nCredits: Original skill by @blader - https://github.com/blader/humanizer",
+    "description": "去除文本中的 AI 生成痕迹。在编辑或审阅文本、使其读起来更自然、更像人写的时候使用。基于维基百科的「AI 写作特征」指南，检测并修正夸大象征、促销腔、肤浅分析、含糊归因、破折号滥用、三段式、AI 常用词、否定平行结构和过多连接短语。原技能作者 @blader：https://github.com/blader/humanizer",
     "identifier": "davila7-claude-code-templates-humanizer",
     "name": "humanizer",
     "updatedAt": "2026-09-16T23:37:42.925Z",
-    "commentCount": 39,
-    "createdAt": "2026-02-12T13:32:27.891Z",
     "github": {
-      "forks": 1878,
       "stars": 20164,
       "url": "https://github.com/davila7/claude-code-templates"
     },
     "homepage": "https://github.com/davila7/claude-code-templates/tree/main/cli-tool/components/skills/productivity/humanizer",
     "icon": "https://github.com/davila7.png",
-    "installCount": 1365,
-    "ratingAvg": 5,
     "resourcesCount": 1,
     "version": "2.1.1"
   },
   {
     "author": "ComposioHQ",
     "category": "transportation",
-    "description": "Automate Google Maps tasks via Rube MCP (Composio): geocode addresses, search places, get directions, compute route matrices, reverse geocode, autocomplete, get place details. Always search tools first for current schemas.",
+    "description": "通过 Rube MCP（Composio）自动化 Google Maps 任务：地址地理编码、地点搜索、路线规划、路线矩阵计算、反向地理编码、自动补全和地点详情。使用前先搜索工具以获取当前参数结构。",
     "identifier": "composiohq-awesome-claude-skills-google-maps-automation",
     "name": "google-maps-automation",
     "updatedAt": "2026-09-16T02:39:11.663Z",
-    "commentCount": 0,
-    "createdAt": "2026-03-11T09:10:12.913Z",
     "github": {
-      "forks": 4301,
       "stars": 42914,
-      "url": "https://github.com/ComposioHQ/awesome-claude-skills",
-      "watchers": 299
+      "url": "https://github.com/ComposioHQ/awesome-claude-skills"
     },
     "homepage": "https://github.com/ComposioHQ/awesome-claude-skills/tree/master/composio-skills/google-maps-automation",
     "icon": "https://github.com/ComposioHQ.png",
-    "installCount": 162,
     "version": "1.0.1"
   },
   {
@@ -362,20 +188,14 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "anthropics-skills-pptx",
     "name": "pptx",
     "updatedAt": "2026-09-22T04:53:52.348Z",
-    "commentCount": 75,
-    "createdAt": "2026-02-12T13:15:02.445Z",
     "github": {
-      "forks": 20869,
       "stars": 176292,
-      "url": "https://github.com/anthropics/skills",
-      "watchers": 1127
+      "url": "https://github.com/anthropics/skills"
     },
     "homepage": "https://github.com/anthropics/skills/tree/main/skills/pptx",
     "icon": "https://github.com/anthropics.png",
-    "installCount": 3108,
     "isFeatured": true,
     "license": "Proprietary",
-    "ratingAvg": 4.54,
     "resourcesCount": 55,
     "version": "1.0.5"
   },
@@ -386,20 +206,14 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "anthropics-skills-xlsx",
     "name": "xlsx",
     "updatedAt": "2026-09-22T04:54:50.143Z",
-    "commentCount": 24,
-    "createdAt": "2026-02-12T13:25:54.206Z",
     "github": {
-      "forks": 20869,
       "stars": 176292,
-      "url": "https://github.com/anthropics/skills",
-      "watchers": 1127
+      "url": "https://github.com/anthropics/skills"
     },
     "homepage": "https://github.com/anthropics/skills/tree/main/skills/xlsx",
     "icon": "https://github.com/anthropics.png",
-    "installCount": 1459,
     "isFeatured": true,
     "license": "Proprietary",
-    "ratingAvg": 4.69,
     "resourcesCount": 52,
     "version": "1.0.5"
   },
@@ -410,20 +224,14 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "anthropics-skills-pdf",
     "name": "pdf",
     "updatedAt": "2026-09-22T02:03:00.974Z",
-    "commentCount": 61,
-    "createdAt": "2026-02-12T13:14:12.911Z",
     "github": {
-      "forks": 20869,
       "stars": 176292,
-      "url": "https://github.com/anthropics/skills",
-      "watchers": 1127
+      "url": "https://github.com/anthropics/skills"
     },
     "homepage": "https://github.com/anthropics/skills/tree/main/skills/pdf",
     "icon": "https://github.com/anthropics.png",
-    "installCount": 2609,
     "isFeatured": true,
     "license": "Proprietary",
-    "ratingAvg": 4.96,
     "resourcesCount": 11,
     "version": "1.0.5"
   },
@@ -434,44 +242,16 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "anthropics-skills-docx",
     "name": "docx",
     "updatedAt": "2026-09-22T02:02:56.643Z",
-    "commentCount": 39,
-    "createdAt": "2026-02-12T13:25:58.403Z",
     "github": {
-      "forks": 20869,
       "stars": 176292,
-      "url": "https://github.com/anthropics/skills",
-      "watchers": 1127
+      "url": "https://github.com/anthropics/skills"
     },
     "homepage": "https://github.com/anthropics/skills/tree/main/skills/docx",
     "icon": "https://github.com/anthropics.png",
-    "installCount": 2228,
     "isFeatured": true,
     "license": "Proprietary",
-    "ratingAvg": 4.9,
     "resourcesCount": 60,
     "version": "1.0.5"
-  },
-  {
-    "author": "fore-vip",
-    "category": "marketing-sales",
-    "description": "批量推送 AI 产品。从外部来源（AI、搜索、GitHub 等）创建多个产品，不进行重复检查。",
-    "identifier": "fore-vip-skills-product",
-    "name": "product",
-    "updatedAt": "2026-09-14T21:53:36.065Z",
-    "commentCount": 0,
-    "createdAt": "2026-03-31T04:02:09.440Z",
-    "github": {
-      "forks": 0,
-      "stars": 0,
-      "url": "https://github.com/fore-vip/skills",
-      "watchers": 0
-    },
-    "homepage": "https://github.com/fore-vip/skills/tree/main/product",
-    "icon": "https://github.com/fore-vip.png",
-    "installCount": 389,
-    "license": "MIT",
-    "resourcesCount": 6,
-    "version": "2.0.0"
   },
   {
     "author": "affaan-m",
@@ -480,39 +260,13 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "affaan-m-ecc-healthcare-emr-patterns",
     "name": "healthcare-emr-patterns",
     "updatedAt": "2026-09-16T02:10:03.480Z",
-    "commentCount": 0,
-    "createdAt": "2026-05-19T10:08:57.787Z",
     "github": {
-      "forks": 28938,
       "stars": 186895,
-      "url": "https://github.com/affaan-m/ECC",
-      "watchers": 933
+      "url": "https://github.com/affaan-m/ECC"
     },
     "homepage": "https://github.com/affaan-m/ECC/tree/main/docs/ja-JP/skills/healthcare-emr-patterns",
     "icon": "https://github.com/affaan-m.png",
-    "installCount": 192,
     "version": "1.0.0"
-  },
-  {
-    "author": "openclaw",
-    "category": "media-streaming",
-    "description": "High-quality voice synthesis with 9 personas, 11 languages, streaming, and voice cloning using Voice.ai API.",
-    "identifier": "openclaw-skills-voice-ai-tts",
-    "name": "voice-ai-tts",
-    "updatedAt": "2026-09-15T07:34:47.933Z",
-    "commentCount": 1,
-    "createdAt": "2026-02-17T06:17:09.555Z",
-    "github": {
-      "forks": 356,
-      "stars": 1069,
-      "url": "https://github.com/openclaw/skills"
-    },
-    "homepage": "https://github.com/openclaw/skills/tree/main/skills/gizmogremlin/voice-ai-tts",
-    "icon": "https://github.com/openclaw.png",
-    "installCount": 289,
-    "ratingAvg": 5,
-    "resourcesCount": 4,
-    "version": "1.0.1"
   },
   {
     "author": "openclaw",
@@ -521,85 +275,29 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "openclaw-openclaw-obsidian",
     "name": "obsidian",
     "updatedAt": "2026-09-16T11:08:58.151Z",
-    "commentCount": 14,
-    "createdAt": "2026-02-12T13:11:28.910Z",
     "github": {
-      "forks": 67078,
       "stars": 340209,
-      "url": "https://github.com/openclaw/openclaw",
-      "watchers": 1688
+      "url": "https://github.com/openclaw/openclaw"
     },
     "homepage": "https://github.com/openclaw/openclaw/tree/main/skills/obsidian",
     "icon": "https://github.com/openclaw.png",
-    "installCount": 1002,
     "isFeatured": true,
-    "ratingAvg": 4.14,
     "version": "1.0.3"
   },
   {
     "author": "ComposioHQ",
     "category": "calendar-scheduling",
-    "description": "Automate Cal tasks via Rube MCP (Composio). Always search tools first for current schemas.",
+    "description": "通过 Rube MCP（Composio）自动化 Cal 日程任务。使用前先搜索工具以获取当前参数结构。",
     "identifier": "composiohq-awesome-claude-skills-cal-automation",
     "name": "cal-automation",
     "updatedAt": "2026-09-16T02:34:41.961Z",
-    "commentCount": 0,
-    "createdAt": "2026-03-11T09:09:31.603Z",
     "github": {
-      "forks": 4301,
       "stars": 42914,
-      "url": "https://github.com/ComposioHQ/awesome-claude-skills",
-      "watchers": 299
+      "url": "https://github.com/ComposioHQ/awesome-claude-skills"
     },
     "homepage": "https://github.com/ComposioHQ/awesome-claude-skills/tree/master/composio-skills/cal-automation",
     "icon": "https://github.com/ComposioHQ.png",
-    "installCount": 146,
     "version": "1.0.1"
-  },
-  {
-    "author": "fore-vip",
-    "category": "shopping-ecommerce",
-    "description": "在 fore.vip 上创建单个 AI 产品并进行重复检查。内容可来自外部来源（AI 生成、搜索、GitHub、Product Hunt、用户对话等）。",
-    "identifier": "fore-vip-skills-product-create",
-    "name": "product-create",
-    "updatedAt": "2026-09-13T23:01:14.553Z",
-    "commentCount": 0,
-    "createdAt": "2026-03-31T04:01:31.291Z",
-    "github": {
-      "forks": 0,
-      "stars": 0,
-      "url": "https://github.com/fore-vip/skills",
-      "watchers": 0
-    },
-    "homepage": "https://github.com/fore-vip/skills/tree/main/product-create",
-    "icon": "https://github.com/fore-vip.png",
-    "installCount": 398,
-    "license": "MIT",
-    "resourcesCount": 1,
-    "version": "1.0.0"
-  },
-  {
-    "author": "openclaw",
-    "category": "security-passwords",
-    "description": "面向 AI 代理的安全优先技能审查工具。在从 ClawdHub、GitHub 或其他来源安装任何技能之前使用。检测潜在危险信号、权限范围和可疑模式。",
-    "identifier": "openclaw-skills-skill-vetter",
-    "name": "skill-vetter",
-    "updatedAt": "2026-09-16T11:57:32.832Z",
-    "commentCount": 181,
-    "createdAt": "2026-02-17T13:14:41.683Z",
-    "github": {
-      "forks": 953,
-      "stars": 3331,
-      "url": "https://github.com/openclaw/skills",
-      "watchers": 34
-    },
-    "homepage": "https://github.com/openclaw/skills/tree/main/skills/spclaudehome/skill-vetter",
-    "icon": "https://github.com/openclaw.png",
-    "installCount": 2747,
-    "isFeatured": true,
-    "ratingAvg": 4.86,
-    "resourcesCount": 1,
-    "version": "1.0.0"
   },
   {
     "author": "a18515373115-droid",
@@ -608,19 +306,13 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "a18515373115-droid-zhangxuefeng-skill",
     "name": "张雪峰-skill",
     "updatedAt": "2026-09-14T17:05:04.159Z",
-    "commentCount": 2,
-    "createdAt": "2026-04-08T16:02:12.292Z",
     "github": {
-      "forks": 0,
       "stars": 0,
-      "url": "https://github.com/a18515373115-droid/ZhangXueFeng-skill",
-      "watchers": 0
+      "url": "https://github.com/a18515373115-droid/ZhangXueFeng-skill"
     },
     "homepage": "https://github.com/a18515373115-droid/ZhangXueFeng-skill",
     "icon": "https://github.com/a18515373115-droid.png",
-    "installCount": 259,
     "license": "MIT",
-    "ratingAvg": 5,
     "resourcesCount": 10,
     "version": "2.0"
   },
@@ -631,19 +323,13 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "openclaw-openclaw-openai-whisper",
     "name": "openai-whisper",
     "updatedAt": "2026-09-16T16:44:23.013Z",
-    "commentCount": 7,
-    "createdAt": "2026-02-12T13:11:33.449Z",
     "github": {
-      "forks": 67078,
       "stars": 340209,
-      "url": "https://github.com/openclaw/openclaw",
-      "watchers": 1688
+      "url": "https://github.com/openclaw/openclaw"
     },
     "homepage": "https://github.com/openclaw/openclaw/tree/main/skills/openai-whisper",
     "icon": "https://github.com/openclaw.png",
-    "installCount": 622,
     "isFeatured": true,
-    "ratingAvg": 4.13,
     "version": "1.0.2"
   },
   {
@@ -653,18 +339,12 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "openclaw-openclaw-apple-notes",
     "name": "apple-notes",
     "updatedAt": "2026-09-16T08:25:36.005Z",
-    "commentCount": 2,
-    "createdAt": "2026-02-12T13:11:08.189Z",
     "github": {
-      "forks": 67078,
       "stars": 340209,
-      "url": "https://github.com/openclaw/openclaw",
-      "watchers": 1688
+      "url": "https://github.com/openclaw/openclaw"
     },
     "homepage": "https://github.com/openclaw/openclaw/tree/main/skills/apple-notes",
     "icon": "https://github.com/openclaw.png",
-    "installCount": 342,
-    "ratingAvg": 5,
     "version": "1.0.3"
   },
   {
@@ -674,17 +354,12 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "openclaw-openclaw-eightctl",
     "name": "eightctl",
     "updatedAt": "2026-09-16T02:10:37.592Z",
-    "commentCount": 0,
-    "createdAt": "2026-02-12T13:11:30.390Z",
     "github": {
-      "forks": 67078,
       "stars": 340209,
-      "url": "https://github.com/openclaw/openclaw",
-      "watchers": 1688
+      "url": "https://github.com/openclaw/openclaw"
     },
     "homepage": "https://github.com/openclaw/openclaw/tree/main/skills/eightctl",
     "icon": "https://github.com/openclaw.png",
-    "installCount": 256,
     "version": "1.0.3"
   },
   {
@@ -694,61 +369,27 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "wshobson-agents-godot-gdscript-patterns",
     "name": "godot-gdscript-patterns",
     "updatedAt": "2026-09-16T02:31:30.570Z",
-    "commentCount": 8,
-    "createdAt": "2026-02-12T13:17:52.528Z",
     "github": {
-      "forks": 3318,
       "stars": 30327,
-      "url": "https://github.com/wshobson/agents",
-      "watchers": 307
+      "url": "https://github.com/wshobson/agents"
     },
     "homepage": "https://github.com/wshobson/agents/tree/main/plugins/game-development/skills/godot-gdscript-patterns",
     "icon": "https://github.com/wshobson.png",
-    "installCount": 359,
-    "ratingAvg": 4.5,
     "version": "1.0.3"
-  },
-  {
-    "author": "openclaw",
-    "category": "clawdbot-tools",
-    "description": "通过对 old.reddit.com 的网页抓取读取和搜索 Reddit 帖子。当 Clawdbot 需要浏览 Reddit 内容时使用 — 可读取子版块的帖子、搜索话题、监控特定社区。仅限只读，不进行发布或评论。",
-    "identifier": "openclaw-skills-reddit-scraper",
-    "name": "reddit",
-    "updatedAt": "2026-09-16T07:14:24.063Z",
-    "commentCount": 20,
-    "createdAt": "2026-02-17T13:08:01.743Z",
-    "github": {
-      "forks": 598,
-      "stars": 1907,
-      "url": "https://github.com/openclaw/skills",
-      "watchers": 22
-    },
-    "homepage": "https://github.com/openclaw/skills/tree/main/skills/javicasper/reddit-scraper",
-    "icon": "https://github.com/openclaw.png",
-    "installCount": 863,
-    "ratingAvg": 4.1,
-    "resourcesCount": 3,
-    "version": "1.0.2"
   },
   {
     "author": "Aradotso",
     "category": "self-hosted-automation",
-    "description": "```markdown",
+    "description": "Nous Research Hermes Agent 的精选生态指南，涵盖自改进 AI 代理的技能、记忆、多平台消息和 MCP 集成。当用户要安装或配置 Hermes、添加技能、部署集成，或在 Telegram、Discord 上使用 Hermes 时使用。",
     "identifier": "aradotso-trending-skills-awesome-hermes-agent",
     "name": "Awesome Hermes Agent",
     "updatedAt": "2026-09-15T15:53:19.444Z",
-    "commentCount": 5,
-    "createdAt": "2026-03-30T22:50:07.497Z",
     "github": {
-      "forks": 3,
       "stars": 15,
-      "url": "https://github.com/Aradotso/trending-skills",
-      "watchers": 0
+      "url": "https://github.com/Aradotso/trending-skills"
     },
     "homepage": "https://github.com/Aradotso/trending-skills/tree/main/skills/awesome-hermes-agent",
     "icon": "https://github.com/Aradotso.png",
-    "installCount": 666,
-    "ratingAvg": 4.29,
     "version": "1.0.1"
   },
   {
@@ -758,39 +399,13 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "lingojack-j-swift-ios-app-gen",
     "name": "swift-ios-app-gen",
     "updatedAt": "2026-09-16T11:30:41.508Z",
-    "commentCount": 0,
-    "createdAt": "2026-03-31T04:01:52.614Z",
     "github": {
-      "forks": 0,
       "stars": 1,
-      "url": "https://github.com/LingoJack/j",
-      "watchers": 0
+      "url": "https://github.com/LingoJack/j"
     },
     "homepage": "https://github.com/LingoJack/j/tree/main/assets/skills/swift-ios-app-gen",
     "icon": "https://github.com/LingoJack.png",
-    "installCount": 351,
     "version": "1.0.1"
-  },
-  {
-    "author": "modu-ai",
-    "category": "moltbook",
-    "description": "书籍章节正文草稿撰写——以“节”（单个章节段落）为单位写作，管理篇幅、处理引文，并自动按四种文体分支。接收书籍大纲设计器（book-outline-designer）提供的章节概要，完整撰写单个节从开头到结尾的稿件。提供实用（清晰·实操）、人文（叙事·文体）、技术（代码·图表）、小说（描写·视角）四类预设。自动计算以每页200字原稿纸为单位的页数，引用以脚注标注，整合图表与代码块占位。\n\n遇到以下请求时请务必使用此技能：\n- “章节正文写作”、“节落写作”、“稿件撰写”\n- “书籍正文”、“章正文”、“草稿写作”\n- “按类型文体”、“出版稿件写作”\n- “引用处理”、“脚注标注”、“插入图表”",
-    "identifier": "modu-ai-cowork-plugins-book-chapter-writer",
-    "name": "book-chapter-writer",
-    "updatedAt": "2026-09-16T03:03:10.174Z",
-    "commentCount": 0,
-    "createdAt": "2026-05-18T04:05:24.819Z",
-    "github": {
-      "forks": 48,
-      "stars": 200,
-      "url": "https://github.com/modu-ai/cowork-plugins",
-      "watchers": 1
-    },
-    "homepage": "https://github.com/modu-ai/cowork-plugins/tree/main/moai-book/skills/book-chapter-writer",
-    "icon": "https://github.com/modu-ai.png",
-    "installCount": 135,
-    "resourcesCount": 1,
-    "version": "2.10.0"
   },
   {
     "author": "davila7",
@@ -799,18 +414,12 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "davila7-claude-code-templates-excel-analysis",
     "name": "Excel Analysis",
     "updatedAt": "2026-09-16T05:38:49.702Z",
-    "commentCount": 5,
-    "createdAt": "2026-02-12T13:19:26.528Z",
     "github": {
-      "forks": 2083,
       "stars": 22008,
-      "url": "https://github.com/davila7/claude-code-templates",
-      "watchers": 144
+      "url": "https://github.com/davila7/claude-code-templates"
     },
     "homepage": "https://github.com/davila7/claude-code-templates/tree/main/cli-tool/components/skills/enterprise-communication/excel-analysis",
     "icon": "https://github.com/davila7.png",
-    "installCount": 915,
-    "ratingAvg": 4.71,
     "version": "1.0.2"
   },
   {
@@ -820,46 +429,12 @@ export const COMMUNITY_SKILLS_DATA = [
     "identifier": "sickn33-antigravity-awesome-skills-quant-analyst",
     "name": "quant-analyst",
     "updatedAt": "2026-09-15T15:37:02.150Z",
-    "commentCount": 6,
-    "createdAt": "2026-02-12T13:43:44.130Z",
     "github": {
-      "forks": 1752,
       "stars": 8567,
       "url": "https://github.com/sickn33/antigravity-awesome-skills"
     },
     "homepage": "https://github.com/sickn33/antigravity-awesome-skills/tree/main/skills/quant-analyst",
     "icon": "https://github.com/sickn33.png",
-    "installCount": 418,
-    "ratingAvg": 4.71,
     "version": "1.0.1"
-  },
-  {
-    "author": "openclaw",
-    "category": "agent-to-agent-protocols",
-    "description": "A self-evolution engine for AI agents. Analyzes runtime history to identify improvements and applies protocol-constrained evolution.",
-    "identifier": "openclaw-skills-capability-evolver",
-    "name": "capability-evolver",
-    "updatedAt": "2026-09-16T06:23:40.874Z",
-    "commentCount": 49,
-    "createdAt": "2026-02-17T04:18:05.857Z",
-    "github": {
-      "forks": 759,
-      "stars": 2602,
-      "url": "https://github.com/openclaw/skills",
-      "watchers": 28
-    },
-    "homepage": "https://github.com/openclaw/skills/tree/main/skills/autogame-17/capability-evolver",
-    "icon": "https://github.com/openclaw.png",
-    "installCount": 1658,
-    "isFeatured": true,
-    "ratingAvg": 4.1,
-    "resourcesCount": 75,
-    "tags": [
-      "meta",
-      "ai",
-      "self-improvement",
-      "core"
-    ],
-    "version": "1.0.3"
   }
 ] as DiscoverSkillItem[]

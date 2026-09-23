@@ -4,13 +4,8 @@ import { getResetPasswordEmailTemplate } from '../reset-password'
 import { getVerificationEmailTemplate } from '../verification'
 import { getVerificationOTPEmailTemplate } from '../verification-otp'
 
-import { EMAIL_TEMPLATE_CATALOG, EMAIL_TEMPLATE_PREVIEW_MOCK } from './preview-catalog'
-import type {
-  EmailTemplateKey,
-  EmailTemplateParams,
-  EmailTemplatePreview,
-  RenderedEmailTemplate,
-} from './preview-catalog'
+import { EMAIL_TEMPLATE_PREVIEW_MOCK } from './preview-catalog'
+import type { EmailTemplateKey, EmailTemplateParams, RenderedEmailTemplate } from './preview-catalog'
 
 const resolveTemplateParams = (params: EmailTemplateParams = {}) => {
   const { url, userName, expiresInSeconds, otp } = {
@@ -38,12 +33,4 @@ export function renderEmailTemplate(key: EmailTemplateKey, params: EmailTemplate
     default:
       throw new Error(`Unknown email template: ${key}`)
   }
-}
-
-export function getEmailTemplatePreviews(): EmailTemplatePreview[] {
-  return EMAIL_TEMPLATE_CATALOG.map((entry) => ({
-    key: entry.key,
-    label: entry.label,
-    ...renderEmailTemplate(entry.key),
-  }))
 }

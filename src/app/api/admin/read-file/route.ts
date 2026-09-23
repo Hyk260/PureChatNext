@@ -7,9 +7,11 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { loadFile, UnsupportedFileTypeError } from '@pure/file-loaders'
 
+import { withAdmin } from '@/libs/auth/get-session-user'
+
 /**
- * 解析文件内容
- * POST /api/read-file
+ * 解析文件内容（仅管理员）
+ * POST /api/admin/read-file
  *
  * 支持两种入参方式：
  * 1. 上传文件: multipart/form-data, 字段名 "file"
@@ -34,7 +36,7 @@ async function saveTempFile(buffer: Buffer, filename: string): Promise<string> {
   return tmpPath
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest) => {
   let tmpPath: string | null = null
 
   try {
@@ -43,7 +45,6 @@ export async function POST(request: NextRequest) {
     let filename: string
 
     if (contentType.includes('multipart/form-data')) {
-      // 方式1: 文件上传
       const formData = await request.formData()
       const file = formData.get('file')
       if (!file || !(file instanceof File)) {
@@ -52,7 +53,6 @@ export async function POST(request: NextRequest) {
       buffer = Buffer.from(await file.arrayBuffer())
       filename = file.name
     } else if (contentType.includes('application/json')) {
-      // 方式2: URL 下载
       const body = await request.json()
       const url = body.url
       if (!url || typeof url !== 'string') {
@@ -68,18 +68,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 写入临时文件
     tmpPath = await saveTempFile(buffer, filename)
 
-    // 调用 loadFile 解析
     const result = await loadFile(tmpPath, { filename, source: tmpPath })
 
-    // 清理临时文件
     await unlink(tmpPath).catch(() => {})
 
     return NextResponse.json(result)
   } catch (error) {
-    // 清理临时文件
     if (tmpPath) {
       await unlink(tmpPath).catch(() => {})
     }
@@ -91,4 +87,4 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : 'Internal server error'
     return NextResponse.json({ error: message }, { status: 500 })
   }
-}
+})

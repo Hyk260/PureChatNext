@@ -19,6 +19,7 @@ import {
 import { formatSize } from '@pure/utils/client'
 
 import type { DocumentPage, FileDocument } from '@pure/file-loaders'
+import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 type RequestMode = 'file' | 'url'
 type ResultView = 'content' | 'pages' | 'json'
@@ -150,16 +151,12 @@ export default function ReadFileTestPage() {
       if (mode === 'file' && file) {
         const formData = new FormData()
         formData.append('file', file)
-        response = await fetch('/api/read-file', {
+        response = await apiFetch('/api/admin/read-file', {
           method: 'POST',
           body: formData,
         })
       } else {
-        response = await fetch('/api/read-file', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: url.trim() }),
-        })
+        response = await apiFetch('/api/admin/read-file', jsonInit({ url: url.trim() }, { method: 'POST' }))
       }
 
       const payload = (await response.json()) as FileDocument | ApiError
@@ -384,7 +381,7 @@ export default function ReadFileTestPage() {
               <dl className='mt-3 grid gap-3 text-sm'>
                 <div className='flex items-center justify-between gap-4'>
                   <dt className='text-slate-500'>Endpoint</dt>
-                  <dd className='font-mono text-xs text-slate-900'>POST /api/read-file</dd>
+                  <dd className='font-mono text-xs text-slate-900'>POST /api/admin/read-file</dd>
                 </div>
                 <div className='flex items-center justify-between gap-4'>
                   <dt className='text-slate-500'>Content-Type</dt>

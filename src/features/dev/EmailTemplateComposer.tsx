@@ -28,7 +28,7 @@ const PARAM_LABELS: Record<EmailTemplateParamField, string> = {
 const PARAM_PLACEHOLDERS: Record<EmailTemplateParamField, string> = {
   expiresInSeconds: '3600',
   otp: '123456',
-  url: 'https://localhost:3000/auth/verify?token=preview-token',
+  url: EMAIL_TEMPLATE_PREVIEW_MOCK.url,
   userName: 'Preview User',
 }
 

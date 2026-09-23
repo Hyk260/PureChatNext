@@ -224,7 +224,7 @@ const AgentDetailModal = memo<AgentDetailModalProps>(({ agent, onClose, onEdit, 
               style={{ flex: 'none' }}
             />
             <Flex className='flex-col gap-1 overflow-hidden'>
-              <Text as='h2' className='!m-0 !text-[20px] !font-semibold' ellipsis>
+              <Text as='h2' className='m-0! text-[20px]! font-semibold!' ellipsis>
                 {agent.title}
               </Text>
               <Flex className='mt-1 flex-wrap gap-1'>

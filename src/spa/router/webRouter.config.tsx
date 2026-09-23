@@ -328,6 +328,10 @@ export const webRoutes: RouteObject[] = [
         element: dynamicElement(() => import('@/features/dev/EmailServicePage'), 'Admin > EmailService'),
         path: 'email-service',
       },
+      {
+        element: dynamicElement(() => import('@/features/dev/ReadFilePage'), 'Admin > ReadFile'),
+        path: 'read-file',
+      },
     ],
     element: dynamicLayout(() => import('@/routes/admin/_layout'), 'AdminLayout'),
     path: 'admin',
@@ -339,16 +343,8 @@ export const webRoutes: RouteObject[] = [
         {
           children: [
             {
-              element: dynamicElement(() => import('@/features/dev/EmailTemplatesPage'), 'Dev > EmailTemplates'),
-              path: 'email-templates',
-            },
-            {
               element: dynamicElement(() => import('@/features/dev/S3Page'), 'Dev > S3'),
               path: 's3',
-            },
-            {
-              element: dynamicElement(() => import('@/features/dev/ReadFilePage'), 'Dev > ReadFile'),
-              path: 'read-file',
             },
             {
               element: dynamicElement(() => import('@/features/dev/WechatConversationPage'), 'Dev > WechatConversation'),

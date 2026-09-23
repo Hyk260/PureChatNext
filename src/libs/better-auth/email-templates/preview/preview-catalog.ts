@@ -1,7 +1,38 @@
+import { SITE_DEFAULT_URL } from '@/const/site'
+
+const PREVIEW_VERIFY_PATH = '/verify-email?token=preview-token'
+const LOCAL_PREVIEW_ORIGIN = 'http://localhost:5174'
+
+const trimTrailingSlash = (value: string) => value.replace(/\/$/, '')
+
+// 浏览器走当前站点；这里不引 appEnv，避免 SPA 打包进服务端 env。
+const previewEmailOrigin = () => {
+  if (process.env.NODE_ENV === 'test') {
+    return LOCAL_PREVIEW_ORIGIN
+  }
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin
+  }
+
+  const appUrl = process.env.APP_URL?.trim()
+  if (appUrl) {
+    return trimTrailingSlash(appUrl)
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    return SITE_DEFAULT_URL
+  }
+
+  return LOCAL_PREVIEW_ORIGIN
+}
+
 export const EMAIL_TEMPLATE_PREVIEW_MOCK = {
   expiresInSeconds: 3600,
   otp: '123456',
-  url: 'https://localhost:3000/auth/verify?token=preview-token',
+  get url() {
+    return `${previewEmailOrigin()}${PREVIEW_VERIFY_PATH}`
+  },
   userName: 'Preview User',
 }
 
@@ -31,14 +62,6 @@ export const EMAIL_TEMPLATE_CATALOG: EmailTemplateCatalogEntry[] = [
 ]
 
 export const EMAIL_TEMPLATE_KEYS = EMAIL_TEMPLATE_CATALOG.map((entry) => entry.key)
-
-export type EmailTemplatePreview = {
-  html: string
-  key: string
-  label: string
-  subject: string
-  text: string
-}
 
 export type RenderedEmailTemplate = {
   html: string

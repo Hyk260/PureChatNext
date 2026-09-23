@@ -5,29 +5,33 @@ vi.mock('@/libs/auth/get-session-user', () => ({
   withAdmin: (handler: unknown) => handler,
 }))
 
-vi.mock('@/libs/better-auth/email-templates/preview', () => ({
-  parseEmailTemplateKey: (value: unknown) => {
-    const keys = ['verification', 'change-email', 'magic-link', 'reset-password', 'verification-otp']
+vi.mock('@/libs/better-auth/email-templates/preview', async () => {
+  const { EMAIL_TEMPLATE_PREVIEW_MOCK } = await import('@/libs/better-auth/email-templates/preview/preview-catalog')
 
-    return typeof value === 'string' && keys.includes(value) ? value : undefined
-  },
-  parseEmailTemplateParams: (value: unknown) => {
-    if (value === undefined) {
-      return undefined
-    }
+  return {
+    parseEmailTemplateKey: (value: unknown) => {
+      const keys = ['verification', 'change-email', 'magic-link', 'reset-password', 'verification-otp']
 
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-      return undefined
-    }
+      return typeof value === 'string' && keys.includes(value) ? value : undefined
+    },
+    parseEmailTemplateParams: (value: unknown) => {
+      if (value === undefined) {
+        return undefined
+      }
 
-    return value
-  },
-  renderEmailTemplate: vi.fn((key: string, params?: { url?: string }) => ({
-    html: `<p>Rendered ${key} ${params?.url ?? 'https://localhost:3000/auth/verify?token=preview-token'}</p>`,
-    subject: key === 'verification' ? '验证您的邮箱 - PureChat' : 'Subject',
-    text: `Text for ${key} ${params?.url ?? 'https://localhost:3000/auth/verify?token=preview-token'}`,
-  })),
-}))
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        return undefined
+      }
+
+      return value
+    },
+    renderEmailTemplate: vi.fn((key: string, params?: { url?: string }) => ({
+      html: `<p>Rendered ${key} ${params?.url ?? EMAIL_TEMPLATE_PREVIEW_MOCK.url}</p>`,
+      subject: key === 'verification' ? '验证您的邮箱 - PureChat' : 'Subject',
+      text: `Text for ${key} ${params?.url ?? EMAIL_TEMPLATE_PREVIEW_MOCK.url}`,
+    })),
+  }
+})
 
 vi.mock('@/server/services/email', () => ({
   EmailImplType: {

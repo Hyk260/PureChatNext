@@ -1,17 +1,14 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { FileS3 } from '@/server/modules/S3'
-import { devError, getErrorMessage } from '../_utils'
+import { withAdmin } from '@/libs/auth/get-session-user'
+import { devError, getErrorMessage } from '../../dev/_utils'
 
 const DEV_S3_PREFIX = 'dev/'
 let fileS3: FileS3 | undefined
 
 const getFileS3 = () => (fileS3 ??= new FileS3())
-
-const rejectOutsideDevelopment = () => {
-  if (process.env.NODE_ENV === 'development') return
-  return devError('Not found', 404)
-}
 
 // —— Helpers ——
 
@@ -32,16 +29,13 @@ const toDevKey = (key: string) => {
 const toDevPrefix = (prefix: string | null) => toDevKey(prefix?.trim() || '')
 
 /**
- * S3 测试 API（仅开发环境）
- * POST /api/dev/s3
+ * S3 测试 API（仅管理员）
+ * POST /api/admin/s3
  * - action=uploadFile      (multipart/form-data, field "file")
  * - action=uploadText      (JSON: { key, content })
  * - action=uploadBuffer    (JSON: { key, content, contentType? })
  */
-export const POST = async (req: Request) => {
-  const rejected = rejectOutsideDevelopment()
-  if (rejected) return rejected
-
+export const POST = withAdmin(async (req: NextRequest) => {
   try {
     const url = new URL(req.url)
     const action = getAction(url.searchParams)
@@ -110,20 +104,17 @@ export const POST = async (req: Request) => {
   } catch (error) {
     return devError(getErrorMessage(error, 'Unknown error'), 500)
   }
-}
+})
 
 /**
- * S3 测试 API（仅开发环境）
- * GET /api/dev/s3
+ * S3 测试 API（仅管理员）
+ * GET /api/admin/s3
  * - action=list&prefix=xxx
  * - action=info&key=xxx
  * - action=download&key=xxx          (presigned URL for preview)
  * - action=downloadUrl&key=xxx&expiresIn=xxx
  */
-export const GET = async (req: Request) => {
-  const rejected = rejectOutsideDevelopment()
-  if (rejected) return rejected
-
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const url = new URL(req.url)
     const action = getAction(url.searchParams)
@@ -167,18 +158,15 @@ export const GET = async (req: Request) => {
   } catch (error) {
     return devError(getErrorMessage(error, 'Unknown error'), 500)
   }
-}
+})
 
 /**
- * S3 测试 API（仅开发环境）
- * DELETE /api/dev/s3
+ * S3 测试 API（仅管理员）
+ * DELETE /api/admin/s3
  * - action=deleteOne&key=xxx
  * - action=deleteMany  (JSON body: { keys: string[] })
  */
-export const DELETE = async (req: Request) => {
-  const rejected = rejectOutsideDevelopment()
-  if (rejected) return rejected
-
+export const DELETE = withAdmin(async (req: NextRequest) => {
   try {
     const url = new URL(req.url)
     const action = getAction(url.searchParams)
@@ -213,17 +201,14 @@ export const DELETE = async (req: Request) => {
   } catch (error) {
     return devError(getErrorMessage(error, 'Unknown error'), 500)
   }
-}
+})
 
 /**
- * S3 测试 API（仅开发环境）
- * PUT /api/dev/s3
+ * S3 测试 API（仅管理员）
+ * PUT /api/admin/s3
  * - action=rename  (JSON body: { oldKey, newKey })
  */
-export const PUT = async (req: Request) => {
-  const rejected = rejectOutsideDevelopment()
-  if (rejected) return rejected
-
+export const PUT = withAdmin(async (req: NextRequest) => {
   try {
     const url = new URL(req.url)
     const action = getAction(url.searchParams)
@@ -247,4 +232,4 @@ export const PUT = async (req: Request) => {
   } catch (error) {
     return devError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
-}
+})

@@ -237,6 +237,10 @@ export const webRoutes: RouteObject[] = [
         path: 'read-file',
       },
       {
+        element: dynamicElement(() => import('@/routes/settings/s3/page'), 'Settings > S3'),
+        path: 's3',
+      },
+      {
         element: dynamicElement(() => import('@/routes/settings/messenger/page'), 'Settings > Messenger'),
         path: 'messenger',
       },
@@ -336,6 +340,10 @@ export const webRoutes: RouteObject[] = [
         element: dynamicElement(() => import('@/features/dev/ReadFilePage'), 'Admin > ReadFile'),
         path: 'read-file',
       },
+      {
+        element: dynamicElement(() => import('@/features/dev/S3Page'), 'Admin > S3'),
+        path: 's3',
+      },
     ],
     element: dynamicLayout(() => import('@/routes/admin/_layout'), 'AdminLayout'),
     path: 'admin',
@@ -346,10 +354,6 @@ export const webRoutes: RouteObject[] = [
     ? ([
         {
           children: [
-            {
-              element: dynamicElement(() => import('@/features/dev/S3Page'), 'Dev > S3'),
-              path: 's3',
-            },
             {
               element: dynamicElement(() => import('@/features/dev/WechatConversationPage'), 'Dev > WechatConversation'),
               path: 'wechat-conversation',

@@ -23,6 +23,12 @@ import {
 } from 'lucide-react'
 import { formatDateTime, formatSize } from '@pure/utils/client'
 
+import { apiFetch } from '@/utils/apiFetch'
+
+const adminS3Url = () => new URL('/api/admin/s3', window.location.origin)
+
+const fetchS3 = (url: URL, init?: RequestInit) => apiFetch(`${url.pathname}${url.search}`, init)
+
 // —— Types ——
 
 type FileInfo = {
@@ -206,10 +212,10 @@ export default function S3TestPage() {
   useEffect(() => {
     const doFetch = async () => {
       try {
-        const url = new URL('/api/dev/s3', window.location.origin)
+        const url = adminS3Url()
         url.searchParams.set('action', 'list')
         url.searchParams.set('prefix', 'dev/')
-        const res = await fetch(url.toString())
+        const res = await fetchS3(url)
         const json = (await res.json()) as ApiResult<FileInfo[]>
         if (json.success) setFileList(json.data)
       } catch {
@@ -221,11 +227,11 @@ export default function S3TestPage() {
 
   const fetchList = async () => {
     try {
-      const url = new URL('/api/dev/s3', window.location.origin)
+      const url = adminS3Url()
       url.searchParams.set('action', 'list')
       url.searchParams.set('prefix', listPrefix || 'dev/')
 
-      const res = await fetch(url.toString())
+      const res = await fetchS3(url)
       const json = (await res.json()) as ApiResult<FileInfo[]>
 
       if (json.success) {
@@ -262,15 +268,15 @@ export default function S3TestPage() {
         formData.append('file', uploadFiles[0])
         if (uploadKey) formData.append('key', uploadKey)
 
-        const url = new URL('/api/dev/s3', window.location.origin)
+        const url = adminS3Url()
         url.searchParams.set('action', 'uploadFile')
 
-        response = await fetch(url.toString(), { method: 'POST', body: formData })
+        response = await fetchS3(url, { method: 'POST', body: formData })
       } else {
         // JSON requests
         let method = 'GET'
         let body: BodyInit | undefined
-        const url = new URL('/api/dev/s3', window.location.origin)
+        const url = adminS3Url()
 
         if (action === 'upload') {
           method = 'POST'
@@ -297,7 +303,7 @@ export default function S3TestPage() {
           body = JSON.stringify({ oldKey: renameOldKey, newKey: renameNewKey })
         }
 
-        response = await fetch(url.toString(), {
+        response = await fetchS3(url, {
           method,
           headers: body ? { 'Content-Type': 'application/json' } : undefined,
           body,
@@ -399,12 +405,12 @@ export default function S3TestPage() {
   }
 
   const deleteSingleFile = async (key: string) => {
-    const url = new URL('/api/dev/s3', window.location.origin)
+    const url = adminS3Url()
     url.searchParams.set('action', 'deleteOne')
     url.searchParams.set('key', key)
 
     try {
-      const res = await fetch(url.toString(), { method: 'DELETE' })
+      const res = await fetchS3(url, { method: 'DELETE' })
       const json = (await res.json()) as ApiResult
       if (json.success) {
         addToast(`Deleted: ${key}`, 'success')
@@ -418,11 +424,11 @@ export default function S3TestPage() {
   }
 
   const fetchDownloadUrl = async (key: string) => {
-    const url = new URL('/api/dev/s3', window.location.origin)
+    const url = adminS3Url()
     url.searchParams.set('action', 'downloadUrl')
     url.searchParams.set('key', key)
 
-    const res = await fetch(url.toString())
+    const res = await fetchS3(url)
     const json = (await res.json()) as ApiResult<{ downloadUrl: string }>
 
     if (!json.success) {
@@ -781,7 +787,7 @@ export default function S3TestPage() {
               <dl className='mt-3 grid gap-3 text-sm'>
                 <div className='flex items-center justify-between gap-4'>
                   <dt className='text-slate-500'>Endpoint</dt>
-                  <dd className='font-mono text-xs text-slate-900'>/api/dev/s3</dd>
+                  <dd className='font-mono text-xs text-slate-900'>/api/admin/s3</dd>
                 </div>
                 <div className='flex items-center justify-between gap-4'>
                   <dt className='text-slate-500'>Action</dt>

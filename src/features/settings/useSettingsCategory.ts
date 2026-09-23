@@ -11,6 +11,7 @@ import {
   Database,
   EllipsisIcon,
   FileText,
+  HardDrive,
   Globe2,
   Info,
   KeyboardIcon,
@@ -60,6 +61,7 @@ export enum SettingsTab {
   WebSearch = 'web-search',
   Email = 'email-service',
   ReadFile = 'read-file',
+  S3 = 's3',
 }
 
 /** Page titles for SettingsHeader (covers nav + empty/hidden tabs). */
@@ -87,6 +89,7 @@ export const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
   [SettingsTab.WebSearch]: '联网搜索',
   [SettingsTab.Email]: '邮件服务',
   [SettingsTab.ReadFile]: '文件读取',
+  [SettingsTab.S3]: 'S3 测试',
 }
 
 export function getSettingsTabLabel(tab: string | undefined): string {
@@ -136,6 +139,12 @@ const MANAGE_GROUP: SettingsCategoryGroup = {
       icon: FileText,
       key: SettingsTab.ReadFile,
       label: '文件读取',
+    },
+    {
+      href: tabHref(SettingsTab.S3),
+      icon: HardDrive,
+      key: SettingsTab.S3,
+      label: 'S3 测试',
     },
   ],
   key: SettingsGroupKey.Manage,

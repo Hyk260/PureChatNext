@@ -47,12 +47,12 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
       { href: '/admin/users', label: '用户管理' },
       { href: '/admin/email-service', label: '邮件服务' },
       { href: '/admin/read-file', label: '文件读取' },
+      { href: '/admin/s3', label: 'S3 测试' },
     ],
   },
   {
     title: '开发',
     routes: [
-      { href: '/dev/s3', label: 'S3 测试' },
       { href: '/dev/wechat-conversation', label: '微信对话' },
       { href: '/dev/qq-conversation', label: 'QQ 对话' },
       { href: '/dev/code-block', label: 'CodeBlock' },

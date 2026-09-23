@@ -3,24 +3,20 @@
 import { Flex } from '@pure/ui'
 import { Drawer } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
-import { FileText, Globe2, HardDrive, Mail, Route, Users } from 'lucide-react'
+import { Route } from 'lucide-react'
 import { memo, useState } from 'react'
 
 import NavItem from '@/components/NavItem'
-import { isAdminRole } from '@/const/auth'
 import { HOME_TOP_NAV } from '@/const/home/nav'
 import { RouteNavContent } from '@/features/dev/RouteNavContent'
-import { useSession } from '@/libs/better-auth/client'
 import { isDev } from '@/libs/constants'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const SidebarNav = memo(() => {
   const pathname = usePathname()
-  const { data: session } = useSession()
   const { message } = useApp()
   const [routeNavOpen, setRouteNavOpen] = useState(false)
-  const showAdminNav = isAdminRole(session?.user?.role)
 
   return (
     <>
@@ -56,45 +52,6 @@ const SidebarNav = memo(() => {
             </Link>
           )
         })}
-        {showAdminNav ? (
-          <>
-            <Link className='text-inherit no-underline' href='/admin/users'>
-              <NavItem
-                active={pathname.startsWith('/admin/users')}
-                clickable
-                icon={Users}
-                title='用户管理'
-              />
-            </Link>
-            <Link className='text-inherit no-underline' href='/admin/web-search'>
-              <NavItem
-                active={pathname.startsWith('/admin/web-search')}
-                clickable
-                icon={Globe2}
-                title='联网搜索'
-              />
-            </Link>
-            <Link className='text-inherit no-underline' href='/admin/email-service'>
-              <NavItem
-                active={pathname.startsWith('/admin/email-service')}
-                clickable
-                icon={Mail}
-                title='邮件服务'
-              />
-            </Link>
-            <Link className='text-inherit no-underline' href='/admin/read-file'>
-              <NavItem
-                active={pathname.startsWith('/admin/read-file')}
-                clickable
-                icon={FileText}
-                title='文件读取'
-              />
-            </Link>
-            <Link className='text-inherit no-underline' href='/admin/s3'>
-              <NavItem active={pathname.startsWith('/admin/s3')} clickable icon={HardDrive} title='S3 测试' />
-            </Link>
-          </>
-        ) : null}
         {isDev ? <NavItem icon={Route} title='dev测试路由' onItemClick={() => setRouteNavOpen(true)} /> : null}
       </Flex>
       {isDev ? (

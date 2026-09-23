@@ -611,13 +611,13 @@ export default function WebSearchTestPage() {
         <header className='flex flex-col justify-between gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end'>
           <div>
             <div className='mb-3 flex items-center gap-2'>
-              <ActionIcon
+              {/* <ActionIcon
                 aria-label='返回上一页'
                 icon={ArrowLeft}
                 size='small'
                 title='返回上一页'
                 onClick={() => navigate(-1)}
-              />
+              /> */}
               <div className='inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-sm font-medium text-cyan-700 ring-1 ring-cyan-200'>
                 <Sparkles className='size-4' />
                 web-search API tester

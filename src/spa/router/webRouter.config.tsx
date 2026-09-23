@@ -5,9 +5,51 @@ import { dynamicElement, dynamicLayout } from '@/utils/router'
 
 /**
  * Web SPA route tree (react-router).
- * Mirrors App Router paths from `docs/spa-migration-checklist.md` §2.
+ * Web and desktop share this tree; desktop only swaps the fetch transport.
  * Layouts / pages live in `src/routes/*` (thin) → `@/features/*`.
  */
+
+/** Named exports from `settings/empty` — one chunk, path is the settings tab. */
+const SETTINGS_FROM_EMPTY = [
+  ['appearance', 'AppearancePage'],
+  ['language', 'LanguagePage'],
+  ['hotkey', 'HotkeyPage'],
+  ['notification', 'NotificationPage'],
+  ['stats', 'StatsPage'],
+  ['advanced', 'AdvancedPage'],
+  ['storage', 'StoragePage'],
+  ['memory', 'MemoryPage'],
+  ['creds', 'CredsPage'],
+  ['connector', 'ConnectorPage'],
+  ['service-model', 'ServiceModelPage'],
+] as const
+
+function settingsFromEmpty([path, page]: (typeof SETTINGS_FROM_EMPTY)[number]): RouteObject {
+  return {
+    element: dynamicElement(
+      () => import('@/routes/settings/empty').then((mod) => ({ default: mod[page] })),
+      `Settings > ${page}`
+    ),
+    path,
+  }
+}
+
+const PUBLIC_PAGES = [
+  ['help', 'HelpPage'],
+  ['privacy', 'PrivacyPage'],
+  ['terms', 'TermsPage'],
+] as const
+
+function publicPage([path, page]: (typeof PUBLIC_PAGES)[number]): RouteObject {
+  return {
+    element: dynamicElement(
+      () => import('@/features/public/PublicInfoPages').then((mod) => ({ default: mod[page] })),
+      page
+    ),
+    path,
+  }
+}
+
 export const webRoutes: RouteObject[] = [
   // —— Main (home) ——
   {
@@ -76,10 +118,6 @@ export const webRoutes: RouteObject[] = [
     path: 'signup',
   },
   {
-    element: dynamicElement(() => import('@/routes/login/page'), 'Login'),
-    path: 'login',
-  },
-  {
     element: dynamicElement(() => import('@/routes/verify-email/page'), 'VerifyEmail'),
     path: 'verify-email',
   },
@@ -95,33 +133,9 @@ export const webRoutes: RouteObject[] = [
     element: dynamicElement(() => import('@/routes/profile/page'), 'Profile'),
     path: 'profile',
   },
-  {
-    element: dynamicElement(() => import('@/routes/protected/page'), 'Protected'),
-    path: 'protected',
-  },
 
   // —— Public information ——
-  {
-    element: dynamicElement(
-      () => import('@/features/public/PublicInfoPages').then((module) => ({ default: module.HelpPage })),
-      'Help'
-    ),
-    path: 'help',
-  },
-  {
-    element: dynamicElement(
-      () => import('@/features/public/PublicInfoPages').then((module) => ({ default: module.PrivacyPage })),
-      'Privacy'
-    ),
-    path: 'privacy',
-  },
-  {
-    element: dynamicElement(
-      () => import('@/features/public/PublicInfoPages').then((module) => ({ default: module.TermsPage })),
-      'Terms'
-    ),
-    path: 'terms',
-  },
+  ...PUBLIC_PAGES.map(publicPage),
   {
     element: dynamicElement(() => import('@/routes/share/t/$id/page'), 'Share > Topic'),
     path: 'share/t/:id',
@@ -139,75 +153,12 @@ export const webRoutes: RouteObject[] = [
         path: 'profile',
       },
       {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.AppearancePage })),
-          'Settings > Appearance'
-        ),
-        path: 'appearance',
-      },
-      {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.LanguagePage })),
-          'Settings > Language'
-        ),
-        path: 'language',
-      },
-      {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.HotkeyPage })),
-          'Settings > Hotkey'
-        ),
-        path: 'hotkey',
-      },
-      {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.NotificationPage })),
-          'Settings > Notification'
-        ),
-        path: 'notification',
-      },
-      {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.StatsPage })),
-          'Settings > Stats'
-        ),
-        path: 'stats',
-      },
-      {
         element: dynamicElement(() => import('@/routes/settings/credits/page'), 'Settings > Credits'),
         path: 'credits',
       },
       {
         element: dynamicElement(() => import('@/routes/settings/usage/page'), 'Settings > Usage'),
         path: 'usage',
-      },
-      {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.AdvancedPage })),
-          'Settings > Advanced'
-        ),
-        path: 'advanced',
-      },
-      {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.StoragePage })),
-          'Settings > Storage'
-        ),
-        path: 'storage',
-      },
-      {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.MemoryPage })),
-          'Settings > Memory'
-        ),
-        path: 'memory',
-      },
-      {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.CredsPage })),
-          'Settings > Creds'
-        ),
-        path: 'creds',
       },
       {
         element: dynamicElement(() => import('@/routes/settings/about/page'), 'Settings > About'),
@@ -242,31 +193,13 @@ export const webRoutes: RouteObject[] = [
       },
       {
         element: dynamicElement(() => import('@/routes/settings/messenger/page'), 'Settings > Messenger'),
-        path: 'messenger',
-      },
-      // 同一页读 `:platform` 切换列表/详情（嵌套路由参数）
-      {
-        element: dynamicElement(() => import('@/routes/settings/messenger/page'), 'Settings > Messenger > Platform'),
-        path: 'messenger/:platform',
-      },
-      {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.ConnectorPage })),
-          'Settings > Connector'
-        ),
-        path: 'connector',
+        path: 'messenger/:platform?',
       },
       {
         element: dynamicElement(() => import('@/routes/settings/skill/page'), 'Settings > Skill'),
         path: 'skill',
       },
-      {
-        element: dynamicElement(
-          () => import('@/routes/settings/empty').then((m) => ({ default: m.ServiceModelPage })),
-          'Settings > ServiceModel'
-        ),
-        path: 'service-model',
-      },
+      ...SETTINGS_FROM_EMPTY.map(settingsFromEmpty),
       {
         children: [
           {
@@ -325,7 +258,7 @@ export const webRoutes: RouteObject[] = [
   {
     children: [
       {
-        element: dynamicElement(() => import('@/features/dev/WebSearchPage'), 'Admin > WebSearch'),
+        element: dynamicElement(() => import('@/features/admin/WebSearchPage'), 'Admin > WebSearch'),
         path: 'web-search',
       },
       {
@@ -333,15 +266,15 @@ export const webRoutes: RouteObject[] = [
         path: 'users',
       },
       {
-        element: dynamicElement(() => import('@/features/dev/EmailServicePage'), 'Admin > EmailService'),
+        element: dynamicElement(() => import('@/features/admin/EmailServicePage'), 'Admin > EmailService'),
         path: 'email-service',
       },
       {
-        element: dynamicElement(() => import('@/features/dev/ReadFilePage'), 'Admin > ReadFile'),
+        element: dynamicElement(() => import('@/features/admin/ReadFilePage'), 'Admin > ReadFile'),
         path: 'read-file',
       },
       {
-        element: dynamicElement(() => import('@/features/dev/S3Page'), 'Admin > S3'),
+        element: dynamicElement(() => import('@/features/admin/S3Page'), 'Admin > S3'),
         path: 's3',
       },
     ],

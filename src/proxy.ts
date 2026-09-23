@@ -43,7 +43,6 @@ export const config = {
     '/api(.*)',
     // include the /
     '/',
-    '/login',
 
     '/me',
     '/me(.*)',

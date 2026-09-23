@@ -1,6 +1,6 @@
 'use client'
 
-import ReadFilePage from '@/features/dev/ReadFilePage'
+import ReadFilePage from '@/features/admin/ReadFilePage'
 import RequireAdmin from '@/spa/auth/RequireAdmin'
 
 export default function SettingsReadFilePage() {

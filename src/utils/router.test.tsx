@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react'
 
 import { render, screen } from '@testing-library/react'
-import { createMemoryRouter } from 'react-router'
+import { createMemoryRouter, matchRoutes } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -77,6 +77,16 @@ describe('RouterErrorElement', () => {
 
     expect(await screen.findByText(/页面不存在/)).toBeTruthy()
     expect(consoleError).not.toHaveBeenCalled()
+  })
+
+  it('matches messenger list and platform on one route', () => {
+    const list = matchRoutes(webRoutes, '/settings/messenger')
+    const detail = matchRoutes(webRoutes, '/settings/messenger/qq')
+
+    expect(list?.at(-1)?.route.path).toBe('messenger/:platform?')
+    expect(detail?.at(-1)?.params.platform).toBe('qq')
+    expect(matchRoutes(webRoutes, '/settings/appearance')?.at(-1)?.route.path).toBe('appearance')
+    expect(matchRoutes(webRoutes, '/help')?.at(-1)?.route.path).toBe('help')
   })
 
   it('renders the shared 404 component for unmatched web routes', async () => {

@@ -1,6 +1,6 @@
 'use client'
 
-import WebSearchPage from '@/features/dev/WebSearchPage'
+import WebSearchPage from '@/features/admin/WebSearchPage'
 import RequireAdmin from '@/spa/auth/RequireAdmin'
 
 export default function SettingsWebSearchPage() {

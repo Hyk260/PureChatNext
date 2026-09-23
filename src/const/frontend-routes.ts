@@ -24,7 +24,6 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
     routes: [
       { href: '/signin', label: '登录' },
       { href: '/signup', label: '注册' },
-      { href: '/login', label: '登录（旧）' },
       { href: '/reset-password', label: '重置密码' },
       { href: '/verify-email', label: '验证邮箱' },
       { href: '/auth-error', label: '认证错误' },
@@ -36,7 +35,6 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
       { href: '/profile', label: '个人资料' },
       { href: '/settings', label: '设置' },
       { href: '/settings/profile', label: '账号设置' },
-      { href: '/protected', label: '受保护页' },
     ],
   },
   {

@@ -298,13 +298,13 @@ export default function AdminUsersPage() {
       <Flex className='mx-auto w-full max-w-6xl flex-col gap-4 px-6 py-6'>
         <Flex className='flex-between gap-3 flex-wrap'>
           <Flex className='items-center gap-2'>
-            <ActionIcon
+            {/* <ActionIcon
               aria-label='返回上一页'
               icon={ArrowLeft}
               size='small'
               title='返回上一页'
               onClick={goBack}
-            />
+            /> */}
             <Flex className='flex-col gap-1'>
               <Text className='text-xl font-semibold'>用户管理</Text>
               <Text type='secondary'>管理员可创建、编辑、封禁和删除用户</Text>

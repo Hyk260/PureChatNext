@@ -15,6 +15,7 @@ const FULL_BLEED_PREFIXES = [
   '/settings/users',
   '/settings/web-search',
   '/settings/email-service',
+  '/settings/read-file',
 ]
 
 const SettingsShellLayout = ({ children }: { children: ReactNode }) => {

@@ -233,6 +233,10 @@ export const webRoutes: RouteObject[] = [
         path: 'email-service',
       },
       {
+        element: dynamicElement(() => import('@/routes/settings/read-file/page'), 'Settings > ReadFile'),
+        path: 'read-file',
+      },
+      {
         element: dynamicElement(() => import('@/routes/settings/messenger/page'), 'Settings > Messenger'),
         path: 'messenger',
       },

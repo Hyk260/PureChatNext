@@ -3,7 +3,7 @@
 import { Flex } from '@pure/ui'
 import { Drawer } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
-import { Globe2, Mail, Route, Users } from 'lucide-react'
+import { FileText, Globe2, Mail, Route, Users } from 'lucide-react'
 import { memo, useState } from 'react'
 
 import NavItem from '@/components/NavItem'
@@ -80,6 +80,14 @@ const SidebarNav = memo(() => {
                 clickable
                 icon={Mail}
                 title='邮件服务'
+              />
+            </Link>
+            <Link className='text-inherit no-underline' href='/admin/read-file'>
+              <NavItem
+                active={pathname.startsWith('/admin/read-file')}
+                clickable
+                icon={FileText}
+                title='文件读取'
               />
             </Link>
           </>

@@ -35,11 +35,12 @@ describe('useSettingsCategory system tools', () => {
 
     const { result: admin } = renderHook(() => useSettingsCategory(true))
     const manage = admin.current.find((group) => group.title === '管理')
-    expect(manage?.items.map((item) => item.label)).toEqual(['用户管理', '联网搜索', '邮件服务'])
+    expect(manage?.items.map((item) => item.label)).toEqual(['用户管理', '联网搜索', '邮件服务', '文件读取'])
     expect(manage?.items.map((item) => item.href)).toEqual([
       '/settings/users',
       '/settings/web-search',
       '/settings/email-service',
+      '/settings/read-file',
     ])
   })
 })

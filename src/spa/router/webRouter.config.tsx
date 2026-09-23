@@ -258,7 +258,7 @@ export const webRoutes: RouteObject[] = [
   {
     children: [
       {
-        element: dynamicElement(() => import('@/features/admin/WebSearchPage'), 'Admin > WebSearch'),
+        element: dynamicElement(() => import('@/features/admin/web-search/WebSearchPage'), 'Admin > WebSearch'),
         path: 'web-search',
       },
       {

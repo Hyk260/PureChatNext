@@ -266,7 +266,7 @@ export const webRoutes: RouteObject[] = [
         path: 'users',
       },
       {
-        element: dynamicElement(() => import('@/features/admin/EmailServicePage'), 'Admin > EmailService'),
+        element: dynamicElement(() => import('@/features/admin/email-service/EmailServicePage'), 'Admin > EmailService'),
         path: 'email-service',
       },
       {
@@ -274,7 +274,7 @@ export const webRoutes: RouteObject[] = [
         path: 'read-file',
       },
       {
-        element: dynamicElement(() => import('@/features/admin/S3Page'), 'Admin > S3'),
+        element: dynamicElement(() => import('@/features/admin/s3/S3Page'), 'Admin > S3'),
         path: 's3',
       },
     ],

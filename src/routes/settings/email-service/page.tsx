@@ -1,6 +1,6 @@
 'use client'
 
-import EmailServicePage from '@/features/admin/EmailServicePage'
+import EmailServicePage from '@/features/admin/email-service/EmailServicePage'
 import RequireAdmin from '@/spa/auth/RequireAdmin'
 
 export default function SettingsEmailServicePage() {

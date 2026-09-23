@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Push 前跑与 Vercel next build 相同的类型检查，拦住 TS2540 等部署失败。
+# 跳过：SKIP_PREPUSH=1 git push
+set -euo pipefail
+
+if [[ "${SKIP_PREPUSH:-}" == "1" ]]; then
+  echo "SKIP_PREPUSH=1 — skip check:prepush"
+  exit 0
+fi
+
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+echo "pre-push → pnpm check:prepush (tsc --noEmit)"
+pnpm run check:prepush

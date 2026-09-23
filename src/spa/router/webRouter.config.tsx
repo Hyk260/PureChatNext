@@ -270,7 +270,7 @@ export const webRoutes: RouteObject[] = [
         path: 'email-service',
       },
       {
-        element: dynamicElement(() => import('@/features/admin/ReadFilePage'), 'Admin > ReadFile'),
+        element: dynamicElement(() => import('@/features/admin/read-file/ReadFilePage'), 'Admin > ReadFile'),
         path: 'read-file',
       },
       {

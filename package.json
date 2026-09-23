@@ -75,6 +75,8 @@
     "prettier": "prettier --write .",
     "prettier:check": "prettier --check .",
     "check:spa-env-leak": "node scripts/check-spa-env-leak.mjs",
+    "check:prepush": "pnpm run typecheck",
+    "hooks:install": "git config core.hooksPath .githooks && chmod +x .githooks/pre-push",
     "typecheck": "tsc --noEmit",
     "typecheck:docs": "pnpm --filter @pure/docs types:check",
     "typecheck:packages": "pnpm -r --filter \"@pure/*\" exec tsc --noEmit"

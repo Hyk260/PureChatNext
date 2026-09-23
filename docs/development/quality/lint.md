@@ -39,6 +39,8 @@ pnpm prettier:check    # Prettier 只检查
 | `prettier` | Prettier 写回 | 否 | 是 | 否 |
 | `prettier:check` | Prettier 只检查 | 否 | 否 | 否 |
 | `check:spa-env-leak` | 扫描 SPA 构建产物是否内联密钥 | 否（挂在 `build`） | 否 | 是 |
+| `check:prepush` | Push 前类型检查（等同 `typecheck`） | 否 | 否 | 否（本地 hook） |
+| `hooks:install` | 启用 `.githooks/pre-push` | 否 | 否（改本地 git config） | 否 |
 | `typecheck:packages` | 各 `@pure/*` 包内 `tsc --noEmit` | 否 | 否 | 否 |
 
 ## 聚合链路
@@ -126,9 +128,17 @@ Stylelint，配置：[stylelint.config.mjs](../../../stylelint.config.mjs)（sta
 
 挂在 `build` / `build:docker` 之后（需先有 SPA 产物），**不是**源码 lint。CI 在 `build:spa` 前注入含 `DO-NOT-LEAK` 的 canary 密钥，再扫描产物。
 
-### `typecheck`
+### `typecheck` / `check:prepush`
 
 根目录 [`tsconfig.json`](../../../tsconfig.json) 的 `include` 为 `**/*.ts` / `**/*.tsx`，因此 **packages 会一并被检查**，compilerOptions 用的是根配置（`module: esnext`、`moduleResolution: bundler` 等）。
+
+Vercel 跑 `next build` 时会做同类类型检查；CI 当前**不跑** `tsc`，所以本地 push 前应拦住。启用一次：
+
+```bash
+pnpm hooks:install   # git config core.hooksPath .githooks
+```
+
+之后每次 `git push` 会跑 `pnpm check:prepush`（即 `tsc --noEmit`）。紧急跳过：`SKIP_PREPUSH=1 git push`。
 
 ### `typecheck:packages`
 

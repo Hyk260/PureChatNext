@@ -101,16 +101,9 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     // 通过获取 Access Token 验证应用凭据是否有效。
     await this.api.getAccessToken()
 
-    // 尝试获取机器人信息；失败不影响适配器继续工作。
-    try {
-      const botInfo = await this.api.getBotInfo()
-      if (botInfo) {
-        if (botInfo.username) this._userName = botInfo.username
-        if (botInfo.id) this._botUserId = botInfo.id
-      }
-    } catch {
-      // 机器人信息不是初始化所必需的。
-    }
+    const botInfo = await this.api.getBotInfo()
+    if (botInfo?.username) this._userName = botInfo.username
+    if (botInfo?.id) this._botUserId = botInfo.id
 
     this.logger.info('Initialized QQ adapter (botUserId=%s)', this._botUserId)
   }
@@ -175,7 +168,7 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     }
 
     // 通过延迟执行的工厂函数创建 Chat SDK 消息对象。
-    const messageFactory = () => this.parseRawEvent(eventData, threadId, eventType!)
+    const messageFactory = () => this.parseRawEvent(eventData, threadId)
 
     // 将消息交给 Chat SDK 的标准处理流水线。
     this.chat.processMessage(this, threadId, messageFactory, options)
@@ -458,24 +451,18 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     })
   }
 
-  private async parseRawEvent(
-    data: QQWebhookEventData,
-    threadId: string,
-    _eventType: string
-  ): Promise<Message<QQRawMessage>> {
+  private async parseRawEvent(data: QQWebhookEventData, threadId: string): Promise<Message<QQRawMessage>> {
     const content = data.content || ''
     const cleanText = this.formatConverter.cleanMentions(content)
     const formatted = parseMarkdown(cleanText)
 
     const authorId = resolveQQAuthorId(data.author)
     const displayName = resolveQQAuthorDisplayName(data.author)
-    // Webhook 消息事件来自用户，而不是机器人自身。
-    const isBot = false
-
+    // Webhook 消息来自用户，不是机器人自身。
     const author: Author = {
       fullName: displayName,
-      isBot,
-      isMe: isBot && authorId === this._botUserId,
+      isBot: false,
+      isMe: false,
       userId: authorId,
       userName: displayName,
     }

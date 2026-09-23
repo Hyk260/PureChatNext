@@ -10,13 +10,7 @@ export class QQFormatConverter extends BaseFormatConverter {
 
   /** 将入站 QQ 文本转为 mdast，并先移除 @提及和频道标记。 */
   toAst(text: string): Root {
-    const cleaned = text
-      .replaceAll(/<@!?\d+>/g, '')
-      .replaceAll('<@everyone>', '')
-      .replaceAll(/<#\d+>/g, '')
-      .trim()
-
-    return parseMarkdown(cleaned)
+    return parseMarkdown(this.cleanMentions(text))
   }
 
   /** 从纯文本中移除 QQ 的 @提及和频道标记。 */

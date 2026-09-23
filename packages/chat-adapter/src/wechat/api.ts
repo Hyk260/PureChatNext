@@ -106,24 +106,25 @@ export class WechatApiClient {
     this.baseUrl = stripTrailingSlashes(baseUrl || DEFAULT_BASE_URL)
   }
 
+  private async post<T>(path: string, body: unknown, label: string, signal?: AbortSignal): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      body: JSON.stringify(body),
+      headers: buildHeaders(this.botToken),
+      method: 'POST',
+      signal: signal ?? AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
+    })
+    return parseResponse<T>(response, label)
+  }
+
   /**
    * 通过 iLink Bot API 长轮询新消息。
    * 服务端会保持连接约 35 秒。
    */
-  async getUpdates(cursor?: string, signal?: AbortSignal, timeoutMs: number = POLL_TIMEOUT_MS): Promise<WechatGetUpdatesResponse> {
-    const body = {
+  getUpdates(cursor?: string, signal?: AbortSignal, timeoutMs: number = POLL_TIMEOUT_MS): Promise<WechatGetUpdatesResponse> {
+    return this.post('/ilink/bot/getupdates', {
       base_info: BASE_INFO,
       get_updates_buf: cursor || '',
-    }
-
-    const response = await fetch(`${this.baseUrl}/ilink/bot/getupdates`, {
-      body: JSON.stringify(body),
-      headers: buildHeaders(this.botToken),
-      method: 'POST',
-      signal: combinedSignal(signal, timeoutMs),
-    })
-
-    return parseResponse<WechatGetUpdatesResponse>(response, 'getupdates')
+    }, 'getupdates', combinedSignal(signal, timeoutMs))
   }
 
   /**
@@ -151,8 +152,8 @@ export class WechatApiClient {
    * 按 protocol.md §6.7，稳定用法是每次请求一个 MessageItem —
    * 文本与媒体分开发送。调用方每次应生成新的 `client_id`；本方法内部会分配。
    */
-  async sendItem(toUserId: string, item: MessageItem, contextToken: string): Promise<WechatSendMessageResponse> {
-    const body = {
+  sendItem(toUserId: string, item: MessageItem, contextToken: string): Promise<WechatSendMessageResponse> {
+    return this.post('/ilink/bot/sendmessage', {
       base_info: BASE_INFO,
       msg: {
         client_id: crypto.randomUUID(),
@@ -163,16 +164,7 @@ export class WechatApiClient {
         message_type: MessageType.BOT,
         to_user_id: toUserId,
       },
-    }
-
-    const response = await fetch(`${this.baseUrl}/ilink/bot/sendmessage`, {
-      body: JSON.stringify(body),
-      headers: buildHeaders(this.botToken),
-      method: 'POST',
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
-    })
-
-    return parseResponse<WechatSendMessageResponse>(response, 'sendmessage')
+    }, 'sendmessage')
   }
 
   /**
@@ -200,28 +192,17 @@ export class WechatApiClient {
     const cipherSize = ciphertext.length
     const rawfilemd5 = createHash('md5').update(plaintext).digest('hex')
 
-    // 步骤 1：请求 upload_param
-    const uploadParamResp = await fetch(`${this.baseUrl}/ilink/bot/getuploadurl`, {
-      body: JSON.stringify({
-        aeskey: aesKeyHex,
-        base_info: BASE_INFO,
-        filekey,
-        filesize: cipherSize,
-        media_type: mediaType,
-        no_need_thumb: true,
-        rawfilemd5,
-        rawsize: rawSize,
-        to_user_id: toUserId,
-      }),
-      headers: buildHeaders(this.botToken),
-      method: 'POST',
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
-    })
-
-    const { upload_param: uploadParam } = await parseResponse<{ upload_param?: string }>(
-      uploadParamResp,
-      'getuploadurl'
-    )
+    const { upload_param: uploadParam } = await this.post<{ upload_param?: string }>('/ilink/bot/getuploadurl', {
+      aeskey: aesKeyHex,
+      base_info: BASE_INFO,
+      filekey,
+      filesize: cipherSize,
+      media_type: mediaType,
+      no_need_thumb: true,
+      rawfilemd5,
+      rawsize: rawSize,
+      to_user_id: toUserId,
+    }, 'getuploadurl')
     if (!uploadParam) {
       throw new Error('getuploadurl returned empty upload_param')
     }
@@ -252,21 +233,14 @@ export class WechatApiClient {
     return { aesKey, cipherSize, encryptQueryParam, rawSize }
   }
 
-  /** 通过 iLink Bot API 发送正在输入指示。 */
+  /** 通过 iLink Bot API 发送正在输入指示。尽力而为，失败可忽略。 */
   async sendTyping(toUserId: string, typingTicket: string, start = true): Promise<void> {
-    await fetch(`${this.baseUrl}/ilink/bot/sendtyping`, {
-      body: JSON.stringify({
-        base_info: BASE_INFO,
-        ilink_user_id: toUserId,
-        status: start ? 1 : 2,
-        typing_ticket: typingTicket,
-      }),
-      headers: buildHeaders(this.botToken),
-      method: 'POST',
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
-    }).catch(() => {
-      // 正在输入指示为尽力而为，失败可忽略
-    })
+    await this.post('/ilink/bot/sendtyping', {
+      base_info: BASE_INFO,
+      ilink_user_id: toUserId,
+      status: start ? 1 : 2,
+      typing_ticket: typingTicket,
+    }, 'sendtyping').catch(() => {})
   }
 
   /** 便捷方法：getConfig + sendTyping 一次调用。尽力而为，永不抛错。 */
@@ -323,19 +297,12 @@ export class WechatApiClient {
    * 获取 Bot 配置（含 typing_ticket）。
    * 参考实现要求传入 userId 与 contextToken。
    */
-  async getConfig(userId: string, contextToken: string): Promise<WechatGetConfigResponse> {
-    const response = await fetch(`${this.baseUrl}/ilink/bot/getconfig`, {
-      body: JSON.stringify({
-        base_info: BASE_INFO,
-        context_token: contextToken,
-        ilink_user_id: userId,
-      }),
-      headers: buildHeaders(this.botToken),
-      method: 'POST',
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
-    })
-
-    return parseResponse<WechatGetConfigResponse>(response, 'getconfig')
+  getConfig(userId: string, contextToken: string): Promise<WechatGetConfigResponse> {
+    return this.post('/ilink/bot/getconfig', {
+      base_info: BASE_INFO,
+      context_token: contextToken,
+      ilink_user_id: userId,
+    }, 'getconfig')
   }
 }
 
@@ -356,33 +323,28 @@ export interface QrStatusResponse {
   status: 'wait' | 'scaned' | 'confirmed' | 'expired'
 }
 
-/** 请求 Bot 登录用的新二维码。 */
-export async function fetchQrCode(baseUrl: string = DEFAULT_BASE_URL): Promise<QrCodeResponse> {
-  const url = `${stripTrailingSlashes(baseUrl)}/ilink/bot/get_bot_qrcode?bot_type=3`
-  const response = await fetch(url, { method: 'GET' })
-
+async function fetchJson<T>(url: string, label: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init)
   if (!response.ok) {
     const text = await response.text()
-    throw new Error(`iLink get_bot_qrcode failed: ${response.status} ${text}`)
+    throw new Error(`${label} failed: ${response.status} ${text}`)
   }
+  return response.json() as Promise<T>
+}
 
-  return response.json() as Promise<QrCodeResponse>
+/** 请求 Bot 登录用的新二维码。 */
+export function fetchQrCode(baseUrl: string = DEFAULT_BASE_URL): Promise<QrCodeResponse> {
+  const url = `${stripTrailingSlashes(baseUrl)}/ilink/bot/get_bot_qrcode?bot_type=3`
+  return fetchJson(url, 'iLink get_bot_qrcode', { method: 'GET' })
 }
 
 /** 轮询二维码扫码状态。 */
-export async function pollQrStatus(qrcode: string, baseUrl: string = DEFAULT_BASE_URL): Promise<QrStatusResponse> {
+export function pollQrStatus(qrcode: string, baseUrl: string = DEFAULT_BASE_URL): Promise<QrStatusResponse> {
   const url = `${stripTrailingSlashes(baseUrl)}/ilink/bot/get_qrcode_status?qrcode=${encodeURIComponent(qrcode)}`
-  const response = await fetch(url, {
+  return fetchJson(url, 'iLink get_qrcode_status', {
     headers: { 'iLink-App-ClientVersion': '1' },
     method: 'GET',
   })
-
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`iLink get_qrcode_status failed: ${response.status} ${text}`)
-  }
-
-  return response.json() as Promise<QrStatusResponse>
 }
 
 // ============================================================================
@@ -391,13 +353,8 @@ export async function pollQrStatus(qrcode: string, baseUrl: string = DEFAULT_BAS
 
 function chunkText(text: string, limit: number): string[] {
   if (text.length <= limit) return [text]
-
   const chunks: string[] = []
-  let remaining = text
-  while (remaining.length > 0) {
-    chunks.push(remaining.slice(0, limit))
-    remaining = remaining.slice(limit)
-  }
+  for (let offset = 0; offset < text.length; offset += limit) chunks.push(text.slice(offset, offset + limit))
   return chunks
 }
 

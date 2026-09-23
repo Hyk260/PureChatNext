@@ -10,10 +10,22 @@ const NETWORK_RETRY_COUNT = 2
 const MAX_TEXT_LENGTH = 2000
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
 
+type PassiveReply = { eventId?: string; msgId?: string; msgSeq?: number }
+type RichMediaUpload = { file_info: string; ttl?: number }
+type RichMediaFileType = 1 | 2 | 3 | 4
+
 function retryDelayMs(response: Response, attempt: number): number {
   const retryAfter = Number(response.headers.get('retry-after'))
   if (Number.isFinite(retryAfter) && retryAfter >= 0) return Math.min(retryAfter * 1000, 30_000)
   return 500 * 2 ** attempt
+}
+
+function passiveReply(options?: PassiveReply): Pick<QQSendMessageParams, 'event_id' | 'msg_id' | 'msg_seq'> {
+  const fields: Pick<QQSendMessageParams, 'event_id' | 'msg_id' | 'msg_seq'> = {}
+  if (options?.msgId) fields.msg_id = options.msgId
+  if (options?.eventId) fields.event_id = options.eventId
+  if (options?.msgSeq !== undefined) fields.msg_seq = options.msgSeq
+  return fields
 }
 
 export class QQApiClient {
@@ -115,93 +127,31 @@ export class QQApiClient {
   }
 
   /** 向 QQ 群发送文本消息；如果存在入站上下文，则附带被动回复参数。 */
-  async sendGroupMessage(
-    groupOpenId: string,
-    content: string,
-    options?: { eventId?: string; msgId?: string; msgSeq?: number }
-  ): Promise<QQSendMessageResponse> {
-    const params: QQSendMessageParams = {
-      content: this.truncateText(content),
-      msg_type: QQ_MSG_TYPE.TEXT,
-    }
-
-    if (options?.msgId) {
-      params.msg_id = options.msgId
-    }
-    if (options?.eventId) {
-      params.event_id = options.eventId
-    }
-    if (options?.msgSeq !== undefined) {
-      params.msg_seq = options.msgSeq
-    }
-
-    return this.call<QQSendMessageResponse>('POST', `/v2/groups/${groupOpenId}/messages`, params)
+  sendGroupMessage(groupOpenId: string, content: string, options?: PassiveReply): Promise<QQSendMessageResponse> {
+    return this.sendText(`/v2/groups/${groupOpenId}/messages`, content, options)
   }
 
   /** 向 QQ 频道的子频道发送文本消息。 */
-  async sendGuildMessage(
-    channelId: string,
-    content: string,
-    options?: { eventId?: string; msgId?: string }
-  ): Promise<QQSendMessageResponse> {
-    const params: QQSendMessageParams = {
-      content: this.truncateText(content),
-      msg_type: QQ_MSG_TYPE.TEXT,
-    }
-
-    if (options?.msgId) {
-      params.msg_id = options.msgId
-    }
-    if (options?.eventId) {
-      params.event_id = options.eventId
-    }
-
-    return this.call<QQSendMessageResponse>('POST', `/channels/${channelId}/messages`, params)
+  sendGuildMessage(channelId: string, content: string, options?: PassiveReply): Promise<QQSendMessageResponse> {
+    return this.sendText(`/channels/${channelId}/messages`, content, options)
   }
 
   /** 向 QQ 用户发送 C2C 单聊文本消息。 */
-  async sendC2CMessage(
-    openId: string,
-    content: string,
-    options?: { eventId?: string; msgId?: string; msgSeq?: number }
-  ): Promise<QQSendMessageResponse> {
-    const params: QQSendMessageParams = {
-      content: this.truncateText(content),
-      msg_type: QQ_MSG_TYPE.TEXT,
-    }
-
-    if (options?.msgId) {
-      params.msg_id = options.msgId
-    }
-    if (options?.eventId) {
-      params.event_id = options.eventId
-    }
-    if (options?.msgSeq !== undefined) {
-      params.msg_seq = options.msgSeq
-    }
-
-    return this.call<QQSendMessageResponse>('POST', `/v2/users/${openId}/messages`, params)
+  sendC2CMessage(openId: string, content: string, options?: PassiveReply): Promise<QQSendMessageResponse> {
+    return this.sendText(`/v2/users/${openId}/messages`, content, options)
   }
 
   /** 向 QQ 频道私信会话（DMS）发送文本消息。 */
-  async sendDmsMessage(
-    guildId: string,
-    content: string,
-    options?: { eventId?: string; msgId?: string }
-  ): Promise<QQSendMessageResponse> {
-    const params: QQSendMessageParams = {
+  sendDmsMessage(guildId: string, content: string, options?: PassiveReply): Promise<QQSendMessageResponse> {
+    return this.sendText(`/dms/${guildId}/messages`, content, options)
+  }
+
+  private sendText(path: string, content: string, options?: PassiveReply): Promise<QQSendMessageResponse> {
+    return this.call<QQSendMessageResponse>('POST', path, {
       content: this.truncateText(content),
       msg_type: QQ_MSG_TYPE.TEXT,
-    }
-
-    if (options?.msgId) {
-      params.msg_id = options.msgId
-    }
-    if (options?.eventId) {
-      params.event_id = options.eventId
-    }
-
-    return this.call<QQSendMessageResponse>('POST', `/dms/${guildId}/messages`, params)
+      ...passiveReply(options),
+    })
   }
 
   // ==================== 富媒体（Open Platform） ====================
@@ -213,28 +163,20 @@ export class QQApiClient {
    *
    * @see https://bot.q.qq.com/wiki/develop/api-v2/server-inter/message/send-receive/rich-media.html
    */
-  async uploadGroupRichMedia(
-    groupOpenId: string,
-    fileType: 1 | 2 | 3 | 4,
-    url: string
-  ): Promise<{ file_info: string; ttl?: number }> {
-    return this.call<{ file_info: string; ttl?: number }>('POST', `/v2/groups/${groupOpenId}/files`, {
-      file_type: fileType,
-      srv_send_msg: false,
-      url,
-    })
+  uploadGroupRichMedia(groupOpenId: string, fileType: RichMediaFileType, url: string): Promise<RichMediaUpload> {
+    return this.uploadMedia(`/v2/groups/${groupOpenId}/files`, fileType, url)
   }
 
   /**
    * `uploadGroupRichMedia` 的 C2C（用户单聊）对应接口，
    * 请求体结构相同但路由不同。
    */
-  async uploadC2CRichMedia(
-    openId: string,
-    fileType: 1 | 2 | 3 | 4,
-    url: string
-  ): Promise<{ file_info: string; ttl?: number }> {
-    return this.call<{ file_info: string; ttl?: number }>('POST', `/v2/users/${openId}/files`, {
+  uploadC2CRichMedia(openId: string, fileType: RichMediaFileType, url: string): Promise<RichMediaUpload> {
+    return this.uploadMedia(`/v2/users/${openId}/files`, fileType, url)
+  }
+
+  private uploadMedia(path: string, fileType: RichMediaFileType, url: string): Promise<RichMediaUpload> {
+    return this.call<RichMediaUpload>('POST', path, {
       file_type: fileType,
       srv_send_msg: false,
       url,
@@ -246,37 +188,22 @@ export class QQApiClient {
    * 同一条消息不能同时包含媒体和文本（`msg_type` 只能是 7（MEDIA）或 0（TEXT）），
    * 因此调用方需要将文本部分单独发送。
    */
-  async sendGroupMedia(
-    groupOpenId: string,
-    fileInfo: string,
-    options?: { eventId?: string; msgId?: string; msgSeq?: number }
-  ): Promise<QQSendMessageResponse> {
-    const params: QQSendMessageParams = {
-      content: ' ',
-      media: { file_info: fileInfo },
-      msg_type: QQ_MSG_TYPE.MEDIA,
-    }
-    if (options?.msgId) params.msg_id = options.msgId
-    if (options?.eventId) params.event_id = options.eventId
-    if (options?.msgSeq !== undefined) params.msg_seq = options.msgSeq
-    return this.call<QQSendMessageResponse>('POST', `/v2/groups/${groupOpenId}/messages`, params)
+  sendGroupMedia(groupOpenId: string, fileInfo: string, options?: PassiveReply): Promise<QQSendMessageResponse> {
+    return this.sendMedia(`/v2/groups/${groupOpenId}/messages`, fileInfo, options)
   }
 
   /** `sendGroupMedia` 的 C2C 单聊对应接口。 */
-  async sendC2CMedia(
-    openId: string,
-    fileInfo: string,
-    options?: { eventId?: string; msgId?: string; msgSeq?: number }
-  ): Promise<QQSendMessageResponse> {
-    const params: QQSendMessageParams = {
+  sendC2CMedia(openId: string, fileInfo: string, options?: PassiveReply): Promise<QQSendMessageResponse> {
+    return this.sendMedia(`/v2/users/${openId}/messages`, fileInfo, options)
+  }
+
+  private sendMedia(path: string, fileInfo: string, options?: PassiveReply): Promise<QQSendMessageResponse> {
+    return this.call<QQSendMessageResponse>('POST', path, {
       content: ' ',
       media: { file_info: fileInfo },
       msg_type: QQ_MSG_TYPE.MEDIA,
-    }
-    if (options?.msgId) params.msg_id = options.msgId
-    if (options?.eventId) params.event_id = options.eventId
-    if (options?.msgSeq !== undefined) params.msg_seq = options.msgSeq
-    return this.call<QQSendMessageResponse>('POST', `/v2/users/${openId}/messages`, params)
+      ...passiveReply(options),
+    })
   }
 
   /** 获取用于建立持久化 WebSocket 连接的 Gateway URL。 */

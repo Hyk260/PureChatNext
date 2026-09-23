@@ -8,7 +8,6 @@ import type {
   EmojiValue,
   FetchOptions,
   FetchResult,
-  FileUpload,
   FormattedContent,
   Logger,
   RawMessage,
@@ -24,11 +23,9 @@ import {
 import { WechatApiClient, WechatUploadMediaType } from './api'
 import { WechatFormatConverter } from './format-converter'
 import { MessageItemType, MessageState, MessageType } from './types'
-import type { MessageItem, WechatAdapterConfig, WechatRawMessage, WechatThreadId } from './types'
+import type { CDNMedia, MessageItem, WechatAdapterConfig, WechatRawMessage, WechatThreadId } from './types'
 
-/**
- * 从 WechatRawMessage 的 item_list 提取文本内容。
- */
+/** 文本与语音转写；图片和视频只走 attachments。 */
 function extractText(msg: WechatRawMessage): string {
   const parts: string[] = []
   for (const item of msg.item_list) {
@@ -37,21 +34,12 @@ function extractText(msg: WechatRawMessage): string {
         if (item.text_item?.text) parts.push(item.text_item.text)
         break
       }
-      case MessageItemType.IMAGE: {
-        // 图片内容通过 attachments 传递，无需文本占位
-        break
-      }
       case MessageItemType.VOICE: {
-        // 仅包含转写文本，跳过占位符
         if (item.voice_item?.text) parts.push(item.voice_item.text)
         break
       }
       case MessageItemType.FILE: {
         parts.push(`[file: ${item.file_item?.file_name || 'unknown'}]`)
-        break
-      }
-      case MessageItemType.VIDEO: {
-        // 视频内容通过 attachments 传递，无需文本占位
         break
       }
     }
@@ -241,6 +229,22 @@ export async function downloadMediaFromRawMessage(
  *   2. CDN 缩略图（image_item.thumb_media）
  *   3. 直链 URL（image_item.url）
  */
+function imageAttachment(buf: Buffer, imageMime: string): Attachment {
+  return {
+    buffer: buf,
+    mimeType: imageMime,
+    name: `image.${preferredImageExtension(imageMime)}`,
+    type: 'image',
+    url: '',
+  } as Attachment
+}
+
+async function downloadCdnImage(api: WechatApiClient, media: CDNMedia, aeskey?: string): Promise<Attachment> {
+  const buf = await api.downloadCdnMedia(media, aeskey)
+  const imageMime = (await resolveImageMimeTypeFromBytes('image/jpeg', buf)) ?? 'image/jpeg'
+  return imageAttachment(buf, imageMime)
+}
+
 async function downloadImageItemFromRaw(
   api: WechatApiClient,
   item: WechatRawMessage['item_list'][number],
@@ -249,57 +253,27 @@ async function downloadImageItemFromRaw(
   const imageItem = item.image_item
   if (!imageItem) return undefined
 
-  // 1. 尝试从主媒体 CDN 下载
-  if (imageItem.media?.encrypt_query_param) {
+  const cdnSources: Array<[CDNMedia | undefined, string]> = [
+    [imageItem.media, 'CDN image download failed: %s'],
+    [imageItem.thumb_media, 'CDN thumbnail download failed: %s'],
+  ]
+  for (const [media, label] of cdnSources) {
+    if (!media?.encrypt_query_param) continue
     try {
-      const buf = await api.downloadCdnMedia(imageItem.media, imageItem.aeskey)
-      const imageMime = (await resolveImageMimeTypeFromBytes('image/jpeg', buf)) ?? 'image/jpeg'
-      return {
-        buffer: buf,
-        mimeType: imageMime,
-        name: `image.${preferredImageExtension(imageMime)}`,
-        type: 'image',
-        url: '',
-      } as Attachment
+      return await downloadCdnImage(api, media, imageItem.aeskey)
     } catch (error) {
-      warn('CDN image download failed: %s', error)
+      warn(label, error)
     }
   }
 
-  // 2. 回退到 CDN 缩略图
-  if (imageItem.thumb_media?.encrypt_query_param) {
-    try {
-      const buf = await api.downloadCdnMedia(imageItem.thumb_media, imageItem.aeskey)
-      const imageMime = (await resolveImageMimeTypeFromBytes('image/jpeg', buf)) ?? 'image/jpeg'
-      return {
-        buffer: buf,
-        mimeType: imageMime,
-        name: `image.${preferredImageExtension(imageMime)}`,
-        type: 'image',
-        url: '',
-      } as Attachment
-    } catch (error) {
-      warn('CDN thumbnail download failed: %s', error)
-    }
-  }
-
-  // 3. 回退到 url 直链字段
   if (imageItem.url) {
     try {
-      const response = await fetch(imageItem.url, {
-        signal: AbortSignal.timeout(15_000),
-      })
+      const response = await fetch(imageItem.url, { signal: AbortSignal.timeout(15_000) })
       if (response.ok) {
         const buf = Buffer.from(await response.arrayBuffer())
         const declared = response.headers.get('content-type') || 'image/jpeg'
         const imageMime = (await resolveImageMimeTypeFromBytes(declared, buf)) ?? declared
-        return {
-          buffer: buf,
-          mimeType: imageMime,
-          name: `image.${preferredImageExtension(imageMime)}`,
-          type: 'image',
-          url: '',
-        } as Attachment
+        return imageAttachment(buf, imageMime)
       }
       warn('Image url fallback failed: HTTP %d', response.status)
     } catch (error) {
@@ -383,10 +357,6 @@ async function loadAttachmentBuffer(
     }
   }
   return undefined
-}
-
-async function fileUploadToBuffer(file: FileUpload): Promise<Buffer | undefined> {
-  return blobOrBufferToBuffer(file.data)
 }
 
 async function blobOrBufferToBuffer(data: Buffer | Blob | ArrayBuffer): Promise<Buffer | undefined> {
@@ -561,44 +531,34 @@ export class WechatAdapter implements Adapter<WechatThreadId, WechatRawMessage> 
   private async collectMediaSpecs(message: AdapterPostableMessage): Promise<OutboundMediaSpec[]> {
     if (typeof message === 'string') return []
 
-    const attachments: Attachment[] = []
-    const files: FileUpload[] = []
+    const specs: OutboundMediaSpec[] = []
+    const add = async (
+      buffer: Buffer | undefined,
+      declaredMime: string | null,
+      name: string | undefined,
+      type?: OutboundMediaSpec['type']
+    ) => {
+      if (!buffer) return
+      const mimeType = await resolveMimeTypeFromBytes(declaredMime, buffer)
+      specs.push({ buffer, mimeType, name, type: type ?? inferAttachmentTypeFromMime(mimeType) })
+    }
 
-    // PostableRaw / PostableMarkdown / PostableAst 共用 `attachments` + `files` 形态。
+    // PostableRaw / PostableMarkdown / PostableAst 共用 `attachments` + `files`。
     // PostableCard 仅含 `files`；CardElement 两者皆无。
     if ('attachments' in message && Array.isArray(message.attachments)) {
-      attachments.push(...message.attachments)
+      for (const attachment of message.attachments) {
+        await add(
+          await loadAttachmentBuffer(attachment, this.logger),
+          attachment.mimeType ?? null,
+          attachment.name,
+          attachment.type
+        )
+      }
     }
     if ('files' in message && Array.isArray(message.files)) {
-      files.push(...message.files)
-    }
-
-    const specs: OutboundMediaSpec[] = []
-
-    for (const attachment of attachments) {
-      const buffer = await loadAttachmentBuffer(attachment, this.logger)
-      if (!buffer) continue
-      // 字节级 MIME 检测优先于声明值；检测结果顺便更正 type 分类
-      const detectedMime = await resolveMimeTypeFromBytes(attachment.mimeType ?? null, buffer)
-      specs.push({
-        buffer,
-        mimeType: detectedMime,
-        name: attachment.name,
-        type: attachment.type ?? inferAttachmentTypeFromMime(detectedMime),
-      })
-    }
-
-    for (const file of files) {
-      const buffer = await fileUploadToBuffer(file)
-      if (!buffer) continue
-      const detectedMime = await resolveMimeTypeFromBytes(file.mimeType ?? null, buffer)
-      specs.push({
-        buffer,
-        mimeType: detectedMime,
-        name: file.filename,
-        // 字节检测 MIME 确定后，再基于真实 MIME 推断附件分类
-        type: inferAttachmentTypeFromMime(detectedMime),
-      })
+      for (const file of message.files) {
+        await add(await blobOrBufferToBuffer(file.data), file.mimeType ?? null, file.filename)
+      }
     }
 
     return specs

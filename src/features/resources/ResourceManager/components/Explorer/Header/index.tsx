@@ -153,7 +153,7 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
             }}
           />
         ) : (
-          <Text ellipsis style={{ marginInlineStart: 8 }}>
+          <Text className='ms-2' ellipsis>
             {title ?? '资源'}
           </Text>
         )}
@@ -166,7 +166,7 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
         <DropdownMenu items={viewMenuItems} nativeButton placement='bottomRight'>
           <ActionIconWithChevron icon={currentViewIcon} title={currentViewLabel} />
         </DropdownMenu>
-        <Flex className='flex-col' style={{ marginInlineStart: 8 }}>
+        <Flex className='ms-2 flex-col'>
           <DropdownMenu items={addMenuItems} nativeButton placement='bottomRight'>
             <Button icon={<Plus />} type='primary'>
               添加

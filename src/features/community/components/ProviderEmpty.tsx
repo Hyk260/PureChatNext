@@ -13,7 +13,7 @@ const ProviderEmpty = memo(() => {
           <>
             <Text strong>暂无模型服务商</Text>
             <br />
-            <Text type='secondary' style={{ fontSize: 14 }}>
+            <Text className='text-[14px]' type='secondary'>
               当前没有可展示的模型服务商
             </Text>
           </>

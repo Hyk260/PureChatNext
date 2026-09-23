@@ -31,13 +31,13 @@ const LibraryList = memo(() => {
   return (
     <Flex className='flex-col gap-1 px-2'>
       <Flex className='flex-between px-1'>
-        <Text type='secondary' style={{ fontSize: 12 }}>
+        <Text className='text-[12px]' type='secondary'>
           知识库
         </Text>
         <ActionIcon icon={Plus} onClick={handleCreate} size='small' title='新建' />
       </Flex>
       {libraries.length === 0 ? (
-        <Text type='secondary' style={{ fontSize: 12 }}>
+        <Text className='text-[12px]' type='secondary'>
           暂无知识库
         </Text>
       ) : (

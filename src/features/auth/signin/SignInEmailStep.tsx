@@ -99,7 +99,7 @@ export const SignInEmailStep = ({
 
   const divider = (
     <Divider>
-      <Text type='secondary' style={{ fontSize: 12 }}>
+      <Text className='text-[12px]' type='secondary'>
         或继续使用
       </Text>
     </Divider>

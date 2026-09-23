@@ -71,7 +71,7 @@ function ExternalLink({ children, href }: { children: ReactNode; href: string })
 function OpenAction({ href, label }: { href: string; label: string }) {
   return (
     <ExternalLink href={href}>
-      <Text style={{ cursor: 'pointer', fontSize: 13 }}>{label}</Text>
+      <Text className='cursor-pointer text-[13px]'>{label}</Text>
     </ExternalLink>
   )
 }
@@ -79,7 +79,7 @@ function OpenAction({ href, label }: { href: string; label: string }) {
 function InternalAction({ href, label }: { href: string; label: string }) {
   return (
     <Link className='text-inherit no-underline' href={href}>
-      <Text style={{ cursor: 'pointer', fontSize: 13 }}>{label}</Text>
+      <Text className='cursor-pointer text-[13px]'>{label}</Text>
     </Link>
   )
 }
@@ -234,7 +234,7 @@ export function AboutSettingsContent() {
         ]}
       />
 
-      <Text type='secondary' style={{ fontSize: 12 }}>
+      <Text className='text-[12px]' type='secondary'>
         {SITE_NAME} 是开源项目，源码按 MIT License 发布。
       </Text>
     </Flex>

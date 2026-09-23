@@ -50,10 +50,10 @@ const MessengerCommandList = memo(({ platform }: MessengerCommandListProps) => {
 
   return (
     <Flex className='flex-col gap-2 w-full'>
-      <Text strong style={{ fontSize: 15 }}>
+      <Text className='text-[15px]' strong>
         指令
       </Text>
-      <Text type='secondary' style={{ fontSize: 13 }}>
+      <Text className='text-[13px]' type='secondary'>
         {hint}
       </Text>
 
@@ -65,10 +65,10 @@ const MessengerCommandList = memo(({ platform }: MessengerCommandListProps) => {
               <Flex className={[styles.icon, 'flex-center']}>
                 <Icon icon={COMMAND_ICONS[item.icon]} size={18} />
               </Flex>
-              <Text code strong style={{ fontSize: 14 }}>
+              <Text className='text-[14px]' code strong>
                 {item.command}
               </Text>
-              <Text type='secondary' style={{ flex: 1, fontSize: 13, textAlign: 'end' }}>
+              <Text className='flex-1 text-end text-[13px]' type='secondary'>
                 {item.description}
               </Text>
             </Flex>

@@ -138,7 +138,7 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
     >
       <Flex className='max-h-[60vh] flex-col gap-3 overflow-y-auto py-2'>
         <Flex className='flex-col gap-1'>
-          <Text type='secondary' style={{ fontSize: 12 }}>
+          <Text className='text-[12px]' type='secondary'>
             头像
           </Text>
           <Suspense fallback={<Avatar avatar={values.avatar} loading shape='square' size={48} />}>
@@ -158,7 +158,7 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
           </Suspense>
         </Flex>
         <Flex className='flex-col gap-1'>
-          <Text type='secondary' style={{ fontSize: 12 }}>
+          <Text className='text-[12px]' type='secondary'>
             名称
           </Text>
           <Input
@@ -168,7 +168,7 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
           />
         </Flex>
         <Flex className='flex-col gap-1'>
-          <Text type='secondary' style={{ fontSize: 12 }}>
+          <Text className='text-[12px]' type='secondary'>
             描述
           </Text>
           <Input
@@ -178,7 +178,7 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
           />
         </Flex>
         <Flex className='flex-col gap-1'>
-          <Text type='secondary' style={{ fontSize: 12 }}>
+          <Text className='text-[12px]' type='secondary'>
             系统提示词
           </Text>
           <TextArea
@@ -190,7 +190,7 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
         </Flex>
         <Flex className='flex-col gap-1'>
           <Flex className='flex-between items-center'>
-            <Text type='secondary' style={{ fontSize: 12 }}>
+            <Text className='text-[12px]' type='secondary'>
               开场消息
             </Text>
             <Button disabled={!canGenerate} loading={generating} size='small' onClick={() => void handleGenerate()}>
@@ -205,7 +205,7 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
           />
         </Flex>
         <Flex className='flex-col gap-1'>
-          <Text type='secondary' style={{ fontSize: 12 }}>
+          <Text className='text-[12px]' type='secondary'>
             开场问题
           </Text>
           {values.openingQuestions.map((question, index) => (

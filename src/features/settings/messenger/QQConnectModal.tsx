@@ -263,7 +263,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
               value={appSecret}
               onChange={(event) => setAppSecret(event.target.value)}
             />
-            <Text type='secondary' style={{ fontSize: 13 }}>
+            <Text className='text-[13px]' type='secondary'>
               {mode === 'websocket'
                 ? '由内置 Gateway 维护长连接，无需公网回调地址。'
                 : '保存后将在设置页显示需要配置到 QQ 开放平台的回调地址。'}

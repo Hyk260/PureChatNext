@@ -43,7 +43,7 @@ export const MessengerModelSwitch = memo<MessengerModelSwitchProps>(
 
     return (
       <Flex className='flex-col gap-2'>
-        <Text type='secondary' style={{ fontSize: 13 }}>
+        <Text className='text-[13px]' type='secondary'>
           模型
         </Text>
         <ModelSwitchMenu
@@ -55,11 +55,10 @@ export const MessengerModelSwitch = memo<MessengerModelSwitchProps>(
           onSelect={onSelect}
         >
           <Flex
-            className={[styles.modelTrigger, 'items-center gap-1.5']}
-            style={{ opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? 'none' : undefined }}
+            className={[styles.modelTrigger, 'items-center gap-1.5', disabled && 'pointer-events-none opacity-50']}
           >
             <ModelIcon model={modelId} size={18} />
-            <Text ellipsis style={{ flex: 1, fontSize: 13, minWidth: 0 }}>
+            <Text className='min-w-0 flex-1 text-[13px]' ellipsis>
               {currentDisplayName}
             </Text>
             <ChevronDownIcon className={styles.chevron} size={14} />

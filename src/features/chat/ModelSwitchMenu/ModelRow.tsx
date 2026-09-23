@@ -65,10 +65,10 @@ export const ModelRowContent = memo<ModelRowContentProps>(
     return (
       <Flex className='items-center gap-2 min-w-0 w-full'>
         <ModelIcon model={model} size={20} />
-        <Text ellipsis style={{ fontSize: 13, flex: 1, minWidth: 0 }}>
+        <Text className='min-w-0 flex-1 text-[13px]' ellipsis>
           {displayName}
         </Text>
-        <div style={{ flexShrink: 0, maxWidth: 120 }}>
+        <div className='max-w-[120px] shrink-0'>
           <ModelFeatureTags
             abilities={abilities ?? card?.abilities}
             contextWindowTokens={contextWindowTokens ?? card?.contextWindowTokens}
@@ -195,7 +195,7 @@ export const MultiProviderModelRow = memo<MultiProviderModelRowProps>(
                         <DropdownMenuItemLabel>
                           <Flex className='items-center gap-2'>
                             <ProviderIcon provider={provider.id} size={20} type='color' />
-                            <Text ellipsis style={{ fontSize: 13 }}>
+                            <Text className='text-[13px]' ellipsis>
                               {provider.name}
                             </Text>
                           </Flex>

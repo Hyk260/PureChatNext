@@ -102,7 +102,7 @@ const OverviewTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
         expandIconPlacement='end'
         items={[
           {
-            children: <Text style={{ whiteSpace: 'pre-wrap' }}>{usageText}</Text>,
+            children: <Text className='whitespace-pre-wrap'>{usageText}</Text>,
             key: 'usage',
             label: '你可以使用该助理做什么？',
           },
@@ -176,7 +176,7 @@ const IntroTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
             {agent.openingQuestions.map((question) => (
               <Block className='flex items-start gap-3 p-4' key={question} variant='outlined'>
                 <Icon color={cssVar.colorWarning} icon={MessageCircleQuestionIcon} size={20} style={{ marginTop: 2 }} />
-                <Text style={{ whiteSpace: 'pre-wrap' }}>{question}</Text>
+                <Text className='whitespace-pre-wrap'>{question}</Text>
               </Block>
             ))}
           </Flex>
@@ -224,7 +224,7 @@ const AgentDetailModal = memo<AgentDetailModalProps>(({ agent, onClose, onEdit, 
               style={{ flex: 'none' }}
             />
             <Flex className='flex-col gap-1 overflow-hidden'>
-              <Text as='h2' ellipsis style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>
+              <Text as='h2' className='!m-0 !text-[20px] !font-semibold' ellipsis>
                 {agent.title}
               </Text>
               <Flex className='mt-1 flex-wrap gap-1'>

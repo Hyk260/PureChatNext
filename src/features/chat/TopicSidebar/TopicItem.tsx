@@ -244,15 +244,10 @@ const TopicItem = memo<Props>(
               style={{ flex: 'none' }}
             />
             <Text
+              className='min-w-0 flex-1'
+              color={active ? cssVar.colorText : cssVar.colorTextSecondary}
+              ellipsis
               title={topic.title}
-              style={{
-                color: active ? cssVar.colorText : cssVar.colorTextSecondary,
-                flex: 1,
-                minWidth: 0,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
             >
               {topic.title}
             </Text>

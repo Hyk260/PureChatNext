@@ -96,7 +96,7 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
           <img
             alt={item.name}
             src={item.url}
-            style={{ borderRadius: 8, height: 120, objectFit: 'cover', width: '100%' }}
+            className='h-[120px] w-full rounded-lg object-cover'
           />
         ) : (
           <Flex className='flex-col-center h-[120px]'>
@@ -104,7 +104,7 @@ const MasonryCard = memo<MasonryCardProps>(({ item, onOpen }) => {
           </Flex>
         )}
         <Text ellipsis>{item.name}</Text>
-        <Text type='secondary' style={{ fontSize: 12 }}>
+        <Text className='text-[12px]' type='secondary'>
           {isFolder ? '文件夹' : formatDate(item.updatedAt)}
         </Text>
       </Flex>

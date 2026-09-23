@@ -48,7 +48,7 @@ const MessageAttachments = memo<{ message: UIMessage }>(({ message }) => {
   const otherFiles = files.filter((file) => !file.mediaType?.startsWith('image/'))
 
   return (
-    <Flex className='flex-col gap-2' style={{ marginBlockEnd: 4 }}>
+    <Flex className='mb-1 flex-col gap-2'>
       {imageFiles.length > 0 ? (
         <Image.PreviewGroup>
           {imageFiles.map((file, index) => {

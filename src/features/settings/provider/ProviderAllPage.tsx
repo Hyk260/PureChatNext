@@ -39,7 +39,7 @@ const ProviderSection = memo<{
 }>(({ ids, title }) => (
   <Flex className='flex-col gap-4'>
     <Flex className='items-center gap-2'>
-      <Text style={{ fontSize: 18, fontWeight: 600 }}>{title}</Text>
+      <Text className='text-[18px] font-semibold'>{title}</Text>
       <Tag>{ids.length}</Tag>
     </Flex>
     {ids.length > 0 ? (

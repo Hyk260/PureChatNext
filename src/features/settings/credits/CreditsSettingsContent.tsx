@@ -57,7 +57,7 @@ export function CreditsSettingsContent() {
       ) : data ? (
         <Flex className='flex-col gap-4 max-w-[480px]'>
           <Flex className='flex-col gap-1'>
-            <Text style={{ fontSize: 28, fontWeight: 600 }}>{formatNumber(data.remaining)}</Text>
+            <Text className='text-[28px] font-semibold'>{formatNumber(data.remaining)}</Text>
             <Text type='secondary'>剩余 / 本月额度 {formatNumber(data.grant)}</Text>
           </Flex>
           <Progress percent={percent} showInfo format={() => `已用 ${formatNumber(data.used)}`} />

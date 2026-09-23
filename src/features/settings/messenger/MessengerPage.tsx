@@ -91,10 +91,10 @@ const MessengerPage = memo(() => {
             <Flex className='items-center gap-4'>
               <PlatformAvatar platform={item.id} size={48} />
               <Flex className='flex-col flex-1 gap-0.5'>
-                <Text strong style={{ fontSize: 15 }}>
+                <Text className='text-[15px]' strong>
                   {item.name}
                 </Text>
-                <Text type='secondary' style={{ fontSize: 13 }}>
+                <Text className='text-[13px]' type='secondary'>
                   {item.description}
                 </Text>
               </Flex>

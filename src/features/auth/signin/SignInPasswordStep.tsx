@@ -79,7 +79,7 @@ export const SignInPasswordStep = ({
         }
         subtitle='请输入密码以继续'
       >
-        <Text style={{ fontSize: 20 }}>{accountLabel}</Text>
+        <Text className='text-[20px]'>{accountLabel}</Text>
         <Alert
           showIcon
           style={{ marginTop: 12 }}
@@ -127,7 +127,7 @@ export const SignInPasswordStep = ({
       }
       subtitle='请输入密码以继续'
     >
-      <Text style={{ fontSize: 20 }}>{accountLabel}</Text>
+      <Text className='text-[20px]'>{accountLabel}</Text>
       <Form form={form} layout='vertical' onFinish={onSignIn}>
         <Form.Item name='password' rules={[{ message: '请输入密码', required: true }]} style={{ marginBottom: 0 }}>
           <InputPassword

@@ -375,10 +375,7 @@ export default function SkillSettingsPage() {
   return (
     <Flex className='h-full min-h-0 w-full'>
       <Flex className={[styles.list, 'flex-col min-h-0']}>
-        <Flex
-          className='h-10 items-center justify-between gap-2 px-3 py-2 border-b border-border'
-          style={{ flex: 'none' }}
-        >
+        <Flex className='h-10 flex-none items-center justify-between gap-2 border-b border-border px-3 py-2'>
           <Text strong>技能</Text>
           <Flex className='items-center gap-1'>
             <ActionIcon icon={LayoutGrid} size='small' title='技能商店' onClick={() => setStoreOpen(true)} />

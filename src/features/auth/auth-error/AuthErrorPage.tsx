@@ -1,7 +1,6 @@
 'use client'
 
 import { Button, Text, Flex } from '@pure/ui'
-import { cssVar } from 'antd-style'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense, memo } from 'react'
@@ -71,7 +70,7 @@ const AuthErrorContent = memo(() => {
         subtitle={description}
         title='登录失败'
       >
-        <Text style={{ fontFamily: cssVar.fontFamilyCode }} type='secondary'>
+        <Text code type='secondary'>
           ErrorCode: {error || 'UNKNOWN'}
         </Text>
       </AuthCard>

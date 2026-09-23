@@ -96,7 +96,7 @@ const BoundSpacerItem = memo(() => (
   <Flex className={[styles.item, 'items-center gap-2']}>
     <Icon icon={ArrowDownToLine} size={14} style={{ color: cssVar.colorTextQuaternary }} />
     <div className={styles.spacerLine} />
-    <Text type='secondary' style={{ fontSize: 12 }}>
+    <Text className='text-[12px]' type='secondary'>
       下方条目锚定到底部
     </Text>
     <div className={styles.spacerLine} />

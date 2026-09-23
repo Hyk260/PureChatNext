@@ -163,15 +163,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         <Avatar avatar={agent.avatar} background={agent.backgroundColor ?? undefined} size={28} />
       </Center>
       <Flex className='flex-col flex-1 min-w-0 overflow-hidden'>
-        <Text
-          title={agent.title}
-          style={{
-            color: cssVar.colorTextSecondary,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
+        <Text color={cssVar.colorTextSecondary} ellipsis title={agent.title}>
           {agent.title}
         </Text>
       </Flex>

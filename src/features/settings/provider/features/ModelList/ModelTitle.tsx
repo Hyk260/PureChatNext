@@ -114,7 +114,7 @@ const ModelTitle = memo<ModelTitleProps>(
       >
         <Flex className={[styles.header, 'flex-between w-full']}>
           <Flex className='items-center gap-1'>
-            <Text strong style={{ fontSize: 16 }}>
+            <Text className='text-[16px]' strong>
               模型列表
             </Text>
             {canClearRemoteModels && onClearRemoteModels ? (

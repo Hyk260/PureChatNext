@@ -24,7 +24,7 @@ const MoveToLibraryModal = memo<MoveToLibraryModalProps>(({ fileIds, onClose, op
   return (
     <Modal footer={null} open={open} title='移动到知识库' onCancel={onClose}>
       {knowledgeBases.map((kb) => (
-        <div key={kb.id} style={{ cursor: 'pointer', padding: '8px 0' }} onClick={() => handleSelect(kb.id)}>
+        <div key={kb.id} className='cursor-pointer py-2' onClick={() => handleSelect(kb.id)}>
           {kb.name}
         </div>
       ))}

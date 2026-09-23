@@ -52,7 +52,7 @@ export function EmailSetting({ email }: EmailSettingProps) {
       <SettingRow
         action={
           email ? (
-            <Text onClick={() => setOpen(true)} style={{ cursor: 'pointer', fontSize: 13 }}>
+            <Text className='cursor-pointer text-[13px]' onClick={() => setOpen(true)}>
               修改邮箱
             </Text>
           ) : null
@@ -63,7 +63,7 @@ export function EmailSetting({ email }: EmailSettingProps) {
       </SettingRow>
 
       <Modal destroyOnHidden footer={null} onCancel={() => setOpen(false)} open={open} title='修改邮箱' width={420}>
-        <Text type='secondary' style={{ display: 'block', marginBottom: 16 }}>
+        <Text className='mb-4 block' type='secondary'>
           验证邮件将发送到新邮箱地址，验证完成后邮箱才会更新。
         </Text>
         <Form form={form} layout='vertical' onFinish={handleSubmit}>

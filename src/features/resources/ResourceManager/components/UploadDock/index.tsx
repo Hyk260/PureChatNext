@@ -34,7 +34,7 @@ const UploadDock = memo(() => {
     <Flex className={[styles.dock, 'flex-col gap-2']}>
       <Text strong>上传中</Text>
       {items.map((item) => (
-        <Text key={item.id} style={{ fontSize: 12 }}>
+        <Text className='text-[12px]' key={item.id}>
           {item.name} — {item.progress}%
         </Text>
       ))}

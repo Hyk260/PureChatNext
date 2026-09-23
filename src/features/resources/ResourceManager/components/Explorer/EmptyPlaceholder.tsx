@@ -74,7 +74,7 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
 
   return (
     <Center gap={24} height='100%' style={{ paddingBottom: 100 }} width='100%'>
-      <Flex className='flex-col justify-center' style={{ textAlign: 'center' }}>
+      <Flex className='flex-col justify-center text-center'>
         <Text>把文件或文件夹拖到这里</Text>
         <Text type='secondary'>或者</Text>
       </Flex>

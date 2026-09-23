@@ -72,7 +72,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
 
   return (
     <SettingRow label='兴趣领域'>
-      <Flex className='flex-col gap-3' style={{ opacity: saving ? 0.7 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
+      <Flex className={['flex-col gap-3', saving && 'pointer-events-none opacity-70']}>
         <Flex className='items-center gap-2 flex-wrap'>
           {INTEREST_AREAS.map((item) => {
             const isSelected = normalizedInterests.includes(item.key)
@@ -95,7 +95,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
                 variant='outlined'
               >
                 <Icon color={cssVar.colorTextSecondary} icon={item.icon} size={14} />
-                <Text style={{ fontSize: 13, fontWeight: 500 }}>{item.label}</Text>
+                <Text className='text-[13px] font-medium'>{item.label}</Text>
               </Block>
             )
           })}
@@ -113,7 +113,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
                 }}
                 variant='outlined'
               >
-                <Text style={{ fontSize: 13, fontWeight: 500 }}>{interest}</Text>
+                <Text className='text-[13px] font-medium'>{interest}</Text>
               </Block>
             ))}
           <Block
@@ -130,7 +130,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
             variant='outlined'
           >
             <Icon color={cssVar.colorTextSecondary} icon={BriefcaseIcon} size={14} />
-            <Text style={{ fontSize: 13, fontWeight: 500 }}>其他领域</Text>
+            <Text className='text-[13px] font-medium'>其他领域</Text>
           </Block>
         </Flex>
         {showCustomInput ? (

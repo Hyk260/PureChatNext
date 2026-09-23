@@ -292,7 +292,7 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
               style={{ flex: 'none' }}
             />
             <Flex className='flex-col gap-1 overflow-hidden'>
-              <Text as='h2' ellipsis style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>
+              <Text as='h2' className='!m-0 !text-[20px] !font-semibold' ellipsis>
                 {skill.name}
               </Text>
               <Flex className='mt-1 flex-wrap gap-1'>
@@ -317,7 +317,7 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
           />
         </Flex>
 
-        <Flex className='items-center gap-3 flex-wrap' style={{ color: cssVar.colorTextDescription }}>
+        <Flex className={[styles.meta, 'items-center gap-3 flex-wrap']}>
           <span className={styles.meta}>{skill.author}</span>
           {skill.homepage ? (
             <>

@@ -22,7 +22,7 @@ const ModelTypeIcon = memo<ModelTypeIconProps>(({ type, size = 20 }) => {
 
   return (
     <Tooltip title={meta.label}>
-      <span style={{ display: 'inline-flex', lineHeight: 0 }}>
+      <span className='inline-flex leading-[0]'>
         <Icon color={cssVar.colorTextDescription} icon={meta.icon} size={size} />
       </span>
     </Tooltip>

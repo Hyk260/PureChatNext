@@ -115,7 +115,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
       <Flex className='items-center gap-2 min-w-0 w-full'>
         {saving ? <Loader2 className='h-4 w-4 shrink-0 animate-spin' /> : null}
         {error ? (
-          <Text type='danger' style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+          <Text className='whitespace-nowrap text-[12px]' type='danger'>
             {error}
           </Text>
         ) : null}

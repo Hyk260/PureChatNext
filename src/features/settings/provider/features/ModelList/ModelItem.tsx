@@ -108,7 +108,7 @@ const ModelItem = memo<ModelItemProps>(
           <ModelIcon model={model.id} size={32} />
           <Flex className={[styles.meta, 'flex-col gap-1']}>
             <Flex className='items-center gap-2 min-w-0'>
-              <Text ellipsis style={{ fontWeight: 500 }}>
+              <Text className='font-medium' ellipsis>
                 {model.displayName}
               </Text>
               <Tooltip title='点击复制模型 ID'>

@@ -101,7 +101,7 @@ const TopicSidebar = memo<Props>(
                 <Flex className='items-center gap-[5px]'>
                   话题
                   {topics.length ? (
-                    <Text type='secondary' style={{ fontSize: 11 }}>
+                    <Text className='text-[11px]' type='secondary'>
                       {topics.length}
                     </Text>
                   ) : null}

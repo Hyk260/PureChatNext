@@ -98,19 +98,18 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
         <Checkbox checked={selected} style={{ pointerEvents: 'none' }} />
       </Center>
       <Flex
-        className={[styles.item, 'items-center gap-2 px-2']}
-
-        style={{ flexShrink: 0, maxWidth: columnWidths.name, minWidth: columnWidths.name, width: columnWidths.name }}
+        className={[styles.item, 'shrink-0 items-center gap-2 px-2']}
+        style={{ maxWidth: columnWidths.name, minWidth: columnWidths.name, width: columnWidths.name }}
       >
         <FileIcon fileName={item.name} isDirectory={isFolder} size={24} />
-        <Text ellipsis style={{ color: cssVar.colorText, flex: 1, minWidth: 0 }}>
+        <Text className='min-w-0 flex-1' ellipsis>
           {item.name}
         </Text>
       </Flex>
-      <Flex className={[styles.item, 'flex-col']} style={{ flexShrink: 0, width: columnWidths.date }}>
+      <Flex className={[styles.item, 'shrink-0 flex-col']} style={{ width: columnWidths.date }}>
         {formatDateTime(item.createdAt)}
       </Flex>
-      <Flex className={[styles.item, 'flex-col']} style={{ flexShrink: 0, width: columnWidths.size }}>
+      <Flex className={[styles.item, 'shrink-0 flex-col']} style={{ width: columnWidths.size }}>
         {isFolder ? '-' : formatSize(item.size)}
       </Flex>
     </Flex>

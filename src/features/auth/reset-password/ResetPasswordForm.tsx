@@ -14,7 +14,7 @@ export const ResetPasswordForm = () => {
   if (!token) {
     return (
       <Block padding={24}>
-        <Text style={{ textAlign: 'center', fontSize: 16 }}>
+        <Text className='text-center text-[16px]'>
           重置链接无效或已过期。请返回登录页重新申请密码重置邮件。
         </Text>
       </Block>

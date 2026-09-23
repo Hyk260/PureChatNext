@@ -333,12 +333,12 @@ const MessengerWeChatPage = memo(() => {
         />
       ) : (
         <Flex className='flex-col gap-2'>
-          <Text strong style={{ fontSize: 15 }}>
+          <Text className='text-[15px]' strong>
             连接微信
           </Text>
 
           <Flex className='flex-col gap-2'>
-            <Text type='secondary' style={{ fontSize: 13 }}>
+            <Text className='text-[13px]' type='secondary'>
               绑定助手
             </Text>
             <Select

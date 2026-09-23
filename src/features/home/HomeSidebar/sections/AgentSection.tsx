@@ -136,7 +136,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
         paddingBlock={4}
         paddingInline='8px 4px'
         title={
-          <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+          <Text className='text-[12px] font-medium' ellipsis type='secondary'>
             助理
           </Text>
         }
@@ -162,7 +162,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
             ))
           ) : (
             <Flex className='flex-col py-1 px-3'>
-              <Text className={styles.empty} style={{ fontSize: 12 }}>
+              <Text className={`${styles.empty} text-[12px]`}>
                 暂无内容
               </Text>
             </Flex>

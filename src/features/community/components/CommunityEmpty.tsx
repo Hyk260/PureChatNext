@@ -18,7 +18,7 @@ const CommunityEmpty = memo<CommunityEmptyProps>(({ description, title }) => {
           <>
             <Text strong>{title}</Text>
             <br />
-            <Text type='secondary' style={{ fontSize: 14 }}>
+            <Text className='text-[14px]' type='secondary'>
               {description}
             </Text>
           </>

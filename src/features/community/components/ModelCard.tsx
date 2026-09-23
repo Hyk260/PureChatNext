@@ -70,7 +70,6 @@ const ModelCard = memo<DiscoverModelItem>(
               ellipsis={{
                 rows: 3,
               }}
-              style={{ marginBottom: 0 }}
             >
               {description}
             </Text>

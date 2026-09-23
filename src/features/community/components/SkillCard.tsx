@@ -102,12 +102,7 @@ const SkillCard = memo<SkillCardProps>(({ onOpenDetail, ...item }) => {
       </Flex>
 
       <Flex className='flex-col flex-1 gap-3 px-4'>
-        <Text
-          as='p'
-          className={styles.desc}
-          ellipsis={{ rows: 3 }}
-          style={{ marginBottom: 0 }}
-        >
+        <Text as='p' className={styles.desc} ellipsis={{ rows: 3 }}>
           {description}
         </Text>
         <Flex className='items-center justify-between'>

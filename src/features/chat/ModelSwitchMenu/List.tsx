@@ -82,7 +82,7 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
                 >
                   <Flex className='items-center gap-2 min-w-0'>
                     <ProviderIcon provider={item.provider.id} size={18} type='color' />
-                    <Text ellipsis style={{ fontSize: 12 }}>
+                    <Text className='text-[12px]' ellipsis>
                       {item.provider.name}
                     </Text>
                   </Flex>

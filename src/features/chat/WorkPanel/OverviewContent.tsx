@@ -25,12 +25,12 @@ const OverviewContent = memo<Props>(({ topic, topicTitle }) => {
 
   return (
     <Flex className='flex-col gap-3 p-4 min-h-0 overflow-auto'>
-      <Text style={{ fontWeight: 500 }}>会话概览</Text>
+      <Text className='font-medium'>会话概览</Text>
       <Flex className='flex-col gap-2'>
         {rows.map((row) => (
           <Flex className='flex-between gap-3' key={row.label}>
             <Text type='secondary'>{row.label}</Text>
-            <Text ellipsis style={{ textAlign: 'right' }}>
+            <Text className='text-right' ellipsis>
               {row.value}
             </Text>
           </Flex>

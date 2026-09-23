@@ -166,7 +166,7 @@ const AttachmentImagePreview = memo<{ file: File }>(({ file }) => {
 
   useEffect(() => () => URL.revokeObjectURL(source), [source])
 
-  return <img alt='' height={28} src={source} style={{ borderRadius: 4, objectFit: 'cover', width: 28 }} />
+  return <img alt='' height={28} src={source} className='size-7 rounded object-cover' />
 })
 
 AttachmentImagePreview.displayName = 'AttachmentImagePreview'
@@ -329,7 +329,7 @@ const HomeChatInput = memo(() => {
         />
 
         {files.length > 0 ? (
-          <Flex className='gap-2 flex-wrap' style={{ marginBottom: 10 }}>
+          <Flex className='mb-2.5 gap-2 flex-wrap'>
             {files.map((file, index) => (
               <Flex
                 className={[styles.attachment, 'items-center gap-1.5']}
@@ -340,7 +340,7 @@ const HomeChatInput = memo(() => {
                 ) : (
                   <Icon icon={FileText} size={16} />
                 )}
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
+                <span className='truncate'>{file.name}</span>
                 <ActionIcon
                   icon={X}
                   size={{ blockSize: 24, size: 14 }}
@@ -367,7 +367,7 @@ const HomeChatInput = memo(() => {
           }}
         />
 
-        <Flex className={[styles.footer, 'flex-between']} style={{ marginTop: 12 }}>
+        <Flex className={[styles.footer, 'mt-3 flex-between']}>
           <Flex className='items-center gap-2'>
             <DropdownMenuRoot open={plusOpen} onOpenChange={setPlusOpen}>
               <DropdownMenuTrigger className={styles.plusTrigger} disabled={sending} nativeButton>

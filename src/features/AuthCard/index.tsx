@@ -16,9 +16,9 @@ export const AuthCard = memo<AuthCardProps>(({ children, title, subtitle, footer
   return (
     <Flex className='flex-col w-[min(100%,440px)]' {...rest} style={{ ...style }}>
       <Flex className='flex-col gap-4'>
-        {title && <Text style={{ fontSize: 28, lineHeight: 1.4, fontWeight: 'bold' }}>{title}</Text>}
+        {title && <Text className='text-[28px] font-bold leading-[1.4]'>{title}</Text>}
         {subtitle && (
-          <Text type={'secondary'} style={{ fontSize: 18, lineHeight: 1.4, fontWeight: 500 }}>
+          <Text className='text-[18px] font-medium leading-[1.4]' type='secondary'>
             {subtitle}
           </Text>
         )}

@@ -46,7 +46,7 @@ const LibraryHierarchy = memo(() => {
   if (folders.length === 0) {
     return (
       <Flex className='flex-col p-3'>
-        <Text type='secondary' style={{ fontSize: 12 }}>
+        <Text className='text-[12px]' type='secondary'>
           暂无文件夹
         </Text>
       </Flex>

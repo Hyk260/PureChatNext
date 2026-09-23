@@ -36,7 +36,7 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
   return (
     <Flex className='flex-col gap-4'>
       <Block padding={24}>
-        <Text style={{ textAlign: 'center' }}>
+        <Text className='text-center'>
           验证码将在 {expirationText} 后过期；如未收到，请检查垃圾邮件文件夹。
         </Text>
       </Block>
@@ -69,7 +69,7 @@ const VerifyEmailLinkContent = ({ email, callbackUrl, mode }: VerifyEmailModeCon
   return (
     <Flex className='flex-col gap-4'>
       <Block padding={24}>
-        <Text style={{ textAlign: 'center' }}>如果没有收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送。</Text>
+        <Text className='text-center'>如果没有收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送。</Text>
       </Block>
 
       <Button icon={<RefreshCw size={16} />} loading={resending} onClick={handleResend} size='large' type='default'>

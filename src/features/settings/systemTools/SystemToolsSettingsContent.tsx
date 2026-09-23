@@ -67,7 +67,10 @@ function RuntimeToolRow({
       ) : null}
       <Flex className={['items-center gap-1 shrink-0', statusClassName]}>
         <StatusIcon size={14} />
-        <Text className={statusClassName} style={{ fontSize: 13 }}>
+        <Text
+          className='text-[13px]'
+          color={tool.available ? 'var(--ant-color-success)' : 'var(--ant-color-text-tertiary)'}
+        >
           {statusLabel}
         </Text>
       </Flex>

@@ -283,25 +283,24 @@ const ChatInput = memo<ChatInputProps>((props) => {
       />
 
       {files.length > 0 ? (
-        <Flex className='gap-2 flex-wrap' style={{ marginBottom: 8 }}>
+        <Flex className='mb-2 gap-2 flex-wrap'>
           {files.map((file, index) => (
             <Flex
-              className='items-center gap-1.5 max-w-[260px] p-[5px_8px]'
+              className='items-center gap-1.5 max-w-[260px] rounded-lg p-[5px_8px]'
               key={`${file.name}-${file.lastModified}-${index}`}
-
-              style={{ background: 'var(--ant-color-fill-quaternary)', borderRadius: 8 }}
+              style={{ background: 'var(--ant-color-fill-quaternary)' }}
             >
               {file.type.startsWith('image/') ? (
                 <img
                   alt=''
                   height={28}
                   src={URL.createObjectURL(file)}
-                  style={{ borderRadius: 4, objectFit: 'cover', width: 28 }}
+                  className='size-7 rounded object-cover'
                 />
               ) : (
                 <Icon icon={FileText} size={16} />
               )}
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
+              <span className='truncate'>{file.name}</span>
               <button
                 aria-label={`删除 ${file.name}`}
                 className={styles.plusTrigger}
@@ -333,7 +332,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
         }}
       />
 
-      <Flex className='flex-between' style={{ marginTop: 8 }}>
+      <Flex className='mt-2 flex-between'>
         <Flex className='items-center gap-1'>
           <ModelSelector />
           <DropdownMenuRoot open={plusOpen} onOpenChange={setPlusOpen}>

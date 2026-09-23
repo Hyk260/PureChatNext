@@ -64,7 +64,7 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
           }}
         >
           <Icon icon={ArrowLeftIcon} size='small' />
-          <Text strong style={{ fontSize: 20 }}>
+          <Text className='text-[20px]' strong>
             {platformMeta.name}
           </Text>
         </span>
@@ -73,10 +73,10 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
           <Flex className='items-center gap-4'>
             <PlatformAvatar platform={platform} size={48} />
             <Flex className='flex-col flex-1 gap-0.5'>
-              <Text strong style={{ fontSize: 15 }}>
+              <Text className='text-[15px]' strong>
                 {platformMeta.name}
               </Text>
-              <Text type='secondary' style={{ fontSize: 13 }}>
+              <Text className='text-[13px]' type='secondary'>
                 {platformMeta.description}
               </Text>
             </Flex>

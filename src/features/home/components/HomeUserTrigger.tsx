@@ -48,12 +48,12 @@ const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planL
       <Avatar size={36} src={avatar}> {name.slice(0, 3).toUpperCase()} </Avatar>
       <Flex className='flex-col flex-1'>
         <Flex className='items-center gap-2'>
-          <Text as='span' style={{ lineHeight: 1.4 }} weight='bold'>
+          <Text as='span' className='leading-[1.4]' weight='bold'>
             {name}
           </Text>
         </Flex>
         {email ? (
-          <Text as='span' fontSize={12} type='secondary' style={{ lineHeight: 1.4 }}>
+          <Text as='span' className='leading-[1.4]' fontSize={12} type='secondary'>
             {email}
           </Text>
         ) : null}
@@ -170,7 +170,7 @@ const HomeUserTrigger = memo(() => {
       >
         <Avatar shape='square' size={28} src={avatar} >{displayName.slice(0, 3).toUpperCase()}</Avatar>
         <Flex className='items-center gap-1 overflow-hidden'>
-          <Text as='span' ellipsis style={{ flex: 1 }} weight={500}>
+          <Text as='span' className='min-w-0 flex-1' ellipsis weight={500}>
             {displayName}
           </Text>
           <Icon color={cssVar.colorTextDescription} icon={ChevronDownIcon} />

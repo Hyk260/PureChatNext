@@ -83,7 +83,7 @@ const SettingsSidebar = memo(() => {
                 paddingBlock={4}
                 paddingInline='8px 4px'
                 title={
-                  <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+                  <Text className='text-[12px] font-medium' ellipsis type='secondary'>
                     {group.title}
                   </Text>
                 }

@@ -168,11 +168,11 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
         ) : (
           oauthAccounts.map((account) => (
             <Flex className='flex-between' key={account.id}>
-              <Flex className='items-center gap-1.5 min-w-0' style={{ fontSize: 12 }}>
+              <Flex className='items-center gap-1.5 min-w-0 text-xs'>
                 {AuthIcons(account.providerId, 16)}
                 <span>{getProviderLabel(account.providerId)}</span>
                 {userEmail ? (
-                  <Text type='secondary' style={{ fontSize: 11 }}>
+                  <Text className='text-[11px]' type='secondary'>
                     · {userEmail}
                   </Text>
                 ) : null}
@@ -190,9 +190,10 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
         {availableProviders.length > 0 ? (
           <DropdownMenu items={linkMenuItems} popupProps={{ style: { maxWidth: 200 } }}>
             <Flex
-              className='items-center gap-1.5'
-
-              style={{ cursor: linkingProvider ? 'wait' : 'pointer', fontSize: 12, opacity: linkingProvider ? 0.6 : 1 }}
+              className={[
+                'items-center gap-1.5 text-xs',
+                linkingProvider ? 'cursor-wait opacity-60' : 'cursor-pointer',
+              ]}
             >
               <Plus size={14} />
               <span>关联账户</span>

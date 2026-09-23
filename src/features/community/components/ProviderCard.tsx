@@ -55,7 +55,6 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
             ellipsis={{
               rows: 3,
             }}
-            style={{ marginBottom: 0 }}
           >
             {description}
           </Text>

@@ -11,7 +11,7 @@ const ResourcesHeader = memo(() => {
 
   return (
     <Flex className='flex-between p-4 w-full'>
-      <Text strong style={{ fontSize: 16 }}>
+      <Text className='text-[16px]' strong>
         资源
       </Text>
       <Avatar src={session?.user?.image ?? undefined} size={32} />

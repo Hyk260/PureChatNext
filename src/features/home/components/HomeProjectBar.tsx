@@ -218,12 +218,12 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
         </Text>
         <Flex className='flex-col gap-1 max-h-64 overflow-y-auto'>
           {loading ? (
-            <Text className='px-3 py-2' type='secondary' style={{ fontSize: 12 }}>
+            <Text className='px-3 py-2 text-[12px]' type='secondary'>
               加载中…
             </Text>
           ) : null}
           {!loading && projects.length === 0 ? (
-            <Text className='px-3 py-2' type='secondary' style={{ fontSize: 12 }}>
+            <Text className='px-3 py-2 text-[12px]' type='secondary'>
               还没有项目，先创建一个吧
             </Text>
           ) : null}
@@ -239,7 +239,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
                   <Icon icon={Folder} size={16} />
                   <Flex className='flex-col flex-1 min-w-0'>
                     <Text ellipsis>{project.name}</Text>
-                    <Text ellipsis type='secondary' style={{ fontSize: 12 }}>
+                    <Text className='text-[12px]' ellipsis type='secondary'>
                       {project.rootPath}
                     </Text>
                   </Flex>
@@ -258,7 +258,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
         <Flex className='flex-col gap-1 mt-1 pt-1 border-t border-(--ant-color-border-secondary)'>
           {value ? (
             <Button className={styles.menuAction} type='text' onClick={handleClear}>
-              <Text type='secondary' style={{ fontSize: 12 }}>
+              <Text className='text-[12px]' type='secondary'>
                 不使用项目
               </Text>
             </Button>
@@ -291,7 +291,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
           title={value?.rootPath}
           type='text'
         >
-          <Text ellipsis style={{ fontSize: 12 }}>
+          <Text className='text-[12px]' ellipsis>
             {triggerLabel}
           </Text>
         </Button>
@@ -320,7 +320,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
             onChange={(event) => setName(event.target.value)}
           />
           <Flex className='flex-col gap-2'>
-            <Text type='secondary' style={{ fontSize: 13 }}>
+            <Text className='text-[13px]' type='secondary'>
               源文件夹
             </Text>
             <Flex

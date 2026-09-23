@@ -57,16 +57,16 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
       <Flex className='flex-col gap-3 w-full'>
         <ProviderCombine provider={id} size={28} style={{ flex: 'none' }} />
         <Flex className='flex-col gap-1.5'>
-          <Text style={{ fontWeight: 600 }}>{meta.name}</Text>
+          <Text className='font-semibold'>{meta.name}</Text>
           {meta.description ? (
-            <Text as='p' className={styles.desc} ellipsis={{ rows: 2 }} style={{ marginBottom: 0, fontSize: 13 }}>
+            <Text as='p' className={`${styles.desc} text-[13px]`} ellipsis={{ rows: 2 }}>
               {meta.description}
             </Text>
           ) : null}
         </Flex>
       </Flex>
       <Flex className={[styles.footer, 'flex-between w-full']}>
-        <Text type='secondary' style={{ fontSize: 12 }}>
+        <Text className='text-[12px]' type='secondary'>
           {isEnabled ? '已启用' : '未启用'}
         </Text>
         {serverManaged ? null : (

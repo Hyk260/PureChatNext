@@ -67,7 +67,7 @@ const AgentSwitcher = memo<Props>(({ agents, currentAgentId, onSelect }) => {
               }}
             >
               <Avatar avatar={agent.avatar} background={agent.backgroundColor ?? undefined} shape='square' size={28} />
-              <Text ellipsis style={{ flex: 1, minWidth: 0 }} type={active ? undefined : 'secondary'}>
+              <Text className='min-w-0 flex-1' ellipsis type={active ? undefined : 'secondary'}>
                 {agent.title}
               </Text>
               {agent.pinned ? <Icon color={cssVar.colorTextTertiary} icon={PinIcon} size={14} /> : null}
@@ -103,7 +103,7 @@ const AgentSwitcher = memo<Props>(({ agents, currentAgentId, onSelect }) => {
           shape='square'
           size={28}
         />
-        <Text ellipsis style={{ flex: 1, minWidth: 0, fontWeight: 500 }}>
+        <Text className='min-w-0 flex-1 font-medium' ellipsis>
           {currentAgent.title}
         </Text>
         <ActionIcon icon={ChevronsUpDownIcon} size='small' />

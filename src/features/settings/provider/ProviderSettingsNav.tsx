@@ -54,7 +54,7 @@ const ProviderNavItem = memo<{ id: ProviderId; active: boolean; enabled: boolean
         title={
           <Flex className='items-center gap-2 w-full'>
             <ProviderIcon provider={id} size={18} type='color' />
-            <Text ellipsis style={{ flex: 1, minWidth: 0 }}>
+            <Text className='min-w-0 flex-1' ellipsis>
               {meta.name}
             </Text>
             {enabled ? <span className={styles.status} /> : null}
@@ -106,7 +106,7 @@ const ProviderSettingsNav = memo(() => {
         />
       </Flex>
       <ScrollShadow size={2} style={{ flex: 1, minHeight: 0, width: '100%' }}>
-        <Flex className='flex-col gap-1 px-1 py-[0_32px]' style={{ marginBlockStart: 8 }}>
+        <Flex className='mt-2 flex-col gap-1 px-1 py-[0_32px]'>
           <Link className='text-inherit no-underline' href='/settings/provider/all'>
             <NavItem active={isAllActive} clickable icon={LayoutGrid} title='全部' />
           </Link>
@@ -116,7 +116,7 @@ const ProviderSettingsNav = memo(() => {
               paddingBlock={4}
               paddingInline='8px 4px'
               title={
-                <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+                <Text className='text-[12px] font-medium' ellipsis type='secondary'>
                   已启用 · {enabledIds.length}
                 </Text>
               }
@@ -125,7 +125,7 @@ const ProviderSettingsNav = memo(() => {
                 {enabledIds.length > 0 ? (
                   enabledIds.map((id) => <ProviderNavItem active={activeId === id} enabled id={id} key={id} />)
                 ) : (
-                  <Text type='secondary' style={{ fontSize: 12, paddingBlock: 6, paddingInline: 12 }}>
+                  <Text className='px-3 py-1.5 text-[12px]' type='secondary'>
                     暂无
                   </Text>
                 )}
@@ -136,7 +136,7 @@ const ProviderSettingsNav = memo(() => {
               paddingBlock={4}
               paddingInline='8px 4px'
               title={
-                <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+                <Text className='text-[12px] font-medium' ellipsis type='secondary'>
                   未启用 · {disabledIds.length}
                 </Text>
               }
@@ -145,7 +145,7 @@ const ProviderSettingsNav = memo(() => {
                 {disabledIds.length > 0 ? (
                   disabledIds.map((id) => <ProviderNavItem active={activeId === id} enabled={false} id={id} key={id} />)
                 ) : (
-                  <Text type='secondary' style={{ fontSize: 12, paddingBlock: 6, paddingInline: 12 }}>
+                  <Text className='px-3 py-1.5 text-[12px]' type='secondary'>
                     暂无
                   </Text>
                 )}

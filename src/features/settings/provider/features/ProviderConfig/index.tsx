@@ -190,7 +190,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
   const savingStatus = saving ? (
     <Flex className='items-center gap-1 text-muted-foreground'>
       <Loader2 aria-hidden className='h-4 w-4 animate-spin' />
-      <Text type='secondary' style={{ fontSize: 12 }}>
+      <Text className='text-[12px]' type='secondary'>
         保存中
       </Text>
     </Flex>
@@ -215,10 +215,10 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
 
       {serverManaged ? (
         <>
-          <Text type='secondary' style={{ fontSize: 13 }}>
+          <Text className='text-[13px]' type='secondary'>
             由 PureChat 官方托管，无需填写 API Key。用量计入每月免费积分；用尽后可等待下月重置，或改用下方自配服务商。
           </Text>
-          <Text className={styles.hint} style={{ marginBlockStart: 8 }}>
+          <Text className={`${styles.hint} mt-2`}>
             设置中不提供购买积分入口。
           </Text>
         </>
@@ -226,8 +226,8 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
         <>
           <div className={styles.row}>
             <Flex className={[styles.rowLabel, 'flex-col gap-1']}>
-              <Text style={{ fontWeight: 500 }}>API Key</Text>
-              <Text type='secondary' style={{ fontSize: 12 }}>
+              <Text className='font-medium'>API Key</Text>
+              <Text className='text-[12px]' type='secondary'>
                 请填写你的 {meta.name} API Key
               </Text>
             </Flex>
@@ -258,8 +258,8 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
 
           <div className={styles.row}>
             <Flex className={[styles.rowLabel, 'flex-col gap-1']}>
-              <Text style={{ fontWeight: 500 }}>API 代理地址</Text>
-              <Text type='secondary' style={{ fontSize: 12 }}>
+              <Text className='font-medium'>API 代理地址</Text>
+              <Text className='text-[12px]' type='secondary'>
                 必须包含 http(s)://
               </Text>
             </Flex>
@@ -284,8 +284,8 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
 
           <div className={styles.row}>
             <Flex className={[styles.rowLabel, 'flex-col gap-1']}>
-              <Text style={{ fontWeight: 500 }}>连通性检查</Text>
-              <Text type='secondary' style={{ fontSize: 12 }}>
+              <Text className='font-medium'>连通性检查</Text>
+              <Text className='text-[12px]' type='secondary'>
                 测试 API Key 与代理地址是否正确填写
               </Text>
             </Flex>
@@ -294,7 +294,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
             </div>
           </div>
 
-          <Text className={styles.hint} style={{ marginBlockStart: 8 }}>
+          <Text className={`${styles.hint} mt-2`}>
             {AES_GCM_HINT}
           </Text>
         </>

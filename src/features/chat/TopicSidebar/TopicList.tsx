@@ -107,7 +107,7 @@ const TopicList = memo<Props>(
     if (topics.length === 0) {
       return (
         <Flex className='flex-col py-1 px-3'>
-          <Text className={styles.empty} style={{ fontSize: 12 }}>
+          <Text className={`${styles.empty} text-[12px]`}>
             暂无话题
           </Text>
         </Flex>
@@ -144,7 +144,7 @@ const TopicList = memo<Props>(
               title={
                 <Flex className='items-center gap-1.5 min-w-0'>
                   {getGroupTitleIcon(group.id, groupMode)}
-                  <Text ellipsis type='secondary' style={{ fontSize: 12, fontWeight: 500 }}>
+                  <Text className='text-[12px] font-medium' ellipsis type='secondary'>
                     {group.title}
                   </Text>
                 </Flex>

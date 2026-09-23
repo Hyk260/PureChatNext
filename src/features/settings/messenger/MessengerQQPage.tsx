@@ -85,7 +85,7 @@ function renderQqStatusBanner(params: {
           title='Webhook 回调地址'
           description={
             <Text
-              style={{ cursor: 'copy', fontSize: 13 }}
+              className='cursor-copy text-[13px]'
               title='点击复制'
               onClick={async () => {
                 await copyToClipboard(webhookUrl)
@@ -289,12 +289,12 @@ const MessengerQQPage = memo(() => {
   return (
     <MessengerDetailShell headerAction={headerAction} platform='qq' platformMeta={platformMeta}>
       <Flex className='flex-col gap-3'>
-        <Text strong style={{ fontSize: 15 }}>
+        <Text className='text-[15px]' strong>
           连接 QQ
         </Text>
 
         <Flex className='flex-col gap-2'>
-          <Text type='secondary' style={{ fontSize: 13 }}>
+          <Text className='text-[13px]' type='secondary'>
             绑定助手
           </Text>
           <Select

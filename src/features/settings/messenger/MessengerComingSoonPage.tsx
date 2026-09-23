@@ -18,7 +18,7 @@ const MessengerComingSoonPage = memo<MessengerComingSoonPageProps>(({ platform }
   return (
     <MessengerDetailShell platform={meta.id} platformMeta={meta}>
       <Flex className='flex-col gap-2'>
-        <Text strong style={{ fontSize: 15 }}>
+        <Text className='text-[15px]' strong>
           连接 {meta.name}
         </Text>
         <div className={messengerDetailStyles.emptyRow}>即将推出，其它平台敬请期待。</div>

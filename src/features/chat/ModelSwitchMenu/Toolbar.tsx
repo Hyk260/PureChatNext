@@ -44,7 +44,7 @@ const Toolbar = memo<ToolbarProps>(({ groupMode, keyword, onGroupModeChange, onK
       onInputChange={onKeywordChange}
       onKeyDown={stopPropagation}
     />
-    <Flex className='gap-0.5' style={{ flexShrink: 0 }}>
+    <Flex className='shrink-0 gap-0.5'>
       <Tooltip title='按模型'>
         <ActionIcon
           className={cx(styles.modeBtn, groupMode === 'byModel' && styles.modeBtnActive)}

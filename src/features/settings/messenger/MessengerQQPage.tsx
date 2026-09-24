@@ -266,7 +266,7 @@ const MessengerQQPage = memo(() => {
   const headerAction = (
     <Flex className='items-center gap-2'>
       {isAdminRole(session?.user?.role) ? (
-        <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/admin/qq-conversation')}>
+        <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/settings/qq-conversation')}>
           对话监控
         </Button>
       ) : null}

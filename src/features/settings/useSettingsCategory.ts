@@ -21,6 +21,7 @@ import {
   UserIcon,
   Link2,
   MessageCircleIcon,
+  MessageSquare,
   PaletteIcon,
   Sparkles,
   Users,
@@ -62,6 +63,7 @@ export enum SettingsTab {
   Email = 'email-service',
   ReadFile = 'read-file',
   S3 = 's3',
+  QqConversation = 'qq-conversation',
 }
 
 /** Page titles for SettingsHeader (covers nav + empty/hidden tabs). */
@@ -90,6 +92,7 @@ export const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
   [SettingsTab.Email]: '邮件服务',
   [SettingsTab.ReadFile]: '文件读取',
   [SettingsTab.S3]: 'S3 测试',
+  [SettingsTab.QqConversation]: 'QQ 对话',
 }
 
 export function getSettingsTabLabel(tab: string | undefined): string {
@@ -145,6 +148,12 @@ const MANAGE_GROUP: SettingsCategoryGroup = {
       icon: HardDrive,
       key: SettingsTab.S3,
       label: 'S3 测试',
+    },
+    {
+      href: tabHref(SettingsTab.QqConversation),
+      icon: MessageSquare,
+      key: SettingsTab.QqConversation,
+      label: 'QQ 对话',
     },
   ],
   key: SettingsGroupKey.Manage,

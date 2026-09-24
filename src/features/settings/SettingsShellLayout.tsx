@@ -17,6 +17,7 @@ const HEADERLESS_PREFIXES = [
   '/settings/email-service',
   '/settings/read-file',
   '/settings/s3',
+  '/settings/qq-conversation',
 ]
 
 const FULL_BLEED_PREFIXES = ['/settings/provider', '/settings/skill', ...HEADERLESS_PREFIXES]

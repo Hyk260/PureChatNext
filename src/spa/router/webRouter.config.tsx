@@ -192,6 +192,13 @@ export const webRoutes: RouteObject[] = [
         path: 's3',
       },
       {
+        element: dynamicElement(
+          () => import('@/routes/settings/qq-conversation/page'),
+          'Settings > QQ Conversation'
+        ),
+        path: 'qq-conversation',
+      },
+      {
         element: dynamicElement(() => import('@/routes/settings/messenger/page'), 'Settings > Messenger'),
         path: 'messenger/:platform?',
       },

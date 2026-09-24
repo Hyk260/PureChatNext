@@ -17,7 +17,8 @@ import type {
 import mime from 'mime'
 import { resolveMimeTypeFromBytes } from '@pure/utils'
 
-import { QQApiClient, QQ_MAX_PASSIVE_REPLIES, QQ_MAX_TEXT_LENGTH, chunkQQText, chunkQQTextLimited } from './api'
+import { QQ_MAX_PASSIVE_REPLIES, QQ_MAX_TEXT_LENGTH, chunkQQText, chunkQQTextLimited } from '@pure/utils/qqText'
+import { QQApiClient } from './api'
 import { toQQMediaFileType } from './mediaType'
 import { signWebhookResponse } from './crypto'
 import { QQFormatConverter } from './format-converter'

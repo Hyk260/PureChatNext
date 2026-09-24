@@ -1,4 +1,4 @@
-import { QQ_MAX_PASSIVE_REPLIES } from '@pure/chat-adapter/qq'
+import { QQ_MAX_PASSIVE_REPLIES } from '@pure/utils/qqText'
 
 import type { QQThreadType } from './thread'
 

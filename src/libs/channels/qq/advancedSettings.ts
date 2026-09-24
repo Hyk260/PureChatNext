@@ -1,4 +1,4 @@
-import { QQ_MAX_TEXT_LENGTH, chunkQQText } from '@pure/chat-adapter/qq'
+import { QQ_MAX_TEXT_LENGTH, chunkQQText } from '@pure/utils/qqText'
 import type { ChannelAccessPolicy, ChannelAllowedUser, ChannelBindingSettings } from '@pure/database/schemas/channel'
 
 import type { QQThreadType } from './thread'

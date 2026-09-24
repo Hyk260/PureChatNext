@@ -7,7 +7,7 @@ import debug from 'debug'
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
-import { chunkQQTextLimited } from '@pure/chat-adapter/qq'
+import { chunkQQTextLimited } from '@pure/utils/qqText'
 import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
 import type { ChannelToolArtifact, ChannelToolContext } from '@/server/chat/toolRegistry'
 

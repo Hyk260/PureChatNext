@@ -244,7 +244,7 @@ export default function WebSearchPage() {
           <div>
             <h1 className='text-2xl font-semibold text-foreground'>联网搜索功能测试台</h1>
             <p className='mt-1 max-w-2xl text-sm leading-6 text-muted-foreground'>
-              验证 SearchService 的 query、webSearch 和 crawlPages 三条路径，查看请求体、状态、摘要和原始响应。
+              验证 query、webSearch、crawlPages 三条路径。
             </p>
           </div>
           <Segmented

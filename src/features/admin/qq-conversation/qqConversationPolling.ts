@@ -1,10 +1,10 @@
-import type { QQDevMessage } from './qqConversationApi'
+import type { QQMessage } from './qqConversationApi'
 
 export const MESSAGE_POLL_DELAYS = [2_000, 5_000, 10_000, 15_000] as const
 
 const ACTIVE_STATUSES = new Set(['pending', 'processing', 'retry'])
 
-function compareMessages(a: QQDevMessage, b: QQDevMessage): number {
+function compareMessages(a: QQMessage, b: QQMessage): number {
   const timeDifference = a.createdAt.localeCompare(b.createdAt)
   if (timeDifference) return timeDifference
   if (a.eventId !== b.eventId) return a.eventId < b.eventId ? -1 : 1
@@ -12,10 +12,10 @@ function compareMessages(a: QQDevMessage, b: QQDevMessage): number {
   return a.id === b.id ? 0 : a.id < b.id ? -1 : 1
 }
 
-export function mergeQQDevMessages(
-  current: QQDevMessage[],
-  incoming: QQDevMessage[]
-): { changed: boolean; messages: QQDevMessage[] } {
+export function mergeQQMessages(
+  current: QQMessage[],
+  incoming: QQMessage[]
+): { changed: boolean; messages: QQMessage[] } {
   const byId = new Map(current.map((message) => [message.id, message]))
   let changed = false
   for (const message of incoming) {
@@ -29,11 +29,11 @@ export function mergeQQDevMessages(
   return { changed, messages }
 }
 
-export function hasActiveQQMessages(messages: QQDevMessage[]): boolean {
+export function hasActiveQQMessages(messages: QQMessage[]): boolean {
   return messages.some((message) => message.status && ACTIVE_STATUSES.has(message.status))
 }
 
-export function getActiveQQEventIds(messages: QQDevMessage[]): string[] {
+export function getActiveQQEventIds(messages: QQMessage[]): string[] {
   return [
     ...new Set(
       messages

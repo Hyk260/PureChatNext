@@ -277,6 +277,13 @@ export const webRoutes: RouteObject[] = [
         element: dynamicElement(() => import('@/features/admin/s3/S3Page'), 'Admin > S3'),
         path: 's3',
       },
+      {
+        element: dynamicElement(
+          () => import('@/features/admin/qq-conversation/QqConversationPage'),
+          'Admin > QqConversation'
+        ),
+        path: 'qq-conversation',
+      },
     ],
     element: dynamicLayout(() => import('@/routes/admin/_layout'), 'AdminLayout'),
     path: 'admin',
@@ -290,10 +297,6 @@ export const webRoutes: RouteObject[] = [
             {
               element: dynamicElement(() => import('@/features/dev/WechatConversationPage'), 'Dev > WechatConversation'),
               path: 'wechat-conversation',
-            },
-            {
-              element: dynamicElement(() => import('@/features/dev/QqConversationPage'), 'Dev > QqConversation'),
-              path: 'qq-conversation',
             },
             {
               element: dynamicElement(() => import('@/features/dev/CodeBlockPage'), 'Dev > CodeBlock'),

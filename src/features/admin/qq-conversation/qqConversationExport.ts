@@ -1,15 +1,15 @@
-import type { QQDevMessage, QQDevSession } from './qqConversationApi'
+import type { QQMessage, QQSession } from './qqConversationApi'
 
 export type QQExportMode = 'full' | 'openai'
 
 type ExportSession = Pick<
-  QQDevSession,
+  QQSession,
   'agentId' | 'agentTitle' | 'conversationVersion' | 'externalUserId' | 'externalUserName' | 'id'
 >
 
 export function createQQConversationExport(
   mode: QQExportMode,
-  messages: QQDevMessage[],
+  messages: QQMessage[],
   session: ExportSession,
   exportedAt?: string
 ) {
@@ -60,10 +60,11 @@ export function createQQConversationExport(
 }
 
 export function createQQExportFilename(session: ExportSession, now = new Date()): string {
-  const label = (session.externalUserName || session.externalUserId || 'conversation')
-    .replace(/[\\/:*?"<>|\s]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 48) || 'conversation'
+  const label =
+    (session.externalUserName || session.externalUserId || 'conversation')
+      .replace(/[\\/:*?"<>|\s]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'conversation'
   const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19)
   return `qq-${label}-v${session.conversationVersion}-${timestamp}.json`
 }

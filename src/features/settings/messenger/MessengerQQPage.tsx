@@ -5,13 +5,13 @@ import { Alert, Button, confirmModal, Select, Text, copyToClipboard, Flex } from
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
-import { isDev } from '@/libs/constants'
 import { MessagesSquareIcon, Trash2Icon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import useSWR from 'swr'
 
+import { isAdminRole } from '@/const/auth'
 import { useSession } from '@/libs/better-auth/client'
 import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 
@@ -265,8 +265,8 @@ const MessengerQQPage = memo(() => {
 
   const headerAction = (
     <Flex className='items-center gap-2'>
-      {isDev ? (
-        <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/dev/qq-conversation')}>
+      {isAdminRole(session?.user?.role) ? (
+        <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/admin/qq-conversation')}>
           对话监控
         </Button>
       ) : null}

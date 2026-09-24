@@ -4,7 +4,7 @@ import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import type { ChannelEventItem } from '@pure/database/schemas/channel'
-import { jsonError, withAuth } from '@/libs/auth/get-session-user'
+import { jsonError, withAdmin } from '@/libs/auth/get-session-user'
 import { canSendQQDevOutbound, sendQQDevOutbound } from '@/libs/channels/qq/outbound'
 import { resolveQQPassiveReply } from '@/libs/channels/qq/passiveReply'
 import { expandQQEventsToMessages } from '@/libs/channels/qq/timeline'
@@ -30,10 +30,10 @@ function outboundMessage(event: ChannelEventItem) {
 }
 
 /**
- * GET /api/dev/qq/sessions/[sessionId]/messages
- * 开发环境：分页拉取 QQ 会话时间线消息
+ * GET /api/admin/qq/sessions/[sessionId]/messages
+ * 管理员：分页拉取 QQ 会话时间线消息
  */
-export const GET = withAuth<{ sessionId: string }>(async (request, { params, userId }) => {
+export const GET = withAdmin<{ sessionId: string }>(async (request, { params, userId }) => {
   const { sessionId } = await params
   if (!sessionId?.trim()) return jsonError('Invalid sessionId', 400)
 
@@ -103,10 +103,10 @@ export const GET = withAuth<{ sessionId: string }>(async (request, { params, use
 })
 
 /**
- * POST /api/dev/qq/sessions/[sessionId]/messages
- * 开发环境：向 QQ 会话发送出站文本消息
+ * POST /api/admin/qq/sessions/[sessionId]/messages
+ * 管理员：向本人绑定的 QQ 会话代发文本
  */
-export const POST = withAuth<{ sessionId: string }>(async (request, { params, userId }) => {
+export const POST = withAdmin<{ sessionId: string }>(async (request, { params, userId }) => {
   const { sessionId } = await params
   if (!sessionId?.trim()) return jsonError('Invalid sessionId', 400)
 

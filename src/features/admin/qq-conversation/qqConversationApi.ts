@@ -1,6 +1,8 @@
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
-export type QQDevSession = {
+const SESSIONS_PATH = '/api/admin/qq/sessions'
+
+export type QQSession = {
   activeAgentId: string | null
   agentId: string
   agentTitle: string | null
@@ -16,23 +18,25 @@ export type QQDevSession = {
   threadType?: string | null
 }
 
-export type QQDevSessionsResponse = {
+export type QQSessionsResponse = {
   agentId?: string
   agentTitle?: string | null
   bound: boolean
-  sessions: QQDevSession[]
+  sessions: QQSession[]
 }
 
-export type QQDevMessage = {
-  attachments?: Array<{
-    deliveryStatus: string
-    fileName: string
-    fileSize?: number | null
-    fileUrl: string
-    id: string
-    summary?: string
-    version: number
-  }>
+export type QQAttachment = {
+  deliveryStatus: string
+  fileName: string
+  fileSize?: number | null
+  fileUrl: string
+  id: string
+  summary?: string
+  version: number
+}
+
+export type QQMessage = {
+  attachments?: QQAttachment[]
   authorId?: string
   authorName?: string
   createdAt: string
@@ -52,19 +56,19 @@ export type QQDevMessage = {
   text: string
 }
 
-export type QQDevMessagesResponse = {
+export type QQMessagesResponse = {
   cursor?: string
-  messages: QQDevMessage[]
-  session: QQDevSession
+  messages: QQMessage[]
+  session: QQSession
 }
 
-export async function fetchQQDevSessions(signal?: AbortSignal): Promise<QQDevSessionsResponse> {
-  const res = await apiFetch('/api/dev/qq/sessions', { signal })
+export async function fetchQQSessions(signal?: AbortSignal): Promise<QQSessionsResponse> {
+  const res = await apiFetch(SESSIONS_PATH, { signal })
   if (!res.ok) throw new Error(`sessions failed: ${res.status}`)
-  return res.json() as Promise<QQDevSessionsResponse>
+  return res.json() as Promise<QQSessionsResponse>
 }
 
-export async function fetchQQDevSessionMessages(
+export async function fetchQQSessionMessages(
   sessionId: string,
   options:
     | number
@@ -75,7 +79,7 @@ export async function fetchQQDevSessionMessages(
         signal?: AbortSignal
         watchEventIds?: string[]
       } = 50
-): Promise<QQDevMessagesResponse> {
+): Promise<QQMessagesResponse> {
   const resolved = typeof options === 'number' ? { limit: options } : options
   const searchParams = new URLSearchParams({ limit: String(resolved.limit ?? 50) })
   if (resolved.cursor) searchParams.set('cursor', resolved.cursor)
@@ -83,27 +87,32 @@ export async function fetchQQDevSessionMessages(
     searchParams.set('conversationVersion', String(resolved.conversationVersion))
   }
   for (const eventId of resolved.watchEventIds ?? []) searchParams.append('watchEventId', eventId)
-  const res = await apiFetch(`/api/dev/qq/sessions/${encodeURIComponent(sessionId)}/messages?${searchParams}`, {
-    signal: resolved.signal,
-  })
+
+  const res = await apiFetch(
+    `${SESSIONS_PATH}/${encodeURIComponent(sessionId)}/messages?${searchParams}`,
+    { signal: resolved.signal }
+  )
   if (!res.ok) throw new Error(`messages failed: ${res.status}`)
-  return res.json() as Promise<QQDevMessagesResponse>
+  return res.json() as Promise<QQMessagesResponse>
 }
 
-export async function sendQQDevMessage(
+export async function sendQQMessage(
   sessionId: string,
   payload: string | { requestId?: string; text?: string }
-): Promise<QQDevMessage> {
+): Promise<QQMessage> {
   const resolved = typeof payload === 'string' ? { text: payload } : payload
   const text = resolved.text?.trim() ?? ''
   const requestId = resolved.requestId ?? crypto.randomUUID()
 
-  const res = await apiFetch(`/api/dev/qq/sessions/${encodeURIComponent(sessionId)}/messages`, jsonInit({ requestId, text }, { method: 'POST' }))
+  const res = await apiFetch(
+    `${SESSIONS_PATH}/${encodeURIComponent(sessionId)}/messages`,
+    jsonInit({ requestId, text }, { method: 'POST' })
+  )
   if (!res.ok) {
     const data = (await res.json().catch(() => null)) as { error?: string } | null
     throw new Error(data?.error || `send failed: ${res.status}`)
   }
-  const data = (await res.json()) as { message: QQDevMessage }
+  const data = (await res.json()) as { message: QQMessage }
   if (!data.message) throw new Error('发送成功但未返回消息记录，请刷新会话确认状态')
   return data.message
 }

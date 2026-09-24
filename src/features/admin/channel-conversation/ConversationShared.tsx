@@ -1,7 +1,7 @@
 'use client'
 
 import { Check, Copy, Download, Loader2, X } from 'lucide-react'
-import { Segmented } from 'antd'
+import { Alert, Segmented } from 'antd'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { formatSize } from '@pure/utils/client'
@@ -176,7 +176,7 @@ export function ConnectionBadge({ connected }: { connected: boolean }) {
 
 export function ChannelErrorBanner({ error }: { error: string | null }) {
   if (!error) return null
-  return <div className='mx-4 mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive'>{error}</div>
+  return <Alert key={error} className='mx-4 mt-3' title={error} showIcon type='error' closable />
 }
 
 export function MessagesLoadingState() {

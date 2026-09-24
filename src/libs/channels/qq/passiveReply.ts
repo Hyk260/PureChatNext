@@ -1,6 +1,8 @@
+import { QQ_MAX_PASSIVE_REPLIES } from '@pure/chat-adapter/qq'
+
 import type { QQThreadType } from './thread'
 
-export const QQ_MAX_PASSIVE_REPLIES = 5
+export { QQ_MAX_PASSIVE_REPLIES }
 
 const QQ_PASSIVE_REPLY_WINDOW_MS: Record<QQThreadType, number> = {
   c2c: 60 * 60 * 1000,
@@ -27,7 +29,8 @@ export type QQPassiveReplyResult =
 
 /** QQ 已下线主动消息；群聊/单聊代发必须挂到最近一条入站 msg_id 上。 */
 export function resolveQQPassiveReply(params: {
-  hasAgentReply: boolean
+  /** Agent / 入站自动回复实际占用的 msg_seq 条数（分片后可能 > 1）。 */
+  agentReplyCount: number
   inboundCreatedAt?: Date | null
   now?: Date
   outboundCount: number
@@ -55,7 +58,8 @@ export function resolveQQPassiveReply(params: {
     }
   }
 
-  const usedSeq = (params.hasAgentReply ? 1 : 0) + params.outboundCount
+  const agentReplyCount = Math.max(0, Math.floor(params.agentReplyCount))
+  const usedSeq = agentReplyCount + params.outboundCount
   const msgSeq = usedSeq + 1
   if (msgSeq > QQ_MAX_PASSIVE_REPLIES) {
     return {

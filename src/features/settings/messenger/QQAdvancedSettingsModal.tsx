@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Alert, Button, Flex, Input, Modal, Select, Text, Tooltip } from '@pure/ui'
+import { ActionIcon, Button, Flex, Input, Modal, Select, Text, Tooltip } from '@pure/ui'
 import {
   CircleHelp,
   Hash,
@@ -14,7 +14,16 @@ import {
 import type { ReactNode } from 'react'
 import { memo, useCallback, useState } from 'react'
 
-type AccessPolicy = 'allowlist' | 'disabled' | 'open'
+import { useApp } from '@/components/AntdStaticMethods'
+
+import type { QQAccessPolicy, QQAdvancedSettings } from './qqApi'
+import { updateQQAdvancedSettings } from './qqApi'
+import {
+  QQ_DEFAULT_CHAR_LIMIT,
+  QQ_MIN_CHAR_LIMIT,
+  QQ_PLATFORM_MAX_TEXT_LENGTH,
+} from '@/libs/channels/qq/advancedSettings'
+
 type AccessPolicyScope = 'dm' | 'group'
 
 type AllowedUser = {
@@ -26,13 +35,13 @@ type AllowedUser = {
 type AdvancedSettingsDraft = {
   allowedUsers: AllowedUser[]
   charLimit: string
-  dmPolicy: AccessPolicy
-  groupPolicy: AccessPolicy
+  dmPolicy: QQAccessPolicy
+  groupPolicy: QQAccessPolicy
   platformUserId: string
 }
 
 const ACCESS_POLICY_META: Record<
-  AccessPolicy,
+  QQAccessPolicy,
   { description: Record<AccessPolicyScope, string>; label: string }
 > = {
   open: {
@@ -51,51 +60,74 @@ const ACCESS_POLICY_META: Record<
   },
   disabled: {
     description: {
-      dm: '拒绝所有私信',
+      dm: '拒绝所有私信（含自己）',
       group: '拒绝所有群消息',
     },
     label: '禁用',
   },
 }
 
-const ACCESS_POLICY_VALUES = ['open', 'allowlist', 'disabled'] as const satisfies AccessPolicy[]
+const ACCESS_POLICY_VALUES = ['open', 'allowlist', 'disabled'] as const satisfies QQAccessPolicy[]
 
-/** Outbound character limit default and hard upper bound for the preview UI. */
-const DEFAULT_CHAR_LIMIT = 2000
-const MIN_CHAR_LIMIT = 1
-const MAX_CHAR_LIMIT = 2000
-
-/** Shared width for character-limit + policy controls so they visually align. */
 const COMPACT_CONTROL_WIDTH = 140
 const PLATFORM_ID_CONTROL_WIDTH = 280
 
-const DEFAULT_DRAFT: AdvancedSettingsDraft = {
-  allowedUsers: [],
-  charLimit: String(DEFAULT_CHAR_LIMIT),
-  dmPolicy: 'open',
-  groupPolicy: 'open',
-  platformUserId: '',
+function createDefaultDraft(): AdvancedSettingsDraft {
+  return {
+    allowedUsers: [],
+    charLimit: String(QQ_DEFAULT_CHAR_LIMIT),
+    dmPolicy: 'open',
+    groupPolicy: 'open',
+    platformUserId: '',
+  }
 }
 
 function digitsOnly(raw: string) {
   return raw.replace(/\D/g, '')
 }
 
-/** Clamp a digit string into [MIN_CHAR_LIMIT, MAX_CHAR_LIMIT]; empty falls back to default. */
 function clampCharLimit(raw: string): string {
   const digits = digitsOnly(raw)
-  if (!digits) return String(DEFAULT_CHAR_LIMIT)
+  if (!digits) return String(QQ_DEFAULT_CHAR_LIMIT)
   const value = Number(digits)
-  if (!Number.isFinite(value) || value < MIN_CHAR_LIMIT) return String(MIN_CHAR_LIMIT)
-  if (value > MAX_CHAR_LIMIT) return String(MAX_CHAR_LIMIT)
+  if (!Number.isFinite(value) || value < QQ_MIN_CHAR_LIMIT) return String(QQ_MIN_CHAR_LIMIT)
+  if (value > QQ_PLATFORM_MAX_TEXT_LENGTH) return String(QQ_PLATFORM_MAX_TEXT_LENGTH)
   return String(value)
 }
 
-function createAllowedUser(): AllowedUser {
+function createAllowedUser(seed?: { platformUserId?: string; remark?: string }): AllowedUser {
   return {
     id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    platformUserId: '',
-    remark: '',
+    platformUserId: seed?.platformUserId ?? '',
+    remark: seed?.remark ?? '',
+  }
+}
+
+function settingsToDraft(settings?: QQAdvancedSettings | null): AdvancedSettingsDraft {
+  if (!settings) return createDefaultDraft()
+  return {
+    allowedUsers: settings.allowedUsers.map((user) =>
+      createAllowedUser({ platformUserId: user.platformUserId, remark: user.remark })
+    ),
+    charLimit: String(settings.charLimit || QQ_DEFAULT_CHAR_LIMIT),
+    dmPolicy: settings.dmPolicy,
+    groupPolicy: settings.groupPolicy,
+    platformUserId: settings.platformUserId,
+  }
+}
+
+function draftToSettings(draft: AdvancedSettingsDraft): QQAdvancedSettings {
+  return {
+    allowedUsers: draft.allowedUsers
+      .map((user) => ({
+        platformUserId: user.platformUserId.trim(),
+        ...(user.remark.trim() ? { remark: user.remark.trim() } : {}),
+      }))
+      .filter((user) => user.platformUserId),
+    charLimit: Number(clampCharLimit(draft.charLimit)),
+    dmPolicy: draft.dmPolicy,
+    groupPolicy: draft.groupPolicy,
+    platformUserId: draft.platformUserId.trim(),
   }
 }
 
@@ -110,7 +142,6 @@ function AdvancedSettingRow({
   icon: ReactNode
   label: string
   labelExtra?: ReactNode
-  /** Put the control column on the right with flex-1 (for multi-line editors). */
   wide?: boolean
 }) {
   return (
@@ -132,14 +163,14 @@ function AccessPolicySelect({
   scope,
   value,
 }: {
-  onChange: (value: AccessPolicy) => void
+  onChange: (value: QQAccessPolicy) => void
   scope: AccessPolicyScope
-  value: AccessPolicy
+  value: QQAccessPolicy
 }) {
   return (
     <Select
       optionRender={(option) => {
-        const policy = option.value as AccessPolicy
+        const policy = option.value as QQAccessPolicy
         const meta = ACCESS_POLICY_META[policy]
         return (
           <Flex className='w-full min-w-[320px] items-center justify-between gap-6'>
@@ -156,7 +187,7 @@ function AccessPolicySelect({
       style={{ width: COMPACT_CONTROL_WIDTH }}
       value={value}
       onChange={(next) => {
-        if (typeof next === 'string') onChange(next as AccessPolicy)
+        if (typeof next === 'string') onChange(next as QQAccessPolicy)
       }}
     />
   )
@@ -177,7 +208,7 @@ function AllowedUsersEditor({
     <Flex className='flex-col gap-2'>
       {users.length === 0 ? (
         <Text className='text-[13px]' type='secondary'>
-          尚未添加任何用户
+          尚未添加任何用户——任何人都可以与机器人交互（受策略约束）。
         </Text>
       ) : null}
       {users.map((user) => (
@@ -194,12 +225,7 @@ function AllowedUsersEditor({
             value={user.remark}
             onChange={(event) => onChange(user.id, { remark: event.target.value })}
           />
-          <ActionIcon
-            icon={Trash2}
-            size='small'
-            title='移除用户'
-            onClick={() => onRemove(user.id)}
-          />
+          <ActionIcon icon={Trash2} size='small' title='移除用户' onClick={() => onRemove(user.id)} />
         </Flex>
       ))}
       <button
@@ -215,129 +241,162 @@ function AllowedUsersEditor({
 }
 
 type QQAdvancedSettingsModalProps = {
+  initialSettings?: QQAdvancedSettings | null
   onClose: () => void
+  onSaved: (settings: QQAdvancedSettings) => void
   open: boolean
 }
 
-/**
- * QQ channel advanced-settings preview UI.
- * TODO(qq-advanced-settings): load/save via channel bind API.
- */
-const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(({ onClose, open }) => {
-  const [draft, setDraft] = useState<AdvancedSettingsDraft>(DEFAULT_DRAFT)
+const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(
+  ({ initialSettings, onClose, onSaved, open }) => {
+    const { message } = useApp()
+    const [draft, setDraft] = useState<AdvancedSettingsDraft>(() => settingsToDraft(initialSettings))
+    const [saving, setSaving] = useState(false)
 
-  const resetDefaults = useCallback(() => {
-    setDraft(DEFAULT_DRAFT)
-  }, [])
+    const resetDefaults = useCallback(() => {
+      setDraft(createDefaultDraft())
+    }, [])
 
-  const patchDraft = useCallback((patch: Partial<AdvancedSettingsDraft>) => {
-    setDraft((current) => ({ ...current, ...patch }))
-  }, [])
+    const patchDraft = useCallback((patch: Partial<AdvancedSettingsDraft>) => {
+      setDraft((current) => ({ ...current, ...patch }))
+    }, [])
 
-  const addAllowedUser = useCallback(() => {
-    setDraft((current) => ({
-      ...current,
-      allowedUsers: [...current.allowedUsers, createAllowedUser()],
-    }))
-  }, [])
-
-  const removeAllowedUser = useCallback((id: string) => {
-    setDraft((current) => ({
-      ...current,
-      allowedUsers: current.allowedUsers.filter((user) => user.id !== id),
-    }))
-  }, [])
-
-  const updateAllowedUser = useCallback(
-    (id: string, patch: Partial<Pick<AllowedUser, 'platformUserId' | 'remark'>>) => {
+    const addAllowedUser = useCallback(() => {
       setDraft((current) => ({
         ...current,
-        allowedUsers: current.allowedUsers.map((user) => (user.id === id ? { ...user, ...patch } : user)),
+        allowedUsers: [...current.allowedUsers, createAllowedUser()],
       }))
-    },
-    []
-  )
+    }, [])
 
-  return (
-    <Modal
-      destroyOnHidden
-      footer={null}
-      open={open}
-      title='高级设置'
-      width={720}
-      onCancel={onClose}
-    >
-      <Flex className='mb-3 flex-col gap-3'>
-        <Alert
-          showIcon
-          type='info'
-          title='界面预览'
-          description='当前仅展示高级设置布局，修改不会保存，关闭后恢复默认。'
-        />
-        <Flex className='items-center justify-end'>
-          <Button icon={<RotateCcw size={14} />} size='small' onClick={resetDefaults}>
+    const removeAllowedUser = useCallback((id: string) => {
+      setDraft((current) => ({
+        ...current,
+        allowedUsers: current.allowedUsers.filter((user) => user.id !== id),
+      }))
+    }, [])
+
+    const updateAllowedUser = useCallback(
+      (id: string, patch: Partial<Pick<AllowedUser, 'platformUserId' | 'remark'>>) => {
+        setDraft((current) => ({
+          ...current,
+          allowedUsers: current.allowedUsers.map((user) => (user.id === id ? { ...user, ...patch } : user)),
+        }))
+      },
+      []
+    )
+
+    const settingsReady = Boolean(initialSettings)
+    const handleSave = useCallback(async () => {
+      if (!settingsReady) {
+        message.warning('设置尚未加载，请稍后再试')
+        return
+      }
+      const blankRows = draft.allowedUsers.filter((user) => !user.platformUserId.trim())
+      if (blankRows.length > 0) {
+        message.warning('请填写白名单用户的平台用户 ID，或移除空行')
+        return
+      }
+      setSaving(true)
+      try {
+        const next = await updateQQAdvancedSettings(draftToSettings(draft))
+        message.success('已保存高级设置')
+        onSaved(next)
+        onClose()
+      } catch (error) {
+        message.error(error instanceof Error ? error.message : '保存失败')
+      } finally {
+        setSaving(false)
+      }
+    }, [draft, message, onClose, onSaved, settingsReady])
+
+    return (
+      <Modal
+        cancelButtonProps={{ disabled: saving }}
+        cancelText='取消'
+        confirmLoading={saving}
+        destroyOnHidden
+        keyboard={!saving}
+        maskClosable={!saving}
+        okButtonProps={{ disabled: !settingsReady || saving }}
+        okText='保存'
+        open={open}
+        title='高级设置'
+        width={720}
+        onCancel={onClose}
+        onOk={() => void handleSave()}
+      >
+        <Flex className='mb-3 items-center justify-end'>
+          <Button disabled={saving} icon={<RotateCcw size={14} />} size='small' onClick={resetDefaults}>
             恢复默认配置
           </Button>
         </Flex>
-      </Flex>
 
-      <div className='px-0.5'>
-        <AdvancedSettingRow
-          icon={<ScanFace className='size-4' />}
-          label='你的平台用户 ID'
-          labelExtra={
-            <Tooltip title='用于标识你在该平台上的身份；后续可用于访问控制与会话归属。'>
-              <CircleHelp className='size-3.5 cursor-help text-muted-foreground' />
-            </Tooltip>
-          }
-        >
-          <Input
-            placeholder='你的平台用户 ID'
-            style={{ width: PLATFORM_ID_CONTROL_WIDTH }}
-            value={draft.platformUserId}
-            onChange={(event) => patchDraft({ platformUserId: event.target.value })}
-          />
-        </AdvancedSettingRow>
+        <div className='px-0.5'>
+          <AdvancedSettingRow
+            icon={<ScanFace className='size-4' />}
+            label='你的平台用户 ID'
+            labelExtra={
+              <Tooltip title='填写 QQ OpenAPI 事件中的 tiny_id（不是 QQ 号）。先私信机器人一次，再从入站日志/事件中复制；用于白名单防锁定。'>
+                <CircleHelp className='size-3.5 cursor-help text-muted-foreground' />
+              </Tooltip>
+            }
+          >
+            <Input
+              placeholder='QQ tiny_id'
+              style={{ width: PLATFORM_ID_CONTROL_WIDTH }}
+              value={draft.platformUserId}
+              onChange={(event) => patchDraft({ platformUserId: event.target.value })}
+            />
+          </AdvancedSettingRow>
 
-        <AdvancedSettingRow icon={<Hash className='size-4' />} label='字符限制'>
-          <Input
-            inputMode='numeric'
-            placeholder={String(DEFAULT_CHAR_LIMIT)}
-            style={{ width: COMPACT_CONTROL_WIDTH }}
-            value={draft.charLimit}
-            onBlur={() => patchDraft({ charLimit: clampCharLimit(draft.charLimit) })}
-            onChange={(event) => patchDraft({ charLimit: digitsOnly(event.target.value) })}
-          />
-        </AdvancedSettingRow>
+          <AdvancedSettingRow
+            icon={<Hash className='size-4' />}
+            label='字符限制'
+            labelExtra={
+              <Tooltip title='单条出站消息的分片长度（最大 2000）。超长回复会拆成多条发送，被动回复窗口最多 5 条。'>
+                <CircleHelp className='size-3.5 cursor-help text-muted-foreground' />
+              </Tooltip>
+            }
+          >
+            <Input
+              inputMode='numeric'
+              placeholder={String(QQ_DEFAULT_CHAR_LIMIT)}
+              style={{ width: COMPACT_CONTROL_WIDTH }}
+              value={draft.charLimit}
+              onBlur={() => patchDraft({ charLimit: clampCharLimit(draft.charLimit) })}
+              onChange={(event) => patchDraft({ charLimit: digitsOnly(event.target.value) })}
+            />
+          </AdvancedSettingRow>
 
-        <AdvancedSettingRow icon={<ListFilter className='size-4' />} label='私信策略'>
-          <AccessPolicySelect
-            scope='dm'
-            value={draft.dmPolicy}
-            onChange={(dmPolicy) => patchDraft({ dmPolicy })}
-          />
-        </AdvancedSettingRow>
+          <AdvancedSettingRow icon={<ListFilter className='size-4' />} label='私信策略'>
+            <AccessPolicySelect
+              scope='dm'
+              value={draft.dmPolicy}
+              onChange={(dmPolicy) => patchDraft({ dmPolicy })}
+            />
+          </AdvancedSettingRow>
 
-        <AdvancedSettingRow icon={<ListFilter className='size-4' />} label='群组策略'>
-          <AccessPolicySelect
-            scope='group'
-            value={draft.groupPolicy}
-            onChange={(groupPolicy) => patchDraft({ groupPolicy })}
-          />
-        </AdvancedSettingRow>
+          <AdvancedSettingRow icon={<ListFilter className='size-4' />} label='群组策略'>
+            <AccessPolicySelect
+              scope='group'
+              value={draft.groupPolicy}
+              onChange={(groupPolicy) => patchDraft({ groupPolicy })}
+            />
+          </AdvancedSettingRow>
 
-        <AdvancedSettingRow icon={<Users className='size-4' />} label='允许的用户' wide>
-          <AllowedUsersEditor
-            users={draft.allowedUsers}
-            onAdd={addAllowedUser}
-            onChange={updateAllowedUser}
-            onRemove={removeAllowedUser}
-          />
-        </AdvancedSettingRow>
-      </div>
-    </Modal>
-  )
-})
+          <AdvancedSettingRow icon={<Users className='size-4' />} label='允许的用户' wide>
+            <AllowedUsersEditor
+              users={draft.allowedUsers}
+              onAdd={addAllowedUser}
+              onChange={updateAllowedUser}
+              onRemove={removeAllowedUser}
+            />
+          </AdvancedSettingRow>
+        </div>
+      </Modal>
+    )
+  }
+)
 
 QQAdvancedSettingsModal.displayName = 'QQAdvancedSettingsModal'
 

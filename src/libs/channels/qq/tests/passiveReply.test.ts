@@ -8,7 +8,7 @@ describe('resolveQQPassiveReply', () => {
   it('requires a recent inbound msg_id for group threads', () => {
     expect(
       resolveQQPassiveReply({
-        hasAgentReply: false,
+        agentReplyCount: 0,
         outboundCount: 0,
         threadType: 'group',
       })
@@ -21,7 +21,7 @@ describe('resolveQQPassiveReply', () => {
   it('rejects group replies after the 5 minute window', () => {
     expect(
       resolveQQPassiveReply({
-        hasAgentReply: false,
+        agentReplyCount: 0,
         inboundCreatedAt,
         now: new Date('2026-09-07T08:06:00.000Z'),
         outboundCount: 0,
@@ -34,7 +34,7 @@ describe('resolveQQPassiveReply', () => {
   it('increments msg_seq after an agent reply and completed outbound', () => {
     expect(
       resolveQQPassiveReply({
-        hasAgentReply: true,
+        agentReplyCount: 1,
         inboundCreatedAt,
         now: new Date('2026-09-07T08:01:00.000Z'),
         outboundCount: 1,
@@ -47,10 +47,26 @@ describe('resolveQQPassiveReply', () => {
     })
   })
 
+  it('accounts for multi-chunk agent replies when allocating msg_seq', () => {
+    expect(
+      resolveQQPassiveReply({
+        agentReplyCount: 3,
+        inboundCreatedAt,
+        now: new Date('2026-09-07T08:01:00.000Z'),
+        outboundCount: 0,
+        platformMessageId: 'msg-1',
+        threadType: 'group',
+      })
+    ).toEqual({
+      ok: true,
+      reply: { msgId: 'msg-1', msgSeq: 4 },
+    })
+  })
+
   it('allows c2c replies within 60 minutes', () => {
     expect(
       resolveQQPassiveReply({
-        hasAgentReply: false,
+        agentReplyCount: 0,
         inboundCreatedAt,
         now: new Date('2026-09-07T08:50:00.000Z'),
         outboundCount: 0,

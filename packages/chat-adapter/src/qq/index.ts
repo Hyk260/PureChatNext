@@ -1,6 +1,14 @@
 /** `@pure/chat-adapter/qq`：面向 Vercel Chat SDK 的 QQ Bot 适配器。 */
 export { createQQAdapter, QQAdapter } from './adapter'
-export { QQApiClient, type RichMediaFileType, type RichMediaSource } from './api'
+export {
+  chunkQQText,
+  chunkQQTextLimited,
+  QQApiClient,
+  QQ_MAX_PASSIVE_REPLIES,
+  QQ_MAX_TEXT_LENGTH,
+  type RichMediaFileType,
+  type RichMediaSource,
+} from './api'
 export { toQQMediaFileType } from './mediaType'
 export { signWebhookResponse, verifyWebhookSignature } from './crypto'
 export { QQFormatConverter } from './format-converter'

@@ -17,7 +17,7 @@ import type {
 import mime from 'mime'
 import { resolveMimeTypeFromBytes } from '@pure/utils'
 
-import { QQApiClient } from './api'
+import { QQApiClient, QQ_MAX_PASSIVE_REPLIES, QQ_MAX_TEXT_LENGTH, chunkQQText, chunkQQTextLimited } from './api'
 import { toQQMediaFileType } from './mediaType'
 import { signWebhookResponse } from './crypto'
 import { QQFormatConverter } from './format-converter'
@@ -251,27 +251,66 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     const { type, id, guildId } = this.decodeThreadId(threadId)
     const text = this.formatConverter.renderPostable(message)
     const media = this.collectOutboundMedia(message)
+    const sendableMedia =
+      type === 'group' || type === 'c2c' ? media : ([] as typeof media)
+    if (media.length > 0 && sendableMedia.length === 0) {
+      this.logger.warn('QQ media delivery is unsupported for thread type=%s', type)
+    }
 
     let response
     if (text.trim()) {
-      const replyOpts = this.consumeReplyOptions(threadId)
-      response = await this.sendTextMessage(type, id, guildId, text, replyOpts)
+      // 对齐微信分片，并受被动回复窗口上限约束（为媒体预留槽位）。
+      const textBudget = this.remainingPassiveReplies(threadId, sendableMedia.length)
+      const chunks =
+        textBudget === null ? chunkQQText(text) : chunkQQTextLimited(text, QQ_MAX_TEXT_LENGTH, textBudget)
+      if (textBudget !== null && chunks.length === 0) {
+        this.logger.warn('QQ passive reply budget exhausted before text for thread=%s', threadId)
+        throw new Error('QQ passive reply budget exhausted')
+      }
+      for (const chunk of chunks) {
+        const piece = chunk.trim()
+        if (!piece) continue
+        const replyOpts = this.consumeReplyOptions(threadId)
+        response = await this.sendTextMessage(type, id, guildId, piece, replyOpts)
+      }
     }
 
-    for (const item of media) {
-      if (type !== 'group' && type !== 'c2c') {
-        this.logger.warn('QQ media delivery is unsupported for thread type=%s', type)
-        break
-      }
+    const mediaBudget = this.remainingPassiveReplies(threadId)
+    const mediaToSend =
+      mediaBudget === null ? sendableMedia : sendableMedia.slice(0, Math.max(0, mediaBudget))
+    if (mediaToSend.length < sendableMedia.length) {
+      this.logger.warn(
+        'QQ passive reply budget caps media %d→%d for thread=%s',
+        sendableMedia.length,
+        mediaToSend.length,
+        threadId
+      )
+    }
+    if (sendableMedia.length > 0 && mediaToSend.length === 0 && !response) {
+      throw new Error('QQ passive reply budget exhausted')
+    }
+    for (const item of mediaToSend) {
       const uploaded = await this.uploadRichMedia(type, id, item)
       const replyOpts = this.consumeReplyOptions(threadId)
       response = await this.sendRichMedia(type, id, uploaded.file_info, replyOpts)
     }
 
-    // 文本与媒体均未发出时补发空格，保证会话有可感知的响应。
+    // 无文本/媒体可发时不再补空格：空消息会显示成「空 @用户」，并白白占用被动回复名额。
     if (!response) {
-      const replyOpts = this.consumeReplyOptions(threadId)
-      response = await this.sendTextMessage(type, id, guildId, ' ', replyOpts)
+      if (text.trim() || sendableMedia.length > 0) {
+        throw new Error('QQ outbound send produced no messages')
+      }
+      const emptyId = `qq-local-${Date.now()}`
+      return {
+        id: emptyId,
+        raw: {
+          author: { id: this._botUserId || '' },
+          content: '',
+          id: emptyId,
+          timestamp: new Date().toISOString(),
+        } as QQRawMessage,
+        threadId,
+      }
     }
 
     return {
@@ -360,6 +399,17 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     const msgSeq = ctx.msgSeq
     this.replyContext.set(threadId, { msgId: ctx.msgId, msgSeq: msgSeq + 1 })
     return { msgId: ctx.msgId, msgSeq }
+  }
+
+  /**
+   * 当前被动窗口内还可发送的条数（已占用 `msgSeq` 之前的序号）。
+   * 无被动上下文时返回 `null`（不按被动上限截断）。
+   */
+  private remainingPassiveReplies(threadId: string, reservedSlots = 0): number | null {
+    const ctx = this.replyContext.get(threadId)
+    if (!ctx?.msgId) return null
+    const remaining = QQ_MAX_PASSIVE_REPLIES - ctx.msgSeq + 1
+    return Math.max(0, remaining - Math.max(0, reservedSlots))
   }
 
   /** 编辑消息；QQ 不支持原地编辑时退化为发送新消息。 */

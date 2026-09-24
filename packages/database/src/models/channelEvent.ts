@@ -234,6 +234,8 @@ export class ChannelEventModel {
       errorMessage?: string
       model?: string
       provider?: string
+      /** 实际发出的被动回复条数（分片后可能 > 1）。 */
+      sentChunkCount?: number
       status?: 'completed' | 'failed'
       text: string
     }
@@ -247,6 +249,7 @@ export class ChannelEventModel {
         ...(response.errorMessage === undefined ? {} : { lastErrorMessage: response.errorMessage.slice(0, 500) }),
         ...(response.model ? { model: response.model } : {}),
         ...(response.provider ? { provider: response.provider } : {}),
+        ...(response.sentChunkCount === undefined ? {} : { sentChunkCount: response.sentChunkCount }),
         ...(response.status === 'completed' ? { completedAt: now } : {}),
         responseText: response.text,
         status: response.status ?? 'completed',

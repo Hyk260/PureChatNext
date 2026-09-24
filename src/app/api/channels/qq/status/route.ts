@@ -5,7 +5,7 @@ import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelB
 import { appEnv } from '@/envs/app'
 import { gatewayEnv } from '@/envs/gateway'
 import { withAuth } from '@/libs/auth/get-session-user'
-import { decryptCredentials } from '@/libs/channels/qq'
+import { decryptCredentials, normalizeQQChannelSettings } from '@/libs/channels/qq'
 import { ensureChannelGatewayRunning } from '@/server/channel-gateway'
 
 const log = debug('channel:qq:status')
@@ -100,6 +100,7 @@ export const GET = withAuth(async (_request, { userId }) => {
     model: binding.model,
     provider: binding.provider,
     runtimeStatus,
+    settings: normalizeQQChannelSettings(binding.settings),
     webhookUrl: webhookUrl.toString(),
   })
 })

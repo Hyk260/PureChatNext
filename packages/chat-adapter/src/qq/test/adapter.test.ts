@@ -517,6 +517,77 @@ describe('QQAdapter', () => {
         expect.objectContaining({ msgId: 'inbound_msg_99', msgSeq: 2 })
       )
     })
+
+    it('should chunk long text and increment msg_seq per chunk', async () => {
+      const sendSpy = vi
+        .spyOn((adapter as any).api, 'sendGroupMessage')
+        .mockResolvedValue({ id: 'out_1', timestamp: '2024-01-01T00:00:01Z' })
+
+      const payload = makeWebhookPayload(QQ_EVENT_TYPES.GROUP_AT_MESSAGE_CREATE, {
+        content: 'hi',
+        group_openid: 'group_abc',
+        id: 'inbound_msg_long',
+      })
+      await adapter.handleWebhook(makeRequest(payload))
+
+      const longText = 'a'.repeat(4500)
+      await adapter.postMessage('qq:group:group_abc', { markdown: longText } as any)
+
+      expect(sendSpy.mock.calls.length).toBeGreaterThanOrEqual(3)
+      expect(sendSpy.mock.calls[0][1]).toHaveLength(2000)
+      expect(sendSpy.mock.calls[1][1]).toHaveLength(2000)
+      const lastChunk = sendSpy.mock.calls.at(-1)?.[1] as string
+      expect(lastChunk.length).toBeGreaterThan(0)
+      expect(lastChunk.length).toBeLessThanOrEqual(2000)
+      expect(sendSpy.mock.calls.map((call) => call[2]?.msgSeq)).toEqual(
+        Array.from({ length: sendSpy.mock.calls.length }, (_, index) => index + 1)
+      )
+    })
+
+    it('should cap text chunks within the passive reply budget', async () => {
+      const sendSpy = vi
+        .spyOn((adapter as any).api, 'sendGroupMessage')
+        .mockResolvedValue({ id: 'out_1', timestamp: '2024-01-01T00:00:01Z' })
+
+      const payload = makeWebhookPayload(QQ_EVENT_TYPES.GROUP_AT_MESSAGE_CREATE, {
+        content: 'hi',
+        group_openid: 'group_abc',
+        id: 'inbound_msg_cap',
+      })
+      await adapter.handleWebhook(makeRequest(payload))
+
+      // 6 * 2000 would exceed the 5-slot passive window — expect at most 5 sends.
+      await adapter.postMessage('qq:group:group_abc', { markdown: 'a'.repeat(12_000) } as any)
+
+      expect(sendSpy.mock.calls.length).toBeLessThanOrEqual(5)
+      expect(sendSpy.mock.calls.map((call) => call[2]?.msgSeq)).toEqual(
+        Array.from({ length: sendSpy.mock.calls.length }, (_, index) => index + 1)
+      )
+    })
+
+    it('should throw instead of sending blank placeholders when budget is exhausted', async () => {
+      const sendSpy = vi
+        .spyOn((adapter as any).api, 'sendGroupMessage')
+        .mockResolvedValue({ id: 'out_1', timestamp: '2024-01-01T00:00:01Z' })
+
+      const payload = makeWebhookPayload(QQ_EVENT_TYPES.GROUP_AT_MESSAGE_CREATE, {
+        content: 'hi',
+        group_openid: 'group_abc',
+        id: 'inbound_msg_budget',
+      })
+      await adapter.handleWebhook(makeRequest(payload))
+
+      await adapter.postMessage('qq:group:group_abc', { markdown: 'a'.repeat(10_000) } as any)
+      const sentAfterFill = sendSpy.mock.calls.length
+      expect(sentAfterFill).toBe(5)
+
+      await expect(
+        adapter.postMessage('qq:group:group_abc', { markdown: 'should not send' } as any)
+      ).rejects.toThrow(/passive reply budget exhausted/)
+
+      expect(sendSpy.mock.calls.length).toBe(sentAfterFill)
+      expect(sendSpy.mock.calls.every((call) => String(call[1]).trim().length > 0)).toBe(true)
+    })
   })
 })
 

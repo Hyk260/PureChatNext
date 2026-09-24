@@ -2,7 +2,7 @@ import { and, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { channelBindings, channelEvents, channelSessions } from '../schemas/channel'
-import type { ChannelBindingItem, NewChannelBinding } from '../schemas/channel'
+import type { ChannelBindingItem, ChannelBindingSettings, NewChannelBinding } from '../schemas/channel'
 import type { ChatDatabase } from '../type'
 
 export const WECHAT_PLATFORM = 'wechat' as const
@@ -163,6 +163,15 @@ export class ChannelBindingModel {
         )
       return updated ?? null
     })
+  }
+
+  updateSettings = async (userId: string, platform: string, settings: ChannelBindingSettings) => {
+    const [updated] = await this.db
+      .update(channelBindings)
+      .set({ settings, updatedAt: new Date() })
+      .where(and(eq(channelBindings.userId, userId), eq(channelBindings.platform, platform)))
+      .returning()
+    return updated ?? null
   }
 
   markNeedsRebind = async (id: string) => {

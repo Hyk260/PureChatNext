@@ -226,8 +226,11 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
   }
 
   const inFlightChunks = event && event.status !== 'completed' ? event.sentChunkCount : 0
+  const agentReplyCount = inbound?.responseText?.trim()
+    ? Math.max(inbound.sentChunkCount || 0, 1)
+    : 0
   const reply = resolveQQPassiveReply({
-    hasAgentReply: Boolean(inbound?.responseText?.trim()),
+    agentReplyCount,
     inboundCreatedAt: inbound?.createdAt,
     outboundCount: outboundCount + inFlightChunks,
     platformMessageId: inbound?.platformMessageId,
@@ -294,8 +297,8 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
           chunksSent += 1
           await eventModel.setOutboundSentChunkCount(event!.id, chunksSent)
         },
-        onTextSent: async () => {
-          chunksSent += 1
+        onTextSent: async (chunkCount = 1) => {
+          chunksSent += chunkCount
           await eventModel.setOutboundSentChunkCount(event!.id, chunksSent, { textSent: true })
         },
         reply: reply.reply,

@@ -1,7 +1,7 @@
 import { QQApiClient, toQQMediaFileType } from '@pure/chat-adapter/qq'
-
 import type { ChannelBindingItem, ChannelSessionItem } from '@pure/database/schemas/channel'
 
+import { normalizeQQChannelSettings, chunkQQOutboundText } from './advancedSettings'
 import { decryptCredentials } from './encrypt'
 import { QQ_MAX_OUTBOUND_FILE_BYTES, qqOutboundFileLimitLabel } from './outboundLimits'
 import { QQ_MAX_PASSIVE_REPLIES, type QQPassiveReplyOptions } from './passiveReply'
@@ -36,7 +36,7 @@ export async function sendQQDevOutbound(params: {
   binding: ChannelBindingItem
   media?: QQOutboundMedia[]
   onMediaSent?: (index: number) => Promise<void> | void
-  onTextSent?: () => Promise<void> | void
+  onTextSent?: (chunkCount: number) => Promise<void> | void
   reply: QQPassiveReplyOptions
   session: ChannelSessionItem
   text?: string
@@ -63,7 +63,9 @@ export async function sendQQDevOutbound(params: {
     throw new QQOutboundError('群聊仅支持发送图片附件')
   }
 
-  const messageCount = (text ? 1 : 0) + media.length
+  const charLimit = normalizeQQChannelSettings(params.binding.settings).charLimit
+  const textChunks = text ? chunkQQOutboundText(text, charLimit) : []
+  const messageCount = textChunks.length + media.length
   if (params.reply.msgSeq + messageCount - 1 > QQ_MAX_PASSIVE_REPLIES) {
     throw new QQOutboundError(`该条消息剩余被动回复次数不足（需 ${messageCount} 次，上限 ${QQ_MAX_PASSIVE_REPLIES}）`)
   }
@@ -79,26 +81,26 @@ export async function sendQQDevOutbound(params: {
     return reply
   }
 
-  if (text) {
+  for (const chunk of textChunks) {
     const replyOpts = nextReply()
     switch (target.type) {
       case 'group':
-        await api.sendGroupMessage(target.id, text, replyOpts)
+        await api.sendGroupMessage(target.id, chunk, replyOpts)
         break
       case 'guild':
-        await api.sendGuildMessage(target.id, text, replyOpts)
+        await api.sendGuildMessage(target.id, chunk, replyOpts)
         break
       case 'c2c':
-        await api.sendC2CMessage(target.id, text, replyOpts)
+        await api.sendC2CMessage(target.id, chunk, replyOpts)
         break
       case 'dms':
-        await api.sendDmsMessage(target.id, text, replyOpts)
+        await api.sendDmsMessage(target.id, chunk, replyOpts)
         break
       default:
         throw new QQOutboundError('当前会话类型不支持代发文本')
     }
     sentCount += 1
-    await params.onTextSent?.()
+    await params.onTextSent?.(1)
   }
 
   for (const [index, item] of media.entries()) {

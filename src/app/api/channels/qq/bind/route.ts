@@ -4,10 +4,11 @@ import type { NextRequest } from 'next/server'
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
-import { decryptCredentials, encryptCredentials, invalidateQQChat } from '@/libs/channels/qq'
+import { decryptCredentials, encryptCredentials, invalidateQQChat, normalizeQQChannelSettings } from '@/libs/channels/qq'
 import type { QQConnectionMode } from '@/libs/channels/qq'
 import { isQQProviderId, qqChannelByokUnavailableReason, validateQQModel } from '@/libs/channels/qq/agentSupport'
 import type { QQProviderId } from '@/libs/channels/qq/agentSupport'
+import { parseQQChannelSettingsInput } from '@/libs/channels/qq/advancedSettings'
 import { bindQQCredentials, QQBindingError } from '@/libs/channels/qq/binding'
 import { gatewayEnv } from '@/envs/gateway'
 import { cancelQQQrSessionsForUser } from '@/libs/channels/qq/qrSession'
@@ -129,9 +130,15 @@ export const DELETE = withAuth(async (_request, { userId }) => {
   return NextResponse.json({ ok: true })
 })
 
-/** PATCH /api/channels/qq/bind — 更新绑定的 Agent、模型或 connectionMode */
+/** PATCH /api/channels/qq/bind — 更新绑定的 Agent、模型、connectionMode 或高级设置 */
 export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
-  let body: { agentId?: string; connectionMode?: string; model?: string; provider?: string }
+  let body: {
+    agentId?: string
+    connectionMode?: string
+    model?: string
+    provider?: string
+    settings?: unknown
+  }
   try {
     body = await request.json()
   } catch {
@@ -141,6 +148,28 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
   const bindingModel = new ChannelBindingModel()
   const existing = await bindingModel.findByUserAndPlatform(userId, QQ_PLATFORM)
   if (!existing) return jsonError('QQ not connected', 404)
+
+  if (body.settings !== undefined) {
+    if (body.agentId !== undefined || body.connectionMode !== undefined || body.model !== undefined || body.provider !== undefined) {
+      return jsonError('settings cannot be combined with agentId/connectionMode/model/provider', 400)
+    }
+    if (!body.settings || typeof body.settings !== 'object' || Array.isArray(body.settings)) {
+      return jsonError('settings must be an object', 400)
+    }
+    const existingSettings = normalizeQQChannelSettings(existing.settings)
+    const parsed = parseQQChannelSettingsInput({
+      ...existingSettings,
+      ...(body.settings as Record<string, unknown>),
+    })
+    if (!parsed.ok) return jsonError(parsed.error, 400)
+    // settings 每次入站从 DB 读取，不在 ChatBot fingerprint 内，无需 invalidate
+    const updated = await bindingModel.updateSettings(userId, QQ_PLATFORM, parsed.settings)
+    if (!updated) return jsonError('QQ not connected', 404)
+    return NextResponse.json({
+      ok: true,
+      settings: normalizeQQChannelSettings(updated.settings),
+    })
+  }
 
   const nextConnectionMode =
     body.connectionMode === undefined ? undefined : parseConnectionMode(body.connectionMode)
@@ -231,5 +260,5 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     })
   }
 
-  return jsonError('agentId or connectionMode is required')
+  return jsonError('agentId, connectionMode or settings is required')
 })

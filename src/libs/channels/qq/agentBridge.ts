@@ -7,6 +7,7 @@ import debug from 'debug'
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
+import { chunkQQTextLimited } from '@pure/chat-adapter/qq'
 import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
 import type { ChannelToolArtifact, ChannelToolContext } from '@/server/chat/toolRegistry'
 
@@ -20,11 +21,50 @@ import { prepareQQFileForAgent } from './inboundMedia'
 import type { PreparedQQFile } from './inboundMedia'
 import { beginQQGeneration, endQQGeneration, flushQQChatInvalidation, tryHandleQQCommand } from './commands'
 import { formatQQAttachmentContext, formatQQUnsupportedMessage, logQQInbound, resolveQQInboundKind } from './inboundLog'
+import {
+  evaluateQQInboundAccess,
+  normalizeQQChannelSettings,
+  QQ_MIN_CHAR_LIMIT,
+  QQ_PLATFORM_MAX_TEXT_LENGTH,
+} from './advancedSettings'
+import { QQ_MAX_PASSIVE_REPLIES } from './passiveReply'
 import { buildQQPlatformPayload, resolveQQAuthorLabel, resolveQQSessionLabel, resolveQQThreadType } from './thread'
 
 const log = debug('channel:qq:bridge')
 export const QQ_UNSUPPORTED_MESSAGE = formatQQUnsupportedMessage
 const QQ_FAILURE_MESSAGE = '消息处理失败，请稍后重试。'
+
+/**
+ * 按 `charLimit` 分片后多次 `thread.post`（对齐微信多条发送）。
+ * 被动回复窗口最多 {@link QQ_MAX_PASSIVE_REPLIES} 条，超出部分截断并加省略号。
+ * 中途配额耗尽时保留已发出的分片（不抛错），避免网页侧整单标失败、也不再补空消息。
+ */
+async function postQQMarkdown(
+  thread: Thread,
+  text: string,
+  charLimit: number
+): Promise<{ sentCount: number; text: string }> {
+  const limit = Math.min(QQ_PLATFORM_MAX_TEXT_LENGTH, Math.max(QQ_MIN_CHAR_LIMIT, Math.round(charLimit)))
+  const chunks = chunkQQTextLimited(text, limit, QQ_MAX_PASSIVE_REPLIES)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+  if (chunks.length === 0) return { sentCount: 0, text }
+
+  const sentParts: string[] = []
+  for (const chunk of chunks) {
+    try {
+      await thread.post(chunk)
+      sentParts.push(chunk)
+    } catch (error) {
+      if (sentParts.length > 0) {
+        log('postQQMarkdown stopped after %d/%d chunks: %O', sentParts.length, chunks.length, error)
+        return { sentCount: sentParts.length, text: sentParts.join('') }
+      }
+      throw error
+    }
+  }
+  return { sentCount: sentParts.length, text: sentParts.join('') }
+}
 
 function buildQQUserText(message: Message, text?: string): string | undefined {
   const attachmentText = formatQQAttachmentContext(message.attachments)
@@ -213,6 +253,9 @@ export async function handleQQMention(params: {
 
   if (message.author?.isBot === true) return
 
+  const settings = normalizeQQChannelSettings(
+    (await new ChannelBindingModel().findById(bindingId))?.settings
+  )
   const userText = buildQQUserText(message, message.text?.trim())
   const externalUserId = thread.id
   const messageKind = resolveQQInboundKind({ attachments: message.attachments, text: userText })
@@ -225,13 +268,41 @@ export async function handleQQMention(params: {
 
   const eventModel = new ChannelEventModel()
   const threadType = resolveQQThreadType(thread.id)
+  const authorId = message.author?.userId || 'unknown'
   const platformPayload = buildQQPlatformPayload({
     attachments: message.attachments,
-    authorId: message.author?.userId || 'unknown',
+    authorId,
     authorName: resolveQQAuthorLabel(message),
     threadId: thread.id,
     threadType,
   })
+
+  const access = evaluateQQInboundAccess({
+    authorId,
+    settings,
+    threadType,
+  })
+  if (!access.ok) {
+    const { event, inserted } = await eventModel.ingestQQInbound({
+      bindingId,
+      content: userText || access.notice,
+      externalUserId,
+      externalUserName: resolveQQSessionLabel(thread, message),
+      messageKind: messageKind === 'audio' || messageKind === 'video' ? messageKind : 'text',
+      platformMessageId: message.id,
+      platformPayload,
+      threadType,
+    })
+    if (!inserted) return
+    const posted = await postQQMarkdown(thread, access.notice, settings.charLimit).catch((error) => {
+      log('access rejection reply failed app=%s: %O', applicationId, error)
+      return { sentCount: 0, text: access.notice }
+    })
+    await eventModel
+      .saveQQResponse(event.id, { sentChunkCount: posted.sentCount, text: posted.text })
+      .catch((saveError) => log('save access rejection failed app=%s: %O', applicationId, saveError))
+    return
+  }
 
   if (messageKind === 'audio' || messageKind === 'video') {
     const unsupportedMessage = QQ_UNSUPPORTED_MESSAGE(messageKind)
@@ -246,11 +317,12 @@ export async function handleQQMention(params: {
       threadType,
     })
     if (!inserted) return
-    await thread.post({ markdown: unsupportedMessage }).catch((error) => {
+    const posted = await postQQMarkdown(thread, unsupportedMessage, settings.charLimit).catch((error) => {
       log('unsupported message reply failed app=%s: %O', applicationId, error)
+      return { sentCount: 0, text: unsupportedMessage }
     })
     await eventModel
-      .saveQQResponse(event.id, { text: unsupportedMessage })
+      .saveQQResponse(event.id, { sentChunkCount: posted.sentCount, text: posted.text })
       .catch((saveError) => log('save unsupported event failed app=%s: %O', applicationId, saveError))
     return
   }
@@ -289,9 +361,9 @@ export async function handleQQMention(params: {
     })
     if (commandReply) {
       const reply = await finalizeQQOutbound({ agentId, reply: commandReply, userId })
-      await thread.post({ markdown: reply })
+      const outbound = await postQQMarkdown(thread, reply, settings.charLimit)
       await eventModel
-        .saveQQResponse(event.id, { text: reply })
+        .saveQQResponse(event.id, { sentChunkCount: outbound.sentCount, text: outbound.text })
         .catch((saveError) => log('save command event failed app=%s: %O', applicationId, saveError))
       void flushQQChatInvalidation(applicationId).catch((error) => {
         log('invalidate after command failed app=%s: %O', applicationId, error)
@@ -352,12 +424,13 @@ export async function handleQQMention(params: {
         },
       })
       const finalReply = await finalizeQQOutbound({ agentId, reply, userId })
-      await thread.post({ markdown: finalReply })
+      const outbound = await postQQMarkdown(thread, finalReply, settings.charLimit)
       await eventModel
         .saveQQResponse(event.id, {
           ...(model ? { model } : {}),
           ...(provider ? { provider } : {}),
-          text: finalReply,
+          sentChunkCount: outbound.sentCount,
+          text: outbound.text,
         })
         .catch((saveError) => log('save reply event failed app=%s: %O', applicationId, saveError))
     } finally {
@@ -377,13 +450,27 @@ export async function handleQQMention(params: {
       return
     }
     log('handleMention failed agent=%s: %O', agentId, error)
+    const errorMessage = error instanceof Error ? error.message : 'QQ message processing failed'
+    // 配额耗尽时再发失败提示只会继续 40034128，且把已成功的分片在网页标成失败。
+    if (/passive reply budget exhausted|40034128/.test(errorMessage)) {
+      await eventModel
+        .saveQQResponse(event.id, {
+          errorCode: 'PASSIVE_REPLY_BUDGET',
+          errorMessage,
+          status: 'failed',
+          text: '',
+        })
+        .catch((saveError) => log('save budget-exhausted event failed app=%s: %O', applicationId, saveError))
+      return
+    }
     try {
-      await thread.post({ markdown: QQ_FAILURE_MESSAGE })
+      const outbound = await postQQMarkdown(thread, QQ_FAILURE_MESSAGE, settings.charLimit)
       await eventModel.saveQQResponse(event.id, {
         errorCode: 'PROCESSING_ERROR',
-        errorMessage: error instanceof Error ? error.message : 'QQ message processing failed',
+        errorMessage,
+        sentChunkCount: outbound.sentCount,
         status: 'failed',
-        text: QQ_FAILURE_MESSAGE,
+        text: outbound.text,
       })
     } catch (sendError) {
       log('failure reply failed app=%s: %O', applicationId, sendError)

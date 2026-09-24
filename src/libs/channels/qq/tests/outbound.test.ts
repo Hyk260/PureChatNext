@@ -128,6 +128,33 @@ describe('sendQQDevOutbound', () => {
     expect(mocks.sendC2CMedia).toHaveBeenCalledWith('user-1', 'file-info-1', { msgId: 'msg-3', msgSeq: 2 })
   })
 
+  it('chunks long text into multiple sends with incremented msg_seq', async () => {
+    const longText = 'a'.repeat(4500)
+    await sendQQDevOutbound({
+      binding,
+      reply: { msgId: 'msg-long', msgSeq: 1 },
+      session,
+      text: longText,
+    })
+    expect(mocks.sendC2CMessage).toHaveBeenCalledTimes(3)
+    expect(mocks.sendC2CMessage.mock.calls.map((call) => call[2])).toEqual([
+      { msgId: 'msg-long', msgSeq: 1 },
+      { msgId: 'msg-long', msgSeq: 2 },
+      { msgId: 'msg-long', msgSeq: 3 },
+    ])
+  })
+
+  it('rejects when chunked text exceeds remaining passive replies', async () => {
+    await expect(
+      sendQQDevOutbound({
+        binding,
+        reply: { msgId: 'msg-full', msgSeq: 4 },
+        session,
+        text: 'a'.repeat(4500),
+      })
+    ).rejects.toThrow('剩余被动回复次数不足')
+  })
+
   it('rejects non-image attachments for group threads', async () => {
     await expect(
       sendQQDevOutbound({

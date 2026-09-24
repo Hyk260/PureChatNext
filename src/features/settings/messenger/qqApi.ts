@@ -1,5 +1,14 @@
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
+import type {
+  QQAccessPolicy,
+  QQAllowedUser,
+  QQChannelSettings,
+} from '@/libs/channels/qq/advancedSettings'
+
+export type { QQAccessPolicy, QQAllowedUser }
+export type QQAdvancedSettings = QQChannelSettings
+
 export type QQConnectionMode = 'websocket' | 'webhook'
 export type QQProviderId = 'purechat' | 'openai' | 'deepseek'
 export type QQConfiguration = { agentId: string; model: string; provider: QQProviderId }
@@ -18,6 +27,7 @@ export type QQStatus = {
   model?: string | null
   provider?: QQProviderId | null
   runtimeStatus?: string
+  settings?: QQAdvancedSettings
   webhookUrl?: string
 }
 
@@ -111,4 +121,14 @@ export async function updateQQConfiguration(config: QQConfiguration): Promise<vo
   if (!res.ok) {
     throw await readApiError(res, `update configuration failed: ${res.status}`)
   }
+}
+
+export async function updateQQAdvancedSettings(settings: QQAdvancedSettings): Promise<QQAdvancedSettings> {
+  const res = await apiFetch('/api/channels/qq/bind', jsonInit({ settings }, { method: 'PATCH' }))
+  if (!res.ok) {
+    throw await readApiError(res, `update settings failed: ${res.status}`)
+  }
+  const body = (await res.json()) as { settings?: QQAdvancedSettings }
+  if (!body.settings) throw new Error('update settings returned empty payload')
+  return body.settings
 }

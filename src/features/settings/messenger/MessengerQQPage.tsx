@@ -268,7 +268,12 @@ const MessengerQQPage = memo(() => {
 
   const headerAction = (
     <Flex className='items-center gap-2'>
-      <Button icon={<Settings2Icon size={16} />} onClick={() => setAdvancedOpen(true)}>
+      <Button
+        disabled={showConnect}
+        icon={<Settings2Icon size={16} />}
+        title={showConnect ? '请先连接 QQ' : undefined}
+        onClick={() => setAdvancedOpen(true)}
+      >
         高级设置
       </Button>
       {isAdminRole(session?.user?.role) ? (
@@ -323,7 +328,17 @@ const MessengerQQPage = memo(() => {
       <MessengerCommandList platform='qq' />
 
       {advancedOpen ? (
-        <QQAdvancedSettingsModal open onClose={() => setAdvancedOpen(false)} />
+        <QQAdvancedSettingsModal
+          initialSettings={status?.settings}
+          open
+          onClose={() => setAdvancedOpen(false)}
+          onSaved={(settings) => {
+            void mutateStatus(
+              (current) => (current ? { ...current, settings } : current),
+              { revalidate: false }
+            )
+          }}
+        />
       ) : null}
     </MessengerDetailShell>
   )

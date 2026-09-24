@@ -1,3 +1,4 @@
+export * from './advancedSettings'
 export * from './encrypt'
 export * from './agentBridge'
 export * from './chatBot'

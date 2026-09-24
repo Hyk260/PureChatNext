@@ -6,6 +6,13 @@ const mocks = vi.hoisted(() => ({
   decryptCredentials: vi.fn(),
   ensureChannelGatewayRunning: vi.fn().mockResolvedValue(undefined),
   findByUserAndPlatform: vi.fn(),
+  normalizeQQChannelSettings: vi.fn((raw: unknown) => raw ?? {
+    allowedUsers: [],
+    charLimit: 2000,
+    dmPolicy: 'open',
+    groupPolicy: 'open',
+    platformUserId: '',
+  }),
 }))
 
 vi.mock('@/envs/app', () => ({ appEnv: { APP_URL: 'https://chat.example.com/' } }))
@@ -22,7 +29,10 @@ vi.mock('@pure/database/models/channelBinding', () => ({
   },
   QQ_PLATFORM: 'qq',
 }))
-vi.mock('@/libs/channels/qq', () => ({ decryptCredentials: mocks.decryptCredentials }))
+vi.mock('@/libs/channels/qq', () => ({
+  decryptCredentials: mocks.decryptCredentials,
+  normalizeQQChannelSettings: mocks.normalizeQQChannelSettings,
+}))
 vi.mock('@/server/channel-gateway', () => ({
   ensureChannelGatewayRunning: mocks.ensureChannelGatewayRunning,
 }))

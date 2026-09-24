@@ -5,6 +5,22 @@ import { timestamptz, timestamps, varchar255 } from './_helpers'
 import { users } from './user'
 import { files } from './file'
 
+/** QQ / 通用渠道高级设置（持久化在 channel_bindings.settings）。 */
+export type ChannelAccessPolicy = 'allowlist' | 'disabled' | 'open'
+
+export type ChannelAllowedUser = {
+  platformUserId: string
+  remark?: string
+}
+
+export type ChannelBindingSettings = {
+  allowedUsers?: ChannelAllowedUser[]
+  charLimit?: number
+  dmPolicy?: ChannelAccessPolicy
+  groupPolicy?: ChannelAccessPolicy
+  platformUserId?: string
+}
+
 /**
  * 第三方消息渠道绑定（微信 iLink / QQ 开放平台等）。
  * credentials 为加密/服务端-only 文本，勿下发到客户端。
@@ -27,6 +43,8 @@ export const channelBindings = pgTable(
     /** 微信渠道固定模型配置；其他渠道保持 null。 */
     provider: varchar255('provider'),
     model: varchar255('model'),
+    /** 渠道高级设置（访问策略、字符限制等）；微信可空。 */
+    settings: jsonb('settings').$type<ChannelBindingSettings>(),
     enabled: boolean('enabled').notNull().default(true),
     /** 会话过期等，需用户重新扫码 */
     needsRebind: boolean('needs_rebind').notNull().default(false),

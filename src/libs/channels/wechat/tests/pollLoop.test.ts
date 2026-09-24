@@ -50,6 +50,7 @@ function binding(): ChannelBindingItem {
     pollCursor: null,
     provider: null,
     runtimeStatus: 'starting',
+    settings: null,
     updatedAt: now,
     userId: 'user-1',
   }

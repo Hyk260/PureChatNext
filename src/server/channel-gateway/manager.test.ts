@@ -58,6 +58,7 @@ function binding(overrides: Partial<ChannelBindingItem> = {}): ChannelBindingIte
     updatedAt: now,
     userId: 'user-1',
     ...overrides,
+    settings: overrides.settings ?? null,
   }
 }
 

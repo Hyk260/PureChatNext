@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest'
+
 import type { QQChannelSettings } from '@/libs/channels/qq/advancedSettings'
 import {
   DEFAULT_QQ_CHANNEL_SETTINGS,

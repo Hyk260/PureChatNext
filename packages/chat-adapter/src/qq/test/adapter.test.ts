@@ -539,7 +539,7 @@ describe('QQAdapter', () => {
       const lastChunk = sendSpy.mock.calls.at(-1)?.[1] as string
       expect(lastChunk.length).toBeGreaterThan(0)
       expect(lastChunk.length).toBeLessThanOrEqual(2000)
-      expect(sendSpy.mock.calls.map((call) => call[2]?.msgSeq)).toEqual(
+      expect(sendSpy.mock.calls.map((call) => (call[2] as { msgSeq?: number } | undefined)?.msgSeq)).toEqual(
         Array.from({ length: sendSpy.mock.calls.length }, (_, index) => index + 1)
       )
     })
@@ -560,7 +560,7 @@ describe('QQAdapter', () => {
       await adapter.postMessage('qq:group:group_abc', { markdown: 'a'.repeat(12_000) } as any)
 
       expect(sendSpy.mock.calls.length).toBeLessThanOrEqual(5)
-      expect(sendSpy.mock.calls.map((call) => call[2]?.msgSeq)).toEqual(
+      expect(sendSpy.mock.calls.map((call) => (call[2] as { msgSeq?: number } | undefined)?.msgSeq)).toEqual(
         Array.from({ length: sendSpy.mock.calls.length }, (_, index) => index + 1)
       )
     })

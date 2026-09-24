@@ -6,13 +6,15 @@ import type { QQAccessTokenResponse, QQGatewayUrlResponse, QQSendMessageParams, 
 const AUTH_URL = 'https://bots.qq.com/app/getAppAccessToken'
 const API_BASE_URL = 'https://api.sgroup.qq.com'
 const REQUEST_TIMEOUT_MS = 15_000
+const MEDIA_UPLOAD_TIMEOUT_MS = 60_000
 const NETWORK_RETRY_COUNT = 2
 const MAX_TEXT_LENGTH = 2000
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
 
 type PassiveReply = { eventId?: string; msgId?: string; msgSeq?: number }
 type RichMediaUpload = { file_info: string; ttl?: number }
-type RichMediaFileType = 1 | 2 | 3 | 4
+export type RichMediaFileType = 1 | 2 | 3 | 4
+export type RichMediaSource = { fileData: string; url?: never } | { fileData?: never; url: string }
 
 function retryDelayMs(response: Response, attempt: number): number {
   const retryAfter = Number(response.headers.get('retry-after'))
@@ -34,14 +36,14 @@ export class QQApiClient {
   private cachedToken?: string
   private tokenExpiresAt = 0
 
-  private async fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+  private async fetchWithRetry(url: string, init: RequestInit, timeoutMs = REQUEST_TIMEOUT_MS): Promise<Response> {
     let lastError: unknown
 
     for (let attempt = 0; attempt <= NETWORK_RETRY_COUNT; attempt++) {
       try {
         const response = await fetch(url, {
           ...init,
-          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
         })
         if (!RETRYABLE_STATUS_CODES.has(response.status) || attempt === NETWORK_RETRY_COUNT) return response
         await response.body?.cancel()
@@ -94,7 +96,12 @@ export class QQApiClient {
     return this.cachedToken
   }
 
-  private async call<T>(method: string, path: string, body?: Record<string, unknown>): Promise<T> {
+  private async call<T>(
+    method: string,
+    path: string,
+    body?: Record<string, unknown>,
+    timeoutMs = REQUEST_TIMEOUT_MS
+  ): Promise<T> {
     const token = await this.getAccessToken()
     const url = `${API_BASE_URL}${path}`
 
@@ -110,7 +117,7 @@ export class QQApiClient {
       init.body = JSON.stringify(body)
     }
 
-    const response = await this.fetchWithRetry(url, init)
+    const response = await this.fetchWithRetry(url, init, timeoutMs)
 
     if (!response.ok) {
       const text = await response.text()
@@ -157,30 +164,47 @@ export class QQApiClient {
   // ==================== 富媒体（Open Platform） ====================
 
   /**
-   * 上传群聊要发送的富媒体文件。QQ Open Platform 支持公共 URL（由 QQ 服务端抓取）
-   * 或内联字节；当前仅使用 URL 方式，因为内联 Base64 需要额外的临时存储。
+   * 上传群聊要发送的富媒体文件。支持公网 URL 或 base64 `file_data`。
    * 接口返回的 `file_info` 令牌必须继续传给 `sendGroupMedia` 才能真正发送文件。
    *
    * @see https://bot.q.qq.com/wiki/develop/api-v2/server-inter/message/send-receive/rich-media.html
    */
-  uploadGroupRichMedia(groupOpenId: string, fileType: RichMediaFileType, url: string): Promise<RichMediaUpload> {
-    return this.uploadMedia(`/v2/groups/${groupOpenId}/files`, fileType, url)
+  uploadGroupRichMedia(
+    groupOpenId: string,
+    fileType: RichMediaFileType,
+    source: string | RichMediaSource
+  ): Promise<RichMediaUpload> {
+    return this.uploadMedia(`/v2/groups/${groupOpenId}/files`, fileType, source)
   }
 
   /**
    * `uploadGroupRichMedia` 的 C2C（用户单聊）对应接口，
    * 请求体结构相同但路由不同。
    */
-  uploadC2CRichMedia(openId: string, fileType: RichMediaFileType, url: string): Promise<RichMediaUpload> {
-    return this.uploadMedia(`/v2/users/${openId}/files`, fileType, url)
+  uploadC2CRichMedia(
+    openId: string,
+    fileType: RichMediaFileType,
+    source: string | RichMediaSource
+  ): Promise<RichMediaUpload> {
+    return this.uploadMedia(`/v2/users/${openId}/files`, fileType, source)
   }
 
-  private uploadMedia(path: string, fileType: RichMediaFileType, url: string): Promise<RichMediaUpload> {
-    return this.call<RichMediaUpload>('POST', path, {
-      file_type: fileType,
-      srv_send_msg: false,
-      url,
-    })
+  private uploadMedia(
+    path: string,
+    fileType: RichMediaFileType,
+    source: string | RichMediaSource
+  ): Promise<RichMediaUpload> {
+    const resolved = typeof source === 'string' ? { url: source } : source
+    return this.call<RichMediaUpload>(
+      'POST',
+      path,
+      {
+        file_type: fileType,
+        srv_send_msg: false,
+        ...(resolved.url !== undefined ? { url: resolved.url } : { file_data: resolved.fileData }),
+      },
+      MEDIA_UPLOAD_TIMEOUT_MS
+    )
   }
 
   /**

@@ -4,7 +4,9 @@ import path from 'node:path'
 
 import { loadFile } from '@pure/file-loaders'
 
-export const QQ_MAX_INBOUND_FILE_BYTES = 10 * 1024 * 1024
+import { QQ_MAX_FILE_BYTES } from './outboundLimits'
+
+export const QQ_MAX_INBOUND_FILE_BYTES = QQ_MAX_FILE_BYTES
 export const QQ_MAX_PARSED_FILE_CHARS = 120_000
 
 export type PreparedQQFile = {

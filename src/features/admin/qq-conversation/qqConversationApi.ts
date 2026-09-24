@@ -98,16 +98,27 @@ export async function fetchQQSessionMessages(
 
 export async function sendQQMessage(
   sessionId: string,
-  payload: string | { requestId?: string; text?: string }
+  payload: string | { files?: File[]; requestId?: string; text?: string }
 ): Promise<QQMessage> {
   const resolved = typeof payload === 'string' ? { text: payload } : payload
   const text = resolved.text?.trim() ?? ''
+  const files = resolved.files ?? []
   const requestId = resolved.requestId ?? crypto.randomUUID()
+  const hasFiles = files.length > 0
+  const url = `${SESSIONS_PATH}/${encodeURIComponent(sessionId)}/messages`
 
-  const res = await apiFetch(
-    `${SESSIONS_PATH}/${encodeURIComponent(sessionId)}/messages`,
-    jsonInit({ requestId, text }, { method: 'POST' })
-  )
+  const res = hasFiles
+    ? await apiFetch(url, {
+        body: (() => {
+          const form = new FormData()
+          if (text) form.set('text', text)
+          form.set('requestId', requestId)
+          for (const file of files) form.append('files', file)
+          return form
+        })(),
+        method: 'POST',
+      })
+    : await apiFetch(url, jsonInit({ requestId, text }, { method: 'POST' }))
   if (!res.ok) {
     const data = (await res.json().catch(() => null)) as { error?: string } | null
     throw new Error(data?.error || `send failed: ${res.status}`)

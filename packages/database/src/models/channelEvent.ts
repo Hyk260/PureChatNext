@@ -361,10 +361,15 @@ export class ChannelEventModel {
     return row ?? null
   }
 
-  /** 统计某条入站之后已成功发出的网页代发条数，用于递增 msg_seq。 */
+  /**
+   * 统计某条入站之后已成功发出的网页代发占用的 msg_seq 数。
+   * 单次代发可能包含文本 + 多个附件，按 `sent_chunk_count` 累加（旧记录为 0 时按 1 计）。
+   */
   countCompletedOutboundAfter = async (sessionId: string, conversationVersion: number, after: Date) => {
     const [row] = await this.db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({
+        count: sql<number>`coalesce(sum(greatest(${channelEvents.sentChunkCount}, 1)), 0)::int`,
+      })
       .from(channelEvents)
       .where(
         and(
@@ -440,10 +445,37 @@ export class ChannelEventModel {
     return event ?? null
   }
 
-  markOutboundTextSent = async (id: string) => {
+  markOutboundTextSent = async (id: string, sentChunkCount = 1) => {
+    await this.setOutboundSentChunkCount(id, sentChunkCount)
+  }
+
+  /** 记录网页代发已占用的被动回复条数（文本 + 附件合计）。 */
+  setOutboundSentChunkCount = async (
+    id: string,
+    sentChunkCount: number,
+    options?: { responseText?: string; textSent?: boolean }
+  ) => {
+    let platformPayload: Record<string, unknown> | undefined
+    if (options?.textSent) {
+      const [row] = await this.db
+        .select({ platformPayload: channelEvents.platformPayload })
+        .from(channelEvents)
+        .where(eq(channelEvents.id, id))
+        .limit(1)
+      const prev =
+        row?.platformPayload && typeof row.platformPayload === 'object' && !Array.isArray(row.platformPayload)
+          ? (row.platformPayload as Record<string, unknown>)
+          : {}
+      platformPayload = { ...prev, textSent: true }
+    }
     await this.db
       .update(channelEvents)
-      .set({ sentChunkCount: 1, updatedAt: new Date() })
+      .set({
+        sentChunkCount,
+        updatedAt: new Date(),
+        ...(options?.responseText !== undefined ? { responseText: options.responseText } : {}),
+        ...(platformPayload ? { platformPayload } : {}),
+      })
       .where(eq(channelEvents.id, id))
   }
 

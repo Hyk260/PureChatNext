@@ -1,35 +1,31 @@
 'use client'
 
-import { MessageSquare } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
+  CHANNEL_SESSION_POLL_MS,
+  CHANNEL_STATUS_POLL_MS,
+  ChannelConversationShell,
   ConversationExportDialog,
   LoadingConversation,
-} from '@/features/dev/ConversationShared'
+  getActiveChannelEventIds,
+  hasActiveChannelMessages,
+  mergeChannelMessages,
+  MESSAGE_POLL_DELAYS,
+  nextChannelMessagePollDelay,
+  useCopyFeedback,
+} from '@/features/admin/channel-conversation'
 import { fetchQQStatus } from '@/features/settings/messenger/qqApi'
 import type { QQStatus } from '@/features/settings/messenger/qqApi'
 
 import { QqMessagePane } from './QqMessagePane'
+import type { PendingAttachment } from './QqMessagePane'
 import { QqSessionSidebar } from './QqSessionSidebar'
-import {
-  fetchQQSessionMessages,
-  fetchQQSessions,
-  sendQQMessage,
-} from './qqConversationApi'
+import { fetchQQSessionMessages, fetchQQSessions, sendQQMessage } from './qqConversationApi'
 import type { QQMessage, QQSession } from './qqConversationApi'
 import { createQQConversationExport, createQQExportFilename } from './qqConversationExport'
-import {
-  getActiveQQEventIds,
-  hasActiveQQMessages,
-  mergeQQMessages,
-  MESSAGE_POLL_DELAYS,
-  nextQQMessagePollDelay,
-} from './qqConversationPolling'
-
-const SESSION_POLL_MS = 30_000
-const STATUS_POLL_MS = 30_000
-const COPIED_FEEDBACK_MS = 1600
+import { QQ_MAX_OUTBOUND_FILE_BYTES, QQ_MAX_OUTBOUND_FILES } from '@/libs/channels/qq/outboundLimits'
+import { isChannelImageFileName } from '@/features/admin/channel-conversation'
 
 export default function QqConversationPage() {
   const [status, setStatus] = useState<QQStatus | null>(null)
@@ -42,19 +38,37 @@ export default function QqConversationPage() {
   const [messagesLoading, setMessagesLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([])
   const [sending, setSending] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
-  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
 
   const messagesRef = useRef<QQMessage[]>([])
   const selectedIdRef = useRef<string | null>(null)
   const messageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const delayRef = useRef<number>(MESSAGE_POLL_DELAYS[0])
   const refreshMessagesRef = useRef<() => Promise<void>>(async () => {})
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const pendingAttachmentsRef = useRef(pendingAttachments)
+  const pendingRequestIdRef = useRef<string | null>(null)
+
+  const { copiedMessageId, copyText } = useCopyFeedback(setError)
 
   useEffect(() => {
     messagesRef.current = messages
   }, [messages])
+
+  useEffect(() => {
+    pendingAttachmentsRef.current = pendingAttachments
+  }, [pendingAttachments])
+
+  const clearPendingAttachments = useCallback(() => {
+    setPendingAttachments((prev) => {
+      for (const item of prev) {
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl)
+      }
+      return []
+    })
+  }, [])
 
   const clearMessageTimer = useCallback(() => {
     if (messageTimerRef.current) {
@@ -78,25 +92,27 @@ export default function QqConversationPage() {
     setMessages([])
     setSessionMeta(null)
     setDraft('')
+    clearPendingAttachments()
+    pendingRequestIdRef.current = null
     setMessagesLoading(false)
-  }, [clearMessageTimer])
+  }, [clearMessageTimer, clearPendingAttachments])
 
   const refreshMessages = useCallback(async () => {
     const id = selectedIdRef.current
     if (!id) return
     try {
-      const activeEventIds = getActiveQQEventIds(messagesRef.current)
+      const activeEventIds = getActiveChannelEventIds(messagesRef.current)
       const data = await fetchQQSessionMessages(id, {
         limit: 50,
         watchEventIds: activeEventIds,
       })
       if (selectedIdRef.current !== id) return
-      const merged = mergeQQMessages(messagesRef.current, data.messages)
+      const merged = mergeChannelMessages(messagesRef.current, data.messages)
       setMessages(merged.messages)
       setSessionMeta(data.session)
-      delayRef.current = nextQQMessagePollDelay(delayRef.current, {
+      delayRef.current = nextChannelMessagePollDelay(delayRef.current, {
         changed: merged.changed,
-        pending: hasActiveQQMessages(merged.messages),
+        pending: hasActiveChannelMessages(merged.messages),
       })
     } catch {
       /* 下一轮轮询继续重试 */
@@ -116,6 +132,8 @@ export default function QqConversationPage() {
       setMessages([])
       setSessionMeta(null)
       setDraft('')
+      clearPendingAttachments()
+      pendingRequestIdRef.current = null
       setMessagesLoading(true)
       setError(null)
       delayRef.current = MESSAGE_POLL_DELAYS[0]
@@ -125,9 +143,9 @@ export default function QqConversationPage() {
         if (selectedIdRef.current !== id) return
         setMessages(data.messages)
         setSessionMeta(data.session)
-        delayRef.current = nextQQMessagePollDelay(delayRef.current, {
+        delayRef.current = nextChannelMessagePollDelay(delayRef.current, {
           changed: true,
-          pending: hasActiveQQMessages(data.messages),
+          pending: hasActiveChannelMessages(data.messages),
         })
       } catch (err) {
         if (selectedIdRef.current !== id) return
@@ -139,7 +157,7 @@ export default function QqConversationPage() {
         }
       }
     },
-    [clearMessageTimer, scheduleMessagePoll]
+    [clearMessageTimer, clearPendingAttachments, scheduleMessagePoll]
   )
 
   const refreshSessions = useCallback(async () => {
@@ -189,10 +207,10 @@ export default function QqConversationPage() {
       void fetchQQStatus()
         .then(setStatus)
         .catch(() => {})
-    }, STATUS_POLL_MS)
+    }, CHANNEL_STATUS_POLL_MS)
     const sessionTimer = setInterval(() => {
       void refreshSessions()
-    }, SESSION_POLL_MS)
+    }, CHANNEL_SESSION_POLL_MS)
 
     return () => {
       active = false
@@ -202,87 +220,123 @@ export default function QqConversationPage() {
     }
   }, [clearMessageTimer, clearSelection, loadSession, refreshSessions])
 
+  const handlePickFiles = useCallback((fileList: FileList | null) => {
+    if (!fileList?.length) return
+    const current = pendingAttachmentsRef.current
+    pendingRequestIdRef.current = null
+    const remaining = QQ_MAX_OUTBOUND_FILES - current.length
+    if (remaining <= 0) {
+      setError(`一次最多添加 ${QQ_MAX_OUTBOUND_FILES} 个附件`)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    const accepted: PendingAttachment[] = []
+    let errorMessage: string | null = null
+    for (const file of Array.from(fileList)) {
+      if (accepted.length >= remaining) {
+        errorMessage = `一次最多添加 ${QQ_MAX_OUTBOUND_FILES} 个附件`
+        break
+      }
+      if (file.size <= 0) {
+        errorMessage ??= `附件「${file.name}」为空`
+        continue
+      }
+      if (file.size > QQ_MAX_OUTBOUND_FILE_BYTES) {
+        errorMessage ??= `附件「${file.name}」超过 ${Math.round(QQ_MAX_OUTBOUND_FILE_BYTES / (1024 * 1024))}MB 限制`
+        continue
+      }
+      accepted.push({
+        file,
+        id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
+        previewUrl: isChannelImageFileName(file.name, file.type) ? URL.createObjectURL(file) : null,
+      })
+    }
+    if (accepted.length) setPendingAttachments((prev) => [...prev, ...accepted])
+    if (errorMessage) setError(errorMessage)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [])
+
+  const handleRemovePendingAttachment = useCallback((id: string) => {
+    pendingRequestIdRef.current = null
+    setPendingAttachments((prev) => {
+      const target = prev.find((item) => item.id === id)
+      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
+      return prev.filter((item) => item.id !== id)
+    })
+  }, [])
+
   const send = async () => {
-    if (!selectedId || !sessionMeta?.canSend || !draft.trim() || sending) return
+    if (!selectedId || !sessionMeta?.canSend || sending) return
+    const text = draft.trim()
+    const files = pendingAttachments.map((item) => item.file)
+    if (!text && files.length === 0) return
+    const requestId = pendingRequestIdRef.current ?? crypto.randomUUID()
+    pendingRequestIdRef.current = requestId
     setSending(true)
+    setError(null)
+    const sendingSessionId = selectedId
     try {
-      const message = await sendQQMessage(selectedId, draft)
-      if (selectedIdRef.current !== selectedId) return
-      setMessages((current) => mergeQQMessages(current, [message]).messages)
+      const message = await sendQQMessage(sendingSessionId, { files, requestId, text })
+      if (selectedIdRef.current !== sendingSessionId) return
+      setMessages((current) => mergeChannelMessages(current, [message]).messages)
       setDraft('')
+      clearPendingAttachments()
+      pendingRequestIdRef.current = null
     } catch (err) {
-      if (selectedIdRef.current === selectedId) {
+      if (selectedIdRef.current === sendingSessionId) {
         setError(err instanceof Error ? err.message : '发送失败')
       }
     } finally {
-      if (selectedIdRef.current === selectedId) setSending(false)
+      setSending(false)
     }
   }
 
-  const copyText = async (text: string, id: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedMessageId(id)
-      window.setTimeout(() => {
-        setCopiedMessageId((current) => (current === id ? null : current))
-      }, COPIED_FEEDBACK_MS)
-    } catch {
-      setError('复制失败，请检查浏览器剪贴板权限')
+  useEffect(() => {
+    return () => {
+      for (const item of pendingAttachmentsRef.current) {
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl)
+      }
     }
-  }
+  }, [])
 
   if (loading) {
     return <LoadingConversation label='加载 QQ 会话' />
   }
 
-  const connected = Boolean(status?.connected)
-
   return (
-    <main className='flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground'>
-      <header className='shrink-0 border-b border-border bg-card/90 backdrop-blur-md'>
-        <div className='mx-auto flex w-full max-w-[1400px] items-center gap-3 px-4 py-3 sm:px-6'>
-          <div className='flex items-center gap-2'>
-            <div className='flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20'>
-              <MessageSquare className='size-4' />
-            </div>
-            <div>
-              <h1 className='text-sm font-semibold tracking-tight'>QQ 对话监控</h1>
-              <p className='text-[11px] text-muted-foreground'>Agent ↔ QQ 用户</p>
-            </div>
-          </div>
-          <span
-            className={`ml-2 inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium ring-1 ring-border ${
-              connected ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive'
-            }`}
-          >
-            <span className={`size-1.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-destructive'}`} />
-            {connected ? '已连接' : '未连接'}
-          </span>
-          <span className='ml-auto text-[11px] text-muted-foreground'>会话 {sessions.length}</span>
-        </div>
-      </header>
-
-      <div className='mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 overflow-hidden'>
+    <ChannelConversationShell
+      connected={Boolean(status?.connected)}
+      sessionCount={sessions.length}
+      sidebar={
         <QqSessionSidebar
           bound={bound}
           selectedId={selectedId}
           sessions={sessions}
           onSelect={(id) => void loadSession(id)}
         />
-        <QqMessagePane
-          copiedMessageId={copiedMessageId}
-          draft={draft}
-          error={error}
-          loading={messagesLoading}
-          messages={messages}
-          sending={sending}
-          sessionMeta={sessionMeta}
-          onCopy={copyText}
-          onDraftChange={setDraft}
-          onExport={() => setExportOpen(true)}
-          onSend={() => void send()}
-        />
-      </div>
+      }
+      subtitle='Agent ↔ QQ 用户'
+      title='QQ 对话监控'
+    >
+      <QqMessagePane
+        copiedMessageId={copiedMessageId}
+        draft={draft}
+        error={error}
+        fileInputRef={fileInputRef}
+        loading={messagesLoading}
+        maxOutboundFiles={QQ_MAX_OUTBOUND_FILES}
+        messages={messages}
+        pendingAttachments={pendingAttachments}
+        sending={sending}
+        sessionMeta={sessionMeta}
+        onCopy={copyText}
+        onDraftChange={setDraft}
+        onExport={() => setExportOpen(true)}
+        onPickFiles={handlePickFiles}
+        onRemovePending={handleRemovePendingAttachment}
+        onSend={() => void send()}
+      />
 
       {exportOpen && sessionMeta ? (
         <ConversationExportDialog
@@ -290,11 +344,11 @@ export default function QqConversationPage() {
           createFilename={createQQExportFilename}
           exportMode='full'
           messages={messages}
-          onClose={() => setExportOpen(false)}
           session={sessionMeta}
           title='导出 QQ 会话'
+          onClose={() => setExportOpen(false)}
         />
       ) : null}
-    </main>
+    </ChannelConversationShell>
   )
 }

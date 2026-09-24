@@ -1,15 +1,17 @@
 import type { WechatDevMessage, WechatDevSession } from './wechatConversationApi'
+import {
+  createChannelExportFilename,
+  createChannelFullExport,
+  createChannelOpenAIExport,
+} from '@/features/admin/channel-conversation/channelConversationExport'
+import type { ChannelExportMode } from '@/features/admin/channel-conversation/channelConversationExport'
 
-export type WechatExportMode = 'full' | 'openai'
+export type WechatExportMode = ChannelExportMode
 
 type ExportSession = Pick<
   WechatDevSession,
   'agentId' | 'agentTitle' | 'conversationVersion' | 'externalUserId' | 'externalUserName' | 'id'
 >
-
-function compact<T extends Record<string, unknown>>(value: T): T {
-  return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined && item !== null)) as T
-}
 
 export function createWechatConversationExport(
   mode: WechatExportMode,
@@ -17,57 +19,10 @@ export function createWechatConversationExport(
   session: ExportSession,
   exportedAt = new Date().toISOString()
 ) {
-  const exportableMessages = messages.filter((message) => message.source !== 'manual')
-
-  if (mode === 'openai') {
-    return exportableMessages
-      .filter((message) => {
-        if (message.status !== 'completed' || !message.text.trim()) return false
-        if (message.messageKind && message.messageKind !== 'text') return false
-        return message.source === 'user' || message.source === 'model'
-      })
-      .map(({ role, text }) => ({ content: text.trim(), role }))
-  }
-
-  return {
-    exportedAt,
-    messages: exportableMessages.map((message) =>
-      compact({
-        content: message.text,
-        attachments: message.attachments,
-        createdAt: message.createdAt,
-        durationMs: message.durationMs,
-        eventId: message.eventId,
-        fileName: message.fileName,
-        fileSize: message.fileSize,
-        fileUrl: message.fileUrl,
-        id: message.id,
-        imageUrl: message.imageUrl,
-        messageKind: message.messageKind,
-        model: message.model,
-        provider: message.provider,
-        role: message.role,
-        source: message.source,
-        status: message.status,
-      })
-    ),
-    session: compact({
-      agentId: session.agentId,
-      agentTitle: session.agentTitle,
-      conversationVersion: session.conversationVersion,
-      externalUserId: session.externalUserId,
-      externalUserName: session.externalUserName,
-      id: session.id,
-    }),
-    version: '1.0',
-  }
+  if (mode === 'openai') return createChannelOpenAIExport(messages)
+  return createChannelFullExport(messages, session, { compactNulls: true, exportedAt })
 }
 
 export function createWechatExportFilename(session: ExportSession, now = new Date()): string {
-  const label = (session.externalUserName || session.externalUserId || 'conversation')
-    .replace(/[\\/:*?"<>|\s]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 48) || 'conversation'
-  const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19)
-  return `wechat-${label}-v${session.conversationVersion}-${timestamp}.json`
+  return createChannelExportFilename('wechat', session, now)
 }

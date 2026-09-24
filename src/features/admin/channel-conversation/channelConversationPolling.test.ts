@@ -1,25 +1,25 @@
 import { describe, expect, it } from 'vitest'
 
-import type { WechatDevMessage } from './wechatConversationApi'
+import type { ChannelPollMessage } from './channelConversationPolling'
 import {
-  getActiveWechatEventIds,
-  hasActiveWechatMessages,
-  mergeWechatDevMessages,
-  nextWechatMessagePollDelay,
-} from './wechatConversationPolling'
+  getActiveChannelEventIds,
+  hasActiveChannelMessages,
+  mergeChannelMessages,
+  nextChannelMessagePollDelay,
+} from './channelConversationPolling'
 
-function message(id: string, createdAt: string, status = 'completed'): WechatDevMessage {
-  return { createdAt, eventId: id.split(':')[0]!, id, role: 'user', source: 'user', status, text: id }
+function message(id: string, createdAt: string, status = 'completed'): ChannelPollMessage & { text: string } {
+  return { createdAt, eventId: id.split(':')[0]!, id, role: 'user', status, text: id }
 }
 
-describe('wechat conversation delta helpers', () => {
+describe('channel conversation delta helpers', () => {
   it('merges, updates, deduplicates, and sorts delta messages', () => {
     const current = [
       message('event-b:user', '2026-08-07T00:00:02.000Z'),
       message('event-a:user', '2026-08-07T00:00:01.000Z', 'pending'),
     ]
     const updated = { ...message('event-a:user', '2026-08-07T00:00:01.000Z'), text: 'updated' }
-    const result = mergeWechatDevMessages(current, [
+    const result = mergeChannelMessages(current, [
       updated,
       updated,
       { ...message('event-c:assistant', '2026-08-07T00:00:02.000Z'), role: 'assistant' },
@@ -36,15 +36,15 @@ describe('wechat conversation delta helpers', () => {
   })
 
   it('backs off unchanged responses and stays active while pending', () => {
-    expect(nextWechatMessagePollDelay(2_000, { changed: false, pending: false })).toBe(5_000)
-    expect(nextWechatMessagePollDelay(5_000, { changed: false, pending: false })).toBe(10_000)
-    expect(nextWechatMessagePollDelay(10_000, { changed: false, pending: false })).toBe(15_000)
-    expect(nextWechatMessagePollDelay(15_000, { changed: false, pending: false })).toBe(15_000)
-    expect(nextWechatMessagePollDelay(15_000, { changed: true, pending: false })).toBe(2_000)
+    expect(nextChannelMessagePollDelay(2_000, { changed: false, pending: false })).toBe(5_000)
+    expect(nextChannelMessagePollDelay(5_000, { changed: false, pending: false })).toBe(10_000)
+    expect(nextChannelMessagePollDelay(10_000, { changed: false, pending: false })).toBe(15_000)
+    expect(nextChannelMessagePollDelay(15_000, { changed: false, pending: false })).toBe(15_000)
+    expect(nextChannelMessagePollDelay(15_000, { changed: true, pending: false })).toBe(2_000)
     const pending = [message('event-a:user', '2026-08-07T00:00:00.000Z', 'processing')]
-    expect(hasActiveWechatMessages(pending)).toBe(true)
-    expect(getActiveWechatEventIds([...pending, { ...pending[0]!, id: 'event-a:assistant' }])).toEqual(['event-a'])
-    expect(nextWechatMessagePollDelay(15_000, { changed: false, pending: true })).toBe(2_000)
+    expect(hasActiveChannelMessages(pending)).toBe(true)
+    expect(getActiveChannelEventIds([...pending, { ...pending[0]!, id: 'event-a:assistant' }])).toEqual(['event-a'])
+    expect(nextChannelMessagePollDelay(15_000, { changed: false, pending: true })).toBe(2_000)
   })
 
   it('observes watched event completion and a newly available assistant response', () => {
@@ -57,10 +57,10 @@ describe('wechat conversation delta helpers', () => {
       text: 'done',
     }
 
-    const result = mergeWechatDevMessages([pending], [completed, assistant])
+    const result = mergeChannelMessages([pending], [completed, assistant])
 
     expect(result.changed).toBe(true)
     expect(result.messages).toEqual([completed, assistant])
-    expect(hasActiveWechatMessages(result.messages)).toBe(false)
+    expect(hasActiveChannelMessages(result.messages)).toBe(false)
   })
 })

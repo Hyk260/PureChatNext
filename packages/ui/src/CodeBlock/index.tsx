@@ -80,33 +80,75 @@ const KEYWORDS = new Set([
 const TOKEN =
   /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`[^`]*`|\b\d+(?:\.\d+)?\b|\b(?:import|from|export|default|async|function|const|let|var|await|return|if|else|for|while|new|throw|try|catch|null|true|false|undefined)\b|[A-Za-z_$][\w$]*(?=\s*\())/g
 
-function highlight(text: string): ReactNode[] {
+/** key `"foo":` · string value · number (incl. negatives) · true/false/null */
+const JSON_TOKEN =
+  /("(?:\\.|[^"\\])*")(\s*:)?|-?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b|\b(?:true|false|null)\b/g
+
+export type CodeBlockLanguage = 'ts' | 'json'
+
+function highlightTokens(
+  text: string,
+  tokenRe: RegExp,
+  renderMatch: (match: RegExpMatchArray, nextKey: () => number) => ReactNode[]
+): ReactNode[] {
   const nodes: ReactNode[] = []
   let last = 0
   let k = 0
-  for (const m of text.matchAll(TOKEN)) {
+  const nextKey = () => k++
+  for (const m of text.matchAll(tokenRe)) {
     const idx = m.index ?? 0
+    if (idx > last) nodes.push(<span key={nextKey()}>{text.slice(last, idx)}</span>)
+    nodes.push(...renderMatch(m, nextKey))
+    last = idx + m[0].length
+  }
+  if (last < text.length) nodes.push(<span key={nextKey()}>{text.slice(last)}</span>)
+  return nodes
+}
+
+function highlightTs(text: string): ReactNode[] {
+  return highlightTokens(text, TOKEN, (m, nextKey) => {
     const t = m[0]
-    if (idx > last) nodes.push(<span key={k++}>{text.slice(last, idx)}</span>)
     let color: string
     let weight: number | undefined
-    if (/^["'`]/.test(t) || /^\d/.test(t))
-      color = 'var(--orange)' // string / number
-    else if (KEYWORDS.has(t))
-      color = 'var(--accent-ink)' // keyword / import / conditional
+    if (/^["'`]/.test(t) || /^\d/.test(t)) color = 'var(--orange)'
+    else if (KEYWORDS.has(t)) color = 'var(--accent-ink)'
     else {
       color = 'var(--ink)'
       weight = 500
-    } // function call
-    nodes.push(
-      <span key={k++} style={{ color, fontWeight: weight }}>
+    }
+    return [
+      <span key={nextKey()} style={{ color, fontWeight: weight }}>
         {t}
-      </span>
-    )
-    last = idx + t.length
-  }
-  if (last < text.length) nodes.push(<span key={k++}>{text.slice(last)}</span>)
-  return nodes
+      </span>,
+    ]
+  })
+}
+
+function highlightJson(text: string): ReactNode[] {
+  return highlightTokens(text, JSON_TOKEN, (m, nextKey) => {
+    const str = m[1]
+    const afterKey = m[2]
+    if (str !== undefined) {
+      const nodes: ReactNode[] = [
+        <span key={nextKey()} style={{ color: afterKey !== undefined ? 'var(--accent-ink)' : 'var(--orange)' }}>
+          {str}
+        </span>,
+      ]
+      if (afterKey !== undefined) nodes.push(<span key={nextKey()}>{afterKey}</span>)
+      return nodes
+    }
+    const t = m[0]
+    const lit = t === 'true' || t === 'false' || t === 'null'
+    return [
+      <span key={nextKey()} style={{ color: lit ? 'var(--accent-ink)' : 'var(--orange)' }}>
+        {t}
+      </span>,
+    ]
+  })
+}
+
+function highlight(text: string, language: CodeBlockLanguage = 'ts'): ReactNode[] {
+  return language === 'json' ? highlightJson(text) : highlightTs(text)
 }
 
 function Pieces({ pieces }: { pieces: Piece[] }) {
@@ -158,75 +200,108 @@ function FileIcon() {
 
 export type CodeBlockVariant = 'Code' | 'Diff'
 
-export default function CodeBlock({ variant = 'Code' }: { variant?: CodeBlockVariant }) {
+export default function CodeBlock({
+  code,
+  fileName,
+  language = 'ts',
+  showHeader = true,
+  variant = 'Code',
+}: {
+  /** Source for the Code variant. Ignored when `variant='Diff'` (built-in demo fixture). */
+  code?: string
+  /** Optional header label. Demo mode (no `code`, or Diff) defaults to `churn.ts`. */
+  fileName?: string
+  language?: CodeBlockLanguage
+  showHeader?: boolean
+  variant?: CodeBlockVariant
+}) {
   const [copied, setCopied] = useState(false)
   const isDiff = variant === 'Diff'
+  // Diff always uses the built-in DIFF fixture; `code` only feeds the Code body.
+  const raw = isDiff ? RAW : (code ?? RAW)
+  const lines = raw.split('\n')
+  const isDemo = isDiff || code === undefined || code === null
+  const resolvedFileName = fileName ?? (isDemo ? FILE : undefined)
 
   const copy = useCallback(() => {
-    navigator.clipboard.writeText(RAW).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    })
-  }, [])
+    void navigator.clipboard
+      .writeText(raw)
+      .then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 1500)
+      })
+      .catch(() => setCopied(false))
+  }, [raw])
 
   const added = DIFF.filter((r) => r.type === 'add').length
   const removed = DIFF.filter((r) => r.type === 'del').length
 
   return (
-    <div className='w-full max-w-105 overflow-hidden rounded-card bg-surface shadow-card'>
-      {/* header — file · (diff stat | copy) */}
-      <div className='flex h-11 items-center gap-2 border-b border-line px-4 text-[12.5px]'>
-        <span className='inline-flex min-w-0 items-center gap-[7px]'>
-          <FileIcon />
-          <span className='truncate font-mono leading-none text-ink'>{FILE}</span>
-        </span>
+    <div
+      className={
+        showHeader
+          ? 'w-full max-w-105 overflow-hidden rounded-card bg-surface shadow-card'
+          : 'w-full overflow-hidden bg-transparent'
+      }
+    >
+      {showHeader ? (
+        <div className='flex h-11 items-center gap-2 border-b border-line px-4 text-[12.5px]'>
+          {resolvedFileName ? (
+            <span className='inline-flex min-w-0 items-center gap-[7px]'>
+              <FileIcon />
+              <span className='truncate font-mono leading-none text-ink'>{resolvedFileName}</span>
+            </span>
+          ) : (
+            <span className='min-w-0 flex-1' />
+          )}
 
-        {isDiff ? (
-          <span className='ml-auto inline-flex items-center gap-2 font-mono text-[12px] leading-none tabular-nums'>
-            <span className='text-green'>+{added}</span>
-            <span className='text-red'>-{removed}</span>
-          </span>
-        ) : (
-          <button
-            type='button'
-            aria-label='Copy code'
-            onClick={copy}
-            className={`-mr-1 ml-auto flex h-6 items-center gap-1 rounded-[6px] px-1.5 text-[12px]
+          {isDiff ? (
+            <span className='ml-auto inline-flex items-center gap-2 font-mono text-[12px] leading-none tabular-nums'>
+              <span className='text-green'>+{added}</span>
+              <span className='text-red'>-{removed}</span>
+            </span>
+          ) : (
+            <button
+              type='button'
+              aria-label='Copy code'
+              onClick={copy}
+              className={`-mr-1 ml-auto flex h-6 items-center gap-1 rounded-[6px] px-1.5 text-[12px]
               font-medium transition-colors duration-100 hover:bg-hover
               ${copied ? 'text-green' : 'text-ink-3 hover:text-ink'}`}
-          >
-            {copied ? (
-              <svg
-                width='11'
-                height='11'
-                viewBox='0 0 24 24'
-                fill='none'
-                stroke='currentColor'
-                strokeWidth='3'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              >
-                <path d='M20 6L9 17l-5-5' />
-              </svg>
-            ) : (
-              <svg
-                width='11'
-                height='11'
-                viewBox='0 0 24 24'
-                fill='none'
-                stroke='currentColor'
-                strokeWidth='2'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              >
-                <rect x='9' y='9' width='12' height='12' rx='2.5' />
-                <path d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' />
-              </svg>
-            )}
-            {copied ? 'Copied' : 'Copy'}
-          </button>
-        )}
-      </div>
+            >
+              {copied ? (
+                <svg
+                  width='11'
+                  height='11'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='3'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                >
+                  <path d='M20 6L9 17l-5-5' />
+                </svg>
+              ) : (
+                <svg
+                  width='11'
+                  height='11'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                >
+                  <rect x='9' y='9' width='12' height='12' rx='2.5' />
+                  <path d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' />
+                </svg>
+              )}
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+          )}
+        </div>
+      ) : null}
 
       {/* body — equal 12px inset on top / left / right; lines wrap */}
       <div className='py-3 font-mono text-[12.5px] leading-[1.65] text-ink-2'>
@@ -265,10 +340,12 @@ export default function CodeBlock({ variant = 'Code' }: { variant?: CodeBlockVar
         ) : (
           <div className='relative'>
             <span className='pointer-events-none absolute inset-y-0 left-5 w-px bg-line' />
-            {CODE_LINES.map((line, i) => (
+            {lines.map((line, i) => (
               <div key={i} className='grid grid-cols-[20px_minmax(0,1fr)] items-start'>
                 <span className='select-none text-center text-[11px] text-ink-3'>{i + 1}</span>
-                <code className='pr-3 pl-1 wrap-break-word whitespace-pre-wrap'>{highlight(line)}</code>
+                <code className='pr-3 pl-1 wrap-break-word whitespace-pre-wrap'>
+                  {highlight(line, language)}
+                </code>
               </div>
             ))}
           </div>

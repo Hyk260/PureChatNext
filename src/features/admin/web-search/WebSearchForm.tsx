@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react'
 import { Clipboard, RefreshCcw, Sparkles, Trash2 } from 'lucide-react'
 
-import { ActionIcon, Button, Checkbox, Select, TextArea } from '@pure/ui'
-import { Highlighter } from '@pure/ui/Markdown'
+import { ActionIcon, Button, Checkbox, CodeBlock, Select, TextArea } from '@pure/ui'
 
 import Scrollbar from '@/components/Scrollbar'
 
@@ -160,17 +159,7 @@ export function WebSearchForm({
               </Button>
             </div>
             <Scrollbar maxHeight='10rem' className='mt-3 overflow-hidden rounded-lg ring-1 ring-border'>
-              <Highlighter
-                actionIconSize='small'
-                copyable={false}
-                language='json'
-                showLanguage={false}
-                styles={{ content: { height: 'auto' } }}
-                variant='borderless'
-                wrap
-              >
-                {requestJson}
-              </Highlighter>
+              <CodeBlock code={requestJson} language='json' showHeader={false} />
             </Scrollbar>
           </div>
         </div>

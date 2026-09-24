@@ -18,6 +18,7 @@ import mime from 'mime'
 import { resolveMimeTypeFromBytes } from '@pure/utils'
 
 import { QQApiClient } from './api'
+import { toQQMediaFileType } from './mediaType'
 import { signWebhookResponse } from './crypto'
 import { QQFormatConverter } from './format-converter'
 import { QQGatewayConnection } from './gateway'
@@ -51,14 +52,6 @@ const resolveQQAuthorId = (author?: QQAuthor) =>
 const resolveQQAuthorDisplayName = (author?: QQAuthor) => {
   const username = author?.username?.trim()
   return username || resolveQQAuthorId(author)
-}
-
-/** 按 MIME 前缀映射 QQ 富媒体文件类型：1 图片 / 2 视频 / 3 音频 / 4 其它。 */
-const toQQMediaFileType = (mimeType: string): QQOutboundMedia['fileType'] => {
-  if (mimeType.startsWith('image/')) return 1
-  if (mimeType.startsWith('video/')) return 2
-  if (mimeType.startsWith('audio/')) return 3
-  return 4
 }
 
 /** `@pure/chat-adapter/qq` 的 QQ Bot 适配器（Vercel Chat SDK）。 */
@@ -352,7 +345,7 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
 
     return message.attachments.flatMap((attachment) => {
       if (!attachment.url) return []
-      return [{ fileType: toQQMediaFileType(attachment.mimeType || ''), name: attachment.name, url: attachment.url }]
+      return [{ fileType: toQQMediaFileType(attachment.mimeType || '', attachment.name), name: attachment.name, url: attachment.url }]
     })
   }
 

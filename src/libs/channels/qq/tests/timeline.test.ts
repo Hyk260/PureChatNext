@@ -177,4 +177,34 @@ describe('expandQQEventsToMessages', () => {
     expect(messages).toHaveLength(1)
     expect(messages[0]).toMatchObject({ role: 'assistant', source: 'manual', text: '网页代发' })
   })
+
+  it('expands outbound attachment-only messages', () => {
+    const messages = expandQQEventsToMessages([
+      event({
+        attachments: [
+          {
+            deliveryError: null,
+            deliveryStatus: 'sent',
+            direction: 'output',
+            fileId: 'file-1',
+            fileName: 'photo.png',
+            fileSize: 128,
+            id: 'art-1',
+            summary: '网页代发附件',
+            version: 1,
+          },
+        ],
+        completedAt: new Date('2026-08-01T00:01:00.000Z'),
+        messageKind: 'outbound',
+        responseText: '',
+      }),
+    ])
+
+    expect(messages).toHaveLength(1)
+    expect(messages[0]).toMatchObject({
+      attachments: [{ fileName: 'photo.png', fileUrl: '/api/resources/files/file-1/content' }],
+      role: 'assistant',
+      text: '[附件]',
+    })
+  })
 })

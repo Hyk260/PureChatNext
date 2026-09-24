@@ -1,25 +1,46 @@
 'use client'
 
-import { Bot, Download, ExternalLink, Loader2, Send, User } from 'lucide-react'
+import { Bot, ExternalLink, User } from 'lucide-react'
+import type { ReactNode, RefObject } from 'react'
 import { formatDateTime, formatSize } from '@pure/utils/client'
 
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
-import { CopyMessageButton, StatusChip } from '@/features/dev/ConversationShared'
+import {
+  ChannelAttachmentComposer,
+  ChannelImageCard,
+  ChannelMessagePaneFrame,
+  CopyMessageButton,
+  ExportSessionLink,
+  MessagesEmptyState,
+  MessagesLoadingState,
+  StatusChip,
+  channelBubbleClass,
+  formatChannelDuration,
+  isChannelImageFileName,
+} from '@/features/admin/channel-conversation'
+import type { ChannelPendingAttachment } from '@/features/admin/channel-conversation'
 
 import type { QQAttachment, QQMessage, QQSession } from './qqConversationApi'
 import { qqComposerPlaceholder, qqMessageUserLabel, qqSessionTitle } from './qqSessionLabels'
+
+export type PendingAttachment = ChannelPendingAttachment
 
 type QqMessagePaneProps = {
   copiedMessageId: string | null
   draft: string
   error: string | null
+  fileInputRef: RefObject<HTMLInputElement | null>
   loading: boolean
+  maxOutboundFiles: number
   messages: QQMessage[]
   onCopy: (text: string, id: string) => void
   onDraftChange: (value: string) => void
   onExport: () => void
+  onPickFiles: (files: FileList | null) => void
+  onRemovePending: (id: string) => void
   onSend: () => void
+  pendingAttachments: PendingAttachment[]
   sending: boolean
   sessionMeta: QQSession | null
 }
@@ -42,6 +63,56 @@ function AttachmentCard({ attachment }: { attachment: QQAttachment }) {
   )
 }
 
+function renderAttachment(attachment: QQAttachment, isRight?: boolean) {
+  if (isChannelImageFileName(attachment.fileName)) {
+    return <ChannelImageCard key={attachment.id} alt={attachment.fileName} isRight={isRight} src={attachment.fileUrl} />
+  }
+  return <AttachmentCard key={attachment.id} attachment={attachment} />
+}
+
+function renderUserLegacyMedia(message: QQMessage): ReactNode {
+  if (!message.fileUrl || message.attachments?.length) return null
+  if (isChannelImageFileName(message.fileName) || message.imageUrl) {
+    return (
+      <ChannelImageCard
+        alt={message.fileName || '图片'}
+        isRight
+        src={message.imageUrl || message.fileUrl}
+      />
+    )
+  }
+  return (
+    <AttachmentCard
+      attachment={{
+        deliveryStatus: 'available',
+        fileName: message.fileName || '附件',
+        fileSize: message.fileSize,
+        fileUrl: message.fileUrl,
+        id: message.id,
+        version: 1,
+      }}
+    />
+  )
+}
+
+function renderBubbleBody(message: QQMessage, isUser: boolean, showText: boolean): ReactNode {
+  return (
+    <>
+      {showText ? (
+        isUser ? (
+          <div className='whitespace-pre-wrap text-sm'>{message.text}</div>
+        ) : (
+          <MessageMarkdown text={message.text} />
+        )
+      ) : null}
+      {isUser && message.attachments?.length ? (
+        <div className='mt-2 space-y-2'>{message.attachments.map((item) => renderAttachment(item, true))}</div>
+      ) : null}
+      {isUser ? renderUserLegacyMedia(message) : null}
+    </>
+  )
+}
+
 function MessageList({
   copiedMessageId,
   loading,
@@ -58,21 +129,10 @@ function MessageList({
     initialScrollToBottom: true,
   })
 
-  if (loading) {
-    return (
-      <div className='flex min-h-0 flex-1 items-center justify-center text-muted-foreground'>
-        <Loader2 className='mr-2 size-4 animate-spin' />
-        加载消息
-      </div>
-    )
-  }
+  if (loading) return <MessagesLoadingState />
 
   if (!sessionMeta || messages.length === 0) {
-    return (
-      <div className='flex min-h-0 flex-1 items-center justify-center text-muted-foreground'>
-        暂无消息，等待 QQ 用户发送消息
-      </div>
-    )
+    return <MessagesEmptyState>暂无消息，等待 QQ 用户发送消息</MessagesEmptyState>
   }
 
   return (
@@ -84,6 +144,7 @@ function MessageList({
       {messages.map((message) => {
         const isUser = message.role === 'user'
         const hasMedia = Boolean(message.fileUrl || message.attachments?.length)
+        const showText = Boolean(message.text.trim()) && message.text !== '[附件]'
         return (
           <div key={message.id} className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
             <div className='flex items-center gap-1.5 px-1'>
@@ -96,60 +157,45 @@ function MessageList({
                 {isUser ? qqMessageUserLabel(message, sessionMeta) : 'Agent'}
               </span>
               <StatusChip status={message.status} />
-              <span className='text-[10px] text-muted-foreground/60'>{formatDateTime(message.createdAt)}</span>
-            </div>
-            <div className={`group flex max-w-[92%] items-end gap-1.5 ${isUser ? 'flex-row-reverse' : ''}`}>
-              <div
-                className={`max-w-[min(720px,100%)] rounded-2xl text-sm leading-relaxed shadow-sm ${
-                  isUser
-                    ? 'rounded-br-md bg-primary px-3.5 py-2.5 text-primary-foreground'
-                    : 'rounded-bl-md bg-muted px-3.5 py-2.5 text-foreground ring-1 ring-border'
-                }`}
-              >
-                {isUser ? (
-                  <div className='whitespace-pre-wrap text-sm'>{message.text}</div>
-                ) : (
-                  <MessageMarkdown text={message.text} />
-                )}
-                {message.attachments?.length ? (
-                  <div className='mt-2 space-y-2'>
-                    {message.attachments.map((attachment) => (
-                      <AttachmentCard key={attachment.id} attachment={attachment} />
-                    ))}
-                  </div>
-                ) : null}
-                {message.fileUrl && !message.attachments?.length ? (
-                  <AttachmentCard
-                    attachment={{
-                      deliveryStatus: 'available',
-                      fileName: message.fileName || '附件',
-                      fileSize: message.fileSize,
-                      fileUrl: message.fileUrl,
-                      id: message.id,
-                      version: 1,
-                    }}
-                  />
-                ) : null}
-              </div>
-              {!hasMedia && message.text.trim() ? (
-                <span className='mb-0.5 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100'>
-                  <CopyMessageButton
-                    copied={copiedMessageId === message.id}
-                    onCopy={() => void onCopy(message.text, message.id)}
-                  />
+              {!isUser && message.source === 'model' ? (
+                <span className='rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] text-primary'>
+                  {message.provider} / {message.model}
+                  {typeof message.durationMs === 'number'
+                    ? ` · ${formatChannelDuration(message.durationMs)}`
+                    : ''}
                 </span>
               ) : null}
+              {!isUser && message.source === 'system' ? (
+                <span className='rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>系统</span>
+              ) : null}
+              <span className='text-[10px] text-muted-foreground/60'>{formatDateTime(message.createdAt)}</span>
             </div>
+            {showText || (isUser && hasMedia) ? (
+              <div className={`group flex max-w-[92%] items-end gap-1.5 ${isUser ? 'flex-row-reverse' : ''}`}>
+                <div
+                  className={`max-w-[min(720px,100%)] rounded-2xl text-sm leading-relaxed shadow-sm ${channelBubbleClass(isUser)}`}
+                >
+                  {renderBubbleBody(message, isUser, showText)}
+                </div>
+                {showText && !hasMedia ? (
+                  <span className='mb-0.5 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100'>
+                    <CopyMessageButton
+                      copied={copiedMessageId === message.id}
+                      onCopy={() => void onCopy(message.text, message.id)}
+                    />
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+            {!isUser && message.attachments?.length ? (
+              <div className='mt-1 flex max-w-[92%] flex-col items-start gap-2'>
+                {message.attachments.map((attachment) => renderAttachment(attachment))}
+              </div>
+            ) : null}
           </div>
         )
       })}
-      <button
-        className='mx-auto my-4 block text-xs text-muted-foreground underline'
-        type='button'
-        onClick={onExport}
-      >
-        导出当前会话
-      </button>
+      {/* <ExportSessionLink onExport={onExport} /> */}
     </div>
   )
 }
@@ -158,78 +204,57 @@ export function QqMessagePane({
   copiedMessageId,
   draft,
   error,
+  fileInputRef,
   loading,
+  maxOutboundFiles,
   messages,
   onCopy,
   onDraftChange,
   onExport,
+  onPickFiles,
+  onRemovePending,
   onSend,
+  pendingAttachments,
   sending,
   sessionMeta,
 }: QqMessagePaneProps) {
-  const canSend = Boolean(sessionMeta?.canSend && draft.trim() && !sending)
-
   return (
-    <section className='flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card'>
-      <div className='flex shrink-0 items-center justify-between border-b border-border px-4 py-3'>
-        <div className='min-w-0'>
-          <div className='truncate text-sm font-semibold'>{qqSessionTitle(sessionMeta)}</div>
-          <div className='text-xs text-muted-foreground'>
-            {sessionMeta
-              ? `会话版本 v${sessionMeta.conversationVersion} · ${sessionMeta.agentTitle ?? sessionMeta.agentId}`
-              : '请在左侧选择会话'}
-          </div>
-        </div>
-        {sessionMeta ? (
-          <button
-            className='inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium ring-1 ring-border hover:bg-muted'
-            type='button'
-            onClick={onExport}
-          >
-            <Download className='size-3.5' />
-            导出
-          </button>
-        ) : null}
-      </div>
-
-      {error ? (
-        <div className='mx-4 mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive'>{error}</div>
-      ) : null}
-
+    <ChannelMessagePaneFrame
+      composer={
+        sessionMeta ? (
+          <ChannelAttachmentComposer
+            attachTitle='上传图片或文件（群聊仅图片）'
+            canSend={Boolean(sessionMeta.canSend)}
+            draft={draft}
+            fileInputRef={fileInputRef}
+            maxOutboundFiles={maxOutboundFiles}
+            pendingAttachments={pendingAttachments}
+            placeholder={qqComposerPlaceholder(sessionMeta)}
+            sending={sending}
+            onDraftChange={onDraftChange}
+            onPickFiles={onPickFiles}
+            onRemovePending={onRemovePending}
+            onSend={onSend}
+          />
+        ) : undefined
+      }
+      error={error}
+      subtitle={
+        sessionMeta
+          ? `会话版本 v${sessionMeta.conversationVersion} · ${sessionMeta.agentTitle ?? sessionMeta.agentId}`
+          : '请在左侧选择会话'
+      }
+      title={qqSessionTitle(sessionMeta)}
+      onExport={sessionMeta ? onExport : undefined}
+    >
       <MessageList
         copiedMessageId={copiedMessageId}
         loading={loading}
         messages={messages}
+        sessionMeta={sessionMeta}
         onCopy={onCopy}
         onExport={onExport}
-        sessionMeta={sessionMeta}
       />
-
-      {sessionMeta ? (
-        <div className='flex shrink-0 items-end gap-2 border-t border-border px-4 py-3 sm:px-6'>
-          <textarea
-            className='min-h-[44px] flex-1 resize-none rounded-xl bg-muted px-3 py-2.5 text-sm outline-none ring-1 ring-border focus:bg-background focus:ring-ring'
-            placeholder={qqComposerPlaceholder(sessionMeta)}
-            value={draft}
-            onChange={(event) => onDraftChange(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault()
-                if (!canSend) return
-                void onSend()
-              }
-            }}
-          />
-          <button
-            className='inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3.5 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-50'
-            disabled={!canSend}
-            type='button'
-            onClick={onSend}
-          >
-            {sending ? <Loader2 className='size-4 animate-spin' /> : <Send className='size-4' />}
-          </button>
-        </div>
-      ) : null}
-    </section>
+    </ChannelMessagePaneFrame>
   )
 }

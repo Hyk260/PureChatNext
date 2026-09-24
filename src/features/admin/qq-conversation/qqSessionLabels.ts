@@ -1,11 +1,7 @@
 import type { QQMessage, QQSession } from './qqConversationApi'
+import { truncateId } from '@/features/admin/channel-conversation/channelUi'
 
-function truncateId(id: string, head = 8, tail = 4) {
-  if (id.length <= head + tail + 1) return id
-  return `${id.slice(0, head)}…${id.slice(-tail)}`
-}
-
-export function isQQGroupSession(session: QQSession | null) {
+function isQQGroupSession(session: QQSession | null) {
   return session?.threadType === 'group' || Boolean(session?.externalUserId.startsWith('qq:group:'))
 }
 

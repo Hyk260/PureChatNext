@@ -109,6 +109,20 @@ function mapQQAttachments(event: ChannelTimelineEvent) {
     }))
 }
 
+function mapOutputAttachments(event: ChannelTimelineEvent) {
+  return event.attachments
+    .filter(({ direction }) => direction === 'output')
+    .map((attachment) => ({
+      deliveryStatus: attachment.deliveryStatus,
+      fileName: attachment.fileName,
+      fileSize: attachment.fileSize,
+      fileUrl: `/api/resources/files/${attachment.fileId}/content`,
+      id: attachment.id,
+      ...(attachment.summary ? { summary: attachment.summary } : {}),
+      version: attachment.version,
+    }))
+}
+
 /** 将 QQ channel_events 时间线展开为 Dev 会话气泡；附件直接使用 QQ 原始 URL。 */
 export function expandQQEventsToMessages(
   events: ChannelTimelineEvent[],
@@ -118,9 +132,11 @@ export function expandQQEventsToMessages(
   const authorNames = collectQQAuthorNames(events, options?.sessionUserName)
   for (const event of events) {
     if (event.messageKind === 'outbound') {
+      const outputAttachments = mapOutputAttachments(event)
       const text = event.responseText?.trim() || ''
-      if (!text) continue
+      if (!text && outputAttachments.length === 0) continue
       messages.push({
+        ...(outputAttachments.length ? { attachments: outputAttachments } : {}),
         createdAt: (event.completedAt ?? event.createdAt).toISOString(),
         eventId: event.id,
         id: `${event.id}:assistant`,
@@ -128,7 +144,7 @@ export function expandQQEventsToMessages(
         role: 'assistant',
         source: 'manual',
         status: event.status,
-        text,
+        text: text || '[附件]',
       })
       continue
     }
@@ -173,7 +189,9 @@ export function expandQQEventsToMessages(
     })
 
     if (event.responseText) {
+      const outputAttachments = mapOutputAttachments(event)
       messages.push({
+        ...(outputAttachments.length ? { attachments: outputAttachments } : {}),
         createdAt: (event.completedAt ?? event.createdAt).toISOString(),
         ...(event.durationMs === null ? {} : { durationMs: event.durationMs }),
         ...(event.model ? { model: event.model } : {}),

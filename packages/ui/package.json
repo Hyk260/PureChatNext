@@ -24,6 +24,7 @@
     "./Flexbox": "./src/Flexbox/index.ts",
     "./Flex": "./src/Flex/index.tsx",
     "./HtmlPreview": "./src/HtmlPreview/index.ts",
+    "./Image": "./src/Image/index.ts",
     "./MaterialFileTypeIcon": "./src/MaterialFileTypeIcon/index.ts",
     "./Icon": "./src/Icon/index.ts",
     "./Input": "./src/Input/index.ts",

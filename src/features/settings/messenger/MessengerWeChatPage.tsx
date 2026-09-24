@@ -1,7 +1,7 @@
 'use client'
 
 import { Spin } from 'antd'
-import { Alert, Button, confirmModal, Select, Text, Flex } from '@pure/ui'
+import { Alert, Button, confirmModal, Text, Flex } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
 import { isAdminRole } from '@/const/auth'
@@ -22,6 +22,7 @@ import {
   MESSENGER_DEFAULT_MODELS,
   MESSENGER_DEFAULT_PROVIDER,
 } from './const'
+import MessengerAgentSelect from './MessengerAgentSelect'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
@@ -159,7 +160,7 @@ const MessengerWeChatPage = memo(() => {
   } = useSWR<AgentListItem[]>(userId ? ['messenger-agents', userId] : null, fetchAgents, {
     revalidateOnFocus: false,
   })
-  const agents = agentList?.map((agent) => ({ label: agent.title, value: agent.id })) ?? []
+  const agents = agentList ?? []
   const loading = !userId || statusLoading || agentsLoading
 
   useEffect(() => {
@@ -341,12 +342,11 @@ const MessengerWeChatPage = memo(() => {
             <Text className='text-[13px]' type='secondary'>
               绑定助手
             </Text>
-            <Select
+            <MessengerAgentSelect
+              agents={agents}
               disabled={controlsDisabled}
-              options={agents}
-              style={{ maxWidth: 300, width: '100%' }}
               value={agentId}
-              onChange={(v) => void handleAgentChange(v)}
+              onChange={handleAgentChange}
             />
           </Flex>
 

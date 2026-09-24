@@ -1,11 +1,11 @@
 'use client'
 
 import { Spin } from 'antd'
-import { Alert, Button, confirmModal, Select, Text, copyToClipboard, Flex } from '@pure/ui'
+import { Alert, Button, confirmModal, Text, copyToClipboard, Flex } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
-import { MessagesSquareIcon, Trash2Icon } from 'lucide-react'
+import { MessagesSquareIcon, Settings2Icon, Trash2Icon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -24,9 +24,11 @@ import {
   QQ_DEFAULT_MODEL,
   QQ_DEFAULT_PROVIDER,
 } from './const'
+import MessengerAgentSelect from './MessengerAgentSelect'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
+import QQAdvancedSettingsModal from './QQAdvancedSettingsModal'
 import { QQConnectButton } from './QQConnectModal'
 import { fetchQQStatus, unbindQQ, updateQQConfiguration } from './qqApi'
 import type { QQProviderId, QQStatus } from './qqApi'
@@ -129,6 +131,7 @@ const MessengerQQPage = memo(() => {
   const userId = session?.user?.id
   const [binding, setBinding] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
   const [agentId, setAgentId] = useState('agt_inbox')
   const [provider, setProvider] = useState<QQProviderId>(QQ_DEFAULT_PROVIDER)
   const [modelId, setModelId] = useState(QQ_DEFAULT_MODEL)
@@ -148,7 +151,7 @@ const MessengerQQPage = memo(() => {
   } = useSWR<AgentListItem[]>(userId ? ['messenger-agents', userId] : null, fetchAgents, {
     revalidateOnFocus: false,
   })
-  const agents = agentList?.map((agent) => ({ label: agent.title, value: agent.id })) ?? []
+  const agents = agentList ?? []
   const loading = !userId || statusLoading || agentsLoading
 
   useEffect(() => {
@@ -265,6 +268,9 @@ const MessengerQQPage = memo(() => {
 
   const headerAction = (
     <Flex className='items-center gap-2'>
+      <Button icon={<Settings2Icon size={16} />} onClick={() => setAdvancedOpen(true)}>
+        高级设置
+      </Button>
       {isAdminRole(session?.user?.role) ? (
         <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/settings/qq-conversation')}>
           对话监控
@@ -297,12 +303,11 @@ const MessengerQQPage = memo(() => {
           <Text className='text-[13px]' type='secondary'>
             绑定助手
           </Text>
-          <Select
+          <MessengerAgentSelect
+            agents={agents}
             disabled={controlsDisabled}
-            options={agents}
-            style={{ maxWidth: 300, width: '100%' }}
             value={agentId}
-            onChange={(v) => void handleAgentChange(v)}
+            onChange={handleAgentChange}
           />
         </Flex>
 
@@ -312,11 +317,14 @@ const MessengerQQPage = memo(() => {
           provider={provider}
           onSelect={handleModelSelect}
         />
-
         {renderQqStatusBanner({ connected, gatewaySupported, message, showConnect, status: status ?? null })}
       </Flex>
 
       <MessengerCommandList platform='qq' />
+
+      {advancedOpen ? (
+        <QQAdvancedSettingsModal open onClose={() => setAdvancedOpen(false)} />
+      ) : null}
     </MessengerDetailShell>
   )
 })

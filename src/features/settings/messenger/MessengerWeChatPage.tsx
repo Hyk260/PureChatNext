@@ -4,7 +4,7 @@ import { Spin } from 'antd'
 import { Alert, Button, confirmModal, Select, Text, Flex } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
-import { isDev } from '@/libs/constants'
+import { isAdminRole } from '@/const/auth'
 import { MessagesSquareIcon, Trash2Icon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
@@ -307,8 +307,8 @@ const MessengerWeChatPage = memo(() => {
   // Gateway 不可用（Vercel / 未开启内置进程）时不展示连接配置与操作按钮。
   const headerAction = gatewaySupported ? (
     <Flex className='items-center gap-2'>
-      {isDev ? (
-        <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/dev/wechat-conversation')}>
+      {isAdminRole(session?.user?.role) ? (
+        <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/settings/wechat-conversation')}>
           对话监控
         </Button>
       ) : null}

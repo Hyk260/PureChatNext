@@ -42,6 +42,7 @@ describe('useSettingsCategory system tools', () => {
       '文件读取',
       'S3 测试',
       'QQ 对话',
+      '微信对话',
     ])
     expect(manage?.items.map((item) => item.href)).toEqual([
       '/settings/users',
@@ -50,6 +51,7 @@ describe('useSettingsCategory system tools', () => {
       '/settings/read-file',
       '/settings/s3',
       '/settings/qq-conversation',
+      '/settings/wechat-conversation',
     ])
   })
 })

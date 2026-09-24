@@ -87,12 +87,12 @@ export function expandEventsToMessages(events: ChannelTimelineEvent[]): Timeline
       createdAt: event.createdAt.toISOString(),
       eventId: event.id,
       id: `${event.id}:user`,
-      ...(isImage ? { imageUrl: `/api/dev/wechat/events/${event.id}/image` } : {}),
+      ...(isImage ? { imageUrl: `/api/admin/wechat/events/${event.id}/image` } : {}),
       ...(isFile
         ? {
             fileName: filePayload?.file_name || '未命名文件',
             fileSize: parseFileSize(filePayload?.len),
-            fileUrl: `/api/dev/wechat/events/${event.id}/file`,
+            fileUrl: `/api/admin/wechat/events/${event.id}/file`,
           }
         : {}),
       messageKind: event.messageKind,

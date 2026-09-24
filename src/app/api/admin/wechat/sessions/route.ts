@@ -3,15 +3,15 @@ import { NextResponse } from 'next/server'
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
-import { withAuth } from '@/libs/auth/get-session-user'
+import { withAdmin } from '@/libs/auth/get-session-user'
 import { decryptCredentials } from '@/libs/channels/wechat/encrypt'
 import { canSendWechatDevOutbound } from '@/libs/channels/wechat/outbound'
 
 /**
- * GET /api/dev/wechat/sessions
- * 开发环境：列出微信会话（仅开发调试）
+ * GET /api/admin/wechat/sessions
+ * 管理员：列出微信渠道会话
  */
-export const GET = withAuth(async (_request, { userId }) => {
+export const GET = withAdmin(async (_request, { userId }) => {
   const myBinding = await new ChannelBindingModel().findByUserAndPlatform(userId, WECHAT_PLATFORM)
 
   let ownerExternalUserId = ''
@@ -23,7 +23,7 @@ export const GET = withAuth(async (_request, { userId }) => {
     }
   }
 
-  // Dev 页：展示本库全部 wechat 会话，便于切换查看；代发仍仅限本人 binding + 扫码授权者
+  // 展示本库全部 wechat 会话，便于切换查看；代发仍仅限本人 binding + 扫码授权者
   const sessions = await new ChannelEventModel().listSessionsByPlatform(WECHAT_PLATFORM)
   const agentModel = new AgentModel(userId)
   const agentIds = new Set<string>()

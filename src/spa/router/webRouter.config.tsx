@@ -199,6 +199,13 @@ export const webRoutes: RouteObject[] = [
         path: 'qq-conversation',
       },
       {
+        element: dynamicElement(
+          () => import('@/routes/settings/wechat-conversation/page'),
+          'Settings > WeChat Conversation'
+        ),
+        path: 'wechat-conversation',
+      },
+      {
         element: dynamicElement(() => import('@/routes/settings/messenger/page'), 'Settings > Messenger'),
         path: 'messenger/:platform?',
       },
@@ -291,6 +298,13 @@ export const webRoutes: RouteObject[] = [
         ),
         path: 'qq-conversation',
       },
+      {
+        element: dynamicElement(
+          () => import('@/features/admin/wechat-conversation/WechatConversationPage'),
+          'Admin > WechatConversation'
+        ),
+        path: 'wechat-conversation',
+      },
     ],
     element: dynamicLayout(() => import('@/routes/admin/_layout'), 'AdminLayout'),
     path: 'admin',
@@ -301,10 +315,6 @@ export const webRoutes: RouteObject[] = [
     ? ([
         {
           children: [
-            {
-              element: dynamicElement(() => import('@/features/dev/WechatConversationPage'), 'Dev > WechatConversation'),
-              path: 'wechat-conversation',
-            },
             {
               element: dynamicElement(() => import('@/features/dev/CodeBlockPage'), 'Dev > CodeBlock'),
               path: 'code-block',

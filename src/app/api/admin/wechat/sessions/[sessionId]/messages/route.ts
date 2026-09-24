@@ -6,7 +6,7 @@ import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
-import { jsonError, withAuth } from '@/libs/auth/get-session-user'
+import { jsonError, withAdmin } from '@/libs/auth/get-session-user'
 import { decryptCredentials } from '@/libs/channels/wechat/encrypt'
 import { persistWechatFile } from '@/libs/channels/wechat/fileArtifacts'
 import { WECHAT_MAX_INBOUND_FILE_BYTES } from '@/libs/channels/wechat/inboundMedia'
@@ -99,11 +99,11 @@ function outboundAttachments(eventId: string) {
 }
 
 /**
- * GET /api/dev/wechat/sessions/[sessionId]/messages
- * 开发环境：分页拉取微信会话时间线消息
+ * GET /api/admin/wechat/sessions/[sessionId]/messages
+ * 管理员：分页拉取微信会话时间线消息
  * @param request - query `limit` / `cursor` / `conversationVersion` / `watchEventId`
  */
-export const GET = withAuth<{ sessionId: string }>(async (request, { params, userId }) => {
+export const GET = withAdmin<{ sessionId: string }>(async (request, { params, userId }) => {
   const { sessionId } = await params
   if (!sessionId?.trim()) return jsonError('Invalid sessionId', 400)
 
@@ -172,10 +172,10 @@ export const GET = withAuth<{ sessionId: string }>(async (request, { params, use
 })
 
 /**
- * POST /api/dev/wechat/sessions/[sessionId]/messages
- * 开发环境：向微信会话发送出站消息
+ * POST /api/admin/wechat/sessions/[sessionId]/messages
+ * 管理员：向微信会话发送出站消息
  */
-export const POST = withAuth<{ sessionId: string }>(async (request, { params, userId }) => {
+export const POST = withAdmin<{ sessionId: string }>(async (request, { params, userId }) => {
   const { sessionId } = await params
   if (!sessionId?.trim()) return jsonError('Invalid sessionId', 400)
 

@@ -3,15 +3,15 @@ import { NextResponse } from 'next/server'
 import { WechatApiClient } from '@pure/chat-adapter/wechat'
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
-import { jsonError, withAuth } from '@/libs/auth/get-session-user'
+import { jsonError, withAdmin } from '@/libs/auth/get-session-user'
 import { decryptCredentials } from '@/libs/channels/wechat/encrypt'
 import { downloadStoredWechatImage, parseWechatImageContent } from '@/libs/channels/wechat/inboundMedia'
 
 /**
- * GET /api/dev/wechat/events/[eventId]/image
- * 开发环境：下载微信入站图片事件内容
+ * GET /api/admin/wechat/events/[eventId]/image
+ * 管理员：下载微信入站图片事件内容
  */
-export const GET = withAuth<{ eventId: string }>(async (_request, { params, userId }) => {
+export const GET = withAdmin<{ eventId: string }>(async (_request, { params, userId }) => {
   const { eventId } = await params
   if (!eventId?.trim()) return jsonError('Invalid eventId', 400)
 

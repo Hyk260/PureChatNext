@@ -64,6 +64,7 @@ export enum SettingsTab {
   ReadFile = 'read-file',
   S3 = 's3',
   QqConversation = 'qq-conversation',
+  WechatConversation = 'wechat-conversation',
 }
 
 /** Page titles for SettingsHeader (covers nav + empty/hidden tabs). */
@@ -93,6 +94,7 @@ export const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
   [SettingsTab.ReadFile]: '文件读取',
   [SettingsTab.S3]: 'S3 测试',
   [SettingsTab.QqConversation]: 'QQ 对话',
+  [SettingsTab.WechatConversation]: '微信对话',
 }
 
 export function getSettingsTabLabel(tab: string | undefined): string {
@@ -154,6 +156,12 @@ const MANAGE_GROUP: SettingsCategoryGroup = {
       icon: MessageSquare,
       key: SettingsTab.QqConversation,
       label: 'QQ 对话',
+    },
+    {
+      href: tabHref(SettingsTab.WechatConversation),
+      icon: MessageCircleIcon,
+      key: SettingsTab.WechatConversation,
+      label: '微信对话',
     },
   ],
   key: SettingsGroupKey.Manage,

@@ -58,7 +58,7 @@ export type WechatDevMessagesResponse = {
 }
 
 export async function fetchWechatDevSessions(signal?: AbortSignal): Promise<WechatDevSessionsResponse> {
-  const res = await apiFetch('/api/dev/wechat/sessions', { signal })
+  const res = await apiFetch('/api/admin/wechat/sessions', { signal })
   if (!res.ok) throw new Error(`sessions failed: ${res.status}`)
   return res.json() as Promise<WechatDevSessionsResponse>
 }
@@ -82,7 +82,7 @@ export async function fetchWechatDevSessionMessages(
     searchParams.set('conversationVersion', String(resolved.conversationVersion))
   }
   for (const eventId of resolved.watchEventIds ?? []) searchParams.append('watchEventId', eventId)
-  const res = await apiFetch(`/api/dev/wechat/sessions/${encodeURIComponent(sessionId)}/messages?${searchParams}`, {
+  const res = await apiFetch(`/api/admin/wechat/sessions/${encodeURIComponent(sessionId)}/messages?${searchParams}`, {
     signal: resolved.signal,
   })
   if (!res.ok) throw new Error(`messages failed: ${res.status}`)
@@ -98,7 +98,7 @@ export async function sendWechatDevMessage(
   const files = resolved.files ?? []
   const requestId = resolved.requestId ?? crypto.randomUUID()
   const hasFiles = files.length > 0
-  const url = `/api/dev/wechat/sessions/${encodeURIComponent(sessionId)}/messages`
+  const url = `/api/admin/wechat/sessions/${encodeURIComponent(sessionId)}/messages`
 
   const res = hasFiles
     ? await apiFetch(url, {

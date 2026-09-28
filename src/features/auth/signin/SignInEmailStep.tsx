@@ -33,7 +33,12 @@ interface SignInEmailStepProps {
   serverConfigInit: boolean
 }
 
-const PROVIDER_ICON_STYLE: CSSProperties = { left: 12, position: 'absolute', top: 13 }
+const PROVIDER_ICON_STYLE: CSSProperties = {
+  left: 12,
+  position: 'absolute',
+  top: '50%',
+  transform: 'translateY(-50%)',
+}
 const INPUT_ICON_STYLE: CSSProperties = { marginInline: 6 }
 const LAST_USED_BADGE_STYLES = {
   root: { display: 'block', paddingTop: 8, width: '100%' },
@@ -106,7 +111,7 @@ export const SignInEmailStep = ({
   )
 
   return (
-    <AuthCard title={`登录或注册你的 ${BRANDING_NAME} 账号`}>
+    <AuthCard title={`登录 ${BRANDING_NAME} 账号`}>
       <Flex className='flex-col gap-3'>
         {!serverConfigInit && (
           <>
@@ -123,7 +128,7 @@ export const SignInEmailStep = ({
                 <Button
                   block
                   disabled={pendingProvider !== null}
-                  icon={<Icon icon={AuthIcons(provider, 18)} style={PROVIDER_ICON_STYLE} />}
+                  icon={<span style={PROVIDER_ICON_STYLE}>{AuthIcons(provider, 18)}</span>}
                   loading={pendingProvider === provider}
                   size='large'
                   type='fill'

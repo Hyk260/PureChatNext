@@ -1,6 +1,6 @@
 'use client'
 
-import { Checkbox, Text, confirmModal, stopPropagation, Flex } from '@pure/ui'
+import { Checkbox, confirmModal, stopPropagation } from '@pure/ui'
 import { memo, useSyncExternalStore } from 'react'
 
 import Link from 'next/link'
@@ -11,7 +11,10 @@ import {
   subscribeAuthAgreement,
 } from './agreement'
 
-const AGREEMENT_TEXT_PROPS = { style: { fontSize: 13 }, type: 'secondary' } as const
+const AGREEMENT_TEXT_PROPS = {
+  style: { fontSize: 13, lineHeight: '16px' },
+  type: 'secondary',
+} as const
 
 const AgreementLinks = () => (
   <>
@@ -55,17 +58,9 @@ const AuthAgreement = memo(() => {
   const checked = useSyncExternalStore(subscribeAuthAgreement, isAuthAgreementAccepted, () => false)
 
   return (
-    <Flex
-      className='cursor-pointer items-center gap-2 select-none'
-      onClick={() => setAuthAgreementAccepted(!checked)}
-    >
-      <span onClick={stopPropagation} onKeyDown={stopPropagation}>
-        <Checkbox checked={checked} onChange={setAuthAgreementAccepted} />
-      </span>
-      <Text as='span' {...AGREEMENT_TEXT_PROPS}>
-        我已阅读并同意 <AgreementLinks />
-      </Text>
-    </Flex>
+    <Checkbox checked={checked} textProps={AGREEMENT_TEXT_PROPS} onChange={setAuthAgreementAccepted}>
+      我已阅读并同意 <AgreementLinks />
+    </Checkbox>
   )
 })
 

@@ -5,14 +5,55 @@ import AuthAgreement, { withAuthAgreement } from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
 import { Button, Icon, Input, InputPassword, Text } from '@pure/ui'
 import { Form } from 'antd'
+import type { Rule } from 'antd/es/form'
 import type { InputRef } from '@pure/ui'
 import { Lock, Mail } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef } from 'react'
+import type { CSSProperties } from 'react'
 
 import { useSignUp } from './useSignUp'
 import type { SignUpFormValues } from './useSignUp'
+
+const INPUT_ICON_STYLE: CSSProperties = { marginInline: 6 }
+
+const EMAIL_RULES: Rule[] = [
+  { message: '请输入邮箱', required: true },
+  { message: '请输入有效的邮箱地址', type: 'email' },
+]
+
+function validatePasswordComplexity(_: unknown, value?: string) {
+  if (!value) return Promise.resolve()
+  const hasLetter = /[a-z]/i.test(value)
+  const hasNumber = /\d/.test(value)
+  if (hasLetter && hasNumber) return Promise.resolve()
+  return Promise.reject(new Error('密码须同时包含字母和数字'))
+}
+
+const PASSWORD_RULES: Rule[] = [
+  { message: '请输入密码', required: true },
+  { message: '密码至少 8 个字符', min: 8 },
+  { max: 64, message: '密码最多 64 个字符' },
+  { validator: validatePasswordComplexity },
+]
+
+const CONFIRM_PASSWORD_RULES: Rule[] = [
+  { message: '请确认密码', required: true },
+  ({ getFieldValue }) => ({
+    validator(_, value) {
+      if (!value || getFieldValue('password') === value) {
+        return Promise.resolve()
+      }
+      return Promise.reject(new Error('两次输入的密码不一致'))
+    },
+  }),
+]
+
+function FieldIcon({ icon }: { icon: LucideIcon }) {
+  return <Icon icon={icon} style={INPUT_ICON_STYLE} />
+}
 
 // configReady 由 SignUpPage 在外层保证，此处直接渲染表单内容
 export const SignUpForm = () => {
@@ -54,95 +95,33 @@ const SignUpFormContent = () => {
   return (
     <AuthCard footer={footer} title={`创建 ${BRANDING_NAME} 账号`}>
       <Form form={form} layout='vertical' onFinish={handleFinish}>
-        <Form.Item
-          name='email'
-          rules={[
-            { message: '请输入邮箱', required: true },
-            { message: '请输入有效的邮箱地址', type: 'email' },
-          ]}
-        >
+        <Form.Item name='email' rules={EMAIL_RULES}>
           <Input
             placeholder='请输入邮箱地址'
+            prefix={<FieldIcon icon={Mail} />}
             ref={emailInputRef}
             size='large'
-            prefix={
-              <Icon
-                icon={Mail}
-                style={{
-                  marginInline: 6,
-                }}
-              />
-            }
           />
         </Form.Item>
 
-        <Form.Item
-          name='password'
-          rules={[
-            { message: '请输入密码', required: true },
-            { message: '密码至少 8 个字符', min: 8 },
-            { max: 64, message: '密码最多 64 个字符' },
-            {
-              validator: (_, value) => {
-                if (!value) return Promise.resolve()
-                const hasLetter = /[a-z]/i.test(value)
-                const hasNumber = /\d/.test(value)
-                return hasLetter && hasNumber
-                  ? Promise.resolve()
-                  : Promise.reject(new Error('密码须同时包含字母和数字'))
-              },
-            },
-          ]}
-        >
+        <Form.Item name='password' rules={PASSWORD_RULES}>
           <InputPassword
             placeholder='请输入密码'
+            prefix={<FieldIcon icon={Lock} />}
             ref={passwordInputRef}
             size='large'
-            prefix={
-              <Icon
-                icon={Lock}
-                style={{
-                  marginInline: 6,
-                }}
-              />
-            }
           />
         </Form.Item>
 
-        <Form.Item
-          dependencies={['password']}
-          name='confirmPassword'
-          rules={[
-            { message: '请确认密码', required: true },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue('password') === value) {
-                  return Promise.resolve()
-                }
-                return Promise.reject(new Error('两次输入的密码不一致'))
-              },
-            }),
-          ]}
-        >
-          <InputPassword
-            placeholder='请确认密码'
-            size='large'
-            prefix={
-              <Icon
-                icon={Lock}
-                style={{
-                  marginInline: 6,
-                }}
-              />
-            }
-          />
+        <Form.Item dependencies={['password']} name='confirmPassword' rules={CONFIRM_PASSWORD_RULES}>
+          <InputPassword placeholder='请确认密码' prefix={<FieldIcon icon={Lock} />} size='large' />
         </Form.Item>
 
         <Form.Item>
           <AuthAgreement />
         </Form.Item>
 
-        <Form.Item>
+        <Form.Item style={{ marginBottom: 0 }}>
           <Button block htmlType='submit' loading={loading} size='large' type='primary'>
             注册
           </Button>

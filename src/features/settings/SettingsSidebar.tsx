@@ -1,12 +1,13 @@
 'use client'
 
-import { Accordion, AccordionItem, ScrollShadow, Text, Flex } from '@pure/ui'
+import { Accordion, AccordionItem, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { memo, useMemo } from 'react'
 
 import NavItem from '@/components/NavItem'
+import Scrollbar from '@/components/Scrollbar'
 import { isAdminRole } from '@/const/auth'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
@@ -55,7 +56,7 @@ const SettingsSidebar = memo(() => {
     <Flex
       className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}
     >
-      <Flex className='flex-col gap-px h-full'>
+      <Flex className='flex-col gap-px h-full w-[240px]'>
         <SideBarHeaderLayout
           breadcrumb={[
             {
@@ -66,39 +67,41 @@ const SettingsSidebar = memo(() => {
           homeHref='/'
           showHomeIcon
         />
-        <Flex className='flex-col px-1'>
-          <Accordion
-            defaultExpandedKeys={[
-              SettingsGroupKey.General,
-              SettingsGroupKey.Agent,
-              SettingsGroupKey.System,
-              SettingsGroupKey.Manage,
-            ]}
-            gap={8}
-          >
-            {categoryGroups.map((group) => (
-              <AccordionItem
-                itemKey={group.key}
-                key={group.key}
-                paddingBlock={4}
-                paddingInline='8px 4px'
-                title={
-                  <Text className='text-[12px] font-medium' ellipsis type='secondary'>
-                    {group.title}
-                  </Text>
-                }
-              >
-                <Flex className='flex-col gap-px py-px'>
-                  {group.items.map((item) => (
-                    <Link className='text-inherit no-underline' href={item.href} key={item.key}>
-                      <NavItem active={activeTab === item.key} clickable icon={item.icon} title={item.label} />
-                    </Link>
-                  ))}
-                </Flex>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </Flex>
+        <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }}>
+          <Flex className='flex-col px-1'>
+            <Accordion
+              defaultExpandedKeys={[
+                SettingsGroupKey.General,
+                SettingsGroupKey.Agent,
+                SettingsGroupKey.System,
+                SettingsGroupKey.Manage,
+              ]}
+              gap={8}
+            >
+              {categoryGroups.map((group) => (
+                <AccordionItem
+                  itemKey={group.key}
+                  key={group.key}
+                  paddingBlock={4}
+                  paddingInline='8px 4px'
+                  title={
+                    <Text className='text-[12px] font-medium' ellipsis type='secondary'>
+                      {group.title}
+                    </Text>
+                  }
+                >
+                  <Flex className='flex-col gap-px py-px'>
+                    {group.items.map((item) => (
+                      <Link className='text-inherit no-underline' href={item.href} key={item.key}>
+                        <NavItem active={activeTab === item.key} clickable icon={item.icon} title={item.label} />
+                      </Link>
+                    ))}
+                  </Flex>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </Flex>
+        </Scrollbar>
       </Flex>
     </Flex>
   )

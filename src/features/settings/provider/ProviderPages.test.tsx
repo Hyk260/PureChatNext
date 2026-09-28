@@ -62,7 +62,6 @@ vi.mock('@pure/ui', () => ({
   Icon: () => null,
   ProviderCombine: () => null,
   ProviderIcon: () => null,
-  ScrollShadow: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   SearchBar: ({
     onInputChange,
     placeholder,
@@ -74,6 +73,10 @@ vi.mock('@pure/ui', () => ({
   }) => <input placeholder={placeholder} value={value} onChange={(event) => onInputChange?.(event.target.value)} />,
   Tag: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
+}))
+
+vi.mock('@/components/Scrollbar', () => ({
+  default: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))
 
 vi.mock('antd-style', () => ({

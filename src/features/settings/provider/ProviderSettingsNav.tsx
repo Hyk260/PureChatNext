@@ -1,6 +1,6 @@
 'use client'
 
-import { Accordion, AccordionItem, Flex, Icon, ProviderIcon, ScrollShadow, SearchBar, Text } from '@pure/ui'
+import { Accordion, AccordionItem, Flex, Icon, ProviderIcon, SearchBar, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LayoutGrid, Search } from 'lucide-react'
 import Link from 'next/link'
@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation'
 import { memo, useMemo, useState } from 'react'
 
 import NavItem from '@/components/NavItem'
+import Scrollbar from '@/components/Scrollbar'
 
 import { SETTINGS_PROVIDER_IDS, getSettingsProviderMeta } from './const'
 import { useProviderConfigStore } from './store/useProviderConfigStore'
@@ -105,7 +106,7 @@ const ProviderSettingsNav = memo(() => {
           onInputChange={setKeyword}
         />
       </Flex>
-      <ScrollShadow size={2} style={{ flex: 1, minHeight: 0, width: '100%' }}>
+      <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }}>
         <Flex className='mt-2 flex-col gap-1 px-1 py-[0_32px]'>
           <Link className='text-inherit no-underline' href='/settings/provider/all'>
             <NavItem active={isAllActive} clickable icon={LayoutGrid} title='全部' />
@@ -153,7 +154,7 @@ const ProviderSettingsNav = memo(() => {
             </AccordionItem>
           </Accordion>
         </Flex>
-      </ScrollShadow>
+      </Scrollbar>
     </Flex>
   )
 })

@@ -1,9 +1,10 @@
 'use client'
 
-import { ScrollShadow, Flex } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Suspense, memo } from 'react'
 
+import Scrollbar from '@/components/Scrollbar'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
 
@@ -35,7 +36,7 @@ const HomeSidebar = memo(() => {
     <Flex
       className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}
     >
-      <ScrollShadow className='h-full w-[240px]' size={2}>
+      <Scrollbar className='h-full w-[240px]'>
         <Flex className='flex-col gap-px h-full'>
           <SideBarHeaderLayout
             breadcrumb={[
@@ -54,7 +55,7 @@ const HomeSidebar = memo(() => {
             {/* 知识库功能暂未开放 */}
           </Flex>
         </Flex>
-      </ScrollShadow>
+      </Scrollbar>
     </Flex>
   )
 })

@@ -1,9 +1,10 @@
 'use client'
 
-import { ScrollShadow, Flex } from '@pure/ui'
+import { Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { memo } from 'react'
 
+import Scrollbar from '@/components/Scrollbar'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
 import CommunitySidebarHeader from './CommunitySidebarHeader'
@@ -34,11 +35,11 @@ const CommunitySidebar = memo(() => {
     <Flex
       className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}
     >
-      <ScrollShadow className='h-full w-[240px]' size={2}>
+      <Scrollbar className='h-full w-[240px]'>
         <Flex className='flex-col gap-px h-full'>
           <CommunitySidebarHeader />
         </Flex>
-      </ScrollShadow>
+      </Scrollbar>
     </Flex>
   )
 })

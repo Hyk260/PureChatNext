@@ -11,10 +11,9 @@ import type { ChatPermissionMode } from '@pure/types'
 import { useApp } from '@/components/AntdStaticMethods'
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import type { AgentListItem } from '@/const/home/agents'
-import { buildChatHref } from '@/features/chat/buildChatHref'
-import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 import {
   autoRenameTopic,
+  buildChatHref,
   deleteTopic,
   deleteTopics as deleteTopicsApi,
   fetchMessages,
@@ -40,6 +39,7 @@ import type {
   TopicDeleteScope,
   TopicUpdate,
 } from '@/features/chat/types'
+import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 import { fetchAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'

@@ -32,7 +32,7 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 /**
- * Text model switcher used in SendArea.
+ * Text model switcher used in send areas (home input).
  */
 const ModelLabel = memo(() => {
   const current = useCurrentHomeModel()

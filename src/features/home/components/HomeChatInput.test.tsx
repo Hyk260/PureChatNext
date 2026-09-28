@@ -65,12 +65,15 @@ vi.mock('@/features/home/components/HomeProjectBar', () => ({
 vi.mock('@/features/chat/ModelSwitchMenu', () => ({
   useCurrentHomeModel: () => ({ abilities: { vision: mocks.vision } }),
 }))
-vi.mock('@/features/chat/SendArea', () => ({
+vi.mock('@/features/chat/SendArea/SendButton', () => ({
   default: ({ disabled, onClick }: { disabled?: boolean; onClick: () => void }) => (
     <button disabled={disabled} type='button' onClick={onClick}>
       发送
     </button>
   ),
+}))
+vi.mock('@/features/chat/ModelLabel', () => ({
+  default: () => <span>model</span>,
 }))
 vi.mock('@/features/chat/PermissionModeSelector', () => ({
   default: ({ onChange, value }: { onChange: (value: 'full') => void; value: string }) => (

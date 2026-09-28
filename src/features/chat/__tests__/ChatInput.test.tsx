@@ -45,8 +45,8 @@ vi.mock('antd-style', () => ({
 }))
 
 vi.mock('@/features/chat/ModelSelector', () => ({ default: () => <span>model</span> }))
-vi.mock('@/features/chat/SendArea', () => ({
-  SendButton: ({ onClick }: { onClick: () => void }) => (
+vi.mock('@/features/chat/SendArea/SendButton', () => ({
+  default: ({ onClick }: { onClick: () => void }) => (
     <button type='button' onClick={onClick}>
       send
     </button>

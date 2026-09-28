@@ -21,4 +21,8 @@ description: 面向 PureChatNext 贡献者的数据库、质量检查与前端�
 - [Tailwind 样式与 AI 编码规范](./styling/tailwind-guidelines.md)
 - [Tailwind 样式迁移方案](./styling/tailwind-migration.md)
 
+## 开发工具
+
+- [Ponytail 使用指南](./ponytail.md)
+
 开始开发前还应阅读仓库根目录的 [AGENTS.md](../../AGENTS.md) 和 [贡献指南](../../CONTRIBUTING.md)。

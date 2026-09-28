@@ -11,8 +11,7 @@ import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from '
 import type { ChatPermissionMode } from '@pure/types'
 
 import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
-import { buildChatHref } from '@/features/chat/buildChatHref'
-import { createTopic, putMessages, updateToolApproval, upsertToolApproval } from '@/features/chat/chatApi'
+import { buildChatHref, createTopic, putMessages, updateToolApproval, upsertToolApproval } from '@/features/chat/chatApi'
 import {
   claimPendingChatFiles,
   claimPendingChatProject,
@@ -145,8 +144,7 @@ const ChatView = memo<ChatViewProps>(
     } = useChat({
       id: chatId,
       messages: initialMessages,
-      // Throttle UI updates so Markdown/Streamdown isn't re-rendered on every chunk
-      throttle: 50,
+      // throttle: 50,
       transport: chatTransport,
       sendAutomaticallyWhen: ({ messages: nextMessages }) =>
         lastAssistantMessageIsCompleteWithToolCalls({ messages: nextMessages }) ||

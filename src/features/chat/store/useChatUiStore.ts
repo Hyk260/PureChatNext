@@ -7,7 +7,6 @@ import type { WorkPanelTabId } from '@/features/chat/WorkPanel/tabs'
 import {
   DEFAULT_WORK_PANEL_ACTIVE_TAB,
   DEFAULT_WORK_PANEL_OPEN_TABS,
-  WORK_PANEL_TAB_BY_ID,
   isWorkPanelTabId,
 } from '@/features/chat/WorkPanel/tabs'
 import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
@@ -47,7 +46,7 @@ type ChatUiState = {
 
 function normalizeOpenTabs(tabs: unknown): WorkPanelTabId[] {
   if (!Array.isArray(tabs)) return [...DEFAULT_WORK_PANEL_OPEN_TABS]
-  const next = tabs.filter((tab): tab is WorkPanelTabId => isWorkPanelTabId(tab) && WORK_PANEL_TAB_BY_ID[tab].implemented)
+  const next = tabs.filter((tab): tab is WorkPanelTabId => isWorkPanelTabId(tab))
   return next.length > 0 ? next : [...DEFAULT_WORK_PANEL_OPEN_TABS]
 }
 
@@ -84,7 +83,7 @@ export const useChatUiStore = create<ChatUiState>()(
       setLeftCollapsed: (leftCollapsed) => set({ leftCollapsed }),
       setRightCollapsed: (rightCollapsed) => set({ rightCollapsed }),
       openWorkPanelTab: (tab) => {
-        if (!WORK_PANEL_TAB_BY_ID[tab]?.implemented) return
+        if (!isWorkPanelTabId(tab)) return
         set((s) => ({
           rightCollapsed: false,
           workPanelActiveTab: tab,

@@ -138,31 +138,11 @@ export class AgentModel {
     const existing = await this.findVisibleById(id)
     if (!existing) return undefined
 
-    const patch: Partial<AgentItem> = {
-      updatedAt: new Date(),
-    }
-
-    if (data.title !== undefined) patch.title = data.title
-    if (data.description !== undefined) patch.description = data.description
-    if (data.avatar !== undefined) patch.avatar = data.avatar
-    if (data.backgroundColor !== undefined) patch.backgroundColor = data.backgroundColor
-    if (data.systemRole !== undefined) patch.systemRole = data.systemRole
-    if (data.openingMessage !== undefined) patch.openingMessage = data.openingMessage
-    if (data.openingQuestions !== undefined) patch.openingQuestions = data.openingQuestions
-    if (data.model !== undefined) patch.model = data.model
-    if (data.provider !== undefined) patch.provider = data.provider
-    if (data.params !== undefined) patch.params = data.params
-    if (data.pinned !== undefined) patch.pinned = data.pinned
-    if (data.sort !== undefined) patch.sort = data.sort
-
-    // 内置禁止改 slug；用户助理允许
-    if (data.slug !== undefined && !existing.isBuiltin) {
-      patch.slug = data.slug
-    }
+    const { slug, ...patch } = data
 
     const [item] = await this.db
       .update(agents)
-      .set(patch)
+      .set({ ...patch, slug: existing.isBuiltin ? undefined : slug, updatedAt: new Date() })
       .where(and(eq(agents.id, id), this.visibleWhere()))
       .returning()
     return item
@@ -185,10 +165,6 @@ export class AgentModel {
     if (existing.isBuiltin || existing.userId === null) {
       throw new AgentDeleteError('Builtin agent cannot be deleted', 'builtin')
     }
-    if (existing.userId !== this.userId) {
-      throw new AgentDeleteError('Agent not found', 'not_found')
-    }
-
     // 话题无 FK；消息随 topic_id cascade。先删话题再删助理。
     await this.db.transaction(async (tx) => {
       await tx.delete(chatTopics).where(and(eq(chatTopics.agentId, id), eq(chatTopics.userId, this.userId)))

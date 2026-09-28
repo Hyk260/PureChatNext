@@ -30,8 +30,9 @@ import {
   setPendingChatText,
 } from '@/features/chat/chatLocalStorage'
 import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
+import ModelLabel from '@/features/chat/ModelLabel'
 import PermissionModeSelector from '@/features/chat/PermissionModeSelector'
-import SendArea from '@/features/chat/SendArea'
+import SendButton from '@/features/chat/SendArea/SendButton'
 import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
 import HomeAgentSelect from '@/features/home/components/HomeAgentSelect'
 import HomeProjectBar from '@/features/home/components/HomeProjectBar'
@@ -393,7 +394,12 @@ const HomeChatInput = memo(() => {
             ) : null}
           </Flex>
 
-          <SendArea disabled={!canSend} loading={sending} modelLabelClassName={styles.modelLabel} onClick={handleSend} />
+          <Flex className='items-center flex-none gap-3'>
+            <span className={styles.modelLabel}>
+              <ModelLabel />
+            </span>
+            <SendButton disabled={!canSend} loading={sending} onClick={handleSend} />
+          </Flex>
         </Flex>
       </Block>
     </div>

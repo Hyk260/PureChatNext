@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { formatSize } from '@pure/utils/client'
 import { Button, Image, MaterialFileTypeIcon, Modal, Tag } from '@pure/ui'
 
-import { SendButton } from '@/features/chat/SendArea'
+import SendButton from '@/features/chat/SendArea/SendButton'
 import { READ_FILE_API_PATH } from '@/features/admin/read-file/readFileModel'
 import { apiFetch } from '@/utils/apiFetch'
 

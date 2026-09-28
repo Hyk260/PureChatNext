@@ -55,8 +55,6 @@ const WorkPanel = memo<Props>(({ value, onChange, topic, topicTitle }) => {
 
   const handleToggleMenuTab = useCallback(
     (tabId: WorkPanelTabId) => {
-      const meta = WORK_PANEL_TAB_BY_ID[tabId]
-      if (!meta.implemented) return
       if (openTabs.includes(tabId)) {
         closeWorkPanelTab(tabId)
       } else {
@@ -70,7 +68,6 @@ const WorkPanel = memo<Props>(({ value, onChange, topic, topicTitle }) => {
   const menuItems = useMemo<MenuProps['items']>(() => {
     const toMenuChildren = (tabs: typeof WORKSPACE_MENU_TABS) =>
       tabs.map((tab) => ({
-        disabled: !tab.implemented,
         icon: openTabs.includes(tab.id) ? <Icon icon={Check} /> : <Icon icon={tab.icon} />,
         key: tab.id,
         label: tab.label,

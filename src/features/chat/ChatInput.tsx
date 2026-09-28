@@ -22,7 +22,7 @@ import { CHAT_ATTACHMENT_ACCEPT, validateChatAttachments } from '@/features/chat
 import ModelSelector from '@/features/chat/ModelSelector'
 import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
 import PermissionModeSelector from '@/features/chat/PermissionModeSelector'
-import { SendButton } from '@/features/chat/SendArea'
+import SendButton from '@/features/chat/SendArea/SendButton'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { ChatSearchMode } from '@/features/chat/types'
 import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'

@@ -84,6 +84,11 @@ vi.mock('@/components/AntdStaticMethods', () => ({
 
 vi.mock('@/features/chat/chatApi', () => ({
   autoRenameTopic: mocks.autoRenameTopic,
+  buildChatHref: (agentId: string, topicId?: string | null) => {
+    const params = new URLSearchParams({ agent: agentId })
+    if (topicId) params.set('topic', topicId)
+    return `/chat?${params.toString()}`
+  },
   createTopic: mocks.createTopic,
   deleteTopic: vi.fn(),
   deleteTopics: vi.fn(),

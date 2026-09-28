@@ -5,6 +5,12 @@ import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 import type { LocalChatTopic, TopicDeleteScope, TopicUpdate } from './types'
 
+export const buildChatHref = (agentId: string, topicId?: string | null) => {
+  const params = new URLSearchParams({ agent: agentId })
+  if (topicId) params.set('topic', topicId)
+  return `/chat?${params.toString()}`
+}
+
 export type AutoRenameTopicConfig = {
   model: string
   provider: string

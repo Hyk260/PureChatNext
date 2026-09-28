@@ -15,8 +15,12 @@ const prefixCls = 'ant'
 
 const styles = createStaticStyles(({ css, cssVar: token }) => ({
   breadcrumb: css`
+    min-width: 0;
+
     ol {
       align-items: center;
+      flex-wrap: nowrap;
+      white-space: nowrap;
     }
 
     .${prefixCls}-breadcrumb-separator {
@@ -40,7 +44,8 @@ const styles = createStaticStyles(({ css, cssVar: token }) => ({
     }
   `,
   container: css`
-    overflow: hidden;
+    /* 侧栏折叠时外层 width 动画；内层保持 240 避免 Breadcrumb 被挤压重排 */
+    width: 240px;
   `,
 }))
 
@@ -110,7 +115,7 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
         )}
       </Flex>
     ) : (
-      <Flex className='flex-col flex-1 px-1.5'>
+      <Flex className='flex-col flex-1 min-w-0 px-1.5'>
         <Breadcrumb
           className={styles.breadcrumb}
           separator={<Icon color={cssVar.colorTextDescription} icon={ChevronRightIcon} size={12} />}

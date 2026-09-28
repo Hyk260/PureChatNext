@@ -8,8 +8,6 @@ import { chatMessages, chatTopics } from '../schemas/chat'
 import type { ChatMessageItem } from '../schemas/chat'
 import type { ChatDatabase } from '../type'
 
-import { ChatTopicModel } from './chatTopic'
-
 const rowToUIMessage = (row: ChatMessageItem): UIMessage => {
   const storedMetadata = row.metadata ?? undefined
   const metadata: ChatMessageMetadata | undefined =
@@ -30,10 +28,7 @@ const rowToUIMessage = (row: ChatMessageItem): UIMessage => {
 }
 
 const extractTextFromParts = (message: UIMessage): string =>
-  message.parts
-    .map((part) => (part.type === 'text' ? part.text : ''))
-    .filter(Boolean)
-    .join('')
+  message.parts.reduce((text, part) => (part.type === 'text' ? text + part.text : text), '')
 
 const extractMetadata = (message: UIMessage) => {
   const metadata = message.metadata as ChatMessageMetadata | undefined
@@ -47,12 +42,10 @@ const extractMetadata = (message: UIMessage) => {
 export class ChatMessageModel {
   private readonly db: ChatDatabase
   private readonly userId: string
-  private readonly topicModel: ChatTopicModel
 
   constructor(userId: string, db: ChatDatabase = getServerDB()) {
     this.userId = userId
     this.db = db
-    this.topicModel = new ChatTopicModel(userId, db)
   }
 
   countAll = async () => {
@@ -64,9 +57,6 @@ export class ChatMessageModel {
   }
 
   listByTopic = async (topicId: string): Promise<UIMessage[]> => {
-    const topic = await this.topicModel.findById(topicId)
-    if (!topic) return []
-
     const rows = await this.db.query.chatMessages.findMany({
       where: and(eq(chatMessages.topicId, topicId), eq(chatMessages.userId, this.userId)),
       orderBy: [asc(chatMessages.createdAt)],

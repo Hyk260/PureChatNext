@@ -191,7 +191,6 @@ export class FileModel {
       sortType,
       sorter,
       knowledgeBaseId,
-      showFilesInKnowledgeBase,
       parentId,
       limit = 50,
       offset = 0,
@@ -215,15 +214,16 @@ export class FileModel {
     }
 
     if (knowledgeBaseId) {
-      const kbFileIds = await this.db
-        .select({ fileId: knowledgeBaseFiles.fileId })
-        .from(knowledgeBaseFiles)
-        .where(and(eq(knowledgeBaseFiles.knowledgeBaseId, knowledgeBaseId), eq(knowledgeBaseFiles.userId, this.userId)))
-      const ids = kbFileIds.map((r) => r.fileId)
-      if (ids.length === 0 && !showFilesInKnowledgeBase) {
-        return []
-      }
-      whereClause = and(whereClause, ids.length > 0 ? inArray(files.id, ids) : eq(files.id, ''))
+      whereClause = and(
+        whereClause,
+        inArray(
+          files.id,
+          this.db
+            .select({ fileId: knowledgeBaseFiles.fileId })
+            .from(knowledgeBaseFiles)
+            .where(and(eq(knowledgeBaseFiles.knowledgeBaseId, knowledgeBaseId), eq(knowledgeBaseFiles.userId, this.userId)))
+        )
+      )
     }
 
     const sortableFields = {

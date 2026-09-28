@@ -1,6 +1,7 @@
 'use client'
 
-import { AlertCircle, Loader2, RotateCcw } from 'lucide-react'
+import { Button } from '@pure/ui'
+import { RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
@@ -23,11 +24,7 @@ import type { WechatStatus } from '@/features/settings/messenger/wechatApi'
 import { WechatMessagePane } from './WechatMessagePane'
 import type { ChatPerspective, PendingAttachment } from './WechatMessagePane'
 import { WechatSessionSidebar } from './WechatSessionSidebar'
-import {
-  fetchWechatDevSessionMessages,
-  fetchWechatDevSessions,
-  sendWechatDevMessage,
-} from './wechatConversationApi'
+import { fetchWechatDevSessionMessages, fetchWechatDevSessions, sendWechatDevMessage } from './wechatConversationApi'
 import type { WechatDevMessage, WechatDevSession } from './wechatConversationApi'
 import { createWechatConversationExport, createWechatExportFilename } from './wechatConversationExport'
 
@@ -496,7 +493,15 @@ export default function WechatConversationPage() {
       if (selectedIdRef.current === sendingSessionId) refreshMessagesNowRef.current()
       setSending(false)
     }
-  }, [clearPendingAttachments, draft, pendingAttachments, refreshSessionsNow, selectedId, sending, sessionMeta?.canSend])
+  }, [
+    clearPendingAttachments,
+    draft,
+    pendingAttachments,
+    refreshSessionsNow,
+    selectedId,
+    sending,
+    sessionMeta?.canSend,
+  ])
 
   const handleCopyMessage = useCallback(
     (message: WechatDevMessage) => {
@@ -526,27 +531,22 @@ export default function WechatConversationPage() {
       connected={Boolean(status?.connected)}
       headerExtra={
         failedCount > 0 ? (
-          <button
-            className='inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive ring-1 ring-destructive/20 disabled:opacity-50'
+          <Button
+            danger
             disabled={retrying}
-            type='button'
+            ghost
+            icon={<RotateCcw className='size-3.5' />}
+            loading={retrying}
+            size='small'
             onClick={() => void handleRetry()}
           >
-            {retrying ? <Loader2 className='size-3 animate-spin' /> : <AlertCircle className='size-3' />}
-            失败 {failedCount}
-            <RotateCcw className='size-3' />
-            重试
-          </button>
+            失败 {failedCount} · 重试
+          </Button>
         ) : null
       }
       sessionCount={sessions.length}
       sidebar={
-        <WechatSessionSidebar
-          bound={bound}
-          selectedId={selectedId}
-          sessions={sessions}
-          onSelect={setSelectedId}
-        />
+        <WechatSessionSidebar bound={bound} selectedId={selectedId} sessions={sessions} onSelect={setSelectedId} />
       }
       subtitle='Agent ↔ 微信用户'
       title='微信对话监控'

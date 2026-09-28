@@ -9,17 +9,6 @@ export function channelAccessLabel(canSend: boolean, isOwnBinding?: boolean) {
   return '其它账号'
 }
 
-export function channelSendBadgeClass(canSend: boolean, active: boolean) {
-  if (active) {
-    return canSend
-      ? 'bg-primary-foreground/20 text-primary-foreground'
-      : 'bg-primary-foreground/15 text-primary-foreground/80'
-  }
-  return canSend
-    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-    : 'bg-muted text-muted-foreground'
-}
-
 export function channelBubbleClass(isUser: boolean, options?: { hasMedia?: boolean; isRight?: boolean }) {
   const isRight = options?.isRight ?? isUser
   const corner = isRight ? 'rounded-br-md' : 'rounded-bl-md'

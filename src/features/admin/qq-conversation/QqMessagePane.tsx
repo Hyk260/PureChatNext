@@ -73,13 +73,7 @@ function renderAttachment(attachment: QQAttachment, isRight?: boolean) {
 function renderUserLegacyMedia(message: QQMessage): ReactNode {
   if (!message.fileUrl || message.attachments?.length) return null
   if (isChannelImageFileName(message.fileName) || message.imageUrl) {
-    return (
-      <ChannelImageCard
-        alt={message.fileName || '图片'}
-        isRight
-        src={message.imageUrl || message.fileUrl}
-      />
-    )
+    return <ChannelImageCard alt={message.fileName || '图片'} isRight src={message.imageUrl || message.fileUrl} />
   }
   return (
     <AttachmentCard
@@ -120,10 +114,7 @@ function MessageList({
   onCopy,
   onExport,
   sessionMeta,
-}: Pick<
-  QqMessagePaneProps,
-  'copiedMessageId' | 'loading' | 'messages' | 'onCopy' | 'onExport' | 'sessionMeta'
->) {
+}: Pick<QqMessagePaneProps, 'copiedMessageId' | 'loading' | 'messages' | 'onCopy' | 'onExport' | 'sessionMeta'>) {
   const { handleScroll, ref: scrollRef } = useAutoScroll({
     deps: [messages],
     initialScrollToBottom: true,
@@ -136,11 +127,7 @@ function MessageList({
   }
 
   return (
-    <div
-      className='min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6'
-      ref={scrollRef}
-      onScroll={handleScroll}
-    >
+    <div className='min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-8' ref={scrollRef} onScroll={handleScroll}>
       {messages.map((message) => {
         const isUser = message.role === 'user'
         const hasMedia = Boolean(message.fileUrl || message.attachments?.length)
@@ -148,27 +135,15 @@ function MessageList({
         return (
           <div key={message.id} className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
             <div className='flex items-center gap-1.5 px-1'>
-              {isUser ? (
-                <User className='size-3 text-muted-foreground' />
-              ) : (
-                <Bot className='size-3 text-primary' />
-              )}
-              <span className='text-[10px] font-medium text-muted-foreground'>
+              {isUser ? <User className='size-3 text-muted-foreground' /> : <Bot className='size-3 text-primary' />}
+              <span className='text-xs font-medium text-muted-foreground'>
                 {isUser ? qqMessageUserLabel(message, sessionMeta) : 'Agent'}
               </span>
               <StatusChip status={message.status} />
-              {!isUser && message.source === 'model' ? (
-                <span className='rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] text-primary'>
-                  {message.provider} / {message.model}
-                  {typeof message.durationMs === 'number'
-                    ? ` · ${formatChannelDuration(message.durationMs)}`
-                    : ''}
-                </span>
-              ) : null}
               {!isUser && message.source === 'system' ? (
                 <span className='rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>系统</span>
               ) : null}
-              <span className='text-[10px] text-muted-foreground/60'>{formatDateTime(message.createdAt)}</span>
+              <span className='text-[11px] text-muted-foreground'>{formatDateTime(message.createdAt)}</span>
             </div>
             {showText || (isUser && hasMedia) ? (
               <div className={`group flex max-w-[92%] items-end gap-1.5 ${isUser ? 'flex-row-reverse' : ''}`}>
@@ -191,6 +166,12 @@ function MessageList({
               <div className='mt-1 flex max-w-[92%] flex-col items-start gap-2'>
                 {message.attachments.map((attachment) => renderAttachment(attachment))}
               </div>
+            ) : null}
+            {!isUser && message.source === 'model' ? (
+              <span className='px-1 font-mono text-[11px] text-muted-foreground'>
+                {message.provider} / {message.model}
+                {typeof message.durationMs === 'number' ? ` · ${formatChannelDuration(message.durationMs)}` : ''}
+              </span>
             ) : null}
           </div>
         )

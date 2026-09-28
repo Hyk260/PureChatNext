@@ -1,18 +1,10 @@
 'use client'
 
-import {
-  ArrowLeftRight,
-  Bot,
-  File,
-  FileArchive,
-  FileCode,
-  FileSpreadsheet,
-  FileText,
-  User,
-} from 'lucide-react'
+import { ArrowLeftRight, Bot, File, FileArchive, FileCode, FileSpreadsheet, FileText, User } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode, RefObject } from 'react'
 import { formatDateTime, formatSize } from '@pure/utils/client'
+import { Tag } from '@pure/ui'
 
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
@@ -74,11 +66,7 @@ type WechatMessagePaneProps = {
 
 function kindChip(kind?: string) {
   if (!kind || kind === 'text' || kind === 'outbound') return null
-  return (
-    <span className='inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground'>
-      {KIND_LABEL[kind] ?? kind}
-    </span>
-  )
+  return <Tag size='small'>{KIND_LABEL[kind] ?? kind}</Tag>
 }
 
 type FileVisual = {
@@ -173,11 +161,7 @@ function MessageList({
   }
 
   return (
-    <div
-      className='min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6'
-      ref={scrollRef}
-      onScroll={handleScroll}
-    >
+    <div className='min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-8' ref={scrollRef} onScroll={handleScroll}>
       {messages.map((msg) => {
         const isUser = msg.role === 'user'
         const isRight = perspective === 'agent' ? isUser : !isUser
@@ -198,22 +182,10 @@ function MessageList({
         return (
           <div key={msg.id} className={`flex flex-col gap-1 ${isRight ? 'items-end' : 'items-start'}`}>
             <div className='flex items-center gap-1.5 px-1'>
-              {isUser ? (
-                <User className='size-3 text-muted-foreground' />
-              ) : (
-                <Bot className='size-3 text-primary' />
-              )}
-              <span className='text-[10px] font-medium text-muted-foreground'>
-                {isUser ? userLabel : 'Agent'}
-              </span>
+              {isUser ? <User className='size-3 text-muted-foreground' /> : <Bot className='size-3 text-primary' />}
+              <span className='text-xs font-medium text-muted-foreground'>{isUser ? userLabel : 'Agent'}</span>
               {kindChip(msg.messageKind)}
               <StatusChip status={msg.status} />
-              {!isUser && msg.source === 'model' ? (
-                <span className='rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] text-primary'>
-                  {msg.provider} / {msg.model}
-                  {typeof msg.durationMs === 'number' ? ` · ${formatChannelDuration(msg.durationMs)}` : ''}
-                </span>
-              ) : null}
               {!isUser && msg.source === 'manual' ? (
                 <span className='rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-700 dark:text-amber-400'>
                   代发
@@ -222,7 +194,7 @@ function MessageList({
               {!isUser && msg.source === 'system' ? (
                 <span className='rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>系统</span>
               ) : null}
-              <span className='text-[10px] text-muted-foreground/60'>{formatDateTime(msg.createdAt)}</span>
+              <span className='text-[11px] text-muted-foreground'>{formatDateTime(msg.createdAt)}</span>
             </div>
             {content ? (
               <div className={`group flex max-w-[92%] items-end gap-1.5 ${isRight ? 'flex-row-reverse' : ''}`}>
@@ -260,6 +232,12 @@ function MessageList({
                   </div>
                 ))}
               </div>
+            ) : null}
+            {!isUser && msg.source === 'model' ? (
+              <span className='px-1 font-mono text-[11px] text-muted-foreground'>
+                {msg.provider} / {msg.model}
+                {typeof msg.durationMs === 'number' ? ` · ${formatChannelDuration(msg.durationMs)}` : ''}
+              </span>
             ) : null}
           </div>
         )
@@ -330,15 +308,9 @@ export function WechatMessagePane({
         sessionMeta ? (
           <span className='inline-flex min-w-0 items-center gap-2'>
             <span className='truncate'>{wechatSessionTitle(sessionMeta)}</span>
-            <span
-              className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                sessionMeta.canSend
-                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                  : 'bg-muted text-muted-foreground'
-              }`}
-            >
+            <Tag color={sessionMeta.canSend ? 'green' : 'default'} size='small'>
               {wechatAccessLabel(sessionMeta.canSend, sessionMeta.isOwnBinding)}
-            </span>
+            </Tag>
           </span>
         ) : (
           wechatSessionTitle(null)

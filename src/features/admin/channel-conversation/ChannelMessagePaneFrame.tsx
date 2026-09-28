@@ -1,5 +1,6 @@
 'use client'
 
+import { Button, TextArea } from '@pure/ui'
 import { Download, Paperclip } from 'lucide-react'
 import type { ReactNode, RefObject } from 'react'
 
@@ -38,13 +39,13 @@ export function ChannelMessagePaneFrame({
   title,
 }: ChannelMessagePaneFrameProps) {
   return (
-    <section className='flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card'>
-      <div className='flex shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-3'>
+    <section className='flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background'>
+      <div className='flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-4 sm:px-6'>
         <div className='min-w-0'>
-          <div className='truncate text-sm font-semibold'>{title}</div>
-          <div className='text-xs text-muted-foreground'>{subtitle}</div>
+          <div className='truncate text-base font-semibold'>{title}</div>
+          <div className='mt-0.5 truncate text-xs text-muted-foreground'>{subtitle}</div>
         </div>
-        <div className='flex shrink-0 items-center gap-2'>
+        <div className='flex shrink-0 items-center gap-1.5'>
           {actions}
           {onExport ? (
             <PaneHeaderButton onClick={onExport}>
@@ -96,7 +97,7 @@ export function ChannelAttachmentComposer({
   const { onCompositionEnd, onCompositionStart, shouldIgnoreEnter } = useImeEnterGuard()
 
   return (
-    <div className='shrink-0 border-t border-border px-4 py-3 sm:px-6'>
+    <div className='shrink-0 border-t border-border bg-card px-4 py-3 sm:px-6'>
       {pendingAttachments.length > 0 ? (
         <div className='mb-2 flex flex-wrap gap-2'>
           {pendingAttachments.map((item) => (
@@ -110,13 +111,14 @@ export function ChannelAttachmentComposer({
           ))}
         </div>
       ) : null}
-      <div className='flex min-w-0 flex-col rounded-xl bg-muted ring-1 ring-border focus-within:bg-background focus-within:ring-ring'>
-        <textarea
-          className='min-h-[44px] max-h-36 w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50'
+      <div className='flex min-w-0 flex-col rounded-xl bg-background ring-1 ring-border transition focus-within:ring-primary/50'>
+        <TextArea
+          autoSize={{ minRows: 2, maxRows: 5 }}
+          className='!bg-transparent !px-3 !pt-3 !pb-1'
           disabled={!canSend || sending}
           placeholder={placeholder}
-          rows={2}
           value={draft}
+          variant='borderless'
           onChange={(event) => onDraftChange(event.target.value)}
           onCompositionEnd={onCompositionEnd}
           onCompositionStart={onCompositionStart}
@@ -138,17 +140,17 @@ export function ChannelAttachmentComposer({
               type='file'
               onChange={(event) => onPickFiles(event.target.files)}
             />
-            <button
+            <Button
               aria-label='添加附件'
-              className='inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground transition hover:bg-background hover:text-foreground disabled:opacity-40'
               disabled={!canSend || sending || pendingAttachments.length >= maxOutboundFiles}
+              icon={<Paperclip className='size-3.5' />}
+              size='small'
               title={attachTitle}
-              type='button'
+              type='text'
               onClick={() => fileInputRef.current?.click()}
             >
-              <Paperclip className='size-3.5' />
               附件
-            </button>
+            </Button>
           </div>
           <ComposerSendButton disabled={!canSubmit} sending={sending} onClick={onSend} />
         </div>

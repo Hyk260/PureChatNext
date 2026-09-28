@@ -3,7 +3,6 @@ export {
   CHANNEL_STATUS_POLL_MS,
   channelAccessLabel,
   channelBubbleClass,
-  channelSendBadgeClass,
   COPIED_FEEDBACK_MS,
   formatChannelDuration,
   isChannelImageFileName,
@@ -14,11 +13,7 @@ export {
   createChannelFullExport,
   createChannelOpenAIExport,
 } from './channelConversationExport'
-export type {
-  ChannelExportMessage,
-  ChannelExportMode,
-  ChannelExportSession,
-} from './channelConversationExport'
+export type { ChannelExportMessage, ChannelExportMode, ChannelExportSession } from './channelConversationExport'
 export {
   getActiveChannelEventIds,
   hasActiveChannelMessages,

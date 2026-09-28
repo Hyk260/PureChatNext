@@ -110,9 +110,7 @@ export function ConversationExportDialog<Message, Session, Mode extends string>(
             <div id='conversation-export-title' className='truncate text-base font-semibold'>
               {title}
             </div>
-            <div className='mt-0.5 truncate text-xs font-normal text-muted-foreground'>
-              仅包含当前页面已加载的消息
-            </div>
+            <div className='mt-0.5 truncate text-xs font-normal text-muted-foreground'>仅包含当前页面已加载的消息</div>
           </div>
           <Segmented
             className='shrink-0'
@@ -163,14 +161,10 @@ export function CopyMessageButton({ copied, onCopy }: { copied: boolean; onCopy:
 
 export function ConnectionBadge({ connected }: { connected: boolean }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium ring-1 ring-border ${
-        connected ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive'
-      }`}
-    >
+    <Tag color={connected ? 'green' : 'red'} shape='round' size='small'>
       <span className={`size-1.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-destructive'}`} />
       {connected ? '已连接' : '未连接'}
-    </span>
+    </Tag>
   )
 }
 
@@ -198,13 +192,9 @@ export function MessagesEmptyState({ children }: { children: ReactNode }) {
 
 export function ExportSessionLink({ onExport }: { onExport: () => void }) {
   return (
-    <button
-      className='mx-auto my-4 block text-xs text-muted-foreground underline'
-      type='button'
-      onClick={onExport}
-    >
+    <Button className='mx-auto my-4 !flex' size='small' type='link' onClick={onExport}>
       导出当前会话
-    </button>
+    </Button>
   )
 }
 
@@ -222,16 +212,9 @@ export function PaneHeaderButton({
   title?: string
 }) {
   return (
-    <button
-      aria-label={ariaLabel}
-      className='inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium ring-1 ring-border hover:bg-muted disabled:opacity-40'
-      disabled={disabled}
-      title={title}
-      type='button'
-      onClick={onClick}
-    >
+    <Button aria-label={ariaLabel} disabled={disabled} size='small' title={title} onClick={onClick}>
       {children}
-    </button>
+    </Button>
   )
 }
 
@@ -248,15 +231,7 @@ export function ComposerSendButton({
 }
 
 /** 渠道会话气泡内图片：点击走 @pure/ui Image 预览。 */
-export function ChannelImageCard({
-  alt,
-  isRight,
-  src,
-}: {
-  alt: string
-  isRight?: boolean
-  src: string
-}) {
+export function ChannelImageCard({ alt, isRight, src }: { alt: string; isRight?: boolean; src: string }) {
   return (
     <Image
       alt={alt}
@@ -288,9 +263,12 @@ function PendingFileContentPreview({ file, onClose }: { file: File; onClose: () 
         const form = new FormData()
         form.set('file', file)
         const res = await apiFetch(READ_FILE_API_PATH, { body: form, method: 'POST' })
-        const data = (await res.json().catch(() => null)) as
-          | { content?: string; error?: string; filename?: string; totalCharCount?: number }
-          | null
+        const data = (await res.json().catch(() => null)) as {
+          content?: string
+          error?: string
+          filename?: string
+          totalCharCount?: number
+        } | null
         if (cancelled) return
         if (!res.ok) {
           setError(data?.error || `预览失败: ${res.status}`)
@@ -368,33 +346,28 @@ export function ChannelPendingAttachmentChip({
             width={40}
           />
         ) : (
-          <button
+          <Button
             aria-label={`预览 ${file.name}`}
-            className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-background ring-1 ring-border transition hover:bg-muted'
             disabled={disabled}
-            type='button'
+            icon={<MaterialFileTypeIcon filename={file.name} size={24} type='file' variant='raw' />}
+            size='large'
             onClick={() => setFilePreviewOpen(true)}
-          >
-            <MaterialFileTypeIcon filename={file.name} size={24} type='file' variant='raw' />
-          </button>
+          />
         )}
         <div className='min-w-0 max-w-[160px]'>
           <div className='truncate text-xs font-medium'>{file.name}</div>
           <div className='text-[10px] text-muted-foreground'>{formatSize(file.size)}</div>
         </div>
-        <button
+        <Button
           aria-label={`移除 ${file.name}`}
-          className='rounded-md p-1 text-muted-foreground transition hover:bg-background hover:text-foreground'
           disabled={disabled}
-          type='button'
+          icon={<X className='size-3.5' />}
+          size='small'
+          type='text'
           onClick={onRemove}
-        >
-          <X className='size-3.5' />
-        </button>
+        />
       </div>
-      {filePreviewOpen ? (
-        <PendingFileContentPreview file={file} onClose={() => setFilePreviewOpen(false)} />
-      ) : null}
+      {filePreviewOpen ? <PendingFileContentPreview file={file} onClose={() => setFilePreviewOpen(false)} /> : null}
     </>
   )
 }

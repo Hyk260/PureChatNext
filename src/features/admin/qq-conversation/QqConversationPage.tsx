@@ -10,6 +10,7 @@ import {
   LoadingConversation,
   getActiveChannelEventIds,
   hasActiveChannelMessages,
+  isChannelImageFileName,
   mergeChannelMessages,
   MESSAGE_POLL_DELAYS,
   nextChannelMessagePollDelay,
@@ -25,7 +26,6 @@ import { fetchQQSessionMessages, fetchQQSessions, sendQQMessage } from './qqConv
 import type { QQMessage, QQSession } from './qqConversationApi'
 import { createQQConversationExport, createQQExportFilename } from './qqConversationExport'
 import { QQ_MAX_OUTBOUND_FILE_BYTES, QQ_MAX_OUTBOUND_FILES } from '@/libs/channels/qq/outboundLimits'
-import { isChannelImageFileName } from '@/features/admin/channel-conversation'
 
 export default function QqConversationPage() {
   const [status, setStatus] = useState<QQStatus | null>(null)

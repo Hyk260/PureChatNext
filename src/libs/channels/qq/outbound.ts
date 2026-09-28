@@ -4,7 +4,8 @@ import type { ChannelBindingItem, ChannelSessionItem } from '@pure/database/sche
 import { normalizeQQChannelSettings, chunkQQOutboundText } from './advancedSettings'
 import { decryptCredentials } from './encrypt'
 import { QQ_MAX_OUTBOUND_FILE_BYTES, qqOutboundFileLimitLabel } from './outboundLimits'
-import { QQ_MAX_PASSIVE_REPLIES, type QQPassiveReplyOptions } from './passiveReply'
+import { QQ_MAX_PASSIVE_REPLIES } from './passiveReply'
+import type { QQPassiveReplyOptions } from './passiveReply'
 import { parseQQThreadId } from './thread'
 
 export class QQOutboundError extends Error {

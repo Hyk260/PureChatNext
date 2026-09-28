@@ -118,7 +118,9 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     const controller = new AbortController()
-    void loadUsers(controller.signal)
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) void loadUsers(controller.signal)
+    })
     return () => controller.abort()
   }, [loadUsers])
 

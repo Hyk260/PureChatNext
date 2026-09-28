@@ -5,12 +5,15 @@ import type { NextRequest } from 'next/server'
 import { UserModel } from '@pure/database/models/user'
 import { auth } from '@/auth'
 import { isAdminRole } from '@/const/auth'
+import { touchUserLastActive } from '@/libs/auth/touch-last-active'
 
 async function getAuthenticatedUser() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user?.id) return null
 
-  return new UserModel().findById(session.user.id)
+  const user = await new UserModel().findById(session.user.id)
+  if (user?.id) touchUserLastActive(user.id)
+  return user
 }
 
 export async function getAuthenticatedUserId() {

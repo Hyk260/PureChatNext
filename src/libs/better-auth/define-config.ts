@@ -297,6 +297,17 @@ export function defineConfig() {
           },
         },
       },
+      session: {
+        create: {
+          // 登录建 session 即记最近活跃（与 API 鉴权路径共用节流）
+          after: async (session) => {
+            const userId = typeof session?.userId === 'string' ? session.userId : ''
+            if (!userId) return
+            const { touchUserLastActive } = await import('@/libs/auth/touch-last-active')
+            touchUserLastActive(userId)
+          },
+        },
+      },
     },
     // 用户表字段映射与扩展字段（对齐现有 users 表结构）
     user: {

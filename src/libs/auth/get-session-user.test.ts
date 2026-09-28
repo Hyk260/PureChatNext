@@ -23,7 +23,12 @@ vi.mock('@pure/database/models/user', () => ({
   },
 }))
 
+vi.mock('./touch-last-active', () => ({
+  touchUserLastActive: vi.fn(),
+}))
+
 import { withAdmin } from './get-session-user'
+import { touchUserLastActive } from './touch-last-active'
 import type { AuthRouteContext } from './get-session-user'
 
 const handler = vi.fn(async (_request: NextRequest, _context: AuthRouteContext) => NextResponse.json({ ok: true }))
@@ -65,5 +70,6 @@ describe('withAdmin', () => {
     expect(response.status).toBe(200)
     expect(handler).toHaveBeenCalledOnce()
     expect(handler.mock.calls[0]?.[1]).toMatchObject({ userId: 'u1' })
+    expect(touchUserLastActive).toHaveBeenCalledWith('u1')
   })
 })

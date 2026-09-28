@@ -2,7 +2,7 @@ import { isAdminRole, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { createNanoId, generateCompactUuid } from '@pure/utils'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
-import { and, asc, count, desc, eq, ilike, inArray, or } from 'drizzle-orm'
+import { and, asc, count, desc, eq, ilike, inArray, lt, or } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { account, passkey, session, twoFactor, users, verification } from '../schemas'
@@ -116,11 +116,30 @@ export type AdminUserListQuery = {
   sortOrder?: 'asc' | 'desc'
 }
 
+/** 最近活跃写库节流窗口（与鉴权侧进程内 Map 一致） */
+export const LAST_ACTIVE_TOUCH_INTERVAL_MS = 5 * 60_000
+
 export class UserModel {
   private readonly db: ChatDatabase
 
   constructor(db: ChatDatabase = getServerDB()) {
     this.db = db
+  }
+
+  /**
+   * 节流更新 `last_active_at`：仅当库内值早于窗口阈值写入。
+   * 不改 `updatedAt`（资料变更语义）。
+   * @returns 是否实际写库
+   */
+  touchLastActiveAt = async (userId: string, now: Date = new Date()) => {
+    const threshold = new Date(now.getTime() - LAST_ACTIVE_TOUCH_INTERVAL_MS)
+    const [updated] = await this.db
+      .update(users)
+      .set({ lastActiveAt: now })
+      .where(and(eq(users.id, userId), lt(users.lastActiveAt, threshold)))
+      .returning({ id: users.id })
+
+    return Boolean(updated)
   }
 
   private normalizeUniqueUserFields = <

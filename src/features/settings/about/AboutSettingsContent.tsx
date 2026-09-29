@@ -1,6 +1,7 @@
 'use client'
 
-import { ActionIcon, Block, Button, copyToClipboard, Flex, Github, PureChatMark, Tag, Text } from '@pure/ui'
+import { ActionIcon, Block, Button, Flex, Github, PureChatMark, Tag, Text } from '@pure/ui'
+import { copyToClipboard } from '@pure/utils/client'
 import { Divider } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Copy } from 'lucide-react'

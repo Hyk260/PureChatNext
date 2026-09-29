@@ -4,12 +4,12 @@ import {
   ActionIcon,
   Block,
   Button,
-  copyToClipboard,
   Flex,
   Skeleton,
   Tag,
   Text,
 } from '@pure/ui'
+import { copyToClipboard } from '@pure/utils/client'
 import { Divider } from 'antd'
 import { Check, CircleX, Copy, RefreshCw } from 'lucide-react'
 import { Fragment, useCallback, useEffect, useState } from 'react'

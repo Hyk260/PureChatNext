@@ -29,6 +29,9 @@ vi.mock('@pure/ui', () => ({
   Skeleton: () => <div>loading</div>,
   Tag: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
+}))
+
+vi.mock('@pure/utils/client', () => ({
   copyToClipboard: mocks.copyToClipboard,
 }))
 

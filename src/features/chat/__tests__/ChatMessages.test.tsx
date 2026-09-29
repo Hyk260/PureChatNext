@@ -81,6 +81,9 @@ vi.mock('@pure/ui', () => ({
   } & React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
   Icon: () => <span />,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
+}))
+
+vi.mock('@pure/utils/client', () => ({
   copyToClipboard: vi.fn(),
 }))
 

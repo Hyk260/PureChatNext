@@ -1,6 +1,7 @@
 'use client'
 
-import { ActionIcon, Flex, Icon, ModelIcon, SortableList, Tag, Text, Tooltip, copyToClipboard } from '@pure/ui'
+import { ActionIcon, Flex, Icon, ModelIcon, SortableList, Tag, Text, Tooltip } from '@pure/ui'
+import { copyToClipboard } from '@pure/utils/client'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { formatDuration, formatTokenNumber } from '@pure/utils/client'

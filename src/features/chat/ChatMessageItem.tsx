@@ -1,6 +1,7 @@
 'use client'
 
-import { ApprovalCard, Avatar, copyToClipboard, Text, Flex } from '@pure/ui'
+import { ApprovalCard, Avatar, Text, Flex } from '@pure/ui'
+import { copyToClipboard } from '@pure/utils/client'
 import type { ChatMessageMetadata } from '@pure/types'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'

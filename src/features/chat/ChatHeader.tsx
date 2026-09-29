@@ -1,6 +1,7 @@
 'use client'
 
-import { ActionIcon, copyToClipboard, DropdownMenu, Icon, Text, Flex } from '@pure/ui'
+import { ActionIcon, DropdownMenu, Icon, Text, Flex } from '@pure/ui'
+import { copyToClipboard } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
   Hash,

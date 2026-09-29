@@ -44,7 +44,6 @@ vi.mock('@pure/ui', () => ({
     ) : null,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
   confirmModal: mocks.confirm,
-  copyToClipboard: mocks.copyToClipboard,
   DropdownMenu: ({ children, items }: { children?: React.ReactNode; items?: Array<Record<string, unknown>> }) => (
     <div>
       <button aria-label='更多'>{children}</button>
@@ -73,6 +72,10 @@ vi.mock('@pure/ui', () => ({
       </div>
     </div>
   ),
+}))
+
+vi.mock('@pure/utils/client', () => ({
+  copyToClipboard: mocks.copyToClipboard,
 }))
 
 vi.mock('antd-style', () => ({

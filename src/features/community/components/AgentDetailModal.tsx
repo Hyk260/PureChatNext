@@ -1,6 +1,7 @@
 'use client'
 
-import { ActionIcon, Avatar, Block, Button, copyToClipboard, Flex, Icon, Modal, Tag, Text } from '@pure/ui'
+import { ActionIcon, Avatar, Block, Button, Flex, Icon, Modal, Tag, Text } from '@pure/ui'
+import { copyToClipboard } from '@pure/utils/client'
 import { Collapse, Tabs } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Copy, MessageCircleHeartIcon, MessageCircleQuestionIcon } from 'lucide-react'

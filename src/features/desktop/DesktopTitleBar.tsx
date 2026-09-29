@@ -23,6 +23,7 @@ import { Outlet, useInRouterContext, useLocation, useNavigate, useNavigationType
 import { DESKTOP_SIDEBAR_STATE_EVENT, DESKTOP_TOGGLE_SIDEBAR_EVENT } from '@/features/desktop/desktopEvents'
 import type { DesktopSidebarStateDetail } from '@/features/desktop/desktopEvents'
 import { desktopHref, useDesktopTabsStore } from '@/features/desktop/useDesktopTabsStore'
+import { DEFAULT_SIDEBAR_WIDTH, useSidebarLayoutStore } from '@/layout/sidebarResize'
 import { getDesktopApi } from '@/types/desktop'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -37,15 +38,29 @@ const styles = createStaticStyles(({ css }) => ({
     display: flex;
     flex: none;
     align-items: center;
-    gap: 6px;
     height: 38px;
-    padding-inline: 8px;
     color: var(--ant-color-text, #1f1f1f);
     background: var(--ant-color-bg-layout, #f8f8f8);
-    // border-block-end: 1px solid var(--ant-color-border-secondary, #e5e5e5);
     -webkit-app-region: drag;
   `,
   leading: css`
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    height: 100%;
+    padding-inline: 8px;
+    transition: width 0.2s ease;
+  `,
+  leadingStart: css`
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 2px;
+    height: 100%;
+  `,
+  leadingEnd: css`
     display: flex;
     flex: none;
     align-items: center;
@@ -105,11 +120,20 @@ const styles = createStaticStyles(({ css }) => ({
     display: inline-flex;
     -webkit-app-region: no-drag;
   `,
+  main: css`
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    height: 100%;
+    padding: 0 8px 0 0;
+  `,
   tabs: css`
     display: flex;
     flex: 1;
     align-items: center;
-    justify-content: center;
     gap: 4px;
     min-width: 0;
     height: 100%;
@@ -275,159 +299,169 @@ const DesktopTitleBarChrome = ({
   const api = getDesktopApi()
   const tabs = useDesktopTabsStore((s) => s.tabs)
   const activeTabId = useDesktopTabsStore((s) => s.activeTabId)
+  const sidebarWidth = useSidebarLayoutStore((s) => s.sidebarWidth)
 
   if (!api) return null
 
   const isMac = platform === 'darwin'
   const sidebarLabel = isSidebarCollapsed ? '展开侧栏' : '折叠侧栏'
+  const leadingWidth = isSidebarCollapsed ? undefined : (sidebarWidth || DEFAULT_SIDEBAR_WIDTH)
 
   return (
     <header className={styles.bar}>
-      <div className={styles.leading}>
-        {isMac ? (
-          <div className={styles.trafficLights}>
-            <button
-              aria-label='关闭窗口'
-              className={`${styles.trafficLight} ${styles.closeTrafficLight}`}
-              onClick={() => void api.closeWindow()}
-              type='button'
-            />
-            <button
-              aria-label='最小化窗口'
-              className={`${styles.trafficLight} ${styles.minimizeTrafficLight}`}
-              onClick={() => void api.minimizeWindow()}
-              type='button'
-            />
-            <button
-              aria-label={isMaximized ? '还原窗口' : '最大化窗口'}
-              className={`${styles.trafficLight} ${styles.maximizeTrafficLight}`}
-              onClick={onToggleMaximize}
-              type='button'
-            />
-          </div>
-        ) : null}
-
-        <Tooltip title={sidebarLabel}>
-          <span className={styles.tooltipTarget}>
-            <button
-              aria-label={sidebarLabel}
-              className={styles.iconButton}
-              onClick={onToggleSidebar}
-              type='button'
-            >
-              {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-            </button>
-          </span>
-        </Tooltip>
-
-        <Tooltip title='后退'>
-          <span className={styles.tooltipTarget}>
-            <button
-              aria-label='后退'
-              className={styles.iconButton}
-              disabled={!canGoBack}
-              onClick={onBack}
-              type='button'
-            >
-              <ArrowLeft size={16} />
-            </button>
-          </span>
-        </Tooltip>
-
-        <Tooltip title='前进'>
-          <span className={styles.tooltipTarget}>
-            <button
-              aria-label='前进'
-              className={styles.iconButton}
-              disabled={!canGoForward}
-              onClick={onForward}
-              type='button'
-            >
-              <ArrowRight size={16} />
-            </button>
-          </span>
-        </Tooltip>
-
-        <Tooltip title='显示历史记录'>
-          <span className={styles.tooltipTarget}>
-            <DropdownMenu items={historyMenuItems} nativeButton placement='bottomLeft'>
-              <button aria-label='显示历史记录' className={styles.iconButton} type='button'>
-                <History size={16} />
-              </button>
-            </DropdownMenu>
-          </span>
-        </Tooltip>
-      </div>
-
-      <div className={styles.tabs}>
-        {tabs.map((tab) => {
-          const active = tab.id === activeTabId
-          const Icon = tabIconForPath(tab.path)
-          return (
-            <div
-              className={`${styles.tab} ${active ? `${styles.tabActive} active` : ''}`}
-              key={tab.id}
-              role='tab'
-              tabIndex={0}
-              onClick={() => onActivateTab(tab.id)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault()
-                  onActivateTab(tab.id)
-                }
-              }}
-            >
-              <span className={styles.tabIcon}>
-                <Icon size={14} />
-              </span>
-              <span className={styles.tabTitle}>{tab.title}</span>
+      <div className={styles.leading} style={leadingWidth ? { width: leadingWidth } : undefined}>
+        <div className={styles.leadingStart}>
+          {isMac ? (
+            <div className={styles.trafficLights}>
               <button
-                aria-label={`关闭 ${tab.title}`}
-                className={`desktop-tab-close ${styles.tabClose}`}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  onCloseTab(tab.id)
-                }}
+                aria-label='关闭窗口'
+                className={`${styles.trafficLight} ${styles.closeTrafficLight}`}
+                onClick={() => void api.closeWindow()}
+                type='button'
+              />
+              <button
+                aria-label='最小化窗口'
+                className={`${styles.trafficLight} ${styles.minimizeTrafficLight}`}
+                onClick={() => void api.minimizeWindow()}
+                type='button'
+              />
+              <button
+                aria-label={isMaximized ? '还原窗口' : '最大化窗口'}
+                className={`${styles.trafficLight} ${styles.maximizeTrafficLight}`}
+                onClick={onToggleMaximize}
+                type='button'
+              />
+            </div>
+          ) : null}
+
+          <Tooltip title={sidebarLabel}>
+            <span className={styles.tooltipTarget}>
+              <button
+                aria-label={sidebarLabel}
+                className={styles.iconButton}
+                onClick={onToggleSidebar}
                 type='button'
               >
-                <X size={12} />
+                {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
               </button>
-            </div>
-          )
-        })}
-        <button aria-label='新建选项卡' className={styles.addTab} onClick={onAddTab} type='button'>
-          <Plus size={16} />
-        </button>
+            </span>
+          </Tooltip>
+        </div>
+
+        <div className={styles.leadingEnd}>
+          <Tooltip title='后退'>
+            <span className={styles.tooltipTarget}>
+              <button
+                aria-label='后退'
+                className={styles.iconButton}
+                disabled={!canGoBack}
+                onClick={onBack}
+                type='button'
+              >
+                <ArrowLeft size={16} />
+              </button>
+            </span>
+          </Tooltip>
+
+          <Tooltip title='前进'>
+            <span className={styles.tooltipTarget}>
+              <button
+                aria-label='前进'
+                className={styles.iconButton}
+                disabled={!canGoForward}
+                onClick={onForward}
+                type='button'
+              >
+                <ArrowRight size={16} />
+              </button>
+            </span>
+          </Tooltip>
+
+          <Tooltip title='显示历史记录'>
+            <span className={styles.tooltipTarget}>
+              <DropdownMenu items={historyMenuItems} nativeButton placement='bottomLeft'>
+                <button aria-label='显示历史记录' className={styles.iconButton} type='button'>
+                  <History size={16} />
+                </button>
+              </DropdownMenu>
+            </span>
+          </Tooltip>
+        </div>
       </div>
 
-      {platform && !isMac ? (
-        <div className={styles.controls}>
-          <button
-            aria-label='最小化窗口'
-            className={styles.button}
-            onClick={() => void api.minimizeWindow()}
-            type='button'
-          >
-            <Minus size={14} />
-          </button>
-          <button
-            aria-label={isMaximized ? '还原窗口' : '最大化窗口'}
-            className={styles.button}
-            onClick={onToggleMaximize}
-            type='button'
-          >
-            {isMaximized ? <Copy size={13} /> : <Square size={13} />}
-          </button>
-          <button
-            aria-label='关闭窗口'
-            className={`${styles.button} ${styles.closeButton}`}
-            onClick={() => void api.closeWindow()}
-            type='button'
-          >
-            <X size={15} />
+      <div className={styles.main}>
+        <div className={styles.tabs}>
+          {tabs.map((tab) => {
+            const active = tab.id === activeTabId
+            const Icon = tabIconForPath(tab.path)
+            return (
+              <div
+                className={`${styles.tab} ${active ? `${styles.tabActive} active` : ''}`}
+                key={tab.id}
+                role='tab'
+                tabIndex={0}
+                onClick={() => onActivateTab(tab.id)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    onActivateTab(tab.id)
+                  }
+                }}
+              >
+                <span className={styles.tabIcon}>
+                  <Icon size={14} />
+                </span>
+                <span className={styles.tabTitle}>{tab.title}</span>
+                <button
+                  aria-label={`关闭 ${tab.title}`}
+                  className={`desktop-tab-close ${styles.tabClose}`}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onCloseTab(tab.id)
+                  }}
+                  type='button'
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )
+          })}
+          <button aria-label='新建选项卡' className={styles.addTab} onClick={onAddTab} type='button'>
+            <Plus size={16} />
           </button>
         </div>
-      ) : null}
+
+        <div className={styles.controls}>
+          {platform && !isMac ? (
+            <>
+              <button
+                aria-label='最小化窗口'
+                className={styles.button}
+                onClick={() => void api.minimizeWindow()}
+                type='button'
+              >
+                <Minus size={14} />
+              </button>
+              <button
+                aria-label={isMaximized ? '还原窗口' : '最大化窗口'}
+                className={styles.button}
+                onClick={onToggleMaximize}
+                type='button'
+              >
+                {isMaximized ? <Copy size={13} /> : <Square size={13} />}
+              </button>
+              <button
+                aria-label='关闭窗口'
+                className={`${styles.button} ${styles.closeButton}`}
+                onClick={() => void api.closeWindow()}
+                type='button'
+              >
+                <X size={15} />
+              </button>
+            </>
+          ) : null}
+        </div>
+      </div>
     </header>
   )
 }

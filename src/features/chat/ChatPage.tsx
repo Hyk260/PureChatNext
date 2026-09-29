@@ -99,7 +99,7 @@ const ChatPage = memo(() => {
   const agents = useAgentsStore((s) => s.agents)
 
   const paramsByAgent = useChatUiStore((s) => s.paramsByAgent)
-  const searchMode = useChatUiStore((s) => s.searchModeByAgent[agentId] ?? 'off')
+  const searchMode = useChatUiStore((s) => s.searchMode)
   const setParams = useChatUiStore((s) => s.setParams)
   const setSearchMode = useChatUiStore((s) => s.setSearchMode)
   const params: ChatLlmParams = paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS
@@ -472,9 +472,9 @@ const ChatPage = memo(() => {
 
   const handleSearchModeChange = useCallback(
     (mode: ChatSearchMode) => {
-      setSearchMode(agentId, mode)
+      setSearchMode(mode)
     },
-    [agentId, setSearchMode]
+    [setSearchMode]
   )
 
   const handlePermissionModeChange = useCallback(

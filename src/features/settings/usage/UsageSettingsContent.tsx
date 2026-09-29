@@ -107,6 +107,21 @@ const styles = createStaticStyles(({ css }) => ({
     font-weight: 600;
   `,
   table: css`
+    .ant-table,
+    .ant-table-container,
+    .ant-table-thead > tr > th:first-child,
+    .ant-table-thead > tr > th:last-child,
+    .ant-table-tbody > tr > td:first-child,
+    .ant-table-tbody > tr > td:last-child {
+      border-radius: 0 !important;
+    }
+
+    .ant-table-container,
+    .ant-table-header,
+    .ant-table-thead > tr > th {
+      box-shadow: none !important;
+    }
+
     .ant-table-thead > tr > th {
       padding-block: 10px;
       font-weight: 600;
@@ -433,6 +448,7 @@ export function UsageSettingsContent() {
           ) : null}
 
           <Table<UsageItem>
+            className={styles.table}
             columns={columns}
             dataSource={data?.items ?? []}
             loading={loading}

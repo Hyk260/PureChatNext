@@ -1,12 +1,11 @@
 'use client'
 
-import { Avatar, Flex } from '@pure/ui'
+import { Avatar, ChatItem, Flex } from '@pure/ui'
 import { memo, useEffect, useState } from 'react'
 
 import NotFound from '@/components/404'
 import Loading from '@/components/Loading/BrandTextLoading'
 import { getMessageText } from '@/features/chat/messageText'
-import MessageMarkdown from '@/features/chat/MessageMarkdown'
 import { useParams } from 'next/navigation'
 
 import { fetchPublicTopicShare } from './shareApi'
@@ -57,14 +56,21 @@ const ShareTopicPage = memo(() => {
             const text = getMessageText(message)
             if (!text) return null
 
-            return message.role === 'user' ? (
-              <div className='self-end whitespace-pre-wrap rounded-2xl bg-muted px-4 py-3 text-[15px] leading-7' key={message.id}>
-                {text}
-              </div>
-            ) : (
-              <article className='w-full text-[15px] leading-7' key={message.id}>
-                <MessageMarkdown text={text} />
-              </article>
+            const isUser = message.role === 'user'
+
+            return (
+              <ChatItem
+                key={message.id}
+                avatar={
+                  isUser
+                    ? { avatar: '🙂', title: 'User' }
+                    : { avatar: data.agent.avatar ?? '🤖', title: data.agent.title }
+                }
+                message={text}
+                placement={isUser ? 'right' : 'left'}
+                showTitle
+                variant='bubble'
+              />
             )
           })}
         </Flex>

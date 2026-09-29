@@ -19,9 +19,8 @@ type ChatUiState = {
   wideScreen: boolean
   /** agentId → params */
   paramsByAgent: Record<string, ChatLlmParams>
-  /** agentId → web search mode */
-  searchModeByAgent: Record<string, ChatSearchMode>
   /** Shared across all agents */
+  searchMode: ChatSearchMode
   topicGroupMode: TopicGroupMode
   topicPageSize: TopicPageSize
   topicSortBy: TopicSortBy
@@ -38,7 +37,7 @@ type ChatUiState = {
   openParamsPanel: () => void
   getParams: (agentId: string) => ChatLlmParams
   setParams: (agentId: string, patch: Partial<ChatLlmParams>) => void
-  setSearchMode: (agentId: string, mode: ChatSearchMode) => void
+  setSearchMode: (mode: ChatSearchMode) => void
   setTopicGroupMode: (mode: TopicGroupMode) => void
   setTopicPageSize: (pageSize: TopicPageSize) => void
   setTopicSortBy: (sortBy: TopicSortBy) => void
@@ -57,7 +56,7 @@ export const useChatUiStore = create<ChatUiState>()(
       rightCollapsed: true,
       wideScreen: false,
       paramsByAgent: {},
-      searchModeByAgent: {},
+      searchMode: 'off',
       topicGroupMode: 'byTime',
       topicPageSize: 40,
       topicSortBy: 'updatedAt',
@@ -131,21 +130,14 @@ export const useChatUiStore = create<ChatUiState>()(
           },
         }))
       },
-      setSearchMode: (agentId, mode) => {
-        set((s) => ({
-          searchModeByAgent: {
-            ...s.searchModeByAgent,
-            [agentId]: mode,
-          },
-        }))
-      },
+      setSearchMode: (searchMode) => set({ searchMode }),
       setTopicGroupMode: (topicGroupMode) => set({ topicGroupMode }),
       setTopicPageSize: (topicPageSize) => set({ topicPageSize }),
       setTopicSortBy: (topicSortBy) => set({ topicSortBy }),
     }),
     {
       name: 'purechat:chat:v2:ui',
-      version: 6,
+      version: 7,
       migrate: (persisted, version) => {
         let state = (persisted ?? {}) as Record<string, unknown>
         if (version < 4) {
@@ -157,9 +149,6 @@ export const useChatUiStore = create<ChatUiState>()(
             topicGroupMode: firstMode ?? 'byTime',
           }
         }
-        if (version < 5) {
-          state = { ...state, searchModeByAgent: {} }
-        }
         if (version < 6) {
           state = {
             ...state,
@@ -167,13 +156,15 @@ export const useChatUiStore = create<ChatUiState>()(
             workPanelOpenTabs: [...DEFAULT_WORK_PANEL_OPEN_TABS],
           }
         }
-        const workPanelOpenTabs = normalizeOpenTabs(state.workPanelOpenTabs)
+        const { searchModeByAgent: _dropped, ...rest } = state
+        const workPanelOpenTabs = normalizeOpenTabs(rest.workPanelOpenTabs)
         const workPanelActiveTab =
-          isWorkPanelTabId(state.workPanelActiveTab) && workPanelOpenTabs.includes(state.workPanelActiveTab)
-            ? state.workPanelActiveTab
+          isWorkPanelTabId(rest.workPanelActiveTab) && workPanelOpenTabs.includes(rest.workPanelActiveTab)
+            ? rest.workPanelActiveTab
             : (workPanelOpenTabs[0] ?? DEFAULT_WORK_PANEL_ACTIVE_TAB)
         return {
-          ...state,
+          ...rest,
+          searchMode: rest.searchMode === 'auto' ? 'auto' : 'off',
           workPanelActiveTab,
           workPanelOpenTabs,
         }

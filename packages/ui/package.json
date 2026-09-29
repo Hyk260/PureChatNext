@@ -15,6 +15,7 @@
     "./Avatar": "./src/Avatar/index.ts",
     "./Block": "./src/Block/index.ts",
     "./Button": "./src/Button/index.ts",
+    "./ChatItem": "./src/ChatItem/index.ts",
     "./Checkbox": "./src/Checkbox/index.ts",
     "./CodeBlock": "./src/CodeBlock/index.tsx",
     "./DropdownMenu": "./src/DropdownMenu/index.ts",

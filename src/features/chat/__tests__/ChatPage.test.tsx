@@ -164,7 +164,7 @@ vi.mock('@/features/chat/store/useChatUiStore', () => ({
   useChatUiStore: (selector: (state: unknown) => unknown) =>
     selector({
       paramsByAgent: {},
-      searchModeByAgent: { agt_inbox: mocks.searchMode },
+      searchMode: mocks.searchMode,
       wideScreen: false,
       setParams: vi.fn(),
       setSearchMode: vi.fn(),

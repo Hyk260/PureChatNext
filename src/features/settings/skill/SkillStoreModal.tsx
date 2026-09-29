@@ -108,8 +108,14 @@ const StoreSkillRow = memo(function StoreSkillRow({
       </Flex>
       {installedId ? (
         <span onClick={stopPropagation} onKeyDown={stopPropagation}>
-          <DropdownMenu items={menuItems} nativeButton placement='bottomRight'>
-            <ActionIcon disabled={uninstalling} icon={Ellipsis} size='small' title='更多' />
+          <DropdownMenu
+            items={menuItems}
+            nativeButton
+            placement='bottomRight'
+            triggerProps={{ disabled: uninstalling, title: '更多' }}
+          >
+            <Ellipsis size={16} />
+            <span className='sr-only'>更多</span>
           </DropdownMenu>
         </span>
       ) : (

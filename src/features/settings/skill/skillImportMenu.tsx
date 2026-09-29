@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, DropdownMenu, Flex, Text } from '@pure/ui'
+import { DropdownMenu, Flex, Text } from '@pure/ui'
 import { Github } from '@pure/ui/icons'
 import type { MenuProps } from '@pure/ui'
 import { Box, FileArchive, Link } from 'lucide-react'
@@ -46,8 +46,19 @@ export const SkillImportMenu = ({ children }: { children?: ReactNode }) => {
   )
 
   return (
-    <DropdownMenu items={items} nativeButton placement='bottomRight' popupProps={{ style: { minWidth: 280 } }}>
-      {children ?? <ActionIcon icon={Box} size='small' title='添加' />}
+    <DropdownMenu
+      items={items}
+      nativeButton
+      placement='bottomRight'
+      popupProps={{ style: { minWidth: 280 } }}
+      triggerProps={children ? undefined : { title: '添加' }}
+    >
+      {children ?? (
+        <>
+          <Box size={16} />
+          <span className='sr-only'>添加</span>
+        </>
+      )}
     </DropdownMenu>
   )
 }

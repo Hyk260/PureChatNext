@@ -1,7 +1,7 @@
 'use client'
 
 import { Form } from 'antd'
-import { Button, Input, Text, Modal } from '@pure/ui'
+import { Button, Input, Text, Modal, Flex } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { useState } from 'react'
 
@@ -77,13 +77,13 @@ export function EmailSetting({ email }: EmailSettingProps) {
           >
             <Input placeholder='new@example.com' type='email' />
           </Form.Item>
-          <Form.Item className='mb-0'>
-            <div className='flex justify-end gap-2'>
+          <Form.Item className='mb-0!'>
+            <Flex className='justify-end gap-2'>
               <Button onClick={() => setOpen(false)}>取消</Button>
               <Button htmlType='submit' loading={loading} type='primary'>
                 确认
               </Button>
-            </div>
+            </Flex>
           </Form.Item>
         </Form>
       </Modal>

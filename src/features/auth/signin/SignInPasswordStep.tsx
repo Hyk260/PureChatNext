@@ -2,12 +2,11 @@
 
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
-import { Button, Icon, InputPassword, Text, confirmModal } from '@pure/ui'
+import { Button, Flex, Icon, InputPassword, Text, confirmModal } from '@pure/ui'
 import { Alert, Form } from 'antd'
 import type { FormInstance } from 'antd'
 import type { InputRef } from '@pure/ui'
-import { cssVar } from 'antd-style'
-import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
+import { ChevronLeft, Lock } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
 
 interface SignInFormValues {
@@ -110,22 +109,26 @@ export const SignInPasswordStep = ({
   return (
     <AuthCard
       footer={
-        <>
-          <Button
-            className='self-start'
-            disabled={forgotPasswordLoading}
-            loading={forgotPasswordLoading}
-            type='link'
-            onClick={handleForgotPasswordClick}
-          >
-            忘记密码？
+        <Flex className='flex-col gap-3'>
+          <Flex className='flex-between items-center'>
+            <Button
+              disabled={forgotPasswordLoading}
+              loading={forgotPasswordLoading}
+              type='link'
+              onClick={handleForgotPasswordClick}
+            >
+              忘记密码？
+            </Button>
+            <Button type='link' onClick={onBack}>
+              修改账号
+            </Button>
+          </Flex>
+          <Button block loading={loading} size='large' type='primary' onClick={() => form.submit()}>
+            登录
           </Button>
-          <Button icon={<ChevronLeft />} size='large' style={{ marginTop: 12 }} type='fill' onClick={onBack}>
-            返回修改账号
-          </Button>
-        </>
+        </Flex>
       }
-      subtitle='请输入密码以继续'
+      subtitle='请输入密码'
     >
       <Text className='text-[20px]'>{accountLabel}</Text>
       <Form form={form} layout='vertical' onFinish={onSignIn}>
@@ -134,27 +137,8 @@ export const SignInPasswordStep = ({
             placeholder='请输入密码'
             ref={passwordInputRef}
             size='large'
-            prefix={
-              <Icon
-                icon={Lock}
-                style={{
-                  marginInline: 6,
-                }}
-              />
-            }
-            style={{
-              padding: 6,
-            }}
-            suffix={
-              <Button
-                icon={<ChevronRight />}
-                loading={loading}
-                style={{ color: cssVar.colorPrimary }}
-                title='登录'
-                type='fill'
-                onClick={() => form.submit()}
-              />
-            }
+            prefix={<Icon icon={Lock} style={{ marginInline: 6 }} />}
+            onPressEnter={() => form.submit()}
           />
         </Form.Item>
       </Form>

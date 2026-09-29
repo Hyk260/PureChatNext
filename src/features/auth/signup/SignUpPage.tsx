@@ -24,9 +24,11 @@ const SignUpContent = () => {
 
 const SignUpPage = () => {
   return (
-    <Suspense fallback={null}>
-      <SignUpContent />
-    </Suspense>
+    <div className='h-full min-h-0'>
+      <Suspense fallback={null}>
+        <SignUpContent />
+      </Suspense>
+    </div>
   )
 }
 

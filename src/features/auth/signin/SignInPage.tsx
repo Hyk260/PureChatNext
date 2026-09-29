@@ -71,9 +71,11 @@ const SignInContent = () => {
 
 const SignInPage = () => {
   return (
-    <Suspense fallback={null}>
-      <SignInContent />
-    </Suspense>
+    <div className='h-full min-h-0'>
+      <Suspense fallback={null}>
+        <SignInContent />
+      </Suspense>
+    </div>
   )
 }
 

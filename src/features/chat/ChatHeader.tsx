@@ -22,6 +22,7 @@ import { createTopicShare } from '@/features/chat/chatApi'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { LocalChatTopic } from '@/features/chat/types'
 import TopicRenameModal, { confirmDeleteTopic, useTopicRename } from '@/features/chat/TopicRenameModal'
+import { getDesktopApi } from '@/types/desktop'
 
 const styles = createStaticStyles(({ css }) => ({
   header: css`
@@ -196,7 +197,7 @@ const ChatHeader = memo<Props>(
       <>
         <Flex className={[styles.header, 'flex-between']}>
           <Flex className='items-center flex-1 gap-1 min-w-0 overflow-hidden'>
-            {leftCollapsed ? (
+            {leftCollapsed && !getDesktopApi() ? (
               <ActionIcon icon={PanelLeftOpen} size='small' title='展开话题栏' onClick={toggleLeftCollapsed} />
             ) : null}
             <Text className={styles.title} ellipsis>

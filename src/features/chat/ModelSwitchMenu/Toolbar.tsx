@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, SearchBar, stopPropagation, Tooltip, Flex } from '@pure/ui'
+import { ActionIcon, SearchBar, Tooltip, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { Boxes, Brain } from 'lucide-react'
 import { memo } from 'react'
@@ -42,7 +42,7 @@ const Toolbar = memo<ToolbarProps>(({ groupMode, keyword, onGroupModeChange, onK
       value={keyword}
       variant='borderless'
       onInputChange={onKeywordChange}
-      onKeyDown={stopPropagation}
+      onKeyDown={(event) => event.stopPropagation()}
     />
     <Flex className='shrink-0 gap-0.5'>
       <Tooltip title='按模型'>

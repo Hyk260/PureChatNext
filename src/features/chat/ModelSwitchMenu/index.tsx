@@ -6,7 +6,6 @@ import {
   DropdownMenuPositioner,
   DropdownMenuRoot,
   DropdownMenuTrigger,
-  stopPropagation,
 } from '@pure/ui'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
@@ -179,7 +178,7 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
         </DropdownMenuTrigger>
         <DropdownMenuPortal>
           <DropdownMenuPositioner hoverTrigger={openOnHover} placement={placement}>
-            <DropdownMenuPopup className={styles.container} onKeyDown={stopPropagation}>
+            <DropdownMenuPopup className={styles.container} onKeyDown={(event) => event.stopPropagation()}>
               <Toolbar
                 groupMode={groupMode}
                 keyword={keyword}

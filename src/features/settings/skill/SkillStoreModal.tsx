@@ -12,7 +12,6 @@ import {
   Modal,
   SearchBar,
   Text,
-  stopPropagation,
 } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
 import { Pagination, Segmented } from 'antd'
@@ -107,7 +106,10 @@ const StoreSkillRow = memo(function StoreSkillRow({
         </Text>
       </Flex>
       {installedId ? (
-        <span onClick={stopPropagation} onKeyDown={stopPropagation}>
+        <span
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
           <DropdownMenu
             items={menuItems}
             nativeButton
@@ -119,7 +121,10 @@ const StoreSkillRow = memo(function StoreSkillRow({
           </DropdownMenu>
         </span>
       ) : (
-        <span onClick={stopPropagation} onKeyDown={stopPropagation}>
+        <span
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
           <ActionIcon
             disabled={installing}
             icon={installing ? Loader2 : Plus}

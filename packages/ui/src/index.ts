@@ -6,7 +6,8 @@ export * from './Avatar'
 export * from './Block'
 export { default as CodeBlock, type CodeBlockLanguage, type CodeBlockVariant } from './CodeBlock'
 export * from './Button'
-export * from './ChatItem'
+// ChatItem depends on message rendering; keep it behind its own subpath so
+// consumers that only need shared primitives do not preload Markdown/Mermaid.
 export * from './Checkbox'
 export * from './DropdownMenu'
 export * from './Empty'

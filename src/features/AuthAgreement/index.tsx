@@ -1,6 +1,6 @@
 'use client'
 
-import { Checkbox, confirmModal, stopPropagation } from '@pure/ui'
+import { Checkbox, confirmModal } from '@pure/ui'
 import { memo, useSyncExternalStore } from 'react'
 
 import Link from 'next/link'
@@ -18,11 +18,11 @@ const AGREEMENT_TEXT_PROPS = {
 
 const AgreementLinks = () => (
   <>
-    <Link href='/terms' onClick={stopPropagation}>
+    <Link href='/terms' onClick={(event) => event.stopPropagation()}>
       服务条款
     </Link>{' '}
     与{' '}
-    <Link href='/privacy' onClick={stopPropagation}>
+    <Link href='/privacy' onClick={(event) => event.stopPropagation()}>
       隐私政策
     </Link>
   </>

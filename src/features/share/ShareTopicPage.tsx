@@ -1,6 +1,7 @@
 'use client'
 
-import { Avatar, ChatItem, Flex } from '@pure/ui'
+import { Avatar, Flex } from '@pure/ui'
+import { ChatItem } from '@pure/ui/ChatItem'
 import { memo, useEffect, useState } from 'react'
 
 import NotFound from '@/components/404'

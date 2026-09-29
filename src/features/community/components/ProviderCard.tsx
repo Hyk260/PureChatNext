@@ -1,6 +1,6 @@
 'use client'
 
-import { Block, MaskShadow, ModelTag, ProviderCombine, stopPropagation, ActionIcon, Text, Flex } from '@pure/ui'
+import { Block, MaskShadow, ModelTag, ProviderCombine, ActionIcon, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { GlobeIcon } from 'lucide-react'
 import { memo } from 'react'
@@ -42,7 +42,7 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
           <div className={styles.author}>@{name}</div>
         </Flex>
         <Flex className='items-center'>
-          <a href={url} rel='noopener noreferrer' target='_blank' onClick={stopPropagation}>
+          <a href={url} rel='noopener noreferrer' target='_blank' onClick={(event) => event.stopPropagation()}>
             <ActionIcon color={cssVar.colorTextDescription} icon={GlobeIcon} />
           </a>
         </Flex>

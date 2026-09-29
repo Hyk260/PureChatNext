@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Avatar, Block, Flex, Icon, stopPropagation, Tag, Text } from '@pure/ui'
+import { ActionIcon, Avatar, Block, Flex, Icon, Tag, Text } from '@pure/ui'
 import { Github } from '@pure/ui/icons'
 import { formatDate } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
@@ -95,7 +95,12 @@ const SkillCard = memo<SkillCardProps>(({ onOpenDetail, ...item }) => {
           </Flex>
         </Flex>
         {github?.url ? (
-          <a href={github.url} rel='noopener noreferrer' target='_blank' onClick={stopPropagation}>
+          <a
+            href={github.url}
+            rel='noopener noreferrer'
+            target='_blank'
+            onClick={(event) => event.stopPropagation()}
+          >
             <ActionIcon fill={cssVar.colorTextDescription} icon={Github} title='仓库' />
           </a>
         ) : null}

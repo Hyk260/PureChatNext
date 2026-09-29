@@ -5,17 +5,24 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router/dom'
 
-import { configureDesktopFetch } from '@/utils/desktopFetch'
-import { webRoutes } from '@/spa/router/webRouter.config'
-import { createAppRouter } from '@/utils/router'
+import { DesktopTitleBarLayout } from '@/features/desktop/DesktopTitleBar'
+import DesktopTitleBar from '@/features/desktop/DesktopTitleBar'
 import DesktopServerSetup from '@/spa/desktop/DesktopServerSetup'
+import { webRoutes } from '@/spa/router/webRouter.config'
+import { configureDesktopFetch } from '@/utils/desktopFetch'
+import { createAppRouter } from '@/utils/router'
 
 const rootEl = document.getElementById('root')
 
 if (!rootEl) throw new Error('Root element #root not found')
 
 const render = () => {
-  const router = createAppRouter(webRoutes)
+  const router = createAppRouter([
+    {
+      children: webRoutes,
+      element: <DesktopTitleBarLayout />,
+    },
+  ])
   createRoot(rootEl).render(
     <StrictMode>
       <RouterProvider router={router} />
@@ -26,7 +33,9 @@ const render = () => {
 const renderSetup = () => {
   createRoot(rootEl).render(
     <StrictMode>
-      <DesktopServerSetup />
+      <DesktopTitleBar>
+        <DesktopServerSetup />
+      </DesktopTitleBar>
     </StrictMode>
   )
 }

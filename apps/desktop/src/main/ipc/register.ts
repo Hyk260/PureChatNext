@@ -8,6 +8,7 @@ import {
   ProjectController,
   StorageController,
   SystemController,
+  WindowController,
 } from '../controllers'
 import { CommandService } from '../services/CommandService'
 import { DesktopConfigService } from '../services/DesktopConfigService'
@@ -36,6 +37,7 @@ export const registerDesktopIpc = async (options: {
   new ProjectController(config).register(registry)
   new LocalSystemController(tools).register(registry)
   new SystemController().register(registry)
+  new WindowController().register(registry)
 
   return {
     dispose: () => {

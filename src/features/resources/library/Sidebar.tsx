@@ -22,7 +22,6 @@ const styles = createStaticStyles(({ css }) => ({
     width: 240px;
     height: 100%;
     background: ${cssVar.colorBgLayout};
-    border-inline-end: 1px solid ${cssVar.colorBorderSecondary};
   `,
   header: css`
     padding: 12px 16px;

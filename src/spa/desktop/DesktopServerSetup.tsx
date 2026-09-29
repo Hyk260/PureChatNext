@@ -73,7 +73,7 @@ const styles = {
     alignItems: 'center',
     background: '#f8f8f8',
     display: 'flex',
-    height: '100vh',
+    height: '100%',
     justifyContent: 'center',
   },
   description: { color: '#666', lineHeight: 1.6, margin: '0 0 24px' },

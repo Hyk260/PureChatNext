@@ -9,6 +9,7 @@ import { memo } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { useSession } from '@/libs/better-auth/client'
+import { getDesktopApi } from '@/types/desktop'
 
 const styles = createStaticStyles(({ css }) => ({
   header: css`
@@ -26,7 +27,7 @@ const NavHeader = memo(() => {
   return (
     <Flex className={[styles.header, 'flex-between h-[40px] p-2']}>
       <Flex className='items-center gap-0.5'>
-        {sidebarCollapsed ? (
+        {sidebarCollapsed && !getDesktopApi() ? (
           <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />
         ) : null}
       </Flex>

@@ -6,6 +6,10 @@ export interface DesktopAppInfo {
   version: string
 }
 
+export interface DesktopWindowState {
+  isMaximized: boolean
+}
+
 export interface DesktopBuiltinTool {
   description: string
   id: string
@@ -92,11 +96,15 @@ export interface DesktopApi {
   deleteProject: (id: string) => Promise<void>
   deleteSecret: (key: string) => Promise<void>
   getAppInfo: () => Promise<DesktopAppInfo>
+  getWindowState: () => Promise<DesktopWindowState>
   getSystemTools: () => Promise<DesktopSystemTools>
   getRemoteServer: () => Promise<DesktopRemoteServer>
   listProjectEntries: (input: { projectId: string; relativePath?: string }) => Promise<DesktopProjectEntries>
   listProjects: () => Promise<DesktopProject[]>
   notify: (input: DesktopNotificationInput) => Promise<void>
+  minimizeWindow: () => Promise<void>
+  toggleMaximizeWindow: () => Promise<DesktopWindowState>
+  closeWindow: () => Promise<void>
   executeLocalTool: (request: DesktopLocalToolRequest) => Promise<DesktopLocalToolResult>
   getPermissionScope: (topicId: string) => Promise<{ scope: string | null }>
   requestFullAccess: (topicId: string) => Promise<{ granted: boolean }>

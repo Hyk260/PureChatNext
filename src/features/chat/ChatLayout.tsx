@@ -2,12 +2,15 @@
 
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { Flex } from '@pure/ui'
-import { memo } from 'react'
+import { memo, useEffect } from 'react'
 import type { ReactNode } from 'react'
 
 import ChatHeader from '@/features/chat/ChatHeader'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { LocalChatTopic } from '@/features/chat/types'
+import { DESKTOP_SIDEBAR_STATE_EVENT, DESKTOP_TOGGLE_SIDEBAR_EVENT } from '@/features/desktop/desktopEvents'
+import type { DesktopSidebarStateDetail } from '@/features/desktop/desktopEvents'
+import InsetContentFrame from '@/layout/InsetContentFrame'
 
 const LEFT_WIDTH = 240
 const RIGHT_WIDTH = 320
@@ -23,27 +26,23 @@ const styles = createStaticStyles(({ css }) => ({
     flex: none;
     width: ${LEFT_WIDTH}px;
     min-width: 0;
-    height: 100dvh;
+    height: 100%;
     overflow: hidden;
-    border-inline-end: 1px solid ${cssVar.colorBorderSecondary};
-    transition:
-      width 0.25s ${cssVar.motionEaseInOut},
-      border-color 0.25s ${cssVar.motionEaseInOut};
+    transition: width 0.25s ${cssVar.motionEaseInOut};
   `,
   leftCollapsed: css`
     width: 0 !important;
-    border-inline-end-color: transparent;
   `,
   main: css`
     flex: 1;
     min-width: 0;
-    height: 100dvh;
+    height: 100%;
   `,
   right: css`
     flex: none;
     width: ${RIGHT_WIDTH}px;
     min-width: 0;
-    height: 100dvh;
+    height: 100%;
     overflow: hidden;
     border-inline-start: 1px solid ${cssVar.colorBorderSecondary};
     transition:
@@ -89,32 +88,44 @@ const ChatLayout = memo<Props>(
     const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
     const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
 
+    useEffect(() => {
+      const handleToggle = () => useChatUiStore.getState().toggleLeftCollapsed()
+      window.addEventListener(DESKTOP_TOGGLE_SIDEBAR_EVENT, handleToggle)
+      return () => window.removeEventListener(DESKTOP_TOGGLE_SIDEBAR_EVENT, handleToggle)
+    }, [])
+
+    useEffect(() => {
+      window.dispatchEvent(
+        new CustomEvent<DesktopSidebarStateDetail>(DESKTOP_SIDEBAR_STATE_EVENT, {
+          detail: { collapsed: leftCollapsed },
+        })
+      )
+    }, [leftCollapsed])
+
     return (
-      <Flex className='h-[100dvh] w-full overflow-hidden'>
-        <aside
-          className={cx(styles.left, leftCollapsed && styles.leftCollapsed)}
-        >
+      <Flex className='h-full w-full overflow-hidden'>
+        <aside className={cx(styles.left, leftCollapsed && styles.leftCollapsed)}>
           <Flex className='h-full w-[240px]'>{left}</Flex>
         </aside>
-        <Flex className={[styles.main, 'flex-col h-full min-w-0']}>
-          <ChatHeader
-            autoRenameDisabled={busy || autoRenamingTopicId !== null}
-            autoRenaming={topic?.id === autoRenamingTopicId}
-            hasMessages={hasMessages}
-            title={title}
-            topic={topic}
-            onAutoRename={onAutoRenameTopic}
-            onDelete={onDeleteTopic}
-            onFavorite={onFavoriteTopic}
-            onRename={onRenameTopic}
-          />
-          <div className={styles.content}>{children}</div>
-        </Flex>
-        <aside
-          className={cx(styles.right, rightCollapsed && styles.rightCollapsed)}
-        >
-          <Flex className='h-full w-[320px]'>{right}</Flex>
-        </aside>
+        <InsetContentFrame sidebarCollapsed={leftCollapsed}>
+          <Flex className={[styles.main, 'h-full min-w-0 flex-col']}>
+            <ChatHeader
+              autoRenameDisabled={busy || autoRenamingTopicId !== null}
+              autoRenaming={topic?.id === autoRenamingTopicId}
+              hasMessages={hasMessages}
+              title={title}
+              topic={topic}
+              onAutoRename={onAutoRenameTopic}
+              onDelete={onDeleteTopic}
+              onFavorite={onFavoriteTopic}
+              onRename={onRenameTopic}
+            />
+            <div className={styles.content}>{children}</div>
+          </Flex>
+          <aside className={cx(styles.right, rightCollapsed && styles.rightCollapsed)}>
+            <Flex className='h-full w-[320px]'>{right}</Flex>
+          </aside>
+        </InsetContentFrame>
       </Flex>
     )
   }

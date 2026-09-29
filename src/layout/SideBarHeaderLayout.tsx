@@ -10,6 +10,7 @@ import { memo } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
+import { getDesktopApi } from '@/types/desktop'
 
 const prefixCls = 'ant'
 
@@ -78,6 +79,7 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     const sidebarCollapsed = collapsed ?? homeSidebarCollapsed
     const toggleSidebarCollapsed = onToggleCollapsed ?? toggleHomeSidebarCollapsed
     const router = useRouter()
+    const showToggle = showTogglePanelButton && !getDesktopApi()
 
     const breadcrumbItems: BreadcrumbProps['items'] = [
       ...(showHomeIcon
@@ -125,11 +127,11 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     )
 
     return (
-      <Flex className={[styles.container, 'flex-between flex-none p-[0px_6px] h-[40px]']}>
+      <Flex className={[styles.container, 'flex-between flex-none p-2 h-[40px]']}>
         {leftContent}
         <Flex className='items-center flex-none gap-0.5 justify-end'>
           {right}
-          {showTogglePanelButton ? (
+          {showToggle ? (
             <ActionIcon
               icon={sidebarCollapsed ? PanelLeftOpen : PanelLeftClose}
               size='small'

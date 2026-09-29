@@ -39,6 +39,9 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-card: var(--card);
   --color-border: var(--border);
+  --color-app-layout: var(--ant-color-bg-layout);
+  --color-app-surface: var(--ant-color-bg-container);
+  --color-app-border-secondary: var(--ant-color-border-secondary);
   --color-ring: var(--ring);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);

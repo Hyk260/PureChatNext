@@ -18,14 +18,10 @@ const styles = createStaticStyles(({ css }) => ({
     height: 100%;
     overflow: hidden;
     background: ${cssVar.colorBgLayout};
-    border-inline-end: 1px solid ${cssVar.colorBorderSecondary};
-    transition:
-      width 0.25s ${cssVar.motionEaseInOut},
-      border-color 0.25s ${cssVar.motionEaseInOut};
+    transition: width 0.25s ${cssVar.motionEaseInOut};
   `,
   sidebarCollapsed: css`
     width: 0 !important;
-    border-inline-end-color: transparent;
   `,
 }))
 
@@ -33,9 +29,7 @@ const HomeSidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flex
-      className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}
-    >
+    <Flex className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}>
       <SidebarHeader />
       <Flex className='flex-col flex-1 gap-px min-h-[0px] w-[240px]'>
         <SidebarNav />

@@ -4,11 +4,7 @@ import { BrowserWindow, shell } from 'electron'
 
 import { isSafeExternalUrl, isTrustedRendererUrl } from '../security/RendererSecurity'
 import type { DesktopConfigService, DesktopWindowState } from '../services/DesktopConfigService'
-import {
-  getRendererReloadDelayMs,
-  MAX_RENDERER_RELOAD_ATTEMPTS,
-  shouldRetryRendererLoad,
-} from './rendererLoadRetry'
+import { getRendererReloadDelayMs, MAX_RENDERER_RELOAD_ATTEMPTS, shouldRetryRendererLoad } from './rendererLoadRetry'
 
 export class WindowManager {
   private window: BrowserWindow | null = null
@@ -35,6 +31,7 @@ export class WindowManager {
     if (this.window) return this.window
     const savedState = await this.config?.read().then((value) => value.windowState)
     const window = new BrowserWindow({
+      frame: false,
       height: savedState?.height ?? 800,
       icon: this.iconPath,
       minHeight: 520,

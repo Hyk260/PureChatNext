@@ -8,6 +8,7 @@ import type {
   DesktopProjectEntries,
   DesktopRemoteServer,
   DesktopSystemTools,
+  DesktopWindowState,
 } from '../../../../../src/types/desktop'
 
 export interface DesktopIpcContractMap {
@@ -32,6 +33,10 @@ export interface DesktopIpcContractMap {
   'localSystem.execute': { args: [request: DesktopLocalToolRequest]; result: DesktopLocalToolResult }
   'shell.openPath': { args: [targetPath: string]; result: void }
   'window.openExternal': { args: [url: string]; result: void }
+  'window.getState': { args: []; result: DesktopWindowState }
+  'window.minimize': { args: []; result: void }
+  'window.toggleMaximize': { args: []; result: DesktopWindowState }
+  'window.close': { args: []; result: void }
   'notification.show': { args: [input: DesktopNotificationInput]; result: void }
 }
 
@@ -58,5 +63,11 @@ export const DESKTOP_IPC_CHANNELS = {
   },
   shell: { openPath: 'shell.openPath' },
   storage: { deleteSecret: 'storage.deleteSecret', storeSecret: 'storage.storeSecret' },
-  window: { openExternal: 'window.openExternal' },
+  window: {
+    close: 'window.close',
+    getState: 'window.getState',
+    minimize: 'window.minimize',
+    openExternal: 'window.openExternal',
+    toggleMaximize: 'window.toggleMaximize',
+  },
 } as const

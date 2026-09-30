@@ -7,6 +7,7 @@ import { memo, useMemo } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { getSettingsTabLabel } from '@/features/settings/useSettingsCategory'
+import { getDesktopApi } from '@/types/desktop'
 import { usePathname } from 'next/navigation'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -39,7 +40,7 @@ const SettingsHeader = memo(() => {
 
   return (
     <Flex className={[styles.header, 'items-center']}>
-      {sidebarCollapsed ? (
+      {sidebarCollapsed && !getDesktopApi() ? (
         <ActionIcon
           className={styles.toggle}
           icon={PanelLeftOpen}

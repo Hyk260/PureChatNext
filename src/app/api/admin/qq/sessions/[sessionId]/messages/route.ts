@@ -8,10 +8,15 @@ import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
 import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import { jsonError, withAdmin } from '@/libs/auth/get-session-user'
+import { safeFileName } from '@/libs/utils/safeFileName'
 import { persistWechatFile, WechatFileArtifactError } from '@/libs/channels/wechat/fileArtifacts'
 import { canSendQQDevOutbound, sendQQDevOutbound, QQOutboundError } from '@/libs/channels/qq/outbound'
 import type { QQOutboundMedia } from '@/libs/channels/qq/outbound'
-import { QQ_MAX_OUTBOUND_FILE_BYTES, QQ_MAX_OUTBOUND_FILES, qqOutboundFileLimitLabel } from '@/libs/channels/qq/outboundLimits'
+import {
+  QQ_MAX_OUTBOUND_FILE_BYTES,
+  QQ_MAX_OUTBOUND_FILES,
+  qqOutboundFileLimitLabel,
+} from '@/libs/channels/qq/outboundLimits'
 import { resolveQQPassiveReply } from '@/libs/channels/qq/passiveReply'
 import { expandQQEventsToMessages } from '@/libs/channels/qq/timeline'
 import { resolveQQThreadType } from '@/libs/channels/qq/thread'
@@ -23,16 +28,13 @@ import {
 
 const MAX_OUTBOUND_TEXT_LENGTH = 2000
 
-function safeFileName(name: string) {
-  const base = name.split(/[/\\]/).pop()?.trim() || 'file'
-  return base.slice(0, 180) || 'file'
-}
-
 function readOutboundTextSent(payload: Record<string, unknown> | null | undefined) {
   return Boolean(payload && payload.textSent === true)
 }
 
-async function parseOutboundBody(request: Request): Promise<{ media: QQOutboundMedia[]; requestId: string; text: string }> {
+async function parseOutboundBody(
+  request: Request
+): Promise<{ media: QQOutboundMedia[]; requestId: string; text: string }> {
   const contentType = request.headers.get('content-type') || ''
   if (contentType.includes('multipart/form-data')) {
     const form = await request.formData()
@@ -75,23 +77,21 @@ async function parseOutboundBody(request: Request): Promise<{ media: QQOutboundM
 }
 
 function outboundAttachments(eventId: string) {
-  return new ChannelEventFileModel()
-    .listForEvent(eventId)
-    .then((rows) =>
-      rows
-        .filter(({ artifact }) => artifact.direction === 'output')
-        .map(({ artifact, file }) => ({
-          deliveryError: artifact.deliveryError,
-          deliveryStatus: artifact.deliveryStatus,
-          direction: artifact.direction,
-          fileId: file.id,
-          fileName: file.name,
-          fileSize: file.size,
-          id: artifact.id,
-          summary: artifact.summary,
-          version: artifact.version,
-        }))
-    )
+  return new ChannelEventFileModel().listForEvent(eventId).then((rows) =>
+    rows
+      .filter(({ artifact }) => artifact.direction === 'output')
+      .map(({ artifact, file }) => ({
+        deliveryError: artifact.deliveryError,
+        deliveryStatus: artifact.deliveryStatus,
+        direction: artifact.direction,
+        fileId: file.id,
+        fileName: file.name,
+        fileSize: file.size,
+        id: artifact.id,
+        summary: artifact.summary,
+        version: artifact.version,
+      }))
+  )
 }
 
 function outboundMessage(event: ChannelEventItem, attachments: Awaited<ReturnType<typeof outboundAttachments>>) {
@@ -226,9 +226,7 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
   }
 
   const inFlightChunks = event && event.status !== 'completed' ? event.sentChunkCount : 0
-  const agentReplyCount = inbound?.responseText?.trim()
-    ? Math.max(inbound.sentChunkCount || 0, 1)
-    : 0
+  const agentReplyCount = inbound?.responseText?.trim() ? Math.max(inbound.sentChunkCount || 0, 1) : 0
   const reply = resolveQQPassiveReply({
     agentReplyCount,
     inboundCreatedAt: inbound?.createdAt,

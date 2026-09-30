@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { AgentDeleteError, AgentModel } from '@pure/database/models/agent'
+import { AgentDeleteError, AgentModel, AgentUpdateError } from '@pure/database/models/agent'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const updateSchema = z.object({
@@ -43,10 +43,17 @@ export const PATCH = withAuth(async (request, { params, userId }) => {
   const parsed = updateSchema.safeParse(body)
   if (!parsed.success) return jsonError(parsed.error.message)
 
-  const item = await new AgentModel(userId).update(id, parsed.data)
-  if (!item) return jsonError('Agent not found', 404)
+  try {
+    const item = await new AgentModel(userId).update(id, parsed.data)
+    if (!item) return jsonError('Agent not found', 404)
 
-  return NextResponse.json(item)
+    return NextResponse.json(item)
+  } catch (error) {
+    if (error instanceof AgentUpdateError) {
+      return jsonError(error.message, error.code === 'builtin' ? 403 : 404)
+    }
+    throw error
+  }
 })
 
 /**

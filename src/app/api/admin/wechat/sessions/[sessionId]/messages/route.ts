@@ -7,14 +7,11 @@ import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/chan
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
 import { jsonError, withAdmin } from '@/libs/auth/get-session-user'
+import { safeFileName } from '@/libs/utils/safeFileName'
 import { decryptCredentials } from '@/libs/channels/wechat/encrypt'
 import { persistWechatFile } from '@/libs/channels/wechat/fileArtifacts'
 import { WECHAT_MAX_INBOUND_FILE_BYTES } from '@/libs/channels/wechat/inboundMedia'
-import {
-  canSendWechatDevOutbound,
-  sendWechatOutbound,
-  WechatOutboundError,
-} from '@/libs/channels/wechat/outbound'
+import { canSendWechatDevOutbound, sendWechatOutbound, WechatOutboundError } from '@/libs/channels/wechat/outbound'
 import type { WechatOutboundMedia } from '@/libs/channels/wechat/outbound'
 import { expandEventsToMessages } from '@/libs/channels/wechat/timeline'
 import {
@@ -34,12 +31,9 @@ function resolveOwnerExternalUserId(credentials: string): string {
   }
 }
 
-function safeFileName(name: string) {
-  const base = name.split(/[/\\]/).pop()?.trim() || 'file'
-  return base.slice(0, 180) || 'file'
-}
-
-async function parseOutboundBody(request: Request): Promise<{ media: WechatOutboundMedia[]; requestId: string; text: string }> {
+async function parseOutboundBody(
+  request: Request
+): Promise<{ media: WechatOutboundMedia[]; requestId: string; text: string }> {
   const contentType = request.headers.get('content-type') || ''
   if (contentType.includes('multipart/form-data')) {
     const form = await request.formData()
@@ -74,28 +68,29 @@ async function parseOutboundBody(request: Request): Promise<{ media: WechatOutbo
     throw new WechatOutboundError('Invalid JSON body')
   }
   const text = typeof (body as { text?: unknown })?.text === 'string' ? (body as { text: string }).text.trim() : ''
-  const requestId = typeof (body as { requestId?: unknown })?.requestId === 'string' ? (body as { requestId: string }).requestId.trim() : ''
+  const requestId =
+    typeof (body as { requestId?: unknown })?.requestId === 'string'
+      ? (body as { requestId: string }).requestId.trim()
+      : ''
   return { media: [], requestId, text }
 }
 
 function outboundAttachments(eventId: string) {
-  return new ChannelEventFileModel()
-    .listForEvent(eventId)
-    .then((rows) =>
-      rows
-        .filter(({ artifact }) => artifact.direction === 'output')
-        .map(({ artifact, file }) => ({
-          deliveryError: artifact.deliveryError,
-          deliveryStatus: artifact.deliveryStatus,
-          direction: artifact.direction,
-          fileId: file.id,
-          fileName: file.name,
-          fileSize: file.size,
-          id: artifact.id,
-          summary: artifact.summary,
-          version: artifact.version,
-        }))
-    )
+  return new ChannelEventFileModel().listForEvent(eventId).then((rows) =>
+    rows
+      .filter(({ artifact }) => artifact.direction === 'output')
+      .map(({ artifact, file }) => ({
+        deliveryError: artifact.deliveryError,
+        deliveryStatus: artifact.deliveryStatus,
+        direction: artifact.direction,
+        fileId: file.id,
+        fileName: file.name,
+        fileSize: file.size,
+        id: artifact.id,
+        summary: artifact.summary,
+        version: artifact.version,
+      }))
+  )
 }
 
 /**
@@ -159,8 +154,7 @@ export const GET = withAdmin<{ sessionId: string }>(async (request, { params, us
       agentTitle: agent?.title ?? null,
       applicationId: sessionBinding.applicationId,
       bindingId: session.bindingId,
-      canSend:
-        isOwnBinding && canSendWechatDevOutbound(ownerExternalUserId, session.externalUserId),
+      canSend: isOwnBinding && canSendWechatDevOutbound(ownerExternalUserId, session.externalUserId),
       conversationVersion: session.conversationVersion,
       externalUserId: session.externalUserId,
       externalUserName: session.externalUserName,
@@ -210,7 +204,8 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
   const platformMessageId = `web-outbound:${requestId}`
   let event = await eventModel.findByPlatformMessageId(binding.id, platformMessageId)
   if (event && event.sessionId !== session.id) return jsonError('Invalid requestId', 400)
-  const encryptedContextToken = event?.encryptedContextToken ?? (await eventModel.findLatestEncryptedContextToken(sessionId))
+  const encryptedContextToken =
+    event?.encryptedContextToken ?? (await eventModel.findLatestEncryptedContextToken(sessionId))
   if (!encryptedContextToken) {
     return jsonError('该联系人尚无可用会话 token，请先用微信发一条消息', 400)
   }
@@ -252,7 +247,11 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
         summary: '网页代发附件',
         userId,
       })
-      persisted.push({ artifactId: artifact.artifactId, deliveryStatus: artifact.deliveryStatus, fileId: artifact.file.id })
+      persisted.push({
+        artifactId: artifact.artifactId,
+        deliveryStatus: artifact.deliveryStatus,
+        fileId: artifact.file.id,
+      })
     }
 
     const sendable = media

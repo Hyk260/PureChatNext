@@ -296,7 +296,7 @@ export default function AdminUsersPage() {
   const rangeEnd = Math.min(page * pageSize, total)
 
   return (
-    <main className='h-screen overflow-y-auto'>
+    <main className='h-full min-h-0 overflow-y-auto'>
       <Flex className='mx-auto w-full max-w-6xl flex-col gap-4 px-6 py-6'>
         <Flex className='flex-between gap-3 flex-wrap'>
           <Flex className='items-center gap-2'>

@@ -13,6 +13,11 @@ export interface ReclaimUnverifiedEmailResponse {
   reclaimed: boolean
 }
 
+interface ReclaimUnverifiedEmailPayload {
+  email?: unknown
+  password?: unknown
+}
+
 /**
  * POST /api/auth/reclaim-unverified-email
  * 删除未验证用户，释放邮箱以便重新注册。
@@ -20,12 +25,20 @@ export interface ReclaimUnverifiedEmailResponse {
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const body = (await req.json()) as ReclaimUnverifiedEmailPayload
     const email = typeof body?.email === 'string' ? body.email.toLowerCase().trim() : ''
+    const password = typeof body?.password === 'string' ? body.password : ''
 
     if (!email || !email.includes('@')) {
       return NextResponse.json(
         { error: 'Email is required', reclaimed: false } satisfies ReclaimUnverifiedEmailResponse,
+        { status: 400 }
+      )
+    }
+
+    if (!password) {
+      return NextResponse.json(
+        { error: 'Password is required', reclaimed: false } satisfies ReclaimUnverifiedEmailResponse,
         { status: 400 }
       )
     }
@@ -53,6 +66,14 @@ export async function POST(req: NextRequest) {
           reclaimed: false,
         } satisfies ReclaimUnverifiedEmailResponse,
         { status: 409 }
+      )
+    }
+
+    const authenticatedUser = await new UserModel().findByEmailAndPassword(email, password)
+    if (!authenticatedUser || authenticatedUser.id !== user.id) {
+      return NextResponse.json(
+        { error: 'Invalid credentials', reclaimed: false } satisfies ReclaimUnverifiedEmailResponse,
+        { status: 401 }
       )
     }
 

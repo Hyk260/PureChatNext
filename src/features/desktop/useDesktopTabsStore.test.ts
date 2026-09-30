@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { desktopHref, titleFromLocation, useDesktopTabsStore } from './useDesktopTabsStore'
+import {
+  dedupeHistoryEntries,
+  desktopHref,
+  titleFromLocation,
+  useDesktopTabsStore,
+} from './useDesktopTabsStore'
 
 describe('useDesktopTabsStore', () => {
   beforeEach(() => {
@@ -16,10 +21,13 @@ describe('useDesktopTabsStore', () => {
     })
   })
 
-  it('derives titles from path', () => {
+  it('derives specific titles from path', () => {
     expect(titleFromLocation('/', '')).toBe('PureChat')
     expect(titleFromLocation('/chat', '')).toBe('聊天')
-    expect(titleFromLocation('/settings/about', '')).toBe('设置')
+    expect(titleFromLocation('/settings/about', '')).toBe('关于')
+    expect(titleFromLocation('/settings/profile', '')).toBe('个人资料')
+    expect(titleFromLocation('/admin/users', '')).toBe('用户管理')
+    expect(titleFromLocation('/verify-email', '')).toBe('验证邮箱')
   })
 
   it('adds and closes tabs', () => {
@@ -45,11 +53,25 @@ describe('useDesktopTabsStore', () => {
 
   it('dedupes history entries by href', () => {
     useDesktopTabsStore.getState().syncLocation('/chat', '', 'PUSH')
-    useDesktopTabsStore.getState().syncLocation('/settings', '', 'PUSH')
+    useDesktopTabsStore.getState().syncLocation('/settings/about', '', 'PUSH')
     useDesktopTabsStore.getState().syncLocation('/chat', '', 'PUSH')
 
     const entries = useDesktopTabsStore.getState().historyEntries
     const hrefs = entries.map((entry) => desktopHref(entry))
-    expect(hrefs).toEqual(['/chat', '/settings'])
+    expect(hrefs).toEqual(['/chat', '/settings/about'])
+  })
+
+  it('dedupes history entries by title', () => {
+    useDesktopTabsStore.getState().syncLocation('/settings/profile', '', 'PUSH')
+    useDesktopTabsStore.getState().syncLocation('/community/a', '', 'PUSH')
+    useDesktopTabsStore.getState().syncLocation('/community/b', '', 'PUSH')
+
+    // community/a and community/b would both become distinct segments; force same title
+    const entries = dedupeHistoryEntries([
+      { id: '1', path: '/settings/a', search: '', title: '设置', visitedAt: 3 },
+      { id: '2', path: '/settings/b', search: '', title: '设置', visitedAt: 2 },
+      { id: '3', path: '/chat', search: '', title: '聊天', visitedAt: 1 },
+    ])
+    expect(entries.map((entry) => entry.id)).toEqual(['1', '3'])
   })
 })

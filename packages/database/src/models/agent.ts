@@ -54,6 +54,16 @@ export class AgentDeleteError extends Error {
   }
 }
 
+export class AgentUpdateError extends Error {
+  constructor(
+    message: string,
+    public readonly code: 'builtin'
+  ) {
+    super(message)
+    this.name = 'AgentUpdateError'
+  }
+}
+
 export class AgentModel {
   private readonly db: ChatDatabase
   private readonly userId: string
@@ -137,12 +147,15 @@ export class AgentModel {
   update = async (id: string, data: AgentUpdateInput) => {
     const existing = await this.findVisibleById(id)
     if (!existing) return undefined
+    if (existing.isBuiltin || existing.userId === null) {
+      throw new AgentUpdateError('Builtin agent cannot be updated', 'builtin')
+    }
 
     const { slug, ...patch } = data
 
     const [item] = await this.db
       .update(agents)
-      .set({ ...patch, slug: existing.isBuiltin ? undefined : slug, updatedAt: new Date() })
+      .set({ ...patch, slug, updatedAt: new Date() })
       .where(and(eq(agents.id, id), this.visibleWhere()))
       .returning()
     return item

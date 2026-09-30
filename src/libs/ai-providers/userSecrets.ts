@@ -1,7 +1,12 @@
 import { UserProviderSecretModel } from '@pure/database/models/userProviderSecret'
 
 import type { SupportedProviderId } from './resolveClient'
-import { isSupportedProviderId, resolveOptionalBaseURL, resolveProviderApiKey } from './resolveClient'
+import {
+  isSupportedProviderId,
+  PROVIDER_RUNTIME_DEFAULT_BASE_URLS,
+  resolveOptionalBaseURL,
+  resolveProviderApiKey,
+} from './resolveClient'
 
 export type UserProviderCredentials = {
   apiKey: string
@@ -33,11 +38,16 @@ export async function resolveUserProviderCredentials(params: {
     }
   }
 
-  if (!params.allowEnvFallback) return null
+  const headerKey = params.headerKey?.trim()
+  if (headerKey) {
+    return { apiKey: headerKey, baseURL: requestBaseURL }
+  }
 
-  const envKey = resolveProviderApiKey(params.provider, params.headerKey, undefined)
+  if (!params.allowEnvFallback || !params.userId) return null
+
+  const envKey = resolveProviderApiKey(params.provider, undefined, undefined)
   if (!envKey) return null
-  return { apiKey: envKey, baseURL: requestBaseURL }
+  return { apiKey: envKey, baseURL: PROVIDER_RUNTIME_DEFAULT_BASE_URLS[params.provider] }
 }
 
 export function isByokProviderId(provider: string): provider is SupportedProviderId {

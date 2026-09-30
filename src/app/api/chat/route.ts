@@ -38,6 +38,7 @@ import { buildChatRuntimeInstructions } from '@/server/chat/runtimeInstructions'
 import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
 import { desktopTools } from '@/server/chat/desktopTools'
 import { CHAT_TOOL_CAPABILITIES, isToolApprovalRequired } from '@/server/chat/permissionPolicy'
+import { safeFileName } from '@/libs/utils/safeFileName'
 
 import { createMessageMetadata } from './messageMetadata'
 
@@ -104,7 +105,7 @@ const normalizeAttachmentMessages = async (messages: UIMessage[], supportsVision
             continue
           }
 
-          const tempPath = join(tmpdir(), `chat-file-${randomUUID()}-${filename}`)
+          const tempPath = join(tmpdir(), `chat-file-${randomUUID()}-${safeFileName(filename, 'attachment')}`)
           tempPaths.push(tempPath)
           await writeFile(tempPath, buffer)
           const document = await loadFile(tempPath, { filename, source: tempPath })
@@ -384,7 +385,7 @@ export async function POST(request: Request) {
 
   const supportsVision = Boolean(
     requestBody.modelAbilities?.vision ??
-      getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision
+    getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision
   )
   try {
     messages = await normalizeAttachmentMessages(messages, supportsVision)
@@ -448,12 +449,7 @@ export async function POST(request: Request) {
 
     try {
       const usageStartedAt = Date.now()
-      const resolvedModel = resolveModel(
-        PURECHAT_PROVIDER_ID,
-        displayModel,
-        gatewayKey,
-        resolveAiGatewayBaseURL()
-      )
+      const resolvedModel = resolveModel(PURECHAT_PROVIDER_ID, displayModel, gatewayKey, resolveAiGatewayBaseURL())
 
       log('purechat modelId: %o', resolvedModel.modelId)
 

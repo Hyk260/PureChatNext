@@ -21,7 +21,7 @@ vi.hoisted(() => {
 })
 
 import { AgentModel } from '@pure/database/models/agent'
-import type { AgentDeleteError } from '@pure/database/models/agent'
+import type { AgentDeleteError, AgentUpdateError } from '@pure/database/models/agent'
 import { ChatMessageModel } from '@pure/database/models/chatMessage'
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import * as schema from '@pure/database/schemas'
@@ -142,15 +142,11 @@ describeIfDb('AgentModel', () => {
     expect(found).toBeUndefined()
   })
 
-  it('update can change title for builtin', async () => {
-    const updated = await new AgentModel(userAId, db).update(PURE_AI_AGENT_ID, {
-      description: `desc-${TEST_PREFIX}`,
-    })
-    expect(updated?.description).toBe(`desc-${TEST_PREFIX}`)
-
-    // restore
-    await new AgentModel(userAId, db).update(PURE_AI_AGENT_ID, {
-      description: '你的默认 AI 助手',
-    })
+  it('rejects updating builtin Pure AI', async () => {
+    await expect(
+      new AgentModel(userAId, db).update(PURE_AI_AGENT_ID, { description: 'changed' })
+    ).rejects.toMatchObject({
+      code: 'builtin',
+    } satisfies Partial<AgentUpdateError>)
   })
 })

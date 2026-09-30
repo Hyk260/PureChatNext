@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 
 import debug from 'debug'
 import { NextResponse } from 'next/server'
@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server'
 import { FileModel, FileStorageQuotaExceededError } from '@pure/database/models/file'
 import { fileStorageLimitBytes } from '@/envs/file'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
+import { safeFileName } from '@/libs/utils/safeFileName'
 import { FileS3 } from '@/server/modules/S3'
 import { isS3Configured } from '@/server/modules/S3/config'
 import { buildPublicS3Url, resolveFileAccessUrl } from '@/server/modules/S3/url'
@@ -61,7 +62,7 @@ export const POST = withAuth(async (request, { userId }) => {
   // 基于字节魔数校验真实 MIME；file.type 是浏览器声明值（可伪造），仅作 fallback
   const detectedFileType = await resolveMimeTypeFromBytes(file.type || null, buffer)
   const fileHash = createHash('sha256').update(buffer).digest('hex')
-  const key = `resources/${userId}/${Date.now()}-${file.name}`
+  const key = `resources/${userId}/${randomUUID()}-${safeFileName(file.name, 'file')}`
   const fileS3 = new FileS3()
   const url = buildPublicS3Url(key)
   let uploaded = false

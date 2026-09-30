@@ -28,7 +28,10 @@ const parseRecipients = (value: unknown): string[] | undefined => {
   }
 
   if (Array.isArray(value)) {
-    const recipients = value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    const recipients = value
+      .filter((item): item is string => typeof item === 'string')
+      .map((item) => item.trim())
+      .filter(Boolean)
 
     return recipients.length > 0 ? recipients : undefined
   }
@@ -48,9 +51,11 @@ const resolveImplType = (value: unknown): EmailImplType | undefined => {
   return value as EmailImplType
 }
 
-const parseSendMailPayload = (rawPayload: unknown): EmailPayload | undefined => {
+type ParsedSendMailPayload = { error: string } | { payload: EmailPayload }
+
+const parseSendMailPayload = (rawPayload: unknown): ParsedSendMailPayload => {
   if (!isRecord(rawPayload)) {
-    return undefined
+    return { error: 'Missing or invalid "payload" field' }
   }
 
   const to = parseRecipients(rawPayload.to)
@@ -58,24 +63,23 @@ const parseSendMailPayload = (rawPayload: unknown): EmailPayload | undefined => 
   const text = toTrimmedString(rawPayload.text)
   const html = toTrimmedString(rawPayload.html)
 
-  if (!to || !subject) {
-    return undefined
-  }
+  if (!to) return { error: 'Missing or invalid "payload.to" field' }
+  if (!subject) return { error: 'Missing or invalid "payload.subject" field' }
 
-  if (!text && !html) {
-    return undefined
-  }
+  if (!text && !html) return { error: 'Missing email content. Provide "payload.text" or "payload.html"' }
 
   const from = toTrimmedString(rawPayload.from)
   const replyTo = toTrimmedString(rawPayload.replyTo)
 
   return {
-    ...(from ? { from } : {}),
-    ...(html ? { html } : {}),
-    ...(replyTo ? { replyTo } : {}),
-    ...(text ? { text } : {}),
-    subject,
-    to: to.length === 1 ? to[0]! : to,
+    payload: {
+      ...(from ? { from } : {}),
+      ...(html ? { html } : {}),
+      ...(replyTo ? { replyTo } : {}),
+      ...(text ? { text } : {}),
+      subject,
+      to: to.length === 1 ? to[0]! : to,
+    },
   }
 }
 
@@ -143,36 +147,10 @@ export const POST = withAdmin(async (req: NextRequest) => {
       return devActionSuccess(action, { valid })
     }
 
-    const rawPayload = body.payload
+    const parsedPayload = parseSendMailPayload(body.payload)
+    if ('error' in parsedPayload) return devError(parsedPayload.error)
 
-    if (!isRecord(rawPayload)) {
-      return devError('Missing or invalid "payload" field')
-    }
-
-    const to = parseRecipients(rawPayload.to)
-    const subject = toTrimmedString(rawPayload.subject)
-    const text = toTrimmedString(rawPayload.text)
-    const html = toTrimmedString(rawPayload.html)
-
-    if (!to) {
-      return devError('Missing or invalid "payload.to" field')
-    }
-
-    if (!subject) {
-      return devError('Missing or invalid "payload.subject" field')
-    }
-
-    if (!text && !html) {
-      return devError('Missing email content. Provide "payload.text" or "payload.html"')
-    }
-
-    const payload = parseSendMailPayload(rawPayload)
-
-    if (!payload) {
-      return devError('Invalid sendMail payload')
-    }
-
-    const result = await emailService.sendMail(payload)
+    const result = await emailService.sendMail(parsedPayload.payload)
 
     return devActionSuccess(action, result)
   } catch (error) {

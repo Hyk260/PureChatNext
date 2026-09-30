@@ -15,7 +15,7 @@ export default function CodeBlockPage() {
   const [variant, setVariant] = useState<CodeBlockVariant>('Code')
 
   return (
-    <main className='h-screen overflow-y-auto bg-[#f5f7fb] text-slate-950'>
+    <main className='h-full min-h-0 overflow-y-auto bg-[#f5f7fb] text-slate-950'>
       <div className='mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8'>
         <header className='flex flex-col gap-2'>
           <div className='flex items-center gap-3'>

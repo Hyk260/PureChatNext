@@ -13,6 +13,10 @@ vi.mock('@pure/database/models/userProviderSecret', () => ({
 }))
 vi.mock('./resolveClient', () => ({
   isSupportedProviderId: (id: string) => id === 'openai' || id === 'deepseek',
+  PROVIDER_RUNTIME_DEFAULT_BASE_URLS: {
+    deepseek: 'https://api.deepseek.com',
+    openai: 'https://api.openai.com/v1',
+  },
   resolveOptionalBaseURL: (value?: string) => {
     if (typeof value !== 'string') return undefined
     const trimmed = value.trim()
@@ -66,6 +70,28 @@ describe('resolveUserProviderCredentials', () => {
         requestBaseURL: 'https://proxy.example/v1',
         userId: 'user-1',
       })
-    ).resolves.toEqual({ apiKey: 'sk-env', baseURL: 'https://proxy.example/v1' })
+    ).resolves.toEqual({ apiKey: 'sk-env', baseURL: 'https://api.openai.com/v1' })
+  })
+
+  it('does not use env keys for unauthenticated requests', async () => {
+    mocks.resolveProviderApiKey.mockReturnValue('sk-env')
+
+    await expect(
+      resolveUserProviderCredentials({
+        allowEnvFallback: true,
+        provider: 'openai',
+      })
+    ).resolves.toBeNull()
+  })
+
+  it('allows a caller-supplied key to use its requested endpoint', async () => {
+    await expect(
+      resolveUserProviderCredentials({
+        allowEnvFallback: false,
+        headerKey: 'sk-header',
+        provider: 'openai',
+        requestBaseURL: 'https://proxy.example/v1',
+      })
+    ).resolves.toEqual({ apiKey: 'sk-header', baseURL: 'https://proxy.example/v1' })
   })
 })

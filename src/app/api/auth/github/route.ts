@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
     const query: Record<string, string> = {
       client_id: clientId,
       scope: 'read:user user:email',
-      // allow_signup: 'true',
     }
 
     const url = `https://github.com/login/oauth/authorize?${new URLSearchParams(query).toString()}`

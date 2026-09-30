@@ -62,7 +62,7 @@ export const useSignUp = () => {
         }
 
         // 未验证占坑：回收后按首次注册继续走验证
-        await reclaimUnverifiedEmail(email)
+        await reclaimUnverifiedEmail(email, values.password)
       }
 
       const name = email.split('@')[0] ?? email

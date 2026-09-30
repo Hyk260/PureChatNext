@@ -37,7 +37,6 @@ const validateJsonBody = async (request: Request) => {
  * better-auth 捕获路由（会话 / OAuth 等 GET）
  */
 export const GET = async (request: NextRequest) => {
-  // log('GET %s', request.url);
   return handler.GET(request)
 }
 

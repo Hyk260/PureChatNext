@@ -45,8 +45,8 @@ const styles = createStaticStyles(({ css, cssVar: token }) => ({
     }
   `,
   container: css`
-    /* 侧栏折叠时外层 width 动画；内层保持 240 避免 Breadcrumb 被挤压重排 */
-    width: 240px;
+    width: 100%;
+    min-width: 0;
   `,
 }))
 

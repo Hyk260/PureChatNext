@@ -324,6 +324,7 @@ export const webRoutes: RouteObject[] = [
               path: 'approval-card',
             },
           ],
+          element: dynamicLayout(() => import('@/routes/dev/_layout'), 'DevLayout'),
           path: 'dev',
         },
       ] satisfies RouteObject[])

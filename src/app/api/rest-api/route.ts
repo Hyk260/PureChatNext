@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { isAdminRole } from '@pure/const'
+import { UserModel } from '@pure/database/models/user'
+import { verifyAuth } from '@/libs/auth/middleware'
 import { API_METHODS } from './handlers'
 import debug from 'debug'
 
@@ -18,6 +21,20 @@ const methodNotAllowed = () => {
   )
 }
 
+const requireAdmin = async (request: NextRequest): Promise<NextResponse | null> => {
+  const { user } = await verifyAuth(request)
+  if (!user) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const currentUser = await new UserModel().findByUserId(user.userId)
+  if (!currentUser || !isAdminRole(currentUser.role)) {
+    return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
+  }
+
+  return null
+}
+
 /**
  * POST /api/rest-api
  * 对外 REST 方法分发入口
@@ -25,6 +42,9 @@ const methodNotAllowed = () => {
  */
 export async function POST(request: NextRequest) {
   try {
+    const authorizationError = await requireAdmin(request)
+    if (authorizationError) return authorizationError
+
     const body = await request.json()
     const { funName, params } = body
 
@@ -52,7 +72,10 @@ export async function POST(request: NextRequest) {
  * GET /api/rest-api
  * 返回 REST API 可用方法列表
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authorizationError = await requireAdmin(request)
+  if (authorizationError) return authorizationError
+
   return NextResponse.json(
     {
       message: 'REST API',

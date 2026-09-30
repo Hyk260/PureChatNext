@@ -3,7 +3,7 @@
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import { Flex } from '@pure/ui'
 import { memo, useEffect } from 'react'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
 import ChatHeader from '@/features/chat/ChatHeader'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
@@ -11,8 +11,8 @@ import type { LocalChatTopic } from '@/features/chat/types'
 import { DESKTOP_SIDEBAR_STATE_EVENT, DESKTOP_TOGGLE_SIDEBAR_EVENT } from '@/features/desktop/desktopEvents'
 import type { DesktopSidebarStateDetail } from '@/features/desktop/desktopEvents'
 import InsetContentFrame from '@/layout/InsetContentFrame'
+import { sidebarResizeStyles, useSidebarResize } from '@/layout/sidebarResize'
 
-const LEFT_WIDTH = 240
 const RIGHT_WIDTH = 320
 
 const styles = createStaticStyles(({ css }) => ({
@@ -21,17 +21,6 @@ const styles = createStaticStyles(({ css }) => ({
     min-width: 0;
     min-height: 0;
     overflow: hidden;
-  `,
-  left: css`
-    flex: none;
-    width: ${LEFT_WIDTH}px;
-    min-width: 0;
-    height: 100%;
-    overflow: hidden;
-    transition: width 0.25s ${cssVar.motionEaseInOut};
-  `,
-  leftCollapsed: css`
-    width: 0 !important;
   `,
   main: css`
     flex: 1;
@@ -87,6 +76,7 @@ const ChatLayout = memo<Props>(
   }) => {
     const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
     const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
+    const { handleResizeStart, sidebarWidth } = useSidebarResize()
 
     useEffect(() => {
       const handleToggle = () => useChatUiStore.getState().toggleLeftCollapsed()
@@ -104,10 +94,21 @@ const ChatLayout = memo<Props>(
 
     return (
       <Flex className='h-full w-full overflow-hidden'>
-        <aside className={cx(styles.left, leftCollapsed && styles.leftCollapsed)}>
-          <Flex className='h-full w-[240px]'>{left}</Flex>
-        </aside>
-        <InsetContentFrame sidebarCollapsed={leftCollapsed}>
+        <div
+          className={sidebarResizeStyles.sidebarWrapper}
+          style={
+            {
+              '--main-shell-sidebar-width': leftCollapsed ? '0px' : `${sidebarWidth}px`,
+              width: leftCollapsed ? 0 : sidebarWidth,
+            } as CSSProperties
+          }
+        >
+          <Flex className='h-full w-full flex-col overflow-hidden'>{left}</Flex>
+        </div>
+        <InsetContentFrame
+          onResizeStart={leftCollapsed ? undefined : handleResizeStart}
+          sidebarCollapsed={leftCollapsed}
+        >
           <Flex className={[styles.main, 'h-full min-w-0 flex-col']}>
             <ChatHeader
               autoRenameDisabled={busy || autoRenamingTopicId !== null}

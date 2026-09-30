@@ -12,12 +12,11 @@ import CommunitySidebarHeader from './CommunitySidebarHeader'
 const styles = createStaticStyles(({ css }) => ({
   sidebar: css`
     flex: none;
-    width: 240px;
+    width: 100%;
     min-width: 0;
     height: 100%;
     overflow: hidden;
     background: ${cssVar.colorBgLayout};
-    transition: width 0.25s ${cssVar.motionEaseInOut};
   `,
   sidebarCollapsed: css`
     width: 0 !important;
@@ -29,7 +28,7 @@ const CommunitySidebar = memo(() => {
 
   return (
     <Flex className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}>
-      <Scrollbar className='h-full w-[240px]'>
+      <Scrollbar className='h-full w-full'>
         <Flex className='flex-col gap-px h-full'>
           <CommunitySidebarHeader />
         </Flex>

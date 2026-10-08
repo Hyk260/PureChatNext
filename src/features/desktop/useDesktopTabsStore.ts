@@ -160,11 +160,7 @@ export const useDesktopTabsStore = create<DesktopTabsState>((set, get) => ({
 
   closeTab: (id) => {
     const { activeTabId, tabs } = get()
-    if (tabs.length <= 1) {
-      const home = createTab('/', '', 'PureChat')
-      set({ activeTabId: home.id, tabs: [home] })
-      return { closedActive: true, next: home }
-    }
+    if (tabs.length <= 1) return { closedActive: false, next: null }
     const index = tabs.findIndex((tab) => tab.id === id)
     if (index < 0) return { closedActive: false, next: null }
     const nextTabs = tabs.filter((tab) => tab.id !== id)

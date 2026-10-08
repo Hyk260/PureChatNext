@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
+import { ensureDirectory } from '../utils/file'
+
 export interface DesktopProject {
   createdAt: number
   id: string
@@ -108,7 +110,7 @@ export class DesktopConfigService {
   }
 
   async write(config: DesktopConfig) {
-    await fs.mkdir(this.userDataPath, { recursive: true })
+    await ensureDirectory(this.userDataPath)
     const tempPath = path.join(this.userDataPath, `config.${randomUUID()}.tmp`)
     await fs.writeFile(tempPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8')
     try {

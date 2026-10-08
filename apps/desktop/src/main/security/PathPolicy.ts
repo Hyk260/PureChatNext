@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
-import type { DesktopLocalToolRequest } from '../../../../../src/types/desktop'
+import type { DesktopLocalToolRequest } from '@/types/desktop'
 import type { DesktopConfig } from '../services/DesktopConfigService'
 
 const blockedRoots = ['/System', '/private/etc', '/private/var/db', '/usr/bin/sudo']

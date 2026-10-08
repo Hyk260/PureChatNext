@@ -1,4 +1,4 @@
-import type { DesktopApi } from '../../../../src/types/desktop'
+import type { DesktopApi } from '@/types/desktop'
 
 import { invoke } from './invoke'
 

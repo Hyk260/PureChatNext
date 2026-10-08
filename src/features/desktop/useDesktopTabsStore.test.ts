@@ -41,6 +41,17 @@ describe('useDesktopTabsStore', () => {
     expect(useDesktopTabsStore.getState().tabs).toHaveLength(1)
   })
 
+  it('keeps the last tab when close is requested', () => {
+    const [lastTab] = useDesktopTabsStore.getState().tabs
+    if (!lastTab) throw new Error('Expected the initial tab')
+
+    const result = useDesktopTabsStore.getState().closeTab(lastTab.id)
+
+    expect(result).toEqual({ closedActive: false, next: null })
+    expect(useDesktopTabsStore.getState().tabs).toEqual([lastTab])
+    expect(useDesktopTabsStore.getState().activeTabId).toBe(lastTab.id)
+  })
+
   it('tracks history stack on push and back', () => {
     useDesktopTabsStore.getState().syncLocation('/chat', '', 'PUSH')
     expect(useDesktopTabsStore.getState().canGoBack).toBe(true)

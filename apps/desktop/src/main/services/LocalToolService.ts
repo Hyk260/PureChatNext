@@ -3,10 +3,11 @@ import { promises as fs } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import type { DesktopLocalToolRequest, DesktopLocalToolResult } from '../../../../../src/types/desktop'
+import type { DesktopLocalToolRequest, DesktopLocalToolResult } from '@/types/desktop'
 
 import { resolveSafePath } from '../security/PathPolicy'
 import { requiresNativeApproval } from '../security/PermissionPolicy'
+import { readTextFileWithAutoEncoding } from '../utils/file'
 import type { CommandService } from './CommandService'
 import type { DesktopConfigService } from './DesktopConfigService'
 import type { PermissionService } from './PermissionService'
@@ -47,7 +48,9 @@ export class LocalToolService {
           break
         case 'readFile': {
           const filePath = await resolveSafePath(request, config, String(args.path ?? ''))
-          output = result((await fs.readFile(filePath, 'utf8')).slice(0, MAX_FILE_BYTES), true, { path: filePath })
+          output = result((await readTextFileWithAutoEncoding(filePath)).slice(0, MAX_FILE_BYTES), true, {
+            path: filePath,
+          })
           break
         }
         case 'listFiles': {

@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
-import type { DesktopBuiltinTool, DesktopRuntimeTool, DesktopSystemTools } from '../../../../../src/types/desktop'
+import type { DesktopBuiltinTool, DesktopRuntimeTool, DesktopSystemTools } from '@/types/desktop'
 
 const execFileAsync = promisify(execFile)
 

@@ -27,6 +27,7 @@
     "vitest": "3.2.4"
   },
   "dependencies": {
+    "electron-log": "^5.4.4",
     "electron-updater": "^6.8.9"
   }
 }

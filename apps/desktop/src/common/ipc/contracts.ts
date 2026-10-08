@@ -9,7 +9,7 @@ import type {
   DesktopRemoteServer,
   DesktopSystemTools,
   DesktopWindowState,
-} from '../../../../../src/types/desktop'
+} from '@/types/desktop'
 
 export interface DesktopIpcContractMap {
   'app.getInfo': { args: []; result: DesktopAppInfo }

@@ -178,6 +178,11 @@ const styles = createStaticStyles(({ css }) => ({
       color: var(--ant-color-text, #1f1f1f);
       background: var(--ant-color-fill-secondary, #f0f0f0);
     }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.35;
+    }
   `,
   addTab: css`
     display: inline-flex;
@@ -349,6 +354,7 @@ const DesktopTitleBarChrome = ({
                 <button
                   aria-label={`关闭 ${tab.title}`}
                   className={`desktop-tab-close ${styles.tabClose}`}
+                  disabled={tabs.length <= 1}
                   onClick={(event) => {
                     event.stopPropagation()
                     onCloseTab(tab.id)

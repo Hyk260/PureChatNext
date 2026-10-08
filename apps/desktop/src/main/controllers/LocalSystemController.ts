@@ -1,4 +1,4 @@
-import type { DesktopLocalToolRequest } from '../../../../../src/types/desktop'
+import type { DesktopLocalToolRequest } from '@/types/desktop'
 
 import type { IpcRegistry } from '../ipc/IpcRegistry'
 import type { LocalToolService } from '../services/LocalToolService'

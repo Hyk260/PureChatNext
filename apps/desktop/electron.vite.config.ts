@@ -23,6 +23,10 @@ for (const [key, value] of Object.entries(desktopEnv)) {
 const nextPort = Number(process.env.PORT) || 3000
 const rendererPort = Number(process.env.PURECHAT_DESKTOP_VITE_PORT) || 5176
 const isDev = process.env.NODE_ENV !== 'production'
+const desktopAliases = {
+  '@': path.resolve(rootDir, 'src'),
+  '@main': path.resolve(desktopDir, 'src/main'),
+}
 
 export default defineConfig({
   main: {
@@ -33,6 +37,7 @@ export default defineConfig({
       outDir: path.resolve(desktopDir, 'dist/main'),
       sourcemap: process.env.NODE_ENV !== 'production',
     },
+    resolve: { alias: desktopAliases },
   },
   preload: {
     build: {
@@ -45,6 +50,7 @@ export default defineConfig({
       },
       sourcemap: process.env.NODE_ENV !== 'production',
     },
+    resolve: { alias: desktopAliases },
   },
   renderer: {
     root: desktopDir,
@@ -73,7 +79,7 @@ export default defineConfig({
     resolve: {
       alias: {
         '@/envs': path.resolve(rootDir, 'packages/env/src'),
-        '@': path.resolve(rootDir, 'src'),
+        ...desktopAliases,
         ...sharedResolveAlias(rootDir),
       },
       dedupe: ['react', 'react-dom'],

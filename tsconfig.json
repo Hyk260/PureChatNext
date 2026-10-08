@@ -20,7 +20,8 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@/envs/*": ["./packages/env/src/*"]
+      "@/envs/*": ["./packages/env/src/*"],
+      "@main/*": ["./apps/desktop/src/main/*"]
     }
   },
   "include": [

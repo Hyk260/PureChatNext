@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
-import type { DesktopProjectEntries } from '../../../../../src/types/desktop'
+import type { DesktopProjectEntries } from '@/types/desktop'
 
 import type { IpcRegistry } from '../ipc/IpcRegistry'
 import type { DesktopConfigService } from '../services/DesktopConfigService'

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { spawn } from 'node:child_process'
 import type { ChildProcess, SpawnOptions } from 'node:child_process'
 
-import type { DesktopLocalToolResult } from '../../../../../src/types/desktop'
+import type { DesktopLocalToolResult } from '@/types/desktop'
 
 import { assertCommandAllowed } from '../security/CommandPolicy'
 import { resolveCommandCwd } from '../security/PathPolicy'

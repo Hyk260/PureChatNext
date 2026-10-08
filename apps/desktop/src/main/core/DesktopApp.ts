@@ -8,6 +8,7 @@ import { APP_RENDERER_URL, isTrustedRendererUrl } from '../rendererSecurity'
 import { installApplicationMenu } from '../ui/ApplicationMenu'
 import { DesktopConfigService } from '../services/DesktopConfigService'
 import { UpdateService } from '../services/UpdateService'
+import { getResourcePath } from '../utils/file'
 import { ProtocolManager } from './ProtocolManager'
 import { TrayManager } from './TrayManager'
 import { WindowManager, resolvePreloadPath } from './WindowManager'
@@ -83,7 +84,7 @@ export class DesktopApp {
 
     await app.whenReady()
     this.updateService.start()
-    installApplicationMenu()
+    installApplicationMenu(app.getPath('userData'))
     this.registerProtocolClient()
     if (!isTrustedRendererUrl(this.rendererUrl, this.rendererUrl)) {
       throw new Error('非法的桌面渲染页地址')
@@ -133,6 +134,11 @@ export class DesktopApp {
   }
 
   private getDesktopResourcePath(name: string) {
-    return app.isPackaged ? path.join(process.resourcesPath, name) : path.resolve(this.mainDir, '../../build', name)
+    const resourcePath = getResourcePath(name, {
+      developmentRoot: path.resolve(this.mainDir, '../../build'),
+      requireExists: true,
+    })
+    if (!resourcePath) throw new Error(`桌面资源不存在: ${name}`)
+    return resourcePath
   }
 }

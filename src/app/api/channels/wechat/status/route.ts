@@ -33,7 +33,7 @@ function resolveWechatRuntimeStatus(input: {
  * 当前用户微信连接状态（不含敏感凭证）
  */
 export const GET = withAuth(async (_request, { userId }) => {
-  void ensureChannelGatewayRunning().catch((error) => {
+  ensureChannelGatewayRunning().catch((error) => {
     log('gateway startup failed: %O', error)
   })
   const binding = await new ChannelBindingModel().findByUserAndPlatform(userId, WECHAT_PLATFORM)

@@ -113,7 +113,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
   }, [message])
 
   useEffect(() => {
-    void refreshProjects()
+    refreshProjects()
   }, [refreshProjects])
 
   const resetCreateForm = useCallback(() => {
@@ -249,7 +249,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
                   icon={X}
                   size='small'
                   title={`删除项目 ${project.name}`}
-                  onClick={() => void handleDelete(project)}
+                  onClick={() => handleDelete(project)}
                 />
               </Flex>
             )
@@ -310,7 +310,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
           setCreateOpen(false)
           resetCreateForm()
         }}
-        onOk={() => void handleCreate()}
+        onOk={handleCreate}
       >
         <Flex className='flex-col gap-4 py-1'>
           <Input
@@ -327,11 +327,11 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
               className={styles.folderDropzone}
               role='button'
               tabIndex={0}
-              onClick={() => void handleChooseFolder()}
+              onClick={handleChooseFolder}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault()
-                  void handleChooseFolder()
+                  handleChooseFolder()
                 }
               }}
             >

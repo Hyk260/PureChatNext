@@ -41,7 +41,7 @@ describe('wechat encryptCredentials', () => {
 
   it('refuses to create new encrypted values without KEY_VAULTS_SECRET', () => {
     mocks.serverDBEnv.KEY_VAULTS_SECRET = undefined
-    expect(() => requireWechatVaultSecret()).toThrow('KEY_VAULTS_SECRET')
+    expect(requireWechatVaultSecret).toThrow('KEY_VAULTS_SECRET')
     expect(() => encryptCredentials({ botId: 'bot', botToken: 'token', userId: 'user' })).toThrow(
       'KEY_VAULTS_SECRET'
     )

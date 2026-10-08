@@ -94,7 +94,7 @@ const SkillCategoryNav = memo(() => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const selected = (searchParams.get('category') as SkillCategory | null) ?? SkillCategory.All
-  const counts = useMemo(() => getSkillCategoryCounts(), [])
+  const counts = useMemo(getSkillCategoryCounts, [])
 
   const handleSelect = useCallback(
     (key: SkillCategory) => {

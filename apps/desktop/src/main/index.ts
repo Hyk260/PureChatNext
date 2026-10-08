@@ -11,7 +11,7 @@ app.commandLine.appendSwitch('lang', 'zh-CN')
 const mainDir = path.dirname(fileURLToPath(import.meta.url))
 const desktopApp = new DesktopApp(mainDir)
 
-void desktopApp.bootstrap().catch((error) => {
+desktopApp.bootstrap().catch((error) => {
   console.error('PureChat desktop bootstrap failed', error)
   app.quit()
 })

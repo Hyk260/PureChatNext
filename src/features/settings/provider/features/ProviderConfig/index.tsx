@@ -149,11 +149,11 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
         setApiKeyDraft('')
         return
       }
-      void clearSecrets()
+      clearSecrets()
       return
     }
     if (apiKey === savedApiKey) return
-    void persistSecrets({ apiKey, baseURL })
+    persistSecrets({ apiKey, baseURL })
   }
 
   const handleBaseURLBlur = () => {
@@ -164,7 +164,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
       message.info('请先填写 API Key')
       return
     }
-    void persistSecrets({ apiKey: apiKey || undefined, baseURL })
+    persistSecrets({ apiKey: apiKey || undefined, baseURL })
   }
 
   const ensureSecretForCheck = () => {

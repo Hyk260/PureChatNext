@@ -405,7 +405,7 @@ const isMainModule = () => {
 }
 
 if (isMainModule()) {
-  void main().catch((error) => {
+  main().catch((error) => {
     const message = error instanceof Error ? error.message : String(error)
     if (message === 'ABORTED' || shuttingDown) {
       process.exit(process.exitCode ?? 1)

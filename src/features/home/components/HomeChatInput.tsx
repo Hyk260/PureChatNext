@@ -312,7 +312,7 @@ const HomeChatInput = memo(() => {
           <HomeProjectBar
             disabled={sending}
             value={selectedProject}
-            onChange={(project) => void handleProjectChange(project)}
+            onChange={(project) => handleProjectChange(project)}
           />
         </div>
       ) : null}

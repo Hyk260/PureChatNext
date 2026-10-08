@@ -105,7 +105,7 @@ export default function WebSearchPage() {
   }
 
   useEffect(() => {
-    void apiFetch(WEB_SEARCH_API_PATH)
+    apiFetch(WEB_SEARCH_API_PATH)
       .then(async (response) => (response.ok ? ((await response.json()) as WebSearchConfigResponse) : null))
       .then((config) => {
         const nextConfigured = Array.isArray(config?.configuredProviders)
@@ -267,9 +267,9 @@ export default function WebSearchPage() {
             values={values}
             onChange={updateValues}
             onClearCache={clearCache}
-            onCopy={() => void copyRequestJson()}
+            onCopy={copyRequestJson}
             onReset={reset}
-            onSubmit={() => void submit()}
+            onSubmit={submit}
             onToggleImpl={(value) => updateValues({ impls: toggleImplList(values.impls, value) })}
           />
           <WebSearchResults

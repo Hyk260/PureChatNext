@@ -69,7 +69,7 @@ const AgentCard = memo<AgentCardProps>(({ onOpenDetail, ...item }) => {
 
   const handleUse = (event: MouseEvent) => {
     event.stopPropagation()
-    void addAgent(item)
+    addAgent(item)
   }
 
   return (

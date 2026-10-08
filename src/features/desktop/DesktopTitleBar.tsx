@@ -5,15 +5,12 @@ import { createStaticStyles } from 'antd-style'
 import {
   ArrowLeft,
   ArrowRight,
-  Copy,
   History,
   ListTodo,
   MessageSquare,
-  Minus,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
-  Square,
   X,
 } from 'lucide-react'
 import type { PropsWithChildren } from 'react'
@@ -22,6 +19,8 @@ import { Outlet, useInRouterContext, useLocation, useNavigate, useNavigationType
 
 import { DESKTOP_SIDEBAR_STATE_EVENT, DESKTOP_TOGGLE_SIDEBAR_EVENT } from '@/features/desktop/desktopEvents'
 import type { DesktopSidebarStateDetail } from '@/features/desktop/desktopEvents'
+import DesktopWindowControls from '@/features/desktop/DesktopWindowControls'
+import MacTrafficLights from '@/features/desktop/MacTrafficLights'
 import { desktopHref, useDesktopTabsStore } from '@/features/desktop/useDesktopTabsStore'
 import { DEFAULT_SIDEBAR_WIDTH, useSidebarLayoutStore } from '@/layout/sidebarResize'
 import { getDesktopApi } from '@/types/desktop'
@@ -66,31 +65,6 @@ const styles = createStaticStyles(({ css }) => ({
     align-items: center;
     gap: 2px;
     height: 100%;
-  `,
-  trafficLights: css`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-inline-end: 8px;
-    padding-inline: 4px;
-    -webkit-app-region: no-drag;
-  `,
-  trafficLight: css`
-    width: 12px;
-    height: 12px;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    cursor: pointer;
-  `,
-  closeTrafficLight: css`
-    background: #ff5f57;
-  `,
-  minimizeTrafficLight: css`
-    background: #febc2e;
-  `,
-  maximizeTrafficLight: css`
-    background: #28c840;
   `,
   iconButton: css`
     display: inline-flex;
@@ -211,6 +185,8 @@ const styles = createStaticStyles(({ css }) => ({
     justify-content: center;
     width: 28px;
     height: 28px;
+    min-width: 28px;
+    min-height: 28px;
     padding: 0;
     color: var(--ant-color-text-secondary, #666);
     background: transparent;
@@ -222,34 +198,6 @@ const styles = createStaticStyles(({ css }) => ({
     &:hover {
       color: var(--ant-color-text, #1f1f1f);
       background: var(--ant-color-fill-secondary, #f0f0f0);
-    }
-  `,
-  controls: css`
-    display: flex;
-    height: 100%;
-    -webkit-app-region: no-drag;
-  `,
-  button: css`
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 100%;
-    padding: 0;
-    color: var(--ant-color-text-secondary, #666);
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-
-    &:hover {
-      color: var(--ant-color-text, #1f1f1f);
-      background: var(--ant-color-fill-secondary, #f0f0f0);
-    }
-  `,
-  closeButton: css`
-    &:hover {
-      color: #fff;
-      background: #e81123;
     }
   `,
   content: css`
@@ -312,26 +260,12 @@ const DesktopTitleBarChrome = ({
       <div className={styles.leading} style={leadingWidth ? { width: leadingWidth } : undefined}>
         <div className={styles.leadingStart}>
           {isMac ? (
-            <div className={styles.trafficLights}>
-              <button
-                aria-label='关闭窗口'
-                className={`${styles.trafficLight} ${styles.closeTrafficLight}`}
-                onClick={() => void api.closeWindow()}
-                type='button'
-              />
-              <button
-                aria-label='最小化窗口'
-                className={`${styles.trafficLight} ${styles.minimizeTrafficLight}`}
-                onClick={() => void api.minimizeWindow()}
-                type='button'
-              />
-              <button
-                aria-label={isMaximized ? '还原窗口' : '最大化窗口'}
-                className={`${styles.trafficLight} ${styles.maximizeTrafficLight}`}
-                onClick={onToggleMaximize}
-                type='button'
-              />
-            </div>
+            <MacTrafficLights
+              isMaximized={isMaximized}
+              onClose={api.closeWindow}
+              onMaximize={onToggleMaximize}
+              onMinimize={api.minimizeWindow}
+            />
           ) : null}
 
           <Tooltip title={sidebarLabel}>
@@ -408,9 +342,9 @@ const DesktopTitleBarChrome = ({
                   }
                 }}
               >
-                <span className={styles.tabIcon}>
+                {/* <span className={styles.tabIcon}>
                   <Icon size={14} />
-                </span>
+                </span> */}
                 <span className={styles.tabTitle}>{tab.title}</span>
                 <button
                   aria-label={`关闭 ${tab.title}`}
@@ -431,36 +365,14 @@ const DesktopTitleBarChrome = ({
           </button>
         </div>
 
-        <div className={styles.controls}>
-          {platform && !isMac ? (
-            <>
-              <button
-                aria-label='最小化窗口'
-                className={styles.button}
-                onClick={() => void api.minimizeWindow()}
-                type='button'
-              >
-                <Minus size={14} />
-              </button>
-              <button
-                aria-label={isMaximized ? '还原窗口' : '最大化窗口'}
-                className={styles.button}
-                onClick={onToggleMaximize}
-                type='button'
-              >
-                {isMaximized ? <Copy size={13} /> : <Square size={13} />}
-              </button>
-              <button
-                aria-label='关闭窗口'
-                className={`${styles.button} ${styles.closeButton}`}
-                onClick={() => void api.closeWindow()}
-                type='button'
-              >
-                <X size={15} />
-              </button>
-            </>
-          ) : null}
-        </div>
+        {platform && !isMac ? (
+          <DesktopWindowControls
+            isMaximized={isMaximized}
+            onClose={api.closeWindow}
+            onMinimize={api.minimizeWindow}
+            onToggleMaximize={onToggleMaximize}
+          />
+        ) : null}
       </div>
     </header>
   )
@@ -475,7 +387,7 @@ function useWindowChromeState() {
   useEffect(() => {
     if (!api) return
     let active = true
-    void Promise.all([api.getAppInfo(), api.getWindowState()]).then(([appInfo, state]) => {
+    Promise.all([api.getAppInfo(), api.getWindowState()]).then(([appInfo, state]) => {
       if (!active) return
       setPlatform(appInfo.platform)
       setIsMaximized(state.isMaximized)
@@ -504,7 +416,7 @@ function useWindowChromeState() {
     isMaximized,
     isSidebarCollapsed,
     platform,
-    toggleMaximize: () => void handleToggleMaximize(),
+    toggleMaximize: handleToggleMaximize,
     toggleSidebar: () => window.dispatchEvent(new Event(DESKTOP_TOGGLE_SIDEBAR_EVENT)),
   }
 }

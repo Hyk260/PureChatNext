@@ -88,7 +88,7 @@ export function confirmDeleteTopic(onDelete: () => void | Promise<void>) {
     content: '话题下的所有消息将一并删除。',
     okButtonProps: { danger: true },
     okText: '删除',
-    onOk: () => onDelete(),
+    onOk: onDelete,
     title: '删除该话题？',
   })
 }

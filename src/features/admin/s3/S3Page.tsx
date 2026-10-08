@@ -99,7 +99,7 @@ export default function S3Page() {
   }
 
   useEffect(() => {
-    void fetchFileList('').then(applyFiles)
+    fetchFileList('').then(applyFiles)
   }, [])
 
   const updateValues = (patch: Partial<S3FormValues>) => {
@@ -266,11 +266,11 @@ export default function S3Page() {
             runState={runState}
             values={values}
             onChange={updateValues}
-            onCopy={() => void copyRequestJson()}
+            onCopy={copyRequestJson}
             onFiles={acceptFiles}
             onRemoveFile={(index) => setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}
             onReset={reset}
-            onSubmit={() => void submit()}
+            onSubmit={submit}
           />
           <S3Results
             action={resultAction}
@@ -282,11 +282,11 @@ export default function S3Page() {
             rawJson={rawJson}
             view={view}
             onClosePreview={() => setImagePreview(null)}
-            onCopyKey={(key) => void copyKey(key)}
-            onDeleteFile={(key) => void deleteFile(key)}
-            onDownloadFile={(key) => void downloadFile(key)}
-            onPreviewImage={(key) => void previewImage(key)}
-            onRefresh={() => void refreshList()}
+            onCopyKey={(key) => copyKey(key)}
+            onDeleteFile={(key) => deleteFile(key)}
+            onDownloadFile={(key) => downloadFile(key)}
+            onPreviewImage={(key) => previewImage(key)}
+            onRefresh={refreshList}
             onRenameFile={(key) => {
               setAction('rename')
               updateValues({ renameOldKey: key })

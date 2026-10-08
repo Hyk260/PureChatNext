@@ -20,12 +20,32 @@ pnpm prettier:check    # Prettier 只检查
 
 `pnpm lint` 只检查、不格式化。需要改写源码时用带 `:fix` 的脚本或 `pnpm prettier`。
 
+## 异步调用与回调简化
+
+- 禁止使用一元 `void` 包装调用。需要 fire-and-forget 时直接写表达式语句；需要处理失败时显式追加 `.catch(...)`。
+- 事件回调不要写无参数的 `() => fn()`，直接传递 `fn`。带参数的回调、延迟执行回调、需要转换返回值的回调，以及需要保留成员方法 `this` 绑定的包装可以保留。
+
+```tsx
+// ✅
+onClick={handleRefresh}
+onClose={api.closeWindow}
+loadData()
+
+// ❌
+onClick={() => handleRefresh()}
+onClose={() => void api.closeWindow()}
+void loadData()
+```
+
+这些约束由根目录 `eslint.config.mjs` 中的 `no-void` 与
+`purechat/no-useless-event-arrow` 提供。`void` 类型标注（例如 `() => void`）不受 `no-void` 影响。
+
 ## 脚本一览
 
 | 命令 | 职责 | 在 `pnpm lint` 内 | 改写文件 | CI |
 | --- | --- | --- | --- | --- |
 | `lint` | 并行跑下表「聚合」项，再跑 `typecheck` | — | 否 | 否 |
-| `lint:ts` | ESLint（`src/`、`tests/`） | 是 | 否 | 否 |
+| `lint:ts` | ESLint（`src/`、`tests/`、桌面端、文档站、`scripts/`） | 是 | 否 | 否 |
 | `lint:spa-env-imports` | SPA/客户端禁止导入服务端 env | 是 | 否 | 是（独立 job） |
 | `lint:style` | Stylelint 检查 CSS | 是 | 否 | 否 |
 | `lint:style:fix` | Stylelint 并 `--fix` | 否 | 是 | 否 |
@@ -68,12 +88,12 @@ flowchart LR
 ### `lint:ts`
 
 ```bash
-eslint src/ tests/ --concurrency=auto
+eslint src/ tests/ apps/desktop/src/ apps/docs/src/ scripts/ --concurrency=auto
 ```
 
 配置：[eslint.config.mjs](../../../eslint.config.mjs)（`eslint-config-next` + 顶层 `import type` 规则）。
 
-规则 glob 写了 `**/*.{ts,tsx}`（含 `packages/**`），但 CLI **只传入** `src/` 与 `tests/`，未传入的目录不会被检查。`packages/` 上仍有存量 TypeScript ESLint 报错（`no-explicit-any`、`no-unsafe-function-type`、`ban-ts-comment` 等），因此尚未扩扫描范围。`scripts/` 也不在范围内。
+规则 glob 写了 `**/*.{ts,tsx}`（含 `packages/**`），CLI 当前检查主应用、桌面端、文档站和 `scripts/`；`packages/` 上仍有存量 TypeScript ESLint 报错（`no-explicit-any`、`no-unsafe-function-type`、`ban-ts-comment` 等），因此尚未扩扫描范围。
 
 SPA 客户端另有 `no-restricted-imports`：禁止从 `@/envs`、`@pure/env` 导入；禁止从 `next/navigation` 导入 `redirect` / `notFound` 等服务端 API，以及已删除的 `@/utils/navigation`、`@/utils/link` 转手层。与下面的专用脚本互补。
 

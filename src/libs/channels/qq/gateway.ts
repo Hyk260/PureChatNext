@@ -45,7 +45,7 @@ export class QQChannelGatewayClient {
     })
     await this.chat.initialize()
     this.connection = await adapter.startGatewayListener(
-      { waitUntil: (task) => void task },
+      { waitUntil: () => undefined },
       undefined,
       this.abortController.signal,
       buildChannelGatewayWebhookUrl(`/api/channels/qq/webhook/${encodeURIComponent(this.binding.applicationId)}`),

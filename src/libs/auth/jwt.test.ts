@@ -63,7 +63,7 @@ describe('auth/jwt', () => {
     vi.clearAllMocks()
     importJWKMock.mockResolvedValue('mock-crypto-key')
     signMock.mockResolvedValue('signed.jwt.token')
-    SignJWTMock.mockImplementation(() => buildSignJWTChain())
+    SignJWTMock.mockImplementation(buildSignJWTChain)
   })
 
   describe('signAccessToken', () => {

@@ -172,7 +172,7 @@ const SkillTextPreview = ({ path, skillId }: { path: string; skillId: string }) 
   useEffect(() => {
     let cancelled = false
     const controller = new AbortController()
-    void fetch(fileUrl(skillId, path), { signal: controller.signal })
+    fetch(fileUrl(skillId, path), { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error('file')
         const next = await response.text()
@@ -232,7 +232,7 @@ const SkillDetailPane = ({ skillId }: { skillId: string }) => {
   useEffect(() => {
     let cancelled = false
     const controller = new AbortController()
-    void fetch(`/api/user/skills/${encodeURIComponent(skillId)}`, { signal: controller.signal })
+    fetch(`/api/user/skills/${encodeURIComponent(skillId)}`, { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error('detail')
         const payload = (await response.json()) as SkillDetail
@@ -331,11 +331,11 @@ export default function SkillSettingsPage() {
   }, [message])
 
   useEffect(() => {
-    void refreshList()
+    refreshList()
   }, [refreshList])
 
   const handleUninstalled = useCallback(() => {
-    void refreshList(null)
+    refreshList(null)
   }, [refreshList])
 
   const handleUninstallSkill = useCallback(
@@ -359,7 +359,7 @@ export default function SkillSettingsPage() {
 
   const handleInstalled = useCallback(
     (skillId?: string) => {
-      void refreshList(skillId ?? selectedId)
+      refreshList(skillId ?? selectedId)
     },
     [refreshList, selectedId]
   )

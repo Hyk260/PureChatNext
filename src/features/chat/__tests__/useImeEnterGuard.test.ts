@@ -13,7 +13,7 @@ const enterEvent = (overrides: { isComposing?: boolean; keyCode?: number } = {})
 
 describe('useImeEnterGuard', () => {
   it('ignores Enter while composing', () => {
-    const { result } = renderHook(() => useImeEnterGuard())
+    const { result } = renderHook(useImeEnterGuard)
 
     act(() => result.current.onCompositionStart())
     expect(result.current.shouldIgnoreEnter(enterEvent({ isComposing: true, keyCode: 229 }))).toBe(true)
@@ -23,7 +23,7 @@ describe('useImeEnterGuard', () => {
   })
 
   it('allows Enter after composition has fully ended', async () => {
-    const { result } = renderHook(() => useImeEnterGuard())
+    const { result } = renderHook(useImeEnterGuard)
 
     act(() => result.current.onCompositionEnd())
     await act(async () => {

@@ -60,7 +60,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
       const current = sessionRef.current
       sessionRef.current = undefined
       setSessionId(undefined)
-      if (current) void cancelQQQrLogin(current)
+      if (current) cancelQQQrLogin(current)
     }, [])
 
     const finish = useCallback(async () => {
@@ -97,7 +97,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
             if (isQQQrSessionMissingError(err)) {
               if (sessionRef.current !== id) return
               if (missingRetries < MAX_SESSION_MISSING_RETRIES) {
-                timerRef.current = setTimeout(() => void run(missingRetries + 1), SESSION_MISSING_RETRY_MS)
+                timerRef.current = setTimeout(() => run(missingRetries + 1), SESSION_MISSING_RETRY_MS)
                 return
               }
               sessionRef.current = undefined
@@ -126,7 +126,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
       try {
         const result = await startQQQrLogin({ agentId, model, provider }, controller.signal)
         if (attemptRef.current !== attempt) {
-          void cancelQQQrLogin(result.sessionId)
+          cancelQQQrLogin(result.sessionId)
           return
         }
         sessionRef.current = result.sessionId
@@ -144,7 +144,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
     }, [agentId, cancelSession, model, poll, provider])
 
     useEffect(() => {
-      if (mode === 'qr' && gatewaySupported) void startQr()
+      if (mode === 'qr' && gatewaySupported) startQr()
       else cancelSession()
       return cancelSession
     }, [cancelSession, gatewaySupported, mode, startQr])
@@ -241,7 +241,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
                   value={selectedAppId}
                   onChange={setSelectedAppId}
                 />
-                <AntButton block loading={loading} type='primary' onClick={() => void handleSelection()}>
+                <AntButton block loading={loading} type='primary' onClick={handleSelection}>
                   连接所选机器人
                 </AntButton>
               </Flex>
@@ -249,7 +249,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
             {error && (
               <Flex className='flex-col-center'>
                 <Alert showIcon type='warning' title={error} />
-                <AntButton icon={<RefreshCw size={16} />} onClick={() => void startQr()}>
+                <AntButton icon={<RefreshCw size={16} />} onClick={startQr}>
                   重新获取二维码
                 </AntButton>
               </Flex>
@@ -271,7 +271,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
             {error && <Alert showIcon type='warning' title={error} />}
             <Flex className='justify-end gap-2'>
               <AntButton onClick={close}>取消</AntButton>
-              <AntButton loading={loading} type='primary' onClick={() => void handleManualBind()}>
+              <AntButton loading={loading} type='primary' onClick={handleManualBind}>
                 注册
               </AntButton>
             </Flex>

@@ -95,7 +95,7 @@ const FilesContent = memo<Props>(({ topic }) => {
       }
     }
 
-    void syncProject()
+    syncProject()
     return () => {
       cancelled = true
     }
@@ -160,7 +160,7 @@ const FilesContent = memo<Props>(({ topic }) => {
         />
         <Flex className='items-center gap-1 min-w-0'>
           {relativePath ? (
-            <ActionIcon icon={FolderOpen} size='small' title='返回上级' onClick={() => void handleGoUp()} />
+            <ActionIcon icon={FolderOpen} size='small' title='返回上级' onClick={handleGoUp} />
           ) : null}
           <Text ellipsis type='secondary'>
             {relativePath || project.name}
@@ -185,7 +185,7 @@ const FilesContent = memo<Props>(({ topic }) => {
               className='flex items-center gap-2 w-full px-3 py-2 text-left border-0 bg-transparent cursor-pointer hover:bg-(--ant-color-fill-quaternary)'
               key={`${entry.isDirectory ? 'dir' : 'file'}:${entry.name}`}
               type='button'
-              onClick={() => void handleOpenEntry(entry)}
+              onClick={() => handleOpenEntry(entry)}
             >
               <Icon icon={entry.isDirectory ? Folder : FileText} size={16} />
               <Text ellipsis>{entry.name}</Text>

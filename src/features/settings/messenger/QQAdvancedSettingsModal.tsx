@@ -323,7 +323,7 @@ const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(
         title='高级设置'
         width={720}
         onCancel={onClose}
-        onOk={() => void handleSave()}
+        onOk={handleSave}
       >
         <Flex className='mb-3 items-center justify-end'>
           <Button disabled={saving} icon={<RotateCcw size={14} />} size='small' onClick={resetDefaults}>

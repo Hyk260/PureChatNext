@@ -48,7 +48,7 @@ const actionsRender: NonNullable<HtmlPreviewProps['actionsRender']> = ({
       size={actionIconSize}
       title='复制'
       onClick={() => {
-        void copyToClipboard(getContent())
+        copyToClipboard(getContent())
       }}
     />
     <ActionIcon
@@ -56,7 +56,7 @@ const actionsRender: NonNullable<HtmlPreviewProps['actionsRender']> = ({
       size={actionIconSize}
       title='下载 HTML'
       onClick={() => {
-        void downloadHtml(getContent())
+        downloadHtml(getContent())
       }}
     />
   </>

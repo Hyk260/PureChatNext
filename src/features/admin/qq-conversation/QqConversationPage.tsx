@@ -81,7 +81,7 @@ export default function QqConversationPage() {
     clearMessageTimer()
     if (!selectedIdRef.current) return
     messageTimerRef.current = setTimeout(() => {
-      void refreshMessagesRef.current()
+      refreshMessagesRef.current()
     }, delayRef.current)
   }, [clearMessageTimer])
 
@@ -171,7 +171,7 @@ export default function QqConversationPage() {
 
       const first = data.sessions[0]?.id ?? null
       if (first) {
-        void loadSession(first)
+        loadSession(first)
       } else {
         clearSelection()
       }
@@ -191,7 +191,7 @@ export default function QqConversationPage() {
         setSessions(sessionData.sessions)
         const first = sessionData.sessions[0]?.id ?? null
         if (first) {
-          void loadSession(first)
+          loadSession(first)
         } else {
           clearSelection()
         }
@@ -201,15 +201,15 @@ export default function QqConversationPage() {
         if (active) setLoading(false)
       }
     }
-    void bootstrap()
+    bootstrap()
 
     const statusTimer = setInterval(() => {
-      void fetchQQStatus()
+      fetchQQStatus()
         .then(setStatus)
         .catch(() => {})
     }, CHANNEL_STATUS_POLL_MS)
     const sessionTimer = setInterval(() => {
-      void refreshSessions()
+      refreshSessions()
     }, CHANNEL_SESSION_POLL_MS)
 
     return () => {
@@ -313,7 +313,7 @@ export default function QqConversationPage() {
           bound={bound}
           selectedId={selectedId}
           sessions={sessions}
-          onSelect={(id) => void loadSession(id)}
+          onSelect={(id) => loadSession(id)}
         />
       }
       subtitle='Agent ↔ QQ 用户'
@@ -335,7 +335,7 @@ export default function QqConversationPage() {
         onExport={() => setExportOpen(true)}
         onPickFiles={handlePickFiles}
         onRemovePending={handleRemovePendingAttachment}
-        onSend={() => void send()}
+        onSend={send}
       />
 
       {exportOpen && sessionMeta ? (

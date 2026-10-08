@@ -39,7 +39,7 @@ const renderSetup = () => {
   )
 }
 
-void configureDesktopFetch()
+configureDesktopFetch()
   .then((configured) => {
     if (configured) render()
     else renderSetup()

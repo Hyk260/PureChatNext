@@ -285,7 +285,7 @@ const SkillStoreModal = memo<SkillStoreModalProps>(({ installedSkills, onClose, 
                           item={item}
                           key={item.identifier}
                           uninstalling={uninstallingId === installedId}
-                          onInstall={() => void handleInstall(item.identifier)}
+                          onInstall={() => handleInstall(item.identifier)}
                           onOpenDetail={setSelectedIdentifier}
                           onUninstall={handleUninstall}
                         />

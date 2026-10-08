@@ -385,7 +385,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
       },
     }),
     {
-      migrate: (persisted, version) => {
+      migrate: (persisted) => {
         const state = persisted as { configs?: Partial<ProviderConfigs> } | undefined
         const configs = state?.configs
 
@@ -395,8 +395,6 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
 
         const next = stripSecretFields(normalizePersistedConfigs(configs))
 
-        // version < 2 also needs empty baseURL migration (handled in mergeProviderConfig).
-        void version
         return { configs: next }
       },
       merge: (persisted, current) => {

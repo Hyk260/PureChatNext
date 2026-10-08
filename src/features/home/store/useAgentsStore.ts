@@ -70,7 +70,7 @@ export const useAgentsStore = create<AgentsStoreState>((set, get) => ({
 
     const request = run()
     agentsInflight = request
-    void request.finally(() => {
+    request.finally(() => {
       if (agentsInflight === request) agentsInflight = null
     })
     return request

@@ -51,7 +51,6 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
 
       <Button
         block
-        icon={<RefreshCw size={16} />}
         loading={resending}
         onClick={handleResend}
         size='large'

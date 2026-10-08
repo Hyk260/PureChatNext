@@ -1,4 +1,5 @@
 import { createNanoId, generateCompactUuid } from '@pure/utils'
+import { APIError } from 'better-auth/api'
 import { betterAuth } from 'better-auth/minimal'
 import type { BetterAuthOptions } from 'better-auth/minimal'
 import { verifyPassword } from 'better-auth/crypto'
@@ -31,6 +32,8 @@ const log = debug('better-auth:define-config')
 import { appEnv } from '@/envs/app'
 import { authEnv } from '@/envs/auth'
 import { getAllowedOrigins } from '@/libs/utils/allowed-origins'
+import { isDev } from '@/libs/constants'
+import { isObviousTestEmail, TEST_EMAIL_POLICY_MESSAGE } from '@/libs/better-auth/shared/test-email-policy'
 
 const enabledSSOProviders = parseSSOProviders(authEnv.AUTH_SSO_PROVIDERS)
 const { socialProviders, genericOAuthProviders } = initBetterAuthSSOProviders()
@@ -44,6 +47,11 @@ const useOtpEmailVerification = authEnv.AUTH_EMAIL_VERIFICATION_MODE === 'otp'
 const EMAIL_ENDPOINT_RATE_LIMIT = { max: 1, window: 60 }
 
 async function sendAuthEmail(to: string, template: Pick<EmailPayload, 'html' | 'subject' | 'text'>) {
+  if (isObviousTestEmail(to)) {
+    log('skip auth email for reserved test address %s', to)
+    return
+  }
+
   await new EmailService().sendMail({ to, ...template })
 }
 
@@ -269,6 +277,9 @@ export function defineConfig() {
           // 写入前：同 IP 日限 + 首个用户为 admin，其余为 user
           before: async (user, context) => {
             log('user create before: %O', user)
+            if (!isDev && isObviousTestEmail(user.email)) {
+              throw new APIError('BAD_REQUEST', { message: TEST_EMAIL_POLICY_MESSAGE })
+            }
             await assertSignupIpAllowed(rateLimitStorage, context)
             const { UserModel } = await import('@pure/database/models/user')
             const userModel = new UserModel()
@@ -317,7 +328,7 @@ export function defineConfig() {
       additionalFields: {
         // 业务用户 ID，与 auth 主键 id 分离；客户端不可直接提交
         userId: {
-          defaultValue: () => generateCompactUuid(),
+          defaultValue: generateCompactUuid,
           input: false,
           required: false,
           type: 'string',

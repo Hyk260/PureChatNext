@@ -18,19 +18,19 @@ describe('useSettingsCategory system tools', () => {
 
   it('includes system tools tab only on desktop', () => {
     mocks.getDesktopApi.mockReturnValue({})
-    const { result: desktop } = renderHook(() => useSettingsCategory())
+    const { result: desktop } = renderHook(useSettingsCategory)
     const systemGroup = desktop.current.find((group) => group.title === '系统')
     expect(systemGroup?.items.some((item) => item.key === SettingsTab.SystemTools)).toBe(true)
 
     mocks.getDesktopApi.mockReturnValue(undefined)
-    const { result: web } = renderHook(() => useSettingsCategory())
+    const { result: web } = renderHook(useSettingsCategory)
     const webSystemGroup = web.current.find((group) => group.title === '系统')
     expect(webSystemGroup?.items.some((item) => item.key === SettingsTab.SystemTools)).toBe(false)
   })
 
   it('includes the manage group only for admins', () => {
     mocks.getDesktopApi.mockReturnValue(undefined)
-    const { result: user } = renderHook(() => useSettingsCategory())
+    const { result: user } = renderHook(useSettingsCategory)
     expect(user.current.some((group) => group.title === '管理')).toBe(false)
 
     const { result: admin } = renderHook(() => useSettingsCategory(true))

@@ -118,7 +118,7 @@ export function SystemToolsSettingsContent() {
     let cancelled = false
     const api = getDesktopApi()
     if (!api?.getSystemTools) return
-    void api
+    api
       .getSystemTools()
       .then((result) => {
         if (cancelled) return
@@ -167,7 +167,7 @@ export function SystemToolsSettingsContent() {
         <Block padding={16} variant='filled'>
           <Flex className='items-center justify-between gap-3'>
             <Text type='secondary'>无法加载系统工具信息</Text>
-            <Button icon={<RefreshCw size={14} />} onClick={() => void load()}>
+            <Button icon={<RefreshCw size={14} />} onClick={load}>
               重试
             </Button>
           </Flex>
@@ -182,7 +182,7 @@ export function SystemToolsSettingsContent() {
               {data.runtime.map((tool, index) => (
                 <Fragment key={tool.id}>
                   {index > 0 ? <Divider style={{ margin: 0 }} /> : null}
-                  <RuntimeToolRow tool={tool} onCopyPath={(path) => void handleCopyPath(path)} />
+                  <RuntimeToolRow tool={tool} onCopyPath={(path) => handleCopyPath(path)} />
                 </Fragment>
               ))}
             </Flex>

@@ -34,7 +34,7 @@ export const createSecondaryStorage = () => {
   const markUnavailable = (error: unknown) => {
     unavailableUntil = Date.now() + FAILURE_COOLDOWN_MS
     log('redis secondary storage unavailable for %dms, falling back to DB: %O', FAILURE_COOLDOWN_MS, error)
-    void resetRedisClient().catch((resetError) => {
+    resetRedisClient().catch((resetError) => {
       log('failed to reset redis client after secondary storage error: %O', resetError)
     })
   }

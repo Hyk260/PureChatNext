@@ -193,7 +193,7 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
             <Text className='text-[12px]' type='secondary'>
               开场消息
             </Text>
-            <Button disabled={!canGenerate} loading={generating} size='small' onClick={() => void handleGenerate()}>
+            <Button disabled={!canGenerate} loading={generating} size='small' onClick={handleGenerate}>
               根据描述生成
             </Button>
           </Flex>

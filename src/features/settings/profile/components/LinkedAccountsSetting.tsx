@@ -60,7 +60,7 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
   useEffect(() => {
     let cancelled = false
 
-    void listAccounts()
+    listAccounts()
       .then(({ data, error }) => {
         if (cancelled) return
         if (error) {

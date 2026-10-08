@@ -165,7 +165,7 @@ export async function startQQQrSession(
           session.stop = undefined
           session.credentials = credentials
           if (credentials.length === 1) {
-            void completeSingleCredential(session, credentials[0])
+            completeSingleCredential(session, credentials[0])
           } else if (credentials.length > 1) {
             session.publicStatus = { appIds: credentials.map(({ appId }) => appId), status: 'selecting' }
           } else {

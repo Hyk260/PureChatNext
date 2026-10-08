@@ -54,7 +54,7 @@ export const fetchTopics = async (agentId: string): Promise<LocalChatTopic[]> =>
   })()
 
   topicsInflight.set(agentId, request)
-  void request.finally(() => {
+  request.finally(() => {
     if (topicsInflight.get(agentId) === request) topicsInflight.delete(agentId)
   })
   return request

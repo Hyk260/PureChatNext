@@ -75,7 +75,7 @@ export function ShapeProvider({
   const transitionShape = useCallback((callback: () => void) => {
     const root = document.documentElement
     root.classList.add('transitioning')
-    void root.offsetHeight
+    root.offsetHeight
     callback()
     if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current)
     transitionTimeoutRef.current = setTimeout(() => root.classList.remove('transitioning'), 200)

@@ -59,7 +59,7 @@ export class DesktopApp {
       this.focusWindow()
     })
     app.on('activate', () => {
-      if (!this.windowManager.isOpen) void this.createWindow()
+      if (!this.windowManager.isOpen) this.createWindow()
       else this.focusWindow()
     })
     app.on('before-quit', () => {
@@ -121,7 +121,7 @@ export class DesktopApp {
     }
     this.focusWindow()
     const url = rendererLinks.at(-1)
-    if (url) void this.windowManager.navigate(url)
+    if (url) this.windowManager.navigate(url)
   }
 
   private registerProtocolClient() {

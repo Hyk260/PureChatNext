@@ -28,7 +28,7 @@ const requestGatewayReconcile = async () => {
 }
 
 const scheduleGatewayReconcile = () => {
-  void requestGatewayReconcile().catch((error) => {
+  requestGatewayReconcile().catch((error) => {
     log('gateway reconcile failed after bind: %O', error)
   })
 }

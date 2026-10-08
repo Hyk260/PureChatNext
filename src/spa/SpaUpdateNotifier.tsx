@@ -83,7 +83,7 @@ const SpaUpdateNotifier = ({
     }
 
     const onVisibilityChange = () => {
-      void runCheck()
+      runCheck()
     }
 
     document.addEventListener('visibilitychange', onVisibilityChange)

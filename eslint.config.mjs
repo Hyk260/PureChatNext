@@ -71,9 +71,70 @@ const restrictedServerEnvPathsExceptAnalytics = serverEnvModules
     message: serverEnvImportMessage,
   }))
 
+const noUselessEventArrow = {
+  meta: {
+    docs: {
+      description: 'Disallow no-argument event callbacks that only call a local function',
+    },
+    fixable: 'code',
+    messages: {
+      useFunctionReference: '直接传递函数引用，移除无意义的 `() => fn()` 包装。',
+    },
+    schema: [],
+    type: 'suggestion',
+  },
+  create(context) {
+    const sourceCode = context.sourceCode
+
+    return {
+      ArrowFunctionExpression(node) {
+        const parent = node.parent
+        const jsxAttribute =
+          parent?.type === 'JSXExpressionContainer' && parent.parent?.type === 'JSXAttribute'
+            ? parent.parent
+            : undefined
+        const objectProperty = parent?.type === 'Property' ? parent : undefined
+        const callbackName = jsxAttribute?.name?.name ?? objectProperty?.key?.name
+
+        if (
+          typeof callbackName !== 'string' ||
+          !/^on[A-Z]/.test(callbackName) ||
+          node.async ||
+          node.params.length > 0 ||
+          node.body.type !== 'CallExpression' ||
+          node.body.arguments.length > 0 ||
+          node.body.callee.type !== 'Identifier'
+        ) {
+          return
+        }
+
+        context.report({
+          fix: (fixer) => fixer.replaceText(node, sourceCode.getText(node.body.callee)),
+          messageId: 'useFunctionReference',
+          node,
+        })
+      },
+    }
+  },
+}
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    files: ['**/*.{cjs,js,mjs,mts,ts,tsx}'],
+    plugins: {
+      purechat: {
+        rules: {
+          'no-useless-event-arrow': noUselessEventArrow,
+        },
+      },
+    },
+    rules: {
+      'no-void': 'error',
+      'purechat/no-useless-event-arrow': 'error',
+    },
+  },
   // Enforce: `import type { Foo }` + `import { Bar }` from 'pkg'（含 packages/**）
   {
     files: ['**/*.{ts,tsx}'],

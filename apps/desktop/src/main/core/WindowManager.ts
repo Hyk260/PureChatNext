@@ -65,7 +65,7 @@ export class WindowManager {
           x: bounds.x,
           y: bounds.y,
         }
-        void this.config.setWindowState(state)
+        this.config.setWindowState(state)
       }, 250)
     }
     const persistImmediately = () => {
@@ -80,7 +80,7 @@ export class WindowManager {
         x: bounds.x,
         y: bounds.y,
       }
-      void this.config.setWindowState(state)
+      this.config.setWindowState(state)
     }
     window.on('resize', persistState)
     window.on('move', persistState)
@@ -92,7 +92,7 @@ export class WindowManager {
       persistImmediately()
     })
     window.webContents.setWindowOpenHandler(({ url }) => {
-      if (isSafeExternalUrl(url)) void shell.openExternal(url)
+      if (isSafeExternalUrl(url)) shell.openExternal(url)
       return { action: 'deny' }
     })
     window.webContents.on('will-navigate', (event, url) => {
@@ -129,7 +129,7 @@ export class WindowManager {
       if (this.rendererReloadTimer) clearTimeout(this.rendererReloadTimer)
       this.rendererReloadTimer = setTimeout(() => {
         this.rendererReloadTimer = null
-        if (!window.isDestroyed()) void window.loadURL(this.rendererUrl)
+        if (!window.isDestroyed()) window.loadURL(this.rendererUrl)
       }, delayMs)
     })
     window.once('ready-to-show', () => window.show())

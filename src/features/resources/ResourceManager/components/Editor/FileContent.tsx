@@ -150,7 +150,7 @@ const RemoteTextPreview = ({ fileName, url }: { fileName: string; url: string })
   useEffect(() => {
     const controller = new AbortController()
 
-    void fetch(url, {
+    fetch(url, {
       credentials: getFetchCredentials(url),
       signal: controller.signal,
     })

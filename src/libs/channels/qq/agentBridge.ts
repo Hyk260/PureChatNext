@@ -365,7 +365,7 @@ export async function handleQQMention(params: {
       await eventModel
         .saveQQResponse(event.id, { sentChunkCount: outbound.sentCount, text: outbound.text })
         .catch((saveError) => log('save command event failed app=%s: %O', applicationId, saveError))
-      void flushQQChatInvalidation(applicationId).catch((error) => {
+      flushQQChatInvalidation(applicationId).catch((error) => {
         log('invalidate after command failed app=%s: %O', applicationId, error)
       })
       return

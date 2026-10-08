@@ -317,7 +317,7 @@ const runNextBackgroundTasks = () => {
     console.log(`🔁 SPA:      ${spaRootUrl}`)
   }, 2_000)
 
-  void (async () => {
+  ;(async () => {
     try {
       await waitForNextReady()
       if (shuttingDown) return
@@ -389,7 +389,7 @@ const isMainModule = () => {
 }
 
 if (isMainModule()) {
-  void main().catch((error) => {
+  main().catch((error) => {
     const message = error instanceof Error ? error.message : String(error)
     if (message.startsWith('PORT_IN_USE:')) {
       process.exit(1)

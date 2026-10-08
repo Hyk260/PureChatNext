@@ -116,7 +116,7 @@ export class ChannelGatewayManager {
       await this.startWorkers(signal)
       await this.reconcileNow()
       this.reconcileTimer = setInterval(() => {
-        void this.reconcileNow().catch((error) => this.recordCoreError(error))
+        this.reconcileNow().catch((error) => this.recordCoreError(error))
       }, RECONCILE_INTERVAL_MS)
     } catch (error) {
       this.waitingForDatabase = false
@@ -222,10 +222,10 @@ export class ChannelGatewayManager {
     try {
       client = await definition.createClient({
         binding: leased,
-        reportStatus: (event) => void this.reportStatus(binding.id, event),
+        reportStatus: (event) => this.reportStatus(binding.id, event),
       })
       const leaseTimer = setInterval(() => {
-        void this.renewLease(binding.id)
+        this.renewLease(binding.id)
       }, LEASE_RENEW_INTERVAL_MS)
       const active: ActiveClient = {
         binding: leased,
@@ -238,7 +238,7 @@ export class ChannelGatewayManager {
       }
       this.active.set(binding.id, active)
       await client.start()
-      void client.done.then(
+      client.done.then(
         () => this.handleClientExit(binding.id, new Error('Gateway client stopped unexpectedly')),
         (error) => this.handleClientExit(binding.id, error)
       )

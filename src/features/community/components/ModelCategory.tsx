@@ -19,7 +19,7 @@ const ModelCategory = memo(() => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const selected = searchParams.get('category') ?? ALL_KEY
-  const counts = useMemo(() => getModelProviderCounts(), [])
+  const counts = useMemo(getModelProviderCounts, [])
 
   const handleSelect = useCallback(
     (key: string) => {

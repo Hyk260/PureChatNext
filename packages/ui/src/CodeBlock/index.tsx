@@ -224,7 +224,7 @@ export default function CodeBlock({
   const resolvedFileName = fileName ?? (isDemo ? FILE : undefined)
 
   const copy = useCallback(() => {
-    void navigator.clipboard
+    navigator.clipboard
       .writeText(raw)
       .then(() => {
         setCopied(true)

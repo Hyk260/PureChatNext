@@ -126,7 +126,7 @@ const ChatView = memo<ChatViewProps>(
     useEffect(() => {
       if (!desktopApi || permissionMode !== 'full' || !topicId || fullGrantTopicRef.current === topicId) return
       fullGrantTopicRef.current = topicId
-      void desktopApi.requestFullAccess?.(topicId).then((result) => {
+      desktopApi.requestFullAccess?.(topicId).then((result) => {
         if (!result?.granted) fullGrantTopicRef.current = null
       })
     }, [desktopApi, permissionMode, topicId])
@@ -173,9 +173,9 @@ const ChatView = memo<ChatViewProps>(
           toolName: toolCall.toolName as DesktopLocalToolRequest['toolName'],
           topicId: topicId ?? 'draft',
         }
-        void desktopApi.executeLocalTool(request).then((output) => {
+        desktopApi.executeLocalTool(request).then((output) => {
           if (topicId) {
-            void updateToolApproval(
+            updateToolApproval(
               topicId,
               toolCall.toolCallId,
               output.success ? 'completed' : 'failed',
@@ -437,7 +437,7 @@ const ChatView = memo<ChatViewProps>(
       (toolCallId: string, toolName: string, args: Record<string, unknown>, approved: boolean) => {
         if (!desktopApi || !topicId) return
         if (!approved) {
-          void updateToolApproval(topicId, toolCallId, 'denied')
+          updateToolApproval(topicId, toolCallId, 'denied')
           addToolOutput({
             output: { content: '用户拒绝了该操作', success: false },
             tool: toolName as never,
@@ -453,8 +453,8 @@ const ChatView = memo<ChatViewProps>(
           toolName: toolName as DesktopLocalToolRequest['toolName'],
           topicId,
         }
-        void desktopApi.executeLocalTool(request).then((output) => {
-          void updateToolApproval(
+        desktopApi.executeLocalTool(request).then((output) => {
+          updateToolApproval(
             topicId,
             toolCallId,
             output.success ? 'completed' : 'failed',
@@ -468,7 +468,7 @@ const ChatView = memo<ChatViewProps>(
 
     const handleServerToolApproval = useCallback(
       (approvalId: string, toolCallId: string, approved: boolean) => {
-        if (topicId) void updateToolApproval(topicId, toolCallId, approved ? 'approved' : 'denied')
+        if (topicId) updateToolApproval(topicId, toolCallId, approved ? 'approved' : 'denied')
         addToolApprovalResponse({ approved, id: approvalId })
       },
       [addToolApprovalResponse, topicId]

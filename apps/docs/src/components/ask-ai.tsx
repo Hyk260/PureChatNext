@@ -64,7 +64,7 @@ export function AskAI() {
   useEffect(() => {
     let cancelled = false
 
-    void loadAskAIMessages().then((stored) => {
+    loadAskAIMessages().then((stored) => {
       if (cancelled) return
       if (stored.length > 0) setMessages(stored)
       setRestored(true)
@@ -86,7 +86,7 @@ export function AskAI() {
     const requestContext = { model: selectedModel, skills }
     lastRequestRef.current = requestContext
     clearError()
-    void sendMessage({ text: value }, { body: requestContext })
+    sendMessage({ text: value }, { body: requestContext })
   }
 
   function submitSuggestion(text: string) {
@@ -194,7 +194,7 @@ export function AskAI() {
             {error ? (
               <div className='docs-ai-error' role='alert'>
                 <span>{error.message || '文档助手暂时无法回答，请稍后重试。'}</span>
-                <button onClick={() => void regenerate({ body: lastRequestRef.current })} type='button'>
+                <button onClick={() => regenerate({ body: lastRequestRef.current })} type='button'>
                   <RotateCcw aria-hidden className='size-3.5' />
                   重试
                 </button>

@@ -16,7 +16,7 @@ export class UpdateService {
     autoUpdater.autoDownload = true
     autoUpdater.autoInstallOnAppQuit = true
     autoUpdater.on('update-downloaded', this.onDownloaded)
-    void autoUpdater.checkForUpdates().catch((error) => {
+    autoUpdater.checkForUpdates().catch((error) => {
       // Update metadata is optional for development and self-hosted builds.
       console.warn('PureChat update check skipped', error instanceof Error ? error.message : error)
     })

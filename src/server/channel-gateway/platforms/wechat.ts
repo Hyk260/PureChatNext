@@ -37,7 +37,7 @@ class WechatGatewayClient implements ChannelGatewayClient {
         onStatus: this.context.reportStatus,
         signal: this.abortController.signal,
       })
-      void this.loop.catch((error) => this.readyReject(error instanceof Error ? error : new Error('WeChat gateway failed')))
+      this.loop.catch((error) => this.readyReject(error instanceof Error ? error : new Error('WeChat gateway failed')))
     }
     await this.ready
   }

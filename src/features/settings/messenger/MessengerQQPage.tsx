@@ -142,7 +142,7 @@ const MessengerQQPage = memo(() => {
     error: statusError,
     isLoading: statusLoading,
     mutate: mutateStatus,
-  } = useSWR<QQStatus>(userId ? ['messenger-qq-status', userId] : null, () => fetchQQStatus(), {
+  } = useSWR<QQStatus>(userId ? ['messenger-qq-status', userId] : null, fetchQQStatus, {
     revalidateOnFocus: false,
   })
   const {
@@ -202,7 +202,7 @@ const MessengerQQPage = memo(() => {
     (value: string) => {
       const previous = { agentId, model: modelId, provider }
       setAgentId(value)
-      void saveConfiguration({ ...previous, agentId: value }, previous)
+      saveConfiguration({ ...previous, agentId: value }, previous)
     },
     [agentId, modelId, provider, saveConfiguration]
   )
@@ -213,7 +213,7 @@ const MessengerQQPage = memo(() => {
       const previous = { agentId, model: modelId, provider }
       setProvider(nextProvider)
       setModelId(nextModel)
-      void saveConfiguration({ agentId, model: nextModel, provider: nextProvider }, previous)
+      saveConfiguration({ agentId, model: nextModel, provider: nextProvider }, previous)
     },
     [agentId, modelId, provider, saveConfiguration]
   )
@@ -334,7 +334,7 @@ const MessengerQQPage = memo(() => {
           open
           onClose={() => setAdvancedOpen(false)}
           onSaved={(settings) => {
-            void mutateStatus(
+            mutateStatus(
               (current) => (current ? { ...current, settings } : current),
               { revalidate: false }
             )

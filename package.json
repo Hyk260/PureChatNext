@@ -58,7 +58,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "lint": "node scripts/run-parallel.mjs lint:ts lint:spa-env-imports lint:style lint:circular lint:docs lint:docs-site lint:md && pnpm run typecheck && pnpm run typecheck:docs",
-    "lint:ts": "eslint src/ tests/ --concurrency=auto",
+    "lint:ts": "eslint src/ tests/ apps/desktop/src/ apps/docs/src/ scripts/ --concurrency=auto",
     "lint:style": "stylelint \"{src,tests}/**/*.css\"",
     "lint:style:fix": "stylelint \"{src,tests}/**/*.css\" --fix",
     "lint:spa-env-imports": "node scripts/check-spa-env-imports.mjs",

@@ -157,7 +157,7 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
                 }
               : undefined
           }
-          onClick={() => void checkConnection()}
+          onClick={checkConnection}
         >
           {pass ? '检查通过' : '检查'}
         </Button>

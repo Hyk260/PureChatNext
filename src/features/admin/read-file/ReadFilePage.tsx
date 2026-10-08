@@ -145,7 +145,7 @@ export default function ReadFilePage() {
             onFile={pickFile}
             onMode={setMode}
             onReset={reset}
-            onSubmit={() => void submit()}
+            onSubmit={submit}
             onUrl={updateUrl}
           />
           <ReadFileResults
@@ -154,7 +154,7 @@ export default function ReadFilePage() {
             rawJson={rawJson}
             result={result}
             view={view}
-            onCopy={() => void copyJson()}
+            onCopy={copyJson}
             onDownload={() => downloadResultJson(rawJson, result?.filename ?? 'read-file-result')}
             onViewChange={setView}
           />

@@ -148,7 +148,7 @@ export function AboutSettingsContent() {
         title='应用信息'
         rows={[
           {
-            action: <ActionIcon icon={Copy} size='small' title='复制版本号' onClick={() => void handleCopyVersion()} />,
+            action: <ActionIcon icon={Copy} size='small' title='复制版本号' onClick={handleCopyVersion} />,
             key: 'version',
             label: '版本',
             value: <Text>{VERSION_LABEL}</Text>,

@@ -127,7 +127,7 @@ export function ChannelAttachmentComposer({
             if (shouldIgnoreEnter(event)) return
             event.preventDefault()
             if (!canSubmit) return
-            void onSend()
+            onSend()
           }}
         />
         <div className='flex items-center justify-between gap-2 px-2 pb-1.5'>

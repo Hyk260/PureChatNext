@@ -134,7 +134,7 @@ export const SignInEmailStep = ({
                   type='fill'
                   onClick={() => {
                     withAuthAgreement(() => {
-                      void handleProviderClick(provider)
+                      handleProviderClick(provider)
                     })
                   }}
                 >
@@ -162,7 +162,7 @@ export const SignInEmailStep = ({
             layout='vertical'
             onFinish={(values) => {
               withAuthAgreement(() => {
-                void onCheckUser(values)
+                onCheckUser(values)
               })
             }}
           >

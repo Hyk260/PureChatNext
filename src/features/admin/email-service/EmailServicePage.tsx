@@ -209,9 +209,9 @@ export default function EmailServicePage() {
             values={values}
             onChange={updateValues}
             onContentModeChange={selectContentMode}
-            onCopy={() => void copyRequestJson()}
+            onCopy={copyRequestJson}
             onReset={reset}
-            onSubmit={() => void submit()}
+            onSubmit={submit}
             onTemplateChange={handleTemplateChange}
             onTemplateRendered={handleTemplateRendered}
             onTemplateRenderStateChange={handleTemplateRenderStateChange}

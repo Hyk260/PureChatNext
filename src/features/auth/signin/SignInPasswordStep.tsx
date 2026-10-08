@@ -52,7 +52,7 @@ export const SignInPasswordStep = ({
       cancelText: '取消',
       content: `我们将向 ${email} 发送密码重置链接，请查收邮件后完成重置。`,
       okText: '发送邮件',
-      onOk: () => onForgotPassword(),
+      onOk: onForgotPassword,
       title: '重置密码',
     })
   }

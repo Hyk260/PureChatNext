@@ -130,7 +130,7 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
   if (channelGenerationRegistry.has(key)) throw new Error('A reply is already being generated')
   const abortController = channelGenerationRegistry.begin(key, {
     eventId: event.id,
-    onAbort: () => void new ChannelEventModel().cancel(event.id),
+    onAbort: () => new ChannelEventModel().cancel(event.id),
   })
   let stopTyping = () => {}
   try {

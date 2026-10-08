@@ -41,7 +41,7 @@ function resolveQqConnected(input: {
 
 /** GET /api/channels/qq/status — 当前用户 QQ 连接状态（不含 Secret） */
 export const GET = withAuth(async (_request, { userId }) => {
-  void ensureChannelGatewayRunning().catch((error) => {
+  ensureChannelGatewayRunning().catch((error) => {
     log('gateway startup failed: %O', error)
   })
   const model = new ChannelBindingModel()

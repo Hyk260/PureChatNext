@@ -97,31 +97,60 @@ const waitForExit = (child: ChildProcess) =>
     child.once('exit', (code, signal) => resolve(code ?? (signal ? 1 : 0)))
   })
 
-const waitForPort = (port: number, timeoutMs = 180_000) =>
+const waitForPort = (port: number, timeoutMs = 180_000, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
     const deadline = Date.now() + timeoutMs
     let timer: ReturnType<typeof setTimeout> | undefined
+    let socket: net.Socket | undefined
+    let settled = false
 
-    const probe = () => {
-      const socket = net.createConnection({ host: '127.0.0.1', port })
-      const finish = (error?: Error) => {
-        socket.destroy()
-        if (timer) clearTimeout(timer)
-        if (error) reject(error)
-        else resolve()
-      }
-
-      socket.once('connect', () => finish())
-      socket.once('error', () => {
-        socket.destroy()
-        if (Date.now() >= deadline) {
-          reject(new Error(`等待 Next.js 端口 ${port} 超时`))
-          return
-        }
-        timer = setTimeout(probe, 400)
-      })
+    const finish = (error?: Error) => {
+      if (settled) return
+      settled = true
+      if (timer) clearTimeout(timer)
+      socket?.destroy()
+      signal?.removeEventListener('abort', onAbort)
+      if (error) reject(error)
+      else resolve()
     }
 
+    const onAbort = () => finish(new Error('端口等待已取消'))
+
+    const scheduleProbe = () => {
+      if (settled) return
+      if (signal?.aborted) {
+        onAbort()
+        return
+      }
+      if (Date.now() >= deadline) {
+        finish(new Error(`等待端口 ${port} 超时`))
+        return
+      }
+      timer = setTimeout(probe, 400)
+    }
+
+    const probe = () => {
+      if (settled) return
+      const currentSocket = net.createConnection({ host: '127.0.0.1', port })
+      socket = currentSocket
+      let retried = false
+      const retry = () => {
+        if (retried) return
+        retried = true
+        currentSocket.destroy()
+        scheduleProbe()
+      }
+
+      currentSocket.once('connect', finish)
+      currentSocket.once('error', retry)
+      currentSocket.setTimeout(Math.min(1_000, Math.max(1, deadline - Date.now())), retry)
+    }
+
+    if (signal?.aborted) {
+      onAbort()
+      return
+    }
+    signal?.addEventListener('abort', onAbort, { once: true })
     probe()
   })
 
@@ -178,12 +207,13 @@ const freeRendererPort = async (port: number) => {
   await wait(200)
 }
 
-const listProcessRows = async (): Promise<ProcessRow[]> => {
+const listProcessRows = async (signal?: AbortSignal): Promise<ProcessRow[]> => {
   if (isWindows) return []
 
   try {
     const { stdout } = await execFileAsync('ps', ['-axww', '-o', 'pid=,ppid=,pgid=,state=,command='], {
       env: { ...process.env, COLUMNS: '512' },
+      signal,
       timeout: 3_000,
     })
     return parsePsTable(stdout)
@@ -206,8 +236,8 @@ const inspectDesktopProcesses = async () => {
 }
 
 /** 仅 Electron 应用进程（不含 electron-vite），用于判断窗口是否真正拉起 */
-const listElectronAppPids = async (): Promise<number[]> => {
-  const rows = await listProcessRows()
+const listElectronAppPids = async (signal?: AbortSignal): Promise<number[]> => {
+  const rows = await listProcessRows(signal)
   return rows
     .filter((row) => !row.state.startsWith('Z') && isElectronAppCommand(row.command, rootDir))
     .map((row) => row.pid)
@@ -270,26 +300,47 @@ const killStaleDesktopProcesses = async () => {
 /** 重启前确保旧 Electron 与 renderer 端口都已退出，释放单实例锁 */
 const prepareCleanDesktopStart = async () => {
   await killStaleDesktopProcesses()
-  await freeRendererPort(rendererPort)
-  await clearElectronSingletonLocks()
-
-  const portDeadline = Date.now() + PORT_FREE_WAIT_MS
-  while (Date.now() < portDeadline && (await isPortOpen(rendererPort))) {
+  if (await isPortOpen(rendererPort)) {
     await freeRendererPort(rendererPort)
-    await wait(200)
-  }
 
-  await wait(150)
+    const portDeadline = Date.now() + PORT_FREE_WAIT_MS
+    while (Date.now() < portDeadline && (await isPortOpen(rendererPort))) {
+      await wait(200)
+    }
+  }
+  await clearElectronSingletonLocks()
 }
 
-const waitForElectronApp = async (timeoutMs: number, existingPids: ReadonlySet<number>) => {
+const waitForElectronApp = async (
+  timeoutMs: number,
+  existingPids: ReadonlySet<number>,
+  signal?: AbortSignal
+) => {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
-    const pids = await listElectronAppPids()
+    if (signal?.aborted) return false
+    const pids = await listElectronAppPids(signal)
     if (pids.some((pid) => !existingPids.has(pid))) return true
     await wait(300)
   }
   return false
+}
+
+const waitForElectronReady = async (
+  timeoutMs: number,
+  existingPids: ReadonlySet<number>,
+  signal: AbortSignal
+) => {
+  const [rendererReady, electronReady] = await Promise.all([
+    waitForPort(rendererPort, timeoutMs, signal)
+      .then(() => true)
+      .catch(() => false),
+    waitForElectronApp(timeoutMs, existingPids, signal),
+  ])
+
+  if (!rendererReady) return { kind: 'no-renderer' as const }
+  if (!electronReady) return { kind: 'no-app' as const }
+  return { kind: 'ready' as const }
 }
 
 const startElectronDev = async (
@@ -317,15 +368,16 @@ const startElectronDev = async (
     assertRunning(child)
     track(child)
 
-    const result = await Promise.race([
-      waitForExit(child).then((code) => ({ kind: 'exit' as const, code })),
-      waitForPort(rendererPort, ELECTRON_READY_WAIT_MS)
-        .then(async () => {
-          const ready = await waitForElectronApp(ELECTRON_READY_WAIT_MS, existingAppPids)
-          return ready ? ({ kind: 'ready' as const } as const) : ({ kind: 'no-app' as const } as const)
-        })
-        .catch(() => ({ kind: 'no-renderer' as const })),
-    ])
+    const readinessController = new AbortController()
+    let result: { kind: 'exit'; code: number } | { kind: 'ready' | 'no-app' | 'no-renderer' }
+    try {
+      result = await Promise.race([
+        waitForExit(child).then((code) => ({ kind: 'exit' as const, code })),
+        waitForElectronReady(ELECTRON_READY_WAIT_MS, existingAppPids, readinessController.signal),
+      ])
+    } finally {
+      readinessController.abort()
+    }
 
     assertRunning(child)
     if (result.kind === 'ready') return child
@@ -380,7 +432,7 @@ const main = async () => {
   }
 
   const handleSignal = () => {
-    void cleanup().finally(() => {
+    cleanup().finally(() => {
       process.exit(0)
     })
   }
@@ -415,4 +467,4 @@ const main = async () => {
   }
 }
 
-void main()
+main()

@@ -303,7 +303,7 @@ export class QQGatewayConnection {
   }
 
   private sendAuthed(payload: (token: string) => QQGatewayPayload, closeReason: string): void {
-    void this.api.getAccessToken().then((token) => {
+    this.api.getAccessToken().then((token) => {
       this.send(payload(token))
     }).catch((error) => {
       this.openConnectionError = error instanceof Error ? error : new Error(closeReason)
@@ -386,7 +386,7 @@ export class QQGatewayConnection {
         this.settleDone(new Error('QQ gateway reconnect URL is unavailable'))
         return
       }
-      void this.openConnection(url, canResume).catch(() => this.attemptReconnect())
+      this.openConnection(url, canResume).catch(() => this.attemptReconnect())
     }, timeout)
   }
 }

@@ -11,7 +11,7 @@ const DesktopServerSetup = () => {
 
   useEffect(() => {
     if (!api) return
-    void api.getRemoteServer().then((config) => {
+    api.getRemoteServer().then((config) => {
       setUrl(config.url ?? '')
       setLoading(false)
     })

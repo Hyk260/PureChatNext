@@ -92,7 +92,7 @@ const ChatHeader = memo<Props>(
 
     const handleAutoRename = useCallback(() => {
       if (!topic || autoRenameDisabled) return
-      void onAutoRename(topic.id)
+      onAutoRename(topic.id)
     }, [autoRenameDisabled, onAutoRename, topic])
 
     const handleCopyId = useCallback(async () => {
@@ -132,7 +132,7 @@ const ChatHeader = memo<Props>(
                 icon: <Icon icon={Star} />,
                 key: 'favorite',
                 label: topic.favorite ? '取消收藏' : '收藏',
-                onClick: () => void onFavorite(topic.id, !topic.favorite),
+                onClick: () => onFavorite(topic.id, !topic.favorite),
               },
               { type: 'divider' as const },
               {
@@ -153,7 +153,7 @@ const ChatHeader = memo<Props>(
                 icon: <Icon icon={Hash} />,
                 key: 'copy-session-id',
                 label: '复制会话 ID',
-                onClick: () => void handleCopyId(),
+                onClick: handleCopyId,
               },
               { type: 'divider' as const },
             ]

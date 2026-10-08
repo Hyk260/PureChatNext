@@ -42,7 +42,7 @@ const VerifyEmailPageContent = () => {
 
   const VerifyEmailFooter = (
     <Link href='/signin'>
-      <Button block icon={<ChevronLeft />} size='large'>
+      <Button block size='large'>
         返回登录
       </Button>
     </Link>

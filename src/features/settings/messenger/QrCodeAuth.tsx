@@ -118,7 +118,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
       }
     }
 
-    void run()
+    run()
     return () => {
       cancelled = true
       stopPolling()
@@ -176,7 +176,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
           }}
         >
           <Alert showIcon title={error} type='warning' />
-          <Button icon={<RefreshCw size={16} />} onClick={() => void handleRefresh()}>
+          <Button icon={<RefreshCw size={16} />} onClick={handleRefresh}>
             刷新二维码
           </Button>
         </Flex>

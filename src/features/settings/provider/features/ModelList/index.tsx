@@ -114,7 +114,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
     }
   }
 
-  const handleFetch = showModelFetcher ? () => void fetchRemoteModels() : undefined
+  const handleFetch = showModelFetcher ? fetchRemoteModels : undefined
 
   const handleSaveCustomModel = useCallback(
     (model: CustomModelFormValues) => {
@@ -351,7 +351,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         onAddCustomModel={canManageCustomModels ? handleOpenAddCustomModel : undefined}
         searchKeyword={keyword}
         showModelFetcher={showModelFetcher}
-        onCancelHealthCheck={() => cancelHealthCheck()}
+        onCancelHealthCheck={cancelHealthCheck}
         onClearRemoteModels={handleClearRemoteModels}
         onHealthCheck={() => setHealthModalOpen(true)}
         onFetch={handleFetch}
@@ -376,7 +376,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         open={healthModalOpen}
         provider={id}
         onCancel={() => setHealthModalOpen(false)}
-        onStart={(timeoutMs, concurrency) => void runHealthCheck(timeoutMs, concurrency)}
+        onStart={(timeoutMs, concurrency) => runHealthCheck(timeoutMs, concurrency)}
       />
 
       <Tabs

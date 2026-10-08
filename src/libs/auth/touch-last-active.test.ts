@@ -3,9 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   touchLastActiveAt: vi.fn(),
-  waitUntil: vi.fn((promise: Promise<unknown>) => {
-    void promise
-  }),
+  waitUntil: vi.fn(),
 }))
 
 vi.mock('@vercel/functions', () => ({

@@ -135,7 +135,7 @@ const TopicItem = memo<Props>(
           label: topic.favorite ? '取消收藏' : '收藏',
           onClick: (info) => {
             stopMenuEvent(info)
-            void onFavorite(topic.id, !topic.favorite)
+            onFavorite(topic.id, !topic.favorite)
           },
         },
         // {
@@ -146,7 +146,7 @@ const TopicItem = memo<Props>(
         //       label: projectName,
         //       onClick: (info: MenuInfo) => {
         //         stopMenuEvent(info)
-        //         void onProjectChange(topic.id, projectName)
+        //         onProjectChange(topic.id, projectName)
         //       },
         //     })),
         //     ...(projectNames.length > 0 ? [{ type: 'divider' as const }] : []),
@@ -156,7 +156,7 @@ const TopicItem = memo<Props>(
         //       label: '无项目',
         //       onClick: (info: MenuInfo) => {
         //         stopMenuEvent(info)
-        //         void onProjectChange(topic.id, null)
+        //         onProjectChange(topic.id, null)
         //       },
         //     },
         //     {
@@ -182,7 +182,7 @@ const TopicItem = memo<Props>(
           onClick: (info) => {
             stopMenuEvent(info)
             if (autoRenameDisabled) return
-            void onAutoRename(topic.id)
+            onAutoRename(topic.id)
           },
         },
         {

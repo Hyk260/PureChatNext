@@ -244,7 +244,7 @@ export function UsageSettingsContent() {
       params.set('endDate', range[1].format('YYYY-MM-DD'))
     }
 
-    void fetch(`/api/user/usage?${params}`, { credentials: 'include' })
+    fetch(`/api/user/usage?${params}`, { credentials: 'include' })
       .then(async (response) => {
         const json = (await response.json().catch(() => null)) as (UsageResponse & { error?: string }) | null
         if (!response.ok || !json) throw new Error(json?.error || `HTTP ${response.status}`)

@@ -86,7 +86,7 @@ function useVisiblePeriodicRefresh(
         if (stopped || document.visibilityState !== 'visible') return
         if (refreshPending) {
           refreshPending = false
-          void run()
+          run()
         } else {
           schedule()
         }
@@ -102,7 +102,7 @@ function useVisiblePeriodicRefresh(
         refreshPending = true
         return
       }
-      void run()
+      run()
     }
     const onVisibilityChange = () => {
       clearTimer()
@@ -111,7 +111,7 @@ function useVisiblePeriodicRefresh(
         return
       }
       refreshPending = false
-      void run()
+      run()
     }
     document.addEventListener('visibilitychange', onVisibilityChange)
     schedule()
@@ -194,7 +194,7 @@ export default function WechatConversationPage() {
   useEffect(() => {
     const controller = new AbortController()
     queueMicrotask(() => {
-      if (!controller.signal.aborted) void bootstrap(controller.signal)
+      if (!controller.signal.aborted) bootstrap(controller.signal)
     })
     return () => controller.abort()
   }, [bootstrap])
@@ -337,7 +337,7 @@ export default function WechatConversationPage() {
         if (stopped || paused || document.visibilityState !== 'visible') return
         if (refreshPending) {
           refreshPending = false
-          void run()
+          run()
         } else {
           schedule(delay)
         }
@@ -362,7 +362,7 @@ export default function WechatConversationPage() {
         controller?.abort()
         return
       }
-      void run()
+      run()
     }
     const onVisibilityChange = () => {
       clearTimer()
@@ -373,7 +373,7 @@ export default function WechatConversationPage() {
       }
       delay = MESSAGE_POLL_DELAYS[0]
       refreshPending = false
-      void run()
+      run()
     }
     document.addEventListener('visibilitychange', onVisibilityChange)
     queueMicrotask(() => {
@@ -382,7 +382,7 @@ export default function WechatConversationPage() {
       setMessages([])
       setSessionMeta(null)
       setMessagesLoading(true)
-      void run()
+      run()
     })
     return () => {
       stopped = true
@@ -505,7 +505,7 @@ export default function WechatConversationPage() {
 
   const handleCopyMessage = useCallback(
     (message: WechatDevMessage) => {
-      void copyText(message.text, message.id)
+      copyText(message.text, message.id)
     },
     [copyText]
   )
@@ -538,7 +538,7 @@ export default function WechatConversationPage() {
             icon={<RotateCcw className='size-3.5' />}
             loading={retrying}
             size='small'
-            onClick={() => void handleRetry()}
+            onClick={handleRetry}
           >
             失败 {failedCount} · 重试
           </Button>
@@ -569,7 +569,7 @@ export default function WechatConversationPage() {
         onPerspectiveToggle={() => setPerspective((prev) => (prev === 'agent' ? 'wechat' : 'agent'))}
         onPickFiles={handlePickFiles}
         onRemovePending={handleRemovePendingAttachment}
-        onSend={() => void handleSend()}
+        onSend={handleSend}
       />
 
       {exportOpen && selectedSession ? (

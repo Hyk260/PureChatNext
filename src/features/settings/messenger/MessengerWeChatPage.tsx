@@ -98,7 +98,7 @@ function renderWechatStatusBanner(params: {
             <Button
               size='small'
               onClick={() => {
-                void retryFailedWechatEvents()
+                retryFailedWechatEvents()
                   .then((count) => message.success(`已重新入队 ${count} 条消息`))
                   .then(refreshStatus)
                   .catch((error) => message.error(error instanceof Error ? error.message : '重试失败'))
@@ -147,7 +147,7 @@ const MessengerWeChatPage = memo(() => {
     error: statusError,
     isLoading: statusLoading,
     mutate: mutateStatus,
-  } = useSWR<WechatStatus>(userId ? ['messenger-wechat-status', userId] : null, () => fetchWechatStatus(), {
+  } = useSWR<WechatStatus>(userId ? ['messenger-wechat-status', userId] : null, fetchWechatStatus, {
     refreshInterval: (latestStatus) => {
       if (!latestStatus?.bound) return 0
       return latestStatus.runtimeStatus === 'starting' ? STATUS_POLL_STARTING_MS : STATUS_POLL_MS
@@ -252,7 +252,7 @@ const MessengerWeChatPage = memo(() => {
     (value: string) => {
       const previous = { agentId, model: modelId, provider }
       setAgentId(value)
-      void saveConfiguration({ ...previous, agentId: value }, previous)
+      saveConfiguration({ ...previous, agentId: value }, previous)
     },
     [agentId, modelId, provider, saveConfiguration]
   )
@@ -263,7 +263,7 @@ const MessengerWeChatPage = memo(() => {
       const previous = { agentId, model: modelId, provider }
       setProvider(nextProvider)
       setModelId(nextModel)
-      void saveConfiguration({ agentId, model: nextModel, provider: nextProvider }, previous)
+      saveConfiguration({ agentId, model: nextModel, provider: nextProvider }, previous)
     },
     [agentId, modelId, provider, saveConfiguration]
   )
@@ -314,7 +314,7 @@ const MessengerWeChatPage = memo(() => {
         </Button>
       ) : null}
       {showConnect ? (
-        <QrCodeAuth disabled={binding} onAuthenticated={(c) => void handleAuthenticated(c)} />
+        <QrCodeAuth disabled={binding} onAuthenticated={(c) => handleAuthenticated(c)} />
       ) : (
         <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>
           断开

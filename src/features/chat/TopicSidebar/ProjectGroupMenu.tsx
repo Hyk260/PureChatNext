@@ -72,7 +72,7 @@ const ProjectGroupMenu = memo<Props>(({ disabled, projectName, topicCount, onDel
         icon: <Icon icon={FolderOpen} />,
         key: 'open-folder',
         label: '打开文件夹',
-        onClick: () => void handleOpenFolder(),
+        onClick: handleOpenFolder,
       })
     }
     if (onDeleteProject) {

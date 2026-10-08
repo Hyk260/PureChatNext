@@ -156,7 +156,7 @@ function MessageList({
                   <span className='mb-0.5 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100'>
                     <CopyMessageButton
                       copied={copiedMessageId === message.id}
-                      onCopy={() => void onCopy(message.text, message.id)}
+                      onCopy={() => onCopy(message.text, message.id)}
                     />
                   </span>
                 ) : null}

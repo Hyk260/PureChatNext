@@ -88,7 +88,7 @@ const SignUpFormContent = () => {
 
   const handleFinish = (values: SignUpFormValues) => {
     withAuthAgreement(() => {
-      void onSubmit(values)
+      onSubmit(values)
     })
   }
 

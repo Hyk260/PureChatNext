@@ -12,15 +12,15 @@ export function startWechatTyping(
     .then((config) => config.typing_ticket?.trim() || null)
     .catch(() => null)
 
-  void ticket.then((typingTicket) => {
-    if (typingTicket && !stopped) void api.sendTyping(externalUserId, typingTicket, true).catch(() => {})
+  ticket.then((typingTicket) => {
+    if (typingTicket && !stopped) api.sendTyping(externalUserId, typingTicket, true).catch(() => {})
   })
 
   return () => {
     if (stopped) return
     stopped = true
-    void ticket.then((typingTicket) => {
-      if (typingTicket) void api.sendTyping(externalUserId, typingTicket, false).catch(() => {})
+    ticket.then((typingTicket) => {
+      if (typingTicket) api.sendTyping(externalUserId, typingTicket, false).catch(() => {})
     })
   }
 }

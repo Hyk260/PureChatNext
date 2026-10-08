@@ -136,7 +136,7 @@ const IntroTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
             <Text as='h3' className={styles.sectionTitle}>
               助理简介
             </Text>
-            <ActionIcon icon={Copy} size='small' title='复制' onClick={() => void handleCopySystemRole()} />
+            <ActionIcon icon={Copy} size='small' title='复制' onClick={handleCopySystemRole} />
           </Flex>
           <Block className='p-4' variant='outlined' style={{ maxHeight: 360, overflow: 'auto' }}>
             <MessageMarkdown text={systemRole} />
@@ -203,7 +203,7 @@ const AgentDetailModal = memo<AgentDetailModalProps>(({ agent, onClose, onEdit, 
       onUse()
       return
     }
-    void addAgent(agent)
+    addAgent(agent)
   }
 
   return (

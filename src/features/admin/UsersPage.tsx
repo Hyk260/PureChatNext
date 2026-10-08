@@ -119,7 +119,7 @@ export default function AdminUsersPage() {
   useEffect(() => {
     const controller = new AbortController()
     queueMicrotask(() => {
-      if (!controller.signal.aborted) void loadUsers(controller.signal)
+      if (!controller.signal.aborted) loadUsers(controller.signal)
     })
     return () => controller.abort()
   }, [loadUsers])
@@ -206,6 +206,22 @@ export default function AdminUsersPage() {
       ellipsis: true,
       render: (value: string | null) => value || EMPTY_PLACEHOLDER,
       title: '邮箱',
+      width: 180,
+    },
+    {
+      dataIndex: 'emailVerified',
+      render: (value: boolean) =>
+        value ? (
+          <Tag color='green' size='small'>
+            已验证
+          </Tag>
+        ) : (
+          <Tag color='orange' size='small'>
+            未验证
+          </Tag>
+        ),
+      title: '邮箱验证',
+      width: 90,
     },
     {
       dataIndex: 'username',

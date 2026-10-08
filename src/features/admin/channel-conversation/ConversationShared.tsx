@@ -94,7 +94,7 @@ export function ConversationExportDialog<Message, Session, Mode extends string>(
       footer={
         <div className='flex flex-wrap items-center justify-end gap-2'>
           {feedback ? <span className='mr-auto text-xs text-muted-foreground'>{feedback}</span> : null}
-          <Button icon={<Copy className='size-3.5' />} onClick={() => void copy()}>
+          <Button icon={<Copy className='size-3.5' />} onClick={copy}>
             复制 JSON
           </Button>
           <Button icon={<Download className='size-3.5' />} type='primary' onClick={download}>
@@ -289,7 +289,7 @@ function PendingFileContentPreview({ file, onClose }: { file: File; onClose: () 
         if (!cancelled) setLoading(false)
       }
     }
-    void run()
+    run()
     return () => {
       cancelled = true
     }

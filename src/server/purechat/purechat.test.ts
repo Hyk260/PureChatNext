@@ -18,7 +18,7 @@ describe('purechat re-exports from model-bank', () => {
   })
 
   it('requires pricing on all models', () => {
-    expect(() => assertPureChatPricingComplete()).not.toThrow()
+    expect(assertPureChatPricingComplete).not.toThrow()
   })
 })
 

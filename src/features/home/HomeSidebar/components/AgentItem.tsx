@@ -137,7 +137,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
             content: '删除后不可恢复，该助理下的话题也会一并删除。',
             okButtonProps: { danger: true },
             okText: '删除',
-            onOk: () => handleConfirmDelete(),
+            onOk: handleConfirmDelete,
             title: '删除该助理？',
           })
         },

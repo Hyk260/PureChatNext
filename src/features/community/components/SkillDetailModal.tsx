@@ -115,7 +115,7 @@ const SkillReadme = ({ identifier }: { identifier: string }) => {
     if (readmeCache.has(identifier)) return
 
     let cancelled = false
-    void loadSkillReadme(identifier)
+    loadSkillReadme(identifier)
       .then((markdown) => {
         if (!cancelled) setReadme({ markdown })
       })
@@ -199,7 +199,7 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
     if (!identifier || sessionPending || !isLoggedIn) return
 
     const controller = new AbortController()
-    void fetchInstalledSkills(controller.signal)
+    fetchInstalledSkills(controller.signal)
       .then((items) => {
         rememberInstalledSkills(items)
         setFetchedInstall({ id: installedIdCache.get(identifier) ?? null, identifier })
@@ -312,7 +312,7 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
             sessionPending={sessionPending}
             signInHref={signInHref}
             uninstalling={uninstalling}
-            onInstall={() => void handleInstall()}
+            onInstall={handleInstall}
             onUninstall={handleUninstall}
           />
         </Flex>

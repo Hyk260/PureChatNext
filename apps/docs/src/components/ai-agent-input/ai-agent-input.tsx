@@ -717,7 +717,7 @@ function AIAgentInputInstance({
             ) : hasText && !pending ? (
               <button
                 className={styles.pill}
-                onClick={enhancePhase === 'enhanced' ? revertPrompt : () => void enhancePrompt()}
+                onClick={enhancePhase === 'enhanced' ? revertPrompt : enhancePrompt}
                 type='button'
               >
                 {enhancePhase === 'enhanced' ? '还原' : '增强提示词'}

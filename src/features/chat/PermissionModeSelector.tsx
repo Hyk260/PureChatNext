@@ -81,7 +81,7 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
       return
     }
     let cancelled = false
-    void api
+    api
       .getPermissionScope(topicId)
       .then((result) => {
         if (!cancelled) setScopePath(result.scope)
@@ -168,7 +168,7 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
               disabled={savingMode !== null || choosingScope}
               key={option.mode}
               type='button'
-              onClick={() => void handleSelect(option.mode)}
+              onClick={() => handleSelect(option.mode)}
             >
               <Icon icon={option.icon} size={19} />
               <span className='min-w-0 flex-1'>
@@ -185,7 +185,7 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
         disabled={choosingScope}
         title={scopePath ?? undefined}
         type='button'
-        onClick={() => void handleChooseScope()}
+        onClick={handleChooseScope}
       >
         <Icon icon={Folder} size={16} />
         <span className='min-w-0 flex-1 truncate'>
@@ -234,7 +234,7 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
         }
         width='min(92vw, 680px)'
         onCancel={() => setConfirmOpen(false)}
-        onOk={() => void handleConfirm()}
+        onOk={handleConfirm}
       >
         <div className='flex flex-col gap-4 py-2'>
           <p className='m-0 text-sm leading-6 text-muted-foreground'>

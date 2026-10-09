@@ -6,6 +6,10 @@ import { DESKTOP_IPC_EVENTS } from '../common/ipc/contracts'
 import { invoke } from './invoke'
 
 export const createDesktopApi = (): DesktopApi => ({
+  getDataInfo: () => invoke('data.getInfo'),
+  openDataDirectory: (directory) => invoke('data.openDirectory', directory),
+  setLogRetentionDays: (days) => invoke('data.setLogRetention', days),
+  clearHttpCache: () => invoke('data.clearHttpCache'),
   chooseDirectory: () => invoke('dialog.chooseDirectory'),
   chooseFile: () => invoke('dialog.chooseFile'),
   createProject: (input) => invoke('project.create', input),

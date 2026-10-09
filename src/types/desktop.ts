@@ -97,7 +97,21 @@ export type DesktopLocalToolResult = {
   success: boolean
 }
 
+export type DesktopLogRetentionDays = 0 | 7 | 14 | 30 | 90
+export type DesktopDataDirectory = 'data' | 'logs'
+
+export interface DesktopDataInfo {
+  dataPath: string
+  logsPath: string
+  logRetentionDays: DesktopLogRetentionDays
+  cacheBytes: number | null
+}
+
 export interface DesktopApi {
+  getDataInfo: () => Promise<DesktopDataInfo>
+  openDataDirectory: (directory: DesktopDataDirectory) => Promise<void>
+  setLogRetentionDays: (days: DesktopLogRetentionDays) => Promise<void>
+  clearHttpCache: () => Promise<void>
   chooseFile: () => Promise<DesktopFileSelection | null>
   chooseDirectory: () => Promise<string | null>
   createProject: (input: { name: string; rootPath: string }) => Promise<DesktopProject>

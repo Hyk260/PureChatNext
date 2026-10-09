@@ -22,6 +22,7 @@ describe('webRouter.config smoke', () => {
       "['appearance', 'AppearancePage']",
       "path: 'messenger/:platform?'",
       "path: 'system-tools'",
+      "path: 'data'",
       "path: 'provider'",
       "path: 'community'",
       "path: 'admin'",

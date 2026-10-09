@@ -143,10 +143,10 @@ const DesktopLoginPage = ({ onSuccess, standalone = false }: DesktopLoginPagePro
             <Flex className='size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground'>
               <Cloud aria-hidden size={26} strokeWidth={1.8} />
             </Flex>
-            <Text as='h1' className='!m-0 !text-2xl tracking-tight sm:!text-3xl' weight={600}>
+            <Text as='h1' className='m-0! text-2xl! tracking-tight sm:text-3xl!' weight={600}>
               {title}
             </Text>
-            <Text as='p' className='!m-0' fontSize={15} lineHeight={1.75} type='secondary'>
+            <Text as='p' className='m-0!' fontSize={15} lineHeight={1.75} type='secondary'>
               {description}
             </Text>
           </Flex>
@@ -224,7 +224,7 @@ const DesktopLoginPage = ({ onSuccess, standalone = false }: DesktopLoginPagePro
               <Text type='success'>授权成功，正在返回应用…</Text>
             </Flex>
           ) : (
-            <Text as='p' className='!m-0' fontSize={12} lineHeight={1.75} type='secondary'>
+            <Text as='p' className='m-0!' fontSize={12} lineHeight={1.75} type='secondary'>
               登录页面会在系统默认浏览器中打开，PureChat 不会读取浏览器中的账号密码。
             </Text>
           )}

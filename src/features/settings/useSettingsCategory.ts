@@ -40,6 +40,7 @@ export enum SettingsGroupKey {
 
 export enum SettingsTab {
   About = 'about',
+  Data = 'data',
   Advanced = 'advanced',
   Appearance = 'appearance',
   Connector = 'connector',
@@ -70,6 +71,7 @@ export enum SettingsTab {
 /** Page titles for SettingsHeader (covers nav + empty/hidden tabs). */
 export const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
   [SettingsTab.About]: '关于',
+  [SettingsTab.Data]: '数据',
   [SettingsTab.Advanced]: '高级设置',
   [SettingsTab.Appearance]: '外观',
   [SettingsTab.Connector]: '连接器',
@@ -299,6 +301,12 @@ export function useSettingsCategory(isAdmin = false): SettingsCategoryGroup[] {
           // },
           ...(isDesktop
             ? [
+                {
+                  href: tabHref(SettingsTab.Data),
+                  icon: Database,
+                  key: SettingsTab.Data,
+                  label: '数据',
+                },
                 {
                   href: tabHref(SettingsTab.SystemTools),
                   icon: Wrench,

@@ -31,9 +31,9 @@ const desktopAliases = {
 export default defineConfig({
   main: {
     build: {
-      // electron-builder intentionally excludes node_modules; bundle the updater
+      // electron-builder excludes node_modules; bundle the updater and config store
       // into the main entry so packaged apps can run without a dependency tree.
-      externalizeDeps: { exclude: ['electron-updater'] },
+      externalizeDeps: { exclude: ['electron-updater', 'electron-store'] },
       outDir: path.resolve(desktopDir, 'dist/main'),
       sourcemap: process.env.NODE_ENV !== 'production',
     },

@@ -30,6 +30,7 @@ const SETTINGS_SEGMENT_LABELS: Record<string, string> = {
   connector: '连接器',
   credits: '免费积分',
   creds: '凭证管理',
+  data: '数据',
   'email-service': '邮件服务',
   hotkey: '快捷键',
   language: '语言',

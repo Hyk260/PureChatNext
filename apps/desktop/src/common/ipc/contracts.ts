@@ -1,5 +1,8 @@
 import type {
   DesktopAppInfo,
+  DesktopDataInfo,
+  DesktopDataDirectory,
+  DesktopLogRetentionDays,
   DesktopAuthStatus,
   DesktopFileSelection,
   DesktopLocalToolRequest,
@@ -13,6 +16,10 @@ import type {
 } from '@/types/desktop'
 
 export interface DesktopIpcContractMap {
+  'data.getInfo': { args: []; result: DesktopDataInfo }
+  'data.openDirectory': { args: [directory: DesktopDataDirectory]; result: void }
+  'data.setLogRetention': { args: [days: DesktopLogRetentionDays]; result: void }
+  'data.clearHttpCache': { args: []; result: void }
   'app.getInfo': { args: []; result: DesktopAppInfo }
   'app.getSystemTools': { args: []; result: DesktopSystemTools }
   'config.getRemoteServer': { args: []; result: DesktopRemoteServer }
@@ -51,6 +58,12 @@ export type DesktopIpcArgs<C extends DesktopIpcChannel> = DesktopIpcContractMap[
 export type DesktopIpcResult<C extends DesktopIpcChannel> = DesktopIpcContractMap[C]['result']
 
 export const DESKTOP_IPC_CHANNELS = {
+  data: {
+    getInfo: 'data.getInfo',
+    openDirectory: 'data.openDirectory',
+    setLogRetention: 'data.setLogRetention',
+    clearHttpCache: 'data.clearHttpCache',
+  },
   app: { getInfo: 'app.getInfo', getSystemTools: 'app.getSystemTools' },
   auth: { cancel: 'auth.cancel', getStatus: 'auth.getStatus', logout: 'auth.logout', start: 'auth.start' },
   config: {

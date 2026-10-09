@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto'
-import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
-import { safeStorage } from 'electron'
+import type { DesktopLogRetentionDays } from '@/types/desktop'
 
-import { ensureDirectory } from '../utils/file'
+import { safeStorage } from 'electron'
+import Store from 'electron-store'
 
 export interface DesktopProject {
   createdAt: number
@@ -14,6 +14,7 @@ export interface DesktopProject {
 }
 
 export interface DesktopConfig {
+  logRetentionDays?: DesktopLogRetentionDays
   pendingAuth?: DesktopPendingAuth | null
   permissionScopes: Record<string, string[]>
   projects: DesktopProject[]
@@ -38,6 +39,7 @@ export interface DesktopWindowState {
 }
 
 export const DEFAULT_CONFIG: DesktopConfig = {
+  logRetentionDays: 30,
   pendingAuth: null,
   permissionScopes: {},
   projects: [],
@@ -54,7 +56,8 @@ const normalizePendingAuth = (value: unknown): DesktopPendingAuth | null => {
     typeof pending.redirectUri !== 'string' ||
     typeof pending.serverUrl !== 'string' ||
     typeof pending.state !== 'string'
-  ) return null
+  )
+    return null
   if (pending.expiresAt <= Date.now()) return null
   return {
     expiresAt: pending.expiresAt,
@@ -111,21 +114,31 @@ export const normalizeRemoteServerUrl = (value: string): string => {
   return url.toString().replace(/\/$/, '')
 }
 
+export const isLogRetentionDays = (value: unknown): value is DesktopLogRetentionDays =>
+  value === 0 || value === 7 || value === 14 || value === 30 || value === 90
+
+const normalizeLogRetentionDays = (value: unknown): DesktopLogRetentionDays => (isLogRetentionDays(value) ? value : 30)
+
 export class DesktopConfigService {
   readonly configPath: string
 
   constructor(userDataPath: string) {
-    this.configPath = path.join(userDataPath, 'config.json')
-    this.userDataPath = userDataPath
+    this.store = new Store<DesktopConfig>({
+      cwd: userDataPath,
+      name: 'config',
+      defaults: DEFAULT_CONFIG,
+      accessPropertiesByDotNotation: false,
+    })
+    this.configPath = this.store.path
   }
 
-  private readonly userDataPath: string
+  private readonly store: Store<DesktopConfig>
 
   async read(): Promise<DesktopConfig> {
     try {
-      const raw = await fs.readFile(this.configPath, 'utf8')
-      const parsed = JSON.parse(raw) as Partial<DesktopConfig>
+      const parsed = this.store.store
       return {
+        logRetentionDays: normalizeLogRetentionDays(parsed.logRetentionDays),
         pendingAuth: normalizePendingAuth(parsed.pendingAuth),
         permissionScopes:
           parsed.permissionScopes && typeof parsed.permissionScopes === 'object' ? parsed.permissionScopes : {},
@@ -139,32 +152,48 @@ export class DesktopConfigService {
     }
   }
 
-  async write(config: DesktopConfig) {
-    await ensureDirectory(this.userDataPath)
-    const tempPath = path.join(this.userDataPath, `config.${randomUUID()}.tmp`)
-    await fs.writeFile(tempPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8')
-    try {
-      await fs.rename(tempPath, this.configPath)
-    } catch (error) {
-      await fs.unlink(tempPath).catch(() => undefined)
-      throw error
-    }
+  private mutationQueue: Promise<unknown> = Promise.resolve()
+
+  private enqueue<T>(operation: () => Promise<T>): Promise<T> {
+    const pending = this.mutationQueue.then(operation)
+    this.mutationQueue = pending.catch(() => undefined)
+    return pending
+  }
+
+  private update<T>(operation: (config: DesktopConfig) => Promise<T>): Promise<T> {
+    return this.enqueue(async () => operation(await this.read()))
+  }
+
+  write(config: DesktopConfig) {
+    return this.enqueue(() => this.persist(config))
+  }
+
+  async setLogRetentionDays(days: DesktopLogRetentionDays) {
+    if (!isLogRetentionDays(days)) throw new Error('日志保留期无效')
+    await this.update((config) => this.persist({ ...config, logRetentionDays: days }))
+  }
+
+  private async persist(config: DesktopConfig) {
+    this.store.store = config
   }
 
   async setRemoteServer(value: string) {
-    const url = normalizeRemoteServerUrl(value)
-    const config = await this.read()
-    const changed = config.remoteServerUrl !== url
-    await this.write({ ...config, remoteServerUrl: url })
-    if (changed) {
-      await this.deleteSecrets(['auth.accessToken', 'auth.refreshToken', 'auth.expiresAt'])
-    }
-    return { url }
+    return this.update(async (config) => {
+      const url = normalizeRemoteServerUrl(value)
+      const changed = config.remoteServerUrl !== url
+      config.remoteServerUrl = url
+      if (changed) {
+        for (const key of ['auth.accessToken', 'auth.refreshToken', 'auth.expiresAt']) delete config.secrets[key]
+      }
+      await this.persist(config)
+      return { url }
+    })
   }
 
   async setPendingAuth(pendingAuth: DesktopPendingAuth | null) {
-    const config = await this.read()
-    await this.write({ ...config, pendingAuth })
+    return this.update(async (config) => {
+      await this.persist({ ...config, pendingAuth })
+    })
   }
 
   async clearPendingAuth() {
@@ -173,10 +202,11 @@ export class DesktopConfigService {
   }
 
   async storeSecret(key: string, value: string) {
-    if (!safeStorage.isEncryptionAvailable()) throw new Error('当前系统没有可用的安全存储，未保存敏感信息')
-    const config = await this.read()
-    config.secrets[key] = `safe:${safeStorage.encryptString(value).toString('base64')}`
-    await this.write(config)
+    return this.update(async (config) => {
+      if (!safeStorage.isEncryptionAvailable()) throw new Error('当前系统没有可用的安全存储，未保存敏感信息')
+      config.secrets[key] = `safe:${safeStorage.encryptString(value).toString('base64')}`
+      await this.persist(config)
+    })
   }
 
   async readSecret(key: string): Promise<string | null> {
@@ -190,24 +220,27 @@ export class DesktopConfigService {
   }
 
   async deleteSecret(key: string) {
-    const config = await this.read()
-    delete config.secrets[key]
-    await this.write(config)
+    return this.update(async (config) => {
+      delete config.secrets[key]
+      await this.persist(config)
+    })
   }
 
   async deleteSecrets(keys: readonly string[]) {
-    const config = await this.read()
-    for (const key of keys) delete config.secrets[key]
-    await this.write(config)
+    return this.update(async (config) => {
+      for (const key of keys) delete config.secrets[key]
+      await this.persist(config)
+    })
   }
 
   async setPermissionScope(topicId: string, scope: string) {
-    const config = await this.read()
-    await this.write({
-      ...config,
-      permissionScopes: { ...config.permissionScopes, [topicId]: [scope] },
+    return this.update(async (config) => {
+      await this.persist({
+        ...config,
+        permissionScopes: { ...config.permissionScopes, [topicId]: [scope] },
+      })
+      return { scope }
     })
-    return { scope }
   }
 
   async listProjects() {
@@ -215,36 +248,39 @@ export class DesktopConfigService {
   }
 
   async createProject(input: { name: string; rootPath: string }) {
-    const name = input.name.trim()
-    const rootPath = path.resolve(input.rootPath.trim())
-    if (!name) throw new Error('项目名称不能为空')
-    if (name.length > 80) throw new Error('项目名称过长')
-    if (!path.isAbsolute(rootPath)) throw new Error('项目源文件夹路径无效')
+    return this.update(async (config) => {
+      const name = input.name.trim()
+      const rootPath = path.resolve(input.rootPath.trim())
+      if (!name) throw new Error('项目名称不能为空')
+      if (name.length > 80) throw new Error('项目名称过长')
+      if (!path.isAbsolute(rootPath)) throw new Error('项目源文件夹路径无效')
 
-    const config = await this.read()
-    if (config.projects.some((project) => project.rootPath === rootPath)) {
-      throw new Error('该源文件夹已添加为项目')
-    }
+      if (config.projects.some((project) => project.rootPath === rootPath)) {
+        throw new Error('该源文件夹已添加为项目')
+      }
 
-    const project: DesktopProject = {
-      createdAt: Date.now(),
-      id: randomUUID(),
-      name,
-      rootPath,
-    }
-    await this.write({ ...config, projects: [project, ...config.projects] })
-    return project
+      const project: DesktopProject = {
+        createdAt: Date.now(),
+        id: randomUUID(),
+        name,
+        rootPath,
+      }
+      await this.persist({ ...config, projects: [project, ...config.projects] })
+      return project
+    })
   }
 
   async deleteProject(id: string) {
-    const config = await this.read()
-    const projects = config.projects.filter((project) => project.id !== id)
-    if (projects.length === config.projects.length) throw new Error('项目不存在')
-    await this.write({ ...config, projects })
+    return this.update(async (config) => {
+      const projects = config.projects.filter((project) => project.id !== id)
+      if (projects.length === config.projects.length) throw new Error('项目不存在')
+      await this.persist({ ...config, projects })
+    })
   }
 
   async setWindowState(windowState: DesktopWindowState) {
-    const config = await this.read()
-    await this.write({ ...config, windowState: normalizeWindowState(windowState) })
+    return this.update(async (config) => {
+      await this.persist({ ...config, windowState: normalizeWindowState(windowState) })
+    })
   }
 }

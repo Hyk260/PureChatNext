@@ -25,6 +25,7 @@ describe('useDesktopTabsStore', () => {
     expect(titleFromLocation('/', '')).toBe('PureChat')
     expect(titleFromLocation('/chat', '')).toBe('聊天')
     expect(titleFromLocation('/settings/about', '')).toBe('关于')
+    expect(titleFromLocation('/settings/data', '')).toBe('数据')
     expect(titleFromLocation('/settings/profile', '')).toBe('个人资料')
     expect(titleFromLocation('/admin/users', '')).toBe('用户管理')
     expect(titleFromLocation('/verify-email', '')).toBe('验证邮箱')

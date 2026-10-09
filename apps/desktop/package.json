@@ -23,12 +23,12 @@
     "electron": "41.3.0",
     "electron-builder": "26.14.0",
     "electron-vite": "6.0.0-beta.1",
-    "electron-store": "^8.2.0",
     "typescript": "^5.9.3",
     "vitest": "3.2.4"
   },
   "dependencies": {
     "electron-log": "^5.4.4",
+    "electron-store": "^8.2.0",
     "electron-updater": "^6.8.9"
   }
 }

@@ -21,11 +21,13 @@ describe('useSettingsCategory system tools', () => {
     const { result: desktop } = renderHook(useSettingsCategory)
     const systemGroup = desktop.current.find((group) => group.title === '系统')
     expect(systemGroup?.items.some((item) => item.key === SettingsTab.SystemTools)).toBe(true)
+    expect(systemGroup?.items.find((item) => item.key === SettingsTab.Data)?.href).toBe('/settings/data')
 
     mocks.getDesktopApi.mockReturnValue(undefined)
     const { result: web } = renderHook(useSettingsCategory)
     const webSystemGroup = web.current.find((group) => group.title === '系统')
     expect(webSystemGroup?.items.some((item) => item.key === SettingsTab.SystemTools)).toBe(false)
+    expect(webSystemGroup?.items.some((item) => item.key === SettingsTab.Data)).toBe(false)
   })
 
   it('includes the manage group only for admins', () => {

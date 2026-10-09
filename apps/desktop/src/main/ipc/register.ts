@@ -1,5 +1,8 @@
 import { app } from 'electron'
 
+import { DataController } from '../controllers/DataController'
+import { DesktopDataService } from '../services/DesktopDataService'
+
 import {
   ConfigController,
   DialogController,
@@ -32,10 +35,16 @@ export const registerDesktopIpc = async (options: {
   const commands = new CommandService(permissions)
   const tools = new LocalToolService(config, permissions, commands)
   const registry = new IpcRegistry(options.getTrustedContents, options.rendererUrl)
-  const auth = options.auth ?? new DesktopAuthService(config, (status) => {
-    const contents = options.getTrustedContents()
-    if (contents && !contents.isDestroyed()) contents.send('auth.status', status)
-  })
+  const auth =
+    options.auth ??
+    new DesktopAuthService(config, (status) => {
+      const contents = options.getTrustedContents()
+      if (contents && !contents.isDestroyed()) contents.send('auth.status', status)
+    })
+
+  const data = new DesktopDataService(config, options.getTrustedContents)
+  await data.start()
+  new DataController(data).register(registry)
 
   new ConfigController(config).register(registry)
   new AuthController(auth).register(registry)
@@ -49,6 +58,7 @@ export const registerDesktopIpc = async (options: {
 
   return {
     dispose: () => {
+      data.dispose()
       tools.dispose()
       permissions.dispose()
       registry.unregisterAll()

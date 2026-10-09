@@ -3,6 +3,7 @@ import { sessionStg } from '@pure/utils/storage'
 import { useEffect, useRef } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
+import { isDesktopRenderer } from '@/utils/desktopAuth'
 import {
   SPA_UPDATE_DISMISS_KEY,
   SPA_UPDATE_NOTIFICATION_KEY,
@@ -35,7 +36,7 @@ const SpaUpdateNotifier = ({
   const isShowingRef = useRef(false)
 
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled || isDesktopRenderer()) return
 
     const rememberDismissed = (remote: string) => {
       isShowingRef.current = false

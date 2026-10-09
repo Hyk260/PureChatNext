@@ -349,6 +349,9 @@ importers:
       electron-log:
         specifier: ^5.4.4
         version: 5.4.4
+      electron-store:
+        specifier: ^8.2.0
+        version: 8.2.0
       electron-updater:
         specifier: ^6.8.9
         version: 6.8.9
@@ -362,9 +365,6 @@ importers:
       electron-builder:
         specifier: 26.14.0
         version: 26.14.0(electron-builder-squirrel-windows@26.14.0)
-      electron-store:
-        specifier: ^8.2.0
-        version: 8.2.0
       electron-vite:
         specifier: 6.0.0-beta.1
         version: 6.0.0-beta.1(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))

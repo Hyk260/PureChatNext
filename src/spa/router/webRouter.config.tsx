@@ -176,6 +176,10 @@ export const webRoutes: RouteObject[] = [
         path: 'system-tools',
       },
       {
+        element: dynamicElement(() => import('@/routes/settings/data/page'), 'Settings > Data'),
+        path: 'data',
+      },
+      {
         element: dynamicElement(() => import('@/routes/settings/users/page'), 'Settings > Users'),
         path: 'users',
       },

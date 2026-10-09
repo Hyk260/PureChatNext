@@ -71,7 +71,7 @@ function EmptyResult({ description, title }: { description: string; title: strin
 function VerifySummary({ result }: { result: VerifyResult }) {
   return (
     <article className='rounded-lg border border-border p-4'>
-      <div className='flex items-start gap-3'>
+      <Flex className='items-start gap-3'>
         <ShieldCheck className={`mt-0.5 size-5 shrink-0 ${result.valid ? 'text-green' : 'text-red'}`} />
         <div>
           <div className='text-base font-semibold text-foreground'>
@@ -84,7 +84,7 @@ function VerifySummary({ result }: { result: VerifyResult }) {
           </p>
           <span className={`mt-3 inline-flex ${result.valid ? TAG_OK : TAG_ERR}`}>valid: {String(result.valid)}</span>
         </div>
-      </div>
+      </Flex>
     </article>
   )
 }
@@ -92,7 +92,7 @@ function VerifySummary({ result }: { result: VerifyResult }) {
 function SendMailSummary({ result }: { result: SendMailResult }) {
   return (
     <article className='rounded-lg border border-border p-4'>
-      <div className='flex items-start gap-3'>
+      <Flex className='items-start gap-3'>
         <Mail className='mt-0.5 size-5 shrink-0 text-primary' />
         <div className='min-w-0 flex-1'>
           <div className='text-base font-semibold text-foreground'>邮件发送成功</div>
@@ -122,20 +122,12 @@ function SendMailSummary({ result }: { result: SendMailResult }) {
             ) : null}
           </dl>
         </div>
-      </div>
+      </Flex>
     </article>
   )
 }
 
-function ResultBody({
-  payload,
-  rawJson,
-  view,
-}: {
-  payload: ApiSuccess | null
-  rawJson: string
-  view: ResultView
-}) {
+function ResultBody({ payload, rawJson, view }: { payload: ApiSuccess | null; rawJson: string; view: ResultView }) {
   if (view === 'json') {
     if (!rawJson) {
       return <EmptyResult description='发送请求后会在这里高亮展示原始响应。' title='还没有响应 JSON' />
@@ -212,7 +204,7 @@ export function EmailServiceResults({
     <section className='flex min-h-[32rem] min-w-0 flex-col overflow-hidden rounded-card border border-border bg-card lg:h-full lg:min-h-0'>
       <Flex className='gap-2 shrink-0 flex-col space-y-3 border-b border-border p-4'>
         {requestStatusAlert(error, payload?.action)}
-        <div className='flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between'>
+        <Flex className='flex-col gap-3 lg:flex-row lg:items-start lg:justify-between'>
           <dl className='grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4'>
             {summary.map((item) => (
               <div key={item.label} className='rounded-lg bg-secondary px-3 py-2'>
@@ -223,7 +215,7 @@ export function EmailServiceResults({
               </div>
             ))}
           </dl>
-          <div className='flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center'>
+          <Flex className='shrink-0 flex-col gap-2 sm:flex-row sm:items-center'>
             {showTemplatePreview ? (
               <Segmented
                 options={RIGHT_PANEL_OPTIONS}
@@ -240,8 +232,8 @@ export function EmailServiceResults({
                 onChange={(value) => onViewChange(value as ResultView)}
               />
             )}
-          </div>
-        </div>
+          </Flex>
+        </Flex>
       </Flex>
 
       <Scrollbar className='min-h-0 flex-1'>

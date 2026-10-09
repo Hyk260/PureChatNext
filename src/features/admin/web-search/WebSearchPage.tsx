@@ -1,5 +1,6 @@
 'use client'
 
+import { Flex } from '@pure/ui'
 import { useEffect, useState } from 'react'
 import { Segmented } from 'antd'
 import { Compass, Globe2, Search } from 'lucide-react'
@@ -20,7 +21,16 @@ import {
   toggleImplList,
   WEB_SEARCH_API_PATH,
 } from './webSearchModel'
-import type { ApiFailure, ApiSuccess, CopyState, ResultView, RunState, SearXNGConfig, WebSearchConfigResponse, WebSearchFormValues } from './webSearchModel'
+import type {
+  ApiFailure,
+  ApiSuccess,
+  CopyState,
+  ResultView,
+  RunState,
+  SearXNGConfig,
+  WebSearchConfigResponse,
+  WebSearchFormValues,
+} from './webSearchModel'
 
 const ACTION_ICONS = {
   crawlPages: Compass,
@@ -76,8 +86,7 @@ export default function WebSearchPage() {
       categories: form.categories ?? current.categories,
       engines: form.engines ?? current.engines,
       impls: form.impls ?? current.impls,
-      provider:
-        typeof form.provider === 'string' ? resolveProviderValue(form.provider, configured) : current.provider,
+      provider: typeof form.provider === 'string' ? resolveProviderValue(form.provider, configured) : current.provider,
       query: form.query ?? current.query,
       timeRange: form.timeRange ?? current.timeRange,
       urls: form.urls ?? current.urls,
@@ -239,7 +248,7 @@ export default function WebSearchPage() {
 
   return (
     <main className='flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground'>
-      <div className='mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6 lg:overflow-hidden lg:px-8'>
+      <Flex className='mx-auto h-full min-h-0 w-full max-w-7xl flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6 lg:overflow-hidden lg:px-8'>
         <header className='flex shrink-0 flex-col justify-between gap-3 border-b border-border pb-4 lg:flex-row lg:items-end'>
           <div>
             <h1 className='text-2xl font-semibold text-foreground'>联网搜索功能测试台</h1>
@@ -283,7 +292,7 @@ export default function WebSearchPage() {
             onViewChange={setView}
           />
         </div>
-      </div>
+      </Flex>
     </main>
   )
 }

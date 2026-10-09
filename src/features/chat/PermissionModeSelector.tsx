@@ -1,6 +1,6 @@
 'use client'
 
-import { Icon, Modal, Popover } from '@pure/ui'
+import { Flex, Icon, Modal, Popover } from '@pure/ui'
 import { cssVar } from 'antd-style'
 import {
   Check,
@@ -153,7 +153,7 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
   const popoverContent = (
     <div className='w-[min(360px,calc(100vw-32px))] p-1'>
       <div className='px-3 pb-2 pt-1 text-sm font-medium text-muted-foreground'>PureChat 应如何请求批准？</div>
-      <div className='flex flex-col gap-1'>
+      <Flex className='flex-col gap-1'>
         {OPTIONS.map((option) => {
           const active = option.mode === value
           const danger = option.mode === 'full'
@@ -179,7 +179,7 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
             </button>
           )
         })}
-      </div>
+      </Flex>
       <button
         className='mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs text-muted-foreground hover:bg-secondary'
         disabled={choosingScope}
@@ -188,9 +188,7 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
         onClick={handleChooseScope}
       >
         <Icon icon={Folder} size={16} />
-        <span className='min-w-0 flex-1 truncate'>
-          {scopeLabel ? `工作目录：${scopeLabel}` : '选择工作目录'}
-        </span>
+        <span className='min-w-0 flex-1 truncate'>{scopeLabel ? `工作目录：${scopeLabel}` : '选择工作目录'}</span>
       </button>
     </div>
   )
@@ -236,25 +234,25 @@ const PermissionModeSelector = memo<PermissionModeSelectorProps>(({ disabled, on
         onCancel={() => setConfirmOpen(false)}
         onOk={handleConfirm}
       >
-        <div className='flex flex-col gap-4 py-2'>
+        <Flex className='flex-col gap-4 py-2'>
           <p className='m-0 text-sm leading-6 text-muted-foreground'>
             PureChat 将能够在未经您逐次许可的情况下使用受支持的工具。这包括但不限于：
           </p>
           <div className='divide-y divide-border rounded-2xl bg-secondary px-4'>
             {RISKS.map((risk) => (
-              <div className='flex items-center gap-4 py-3' key={risk.label}>
+              <Flex className='items-center gap-4 py-3' key={risk.label}>
                 <Icon icon={risk.icon} size={22} />
                 <div className='min-w-0'>
                   <div className='text-sm font-medium text-foreground'>{risk.label}</div>
                   <div className='text-xs leading-5 text-muted-foreground'>{risk.description}</div>
                 </div>
-              </div>
+              </Flex>
             ))}
           </div>
           <p className='m-0 text-sm leading-6 text-muted-foreground'>
             这可能带来敏感数据丢失或泄露、提示注入等风险。您可以随时切换为更安全的权限模式。
           </p>
-        </div>
+        </Flex>
       </Modal>
     </>
   )

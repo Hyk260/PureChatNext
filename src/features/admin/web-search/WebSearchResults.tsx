@@ -21,8 +21,7 @@ import type { ApiSuccess, CrawlResponse, ResultView, RunState, SearchResponse } 
 const BODY_CLASS = 'mt-3 text-sm leading-6 break-words text-muted-foreground'
 const TAG_CLASS = 'rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground'
 const TAG_ERROR_CLASS = 'rounded-md bg-red-tint px-2 py-1 text-xs font-medium text-red'
-const ENGINE_CLASS =
-  'rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-muted-foreground'
+const ENGINE_CLASS = 'rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-muted-foreground'
 
 const segmentedIconLabel = (Icon: typeof Search, text: string) => (
   <span className='inline-flex items-center gap-1.5'>
@@ -55,15 +54,7 @@ function requestStatusAlert(error: string | null, completedAction?: ActionMode) 
   return <Alert showIcon description='选择方法并填写参数后发送请求，响应会显示在这里。' title='等待请求' type='info' />
 }
 
-function EmptyResult({
-  description,
-  icon: Icon,
-  title,
-}: {
-  description: string
-  icon: typeof Search
-  title: string
-}) {
+function EmptyResult({ description, icon: Icon, title }: { description: string; icon: typeof Search; title: string }) {
   return (
     <div className='grid min-h-40 place-items-center px-6 py-10 text-center'>
       <div>
@@ -94,7 +85,7 @@ function ResultArticle({
 
   return (
     <article className='py-4'>
-      <div className='flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between'>
+      <Flex className='min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between'>
         <div className='min-w-0 flex-1'>
           <a
             className='block text-base font-semibold break-words text-foreground hover:text-primary'
@@ -108,17 +99,17 @@ function ResultArticle({
             {url}
           </div>
         </div>
-        <div className='flex max-w-full shrink-0 flex-wrap gap-1.5 sm:max-w-[40%] sm:justify-end'>{badges}</div>
-      </div>
+        <Flex className='max-w-full shrink-0 flex-wrap gap-1.5 sm:max-w-[40%] sm:justify-end'>{badges}</Flex>
+      </Flex>
       <p className={bodyClass}>{body}</p>
       {engines && engines.length > 0 ? (
-        <div className='mt-3 flex flex-wrap gap-1.5'>
+        <Flex className='mt-3 flex-wrap gap-1.5'>
           {engines.map((engine) => (
             <span key={engine} className={ENGINE_CLASS}>
               {engine}
             </span>
           ))}
-        </div>
+        </Flex>
       ) : null}
     </article>
   )
@@ -129,7 +120,9 @@ function SearchList({ result }: { result: SearchResponse }) {
 
   return (
     <div>
-      {result.errorDetail ? <p className='mb-3 rounded-lg bg-red-tint px-3 py-2 text-sm text-red'>{result.errorDetail}</p> : null}
+      {result.errorDetail ? (
+        <p className='mb-3 rounded-lg bg-red-tint px-3 py-2 text-sm text-red'>{result.errorDetail}</p>
+      ) : null}
       {result.provider ? (
         <p className='mb-3 rounded-lg bg-secondary px-3 py-2 text-sm text-foreground'>
           结果来自服务商 <span className='font-mono font-semibold'>{result.provider}</span>
@@ -191,15 +184,7 @@ function CrawlList({ result }: { result: CrawlResponse }) {
   )
 }
 
-function ResultBody({
-  payload,
-  rawJson,
-  view,
-}: {
-  payload: ApiSuccess | null
-  rawJson: string
-  view: ResultView
-}) {
+function ResultBody({ payload, rawJson, view }: { payload: ApiSuccess | null; rawJson: string; view: ResultView }) {
   if (view === 'json') {
     if (!rawJson) {
       return <EmptyResult description='发送请求后会在这里高亮展示原始响应。' icon={Code2} title='还没有响应 JSON' />
@@ -258,7 +243,7 @@ export function WebSearchResults({
     <section className='flex min-h-[32rem] min-w-0 flex-col overflow-hidden rounded-card border border-border bg-card lg:h-full lg:min-h-0'>
       <Flex className='gap-2 shrink-0 flex-col space-y-3 border-b border-border p-4'>
         {requestStatusAlert(error, payload?.action)}
-        <div className='flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between'>
+        <Flex className='flex-col gap-3 lg:flex-row lg:items-start lg:justify-between'>
           <dl className='grid flex-1 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5'>
             {summary.map((item) => (
               <div key={item.label} className='rounded-lg bg-secondary px-3 py-2'>
@@ -274,7 +259,7 @@ export function WebSearchResults({
             value={view}
             onChange={(value) => onViewChange(value as ResultView)}
           />
-        </div>
+        </Flex>
       </Flex>
       <Scrollbar className='min-h-0 flex-1'>
         <div className='min-w-0 p-4'>

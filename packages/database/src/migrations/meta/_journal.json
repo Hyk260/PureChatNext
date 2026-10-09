@@ -225,6 +225,13 @@
       "when": 1791518458500,
       "tag": "0031_round_skrulls",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1791526873136,
+      "tag": "0032_late_barracuda",
+      "breakpoints": true
     }
   ]
 }

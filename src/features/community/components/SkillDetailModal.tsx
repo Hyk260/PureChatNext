@@ -282,7 +282,7 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
       onCancel={onClose}
     >
       <Flex className='flex-col gap-4'>
-        <Flex className='justify-between items-center gap-4'>
+        <Flex className='flex-between gap-4'>
           <Flex className='items-start gap-3 overflow-hidden'>
             <Avatar
               avatar={githubAssetAvatar(skill.icon, skill.name)}

@@ -1,5 +1,6 @@
 'use client'
 
+import { Flex } from '@pure/ui'
 import { AlertCircle, Loader2 } from 'lucide-react'
 
 import type { RenderedEmailTemplate } from '@/libs/better-auth/email-templates/preview'
@@ -26,13 +27,13 @@ export function EmailTemplatePreviewBlock({ error, isLoading, label, template }:
 
   if (error) {
     return (
-      <div className='flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800'>
+      <Flex className='items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800'>
         <AlertCircle className='mt-0.5 size-5 shrink-0' />
         <div>
           <div className='text-sm font-semibold'>模板渲染失败</div>
           <div className='mt-1 text-sm leading-5'>{error}</div>
         </div>
-      </div>
+      </Flex>
     )
   }
 
@@ -48,7 +49,7 @@ export function EmailTemplatePreviewBlock({ error, isLoading, label, template }:
   }
 
   return (
-    <div className='flex flex-col gap-4'>
+    <Flex className='flex-col gap-4'>
       {label ? (
         <div className='text-sm font-medium text-slate-700'>
           当前模板：<span className='text-slate-950'>{label}</span>
@@ -76,6 +77,6 @@ export function EmailTemplatePreviewBlock({ error, isLoading, label, template }:
           className='h-[600px] w-full border-0'
         />
       </div>
-    </div>
+    </Flex>
   )
 }

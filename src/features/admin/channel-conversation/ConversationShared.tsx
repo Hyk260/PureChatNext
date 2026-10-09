@@ -5,7 +5,7 @@ import { Alert, Segmented } from 'antd'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { formatSize } from '@pure/utils/client'
-import { Button, Image, MaterialFileTypeIcon, Modal, Tag } from '@pure/ui'
+import { Flex, Button, Image, MaterialFileTypeIcon, Modal, Tag } from '@pure/ui'
 
 import SendButton from '@/features/chat/SendArea/SendButton'
 import { READ_FILE_API_PATH } from '@/features/admin/read-file/readFileModel'
@@ -92,7 +92,7 @@ export function ConversationExportDialog<Message, Session, Mode extends string>(
     <Modal
       aria-labelledby='conversation-export-title'
       footer={
-        <div className='flex flex-wrap items-center justify-end gap-2'>
+        <Flex className='flex-wrap items-center justify-end gap-2'>
           {feedback ? <span className='mr-auto text-xs text-muted-foreground'>{feedback}</span> : null}
           <Button icon={<Copy className='size-3.5' />} onClick={copy}>
             复制 JSON
@@ -100,12 +100,12 @@ export function ConversationExportDialog<Message, Session, Mode extends string>(
           <Button icon={<Download className='size-3.5' />} type='primary' onClick={download}>
             下载文件
           </Button>
-        </div>
+        </Flex>
       }
       open
       styles={{ body: { maxHeight: '70vh', padding: 0 } }}
       title={
-        <div className='flex min-w-0 flex-wrap items-center justify-between gap-3 pr-6'>
+        <Flex className='flex-between-wrap min-w-0 gap-3 pr-6'>
           <div className='min-w-0'>
             <div id='conversation-export-title' className='truncate text-base font-semibold'>
               {title}
@@ -125,7 +125,7 @@ export function ConversationExportDialog<Message, Session, Mode extends string>(
               setFeedback(null)
             }}
           />
-        </div>
+        </Flex>
       }
       width='min(90vw, 768px)'
       onCancel={onClose}
@@ -139,10 +139,10 @@ export function ConversationExportDialog<Message, Session, Mode extends string>(
 
 export function LoadingConversation({ label }: { label: string }) {
   return (
-    <div className='flex h-full min-h-0 items-center justify-center bg-background text-muted-foreground'>
+    <Flex className='flex-center h-full min-h-0 bg-background text-muted-foreground'>
       <Loader2 className='mr-2 size-4 animate-spin' />
       {label}
-    </div>
+    </Flex>
   )
 }
 
@@ -175,19 +175,15 @@ export function ChannelErrorBanner({ error }: { error: string | null }) {
 
 export function MessagesLoadingState() {
   return (
-    <div className='flex min-h-0 flex-1 items-center justify-center text-muted-foreground'>
+    <Flex className='flex-center min-h-0 flex-1 text-muted-foreground'>
       <Loader2 className='mr-2 size-4 animate-spin' />
       加载消息
-    </div>
+    </Flex>
   )
 }
 
 export function MessagesEmptyState({ children }: { children: ReactNode }) {
-  return (
-    <div className='flex min-h-0 flex-1 flex-col items-center justify-center gap-2 text-muted-foreground'>
-      {children}
-    </div>
-  )
+  return <Flex className='flex-col-center min-h-0 flex-1 gap-2 text-muted-foreground'>{children}</Flex>
 }
 
 export function ExportSessionLink({ onExport }: { onExport: () => void }) {
@@ -298,10 +294,10 @@ function PendingFileContentPreview({ file, onClose }: { file: File; onClose: () 
   return (
     <Modal destroyOnHidden footer={null} open title={`预览 · ${file.name}`} width={640} onCancel={onClose}>
       {loading ? (
-        <div className='flex items-center gap-2 py-8 text-sm text-muted-foreground'>
+        <Flex className='items-center gap-2 py-8 text-sm text-muted-foreground'>
           <Loader2 className='size-4 animate-spin' />
           正在解析…
-        </div>
+        </Flex>
       ) : error ? (
         <div className='py-4 text-sm text-destructive'>{error}</div>
       ) : (
@@ -329,7 +325,7 @@ export function ChannelPendingAttachmentChip({
 
   return (
     <>
-      <div className='relative flex items-center gap-2 rounded-xl bg-muted px-2 py-1.5 ring-1 ring-border'>
+      <Flex className='relative items-center gap-2 rounded-xl bg-muted px-2 py-1.5 ring-1 ring-border'>
         {previewUrl ? (
           <Image
             alt={file.name}
@@ -366,7 +362,7 @@ export function ChannelPendingAttachmentChip({
           type='text'
           onClick={onRemove}
         />
-      </div>
+      </Flex>
       {filePreviewOpen ? <PendingFileContentPreview file={file} onClose={() => setFilePreviewOpen(false)} /> : null}
     </>
   )

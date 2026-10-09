@@ -1,5 +1,6 @@
 'use client'
 
+import { Flex } from '@pure/ui'
 import { Bot, ExternalLink, User } from 'lucide-react'
 import type { ReactNode, RefObject } from 'react'
 import { formatDateTime, formatSize } from '@pure/utils/client'
@@ -134,7 +135,7 @@ function MessageList({
         const showText = Boolean(message.text.trim()) && message.text !== '[附件]'
         return (
           <div key={message.id} className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
-            <div className='flex items-center gap-1.5 px-1'>
+            <Flex className='items-center gap-1.5 px-1'>
               {isUser ? <User className='size-3 text-muted-foreground' /> : <Bot className='size-3 text-primary' />}
               <span className='text-xs font-medium text-muted-foreground'>
                 {isUser ? qqMessageUserLabel(message, sessionMeta) : 'Agent'}
@@ -144,7 +145,7 @@ function MessageList({
                 <span className='rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>系统</span>
               ) : null}
               <span className='text-[11px] text-muted-foreground'>{formatDateTime(message.createdAt)}</span>
-            </div>
+            </Flex>
             {showText || (isUser && hasMedia) ? (
               <div className={`group flex max-w-[92%] items-end gap-1.5 ${isUser ? 'flex-row-reverse' : ''}`}>
                 <div
@@ -163,9 +164,9 @@ function MessageList({
               </div>
             ) : null}
             {!isUser && message.attachments?.length ? (
-              <div className='mt-1 flex max-w-[92%] flex-col items-start gap-2'>
+              <Flex className='mt-1 max-w-[92%] flex-col items-start gap-2'>
                 {message.attachments.map((attachment) => renderAttachment(attachment))}
-              </div>
+              </Flex>
             ) : null}
             {!isUser && message.source === 'model' ? (
               <span className='px-1 font-mono text-[11px] text-muted-foreground'>

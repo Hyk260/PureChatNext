@@ -151,7 +151,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
       {loading && (
         // 预留与「二维码盒子 + 状态文字」等高的占位，避免加载完成时高度突变跳动
         <Flex
-          className='flex-col items-center justify-center'
+          className='flex-col-center'
           style={{
             height: QR_PLACEHOLDER_HEIGHT,
           }}
@@ -170,7 +170,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
       {statusText && !error && <Text type='secondary'>{statusText}</Text>}
       {error && (
         <Flex
-          className='flex-col items-center justify-center gap-4'
+          className='flex-col-center gap-4'
           style={{
             minHeight: QR_PLACEHOLDER_HEIGHT,
           }}

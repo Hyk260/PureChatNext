@@ -1,6 +1,6 @@
 'use client'
 
-import { Icon, ProviderIcon, Tag, Text, Flex } from '@pure/ui'
+import { Button, Icon, ProviderIcon, Tag, Text, Flex } from '@pure/ui'
 import { cx } from 'antd-style'
 import { LayoutPanelTop } from 'lucide-react'
 import { memo, useCallback, useMemo } from 'react'
@@ -40,9 +40,10 @@ const ModelCategory = memo(() => {
     <Flex className={[communityCategoryStyles.root, 'flex-col']}>
       <Scrollbar className='size-full'>
         <Flex className='flex-col gap-1'>
-          <button
+          <Button
+            block
             className={cx(communityCategoryStyles.item, selected === ALL_KEY && communityCategoryStyles.active)}
-            type='button'
+            type='text'
             onClick={() => handleSelect(ALL_KEY)}
           >
             <Icon icon={LayoutPanelTop} size={18} />
@@ -56,15 +57,16 @@ const ModelCategory = memo(() => {
                 {counts.all}
               </Tag>
             ) : null}
-          </button>
+          </Button>
           {COMMUNITY_PROVIDERS.map((provider) => {
             const isActive = selected === provider.id
             const count = counts[provider.id] ?? 0
             return (
-              <button
+              <Button
+                block
                 className={cx(communityCategoryStyles.item, isActive && communityCategoryStyles.active)}
                 key={provider.id}
-                type='button'
+                type='text'
                 onClick={() => handleSelect(provider.id)}
               >
                 <ProviderIcon provider={provider.id} size={18} type='mono' />
@@ -78,7 +80,7 @@ const ModelCategory = memo(() => {
                     {count}
                   </Tag>
                 ) : null}
-              </button>
+              </Button>
             )
           })}
         </Flex>

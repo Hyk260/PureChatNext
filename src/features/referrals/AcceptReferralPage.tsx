@@ -1,4 +1,4 @@
-import { Button } from '@pure/ui'
+import { Text, Button } from '@pure/ui'
 import { Spin } from 'antd'
 import { CheckCircle2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -118,35 +118,53 @@ function AcceptReferralContent({ context, complete }: { context: string; complet
   const actionLabel = complete && session?.user ? '重试接受邀请' : '接受邀请'
 
   return (
-    <main className='flex min-h-dvh items-center justify-center bg-background p-4 text-foreground'>
+    <main className='flex-center min-h-dvh bg-background p-4 text-foreground'>
       <article className='w-full max-w-xl overflow-hidden rounded-3xl border border-border bg-background shadow-xl'>
         <ReferralHero />
         <section className='flex flex-col items-center gap-5 p-8 text-center'>
           {accepted ? (
             <>
               <CheckCircle2 size={56} className='text-green-500' aria-hidden />
-              <h1 className='m-0 text-2xl font-semibold'>欢迎使用 PureChat</h1>
-              <p className='text-muted-foreground'>邀请已接受，开始与 AI 对话、搜索和创作吧。</p>
+              <Text as='h1' fontSize={24} weight={600} color='inherit' className='m-0!'>
+                欢迎使用 PureChat
+              </Text>
+              <Text as='p' type='secondary'>
+                邀请已接受，开始与 AI 对话、搜索和创作吧。
+              </Text>
               <Button type='primary' size='large' shape='round' onClick={() => navigate('/')}>
                 开始使用
               </Button>
             </>
           ) : (
             <>
-              <h1 className='m-0 text-2xl font-semibold'>你已受邀使用 PureChat</h1>
+              <Text as='h1' fontSize={24} weight={600} color='inherit' className='m-0!'>
+                你已受邀使用 PureChat
+              </Text>
               {loading ? <Spin /> : null}
               {info ? (
-                <p className='m-0 text-muted-foreground'>{info.inviterName} 邀请你一起体验 AI 对话、搜索和创作。</p>
+                <Text as='p' type='secondary' className='m-0!'>
+                  {info.inviterName} 邀请你一起体验 AI 对话、搜索和创作。
+                </Text>
               ) : null}
               {info ? (
-                <p className='m-0 text-sm text-muted-foreground'>请使用 {info.maskedEmail} 对应邮箱注册并验证。</p>
+                <Text as='p' fontSize={14} type='secondary' className='m-0!'>
+                  请使用 {info.maskedEmail} 对应邮箱注册并验证。
+                </Text>
               ) : null}
-              {expired ? <p>邀请已过期，请联系好友重新发送。</p> : null}
-              {info?.status === 'accepted' ? <p>此邀请已接受。</p> : null}
+              {expired ? (
+                <Text as='p' color='inherit'>
+                  邀请已过期，请联系好友重新发送。
+                </Text>
+              ) : null}
+              {info?.status === 'accepted' ? (
+                <Text as='p' color='inherit'>
+                  此邀请已接受。
+                </Text>
+              ) : null}
               {error ? (
-                <p role='alert' className='m-0 text-sm text-red-500'>
+                <Text as='p' fontSize={14} type='danger' role='alert' className='m-0!'>
                   {error}
-                </p>
+                </Text>
               ) : null}
               {needsVerification ? (
                 <Button type='primary' loading={busy} disabled={!ready} onClick={verify}>

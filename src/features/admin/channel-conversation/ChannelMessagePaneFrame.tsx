@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, TextArea } from '@pure/ui'
+import { Flex, Button, TextArea } from '@pure/ui'
 import { Download, Paperclip } from 'lucide-react'
 import type { ReactNode, RefObject } from 'react'
 
@@ -40,12 +40,12 @@ export function ChannelMessagePaneFrame({
 }: ChannelMessagePaneFrameProps) {
   return (
     <section className='flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background'>
-      <div className='flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-4 sm:px-6'>
+      <Flex className='flex-between h-14 shrink-0 gap-3 border-b border-border bg-card px-4 sm:px-6'>
         <div className='min-w-0'>
           <div className='truncate text-base font-semibold'>{title}</div>
           <div className='mt-0.5 truncate text-xs text-muted-foreground'>{subtitle}</div>
         </div>
-        <div className='flex shrink-0 items-center gap-1.5'>
+        <Flex className='shrink-0 items-center gap-1.5'>
           {actions}
           {onExport ? (
             <PaneHeaderButton onClick={onExport}>
@@ -53,8 +53,8 @@ export function ChannelMessagePaneFrame({
               导出
             </PaneHeaderButton>
           ) : null}
-        </div>
-      </div>
+        </Flex>
+      </Flex>
 
       <ChannelErrorBanner error={error} />
       {children}
@@ -99,7 +99,7 @@ export function ChannelAttachmentComposer({
   return (
     <div className='shrink-0 border-t border-border bg-card px-4 py-3 sm:px-6'>
       {pendingAttachments.length > 0 ? (
-        <div className='mb-2 flex flex-wrap gap-2'>
+        <Flex className='mb-2 flex-wrap gap-2'>
           {pendingAttachments.map((item) => (
             <ChannelPendingAttachmentChip
               key={item.id}
@@ -109,9 +109,9 @@ export function ChannelAttachmentComposer({
               onRemove={() => onRemovePending(item.id)}
             />
           ))}
-        </div>
+        </Flex>
       ) : null}
-      <div className='flex min-w-0 flex-col rounded-xl bg-background ring-1 ring-border transition focus-within:ring-primary/50'>
+      <Flex className='min-w-0 flex-col rounded-xl bg-background ring-1 ring-border transition focus-within:ring-primary/50'>
         <TextArea
           autoSize={{ minRows: 2, maxRows: 5 }}
           className='!bg-transparent !px-3 !pt-3 !pb-1'
@@ -130,8 +130,8 @@ export function ChannelAttachmentComposer({
             onSend()
           }}
         />
-        <div className='flex items-center justify-between gap-2 px-2 pb-1.5'>
-          <div className='flex items-center'>
+        <Flex className='flex-between gap-2 px-2 pb-1.5'>
+          <Flex className='items-center'>
             <input
               ref={fileInputRef}
               accept='image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.md,.zip,.pptx'
@@ -151,10 +151,10 @@ export function ChannelAttachmentComposer({
             >
               附件
             </Button>
-          </div>
+          </Flex>
           <ComposerSendButton disabled={!canSubmit} sending={sending} onClick={onSend} />
-        </div>
-      </div>
+        </Flex>
+      </Flex>
     </div>
   )
 }

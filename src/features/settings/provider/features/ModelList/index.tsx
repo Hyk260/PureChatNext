@@ -82,10 +82,16 @@ const ModelList = memo<ModelListProps>(({ id }) => {
     setLoading(true)
     try {
       const baseURL = config?.baseURL.trim() ?? ''
-      const response = await apiFetch('/api/providers/models', jsonInit({
-        baseURL: baseURL || undefined,
-        provider: id,
-      }, { method: 'POST' }))
+      const response = await apiFetch(
+        '/api/providers/models',
+        jsonInit(
+          {
+            baseURL: baseURL || undefined,
+            provider: id,
+          },
+          { method: 'POST' }
+        )
+      )
 
       const json = (await response.json()) as {
         cause?: string
@@ -285,12 +291,18 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         setModelHealth(id, model.id, { status: 'checking' })
 
         try {
-          const response = await apiFetch('/api/providers/check', jsonInit({
-            baseURL: baseURL || undefined,
-            model: model.id,
-            provider: id,
-            timeoutMs,
-          }, { method: 'POST', signal: controller.signal }))
+          const response = await apiFetch(
+            '/api/providers/check',
+            jsonInit(
+              {
+                baseURL: baseURL || undefined,
+                model: model.id,
+                provider: id,
+                timeoutMs,
+              },
+              { method: 'POST', signal: controller.signal }
+            )
+          )
           const json = (await response.json()) as {
             durationMs?: number
             error?: { message?: string }
@@ -452,7 +464,7 @@ const ModelSectionHeader = memo<ModelSectionHeaderProps>(
   ({ actionIcon, actionTitle, onAction, onToggleSort, sortMode = false, title }) => (
     <div className={styles.sectionHeader}>
       <span>{title}</span>
-      <div className='flex items-center gap-1'>
+      <Flex className='items-center gap-1'>
         {onToggleSort ? (
           <ActionIcon
             active={sortMode}
@@ -463,7 +475,7 @@ const ModelSectionHeader = memo<ModelSectionHeaderProps>(
           />
         ) : null}
         <ActionIcon icon={actionIcon} size='small' title={actionTitle} onClick={onAction} />
-      </div>
+      </Flex>
     </div>
   )
 )

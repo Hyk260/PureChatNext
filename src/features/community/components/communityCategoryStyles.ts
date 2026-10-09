@@ -5,30 +5,35 @@ export const communityCategoryStyles = createStaticStyles(({ css }) => ({
     margin-inline-start: auto;
   `,
   item: css`
-    cursor: pointer;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    background: transparent;
-    color: ${cssVar.colorTextSecondary};
-    font-size: 14px;
-    text-align: left;
-    transition:
-      background 0.15s ease,
-      color 0.15s ease;
+    /* Preserve navigation-row geometry over the shared Button's default sizing. */
+    && {
+      cursor: pointer;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+      height: auto;
+      justify-content: flex-start;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: ${cssVar.colorTextSecondary};
+      font-size: 14px;
+      text-align: left;
+      transition:
+        background 0.15s ease,
+        color 0.15s ease;
 
-    &:hover {
-      background: ${cssVar.colorFillSecondary};
-      color: ${cssVar.colorText};
-    }
+      &:hover {
+        background: ${cssVar.colorFillSecondary};
+        color: ${cssVar.colorText};
+      }
 
-    &:focus-visible {
-      outline: 2px solid ${cssVar.colorPrimary};
-      outline-offset: -2px;
+      &:focus-visible {
+        outline: 2px solid ${cssVar.colorPrimary};
+        outline-offset: -2px;
+      }
     }
   `,
   active: css`

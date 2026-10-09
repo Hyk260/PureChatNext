@@ -1,5 +1,6 @@
 'use client'
 
+import { Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { X } from 'lucide-react'
 import { memo } from 'react'
@@ -62,9 +63,9 @@ const ChatErrorBanner = memo<ChatErrorBannerProps>(({ message, onDismiss }) => {
   const wideScreen = useChatUiStore((state) => state.wideScreen)
 
   return (
-    <div className='pointer-events-none absolute inset-x-0 bottom-2 z-10 flex justify-center'>
-      <div
-        className='pointer-events-auto box-border flex w-full max-w-full items-center justify-between gap-3 px-4'
+    <Flex className='pointer-events-none absolute inset-x-0 bottom-2 z-10 justify-center'>
+      <Flex
+        className='flex-between pointer-events-auto box-border w-full max-w-full gap-3 px-4'
         style={{ maxWidth: wideScreen ? undefined : `${CONVERSATION_MAX_WIDTH}px` }}
       >
         <div className={styles.alert} role='alert'>
@@ -79,8 +80,8 @@ const ChatErrorBanner = memo<ChatErrorBannerProps>(({ message, onDismiss }) => {
             <X aria-hidden size={16} />
           </button>
         </div>
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   )
 })
 

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Segmented } from 'antd'
 import { Clipboard, RefreshCcw, Sparkles } from 'lucide-react'
 
-import { ActionIcon, Button, Input, Select, TextArea } from '@pure/ui'
+import { Flex, ActionIcon, Button, Input, Select, TextArea } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 
 import Scrollbar from '@/components/Scrollbar'
@@ -103,7 +103,7 @@ export function EmailServiceForm({
   return (
     <section className='flex min-h-[32rem] flex-col overflow-hidden rounded-card border border-border bg-card lg:h-full lg:min-h-0'>
       <Scrollbar className='min-h-0 flex-1'>
-        <div className='flex flex-col gap-4 p-4'>
+        <Flex className='flex-col gap-4 p-4'>
           <p className='text-sm leading-6 text-muted-foreground'>{ACTION_META[action].description}</p>
 
           <Field htmlFor='email-service-impl' label='Provider · 邮件提供商'>
@@ -147,20 +147,20 @@ export function EmailServiceForm({
 
           <dl className='grid gap-2 border-t border-border pt-4 text-sm'>
             {metaRows(action, values.impl, runState).map(([label, value]) => (
-              <div key={label} className='flex-between gap-4'>
+              <Flex key={label} className='flex-between gap-4'>
                 <dt className='text-muted-foreground'>{label}</dt>
                 <dd className='text-right font-mono text-xs text-foreground'>{value}</dd>
-              </div>
+              </Flex>
             ))}
           </dl>
 
           <div>
-            <div className='flex-between gap-3'>
+            <Flex className='flex-between gap-3'>
               <h2 className='text-sm font-semibold text-foreground'>请求体</h2>
               <Button icon={<Clipboard className='size-3.5' />} size='small' onClick={onCopy}>
                 {COPY_LABEL[copyState]}
               </Button>
-            </div>
+            </Flex>
             <Scrollbar maxHeight='10rem' className='mt-3 overflow-hidden rounded-lg ring-1 ring-border'>
               <Highlighter
                 actionIconSize='small'
@@ -175,7 +175,7 @@ export function EmailServiceForm({
               </Highlighter>
             </Scrollbar>
           </div>
-        </div>
+        </Flex>
       </Scrollbar>
     </section>
   )

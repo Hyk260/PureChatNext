@@ -4,7 +4,7 @@ import { ArrowLeftRight, Bot, File, FileArchive, FileCode, FileSpreadsheet, File
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode, RefObject } from 'react'
 import { formatDateTime, formatSize } from '@pure/utils/client'
-import { Tag } from '@pure/ui'
+import { Flex, Tag } from '@pure/ui'
 
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
@@ -111,17 +111,17 @@ function FileMessageCard({
   const name = fileName || '未命名文件'
   const sizeLabel = typeof fileSize === 'number' ? formatSize(fileSize) : '未知大小'
   const inner = (
-    <div className='flex min-w-[220px] max-w-[320px] items-center gap-3 rounded-xl bg-background px-3 py-2.5 ring-1 ring-border'>
-      <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ring-1 ${wrapClass}`}>
+    <Flex className='min-w-[220px] max-w-[320px] items-center gap-3 rounded-xl bg-background px-3 py-2.5 ring-1 ring-border'>
+      <Flex className={`flex-center size-10 shrink-0 rounded-lg ring-1 ${wrapClass}`}>
         <Icon className={`size-5 ${iconClass}`} />
-      </div>
+      </Flex>
       <div className='min-w-0 flex-1'>
         <div className='truncate text-sm font-medium text-foreground' title={name}>
           {name}
         </div>
         <div className='mt-0.5 text-[11px] text-muted-foreground'>{sizeLabel}</div>
       </div>
-    </div>
+    </Flex>
   )
   if (!fileUrl) return inner
   return (
@@ -181,7 +181,7 @@ function MessageList({
 
         return (
           <div key={msg.id} className={`flex flex-col gap-1 ${isRight ? 'items-end' : 'items-start'}`}>
-            <div className='flex items-center gap-1.5 px-1'>
+            <Flex className='items-center gap-1.5 px-1'>
               {isUser ? <User className='size-3 text-muted-foreground' /> : <Bot className='size-3 text-primary' />}
               <span className='text-xs font-medium text-muted-foreground'>{isUser ? userLabel : 'Agent'}</span>
               {kindChip(msg.messageKind)}
@@ -195,7 +195,7 @@ function MessageList({
                 <span className='rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>系统</span>
               ) : null}
               <span className='text-[11px] text-muted-foreground'>{formatDateTime(msg.createdAt)}</span>
-            </div>
+            </Flex>
             {content ? (
               <div className={`group flex max-w-[92%] items-end gap-1.5 ${isRight ? 'flex-row-reverse' : ''}`}>
                 <div

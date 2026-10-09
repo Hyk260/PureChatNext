@@ -60,9 +60,9 @@ const AbilityOption = memo<AbilityOptionProps>(({ checked, description, label, o
   const toggle = () => onToggle(!checked)
 
   return (
-    <div
+    <Flex
       aria-checked={checked}
-      className='flex w-full cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-(--ant-color-fill-quaternary)'
+      className='w-full cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-(--ant-color-fill-quaternary)'
       role='checkbox'
       tabIndex={0}
       onClick={toggle}
@@ -73,17 +73,14 @@ const AbilityOption = memo<AbilityOptionProps>(({ checked, description, label, o
       }}
     >
       {/* Custom Checkbox is not a native input, so label association cannot toggle it. */}
-      <span
-        onClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => event.stopPropagation()}
-      >
+      <span onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
         <Checkbox checked={checked} onChange={onToggle} />
       </span>
       <Flex className='-mt-0.5 min-w-0 flex-1 flex-col gap-1'>
         <span className='text-sm font-medium'>{label}</span>
         <Text type='secondary'>{description}</Text>
       </Flex>
-    </div>
+    </Flex>
   )
 })
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { Flex } from '@pure/ui'
 import { useCallback, useState } from 'react'
 import { Segmented } from 'antd'
 import { Mail, ShieldCheck } from 'lucide-react'
@@ -180,7 +181,7 @@ export default function EmailServicePage() {
 
   return (
     <main className='flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground'>
-      <div className='mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6 lg:overflow-hidden lg:px-8'>
+      <Flex className='mx-auto h-full min-h-0 w-full max-w-7xl flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6 lg:overflow-hidden lg:px-8'>
         <header className='flex shrink-0 flex-col justify-between gap-3 border-b border-border pb-4 lg:flex-row lg:items-end'>
           <div>
             <h1 className='text-2xl font-semibold text-foreground'>邮件服务测试台</h1>
@@ -234,7 +235,7 @@ export default function EmailServicePage() {
             onViewChange={setView}
           />
         </div>
-      </div>
+      </Flex>
     </main>
   )
 }

@@ -9,6 +9,7 @@ import DesktopTitleBar, { DesktopTitleBarLayout } from '@/features/desktop/Deskt
 import DesktopLoginPage from '@/features/desktop/DesktopLoginPage'
 import DesktopContentErrorBoundary from '@/features/desktop/DesktopContentErrorBoundary'
 import DesktopErrorFrame from '@/features/desktop/DesktopErrorFrame'
+import InsetContentFrame from '@/layout/InsetContentFrame'
 import DesktopAuthGate from '@/spa/auth/DesktopAuthGate'
 import DesktopLoginRoute from '@/routes/desktop-login/page'
 import { webRoutes } from '@/spa/router/webRouter.config'
@@ -49,7 +50,9 @@ const renderSetup = () => {
     <StrictMode>
       <DesktopTitleBar>
         <DesktopContentErrorBoundary>
-          <DesktopLoginPage standalone />
+          <InsetContentFrame sidebarCollapsed>
+            <DesktopLoginPage standalone />
+          </InsetContentFrame>
         </DesktopContentErrorBoundary>
       </DesktopTitleBar>
     </StrictMode>

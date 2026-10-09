@@ -1,5 +1,6 @@
 'use client'
 
+import { Flex } from '@pure/ui'
 import { useState } from 'react'
 
 import type { FileDocument } from '@pure/file-loaders'
@@ -7,13 +8,7 @@ import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 import { ReadFileForm } from './ReadFileForm'
 import { ReadFileResults } from './ReadFileResults'
-import {
-  READ_FILE_API_PATH,
-  SUPPORTED_FORMATS,
-  canSubmit,
-  downloadResultJson,
-  readApiError,
-} from './readFileModel'
+import { READ_FILE_API_PATH, SUPPORTED_FORMATS, canSubmit, downloadResultJson, readApiError } from './readFileModel'
 import type { ApiError, CopyState, RequestMode, ResultView, RunState } from './readFileModel'
 
 export default function ReadFilePage() {
@@ -115,7 +110,7 @@ export default function ReadFilePage() {
 
   return (
     <main className='flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground'>
-      <div className='mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6 lg:overflow-hidden lg:px-8'>
+      <Flex className='mx-auto h-full min-h-0 w-full max-w-7xl flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6 lg:overflow-hidden lg:px-8'>
         <header className='flex shrink-0 flex-col justify-between gap-3 border-b border-border pb-4 lg:flex-row lg:items-end'>
           <div>
             <h1 className='text-2xl font-semibold text-foreground'>文件解析功能测试台</h1>
@@ -123,7 +118,7 @@ export default function ReadFilePage() {
               测试上传文件和远程 URL 两种入口，查看标准化内容、分页块、统计信息和原始 JSON 响应。
             </p>
           </div>
-          <div className='flex flex-wrap gap-1.5'>
+          <Flex className='flex-wrap gap-1.5'>
             {SUPPORTED_FORMATS.map((format) => (
               <span
                 key={format}
@@ -132,7 +127,7 @@ export default function ReadFilePage() {
                 {format}
               </span>
             ))}
-          </div>
+          </Flex>
         </header>
 
         <div className='grid min-h-0 flex-1 gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]'>
@@ -159,7 +154,7 @@ export default function ReadFilePage() {
             onViewChange={setView}
           />
         </div>
-      </div>
+      </Flex>
     </main>
   )
 }

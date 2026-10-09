@@ -2,17 +2,12 @@ import type { ChangeEvent, DragEvent, ReactNode } from 'react'
 import { Clipboard, RefreshCcw, Sparkles, Upload, X } from 'lucide-react'
 import { formatSize } from '@pure/utils/client'
 
-import { ActionIcon, Alert, Button, Input, TextArea } from '@pure/ui'
+import { Flex, ActionIcon, Alert, Button, Input, TextArea } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 
 import Scrollbar from '@/components/Scrollbar'
 
-import {
-  ACTION_META,
-  canSubmit,
-  COPY_LABEL,
-  S3_API_PATH,
-} from './s3Model'
+import { ACTION_META, canSubmit, COPY_LABEL, S3_API_PATH } from './s3Model'
 import type { ActionMode, CopyState, RunState, S3FormValues } from './s3Model'
 
 const LABEL_CLASS = 'text-sm font-medium text-foreground'
@@ -74,11 +69,17 @@ export function S3Form({
   return (
     <section className='flex min-h-[32rem] flex-col overflow-hidden rounded-card border border-border bg-card lg:h-full lg:min-h-0'>
       <Scrollbar className='min-h-0 flex-1'>
-        <div className='flex flex-col gap-4 p-4'>
+        <Flex className='flex-col gap-4 p-4'>
           <p className='text-sm leading-6 text-muted-foreground'>{ACTION_META[action].description}</p>
 
           {action === 'upload' ? (
-            <UploadFields files={files} values={values} onChange={onChange} onFiles={onFiles} onRemoveFile={onRemoveFile} />
+            <UploadFields
+              files={files}
+              values={values}
+              onChange={onChange}
+              onFiles={onFiles}
+              onRemoveFile={onRemoveFile}
+            />
           ) : null}
           {action === 'list' ? (
             <Field htmlFor='s3-list-prefix' label='前缀过滤'>
@@ -122,20 +123,20 @@ export function S3Form({
 
           <dl className='grid gap-2 border-t border-border pt-4 text-sm'>
             {metaRows(action, runState).map(([label, value]) => (
-              <div key={label} className='flex-between gap-4'>
+              <Flex key={label} className='flex-between gap-4'>
                 <dt className='text-muted-foreground'>{label}</dt>
                 <dd className='text-right font-mono text-xs text-foreground'>{value}</dd>
-              </div>
+              </Flex>
             ))}
           </dl>
 
           <div>
-            <div className='flex-between gap-3'>
+            <Flex className='flex-between gap-3'>
               <h2 className='text-sm font-semibold text-foreground'>请求体</h2>
               <Button icon={<Clipboard className='size-3.5' />} size='small' onClick={onCopy}>
                 {COPY_LABEL[copyState]}
               </Button>
-            </div>
+            </Flex>
             <Scrollbar maxHeight='10rem' className='mt-3 overflow-hidden rounded-lg ring-1 ring-border'>
               <Highlighter
                 actionIconSize='small'
@@ -150,7 +151,7 @@ export function S3Form({
               </Highlighter>
             </Scrollbar>
           </div>
-        </div>
+        </Flex>
       </Scrollbar>
     </section>
   )
@@ -201,14 +202,13 @@ function UploadFields({
               >
                 <span className='min-w-0 flex-1 truncate text-foreground'>{item.name}</span>
                 <span className='shrink-0 text-xs text-muted-foreground'>{formatSize(item.size)}</span>
-                <button
+                <ActionIcon
                   aria-label={`移除 ${item.name}`}
-                  className='text-muted-foreground hover:text-red'
-                  type='button'
+                  title={`移除 ${item.name}`}
+                  icon={X}
+                  size='small'
                   onClick={() => onRemoveFile(index)}
-                >
-                  <X className='size-3.5' />
-                </button>
+                />
               </li>
             ))}
           </ul>

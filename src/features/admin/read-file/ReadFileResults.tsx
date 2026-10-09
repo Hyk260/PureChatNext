@@ -2,18 +2,12 @@ import { Segmented } from 'antd'
 import { Clipboard, Code2, Download, FileJson, FileText, Layers } from 'lucide-react'
 
 import type { DocumentPage, FileDocument } from '@pure/file-loaders'
-import { Alert, Button } from '@pure/ui'
+import { Flex, Alert, Button } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 
 import Scrollbar from '@/components/Scrollbar'
 
-import {
-  COPY_LABEL,
-  RESULT_VIEW_LABEL,
-  pageTitle,
-  resultSummaryItems,
-  summarizeValue,
-} from './readFileModel'
+import { COPY_LABEL, RESULT_VIEW_LABEL, pageTitle, resultSummaryItems, summarizeValue } from './readFileModel'
 import type { CopyState, ResultView } from './readFileModel'
 
 const segmentedIconLabel = (Icon: typeof FileText, text: string) => (
@@ -27,7 +21,10 @@ function resultViewOptions(pageCount: number) {
   return [
     { label: segmentedIconLabel(FileText, RESULT_VIEW_LABEL.content), value: 'content' },
     {
-      label: segmentedIconLabel(Layers, pageCount > 0 ? `${RESULT_VIEW_LABEL.pages} ${pageCount}` : RESULT_VIEW_LABEL.pages),
+      label: segmentedIconLabel(
+        Layers,
+        pageCount > 0 ? `${RESULT_VIEW_LABEL.pages} ${pageCount}` : RESULT_VIEW_LABEL.pages
+      ),
       value: 'pages',
     },
     { label: segmentedIconLabel(Code2, RESULT_VIEW_LABEL.json), value: 'json' },
@@ -75,12 +72,12 @@ function EmptyResult({ description, title }: { description: string; title: strin
 function PageCard({ index, page }: { index: number; page: DocumentPage }) {
   return (
     <article className='overflow-hidden rounded-lg border border-border'>
-      <div className='flex flex-col gap-1 border-b border-border bg-secondary px-4 py-3 sm:flex-row sm:items-center sm:justify-between'>
+      <Flex className='flex-col gap-1 border-b border-border bg-secondary px-4 py-3 sm:flex-row sm:items-center sm:justify-between'>
         <h3 className='text-sm font-semibold text-foreground'>{pageTitle(page, index)}</h3>
         <div className='text-xs text-muted-foreground'>
           {summarizeValue(page.charCount)} chars · {summarizeValue(page.lineCount)} lines
         </div>
-      </div>
+      </Flex>
       <pre className='max-h-64 overflow-auto whitespace-pre-wrap p-4 font-mono text-sm leading-6 text-foreground'>
         {page.pageContent || 'No page content.'}
       </pre>
@@ -172,17 +169,21 @@ export function ReadFileResults({
         </div>
       </div>
 
-      <div className='flex shrink-0 flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between'>
-        <Segmented options={resultViewOptions(pages.length)} value={view} onChange={(value) => onViewChange(value as ResultView)} />
-        <div className='flex gap-2'>
+      <Flex className='shrink-0 flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between'>
+        <Segmented
+          options={resultViewOptions(pages.length)}
+          value={view}
+          onChange={(value) => onViewChange(value as ResultView)}
+        />
+        <Flex className='gap-2'>
           <Button disabled={!hasJson} icon={<Clipboard className='size-3.5' />} size='small' onClick={onCopy}>
             {COPY_LABEL[copyState]}
           </Button>
           <Button disabled={!hasJson} icon={<Download className='size-3.5' />} size='small' onClick={onDownload}>
             下载
           </Button>
-        </div>
-      </div>
+        </Flex>
+      </Flex>
 
       <Scrollbar className='min-h-0 flex-1'>
         <div className='p-4'>

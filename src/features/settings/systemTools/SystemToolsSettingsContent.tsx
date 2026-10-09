@@ -1,14 +1,6 @@
 'use client'
 
-import {
-  ActionIcon,
-  Block,
-  Button,
-  Flex,
-  Skeleton,
-  Tag,
-  Text,
-} from '@pure/ui'
+import { ActionIcon, Block, Button, Flex, Skeleton, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { Divider } from 'antd'
 import { Check, CircleX, Copy, RefreshCw } from 'lucide-react'
@@ -29,18 +21,10 @@ function SectionTitle({ title }: { title: string }) {
   return <Text className='px-4 pt-4 pb-0 text-base font-semibold'>{title}</Text>
 }
 
-function RuntimeToolRow({
-  onCopyPath,
-  tool,
-}: {
-  onCopyPath: (path: string) => void
-  tool: DesktopRuntimeTool
-}) {
+function RuntimeToolRow({ onCopyPath, tool }: { onCopyPath: (path: string) => void; tool: DesktopRuntimeTool }) {
   const statusLabel = tool.available ? '可用' : '不可用'
   const StatusIcon = tool.available ? Check : CircleX
-  const statusClassName = tool.available
-    ? 'text-[var(--ant-color-success)]'
-    : 'text-[var(--ant-color-text-tertiary)]'
+  const statusClassName = tool.available ? 'text-[var(--ant-color-success)]' : 'text-[var(--ant-color-text-tertiary)]'
 
   return (
     <Flex className='items-center gap-3 min-h-[64px] py-3 w-full min-w-0'>
@@ -165,7 +149,7 @@ export function SystemToolsSettingsContent() {
 
       {state === 'error' ? (
         <Block padding={16} variant='filled'>
-          <Flex className='items-center justify-between gap-3'>
+          <Flex className='flex-between gap-3'>
             <Text type='secondary'>无法加载系统工具信息</Text>
             <Button icon={<RefreshCw size={14} />} onClick={load}>
               重试

@@ -1,5 +1,6 @@
 "use client";
 
+import { Flex } from '@pure/ui'
 import { useEffect, useState } from "react";
 
 /* ─────────────────────────────────────────────────────────
@@ -56,7 +57,7 @@ export default function LoadingState({
   const { delays, dur, round } = PATTERNS[variant] ?? PATTERNS.Drive;
 
   return (
-    <div className="flex w-fit items-center gap-2.5">
+    <Flex className="w-fit items-center gap-2.5">
       <span aria-hidden className="grid grid-cols-[repeat(3,4px)] gap-[1.5px]">
         {delays.map((d, i) => (
           <span
@@ -84,6 +85,6 @@ export default function LoadingState({
       <span className="font-mono text-[12px] text-ink-3 tabular-nums">
         {elapsed}
       </span>
-    </div>
+    </Flex>
   );
 }

@@ -38,32 +38,29 @@ const FilesContent = memo<Props>(({ topic }) => {
   const [filter, setFilter] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const loadEntries = useCallback(
-    async (nextProject: DesktopProject | null, nextRelativePath: string) => {
-      const api = getDesktopApi()
-      if (!api?.listProjectEntries || !nextProject) {
-        setEntries([])
-        setError(null)
-        return
-      }
-
-      setLoading(true)
+  const loadEntries = useCallback(async (nextProject: DesktopProject | null, nextRelativePath: string) => {
+    const api = getDesktopApi()
+    if (!api?.listProjectEntries || !nextProject) {
+      setEntries([])
       setError(null)
-      try {
-        const result = await api.listProjectEntries({
-          projectId: nextProject.id,
-          relativePath: nextRelativePath || undefined,
-        })
-        setEntries(result.entries)
-      } catch (loadError) {
-        setEntries([])
-        setError(loadError instanceof Error ? loadError.message : '读取文件失败')
-      } finally {
-        setLoading(false)
-      }
-    },
-    []
-  )
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await api.listProjectEntries({
+        projectId: nextProject.id,
+        relativePath: nextRelativePath || undefined,
+      })
+      setEntries(result.entries)
+    } catch (loadError) {
+      setEntries([])
+      setError(loadError instanceof Error ? loadError.message : '读取文件失败')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -135,12 +132,7 @@ const FilesContent = memo<Props>(({ topic }) => {
   }, [loadEntries, project, relativePath])
 
   if (!getDesktopApi()?.listProjectEntries) {
-    return (
-      <EmptyState
-        description='文件列表仅在桌面端可用'
-        icon={FileText}
-      />
-    )
+    return <EmptyState description='文件列表仅在桌面端可用' icon={FileText} />
   }
 
   if (!topic?.projectName || !project) {
@@ -159,9 +151,7 @@ const FilesContent = memo<Props>(({ topic }) => {
           onChange={(event) => setFilter(event.target.value)}
         />
         <Flex className='items-center gap-1 min-w-0'>
-          {relativePath ? (
-            <ActionIcon icon={FolderOpen} size='small' title='返回上级' onClick={handleGoUp} />
-          ) : null}
+          {relativePath ? <ActionIcon icon={FolderOpen} size='small' title='返回上级' onClick={handleGoUp} /> : null}
           <Text ellipsis type='secondary'>
             {relativePath || project.name}
           </Text>
@@ -201,7 +191,7 @@ FilesContent.displayName = 'FilesContent'
 
 function EmptyState({ description, icon }: { description: string; icon: typeof File }) {
   return (
-    <Flex className='flex-col items-center justify-center gap-3 flex-1 min-h-[240px] p-6'>
+    <Flex className='flex-col-center gap-3 flex-1 min-h-[240px] p-6'>
       <Icon icon={icon} size={36} style={{ color: 'var(--ant-color-text-quaternary)' }} />
       <Text type='secondary'>{description}</Text>
     </Flex>

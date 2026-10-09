@@ -3,23 +3,18 @@ import { useState } from 'react'
 import { FileText, Link2, RefreshCcw, Sparkles, UploadCloud, X } from 'lucide-react'
 import { formatSize } from '@pure/utils/client'
 
-import { ActionIcon, Button, Input } from '@pure/ui'
+import { Flex, ActionIcon, Button, Input } from '@pure/ui'
 
 import Scrollbar from '@/components/Scrollbar'
 
-import {
-  MODE_META,
-  canSubmit,
-  createSampleFile,
-  metaRows,
-} from './readFileModel'
+import { MODE_META, canSubmit, createSampleFile, metaRows } from './readFileModel'
 import type { RequestMode, RunState } from './readFileModel'
 
 const LABEL_CLASS = 'text-sm font-medium text-foreground'
 const DROP_IDLE =
-  'flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center transition hover:border-primary hover:bg-hover'
+  'flex-col-center min-h-44 cursor-pointer rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center transition hover:border-primary hover:bg-hover'
 const DROP_ACTIVE =
-  'flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-primary bg-secondary px-4 py-6 text-center transition'
+  'flex-col-center min-h-44 cursor-pointer rounded-lg border border-dashed border-primary bg-secondary px-4 py-6 text-center transition'
 
 function Field({
   children,
@@ -87,24 +82,20 @@ export function ReadFileForm({
   return (
     <section className='flex min-h-[32rem] flex-col overflow-hidden rounded-card border border-border bg-card lg:h-full lg:min-h-0'>
       <Scrollbar className='min-h-0 flex-1'>
-        <div className='flex flex-col gap-4 p-4'>
+        <Flex className='flex-col gap-4 p-4'>
           <p className='text-sm leading-6 text-muted-foreground'>{MODE_META[mode].description}</p>
 
           <div className='grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1'>
             {(['file', 'url'] as const).map((value) => (
-              <button
+              <Button
                 key={value}
-                className={`inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-                  mode === value
-                    ? 'bg-card text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-                type='button'
+                type={mode === value ? 'default' : 'text'}
+                aria-pressed={mode === value}
+                icon={value === 'file' ? <UploadCloud className='size-4' /> : <Link2 className='size-4' />}
                 onClick={() => onMode(value)}
               >
-                {value === 'file' ? <UploadCloud className='size-4' /> : <Link2 className='size-4' />}
                 {MODE_META[value].label}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -127,7 +118,7 @@ export function ReadFileForm({
                 </label>
 
                 {file ? (
-                  <div className='mt-2 flex items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm'>
+                  <Flex className='mt-2 items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm'>
                     <FileText className='size-4 shrink-0 text-muted-foreground' />
                     <div className='min-w-0 flex-1'>
                       <div className='truncate text-foreground'>{file.name}</div>
@@ -135,15 +126,8 @@ export function ReadFileForm({
                         {formatSize(file.size)} · {file.type || 'unknown MIME'}
                       </div>
                     </div>
-                    <button
-                      aria-label='移除文件'
-                      className='text-muted-foreground hover:text-red'
-                      type='button'
-                      onClick={() => onFile(null)}
-                    >
-                      <X className='size-3.5' />
-                    </button>
-                  </div>
+                    <ActionIcon icon={X} title='移除文件' size='small' onClick={() => onFile(null)} />
+                  </Flex>
                 ) : null}
               </Field>
 
@@ -189,13 +173,13 @@ export function ReadFileForm({
 
           <dl className='grid gap-2 border-t border-border pt-4 text-sm'>
             {metaRows(mode, runState).map(([label, value]) => (
-              <div key={label} className='flex-between gap-4'>
+              <Flex key={label} className='flex-between gap-4'>
                 <dt className='text-muted-foreground'>{label}</dt>
                 <dd className='text-right font-mono text-xs text-foreground'>{value}</dd>
-              </div>
+              </Flex>
             ))}
           </dl>
-        </div>
+        </Flex>
       </Scrollbar>
     </section>
   )

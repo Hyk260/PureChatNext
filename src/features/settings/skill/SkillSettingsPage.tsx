@@ -215,7 +215,7 @@ const SkillFilePreview = ({ path, skillId }: { path: string; skillId: string }) 
   const kind = getSkillFilePreviewKind(path)
   if (kind === 'binary') {
     return (
-      <Flex className='flex-1 items-center justify-center min-h-40'>
+      <Flex className='flex-center flex-1 min-h-40'>
         <Text type='secondary'>不支持预览</Text>
       </Flex>
     )
@@ -255,7 +255,7 @@ const SkillDetailPane = ({ skillId }: { skillId: string }) => {
 
   if (!detail) {
     return (
-      <Flex className='items-center justify-center flex-1 h-full w-full'>
+      <Flex className='flex-center flex-1 h-full w-full'>
         <Text type='secondary'>正在加载…</Text>
       </Flex>
     )
@@ -314,21 +314,24 @@ export default function SkillSettingsPage() {
   const [storeOpen, setStoreOpen] = useState(false)
   const [uninstallingId, setUninstallingId] = useState<string | null>(null)
 
-  const refreshList = useCallback((keepId?: string | null) => {
-    return fetch('/api/user/skills')
-      .then(async (response) => {
-        if (!response.ok) throw new Error('list')
-        const items = (await response.json()) as InstalledSkill[]
-        setSkills(items)
-        const nextId = keepId && items.some((item) => item.id === keepId) ? keepId : (items[0]?.id ?? null)
-        setSelectedId(nextId)
-      })
-      .catch(() => {
-        setSkills([])
-        setSelectedId(null)
-        message.error('无法加载已安装技能')
-      })
-  }, [message])
+  const refreshList = useCallback(
+    (keepId?: string | null) => {
+      return fetch('/api/user/skills')
+        .then(async (response) => {
+          if (!response.ok) throw new Error('list')
+          const items = (await response.json()) as InstalledSkill[]
+          setSkills(items)
+          const nextId = keepId && items.some((item) => item.id === keepId) ? keepId : (items[0]?.id ?? null)
+          setSelectedId(nextId)
+        })
+        .catch(() => {
+          setSkills([])
+          setSelectedId(null)
+          message.error('无法加载已安装技能')
+        })
+    },
+    [message]
+  )
 
   useEffect(() => {
     refreshList()
@@ -366,7 +369,7 @@ export default function SkillSettingsPage() {
 
   if (skills === null) {
     return (
-      <Flex className='items-center justify-center h-full w-full'>
+      <Flex className='flex-center h-full w-full'>
         <Text type='secondary'>正在加载…</Text>
       </Flex>
     )
@@ -375,7 +378,7 @@ export default function SkillSettingsPage() {
   return (
     <Flex className='h-full min-h-0 w-full'>
       <Flex className={[styles.list, 'flex-col min-h-0']}>
-        <Flex className='h-10 flex-none items-center justify-between gap-2 border-b border-border px-3 py-2'>
+        <Flex className='flex-between h-10 flex-none gap-2 border-b border-border px-3 py-2'>
           <Text strong>技能</Text>
           <Flex className='items-center gap-1'>
             <ActionIcon icon={LayoutGrid} size='small' title='技能商店' onClick={() => setStoreOpen(true)} />
@@ -436,7 +439,7 @@ export default function SkillSettingsPage() {
         {selectedId ? (
           <SkillDetailPane skillId={selectedId} />
         ) : (
-          <Flex className='items-center justify-center flex-1'>
+          <Flex className='flex-center flex-1'>
             <Empty description='从技能商店安装' />
           </Flex>
         )}

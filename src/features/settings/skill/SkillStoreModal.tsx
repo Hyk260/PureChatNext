@@ -1,18 +1,6 @@
 'use client'
 
-import {
-  ActionIcon,
-  Avatar,
-  Block,
-  Button,
-  DropdownMenu,
-  Empty,
-  Flex,
-  Grid,
-  Modal,
-  SearchBar,
-  Text,
-} from '@pure/ui'
+import { ActionIcon, Avatar, Block, Button, DropdownMenu, Empty, Flex, Grid, Modal, SearchBar, Text } from '@pure/ui'
 import type { MenuProps } from '@pure/ui'
 import { Pagination, Segmented } from 'antd'
 import { Box, Ellipsis, Loader2, Plus } from 'lucide-react'
@@ -98,7 +86,13 @@ const StoreSkillRow = memo(function StoreSkillRow({
       variant='outlined'
       onClick={() => onOpenDetail(item.identifier)}
     >
-      <Avatar avatar={githubAssetAvatar(item.icon, item.name)} background='transparent' shape='square' size={40} style={{ flex: 'none' }} />
+      <Avatar
+        avatar={githubAssetAvatar(item.icon, item.name)}
+        background='transparent'
+        shape='square'
+        size={40}
+        style={{ flex: 'none' }}
+      />
       <Flex className='flex-col min-w-0 flex-1'>
         <Text ellipsis>{item.name}</Text>
         <Text ellipsis type='secondary'>
@@ -106,10 +100,7 @@ const StoreSkillRow = memo(function StoreSkillRow({
         </Text>
       </Flex>
       {installedId ? (
-        <span
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
+        <span onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
           <DropdownMenu
             items={menuItems}
             nativeButton
@@ -121,10 +112,7 @@ const StoreSkillRow = memo(function StoreSkillRow({
           </DropdownMenu>
         </span>
       ) : (
-        <span
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
+        <span onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
           <ActionIcon
             disabled={installing}
             icon={installing ? Loader2 : Plus}
@@ -256,7 +244,7 @@ const SkillStoreModal = memo<SkillStoreModalProps>(({ installedSkills, onClose, 
           </Flex>
 
           {tab === 'mcp' ? (
-            <Flex className='flex-1 items-center justify-center min-h-[320px]'>
+            <Flex className='flex-center flex-1 min-h-[320px]'>
               <Empty description='即将推出' />
             </Flex>
           ) : (
@@ -270,7 +258,7 @@ const SkillStoreModal = memo<SkillStoreModalProps>(({ installedSkills, onClose, 
                 }}
               />
               {pageData.length === 0 ? (
-                <Flex className='flex-1 items-center justify-center min-h-[280px]'>
+                <Flex className='flex-center flex-1 min-h-[280px]'>
                   <Empty description='暂无匹配技能' />
                 </Flex>
               ) : (

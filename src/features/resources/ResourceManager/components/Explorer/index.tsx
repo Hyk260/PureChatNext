@@ -157,7 +157,7 @@ const Explorer = memo(() => {
       />
       <Flex className='flex-col flex-1 overflow-auto'>
         {isLoading ? (
-          <Flex className='flex-col items-center flex-1 justify-center'>
+          <Flex className='flex-col-center flex-1'>
             <Spin />
           </Flex>
         ) : resourceList.length === 0 ? (

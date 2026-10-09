@@ -1,0 +1,1 @@
+ALTER TABLE "global_files" ALTER COLUMN "creator" DROP NOT NULL;

@@ -1,8 +1,20 @@
 import { Segmented } from 'antd'
-import { Clipboard, Code2, Download, Eye, FileJson, HardDrive, Loader2, Pencil, RefreshCcw, Trash2, X } from 'lucide-react'
+import {
+  Clipboard,
+  Code2,
+  Download,
+  Eye,
+  FileJson,
+  HardDrive,
+  Loader2,
+  Pencil,
+  RefreshCcw,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { formatDateTime, formatSize } from '@pure/utils/client'
 
-import { Alert, Button } from '@pure/ui'
+import { Flex, Alert, Button } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 
 import Scrollbar from '@/components/Scrollbar'
@@ -10,14 +22,10 @@ import Scrollbar from '@/components/Scrollbar'
 import { isImageKey, readResult } from './s3Model'
 import type { ActionMode, FileInfo, ResultView, S3Result } from './s3Model'
 
-const ICON_BUTTON =
-  'rounded-md p-1.5 text-muted-foreground transition hover:bg-hover active:scale-[0.98] disabled:opacity-50'
-const ICON_BUTTON_DEFAULT = `${ICON_BUTTON} hover:text-foreground`
-const ICON_BUTTON_DANGER = `${ICON_BUTTON} hover:text-red`
-
 function requestStatusAlert(error: string | null, completed: boolean) {
   if (error) return <Alert showIcon description={error} title='请求失败' type='error' />
-  if (completed) return <Alert showIcon description='响应已返回，可在下方查看摘要或原始 JSON。' title='请求完成' type='success' />
+  if (completed)
+    return <Alert showIcon description='响应已返回，可在下方查看摘要或原始 JSON。' title='请求完成' type='success' />
   return <Alert showIcon description='选择操作并填写参数后发送请求。' title='等待请求' type='info' />
 }
 
@@ -184,31 +192,35 @@ function FileTable({
               {file.LastModified ? formatDateTime(file.LastModified) : 'N/A'}
             </td>
             <td className='px-3 py-1.5'>
-              <div className='flex items-center justify-end'>
+              <Flex className='items-center justify-end'>
                 {isImageKey(file.Key) ? (
-                  <button
-                    className={ICON_BUTTON_DEFAULT}
+                  <Button
+                    size='small'
+                    type='text'
                     disabled={previewLoadingKey === file.Key}
                     title='预览'
-                    type='button'
                     onClick={() => onPreview(file.Key)}
                   >
-                    {previewLoadingKey === file.Key ? <Loader2 className='size-4 animate-spin' /> : <Eye className='size-4' />}
-                  </button>
+                    {previewLoadingKey === file.Key ? (
+                      <Loader2 className='size-4 animate-spin' />
+                    ) : (
+                      <Eye className='size-4' />
+                    )}
+                  </Button>
                 ) : null}
-                <button className={ICON_BUTTON_DEFAULT} title='下载' type='button' onClick={() => onDownload(file.Key)}>
+                <Button size='small' type='text' title='下载' onClick={() => onDownload(file.Key)}>
                   <Download className='size-4' />
-                </button>
-                <button className={ICON_BUTTON_DEFAULT} title='复制 Key' type='button' onClick={() => onCopyKey(file.Key)}>
+                </Button>
+                <Button size='small' type='text' title='复制 Key' onClick={() => onCopyKey(file.Key)}>
                   <Clipboard className='size-4' />
-                </button>
-                <button className={ICON_BUTTON_DEFAULT} title='重命名' type='button' onClick={() => onRename(file.Key)}>
+                </Button>
+                <Button size='small' type='text' title='重命名' onClick={() => onRename(file.Key)}>
                   <Pencil className='size-4' />
-                </button>
-                <button className={ICON_BUTTON_DANGER} title='删除' type='button' onClick={() => onDelete(file.Key)}>
+                </Button>
+                <Button size='small' type='text' danger title='删除' onClick={() => onDelete(file.Key)}>
                   <Trash2 className='size-4' />
-                </button>
-              </div>
+                </Button>
+              </Flex>
             </td>
           </tr>
         ))}
@@ -253,9 +265,9 @@ export function S3Results({
   view: ResultView
 }) {
   return (
-    <div className='flex min-h-[32rem] min-w-0 flex-col gap-4 lg:h-full lg:min-h-0'>
+    <Flex className='min-h-[32rem] min-w-0 flex-col gap-4 lg:h-full lg:min-h-0'>
       <section className='shrink-0 rounded-card border border-border bg-card p-4'>
-        <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+        <Flex className='flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
           <div className='min-w-0 flex-1'>{requestStatusAlert(error, payload != null)}</div>
           <Segmented
             options={[
@@ -274,7 +286,7 @@ export function S3Results({
             value={view}
             onChange={(value) => onViewChange(value as ResultView)}
           />
-        </div>
+        </Flex>
         {view === 'json' || payload != null ? (
           <div className='mt-3'>
             <ResultBody action={action} payload={payload} rawJson={rawJson} view={view} />
@@ -283,7 +295,7 @@ export function S3Results({
       </section>
 
       <section className='flex min-h-80 flex-1 flex-col overflow-hidden rounded-card border border-border bg-card'>
-        <div className='flex items-center justify-between gap-3 border-b border-border px-4 py-3'>
+        <Flex className='flex-between gap-3 border-b border-border px-4 py-3'>
           <div className='min-w-0'>
             <h2 className='text-sm font-semibold text-foreground'>
               存储桶文件
@@ -296,7 +308,7 @@ export function S3Results({
           <Button icon={<RefreshCcw className='size-3.5' />} size='small' onClick={onRefresh}>
             刷新
           </Button>
-        </div>
+        </Flex>
         <Scrollbar className='min-h-0 flex-1'>
           <FileTable
             files={files}
@@ -311,29 +323,29 @@ export function S3Results({
       </section>
 
       {imagePreview ? (
-        <div
+        <Flex
           aria-label='图片预览'
           aria-modal='true'
-          className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'
+          className='flex-center fixed inset-0 z-50 bg-black/60 p-4'
           role='dialog'
           onClick={onClosePreview}
         >
-          <div
-            className='flex max-h-[90vh] max-w-[90vw] flex-col overflow-hidden rounded-card bg-card shadow-lg'
+          <Flex
+            className='max-h-[90vh] max-w-[90vw] flex-col overflow-hidden rounded-card bg-card shadow-lg'
             onClick={(event) => event.stopPropagation()}
           >
-            <div className='flex items-center justify-between gap-3 border-b border-border px-4 py-3'>
+            <Flex className='flex-between gap-3 border-b border-border px-4 py-3'>
               <div className='min-w-0 truncate font-mono text-xs text-muted-foreground'>{imagePreview.key}</div>
-              <button className={ICON_BUTTON_DEFAULT} title='关闭' type='button' onClick={onClosePreview}>
+              <Button size='small' type='text' title='关闭' onClick={onClosePreview}>
                 <X className='size-4' />
-              </button>
-            </div>
+              </Button>
+            </Flex>
             <div className='overflow-auto p-4'>
               <img alt={imagePreview.key} className='max-h-[75vh] max-w-full object-contain' src={imagePreview.url} />
             </div>
-          </div>
-        </div>
+          </Flex>
+        </Flex>
       ) : null}
-    </div>
+    </Flex>
   )
 }

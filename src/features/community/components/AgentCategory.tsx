@@ -1,6 +1,6 @@
 'use client'
 
-import { Icon, Tag, Text, Flex } from '@pure/ui'
+import { Button, Icon, Tag, Text, Flex } from '@pure/ui'
 import { cx } from 'antd-style'
 import {
   BadgeDollarSignIcon,
@@ -99,10 +99,11 @@ const AgentCategory = memo(() => {
           {CATEGORY_KEYS.map((key) => {
             const isActive = selected === key
             return (
-              <button
+              <Button
+                block
                 className={cx(communityCategoryStyles.item, isActive && communityCategoryStyles.active)}
                 key={key}
-                type='button'
+                type='text'
                 onClick={() => handleSelect(key)}
               >
                 <Icon icon={CATEGORY_ICONS[key]} size={18} />
@@ -116,7 +117,7 @@ const AgentCategory = memo(() => {
                     {counts[key]}
                   </Tag>
                 ) : null}
-              </button>
+              </Button>
             )
           })}
         </Flex>

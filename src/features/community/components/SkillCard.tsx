@@ -48,17 +48,7 @@ export interface SkillCardProps extends DiscoverSkillItem {
 }
 
 const SkillCard = memo<SkillCardProps>(({ onOpenDetail, ...item }) => {
-  const {
-    author,
-    category,
-    description,
-    github,
-    icon,
-    identifier,
-    name,
-    resourcesCount,
-    updatedAt,
-  } = item
+  const { author, category, description, github, icon, identifier, name, resourcesCount, updatedAt } = item
 
   const handleOpenDetail = useCallback(() => {
     onOpenDetail(identifier)
@@ -95,12 +85,7 @@ const SkillCard = memo<SkillCardProps>(({ onOpenDetail, ...item }) => {
           </Flex>
         </Flex>
         {github?.url ? (
-          <a
-            href={github.url}
-            rel='noopener noreferrer'
-            target='_blank'
-            onClick={(event) => event.stopPropagation()}
-          >
+          <a href={github.url} rel='noopener noreferrer' target='_blank' onClick={(event) => event.stopPropagation()}>
             <ActionIcon fill={cssVar.colorTextDescription} icon={Github} title='仓库' />
           </a>
         ) : null}
@@ -110,7 +95,7 @@ const SkillCard = memo<SkillCardProps>(({ onOpenDetail, ...item }) => {
         <Text as='p' className={styles.desc} ellipsis={{ rows: 3 }}>
           {description}
         </Text>
-        <Flex className='items-center justify-between'>
+        <Flex className='flex-between'>
           <Tag
             size='small'
             style={{

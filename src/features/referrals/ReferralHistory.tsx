@@ -1,4 +1,4 @@
-import { Button, Select } from '@pure/ui'
+import { Text, Flex, Button, Select } from '@pure/ui'
 import { Spin } from 'antd'
 import { ArrowLeft, Copy } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -102,8 +102,10 @@ export function ReferralHistory({ onBack }: { onBack: () => void }) {
       <Button type='text' icon={<ArrowLeft size={16} />} onClick={onBack} className='self-start'>
         返回
       </Button>
-      <div className='flex items-center justify-between gap-4'>
-        <h2 className='m-0 whitespace-nowrap text-xl font-semibold'>查看你的邀请</h2>
+      <Flex className='flex-between gap-4'>
+        <Text as='h2' fontSize={20} weight={600} color='inherit' className='m-0! whitespace-nowrap'>
+          查看你的邀请
+        </Text>
         <Select
           aria-label='邀请历史时间范围'
           className='w-40!'
@@ -112,29 +114,35 @@ export function ReferralHistory({ onBack }: { onBack: () => void }) {
           onChange={changeDays}
           disabled={loading || resending !== null}
         />
-      </div>
+      </Flex>
       {error ? (
         <div role='alert'>
-          <p>{error}</p>
+          <Text as='p' color='inherit'>
+            {error}
+          </Text>
           <Button onClick={reload}>重新加载</Button>
         </div>
       ) : null}
       {loading && !data ? <Spin /> : null}
       {data && !data.items.length ? (
-        <p className='py-12 text-center text-muted-foreground'>暂无邀请，邀请好友一起使用 PureChat 吧。</p>
+        <Text as='p' type='secondary' className='py-12 text-center'>
+          暂无邀请，邀请好友一起使用 PureChat 吧。
+        </Text>
       ) : null}
       <ul className='m-0 flex list-none flex-col gap-5 p-0'>
         {data?.items.map((item) => (
           <li key={item.id} className='flex flex-wrap items-center gap-3'>
-            <div className='flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary'>
+            <Flex className='flex-center size-11 shrink-0 rounded-full bg-secondary'>
               {item.email.slice(0, 1).toUpperCase()}
-            </div>
+            </Flex>
             <div className='min-w-0 flex-1'>
               <div className='break-all'>{item.email}</div>
               <div className='text-xs text-muted-foreground'>{new Date(item.createdAt).toLocaleString()}</div>
               {item.error ? <div className='text-xs text-muted-foreground'>{item.error}</div> : null}
             </div>
-            <span className='text-sm text-muted-foreground'>{REFERRAL_STATUS_LABELS[item.status]}</span>
+            <Text as='span' fontSize={14} type='secondary'>
+              {REFERRAL_STATUS_LABELS[item.status]}
+            </Text>
             {item.link ? (
               <Button icon={<Copy size={14} />} onClick={() => copy(item)}>
                 {copied === item.id ? '已复制' : '复制链接'}

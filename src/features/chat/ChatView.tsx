@@ -1,5 +1,6 @@
 'use client'
 
+import { Flex } from '@pure/ui'
 import { useChat } from '@ai-sdk/react'
 import {
   DefaultChatTransport,
@@ -11,7 +12,13 @@ import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from '
 import type { ChatPermissionMode } from '@pure/types'
 
 import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
-import { buildChatHref, createTopic, putMessages, updateToolApproval, upsertToolApproval } from '@/features/chat/chatApi'
+import {
+  buildChatHref,
+  createTopic,
+  putMessages,
+  updateToolApproval,
+  upsertToolApproval,
+} from '@/features/chat/chatApi'
 import {
   claimPendingChatFiles,
   claimPendingChatProject,
@@ -350,16 +357,13 @@ const ChatView = memo<ChatViewProps>(
         if (!topicId) {
           try {
             const pendingProject = claimPendingChatProject()
-            const topic = await createTopic(
-              agentId,
-              buildTopicTitle(text, files),
-              permissionMode,
-              pendingProject?.name
-            )
+            const topic = await createTopic(agentId, buildTopicTitle(text, files), permissionMode, pendingProject?.name)
             if (pendingProject?.rootPath) {
-              await getDesktopApi()?.setPermissionScope?.(topic.id, pendingProject.rootPath).catch((error) => {
-                console.error('[chat] setPermissionScope failed', error)
-              })
+              await getDesktopApi()
+                ?.setPermissionScope?.(topic.id, pendingProject.rootPath)
+                .catch((error) => {
+                  console.error('[chat] setPermissionScope failed', error)
+                })
             }
             onCacheMessages(topic.id, EMPTY_MESSAGES)
             onTopicsRefresh()
@@ -513,7 +517,7 @@ const ChatView = memo<ChatViewProps>(
     }, [handleSend, handleStop, onBindActions])
 
     return (
-      <div className='relative flex min-h-0 min-w-0 flex-1 flex-col'>
+      <Flex className='relative min-h-0 min-w-0 flex-1 flex-col'>
         <ChatMessages
           agentMeta={agentMeta}
           disabled={isBusy}
@@ -528,7 +532,7 @@ const ChatView = memo<ChatViewProps>(
           onServerToolApproval={handleServerToolApproval}
         />
         {error ? <ChatErrorBanner message={error.message} onDismiss={clearError} /> : null}
-      </div>
+      </Flex>
     )
   }
 )

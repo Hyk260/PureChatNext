@@ -1,6 +1,6 @@
 'use client'
 
-import { Select, Text } from '@pure/ui'
+import { Flex, Select, Text } from '@pure/ui'
 import { useThemeMode } from 'antd-style'
 import type { ThemeMode } from 'antd-style'
 
@@ -14,8 +14,8 @@ const AppearanceSettingsContent = () => {
   const { setThemeMode, themeMode } = useThemeMode()
 
   return (
-    <div className='flex w-full flex-col gap-6 px-6 pb-16 pt-6'>
-      <div className='flex-between-wrap w-full max-w-[720px] gap-6'>
+    <Flex className='w-full flex-col gap-6 px-6 pb-16 pt-6'>
+      <Flex className='flex-between-wrap w-full max-w-[720px] gap-6'>
         <div className='min-w-0 flex-1'>
           <Text strong>主题模式</Text>
           <Text type='secondary'>自动模式会跟随系统的浅色或深色外观。</Text>
@@ -27,8 +27,8 @@ const AppearanceSettingsContent = () => {
           value={themeMode}
           onChange={(value) => setThemeMode(value as ThemeMode)}
         />
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   )
 }
 

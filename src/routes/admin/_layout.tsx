@@ -1,5 +1,6 @@
 'use client'
 
+import { Flex } from '@pure/ui'
 import type { ReactNode } from 'react'
 
 import InsetContentFrame from '@/layout/InsetContentFrame'
@@ -10,11 +11,11 @@ export default function AdminRouteLayout({ children }: { children?: ReactNode })
   return (
     <RequireAuth>
       <RequireAdmin>
-        <div className='flex h-full min-h-0 w-full flex-col'>
+        <Flex className='h-full min-h-0 w-full flex-col'>
           <InsetContentFrame sidebarCollapsed>
             <div className='h-full min-h-0 w-full overflow-hidden'>{children}</div>
           </InsetContentFrame>
-        </div>
+        </Flex>
       </RequireAdmin>
     </RequireAuth>
   )

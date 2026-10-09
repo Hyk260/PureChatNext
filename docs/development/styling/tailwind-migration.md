@@ -72,7 +72,7 @@ rg -l "cssVar" src packages --glob '*.{ts,tsx}' --glob '!**/*.test.*' | wc -l
 - 格式化后单个静态 `className` 超过 120 字符时，先复用 Tailwind 内置工具和 `utilities.css` 组合；仍超限则必须使用 `createStaticStyles`。
 - `createStaticStyles` 可用于复杂样式、动态几何值和无法合理压缩到 120 字符以内的组件级样式。
 - 新增例外时，在代码附近写一句保留原因。
-- `@pure/ui` 组件继续使用，但业务布局优先用 `className` 或已有 props 组合。
+- 新页面和功能优先使用 `@pure/ui` 的 `Flex`、`Text`、`Button`、`Select`、`Input` 等组件，保留必要原生语义和特殊控件。布局通过 `className` 或已有 props 表达，优先复用 `utilities.css` 的等价对齐组合。
 
 这一步不要求立即减少存量，只防止迁移过程中继续增加债务。
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { Input, Select, Text } from '@pure/ui'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { EMAIL_TEMPLATE_CATALOG, EMAIL_TEMPLATE_PREVIEW_MOCK } from '@/libs/better-auth/email-templates/preview'
@@ -24,6 +25,8 @@ const PARAM_LABELS: Record<EmailTemplateParamField, string> = {
   url: '链接 URL',
   userName: '用户名（可选）',
 }
+
+const TEMPLATE_OPTIONS = EMAIL_TEMPLATE_CATALOG.map(({ key, label }) => ({ value: key, label }))
 
 const PARAM_PLACEHOLDERS: Record<EmailTemplateParamField, string> = {
   expiresInSeconds: '3600',
@@ -172,43 +175,40 @@ export function EmailTemplateComposer({ onRendered, onRenderError, onRenderState
 
   return (
     <div className='min-w-0'>
-      <label className='text-sm font-medium text-slate-800' htmlFor='email-template-select'>
+      <label className='text-sm font-medium text-foreground' htmlFor='email-template-select'>
         邮件模板
       </label>
-      <select
+      <Select
         id='email-template-select'
         value={activeTemplate}
-        onChange={(event) => setActiveTemplate(event.target.value as EmailTemplateKey)}
-        className='mt-2 w-full min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
-      >
-        {EMAIL_TEMPLATE_CATALOG.map((entry) => (
-          <option key={entry.key} value={entry.key}>
-            {entry.label}
-          </option>
-        ))}
-      </select>
+        onChange={setActiveTemplate}
+        options={TEMPLATE_OPTIONS}
+        className='mt-2 w-full'
+      />
 
       <div className='mt-4 grid min-w-0 gap-4'>
         {activeParams.map((field) => (
           <div key={field} className='min-w-0'>
             <label
-              className='text-sm font-medium text-slate-800'
+              className='text-sm font-medium text-foreground'
               htmlFor={`email-template-param-${activeTemplate}-${field}`}
             >
               {PARAM_LABELS[field]}
             </label>
-            <input
+            <Input
               id={`email-template-param-${activeTemplate}-${field}`}
               type={field === 'expiresInSeconds' ? 'number' : 'text'}
               min={field === 'expiresInSeconds' ? 1 : undefined}
               value={paramValue(field)}
               onChange={(event) => updateParam(field, event.target.value)}
               placeholder={PARAM_PLACEHOLDERS[field]}
-              className='mt-2 w-full min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-3 focus:ring-cyan-100'
+              className='mt-2 w-full min-w-0'
             />
           </div>
         ))}
-        <p className='text-xs leading-5 text-slate-500'>修改参数后约 300ms 自动刷新预览，发送时将使用当前渲染结果。</p>
+        <Text as='p' fontSize={12} type='secondary' className='leading-5'>
+          修改参数后约 300ms 自动刷新预览，发送时将使用当前渲染结果。
+        </Text>
       </div>
     </div>
   )

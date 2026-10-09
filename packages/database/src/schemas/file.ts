@@ -15,9 +15,8 @@ export const globalFiles = pgTable(
     size: integer('size').notNull(),
     url: text('url').notNull(),
     metadata: jsonb('metadata'),
-    creator: text('creator')
-      .references(() => users.id, { onDelete: 'set null' })
-      .notNull(),
+    // Shared files survive their creator's account deletion.
+    creator: text('creator').references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
     accessedAt: accessedAt(),
   },

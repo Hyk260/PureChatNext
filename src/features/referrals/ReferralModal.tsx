@@ -1,4 +1,4 @@
-import { Button, TextArea, Modal } from '@pure/ui'
+import { Text, Flex, Button, TextArea, Modal } from '@pure/ui'
 import { CheckCircle2, CircleAlert } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
@@ -105,7 +105,11 @@ export default function ReferralModal({ open, onClose }: Props) {
         header: { position: 'absolute', right: 12, top: 12, padding: 0, border: 0, zIndex: 1 },
       }}
       style={{ borderRadius: 24, overflow: 'hidden' }}
-      title={<span className='sr-only'>邀请好友</span>}
+      title={
+        <Text as='span' color='inherit' className='sr-only'>
+          邀请好友
+        </Text>
+      }
       draggable={false}
       centered
     >
@@ -115,8 +119,12 @@ export default function ReferralModal({ open, onClose }: Props) {
           <ReferralHero />
           <section className='flex flex-col items-center gap-6 px-6 py-10 text-center sm:px-10'>
             <div>
-              <h1 className='m-0 text-2xl font-semibold'>邀请朋友使用 PureChat</h1>
-              <p className='mt-3 text-base text-muted-foreground'>与好友一起体验 AI 对话、搜索和创作</p>
+              <Text as='h1' fontSize={24} weight={600} color='inherit' className='m-0!'>
+                邀请朋友使用 PureChat
+              </Text>
+              <Text as='p' fontSize={16} type='secondary' className='mt-3!'>
+                与好友一起体验 AI 对话、搜索和创作
+              </Text>
             </div>
             <div className='w-full text-left'>
               <label htmlFor='referral-emails' className='sr-only'>
@@ -130,15 +138,21 @@ export default function ReferralModal({ open, onClose }: Props) {
                 autoSize={{ minRows: 2, maxRows: 5 }}
                 disabled={loading}
               />
-              <p className='mb-0 mt-2 text-xs text-muted-foreground'>每次最多 3 位好友，邀请链接有效期为 7 天。</p>
-              {input && validation.error ? <p className='text-sm text-red-500'>{validation.error}</p> : null}
+              <Text as='p' fontSize={12} type='secondary' className='mb-0! mt-2!'>
+                每次最多 3 位好友，邀请链接有效期为 7 天。
+              </Text>
+              {input && validation.error ? (
+                <Text as='p' fontSize={14} type='danger'>
+                  {validation.error}
+                </Text>
+              ) : null}
             </div>
             {error ? (
-              <p role='alert' className='text-sm text-red-500'>
+              <Text as='p' fontSize={14} type='danger' role='alert'>
                 {error}
-              </p>
+              </Text>
             ) : null}
-            <div className='flex gap-3'>
+            <Flex className='gap-3'>
               <Button size='large' shape='round' onClick={showHistory}>
                 跟踪邀请
               </Button>
@@ -152,7 +166,7 @@ export default function ReferralModal({ open, onClose }: Props) {
               >
                 发送
               </Button>
-            </div>
+            </Flex>
           </section>
         </div>
       ) : null}
@@ -163,28 +177,32 @@ export default function ReferralModal({ open, onClose }: Props) {
           ) : (
             <CircleAlert size={64} className='text-orange-500' aria-hidden />
           )}
-          <h2 className='m-0 text-2xl font-semibold'>{resultTitle(allSent, sentCount)}</h2>
-          <p className='m-0 text-muted-foreground'>
+          <Text as='h2' fontSize={24} weight={600} color='inherit' className='m-0!'>
+            {resultTitle(allSent, sentCount)}
+          </Text>
+          <Text as='p' type='secondary' className='m-0!'>
             {sentCount
               ? '好友将收到邀请，可加入 PureChat，体验 AI 对话、搜索和创作。'
               : '请检查下方结果。发送结果待确认的邀请请勿重复发送。'}
-          </p>
+          </Text>
           <ul className='m-0 w-full list-none space-y-3 p-0 text-left'>
             {result?.results.map((item) => (
               <li key={item.email} className='flex flex-wrap justify-between gap-2 text-sm'>
-                <span className='break-all'>{item.email}</span>
-                <span className='text-muted-foreground'>
+                <Text as='span' color='inherit' className='break-all'>
+                  {item.email}
+                </Text>
+                <Text as='span' type='secondary'>
                   {item.error ||
                     item.invitation?.error ||
                     (item.invitation && REFERRAL_STATUS_LABELS[item.invitation.status])}
-                </span>
+                </Text>
               </li>
             ))}
           </ul>
           {error ? (
-            <p role='alert' className='text-sm text-red-500'>
+            <Text as='p' fontSize={14} type='danger' role='alert'>
               {error}
-            </p>
+            </Text>
           ) : null}
           {hasFailed ? (
             <Button loading={loading} disabled={!retryable.length} onClick={retryFailed}>

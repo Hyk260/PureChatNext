@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Clipboard, RefreshCcw, Sparkles, Trash2 } from 'lucide-react'
 
-import { ActionIcon, Button, Checkbox, CodeBlock, Select, TextArea } from '@pure/ui'
+import { Flex, ActionIcon, Button, Checkbox, CodeBlock, Select, TextArea } from '@pure/ui'
 
 import Scrollbar from '@/components/Scrollbar'
 
@@ -105,7 +105,7 @@ export function WebSearchForm({
   return (
     <section className='flex min-h-[32rem] flex-col overflow-hidden rounded-card border border-border bg-card lg:h-full lg:min-h-0'>
       <Scrollbar className='min-h-0 flex-1'>
-        <div className='flex flex-col gap-4 p-4'>
+        <Flex className='flex-col gap-4 p-4'>
           <p className='text-sm leading-6 text-muted-foreground'>{ACTION_META[action].description}</p>
 
           {action === 'crawlPages' ? (
@@ -138,31 +138,35 @@ export function WebSearchForm({
             >
               发送请求
             </Button>
-            <ActionIcon icon={Trash2} title='清理缓存（结果与服务商/分类/引擎/时间范围/impls）' onClick={onClearCache} />
+            <ActionIcon
+              icon={Trash2}
+              title='清理缓存（结果与服务商/分类/引擎/时间范围/impls）'
+              onClick={onClearCache}
+            />
             <ActionIcon icon={RefreshCcw} title='重置测试' onClick={onReset} />
           </div>
 
           <dl className='grid gap-2 border-t border-border pt-4 text-sm'>
             {metaRows(runState).map(([label, value]) => (
-              <div key={label} className='flex-between gap-4'>
+              <Flex key={label} className='flex-between gap-4'>
                 <dt className='text-muted-foreground'>{label}</dt>
                 <dd className='text-right font-mono text-xs text-foreground'>{value}</dd>
-              </div>
+              </Flex>
             ))}
           </dl>
 
           <div>
-            <div className='flex-between gap-3'>
+            <Flex className='flex-between gap-3'>
               <h2 className='text-sm font-semibold text-foreground'>请求体</h2>
               <Button icon={<Clipboard className='size-3.5' />} size='small' onClick={onCopy}>
                 {COPY_LABEL[copyState]}
               </Button>
-            </div>
+            </Flex>
             <Scrollbar maxHeight='10rem' className='mt-3 overflow-hidden rounded-lg ring-1 ring-border'>
               <CodeBlock code={requestJson} language='json' showHeader={false} />
             </Scrollbar>
           </div>
-        </div>
+        </Flex>
       </Scrollbar>
     </section>
   )
@@ -190,7 +194,11 @@ function CrawlFields({
           onChange={(event) => onUrls(event.target.value)}
         />
       </Field>
-      <Field hint='可多选；不选则走服务端默认抓取链路。' label='抓取实现 · Crawler impls' labelId='web-search-impls-label'>
+      <Field
+        hint='可多选；不选则走服务端默认抓取链路。'
+        label='抓取实现 · Crawler impls'
+        labelId='web-search-impls-label'
+      >
         <div aria-labelledby='web-search-impls-label' className='grid grid-cols-2 gap-2' role='group'>
           {CRAWLER_IMPLS.map((item) => {
             const checked = selectedImpls.has(item.value)

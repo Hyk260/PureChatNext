@@ -13,12 +13,13 @@ alwaysApply: false
 - 先判断样式复杂度，再选择 Tailwind 或 `createStaticStyles`。
 - 业务布局、间距、颜色、边框、圆角和简单响应式优先写 `className`。
 - 优先使用语义化主题变量，不要复制 dev 页面中的 `slate-*` / `cyan-*` 作为主应用 token。
-- 允许使用 `@pure/ui`；不要把 `@pure/ui` 内部样式桥接迁移混入普通业务改动。
+- 新页面和业务功能优先使用 `@pure/ui` 的 `Flex`、`Text`、`Button`、`Select`、`Input` 等组件；保留必要原生语义与特殊控件，不要把 UI 内部桥接迁移混入普通业务改动。
+- 已有等价布局优先复用 `utilities.css` 的 `flex-center`、`flex-between`、`flex-between-wrap`、`flex-col-center`；`Flex` 普通布局不重复写 `flex`。
 - 保留 `createStaticStyles` 时，在代码附近说明保留原因。
 - 不要为形式上的 Tailwind 化制造超长、难以阅读的 className；复杂样式可以保留。
 - 修改后检查无必要的 `antd-style` import、styles 常量和测试 mock。
 
 完整规范与迁移步骤见：
 
-- [`docs/tailwind-style-guidelines.zh-CN.md`](../../docs/tailwind-style-guidelines.zh-CN.md)
-- [`docs/tailwind-style-migration-guide.zh-CN.md`](../../docs/tailwind-style-migration-guide.zh-CN.md)
+- [`docs/development/styling/tailwind-guidelines.md`](../../docs/development/styling/tailwind-guidelines.md)
+- [`docs/development/styling/tailwind-migration.md`](../../docs/development/styling/tailwind-migration.md)

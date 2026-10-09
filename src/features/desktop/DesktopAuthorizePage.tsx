@@ -1,5 +1,6 @@
 'use client'
 
+import { Button, Text } from '@pure/ui'
 import { AlertCircle, CheckCircle2, LoaderCircle } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
@@ -28,13 +29,16 @@ const DesktopAuthorizePage = () => {
     const authorize = async () => {
       const response = await apiFetch(
         '/api/auth/desktop/authorize',
-        jsonInit({
-          client_id: search.get('client_id'),
-          code_challenge: search.get('code_challenge'),
-          code_challenge_method: search.get('code_challenge_method'),
-          redirect_uri: search.get('redirect_uri'),
-          state: search.get('state'),
-        }, { method: 'POST' })
+        jsonInit(
+          {
+            client_id: search.get('client_id'),
+            code_challenge: search.get('code_challenge'),
+            code_challenge_method: search.get('code_challenge_method'),
+            redirect_uri: search.get('redirect_uri'),
+            state: search.get('state'),
+          },
+          { method: 'POST' }
+        )
       )
       const body = (await response.json().catch(() => ({}))) as { error?: string; redirectUri?: string }
       if (!response.ok || !body.redirectUri) throw new Error(body.error || '桌面授权失败')
@@ -50,7 +54,7 @@ const DesktopAuthorizePage = () => {
   const title = error ? '授权未完成' : session?.user ? '正在返回 PureChat' : '需要先登录 PureChat'
 
   return (
-    <main className='flex min-h-full items-center justify-center bg-app-layout px-6 py-10'>
+    <main className='flex-center min-h-full bg-app-layout px-6 py-10'>
       <section className='w-full max-w-[480px] rounded-3xl border border-app-border-secondary bg-app-surface p-8 text-center shadow-card'>
         {error ? (
           <AlertCircle className='mx-auto text-red' size={34} />
@@ -60,17 +64,13 @@ const DesktopAuthorizePage = () => {
           <LoaderCircle className='mx-auto animate-spin text-primary' size={34} />
         )}
         <h1 className='mt-5 text-2xl font-semibold tracking-tight text-foreground'>{title}</h1>
-        <p className='mt-3 text-sm leading-6 text-muted-foreground'>
+        <Text as='p' fontSize={14} type='secondary' className='mt-3! leading-6'>
           {error || '完成授权后，这个页面会自动关闭或返回桌面应用。'}
-        </p>
+        </Text>
         {error ? (
-          <button
-            className='mt-6 inline-flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground'
-            type='button'
-            onClick={() => window.location.reload()}
-          >
+          <Button className='mt-6' type='primary' onClick={() => window.location.reload()}>
             重试授权
-          </button>
+          </Button>
         ) : null}
       </section>
     </main>

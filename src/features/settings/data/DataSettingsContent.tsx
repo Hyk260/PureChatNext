@@ -1,4 +1,4 @@
-import { ActionIcon, Block, Button, Flex, Skeleton, Text } from '@pure/ui'
+import { ActionIcon, Block, Button, Flex, Modal, Skeleton, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { Alert, Select } from 'antd'
 import { Copy, RefreshCw } from 'lucide-react'
@@ -47,9 +47,9 @@ function DirectoryRow({
     }
   }
   return (
-    <div className='flex flex-wrap items-center gap-3 border-b border-border py-4'>
+    <Flex className='flex-wrap items-center gap-3 border-b border-border py-4'>
       <Text className='shrink-0'>{label}</Text>
-      <div className='flex min-w-0 flex-1 items-center justify-end gap-2'>
+      <Flex className='min-w-0 flex-1 items-center justify-end gap-2'>
         <Text className='min-w-0 break-all text-right text-sm' title={path} type='secondary'>
           {path}
         </Text>
@@ -60,19 +60,20 @@ function DirectoryRow({
           aria-label={`复制${label}路径`}
           onClick={copy}
         />
-      </div>
+      </Flex>
       <Button onClick={open}>{directory === 'data' ? '打开目录' : '打开日志'}</Button>
-    </div>
+    </Flex>
   )
 }
 
 export function DataSettingsContent() {
   const api = getDesktopApi()
-  const { message, modal } = useApp()
+  const { message } = useApp()
   const [data, setData] = useState<DesktopDataInfo | null>(null)
   const [loading, setLoading] = useState(Boolean(api))
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [clearCacheConfirmOpen, setClearCacheConfirmOpen] = useState(false)
   const operation = useRef(false)
   const generation = useRef(0)
   const confirming = useRef(false)
@@ -137,32 +138,32 @@ export function DataSettingsContent() {
   const clearCache = () => {
     if (!api || operation.current || confirming.current) return
     confirming.current = true
-    modal.confirm({
-      title: '清除缓存',
-      content: '仅清除桌面 HTTP 缓存，资源可能需要重新下载。登录状态、聊天数据和项目文件将保留。',
-      okText: '清除缓存',
-      cancelText: '取消',
-      onCancel: () => {
-        confirming.current = false
-      },
-      onOk: async () => {
-        if (operation.current) return
-        operation.current = true
-        setBusy(true)
-        setError(null)
-        try {
-          await api.clearHttpCache()
-          message.success('缓存已清除')
-          await load()
-        } catch {
-          setError('清除缓存失败，请重试')
-        } finally {
-          confirming.current = false
-          operation.current = false
-          setBusy(false)
-        }
-      },
-    })
+    setClearCacheConfirmOpen(true)
+  }
+
+  const confirmClearCache = async () => {
+    if (!api || operation.current) return
+    operation.current = true
+    setBusy(true)
+    setError(null)
+    try {
+      await api.clearHttpCache()
+      message.success('缓存已清除')
+      await load()
+    } catch {
+      setError('清除缓存失败，请重试')
+    } finally {
+      confirming.current = false
+      operation.current = false
+      setBusy(false)
+      setClearCacheConfirmOpen(false)
+    }
+  }
+
+  const cancelClearCache = () => {
+    if (busy) return
+    confirming.current = false
+    setClearCacheConfirmOpen(false)
   }
 
   if (!api)
@@ -176,6 +177,17 @@ export function DataSettingsContent() {
 
   return (
     <Flex className='w-full flex-col gap-6 px-6 py-6 pb-16'>
+      <Modal
+        open={clearCacheConfirmOpen}
+        title='清除缓存'
+        okText='清除缓存'
+        cancelText='取消'
+        confirmLoading={busy}
+        onCancel={cancelClearCache}
+        onOk={confirmClearCache}
+      >
+        仅清除桌面 HTTP 缓存，资源可能需要重新下载。登录状态、聊天数据和项目文件将保留。
+      </Modal>
       {error ? (
         <Alert
           type='error'
@@ -194,8 +206,8 @@ export function DataSettingsContent() {
           <Text className='mb-2 block text-base font-semibold'>数据目录</Text>
           <DirectoryRow label='应用数据' directory='data' path={data.dataPath} onError={setError} />
           <DirectoryRow label='应用日志' directory='logs' path={data.logsPath} onError={setError} />
-          <div className='flex flex-col gap-3 border-b border-border py-4'>
-            <div className='flex items-center justify-between gap-4'>
+          <Flex className='flex-col gap-3 border-b border-border py-4'>
+            <Flex className='flex-between gap-4'>
               <Text>日志保留期</Text>
               <Select<DesktopLogRetentionDays>
                 className='w-40'
@@ -205,13 +217,13 @@ export function DataSettingsContent() {
                 disabled={busy || loading}
                 onChange={setRetention}
               />
-            </div>
+            </Flex>
             <Text type='secondary' className='text-sm'>
               超过保留期的日志会自动删除：启动时检查一次，之后每 12 小时检查一次。
             </Text>
-          </div>
-          <div className='flex flex-wrap items-center justify-between gap-3 pt-4'>
-            <div className='flex items-center gap-2'>
+          </Flex>
+          <Flex className='flex-between-wrap gap-3 pt-4'>
+            <Flex className='items-center gap-2'>
               <Text>清除缓存</Text>
               <Text type='secondary'>（{cacheLabel(data.cacheBytes)}）</Text>
               <ActionIcon
@@ -222,11 +234,11 @@ export function DataSettingsContent() {
                 disabled={busy || loading}
                 onClick={load}
               />
-            </div>
+            </Flex>
             <Button loading={busy} disabled={loading} onClick={clearCache}>
               清除缓存
             </Button>
-          </div>
+          </Flex>
         </Block>
       ) : null}
     </Flex>

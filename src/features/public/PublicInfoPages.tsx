@@ -1,5 +1,6 @@
 'use client'
 
+import { Button, Flex, Text } from '@pure/ui'
 import type { ReactNode } from 'react'
 
 import { SITE_DISCUSSIONS_URL, SITE_ISSUES_URL, SITE_REPOSITORY_URL } from '@/const/site'
@@ -33,9 +34,9 @@ const BackLink = () => {
   const router = useRouter()
 
   return (
-    <button
-      className='w-fit cursor-pointer border-0 bg-transparent p-0 text-sm text-muted-foreground hover:text-foreground'
-      type='button'
+    <Button
+      className='w-fit self-start'
+      type='text'
       onClick={() => {
         if (typeof window !== 'undefined' && window.history.length > 1) {
           router.back()
@@ -45,7 +46,7 @@ const BackLink = () => {
       }}
     >
       ← 返回上一级
-    </button>
+    </Button>
   )
 }
 
@@ -55,18 +56,22 @@ const PublicInfoPage = ({ description, sections, title }: PublicInfoPageProps) =
       <header className='flex flex-col gap-4 border-b border-border pb-8'>
         <BackLink />
         <h1 className='m-0 text-3xl font-bold tracking-tight md:text-4xl'>{title}</h1>
-        <p className='m-0 text-base leading-7 text-muted-foreground'>{description}</p>
-        <p className='m-0 text-sm text-muted-foreground'>最后更新：{UPDATED_AT}</p>
+        <Text as='p' fontSize={16} type='secondary' className='m-0 leading-7'>
+          {description}
+        </Text>
+        <Text as='p' fontSize={14} type='secondary' className='m-0'>
+          最后更新：{UPDATED_AT}
+        </Text>
       </header>
 
-      <div className='flex flex-col gap-9'>
+      <Flex className='flex-col gap-9'>
         {sections.map((section) => (
           <section className='flex flex-col gap-3' key={section.title}>
             <h2 className='m-0 text-xl font-semibold'>{section.title}</h2>
             <div className='space-y-3 text-[15px] leading-7 text-muted-foreground'>{section.content}</div>
           </section>
         ))}
-      </div>
+      </Flex>
 
       <footer className='border-t border-border pt-6 text-sm text-muted-foreground'>
         PureChat 是开源项目。第三方自托管实例的运营者可能采用不同规则，请同时查看该实例提供的说明。
@@ -210,9 +215,7 @@ const HelpContent = () => (
               </ExternalLink>
             </li>
             <li>
-              <ExternalLink
-                href={`${SITE_REPOSITORY_URL}/blob/main/docs/self-hosting/configuration/environment.md`}
-              >
+              <ExternalLink href={`${SITE_REPOSITORY_URL}/blob/main/docs/self-hosting/configuration/environment.md`}>
                 环境变量与生产配置
               </ExternalLink>
             </li>

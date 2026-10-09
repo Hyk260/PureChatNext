@@ -11,7 +11,7 @@ const HomePage = memo(() => {
   return (
     <Flex className='flex-col flex-1 h-full min-h-[0px] w-full'>
       <NavHeader />
-      <Flex className='flex-col flex-1 items-center justify-center min-h-[0px] overflow-y-auto py-6 w-full'>
+      <Flex className='flex-col-center flex-1 min-h-[0px] overflow-y-auto py-6 w-full'>
         <WideScreenContainer>
           <HomeContent />
         </WideScreenContainer>

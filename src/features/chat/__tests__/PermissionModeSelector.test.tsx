@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@pure/ui', () => ({
+  Flex: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
   Icon: () => <span aria-hidden />,
   Modal: ({
     cancelText,

@@ -1,5 +1,6 @@
 'use client'
 
+import { Flex } from '@pure/ui'
 import { useEffect, useState } from 'react'
 import { Segmented } from 'antd'
 import { Download, HardDrive, Pencil, Trash2, Upload } from 'lucide-react'
@@ -86,10 +87,10 @@ export default function S3Page() {
     buildRequestPreview(
       action,
       values,
-      files.map((item) => item.name),
+      files.map((item) => item.name)
     ),
     null,
-    2,
+    2
   )
   const rawJson = payload ? JSON.stringify(payload, null, 2) : ''
   const resultData = isApiSuccess(payload) ? payload.data : null
@@ -239,7 +240,7 @@ export default function S3Page() {
 
   return (
     <main className='flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground'>
-      <div className='mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6 lg:overflow-hidden lg:px-8'>
+      <Flex className='mx-auto h-full min-h-0 w-full max-w-7xl flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6 lg:overflow-hidden lg:px-8'>
         <header className='flex shrink-0 flex-col justify-between gap-3 border-b border-border pb-4 lg:flex-row lg:items-end'>
           <div>
             <h1 className='text-2xl font-semibold text-foreground'>FileS3 功能测试台</h1>
@@ -294,7 +295,7 @@ export default function S3Page() {
             onViewChange={setView}
           />
         </div>
-      </div>
+      </Flex>
     </main>
   )
 }
@@ -309,6 +310,7 @@ async function sendRequest(action: ActionMode, values: S3FormValues, files: File
   }
 
   const { request } = plan
-  const init = request.body === undefined ? { method: request.method } : jsonInit(request.body, { method: request.method })
+  const init =
+    request.body === undefined ? { method: request.method } : jsonInit(request.body, { method: request.method })
   return apiFetch(withSearch(S3_API_PATH, request.search), init)
 }

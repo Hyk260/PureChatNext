@@ -9,7 +9,7 @@ description: PureChatNext 的 Tailwind 优先样式规则、主题边界与 AI �
 
 ## 一句话规则
 
-新组件默认使用 Tailwind CSS；格式化后单个静态 `className` 不得超过 120 字符。先复用 Tailwind 内置工具和 `utilities.css` 组合，仍然超限时必须改用 `createStaticStyles`。
+新页面和业务功能优先复用 `@pure/ui` 的组件，Tailwind 负责布局与外观；格式化后单个静态 `className` 不得超过 120 字符。先复用 Tailwind 内置工具和 `utilities.css` 组合，仍然超限时必须改用 `createStaticStyles`。
 
 ## 选择方式
 
@@ -33,14 +33,22 @@ description: PureChatNext 的 Tailwind 优先样式规则、主题边界与 AI �
 
 ```tsx
 export const EmptyState = ({ title }: { title: string }) => (
-  <section className='flex flex-col items-center gap-2 px-6 py-8 text-center'>
-    <h2 className='text-base font-medium text-foreground'>{title}</h2>
-    <p className='text-sm text-muted-foreground'>暂无内容</p>
+  <section>
+    <Flex className='flex-col items-center gap-2 px-6 py-8 text-center'>
+      <Text as='h2' fontSize={16} weight={500}>{title}</Text>
+      <Text as='p' type='secondary'>暂无内容</Text>
+    </Flex>
   </section>
 )
 ```
 
-允许使用已有的 `@pure/ui` 组件；Tailwind 负责业务布局和外观，组件自身的交互和可访问性仍由 UI 组件负责。
+### UI 组件优先（新页面与新功能）
+
+- 非语义布局容器优先使用 `Flex`，文字和标题优先使用 `Text`，普通操作优先使用 `Button` / `ActionIcon`，选择与输入优先使用 `Select` / `Input` / `TextArea`，统一从 `@pure/ui` 导入已有组件。
+- `Flex` 默认是 `div`，不支持 antd Flex 的 `align` / `justify` props；通过 `className` 设置布局。`Text` 使用 `as='h1'` / `as='h2'` / `as='p'` / `as='span'` 保留语义，优先通过 `fontSize`、`weight`、`type` 等现有 API 设置文字外观。
+- `Button` 的视觉类型使用 `type`，表单提交使用 `htmlType='submit'`；`Select` 使用 `options` 和值回调，不沿用原生 select 的 `event.target.value`。
+- 保留 `main`、`section`、`header`、`nav`、`form`、`label`、`ul` / `li`、表格等必要原生语义。文件输入、IME / 自动高度受控编辑器、桌面窗口控制等依赖原生行为的特殊控件允许保留，不能为统一组件而破坏焦点、键盘、ref 或 DOM 结构。
+- 修改存量代码时先确认组件 API 和样式优先级，按功能域迁移；不要把所有原生标签机械替换为 `Flex` 或 `Text`。UI 组件负责交互、可访问性与主题，Tailwind 负责业务布局和外观。
 
 ### 不要这样写
 
@@ -58,7 +66,7 @@ const styles = createStaticStyles(({ css }) => ({
 应直接使用：
 
 ```tsx
-<p className='text-center text-xs'>...</p>
+<Text as='p' align='center' fontSize={12}>...</Text>
 ```
 
 也不要为了“迁移到 Tailwind”把复杂的动态 CSS 拆成难以阅读的超长 className。
@@ -92,6 +100,10 @@ const styles = createStaticStyles(({ css }) => ({
 ```
 
 布局优先使用 `@pure/ui` 的 `Flex`：它是 Tailwind-first 的 flex 容器，可直接用普通工具类控制 `gap`、`width`、`height`、`padding` 等。
+
+### 对齐组合必须优先复用
+
+已有等价组合时不要重复堆叠基础类：`flex items-center justify-center` 使用 `flex-center`，`flex items-center justify-between` 使用 `flex-between`，带换行使用 `flex-between-wrap`，纵向双轴居中使用 `flex-col-center`。`Flex` 自带 `display: flex`，普通布局无需额外写 `flex`；组合工具类可直接用于 `Flex`，也可用于需要保留语义的原生元素。响应式隐藏 / 显示类仍需按原行为保留，不强制合并只有部分对齐属性的布局。
 
 ## 主题与颜色
 

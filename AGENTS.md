@@ -105,6 +105,8 @@ pnpm exec vitest run --silent='passed-only' '<test-file>'
 
 - 遵循 `eslint.config.mjs`；类型导入使用顶层 `import type`，不要把同一来源拆成重复 import。
 - 新组件和简单静态样式默认使用 Tailwind CSS；复杂选择器、动画、SVG、滚动条或动态几何值可保留 `createStaticStyles`。
+- 新页面和业务功能优先使用 `@pure/ui` 的 `Flex`、`Text`、`Button`、`ActionIcon`、`Select`、`Input` 等组件；保留必要原生语义及依赖原生行为的特殊控件，替换时确认组件 API、键盘和 ref 行为。
+- 已有等价对齐组合时优先复用 `utilities.css` 中的 `flex-center`、`flex-between`、`flex-between-wrap`、`flex-col-center`，不要重复堆叠 `flex items-center justify-center` 等基础类；`Flex` 普通布局不重复写 `flex`。
 - 仅将跨页面高频且语义稳定的样式组合加入 `src/styles/utilities.css`；新增前先搜索仓库验证复用需求。
 - Tailwind 细则见 `docs/development/styling/tailwind-guidelines.md` 与 `docs/development/styling/tailwind-migration.md`。
 - 单文件接近或超过 800 行时评估拆分，但不要为控制行数进行无关重构。

@@ -16,8 +16,8 @@ Agent 指引：https://ant.design/docs/react/for-agents.md
 
 ## 编写约定
 
-- 从 `antd` 具名导入组件；类型优先用 `GetProps` / `GetRef` / `GetProp`（`import type { GetProps } from 'antd'`），与现有代码风格一致。
-- 布局优先 `Flex`（本仓库已广泛使用），其次 `Space`；避免随意引入整套 `Layout` 脚手架。
+- 业务组件优先从 `@pure/ui` 导入已有封装；包内未提供的组件再从 `antd` 具名导入。antd 类型优先用 `GetProps` / `GetRef` / `GetProp`（`import type { GetProps } from 'antd'`）。
+- 布局优先使用 `@pure/ui` 的 Tailwind-first `Flex`，通过 `className` 和已有 `utilities.css` 对齐组合控制布局；该 Flex 不支持 antd 的 `align` / `justify` props。避免随意引入整套 `Layout` 脚手架。
 - 反馈类 API：**优先** `App.useApp()` 取 `message` / `modal` / `notification`，勿用已弃用的静态 `message.xxx`（主题/上下文会错）。全局静态桥接见 `src/components/AntdStaticMethods`。
 - `ConfigProvider` 与 `App` 成对：主题 token 在 `ConfigProvider` 内，`App` 包在其内层；本仓库主题入口见 `src/layout/ThemeProviders.tsx`。
 - Button：主操作 `type="primary"`；危险操作用 `danger`；可用 `color` + `variant` 组合变体（v5.21+ / v6）。

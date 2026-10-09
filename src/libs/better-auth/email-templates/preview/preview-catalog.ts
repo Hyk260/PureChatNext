@@ -36,7 +36,7 @@ export const EMAIL_TEMPLATE_PREVIEW_MOCK = {
   userName: 'Preview User',
 }
 
-export type EmailTemplateKey = 'verification' | 'change-email' | 'magic-link' | 'reset-password' | 'verification-otp'
+export type EmailTemplateKey = 'referral' | 'verification' | 'change-email' | 'magic-link' | 'reset-password' | 'verification-otp'
 
 export type EmailTemplateParamField = 'url' | 'userName' | 'expiresInSeconds' | 'otp'
 
@@ -59,6 +59,7 @@ export const EMAIL_TEMPLATE_CATALOG: EmailTemplateCatalogEntry[] = [
   { key: 'magic-link', label: 'Magic Link', params: ['url', 'expiresInSeconds'] },
   { key: 'reset-password', label: '重置密码', params: ['url'] },
   { key: 'verification-otp', label: 'OTP 验证', params: ['userName', 'expiresInSeconds', 'otp'] },
+  { key: 'referral', label: '邀请好友', params: ['url', 'userName'] },
 ]
 
 export const EMAIL_TEMPLATE_KEYS = EMAIL_TEMPLATE_CATALOG.map((entry) => entry.key)

@@ -32,8 +32,10 @@ export default defineConfig({
     // Let `.md` imports resolve to their raw text content so Rollup/Vitest
     // doesn't try to parse Markdown as JavaScript.
     {
-      name: 'raw-md',
-      transform(_, id) {
+      name: 'raw-templates',
+      enforce: 'pre',
+      transform(code, id) {
+        if (id.endsWith('.html')) return { code: `export default ${JSON.stringify(code)}`, map: null }
         if (id.endsWith('.md')) return { code: 'export default ""', map: null }
       },
     },

@@ -1,6 +1,7 @@
 import { analyticsEnv } from '@/envs/analytics'
 import { appEnv, IS_VERCEL } from '@/envs/app'
 import { getProviderEnvKeyFlags } from '@/libs/ai-providers/envKeys'
+import { sanitizeReferralTelemetryUrl } from '@/libs/referrals/helpers'
 import { renderSpaHtml } from '@/server/spaHtml'
 import type { SPAServerConfig } from '@/types/spaServerConfig'
 
@@ -37,11 +38,16 @@ export async function GET(request: NextRequest, context: SpaRouteContext) {
   const { path = [] } = await context.params
   const pathname = path.length > 0 ? `/${path.map(encodeURIComponent).join('/')}` : '/'
 
-  return renderSpaHtml(spaHtmlTemplate, {
+  const response = renderSpaHtml(spaHtmlTemplate, {
     publicMetadata: {
       baseUrl: appEnv.APP_URL ?? request.nextUrl.origin,
       pathname,
     },
     serverConfig: buildServerConfig(request.nextUrl.origin),
   })
+  const url = request.nextUrl.toString()
+  if (pathname === '/accept-referral' || sanitizeReferralTelemetryUrl(url) !== url) {
+    response.headers.set('Referrer-Policy', 'no-referrer')
+  }
+  return response
 }

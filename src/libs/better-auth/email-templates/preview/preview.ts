@@ -1,3 +1,4 @@
+import { getReferralEmailTemplate } from '../referral'
 import { getChangeEmailVerificationTemplate } from '../change-email'
 import { getMagicLinkEmailTemplate } from '../magic-link'
 import { getResetPasswordEmailTemplate } from '../reset-password'
@@ -20,6 +21,8 @@ export function renderEmailTemplate(key: EmailTemplateKey, params: EmailTemplate
   const { url, userName, expiresInSeconds, otp } = resolveTemplateParams(params)
 
   switch (key) {
+    case 'referral':
+      return getReferralEmailTemplate({ url, userName })
     case 'verification':
       return getVerificationEmailTemplate({ expiresInSeconds, url, userName })
     case 'change-email':

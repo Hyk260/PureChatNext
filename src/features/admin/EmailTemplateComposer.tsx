@@ -173,7 +173,7 @@ export function EmailTemplateComposer({ onRendered, onRenderError, onRenderState
   return (
     <div className='min-w-0'>
       <label className='text-sm font-medium text-slate-800' htmlFor='email-template-select'>
-        认证模板
+        邮件模板
       </label>
       <select
         id='email-template-select'

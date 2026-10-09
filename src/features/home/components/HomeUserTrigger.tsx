@@ -4,13 +4,15 @@ import { Avatar } from 'antd'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Block, Button, Icon, Menu, Popover, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { ChevronDownIcon, LogOut, Settings2 } from 'lucide-react'
+import { ChevronDownIcon, LogOut, Settings2, Send } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import { signOutWorkspace } from '@/features/auth/signOutWorkspace'
 import { useSession } from '@/libs/better-auth/client'
+
+import ReferralModal from '@/features/referrals/ReferralModal'
 
 import DataStatistics from './DataStatistics'
 import FreeCreditsSummary from './FreeCreditsSummary'
@@ -69,6 +71,7 @@ const HomeUserTrigger = memo(() => {
   const router = useRouter()
   const { data: session } = useSession()
   const [open, setOpen] = useState(false)
+  const [referralOpen, setReferralOpen] = useState(false)
 
   const displayName = session?.user?.name ?? session?.user?.email?.split('@')[0] ?? '访客'
 
@@ -95,7 +98,7 @@ const HomeUserTrigger = memo(() => {
                 </Link>
               ),
             },
-            // { type: 'divider' as const },
+            { icon: <Icon icon={Send} />, key: 'referral', label: '邀请好友' },
             {
               danger: true,
               icon: <Icon icon={LogOut} />,
@@ -109,6 +112,11 @@ const HomeUserTrigger = memo(() => {
 
   const handleMenuClick = useCallback(
     ({ key }: { key: string }) => {
+      if (key === 'referral') {
+        setOpen(false)
+        setReferralOpen(true)
+        return
+      }
       if (key === 'logout') {
         handleSignOut()
         return
@@ -141,42 +149,45 @@ const HomeUserTrigger = memo(() => {
   )
 
   return (
-    <Popover
-      arrow={false}
-      content={menuContent}
-      open={open}
-      placement='topLeft'
-      trigger='click'
-      classNames={{
-        content: styles.popoverContent,
-        root: styles.popover,
-      }}
-      onOpenChange={setOpen}
-    >
-      <Block
-        clickable
-        horizontal
-        align='center'
-        className={styles.trigger}
-        gap={8}
-        paddingBlock={2}
-        variant='borderless'
-        style={{
-          minWidth: 32,
-          overflow: 'hidden',
-          paddingInlineEnd: 8,
-          paddingInlineStart: 2,
+    <>
+      <ReferralModal open={referralOpen} onClose={() => setReferralOpen(false)} />
+      <Popover
+        arrow={false}
+        content={menuContent}
+        open={open}
+        placement='topLeft'
+        trigger='click'
+        classNames={{
+          content: styles.popoverContent,
+          root: styles.popover,
         }}
+        onOpenChange={setOpen}
       >
-        <Avatar shape='square' size={28} src={avatar} >{displayName.slice(0, 3).toUpperCase()}</Avatar>
-        <Flex className='items-center gap-1 overflow-hidden'>
-          <Text as='span' className='min-w-0 flex-1' ellipsis weight={500}>
-            {displayName}
-          </Text>
-          <Icon color={cssVar.colorTextDescription} icon={ChevronDownIcon} />
-        </Flex>
-      </Block>
-    </Popover>
+        <Block
+          clickable
+          horizontal
+          align='center'
+          className={styles.trigger}
+          gap={8}
+          paddingBlock={2}
+          variant='borderless'
+          style={{
+            minWidth: 32,
+            overflow: 'hidden',
+            paddingInlineEnd: 8,
+            paddingInlineStart: 2,
+          }}
+        >
+          <Avatar shape='square' size={28} src={avatar} >{displayName.slice(0, 3).toUpperCase()}</Avatar>
+          <Flex className='items-center gap-1 overflow-hidden'>
+            <Text as='span' className='min-w-0 flex-1' ellipsis weight={500}>
+              {displayName}
+            </Text>
+            <Icon color={cssVar.colorTextDescription} icon={ChevronDownIcon} />
+          </Flex>
+        </Block>
+      </Popover>
+    </>
   )
 })
 

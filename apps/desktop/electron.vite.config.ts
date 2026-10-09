@@ -5,6 +5,7 @@ import { defineConfig } from 'electron-vite'
 import type { PluginOption } from 'vite'
 import { loadEnv } from 'vite'
 
+import { rawHtmlOptimizerPlugin } from '../../plugins/vite/rawHtml'
 import {
   createSharedRolldownOutput,
   sharedOptimizeDeps,
@@ -74,7 +75,12 @@ export default defineConfig({
       ...sharedRendererDefine(isDev),
       __ELECTRON__: 'true',
     },
-    optimizeDeps: sharedOptimizeDeps,
+    optimizeDeps: {
+      ...sharedOptimizeDeps,
+      rolldownOptions: {
+        plugins: [rawHtmlOptimizerPlugin(rootDir)],
+      },
+    },
     plugins: sharedRendererPlugins({
       enableCodeInspector: process.env.CODE_INSPECTOR === '1',
       isDev,

@@ -2,8 +2,15 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 import { message } from '@/components/AntdStaticMethods'
-import { checkUserByEmail, reclaimUnverifiedEmail, signUp, useAuthConfig } from '@/libs/better-auth/client'
+import {
+  checkUserByEmail,
+  reclaimUnverifiedEmail,
+  sendVerificationEmail,
+  signUp,
+  useAuthConfig,
+} from '@/libs/better-auth/client'
 import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
+import { isReferralCallback } from '@/libs/referrals/helpers'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
 
 export interface SignUpFormValues {
@@ -97,7 +104,15 @@ export const useSignUp = () => {
         first: markFirstConversion('sign_up'),
       })
 
-      if (config.enableEmailVerification) {
+      if (config.enableEmailVerification || isReferralCallback(callbackUrl)) {
+        if (!config.enableEmailVerification && config.emailVerificationMode === 'link') {
+          try {
+            const verification = await sendVerificationEmail({ email, callbackURL: callbackUrl })
+            if (verification.error) message.warning('账号已创建，验证邮件发送失败，请在验证页重试')
+          } catch {
+            message.warning('账号已创建，验证邮件发送失败，请在验证页重试')
+          }
+        }
         router.push(`/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`)
         return
       }

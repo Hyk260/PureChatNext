@@ -218,6 +218,13 @@
       "when": 1791448397761,
       "tag": "0030_bright_siren",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791518458500,
+      "tag": "0031_round_skrulls",
+      "breakpoints": true
     }
   ]
 }

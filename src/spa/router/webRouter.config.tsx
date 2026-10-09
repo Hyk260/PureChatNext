@@ -108,6 +108,11 @@ export const webRoutes: RouteObject[] = [
     path: 'resources',
   },
 
+  {
+    element: dynamicElement(() => import('@/features/referrals/AcceptReferralPage'), 'AcceptReferral'),
+    path: 'accept-referral',
+  },
+
   // —— Auth / account ——
   {
     element: dynamicElement(() => import('@/routes/signin/page'), 'SignIn'),

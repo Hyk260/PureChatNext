@@ -42,6 +42,13 @@ describe('webRouter.config smoke', () => {
     expect(source).toMatch(/path:\s*'dev'/)
   })
 
+  it('exposes the desktop authorization page as a dev test route', () => {
+    const devRoutes = source.split('// —— Dev (dev-only; production can 404 later) ——')[1]?.split('// —— Fallback ——')[0]
+
+    expect(devRoutes).toContain("path: 'desktop-authorize'")
+    expect(devRoutes).toContain("import('@/features/desktop/DesktopAuthorizePage')")
+  })
+
   it('uses RequireAuth for chat layout', () => {
     expect(source).toContain("import('@/routes/chat/_layout')")
   })

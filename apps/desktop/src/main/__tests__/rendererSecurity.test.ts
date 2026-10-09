@@ -59,6 +59,7 @@ describe('external links', () => {
   it('allows HTTPS and local HTTP without URL credentials', () => {
     expect(isSafeExternalUrl('https://example.com/path')).toBe(true)
     expect(isSafeExternalUrl('http://localhost:3000/')).toBe(true)
+    expect(isSafeExternalUrl('http://[::1]:3000/')).toBe(true)
     for (const value of ['file:///tmp/a', 'javascript:alert(1)', 'http://example.com', 'https://user:secret@example.com', 'invalid']) {
       expect(isSafeExternalUrl(value)).toBe(false)
     }

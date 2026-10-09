@@ -1,5 +1,6 @@
 export * from './user'
 export * from './betterAuth'
+export * from './desktopAuth'
 export * from './agent'
 export * from './chat'
 export * from './file'

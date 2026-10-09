@@ -35,6 +35,14 @@ export interface DesktopRemoteServer {
   url: string | null
 }
 
+export type DesktopAuthStatus =
+  | { status: 'signedOut' }
+  | { expiresAt: number; status: 'waiting' }
+  | { status: 'signedIn' }
+  | { message: string; status: 'error' }
+
+export type DesktopAuthStatusListener = (status: DesktopAuthStatus) => void
+
 export interface DesktopProject {
   createdAt: number
   id: string
@@ -99,6 +107,7 @@ export interface DesktopApi {
   getWindowState: () => Promise<DesktopWindowState>
   getSystemTools: () => Promise<DesktopSystemTools>
   getRemoteServer: () => Promise<DesktopRemoteServer>
+  getCloudServer: () => Promise<DesktopRemoteServer>
   listProjectEntries: (input: { projectId: string; relativePath?: string }) => Promise<DesktopProjectEntries>
   listProjects: () => Promise<DesktopProject[]>
   notify: (input: DesktopNotificationInput) => Promise<void>
@@ -113,6 +122,13 @@ export interface DesktopApi {
   openPath: (targetPath: string) => Promise<void>
   setRemoteServer: (url: string) => Promise<DesktopRemoteServer>
   storeSecret: (key: string, value: string) => Promise<void>
+  auth: {
+    start: (input: { serverUrl: string }) => Promise<DesktopAuthStatus>
+    getStatus: () => Promise<DesktopAuthStatus>
+    cancel: () => Promise<DesktopAuthStatus>
+    logout: () => Promise<DesktopAuthStatus>
+    onStatusChange: (listener: DesktopAuthStatusListener) => () => void
+  }
 }
 
 declare global {

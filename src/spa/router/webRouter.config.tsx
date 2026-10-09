@@ -130,6 +130,10 @@ export const webRoutes: RouteObject[] = [
     path: 'auth-error',
   },
   {
+    element: dynamicElement(() => import('@/features/desktop/DesktopAuthorizePage'), 'DesktopAuthorize'),
+    path: 'desktop-authorize',
+  },
+  {
     element: dynamicElement(() => import('@/routes/profile/page'), 'Profile'),
     path: 'profile',
   },
@@ -322,6 +326,13 @@ export const webRoutes: RouteObject[] = [
             {
               element: dynamicElement(() => import('@/features/dev/ApprovalCardPage'), 'Dev > ApprovalCard'),
               path: 'approval-card',
+            },
+            {
+              element: dynamicElement(
+                () => import('@/features/desktop/DesktopAuthorizePage'),
+                'Dev > DesktopAuthorize'
+              ),
+              path: 'desktop-authorize',
             },
           ],
           element: dynamicLayout(() => import('@/routes/dev/_layout'), 'DevLayout'),

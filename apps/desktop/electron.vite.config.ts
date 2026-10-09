@@ -37,6 +37,11 @@ export default defineConfig({
       outDir: path.resolve(desktopDir, 'dist/main'),
       sourcemap: process.env.NODE_ENV !== 'production',
     },
+    define: {
+      __PURECHAT_DESKTOP_CLOUD_URL__: JSON.stringify(
+        process.env.PURECHAT_DESKTOP_CLOUD_URL?.trim() || process.env.APP_URL?.trim() || ''
+      ),
+    },
     resolve: { alias: desktopAliases },
   },
   preload: {

@@ -5,10 +5,24 @@ import type { NextRequest } from 'next/server'
 import { UserModel } from '@pure/database/models/user'
 import { auth } from '@/auth'
 import { isAdminRole } from '@/const/auth'
+import { verifyAccessToken } from '@/libs/auth/jwt'
 import { touchUserLastActive } from '@/libs/auth/touch-last-active'
 
 async function getAuthenticatedUser() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const requestHeaders = await headers()
+  const authorization = requestHeaders.get('authorization')
+
+  if (authorization) {
+    const match = authorization.match(/^Bearer\s+(.+)$/i)
+    const payload = match?.[1] ? await verifyAccessToken(match[1]) : null
+    if (!payload?.userId) return null
+
+    const user = await new UserModel().findByUserId(payload.userId)
+    if (user?.id) touchUserLastActive(user.id)
+    return user ?? null
+  }
+
+  const session = await auth.api.getSession({ headers: requestHeaders })
   if (!session?.user?.id) return null
 
   const user = await new UserModel().findById(session.user.id)

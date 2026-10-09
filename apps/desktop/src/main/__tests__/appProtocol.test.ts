@@ -13,7 +13,10 @@ describe('packaged app protocol', () => {
   const config = { getRemoteServerUrl: async (): Promise<string | null> => 'https://chat.example.com' }
   const request = (pathname: string, init?: RequestInit) => new Request(`purechat://renderer${pathname}`, init)
   const handle = (req: Request) => createAppProtocolHandler({
-    rendererDir, fetch: upstream.fetch, getRemoteServerUrl: config.getRemoteServerUrl,
+    rendererDir,
+    fetch: upstream.fetch,
+    getAuthorizationHeader: async () => 'Bearer test-token',
+    getRemoteServerUrl: config.getRemoteServerUrl,
   })(req)
 
   beforeEach(async () => {

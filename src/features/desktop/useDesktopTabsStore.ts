@@ -80,7 +80,7 @@ export function titleFromLocation(pathname: string, _search = ''): string {
   if (pathname.startsWith('/admin')) return segmentLabel(pathname, 1, '管理', ADMIN_SEGMENT_LABELS)
   if (pathname.startsWith('/community')) return segmentLabel(pathname, 1, '社区')
   if (pathname.startsWith('/resources')) return segmentLabel(pathname, 1, '资源')
-  if (pathname.startsWith('/signin')) return '登录'
+  if (pathname.startsWith('/login') || pathname.startsWith('/signin')) return '登录'
   if (pathname.startsWith('/signup')) return '注册'
   if (pathname.startsWith('/verify-email')) return '验证邮箱'
   if (pathname.startsWith('/reset-password')) return '重置密码'

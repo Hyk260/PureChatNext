@@ -1,9 +1,7 @@
-import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import type { ProfileUser } from '@/features/settings/profile/ProfileContent'
-import { auth } from '@/auth'
 import { UserModel } from '@pure/database/models/user'
 import type { UserItem } from '@pure/database/schemas'
 import { normalizeInterestsForStorage } from '@/features/settings/const/interests'
@@ -29,18 +27,17 @@ function serializeUser(user: UserItem): ProfileUser {
  * SPA / 客户端设置页用户资料引导数据
  */
 export const GET = withAuth(async (_request, { userId }) => {
-  const user = await new UserModel().findById(userId)
+  const userModel = new UserModel()
+  const user = await userModel.findById(userId)
 
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
-  const accounts = await auth.api.listUserAccounts({
-    headers: await headers(),
-  })
+  const hasCredentialAccount = await userModel.hasCredentialAccount(userId)
 
   return NextResponse.json({
-    hasCredentialAccount: accounts.some((account) => account.providerId === 'credential'),
+    hasCredentialAccount,
     s3Configured: isS3Configured(),
     user: serializeUser(user),
   })

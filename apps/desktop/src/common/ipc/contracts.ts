@@ -1,5 +1,6 @@
 import type {
   DesktopAppInfo,
+  DesktopAuthStatus,
   DesktopFileSelection,
   DesktopLocalToolRequest,
   DesktopLocalToolResult,
@@ -15,7 +16,12 @@ export interface DesktopIpcContractMap {
   'app.getInfo': { args: []; result: DesktopAppInfo }
   'app.getSystemTools': { args: []; result: DesktopSystemTools }
   'config.getRemoteServer': { args: []; result: DesktopRemoteServer }
+  'config.getCloudServer': { args: []; result: DesktopRemoteServer }
   'config.setRemoteServer': { args: [value: string]; result: DesktopRemoteServer }
+  'auth.start': { args: [input: { serverUrl: string }]; result: DesktopAuthStatus }
+  'auth.getStatus': { args: []; result: DesktopAuthStatus }
+  'auth.cancel': { args: []; result: DesktopAuthStatus }
+  'auth.logout': { args: []; result: DesktopAuthStatus }
   'storage.deleteSecret': { args: [key: string]; result: void }
   'storage.storeSecret': { args: [key: string, value: string]; result: void }
   'dialog.chooseDirectory': { args: []; result: string | null }
@@ -46,7 +52,12 @@ export type DesktopIpcResult<C extends DesktopIpcChannel> = DesktopIpcContractMa
 
 export const DESKTOP_IPC_CHANNELS = {
   app: { getInfo: 'app.getInfo', getSystemTools: 'app.getSystemTools' },
-  config: { getRemoteServer: 'config.getRemoteServer', setRemoteServer: 'config.setRemoteServer' },
+  auth: { cancel: 'auth.cancel', getStatus: 'auth.getStatus', logout: 'auth.logout', start: 'auth.start' },
+  config: {
+    getCloudServer: 'config.getCloudServer',
+    getRemoteServer: 'config.getRemoteServer',
+    setRemoteServer: 'config.setRemoteServer',
+  },
   dialog: { chooseDirectory: 'dialog.chooseDirectory', chooseFile: 'dialog.chooseFile' },
   localSystem: { execute: 'localSystem.execute' },
   notification: { show: 'notification.show' },
@@ -70,4 +81,8 @@ export const DESKTOP_IPC_CHANNELS = {
     openExternal: 'window.openExternal',
     toggleMaximize: 'window.toggleMaximize',
   },
+} as const
+
+export const DESKTOP_IPC_EVENTS = {
+  authStatus: 'auth.status',
 } as const

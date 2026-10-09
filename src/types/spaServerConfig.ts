@@ -5,6 +5,8 @@
 export type SPAServerConfig = {
   /** ISO timestamp when the shell was rendered (debug / deploy sanity). */
   renderedAt: string
+  /** Public Electron authorization origin; never contains a secret. */
+  desktopCloudUrl?: string
   /** Mirrors `ENABLE_VERCEL_ANALYTICS` — SPA cannot read server env at runtime. */
   enableVercelAnalytics?: boolean
   debugVercelAnalytics?: boolean

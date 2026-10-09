@@ -1,6 +1,7 @@
 /**
  * Browser fetch to same-origin `/api/...`.
- * Dev: Vite proxies `/api` → Next. Prod: same origin as SPA shell.
+ * Web: Vite proxies `/api` → Next. Electron installs a fetch transport that
+ * sends the same paths through the main-process protocol proxy.
  * Always sends cookies (`credentials: 'include'`).
  */
 export function apiFetch(input: string, init?: RequestInit): Promise<Response> {

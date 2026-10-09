@@ -5,6 +5,7 @@ import { Button, Flex } from '@pure/ui'
 import { Result } from 'antd'
 
 import Link from 'next/link'
+import { getDesktopApi } from '@/types/desktop'
 
 export const StatusHomeButton = () => (
   <Link href='/'>
@@ -13,7 +14,7 @@ export const StatusHomeButton = () => (
 )
 
 export const StatusPage = (props: ResultProps) => (
-  <Flex className='min-h-svh w-full flex-center bg-background'>
+  <Flex className={`${getDesktopApi() ? 'min-h-full shrink-0' : 'min-h-svh'} w-full flex-center bg-background`}>
     <Result {...props} />
   </Flex>
 )

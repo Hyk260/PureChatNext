@@ -174,6 +174,16 @@ export class UserModel {
     return credentialAccount?.password ?? null
   }
 
+  hasCredentialAccount = async (authUserId: string): Promise<boolean> => {
+    const [credentialAccount] = await this.db
+      .select({ id: account.id })
+      .from(account)
+      .where(and(eq(account.userId, authUserId), eq(account.providerId, CREDENTIAL_PROVIDER)))
+      .limit(1)
+
+    return Boolean(credentialAccount)
+  }
+
   private toUserWithoutPasswordIfPasswordOk = async (
     user: UserItem | undefined,
     plainPassword: string

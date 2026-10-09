@@ -59,6 +59,6 @@ export const isSafeExternalUrl = (value: string): boolean => {
   const url = parseUrl(value)
   return Boolean(
     url && (url.protocol === 'https:' ||
-      (url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname)))
+      (url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)))
   )
 }

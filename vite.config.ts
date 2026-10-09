@@ -12,6 +12,7 @@ import {
   sharedRendererPlugins,
   sharedResolveAlias,
 } from './plugins/vite/sharedRendererConfig'
+import { rawHtmlOptimizerPlugin } from './plugins/vite/rawHtml'
 import { resolveTryCloudflareAllowedHosts } from './packages/env/src/dev-tunnel'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
@@ -55,7 +56,12 @@ export default defineConfig(({ mode }) => {
       alias: sharedResolveAlias(rootDir),
       dedupe: ['@lobehub/icons', '@lobehub/ui'],
     },
-    optimizeDeps: sharedOptimizeDeps,
+    optimizeDeps: {
+      ...sharedOptimizeDeps,
+      rolldownOptions: {
+        plugins: [rawHtmlOptimizerPlugin(rootDir)],
+      },
+    },
     server: {
       ...(allowedHosts !== undefined ? { allowedHosts } : {}),
       cors: true,

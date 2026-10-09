@@ -9,6 +9,8 @@ declare global {
     interface ProcessEnv {
       /** 对外访问地址，用于 Better Auth、邮件和 OAuth 回调；本地应使用 Vite SPA 的 `5174` 端口。 */
       APP_URL?: string
+      /** Electron 桌面端官方授权服务地址；发布构建时通常与 APP_URL 相同。 */
+      PURECHAT_DESKTOP_CLOUD_URL?: string
       /** CORS 额外允许来源，逗号分隔；省略时使用 `APP_URL` */
       ALLOWED_ORIGINS?: string
       /** 本地 cloudflared TryCloudflare 隧道；同时放开 Vite Host 与 Auth/CORS Origin */
@@ -41,6 +43,7 @@ export const getAppConfig = () => {
     server: {
       /** 对外访问地址，用于 Better Auth、邮件和 OAuth 回调；本地应使用 Vite SPA 的 `5174` 端口。 */
       APP_URL: z.string().optional(),
+      PURECHAT_DESKTOP_CLOUD_URL: z.string().optional(),
       /** Vercel Edge Config 连接字符串。 */
       VERCEL_EDGE_CONFIG: z.string().optional(),
       /** CORS 额外允许来源，逗号分隔；省略时使用 `APP_URL`。 */
@@ -54,6 +57,7 @@ export const getAppConfig = () => {
     },
     runtimeEnv: {
       APP_URL,
+      PURECHAT_DESKTOP_CLOUD_URL: process.env.PURECHAT_DESKTOP_CLOUD_URL,
       VERCEL_EDGE_CONFIG: process.env.VERCEL_EDGE_CONFIG,
       ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
       ALLOW_TRYCLOUDFLARE: parseEnvBoolean(process.env.ALLOW_TRYCLOUDFLARE),

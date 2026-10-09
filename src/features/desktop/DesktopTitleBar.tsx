@@ -32,6 +32,7 @@ const styles = createStaticStyles(({ css }) => ({
     width: 100%;
     height: 100%;
     min-height: 0;
+    overflow: hidden;
   `,
   bar: css`
     display: flex;
@@ -209,6 +210,7 @@ const styles = createStaticStyles(({ css }) => ({
     display: flex;
     flex: 1;
     min-height: 0;
+    overflow: hidden;
     flex-direction: column;
   `,
 }))
@@ -221,6 +223,7 @@ function tabIconForPath(path: string) {
 type ChromeProps = {
   canGoBack: boolean
   canGoForward: boolean
+  hideNavigation?: boolean
   historyMenuItems: Array<{ key: string; label: string; onClick: () => void }>
   isMaximized: boolean
   isSidebarCollapsed: boolean
@@ -238,6 +241,7 @@ const DesktopTitleBarChrome = ({
   canGoBack,
   canGoForward,
   historyMenuItems,
+  hideNavigation = false,
   isMaximized,
   isSidebarCollapsed,
   onActivateTab,
@@ -257,6 +261,32 @@ const DesktopTitleBarChrome = ({
   if (!api) return null
 
   const isMac = platform === 'darwin'
+  if (hideNavigation) {
+    return (
+      <header className={styles.bar}>
+        <div className={styles.leading}>
+          {isMac ? (
+            <MacTrafficLights
+              isMaximized={isMaximized}
+              onClose={api.closeWindow}
+              onMaximize={onToggleMaximize}
+              onMinimize={api.minimizeWindow}
+            />
+          ) : null}
+        </div>
+        <div className='flex-1' />
+        {platform && !isMac ? (
+          <DesktopWindowControls
+            isMaximized={isMaximized}
+            onClose={api.closeWindow}
+            onMinimize={api.minimizeWindow}
+            onToggleMaximize={onToggleMaximize}
+          />
+        ) : null}
+      </header>
+    )
+  }
+
   const sidebarLabel = isSidebarCollapsed ? '展开侧栏' : '折叠侧栏'
   const leadingWidth = isSidebarCollapsed ? undefined : (sidebarWidth || DEFAULT_SIDEBAR_WIDTH)
 
@@ -463,6 +493,7 @@ const DesktopTitleBarNav = () => {
       canGoBack={canGoBack}
       canGoForward={canGoForward}
       historyMenuItems={historyMenuItems}
+      hideNavigation={location.pathname === '/desktop-login' || location.pathname === '/desktop-login/'}
       isMaximized={chrome.isMaximized}
       isSidebarCollapsed={chrome.isSidebarCollapsed}
       platform={chrome.platform}
@@ -503,6 +534,7 @@ const DesktopTitleBarStatic = () => {
       canGoBack={false}
       canGoForward={false}
       historyMenuItems={[]}
+      hideNavigation
       isMaximized={chrome.isMaximized}
       isSidebarCollapsed={chrome.isSidebarCollapsed}
       platform={chrome.platform}

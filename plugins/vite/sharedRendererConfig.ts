@@ -163,7 +163,6 @@ export const sharedOptimizeDeps = {
     'swr',
     'motion/react',
     'lodash-es',
-    'react-scan',
   ],
 }
 

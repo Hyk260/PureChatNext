@@ -3,10 +3,11 @@ import path from 'node:path'
 import { app } from 'electron'
 
 import { registerDesktopIpc } from '../ipc/register'
-import { protocolLinksFromCommandLine, resolveProtocolLink } from '../protocolLink'
+import { parseDesktopAuthCallback, protocolLinksFromCommandLine, resolveProtocolLink } from '../protocolLink'
 import { APP_RENDERER_URL, isTrustedRendererUrl } from '../rendererSecurity'
 import { installApplicationMenu } from '../ui/ApplicationMenu'
 import { DesktopConfigService } from '../services/DesktopConfigService'
+import { DesktopAuthService } from '../services/DesktopAuthService'
 import { UpdateService } from '../services/UpdateService'
 import { getResourcePath } from '../utils/file'
 import { ProtocolManager } from './ProtocolManager'
@@ -22,7 +23,9 @@ export class DesktopApp {
   private readonly protocolManager: ProtocolManager
   private readonly updateService = new UpdateService()
   private readonly pendingProtocolLinks: string[]
+  private readonly pendingAuthLinks: string[]
   private readonly config: DesktopConfigService
+  private readonly authService: DesktopAuthService
   private disposeIpc: (() => void) | null = null
   private isQuitting = false
 
@@ -31,7 +34,10 @@ export class DesktopApp {
     this.rendererUrl = app.isPackaged
       ? APP_RENDERER_URL
       : process.env.ELECTRON_RENDERER_URL || `http://127.0.0.1:${process.env.PURECHAT_DESKTOP_VITE_PORT || 5176}`
-    this.pendingProtocolLinks = protocolLinksFromCommandLine(process.argv)
+    const initialProtocolLinks = protocolLinksFromCommandLine(process.argv)
+    this.pendingAuthLinks = initialProtocolLinks.filter((url) => Boolean(parseDesktopAuthCallback(url)))
+    this.pendingProtocolLinks = initialProtocolLinks
+      .filter((url) => !parseDesktopAuthCallback(url))
       .map(resolveProtocolLink)
       .filter((url): url is string => Boolean(url))
     this.config = new DesktopConfigService(app.getPath('userData'))
@@ -43,6 +49,10 @@ export class DesktopApp {
       () => !this.isQuitting && this.trayManager.exists,
       this.config
     )
+    this.authService = new DesktopAuthService(this.config, (status) => {
+      const contents = this.windowManager.trustedContents
+      if (contents && !contents.isDestroyed()) contents.send('auth.status', status)
+    })
     this.trayManager = new TrayManager(
       this.getDesktopResourcePath('tray.png'),
       () => this.focusWindow(),
@@ -91,14 +101,17 @@ export class DesktopApp {
     }
 
     const ipc = await registerDesktopIpc({
+      auth: this.authService,
       config: this.config,
       getTrustedContents: () => this.windowManager.trustedContents,
       rendererUrl: this.rendererUrl,
     })
     this.disposeIpc = ipc.dispose
     this.protocolManager.setRemoteServerUrlGetter(ipc.getRemoteServerUrl)
+    this.protocolManager.setAuthorizationHeaderGetter(ipc.getAuthorizationHeader)
     this.protocolManager.initialize()
     await this.createWindow()
+    await Promise.all(this.pendingAuthLinks.map((link) => this.authService.handleProtocolLink(link)))
     this.trayManager.create()
   }
 
@@ -114,7 +127,15 @@ export class DesktopApp {
   }
 
   private openProtocolLinks(links: readonly string[]) {
-    const rendererLinks = links.map(resolveProtocolLink).filter((url): url is string => Boolean(url))
+    const authLinks = links.filter((link) => Boolean(parseDesktopAuthCallback(link)))
+    if (authLinks.length > 0) {
+      Promise.all(authLinks.map((link) => this.authService.handleProtocolLink(link))).catch(() => undefined)
+      this.focusWindow()
+    }
+    const rendererLinks = links
+      .filter((link) => !parseDesktopAuthCallback(link))
+      .map(resolveProtocolLink)
+      .filter((url): url is string => Boolean(url))
     if (rendererLinks.length === 0) return
     if (!this.windowManager.isOpen) {
       this.pendingProtocolLinks.push(...rendererLinks)

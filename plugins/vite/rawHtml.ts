@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
 import type { PluginOption } from 'vite'
@@ -32,6 +33,32 @@ export function viteRawHtml(rootDir: string): PluginOption {
         code: `export default ${JSON.stringify(code)}`,
         map: null,
       }
+    },
+  }
+}
+
+export function rawHtmlOptimizerPlugin(rootDir: string): PluginOption {
+  const srcDir = path.resolve(rootDir, 'src')
+
+  return {
+    name: 'vite-raw-html-optimizer',
+    async load(id) {
+      const normalizedId = id.replaceAll('\\', '/')
+      const [idPath, query = ''] = normalizedId.split('?')
+      const filePath = path.resolve(idPath)
+      const relativePath = path.relative(srcDir, filePath)
+
+      if (
+        !query.split('&').includes('raw') ||
+        !filePath.endsWith('.html') ||
+        relativePath.startsWith('..') ||
+        path.isAbsolute(relativePath)
+      ) {
+        return null
+      }
+
+      const code = await readFile(filePath, 'utf8')
+      return `export default ${JSON.stringify(code)}`
     },
   }
 }

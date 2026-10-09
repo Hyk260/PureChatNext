@@ -8,6 +8,7 @@ import { Navigate, useLocation } from 'react-router'
 import { useSession } from '@/libs/better-auth/client'
 import { trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
+import { isDesktopRenderer, resolveDesktopCallbackUrl } from '@/utils/desktopAuth'
 
 type RequireAuthProps = {
   children: ReactNode
@@ -16,7 +17,7 @@ type RequireAuthProps = {
 }
 
 /**
- * SPA client auth gate — redirects unauthenticated users to `/signin` with callbackUrl.
+ * SPA client auth gate — redirects unauthenticated Web users to `/signin` and Electron users to `/desktop-login`.
  * Replaces Next SSR `headers()` + `redirect()` for routes mounted under Vite.
  */
 export default function RequireAuth({ children, fallback }: RequireAuthProps) {
@@ -42,8 +43,9 @@ export default function RequireAuth({ children, fallback }: RequireAuthProps) {
   }
 
   if (!session?.user) {
-    const callbackUrl = resolveCallbackUrl(rawPath, '/chat')
-    return <Navigate replace to={`/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`} />
+    const callbackUrl = isDesktopRenderer() ? resolveDesktopCallbackUrl(rawPath) : resolveCallbackUrl(rawPath, '/chat')
+    const loginPath = isDesktopRenderer() ? '/desktop-login' : '/signin'
+    return <Navigate replace to={`${loginPath}?callbackUrl=${encodeURIComponent(callbackUrl)}`} />
   }
 
   return children

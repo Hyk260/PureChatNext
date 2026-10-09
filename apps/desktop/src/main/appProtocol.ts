@@ -5,6 +5,7 @@ import { isAppRendererUrl } from './rendererSecurity'
 
 interface AppProtocolOptions {
   fetch: (url: string, init?: RequestInit) => Promise<Response>
+  getAuthorizationHeader?: () => Promise<string | null>
   getRemoteServerUrl: () => Promise<string | null>
   rendererDir: string
 }
@@ -48,6 +49,9 @@ export const createAppProtocolHandler = (options: AppProtocolOptions) => {
       const targetUrl = new URL(`${url.pathname}${url.search}`, `${remoteServerUrl}/`)
       const headers = new Headers(request.headers)
       removeBrowserOriginHeaders(headers)
+      headers.delete('authorization')
+      const authorization = await options.getAuthorizationHeader?.()
+      if (authorization) headers.set('authorization', authorization)
       const init: RequestInit = {
         credentials: 'include', headers, method: request.method, signal: request.signal,
       }

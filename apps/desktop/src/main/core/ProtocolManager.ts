@@ -8,6 +8,7 @@ const protocolScheme = 'purechat'
 
 export class ProtocolManager {
   private remoteServerUrlGetter: () => Promise<string | null>
+  private authorizationHeaderGetter: () => Promise<string | null> = async () => null
 
   constructor(
     private readonly rendererDir: string,
@@ -18,6 +19,10 @@ export class ProtocolManager {
 
   setRemoteServerUrlGetter(getter: () => Promise<string | null>) {
     this.remoteServerUrlGetter = getter
+  }
+
+  setAuthorizationHeaderGetter(getter: () => Promise<string | null>) {
+    this.authorizationHeaderGetter = getter
   }
 
   static registerScheme() {
@@ -34,6 +39,7 @@ export class ProtocolManager {
       protocolScheme,
       createAppProtocolHandler({
         fetch: (input, init) => session.defaultSession.fetch(input, init),
+        getAuthorizationHeader: () => this.authorizationHeaderGetter(),
         getRemoteServerUrl: () => this.remoteServerUrlGetter(),
         rendererDir: path.resolve(this.rendererDir),
       })

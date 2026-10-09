@@ -8,9 +8,10 @@ import {
 import { createAuthClient } from 'better-auth/react'
 
 import type { auth } from '@/auth'
+import { getDesktopApi } from '@/types/desktop'
+import { isDesktopRenderer, isPackagedDesktopRenderer } from '@/utils/desktopAuth'
 
-const isDesktopRenderer = () =>
-  typeof window !== 'undefined' && window.location.protocol === 'purechat:'
+import { useDesktopSession } from './desktop-session'
 
 /**
  * Better Auth only accepts HTTP(S) base URLs, while packaged Electron uses
@@ -18,7 +19,7 @@ const isDesktopRenderer = () =>
  * valid, then send the request back through Electron's same-origin proxy.
  */
 const desktopFetch: typeof fetch = (input, init) => {
-  if (!isDesktopRenderer()) return fetch(input, init)
+  if (!isPackagedDesktopRenderer()) return fetch(input, init)
 
   const inputUrl = typeof input === 'string' || input instanceof URL ? input.toString() : input.url
   const targetUrl = new URL(inputUrl)
@@ -29,6 +30,21 @@ const desktopFetch: typeof fetch = (input, init) => {
   if (input instanceof Request) return fetch(new Request(targetUrl, input), init)
   return fetch(targetUrl, init)
 }
+
+const authClient = createAuthClient({
+  baseURL: isPackagedDesktopRenderer() ? 'http://localhost/api/auth' : undefined,
+  fetchOptions: {
+    customFetchImpl: desktopFetch,
+  },
+  plugins: [
+    adminClient(),
+    inferAdditionalFields<typeof auth>(),
+    genericOAuthClient(),
+    emailOTPClient(),
+    // Always include magicLinkClient - server will reject if not enabled
+    magicLinkClient(),
+  ],
+})
 
 export const {
   changeEmail,
@@ -42,22 +58,20 @@ export const {
   resetPassword,
   sendVerificationEmail,
   signIn,
-  signOut,
   signUp,
   unlinkAccount,
   updateUser,
-  useSession,
-} = createAuthClient({
-  baseURL: isDesktopRenderer() ? 'http://localhost/api/auth' : undefined,
-  fetchOptions: {
-    customFetchImpl: desktopFetch,
-  },
-  plugins: [
-    adminClient(),
-    inferAdditionalFields<typeof auth>(),
-    genericOAuthClient(),
-    emailOTPClient(),
-    // Always include magicLinkClient - server will reject if not enabled
-    magicLinkClient(),
-  ],
-})
+} = authClient
+
+const betterAuthSignOut = authClient.signOut
+const betterAuthUseSession = authClient.useSession
+const useResolvedSession = isDesktopRenderer() ? useDesktopSession : betterAuthUseSession
+
+export const signOut = (...args: Parameters<typeof betterAuthSignOut>) => {
+  if (!isDesktopRenderer()) return betterAuthSignOut(...args)
+  return getDesktopApi()?.auth.logout()
+}
+
+export const useSession = () => {
+  return useResolvedSession()
+}

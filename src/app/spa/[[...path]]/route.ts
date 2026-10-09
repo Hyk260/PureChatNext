@@ -10,8 +10,9 @@ import spaHtmlTemplate from '../spaHtmlTemplate.generated'
 
 export const dynamic = 'force-dynamic'
 
-function buildServerConfig(): SPAServerConfig {
+function buildServerConfig(origin: string): SPAServerConfig {
   return {
+    desktopCloudUrl: appEnv.APP_URL ?? origin,
     renderedAt: new Date().toISOString(),
     enableVercelAnalytics: analyticsEnv.ENABLE_VERCEL_ANALYTICS,
     debugVercelAnalytics: analyticsEnv.DEBUG_VERCEL_ANALYTICS,
@@ -41,6 +42,6 @@ export async function GET(request: NextRequest, context: SpaRouteContext) {
       baseUrl: appEnv.APP_URL ?? request.nextUrl.origin,
       pathname,
     },
-    serverConfig: buildServerConfig(),
+    serverConfig: buildServerConfig(request.nextUrl.origin),
   })
 }

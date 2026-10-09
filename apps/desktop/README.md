@@ -178,8 +178,8 @@ pnpm --filter purechat-desktop typecheck
 pnpm package:desktop
 ```
 
-生产构建通过 `purechat://renderer` 协议加载打包后的渲染页。首次启动可在界面配置服务地址；开发调试也可使用桌面进程环境变量 `PURECHAT_DESKTOP_REMOTE_URL`。打包后的 `/api` 请求由 Electron 主进程通过 session 代理，保留现有移除浏览器来源头的兼容行为。该行为不等于完整的桌面认证方案；Cookie、OAuth 和重启恢复仍需要安装包端到端验收。
+生产构建通过 `purechat://renderer` 协议加载打包后的渲染页。首次启动可在界面配置服务地址；开发调试也可使用桌面进程环境变量 `PURECHAT_DESKTOP_REMOTE_URL`。打包后的 `/api` 请求由 Electron 主进程通过 session 代理并注入主进程管理的 Bearer 令牌。桌面登录使用系统浏览器完成 Web 授权，通过 `purechat://auth/callback` 返回应用；授权码采用 PKCE、短时一次性消费，令牌保存在 Electron 安全存储中。构建时可通过非敏感的 `PURECHAT_DESKTOP_CLOUD_URL` 指定官方服务地址，缺省回退到 `SITE_DEFAULT_URL`。
 
 打包会自动检查 ASAR：只允许应用 manifest 和构建产物，拒绝 `node_modules`、环境文件、sourcemap 和缺失入口，归档预算为 64 MiB。未来引入外置原生依赖时必须同步调整精确白名单和验证，不要直接关闭检查。
 
-OAuth PKCE、本地数据库、本地模型运行时与 MCP 进程管理刻意留作后续工作。当前桥只暴露安全边界，便于后续接入这些能力，而不把 Electron 引入 Web 应用。
+桌面 OAuth PKCE、本地数据库和 MCP 进程管理均保持在 Electron 主进程边界内；认证页面不会在 Electron renderer 中渲染，Web 端登录行为保持不变。

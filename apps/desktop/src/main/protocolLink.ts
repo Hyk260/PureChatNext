@@ -2,6 +2,36 @@ import { APP_RENDERER_URL } from './rendererSecurity'
 
 const protocolScheme = 'purechat:'
 
+export interface DesktopAuthProtocolCallback {
+  code: string | null
+  error: string | null
+  errorDescription: string | null
+  state: string | null
+}
+
+const parseProtocolUrl = (value: string) => {
+  try {
+    const url = new URL(value)
+    if (url.protocol !== protocolScheme || url.username || url.password || url.port || !url.hostname) return null
+    return url
+  } catch {
+    return null
+  }
+}
+
+export const parseDesktopAuthCallback = (value: string): DesktopAuthProtocolCallback | null => {
+  const url = parseProtocolUrl(value)
+  if (!url || url.hostname !== 'auth' || url.pathname !== '/callback') return null
+  return {
+    code: url.searchParams.get('code'),
+    error: url.searchParams.get('error'),
+    errorDescription: url.searchParams.get('error_description'),
+    state: url.searchParams.get('state'),
+  }
+}
+
+export const isRecognizedProtocolLink = (value: string) => Boolean(parseProtocolUrl(value))
+
 /**
  * Convert an OS-level purechat:// link into a trusted renderer URL.
  *
@@ -10,14 +40,8 @@ const protocolScheme = 'purechat:'
  * path segment so the custom renderer origin remains protected.
  */
 export const resolveProtocolLink = (value: string): string | null => {
-  let url: URL
-  try {
-    url = new URL(value)
-  } catch {
-    return null
-  }
-
-  if (url.protocol !== protocolScheme || url.username || url.password || url.port || !url.hostname) return null
+  const url = parseProtocolUrl(value)
+  if (!url || parseDesktopAuthCallback(value)) return null
 
   if (url.hostname === 'renderer') {
     return `${APP_RENDERER_URL}${url.pathname.replace(/^\/+/, '')}${url.search}${url.hash}`
@@ -28,4 +52,4 @@ export const resolveProtocolLink = (value: string): string | null => {
 }
 
 export const protocolLinksFromCommandLine = (args: readonly string[]): string[] =>
-  args.filter((value) => resolveProtocolLink(value) !== null)
+  args.filter(isRecognizedProtocolLink)

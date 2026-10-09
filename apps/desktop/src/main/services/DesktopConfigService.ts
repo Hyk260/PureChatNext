@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
+import { safeStorage } from 'electron'
+
 import { ensureDirectory } from '../utils/file'
 
 export interface DesktopProject {
@@ -12,11 +14,19 @@ export interface DesktopProject {
 }
 
 export interface DesktopConfig {
+  pendingAuth?: DesktopPendingAuth | null
   permissionScopes: Record<string, string[]>
   projects: DesktopProject[]
   remoteServerUrl: string | null
   secrets: Record<string, string>
   windowState?: DesktopWindowState | null
+}
+
+export interface DesktopPendingAuth {
+  expiresAt: number
+  redirectUri: string
+  serverUrl: string
+  state: string
 }
 
 export interface DesktopWindowState {
@@ -28,11 +38,30 @@ export interface DesktopWindowState {
 }
 
 export const DEFAULT_CONFIG: DesktopConfig = {
+  pendingAuth: null,
   permissionScopes: {},
   projects: [],
   remoteServerUrl: process.env.PURECHAT_DESKTOP_REMOTE_URL?.trim() || null,
   secrets: {},
   windowState: null,
+}
+
+const normalizePendingAuth = (value: unknown): DesktopPendingAuth | null => {
+  if (!value || typeof value !== 'object') return null
+  const pending = value as Partial<DesktopPendingAuth>
+  if (
+    typeof pending.expiresAt !== 'number' ||
+    typeof pending.redirectUri !== 'string' ||
+    typeof pending.serverUrl !== 'string' ||
+    typeof pending.state !== 'string'
+  ) return null
+  if (pending.expiresAt <= Date.now()) return null
+  return {
+    expiresAt: pending.expiresAt,
+    redirectUri: pending.redirectUri,
+    serverUrl: pending.serverUrl,
+    state: pending.state,
+  }
 }
 
 const normalizeProjects = (value: unknown): DesktopProject[] => {
@@ -97,6 +126,7 @@ export class DesktopConfigService {
       const raw = await fs.readFile(this.configPath, 'utf8')
       const parsed = JSON.parse(raw) as Partial<DesktopConfig>
       return {
+        pendingAuth: normalizePendingAuth(parsed.pendingAuth),
         permissionScopes:
           parsed.permissionScopes && typeof parsed.permissionScopes === 'object' ? parsed.permissionScopes : {},
         projects: normalizeProjects(parsed.projects),
@@ -105,7 +135,7 @@ export class DesktopConfigService {
         windowState: normalizeWindowState(parsed.windowState),
       }
     } catch {
-      return { ...DEFAULT_CONFIG, permissionScopes: {}, projects: [], secrets: {} }
+      return { ...DEFAULT_CONFIG, pendingAuth: null, permissionScopes: {}, projects: [], secrets: {} }
     }
   }
 
@@ -124,8 +154,51 @@ export class DesktopConfigService {
   async setRemoteServer(value: string) {
     const url = normalizeRemoteServerUrl(value)
     const config = await this.read()
+    const changed = config.remoteServerUrl !== url
     await this.write({ ...config, remoteServerUrl: url })
+    if (changed) {
+      await this.deleteSecrets(['auth.accessToken', 'auth.refreshToken', 'auth.expiresAt'])
+    }
     return { url }
+  }
+
+  async setPendingAuth(pendingAuth: DesktopPendingAuth | null) {
+    const config = await this.read()
+    await this.write({ ...config, pendingAuth })
+  }
+
+  async clearPendingAuth() {
+    await this.setPendingAuth(null)
+    await this.deleteSecret('auth.pendingVerifier')
+  }
+
+  async storeSecret(key: string, value: string) {
+    if (!safeStorage.isEncryptionAvailable()) throw new Error('当前系统没有可用的安全存储，未保存敏感信息')
+    const config = await this.read()
+    config.secrets[key] = `safe:${safeStorage.encryptString(value).toString('base64')}`
+    await this.write(config)
+  }
+
+  async readSecret(key: string): Promise<string | null> {
+    const value = (await this.read()).secrets[key]
+    if (!value?.startsWith('safe:') || !safeStorage.isEncryptionAvailable()) return null
+    try {
+      return safeStorage.decryptString(Buffer.from(value.slice(5), 'base64'))
+    } catch {
+      return null
+    }
+  }
+
+  async deleteSecret(key: string) {
+    const config = await this.read()
+    delete config.secrets[key]
+    await this.write(config)
+  }
+
+  async deleteSecrets(keys: readonly string[]) {
+    const config = await this.read()
+    for (const key of keys) delete config.secrets[key]
+    await this.write(config)
   }
 
   async setPermissionScope(topicId: string, scope: string) {

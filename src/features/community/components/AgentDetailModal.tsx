@@ -6,11 +6,13 @@ import { Collapse, Tabs } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { Copy, MessageCircleHeartIcon, MessageCircleQuestionIcon } from 'lucide-react'
 import { memo, useCallback, useMemo } from 'react'
+import useSWRImmutable from 'swr/immutable'
 
 import { useApp } from '@/components/AntdStaticMethods'
+import { loadCommunityAgent } from '@/const/community/agentDetails'
 import { ASSISTANT_CATEGORY_LABELS } from '@/const/community/agents'
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
-import type { DiscoverAgentExample, DiscoverAgentItem } from '@/features/community/types'
+import type { DiscoverAgentExample, DiscoverAgentItem, DiscoverAgentSummary } from '@/features/community/types'
 import { useAddCommunityAgent } from '@/features/community/hooks/useAddCommunityAgent'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -42,7 +44,7 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 export interface AgentDetailModalProps {
-  agent: DiscoverAgentItem | null
+  agent: DiscoverAgentItem | DiscoverAgentSummary | null
   onClose: () => void
   onEdit?: () => void
   onUse?: () => void
@@ -191,19 +193,35 @@ IntroTab.displayName = 'IntroTab'
 
 const AgentDetailModal = memo<AgentDetailModalProps>(({ agent, onClose, onEdit, onUse, open }) => {
   const { addAgent, adding } = useAddCommunityAgent()
+  const {
+    data: loadedAgent,
+    error,
+    mutate,
+  } = useSWRImmutable(open && agent && !('systemRole' in agent) ? agent : null, loadCommunityAgent)
+  const detail = agent && 'systemRole' in agent ? agent : loadedAgent
 
   if (!agent) return null
 
   const isOwnedAgent = Boolean(onUse)
   const primaryLabel = isOwnedAgent ? '使用' : '使用助理'
-  const primaryLoading = !isOwnedAgent && adding
+  const primaryLoading = !isOwnedAgent && (adding || (open && !detail && !error))
+
+  const retryLoad = () => mutate(undefined, { revalidate: true, throwOnError: false })
+  const detailFallback = error ? (
+    <Flex className='flex-col gap-2'>
+      <Text type='secondary'>助理详情加载失败</Text>
+      <Button onClick={retryLoad}>重试</Button>
+    </Flex>
+  ) : (
+    <Text type='secondary'>正在加载助理详情…</Text>
+  )
 
   const handlePrimaryClick = () => {
     if (onUse) {
       onUse()
       return
     }
-    addAgent(agent)
+    if (detail) addAgent(detail)
   }
 
   return (
@@ -242,27 +260,31 @@ const AgentDetailModal = memo<AgentDetailModalProps>(({ agent, onClose, onEdit, 
             {onEdit ? (
               <Button onClick={onEdit}>编辑</Button>
             ) : null}
-            <Button loading={primaryLoading} type='primary' onClick={handlePrimaryClick}>
+            <Button disabled={!detail} loading={primaryLoading} type='primary' onClick={handlePrimaryClick}>
               {primaryLabel}
             </Button>
           </Flex>
         </Flex>
 
-        <Tabs
-          defaultActiveKey='overview'
-          items={[
-            {
-              children: <OverviewTab agent={agent} />,
-              key: 'overview',
-              label: '概览',
-            },
-            {
-              children: <IntroTab agent={agent} />,
-              key: 'intro',
-              label: '助理简介',
-            },
-          ]}
-        />
+        {detail ? (
+          <Tabs
+            defaultActiveKey='overview'
+            items={[
+              {
+                children: <OverviewTab agent={detail} />,
+                key: 'overview',
+                label: '概览',
+              },
+              {
+                children: <IntroTab agent={detail} />,
+                key: 'intro',
+                label: '助理简介',
+              },
+            ]}
+          />
+        ) : (
+          detailFallback
+        )}
       </Flex>
     </Modal>
   )

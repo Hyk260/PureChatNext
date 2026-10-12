@@ -1,7 +1,7 @@
 'use client'
 
 import { Center, confirmModal, Grid, Text } from '@pure/ui'
-import { memo, useCallback, useMemo, useState } from 'react'
+import { lazy, memo, Suspense, useCallback, useMemo, useState } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
@@ -14,9 +14,10 @@ import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { useRouter } from 'next/navigation'
 
-import AgentDetailModal from './AgentDetailModal'
 import CommunityEmpty from './CommunityEmpty'
 import CustomAgentCard from './CustomAgentCard'
+
+const AgentDetailModal = lazy(() => import('./AgentDetailModal'))
 
 export interface CustomAgentListProps {
   data?: AgentListItem[]
@@ -158,13 +159,17 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
           />
         ))}
       </Grid>
-      <AgentDetailModal
-        agent={detailDiscoverAgent}
-        open={detailAgentId !== null}
-        onClose={handleCloseDetail}
-        onEdit={handleEditFromDetail}
-        onUse={handleUseFromDetail}
-      />
+      {detailDiscoverAgent ? (
+        <Suspense fallback={<Text type='secondary'>正在加载助理详情…</Text>}>
+          <AgentDetailModal
+            agent={detailDiscoverAgent}
+            open
+            onClose={handleCloseDetail}
+            onEdit={handleEditFromDetail}
+            onUse={handleUseFromDetail}
+          />
+        </Suspense>
+      ) : null}
       <AgentFormModal
         agent={editing}
         confirmLoading={saving}

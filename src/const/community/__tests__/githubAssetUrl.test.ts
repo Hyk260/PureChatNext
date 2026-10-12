@@ -7,7 +7,7 @@ import {
   githubAssetUrl,
   githubSourceFetchUrls,
   parseGithubAssetUrl,
-} from './githubAssetUrl'
+} from '../githubAssetUrl'
 
 describe('parseGithubAssetUrl', () => {
   it('accepts GitHub user avatars', () => {

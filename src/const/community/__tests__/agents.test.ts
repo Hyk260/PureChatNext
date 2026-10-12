@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { AssistantCategory } from '@/features/community/types'
 
-import { ASSISTANT_CATEGORY_LABELS, filterCommunityAgents } from './agents'
+import { ASSISTANT_CATEGORY_LABELS, filterCommunityAgents } from '../agents'
 
 const sampleAgent = {
   author: 'demo',

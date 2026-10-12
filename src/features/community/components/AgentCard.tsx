@@ -8,7 +8,7 @@ import { memo, useCallback } from 'react'
 import type { MouseEvent } from 'react'
 
 import { ASSISTANT_CATEGORY_LABELS } from '@/const/community/agents'
-import type { DiscoverAgentItem } from '@/features/community/types'
+import type { DiscoverAgentSummary } from '@/features/community/types'
 import { useAddCommunityAgent } from '@/features/community/hooks/useAddCommunityAgent'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -41,7 +41,7 @@ const styles = createStaticStyles(({ css }) => ({
 
 const formatNumber = (value: number) => value.toLocaleString('en-US')
 
-export interface AgentCardProps extends DiscoverAgentItem {
+export interface AgentCardProps extends DiscoverAgentSummary {
   onOpenDetail: (identifier: string) => void
 }
 

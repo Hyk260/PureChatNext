@@ -1,16 +1,17 @@
 'use client'
 
-import { Grid } from '@pure/ui'
-import { memo, useCallback, useMemo, useState } from 'react'
+import { Grid, Text } from '@pure/ui'
+import { lazy, memo, Suspense, useCallback, useMemo, useState } from 'react'
 
-import type { DiscoverAgentItem } from '@/features/community/types'
+import type { DiscoverAgentSummary } from '@/features/community/types'
 
 import AgentCard from './AgentCard'
-import AgentDetailModal from './AgentDetailModal'
 import CommunityEmpty from './CommunityEmpty'
 
+const AgentDetailModal = lazy(() => import('./AgentDetailModal'))
+
 export interface AgentListProps {
-  data?: DiscoverAgentItem[]
+  data?: DiscoverAgentSummary[]
   rows?: number
 }
 
@@ -41,7 +42,11 @@ const AgentList = memo<AgentListProps>(({ data = [], rows = 3 }) => {
           <AgentCard key={item.identifier} {...item} onOpenDetail={handleOpenDetail} />
         ))}
       </Grid>
-      <AgentDetailModal agent={selectedAgent} open={selectedIdentifier !== null} onClose={handleCloseDetail} />
+      {selectedAgent ? (
+        <Suspense fallback={<Text type='secondary'>正在加载助理详情…</Text>}>
+          <AgentDetailModal agent={selectedAgent} open onClose={handleCloseDetail} />
+        </Suspense>
+      ) : null}
     </>
   )
 })

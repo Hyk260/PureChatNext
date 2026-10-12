@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { getCommunitySkillReadmeSnapshot } from './skills.readme'
+import { getCommunitySkillReadmeSnapshot } from '../skills.readme'
 
 describe('getCommunitySkillReadmeSnapshot', () => {
   it('returns undefined for identifiers not captured by sync', () => {

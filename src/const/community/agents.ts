@@ -1,5 +1,5 @@
 import { AssistantCategory } from '@/features/community/types'
-import type { DiscoverAgentItem } from '@/features/community/types'
+import type { DiscoverAgentSummary } from '@/features/community/types'
 
 import { COMMUNITY_AGENTS_DATA } from './agents.data'
 
@@ -43,10 +43,10 @@ export const ASSISTANT_CATEGORY_LABELS: Record<AssistantCategory, string> = {
 }
 
 /** 手选的社区助手目录。草稿来自 `pnpm agents:sync`，脚本不会覆盖。 */
-export const COMMUNITY_AGENTS: DiscoverAgentItem[] = COMMUNITY_AGENTS_DATA
+export const COMMUNITY_AGENTS: DiscoverAgentSummary[] = COMMUNITY_AGENTS_DATA
 
 export const getAssistantCategoryCounts = (
-  agents: DiscoverAgentItem[] = COMMUNITY_AGENTS
+  agents: DiscoverAgentSummary[] = COMMUNITY_AGENTS
 ): Record<AssistantCategory, number> => {
   const counts = Object.fromEntries(Object.values(AssistantCategory).map((key) => [key, 0])) as Record<
     AssistantCategory,
@@ -62,9 +62,9 @@ export const getAssistantCategoryCounts = (
 }
 
 export const filterCommunityAgents = (
-  agents: DiscoverAgentItem[],
+  agents: DiscoverAgentSummary[],
   options: { category?: string | null; q?: string | null }
-): DiscoverAgentItem[] => {
+): DiscoverAgentSummary[] => {
   const category = options.category ?? AssistantCategory.All
   const query = options.q?.trim().toLowerCase() ?? ''
 

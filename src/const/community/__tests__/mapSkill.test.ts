@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { mapMarketSkillToDiscoverItem } from '../../../scripts/map-community-skill'
+import { mapMarketSkillToDiscoverItem } from '../../../../scripts/map-community-skill'
 
 describe('mapMarketSkillToDiscoverItem', () => {
   it('maps marketplace list fields and drops empty optional values', () => {

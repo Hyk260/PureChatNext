@@ -65,6 +65,7 @@ export default defineConfig({
     build: {
       outDir: path.resolve(desktopDir, 'dist/renderer'),
       emptyOutDir: true,
+      minify: 'oxc',
       reportCompressedSize: false,
       chunkSizeWarningLimit: 1500,
       rolldownOptions: {

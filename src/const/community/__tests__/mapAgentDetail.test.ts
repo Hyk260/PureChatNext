@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { mapDetailToDiscoverFields } from '../../../scripts/map-community-agent-detail'
+import { mapDetailToDiscoverFields } from '../../../../scripts/map-community-agent-detail'
 
 describe('mapDetailToDiscoverFields', () => {
   it('maps systemRole, opening fields, examples, summary and tags', () => {

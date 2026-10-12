@@ -117,6 +117,13 @@ export interface DiscoverAgentItem {
   tokenUsage?: number
 }
 
+export type DiscoverAgentDetails = Pick<
+  DiscoverAgentItem,
+  'examples' | 'openingMessage' | 'openingQuestions' | 'summary' | 'systemRole'
+>
+
+export type DiscoverAgentSummary = Omit<DiscoverAgentItem, keyof DiscoverAgentDetails>
+
 export interface ActiveCommunityAgent {
   avatar: string
   identifier: string

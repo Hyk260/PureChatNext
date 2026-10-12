@@ -3,7 +3,8 @@
 import { useApp } from '@/components/AntdStaticMethods'
 import { useCallback, useState } from 'react'
 
-import type { DiscoverAgentItem } from '@/features/community/types'
+import { loadCommunityAgent } from '@/const/community/agentDetails'
+import type { DiscoverAgentItem, DiscoverAgentSummary } from '@/features/community/types'
 import { createAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
@@ -20,19 +21,20 @@ export function useAddCommunityAgent() {
   const upsertLocal = useAgentsStore((s) => s.upsertLocal)
 
   const addAgent = useCallback(
-    async (item: DiscoverAgentItem) => {
+    async (item: DiscoverAgentItem | DiscoverAgentSummary) => {
       if (adding) return
       setAdding(true)
 
       try {
+        const detail = await loadCommunityAgent(item)
         const agent = await createAgent({
           avatar: item.avatar,
           backgroundColor: item.backgroundColor,
           description: item.description,
           marketIdentifier: item.identifier,
-          openingMessage: item.openingMessage ?? null,
-          openingQuestions: item.openingQuestions ?? [],
-          systemRole: item.systemRole,
+          openingMessage: detail.openingMessage ?? null,
+          openingQuestions: detail.openingQuestions ?? [],
+          systemRole: detail.systemRole,
           title: item.title,
         })
         upsertLocal(agent)

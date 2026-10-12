@@ -7,6 +7,7 @@ import type { ReactNode } from 'react'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import MainShellLayout from '@/layout/MainShellLayout'
+import { getDesktopApi } from '@/types/desktop'
 
 import SettingsHeader from './SettingsHeader'
 import SettingsSidebar from './SettingsSidebar'
@@ -25,11 +26,12 @@ const FULL_BLEED_PREFIXES = ['/settings/provider', '/settings/skill', ...HEADERL
 
 const SettingsShellLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname()
+  const isDesktop = Boolean(getDesktopApi())
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
   const toggleSidebarCollapsed = useHomeStore((s) => s.toggleSidebarCollapsed)
   const isFullBleed = FULL_BLEED_PREFIXES.some((prefix) => pathname.startsWith(prefix))
   const showExpand =
-    sidebarCollapsed && HEADERLESS_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+    !isDesktop && sidebarCollapsed && HEADERLESS_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 
   return (
     <MainShellLayout
@@ -39,7 +41,7 @@ const SettingsShellLayout = ({ children }: { children: ReactNode }) => {
     >
       <Flex
         className={[
-          'relative flex-col flex-1 h-full min-h-[0px] w-full',
+          'relative flex-col flex-1 h-full min-h-0 w-full',
           isFullBleed ? 'm-0 max-w-none overflow-hidden' : 'mx-auto max-w-[1024px] overflow-auto',
         ]}
       >

@@ -1,5 +1,5 @@
 import type { ChatPermissionMode } from '@pure/types'
-import type { DesktopUpdatePreferences, DesktopUpdateState } from './desktopUpdater'
+import type { DesktopUpdateLogs, DesktopUpdatePreferences, DesktopUpdateState } from './desktopUpdater'
 
 export type { DesktopUpdatePreferences, DesktopUpdateState } from './desktopUpdater'
 
@@ -113,6 +113,7 @@ export interface DesktopDataInfo {
 export interface DesktopApi {
   updater: {
     getState: () => Promise<DesktopUpdateState>
+    getLogs: () => Promise<DesktopUpdateLogs>
     check: () => Promise<DesktopUpdateState>
     clearCache: () => Promise<DesktopUpdateState>
     setPreferences: (preferences: DesktopUpdatePreferences) => Promise<DesktopUpdateState>

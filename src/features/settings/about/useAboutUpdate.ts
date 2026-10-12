@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import { CURRENT_VERSION } from '@/const/version'
@@ -9,6 +10,7 @@ import { acceptUpdateSnapshot, canShowInstallConfirmation } from './updatePresen
 
 export function useAboutUpdate() {
   const { message } = useApp()
+  const [searchParams, setSearchParams] = useSearchParams()
   const api = getDesktopApi()
   const isDesktop = Boolean(api)
   const [desktopState, setDesktopState] = useState<DesktopUpdateState | null>(null)
@@ -46,6 +48,16 @@ export function useAboutUpdate() {
     }
   }, [api])
 
+  const requestedInstallConfirmation =
+    isDesktop && canShowInstallConfirmation(desktopState?.status || 'idle') && searchParams.get('update') === 'install'
+
+  const clearInstallRequest = () => {
+    if (searchParams.get('update') !== 'install') return
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('update')
+    setSearchParams(nextParams, { replace: true })
+  }
+
   const confirmInstall = () => {
     if (!api || !desktopState || !canShowInstallConfirmation(desktopState.status)) return
     setInstallConfirmationOpen(true)
@@ -54,14 +66,16 @@ export function useAboutUpdate() {
   const closeInstallConfirmation = () => {
     if (installing) return
     setInstallConfirmationOpen(false)
+    clearInstallRequest()
   }
 
   const installUpdate = async () => {
-    if (!api || desktopState?.status !== 'ready' || installing) return
+    if (!api || desktopState?.status !== 'ready' || !desktopState.installationSupport?.supported || installing) return
     setInstalling(true)
     try {
       await api.updater.install()
       setInstallConfirmationOpen(false)
+      clearInstallRequest()
     } catch (error) {
       message.error(error instanceof Error ? error.message : '安装失败，请重试。')
     } finally {
@@ -124,7 +138,7 @@ export function useAboutUpdate() {
     status,
     version,
     pending,
-    installConfirmationOpen,
+    installConfirmationOpen: installConfirmationOpen || requestedInstallConfirmation,
     installing,
     loadError,
     feedback: desktopState?.message || loadError,

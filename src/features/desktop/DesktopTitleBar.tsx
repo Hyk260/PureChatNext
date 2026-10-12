@@ -1,10 +1,11 @@
 'use client'
 
-import { DropdownMenu, Tooltip } from '@pure/ui'
+import { ActionIcon, DropdownMenu, Tooltip } from '@pure/ui'
 import { createStaticStyles } from 'antd-style'
 import {
   ArrowLeft,
   ArrowRight,
+  CircleFadingArrowUp,
   History,
   ListTodo,
   MessageSquare,
@@ -22,6 +23,7 @@ import type { DesktopSidebarStateDetail } from '@/features/desktop/desktopEvents
 import DesktopWindowControls from '@/features/desktop/DesktopWindowControls'
 import MacTrafficLights from '@/features/desktop/MacTrafficLights'
 import { desktopHref, useDesktopTabsStore } from '@/features/desktop/useDesktopTabsStore'
+import { useDesktopUpdateVersion } from '@/features/desktop/useDesktopUpdateVersion'
 import { DEFAULT_SIDEBAR_WIDTH, useSidebarLayoutStore } from '@/layout/sidebarResize'
 import { getDesktopApi } from '@/types/desktop'
 
@@ -232,6 +234,7 @@ type ChromeProps = {
   onBack: () => void
   onCloseTab: (id: string) => void
   onForward: () => void
+  onOpenUpdate?: () => void
   onToggleMaximize: () => void
   onToggleSidebar: () => void
   platform: NodeJS.Platform | null
@@ -249,6 +252,7 @@ const DesktopTitleBarChrome = ({
   onBack,
   onCloseTab,
   onForward,
+  onOpenUpdate,
   onToggleMaximize,
   onToggleSidebar,
   platform,
@@ -257,6 +261,7 @@ const DesktopTitleBarChrome = ({
   const tabs = useDesktopTabsStore((s) => s.tabs)
   const activeTabId = useDesktopTabsStore((s) => s.activeTabId)
   const sidebarWidth = useSidebarLayoutStore((s) => s.sidebarWidth)
+  const updateVersion = useDesktopUpdateVersion()
 
   if (!api) return null
 
@@ -401,6 +406,17 @@ const DesktopTitleBarChrome = ({
           </button>
         </div>
 
+        {updateVersion && onOpenUpdate ? (
+          <ActionIcon
+            aria-label='查看更新'
+            className='shrink-0 text-green! [-webkit-app-region:no-drag]'
+            icon={CircleFadingArrowUp}
+            size={{ blockSize: 28, size: 18 }}
+            title={`更新 v${updateVersion}`}
+            onClick={onOpenUpdate}
+          />
+        ) : null}
+
         {platform && !isMac ? (
           <DesktopWindowControls
             isMaximized={isMaximized}
@@ -519,6 +535,7 @@ const DesktopTitleBarNav = () => {
         markForward()
         navigate(1)
       }}
+      onOpenUpdate={() => navigate('/settings/about?update=install')}
       onToggleMaximize={chrome.toggleMaximize}
       onToggleSidebar={chrome.toggleSidebar}
     />

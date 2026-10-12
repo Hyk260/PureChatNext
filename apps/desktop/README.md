@@ -42,7 +42,7 @@ pnpm package:desktop:win
 pnpm package:desktop:win:portable
 ```
 
-所有产物都写入 `apps/desktop/release/`。打包命令会先执行生产构建，再调用 electron-builder，并使用 `--publish never`，因此不会自动上传或发布。
+所有产物都写入 `apps/desktop/release/`。打包命令会先执行生产构建，成功后清空 `release/`，再调用 electron-builder，并使用 `--publish never`，因此不会自动上传或发布。旧安装包、blockmap、渠道 YAML 和解包目录会一起清理；同一次命令的多架构、多目标产物会保留。单独运行 `build:desktop` 不会清理发布产物；若分多次命令构建不同平台，应在下一次打包前将已生成的产物归档到其他目录。
 
 `package:desktop` 的 `--dir` 目标用于运行与归档校验，不会生成更新所需的 `app-update.yml`；更新验收应使用 macOS ZIP/DMG 或 Windows NSIS 发行目标，并确认包内存在该文件。
 
@@ -137,11 +137,11 @@ portable 与 ZIP 的核心区别是：
 
 ## 体积与构建调优
 
-当前测量基线约为：
+2026-10-12 本机 arm64 产物的测量基线约为：
 
-- `app.asar`：约 29 MiB。
-- 完整 macOS App：约 291–298 MiB。
-- Electron Framework：约 262–269 MiB，是完整 App 的主要体积来源。
+- `app.asar`：约 23 MiB。
+- 完整 macOS App：约 238 MiB。
+- Electron 及辅助框架：约 215 MiB，占完整 App 的约 90%。
 
 因此，继续压缩 ASAR 不会等比例减少最终应用体积。当前已经采取的低风险措施包括：
 
@@ -150,13 +150,17 @@ portable 与 ZIP 的核心区别是：
 - 通过 `beforeBuild: () => false` 跳过 electron-builder 的原生 rebuild 和 pnpm workspace 依赖收集。
 - 生产构建 renderer，避免把开发服务器内容打入安装包。
 - 使用 ASAR 入口和 64 MiB 预算校验，防止依赖意外膨胀。
-- macOS 使用 `compression: 'maximum'`，以换取较小归档体积；代价是打包时间可能增加。
+- macOS 使用 `compression: 'normal'` 加速 ZIP 更新包生成，并通过 `dmg.format: 'UDBZ'` 保留较小的 DMG 安装包体积。
 - 使用 `reportCompressedSize: false` 减少构建过程中的重复压缩统计开销。
+
+同一个已打包 App 的单次本机对比中，ZIP 使用 `maximum` 耗时约 223 秒、体积 97.62 MiB；使用 `normal` 耗时约 31 秒、体积 97.86 MiB，归档耗时减少约 86%，体积增加约 0.24%。DMG 保留 `UDBZ`，约 92.33 MiB；若随普通压缩切换为 `UDZO`，则约 101.11 MiB。这些耗时包含归档与 blockmap，排除源码构建、签名、公证和上传，实际耗时随机器与缓存变化。
+
+`pnpm --filter purechat-desktop package:mac` 仍生成 DMG、ZIP、对应 blockmap 和已配置更新源的渠道 YAML。本地仅验证应用启动和功能时，可使用 `pnpm --filter purechat-desktop package:dir` 跳过压缩归档；更新下载验收仍使用完整发布产物。
 
 后续如果需要继续瘦身，优先顺序应是：
 
 1. 审查 renderer 中的大型 vendor chunk、重复依赖和无需首屏加载的模块。
-2. 对图表、编辑器、代码高亮和 WASM 等资源进行懒加载。
+2. 对图表、编辑器、代码高亮和 WASM 等资源进行懒加载以减少首屏开销；减少安装包体积还需排除无用模块与资源，懒加载本身不会减少打包文件。
 3. 减少不必要的图片、字体和语言资源。
 4. 只有在确实引入原生模块后，才建立精确的 native dependency 白名单和 `asarUnpack` 规则。
 5. 在实际发布验收后，再评估 Electron Framework 本地化裁剪；错误裁剪可能导致运行时缺少资源。
@@ -178,7 +182,19 @@ portable 与 ZIP 的核心区别是：
 
 关于页的自动更新开关控制后台检测与下载；关闭后仍可手动检查。更新设置保存在客户端配置中，测试计划默认关闭，启用后可选择 RC 或 Beta。渠道切换会取消旧下载并清除安装就绪状态，禁止自动降级。Web 端在浏览器 tab 重新可见时检测部署变化并提示用户刷新，关于页不提供更新按钮或更新开关。
 
+版本号旁的日志图标可打开桌面更新日志弹框，查看 `desktop:update` 记录和对应错误堆栈，并手动刷新。日志读取开发或生产环境对应目录最近三个日志文件（含轮转文件），每个文件及弹框内容均限制在 256 KiB；较早内容省略时会显示提示，完整日志仍可通过帮助菜单打开日志目录查看。
+
+客户端启动时检查当前构建的安装条件。macOS 使用系统 `codesign` 检查 Developer ID Application 签名并进行严格校验；开发版、ad-hoc／未签名构建以及校验无法完成的构建仅支持下载，安装确认按钮禁用，主进程也会拒绝安装。弹框会显示具体原因。此检查只确认当前应用的安装条件，每个更新包仍必须通过 Squirrel.Mac 的签名身份兼容性校验；Windows 保留原生安装器校验，portable 和不支持的平台仍使用手动更新。
+
 更新源需提供对应平台、架构和渠道的元数据：稳定渠道 `latest`、预览渠道 `rc`、测试渠道 `beta`。预发布客户端版本使用 `X.Y.Z-rc.N` 或 `X.Y.Z-beta.N`；将 electron-builder 生成的渠道 YAML、安装包和校验文件一起上传到同一个更新根地址。macOS 自动更新需 ZIP 产物，Windows 使用 NSIS 安装包；portable 和未配置更新源的构建提供手动发布页入口。设置页面中的 RC/Beta 选择不会自动创建远端发布渠道。
+
+### 更新说明
+
+当前版本的桌面更新说明统一维护在 [build/release-notes.md](build/release-notes.md)。发布时先更新根 `package.json` 的版本和该文件，再运行打包命令。`releaseInfo.releaseNotesFile` 使用固定的源码文件路径，打包器会将内容写入生成的渠道 YAML 的 `releaseNotes` 字段，关于页通过现有更新状态显示它。
+
+更新说明文件位于 `build/`，清理 `release/` 不会删除它；该文件不作为运行时资源额外装入应用包。生产更新服务会原样提供 YAML 中的说明，开发模式的模拟下载服务仍显示模拟测试说明。已发布的 YAML 需要重新生成并上传，才能包含新说明。
+
+### 打包更新源
 
 打包配置会独立加载 `apps/desktop/` 下的 `.env`、`.env.local`、`.env.desktop` 和 `.env.desktop.local`，后者覆盖前者；shell/CI 中已有的环境变量优先级最高。`electron-vite` 加载的变量不会传递给后续的 `electron-builder` 进程。正式发布时应覆盖本地下载测试地址：
 

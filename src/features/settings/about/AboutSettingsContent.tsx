@@ -3,8 +3,9 @@
 import { ActionIcon, Block, Button, Flex, Github, Modal, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { Segmented, Switch } from 'antd'
-import { BadgeHelp, Bug, Code2, Copy, Globe, MessageSquare, MessagesSquare, Rss } from 'lucide-react'
+import { BadgeHelp, Bug, CircleX, Code2, Copy, FileText, Globe, MessageSquare, MessagesSquare, Rss, TriangleAlert } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router'
 
 import { useApp } from '@/components/AntdStaticMethods'
@@ -22,6 +23,7 @@ import {
 import { getDesktopApi } from '@/types/desktop'
 
 import { UpdateLogo } from './UpdateLogo'
+import { UpdateLogsModal } from './UpdateLogsModal'
 import { canShowInstallConfirmation, getUpdateButtonLabel } from './updatePresentation'
 import { useAboutUpdate } from './useAboutUpdate'
 
@@ -64,6 +66,7 @@ function ResourceRow({
 export function AboutSettingsContent() {
   const { message, modal } = useApp()
   const update = useAboutUpdate()
+  const [logsOpen, setLogsOpen] = useState(false)
   const progress = update.desktopState?.progress || 0
   const checking = update.status === 'checking'
   const downloading = update.status === 'downloading'
@@ -77,6 +80,11 @@ export function AboutSettingsContent() {
   const versionLabel = update.version ? `v${update.version}` : '版本读取中'
   const updateLabel = getUpdateButtonLabel(update.status, progress)
   const hasUpdate = canShowInstallConfirmation(update.status)
+  const installationSupport = update.desktopState?.installationSupport || null
+  const canInstall = update.status === 'ready' && installationSupport?.supported
+  const feedbackIsError = update.status === 'error' || Boolean(update.loadError)
+  const feedbackIcon = feedbackIsError ? CircleX : TriangleAlert
+  const feedbackColor = feedbackIsError ? 'text-red!' : 'text-amber-600! dark:text-amber-400!'
 
   const openExternal = async (href: string) => {
     try {
@@ -129,19 +137,25 @@ export function AboutSettingsContent() {
 
   return (
     <Flex className='flex-col gap-6 w-full px-4 py-6 pb-16 sm:px-6'>
+      {update.isDesktop ? (
+        <UpdateLogsModal open={logsOpen} onClose={() => setLogsOpen(false)} installationSupport={installationSupport} />
+      ) : null}
       <Modal
         open={update.installConfirmationOpen}
         title={`重启并安装 v${update.desktopState?.release?.version || ''}？`}
         okText='重启并安装'
         cancelText='稍后再说'
         confirmLoading={update.installing}
-        okButtonProps={{ disabled: update.status !== 'ready' || update.installing }}
+        okButtonProps={{ disabled: !canInstall || update.installing }}
         cancelButtonProps={{ disabled: update.installing }}
         closable={!update.installing}
         onCancel={update.closeInstallConfirmation}
         onOk={update.installUpdate}
       >
         应用将重启，进行中的聊天和工具任务会被中断。请先完成当前操作。
+        {installationSupport && !installationSupport.supported ? (
+          <Text as='p' className='mb-0 mt-3 text-amber-600! dark:text-amber-400!'>{installationSupport.message}</Text>
+        ) : null}
       </Modal>
       <Block variant='outlined' className='rounded-2xl px-5 sm:px-6'>
         <Flex className='flex-between border-b border-app-border-secondary py-4'>
@@ -177,6 +191,24 @@ export function AboutSettingsContent() {
                   disabled={!update.version}
                   onClick={handleCopyVersion}
                 />
+                {update.feedback ? (
+                  <ActionIcon
+                    aria-label={`${feedbackIsError ? '更新错误' : '更新提示'}：${update.feedback}`}
+                    className={feedbackColor}
+                    icon={feedbackIcon}
+                    size='small'
+                    title={update.feedback}
+                  />
+                ) : null}
+                {update.isDesktop ? (
+                  <ActionIcon
+                    aria-label='查看桌面更新日志'
+                    icon={FileText}
+                    size='small'
+                    title='查看桌面更新日志'
+                    onClick={() => setLogsOpen(true)}
+                  />
+                ) : null}
               </Flex>
             </Flex>
           </Flex>
@@ -191,11 +223,6 @@ export function AboutSettingsContent() {
             </Button>
           ) : null}
         </Flex>
-        {update.feedback ? (
-          <Text as='p' role='status' aria-live='polite' className='mt-0 mb-4 text-[13px]' type='secondary'>
-            {update.feedback}
-          </Text>
-        ) : null}
         {update.isDesktop ? (
           <Flex className='flex-between gap-4 border-t border-app-border-secondary py-4'>
             <Flex className='flex-col gap-1'>

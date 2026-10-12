@@ -55,5 +55,9 @@ describe('useSettingsCategory system tools', () => {
       '/settings/qq-conversation',
       '/settings/wechat-conversation',
     ])
+
+    mocks.getDesktopApi.mockReturnValue({})
+    const { result: desktopAdmin } = renderHook(() => useSettingsCategory(true))
+    expect(desktopAdmin.current.some((group) => group.title === '管理')).toBe(true)
   })
 })

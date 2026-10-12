@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   packaged: true,
   notify: vi.fn(),
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+  installationSupport: vi.fn(),
 }))
 vi.mock('electron', () => ({
   app: {
@@ -47,6 +48,8 @@ import type { DesktopConfigService } from '../DesktopConfigService'
 import { DEFAULT_UPDATE_PREFERENCES } from '@/types/desktopUpdater'
 import type { DesktopUpdatePreferences } from '@/types/desktopUpdater'
 import { UpdateService } from '../UpdateService'
+
+vi.mock('../updateInstallationSupport', () => ({ checkUpdateInstallationSupport: mocks.installationSupport }))
 
 class FakeUpdater extends EventEmitter {
   logger = mocks.logger
@@ -98,6 +101,7 @@ beforeEach(() => {
   vi.useFakeTimers()
   vi.clearAllMocks()
   mocks.packaged = true
+  mocks.installationSupport.mockResolvedValue({ supported: true, signature: 'valid', message: '签名校验通过' })
   preferences = { ...DEFAULT_UPDATE_PREFERENCES }
   Object.defineProperty(process, 'platform', { configurable: true, value: 'darwin' })
   Object.defineProperty(process, 'resourcesPath', { configurable: true, value: '/tmp/purechat-test-resources' })
@@ -122,6 +126,18 @@ async function settle() {
 }
 
 describe('desktop updater', () => {
+  it('allows an ad-hoc production build to download but rejects installation before calling the native updater', async () => {
+    const support = { supported: false, signature: 'ad-hoc', message: '当前应用使用 ad-hoc 签名，仅支持下载更新。' }
+    mocks.installationSupport.mockResolvedValue(support)
+    await service.check()
+    await settle()
+    updater.emit('update-downloaded', release)
+    expect(await service.getState()).toMatchObject({ status: 'ready', installationSupport: support, message: support.message })
+    await expect(service.install()).rejects.toThrow('ad-hoc')
+    expect(updater.quitAndInstall).not.toHaveBeenCalled()
+    expect(mocks.logger.warn).toHaveBeenCalledWith('Update installation blocked', support)
+  })
+
   it('requires downloaded event to install, even at 100 percent, and uses the client version', async () => {
     expect((await service.getState()).currentVersion).toBe('0.2.0')
     await service.check()
@@ -131,7 +147,7 @@ describe('desktop updater', () => {
     expect(await service.getState()).toMatchObject({
       status: 'downloading',
       progress: 100,
-      release: { version: '0.3.0' },
+      release: { version: '0.3.0', notes: 'Changes' },
     })
     await expect(service.install()).rejects.toThrow('尚未就绪')
     updater.emit('update-downloaded', release)
@@ -404,6 +420,48 @@ describe('updater diagnostics', () => {
     const error = Object.assign(new Error('Native installation failed'), { code: 'SIGNATURE_INVALID' })
     updater.emit('error', error)
     expect(mocks.logger.error).toHaveBeenCalledWith('Updater error during installing', error)
-    expect((await service.getState()).status).toBe('error')
+    expect(await service.getState()).toMatchObject({
+      status: 'error',
+      message: '更新包签名校验未通过。请手动安装正式签名版本后再尝试自动更新。',
+    })
+  })
+
+  it('identifies the native macOS code requirement failure after a successful download', async () => {
+    await service.check()
+    await settle()
+    updater.emit('update-downloaded', release)
+    await service.install()
+    const error = Object.assign(new Error(
+      'Code signature at URL file:///tmp/update/PureChat.app/ did not pass validation: code failed to satisfy specified code requirement(s)'
+    ), { code: -1 })
+    updater.emit('error', error)
+    expect(await service.getState()).toMatchObject({
+      status: 'error',
+      release: { version: release.version },
+      message: '更新包签名校验未通过。请手动安装正式签名版本后再尝试自动更新。',
+    })
+    expect(mocks.logger.error).toHaveBeenCalledWith('Updater error during installing', error)
+  })
+
+  it('reports a synchronous installation failure as an error instead of a network warning', async () => {
+    await service.check()
+    await settle()
+    updater.emit('update-downloaded', release)
+    updater.quitAndInstall.mockImplementation(() => { throw new Error('Native installation failed') })
+    await expect(service.install()).rejects.toThrow('Native installation failed')
+    expect(await service.getState()).toMatchObject({
+      status: 'error',
+      message: '更新安装失败，请重试或手动安装新版本。',
+    })
+  })
+
+  it('keeps ordinary download failures distinct from signature failures', async () => {
+    await service.check()
+    await settle()
+    updater.emit('error', Object.assign(new Error('Connection refused'), { code: 'ECONNREFUSED' }))
+    expect(await service.getState()).toMatchObject({
+      status: 'error',
+      message: '更新失败，请检查网络或更新源后重试。',
+    })
   })
 })

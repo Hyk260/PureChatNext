@@ -11,10 +11,22 @@ import { DEFAULT_UPDATE_PREFERENCES, getUpdateChannel, normalizeUpdatePreference
 
 import { createLogger, redactLogText } from '../logger'
 import type { DesktopConfigService } from './DesktopConfigService'
+import { checkUpdateInstallationSupport } from './updateInstallationSupport'
+import { readUpdateLogs } from './updateLogs'
 
 const INITIAL_CHECK_DELAY = 5_000
 const CHECK_INTERVAL = 4 * 60 * 60 * 1_000
 const RETRY_DELAY = 5 * 60 * 1_000
+
+function getUpdateErrorMessage(error: unknown, status: DesktopUpdateState['status']) {
+  const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : ''
+  const message = error instanceof Error ? error.message : String(error)
+  if (/code signature|code requirement|signature_invalid|invalid_signature/i.test(`${code} ${message}`)) {
+    return '更新包签名校验未通过。请手动安装正式签名版本后再尝试自动更新。'
+  }
+  if (status === 'installing') return '更新安装失败，请重试或手动安装新版本。'
+  return '更新失败，请检查网络或更新源后重试。'
+}
 
 function toRelease(info: UpdateInfo): DesktopUpdateRelease {
   const notes = info.releaseNotes
@@ -43,6 +55,7 @@ export class UpdateService {
     status: 'idle',
     currentVersion: app.getVersion(),
     developmentCachePath: null,
+    installationSupport: null,
     preferences: { ...DEFAULT_UPDATE_PREFERENCES },
     progress: 0,
     release: null,
@@ -77,10 +90,18 @@ export class UpdateService {
     const config = await this.config.read()
     if (this.disposed) return
     this.state.preferences = normalizeUpdatePreferences(config.updatePreferences)
+    this.state.installationSupport = await checkUpdateInstallationSupport({
+      isPackaged: app.isPackaged,
+      platform: process.platform,
+      onError: (error) => this.logger.warn('Installation signature check failed', error),
+    })
+    this.logger.info('Update installation support', this.state.installationSupport)
+    if (this.disposed) return
     const reason = await this.unsupportedReason()
     if (this.disposed) return
     if (reason) {
       this.logger.warn('Updater unsupported', reason)
+      this.state.installationSupport = { ...this.state.installationSupport, supported: false, message: reason }
       this.update({ status: 'unsupported', message: reason })
       return
     }
@@ -119,7 +140,7 @@ export class UpdateService {
     this.updater.allowDowngrade = false
     // Keep an error listener while cancelled requests drain (EventEmitter's error is special).
     this.updater.on('error', this.logError)
-    this.update({ status: 'idle' })
+    this.update({ status: 'idle', message: this.state.installationSupport.supported ? null : this.state.installationSupport.message })
     this.schedule(INITIAL_CHECK_DELAY)
   }
 
@@ -168,6 +189,7 @@ export class UpdateService {
     return {
       ...this.state,
       preferences: { ...this.state.preferences },
+      installationSupport: this.state.installationSupport ? { ...this.state.installationSupport } : null,
       release: this.state.release ? { ...this.state.release } : null,
     }
   }
@@ -175,6 +197,10 @@ export class UpdateService {
   async getState(): Promise<DesktopUpdateState> {
     await this.start()
     return this.snapshot()
+  }
+
+  getLogs() {
+    return readUpdateLogs()
   }
 
   async check(manual = true): Promise<DesktopUpdateState> {
@@ -252,15 +278,17 @@ export class UpdateService {
         status: isPackaged ? 'ready' : 'downloaded',
         progress: 100,
         release: toRelease(info),
-        message: isPackaged ? null : '更新已下载。开发版本不会安装此更新。',
+        message: isPackaged
+          ? (this.state.installationSupport?.supported ? null : this.state.installationSupport?.message || '尚未完成安装条件检查。')
+          : '更新已下载。开发版本不会安装此更新。',
       })
       if (isPackaged && Notification.isSupported()) {
         new Notification({ title: 'PureChat 更新已就绪', body: '请在关于页面确认重启并安装更新。' }).show()
       }
     }
-    const onError = () => {
+    const onError = (error: Error) => {
       if (!this.isCurrent(generation)) return
-      this.update({ status: 'error', progress: 0, message: '更新失败，请检查网络或更新源后重试。' })
+      this.update({ status: 'error', progress: 0, message: getUpdateErrorMessage(error, this.state.status) })
     }
     this.updater.on('download-progress', onProgress)
     this.updater.on('update-downloaded', onDownloaded)
@@ -290,7 +318,7 @@ export class UpdateService {
       this.logger.error(`Update operation failed during ${this.state.status}`, error)
       if (!this.isCurrent(generation)) return
       this.failures += 1
-      this.update({ status: 'error', progress: 0, message: '更新失败，请检查网络或更新源后重试。' })
+      this.update({ status: 'error', progress: 0, message: getUpdateErrorMessage(error, this.state.status) })
     }
   }
 
@@ -360,6 +388,10 @@ export class UpdateService {
   async install() {
     if (!app.isPackaged) throw new Error('开发版本仅支持下载更新，不能安装。')
     await this.start()
+    if (!this.state.installationSupport?.supported) {
+      this.logger.warn('Update installation blocked', this.state.installationSupport)
+      throw new Error(this.state.installationSupport?.message || '尚未完成安装条件检查。')
+    }
     if (this.state.status !== 'ready' || this.invalidated || this.changingPreferences) {
       throw new Error('更新尚未就绪，请重新检查更新')
     }
@@ -370,7 +402,7 @@ export class UpdateService {
       this.updater.quitAndInstall(false, true)
     } catch (error) {
       this.logger.error('Update installation failed', error)
-      this.update({ status: 'ready', message: '安装失败，请重试。' })
+      this.update({ status: 'error', message: getUpdateErrorMessage(error, 'installing') })
       throw error
     }
   }

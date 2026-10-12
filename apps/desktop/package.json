@@ -1,6 +1,6 @@
 {
   "name": "purechat-desktop",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "PureChat desktop application",
   "author": "Hyk260",
@@ -10,11 +10,12 @@
   "type": "module",
   "scripts": {
     "build": "electron-vite build",
+    "clean:release": "node scripts/clean-release.mjs",
     "dev": "electron-vite dev",
-    "package:dir": "pnpm build && electron-builder --dir --config electron-builder.mjs --publish never",
-    "package:mac": "pnpm build && electron-builder --mac --config electron-builder.mjs --publish never",
-    "package:win": "pnpm build && electron-builder --win --config electron-builder.mjs --publish never",
-    "package:win:portable": "pnpm build && electron-builder --win portable --config electron-builder.mjs --publish never",
+    "package:dir": "pnpm build && pnpm clean:release && electron-builder --dir --config electron-builder.mjs --publish never",
+    "package:mac": "pnpm build && pnpm clean:release && electron-builder --mac --config electron-builder.mjs --publish never",
+    "package:win": "pnpm build && pnpm clean:release && electron-builder --win --config electron-builder.mjs --publish never",
+    "package:win:portable": "pnpm build && pnpm clean:release && electron-builder --win portable --config electron-builder.mjs --publish never",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },

@@ -26,6 +26,9 @@ const config = {
   productName: 'PureChat',
   // Builder reads the manifest before loading this config; override its cached version too.
   extraMetadata: { version },
+  releaseInfo: {
+    releaseNotesFile: path.join(desktopDir, 'build/release-notes.md'),
+  },
   electronLanguages: ['zh-CN'],
   directories: {
     buildResources: path.join(desktopDir, 'build'),
@@ -50,7 +53,8 @@ const config = {
   mac: {
     category: 'public.app-category.productivity',
     icon: appIcon,
-    compression: 'maximum',
+    // Normal ZIP compression saves minutes with negligible archive size growth.
+    compression: 'normal',
     artifactName: '${productName}-${version}-${arch}.${ext}',
     // arm64 = Apple Silicon（M 系列）；x64 = Intel Mac。分别打两个包，不是 universal。
     target: [
@@ -71,6 +75,8 @@ const config = {
     ],
   },
   dmg: {
+    // Keep the smaller bzip2 DMG independently of the faster ZIP compression.
+    format: 'UDBZ',
     artifactName: '${productName}-${version}-${arch}.${ext}',
   },
   win: {

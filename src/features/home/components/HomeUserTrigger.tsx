@@ -31,7 +31,7 @@ const styles = createStaticStyles(({ css }) => ({
     border-radius: 10px;
   `,
   desktopPopover: css`
-    inset-block-start: 46px !important;
+    inset-block-start: 38px !important;
   `,
   popoverContent: css`
     padding: 0;

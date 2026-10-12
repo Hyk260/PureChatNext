@@ -8,6 +8,7 @@ import { invoke } from './invoke'
 export const createDesktopApi = (): DesktopApi => ({
   updater: {
     getState: () => invoke('updater.getState'),
+    getLogs: () => invoke('updater.getLogs'),
     check: () => invoke('updater.check'),
     clearCache: () => invoke('updater.clearCache'),
     setPreferences: (preferences) => invoke('updater.setPreferences', preferences),

@@ -17,6 +17,17 @@ export interface DesktopUpdateRelease {
   notes: string
 }
 
+export interface DesktopUpdateInstallationSupport {
+  supported: boolean
+  signature: 'valid' | 'ad-hoc' | 'unsigned' | 'unknown' | 'not-required' | 'development' | 'unsupported'
+  message: string
+}
+
+export interface DesktopUpdateLogs {
+  text: string
+  truncated: boolean
+}
+
 export type DesktopUpdateStatus =
   | 'idle'
   | 'checking'
@@ -33,6 +44,7 @@ export interface DesktopUpdateState {
   status: DesktopUpdateStatus
   currentVersion: string
   developmentCachePath: string | null
+  installationSupport: DesktopUpdateInstallationSupport | null
   preferences: DesktopUpdatePreferences
   progress: number
   release: DesktopUpdateRelease | null

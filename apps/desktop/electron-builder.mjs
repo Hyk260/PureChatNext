@@ -3,9 +3,11 @@ import { fileURLToPath } from 'node:url'
 
 import { loadEnv } from 'vite'
 
+import { syncDesktopVersion } from './scripts/sync-version.mjs'
 import { verifyAfterPack } from './scripts/verify-package.mjs'
 
 const desktopDir = path.dirname(fileURLToPath(import.meta.url))
+const version = syncDesktopVersion(desktopDir)
 // electron-builder runs separately from electron-vite and must load desktop env files itself.
 const desktopEnv = loadEnv('desktop', desktopDir, 'PURECHAT_DESKTOP_')
 const updateUrl = desktopEnv.PURECHAT_DESKTOP_UPDATE_URL?.trim()
@@ -22,6 +24,8 @@ if (!process.env.ELECTRON_BUILDER_BINARIES_MIRROR) {
 const config = {
   appId: 'com.purechat.desktop',
   productName: 'PureChat',
+  // Builder reads the manifest before loading this config; override its cached version too.
+  extraMetadata: { version },
   electronLanguages: ['zh-CN'],
   directories: {
     buildResources: path.join(desktopDir, 'build'),

@@ -8,7 +8,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AppUpdater, UpdateCheckResult, UpdateInfo } from 'electron-updater'
 import { DownloadedUpdateHelper } from 'electron-updater/out/DownloadedUpdateHelper'
 
-const mocks = vi.hoisted(() => ({ packaged: true, notify: vi.fn() }))
+const mocks = vi.hoisted(() => ({
+  packaged: true,
+  notify: vi.fn(),
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}))
 vi.mock('electron', () => ({
   app: {
     getVersion: () => '0.2.0',
@@ -34,12 +38,19 @@ vi.mock('electron-updater', () => ({
   },
 }))
 
+vi.mock('../../logger', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../logger')>()),
+  createLogger: () => mocks.logger,
+}))
+
 import type { DesktopConfigService } from '../DesktopConfigService'
 import { DEFAULT_UPDATE_PREFERENCES } from '@/types/desktopUpdater'
 import type { DesktopUpdatePreferences } from '@/types/desktopUpdater'
 import { UpdateService } from '../UpdateService'
 
 class FakeUpdater extends EventEmitter {
+  logger = mocks.logger
+  loadUpdateConfig = vi.fn(async () => ({ url: 'http://127.0.0.1:5500' }))
   forceDevUpdateConfig = false
   disableDifferentialDownload = false
   autoDownload = true
@@ -365,4 +376,34 @@ describe('desktop updater', () => {
       expect(updater.checkForUpdates).not.toHaveBeenCalled()
     }
   )
+})
+
+describe('updater diagnostics', () => {
+  it('connects the updater logger and records a failed check with its original error', async () => {
+    const error = Object.assign(new Error('Feed unavailable'), { code: 'ECONNREFUSED' })
+    updater.checkForUpdates.mockRejectedValue(error)
+    await service.check()
+    await settle()
+    expect(updater.logger).toBe(mocks.logger)
+    expect(mocks.logger.info).toHaveBeenCalledWith('Packaged update source', 'http://127.0.0.1:5500/')
+    expect(mocks.logger.error).toHaveBeenCalledWith('Update operation failed during checking', error)
+    expect(mocks.logger.info).toHaveBeenCalledWith('Scheduling update retry', { delayMs: 300_000, failures: 1 })
+    expect((await service.getState()).status).toBe('error')
+  })
+
+  it('logs progress once per ten-percent bucket and captures asynchronous installation errors', async () => {
+    await service.check()
+    await settle()
+    for (const percent of [0, 5, 9, 10, 11, 19, 20]) {
+      updater.emit('download-progress', { percent, transferred: percent * 10, total: 1000, bytesPerSecond: 100 })
+    }
+    const progressLogs = mocks.logger.info.mock.calls.filter(([message]) => message === 'Download progress')
+    expect(progressLogs).toHaveLength(3)
+    updater.emit('update-downloaded', release)
+    await service.install()
+    const error = Object.assign(new Error('Native installation failed'), { code: 'SIGNATURE_INVALID' })
+    updater.emit('error', error)
+    expect(mocks.logger.error).toHaveBeenCalledWith('Updater error during installing', error)
+    expect((await service.getState()).status).toBe('error')
+  })
 })

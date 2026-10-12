@@ -1,23 +1,23 @@
-import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import { CURRENT_VERSION } from '@/const/version'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopUpdatePreferences, DesktopUpdateState, DesktopUpdateStatus } from '@/types/desktopUpdater'
-import { getUpdateChannel } from '@/types/desktopUpdater'
 
-import { acceptUpdateSnapshot } from './updatePresentation'
+import { acceptUpdateSnapshot, canShowInstallConfirmation } from './updatePresentation'
 
 export function useAboutUpdate() {
-  const { message, modal } = useApp()
+  const { message } = useApp()
   const api = getDesktopApi()
   const isDesktop = Boolean(api)
   const [desktopState, setDesktopState] = useState<DesktopUpdateState | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const [installConfirmationOpen, setInstallConfirmationOpen] = useState(false)
+  const [installing, setInstalling] = useState(false)
   const busyRef = useRef(false)
   const aliveRef = useRef(true)
-  const promptedRef = useRef<string | null>(null)
 
   const receive = (next: DesktopUpdateState) => {
     if (aliveRef.current) setDesktopState((previous) => acceptUpdateSnapshot(previous, next))
@@ -47,33 +47,27 @@ export function useAboutUpdate() {
   }, [api])
 
   const confirmInstall = () => {
-    if (!api) return
-    modal.confirm({
-      title: `重启并安装 v${desktopState?.release?.version || ''}？`,
-      content: '应用将重启，进行中的聊天和工具任务会被中断。请先完成当前操作。',
-      okText: '重启并安装',
-      cancelText: '稍后再说',
-      onOk: async () => {
-        try {
-          await api.updater.install()
-        } catch (error) {
-          message.error(error instanceof Error ? error.message : '安装失败，请重试。')
-          throw error
-        }
-      },
-    })
+    if (!api || !desktopState || !canShowInstallConfirmation(desktopState.status)) return
+    setInstallConfirmationOpen(true)
   }
 
-  const showInstallConfirmation = useEffectEvent(confirmInstall)
+  const closeInstallConfirmation = () => {
+    if (installing) return
+    setInstallConfirmationOpen(false)
+  }
 
-  useEffect(() => {
-    if (!desktopState?.manual || desktopState.status !== 'ready') return
-    const promptKey = `${getUpdateChannel(desktopState.preferences)}:${desktopState.release?.version}`
-    if (promptedRef.current === promptKey) return
-    promptedRef.current = promptKey
-    // This effect reacts to downloaded state, not to the click which started the check.
-    showInstallConfirmation()
-  }, [desktopState])
+  const installUpdate = async () => {
+    if (!api || desktopState?.status !== 'ready' || installing) return
+    setInstalling(true)
+    try {
+      await api.updater.install()
+      setInstallConfirmationOpen(false)
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '安装失败，请重试。')
+    } finally {
+      setInstalling(false)
+    }
+  }
 
   const check = async () => {
     if (!api || busyRef.current) return
@@ -130,12 +124,16 @@ export function useAboutUpdate() {
     status,
     version,
     pending,
+    installConfirmationOpen,
+    installing,
     loadError,
     feedback: desktopState?.message || loadError,
     autoUpdate: desktopState?.preferences.autoUpdate ?? true,
     check,
     clearCache,
     confirmInstall,
+    closeInstallConfirmation,
+    installUpdate,
     setAutoUpdate,
     savePreferences,
   }

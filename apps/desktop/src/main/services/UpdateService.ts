@@ -9,6 +9,7 @@ import { getDesktopUpdateConfig } from '@/envs/desktop'
 import type { DesktopUpdatePreferences, DesktopUpdateRelease, DesktopUpdateState } from '@/types/desktopUpdater'
 import { DEFAULT_UPDATE_PREFERENCES, getUpdateChannel, normalizeUpdatePreferences } from '@/types/desktopUpdater'
 
+import { createLogger, redactLogText } from '../logger'
 import type { DesktopConfigService } from './DesktopConfigService'
 
 const INITIAL_CHECK_DELAY = 5_000
@@ -25,6 +26,7 @@ function toRelease(info: UpdateInfo): DesktopUpdateRelease {
 
 /** Main-process owner of update state. Pages only query snapshots and subscribe. */
 export class UpdateService {
+  private readonly logger = createLogger('desktop:update')
   private initialization: Promise<void> | null = null
   private timer: ReturnType<typeof setTimeout> | null = null
   private operation: Promise<void> | null = null
@@ -52,7 +54,9 @@ export class UpdateService {
     private readonly config: DesktopConfigService,
     private readonly publish: (state: DesktopUpdateState) => void,
     private readonly updater: AppUpdater = autoUpdater
-  ) {}
+  ) {
+    this.updater.logger = this.logger
+  }
 
   start(): Promise<void> {
     this.initialization ??= this.initialize()
@@ -60,12 +64,23 @@ export class UpdateService {
   }
 
   private async initialize() {
+    const configPath = app.isPackaged
+      ? path.join(process.resourcesPath, 'app-update.yml')
+      : path.join(app.getAppPath(), 'dev-app-update.yml')
+    this.logger.info('Initializing updater', {
+      version: this.state.currentVersion,
+      packaged: app.isPackaged,
+      platform: process.platform,
+      arch: process.arch,
+      configPath,
+    })
     const config = await this.config.read()
     if (this.disposed) return
     this.state.preferences = normalizeUpdatePreferences(config.updatePreferences)
     const reason = await this.unsupportedReason()
     if (this.disposed) return
     if (reason) {
+      this.logger.warn('Updater unsupported', reason)
       this.update({ status: 'unsupported', message: reason })
       return
     }
@@ -80,12 +95,23 @@ export class UpdateService {
         // Local download tests use the full artifact, independent of cached blockmaps.
         this.updater.disableDifferentialDownload = true
         this.updater.setFeedURL({ provider: 'generic', url: updateUrl })
+        this.logger.info('Development update source', redactLogText(updateUrl))
         // electron-updater 6 has no public cache API; use its helper to resolve the actual configured path.
         const helper = await this.updater['getOrCreateDownloadHelper']()
         this.state.developmentCachePath = helper.cacheDir
-      } catch {
+        this.logger.info('Development update cache', helper.cacheDir)
+      } catch (error) {
+        this.logger.error('Development updater initialization failed', error)
         this.update({ status: 'unsupported', message: '开发更新源配置无效，请检查 PURECHAT_DESKTOP_UPDATE_URL。' })
         return
+      }
+    } else {
+      // Read the updater's own parsed configuration; never override the packaged feed.
+      try {
+        const source: { url?: string } = await this.updater['loadUpdateConfig']()
+        if (typeof source?.url === 'string') this.logger.info('Packaged update source', redactLogText(source.url))
+      } catch (error) {
+        this.logger.error('Unable to read packaged update source', error)
       }
     }
     this.updater.autoDownload = false
@@ -120,7 +146,8 @@ export class UpdateService {
         : path.join(app.getAppPath(), 'dev-app-update.yml')
       await fs.access(configPath)
       return null
-    } catch {
+    } catch (error) {
+      this.logger.warn('Update configuration unavailable', error)
       return app.isPackaged
         ? '此构建未配置更新源，请前往发布页面下载新版本。'
         : '缺少 dev-app-update.yml，请检查桌面开发更新配置。'
@@ -128,7 +155,7 @@ export class UpdateService {
   }
 
   private readonly logError = (error: Error) => {
-    console.warn('PureChat update failed', error.message)
+    this.logger.error(`Updater error during ${this.state.status}`, error)
   }
 
   private update(patch: Partial<DesktopUpdateState>) {
@@ -174,6 +201,12 @@ export class UpdateService {
     // The channel setter can enable downgrade; always reset it afterwards.
     this.updater.allowDowngrade = false
     this.updater.allowPrerelease = this.state.preferences.testPlan
+    this.logger.info('Checking for updates', {
+      generation,
+      manual,
+      channel: this.updater.channel,
+      currentVersion: this.state.currentVersion,
+    })
     this.attachRunListeners(generation)
     this.update({ status: 'checking', progress: 0, release: null, message: null, manual })
     this.operation = this.performCheck(generation, token).finally(() => {
@@ -193,15 +226,28 @@ export class UpdateService {
 
   private attachRunListeners(generation: number) {
     this.removeRunListeners?.()
+    let lastProgressBucket = -1
     const onProgress = (progress: ProgressInfo) => {
       if (!this.isCurrent(generation) || this.state.status !== 'downloading') return
       const percent = Number.isFinite(progress.percent) ? Math.max(0, Math.min(100, progress.percent)) : 0
+      const bucket = Math.floor(percent / 10)
+      if (bucket > lastProgressBucket) {
+        lastProgressBucket = bucket
+        this.logger.info('Download progress', {
+          generation,
+          percent: bucket * 10,
+          transferred: progress.transferred,
+          total: progress.total,
+          bytesPerSecond: progress.bytesPerSecond,
+        })
+      }
       this.update({ progress: percent })
     }
     const onDownloaded = (info: UpdateInfo) => {
       if (!this.isCurrent(generation) || this.state.status !== 'downloading') return
       if (this.state.release?.version !== info.version) return
       const isPackaged = app.isPackaged
+      this.logger.info('Update downloaded', { generation, version: info.version, installable: isPackaged })
       this.update({
         status: isPackaged ? 'ready' : 'downloaded',
         progress: 100,
@@ -232,13 +278,16 @@ export class UpdateService {
       if (!this.isCurrent(generation)) return
       if (!result) throw new Error('Updater did not return a result')
       if (!result.isUpdateAvailable) {
+        this.logger.info('No update available', { version: result.updateInfo.version })
         this.update({ status: 'upToDate', message: '当前已是最新版本。' })
       } else {
+        this.logger.info('Downloading update', { generation, version: result.updateInfo.version })
         this.update({ status: 'downloading', release: toRelease(result.updateInfo) })
         await this.updater.downloadUpdate(token)
       }
       this.failures = 0
-    } catch {
+    } catch (error) {
+      this.logger.error(`Update operation failed during ${this.state.status}`, error)
       if (!this.isCurrent(generation)) return
       this.failures += 1
       this.update({ status: 'error', progress: 0, message: '更新失败，请检查网络或更新源后重试。' })
@@ -258,6 +307,7 @@ export class UpdateService {
       const stopBackground = !preferences.autoUpdate && !this.state.manual && this.operation !== null
       if (channelChanged || stopBackground) this.cancelRun()
       const normalized = normalizeUpdatePreferences(preferences)
+      this.logger.info('Update preferences saved', normalized)
       if (channelChanged || stopBackground) {
         const status = this.state.status === 'unsupported' ? 'unsupported' : 'idle'
         this.update({
@@ -291,6 +341,7 @@ export class UpdateService {
       // clear() alone swallows filesystem errors and only empties pending; remove the whole update cache first.
       await fs.rm(helper.cacheDir, { recursive: true, force: true })
       await helper.clear()
+      this.logger.info('Development update cache cleared', helper.cacheDir)
       this.failures = 0
       this.update({
         status: 'idle',
@@ -314,15 +365,18 @@ export class UpdateService {
     }
     this.clearTimer()
     this.update({ status: 'installing' })
+    this.logger.info('User confirmed restart and install', { version: this.state.release?.version })
     try {
       this.updater.quitAndInstall(false, true)
     } catch (error) {
+      this.logger.error('Update installation failed', error)
       this.update({ status: 'ready', message: '安装失败，请重试。' })
       throw error
     }
   }
 
   private cancelRun() {
+    if (this.cancellation) this.logger.info('Cancelling update operation', { generation: this.generation })
     this.generation += 1
     this.invalidated = true
     this.removeRunListeners?.()
@@ -340,6 +394,10 @@ export class UpdateService {
     if (this.disposed || !this.state.preferences.autoUpdate || this.state.status === 'unsupported') return
     if (this.state.status === 'ready' || this.state.status === 'downloaded' || this.state.status === 'installing')
       return
+    this.logger.info(this.failures ? 'Scheduling update retry' : 'Scheduling update check', {
+      delayMs: delay,
+      failures: this.failures,
+    })
     this.timer = setTimeout(() => {
       this.timer = null
       this.check(false).catch(this.logError)

@@ -2,11 +2,13 @@ import path from 'node:path'
 
 import { BrowserWindow, shell } from 'electron'
 
+import { createLogger, redactLogText } from '../logger'
 import { isSafeExternalUrl, isTrustedRendererUrl } from '../security/RendererSecurity'
 import type { DesktopConfigService, DesktopWindowState } from '../services/DesktopConfigService'
 import { getRendererReloadDelayMs, MAX_RENDERER_RELOAD_ATTEMPTS, shouldRetryRendererLoad } from './rendererLoadRetry'
 
 export class WindowManager {
+  private readonly logger = createLogger('desktop:window')
   private window: BrowserWindow | null = null
   private rendererReloadAttempts = 0
   private rendererReloadTimer: ReturnType<typeof setTimeout> | null = null
@@ -116,14 +118,14 @@ export class WindowManager {
       if (validatedURL && !isTrustedRendererUrl(validatedURL, this.rendererUrl)) return
 
       if (!shouldRetryRendererLoad(errorCode, this.rendererReloadAttempts)) {
-        console.error('Renderer failed to load', errorCode, errorDescription, validatedURL)
+        this.logger.error('Renderer failed to load', errorCode, errorDescription, redactLogText(validatedURL))
         if (!window.isVisible()) window.show()
         return
       }
 
       this.rendererReloadAttempts += 1
       const delayMs = getRendererReloadDelayMs(this.rendererReloadAttempts)
-      console.warn(
+      this.logger.warn(
         `Renderer load failed (${errorCode} ${errorDescription}); retry ${this.rendererReloadAttempts}/${MAX_RENDERER_RELOAD_ATTEMPTS} in ${delayMs}ms`
       )
       if (this.rendererReloadTimer) clearTimeout(this.rendererReloadTimer)

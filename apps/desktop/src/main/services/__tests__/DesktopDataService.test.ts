@@ -12,7 +12,7 @@ vi.mock('electron', () => ({
   shell: { openPath: mocks.openPath },
 }))
 vi.mock('electron-log', () => ({
-  default: { transports: { file: {} }, scope: () => ({ warn: mocks.warn }) },
+  default: { transports: { file: {}, console: {} }, hooks: [], scope: () => ({ warn: mocks.warn }) },
 }))
 
 import { DesktopConfigService } from '../DesktopConfigService'

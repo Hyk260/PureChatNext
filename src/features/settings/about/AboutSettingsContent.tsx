@@ -1,9 +1,9 @@
 'use client'
 
-import { ActionIcon, Block, Button, Flex, Github, Tag, Text } from '@pure/ui'
+import { ActionIcon, Block, Button, Flex, Github, Modal, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { Segmented, Switch } from 'antd'
-import { BadgeHelp, Bug, Copy, Globe, MessageSquare, MessagesSquare, Rss } from 'lucide-react'
+import { BadgeHelp, Bug, Code2, Copy, Globe, MessageSquare, MessagesSquare, Rss } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link } from 'react-router'
 
@@ -22,7 +22,7 @@ import {
 import { getDesktopApi } from '@/types/desktop'
 
 import { UpdateLogo } from './UpdateLogo'
-import { getUpdateButtonLabel } from './updatePresentation'
+import { canShowInstallConfirmation, getUpdateButtonLabel } from './updatePresentation'
 import { useAboutUpdate } from './useAboutUpdate'
 
 const RESOURCES = [
@@ -67,17 +67,16 @@ export function AboutSettingsContent() {
   const progress = update.desktopState?.progress || 0
   const checking = update.status === 'checking'
   const downloading = update.status === 'downloading'
-  const downloaded = update.status === 'downloaded'
   const installing = update.status === 'installing'
   const desktopLoading = update.isDesktop && !update.desktopState
-  const disabled = update.pending || checking || downloading || downloaded || installing || desktopLoading
+  const disabled = update.pending || checking || downloading || installing || desktopLoading
   const preferencesDisabled = update.pending || installing || desktopLoading
   const cacheClearDisabled = update.pending || checking || downloading || installing
   const developmentCachePath = update.desktopState?.developmentCachePath
   const preferences = update.desktopState?.preferences
   const versionLabel = update.version ? `v${update.version}` : '版本读取中'
   const updateLabel = getUpdateButtonLabel(update.status, progress)
-  const hasUpdate = update.status === 'ready'
+  const hasUpdate = canShowInstallConfirmation(update.status)
 
   const openExternal = async (href: string) => {
     try {
@@ -90,7 +89,7 @@ export function AboutSettingsContent() {
   }
 
   const handleUpdate = () => {
-    if (update.status === 'ready') return update.confirmInstall()
+    if (hasUpdate) return update.confirmInstall()
     if (update.status === 'unsupported') return openExternal(SITE_RELEASES_URL)
     return update.check()
   }
@@ -130,6 +129,20 @@ export function AboutSettingsContent() {
 
   return (
     <Flex className='flex-col gap-6 w-full px-4 py-6 pb-16 sm:px-6'>
+      <Modal
+        open={update.installConfirmationOpen}
+        title={`重启并安装 v${update.desktopState?.release?.version || ''}？`}
+        okText='重启并安装'
+        cancelText='稍后再说'
+        confirmLoading={update.installing}
+        okButtonProps={{ disabled: update.status !== 'ready' || update.installing }}
+        cancelButtonProps={{ disabled: update.installing }}
+        closable={!update.installing}
+        onCancel={update.closeInstallConfirmation}
+        onOk={update.installUpdate}
+      >
+        应用将重启，进行中的聊天和工具任务会被中断。请先完成当前操作。
+      </Modal>
       <Block variant='outlined' className='rounded-2xl px-5 sm:px-6'>
         <Flex className='flex-between border-b border-app-border-secondary py-4'>
           <Text as='h2' className='m-0 text-base font-semibold'>
@@ -145,7 +158,7 @@ export function AboutSettingsContent() {
         </Flex>
         <Flex className='flex-between-wrap gap-5 py-6'>
           <Flex className='items-center gap-4 flex-1 min-w-0'>
-            <UpdateLogo checking={checking} downloading={downloading} progress={progress} />
+            <UpdateLogo status={update.status} progress={progress} />
             <Flex className='flex-col items-start gap-2 min-w-0'>
               <Text as='h3' className='m-0 text-xl font-semibold'>
                 {SITE_NAME}
@@ -233,7 +246,14 @@ export function AboutSettingsContent() {
         {developmentCachePath ? (
           <Flex className='flex-between-wrap gap-4 border-t border-app-border-secondary py-4'>
             <Flex className='flex-col gap-1 min-w-0 flex-1'>
-              <Text>清理下载安装包缓存</Text>
+              <Flex className='items-center gap-1.5'>
+                <Text>清理下载安装包缓存</Text>
+                <Code2
+                  aria-label='开发环境'
+                  className='size-4 text-amber-600 dark:text-amber-400'
+                  role='img'
+                />
+              </Flex>
               <Text className='text-xs' type='secondary'>
                 仅开发环境使用，清理后可重新检查更新测试下载
               </Text>

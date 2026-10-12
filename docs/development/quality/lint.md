@@ -99,7 +99,7 @@ SPA 客户端另有 `no-restricted-imports`：禁止从 `@/envs`、`@pure/env` �
 
 ### `lint:spa-env-imports`
 
-[`scripts/check-spa-env-imports.mjs`](../../../scripts/check-spa-env-imports.mjs) 用正则扫客户端目录（`src/spa`、`src/features`、`src/components` 等），包括动态 `import()`。CI 单独跑这一条，避免被其它 ESLint 噪音挡住导入边界问题。
+[`scripts/web/check-spa-env-imports.mjs`](../../../scripts/web/check-spa-env-imports.mjs) 用正则扫客户端目录（`src/spa`、`src/features`、`src/components` 等），包括动态 `import()`。CI 单独跑这一条，避免被其它 ESLint 噪音挡住导入边界问题。
 
 例外：`src/components/Analytics` 允许 `@/envs/analytics`。
 
@@ -144,7 +144,7 @@ Stylelint，配置：[stylelint.config.mjs](../../../stylelint.config.mjs)（sta
 
 ### `check:spa-env-leak`
 
-[`scripts/check-spa-env-leak.mjs`](../../../scripts/check-spa-env-leak.mjs) 扫描 `dist/` 与 `public/_spa/`，防止服务端密钥被 Vite 内联进前端 bundle。
+[`scripts/web/check-spa-env-leak.mjs`](../../../scripts/web/check-spa-env-leak.mjs) 扫描 `dist/` 与 `public/_spa/`，防止服务端密钥被 Vite 内联进前端 bundle。
 
 挂在 `build` / `build:docker` 之后（需先有 SPA 产物），**不是**源码 lint。CI 在 `build:spa` 前注入含 `DO-NOT-LEAK` 的 canary 密钥，再扫描产物。
 

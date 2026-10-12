@@ -13,9 +13,11 @@ import {
   sharedRendererPlugins,
   sharedResolveAlias,
 } from '../../plugins/vite/sharedRendererConfig'
+import { syncDesktopVersion } from './scripts/sync-version.mjs'
 
 const desktopDir = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(desktopDir, '../..')
+syncDesktopVersion(desktopDir)
 const desktopEnv = loadEnv('desktop', desktopDir, '')
 for (const [key, value] of Object.entries(desktopEnv)) {
   if (process.env[key] === undefined) process.env[key] = value

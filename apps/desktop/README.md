@@ -44,6 +44,8 @@ pnpm package:desktop:win:portable
 
 所有产物都写入 `apps/desktop/release/`。打包命令会先执行生产构建，再调用 electron-builder，并使用 `--publish never`，因此不会自动上传或发布。
 
+`package:desktop` 的 `--dir` 目标用于运行与归档校验，不会生成更新所需的 `app-update.yml`；更新验收应使用 macOS ZIP/DMG 或 Windows NSIS 发行目标，并确认包内存在该文件。
+
 ### 产物矩阵
 
 | 命令 | 平台/架构 | 产物 | 适用场景 |
@@ -107,14 +109,16 @@ portable 与 ZIP 的核心区别是：
 
 | 项目 | 当前值/来源 | 作用 |
 | --- | --- | --- |
-| 桌面应用版本 | `apps/desktop/package.json` 的 `version`，当前为 `0.2.0` | 产物文件名、应用版本和后续更新比较 |
-| 根项目版本 | 根 `package.json`，当前为 `0.2.2` | Web/monorepo 项目版本，不会自动覆盖桌面版本 |
+| 应用版本 | 根 `package.json` 的 `version` | Web 展示、桌面应用版本、产物文件名和更新比较的唯一维护来源 |
+| 桌面清单版本 | 开发、构建和打包时自动从根版本同步 | 供 Electron 的 `app.getVersion()` 读取，无需单独维护 |
 | Electron 版本 | `apps/desktop/package.json` 的 `electron`，当前为 `41.3.0` | Chromium、Node.js、Electron Framework 和运行时能力 |
 | electron-builder 版本 | `electron-builder`，当前为 `26.14.0` | 打包器能力、目标格式和配置语义 |
 | 打包目标 | `mac.target`、`win.target` | 决定生成 DMG、ZIP、NSIS 或 portable |
 | 架构 | macOS `arm64`/`x64`，Windows `x64` | 决定运行平台和原生二进制兼容性 |
 
 升级应用版本不会自动升级 Electron；升级 Electron 也不会自动改变应用版本。架构不同的产物不能互换，macOS Apple Silicon 应使用 arm64，Intel Mac 应使用 x64。
+
+发布新版本只需修改根 `package.json` 的 `version`。`electron-vite` 和 `electron-builder` 加载配置时会自动同步桌面清单，打包配置的 `extraMetadata.version` 也直接使用根版本。修改版本后需重启桌面开发进程或重新打包；更新器和关于页始终读取客户端实际版本。
 
 客户端更新支持稳定（`latest`）、RC 和 Beta 渠道，沿用同一个应用身份与配置目录；发布端需要相应版本策略和渠道元数据。独立 nightly/canary 应用的协议 scheme、数据目录隔离与发布流程尚未实现。
 
@@ -186,56 +190,72 @@ PURECHAT_DESKTOP_UPDATE_URL=https://updates.example.com/purechat pnpm package:de
 
 桌面开发环境可在启动 `pnpm dev:desktop` 前设置 `PURECHAT_DESKTOP_UPDATE_URL`，从 Generic 更新源手动检查并下载更新。开发版本下载完成后只显示下载完成状态，不会提示或执行安装；安装验证仍需使用已打包的发行版本。
 
-### 本地更新下载测试
+### 本地真实发布更新验证
 
-在仓库根目录打开两个终端：
+更新服务默认使用生产模式，只读 electron-builder 生成的渠道 YAML 和发布文件，不改写版本或安装包：
 
 ```bash
-# 终端 1：启动更新服务（默认限速 3 MiB/s，便于观察下载进度）
+# 默认 release 目录，监听 127.0.0.1:5500，模拟 1–10 MiB/s、周期平均 8 MiB/s
 pnpm dev:desktop:update-server
 
-# 终端 2：启动桌面开发环境
+# 指定独立发布目录、架构和固定下载速度（KiB/s）；--kbps 0 关闭限速
+pnpm dev:desktop:update-server --release-dir /path/to/release --platform mac --arch arm64 --kbps 1024
+
+# Windows NSIS 发布目录
+pnpm dev:desktop:update-server --release-dir /path/to/windows-release --platform win --arch x64
+
+# RC 渠道需有真实 rc-mac.yml（Windows 为 rc.yml）及对应版本产物
+pnpm dev:desktop:update-server --channel rc
+```
+
+生产模式会在启动前校验渠道版本、目标架构、文件大小与 SHA-512；只提供选定 YAML 引用的本地文件和对应 blockmap。macOS 支持 ZIP 更新载荷和 DMG 首次安装下载，Windows 支持当前 x64 NSIS 安装包。不存在 blockmap 时允许客户端回退完整下载。缺失或损坏的文件、外部 URL、目录穿越及越界符号链接会使启动失败；不会开放构建日志或整个 release 目录。生产模式拒绝 `--version`、`--artifact`，需要虚增元数据版本时显式使用开发模式。
+
+服务启动后输出发布版本、渠道 YAML 地址和每个安装包的下载地址。支持 GET、HEAD 和单段 Range。默认网络速率以 10 秒为周期，在 1–10 MiB/s 间连续波动，周期平均 8 MiB/s；每约 50 ms 发送一批数据，保留流背压与取消处理。显式设置 `--kbps 8192` 可固定为 8 MiB/s，`--kbps 0` 为不限速。元数据响应不限速。请求日志包含本地年月日时分秒、路径、Range、状态码、传输量、耗时、完成或中断状态及实际平均 MiB/s。客户端更新器仍约每秒上报一次真实进度。检查中显示独立加载提示，下载进度使用 antd Progress 组件；每次新下载从 0% 开始，完成后立即保留 100% 圆环，避免检查圆弧回退和动画未结束就隐藏。不增加计时器或 IPC。Ctrl+C 关闭服务。
+
+真实升级需要两个递增版本的安装包。例如旧版 `0.2.0`，新发布目录包含真实 `0.2.1` 的 YAML、ZIP/NSIS 和相关文件。两次构建都应将更新源写入包内：
+
+```bash
+PURECHAT_DESKTOP_UPDATE_URL=http://127.0.0.1:5500 pnpm package:desktop:mac
+```
+
+先保存并安装旧版本，再以更高的桌面应用版本构建新版并保存到独立发布目录。启动该目录的服务，在旧版关于页检查更新，确认“正在下载 → 更新已就绪”，然后由用户确认重启安装。重启后核对实际桌面应用版本和已有用户配置。同版本发布只会显示已是最新版本，不能用于升级验收。
+
+安装版读取内置 `resources/app-update.yml`，修改 shell 环境变量不会覆盖已安装应用的更新源。macOS 完整安装还需满足代码签名及签名身份匹配要求；当前 ad-hoc 本地产物不作为正式安装升级通过的依据。签名包另行提供后完成重启安装验收。下载通过与安装通过分别记录，不能使用虚增版本证明升级成功。
+
+### 开发版下载测试
+
+原来的模拟下载能力改为显式开发模式：
+
+```bash
+# 终端 1：虚增元数据版本，原安装包不变
+pnpm dev:desktop:update-server --mode development
+
+# 指定载荷和模拟版本
+pnpm dev:desktop:update-server --mode development --artifact PureChat-0.2.0-arm64.zip --version 0.2.2
+
+# RC 模拟下载
+pnpm dev:desktop:update-server --mode development --channel rc --version 0.2.2-rc.1 --kbps 1024
+
+# 终端 2：启动开发客户端
 pnpm dev:desktop
 ```
 
-将 `apps/desktop/.env.desktop.example` 中的更新地址加入本机的 `apps/desktop/.env.desktop.local`：
+将下列配置加入本机 `apps/desktop/.env.desktop.local`，修改后重启开发进程：
 
 ```dotenv
 PURECHAT_DESKTOP_UPDATE_URL=http://127.0.0.1:5500
 PURECHAT_DESKTOP_MULTI_INSTANCE=true
 ```
 
-`apps/desktop/dev-app-update.yml` 已配置相同地址和独立开发缓存目录。主进程在开发模式下启用 `forceDevUpdateConfig`，使用完整文件下载；生产环境仍读取打包后的 `resources/app-update.yml`。修改环境变量后需重新启动桌面进程。
+开发模式默认从 release 目录选择对应架构最新修改的 ZIP 或 NSIS 载荷，将桌面版本的下一补丁版本作为模拟元数据版本。开发客户端使用完整下载；完成后可点击“重启并安装”预览与生产版相同的确认弹框，弹框中的安装按钮禁用，不能执行安装。重复测试下载可使用关于页的“清理下载安装包缓存”；检查或下载期间不可清理。
 
-脚本只监听 `127.0.0.1:5500`，默认从 `apps/desktop/release/` 选择宿主架构最新修改的标准 ZIP（macOS）或 NSIS 安装包（Windows），计算真实 SHA-512 和文件大小，并在内存中提供渠道 YAML。不会修改、复制原始产物，也不会开放整个 release 目录。支持 GET、HEAD 和单段 Range；Ctrl+C 关闭服务。
+### 更新日志排查
 
-默认测试版本为桌面 `package.json` 版本的下一补丁版本，例如当前 `0.2.0` 对应 `0.2.1`。这只是为了触发下载的元数据版本，ZIP 内的应用仍为原始版本，**此服务仅用于开发版下载测试，不用于验证安装升级**。
+主进程复用 `electron-log`，文件与控制台均输出本地时间 `YYYY-MM-DD HH:mm:ss [级别] (模块) 正文`。日志按日期保存，单文件达到 10 MiB 时轮转；开发和生产日志分别位于 `userData/log/dev/` 与 `userData/log/pro/`，菜单“帮助 → 打开日志目录”可直接访问。
 
-关于页保持稳定渠道（测试计划关闭），点击“检查更新”后应经历“正在检查 → 正在下载 → 下载完成（开发环境不可安装）”。开启自动更新时，启动约 5 秒后也会开始检测。已下载的文件可能被缓存，重复检查可能跳过网络下载；要再次观察进度，在关于页“测试计划”下方点击“清理下载安装包缓存”中的“清理缓存”，再点击“检查更新”，无需重启或修改测试版本。该行显示实际缓存路径，仅配置了更新源的桌面开发环境可见；检查或下载期间不可清理。
+`desktop:app` 记录启动版本与运行平台，`desktop:window` 记录页面加载错误，`desktop:update` 记录更新源、配置路径、检查、下载、缓存命中、重试、取消及安装阶段。异常保留错误码、消息和堆栈；下载进度每跨过 10% 记录一次。日志中的 HTTP(S) URL 会去除凭据、查询参数和片段。
 
-```bash
-# 指定产物、版本和端口；改端口时同步修改本地环境变量及 dev-app-update.yml
-pnpm dev:desktop:update-server --artifact PureChat-0.2.0-arm64.zip --version 0.2.2 --port 5500
-
-# RC 下载测试：关于页开启测试计划并选择 RC
-pnpm dev:desktop:update-server --channel rc --version 0.2.2-rc.1 --kbps 1024
-
-# Windows 下载测试：release 中需先生成 NSIS 安装包
-pnpm dev:desktop:update-server --platform win --arch x64 --artifact PureChat-0.2.0-setup.exe
-```
-
-当前本机 release 目录中，测试所需文件及用途如下：
-
-| 文件 | 用途 |
-| --- | --- |
-| `PureChat-0.2.0-arm64.zip` | Apple Silicon 自动更新下载载荷；默认选用 |
-| `PureChat-0.2.0-x64.zip` | Intel Mac 自动更新下载载荷，需使用相应架构客户端 |
-| 对应 `.zip.blockmap` | 差分下载元数据；脚本可提供，开发测试默认下载完整 ZIP |
-| `PureChat-0.2.0-arm64.dmg` | 首次或手动安装，不能代替自动更新所需 ZIP |
-| `latest-mac.yml` / `rc-mac.yml` / `beta-mac.yml` | 更新检测元数据；现有目录缺少，由脚本按所选渠道生成 |
-| `builder-debug.yml`、`builder-effective-config.yaml`、`mac-arm64/` | 构建日志、配置和未压缩应用，不作为更新服务下载文件 |
-
-Windows 自动更新需要 NSIS `*-setup.exe` 和 `latest.yml`（或 RC/Beta 渠道 YAML）；现有本机目录没有 Windows 安装包。实际安装验收需要两个真实、递增版本的发行包、正确的发布元数据与平台签名配置，不应使用脚本模拟的更高版本号。
+出现关于页“更新失败”时，同时查看客户端日志和服务终端日志：没有请求先核对包内更新源及服务是否运行；YAML 请求失败检查渠道与路径；载荷下载失败检查文件及 SHA-512；进入安装后失败查看原生更新器的签名与安装错误。服务不会绕过客户端签名或降级校验。
 
 ## 打包前验证
 

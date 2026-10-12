@@ -5,9 +5,9 @@ import type { DesktopApi } from '@/types/desktop'
 import type { DesktopUpdateState } from '@/types/desktopUpdater'
 import { DEFAULT_UPDATE_PREFERENCES } from '@/types/desktopUpdater'
 
-const ui = vi.hoisted(() => ({ confirm: vi.fn(), error: vi.fn(), success: vi.fn() }))
+const ui = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }))
 vi.mock('@/components/AntdStaticMethods', () => ({
-  useApp: () => ({ message: { error: ui.error, success: ui.success }, modal: { confirm: ui.confirm } }),
+  useApp: () => ({ message: { error: ui.error, success: ui.success }, modal: {} }),
 }))
 
 import { useAboutUpdate } from './useAboutUpdate'
@@ -67,7 +67,7 @@ describe('about update subscription', () => {
     expect(updater.clearCache).not.toHaveBeenCalled()
     expect(fetcher).not.toHaveBeenCalled()
     expect(storage).not.toHaveBeenCalled()
-    expect(ui.confirm).not.toHaveBeenCalled()
+    expect(result.current.installConfirmationOpen).toBe(false)
   })
 
   it('subscribes before reading the snapshot and does not overwrite newer download events', async () => {
@@ -86,22 +86,54 @@ describe('about update subscription', () => {
     expect(unsubscribe).toHaveBeenCalledTimes(1)
   })
 
-  it('asks once after a manual download, keeps 100% downloading separate from ready', async () => {
-    const { result } = renderHook(useAboutUpdate)
-    await waitFor(() => expect(result.current.version).toBe('0.2.0'))
-    act(() => listener({ ...initial, revision: 2, manual: true, status: 'downloading', progress: 100 }))
-    expect(ui.confirm).not.toHaveBeenCalled()
-    const ready: DesktopUpdateState = {
-      ...initial,
-      revision: 3,
-      manual: true,
-      status: 'ready',
-      release: { version: '0.3.0', notes: '' },
+  it.each(['ready', 'downloaded'] as const)(
+    'opens confirmation only on click after a %s event, including after page remount',
+    async (status) => {
+      const { result, unmount } = renderHook(useAboutUpdate)
+      await waitFor(() => expect(result.current.version).toBe('0.2.0'))
+      act(() => listener({ ...initial, revision: 2, manual: true, status: 'downloading', progress: 100 }))
+      expect(result.current.installConfirmationOpen).toBe(false)
+      const ready: DesktopUpdateState = {
+        ...initial,
+        revision: 3,
+        manual: true,
+        status,
+        release: { version: '0.3.0', notes: '' },
+      }
+      act(() => listener(ready))
+      expect(result.current.installConfirmationOpen).toBe(false)
+      act(() => listener({ ...ready, revision: 4 }))
+      expect(result.current.installConfirmationOpen).toBe(false)
+      unmount()
+      updater.getState.mockResolvedValue({ ...ready, revision: 4 })
+      const reopened = renderHook(useAboutUpdate)
+      await waitFor(() => expect(reopened.result.current.status).toBe(status))
+      act(() => reopened.result.current.confirmInstall())
+      expect(reopened.result.current.installConfirmationOpen).toBe(true)
+      await act(async () => {
+        await reopened.result.current.installUpdate()
+      })
+      expect(updater.install).toHaveBeenCalledTimes(status === 'ready' ? 1 : 0)
     }
-    act(() => listener(ready))
-    expect(ui.confirm).toHaveBeenCalledTimes(1)
-    act(() => listener({ ...ready, revision: 4 }))
-    expect(ui.confirm).toHaveBeenCalledTimes(1)
+  )
+
+  it('opens the production confirmation on a development button click but never invokes installation', async () => {
+    updater.getState.mockResolvedValue({
+      ...initial,
+      status: 'downloaded',
+      developmentCachePath: '/tmp/purechat-dev-updater',
+      release: { version: '0.2.1', notes: '' },
+      progress: 100,
+    })
+    const { result } = renderHook(useAboutUpdate)
+    await waitFor(() => expect(result.current.status).toBe('downloaded'))
+    expect(result.current.installConfirmationOpen).toBe(false)
+    act(() => result.current.confirmInstall())
+    expect(result.current.installConfirmationOpen).toBe(true)
+    await act(async () => {
+      await result.current.installUpdate()
+    })
+    expect(updater.install).not.toHaveBeenCalled()
   })
 
   it('deduplicates user checks and retains preferences if saving fails', async () => {

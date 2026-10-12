@@ -23,13 +23,13 @@ describe('parsePsTable', () => {
   it('parses padded ps rows and ignores invalid lines', () => {
     const rows = parsePsTable(`
   57491  1200  57491 Ss   /bin/zsh
-  57500 57491  57491 S    bun scripts/dev-desktop.mts
+  57500 57491  57491 S    bun scripts/electron/dev-desktop.mts
 not-a-process
 `)
 
     expect(rows).toEqual([
       row(57491, 1200, 57491, '/bin/zsh', 'Ss'),
-      row(57500, 57491, 57491, 'bun scripts/dev-desktop.mts'),
+      row(57500, 57491, 57491, 'bun scripts/electron/dev-desktop.mts'),
     ])
   })
 })
@@ -58,7 +58,7 @@ describe('isStaleDesktopCommand', () => {
   })
 
   it('does not match the current desktop script or unrelated processes', () => {
-    expect(isStaleDesktopCommand('bun scripts/dev-desktop.mts', ROOT)).toBe(false)
+    expect(isStaleDesktopCommand('bun scripts/electron/dev-desktop.mts', ROOT)).toBe(false)
     expect(isStaleDesktopCommand('pnpm run dev:desktop', ROOT)).toBe(false)
     expect(isStaleDesktopCommand('next-server', ROOT)).toBe(false)
     expect(isStaleDesktopCommand('node /other/repo/node_modules/electron-vite/bin/electron-vite.js', ROOT)).toBe(
@@ -84,7 +84,7 @@ describe('isElectronAppCommand', () => {
 
 describe('collectStaleDesktopProcesses', () => {
   it('collects leftover trees and skips the current script ancestors', () => {
-    const bun = row(57500, 57491, 57491, 'bun scripts/dev-desktop.mts')
+    const bun = row(57500, 57491, 57491, 'bun scripts/electron/dev-desktop.mts')
     const shell = row(57491, 1, 57491, '/bin/zsh', 'Ss')
     const leftoverPnpm = row(33520, 1, 33520, 'pnpm --dir apps/desktop dev')
     const leftoverVite = row(

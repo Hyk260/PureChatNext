@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import type { DesktopUpdateState } from '@/types/desktopUpdater'
 import { DEFAULT_UPDATE_PREFERENCES } from '@/types/desktopUpdater'
-import { acceptUpdateSnapshot, getUpdateButtonLabel } from './updatePresentation'
+import {
+  acceptUpdateSnapshot,
+  canShowInstallConfirmation,
+  getUpdateButtonLabel,
+  getUpdateProgressPresentation,
+} from './updatePresentation'
 
 const state: DesktopUpdateState = {
   status: 'ready',
@@ -25,9 +30,34 @@ describe('update presentation', () => {
     expect(acceptUpdateSnapshot(state, next)).toBe(next)
   })
 
-  it('offers installation only for the ready state, even with 100% progress', () => {
+  it('offers the same confirmation for downloaded and ready, without treating 100% downloading as complete', () => {
     expect(getUpdateButtonLabel('downloading', 100)).toBe('正在下载 100%')
-    expect(getUpdateButtonLabel('downloaded')).toBe('下载完成（开发环境不可安装）')
+    expect(getUpdateButtonLabel('downloaded')).toBe('重启并安装')
     expect(getUpdateButtonLabel('ready')).toBe('重启并安装')
+    expect(canShowInstallConfirmation('downloaded')).toBe(true)
+    expect(canShowInstallConfirmation('ready')).toBe(true)
+    expect(canShowInstallConfirmation('downloading')).toBe(false)
+  })
+
+  it('resets a new download to zero without turning the checking spinner into numeric progress', () => {
+    expect(getUpdateProgressPresentation('downloaded', 100)).toEqual({ visible: true, completed: true, percent: 100 })
+    expect(getUpdateProgressPresentation('checking', 100)).toEqual({ visible: false, completed: false, percent: 0 })
+    expect(getUpdateProgressPresentation('downloading', 0)).toEqual({ visible: true, completed: false, percent: 0 })
+    expect(getUpdateProgressPresentation('downloading', 12).percent).toBe(12)
+  })
+
+  it.each(['ready', 'downloaded', 'installing'] as const)(
+    'keeps a full ring for %s even without a final progress event',
+    (status) => {
+      expect(getUpdateProgressPresentation(status, 85)).toEqual({ visible: true, completed: true, percent: 100 })
+    }
+  )
+
+  it('clamps invalid progress and hides the ring outside a download', () => {
+    expect(getUpdateProgressPresentation('downloading', Number.NaN).percent).toBe(0)
+    expect(getUpdateProgressPresentation('downloading', -1).percent).toBe(0)
+    expect(getUpdateProgressPresentation('downloading', 120).percent).toBe(100)
+    expect(getUpdateProgressPresentation('idle', 100).visible).toBe(false)
+    expect(getUpdateProgressPresentation('error', 85).visible).toBe(false)
   })
 })

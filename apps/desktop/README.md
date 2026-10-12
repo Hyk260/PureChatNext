@@ -18,7 +18,10 @@ pnpm dev:desktop
 pnpm --filter purechat-desktop dev
 ```
 
-此模式下需另行启动兼容的 Next BFF。同时跑多份实例时，可用 `PURECHAT_DESKTOP_VITE_PORT` 覆盖渲染端口。
+此模式下需另行启动兼容的 Next BFF。同时跑多份开发实例时，可用 `PURECHAT_DESKTOP_VITE_PORT` 覆盖渲染端口。
+
+开发环境默认允许多开，并始终使用 `purechat-desktop-dev` 独立数据目录，因此开发版与已安装的 PureChat 可以同时运行；将
+`PURECHAT_DESKTOP_MULTI_INSTANCE=false` 写入 `apps/desktop/.env.desktop.local` 可切换回单实例，生产安装包未设置该变量时仍保持单实例。
 
 ## 构建与打包命令
 
@@ -113,7 +116,7 @@ portable 与 ZIP 的核心区别是：
 
 升级应用版本不会自动升级 Electron；升级 Electron 也不会自动改变应用版本。架构不同的产物不能互换，macOS Apple Silicon 应使用 arm64，Intel Mac 应使用 x64。
 
-当前没有实现 stable/nightly/canary 渠道。不同渠道不仅要改文件名，还需要独立的版本策略、更新地址、协议 scheme 和测试流程；不能仅靠 `artifactName` 把普通版本伪装成渠道版本。
+客户端更新支持稳定（`latest`）、RC 和 Beta 渠道，沿用同一个应用身份与配置目录；发布端需要相应版本策略和渠道元数据。独立 nightly/canary 应用的协议 scheme、数据目录隔离与发布流程尚未实现。
 
 ## 配置审查结论
 
@@ -166,8 +169,73 @@ portable 与 ZIP 的核心区别是：
 - Windows 产物可以生成，但正式分发前应配置代码签名证书。
 - 未设置 `PURECHAT_DESKTOP_UPDATE_URL` 时，`publish: null` 配合命令行 `--publish never` 表示只构建，不上传。
 - `.blockmap` 是供差分更新使用的元数据，不代表应用已经具备自动更新能力。
-- 客户端已接入 `electron-updater`：仅在打包版本启动时检查更新，下载完成后提示用户，退出时自动安装。
+- 客户端已接入 `electron-updater`：打包安装版本启动后延迟检查，并每 4 小时再次检查；失败后以 5–60 分钟退避重试。关于页可手动检查、查看下载进度和确认重启安装，普通退出不会自动安装。
 - 要启用自动更新，发布构建需要设置 `PURECHAT_DESKTOP_UPDATE_URL`（Generic provider 地址），并同时配置签名、版本策略和端到端验收。
+
+关于页的自动更新开关控制后台检测与下载；关闭后仍可手动检查。更新设置保存在客户端配置中，测试计划默认关闭，启用后可选择 RC 或 Beta。渠道切换会取消旧下载并清除安装就绪状态，禁止自动降级。Web 端在浏览器 tab 重新可见时检测部署变化并提示用户刷新，关于页不提供更新按钮或更新开关。
+
+更新源需提供对应平台、架构和渠道的元数据：稳定渠道 `latest`、预览渠道 `rc`、测试渠道 `beta`。预发布客户端版本使用 `X.Y.Z-rc.N` 或 `X.Y.Z-beta.N`；将 electron-builder 生成的渠道 YAML、安装包和校验文件一起上传到同一个更新根地址。macOS 自动更新需 ZIP 产物，Windows 使用 NSIS 安装包；portable 和未配置更新源的构建提供手动发布页入口。设置页面中的 RC/Beta 选择不会自动创建远端发布渠道。
+
+打包配置会独立加载 `apps/desktop/` 下的 `.env`、`.env.local`、`.env.desktop` 和 `.env.desktop.local`，后者覆盖前者；shell/CI 中已有的环境变量优先级最高。`electron-vite` 加载的变量不会传递给后续的 `electron-builder` 进程。正式发布时应覆盖本地下载测试地址：
+
+```bash
+PURECHAT_DESKTOP_UPDATE_URL=https://updates.example.com/purechat pnpm package:desktop:mac
+```
+
+设置更新地址后，`--publish never` 仍会把更新源写入安装包的 `resources/app-update.yml`，只禁止上传；macOS 对应路径为 `PureChat.app/Contents/Resources/app-update.yml`。安装后的客户端读取该文件，无需运行时再设置环境变量；修改更新地址后必须重新打包。可通过 `apps/desktop/release/builder-effective-config.yaml` 的 `publish` 字段和安装包中的 `app-update.yml` 确认地址已写入。
+
+桌面开发环境可在启动 `pnpm dev:desktop` 前设置 `PURECHAT_DESKTOP_UPDATE_URL`，从 Generic 更新源手动检查并下载更新。开发版本下载完成后只显示下载完成状态，不会提示或执行安装；安装验证仍需使用已打包的发行版本。
+
+### 本地更新下载测试
+
+在仓库根目录打开两个终端：
+
+```bash
+# 终端 1：启动更新服务（默认限速 3 MiB/s，便于观察下载进度）
+pnpm dev:desktop:update-server
+
+# 终端 2：启动桌面开发环境
+pnpm dev:desktop
+```
+
+将 `apps/desktop/.env.desktop.example` 中的更新地址加入本机的 `apps/desktop/.env.desktop.local`：
+
+```dotenv
+PURECHAT_DESKTOP_UPDATE_URL=http://127.0.0.1:5500
+PURECHAT_DESKTOP_MULTI_INSTANCE=true
+```
+
+`apps/desktop/dev-app-update.yml` 已配置相同地址和独立开发缓存目录。主进程在开发模式下启用 `forceDevUpdateConfig`，使用完整文件下载；生产环境仍读取打包后的 `resources/app-update.yml`。修改环境变量后需重新启动桌面进程。
+
+脚本只监听 `127.0.0.1:5500`，默认从 `apps/desktop/release/` 选择宿主架构最新修改的标准 ZIP（macOS）或 NSIS 安装包（Windows），计算真实 SHA-512 和文件大小，并在内存中提供渠道 YAML。不会修改、复制原始产物，也不会开放整个 release 目录。支持 GET、HEAD 和单段 Range；Ctrl+C 关闭服务。
+
+默认测试版本为桌面 `package.json` 版本的下一补丁版本，例如当前 `0.2.0` 对应 `0.2.1`。这只是为了触发下载的元数据版本，ZIP 内的应用仍为原始版本，**此服务仅用于开发版下载测试，不用于验证安装升级**。
+
+关于页保持稳定渠道（测试计划关闭），点击“检查更新”后应经历“正在检查 → 正在下载 → 下载完成（开发环境不可安装）”。开启自动更新时，启动约 5 秒后也会开始检测。已下载的文件可能被缓存，重复检查可能跳过网络下载；要再次观察进度，在关于页“测试计划”下方点击“清理下载安装包缓存”中的“清理缓存”，再点击“检查更新”，无需重启或修改测试版本。该行显示实际缓存路径，仅配置了更新源的桌面开发环境可见；检查或下载期间不可清理。
+
+```bash
+# 指定产物、版本和端口；改端口时同步修改本地环境变量及 dev-app-update.yml
+pnpm dev:desktop:update-server --artifact PureChat-0.2.0-arm64.zip --version 0.2.2 --port 5500
+
+# RC 下载测试：关于页开启测试计划并选择 RC
+pnpm dev:desktop:update-server --channel rc --version 0.2.2-rc.1 --kbps 1024
+
+# Windows 下载测试：release 中需先生成 NSIS 安装包
+pnpm dev:desktop:update-server --platform win --arch x64 --artifact PureChat-0.2.0-setup.exe
+```
+
+当前本机 release 目录中，测试所需文件及用途如下：
+
+| 文件 | 用途 |
+| --- | --- |
+| `PureChat-0.2.0-arm64.zip` | Apple Silicon 自动更新下载载荷；默认选用 |
+| `PureChat-0.2.0-x64.zip` | Intel Mac 自动更新下载载荷，需使用相应架构客户端 |
+| 对应 `.zip.blockmap` | 差分下载元数据；脚本可提供，开发测试默认下载完整 ZIP |
+| `PureChat-0.2.0-arm64.dmg` | 首次或手动安装，不能代替自动更新所需 ZIP |
+| `latest-mac.yml` / `rc-mac.yml` / `beta-mac.yml` | 更新检测元数据；现有目录缺少，由脚本按所选渠道生成 |
+| `builder-debug.yml`、`builder-effective-config.yaml`、`mac-arm64/` | 构建日志、配置和未压缩应用，不作为更新服务下载文件 |
+
+Windows 自动更新需要 NSIS `*-setup.exe` 和 `latest.yml`（或 RC/Beta 渠道 YAML）；现有本机目录没有 Windows 安装包。实际安装验收需要两个真实、递增版本的发行包、正确的发布元数据与平台签名配置，不应使用脚本模拟的更高版本号。
 
 ## 打包前验证
 
@@ -178,7 +246,7 @@ pnpm --filter purechat-desktop typecheck
 pnpm package:desktop
 ```
 
-生产构建通过 `purechat://renderer` 协议加载打包后的渲染页。首次启动可在界面配置服务地址；开发调试也可使用桌面进程环境变量 `PURECHAT_DESKTOP_REMOTE_URL`。打包后的 `/api` 请求由 Electron 主进程通过 session 代理并注入主进程管理的 Bearer 令牌。桌面登录使用系统浏览器完成 Web 授权，通过 `purechat://auth/callback` 返回应用；授权码采用 PKCE、短时一次性消费，令牌保存在 Electron 安全存储中。构建时可通过非敏感的 `PURECHAT_DESKTOP_CLOUD_URL` 指定官方服务地址，缺省回退到 `SITE_DEFAULT_URL`。
+生产构建通过 `purechat://renderer` 协议加载打包后的渲染页。首次启动可在界面配置服务地址；开发调试也可使用桌面进程环境变量 `PURECHAT_DESKTOP_REMOTE_URL`。打包后的 `/api` 请求由 Electron 主进程通过 session 代理并注入主进程管理的 Bearer 令牌。桌面登录使用系统浏览器完成 Web 授权，通过 `purechat://auth/callback` 返回应用；授权码采用 PKCE、短时一次性消费，令牌和桌面配置由 `electron-store` 文件级加密保存，不访问 macOS Keychain。构建时可通过非敏感的 `PURECHAT_DESKTOP_CLOUD_URL` 指定官方服务地址，缺省回退到 `SITE_DEFAULT_URL`。
 
 打包会自动检查 ASAR：只允许应用 manifest 和构建产物，拒绝 `node_modules`、环境文件、sourcemap 和缺失入口，归档预算为 64 MiB。未来引入外置原生依赖时必须同步调整精确白名单和验证，不要直接关闭检查。
 

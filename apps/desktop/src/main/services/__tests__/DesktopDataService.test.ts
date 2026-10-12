@@ -15,8 +15,8 @@ vi.mock('electron-log', () => ({
   default: { transports: { file: {} }, scope: () => ({ warn: mocks.warn }) },
 }))
 
-import { DesktopConfigService } from './DesktopConfigService'
-import { cleanupLogs, DesktopDataService, isExpiredLog } from './DesktopDataService'
+import { DesktopConfigService } from '../DesktopConfigService'
+import { cleanupLogs, DesktopDataService, isExpiredLog } from '../DesktopDataService'
 
 let root: string
 beforeEach(async () => {

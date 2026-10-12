@@ -1,9 +1,14 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { loadEnv } from 'vite'
+
 import { verifyAfterPack } from './scripts/verify-package.mjs'
 
 const desktopDir = path.dirname(fileURLToPath(import.meta.url))
+// electron-builder runs separately from electron-vite and must load desktop env files itself.
+const desktopEnv = loadEnv('desktop', desktopDir, 'PURECHAT_DESKTOP_')
+const updateUrl = desktopEnv.PURECHAT_DESKTOP_UPDATE_URL?.trim()
 const appIcon = path.join(desktopDir, 'build/icon.png')
 const trayIcon = path.join(desktopDir, 'build/tray.png')
 
@@ -80,10 +85,8 @@ const config = {
   portable: {
     artifactName: '${productName}-${version}-portable.${ext}',
   },
-  // Set PURECHAT_DESKTOP_UPDATE_URL in release CI to enable generic-provider updates.
-  publish: process.env.PURECHAT_DESKTOP_UPDATE_URL
-    ? [{ provider: 'generic', url: process.env.PURECHAT_DESKTOP_UPDATE_URL }]
-    : null,
+  // Shell/CI values take precedence over desktop env files.
+  publish: updateUrl ? [{ provider: 'generic', url: updateUrl }] : null,
 }
 
 export default config

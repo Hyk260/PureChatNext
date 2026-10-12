@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { SystemToolsService } from './SystemToolsService'
+import { SystemToolsService } from '../SystemToolsService'
 
 type ExecResult = { stdout: string; stderr: string }
 

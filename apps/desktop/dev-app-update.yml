@@ -1,0 +1,5 @@
+# 本地仅下载测试：pnpm dev:desktop:update-server
+# 请确保此 URL 与 apps/desktop/.env.desktop.local 保持一致。
+provider: generic
+url: http://127.0.0.1:5500
+updaterCacheDirName: purechat-desktop-dev-updater

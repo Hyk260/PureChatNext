@@ -2,8 +2,9 @@ import { randomUUID } from 'node:crypto'
 import path from 'node:path'
 
 import type { DesktopLogRetentionDays } from '@/types/desktop'
+import type { DesktopUpdatePreferences } from '@/types/desktopUpdater'
+import { DEFAULT_UPDATE_PREFERENCES, isUpdatePreferences, normalizeUpdatePreferences } from '@/types/desktopUpdater'
 
-import { safeStorage } from 'electron'
 import Store from 'electron-store'
 
 export interface DesktopProject {
@@ -14,6 +15,7 @@ export interface DesktopProject {
 }
 
 export interface DesktopConfig {
+  updatePreferences?: DesktopUpdatePreferences
   logRetentionDays?: DesktopLogRetentionDays
   pendingAuth?: DesktopPendingAuth | null
   permissionScopes: Record<string, string[]>
@@ -39,6 +41,7 @@ export interface DesktopWindowState {
 }
 
 export const DEFAULT_CONFIG: DesktopConfig = {
+  updatePreferences: DEFAULT_UPDATE_PREFERENCES,
   logRetentionDays: 30,
   pendingAuth: null,
   permissionScopes: {},
@@ -125,9 +128,11 @@ export class DesktopConfigService {
   constructor(userDataPath: string) {
     this.store = new Store<DesktopConfig>({
       cwd: userDataPath,
-      name: 'config',
+      // 使用独立文件名启用 electron-store 文件级加密，不迁移旧版明文配置。
+      name: 'config-encrypted',
       defaults: DEFAULT_CONFIG,
       accessPropertiesByDotNotation: false,
+      encryptionKey: 'purechat-desktop-config-encryption-key-v1',
     })
     this.configPath = this.store.path
   }
@@ -138,6 +143,7 @@ export class DesktopConfigService {
     try {
       const parsed = this.store.store
       return {
+        updatePreferences: normalizeUpdatePreferences(parsed.updatePreferences),
         logRetentionDays: normalizeLogRetentionDays(parsed.logRetentionDays),
         pendingAuth: normalizePendingAuth(parsed.pendingAuth),
         permissionScopes:
@@ -173,6 +179,13 @@ export class DesktopConfigService {
     await this.update((config) => this.persist({ ...config, logRetentionDays: days }))
   }
 
+  async setUpdatePreferences(preferences: DesktopUpdatePreferences) {
+    if (!isUpdatePreferences(preferences)) throw new Error('更新设置无效')
+    await this.update((config) =>
+      this.persist({ ...config, updatePreferences: normalizeUpdatePreferences(preferences) })
+    )
+  }
+
   private async persist(config: DesktopConfig) {
     this.store.store = config
   }
@@ -190,6 +203,20 @@ export class DesktopConfigService {
     })
   }
 
+  async clearRemoteServer() {
+    return this.update(async (config) => {
+      config.remoteServerUrl = null
+      config.pendingAuth = null
+      for (const key of Object.keys(config.secrets)) {
+        if (key.startsWith('auth.')) {
+          delete config.secrets[key]
+        }
+      }
+      await this.persist(config)
+      return { url: null }
+    })
+  }
+
   async setPendingAuth(pendingAuth: DesktopPendingAuth | null) {
     return this.update(async (config) => {
       await this.persist({ ...config, pendingAuth })
@@ -203,20 +230,15 @@ export class DesktopConfigService {
 
   async storeSecret(key: string, value: string) {
     return this.update(async (config) => {
-      if (!safeStorage.isEncryptionAvailable()) throw new Error('当前系统没有可用的安全存储，未保存敏感信息')
-      config.secrets[key] = `safe:${safeStorage.encryptString(value).toString('base64')}`
+      // electron-store 会加密整个配置文件，避免访问 macOS Keychain 时弹出授权窗口。
+      config.secrets[key] = value
       await this.persist(config)
     })
   }
 
   async readSecret(key: string): Promise<string | null> {
     const value = (await this.read()).secrets[key]
-    if (!value?.startsWith('safe:') || !safeStorage.isEncryptionAvailable()) return null
-    try {
-      return safeStorage.decryptString(Buffer.from(value.slice(5), 'base64'))
-    } catch {
-      return null
-    }
+    return typeof value === 'string' ? value : null
   }
 
   async deleteSecret(key: string) {
@@ -228,7 +250,9 @@ export class DesktopConfigService {
 
   async deleteSecrets(keys: readonly string[]) {
     return this.update(async (config) => {
-      for (const key of keys) delete config.secrets[key]
+      for (const key of keys) {
+        delete config.secrets[key]
+      }
       await this.persist(config)
     })
   }

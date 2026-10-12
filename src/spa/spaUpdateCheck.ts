@@ -25,14 +25,11 @@ export function shouldNotifySpaUpdate(local: string | null, remote: string | nul
 
 export async function fetchRemoteSpaBuildTime(fetcher: typeof fetch = fetch): Promise<string | null> {
   try {
-    const res = await fetcher('/api/version', { cache: 'no-store' })
+    const res = await fetcher('/api/version', { cache: 'no-store', signal: AbortSignal.timeout(10_000) })
     if (!res.ok) return null
-
     const data: unknown = await res.json()
     if (!data || typeof data !== 'object' || !('buildTime' in data)) return null
-
-    const buildTime = data.buildTime
-    return typeof buildTime === 'string' && buildTime.length > 0 ? buildTime : null
+    return typeof data.buildTime === 'string' && data.buildTime.length > 0 ? data.buildTime : null
   } catch {
     return null
   }

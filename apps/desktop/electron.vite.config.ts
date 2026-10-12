@@ -25,6 +25,7 @@ const nextPort = Number(process.env.PORT) || 3000
 const rendererPort = Number(process.env.PURECHAT_DESKTOP_VITE_PORT) || 5176
 const isDev = process.env.NODE_ENV !== 'production'
 const desktopAliases = {
+  '@/envs': path.resolve(rootDir, 'packages/env/src'),
   '@': path.resolve(rootDir, 'src'),
   '@main': path.resolve(desktopDir, 'src/main'),
 }
@@ -32,9 +33,9 @@ const desktopAliases = {
 export default defineConfig({
   main: {
     build: {
-      // electron-builder excludes node_modules; bundle the updater and config store
-      // into the main entry so packaged apps can run without a dependency tree.
-      externalizeDeps: { exclude: ['electron-updater', 'electron-store'] },
+      // electron-builder excludes node_modules; bundle runtime dependencies into the
+      // main entry so packaged apps can run without a dependency tree.
+      externalizeDeps: { exclude: ['electron-log', 'electron-updater', 'electron-store'] },
       outDir: path.resolve(desktopDir, 'dist/main'),
       sourcemap: process.env.NODE_ENV !== 'production',
     },
@@ -89,7 +90,6 @@ export default defineConfig({
     }) as PluginOption[],
     resolve: {
       alias: {
-        '@/envs': path.resolve(rootDir, 'packages/env/src'),
         ...desktopAliases,
         ...sharedResolveAlias(rootDir),
       },

@@ -13,7 +13,7 @@ describe('optionalUrlEnv', () => {
 
   it('accepts local, Docker, and public http(s) URLs', () => {
     expect(schema.parse('http://localhost:8180')).toBe('http://localhost:8180')
-    expect(schema.parse('http://searxng:8080')).toBe('http://searxng:8080')
+    expect(schema.parse('  http://searxng:8080  ')).toBe('http://searxng:8080')
     expect(schema.parse('https://searxng-instance.com')).toBe('https://searxng-instance.com')
   })
 

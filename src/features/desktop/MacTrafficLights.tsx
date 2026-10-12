@@ -3,6 +3,8 @@ import { Minus, Plus, X } from 'lucide-react'
 
 const styles = createStaticStyles(({ css }) => ({
   root: css`
+    position: relative;
+    z-index: 9999;
     display: flex;
     align-items: center;
     gap: 8px;

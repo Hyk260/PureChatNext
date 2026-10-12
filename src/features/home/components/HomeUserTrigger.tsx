@@ -11,6 +11,7 @@ import { memo, useCallback, useMemo, useState } from 'react'
 
 import { signOutWorkspace } from '@/features/auth/signOutWorkspace'
 import { useSession } from '@/libs/better-auth/client'
+import { getDesktopApi } from '@/types/desktop'
 
 import ReferralModal from '@/features/referrals/ReferralModal'
 
@@ -28,6 +29,9 @@ const styles = createStaticStyles(({ css }) => ({
     inset-block-start: 8px !important;
     inset-inline-start: 8px !important;
     border-radius: 10px;
+  `,
+  desktopPopover: css`
+    inset-block-start: 46px !important;
   `,
   popoverContent: css`
     padding: 0;
@@ -47,7 +51,10 @@ interface UserInfoSectionProps {
 const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planLabel }) => (
   <Flex className='items-center gap-3 py-3 px-3'>
     <Flex className='items-center gap-2.5'>
-      <Avatar size={36} src={avatar}> {name.slice(0, 3).toUpperCase()} </Avatar>
+      <Avatar size={36} src={avatar}>
+        {' '}
+        {name.slice(0, 3).toUpperCase()}{' '}
+      </Avatar>
       <Flex className='flex-col flex-1'>
         <Flex className='items-center gap-2'>
           <Text as='span' className='leading-[1.4]' weight='bold'>
@@ -72,6 +79,7 @@ const HomeUserTrigger = memo(() => {
   const { data: session } = useSession()
   const [open, setOpen] = useState(false)
   const [referralOpen, setReferralOpen] = useState(false)
+  const isDesktop = Boolean(getDesktopApi())
 
   const displayName = session?.user?.name ?? session?.user?.email?.split('@')[0] ?? '访客'
 
@@ -148,6 +156,8 @@ const HomeUserTrigger = memo(() => {
     </Flex>
   )
 
+  const popoverClassName = isDesktop ? `${styles.popover} ${styles.desktopPopover}` : styles.popover
+
   return (
     <>
       <ReferralModal open={referralOpen} onClose={() => setReferralOpen(false)} />
@@ -159,7 +169,7 @@ const HomeUserTrigger = memo(() => {
         trigger='click'
         classNames={{
           content: styles.popoverContent,
-          root: styles.popover,
+          root: popoverClassName,
         }}
         onOpenChange={setOpen}
       >
@@ -178,7 +188,9 @@ const HomeUserTrigger = memo(() => {
             paddingInlineStart: 2,
           }}
         >
-          <Avatar shape='square' size={28} src={avatar} >{displayName.slice(0, 3).toUpperCase()}</Avatar>
+          <Avatar shape='square' size={28} src={avatar}>
+            {displayName.slice(0, 3).toUpperCase()}
+          </Avatar>
           <Flex className='items-center gap-1 overflow-hidden'>
             <Text as='span' className='min-w-0 flex-1' ellipsis weight={500}>
               {displayName}

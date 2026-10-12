@@ -13,9 +13,17 @@ import type {
   DesktopRemoteServer,
   DesktopSystemTools,
   DesktopWindowState,
+  DesktopUpdatePreferences,
+  DesktopUpdateState,
 } from '@/types/desktop'
 
 export interface DesktopIpcContractMap {
+  'updater.getState': { args: []; result: DesktopUpdateState }
+  'updater.check': { args: []; result: DesktopUpdateState }
+  'updater.clearCache': { args: []; result: DesktopUpdateState }
+  'updater.setPreferences': { args: [preferences: DesktopUpdatePreferences]; result: DesktopUpdateState }
+  'updater.install': { args: []; result: void }
+  'window.openDevTools': { args: []; result: void }
   'data.getInfo': { args: []; result: DesktopDataInfo }
   'data.openDirectory': { args: [directory: DesktopDataDirectory]; result: void }
   'data.setLogRetention': { args: [days: DesktopLogRetentionDays]; result: void }
@@ -58,6 +66,13 @@ export type DesktopIpcArgs<C extends DesktopIpcChannel> = DesktopIpcContractMap[
 export type DesktopIpcResult<C extends DesktopIpcChannel> = DesktopIpcContractMap[C]['result']
 
 export const DESKTOP_IPC_CHANNELS = {
+  updater: {
+    getState: 'updater.getState',
+    check: 'updater.check',
+    clearCache: 'updater.clearCache',
+    setPreferences: 'updater.setPreferences',
+    install: 'updater.install',
+  },
   data: {
     getInfo: 'data.getInfo',
     openDirectory: 'data.openDirectory',
@@ -88,6 +103,7 @@ export const DESKTOP_IPC_CHANNELS = {
   shell: { openPath: 'shell.openPath' },
   storage: { deleteSecret: 'storage.deleteSecret', storeSecret: 'storage.storeSecret' },
   window: {
+    openDevTools: 'window.openDevTools',
     close: 'window.close',
     getState: 'window.getState',
     minimize: 'window.minimize',
@@ -97,5 +113,6 @@ export const DESKTOP_IPC_CHANNELS = {
 } as const
 
 export const DESKTOP_IPC_EVENTS = {
+  updateState: 'updater.state',
   authStatus: 'auth.status',
 } as const

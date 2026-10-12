@@ -6,6 +6,19 @@ import { DESKTOP_IPC_EVENTS } from '../common/ipc/contracts'
 import { invoke } from './invoke'
 
 export const createDesktopApi = (): DesktopApi => ({
+  updater: {
+    getState: () => invoke('updater.getState'),
+    check: () => invoke('updater.check'),
+    clearCache: () => invoke('updater.clearCache'),
+    setPreferences: (preferences) => invoke('updater.setPreferences', preferences),
+    install: () => invoke('updater.install'),
+    onStateChange: (listener) => {
+      const handler = (_event: Electron.IpcRendererEvent, state: Parameters<typeof listener>[0]) => listener(state)
+      ipcRenderer.on(DESKTOP_IPC_EVENTS.updateState, handler)
+      return () => ipcRenderer.removeListener(DESKTOP_IPC_EVENTS.updateState, handler)
+    },
+  },
+  openDevTools: () => invoke('window.openDevTools'),
   getDataInfo: () => invoke('data.getInfo'),
   openDataDirectory: (directory) => invoke('data.openDirectory', directory),
   setLogRetentionDays: (days) => invoke('data.setLogRetention', days),

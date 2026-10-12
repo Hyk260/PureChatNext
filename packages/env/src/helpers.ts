@@ -40,10 +40,17 @@ export const optionalNumberEnv = (min: number, max: number) => {
   )
 }
 
-/** Optional http(s) URL env; empty / null → undefined. */
+/** Optional http(s) URL env; blank / empty / null → undefined, and trim surrounding whitespace. */
 export const optionalUrlEnv = () => {
   return z.preprocess(
-    (value) => (value === '' || value === null ? undefined : value),
+    (value) => {
+      if (typeof value === 'string') {
+        const trimmed = value.trim()
+        return trimmed === '' ? undefined : trimmed
+      }
+
+      return value === null ? undefined : value
+    },
     z.url({ protocol: /^https?$/ }).optional()
   )
 }

@@ -1,6 +1,7 @@
 import path from 'node:path'
 
 import { app } from 'electron'
+import { DESKTOP_IPC_EVENTS } from '../../common/ipc/contracts'
 
 import { registerDesktopIpc } from '../ipc/register'
 import { parseDesktopAuthCallback, protocolLinksFromCommandLine, resolveProtocolLink } from '../protocolLink'
@@ -10,18 +11,29 @@ import { DesktopConfigService } from '../services/DesktopConfigService'
 import { DesktopAuthService } from '../services/DesktopAuthService'
 import { UpdateService } from '../services/UpdateService'
 import { getResourcePath } from '../utils/file'
+import { getDesktopRuntimeConfig } from '@/envs/desktop'
 import { ProtocolManager } from './ProtocolManager'
 import { TrayManager } from './TrayManager'
 import { WindowManager, resolvePreloadPath } from './WindowManager'
 
 const protocolScheme = 'purechat'
+const localDevelopmentHosts = new Set(['127.0.0.1', '::1', 'localhost'])
+
+const isLocalDevelopmentServer = (value: string | null) => {
+  if (!value) return false
+  try {
+    return localDevelopmentHosts.has(new URL(value).hostname)
+  } catch {
+    return false
+  }
+}
 
 export class DesktopApp {
   private readonly rendererUrl: string
   private readonly windowManager: WindowManager
   private readonly trayManager: TrayManager
   private readonly protocolManager: ProtocolManager
-  private readonly updateService = new UpdateService()
+  private readonly updateService: UpdateService
   private readonly pendingProtocolLinks: string[]
   private readonly pendingAuthLinks: string[]
   private readonly config: DesktopConfigService
@@ -52,6 +64,10 @@ export class DesktopApp {
     this.authService = new DesktopAuthService(this.config, (status) => {
       const contents = this.windowManager.trustedContents
       if (contents && !contents.isDestroyed()) contents.send('auth.status', status)
+    })
+    this.updateService = new UpdateService(this.config, (state) => {
+      const contents = this.windowManager.trustedContents
+      if (contents && !contents.isDestroyed()) contents.send(DESKTOP_IPC_EVENTS.updateState, state)
     })
     this.trayManager = new TrayManager(
       this.getDesktopResourcePath('tray.png'),
@@ -87,13 +103,15 @@ export class DesktopApp {
   }
 
   async bootstrap() {
-    if (!app.requestSingleInstanceLock()) {
+    const { PURECHAT_DESKTOP_MULTI_INSTANCE } = getDesktopRuntimeConfig(!app.isPackaged)
+    if (!PURECHAT_DESKTOP_MULTI_INSTANCE && !app.requestSingleInstanceLock()) {
       app.quit()
       return
     }
 
     await app.whenReady()
-    this.updateService.start()
+    await this.clearPackagedDevelopmentConfig()
+    await this.updateService.start()
     installApplicationMenu(app.getPath('userData'))
     this.registerProtocolClient()
     if (!isTrustedRendererUrl(this.rendererUrl, this.rendererUrl)) {
@@ -102,6 +120,7 @@ export class DesktopApp {
 
     const ipc = await registerDesktopIpc({
       auth: this.authService,
+      updater: this.updateService,
       config: this.config,
       getTrustedContents: () => this.windowManager.trustedContents,
       rendererUrl: this.rendererUrl,
@@ -124,6 +143,14 @@ export class DesktopApp {
 
   private focusWindow() {
     this.windowManager.focus()
+  }
+
+  private async clearPackagedDevelopmentConfig() {
+    if (!app.isPackaged) return
+    const config = await this.config.read()
+    if (config.pendingAuth && isLocalDevelopmentServer(config.remoteServerUrl)) {
+      await this.config.clearRemoteServer()
+    }
   }
 
   private openProtocolLinks(links: readonly string[]) {

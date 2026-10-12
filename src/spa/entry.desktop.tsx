@@ -15,6 +15,7 @@ import DesktopLoginRoute from '@/routes/desktop-login/page'
 import { webRoutes } from '@/spa/router/webRouter.config'
 import { configureDesktopFetch } from '@/utils/desktopFetch'
 import { createAppRouter, RouterErrorElement } from '@/utils/router'
+import ThemeProviders from '@/layout/ThemeProviders'
 
 const rootEl = document.getElementById('root')
 
@@ -48,13 +49,15 @@ const render = () => {
 const renderSetup = () => {
   createRoot(rootEl).render(
     <StrictMode>
-      <DesktopTitleBar>
-        <DesktopContentErrorBoundary>
-          <InsetContentFrame sidebarCollapsed>
-            <DesktopLoginPage standalone />
-          </InsetContentFrame>
-        </DesktopContentErrorBoundary>
-      </DesktopTitleBar>
+      <ThemeProviders>
+        <DesktopTitleBar>
+          <DesktopContentErrorBoundary>
+            <InsetContentFrame sidebarCollapsed>
+              <DesktopLoginPage standalone />
+            </InsetContentFrame>
+          </DesktopContentErrorBoundary>
+        </DesktopTitleBar>
+      </ThemeProviders>
     </StrictMode>
   )
 }

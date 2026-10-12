@@ -2,17 +2,11 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
-vi.mock('electron', () => ({
-  safeStorage: {
-    isEncryptionAvailable: () => true,
-    encryptString: (value: string) => Buffer.from(value),
-    decryptString: (value: Buffer) => value.toString(),
-  },
-}))
-
-import { DesktopConfigService, normalizeRemoteServerUrl } from '../services/DesktopConfigService'
+import { DEFAULT_CONFIG, DesktopConfigService, normalizeRemoteServerUrl } from '../services/DesktopConfigService'
+import { DEFAULT_UPDATE_PREFERENCES } from '@/types/desktopUpdater'
+import type { DesktopUpdatePreferences } from '@/types/desktopUpdater'
 
 const tempDirs: string[] = []
 
@@ -32,6 +26,32 @@ describe('normalizeRemoteServerUrl', () => {
 })
 
 describe('DesktopConfigService', () => {
+  it('encrypts the config file and persists secrets across restart', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-desktop-'))
+    tempDirs.push(dir)
+    const store = new DesktopConfigService(dir)
+
+    await store.storeSecret('auth.accessToken', 'access-token')
+
+    expect(await store.readSecret('auth.accessToken')).toBe('access-token')
+    expect(await readFile(store.configPath, 'utf8')).not.toContain('access-token')
+    expect(await new DesktopConfigService(dir).readSecret('auth.accessToken')).toBe('access-token')
+  })
+
+  it('validates and persists update preferences without losing concurrent configuration writes', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-update-config-'))
+    tempDirs.push(dir)
+    const store = new DesktopConfigService(dir)
+    expect((await store.read()).updatePreferences).toEqual(DEFAULT_UPDATE_PREFERENCES)
+    const preferences: DesktopUpdatePreferences = { autoUpdate: false, testPlan: true, testChannel: 'beta' }
+    await Promise.all([store.setUpdatePreferences(preferences), store.setLogRetentionDays(7)])
+    const restarted = new DesktopConfigService(dir)
+    expect((await restarted.read()).updatePreferences).toEqual(preferences)
+    expect((await restarted.read()).logRetentionDays).toBe(7)
+    const invalid = { ...preferences, testChannel: 'nightly' } as unknown as DesktopUpdatePreferences
+    await expect(restarted.setUpdatePreferences(invalid)).rejects.toThrow('更新设置无效')
+    expect((await restarted.read()).updatePreferences).toEqual(preferences)
+  })
   it('persists the remote server without exposing an arbitrary file path', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-desktop-'))
     tempDirs.push(dir)
@@ -45,7 +65,7 @@ describe('DesktopConfigService', () => {
     })
 
     expect((await store.read()).remoteServerUrl).toBe('https://example.com')
-    expect(await readFile(store.configPath, 'utf8')).toContain('example.com')
+    expect(await readFile(store.configPath, 'utf8')).not.toContain('example.com')
   })
 
   it('defaults missing or invalid retention and preserves concurrent configuration updates', async () => {
@@ -53,7 +73,7 @@ describe('DesktopConfigService', () => {
     tempDirs.push(dir)
     const store = new DesktopConfigService(dir)
     for (const value of [undefined, -1, '30', 10]) {
-      await writeFile(store.configPath, JSON.stringify({ logRetentionDays: value }))
+      await store.write({ ...DEFAULT_CONFIG, logRetentionDays: value as never })
       expect((await store.read()).logRetentionDays).toBe(30)
     }
     await Promise.all([
@@ -69,40 +89,11 @@ describe('DesktopConfigService', () => {
     expect(config.remoteServerUrl).toBe('https://example.com')
   })
 
-  it('opens legacy config.json and preserves dotted secret keys across restart', async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-desktop-'))
-    tempDirs.push(dir)
-    const configPath = path.join(dir, 'config.json')
-    const secret = `safe:${Buffer.from('test-token').toString('base64')}`
-    await writeFile(
-      configPath,
-      JSON.stringify({
-        remoteServerUrl: 'https://example.com',
-        projects: [{ id: 'existing', name: 'Existing', rootPath: dir, createdAt: 1 }],
-        permissionScopes: { topic: [dir] },
-        secrets: { 'auth.accessToken': secret },
-      })
-    )
-    const store = new DesktopConfigService(dir)
-    expect(store.configPath).toBe(configPath)
-    expect(await store.readSecret('auth.accessToken')).toBe('test-token')
-    await store.setLogRetentionDays(90)
-    await store.storeSecret('auth.refreshToken', 'refresh-token')
-    const restarted = new DesktopConfigService(dir)
-    const config = await restarted.read()
-    expect(config.logRetentionDays).toBe(90)
-    expect(config.remoteServerUrl).toBe('https://example.com')
-    expect(config.projects[0]?.id).toBe('existing')
-    expect(config.permissionScopes.topic).toEqual([dir])
-    expect(config.secrets['auth.accessToken']).toBe(secret)
-    expect(await restarted.readSecret('auth.refreshToken')).toBe('refresh-token')
-    expect(config.secrets).not.toHaveProperty('auth')
-  })
-
   it('keeps a corrupt config file intact instead of silently resetting it', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-desktop-'))
     tempDirs.push(dir)
-    const configPath = path.join(dir, 'config.json')
+    const store = new DesktopConfigService(dir)
+    const configPath = store.configPath
     await writeFile(configPath, '{corrupt')
     expect(() => new DesktopConfigService(dir)).toThrow()
     expect(await readFile(configPath, 'utf8')).toBe('{corrupt')

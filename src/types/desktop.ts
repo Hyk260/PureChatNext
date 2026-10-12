@@ -1,4 +1,7 @@
 import type { ChatPermissionMode } from '@pure/types'
+import type { DesktopUpdatePreferences, DesktopUpdateState } from './desktopUpdater'
+
+export type { DesktopUpdatePreferences, DesktopUpdateState } from './desktopUpdater'
 
 export interface DesktopAppInfo {
   isPackaged: boolean
@@ -108,6 +111,15 @@ export interface DesktopDataInfo {
 }
 
 export interface DesktopApi {
+  updater: {
+    getState: () => Promise<DesktopUpdateState>
+    check: () => Promise<DesktopUpdateState>
+    clearCache: () => Promise<DesktopUpdateState>
+    setPreferences: (preferences: DesktopUpdatePreferences) => Promise<DesktopUpdateState>
+    install: () => Promise<void>
+    onStateChange: (listener: (state: DesktopUpdateState) => void) => () => void
+  }
+  openDevTools: () => Promise<void>
   getDataInfo: () => Promise<DesktopDataInfo>
   openDataDirectory: (directory: DesktopDataDirectory) => Promise<void>
   setLogRetentionDays: (days: DesktopLogRetentionDays) => Promise<void>

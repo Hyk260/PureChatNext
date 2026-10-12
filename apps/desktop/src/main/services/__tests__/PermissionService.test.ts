@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { PermissionService } from './PermissionService'
+import { PermissionService } from '../PermissionService'
 
 describe('PermissionService', () => {
   it('keeps denied grants unchanged and reuses an approved grant', async () => {

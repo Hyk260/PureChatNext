@@ -37,6 +37,8 @@ const SpaUpdateNotifier = ({
 
   useEffect(() => {
     if (!enabled || isDesktopRenderer()) return
+    let cancelled = false
+    let checking = false
 
     const rememberDismissed = (remote: string) => {
       isShowingRef.current = false
@@ -70,17 +72,21 @@ const SpaUpdateNotifier = ({
     }
 
     const runCheck = async () => {
-      if (document.visibilityState !== 'visible') return
+      if (document.visibilityState !== 'visible' || checking) return
 
       if (preview) {
         if (!isShowingRef.current) notify('preview')
         return
       }
 
-      const result = await checkForSpaUpdate({ isShowing: isShowingRef.current })
-      if (!result.show || !result.remote) return
-
-      notify(result.remote)
+      checking = true
+      try {
+        const result = await checkForSpaUpdate({ isShowing: isShowingRef.current })
+        if (cancelled || !result.show || !result.remote) return
+        notify(result.remote)
+      } finally {
+        checking = false
+      }
     }
 
     const onVisibilityChange = () => {
@@ -91,6 +97,9 @@ const SpaUpdateNotifier = ({
     if (preview) notify('preview')
 
     return () => {
+      cancelled = true
+      isShowingRef.current = false
+      notification.destroy(SPA_UPDATE_NOTIFICATION_KEY)
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [enabled, notification, preview])

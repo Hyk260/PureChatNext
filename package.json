@@ -18,6 +18,7 @@
     "dev:next": "next dev -p 3000",
     "dev:spa": "vite",
     "dev:desktop": "bun scripts/dev-desktop.mts",
+    "dev:desktop:update-server": "node scripts/dev-desktop-update-server.mjs",
     "dev:docs": "pnpm --filter @pure/docs dev",
     "dev:inspect": "bun scripts/dev-startup-sequence.mts --inspect",
     "dev:docker": "bun scripts/docker.mts up",

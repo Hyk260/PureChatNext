@@ -250,7 +250,7 @@ const clearElectronSingletonLocks = async () => {
 
   const home = homedir()
   const candidates = [
-    path.join(home, 'Library/Application Support/purechat-desktop'),
+    path.join(home, 'Library/Application Support/purechat-desktop-dev'),
     path.join(home, 'Library/Application Support/Electron'),
   ]
 

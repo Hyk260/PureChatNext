@@ -6,6 +6,9 @@ const getWindow = () => BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAll
 
 export class WindowController {
   register(ipc: IpcRegistry) {
+    ipc.register('window.openDevTools', () => {
+      getWindow()?.webContents.openDevTools({ mode: 'detach' })
+    })
     ipc.register('window.getState', () => ({ isMaximized: getWindow()?.isMaximized() ?? false }))
     ipc.register('window.minimize', () => {
       getWindow()?.minimize()

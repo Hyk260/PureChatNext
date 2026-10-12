@@ -2,6 +2,8 @@ import { app } from 'electron'
 
 import { DataController } from '../controllers/DataController'
 import { DesktopDataService } from '../services/DesktopDataService'
+import { UpdateController } from '../controllers/UpdateController'
+import type { UpdateService } from '../services/UpdateService'
 
 import {
   ConfigController,
@@ -26,6 +28,7 @@ export const registerDesktopIpc = async (options: {
   getTrustedContents: () => Electron.WebContents | null
   rendererUrl: string
   auth?: DesktopAuthService
+  updater: UpdateService
 }) => {
   const config = options.config ?? new DesktopConfigService(app.getPath('userData'))
   const permissions = new PermissionService(
@@ -55,6 +58,7 @@ export const registerDesktopIpc = async (options: {
   new LocalSystemController(tools).register(registry)
   new SystemController().register(registry)
   new WindowController().register(registry)
+  new UpdateController(options.updater).register(registry)
 
   return {
     dispose: () => {

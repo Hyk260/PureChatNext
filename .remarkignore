@@ -3,6 +3,8 @@ node_modules
 dist
 public/_spa
 coverage
+playwright-report
+test-results
 .agents
 .cursor
 .vercel

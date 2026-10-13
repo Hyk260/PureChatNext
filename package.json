@@ -58,8 +58,11 @@
     "tunnel:ngrok": "ngrok http http://localhost:5174",
     "test": "vitest",
     "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
     "lint": "node scripts/run-parallel.mjs lint:ts lint:spa-env-imports lint:style lint:circular lint:docs lint:docs-site lint:md && pnpm run typecheck && pnpm run typecheck:docs",
-    "lint:ts": "eslint src/ tests/ apps/desktop/src/ apps/docs/src/ scripts/ --concurrency=auto",
+    "lint:ts": "eslint src/ tests/ apps/desktop/src/ apps/docs/src/ scripts/ playwright.config.ts --concurrency=auto",
     "lint:style": "stylelint \"{src,tests}/**/*.css\"",
     "lint:style:fix": "stylelint \"{src,tests}/**/*.css\" --fix",
     "lint:spa-env-imports": "node scripts/web/check-spa-env-imports.mjs",
@@ -160,6 +163,7 @@
     "zustand-utils": "^2.1.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "@tailwindcss/postcss": "^4",
     "@types/debug": "^4.1.12",
     "@types/node": "^20",

@@ -30,6 +30,8 @@ src/const/community/skills.readme.data.json
 
 # Test / coverage
 coverage
+playwright-report
+test-results
 .eslintcache
 .stylelintcache
 

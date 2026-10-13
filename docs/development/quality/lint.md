@@ -88,7 +88,7 @@ flowchart LR
 ### `lint:ts`
 
 ```bash
-eslint src/ tests/ apps/desktop/src/ apps/docs/src/ scripts/ --concurrency=auto
+eslint src/ tests/ apps/desktop/src/ apps/docs/src/ scripts/ playwright.config.ts --concurrency=auto
 ```
 
 配置：[eslint.config.mjs](../../../eslint.config.mjs)（`eslint-config-next` + 顶层 `import type` 规则）。

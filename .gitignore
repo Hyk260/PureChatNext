@@ -98,6 +98,8 @@ robots.txt
 # Documents and media
 *.patch
 *.pdf
+# pnpm patchedDependencies 必须入库，否则 mac/CI 无法应用补丁
+!patches/*.patch
 
 # Cloud service keys
 vertex-ai-key.json

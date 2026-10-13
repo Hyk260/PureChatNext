@@ -1,0 +1,44 @@
+diff --git a/out/util/electronGet.js b/out/util/electronGet.js
+index 8a385317111f4d1e0fcd583a34d194c44fc50771..1dd64d3216c98ac83f29425e7ddce7785f83f854 100644
+--- a/out/util/electronGet.js
++++ b/out/util/electronGet.js
+@@ -163,7 +163,29 @@ async function extractArchive(file, dir) {
+             throw new Error(`Extraction of ${path.basename(file)} produced no files`);
+         }
+         await fs.rm(dir, { recursive: true, force: true });
+-        await fs.rename(tmpDir, dir);
++        // Antivirus software (e.g. Tencent PC Manager) may hold a transient lock on freshly
++        // extracted executables, causing EPERM on the rename right after extraction.
++        // Retry with backoff, then fall back to copy+remove which still works while the
++        // directory entry itself is locked (files remain readable during AV scans).
++        let renamed = false;
++        for (let attempt = 0; attempt < 10 && !renamed; attempt++) {
++            try {
++                await fs.rename(tmpDir, dir);
++                renamed = true;
++            }
++            catch (renameError) {
++                const code = renameError && renameError.code;
++                if (code !== "EPERM" && code !== "EACCES" && code !== "EBUSY") {
++                    throw renameError;
++                }
++                await new Promise(r => setTimeout(r, 250 * (attempt + 1)));
++            }
++        }
++        if (!renamed) {
++            builder_util_1.log.warn({ tmpDir, dir }, "rename blocked (likely antivirus scan), falling back to copy");
++            await fs.cp(tmpDir, dir, { recursive: true, verbatimSymlinks: true });
++            await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 20, retryDelay: 500 });
++        }
+     }
+     finally {
+         await release().catch(err => builder_util_1.log.warn({ err }, "failed to release lockfile"));
+@@ -225,7 +247,7 @@ async function downloadArtifactToFile(config, label) {
+                 retries: 3,
+                 interval: 2000,
+                 backoff: 2000,
+-                shouldRetry: (e) => e instanceof builder_util_runtime_1.HttpError ? e.isServerError() : typeof (e === null || e === void 0 ? void 0 : e.code) === "string" && ["ENOTFOUND", "ETIMEDOUT", "ECONNRESET", "EPIPE", "ENOENT"].includes(e.code),
++                shouldRetry: (e) => e instanceof builder_util_runtime_1.HttpError ? e.isServerError() : typeof (e === null || e === void 0 ? void 0 : e.code) === "string" && ["ENOTFOUND", "ETIMEDOUT", "ECONNRESET", "EPIPE", "ENOENT", "EAI_FAIL", "EAI_AGAIN"].includes(e.code),
+             });
+         }
+         catch (err) {

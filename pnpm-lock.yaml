@@ -20,6 +20,11 @@ overrides:
   undici: 6.28.1
   zod: ^4.3.6
 
+patchedDependencies:
+  app-builder-lib@26.14.0:
+    hash: e4a2e5974e9038e10c4b2d86cf49ef929ffd21e7215b35f2ec567ee73ee41e08
+    path: patches/app-builder-lib@26.14.0.patch
+
 importers:
 
   .:
@@ -303,7 +308,7 @@ importers:
         version: 9.39.0(jiti@2.7.0)
       eslint-config-next:
         specifier: 16.3.8
-        version: 16.3.8(@typescript-eslint/parser@8.46.2(eslint@9.39.0(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.0(jiti@2.7.0))(typescript@5.9.3)
+        version: 16.3.8(eslint@9.39.0(jiti@2.7.0))(typescript@5.9.3)
       js-yaml:
         specifier: ^4.3.2
         version: 4.3.2
@@ -376,7 +381,7 @@ importers:
         version: 26.14.0(electron-builder-squirrel-windows@26.14.0)
       electron-vite:
         specifier: 6.0.0-beta.1
-        version: 6.0.0-beta.1(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
+        version: 6.0.0-beta.1(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -403,7 +408,7 @@ importers:
         version: 16.15.1(@mdx-js/mdx@3.1.1)(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.2.2)(lucide-react@1.28.0(react@19.2.7))(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react-router@8.3.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(zod@4.4.3)
       fumadocs-mdx:
         specifier: 15.3.1
-        version: 15.3.1(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.2.2)(fumadocs-core@16.15.1(@mdx-js/mdx@3.1.1)(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.2.2)(lucide-react@1.28.0(react@19.2.7))(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react-router@8.3.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(zod@4.4.3))(mdast-util-directive@3.1.0)(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(rolldown@1.1.5)(vite@8.1.4(@types/node@20.19.24)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
+        version: 15.3.1(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.2.2)(fumadocs-core@16.15.1(@mdx-js/mdx@3.1.1)(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.2.2)(lucide-react@1.28.0(react@19.2.7))(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react-router@8.3.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(zod@4.4.3))(mdast-util-directive@3.1.0)(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(rolldown@1.1.5)(vite@7.2.1(@types/node@20.19.24)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
       fumadocs-ui:
         specifier: npm:@fumadocs/base-ui@16.15.1
         version: '@fumadocs/base-ui@16.15.1(@emotion/is-prop-valid@1.4.0)(@types/mdx@2.0.14)(@types/react@19.2.2)(date-fns@4.1.0)(fumadocs-core@16.15.1(@mdx-js/mdx@3.1.1)(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.2.2)(lucide-react@1.28.0(react@19.2.7))(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react-router@8.3.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(zod@4.4.3))(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.3)'
@@ -503,7 +508,7 @@ importers:
         version: 7.0.19(zod@4.4.3)
       better-auth:
         specifier: ^1.6.22
-        version: 1.6.22(fe359836bf1c8d5e487f4beddcbb26ee)
+        version: 1.6.22(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.48.4(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9))(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@24.13.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(pg@8.20.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vitest@3.2.4)(vue@3.5.41(typescript@6.0.3))
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9)
@@ -11874,20 +11879,6 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.1.0)(kysely@0.29.2)(nanostores@1.4.0)':
-    dependencies:
-      '@better-auth/utils': 0.4.2
-      '@better-fetch/fetch': 1.3.1
-      '@opentelemetry/semantic-conventions': 1.41.1
-      '@standard-schema/spec': 1.1.0
-      better-call: 1.3.7(zod@4.4.3)
-      jose: 6.1.0
-      kysely: 0.29.2
-      nanostores: 1.4.0
-      zod: 4.4.3
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.1
-
   '@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0)':
     dependencies:
       '@better-auth/utils': 0.4.2
@@ -11902,38 +11893,38 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
 
-  '@better-auth/drizzle-adapter@1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.1.0)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9))':
+  '@better-auth/drizzle-adapter@1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9))':
     dependencies:
-      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.1.0)(kysely@0.29.2)(nanostores@1.4.0)
+      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0)
       '@better-auth/utils': 0.4.2
     optionalDependencies:
       drizzle-orm: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9)
 
   '@better-auth/kysely-adapter@1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(kysely@0.29.2)':
     dependencies:
-      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.1.0)(kysely@0.29.2)(nanostores@1.4.0)
+      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0)
       '@better-auth/utils': 0.4.2
     optionalDependencies:
       kysely: 0.29.2
 
   '@better-auth/memory-adapter@1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)':
     dependencies:
-      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.1.0)(kysely@0.29.2)(nanostores@1.4.0)
+      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0)
       '@better-auth/utils': 0.4.2
 
   '@better-auth/mongo-adapter@1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)':
     dependencies:
-      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.1.0)(kysely@0.29.2)(nanostores@1.4.0)
+      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0)
       '@better-auth/utils': 0.4.2
 
   '@better-auth/prisma-adapter@1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)':
     dependencies:
-      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.1.0)(kysely@0.29.2)(nanostores@1.4.0)
+      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0)
       '@better-auth/utils': 0.4.2
 
   '@better-auth/telemetry@1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)':
     dependencies:
-      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.1.0)(kysely@0.29.2)(nanostores@1.4.0)
+      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0)
       '@better-auth/utils': 0.4.2
       '@better-fetch/fetch': 1.3.1
 
@@ -14848,11 +14839,11 @@ snapshots:
       acorn: 8.18.0
     optional: true
 
-  '@sveltejs/kit@2.48.4(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))':
+  '@sveltejs/kit@2.48.4(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))':
     dependencies:
       '@standard-schema/spec': 1.1.0
       '@sveltejs/acorn-typescript': 1.0.13(acorn@8.18.0)
-      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
+      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
       '@types/cookie': 0.6.0
       acorn: 8.18.0
       cookie: 0.6.0
@@ -14865,7 +14856,7 @@ snapshots:
       set-cookie-parser: 2.7.2
       sirv: 3.0.2
       svelte: 5.43.4(@typescript-eslint/types@8.67.0)
-      vite: 8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
+      vite: 8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
     optional: true
@@ -14892,12 +14883,12 @@ snapshots:
       '@opentelemetry/api': 1.9.1
     optional: true
 
-  '@sveltejs/vite-plugin-svelte-inspector@5.0.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))':
+  '@sveltejs/vite-plugin-svelte-inspector@5.0.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
+      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
       obug: 2.1.4
       svelte: 5.43.4(@typescript-eslint/types@8.67.0)
-      vite: 8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
+      vite: 8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
     optional: true
 
   '@sveltejs/vite-plugin-svelte-inspector@5.0.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4)':
@@ -14908,15 +14899,15 @@ snapshots:
       vite: 8.1.4(@types/node@20.19.24)(@vitejs/devtools@0.4.12)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.50.0)(tsx@4.20.6)(yaml@2.9.0)
     optional: true
 
-  '@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))':
+  '@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 5.0.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
+      '@sveltejs/vite-plugin-svelte-inspector': 5.0.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
       debug: 4.4.3
       deepmerge: 4.3.1
       magic-string: 0.30.21
       svelte: 5.43.4(@typescript-eslint/types@8.67.0)
-      vite: 8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
-      vitefu: 1.1.3(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
+      vite: 8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
+      vitefu: 1.1.3(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -15805,7 +15796,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.17
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.24)(@vitest/ui@3.2.4)(happy-dom@20.10.6)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.50.0)(tsx@4.20.6)(yaml@2.9.0)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.24)(@vitest/ui@3.2.4)(happy-dom@20.10.6)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -16202,7 +16193,7 @@ snapshots:
 
   app-builder-bin@5.0.0-alpha.12: {}
 
-  app-builder-lib@26.14.0(dmg-builder@26.14.0)(electron-builder-squirrel-windows@26.14.0):
+  app-builder-lib@26.14.0(patch_hash=e4a2e5974e9038e10c4b2d86cf49ef929ffd21e7215b35f2ec567ee73ee41e08)(dmg-builder@26.14.0)(electron-builder-squirrel-windows@26.14.0):
     dependencies:
       '@electron/asar': 3.4.1
       '@electron/fuses': 1.8.0
@@ -16434,10 +16425,44 @@ snapshots:
       elkjs: 0.11.1
       entities: 7.0.1
 
+  better-auth@1.6.22(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.48.4(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9))(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@24.13.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(pg@8.20.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vitest@3.2.4)(vue@3.5.41(typescript@6.0.3)):
+    dependencies:
+      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0)
+      '@better-auth/drizzle-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9))
+      '@better-auth/kysely-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(kysely@0.29.2)
+      '@better-auth/memory-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
+      '@better-auth/mongo-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
+      '@better-auth/prisma-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
+      '@better-auth/telemetry': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)
+      '@better-auth/utils': 0.4.2
+      '@better-fetch/fetch': 1.3.1
+      '@noble/ciphers': 2.2.0
+      '@noble/hashes': 2.2.0
+      better-call: 1.3.7(zod@4.4.3)
+      defu: 6.1.7
+      jose: 6.2.3
+      kysely: 0.29.2
+      nanostores: 1.4.0
+      zod: 4.4.3
+    optionalDependencies:
+      '@sveltejs/kit': 2.48.4(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
+      drizzle-kit: 0.31.10
+      drizzle-orm: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9)
+      next: 16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@24.13.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      pg: 8.20.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      svelte: 5.43.4(@typescript-eslint/types@8.67.0)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.13.3)(@vitest/ui@3.2.4)(happy-dom@20.10.6)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
+      vue: 3.5.41(typescript@6.0.3)
+    transitivePeerDependencies:
+      - '@cloudflare/workers-types'
+      - '@opentelemetry/api'
+
   better-auth@1.6.22(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.48.4(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4))(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9))(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(pg@8.20.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vitest@3.2.4)(vue@3.5.41(typescript@5.9.3)):
     dependencies:
-      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.1.0)(kysely@0.29.2)(nanostores@1.4.0)
-      '@better-auth/drizzle-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.1.0)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9))
+      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0)
+      '@better-auth/drizzle-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9))
       '@better-auth/kysely-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(kysely@0.29.2)
       '@better-auth/memory-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
       '@better-auth/mongo-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
@@ -16464,40 +16489,6 @@ snapshots:
       svelte: 5.43.4(@typescript-eslint/types@8.67.0)
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.24)(@vitest/ui@3.2.4)(happy-dom@20.10.6)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.50.0)(tsx@4.20.6)(yaml@2.9.0)
       vue: 3.5.41(typescript@5.9.3)
-    transitivePeerDependencies:
-      - '@cloudflare/workers-types'
-      - '@opentelemetry/api'
-
-  better-auth@1.6.22(fe359836bf1c8d5e487f4beddcbb26ee):
-    dependencies:
-      '@better-auth/core': 1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0)
-      '@better-auth/drizzle-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.1.0)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9))
-      '@better-auth/kysely-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(kysely@0.29.2)
-      '@better-auth/memory-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
-      '@better-auth/mongo-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
-      '@better-auth/prisma-adapter': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)
-      '@better-auth/telemetry': 1.6.22(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)
-      '@better-auth/utils': 0.4.2
-      '@better-fetch/fetch': 1.3.1
-      '@noble/ciphers': 2.2.0
-      '@noble/hashes': 2.2.0
-      better-call: 1.3.7(zod@4.4.3)
-      defu: 6.1.7
-      jose: 6.2.3
-      kysely: 0.29.2
-      nanostores: 1.4.0
-      zod: 4.4.3
-    optionalDependencies:
-      '@sveltejs/kit': 2.48.4(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(svelte@5.43.4(@typescript-eslint/types@8.67.0))(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0))
-      drizzle-kit: 0.31.10
-      drizzle-orm: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.20.0)(postgres@3.4.9)
-      next: 16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@24.13.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      pg: 8.20.0
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-      svelte: 5.43.4(@typescript-eslint/types@8.67.0)
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.13.3)(@vitest/ui@3.2.4)(happy-dom@20.10.6)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
-      vue: 3.5.41(typescript@6.0.3)
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
       - '@opentelemetry/api'
@@ -17278,7 +17269,7 @@ snapshots:
 
   dmg-builder@26.14.0(electron-builder-squirrel-windows@26.14.0):
     dependencies:
-      app-builder-lib: 26.14.0(dmg-builder@26.14.0)(electron-builder-squirrel-windows@26.14.0)
+      app-builder-lib: 26.14.0(patch_hash=e4a2e5974e9038e10c4b2d86cf49ef929ffd21e7215b35f2ec567ee73ee41e08)(dmg-builder@26.14.0)(electron-builder-squirrel-windows@26.14.0)
       builder-util: 26.14.0
       fs-extra: 10.1.0
       js-yaml: 4.3.2
@@ -17377,7 +17368,7 @@ snapshots:
 
   electron-builder-squirrel-windows@26.14.0(dmg-builder@26.14.0):
     dependencies:
-      app-builder-lib: 26.14.0(dmg-builder@26.14.0)(electron-builder-squirrel-windows@26.14.0)
+      app-builder-lib: 26.14.0(patch_hash=e4a2e5974e9038e10c4b2d86cf49ef929ffd21e7215b35f2ec567ee73ee41e08)(dmg-builder@26.14.0)(electron-builder-squirrel-windows@26.14.0)
       builder-util: 26.14.0
       electron-winstaller: 5.4.0
     transitivePeerDependencies:
@@ -17386,7 +17377,7 @@ snapshots:
 
   electron-builder@26.14.0(electron-builder-squirrel-windows@26.14.0):
     dependencies:
-      app-builder-lib: 26.14.0(dmg-builder@26.14.0)(electron-builder-squirrel-windows@26.14.0)
+      app-builder-lib: 26.14.0(patch_hash=e4a2e5974e9038e10c4b2d86cf49ef929ffd21e7215b35f2ec567ee73ee41e08)(dmg-builder@26.14.0)(electron-builder-squirrel-windows@26.14.0)
       builder-util: 26.14.0
       builder-util-runtime: 9.6.3
       chalk: 4.1.2
@@ -17436,7 +17427,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron-vite@6.0.0-beta.1(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)):
+  electron-vite@6.0.0-beta.1(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)):
     dependencies:
       '@babel/core': 7.29.7
       '@babel/plugin-transform-arrow-functions': 7.29.7(@babel/core@7.29.7)
@@ -17444,7 +17435,7 @@ snapshots:
       esbuild: 0.25.12
       magic-string: 0.30.21
       picocolors: 1.1.1
-      vite: 8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
+      vite: 8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -17779,6 +17770,26 @@ snapshots:
       - eslint-plugin-import-x
       - supports-color
 
+  eslint-config-next@16.3.8(eslint@9.39.0(jiti@2.7.0))(typescript@5.9.3):
+    dependencies:
+      '@next/eslint-plugin-next': 16.3.8(eslint@9.39.0(jiti@2.7.0))
+      eslint: 9.39.0(jiti@2.7.0)
+      eslint-import-resolver-node: 0.3.9
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.0(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.0(jiti@2.7.0))
+      eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.0(jiti@2.7.0))
+      eslint-plugin-react: 7.37.5(eslint@9.39.0(jiti@2.7.0))
+      eslint-plugin-react-hooks: 7.1.1(eslint@9.39.0(jiti@2.7.0))
+      globals: 16.4.0
+      typescript-eslint: 8.46.2(eslint@9.39.0(jiti@2.7.0))(typescript@5.9.3)
+    optionalDependencies:
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - '@typescript-eslint/parser'
+      - eslint-import-resolver-webpack
+      - eslint-plugin-import-x
+      - supports-color
+
   eslint-import-resolver-node@0.3.9:
     dependencies:
       debug: 3.2.7
@@ -17837,6 +17848,33 @@ snapshots:
       tsconfig-paths: 3.15.0
     optionalDependencies:
       '@typescript-eslint/parser': 8.46.2(eslint@9.39.0(jiti@2.7.0))(typescript@5.9.3)
+    transitivePeerDependencies:
+      - eslint-import-resolver-typescript
+      - eslint-import-resolver-webpack
+      - supports-color
+
+  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.0(jiti@2.7.0)):
+    dependencies:
+      '@rtsao/scc': 1.1.0
+      array-includes: 3.1.9
+      array.prototype.findlastindex: 1.2.6
+      array.prototype.flat: 1.3.3
+      array.prototype.flatmap: 1.3.3
+      debug: 3.2.7
+      doctrine: 2.1.0
+      eslint: 9.39.0(jiti@2.7.0)
+      eslint-import-resolver-node: 0.3.9
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.46.2(eslint@9.39.0(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.0(jiti@2.7.0))
+      hasown: 2.0.4
+      is-core-module: 2.16.2
+      is-glob: 4.0.3
+      minimatch: 3.1.2
+      object.fromentries: 2.0.8
+      object.groupby: 1.0.3
+      object.values: 1.2.1
+      semver: 6.3.1
+      string.prototype.trimend: 1.0.9
+      tsconfig-paths: 3.15.0
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
@@ -18311,7 +18349,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  fumadocs-mdx@15.3.1(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.2.2)(fumadocs-core@16.15.1(@mdx-js/mdx@3.1.1)(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.2.2)(lucide-react@1.28.0(react@19.2.7))(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react-router@8.3.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(zod@4.4.3))(mdast-util-directive@3.1.0)(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(rolldown@1.1.5)(vite@8.1.4(@types/node@20.19.24)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)):
+  fumadocs-mdx@15.3.1(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.2.2)(fumadocs-core@16.15.1(@mdx-js/mdx@3.1.1)(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.2.2)(lucide-react@1.28.0(react@19.2.7))(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react-router@8.3.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(zod@4.4.3))(mdast-util-directive@3.1.0)(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(rolldown@1.1.5)(vite@7.2.1(@types/node@20.19.24)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)):
     dependencies:
       '@mdx-js/mdx': 3.1.1
       '@standard-schema/spec': 1.1.0
@@ -18341,7 +18379,7 @@ snapshots:
       next: 16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@20.19.24)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react: 19.2.7
       rolldown: 1.1.5
-      vite: 8.1.4(@types/node@20.19.24)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
+      vite: 7.2.1(@types/node@20.19.24)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -23279,24 +23317,6 @@ snapshots:
       tsx: 4.23.1
       yaml: 2.9.0
 
-  vite@8.1.4(@types/node@20.19.24)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0):
-    dependencies:
-      lightningcss: 1.32.0
-      picomatch: 4.0.5
-      postcss: 8.5.19
-      rolldown: 1.1.5
-      tinyglobby: 0.2.17
-    optionalDependencies:
-      '@types/node': 20.19.24
-      '@vitejs/devtools': 0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4)
-      esbuild: 0.28.2
-      fsevents: 2.3.3
-      jiti: 2.7.0
-      terser: 5.50.0
-      tsx: 4.23.1
-      yaml: 2.9.0
-    optional: true
-
   vite@8.1.4(@types/node@20.19.24)(@vitejs/devtools@0.4.12)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.50.0)(tsx@4.20.6)(yaml@2.9.0):
     dependencies:
       lightningcss: 1.32.0
@@ -23314,7 +23334,7 @@ snapshots:
       tsx: 4.20.6
       yaml: 2.9.0
 
-  vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0):
+  vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.5
@@ -23331,9 +23351,9 @@ snapshots:
       tsx: 4.23.1
       yaml: 2.9.0
 
-  vitefu@1.1.3(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)):
+  vitefu@1.1.3(vite@8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)):
     optionalDependencies:
-      vite: 8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12(@vitejs/devtools-vite@0.4.12)(@vitejs/devtools-vitest@0.4.12)(crossws@0.4.10(srvx@0.12.5))(srvx@0.12.5)(typescript@5.9.3)(valibot@1.4.2(typescript@5.9.3))(vite@8.1.4))(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
+      vite: 8.1.4(@types/node@24.13.3)(@vitejs/devtools@0.4.12)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)
     optional: true
 
   vitefu@1.1.3(vite@8.1.4):

@@ -218,7 +218,10 @@
     },
     "ignoredBuiltDependencies": [
       "electron-winstaller"
-    ]
+    ],
+    "patchedDependencies": {
+      "app-builder-lib@26.14.0": "patches/app-builder-lib@26.14.0.patch"
+    }
   },
   "keywords": [
     "ai",

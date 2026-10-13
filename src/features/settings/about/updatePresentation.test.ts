@@ -6,6 +6,7 @@ import {
   acceptUpdateSnapshot,
   canShowInstallConfirmation,
   getUpdateButtonLabel,
+  getUpdateCheckFeedback,
   getUpdateProgressPresentation,
 } from './updatePresentation'
 
@@ -23,6 +24,26 @@ const state: DesktopUpdateState = {
 }
 
 describe('update presentation', () => {
+  it.each([
+    ['upToDate', 'success', '当前已是最新版本。'],
+    ['downloading', 'info', '发现新版本，正在下载…'],
+    ['ready', 'success', '更新已下载，请查看更新详情。'],
+    ['downloaded', 'success', '更新已下载，请查看更新详情。'],
+    ['error', 'error', '检查更新失败，请重试。'],
+    ['unsupported', 'warning', '当前客户端暂不支持自动更新，请手动下载。'],
+  ] as const)('reports the manual check result for %s', (status, type, content) => {
+    expect(getUpdateCheckFeedback({ ...state, status })).toEqual({ type, content })
+  })
+
+  it('waits for a check result and includes the release version or service error', () => {
+    expect(getUpdateCheckFeedback({ ...state, status: 'checking' })).toBeNull()
+    expect(getUpdateCheckFeedback({ ...state, status: 'idle' })).toBeNull()
+    expect(getUpdateCheckFeedback({ ...state, status: 'downloading', release: { version: '0.3.1', notes: '' } }))
+      .toEqual({ type: 'info', content: '发现新版本 v0.3.1，正在下载…' })
+    expect(getUpdateCheckFeedback({ ...state, status: 'error', message: '更新源不可用' }))
+      .toEqual({ type: 'error', content: '更新源不可用' })
+  })
+
   it('does not overwrite a newer subscription event with a stale IPC response', () => {
     const stale = { ...state, revision: 9, progress: 50 }
     expect(acceptUpdateSnapshot(state, stale)).toBe(state)

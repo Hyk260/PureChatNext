@@ -4,6 +4,27 @@ export function acceptUpdateSnapshot(previous: DesktopUpdateState | null, next: 
   return previous && previous.revision > next.revision ? previous : next
 }
 
+export function getUpdateCheckFeedback(state: DesktopUpdateState) {
+  switch (state.status) {
+    case 'upToDate':
+      return { type: 'success' as const, content: state.message || '当前已是最新版本。' }
+    case 'downloading':
+      return {
+        type: 'info' as const,
+        content: state.release ? `发现新版本 v${state.release.version}，正在下载…` : '发现新版本，正在下载…',
+      }
+    case 'ready':
+    case 'downloaded':
+      return { type: 'success' as const, content: state.message || '更新已下载，请查看更新详情。' }
+    case 'error':
+      return { type: 'error' as const, content: state.message || '检查更新失败，请重试。' }
+    case 'unsupported':
+      return { type: 'warning' as const, content: state.message || '当前客户端暂不支持自动更新，请手动下载。' }
+    default:
+      return null
+  }
+}
+
 const BUTTON_LABELS: Record<DesktopUpdateStatus, string> = {
   idle: '检查更新',
   checking: '正在检查',

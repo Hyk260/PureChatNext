@@ -4,20 +4,28 @@ import { Progress, Spin } from 'antd'
 import type { DesktopUpdateStatus } from '@/types/desktopUpdater'
 import { getUpdateProgressPresentation } from './updatePresentation'
 
-export function UpdateLogo({ status, progress }: { status: DesktopUpdateStatus; progress: number }) {
+export function UpdateLogo({
+  status,
+  progress,
+  checking,
+}: {
+  status: DesktopUpdateStatus
+  progress: number
+  checking: boolean
+}) {
   const { visible, completed, percent } = getUpdateProgressPresentation(status, progress)
+
   return (
     <Flex className='relative flex-center size-20 shrink-0 rounded-full bg-secondary'>
       <PureChatMark size={44} />
-      {status === 'checking' ? (
-        <div
-          className='absolute -bottom-1 -right-1 flex-center rounded-full bg-secondary p-1'
-          role='status'
-          aria-label='正在检查更新'
-        >
-          <Spin size='small' />
-        </div>
-      ) : null}
+      <div
+        className={`absolute -bottom-1 -right-1 flex-center rounded-full bg-secondary p-1 ${checking ? 'visible' : 'invisible'}`}
+        role={checking ? 'status' : undefined}
+        aria-label={checking ? '正在检查更新' : undefined}
+        aria-hidden={!checking}
+      >
+        <Spin size='small' />
+      </div>
       {visible ? (
         <Progress
           className='absolute inset-0'

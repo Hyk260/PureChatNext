@@ -20,8 +20,8 @@ pnpm --filter purechat-desktop dev
 
 此模式下需另行启动兼容的 Next BFF。同时跑多份开发实例时，可用 `PURECHAT_DESKTOP_VITE_PORT` 覆盖渲染端口。
 
-开发环境默认允许多开，并始终使用 `purechat-desktop-dev` 独立数据目录，因此开发版与已安装的 PureChat 可以同时运行；将
-`PURECHAT_DESKTOP_MULTI_INSTANCE=false` 写入 `apps/desktop/.env.desktop.local` 可切换回单实例，生产安装包未设置该变量时仍保持单实例。
+非 Windows 开发环境默认允许多开，并始终使用 `purechat-desktop-dev` 独立数据目录，因此开发版与已安装的 PureChat 可以同时运行。Windows 始终启用单实例，以确保浏览器授权回跳由已打开的应用窗口处理。将
+`PURECHAT_DESKTOP_MULTI_INSTANCE=false` 写入 `apps/desktop/.env.desktop.local` 可在其他平台切换回单实例；生产安装包未设置该变量时默认单实例。
 
 ## 构建与打包命令
 
@@ -32,7 +32,7 @@ pnpm build:desktop
 # 当前宿主平台的未打包目录
 pnpm package:desktop
 
-# macOS DMG + ZIP，arm64 和 x64
+# macOS DMG + ZIP，arm64
 pnpm package:desktop:mac
 
 # Windows NSIS 安装包 + portable 免安装 EXE，x64
@@ -52,7 +52,7 @@ pnpm package:desktop:win:portable
 | --- | --- | --- | --- |
 | `build:desktop` | 当前平台 | `dist/` | 只验证编译结果 |
 | `package:desktop` | 当前平台 | 未打包目录 | 本地调试、安装包前验收 |
-| `package:desktop:mac` | macOS arm64/x64 | `.dmg`、`.zip` | macOS 正式分发 |
+| `package:desktop:mac` | macOS arm64 | `.dmg`、`.zip` | macOS 分发 |
 | `package:desktop:win` | Windows x64 | NSIS `.exe`、portable `.exe` | Windows 正式分发和绿色运行 |
 | `package:desktop:win:portable` | Windows x64 | portable `.exe` | 只需要免安装包 |
 
@@ -62,7 +62,41 @@ pnpm package:desktop:win:portable
 - Windows 安装包：`PureChat-${version}-setup.exe`
 - Windows 免安装包：`PureChat-${version}-portable.exe`
 
-实际文件名中的 `${version}` 来自 `apps/desktop/package.json`，`${arch}` 是 `arm64` 或 `x64`。
+实际文件名中的 `${version}` 来自根 `package.json`，构建时自动同步至桌面 manifest。当前 macOS 仅生成 `arm64`，Windows 仅生成 `x64`。
+
+### GitHub Actions 手动打包
+
+工作流 [Desktop release](../../.github/workflows/desktop-release.yml) 仅手动触发，每次同时构建 Windows x64 和 macOS arm64，共四个分发文件。
+
+1. 将工作流合入 `main`，在根 `package.json` 维护 `X.Y.Z` 稳定版本，并更新 [build/release-notes.md](build/release-notes.md)。首版流程不支持 RC/Beta 版本号。
+2. 打开 GitHub 仓库的 **Actions → Desktop release → Run workflow**，选择要构建的分支。所有 job 都使用触发时的固定 commit，无需另填版本。
+3. 构建通过后，从运行页下载 `desktop-X.Y.Z-windows-x64` 和 `desktop-X.Y.Z-mac-arm64` Artifacts，保留期为 30 天。
+4. 两端全部成功后，工作流汇总四个文件到 `vX.Y.Z` 的 Release 草稿，并生成 Installer、Portable、DMG、ZIP 下载表格。检查草稿和安装包后手动发布；表格中的公开下载链接在发布后可用。
+
+Windows 使用 `windows-2022`，macOS 使用 `macos-15`，均使用 Node.js 22.23.2 和 pnpm 10.33.4。Node 版本与 Docker 工作流保持一致，满足当前依赖要求的 `>=22.22.0`。构建前先检查稳定版本、发行说明、服务地址和工作流分支条件；每个平台打包后校验预期文件存在且非空，再上传精确文件名。一端失败不会取消另一端，成功端的 Artifact 仍可下载，但不会创建或更新草稿；不会上传解包目录、blockmap 或调试 YAML。
+
+默认官方服务地址为 `https://next.purechat.cn`。需要覆盖时，在仓库 **Settings → Secrets and variables → Actions → Variables** 设置非敏感变量 `PURECHAT_DESKTOP_CLOUD_URL`，必须是无用户名/密码的 HTTP(S) 地址，不要误填到 Secrets。此流程不配置自动更新源，不需要数据库、AI Key、签名证书或 PAT；草稿汇总 job 使用内置 `GITHUB_TOKEN` 的 `contents: write` 权限，其余 job 仅有读取权限。仓库默认令牌权限保持只读即可，GitHub 会按 job 声明授予草稿写权限。
+
+草稿记录完整 commit SHA。同版本、同 commit 重跑会替换四个产物；已公开版本、不同 commit 的草稿、指向不同 commit 的 tag 均会明确失败。源代码变化后应使用新版本；若需要重建未发布的同版本，应先人工处理旧草稿及冲突 tag。API 或网络错误也会直接失败，不会被当作版本不存在。
+
+现有 tag 发布工作流仍然保留。桌面发行请先运行本流程生成草稿，再手动发布；不要提前推送 tag 让旧工作流公开同版本，否则本流程会拒绝覆盖。GitHub 的 Release API 对相对默认分支改动了工作流的 commit 要求额外的 workflow 写权限，内置 `GITHUB_TOKEN` 无法获得该权限；因此 `prepare` 会提前比较所选 commit 与默认分支的 `.github/workflows/`，不一致时要求先合入 `main`。业务源码可以选择其他分支，只要工作流内容与默认分支一致。[GitHub Release 权限说明](https://docs.github.com/en/rest/releases/releases#create-a-release)
+
+### 手动打包失败排查
+
+| 失败阶段 / 提示 | 处理方式 |
+| --- | --- |
+| 找不到 Run workflow | 确认工作流已进入默认分支，且仓库 Actions 未禁用 |
+| `prepare` 提示工作流与默认分支不同 | 先将 `.github/workflows/` 的改动合入默认分支，再重新触发 |
+| 版本、说明或 `PURECHAT_DESKTOP_CLOUD_URL` 不合法 | 根版本使用 `X.Y.Z`，说明文件非空，服务地址填入仓库 Variable；未配置 Variable 时使用默认地址 |
+| frozen lockfile 不一致 | 本地用 pnpm 同步 manifest 与 lockfile，一起提交；不要在 CI 中改成非冻结安装 |
+| 下载依赖或上传产物时网络失败 | 查看具体失败步骤后重跑；同一次运行的 Re-run all jobs 会替换同名 Artifact |
+| 草稿步骤出现 403 / Resource not accessible by integration | 确认草稿 job 的 `contents: write` 未被删除，并检查组织策略；无需向构建 job 分发 PAT 或服务端密钥 |
+| 草稿步骤提示已公开 / commit 或 tag 冲突 | 使用新版本，或人工处理未发布草稿及冲突 tag；脚本不会覆盖公开版本 |
+| 草稿创建成功但文件上传失败 | 草稿仍未发布，使用同 commit 重跑，四个文件上传成功后再检查并发布 |
+
+`prepare` / `draft` 脚本只依赖 Node 标准库；GitHub 的 Ubuntu runner 已提供 `git`、`gh`，无需额外安装项目依赖。手动运行 CLI 时需在仓库根目录执行，发行步骤还需设置 `GITHUB_REPOSITORY`、完整 `GITHUB_SHA` 和具有仓库写权限的 `GH_TOKEN`；Actions 会自动注入这些值。
+
+首版 Windows 无正式代码签名，macOS 仅使用 ad-hoc 签名，没有 Developer ID 签名或公证。系统可能显示安全提示；macOS 自动安装更新不作为此流程验收目标。发布前应实际验证 Windows 安装版、Portable，以及 Apple Silicon 上的 DMG、ZIP 启动、版本、服务连接和登录回调。
 
 ## DMG、ZIP、NSIS 与 portable 的区别
 

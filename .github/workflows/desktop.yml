@@ -1,3 +1,6 @@
+# 桌面 CI：main 推送 / PR 时检查源码、测试和 Linux 解包归档，不生成 Windows/macOS 安装包。
+# 手动生成四个分发文件并创建草稿，请使用 desktop-release.yml。
+# 无需数据库、服务端密钥或签名证书；contents: read 即可完成 checkout 和检查。
 name: Desktop package checks
 
 on:
@@ -9,6 +12,7 @@ permissions:
   contents: read
 
 concurrency:
+  # 同一分支只保留最新检查；与需要保留产物的手动发行流程分开。
   group: desktop-${{ github.ref }}
   cancel-in-progress: true
 
@@ -22,7 +26,7 @@ jobs:
           version: 10.33.4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.23.2 # 满足当前依赖的 Node >=22.22.0 要求。
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Desktop source checks
@@ -30,4 +34,5 @@ jobs:
       - name: Desktop regression tests
         run: pnpm --filter purechat-desktop test
       - name: Build and verify unpacked desktop artifact
+        # --dir 仅验收 app.asar 的边界、入口和体积，不等同于双平台安装包运行验收。
         run: pnpm package:desktop

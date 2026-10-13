@@ -1,5 +1,7 @@
 # 推送 vX.Y.Z tag 时创建 GitHub Release；同 tag 已存在则跳过，不覆盖。
 # tag 必须等于 package.json version，且 CHANGELOG.md 必须有对应「## X.Y.Z」章节。
+# 此流程只创建公开版本说明，不构建桌面安装包；桌面发行请先运行 desktop-release.yml 生成草稿。
+# GH_TOKEN 使用内置 GITHUB_TOKEN；job 的 contents: write 负责创建 Release，不需要额外 PAT。
 #
 # 触发方法：
 #   git tag v0.2.8
@@ -14,6 +16,7 @@ permissions:
   contents: write
 
 concurrency:
+  # 与 desktop-release.yml 的草稿 job 共享同版本锁，避免同时写入同一个 Release。
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
@@ -27,8 +30,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           tag="${GITHUB_REF_NAME}"
-          if gh release view "$tag" >/dev/null 2>&1; then
+          # 先完整读取版本列表，API / 权限错误直接失败；不要把 gh view 失败一律当作版本不存在。
+          releases="$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --paginate --slurp)"
+          if jq -e --arg tag "$tag" 'any(.[][]; .tag_name == $tag)' <<< "$releases" >/dev/null; then
             echo "Release ${tag} already exists, skip"
             exit 0
           fi

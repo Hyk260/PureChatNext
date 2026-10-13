@@ -15,6 +15,7 @@ import { getDesktopRuntimeConfig } from '@/envs/desktop'
 import { ProtocolManager } from './ProtocolManager'
 import { TrayManager } from './TrayManager'
 import { WindowManager, resolvePreloadPath } from './WindowManager'
+import { shouldEnforceSingleInstanceLock } from './instancePolicy'
 
 const protocolScheme = 'purechat'
 const localDevelopmentHosts = new Set(['127.0.0.1', '::1', 'localhost'])
@@ -104,7 +105,8 @@ export class DesktopApp {
 
   async bootstrap() {
     const { PURECHAT_DESKTOP_MULTI_INSTANCE } = getDesktopRuntimeConfig(!app.isPackaged)
-    if (!PURECHAT_DESKTOP_MULTI_INSTANCE && !app.requestSingleInstanceLock()) {
+    if (shouldEnforceSingleInstanceLock(process.platform, PURECHAT_DESKTOP_MULTI_INSTANCE) &&
+      !app.requestSingleInstanceLock()) {
       app.quit()
       return
     }

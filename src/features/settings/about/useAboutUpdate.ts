@@ -1,29 +1,44 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import { CURRENT_VERSION } from '@/const/version'
 import { getDesktopApi } from '@/types/desktop'
+import type { DesktopApi } from '@/types/desktop'
 import type { DesktopUpdatePreferences, DesktopUpdateState, DesktopUpdateStatus } from '@/types/desktopUpdater'
 
-import { acceptUpdateSnapshot, canShowInstallConfirmation } from './updatePresentation'
+import { acceptUpdateSnapshot, canShowInstallConfirmation, getUpdateCheckFeedback } from './updatePresentation'
+
+const CHECK_MESSAGE_KEY = 'desktop-update-check'
+// Keep the last confirmed snapshot across page remounts while refreshing from Electron.
+const updateSnapshots = new WeakMap<DesktopApi, DesktopUpdateState>()
 
 export function useAboutUpdate() {
   const { message } = useApp()
   const [searchParams, setSearchParams] = useSearchParams()
   const api = getDesktopApi()
   const isDesktop = Boolean(api)
-  const [desktopState, setDesktopState] = useState<DesktopUpdateState | null>(null)
+  const [desktopState, setDesktopState] = useState<DesktopUpdateState | null>(() =>
+    api ? updateSnapshots.get(api) ?? null : null
+  )
   const [loadError, setLoadError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const [clearingCache, setClearingCache] = useState(false)
   const [installConfirmationOpen, setInstallConfirmationOpen] = useState(false)
   const [installing, setInstalling] = useState(false)
   const busyRef = useRef(false)
   const aliveRef = useRef(true)
+  const checkMessageRef = useRef(false)
 
-  const receive = (next: DesktopUpdateState) => {
-    if (aliveRef.current) setDesktopState((previous) => acceptUpdateSnapshot(previous, next))
-  }
+  const receive = useCallback(
+    (next: DesktopUpdateState) => {
+      if (!api || !aliveRef.current) return
+      const snapshot = acceptUpdateSnapshot(updateSnapshots.get(api) ?? null, next)
+      updateSnapshots.set(api, snapshot)
+      setDesktopState(snapshot)
+    },
+    [api]
+  )
 
   useEffect(() => {
     aliveRef.current = true
@@ -31,22 +46,30 @@ export function useAboutUpdate() {
       return () => {
         aliveRef.current = false
       }
-    const unsubscribe = api.updater.onStateChange((next) => {
-      setDesktopState((previous) => acceptUpdateSnapshot(previous, next))
-    })
+    const unsubscribe = api.updater.onStateChange(receive)
     api.updater
       .getState()
-      .then((next) => {
-        if (aliveRef.current) setDesktopState((previous) => acceptUpdateSnapshot(previous, next))
-      })
+      .then(receive)
       .catch(() => {
         if (aliveRef.current) setLoadError('无法读取客户端更新状态，请重新打开页面后重试。')
       })
     return () => {
       aliveRef.current = false
       unsubscribe()
+      if (checkMessageRef.current) {
+        checkMessageRef.current = false
+        message.destroy(CHECK_MESSAGE_KEY)
+      }
     }
-  }, [api])
+  }, [api, receive, message])
+
+  useEffect(() => {
+    if (!checkMessageRef.current || !desktopState) return
+    const feedback = getUpdateCheckFeedback(desktopState)
+    if (!feedback) return
+    checkMessageRef.current = false
+    message.open({ key: CHECK_MESSAGE_KEY, ...feedback, duration: 3 })
+  }, [desktopState, message])
 
   const requestedInstallConfirmation =
     isDesktop && canShowInstallConfirmation(desktopState?.status || 'idle') && searchParams.get('update') === 'install'
@@ -87,10 +110,20 @@ export function useAboutUpdate() {
     if (!api || busyRef.current) return
     busyRef.current = true
     setPending(true)
+    checkMessageRef.current = true
+    message.open({ key: CHECK_MESSAGE_KEY, type: 'loading', content: '正在检查更新…', duration: 0 })
     try {
       receive(await api.updater.check())
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '检查更新失败，请重试。')
+      checkMessageRef.current = false
+      if (aliveRef.current) {
+        message.open({
+          key: CHECK_MESSAGE_KEY,
+          type: 'error',
+          content: error instanceof Error ? error.message : '检查更新失败，请重试。',
+          duration: 3,
+        })
+      }
     } finally {
       busyRef.current = false
       if (aliveRef.current) setPending(false)
@@ -115,6 +148,7 @@ export function useAboutUpdate() {
     if (!api || !desktopState?.developmentCachePath || busyRef.current) return
     busyRef.current = true
     setPending(true)
+    setClearingCache(true)
     try {
       receive(await api.updater.clearCache())
       message.success('下载安装包缓存已清理')
@@ -122,7 +156,10 @@ export function useAboutUpdate() {
       message.error(error instanceof Error ? error.message : '清理更新缓存失败，请重试。')
     } finally {
       busyRef.current = false
-      if (aliveRef.current) setPending(false)
+      if (aliveRef.current) {
+        setPending(false)
+        setClearingCache(false)
+      }
     }
   }
 
@@ -138,11 +175,12 @@ export function useAboutUpdate() {
     status,
     version,
     pending,
+    clearingCache,
     installConfirmationOpen: installConfirmationOpen || requestedInstallConfirmation,
     installing,
     loadError,
     feedback: desktopState?.message || loadError,
-    autoUpdate: desktopState?.preferences.autoUpdate ?? true,
+    autoUpdate: desktopState?.preferences.autoUpdate ?? false,
     check,
     clearCache,
     confirmInstall,

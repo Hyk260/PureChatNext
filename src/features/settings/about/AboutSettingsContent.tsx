@@ -25,6 +25,7 @@ import { getDesktopApi } from '@/types/desktop'
 import { UpdateLogo } from './UpdateLogo'
 import { UpdateLogsModal } from './UpdateLogsModal'
 import { canShowInstallConfirmation, getUpdateButtonLabel } from './updatePresentation'
+import { useDelayedLoading } from './useDelayedLoading'
 import { useAboutUpdate } from './useAboutUpdate'
 
 const RESOURCES = [
@@ -69,12 +70,14 @@ export function AboutSettingsContent() {
   const [logsOpen, setLogsOpen] = useState(false)
   const progress = update.desktopState?.progress || 0
   const checking = update.status === 'checking'
+  const showLoading = useDelayedLoading(checking || update.pending)
   const downloading = update.status === 'downloading'
   const installing = update.status === 'installing'
   const desktopLoading = update.isDesktop && !update.desktopState
   const disabled = update.pending || checking || downloading || installing || desktopLoading
   const preferencesDisabled = update.pending || installing || desktopLoading
   const cacheClearDisabled = update.pending || checking || downloading || installing
+  const keepCacheButtonStable = !update.clearingCache && (update.pending || checking)
   const developmentCachePath = update.desktopState?.developmentCachePath
   const preferences = update.desktopState?.preferences
   const versionLabel = update.version ? `v${update.version}` : '版本读取中'
@@ -83,8 +86,26 @@ export function AboutSettingsContent() {
   const installationSupport = update.desktopState?.installationSupport || null
   const canInstall = update.status === 'ready' && installationSupport?.supported
   const feedbackIsError = update.status === 'error' || Boolean(update.loadError)
-  const feedbackIcon = feedbackIsError ? CircleX : TriangleAlert
-  const feedbackColor = feedbackIsError ? 'text-red!' : 'text-amber-600! dark:text-amber-400!'
+  const currentFeedback = update.feedback ? { message: update.feedback, isError: feedbackIsError } : null
+
+  const [settledFeedback, setSettledFeedback] = useState(() => ({
+    status: update.status,
+    feedback: currentFeedback,
+  }))
+  if (
+    update.status !== 'checking' &&
+    (settledFeedback.status !== update.status ||
+      settledFeedback.feedback?.message !== currentFeedback?.message ||
+      settledFeedback.feedback?.isError !== currentFeedback?.isError)
+  ) {
+    setSettledFeedback({ status: update.status, feedback: currentFeedback })
+  }
+
+  const displayedFeedback = update.status === 'checking' ? settledFeedback.feedback : currentFeedback
+  const displayedFeedbackIcon = displayedFeedback?.isError ? CircleX : TriangleAlert
+  const displayedFeedbackColor = displayedFeedback?.isError
+    ? 'text-red!'
+    : 'text-amber-600! dark:text-amber-400!'
 
   const openExternal = async (href: string) => {
     try {
@@ -172,7 +193,7 @@ export function AboutSettingsContent() {
         </Flex>
         <Flex className='flex-between-wrap gap-5 py-6'>
           <Flex className='items-center gap-4 flex-1 min-w-0'>
-            <UpdateLogo status={update.status} progress={progress} />
+            <UpdateLogo status={update.status} progress={progress} checking={showLoading} />
             <Flex className='flex-col items-start gap-2 min-w-0'>
               <Text as='h3' className='m-0 text-xl font-semibold'>
                 {SITE_NAME}
@@ -191,13 +212,13 @@ export function AboutSettingsContent() {
                   disabled={!update.version}
                   onClick={handleCopyVersion}
                 />
-                {update.feedback ? (
+                {displayedFeedback ? (
                   <ActionIcon
-                    aria-label={`${feedbackIsError ? '更新错误' : '更新提示'}：${update.feedback}`}
-                    className={feedbackColor}
-                    icon={feedbackIcon}
+                    aria-label={`${displayedFeedback.isError ? '更新错误' : '更新提示'}：${displayedFeedback.message}`}
+                    className={displayedFeedbackColor}
+                    icon={displayedFeedbackIcon}
                     size='small'
-                    title={update.feedback}
+                    title={displayedFeedback.message}
                   />
                 ) : null}
                 {update.isDesktop ? (
@@ -215,7 +236,7 @@ export function AboutSettingsContent() {
           {update.isDesktop ? (
             <Button
               type={hasUpdate ? 'primary' : 'default'}
-              loading={checking || update.pending}
+              loading={showLoading}
               disabled={disabled}
               onClick={handleUpdate}
             >
@@ -232,7 +253,9 @@ export function AboutSettingsContent() {
               </Text>
             </Flex>
             <Switch
+              key={desktopLoading ? 'loading' : 'ready'}
               aria-label='自动更新'
+              className={desktopLoading ? 'invisible' : undefined}
               checked={update.autoUpdate}
               disabled={preferencesDisabled}
               onChange={update.setAutoUpdate}
@@ -257,7 +280,9 @@ export function AboutSettingsContent() {
                 />
               ) : null}
               <Switch
+                key={desktopLoading ? 'loading' : 'ready'}
                 aria-label='测试计划'
+                className={desktopLoading ? 'invisible' : undefined}
                 checked={preferences?.testPlan || false}
                 disabled={preferencesDisabled}
                 onChange={(testPlan) => update.savePreferences({ testPlan })}
@@ -288,7 +313,12 @@ export function AboutSettingsContent() {
                 缓存路径：{developmentCachePath}
               </Text>
             </Flex>
-            <Button loading={update.pending} disabled={cacheClearDisabled} onClick={update.clearCache}>
+            <Button
+              className={keepCacheButtonStable ? 'disabled:opacity-100!' : undefined}
+              loading={update.clearingCache}
+              disabled={cacheClearDisabled}
+              onClick={update.clearCache}
+            >
               清理缓存
             </Button>
           </Flex>

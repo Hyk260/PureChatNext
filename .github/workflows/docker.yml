@@ -1,13 +1,9 @@
-# Docker 工作流：校验 Compose、冒烟测试，并在 main / tag / 手动触发时推送多架构镜像到 GHCR。
+# Docker 工作流：仅手动触发，校验 Compose、审计依赖、冒烟测试后推送多架构镜像到 GHCR。
 # Actions → Docker → Run workflow；publish=false 只验证，publish=true 在门禁通过后推送镜像。
 # 发布用内置 GITHUB_TOKEN（packages: write），无需 Docker Hub 凭据；首次推送后需将 GHCR 包设为 Public 供匿名拉取。
 name: Docker
 
 on:
-  pull_request:
-  push:
-    branches: [main]
-    tags: ['v*']
   workflow_dispatch:
     inputs:
       publish:
@@ -31,8 +27,9 @@ env:
 
 jobs:
   config-and-unit:
-    name: Compose config and health route tests
+    name: Dependency audit, Compose config and health tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -47,6 +44,9 @@ jobs:
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
+      - name: Audit production dependencies for High/Critical vulnerabilities
+        # 先执行轻量门禁，避免依赖审计失败时仍花时间构建镜像；最终镜像另由 Trivy 扫描。
+        run: pnpm audit --prod --no-optional --audit-level high
       - name: Validate Compose
         run: pnpm docker:validate
       - name: Test health helpers and route
@@ -54,7 +54,9 @@ jobs:
 
   amd64-smoke:
     name: amd64 image and stack smoke
+    needs: config-and-unit
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -78,8 +80,8 @@ jobs:
           platforms: linux/amd64
           tags: purechat-next:local
           pull: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=docker-linux-amd64
+          cache-to: type=gha,mode=max,scope=docker-linux-amd64
       - name: Start and verify production stack
         run: pnpm docker:verify:local -- --skip-build --external-scan --platform linux/amd64
       - name: 扫描 amd64 应用镜像的 High/Critical 漏洞
@@ -93,31 +95,10 @@ jobs:
           severity: CRITICAL,HIGH
           vuln-type: os,library
 
-  production-audit:
-    name: Production dependency audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 10.33.4
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22.23.2
-          cache: pnpm
-      - name: Install production dependency graph
-        run: pnpm install --frozen-lockfile --prod
-      - name: Audit production dependencies for High/Critical vulnerabilities
-        # pnpm 的共享锁文件会将 optional peer 的开发工具链计入 --prod；这些依赖不进入生产镜像。
-        # 最终镜像中的 OS/Node 依赖由 amd64 Trivy 门禁补充扫描。
-        run: pnpm audit --prod --no-optional --audit-level high
-
   publish-platform:
     name: Publish ${{ matrix.platform }}
-    needs: [config-and-unit, amd64-smoke, production-audit]
-    if: |
-      (github.event_name == 'workflow_dispatch' && inputs.publish == true) ||
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')))
+    needs: amd64-smoke
+    if: inputs.publish
     permissions:
       contents: read
       packages: write
@@ -126,12 +107,15 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
+            cache-scope: docker-linux-amd64
             artifact-name: digests-linux-amd64
             runner: ubuntu-latest
           - platform: linux/arm64
+            cache-scope: docker-linux-arm64
             artifact-name: digests-linux-arm64
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v4
@@ -150,22 +134,26 @@ jobs:
         with:
           context: .
           platforms: ${{ matrix.platform }}
+          pull: true
           push: true
           provenance: false
           outputs: type=image,name=${{ steps.image.outputs.name }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=publish-${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=publish-${{ matrix.platform }}
+          cache-from: type=gha,scope=${{ matrix.cache-scope }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
       - name: Export digest
+        env:
+          BUILD_DIGEST: ${{ steps.build.outputs.digest }}
         run: |
+          [[ "$BUILD_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || { echo '无效或缺失的构建 digest'; exit 1; }
           mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
+          touch "/tmp/digests/${BUILD_DIGEST#sha256:}"
       - uses: actions/upload-artifact@v4
         with:
           # Actions 没有 replace() 函数；矩阵显式提供不含 / 的 Artifact 名称。
           name: ${{ matrix.artifact-name }}
           path: /tmp/digests/*
           if-no-files-found: error
+          overwrite: true
           retention-days: 1
       - name: 写入平台构建摘要
         if: always()
@@ -199,13 +187,12 @@ jobs:
     # 两个平台均成功后才合并 manifest，避免给不完整镜像打 latest / 版本 tag。
     name: Merge multi-arch manifest
     needs: publish-platform
-    if: |
-      (github.event_name == 'workflow_dispatch' && inputs.publish == true) ||
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')))
+    if: inputs.publish
     permissions:
       contents: read
       packages: write
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - name: Normalize image name
@@ -242,8 +229,9 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
         run: |
           set -euo pipefail
-          mapfile -t digests < <(printf '%s\n' *)
-          [[ ${#digests[@]} -gt 0 ]] || { echo "未找到 digest 产物"; exit 1; }
+          shopt -s nullglob
+          digests=(*)
+          [[ ${#digests[@]} -eq 2 ]] || { echo '必须包含 amd64 和 arm64 两个 digest 产物'; exit 1; }
           tag_args=()
           while IFS= read -r tag; do
             [[ -n "$tag" ]] || continue
@@ -252,6 +240,7 @@ jobs:
           [[ ${#tag_args[@]} -gt 0 ]] || { echo "metadata-action 未生成任何 tag"; exit 1; }
           sources=()
           for d in "${digests[@]}"; do
+            [[ -f "$d" && "$d" =~ ^[a-f0-9]{64}$ ]] || { echo "无效的 digest 产物：$d"; exit 1; }
             sources+=("${IMAGE}@sha256:${d}")
           done
           docker buildx imagetools create "${tag_args[@]}" "${sources[@]}"

@@ -39,7 +39,7 @@ class IMServerHttp {
       (response) => {
         const { data, status } = response
         if (status === 200) {
-          return data
+          return response
         }
         return Promise.reject(data)
       },
@@ -48,11 +48,12 @@ class IMServerHttp {
   }
 
   async request<T = IMApiResponse>(config: AxiosRequestConfig): Promise<T> {
-    return this.service.request({
+    const response = await this.service.request<T>({
       ...config,
       method: 'post',
       url: buildURL(config.url || ''),
     })
+    return response.data
   }
 }
 

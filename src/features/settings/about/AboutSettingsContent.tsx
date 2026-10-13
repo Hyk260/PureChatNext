@@ -65,7 +65,7 @@ function ResourceRow({
 }
 
 export function AboutSettingsContent() {
-  const { message, modal } = useApp()
+  const { message } = useApp()
   const update = useAboutUpdate()
   const [logsOpen, setLogsOpen] = useState(false)
   const progress = update.desktopState?.progress || 0
@@ -87,6 +87,7 @@ export function AboutSettingsContent() {
   const canInstall = update.status === 'ready' && installationSupport?.supported
   const feedbackIsError = update.status === 'error' || Boolean(update.loadError)
   const currentFeedback = update.feedback ? { message: update.feedback, isError: feedbackIsError } : null
+  const showDebugPanel = update.isDesktop
 
   const [settledFeedback, setSettledFeedback] = useState(() => ({
     status: update.status,
@@ -134,6 +135,8 @@ export function AboutSettingsContent() {
   }
 
   const openDebug = async () => {
+    if (!update.isDesktop) return
+
     const api = getDesktopApi()
     if (api) {
       try {
@@ -143,12 +146,6 @@ export function AboutSettingsContent() {
       }
       return
     }
-    modal.info({
-      title: '浏览器开发者工具',
-      content:
-        '在浏览器菜单中选择“开发者工具”。Chrome / Edge：macOS 使用 ⌥⌘I，Windows / Linux 使用 F12 或 Ctrl+Shift+I。',
-      okText: '知道了',
-    })
   }
 
   const handleChannelChange = (value: string | number) => {
@@ -223,10 +220,10 @@ export function AboutSettingsContent() {
                 ) : null}
                 {update.isDesktop ? (
                   <ActionIcon
-                    aria-label='查看桌面更新日志'
+                    aria-label='查看更新诊断日志'
                     icon={FileText}
                     size='small'
-                    title='查看桌面更新日志'
+                    title='查看更新诊断日志'
                     onClick={() => setLogsOpen(true)}
                   />
                 ) : null}
@@ -347,7 +344,7 @@ export function AboutSettingsContent() {
               onAction={() => openExternal(resource.href)}
             />
           ))}
-          <ResourceRow icon={Bug} title='调试面板' action='打开' onAction={openDebug} />
+          {showDebugPanel ? <ResourceRow icon={Bug} title='调试面板' action='打开' onAction={openDebug} /> : null}
         </Flex>
       </Block>
 

@@ -79,7 +79,7 @@ curl -fsSL https://raw.githubusercontent.com/Hyk260/PureChatNext/main/docker-com
   | sudo APP_URL=https://chat.example.com bash
 ```
 
-应用镜像：`ghcr.io/hyk260/purechat-next`（`main` / `v*` tag 由 CI 推送）。不便拉镜像时再本机打离线包：
+应用镜像：`ghcr.io/hyk260/purechat-next`，通过 **Actions → Docker → Run workflow** 手动发布。选择 `main` 时更新 `latest`，每次发布同时生成 `sha-*` 标签；选择版本 tag 时生成对应版本标签。取消勾选 `publish` 只执行依赖审计、配置校验、镜像构建、冒烟和漏洞扫描，不推送镜像。PR、push 和创建 tag 均不会自动运行此工作流。不便拉镜像时再本机打离线包：
 
 ```bash
 pnpm docker:pack
@@ -233,7 +233,7 @@ pnpm docker:upload -- --host 203.0.113.10 --user root --dry-run
 
 ### 校验与冒烟
 
-`docker:validate` 无参数。检查开发 / 生产 / 在线 overlay / 验证 overlay 的 Compose `config`，以及 `install.sh`、`install-online.sh`、`start-ip.sh`、`upload-offline.sh` 的 bash 语法。CI 每次 PR 都会跑。
+`docker:validate` 无参数。检查开发 / 生产 / 在线 overlay / 验证 overlay 的 Compose `config`，以及 `install.sh`、`install-online.sh`、`start-ip.sh`、`upload-offline.sh` 的 bash 语法。手动 Docker 工作流先执行生产依赖审计、配置校验和健康测试，通过后才构建镜像。
 
 `docker:verify:local` 用临时 `.env` 和 `docker-compose.verify.yml` 拉起隔离的 app + PostgreSQL + Redis，检查安全基线、`GET /api/health`、迁移记录和重启后数据是否还在。默认会构建镜像，并用 Docker Scout 扫描 High/Critical。这是本机 / CI 冒烟，不是生产安装路径。
 

@@ -22,7 +22,7 @@ export function UpdateLogsModal({ open, onClose, installationSupport }: {
   return (
     <Modal
       open={open}
-      title='桌面更新日志'
+      title='更新诊断日志'
       width={880}
       onCancel={onClose}
       footer={(
@@ -40,7 +40,7 @@ export function UpdateLogsModal({ open, onClose, installationSupport }: {
           仅显示 desktop:update 日志及对应错误堆栈{logs?.truncated ? '，较早的日志已省略' : ''}。
         </Text>
         {error ? (
-          <Text role='alert' className='text-red'>无法读取更新日志，请刷新重试或通过帮助菜单打开日志目录。</Text>
+          <Text role='alert' className='text-red'>无法读取诊断日志，请刷新重试或通过帮助菜单打开日志目录。</Text>
         ) : null}
         <pre
           aria-label='desktop:update 日志'

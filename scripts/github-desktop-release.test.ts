@@ -1,7 +1,9 @@
 // @vitest-environment node
+import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -9,6 +11,7 @@ import {
   desktopArtifacts,
   desktopReleaseNotes,
   remoteTagCommit,
+  validateDesktopBuildConfig,
   validateDesktopDraft,
   verifyDesktopArtifacts,
   writeDesktopDraft,
@@ -41,6 +44,54 @@ function fakeCommands(releases: object[] = [], tagRefs = '') {
     return ''
   })
 }
+
+describe('desktop build preflight', () => {
+  const config = { version, repository, sha, notes, cloudUrl: 'https://next.purechat.cn' }
+
+  it('accepts official and self-hosted HTTP(S) servers', () => {
+    expect(() => validateDesktopBuildConfig(config)).not.toThrow()
+    expect(() => validateDesktopBuildConfig({ ...config, cloudUrl: 'http://localhost:5174' })).not.toThrow()
+  })
+
+  it.each(['', 'next.purechat.cn', 'ftp://example.com', 'https://user:password@example.com'])(
+    'rejects invalid cloud URL %j',
+    (cloudUrl) => {
+      expect(() => validateDesktopBuildConfig({ ...config, cloudUrl })).toThrow('PURECHAT_DESKTOP_CLOUD_URL')
+    }
+  )
+
+  it('requires stable versions, repository context, a complete SHA and nonempty notes before building', () => {
+    expect(() => validateDesktopBuildConfig({ ...config, version: '0.3.0-beta.1' })).toThrow('X.Y.Z')
+    expect(() => validateDesktopBuildConfig({ ...config, repository: '' })).toThrow('仓库名')
+    expect(() => validateDesktopBuildConfig({ ...config, sha: 'main' })).toThrow('完整 commit SHA')
+    expect(() => validateDesktopBuildConfig({ ...config, notes: ' \n' })).toThrow('不能为空')
+  })
+
+  it('exposes a version-only CLI output on success and exits nonzero on invalid environment or empty notes', () => {
+    const notesDir = path.join(directory, 'apps/desktop/build')
+    mkdirSync(notesDir, { recursive: true })
+    writeFileSync(path.join(directory, 'package.json'), JSON.stringify({ version }))
+    writeFileSync(path.join(notesDir, 'release-notes.md'), notes)
+    const script = fileURLToPath(new URL('./github-desktop-release.mjs', import.meta.url))
+    const runPreflight = (cloudUrl: string) =>
+      spawnSync(process.execPath, [script, 'preflight'], {
+        cwd: directory,
+        encoding: 'utf8',
+        env: { ...process.env, GITHUB_REPOSITORY: repository, GITHUB_SHA: sha, PURECHAT_DESKTOP_CLOUD_URL: cloudUrl },
+      })
+    const valid = runPreflight(config.cloudUrl)
+    expect(valid.status).toBe(0)
+    expect(valid.stdout).toBe(`${version}\n`)
+    const invalid = runPreflight('not-a-url')
+    expect(invalid.status).toBe(1)
+    expect(invalid.stdout).toBe('')
+    expect(invalid.stderr).toContain('PURECHAT_DESKTOP_CLOUD_URL')
+    writeFileSync(path.join(notesDir, 'release-notes.md'), '')
+    const emptyNotes = runPreflight(config.cloudUrl)
+    expect(emptyNotes.status).toBe(1)
+    expect(emptyNotes.stderr).toContain('发行说明不能为空')
+  })
+})
 
 describe('desktop distribution artifacts', () => {
   it('maps stable versions to exactly the four configured files', () => {
@@ -196,5 +247,49 @@ describe('desktop draft upload', () => {
     })
     expect(() => writeDesktopDraft({ directory, version, repository, sha, notes }, run)).toThrow('API unavailable')
     expect(run).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not write a Release when fetching the remote tag fails', () => {
+    createArtifacts()
+    const run = fakeCommands()
+    run.mockImplementation((command) => {
+      if (command === 'git') throw new Error('git authentication failed')
+      return '[[]]'
+    })
+    expect(() => writeDesktopDraft({ directory, version, repository, sha, notes }, run)).toThrow(
+      'authentication failed'
+    )
+    expect(run.mock.calls.some(([, args]) => args[0] === 'release')).toBe(false)
+  })
+
+  it('fails on insufficient Release permissions without uploading files and cleans temporary notes', () => {
+    createArtifacts()
+    const run = fakeCommands()
+    let notesFile = ''
+    run.mockImplementation((command, args) => {
+      if (command === 'git') return ''
+      if (args[0] === 'api') return '[[]]'
+      notesFile = args[args.indexOf('--notes-file') + 1]
+      throw new Error('Resource not accessible by integration (403)')
+    })
+    expect(() => writeDesktopDraft({ directory, version, repository, sha, notes }, run)).toThrow('403')
+    expect(run.mock.calls.some(([, args]) => args[1] === 'upload')).toBe(false)
+    expect(existsSync(notesFile)).toBe(false)
+  })
+
+  it('reports upload failure and leaves publication to a same-commit retry', () => {
+    createArtifacts()
+    const run = fakeCommands([draft])
+    let notesFile = ''
+    run.mockImplementation((command, args) => {
+      if (command === 'git') return ''
+      if (args[0] === 'api') return JSON.stringify([[draft]])
+      if (args[1] === 'edit') notesFile = args[args.indexOf('--notes-file') + 1]
+      if (args[1] === 'upload') throw new Error('artifact upload failed')
+      return ''
+    })
+    expect(() => writeDesktopDraft({ directory, version, repository, sha, notes }, run)).toThrow('upload failed')
+    expect(run.mock.calls.some(([, args]) => args.includes('--draft'))).toBe(false)
+    expect(existsSync(notesFile)).toBe(false)
   })
 })

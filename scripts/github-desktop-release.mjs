@@ -1,5 +1,14 @@
 #!/usr/bin/env node
-/** 手动桌面发行：校验分发文件、生成下载表格，并写入绑定 commit 的 Release 草稿。 */
+/**
+ * 手动桌面发行：只依赖 Node 标准库，prepare / draft job 无需 pnpm install。
+ * 从仓库根目录执行：
+ *   node scripts/github-desktop-release.mjs version
+ *   node scripts/github-desktop-release.mjs preflight
+ *   node scripts/github-desktop-release.mjs verify apps/desktop/release mac
+ *   node scripts/github-desktop-release.mjs draft desktop-release-artifacts
+ * preflight 读取 GITHUB_REPOSITORY、GITHUB_SHA、PURECHAT_DESKTOP_CLOUD_URL；draft 还需要 GH_TOKEN、gh 和 git。
+ * API / 上传失败会返回非零状态；草稿保持未发布，修复后可用同 commit 重跑。
+ */
 import { execFileSync } from 'node:child_process'
 import { lstatSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -17,6 +26,21 @@ export function desktopArtifacts(version, platform = 'all') {
   if (platform === 'all') return [...artifacts.windows, ...artifacts.mac]
   if (!(platform === 'windows' || platform === 'mac')) throw new Error(`未知桌面平台: ${platform}`)
   return artifacts[platform]
+}
+
+/** 在下载依赖和启动双平台构建前验证发行输入，不访问或改写远端。 */
+export function validateDesktopBuildConfig({ version, repository, sha, notes, cloudUrl }) {
+  desktopReleaseNotes({ version, repository, notes })
+  validateDesktopDraft({ release: undefined, tagCommit: null, sha })
+  let url
+  try {
+    url = new URL(cloudUrl)
+  } catch {
+    throw new Error('PURECHAT_DESKTOP_CLOUD_URL 必须是有效的 HTTP(S) 服务地址')
+  }
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
+    throw new Error('PURECHAT_DESKTOP_CLOUD_URL 必须是无凭据的 HTTP(S) 服务地址')
+  }
 }
 
 export function verifyDesktopArtifacts(directory, version, platform = 'all') {
@@ -54,6 +78,7 @@ export function desktopReleaseNotes({ version, repository, notes }) {
   ].join('\n')
 }
 
+/** 仅允许新草稿或同 commit 重跑，拒绝公开版本与来源不一致的草稿 / tag。 */
 export function validateDesktopDraft({ release, tagCommit, sha }) {
   if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error('发行必须绑定完整 commit SHA')
   if (tagCommit && tagCommit !== sha) throw new Error('已有 tag 指向不同 commit')
@@ -63,7 +88,7 @@ export function validateDesktopDraft({ release, tagCommit, sha }) {
   }
 }
 
-// Annotated tags have a peeled ^{} entry; compare the commit, not the tag object's SHA.
+// 附注 tag 的 ^{} 行才是 commit SHA；不能把 tag 对象的 SHA 当成应用源码版本。
 export function remoteTagCommit(output, tag) {
   const refs = new Map(
     output
@@ -79,6 +104,7 @@ export function remoteTagCommit(output, tag) {
 }
 
 function runCommand(command, args) {
+  // 使用参数数组，不经 shell 拼接；发行说明通过临时文件传给 gh，保留 Markdown 的真实换行。
   return execFileSync(command, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })
 }
 
@@ -86,6 +112,7 @@ export function writeDesktopDraft({ directory, version, repository, sha, notes }
   const files = verifyDesktopArtifacts(directory, version)
   const body = desktopReleaseNotes({ version, repository, notes })
   const tag = `v${version}`
+  // 必须读取所有分页，包括有写权限时可见的草稿；API 失败不能按“版本不存在”处理。
   const pages = JSON.parse(run('gh', ['api', `repos/${repository}/releases?per_page=100`, '--paginate', '--slurp']))
   const matches = pages.flat().filter((release) => release.tag_name === tag)
   if (matches.length > 1) throw new Error('同版本存在多个 Release，拒绝写入')
@@ -129,6 +156,15 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     desktopArtifacts(version)
     if (command === 'version') {
       console.info(version)
+    } else if (command === 'preflight') {
+      validateDesktopBuildConfig({
+        version,
+        repository: process.env.GITHUB_REPOSITORY,
+        sha: process.env.GITHUB_SHA,
+        cloudUrl: process.env.PURECHAT_DESKTOP_CLOUD_URL,
+        notes: readFileSync('apps/desktop/build/release-notes.md', 'utf8'),
+      })
+      console.info(version)
     } else if (command === 'verify' && directory) {
       const files = verifyDesktopArtifacts(directory, version, platform)
       console.info(`已验证 ${files.length} 个桌面产物`)
@@ -143,7 +179,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
       console.info(`已更新 ${tag} 的 Release 草稿，请检查四个产物后手动发布`)
     } else {
       throw new Error(
-        '用法: node scripts/github-desktop-release.mjs version | verify <目录> [windows|mac|all] | draft <目录>'
+        '用法: node scripts/github-desktop-release.mjs version | preflight | verify <目录> [windows|mac|all] | draft <目录>'
       )
     }
   } catch (error) {

@@ -15,6 +15,7 @@ import {
   SITE_DISCUSSIONS_URL,
   SITE_DOCS_URL,
   SITE_ISSUES_URL,
+  SITE_LANDING_URL,
   SITE_LICENSE_URL,
   SITE_NAME,
   SITE_RELEASES_URL,
@@ -31,6 +32,7 @@ import { useAboutUpdate } from './useAboutUpdate'
 const RESOURCES = [
   { key: 'docs', icon: BadgeHelp, title: '帮助文档', href: SITE_DOCS_URL, action: '查看' },
   { key: 'releases', icon: Rss, title: '更新日志', href: SITE_RELEASES_URL, action: '查看' },
+  { key: 'landing', icon: Globe, title: '产品介绍', href: SITE_LANDING_URL, action: '查看' },
   { key: 'website', icon: Globe, title: '官方网站', href: SITE_DEFAULT_URL, action: '查看' },
   { key: 'issues', icon: MessageSquare, title: '意见反馈', href: SITE_ISSUES_URL, action: '反馈' },
   { key: 'discussions', icon: MessagesSquare, title: '社区讨论', href: SITE_DISCUSSIONS_URL, action: '查看' },

@@ -80,6 +80,18 @@ describe('isElectronAppCommand', () => {
     ).toBe(true)
     expect(isElectronAppCommand(`node ${ROOT}/node_modules/electron-vite/bin/electron-vite.js`, ROOT)).toBe(false)
   })
+
+  it('matches the electron-vite spawned main process command (`electron .`) on all platforms', () => {
+    expect(
+      isElectronAppCommand(
+        `${ROOT}/node_modules/.pnpm/electron@41.3.0/node_modules/electron/dist/electron.exe .`,
+        ROOT
+      )
+    ).toBe(true)
+    expect(isElectronAppCommand('/Users/hyk/node_modules/electron/dist/Electron .', ROOT)).toBe(true)
+    expect(isElectronAppCommand('/other/repo/node_modules/electron/dist/electron .', ROOT)).toBe(true)
+    expect(isElectronAppCommand('/tools/myelectron .', ROOT)).toBe(false)
+  })
 })
 
 describe('collectStaleDesktopProcesses', () => {

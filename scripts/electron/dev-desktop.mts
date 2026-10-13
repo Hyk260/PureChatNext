@@ -1,4 +1,4 @@
-import { execFile, spawn, type ChildProcess } from 'node:child_process'
+import { execFile, execFileSync, spawn, type ChildProcess } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import net from 'node:net'
@@ -13,6 +13,7 @@ import {
   collectKillTargets,
   collectStaleDesktopProcesses,
   isElectronAppCommand,
+  isStaleDesktopCommand,
   parsePsTable,
   type ProcessRow,
 } from './lib/desktop-process'
@@ -67,16 +68,35 @@ const spawnProcess = (command: string, args: string[]) =>
     stdio: 'inherit',
   })
 
+/**
+ * Windows 下结束整棵进程树。
+ * shell:true 拉起的子进程外壳是 cmd.exe，直接 kill 只会结束外壳，
+ * pnpm / electron-vite / Electron 会全部成为孤儿，重试时 renderer 端口仍被占用。
+ */
+const killWindowsTree = (pid: number, force: boolean) => {
+  try {
+    execFileSync('taskkill.exe', ['/PID', String(pid), '/T', ...(force ? ['/F'] : [])], {
+      stdio: 'ignore',
+      windowsHide: true,
+    })
+  } catch {
+    // 进程已退出、无权限或 PID 已被复用，交给下一轮检查兜底。
+  }
+}
+
 const stopProcess = (child: ChildProcess | undefined, signal: NodeJS.Signals = 'SIGTERM') => {
   if (!child?.pid) return
 
-  if (!isWindows) {
-    try {
-      process.kill(-child.pid, signal)
-      return
-    } catch {
-      // Fall through to the direct child pid.
-    }
+  if (isWindows) {
+    killWindowsTree(child.pid, signal !== 'SIGTERM')
+    return
+  }
+
+  try {
+    process.kill(-child.pid, signal)
+    return
+  } catch {
+    // Fall through to the direct child pid.
   }
 
   if (!child.killed) {
@@ -166,10 +186,33 @@ const isPortOpen = (port: number) =>
     socket.setTimeout(1_000, () => finish(false))
   })
 
-const listListeningPids = async (port: number): Promise<number[]> => {
-  if (isWindows) return []
+const runPowerShell = async (script: string, timeout: number, signal?: AbortSignal) => {
+  const { stdout } = await execFileAsync(
+    'powershell.exe',
+    ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script],
+    { timeout, maxBuffer: 32 * 1024 * 1024, signal, windowsHide: true }
+  )
+  return stdout
+}
 
+const listListeningPids = async (port: number): Promise<number[]> => {
   try {
+    if (isWindows) {
+      const stdout = await runPowerShell(
+        `Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess`,
+        5_000
+      )
+      return [
+        ...new Set(
+          stdout
+            .trim()
+            .split(/\r?\n/)
+            .map((line) => Number(line.trim()))
+            .filter((pid) => Number.isInteger(pid) && pid > 0)
+        ),
+      ]
+    }
+
     const { stdout } = await execFileAsync('lsof', ['-t', '-nP', `-iTCP:${port}`, '-sTCP:LISTEN'], {
       timeout: 2_000,
     })
@@ -180,6 +223,11 @@ const listListeningPids = async (port: number): Promise<number[]> => {
 }
 
 const signalPid = (pid: number, signal: NodeJS.Signals) => {
+  if (isWindows) {
+    killWindowsTree(pid, signal !== 'SIGTERM')
+    return
+  }
+
   try {
     process.kill(pid, signal)
   } catch {
@@ -207,8 +255,41 @@ const freeRendererPort = async (port: number) => {
   await wait(200)
 }
 
-const listProcessRows = async (signal?: AbortSignal): Promise<ProcessRow[]> => {
-  if (isWindows) return []
+type WindowsCimProcess = { CommandLine?: unknown; ParentProcessId?: unknown; ProcessId?: unknown }
+
+const listProcessRowsWindows = async (electronOnly: boolean, signal?: AbortSignal): Promise<ProcessRow[]> => {
+  // Windows 没有 ps：用 CIM 读取 PID/PPID/命令行。就绪检测只需 electron.exe，加过滤可显著提速。
+  const script =
+    `Get-CimInstance Win32_Process${electronOnly ? " -Filter \"Name='electron.exe'\"" : ''} | ` +
+    'Select-Object ProcessId,ParentProcessId,CommandLine | ConvertTo-Json -Compress'
+
+  try {
+    const stdout = (await runPowerShell(script, 6_000, signal)).trim()
+    if (!stdout) return []
+    const parsed = JSON.parse(stdout) as WindowsCimProcess | WindowsCimProcess[]
+    const items = Array.isArray(parsed) ? parsed : [parsed]
+
+    return items.flatMap((item): ProcessRow[] => {
+      const pid = Number(item.ProcessId)
+      const ppid = Number(item.ParentProcessId)
+      if (!Number.isInteger(pid) || pid <= 0) return []
+      return [
+        {
+          command: typeof item.CommandLine === 'string' ? item.CommandLine.replaceAll(/[\r\n\t]+/g, ' ').trim() : '',
+          pgid: pid, // Windows 无进程组概念，以自身 pid 占位；组杀分支不会在 Windows 使用。
+          pid,
+          ppid: Number.isInteger(ppid) ? ppid : 0,
+          state: 'R', // CIM 枚举到的都是存活进程。
+        },
+      ]
+    })
+  } catch {
+    return []
+  }
+}
+
+const listProcessRows = async (electronOnly = false, signal?: AbortSignal): Promise<ProcessRow[]> => {
+  if (isWindows) return listProcessRowsWindows(electronOnly, signal)
 
   try {
     const { stdout } = await execFileAsync('ps', ['-axww', '-o', 'pid=,ppid=,pgid=,state=,command='], {
@@ -222,8 +303,37 @@ const listProcessRows = async (signal?: AbortSignal): Promise<ProcessRow[]> => {
   }
 }
 
+/** electron-vite 拉起的 Electron 主进程命令行是 `.../electron.exe .`，不含项目路径，沿父链上溯时需额外识别。 */
+const isWindowsToolchainAncestor = (command: string) => {
+  const normalizedCommand = command.replaceAll('\\', '/')
+  return isStaleDesktopCommand(command, rootDir) || /[\\/]electron(?:\.exe)?\s+\.\s*$/i.test(normalizedCommand)
+}
+
+/**
+ * Windows 版残留进程收集：从命中的行沿 PPID 上溯到工具链树的根
+ *（pnpm/cmd → electron-vite → electron.exe .），后续用 taskkill /T 整树结束。
+ */
+const collectWindowsStaleRoots = (rows: readonly ProcessRow[], protectedPids: ReadonlySet<number>): ProcessRow[] => {
+  const byPid = new Map(rows.map((row) => [row.pid, row]))
+  const roots = new Map<number, ProcessRow>()
+
+  for (const row of rows) {
+    if (protectedPids.has(row.pid) || !isStaleDesktopCommand(row.command, rootDir)) continue
+
+    let root = row
+    let parent = byPid.get(root.ppid)
+    while (parent && !protectedPids.has(parent.pid) && isWindowsToolchainAncestor(parent.command)) {
+      root = parent
+      parent = byPid.get(root.ppid)
+    }
+    roots.set(root.pid, root)
+  }
+
+  return [...roots.values()]
+}
+
 const inspectDesktopProcesses = async () => {
-  const rows = await listProcessRows()
+  const rows = await listProcessRows(false)
   const selfRow = rows.find((row) => row.pid === process.pid)
   const protectedPids = collectAncestorPids(rows, process.pid)
   if (selfRow) protectedPids.add(selfRow.pgid)
@@ -231,16 +341,16 @@ const inspectDesktopProcesses = async () => {
   if (process.ppid) protectedPids.add(process.ppid)
   return {
     protectedPids,
-    stale: collectStaleDesktopProcesses(rows, { protectedPids, rootDir }),
+    stale: isWindows
+      ? collectWindowsStaleRoots(rows, protectedPids)
+      : collectStaleDesktopProcesses(rows, { protectedPids, rootDir }),
   }
 }
 
 /** 仅 Electron 应用进程（不含 electron-vite），用于判断窗口是否真正拉起 */
 const listElectronAppPids = async (signal?: AbortSignal): Promise<number[]> => {
-  const rows = await listProcessRows(signal)
-  return rows
-    .filter((row) => !row.state.startsWith('Z') && isElectronAppCommand(row.command, rootDir))
-    .map((row) => row.pid)
+  const rows = await listProcessRows(true, signal)
+  return rows.filter((row) => isElectronAppCommand(row.command, rootDir)).map((row) => row.pid)
 }
 
 const formatStaleProcess = (row: ProcessRow) => `${row.pid} (${row.command.slice(0, 80)})`
@@ -262,6 +372,9 @@ const clearElectronSingletonLocks = async () => {
 }
 
 const signalGroup = (pgid: number, signal: NodeJS.Signals) => {
+  // Windows 无进程组语义，残留进程统一走 taskkill /T 整树结束。
+  if (isWindows) return
+
   try {
     process.kill(-pgid, signal)
   } catch {
@@ -271,7 +384,7 @@ const signalGroup = (pgid: number, signal: NodeJS.Signals) => {
 
 /**
  * 清掉上次未退出的 Electron / electron-vite。
- * 必须 SIGKILL 整棵进程组：SIGTERM 会给 electron-vite 机会重启主进程，留下白屏旧窗。
+ * 必须 SIGKILL 整棵进程树：SIGTERM 会给 electron-vite 机会重启主进程，留下白屏旧窗。
  */
 const killStaleDesktopProcesses = async () => {
   let logged = false
@@ -285,9 +398,14 @@ const killStaleDesktopProcesses = async () => {
       logged = true
     }
 
-    const { pgids, pids } = collectKillTargets(stale, protectedPids)
-    for (const pgid of pgids) signalGroup(pgid, 'SIGKILL')
-    for (const pid of pids) signalPid(pid, 'SIGKILL')
+    if (isWindows) {
+      // stale 已收敛为各工具链树的根，/T 连带结束 pnpm → electron-vite → Electron 全部子进程。
+      for (const row of stale) killWindowsTree(row.pid, true)
+    } else {
+      const { pgids, pids } = collectKillTargets(stale, protectedPids)
+      for (const pgid of pgids) signalGroup(pgid, 'SIGKILL')
+      for (const pid of pids) signalPid(pid, 'SIGKILL')
+    }
     await wait(STALE_KILL_INTERVAL_MS)
   }
 

@@ -54,6 +54,10 @@ export const isElectronAppCommand = (command: string, rootDir: string): boolean 
   const normalizedCommand = normalizePath(command)
   if (!/Electron/i.test(normalizedCommand) || normalizedCommand.includes('electron-vite')) return false
 
+  // electron-vite 启动的主进程在各平台都是 `.../electron(.exe) .`（工作目录为 apps/desktop），
+  // 命令行不含应用路径；renderer 辅助进程才带 --app-path。先匹配主进程可让就绪检测更早完成。
+  if (/\belectron(?:\.exe)?\s+\.\s*$/i.test(normalizedCommand)) return true
+
   const desktopAppPath = `${normalizePath(rootDir)}/apps/desktop`
   return (
     normalizedCommand.includes(`app-path=${desktopAppPath}`) ||

@@ -4,19 +4,25 @@ import { Copy, Minus, Square, X } from 'lucide-react'
 const styles = createStaticStyles(({ css }) => ({
   root: css`
     display: flex;
+    align-items: center;
+    gap: 2px;
     height: 100%;
+    padding-inline: 4px;
     -webkit-app-region: no-drag;
   `,
   button: css`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 100%;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
     padding: 0;
     color: var(--ant-color-text-secondary, #666);
     background: transparent;
     border: 0;
+    border-radius: 6px;
     cursor: pointer;
 
     &:hover {

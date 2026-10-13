@@ -1,0 +1,153 @@
+#!/usr/bin/env node
+/** 手动桌面发行：校验分发文件、生成下载表格，并写入绑定 commit 的 Release 草稿。 */
+import { execFileSync } from 'node:child_process'
+import { lstatSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
+
+const VERSION_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
+
+export function desktopArtifacts(version, platform = 'all') {
+  if (!VERSION_PATTERN.test(version)) throw new Error('桌面发行版本必须是 X.Y.Z')
+  const artifacts = {
+    windows: [`PureChat-${version}-setup.exe`, `PureChat-${version}-portable.exe`],
+    mac: [`PureChat-${version}-arm64.dmg`, `PureChat-${version}-arm64.zip`],
+  }
+  if (platform === 'all') return [...artifacts.windows, ...artifacts.mac]
+  if (!(platform === 'windows' || platform === 'mac')) throw new Error(`未知桌面平台: ${platform}`)
+  return artifacts[platform]
+}
+
+export function verifyDesktopArtifacts(directory, version, platform = 'all') {
+  return desktopArtifacts(version, platform).map((filename) => {
+    const file = path.resolve(directory, filename)
+    let stat
+    try {
+      stat = lstatSync(file)
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error
+      throw new Error(`缺少桌面产物: ${filename}`)
+    }
+    if (!stat.isFile() || stat.size === 0) throw new Error(`桌面产物必须是非空普通文件: ${filename}`)
+    return file
+  })
+}
+
+export function desktopReleaseNotes({ version, repository, notes }) {
+  const [installer, portable, dmg, zip] = desktopArtifacts(version)
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repository)) throw new Error('无效的 GitHub 仓库名')
+  if (!notes.trim()) throw new Error('桌面发行说明不能为空')
+  const baseUrl = `https://github.com/${repository}/releases/download/v${version}`
+  return [
+    `## Downloads (v${version})`,
+    '',
+    '| 平台 | Architecture | 下载 |',
+    '| --- | --- | --- |',
+    `| Windows | x64 | [Installer](${baseUrl}/${installer}) · [Portable](${baseUrl}/${portable}) |`,
+    `| macOS | Apple silicon (arm64) | [DMG](${baseUrl}/${dmg}) · [ZIP](${baseUrl}/${zip}) |`,
+    '',
+    '> 本版未接入正式代码签名及 macOS 公证，系统可能显示安全提示；macOS 不支持自动安装更新。',
+    '',
+    notes.trim(),
+    '',
+  ].join('\n')
+}
+
+export function validateDesktopDraft({ release, tagCommit, sha }) {
+  if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error('发行必须绑定完整 commit SHA')
+  if (tagCommit && tagCommit !== sha) throw new Error('已有 tag 指向不同 commit')
+  if (release) {
+    if (release.draft !== true) throw new Error('该版本已公开发布，拒绝覆盖')
+    if (release.target_commitish !== sha) throw new Error('草稿来源与本次 commit 不一致')
+  }
+}
+
+// Annotated tags have a peeled ^{} entry; compare the commit, not the tag object's SHA.
+export function remoteTagCommit(output, tag) {
+  const refs = new Map(
+    output
+      .trim()
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .map((line) => {
+        const [commit, ref] = line.split(/\s+/)
+        return [ref, commit]
+      })
+  )
+  return refs.get(`refs/tags/${tag}^{}`) || refs.get(`refs/tags/${tag}`) || null
+}
+
+function runCommand(command, args) {
+  return execFileSync(command, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })
+}
+
+export function writeDesktopDraft({ directory, version, repository, sha, notes }, run = runCommand) {
+  const files = verifyDesktopArtifacts(directory, version)
+  const body = desktopReleaseNotes({ version, repository, notes })
+  const tag = `v${version}`
+  const pages = JSON.parse(run('gh', ['api', `repos/${repository}/releases?per_page=100`, '--paginate', '--slurp']))
+  const matches = pages.flat().filter((release) => release.tag_name === tag)
+  if (matches.length > 1) throw new Error('同版本存在多个 Release，拒绝写入')
+  const release = matches[0]
+  const tagRefs = run('git', ['ls-remote', '--tags', 'origin', `refs/tags/${tag}`, `refs/tags/${tag}^{}`])
+  validateDesktopDraft({ release, tagCommit: remoteTagCommit(tagRefs, tag), sha })
+
+  const temporaryDir = mkdtempSync(path.join(tmpdir(), 'purechat-desktop-release-'))
+  try {
+    const notesFile = path.join(temporaryDir, 'release-notes.md')
+    writeFileSync(notesFile, body)
+    if (release) {
+      run('gh', ['release', 'edit', tag, '--repo', repository, '--notes-file', notesFile])
+    } else {
+      run('gh', [
+        'release',
+        'create',
+        tag,
+        '--repo',
+        repository,
+        '--target',
+        sha,
+        '--draft',
+        '--title',
+        tag,
+        '--notes-file',
+        notesFile,
+      ])
+    }
+    run('gh', ['release', 'upload', tag, ...files, '--repo', repository, '--clobber'])
+    return tag
+  } finally {
+    rmSync(temporaryDir, { recursive: true, force: true })
+  }
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  try {
+    const [command, directory, platform] = process.argv.slice(2)
+    const { version } = JSON.parse(readFileSync('package.json', 'utf8'))
+    desktopArtifacts(version)
+    if (command === 'version') {
+      console.info(version)
+    } else if (command === 'verify' && directory) {
+      const files = verifyDesktopArtifacts(directory, version, platform)
+      console.info(`已验证 ${files.length} 个桌面产物`)
+    } else if (command === 'draft' && directory) {
+      const tag = writeDesktopDraft({
+        directory,
+        version,
+        repository: process.env.GITHUB_REPOSITORY,
+        sha: process.env.GITHUB_SHA,
+        notes: readFileSync('apps/desktop/build/release-notes.md', 'utf8'),
+      })
+      console.info(`已更新 ${tag} 的 Release 草稿，请检查四个产物后手动发布`)
+    } else {
+      throw new Error(
+        '用法: node scripts/github-desktop-release.mjs version | verify <目录> [windows|mac|all] | draft <目录>'
+      )
+    }
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error))
+    process.exit(1)
+  }
+}

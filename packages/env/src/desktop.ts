@@ -9,7 +9,7 @@ declare global {
     interface ProcessEnv {
       /** 桌面端自动更新源地址；开发环境用于本地下载测试，生产环境用于发布更新。 */
       PURECHAT_DESKTOP_UPDATE_URL?: string
-      /** 桌面端是否允许多个实例同时运行；开发环境可用于并行验证安装包与开发版。 */
+      /** 桌面端是否允许多个实例同时运行；Windows 始终单实例以便正确处理授权回跳。 */
       PURECHAT_DESKTOP_MULTI_INSTANCE?: string
     }
   }
@@ -33,7 +33,7 @@ export const getDesktopUpdateConfig = () => {
 export const getDesktopRuntimeConfig = (defaultMultiInstance = false) => {
   return createEnv({
     server: {
-      /** 允许开发版与已安装版本同时启动；生产包缺省为关闭。 */
+      /** 允许非 Windows 平台的多实例；Windows 始终单实例，生产包缺省为关闭。 */
       PURECHAT_DESKTOP_MULTI_INSTANCE: z.boolean(),
     },
     runtimeEnv: {

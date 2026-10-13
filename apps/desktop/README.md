@@ -20,8 +20,8 @@ pnpm --filter purechat-desktop dev
 
 此模式下需另行启动兼容的 Next BFF。同时跑多份开发实例时，可用 `PURECHAT_DESKTOP_VITE_PORT` 覆盖渲染端口。
 
-开发环境默认允许多开，并始终使用 `purechat-desktop-dev` 独立数据目录，因此开发版与已安装的 PureChat 可以同时运行；将
-`PURECHAT_DESKTOP_MULTI_INSTANCE=false` 写入 `apps/desktop/.env.desktop.local` 可切换回单实例，生产安装包未设置该变量时仍保持单实例。
+非 Windows 开发环境默认允许多开，并始终使用 `purechat-desktop-dev` 独立数据目录，因此开发版与已安装的 PureChat 可以同时运行。Windows 始终启用单实例，以确保浏览器授权回跳由已打开的应用窗口处理。将
+`PURECHAT_DESKTOP_MULTI_INSTANCE=false` 写入 `apps/desktop/.env.desktop.local` 可在其他平台切换回单实例；生产安装包未设置该变量时默认单实例。
 
 ## 构建与打包命令
 
@@ -32,7 +32,7 @@ pnpm build:desktop
 # 当前宿主平台的未打包目录
 pnpm package:desktop
 
-# macOS DMG + ZIP，arm64 和 x64
+# macOS DMG + ZIP，arm64
 pnpm package:desktop:mac
 
 # Windows NSIS 安装包 + portable 免安装 EXE，x64
@@ -52,7 +52,7 @@ pnpm package:desktop:win:portable
 | --- | --- | --- | --- |
 | `build:desktop` | 当前平台 | `dist/` | 只验证编译结果 |
 | `package:desktop` | 当前平台 | 未打包目录 | 本地调试、安装包前验收 |
-| `package:desktop:mac` | macOS arm64/x64 | `.dmg`、`.zip` | macOS 正式分发 |
+| `package:desktop:mac` | macOS arm64 | `.dmg`、`.zip` | macOS 分发 |
 | `package:desktop:win` | Windows x64 | NSIS `.exe`、portable `.exe` | Windows 正式分发和绿色运行 |
 | `package:desktop:win:portable` | Windows x64 | portable `.exe` | 只需要免安装包 |
 
@@ -62,7 +62,26 @@ pnpm package:desktop:win:portable
 - Windows 安装包：`PureChat-${version}-setup.exe`
 - Windows 免安装包：`PureChat-${version}-portable.exe`
 
-实际文件名中的 `${version}` 来自 `apps/desktop/package.json`，`${arch}` 是 `arm64` 或 `x64`。
+实际文件名中的 `${version}` 来自根 `package.json`，构建时自动同步至桌面 manifest。当前 macOS 仅生成 `arm64`，Windows 仅生成 `x64`。
+
+### GitHub Actions 手动打包
+
+工作流 [Desktop release](../../.github/workflows/desktop-release.yml) 仅手动触发，每次同时构建 Windows x64 和 macOS arm64，共四个分发文件。
+
+1. 将工作流合入 `main`，在根 `package.json` 维护 `X.Y.Z` 稳定版本，并更新 [build/release-notes.md](build/release-notes.md)。首版流程不支持 RC/Beta 版本号。
+2. 打开 GitHub 仓库的 **Actions → Desktop release → Run workflow**，选择要构建的分支。所有 job 都使用触发时的固定 commit，无需另填版本。
+3. 构建通过后，从运行页下载 `desktop-X.Y.Z-windows-x64` 和 `desktop-X.Y.Z-mac-arm64` Artifacts，保留期为 30 天。
+4. 两端全部成功后，工作流汇总四个文件到 `vX.Y.Z` 的 Release 草稿，并生成 Installer、Portable、DMG、ZIP 下载表格。检查草稿和安装包后手动发布；表格中的公开下载链接在发布后可用。
+
+Windows 使用 `windows-2022`，macOS 使用 `macos-15`，均使用 Node.js 22 和 pnpm 10.33.4。每个平台先校验预期文件存在且非空，再上传精确文件名；不会上传解包目录、blockmap 或调试 YAML。一端失败不会取消另一端，成功端的 Artifact 仍可下载，但不会创建或更新草稿。
+
+默认官方服务地址为 `https://next.purechat.cn`。需要覆盖时，在仓库 **Settings → Secrets and variables → Actions → Variables** 设置非敏感变量 `PURECHAT_DESKTOP_CLOUD_URL`。此流程不配置自动更新源，不需要签名证书或 PAT；草稿汇总 job 使用内置 `GITHUB_TOKEN` 的 `contents: write` 权限，其余 job 仅有读取权限。
+
+草稿记录完整 commit SHA。同版本、同 commit 重跑会替换四个产物；已公开版本、不同 commit 的草稿、指向不同 commit 的 tag 均会明确失败。源代码变化后应使用新版本；若需要重建未发布的同版本，应先人工处理旧草稿及冲突 tag。API 或网络错误也会直接失败，不会被当作版本不存在。
+
+现有 tag 发布工作流仍然保留。桌面发行请先运行本流程生成草稿，再手动发布；不要提前推送 tag 让旧工作流公开同版本，否则本流程会拒绝覆盖。若选择分支相对默认分支改动了工作流，GitHub 的 Release API 可能要求额外的 workflow 写权限，而内置 `GITHUB_TOKEN` 无法获得该权限；应先将工作流改动合入 `main` 再构建，不额外引入 PAT。
+
+首版 Windows 无正式代码签名，macOS 仅使用 ad-hoc 签名，没有 Developer ID 签名或公证。系统可能显示安全提示；macOS 自动安装更新不作为此流程验收目标。发布前应实际验证 Windows 安装版、Portable，以及 Apple Silicon 上的 DMG、ZIP 启动、版本、服务连接和登录回调。
 
 ## DMG、ZIP、NSIS 与 portable 的区别
 

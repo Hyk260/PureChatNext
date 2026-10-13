@@ -1,0 +1,118 @@
+name: Desktop release
+run-name: Desktop release from ${{ github.ref_name }} @ ${{ github.sha }}
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Resolve desktop version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate root application version
+        id: version
+        shell: bash
+        run: |
+          version="$(node scripts/github-desktop-release.mjs version)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Package ${{ matrix.platform }} ${{ matrix.arch }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            arch: x64
+            os: windows-2022
+            first-artifact: setup.exe
+            second-artifact: portable.exe
+          - platform: mac
+            arch: arm64
+            os: macos-15
+            first-artifact: arm64.dmg
+            second-artifact: arm64.zip
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+      PURECHAT_DESKTOP_CLOUD_URL: ${{ vars.PURECHAT_DESKTOP_CLOUD_URL || 'https://next.purechat.cn' }}
+      PURECHAT_DESKTOP_UPDATE_URL: ''
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Package Windows Installer and Portable
+        if: matrix.platform == 'windows'
+        run: pnpm package:desktop:win --x64
+      - name: Package macOS DMG and ZIP with ad-hoc signing
+        if: matrix.platform == 'mac'
+        run: pnpm package:desktop:mac --arm64 -c.mac.identity=- -c.mac.notarize=false
+      - name: Verify expected distribution files
+        run: node scripts/github-desktop-release.mjs verify apps/desktop/release "${{ matrix.platform }}"
+      - name: Upload desktop distribution files
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ needs.prepare.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            apps/desktop/release/PureChat-${{ needs.prepare.outputs.version }}-${{ matrix.first-artifact }}
+            apps/desktop/release/PureChat-${{ needs.prepare.outputs.version }}-${{ matrix.second-artifact }}
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 30
+          compression-level: 0
+
+  draft:
+    name: Assemble desktop Release draft
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # 与现有 tag 发布工作流使用同一 concurrency group，串行处理同版本。
+    concurrency:
+      group: release-refs/tags/${{ needs.prepare.outputs.tag }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: desktop-${{ needs.prepare.outputs.version }}-*
+          path: desktop-release-artifacts
+          merge-multiple: true
+      - name: Validate and upload all four files to a draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/github-desktop-release.mjs draft desktop-release-artifacts

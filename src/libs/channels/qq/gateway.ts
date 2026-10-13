@@ -7,6 +7,7 @@ import debug from 'debug'
 import type { ChannelBindingItem } from '@pure/database/schemas/channel'
 import { buildChannelGatewayHeaders, buildChannelGatewayWebhookUrl } from '@/server/channel-gateway/internal'
 import type { ChannelGatewayStatusEvent } from '@/server/channel-gateway/types'
+import { channelErrorCode, recordChannelGatewayLog } from '@/server/channel-gateway/diagnostics'
 
 import { decryptCredentials } from './encrypt'
 
@@ -51,7 +52,13 @@ export class QQChannelGatewayClient {
       buildChannelGatewayWebhookUrl(`/api/channels/qq/webhook/${encodeURIComponent(this.binding.applicationId)}`),
       buildChannelGatewayHeaders('qq'),
       {
-        onForwardError: (error) => log('webhook forward failed: %O', error),
+        onRetry: (attempt, delayMs) => {
+          recordChannelGatewayLog({ userId: this.binding.userId, platform: 'qq', bindingId: this.binding.id, event: 'retry', attempt, delayMs }).catch(() => undefined)
+        },
+        onForwardError: (error) => {
+          log('webhook forward failed: %O', error)
+          recordChannelGatewayLog({ userId: this.binding.userId, platform: 'qq', bindingId: this.binding.id, event: 'callback_failed', code: channelErrorCode(error) }).catch(() => undefined)
+        },
         onStatus: (status, detail) => this.reportStatus({ ...detail, status }),
       }
     )

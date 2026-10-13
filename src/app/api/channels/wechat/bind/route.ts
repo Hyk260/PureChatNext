@@ -19,6 +19,7 @@ import {
   requireWechatVaultSecret,
 } from '@/libs/channels/wechat'
 import type { WechatCredentials } from '@/libs/channels/wechat'
+import { recordChannelGatewayLog } from '@/server/channel-gateway/diagnostics'
 
 const log = debug('channel:wechat:bind')
 
@@ -87,6 +88,7 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
     provider,
     userId,
   })
+  await recordChannelGatewayLog({ userId, platform: 'wechat', bindingId: binding.id, event: 'bound' })
   scheduleGatewayReconcile()
   return NextResponse.json({ id: binding.id, ok: true, runtimeStatus: binding.runtimeStatus })
 })
@@ -100,6 +102,7 @@ export const DELETE = withAuth(async (_request, { userId }) => {
   const existing = await model.findByUserAndPlatform(userId, WECHAT_PLATFORM)
   if (existing?.applicationId) await invalidateWechatChat(existing.applicationId)
   await model.disconnect(userId, WECHAT_PLATFORM)
+  if (existing) await recordChannelGatewayLog({ userId, platform: 'wechat', bindingId: existing.id, event: 'disconnected' })
   await requestGatewayReconcile()
   return NextResponse.json({ ok: true })
 })

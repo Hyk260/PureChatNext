@@ -2,6 +2,7 @@ import { QQApiClient } from '@pure/chat-adapter/qq'
 
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
+import { channelErrorCode, recordChannelGatewayLog } from '@/server/channel-gateway/diagnostics'
 
 import { resolveAvailableChannelModel } from '../core/modelResolver'
 import { isQQProviderId, qqChannelByokUnavailableReason, validateQQModel } from './agentSupport'
@@ -63,6 +64,7 @@ export async function bindQQCredentials(params: BindQQCredentialsParams) {
   try {
     await new QQApiClient(appId, appSecret).getAccessToken()
   } catch (error) {
+    await recordChannelGatewayLog({ userId: params.userId, platform: 'qq', event: 'authorization_failed', code: channelErrorCode(error) })
     const message = error instanceof Error ? error.message : 'QQ auth failed'
     throw new QQBindingError(`Invalid QQ credentials: ${message}`)
   }
@@ -95,6 +97,7 @@ export async function bindQQCredentials(params: BindQQCredentialsParams) {
     userId: params.userId,
   })
 
+  await recordChannelGatewayLog({ userId: params.userId, platform: 'qq', bindingId: binding.id, event: 'bound' })
   const { reconcileChannelGateway } = await import('@/server/channel-gateway')
   await reconcileChannelGateway()
 

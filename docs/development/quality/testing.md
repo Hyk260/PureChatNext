@@ -62,6 +62,17 @@ HTML 报告位于 `playwright-report/`，失败的截图、视频与 trace 位�
 
 这些隔离冒烟测试不验证真实 BFF、数据库、服务登录、聊天回复或安装包。后续集成测试若使用本地账号，仍须遵守下面的账号与邮件限制。
 
+### 渠道诊断日志
+
+`channel-logs.test.ts` 在 Web 和 Electron 验证 QQ / 微信标题旁的入口、空记录、截断提示、自动刷新、关闭及页面隐藏后暂停、读取失败与恢复、平台缓存隔离。Web 拦截 API 返回固定会话；Electron 在独立临时配置中写入虚构测试令牌，通过真实 preload、IPC 和协议代理访问随机本地端口的固定响应服务，并校验 Bearer 请求头。关闭该服务验证远程不可达，不触发授权浏览器、扫码、邮件、模型或真实渠道消息。
+
+```bash
+pnpm test:e2e --grep '日志入口|Bearer 读取渠道日志'
+pnpm --filter @pure/database exec vitest run src/utils/channelGatewayLogs.test.ts src/models/__tests__/channelGatewayLog.integration.test.ts
+```
+
+数据库集成测试仅使用本机 PostgreSQL，在临时 schema 应用渠道日志迁移，验证并发裁剪、账号/平台隔离、去重、恢复和七天过滤，结束后删除测试 schema。`DATABASE_URL` 指向远程地址时跳过，绝不向远程数据库创建测试表。部署时须先运行 `pnpm db:migrate`，然后更新应用。
+
 ## 本地测试账号
 
 浏览器、curl 和后续端到端登录统一用下面账号。仅限本地开发，不要用于生产。本地没有对应用户时，可在 `http://localhost:5174/signup` 注册；若启用了邮箱验证，则通过管理员创建或本地预置为已验证账号。

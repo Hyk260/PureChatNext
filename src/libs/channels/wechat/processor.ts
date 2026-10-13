@@ -8,6 +8,7 @@ import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
 import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import { createNanoId } from '@pure/utils'
 import type { ChannelToolArtifact } from '@/server/chat/toolRegistry'
+import { channelErrorCode, recordBindingGatewayLog } from '@/server/channel-gateway/diagnostics'
 import { applyChannelFirstBindWelcome, runChannelCommand } from '../core/commands'
 import { channelGenerationRegistry } from '../core/generation'
 import { getChannelHistoryTokenBudget, trimChannelHistory } from '../core/history'
@@ -317,16 +318,20 @@ export async function processNextWechatEvent(owner = `processor-${createNanoId(1
   const model = new ChannelEventModel()
   const event = await model.claimNext(owner, EVENT_LEASE_MS, 'wechat')
   if (!event) return false
+  let diagnosticStage: 'processing_failed' | 'send_failed' = 'processing_failed'
   try {
     const response = await buildResponse(event)
     const saved = await model.saveResponse(event.id, owner, response)
     if (!saved) throw new Error('Event lease lost')
+    diagnosticStage = 'send_failed'
     await sendResponse(event, owner, response.text)
+    diagnosticStage = 'processing_failed'
     await model.complete(event.id, owner)
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       await model.cancel(event.id)
     } else {
+      await recordBindingGatewayLog(event.bindingId, { event: diagnosticStage, code: channelErrorCode(error) })
       const safe = safeError(error)
       log('event failed id=%s code=%s message=%s', event.id, safe.code, safe.message)
       await model.retryOrFail(event, owner, safe.code, safe.message)

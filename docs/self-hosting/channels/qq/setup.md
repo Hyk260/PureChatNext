@@ -76,3 +76,11 @@ KEY_VAULTS_SECRET=replace-with-a-random-secret
 ## 状态判断
 
 WebSocket 的 `connected` 依据 90 秒内的真实心跳，不再仅依据绑定是否存在。状态接口同时返回 `gatewaySupported`、`runtimeStatus`、`lastHeartbeatAt` 与脱敏错误摘要。Webhook 模式按有效绑定报告连接状态。
+
+## 诊断日志
+
+在「连接 QQ」标题右侧点击日志图标，查看服务端连接、重试、授权、回调、模型处理和发送失败记录。Webhook 模式也可查看回调诊断，查询日志不会启动 Gateway。弹框每 5 秒刷新，关闭或页面隐藏时暂停；读取失败可手动刷新重试。
+
+Web 和 Electron 读取同一份 PostgreSQL 记录：Web 使用登录会话，Electron 使用远程服务协议代理与 Bearer 鉴权，不新增本地文件日志或日志 IPC。仅返回当前账号的 QQ 记录，保留最近 7 天、最多 200 条；断开或重新绑定不会删除历史。记录只含固定事件摘要及安全错误码，不包含聊天正文、Secret、Token 或二维码凭据。相同错误一分钟内抑制重复，连接恢复后再次发生会重新记录。
+
+部署此功能前先执行 `pnpm db:migrate`，应用 `0033_goofy_deathstrike.sql`。数据库不可用时显示读取失败，日志写入失败不阻断连接和消息处理。清理在写入事务及常驻 Gateway 的日常维护中执行；Serverless Webhook 部署在写入时清理，查询始终过滤过期记录。

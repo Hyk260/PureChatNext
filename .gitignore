@@ -53,6 +53,7 @@ es/
 public/_spa/
 release/
 logs/
+!src/app/api/channels/**/logs/
 test-output/
 *.tsbuildinfo
 next-env.d.ts

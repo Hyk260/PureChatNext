@@ -6,6 +6,7 @@ import type { WechatRawMessage } from '@pure/chat-adapter/wechat'
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { ingestWechatWebhookBatch } from '@/libs/channels/wechat/webhook'
 import { authorizeWechatWebhook } from '@/libs/channels/wechat/webhookAuth'
+import { channelErrorCode, recordChannelGatewayLog } from '@/server/channel-gateway/diagnostics'
 
 export const runtime = 'nodejs'
 
@@ -49,9 +50,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!parsed.success) return NextResponse.json({ error: 'Invalid batch' }, { status: 400 })
   const binding = await new ChannelBindingModel().findByApplicationId(WECHAT_PLATFORM, applicationId)
   if (!binding?.enabled) return NextResponse.json({ error: 'Binding not found' }, { status: 404 })
-  const accepted = await ingestWechatWebhookBatch(binding, {
-    cursor: parsed.data.get_updates_buf,
-    messages: parsed.data.msgs as WechatRawMessage[],
-  })
-  return NextResponse.json({ accepted: accepted.length }, { status: 202 })
+  try {
+    const accepted = await ingestWechatWebhookBatch(binding, {
+      cursor: parsed.data.get_updates_buf,
+      messages: parsed.data.msgs as WechatRawMessage[],
+    })
+    return NextResponse.json({ accepted: accepted.length }, { status: 202 })
+  } catch (error) {
+    await recordChannelGatewayLog({ userId: binding.userId, platform: 'wechat', bindingId: binding.id, event: 'callback_failed', code: channelErrorCode(error) })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

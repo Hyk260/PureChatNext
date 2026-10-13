@@ -6,6 +6,8 @@ import { QQ_OP_CODES, signWebhookResponse, verifyWebhookSignature } from '@pure/
 import { decryptCredentials } from '@/libs/channels/qq/encrypt'
 import { authorizeQQInternalWebhook } from '@/libs/channels/qq/webhookAuth'
 import { logger } from '@/libs/logger'
+import type { ChannelBindingItem } from '@pure/database/schemas/channel'
+import { channelErrorCode, recordChannelGatewayLog } from '@/server/channel-gateway/diagnostics'
 
 export const maxDuration = 300
 export const runtime = 'nodejs'
@@ -130,6 +132,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'applicationId required' }, { status: 400 })
   }
 
+  let diagnosticBinding: ChannelBindingItem | undefined
   try {
     const { bodyText, payload } = await readQQWebhookBody(request)
     if (!bodyText) {
@@ -155,6 +158,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Binding not found' }, { status: 404 })
     }
 
+    diagnosticBinding = binding
     const credentials = decryptCredentials(binding.credentials)
     const botAppId = request.headers.get('X-Bot-Appid')
     const appIdMismatch =
@@ -198,6 +202,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     if (credentials.connectionMode === 'websocket' && !authorizeQQInternalWebhook(request)) {
+      await recordChannelGatewayLog({ userId: binding.userId, platform: 'qq', bindingId: binding.id, event: 'authorization_failed', code: 'INTERNAL_UNAUTHORIZED' })
       authorizedLog({ reason: 'internal-unauthorized', status: 401 })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -210,6 +215,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         !timestamp ||
         !verifyWebhookSignature(bodyText, timestamp, signature, credentials.appSecret)
       ) {
+        await recordChannelGatewayLog({ userId: binding.userId, platform: 'qq', bindingId: binding.id, event: 'authorization_failed', code: 'INVALID_SIGNATURE' })
         authorizedLog({
           reason: 'event-signature-invalid',
           secretLength: credentials.appSecret.length,
@@ -239,6 +245,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const response = await chat.webhooks.qq(replayQQWebhookRequest(request, bodyText), { waitUntil })
     return response
   } catch (error) {
+    if (diagnosticBinding) await recordChannelGatewayLog({ userId: diagnosticBinding.userId, platform: 'qq', bindingId: diagnosticBinding.id, event: 'callback_failed', code: channelErrorCode(error) })
     logger.error({ applicationId, error }, 'qq webhook failed')
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

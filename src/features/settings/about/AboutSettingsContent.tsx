@@ -84,6 +84,7 @@ export function AboutSettingsContent() {
   const updateLabel = getUpdateButtonLabel(update.status, progress)
   const hasUpdate = canShowInstallConfirmation(update.status)
   const installationSupport = update.desktopState?.installationSupport || null
+  const showTestPlan = installationSupport?.signature === 'development'
   const canInstall = update.status === 'ready' && installationSupport?.supported
   const feedbackIsError = update.status === 'error' || Boolean(update.loadError)
   const currentFeedback = update.feedback ? { message: update.feedback, isError: feedbackIsError } : null
@@ -259,10 +260,17 @@ export function AboutSettingsContent() {
             />
           </Flex>
         ) : null}
-        {update.isDesktop ? (
+        {showTestPlan ? (
           <Flex className='flex-between-wrap gap-4 border-t border-app-border-secondary py-4'>
             <Flex className='flex-col gap-1'>
-              <Text>测试计划</Text>
+              <Flex className='items-center gap-1.5'>
+                <Text>测试计划</Text>
+                <Code2
+                  aria-label='开发环境'
+                  className='size-4 text-amber-600 dark:text-amber-400'
+                  role='img'
+                />
+              </Flex>
               <Text className='text-xs' type='secondary'>
                 提前体验新功能，测试版本可能不稳定
               </Text>

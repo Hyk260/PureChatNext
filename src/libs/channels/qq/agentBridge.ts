@@ -10,6 +10,7 @@ import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { chunkQQTextLimited } from '@pure/utils/qqText'
 import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
 import type { ChannelToolArtifact, ChannelToolContext } from '@/server/chat/toolRegistry'
+import { channelErrorCode, recordChannelGatewayLog } from '@/server/channel-gateway/diagnostics'
 
 import { applyChannelFirstBindWelcome } from '../core/commands'
 import { createChannelGenerationControls, generateChannelAgentReply } from '../core/agentRuntime'
@@ -42,7 +43,8 @@ const QQ_FAILURE_MESSAGE = '消息处理失败，请稍后重试。'
 async function postQQMarkdown(
   thread: Thread,
   text: string,
-  charLimit: number
+  charLimit: number,
+  diagnosticOwner: { bindingId: string; userId: string },
 ): Promise<{ sentCount: number; text: string }> {
   const limit = Math.min(QQ_PLATFORM_MAX_TEXT_LENGTH, Math.max(QQ_MIN_CHAR_LIMIT, Math.round(charLimit)))
   const chunks = chunkQQTextLimited(text, limit, QQ_MAX_PASSIVE_REPLIES)
@@ -56,6 +58,7 @@ async function postQQMarkdown(
       await thread.post(chunk)
       sentParts.push(chunk)
     } catch (error) {
+      await recordChannelGatewayLog({ ...diagnosticOwner, platform: 'qq', event: 'send_failed', code: channelErrorCode(error) })
       if (sentParts.length > 0) {
         log('postQQMarkdown stopped after %d/%d chunks: %O', sentParts.length, chunks.length, error)
         return { sentCount: sentParts.length, text: sentParts.join('') }
@@ -294,7 +297,7 @@ export async function handleQQMention(params: {
       threadType,
     })
     if (!inserted) return
-    const posted = await postQQMarkdown(thread, access.notice, settings.charLimit).catch((error) => {
+    const posted = await postQQMarkdown(thread, access.notice, settings.charLimit, { userId, bindingId }).catch((error) => {
       log('access rejection reply failed app=%s: %O', applicationId, error)
       return { sentCount: 0, text: access.notice }
     })
@@ -317,7 +320,7 @@ export async function handleQQMention(params: {
       threadType,
     })
     if (!inserted) return
-    const posted = await postQQMarkdown(thread, unsupportedMessage, settings.charLimit).catch((error) => {
+    const posted = await postQQMarkdown(thread, unsupportedMessage, settings.charLimit, { userId, bindingId }).catch((error) => {
       log('unsupported message reply failed app=%s: %O', applicationId, error)
       return { sentCount: 0, text: unsupportedMessage }
     })
@@ -345,6 +348,7 @@ export async function handleQQMention(params: {
     log('processing attachments agent=%s count=%d', agentId, message.attachments.length)
   }
 
+  let diagnosticStage: 'processing_failed' | 'send_failed' = 'processing_failed'
   try {
     await thread.startTyping().catch(() => {
       /* typing is best-effort / unsupported on QQ */
@@ -361,7 +365,8 @@ export async function handleQQMention(params: {
     })
     if (commandReply) {
       const reply = await finalizeQQOutbound({ agentId, reply: commandReply, userId })
-      const outbound = await postQQMarkdown(thread, reply, settings.charLimit)
+      diagnosticStage = 'send_failed'
+      const outbound = await postQQMarkdown(thread, reply, settings.charLimit, { userId, bindingId })
       await eventModel
         .saveQQResponse(event.id, { sentChunkCount: outbound.sentCount, text: outbound.text })
         .catch((saveError) => log('save command event failed app=%s: %O', applicationId, saveError))
@@ -424,7 +429,8 @@ export async function handleQQMention(params: {
         },
       })
       const finalReply = await finalizeQQOutbound({ agentId, reply, userId })
-      const outbound = await postQQMarkdown(thread, finalReply, settings.charLimit)
+      diagnosticStage = 'send_failed'
+      const outbound = await postQQMarkdown(thread, finalReply, settings.charLimit, { userId, bindingId })
       await eventModel
         .saveQQResponse(event.id, {
           ...(model ? { model } : {}),
@@ -449,6 +455,7 @@ export async function handleQQMention(params: {
         .catch((saveError) => log('save aborted event failed app=%s: %O', applicationId, saveError))
       return
     }
+    await recordChannelGatewayLog({ userId, platform: 'qq', bindingId, event: diagnosticStage, code: channelErrorCode(error) })
     log('handleMention failed agent=%s: %O', agentId, error)
     const errorMessage = error instanceof Error ? error.message : 'QQ message processing failed'
     // 配额耗尽时再发失败提示只会继续 40034128，且把已成功的分片在网页标成失败。
@@ -464,7 +471,7 @@ export async function handleQQMention(params: {
       return
     }
     try {
-      const outbound = await postQQMarkdown(thread, QQ_FAILURE_MESSAGE, settings.charLimit)
+      const outbound = await postQQMarkdown(thread, QQ_FAILURE_MESSAGE, settings.charLimit, { userId, bindingId })
       await eventModel.saveQQResponse(event.id, {
         errorCode: 'PROCESSING_ERROR',
         errorMessage,
@@ -473,6 +480,7 @@ export async function handleQQMention(params: {
         text: outbound.text,
       })
     } catch (sendError) {
+      await recordChannelGatewayLog({ userId, platform: 'qq', bindingId, event: 'send_failed', code: channelErrorCode(sendError) })
       log('failure reply failed app=%s: %O', applicationId, sendError)
       await eventModel
         .saveQQResponse(event.id, {

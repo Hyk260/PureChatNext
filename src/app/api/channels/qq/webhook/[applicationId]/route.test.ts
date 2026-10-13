@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   getOrCreateQQChat: vi.fn(),
   handleWebhook: vi.fn(),
   touchActive: vi.fn(),
+  recordDiagnostic: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('@vercel/functions', () => ({ waitUntil: vi.fn() }))
@@ -43,6 +44,10 @@ vi.mock('@/libs/channels/qq/webhookAuth', () => ({
   authorizeQQInternalWebhook: mocks.authorizeQQInternalWebhook,
 }))
 vi.mock('@/libs/logger', () => ({ logger: { error: vi.fn(), info: vi.fn() } }))
+vi.mock('@/server/channel-gateway/diagnostics', async () => ({
+  channelErrorCode: (await import('@pure/database/utils/channelGatewayLogs')).channelErrorCode,
+  recordChannelGatewayLog: mocks.recordDiagnostic,
+}))
 
 import { GET, POST } from './route'
 
@@ -189,6 +194,21 @@ describe('POST /api/channels/qq/webhook/[applicationId]', () => {
     expect(response.status).toBe(401)
     expect(mocks.getOrCreateQQChat).not.toHaveBeenCalled()
     expect(mocks.touchActive).not.toHaveBeenCalled()
+    expect(mocks.recordDiagnostic).toHaveBeenCalledExactlyOnceWith({ userId: 'user-1', platform: 'qq', bindingId: 'binding-1', event: 'authorization_failed', code: 'INVALID_SIGNATURE' })
+  })
+
+  it('records attributed callback failure without the payload, secret or raw exception', async () => {
+    const payload = { d: { content: 'private-message-body' }, op: 0 }
+    const body = JSON.stringify(payload)
+    const timestamp = '1725442341'
+    mocks.handleWebhook.mockRejectedValueOnce(new Error('qq-app-secret private-message-body'))
+    const response = await POST(createRequest(body, {
+      'X-Signature-Ed25519': signWebhookResponse(timestamp, body, 'qq-app-secret'),
+      'X-Signature-Timestamp': timestamp,
+    }), context)
+    expect(response.status).toBe(500)
+    expect(mocks.recordDiagnostic).toHaveBeenCalledExactlyOnceWith({ userId: 'user-1', platform: 'qq', bindingId: 'binding-1', event: 'callback_failed', code: 'Error' })
+    expect(JSON.stringify(mocks.recordDiagnostic.mock.calls)).not.toMatch(/qq-app-secret|private-message-body/)
   })
 
   it('forwards the original unconsumed request for a valid webhook dispatch', async () => {

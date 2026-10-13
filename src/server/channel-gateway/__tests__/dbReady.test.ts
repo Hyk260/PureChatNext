@@ -12,13 +12,13 @@ describe('pingDatabase', () => {
 
   it('returns true when PostgreSQL responds', async () => {
     execute.mockResolvedValueOnce([])
-    const { pingDatabase } = await import('./dbReady')
+    const { pingDatabase } = await import('../dbReady')
     await expect(pingDatabase()).resolves.toBe(true)
   })
 
   it('returns false without throwing when PostgreSQL is down', async () => {
     execute.mockRejectedValueOnce(new Error('connect ECONNREFUSED 127.0.0.1:5432'))
-    const { pingDatabase } = await import('./dbReady')
+    const { pingDatabase } = await import('../dbReady')
     await expect(pingDatabase()).resolves.toBe(false)
   })
 })

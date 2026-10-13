@@ -341,7 +341,8 @@ describe('QQGatewayConnection', () => {
     })
 
     it('should reconnect after a post-READY close', async () => {
-      const { connectPromise, ws } = await connectAndGetWs()
+      const onRetry = vi.fn()
+      const { connectPromise, ws } = await connectAndGetWs({ onRetry })
 
       ws.simulateMessage({ op: QQ_WS_OP_CODES.HELLO, d: { heartbeat_interval: 45000 } })
       await vi.advanceTimersByTimeAsync(10)
@@ -360,6 +361,7 @@ describe('QQGatewayConnection', () => {
       await connectPromise
 
       ws.close(4000, 'network reset')
+      expect(onRetry).toHaveBeenCalledExactlyOnceWith(1, 1000)
       await vi.advanceTimersByTimeAsync(1000)
 
       expect(MockWebSocket.instances).toHaveLength(2)

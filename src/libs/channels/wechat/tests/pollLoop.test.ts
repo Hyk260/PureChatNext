@@ -2,6 +2,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const getUpdates = vi.fn()
+const recordDiagnostic = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
+vi.mock('@/server/channel-gateway/diagnostics', async () => ({
+  channelErrorCode: (await import('@pure/database/utils/channelGatewayLogs')).channelErrorCode,
+  recordChannelGatewayLog: recordDiagnostic,
+}))
 
 vi.mock('@pure/chat-adapter/wechat', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@pure/chat-adapter/wechat')>()
@@ -59,6 +64,7 @@ function binding(): ChannelBindingItem {
 describe('pollWechatUpdates', () => {
   afterEach(() => {
     getUpdates.mockReset()
+    recordDiagnostic.mockClear()
   })
 
   it('retries when getUpdates times out with AbortError', async () => {
@@ -100,6 +106,18 @@ describe('pollWechatUpdates', () => {
       forwardBatch: async () => undefined,
       signal: ac.signal,
     })
+    expect(recordDiagnostic).not.toHaveBeenCalled()
+  })
+
+  it('records callback failure and retry without persisting batch contents or raw error details', async () => {
+    const ac = new AbortController()
+    const sensitive = 'body-token-secret'
+    getUpdates.mockResolvedValue({ msgs: [{ text: sensitive }] })
+    const forwardBatch = vi.fn().mockRejectedValueOnce(new Error(sensitive)).mockResolvedValue(undefined)
+    await pollWechatUpdates(binding(), { forwardBatch, onReady: () => ac.abort(), signal: ac.signal })
+    expect(recordDiagnostic).toHaveBeenCalledWith({ userId: 'user-1', platform: 'wechat', bindingId: 'binding-1', event: 'callback_failed', code: 'Error' })
+    expect(recordDiagnostic).toHaveBeenCalledWith(expect.objectContaining({ event: 'retry', delayMs: 1000 }))
+    expect(JSON.stringify(recordDiagnostic.mock.calls)).not.toContain(sensitive)
   })
 
   it('falls back to the default timeout when the server omits its timeout', async () => {

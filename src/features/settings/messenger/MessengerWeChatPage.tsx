@@ -1,11 +1,11 @@
 'use client'
 
 import { Spin } from 'antd'
-import { Alert, Button, confirmModal, Text, Flex } from '@pure/ui'
+import { ActionIcon, Alert, Button, confirmModal, Text, Flex } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
 import { isAdminRole } from '@/const/auth'
-import { MessagesSquareIcon, Trash2Icon } from 'lucide-react'
+import { FileText, MessagesSquareIcon, Trash2Icon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -23,6 +23,7 @@ import {
   MESSENGER_DEFAULT_PROVIDER,
 } from './const'
 import MessengerAgentSelect from './MessengerAgentSelect'
+import { ChannelGatewayLogsModal } from './ChannelGatewayLogsModal'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
@@ -138,6 +139,7 @@ const MessengerWeChatPage = memo(() => {
   const userId = session?.user?.id
   const [binding, setBinding] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [logsOpen, setLogsOpen] = useState(false)
   const [agentId, setAgentId] = useState('agt_inbox')
   const [provider, setProvider] = useState<WechatProviderId>(MESSENGER_DEFAULT_PROVIDER)
   const [modelId, setModelId] = useState(MESSENGER_DEFAULT_MODELS.deepseek)
@@ -147,7 +149,7 @@ const MessengerWeChatPage = memo(() => {
     error: statusError,
     isLoading: statusLoading,
     mutate: mutateStatus,
-  } = useSWR<WechatStatus>(userId ? ['messenger-wechat-status', userId] : null, fetchWechatStatus, {
+  } = useSWR<WechatStatus>(userId ? ['messenger-wechat-status', userId] : null, () => fetchWechatStatus(), {
     refreshInterval: (latestStatus) => {
       if (!latestStatus?.bound) return 0
       return latestStatus.runtimeStatus === 'starting' ? STATUS_POLL_STARTING_MS : STATUS_POLL_MS
@@ -325,6 +327,10 @@ const MessengerWeChatPage = memo(() => {
 
   return (
     <MessengerDetailShell headerAction={headerAction} platform='wechat' platformMeta={platformMeta}>
+      <Flex className='items-center gap-2'>
+        <Text className='text-[15px]' strong>连接微信</Text>
+        <ActionIcon icon={FileText} size='small' title='查看微信网关诊断日志' aria-label='查看微信网关诊断日志' onClick={() => setLogsOpen(true)} />
+      </Flex>
       {!gatewaySupported ? (
         <Alert
           showIcon
@@ -334,10 +340,6 @@ const MessengerWeChatPage = memo(() => {
         />
       ) : (
         <Flex className='flex-col gap-2'>
-          <Text className='text-[15px]' strong>
-            连接微信
-          </Text>
-
           <Flex className='flex-col gap-2'>
             <Text className='text-[13px]' type='secondary'>
               绑定助手
@@ -366,6 +368,9 @@ const MessengerWeChatPage = memo(() => {
       )}
 
       <MessengerCommandList platform='wechat' />
+      {logsOpen ? (
+        <ChannelGatewayLogsModal userId={userId} platform='wechat' bound={bound} gatewaySupported={gatewaySupported} onClose={() => setLogsOpen(false)} />
+      ) : null}
     </MessengerDetailShell>
   )
 })

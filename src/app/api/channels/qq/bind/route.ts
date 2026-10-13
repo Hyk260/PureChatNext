@@ -12,6 +12,7 @@ import { parseQQChannelSettingsInput } from '@/libs/channels/qq/advancedSettings
 import { bindQQCredentials, QQBindingError } from '@/libs/channels/qq/binding'
 import { gatewayEnv } from '@/envs/gateway'
 import { cancelQQQrSessionsForUser } from '@/libs/channels/qq/qrSession'
+import { recordChannelGatewayLog } from '@/server/channel-gateway/diagnostics'
 
 const requestGatewayReconcile = async () => {
   const { reconcileChannelGateway } = await import('@/server/channel-gateway')
@@ -126,6 +127,7 @@ export const DELETE = withAuth(async (_request, { userId }) => {
     await invalidateQQChat(existing.applicationId)
   }
   await model.disconnect(userId, QQ_PLATFORM)
+  if (existing) await recordChannelGatewayLog({ userId, platform: 'qq', bindingId: existing.id, event: 'disconnected' })
   await requestGatewayReconcile()
   return NextResponse.json({ ok: true })
 })

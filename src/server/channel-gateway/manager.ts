@@ -7,6 +7,9 @@ import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { abortableDelay, createNanoId } from '@pure/utils'
 
 import { pingDatabase } from './dbReady'
+import { pruneChannelGatewayLogs, recordBindingGatewayLog, recordChannelGatewayLog } from './diagnostics'
+import { isChannelLogPlatform } from '@pure/types'
+import type { ChannelLogEvent } from '@pure/types'
 import type {
   ChannelGatewayClient,
   ChannelGatewayPlatformDefinition,
@@ -76,6 +79,7 @@ export class ChannelGatewayManager {
   private readonly retry = new Map<string, RetryState>()
   private readonly loggedFailures = new Map<string, string>()
   private readonly statuses = new Map<string, ChannelGatewayRuntimeStatus>()
+  private readonly previouslyOnline = new Set<string>()
   private abortController: AbortController | null = null
   private coreError: string | undefined
   private degradedCounts = new Map<string, number>()
@@ -157,6 +161,7 @@ export class ChannelGatewayManager {
       } catch (error) {
         log('maintenance failed: %O', error)
       }
+      await pruneChannelGatewayLogs()
       await abortableDelay(24 * 60 * 60 * 1000, signal)
     }
   }
@@ -292,6 +297,7 @@ export class ChannelGatewayManager {
   }
 
   private logClientFailure(bindingId: string, details: { code: string; message: string }, retry: RetrySchedule) {
+    recordBindingGatewayLog(bindingId, { event: 'retry', code: details.code, attempt: retry.attempt, delayMs: retry.delayMs }).catch(() => undefined)
     const failureSignature = `${details.code}:${details.message}`
     if (this.loggedFailures.get(bindingId) === failureSignature) return
     this.loggedFailures.set(bindingId, failureSignature)
@@ -306,9 +312,19 @@ export class ChannelGatewayManager {
   }
 
   private async reportStatus(bindingId: string, event: ChannelGatewayStatusEvent) {
+    const previous = this.statuses.get(bindingId)
     const active = this.active.get(bindingId)
     if (active) active.status = event.status
     this.statuses.set(bindingId, event.status)
+    if (previous !== event.status || event.code) {
+      let diagnosticEvent: ChannelLogEvent
+      if (event.status === 'online') {
+        diagnosticEvent = this.previouslyOnline.has(bindingId) ? 'recovered' : 'online'
+        this.previouslyOnline.add(bindingId)
+      } else if (event.status === 'degraded') diagnosticEvent = event.code === 'LEASE_LOST' ? 'lease_lost' : 'offline'
+      else diagnosticEvent = event.status
+      await recordBindingGatewayLog(bindingId, { event: diagnosticEvent, code: event.code })
+    }
     if (event.status === 'needs_rebind') {
       await this.bindingModel.markNeedsRebind(bindingId)
       await this.stopClient(bindingId, false)
@@ -333,6 +349,10 @@ export class ChannelGatewayManager {
     clearInterval(active.leaseTimer)
     await active.client.stop().catch((error) => log('client stop failed platform=%s: %O', active.definition.platform, error))
     await this.bindingModel.releaseGatewayLease(bindingId, this.owner).catch(() => undefined)
+    if (expected && isChannelLogPlatform(active.binding.platform)) {
+      this.statuses.set(bindingId, 'offline')
+      await recordChannelGatewayLog({ userId: active.binding.userId, platform: active.binding.platform, bindingId, event: 'offline' })
+    }
     if (expected && this.running) await this.bindingModel.updateGatewayStatus(bindingId, 'offline', null)
     if (expected) {
       this.retry.delete(bindingId)
@@ -355,6 +375,7 @@ export class ChannelGatewayManager {
     this.desiredCounts.clear()
     this.degradedCounts.clear()
     this.statuses.clear()
+    this.previouslyOnline.clear()
     this.waitingForDatabase = false
   }
 

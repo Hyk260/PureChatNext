@@ -25,10 +25,16 @@ vi.mock('@pure/utils', () => ({
   createNanoId: () => () => 'test-owner',
 }))
 vi.mock('@/libs/channels/wechat/processor', () => ({ runWechatProcessor: vi.fn().mockResolvedValue(undefined) }))
-vi.mock('./dbReady', () => ({ pingDatabase: vi.fn().mockResolvedValue(true) }))
+vi.mock('../dbReady', () => ({ pingDatabase: vi.fn().mockResolvedValue(true) }))
+vi.mock('../diagnostics', () => ({
+  pruneChannelGatewayLogs: vi.fn().mockResolvedValue(undefined),
+  recordBindingGatewayLog: vi.fn().mockResolvedValue(undefined),
+  recordChannelGatewayLog: vi.fn().mockResolvedValue(undefined),
+}))
 
-import { ChannelGatewayManager } from './manager'
-import type { ChannelGatewayClient, ChannelGatewayPlatformDefinition } from './types'
+import { ChannelGatewayManager } from '../manager'
+import { recordBindingGatewayLog } from '../diagnostics'
+import type { ChannelGatewayClient, ChannelGatewayPlatformDefinition } from '../types'
 import type { ChannelBindingItem } from '@pure/database/schemas/channel'
 
 function binding(overrides: Partial<ChannelBindingItem> = {}): ChannelBindingItem {
@@ -103,11 +109,11 @@ function setup(overrides: { isDatabaseReady?: () => Promise<boolean> } = {}) {
     eventModel: { pruneCompleted: vi.fn() } as never,
     isDatabaseReady: overrides.isDatabaseReady ?? (async () => true),
   })
-  return { bindings, clients, manager, model }
+  return { bindings, clients, definition, manager, model }
 }
 
 describe('ChannelGatewayManager', () => {
-  beforeEach(() => vi.useFakeTimers())
+  beforeEach(() => { vi.clearAllMocks(); vi.useFakeTimers() })
   afterEach(() => vi.useRealTimers())
 
   it('starts once, stops idempotently, and can start again', async () => {
@@ -158,6 +164,28 @@ describe('ChannelGatewayManager', () => {
       'degraded',
       expect.objectContaining({ code: 'LEASE_LOST' })
     )
+    expect(recordBindingGatewayLog).toHaveBeenCalledWith('binding-1', { event: 'lease_lost', code: 'LEASE_LOST' })
+    await manager.stop()
+  })
+
+  it('records first online, disconnect and recovery while ignoring successful heartbeats', async () => {
+    const { definition, manager } = setup()
+    let reportStatus: (event: { status: 'online' | 'degraded' | 'needs_rebind'; code?: string }) => void = () => undefined
+    const original = definition.createClient
+    definition.createClient = (context) => { reportStatus = context.reportStatus; return original(context) }
+    await manager.ensureRunning()
+    expect(recordBindingGatewayLog).toHaveBeenCalledWith('binding-1', { event: 'starting', code: undefined })
+    expect(recordBindingGatewayLog).toHaveBeenCalledWith('binding-1', { event: 'online', code: undefined })
+    const count = vi.mocked(recordBindingGatewayLog).mock.calls.length
+    await reportStatus({ status: 'online' })
+    await reportStatus({ status: 'online' })
+    expect(recordBindingGatewayLog).toHaveBeenCalledTimes(count)
+    await reportStatus({ status: 'degraded', code: 'ECONNRESET' })
+    await reportStatus({ status: 'online' })
+    expect(recordBindingGatewayLog).toHaveBeenCalledWith('binding-1', { event: 'offline', code: 'ECONNRESET' })
+    expect(recordBindingGatewayLog).toHaveBeenCalledWith('binding-1', { event: 'recovered', code: undefined })
+    await reportStatus({ status: 'needs_rebind', code: 'SESSION_EXPIRED' })
+    expect(recordBindingGatewayLog).toHaveBeenCalledWith('binding-1', { event: 'needs_rebind', code: 'SESSION_EXPIRED' })
     await manager.stop()
   })
 

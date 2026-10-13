@@ -232,6 +232,13 @@
       "when": 1791526873136,
       "tag": "0032_late_barracuda",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791876123825,
+      "tag": "0033_goofy_deathstrike",
+      "breakpoints": true
     }
   ]
 }

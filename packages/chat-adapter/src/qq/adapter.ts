@@ -226,7 +226,7 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     abortSignal: AbortSignal,
     webhookUrl: string,
     webhookHeaders?: Record<string, string>,
-    callbacks?: Pick<import('./gateway').QQGatewayOptions, 'onForwardError' | 'onStatus'>
+    callbacks?: Pick<import('./gateway').QQGatewayOptions, 'onForwardError' | 'onRetry' | 'onStatus'>
   ): Promise<QQGatewayConnection> {
     const gateway = new QQGatewayConnection(this.api, {
       abortSignal,

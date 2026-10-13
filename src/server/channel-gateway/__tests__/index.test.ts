@@ -14,7 +14,7 @@ vi.mock('@/envs/gateway', () => ({
     return { CHANNEL_GATEWAY_ENABLED: mocks.enabled }
   },
 }))
-vi.mock('./manager', () => ({
+vi.mock('../manager', () => ({
   ChannelGatewayManager: class {
     ensureRunning = mocks.ensureRunning
     getSummary = mocks.getSummary
@@ -22,8 +22,8 @@ vi.mock('./manager', () => ({
     stop = mocks.stop
   },
 }))
-vi.mock('./platforms/wechat', () => ({ wechatGatewayPlatform: { platform: 'wechat' } }))
-vi.mock('./platforms/qq', () => ({ qqGatewayPlatform: { platform: 'qq' } }))
+vi.mock('../platforms/wechat', () => ({ wechatGatewayPlatform: { platform: 'wechat' } }))
+vi.mock('../platforms/qq', () => ({ qqGatewayPlatform: { platform: 'qq' } }))
 
 const MANAGER_KEY = Symbol.for('purechat.channel-gateway.manager')
 
@@ -41,7 +41,7 @@ describe('channel-gateway index', () => {
   })
 
   it('starts the manager when reconciling if instrumentation did not store one', async () => {
-    const { reconcileChannelGateway } = await import('./index')
+    const { reconcileChannelGateway } = await import('../index')
     await reconcileChannelGateway()
     await vi.waitFor(() => {
       expect(mocks.ensureRunning).toHaveBeenCalledOnce()
@@ -51,7 +51,7 @@ describe('channel-gateway index', () => {
 
   it('does not start a manager when the gateway is disabled', async () => {
     mocks.enabled = false
-    const { reconcileChannelGateway } = await import('./index')
+    const { reconcileChannelGateway } = await import('../index')
     await reconcileChannelGateway()
     await Promise.resolve()
     await Promise.resolve()
@@ -62,7 +62,7 @@ describe('channel-gateway index', () => {
   it('propagates startup failures to the binding caller', async () => {
     const error = new Error('gateway startup failed')
     mocks.ensureRunning.mockRejectedValueOnce(error)
-    const { reconcileChannelGateway } = await import('./index')
+    const { reconcileChannelGateway } = await import('../index')
 
     await expect(reconcileChannelGateway()).rejects.toBe(error)
     expect(mocks.reconcileNow).not.toHaveBeenCalled()

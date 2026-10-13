@@ -4,6 +4,7 @@ import { abortableDelay } from '@pure/utils'
 import debug from 'debug'
 
 import type { ChannelBindingItem } from '@pure/database/schemas/channel'
+import { channelErrorCode, recordChannelGatewayLog } from '@/server/channel-gateway/diagnostics'
 
 import { decryptCredentials } from './encrypt'
 
@@ -78,6 +79,8 @@ export async function pollWechatUpdates(binding: ChannelBindingItem, options: We
         options.onSessionExpired?.()
         return
       }
+      await recordChannelGatewayLog({ userId: binding.userId, platform: 'wechat', bindingId: binding.id, event: phase === 'forward' ? 'callback_failed' : 'offline', code: channelErrorCode(error) })
+      await recordChannelGatewayLog({ userId: binding.userId, platform: 'wechat', bindingId: binding.id, event: 'retry', code: channelErrorCode(error), delayMs: retryDelay })
       log(
         'poll failed binding=%s phase=%s code=%s message=%s cause=%s',
         binding.id,

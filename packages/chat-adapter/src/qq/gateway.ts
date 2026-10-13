@@ -37,6 +37,8 @@ export interface QQGatewayOptions {
   log?: GatewayLogger
   /** Webhook 转发重试耗尽后的错误回调。 */
   onForwardError?: (error: Error) => void
+  /** 自动重连安排；只提供尝试次数和退避时间。 */
+  onRetry?: (attempt: number, delayMs: number) => void
   /** Gateway 状态变化回调。 */
   onStatus?: (status: 'online' | 'degraded', detail?: { code: string; message: string }) => void
   /** 当前分片编号和分片总数，默认使用 `[0, 1]`。 */
@@ -74,6 +76,7 @@ export class QQGatewayConnection {
   private readonly log: GatewayLogger
   private readonly onForwardError?: (error: Error) => void
   private readonly onStatus?: QQGatewayOptions['onStatus']
+  private readonly onRetry?: QQGatewayOptions['onRetry']
   private readonly shard: [number, number]
   private readonly webhookHeaders: Record<string, string>
   private readonly webhookUrl: string
@@ -106,6 +109,7 @@ export class QQGatewayConnection {
     this.abortSignal = options.abortSignal
     this.durationMs = options.durationMs
     this.onStatus = options.onStatus
+    this.onRetry = options.onRetry
     this.onForwardError = options.onForwardError
     this.done = new Promise<void>((resolve, reject) => {
       this.doneResolve = resolve
@@ -376,6 +380,7 @@ export class QQGatewayConnection {
     }
     this.reconnectAttempts += 1
     const timeout = Math.min(RECONNECT_BASE_DELAY_MS * 2 ** (this.reconnectAttempts - 1), RECONNECT_MAX_DELAY_MS)
+    this.onRetry?.(this.reconnectAttempts, timeout)
     // 使用指数退避限制重连频率；存在会话时优先使用恢复地址。
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null

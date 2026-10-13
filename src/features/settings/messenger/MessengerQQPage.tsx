@@ -1,12 +1,12 @@
 'use client'
 
 import { Spin } from 'antd'
-import { Alert, Button, confirmModal, Text, Flex } from '@pure/ui'
+import { ActionIcon, Alert, Button, confirmModal, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
-import { MessagesSquareIcon, Settings2Icon, Trash2Icon } from 'lucide-react'
+import { FileText, MessagesSquareIcon, Settings2Icon, Trash2Icon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -26,6 +26,7 @@ import {
   QQ_DEFAULT_PROVIDER,
 } from './const'
 import MessengerAgentSelect from './MessengerAgentSelect'
+import { ChannelGatewayLogsModal } from './ChannelGatewayLogsModal'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
@@ -133,6 +134,7 @@ const MessengerQQPage = memo(() => {
   const [binding, setBinding] = useState(false)
   const [saving, setSaving] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [logsOpen, setLogsOpen] = useState(false)
   const [agentId, setAgentId] = useState('agt_inbox')
   const [provider, setProvider] = useState<QQProviderId>(QQ_DEFAULT_PROVIDER)
   const [modelId, setModelId] = useState(QQ_DEFAULT_MODEL)
@@ -301,9 +303,10 @@ const MessengerQQPage = memo(() => {
   return (
     <MessengerDetailShell headerAction={headerAction} platform='qq' platformMeta={platformMeta}>
       <Flex className='flex-col gap-3'>
-        <Text className='text-[15px]' strong>
-          连接 QQ
-        </Text>
+        <Flex className='items-center gap-2'>
+          <Text className='text-[15px]' strong>连接 QQ</Text>
+          <ActionIcon icon={FileText} size='small' title='查看 QQ 网关诊断日志' aria-label='查看 QQ 网关诊断日志' onClick={() => setLogsOpen(true)} />
+        </Flex>
 
         <Flex className='flex-col gap-2'>
           <Text className='text-[13px]' type='secondary'>
@@ -327,6 +330,9 @@ const MessengerQQPage = memo(() => {
       </Flex>
 
       <MessengerCommandList platform='qq' />
+      {logsOpen ? (
+        <ChannelGatewayLogsModal userId={userId} platform='qq' bound={!showConnect} gatewaySupported={gatewaySupported} connectionMode={status?.connectionMode} onClose={() => setLogsOpen(false)} />
+      ) : null}
 
       {advancedOpen ? (
         <QQAdvancedSettingsModal

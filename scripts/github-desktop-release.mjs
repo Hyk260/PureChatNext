@@ -28,6 +28,18 @@ export function desktopArtifacts(version, platform = 'all') {
   return artifacts[platform]
 }
 
+/** 安装文件与更新元数据必须一起发布；portable 不生成更新 blockmap。 */
+export function desktopReleaseAssets(version, platform = 'all') {
+  const [installer, portable, dmg, zip] = desktopArtifacts(version)
+  const assets = {
+    windows: [installer, portable, 'latest.yml', `${installer}.blockmap`],
+    mac: [dmg, zip, 'latest-mac.yml', `${dmg}.blockmap`, `${zip}.blockmap`],
+  }
+  if (platform === 'all') return [...assets.windows, ...assets.mac]
+  if (!(platform === 'windows' || platform === 'mac')) throw new Error(`未知桌面平台: ${platform}`)
+  return assets[platform]
+}
+
 /** 在下载依赖和启动双平台构建前验证发行输入，不访问或改写远端。 */
 export function validateDesktopBuildConfig({ version, repository, sha, notes, cloudUrl }) {
   desktopReleaseNotes({ version, repository, notes })
@@ -44,7 +56,7 @@ export function validateDesktopBuildConfig({ version, repository, sha, notes, cl
 }
 
 export function verifyDesktopArtifacts(directory, version, platform = 'all') {
-  return desktopArtifacts(version, platform).map((filename) => {
+  return desktopReleaseAssets(version, platform).map((filename) => {
     const file = path.resolve(directory, filename)
     let stat
     try {
@@ -176,7 +188,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
         sha: process.env.GITHUB_SHA,
         notes: readFileSync('apps/desktop/build/release-notes.md', 'utf8'),
       })
-      console.info(`已更新 ${tag} 的 Release 草稿，请检查四个产物后手动发布`)
+      console.info(`已更新 ${tag} 的 Release 草稿，请检查安装文件和更新元数据后手动发布`)
     } else {
       throw new Error(
         '用法: node scripts/github-desktop-release.mjs version | preflight | verify <目录> [windows|mac|all] | draft <目录>'

@@ -121,9 +121,11 @@ const config = {
   portable: {
     artifactName: '${productName}-${version}-portable.${ext}',
   },
-  // 配置更新地址时使用 Generic 更新源；未配置时禁用 publish 配置。
-  // Shell/CI 环境变量优先于桌面 env 文件；打包命令的 --publish never 只禁止上传。
-  publish: updateUrl ? [{ provider: 'generic', url: updateUrl }] : null,
+  // 生产默认使用公开 GitHub Releases；仅在本地下载测试或自托管时用更新地址覆盖。
+  // Shell/CI 环境变量优先于桌面 env 文件；--publish never 只禁止上传，仍生成更新配置和元数据。
+  publish: updateUrl
+    ? [{ provider: 'generic', url: updateUrl }]
+    : [{ provider: 'github', owner: 'Hyk260', repo: 'PureChatNext' }],
 }
 
 export default config

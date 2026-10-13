@@ -3,7 +3,7 @@
 # 使用方法：
 #   1. 将工作流合入 main；更新根 package.json 的 X.Y.Z 稳定版本和 apps/desktop/build/release-notes.md。
 #   2. Actions → Desktop release → Run workflow，选择源码分支；所有 job 固定使用触发时的 commit。
-#   3. 从运行页下载两个 Artifact（保留 30 天），或检查 vX.Y.Z 草稿的四个文件后手动发布。
+#   3. 从运行页下载两个 Artifact（保留 30 天），或检查 vX.Y.Z 草稿的安装文件和更新元数据后手动发布。
 #   4. 不要提前推送同版本 tag 让 release.yml 公开发布；已公开版本不会被本工作流覆盖。
 #
 # 配置与权限：
@@ -11,7 +11,8 @@
 #   - 无需数据库、AI Key、Apple 证书或 PAT；GH_TOKEN 使用 GitHub 自动提供的 GITHUB_TOKEN。
 #   - 默认 contents: read；只有草稿 job 申请 contents: write，无需全局开启写权限。
 #   - GITHUB_TOKEN 不能获得 workflow 写权限；所选分支的工作流必须与默认分支一致，预检会提前检查。
-#   - macOS 仅 ad-hoc 签名，不公证；不配置自动更新源，公开下载链接需发布草稿后才能使用。
+#   - 生产更新源使用 Hyk260/PureChatNext 的 GitHub Releases，公开下载链接需发布草稿后才能使用。
+#   - macOS 仅 ad-hoc 签名，不公证；支持检测和下载更新，不支持自动安装。
 # 详细说明与失败排查见 apps/desktop/README.md 的“GitHub Actions 手动打包”。
 name: Desktop release
 run-name: Desktop release from ${{ github.ref_name }} @ ${{ github.sha }}
@@ -79,16 +80,18 @@ jobs:
             os: windows-2022
             first-artifact: setup.exe
             second-artifact: portable.exe
+            update-manifest: latest.yml
           - platform: mac
             arch: arm64
             os: macos-15
             first-artifact: arm64.dmg
             second-artifact: arm64.zip
+            update-manifest: latest-mac.yml
     env:
       NODE_OPTIONS: --max-old-space-size=4096
       # 构建时固化的公开服务地址；不需要 APP_URL、DATABASE_URL 或任何服务端密钥。
       PURECHAT_DESKTOP_CLOUD_URL: ${{ vars.PURECHAT_DESKTOP_CLOUD_URL || 'https://next.purechat.cn' }}
-      # 显式关闭更新源；--publish never 只禁止 electron-builder 上传，并不会关闭更新配置。
+      # 清除本地 Generic 地址覆盖，使用默认 GitHub 更新源；--publish never 只禁止 Builder 上传。
       PURECHAT_DESKTOP_UPDATE_URL: ''
       # 禁用正式证书自动发现；macOS 命令仍显式使用 identity=- 生成 arm64 所需的 ad-hoc 签名。
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -119,10 +122,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ needs.prepare.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}
-          # 精确文件名避免上传解包目录、旧版本、blockmap 和 builder-debug.yml。
+          # 安装文件、渠道 YAML 和当前版本 blockmap 一起上传，排除解包目录及构建调试文件。
           path: |
             apps/desktop/release/PureChat-${{ needs.prepare.outputs.version }}-${{ matrix.first-artifact }}
             apps/desktop/release/PureChat-${{ needs.prepare.outputs.version }}-${{ matrix.second-artifact }}
+            apps/desktop/release/${{ matrix.update-manifest }}
+            apps/desktop/release/PureChat-${{ needs.prepare.outputs.version }}-*.blockmap
           if-no-files-found: error
           # 兼容同一次运行的 Re-run all jobs，替换此前同名 Artifact。
           overwrite: true
@@ -155,7 +160,7 @@ jobs:
           pattern: desktop-${{ needs.prepare.outputs.version }}-*
           path: desktop-release-artifacts
           merge-multiple: true
-      - name: Validate and upload all four files to a draft
+      - name: Validate and upload installers and update metadata to a draft
         env:
           # gh CLI 读取 GH_TOKEN；只在需要写 Release 的步骤注入，不传入打包 job。
           GH_TOKEN: ${{ github.token }}

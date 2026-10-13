@@ -7,7 +7,7 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface ProcessEnv {
-      /** 桌面端自动更新源地址；开发环境用于本地下载测试，生产环境用于发布更新。 */
+      /** 桌面端 Generic 更新源覆盖地址；开发环境用于本地下载测试，生产默认使用 GitHub Releases。 */
       PURECHAT_DESKTOP_UPDATE_URL?: string
       /** 桌面端是否允许多个实例同时运行；Windows 始终单实例以便正确处理授权回跳。 */
       PURECHAT_DESKTOP_MULTI_INSTANCE?: string

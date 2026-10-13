@@ -52,18 +52,27 @@ describe('desktop version source', () => {
     expect(JSON.parse(await readFile(desktopManifest, 'utf8')).version).toBe('0.3.1')
   })
 
-  it('overrides the manifest cached by builder before its config loads, including release channels', async () => {
-    await writeFile(path.join(rootDir, 'package.json'), JSON.stringify({ version: '0.4.0-rc.1' }))
-    await copyFile(path.join(desktopSourceDir, 'electron-builder.mjs'), path.join(desktopDir, 'electron-builder.mjs'))
-    await symlink(path.join(desktopSourceDir, 'scripts'), path.join(desktopDir, 'scripts'), 'junction')
-    await symlink(path.join(desktopSourceDir, 'node_modules'), path.join(desktopDir, 'node_modules'), 'junction')
-    await symlink(path.resolve(desktopSourceDir, '../../node_modules'), path.join(rootDir, 'node_modules'), 'junction')
-    const output = execFileSync(
-      process.execPath,
-      [
-        '--input-type=module',
-        '-e',
-        `
+  it.each([
+    { updateUrl: '', publish: [{ provider: 'github', owner: 'Hyk260', repo: 'PureChatNext' }] },
+    { updateUrl: 'http://127.0.0.1:5500', publish: [{ provider: 'generic', url: 'http://127.0.0.1:5500' }] },
+  ])(
+    'validates the builder version, channel and publish config with update URL "$updateUrl"',
+    async ({ updateUrl, publish }) => {
+      await writeFile(path.join(rootDir, 'package.json'), JSON.stringify({ version: '0.4.0-rc.1' }))
+      await copyFile(path.join(desktopSourceDir, 'electron-builder.mjs'), path.join(desktopDir, 'electron-builder.mjs'))
+      await symlink(path.join(desktopSourceDir, 'scripts'), path.join(desktopDir, 'scripts'), 'junction')
+      await symlink(path.join(desktopSourceDir, 'node_modules'), path.join(desktopDir, 'node_modules'), 'junction')
+      await symlink(
+        path.resolve(desktopSourceDir, '../../node_modules'),
+        path.join(rootDir, 'node_modules'),
+        'junction'
+      )
+      const output = execFileSync(
+        process.execPath,
+        [
+          '--input-type=module',
+          '-e',
+          `
       import { createRequire } from 'node:module'
       const require = createRequire(import.meta.url)
       const builderRequire = createRequire(require.resolve('electron-builder'))
@@ -72,13 +81,23 @@ describe('desktop version source', () => {
       const packager = new Packager({ projectDir: process.cwd(), config: 'electron-builder.mjs' })
       await packager.validateConfig()
       const info = new AppInfo(packager)
-      console.log('VERSION_RESULT ' + JSON.stringify({ version: info.version, channel: info.channel }))
+      console.log('VERSION_RESULT ' + JSON.stringify({ version: info.version, channel: info.channel, publish: packager.config.publish }))
     `,
-      ],
-      { cwd: desktopDir, encoding: 'utf8', timeout: 10_000 }
-    )
-    const result = output.split('\n').find((line) => line.startsWith('VERSION_RESULT '))
-    expect(JSON.parse(result.slice('VERSION_RESULT '.length))).toEqual({ version: '0.4.0-rc.1', channel: 'rc' })
-    expect(JSON.parse(await readFile(path.join(desktopDir, 'package.json'), 'utf8')).version).toBe('0.4.0-rc.1')
-  })
+        ],
+        {
+          cwd: desktopDir,
+          encoding: 'utf8',
+          timeout: 10_000,
+          env: { ...process.env, PURECHAT_DESKTOP_UPDATE_URL: updateUrl },
+        }
+      )
+      const result = output.split('\n').find((line) => line.startsWith('VERSION_RESULT '))
+      expect(JSON.parse(result.slice('VERSION_RESULT '.length))).toEqual({
+        version: '0.4.0-rc.1',
+        channel: 'rc',
+        publish,
+      })
+      expect(JSON.parse(await readFile(path.join(desktopDir, 'package.json'), 'utf8')).version).toBe('0.4.0-rc.1')
+    }
+  )
 })

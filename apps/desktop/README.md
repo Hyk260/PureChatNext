@@ -66,18 +66,18 @@ pnpm package:desktop:win:portable
 
 ### GitHub Actions 手动打包
 
-工作流 [Desktop release](../../.github/workflows/desktop-release.yml) 仅手动触发，每次同时构建 Windows x64 和 macOS arm64，共四个分发文件。
+工作流 [Desktop release](../../.github/workflows/desktop-release.yml) 仅手动触发，每次同时构建 Windows x64 和 macOS arm64，生成四个分发文件及五个更新元数据文件。
 
 1. 将工作流合入 `main`，在根 `package.json` 维护 `X.Y.Z` 稳定版本，并更新 [build/release-notes.md](build/release-notes.md)。首版流程不支持 RC/Beta 版本号。
 2. 打开 GitHub 仓库的 **Actions → Desktop release → Run workflow**，选择要构建的分支。所有 job 都使用触发时的固定 commit，无需另填版本。
 3. 构建通过后，从运行页下载 `desktop-X.Y.Z-windows-x64` 和 `desktop-X.Y.Z-mac-arm64` Artifacts，保留期为 30 天。
-4. 两端全部成功后，工作流汇总四个文件到 `vX.Y.Z` 的 Release 草稿，并生成 Installer、Portable、DMG、ZIP 下载表格。检查草稿和安装包后手动发布；表格中的公开下载链接在发布后可用。
+4. 两端全部成功后，工作流汇总安装文件、`latest.yml`、`latest-mac.yml` 和三个 blockmap 到 `vX.Y.Z` 的 Release 草稿，并生成 Installer、Portable、DMG、ZIP 下载表格。检查草稿和安装包后手动发布；下载链接和更新元数据在发布后可用。
 
-Windows 使用 `windows-2022`，macOS 使用 `macos-15`，均使用 Node.js 22.23.2 和 pnpm 10.33.4。Node 版本与 Docker 工作流保持一致，满足当前依赖要求的 `>=22.22.0`。构建前先检查稳定版本、发行说明、服务地址和工作流分支条件；每个平台打包后校验预期文件存在且非空，再上传精确文件名。一端失败不会取消另一端，成功端的 Artifact 仍可下载，但不会创建或更新草稿；不会上传解包目录、blockmap 或调试 YAML。
+Windows 使用 `windows-2022`，macOS 使用 `macos-15`，均使用 Node.js 22.23.2 和 pnpm 10.33.4。Node 版本与 Docker 工作流保持一致，满足当前依赖要求的 `>=22.22.0`。构建前先检查稳定版本、发行说明、服务地址和工作流分支条件；每个平台打包后校验安装文件和更新元数据存在且非空，再上传。一端失败不会取消另一端，成功端的 Artifact 仍可下载，但不会创建或更新草稿；不会上传解包目录或构建调试 YAML。
 
-默认官方服务地址为 `https://next.purechat.cn`。需要覆盖时，在仓库 **Settings → Secrets and variables → Actions → Variables** 设置非敏感变量 `PURECHAT_DESKTOP_CLOUD_URL`，必须是无用户名/密码的 HTTP(S) 地址，不要误填到 Secrets。此流程不配置自动更新源，不需要数据库、AI Key、签名证书或 PAT；草稿汇总 job 使用内置 `GITHUB_TOKEN` 的 `contents: write` 权限，其余 job 仅有读取权限。仓库默认令牌权限保持只读即可，GitHub 会按 job 声明授予草稿写权限。
+默认官方服务地址为 `https://next.purechat.cn`。需要覆盖时，在仓库 **Settings → Secrets and variables → Actions → Variables** 设置非敏感变量 `PURECHAT_DESKTOP_CLOUD_URL`，必须是无用户名/密码的 HTTP(S) 地址，不要误填到 Secrets。生产更新源固定为 `Hyk260/PureChatNext` 的公开 GitHub Releases；工作流清空 `PURECHAT_DESKTOP_UPDATE_URL`，避免把本地 Generic 测试地址写入发行包。不需要数据库、AI Key、签名证书或 PAT；草稿汇总 job 使用内置 `GITHUB_TOKEN` 的 `contents: write` 权限，其余 job 仅有读取权限。仓库默认令牌权限保持只读即可，GitHub 会按 job 声明授予草稿写权限。
 
-草稿记录完整 commit SHA。同版本、同 commit 重跑会替换四个产物；已公开版本、不同 commit 的草稿、指向不同 commit 的 tag 均会明确失败。源代码变化后应使用新版本；若需要重建未发布的同版本，应先人工处理旧草稿及冲突 tag。API 或网络错误也会直接失败，不会被当作版本不存在。
+草稿记录完整 commit SHA。同版本、同 commit 重跑会替换安装文件及更新元数据；已公开版本、不同 commit 的草稿、指向不同 commit 的 tag 均会明确失败。源代码变化后应使用新版本；若需要重建未发布的同版本，应先人工处理旧草稿及冲突 tag。API 或网络错误也会直接失败，不会被当作版本不存在。
 
 现有 tag 发布工作流仍然保留。桌面发行请先运行本流程生成草稿，再手动发布；不要提前推送 tag 让旧工作流公开同版本，否则本流程会拒绝覆盖。GitHub 的 Release API 对相对默认分支改动了工作流的 commit 要求额外的 workflow 写权限，内置 `GITHUB_TOKEN` 无法获得该权限；因此 `prepare` 会提前比较所选 commit 与默认分支的 `.github/workflows/`，不一致时要求先合入 `main`。业务源码可以选择其他分支，只要工作流内容与默认分支一致。[GitHub Release 权限说明](https://docs.github.com/en/rest/releases/releases#create-a-release)
 
@@ -92,7 +92,7 @@ Windows 使用 `windows-2022`，macOS 使用 `macos-15`，均使用 Node.js 22.2
 | 下载依赖或上传产物时网络失败 | 查看具体失败步骤后重跑；同一次运行的 Re-run all jobs 会替换同名 Artifact |
 | 草稿步骤出现 403 / Resource not accessible by integration | 确认草稿 job 的 `contents: write` 未被删除，并检查组织策略；无需向构建 job 分发 PAT 或服务端密钥 |
 | 草稿步骤提示已公开 / commit 或 tag 冲突 | 使用新版本，或人工处理未发布草稿及冲突 tag；脚本不会覆盖公开版本 |
-| 草稿创建成功但文件上传失败 | 草稿仍未发布，使用同 commit 重跑，四个文件上传成功后再检查并发布 |
+| 草稿创建成功但文件上传失败 | 草稿仍未发布，使用同 commit 重跑，安装文件和更新元数据全部上传成功后再检查并发布 |
 
 `prepare` / `draft` 脚本只依赖 Node 标准库；GitHub 的 Ubuntu runner 已提供 `git`、`gh`，无需额外安装项目依赖。手动运行 CLI 时需在仓库根目录执行，发行步骤还需设置 `GITHUB_REPOSITORY`、完整 `GITHUB_SHA` 和具有仓库写权限的 `GH_TOKEN`；Actions 会自动注入这些值。
 
@@ -205,14 +205,14 @@ portable 与 ZIP 的核心区别是：
 
 ## 签名、公证、自动更新与 blockmap
 
-当前配置没有接入代码签名、公证或固定的自动更新服务器：
+生产更新源默认使用公开 GitHub Releases，当前发行工作流尚未接入正式代码签名和公证：
 
 - macOS 产物可以生成，但正式分发前仍需配置 Apple Developer 签名和 notarization。
 - Windows 产物可以生成，但正式分发前应配置代码签名证书。
-- 未设置 `PURECHAT_DESKTOP_UPDATE_URL` 时，`publish: null` 配合命令行 `--publish never` 表示只构建，不上传。
+- 未设置 `PURECHAT_DESKTOP_UPDATE_URL` 时，`publish` 使用 `Hyk260/PureChatNext` 的 GitHub Releases；`--publish never` 只禁止 Builder 上传，仍生成包内更新配置和渠道 YAML。
 - `.blockmap` 是供差分更新使用的元数据，不代表应用已经具备自动更新能力。
 - 客户端已接入 `electron-updater`：打包安装版本启动后延迟检查，并每 4 小时再次检查；失败后以 5–60 分钟退避重试。关于页可手动检查、查看下载进度和确认重启安装，普通退出不会自动安装。
-- 要启用自动更新，发布构建需要设置 `PURECHAT_DESKTOP_UPDATE_URL`（Generic provider 地址），并同时配置签名、版本策略和端到端验收。
+- 发布时必须同时上传安装文件、渠道 YAML 和 blockmap；macOS 自动安装还需正式签名及签名身份兼容性验收。公开仓库的客户端检测和下载不需要 GitHub token，上传权限仅留在发行 job。
 
 关于页的自动更新开关控制后台检测与下载；关闭后仍可手动检查。更新设置保存在客户端配置中，测试计划默认关闭，启用后可选择 RC 或 Beta。渠道切换会取消旧下载并清除安装就绪状态，禁止自动降级。Web 端在浏览器 tab 重新可见时检测部署变化并提示用户刷新，关于页不提供更新按钮或更新开关。
 
@@ -220,7 +220,7 @@ portable 与 ZIP 的核心区别是：
 
 客户端启动时检查当前构建的安装条件。macOS 使用系统 `codesign` 检查 Developer ID Application 签名并进行严格校验；开发版、ad-hoc／未签名构建以及校验无法完成的构建仅支持下载，安装确认按钮禁用，主进程也会拒绝安装。弹框会显示具体原因。此检查只确认当前应用的安装条件，每个更新包仍必须通过 Squirrel.Mac 的签名身份兼容性校验；Windows 保留原生安装器校验，portable 和不支持的平台仍使用手动更新。
 
-更新源需提供对应平台、架构和渠道的元数据：稳定渠道 `latest`、预览渠道 `rc`、测试渠道 `beta`。预发布客户端版本使用 `X.Y.Z-rc.N` 或 `X.Y.Z-beta.N`；将 electron-builder 生成的渠道 YAML、安装包和校验文件一起上传到同一个更新根地址。macOS 自动更新需 ZIP 产物，Windows 使用 NSIS 安装包；portable 和未配置更新源的构建提供手动发布页入口。设置页面中的 RC/Beta 选择不会自动创建远端发布渠道。
+更新源需提供对应平台、架构和渠道的元数据：稳定渠道 `latest`、预览渠道 `rc`、测试渠道 `beta`。预发布客户端版本使用 `X.Y.Z-rc.N` 或 `X.Y.Z-beta.N`；将 electron-builder 生成的渠道 YAML、安装包和校验文件一起上传到对应 GitHub Release（Generic 源则上传至同一个更新根地址）。macOS 自动更新需 ZIP 产物，Windows 使用 NSIS 安装包；portable 和未配置更新源的构建提供手动发布页入口。当前手动发行工作流只支持稳定版本，设置页面中的 RC/Beta 选择不会自动创建远端发布渠道。
 
 ### 更新说明
 
@@ -230,13 +230,15 @@ portable 与 ZIP 的核心区别是：
 
 ### 打包更新源
 
-打包配置会独立加载 `apps/desktop/` 下的 `.env`、`.env.local`、`.env.desktop` 和 `.env.desktop.local`，后者覆盖前者；shell/CI 中已有的环境变量优先级最高。`electron-vite` 加载的变量不会传递给后续的 `electron-builder` 进程。正式发布时应覆盖本地下载测试地址：
+打包配置会独立加载 `apps/desktop/` 下的 `.env`、`.env.local`、`.env.desktop` 和 `.env.desktop.local`，后者覆盖前者；shell/CI 中已有的环境变量优先级最高。`electron-vite` 加载的变量不会传递给后续的 `electron-builder` 进程。正式发布时清空本地下载测试地址，使用默认 GitHub provider：
 
 ```bash
-PURECHAT_DESKTOP_UPDATE_URL=https://updates.example.com/purechat pnpm package:desktop:mac
+PURECHAT_DESKTOP_UPDATE_URL= pnpm package:desktop:mac
 ```
 
-设置更新地址后，`--publish never` 仍会把更新源写入安装包的 `resources/app-update.yml`，只禁止上传；macOS 对应路径为 `PureChat.app/Contents/Resources/app-update.yml`。安装后的客户端读取该文件，无需运行时再设置环境变量；修改更新地址后必须重新打包。可通过 `apps/desktop/release/builder-effective-config.yaml` 的 `publish` 字段和安装包中的 `app-update.yml` 确认地址已写入。
+如需本地安装版下载测试或自托管更新服务，设置 `PURECHAT_DESKTOP_UPDATE_URL` 为 HTTP(S) 地址可覆盖为 Generic provider。两种 provider 都会写入安装包的 `resources/app-update.yml`；macOS 对应路径为 `PureChat.app/Contents/Resources/app-update.yml`。安装后的客户端读取该文件，无需运行时再设置环境变量；修改更新源后必须重新打包。可通过 `apps/desktop/release/builder-effective-config.yaml` 的 `publish` 字段和安装包中的 `app-update.yml` 确认配置。
+
+GitHub Release tag 沿用 `vX.Y.Z`，只在草稿资产全部就绪后手动发布；`--publish never` 配合现有 `gh` 草稿汇总流程，无需向 Builder 传 token。旧版没有内置更新源的应用需要先手动安装带 GitHub 配置的新版本，补传远端 YAML 不会改变旧安装包的配置。
 
 桌面开发环境可在启动 `pnpm dev:desktop` 前设置 `PURECHAT_DESKTOP_UPDATE_URL`，从 Generic 更新源手动检查并下载更新。开发版本下载完成后只显示下载完成状态，不会提示或执行安装；安装验证仍需使用已打包的发行版本。
 

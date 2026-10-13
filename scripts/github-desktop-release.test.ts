@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   desktopArtifacts,
+  desktopReleaseAssets,
   desktopReleaseNotes,
   remoteTagCommit,
   validateDesktopBuildConfig,
@@ -34,7 +35,7 @@ afterEach(() => {
 })
 
 function createArtifacts() {
-  for (const filename of desktopArtifacts(version)) writeFileSync(path.join(directory, filename), 'artifact')
+  for (const filename of desktopReleaseAssets(version)) writeFileSync(path.join(directory, filename), 'artifact')
 }
 
 function fakeCommands(releases: object[] = [], tagRefs = '') {
@@ -111,14 +112,35 @@ describe('desktop distribution artifacts', () => {
 
   it('rejects unsupported platforms', () => {
     expect(() => desktopArtifacts(version, 'linux')).toThrow('未知桌面平台')
+    expect(() => desktopReleaseAssets(version, 'linux')).toThrow('未知桌面平台')
+  })
+
+  it('includes both platform manifests and blockmaps, without a portable blockmap', () => {
+    expect(desktopReleaseAssets(version, 'windows')).toEqual([
+      'PureChat-0.3.0-setup.exe',
+      'PureChat-0.3.0-portable.exe',
+      'latest.yml',
+      'PureChat-0.3.0-setup.exe.blockmap',
+    ])
+    expect(desktopReleaseAssets(version, 'mac')).toEqual([
+      'PureChat-0.3.0-arm64.dmg',
+      'PureChat-0.3.0-arm64.zip',
+      'latest-mac.yml',
+      'PureChat-0.3.0-arm64.dmg.blockmap',
+      'PureChat-0.3.0-arm64.zip.blockmap',
+    ])
+    expect(desktopReleaseAssets(version)).toEqual([
+      ...desktopReleaseAssets(version, 'windows'),
+      ...desktopReleaseAssets(version, 'mac'),
+    ])
   })
 
   it('selects only the exact platform files, ignoring old files and builder metadata', () => {
-    for (const filename of desktopArtifacts(version, 'mac')) writeFileSync(path.join(directory, filename), 'mac')
+    for (const filename of desktopReleaseAssets(version, 'mac')) writeFileSync(path.join(directory, filename), 'mac')
     writeFileSync(path.join(directory, 'PureChat-0.2.8-arm64.zip'), 'old')
     writeFileSync(path.join(directory, 'builder-debug.yml'), 'debug')
     expect(verifyDesktopArtifacts(directory, version, 'mac')).toEqual(
-      desktopArtifacts(version, 'mac').map((filename) => path.join(directory, filename))
+      desktopReleaseAssets(version, 'mac').map((filename) => path.join(directory, filename))
     )
     expect(() => verifyDesktopArtifacts(directory, version)).toThrow('缺少桌面产物: PureChat-0.3.0-setup.exe')
   })
@@ -183,7 +205,7 @@ describe('desktop draft binding', () => {
 })
 
 describe('desktop draft upload', () => {
-  it('creates an unpublished draft for the exact SHA and uploads only four files', () => {
+  it('creates an unpublished draft for the exact SHA and uploads installers and update metadata', () => {
     createArtifacts()
     writeFileSync(path.join(directory, 'builder-debug.yml'), 'debug')
     const run = fakeCommands()
@@ -204,7 +226,7 @@ describe('desktop draft upload', () => {
       'release',
       'upload',
       'v0.3.0',
-      ...desktopArtifacts(version).map((file) => path.join(directory, file)),
+      ...desktopReleaseAssets(version).map((file) => path.join(directory, file)),
       '--repo',
       repository,
       '--clobber',
@@ -238,6 +260,17 @@ describe('desktop draft upload', () => {
     expect(() => writeDesktopDraft({ directory, version, repository, sha, notes }, run)).toThrow('缺少桌面产物')
     expect(run).not.toHaveBeenCalled()
   })
+
+  it.each(['latest.yml', 'latest-mac.yml', 'PureChat-0.3.0-setup.exe.blockmap', 'PureChat-0.3.0-arm64.zip.blockmap'])(
+    'does not contact GitHub when update metadata %s is missing',
+    (filename) => {
+      createArtifacts()
+      rmSync(path.join(directory, filename))
+      const run = fakeCommands()
+      expect(() => writeDesktopDraft({ directory, version, repository, sha, notes }, run)).toThrow(filename)
+      expect(run).not.toHaveBeenCalled()
+    }
+  )
 
   it('propagates API failures instead of treating them as a missing Release', () => {
     createArtifacts()

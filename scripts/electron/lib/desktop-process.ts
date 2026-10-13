@@ -15,6 +15,11 @@ const PS_LINE_PATTERN = /^(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(.*)$/
 const PNPM_DESKTOP_DIR_PATTERN = /--dir[= ](?:\S*\/)?apps\/desktop(?:\s|$)/
 
 const normalizePath = (value: string) => value.replaceAll('\\', '/')
+const normalizeCommand = (command: string) => normalizePath(command).replaceAll('"', '')
+
+/** electron-vite 的主进程使用 `electron .`，也可能带调试参数或 Windows 路径引号。 */
+export const isElectronMainCommand = (command: string): boolean =>
+  /^(?:.*\/)?electron(?:\.exe)?\s+\.(?:\s|$)/i.test(normalizeCommand(command))
 
 export const parsePsLine = (line: string): ProcessRow | null => {
   const match = line.trim().match(PS_LINE_PATTERN)
@@ -39,7 +44,7 @@ export const parsePsTable = (stdout: string): ProcessRow[] =>
     .filter((row): row is ProcessRow => row !== null)
 
 export const isStaleDesktopCommand = (command: string, rootDir: string): boolean => {
-  const normalizedCommand = normalizePath(command)
+  const normalizedCommand = normalizeCommand(command)
   const normalizedRoot = normalizePath(rootDir)
   const desktopAppPath = `${normalizedRoot}/apps/desktop`
 
@@ -51,10 +56,13 @@ export const isStaleDesktopCommand = (command: string, rootDir: string): boolean
 }
 
 export const isElectronAppCommand = (command: string, rootDir: string): boolean => {
-  const normalizedCommand = normalizePath(command)
+  const normalizedCommand = normalizeCommand(command)
   if (!/Electron/i.test(normalizedCommand) || normalizedCommand.includes('electron-vite')) return false
 
-  const desktopAppPath = `${normalizePath(rootDir)}/apps/desktop`
+  const normalizedRoot = normalizePath(rootDir)
+  if (isElectronMainCommand(command) && normalizedCommand.startsWith(`${normalizedRoot}/`)) return true
+
+  const desktopAppPath = `${normalizedRoot}/apps/desktop`
   return (
     normalizedCommand.includes(`app-path=${desktopAppPath}`) ||
     normalizedCommand.includes(`${desktopAppPath}/dist/main`) ||
@@ -76,6 +84,45 @@ export const collectAncestorPids = (rows: readonly ProcessRow[], pid: number): S
 }
 
 const isAliveProcess = (row: ProcessRow) => !row.state.startsWith('Z')
+
+/** 就绪检测只接受本次 pnpm 启动树内的 Electron，兼容共享安装位置。 */
+export const collectElectronAppPids = (rows: readonly ProcessRow[], parentPid: number, rootDir: string): number[] =>
+  rows
+    .filter(
+      (row) =>
+        isAliveProcess(row) &&
+        row.pid !== parentPid &&
+        (isElectronMainCommand(row.command) || isElectronAppCommand(row.command, rootDir)) &&
+        collectAncestorPids(rows, row.pid).has(parentPid)
+    )
+    .map((row) => row.pid)
+
+/** Windows 使用 taskkill /T，沿工具链父进程上溯后结束整树。 */
+export const collectWindowsStaleRoots = (rows: readonly ProcessRow[], options: StaleProcessOptions): ProcessRow[] => {
+  const byPid = new Map(rows.map((row) => [row.pid, row]))
+  const roots = new Map<number, ProcessRow>()
+
+  for (const row of rows) {
+    if (options.protectedPids.has(row.pid) || !isStaleDesktopCommand(row.command, options.rootDir)) continue
+
+    const visited = new Set([row.pid])
+    let root = row
+    let parent = byPid.get(root.ppid)
+    while (
+      parent &&
+      !visited.has(parent.pid) &&
+      !options.protectedPids.has(parent.pid) &&
+      (isStaleDesktopCommand(parent.command, options.rootDir) || isElectronMainCommand(parent.command))
+    ) {
+      visited.add(parent.pid)
+      root = parent
+      parent = byPid.get(root.ppid)
+    }
+    roots.set(root.pid, root)
+  }
+
+  return [...roots.values()]
+}
 
 export const collectStaleDesktopProcesses = (
   rows: readonly ProcessRow[],

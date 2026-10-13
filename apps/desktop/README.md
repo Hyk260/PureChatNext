@@ -201,7 +201,7 @@ portable 与 ZIP 的核心区别是：
 
 不要在正式发布命令中使用 `asar: false`。不打 ASAR 只适合本地调试和定位路径问题，会产生更多散文件，也会削弱当前的归档边界校验。
 
-`electronDownload.mirror` 只影响 Electron 二进制下载速度，不会减少最终安装包体积。
+Electron 下载镜像统一配置在 workspace 根目录 `.npmrc`，可用 `ELECTRON_MIRROR` 和 `ELECTRON_BUILDER_BINARIES_MIRROR` 环境变量覆盖。请通过上述 pnpm 脚本打包，以便注入镜像配置；镜像只影响下载速度，不会减少最终安装包体积。
 
 ## 签名、公证、自动更新与 blockmap
 

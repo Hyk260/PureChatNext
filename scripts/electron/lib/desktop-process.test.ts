@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import {
   collectAncestorPids,
+  collectElectronAppPids,
   collectKillTargets,
   collectStaleDesktopProcesses,
+  collectWindowsStaleRoots,
   isElectronAppCommand,
+  isElectronMainCommand,
   isStaleDesktopCommand,
   parsePsTable,
 } from './desktop-process'
@@ -79,6 +82,80 @@ describe('isElectronAppCommand', () => {
       )
     ).toBe(true)
     expect(isElectronAppCommand(`node ${ROOT}/node_modules/electron-vite/bin/electron-vite.js`, ROOT)).toBe(false)
+  })
+
+  it('matches the electron-vite spawned main process command (`electron .`) on all platforms', () => {
+    expect(
+      isElectronAppCommand(
+        `${ROOT}/node_modules/.pnpm/electron@41.3.0/node_modules/electron/dist/electron.exe .`,
+        ROOT
+      )
+    ).toBe(true)
+    expect(isElectronAppCommand(`${ROOT}/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron .`, ROOT)).toBe(true)
+    expect(isElectronAppCommand('/Users/hyk/node_modules/electron/dist/Electron .', ROOT)).toBe(false)
+    expect(isElectronAppCommand('/other/repo/node_modules/electron/dist/electron .', ROOT)).toBe(false)
+    expect(isElectronAppCommand('/tools/myelectron .', ROOT)).toBe(false)
+    expect(isElectronAppCommand('/tools/not-electron .', ROOT)).toBe(false)
+  })
+
+  it('handles quoted Windows executables and app paths with spaces', () => {
+    const root = 'C:\\dev\\Pure Chat Next'
+    expect(isElectronAppCommand(`"${root}\\node_modules\\electron\\dist\\electron.exe" . --inspect=9229`, root)).toBe(true)
+    expect(isElectronAppCommand(`"C:\\tools\\electron.exe" --type=renderer --app-path="${root}\\apps\\desktop"`, root)).toBe(true)
+    expect(isElectronMainCommand('"C:\\shared tools\\electron.exe" .')).toBe(true)
+    expect(isElectronMainCommand('/tools/not-electron .')).toBe(false)
+  })
+})
+
+describe('collectElectronAppPids', () => {
+  it('only accepts live Electron descendants of this launch on macOS', () => {
+    const rows = [
+      row(10, 1, 10, 'pnpm --dir apps/desktop dev'),
+      row(11, 10, 10, `node ${ROOT}/node_modules/electron-vite/bin/electron-vite.js`),
+      row(12, 11, 10, '/shared/Electron.app/Contents/MacOS/Electron . --inspect=9229'),
+      row(13, 12, 10, `/path/Electron --app-path=${ROOT}/apps/desktop`),
+      row(14, 11, 10, '/shared/Electron .', 'Z'),
+      row(20, 1, 20, `${ROOT}/node_modules/electron/dist/Electron .`),
+      row(21, 1, 21, '/other/repo/node_modules/electron/dist/Electron .'),
+      row(22, 11, 10, '/tools/not-electron .'),
+    ]
+
+    expect(collectElectronAppPids(rows, 10, ROOT)).toEqual([12, 13])
+  })
+
+  it('follows the Windows cmd and node chain with quoted paths', () => {
+    const root = 'C:\\dev\\Pure Chat Next'
+    const rows = [
+      row(10, 1, 10, 'cmd.exe /c pnpm --dir apps/desktop dev'),
+      row(11, 10, 11, 'node pnpm.cjs --dir apps/desktop dev'),
+      row(12, 11, 12, 'cmd.exe /c electron-vite dev'),
+      row(13, 12, 13, `node "${root}\\node_modules\\electron-vite\\bin\\electron-vite.js"`),
+      row(14, 13, 14, '"C:\\shared tools\\electron.exe" .'),
+      row(15, 14, 15, `"C:\\shared tools\\electron.exe" --type=renderer --app-path="${root}\\apps\\desktop"`),
+      row(20, 1, 20, '"C:\\shared tools\\electron.exe" .'),
+    ]
+
+    expect(collectElectronAppPids(rows, 10, root)).toEqual([14, 15])
+    expect(collectElectronAppPids(rows.filter((item) => item.pid !== 12), 10, root)).toEqual([])
+  })
+})
+
+describe('collectWindowsStaleRoots', () => {
+  it('reaches a quoted orphan main process through its app helper and protects the current launch', () => {
+    const root = 'C:\\dev\\Pure Chat Next'
+    const main = row(10, 1, 10, '"C:\\shared tools\\electron.exe" . --inspect=9229')
+    const helper = row(11, 10, 11, `"C:\\shared tools\\electron.exe" --app-path="${root}\\apps\\desktop"`)
+    const rows = [main, helper]
+
+    expect(collectWindowsStaleRoots(rows, { protectedPids: new Set(), rootDir: root })).toEqual([main])
+    expect(collectWindowsStaleRoots(rows, { protectedPids: new Set([10, 11]), rootDir: root })).toEqual([])
+  })
+
+  it('stops at a protected ancestor and terminates parent-chain cycles', () => {
+    const parent = row(10, 11, 10, 'pnpm --dir apps/desktop dev')
+    const child = row(11, 10, 11, 'pnpm --dir apps/desktop dev')
+    expect(collectWindowsStaleRoots([parent, child], { protectedPids: new Set([10]), rootDir: ROOT })).toEqual([child])
+    expect(collectWindowsStaleRoots([parent, child], { protectedPids: new Set(), rootDir: ROOT })).toHaveLength(2)
   })
 })
 

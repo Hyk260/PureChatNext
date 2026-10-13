@@ -32,7 +32,7 @@ export const MESSENGER_SUBTITLE = '将你的账号连接到 PureChat 机器人�
 
 export const MESSENGER_PLATFORMS: readonly MessengerPlatformMeta[] = [
   {
-    description: '填写 QQ 开放平台 App ID / Secret，在私聊或群 @ 中与 Agent 对话。',
+    description: '使用 QQ 扫码连接，在私聊或群 @ 中与 Agent 对话。',
     id: 'qq',
     name: 'QQ',
   },

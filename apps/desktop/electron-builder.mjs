@@ -15,12 +15,6 @@ const updateUrl = desktopEnv.PURECHAT_DESKTOP_UPDATE_URL?.trim()
 const appIcon = path.join(desktopDir, 'build/icon.png')
 const trayIcon = path.join(desktopDir, 'build/tray.png')
 
-// pnpm 不会把 apps/desktop/.npmrc 的 electron_builder_binaries_mirror 注入进
-// electron-builder 子进程；不设的话 dmgbuild 会回落到 GitHub Releases，国内极慢。
-if (!process.env.ELECTRON_BUILDER_BINARIES_MIRROR) {
-  process.env.ELECTRON_BUILDER_BINARIES_MIRROR = 'https://npmmirror.com/mirrors/electron-builder-binaries/'
-}
-
 /** @type {import('electron-builder').Configuration} */
 const config = {
   // 应用程序的唯一标识符。
@@ -43,10 +37,6 @@ const config = {
   },
   // 默认应用图标，各平台也显式复用同一图标。
   icon: appIcon,
-  // 使用国内镜像加速 Electron 二进制下载。
-  electronDownload: {
-    mirror: 'https://npmmirror.com/mirrors/electron/',
-  },
   // 仅打包构建产物和 manifest，排除依赖目录及 sourcemap。
   // main/preload 已打包应用代码，仅 Node/Electron 内置模块保持外部引用。
   files: ['dist/**/*', 'package.json', '!node_modules', '!**/*.map'],

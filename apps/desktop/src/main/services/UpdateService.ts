@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { app, Notification } from 'electron'
 import { autoUpdater, CancellationToken } from 'electron-updater'
-import type { AppUpdater, ProgressInfo, UpdateInfo } from 'electron-updater'
+import type { AppUpdater, ProgressInfo, UpdateCheckResult, UpdateInfo } from 'electron-updater'
 
 import { getDesktopUpdateConfig } from '@/envs/desktop'
 import type { DesktopUpdatePreferences, DesktopUpdateRelease, DesktopUpdateSource, DesktopUpdateState } from '@/types/desktopUpdater'
@@ -322,7 +322,29 @@ export class UpdateService {
 
   private async performCheck(generation: number, token: CancellationToken) {
     try {
-      const result = await this.updater.checkForUpdates()
+      let result: UpdateCheckResult | null
+      try {
+        result = await this.updater.checkForUpdates()
+      } catch (error) {
+        const code = error && typeof error === 'object' && 'code' in error ? error.code : null
+        const requestedChannel = getUpdateChannel(this.state.preferences)
+        const source = this.state.effectiveSource
+        const shouldFallbackToStable =
+          code === 'ERR_UPDATER_CHANNEL_FILE_NOT_FOUND' &&
+          requestedChannel !== 'latest' &&
+          source?.type !== 'github'
+
+        if (!shouldFallbackToStable) throw error
+
+        this.logger.warn('Test channel metadata is missing; retrying with the stable channel', {
+          channel: requestedChannel,
+        })
+        this.updater.channel = 'latest'
+        this.updater.allowDowngrade = false
+        this.updater.allowPrerelease = false
+        this.update({ status: 'checking', progress: 0, release: null, message: null })
+        result = await this.updater.checkForUpdates()
+      }
       if (!this.isCurrent(generation)) return
       if (!result) throw new Error('Updater did not return a result')
       if (!result.isUpdateAvailable) {

@@ -94,14 +94,14 @@ export async function recordQQInboundDiagnostic(event: {
     bindingId: event.bindingId,
     event: 'inbound_message',
     platform: 'qq',
-    qqInbound: {
+    inboundMessage: {
       applicationId: event.applicationId,
       contactHash,
       contentLength: event.content.length,
       content: event.content,
       identityType: event.identityType,
       messageKind: event.messageKind,
-      openid: event.openid,
+      identity: event.openid,
       username: event.username ?? undefined,
     },
     userId: event.userId,
@@ -127,7 +127,7 @@ export async function recordQQAgentReplyDiagnostic(event: {
     bindingId: event.bindingId,
     event: 'agent_reply',
     platform: 'qq',
-    qqAgentReply: {
+    agentReply: {
       agentId: event.agentId,
       aiOutput: event.aiOutput,
       contextMessageCount: event.contextMessageCount,

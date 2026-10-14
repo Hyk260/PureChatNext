@@ -7,6 +7,8 @@ import debug from 'debug'
 
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import type { ChannelBindingItem } from '@pure/database/schemas/channel'
+import type { ChannelLogInput } from '@pure/types'
+import { recordChannelGatewayLog } from '@/server/channel-gateway/diagnostics'
 import { buildChannelGatewayHeaders, buildChannelGatewayWebhookUrl } from '@/server/channel-gateway/internal'
 
 import { encodeWechatFileContent, encodeWechatImageContent } from './content'
@@ -14,6 +16,34 @@ import { encryptContextToken } from './encrypt'
 import type { WechatPollBatch } from './poller'
 
 const log = debug('channel:wechat:webhook')
+type WechatLogMessageKind = NonNullable<NonNullable<ChannelLogInput['inboundMessage']>['messageKind']>
+
+function normalizeWechatLogMessageKind(value: string): WechatLogMessageKind {
+  switch (value) {
+    case 'audio':
+    case 'command':
+    case 'file':
+    case 'image':
+    case 'text':
+    case 'unsupported':
+    case 'video':
+      return value
+    default:
+      return 'unsupported'
+  }
+}
+
+function diagnosticWechatContent(event: { content: string; messageKind: string }): string {
+  if (event.messageKind === 'text' || event.messageKind === 'command') return event.content
+  const placeholders: Record<string, string> = {
+    audio: '[语音]',
+    file: '[文件]',
+    image: '[图片]',
+    unsupported: '[非文本消息]',
+    video: '[视频]',
+  }
+  return placeholders[event.messageKind] ?? '[非文本消息]'
+}
 
 export function rawMessageToEvent(bindingId: string, message: WechatRawMessage) {
   if (message.message_type === MessageType.BOT) return null
@@ -100,7 +130,23 @@ export async function ingestWechatWebhookBatch(binding: ChannelBindingItem, batc
     .map((message) => rawMessageToEvent(binding.id, message))
     .filter((event): event is NonNullable<typeof event> => event !== null)
   const inserted = await new ChannelEventModel().ingestBatchAndAdvanceCursor(events, binding.id, batch.cursor)
-  for (const event of inserted) log(formatWechatInboundLog(event))
+  for (const event of inserted) {
+    log(formatWechatInboundLog(event))
+    const content = diagnosticWechatContent(event)
+    await recordChannelGatewayLog({
+      bindingId: binding.id,
+      event: 'inbound_message',
+      inboundMessage: {
+        content,
+        contentLength: content.length,
+        identity: event.externalUserId,
+        identityType: 'user_id',
+        messageKind: normalizeWechatLogMessageKind(event.messageKind),
+      },
+      platform: 'wechat',
+      userId: binding.userId,
+    })
+  }
   return inserted
 }
 

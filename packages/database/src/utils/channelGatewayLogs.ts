@@ -17,9 +17,9 @@ const ERROR_EVENTS = new Set<ChannelLogEvent>([
   'authorization_failed', 'callback_failed', 'processing_failed', 'send_failed',
 ])
 const WARNING_EVENTS = new Set<ChannelLogEvent>(['offline', 'lease_lost', 'needs_rebind', 'retry'])
-type QQInboundMessageKind = NonNullable<NonNullable<ChannelLogInput['qqInbound']>['messageKind']>
+type ChannelInboundMessageKind = NonNullable<NonNullable<ChannelLogInput['inboundMessage']>['messageKind']>
 
-const QQ_MESSAGE_KIND_LABEL: Record<QQInboundMessageKind, string> = {
+const CHANNEL_MESSAGE_KIND_LABEL: Record<ChannelInboundMessageKind, string> = {
   audio: '语音',
   command: '指令',
   file: '文件',
@@ -29,10 +29,10 @@ const QQ_MESSAGE_KIND_LABEL: Record<QQInboundMessageKind, string> = {
   video: '视频',
 }
 
-function normalizeQQInboundMessage(input: ChannelLogInput): string {
-  const details = input.qqInbound
-  const messageKind = details?.messageKind ? QQ_MESSAGE_KIND_LABEL[details.messageKind] : '消息'
-  const applicationId = details?.applicationId && /^\d{1,32}$/.test(details.applicationId)
+function normalizeInboundMessage(input: ChannelLogInput): string {
+  const details = input.inboundMessage
+  const messageKind = details?.messageKind ? CHANNEL_MESSAGE_KIND_LABEL[details.messageKind] : '消息'
+  const applicationId = input.platform === 'qq' && details?.applicationId && /^\d{1,32}$/.test(details.applicationId)
     ? `，应用=${details.applicationId}`
     : ''
 
@@ -44,12 +44,13 @@ function normalizeQQInboundMessage(input: ChannelLogInput): string {
   const contentLength = typeof details?.contentLength === 'number' && Number.isFinite(details.contentLength)
     ? `，长度=${Math.min(Math.max(Math.trunc(details.contentLength), 0), 1_000_000_000)}`
     : ''
-  const identity = details?.identityType && details.openid && /^[\w-]{1,128}$/.test(details.openid)
-    ? `，${details.identityType}=${details.openid}`
+  const identity = details?.identityType && details.identity && /^[\w@.-]{1,255}$/.test(details.identity)
+    ? `，${details.identityType}=${details.identity}`
     : ''
   const username = details?.username ? `，username=${JSON.stringify(clampLogText(details.username, 80))}` : ''
   const content = details?.content ? `，正文=${JSON.stringify(clampLogText(details.content, 500))}` : ''
-  return `QQ Gateway 收到${messageKind}消息${applicationId}${contactHash}${identity}${username}${content}${contentLength}`
+  const gateway = input.platform === 'qq' ? 'QQ Gateway' : '微信 Gateway'
+  return `${gateway} 收到${messageKind}消息${applicationId}${contactHash}${identity}${username}${content}${contentLength}`
 }
 
 function clampLogText(value: string, maxLength: number): string {
@@ -59,9 +60,10 @@ function clampLogText(value: string, maxLength: number): string {
   return `${characters.slice(0, maxLength).join('')}…`
 }
 
-function normalizeQQAgentReply(input: ChannelLogInput): string {
-  const details = input.qqAgentReply
-  if (!details) return 'QQ Agent 回复已生成'
+function normalizeAgentReply(input: ChannelLogInput): string {
+  const details = input.agentReply
+  const platformName = input.platform === 'qq' ? 'QQ' : '微信'
+  if (!details) return `${platformName} Agent 回复已生成`
 
   const safeValue = (value: string | undefined, maxLength = 100) => value ? clampLogText(value, maxLength) : '-'
   const steps = (details.steps ?? []).slice(0, 20).map((step) => {
@@ -80,7 +82,7 @@ function normalizeQQAgentReply(input: ChannelLogInput): string {
     ? Math.max(0, Math.min(Math.trunc(details.contextMessageCount), 100_000))
     : 0
   const output = details.aiOutput ? `，aiOutput=${JSON.stringify(clampLogText(details.aiOutput, 500))}` : ''
-  return `QQ Agent 回复已生成：agentId=${safeValue(details.agentId)}，model=${safeValue(details.model)}，platform=${safeValue(details.platform)}，provider=${safeValue(details.provider)}，durationMs=${durationMs}，contextMessageCount=${contextMessageCount}，finish=${safeValue(details.finish, 40)}，tools.available=[${available}]，tools.called=[${called}]，steps=[${steps.join('; ')}]${output}`
+  return `${platformName} Agent 回复已生成：agentId=${safeValue(details.agentId)}，model=${safeValue(details.model)}，platform=${safeValue(details.platform)}，provider=${safeValue(details.provider)}，durationMs=${durationMs}，contextMessageCount=${contextMessageCount}，finish=${safeValue(details.finish, 40)}，tools.available=[${available}]，tools.called=[${called}]，steps=[${steps.join('; ')}]${output}`
 }
 
 /** Persist public protocol/network codes only; arbitrary messages and stack traces never enter diagnostics. */
@@ -102,9 +104,9 @@ export function normalizeChannelLog(input: ChannelLogInput) {
   else if (WARNING_EVENTS.has(input.event)) level = 'warn'
   let message: string = CHANNEL_LOG_MESSAGES[input.event]
   if (input.event === 'webhook_inbound' || input.event === 'inbound_message') {
-    message = normalizeQQInboundMessage(input)
+    message = normalizeInboundMessage(input)
   }
-  if (input.event === 'agent_reply') message = normalizeQQAgentReply(input)
+  if (input.event === 'agent_reply') message = normalizeAgentReply(input)
   if (input.event === 'retry') {
     if (typeof input.attempt === 'number' && Number.isFinite(input.attempt)) message += `，第 ${Math.min(Math.max(Math.trunc(input.attempt), 1), 9999)} 次`
     if (typeof input.delayMs === 'number' && Number.isFinite(input.delayMs)) message += `，${Math.min(Math.max(Math.trunc(input.delayMs), 0), 300_000)}ms 后执行`

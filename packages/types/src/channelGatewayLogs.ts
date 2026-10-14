@@ -35,17 +35,17 @@ export type ChannelLogInput = {
   code?: string
   attempt?: number
   delayMs?: number
-  qqInbound?: {
+  inboundMessage?: {
     applicationId?: string
     contactHash?: string
     contentLength?: number
     content?: string
-    identityType?: 'member_openid' | 'user_openid'
+    identityType?: 'member_openid' | 'user_openid' | 'user_id'
+    identity?: string
     messageKind?: 'audio' | 'command' | 'file' | 'image' | 'text' | 'unsupported' | 'video'
-    openid?: string
     username?: string
   }
-  qqAgentReply?: {
+  agentReply?: {
     agentId?: string
     aiOutput?: string
     contextMessageCount?: number

@@ -231,7 +231,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         bindingId: binding.id,
         event: 'webhook_inbound',
         platform: 'qq',
-        qqInbound: { applicationId: credentials.appId },
+        inboundMessage: { applicationId: credentials.appId },
         userId: binding.userId,
       })
     }

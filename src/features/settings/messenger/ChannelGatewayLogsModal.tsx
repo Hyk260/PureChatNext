@@ -1,7 +1,9 @@
-import { Button, Flex, Modal, Text } from '@pure/ui'
+import { Button, confirmModal, Flex, Modal, Text } from '@pure/ui'
 import type { ChannelGatewayLogs, ChannelLogPlatform } from '@pure/types'
 import useSWR from 'swr'
+import { useState } from 'react'
 
+import { useApp } from '@/components/AntdStaticMethods'
 import { apiFetch } from '@/utils/apiFetch'
 import { getDesktopRemoteBaseUrl } from '@/utils/desktopFetch'
 
@@ -29,6 +31,8 @@ async function fetchLogs(platform: ChannelLogPlatform): Promise<ChannelGatewayLo
 
 export function ChannelGatewayLogsModal(props: Props) {
   const { platform, userId, onClose } = props
+  const { message } = useApp()
+  const [isClearing, setIsClearing] = useState(false)
   const service = getDesktopRemoteBaseUrl() || window.location.origin
   const { data, error, isValidating, mutate } = useSWR(
     userId ? ['channel:diagnostics', userId, platform, service] : null,
@@ -42,6 +46,29 @@ export function ChannelGatewayLogsModal(props: Props) {
 
   const handleRefresh = () => {
     mutate().catch(() => undefined)
+  }
+
+  const handleClear = () => {
+    confirmModal({
+      content: `将永久删除当前账号的${platform === 'qq' ? 'QQ' : '微信'}诊断日志，无法恢复。`,
+      okText: '清除日志',
+      cancelText: '取消',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        setIsClearing(true)
+        try {
+          const response = await apiFetch(`/api/channels/${platform}/logs`, { method: 'DELETE' })
+          if (!response.ok) throw new Error('清除日志失败')
+          await mutate({ text: '', truncated: false }, { revalidate: false })
+          message.success('诊断日志已清除')
+        } catch {
+          message.error('清除诊断日志失败，请重试')
+        } finally {
+          setIsClearing(false)
+        }
+      },
+      title: '清除诊断日志？',
+    })
   }
 
   let logText = data?.text
@@ -59,6 +86,7 @@ export function ChannelGatewayLogsModal(props: Props) {
       onCancel={onClose}
       footer={(
         <Flex className='justify-end gap-2'>
+          <Button danger disabled={isClearing} loading={isClearing} onClick={handleClear}>清除日志</Button>
           <Button loading={isValidating} onClick={handleRefresh}>更新</Button>
           <Button onClick={onClose}>关闭</Button>
         </Flex>
@@ -67,7 +95,9 @@ export function ChannelGatewayLogsModal(props: Props) {
       <Flex className='flex-col gap-3'>
         <Text>{statusDescription(props)}</Text>
         <Text className='text-xs' type='secondary'>
-          服务端诊断日志：最近 7 天，每个平台最多 200 条；入站消息和 Agent 回复正文最多显示 500 字，包含 QQ OpenID 与昵称，不记录凭据。
+          {platform === 'qq'
+            ? '服务端诊断日志：最近 7 天，每个平台最多 200 条；入站消息和 Agent 回复正文最多显示 500 字，包含 QQ OpenID 与昵称，不记录凭据。'
+            : '服务端诊断日志：最近 7 天，每个平台最多 200 条；入站消息和 Agent 回复正文最多显示 500 字，包含微信用户 ID，不记录凭据。'}
           {data?.truncated ? '已达到保留或显示上限，较早的日志可能已省略。' : ''}
         </Text>
         {error ? (

@@ -47,7 +47,9 @@ const refetch = (): Promise<void> => {
   const currentRevision = revision
   const requestController = new AbortController()
   controller = requestController
-  publish({ ...snapshot, isPending: true })
+  // Keep a resolved session usable while route layouts resubscribe and refresh it.
+  // Only the first load should block protected pages with the auth skeleton.
+  publish({ ...snapshot, isPending: snapshot.data === null })
   // Install the shared promise before getStatus broadcasts its auth.status event.
   const request = Promise.resolve().then(async () => {
     try {

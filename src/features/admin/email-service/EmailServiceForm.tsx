@@ -1,16 +1,21 @@
 import type { ReactNode } from 'react'
 import { Segmented } from 'antd'
-import { Clipboard, RefreshCcw, Sparkles } from 'lucide-react'
+import { Clipboard, RefreshCcw, Sparkles, Trash2 } from 'lucide-react'
 
 import { Flex, ActionIcon, Button, Input, Select, TextArea } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 
 import Scrollbar from '@/components/Scrollbar'
-import type { RenderedEmailTemplate } from '@/libs/better-auth/email-templates/preview'
+import type {
+  EmailTemplateKey,
+  EmailTemplateParams,
+  RenderedEmailTemplate,
+} from '@/libs/better-auth/email-templates/preview'
 
 import { EmailTemplateComposer } from '../EmailTemplateComposer'
 import {
   ACTION_META,
+  ACTION_OPTIONS,
   CONTENT_MODE_OPTIONS,
   COPY_LABEL,
   EMAIL_ENDPOINT_LABEL,
@@ -61,8 +66,12 @@ export function EmailServiceForm({
   action,
   contentMode,
   copyState,
+  initialTemplateKey,
+  initialTemplateParams,
   isLoading,
   onChange,
+  onActionChange,
+  onClearCache,
   onContentModeChange,
   onCopy,
   onReset,
@@ -70,6 +79,7 @@ export function EmailServiceForm({
   onTemplateChange,
   onTemplateRendered,
   onTemplateRenderStateChange,
+  onTemplateStateChange,
   requestJson,
   runState,
   templateError,
@@ -79,8 +89,12 @@ export function EmailServiceForm({
   action: ActionMode
   contentMode: ContentMode
   copyState: CopyState
+  initialTemplateKey: EmailTemplateKey
+  initialTemplateParams: EmailTemplateParams
   isLoading: boolean
   onChange: (patch: Partial<EmailFormValues>) => void
+  onActionChange: (action: ActionMode) => void
+  onClearCache: () => void
   onContentModeChange: (mode: ContentMode) => void
   onCopy: () => void
   onReset: () => void
@@ -88,6 +102,7 @@ export function EmailServiceForm({
   onTemplateChange: (key: string, label: string) => void
   onTemplateRendered: (template: RenderedEmailTemplate) => void
   onTemplateRenderStateChange: (state: { error: string | null; isLoading: boolean }) => void
+  onTemplateStateChange: (state: { key: EmailTemplateKey; params: EmailTemplateParams }) => void
   requestJson: string
   runState: RunState | null
   templateError: string | null
@@ -104,6 +119,17 @@ export function EmailServiceForm({
     <section className='flex min-h-[32rem] flex-col overflow-hidden rounded-card border border-border bg-card lg:h-full lg:min-h-0'>
       <Scrollbar className='min-h-0 flex-1'>
         <Flex className='flex-col gap-4 p-4'>
+          <Field htmlFor='email-service-action' label='操作'>
+            <Select
+              id='email-service-action'
+              aria-label='邮件服务操作'
+              className='w-full'
+              options={ACTION_OPTIONS}
+              style={{ width: '100%' }}
+              value={action}
+              onChange={(value) => onActionChange(value as ActionMode)}
+            />
+          </Field>
           <p className='text-sm leading-6 text-muted-foreground'>{ACTION_META[action].description}</p>
 
           <Field htmlFor='email-service-impl' label='Provider · 邮件提供商'>
@@ -123,16 +149,19 @@ export function EmailServiceForm({
           {action === 'sendMail' ? (
             <SendMailFields
               contentMode={contentMode}
+              initialTemplateKey={initialTemplateKey}
+              initialTemplateParams={initialTemplateParams}
               values={values}
               onChange={onChange}
               onContentModeChange={onContentModeChange}
               onTemplateChange={onTemplateChange}
               onTemplateRendered={onTemplateRendered}
               onTemplateRenderStateChange={onTemplateRenderStateChange}
+              onTemplateStateChange={onTemplateStateChange}
             />
           ) : null}
 
-          <div className='grid grid-cols-[1fr_auto] gap-2'>
+          <div className='grid grid-cols-[1fr_auto_auto] gap-2'>
             <Button
               disabled={!canSend}
               icon={<Sparkles className='size-4' />}
@@ -142,7 +171,8 @@ export function EmailServiceForm({
             >
               发送请求
             </Button>
-            <ActionIcon icon={RefreshCcw} title='重置测试' onClick={onReset} />
+            <ActionIcon disabled={isLoading} icon={Trash2} title='清除浏览器保存的表单与请求状态' onClick={onClearCache} />
+            <ActionIcon disabled={isLoading} icon={RefreshCcw} title='重置测试' onClick={onReset} />
           </div>
 
           <dl className='grid gap-2 border-t border-border pt-4 text-sm'>
@@ -183,19 +213,25 @@ export function EmailServiceForm({
 
 function SendMailFields({
   contentMode,
+  initialTemplateKey,
+  initialTemplateParams,
   onChange,
   onContentModeChange,
   onTemplateChange,
   onTemplateRendered,
   onTemplateRenderStateChange,
+  onTemplateStateChange,
   values,
 }: {
   contentMode: ContentMode
+  initialTemplateKey: EmailTemplateKey
+  initialTemplateParams: EmailTemplateParams
   onChange: (patch: Partial<EmailFormValues>) => void
   onContentModeChange: (mode: ContentMode) => void
   onTemplateChange: (key: string, label: string) => void
   onTemplateRendered: (template: RenderedEmailTemplate) => void
   onTemplateRenderStateChange: (state: { error: string | null; isLoading: boolean }) => void
+  onTemplateStateChange: (state: { key: EmailTemplateKey; params: EmailTemplateParams }) => void
   values: EmailFormValues
 }) {
   return (
@@ -229,8 +265,11 @@ function SendMailFields({
 
       {contentMode === 'template' ? (
         <EmailTemplateComposer
+          initialTemplateKey={initialTemplateKey}
+          initialTemplateParams={initialTemplateParams}
           onRendered={onTemplateRendered}
           onRenderStateChange={onTemplateRenderStateChange}
+          onTemplateStateChange={onTemplateStateChange}
           onTemplateChange={onTemplateChange}
         />
       ) : (

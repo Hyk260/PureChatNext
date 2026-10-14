@@ -42,6 +42,14 @@ export type ChannelAgentRequest = {
 export type ChannelAgentResponse = {
   artifacts?: ChannelArtifact[]
   durationMs: number
+  diagnostics: {
+    agentId: string
+    contextMessageCount: number
+    finish?: string
+    steps: Array<{ finish: string; resultCount: number; step: number; tools: string[] }>
+    toolsAvailable: string[]
+    toolsCalled: string[]
+  }
   model: string
   provider: string
   text: string

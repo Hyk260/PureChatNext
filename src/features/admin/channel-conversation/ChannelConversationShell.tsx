@@ -16,6 +16,7 @@ type ChannelConversationShellProps = {
   sidebar: ReactNode
   subtitle: string
   title: string
+  titleExtra?: ReactNode
 }
 
 export function ChannelConversationShell({
@@ -27,6 +28,7 @@ export function ChannelConversationShell({
   sidebar,
   subtitle,
   title,
+  titleExtra,
 }: ChannelConversationShellProps) {
   const [showSessions, setShowSessions] = useState(true)
 
@@ -39,7 +41,10 @@ export function ChannelConversationShell({
           </Flex>
           <div className='min-w-0'>
             <h1 className='truncate text-sm font-semibold tracking-tight'>{title}</h1>
-            <p className='truncate text-xs text-muted-foreground'>{subtitle}</p>
+            <Flex className='items-center gap-2'>
+              <p className='truncate text-xs text-muted-foreground'>{subtitle}</p>
+              {titleExtra}
+            </Flex>
           </div>
           <Flex className='ml-auto items-center gap-2'>
             {headerExtra}

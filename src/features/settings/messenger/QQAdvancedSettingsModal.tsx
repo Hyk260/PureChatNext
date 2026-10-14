@@ -191,7 +191,7 @@ function AllowedUsersEditor({
     <Flex className='flex-col gap-2'>
       {users.length === 0 ? (
         <Text className='text-[13px]' type='secondary'>
-          尚未添加任何用户——任何人都可以与机器人交互（受策略约束）。
+          尚未添加任何用户（受策略约束）
         </Text>
       ) : null}
       {users.map((user) => (
@@ -204,7 +204,7 @@ function AllowedUsersEditor({
           />
           <Input
             className='min-w-0 flex-[1.2]'
-            placeholder='如：张三（仅你自己可见）'
+            placeholder='昵称（仅自己可见）'
             value={user.remark}
             onChange={(event) => onChange(user.id, { remark: event.target.value })}
           />
@@ -306,7 +306,7 @@ const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(({ initialSet
       width={720}
       footer={(_, { CancelBtn, OkBtn }) => (
         <>
-          <Button disabled={saving} icon={<RotateCcw size={14} />} size='small' onClick={resetDefaults}>
+          <Button disabled={saving} icon={<RotateCcw size={14} />} onClick={resetDefaults}>
             恢复默认配置
           </Button>
           <CancelBtn />
@@ -365,7 +365,15 @@ const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(({ initialSet
           />
         </AdvancedSettingRow>
 
-        <AdvancedSettingRow icon={<Users className='size-4' />} label='允许的用户'>
+        <AdvancedSettingRow
+          icon={<Users className='size-4' />}
+          label='允许的用户'
+          labelExtra={
+            <Tooltip title='此名单仅在私信策略或群组策略设为「白名单」时生效。开放策略允许任何用户，禁用策略会拒绝所有用户。'>
+              <CircleHelp className='size-3.5 cursor-help text-muted-foreground' />
+            </Tooltip>
+          }
+        >
           <AllowedUsersEditor
             users={draft.allowedUsers}
             onAdd={addAllowedUser}

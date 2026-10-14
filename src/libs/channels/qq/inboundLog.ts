@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto'
 
 import debug from 'debug'
 
+import { recordChannelGatewayLog } from '@/server/channel-gateway/diagnostics'
+
 const log = debug('channel:qq:webhook')
 
 const QQ_ATTACHMENT_KIND = {
@@ -74,6 +76,72 @@ export function formatQQInboundLog(event: {
 }) {
   const contactHash = createHash('sha256').update(event.externalUserId).digest('hex').slice(0, 10)
   return `[QQ Gateway] 收到${QQ_KIND_LABEL[event.messageKind] ?? '文本'}消息：应用=${event.applicationId}，联系人=sha256:${contactHash}，长度=${event.content.length}${formatInboundVisibleContent(event)}`
+}
+
+export async function recordQQInboundDiagnostic(event: {
+  applicationId: string
+  bindingId: string
+  content: string
+  externalUserId: string
+  identityType: 'member_openid' | 'user_openid'
+  messageKind: QQInboundKind
+  openid: string
+  username?: string | null
+  userId: string
+}): Promise<void> {
+  const contactHash = createHash('sha256').update(event.externalUserId).digest('hex').slice(0, 10)
+  await recordChannelGatewayLog({
+    bindingId: event.bindingId,
+    event: 'inbound_message',
+    platform: 'qq',
+    qqInbound: {
+      applicationId: event.applicationId,
+      contactHash,
+      contentLength: event.content.length,
+      content: event.content,
+      identityType: event.identityType,
+      messageKind: event.messageKind,
+      openid: event.openid,
+      username: event.username ?? undefined,
+    },
+    userId: event.userId,
+  })
+}
+
+export async function recordQQAgentReplyDiagnostic(event: {
+  aiOutput: string
+  bindingId: string
+  contextMessageCount: number
+  durationMs: number
+  finish?: string
+  model: string
+  platform: string
+  provider: string
+  steps: Array<{ finish: string; resultCount: number; step: number; tools: string[] }>
+  toolsAvailable: string[]
+  toolsCalled: string[]
+  agentId: string
+  userId: string
+}): Promise<void> {
+  await recordChannelGatewayLog({
+    bindingId: event.bindingId,
+    event: 'agent_reply',
+    platform: 'qq',
+    qqAgentReply: {
+      agentId: event.agentId,
+      aiOutput: event.aiOutput,
+      contextMessageCount: event.contextMessageCount,
+      durationMs: event.durationMs,
+      finish: event.finish,
+      model: event.model,
+      platform: event.platform,
+      provider: event.provider,
+      steps: event.steps,
+      toolsAvailable: event.toolsAvailable,
+      toolsCalled: event.toolsCalled,
+    },
+    userId: event.userId,
+  })
 }
 
 export function logQQInbound(event: Parameters<typeof formatQQInboundLog>[0]): void {

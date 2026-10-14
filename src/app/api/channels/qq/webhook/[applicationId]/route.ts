@@ -226,6 +226,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     authorizedLog({ reason: 'dispatch', status: 200 })
+    if (credentials.connectionMode === 'webhook') {
+      await recordChannelGatewayLog({
+        bindingId: binding.id,
+        event: 'webhook_inbound',
+        platform: 'qq',
+        qqInbound: { applicationId: credentials.appId },
+        userId: binding.userId,
+      })
+    }
 
     const { getOrCreateQQChat } = await import('@/libs/channels/qq/chatBot')
 

@@ -1,6 +1,5 @@
 import { Button, Flex, Modal, Text } from '@pure/ui'
 import type { ChannelGatewayLogs, ChannelLogPlatform } from '@pure/types'
-import { useEffect } from 'react'
 import useSWR from 'swr'
 
 import { apiFetch } from '@/utils/apiFetch'
@@ -40,13 +39,11 @@ export function ChannelGatewayLogsModal(props: Props) {
       shouldRetryOnError: false,
     },
   )
-  useEffect(() => {
-    if (!userId || isValidating) return
-    const timer = setInterval(() => {
-      if (!document.hidden) mutate().catch(() => undefined)
-    }, 5_000)
-    return () => clearInterval(timer)
-  }, [isValidating, mutate, userId])
+
+  const handleRefresh = () => {
+    mutate().catch(() => undefined)
+  }
+
   let logText = data?.text
   if (!logText) {
     if (isValidating) logText = '正在读取日志…'
@@ -62,7 +59,7 @@ export function ChannelGatewayLogsModal(props: Props) {
       onCancel={onClose}
       footer={(
         <Flex className='justify-end gap-2'>
-          <Button loading={isValidating} onClick={() => mutate().catch(() => undefined)}>刷新</Button>
+          <Button loading={isValidating} onClick={handleRefresh}>更新</Button>
           <Button onClick={onClose}>关闭</Button>
         </Flex>
       )}
@@ -70,7 +67,7 @@ export function ChannelGatewayLogsModal(props: Props) {
       <Flex className='flex-col gap-3'>
         <Text>{statusDescription(props)}</Text>
         <Text className='text-xs' type='secondary'>
-          服务端诊断日志：最近 7 天，每个平台最多 200 条，不包含聊天正文或凭据。
+          服务端诊断日志：最近 7 天，每个平台最多 200 条；入站消息和 Agent 回复正文最多显示 500 字，包含 QQ OpenID 与昵称，不记录凭据。
           {data?.truncated ? '已达到保留或显示上限，较早的日志可能已省略。' : ''}
         </Text>
         {error ? (

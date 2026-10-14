@@ -1,18 +1,20 @@
 'use client'
 
 import { Flex } from '@pure/ui'
-import { useCallback, useState } from 'react'
-import { Segmented } from 'antd'
-import { Mail, ShieldCheck } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 
-import type { RenderedEmailTemplate } from '@/libs/better-auth/email-templates/preview'
+import { getEmailTemplatePreviewParams } from '@/libs/better-auth/email-templates/preview'
+import type {
+  EmailTemplateKey,
+  EmailTemplateParams,
+  RenderedEmailTemplate,
+} from '@/libs/better-auth/email-templates/preview'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 import { EmailServiceForm } from './EmailServiceForm'
 import { EmailServiceResults } from './EmailServiceResults'
+import { clearEmailServiceCache, readEmailServiceCache, writeEmailServiceCache } from './emailServiceCache'
 import {
-  ACTION_META,
-  ACTION_ORDER,
   DEFAULT_TEMPLATE_LABEL,
   EMAIL_API_PATH,
   buildRequestBody,
@@ -32,42 +34,62 @@ import type {
   RunState,
 } from './emailServiceModel'
 
-const ACTION_ICONS = {
-  sendMail: Mail,
-  verify: ShieldCheck,
-} as const
-
-const segmentedIconLabel = (Icon: (typeof ACTION_ICONS)[ActionMode], text: string, title: string) => (
-  <span className='inline-flex items-center gap-1.5' title={title}>
-    <Icon className='size-4 shrink-0' />
-    {text}
-  </span>
-)
-
-const ACTION_SEGMENTED_OPTIONS = ACTION_ORDER.map((value) => ({
-  label: segmentedIconLabel(ACTION_ICONS[value], ACTION_META[value].label, ACTION_META[value].description),
-  value,
-}))
-
 export default function EmailServicePage() {
-  const [action, setAction] = useState<ActionMode>('verify')
-  const [contentMode, setContentMode] = useState<ContentMode>('custom')
-  const [rightPanel, setRightPanel] = useState<RightPanelView>('preview')
-  const [view, setView] = useState<ResultView>('summary')
-  const [values, setValues] = useState<EmailFormValues>(initialForm)
-  const [renderedTemplate, setRenderedTemplate] = useState<RenderedEmailTemplate | null>(null)
-  const [templateLabel, setTemplateLabel] = useState(DEFAULT_TEMPLATE_LABEL)
+  const [initialCache] = useState(() => readEmailServiceCache())
+  const [action, setAction] = useState<ActionMode>(initialCache?.action ?? 'sendMail')
+  const [contentMode, setContentMode] = useState<ContentMode>(initialCache?.contentMode ?? 'custom')
+  const [rightPanel, setRightPanel] = useState<RightPanelView>(initialCache?.rightPanel ?? 'preview')
+  const [view, setView] = useState<ResultView>(initialCache?.view ?? 'summary')
+  const [values, setValues] = useState<EmailFormValues>(initialCache?.values ?? initialForm())
+  const [renderedTemplate, setRenderedTemplate] = useState<RenderedEmailTemplate | null>(
+    initialCache?.renderedTemplate ?? null
+  )
+  const [templateLabel, setTemplateLabel] = useState(initialCache?.templateLabel ?? DEFAULT_TEMPLATE_LABEL)
+  const [templateKey, setTemplateKey] = useState<EmailTemplateKey>(initialCache?.templateKey ?? 'verification')
+  const [templateParams, setTemplateParams] = useState<EmailTemplateParams>(
+    initialCache?.templateParams ?? getEmailTemplatePreviewParams('verification')
+  )
   const [templateLoading, setTemplateLoading] = useState(false)
   const [templateError, setTemplateError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [runState, setRunState] = useState<RunState | null>(null)
-  const [payload, setPayload] = useState<ApiSuccess | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [runState, setRunState] = useState<RunState | null>(initialCache?.runState ?? null)
+  const [payload, setPayload] = useState<ApiSuccess | null>(initialCache?.payload ?? null)
+  const [error, setError] = useState<string | null>(initialCache?.error ?? null)
   const [copyState, setCopyState] = useState<CopyState>('idle')
 
   const requestBody = buildRequestBody(action, values)
   const requestJson = JSON.stringify(requestBody, null, 2)
   const rawJson = payload ? JSON.stringify(payload, null, 2) : ''
+
+  useEffect(() => {
+    writeEmailServiceCache({
+      action,
+      contentMode,
+      error,
+      payload,
+      renderedTemplate,
+      rightPanel,
+      runState,
+      templateKey,
+      templateLabel,
+      templateParams,
+      values,
+      view,
+    })
+  }, [
+    action,
+    contentMode,
+    error,
+    payload,
+    renderedTemplate,
+    rightPanel,
+    runState,
+    templateKey,
+    templateLabel,
+    templateParams,
+    values,
+    view,
+  ])
 
   const updateValues = (patch: Partial<EmailFormValues>) => {
     if (patch.to !== undefined || patch.subject !== undefined || patch.text !== undefined || patch.html !== undefined) {
@@ -95,20 +117,19 @@ export default function EmailServicePage() {
     setTemplateLabel(label)
   }, [])
 
+  const handleTemplateStateChange = useCallback((state: { key: EmailTemplateKey; params: EmailTemplateParams }) => {
+    setTemplateKey(state.key)
+    setTemplateParams(state.params)
+  }, [])
+
   const selectAction = (nextAction: ActionMode) => {
     setAction(nextAction)
-    setError(null)
-    setPayload(null)
-    setRunState(null)
     setCopyState('idle')
     if (showsTemplatePreview(nextAction, contentMode)) setRightPanel('preview')
   }
 
   const selectContentMode = (nextMode: ContentMode) => {
     setContentMode(nextMode)
-    setError(null)
-    setPayload(null)
-    setRunState(null)
     setCopyState('idle')
     setRightPanel(nextMode === 'template' ? 'preview' : 'response')
   }
@@ -155,18 +176,26 @@ export default function EmailServicePage() {
   }
 
   const reset = () => {
-    setAction('verify')
+    setAction('sendMail')
     setContentMode('custom')
     setRightPanel('preview')
+    setView('summary')
     setValues(initialForm())
     setRenderedTemplate(null)
     setTemplateLabel(DEFAULT_TEMPLATE_LABEL)
+    setTemplateKey('verification')
+    setTemplateParams(getEmailTemplatePreviewParams('verification'))
     setTemplateLoading(false)
     setTemplateError(null)
     setPayload(null)
     setError(null)
     setRunState(null)
     setCopyState('idle')
+  }
+
+  const clearCache = () => {
+    clearEmailServiceCache()
+    reset()
   }
 
   const copyRequestJson = async () => {
@@ -189,12 +218,6 @@ export default function EmailServicePage() {
               验证 EmailService 的 verify 与 sendMail 路径；Send Mail 支持选择认证模板、调整参数并预览后再发送。
             </p>
           </div>
-          <Segmented
-            className='shrink-0'
-            options={ACTION_SEGMENTED_OPTIONS}
-            value={action}
-            onChange={(value) => selectAction(value as ActionMode)}
-          />
         </header>
 
         <div className='grid min-h-0 flex-1 gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]'>
@@ -202,6 +225,8 @@ export default function EmailServicePage() {
             action={action}
             contentMode={contentMode}
             copyState={copyState}
+            initialTemplateKey={templateKey}
+            initialTemplateParams={templateParams}
             isLoading={isLoading}
             requestJson={requestJson}
             runState={runState}
@@ -209,6 +234,8 @@ export default function EmailServicePage() {
             templateLoading={templateLoading}
             values={values}
             onChange={updateValues}
+            onActionChange={selectAction}
+            onClearCache={clearCache}
             onContentModeChange={selectContentMode}
             onCopy={copyRequestJson}
             onReset={reset}
@@ -216,6 +243,7 @@ export default function EmailServicePage() {
             onTemplateChange={handleTemplateChange}
             onTemplateRendered={handleTemplateRendered}
             onTemplateRenderStateChange={handleTemplateRenderStateChange}
+            onTemplateStateChange={handleTemplateStateChange}
           />
           <EmailServiceResults
             action={action}

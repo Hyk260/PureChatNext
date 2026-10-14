@@ -2,66 +2,130 @@
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>你已受邀使用 PureChat</title>
+    <style>
+      @media (max-width: 600px) {
+        .email-container {
+          padding: 24px 16px !important;
+        }
+        .email-card {
+          padding: 28px 24px !important;
+        }
+      }
+    </style>
   </head>
   <body
     style="
       margin: 0;
-      background: #f4f4f5;
-      color: #27272a;
-      font-family: Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      padding: 0;
+      font-family:
+        -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue',
+        Arial, sans-serif;
+      background-color: #f4f4f5;
+      color: #1a1a1a;
     "
   >
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-      <tr>
-        <td align="center" style="padding: 32px 16px">
-          <table
-            role="presentation"
-            width="100%"
-            cellspacing="0"
-            cellpadding="0"
-            style="max-width: 600px; background: #fff; border-radius: 24px; overflow: hidden"
+    <div class="email-container" style="max-width: 600px; margin: 0 auto; padding: 40px 20px">
+      <div style="text-align: center; margin-bottom: 32px">
+        <div
+          style="
+            display: inline-block;
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 8px 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+          "
+        >
+          <span style="font-size: 24px; line-height: 1; margin-right: 10px">💬</span>
+          <span style="font-size: 18px; font-weight: 700; color: #000000; letter-spacing: -0.5px">PureChat</span>
+        </div>
+      </div>
+
+      <div
+        class="email-card"
+        style="
+          background: #ffffff;
+          border-radius: 20px;
+          padding: 40px;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+          border: 1px solid rgba(0, 0, 0, 0.02);
+        "
+      >
+        <div style="text-align: center; margin-bottom: 32px">
+          <h1 style="color: #111827; font-size: 24px; font-weight: 700; margin: 0 0 12px 0; letter-spacing: -0.5px">
+            诚邀你使用 PureChat
+          </h1>
+          <p style="color: #6b7280; font-size: 16px; margin: 0; line-height: 1.5">
+            与好友一起体验 AI 对话、搜索和创作。
+          </p>
+        </div>
+
+        <div style="color: #374151; font-size: 16px; line-height: 1.6">
+          <p style="margin: 0 0 24px 0"><strong>{{userName}}</strong> 邀请你使用 PureChat。</p>
+
+          <div style="text-align: center; margin: 32px 0">
+            <a
+              href="{{url}}"
+              target="_blank"
+              style="
+                display: inline-block;
+                background-color: #000000;
+                color: #ffffff;
+                text-decoration: none;
+                padding: 16px 36px;
+                border-radius: 14px;
+                font-weight: 600;
+                font-size: 16px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+              "
+            >
+              接受邀请
+            </a>
+          </div>
+
+          <div
+            style="
+              background-color: #f9fafb;
+              border-radius: 12px;
+              padding: 16px;
+              margin-bottom: 24px;
+              border: 1px solid #f3f4f6;
+            "
           >
-            <tr>
-              <td align="center" style="padding: 32px; font-size: 32px; font-weight: 700">PureChat</td>
-            </tr>
-            <tr>
-              <td
-                align="center"
-                bgcolor="#5bb5ff"
-                style="padding: 48px 24px; background: linear-gradient(135deg, #8c9dff, #48bbfa); color: #fff"
-              >
-                <h1 style="margin: 0 0 20px; font-size: 30px; line-height: 1.4">诚邀你使用 PureChat</h1>
-                <p style="font-size: 17px; line-height: 1.8; margin: 0 0 28px">与好友一起体验 AI 对话、搜索和创作</p>
-                <a
-                  href="{{url}}"
-                  style="
-                    display: inline-block;
-                    background: #fff;
-                    color: #27272a;
-                    border-radius: 32px;
-                    padding: 14px 32px;
-                    text-decoration: none;
-                    font-weight: 700;
-                  "
-                  >接受邀请</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td style="padding: 32px 24px; font-size: 14px; line-height: 1.8">
-                <p><strong>{{userName}}</strong> 邀请你使用 PureChat。</p>
-                <p>此邀请仅面向新用户，请使用收件邮箱注册并完成邮箱验证。邀请链接有效期为 7 天。</p>
-                <p>按钮无法打开？请复制以下链接到浏览器：</p>
-                <p style="word-break: break-all"><a href="{{url}}" style="color: #2563eb">{{url}}</a></p>
-                <p style="color: #71717a">如果你不认识邀请人，可以忽略这封邮件。</p>
-              </td>
-            </tr>
-          </table>
-          <p style="color: #71717a; font-size: 12px">PureChat · AI 对话、搜索和创作</p>
-        </td>
-      </tr>
-    </table>
+            <p style="color: #6b7280; font-size: 14px; margin: 0; text-align: center; line-height: 1.6">
+              此邀请仅面向新用户，请使用收件邮箱注册并完成邮箱验证。邀请链接将在 <strong>7 天</strong> 后过期。
+            </p>
+          </div>
+
+          <p style="color: #6b7280; font-size: 14px; margin: 0; text-align: center">
+            如果你不认识邀请人，可以忽略这封邮件。
+          </p>
+        </div>
+
+        <div style="border-top: 1px solid #e5e7eb; margin: 32px 0"></div>
+
+        <div style="text-align: center">
+          <p style="color: #9ca3af; font-size: 13px; margin: 0 0 8px 0">按钮无法打开？请复制以下链接到浏览器：</p>
+          <a
+            href="{{url}}"
+            style="
+              color: #2563eb;
+              font-size: 13px;
+              text-decoration: none;
+              word-break: break-all;
+              display: block;
+              line-height: 1.5;
+            "
+          >
+            {{url}}
+          </a>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 32px">
+        <p style="color: #a1a1aa; font-size: 13px; margin: 0">© 2026 PureChat. 保留所有权利。</p>
+      </div>
+    </div>
   </body>
 </html>

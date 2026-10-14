@@ -68,6 +68,11 @@ export const ACTION_META: Record<ActionMode, { description: string; label: strin
   },
 }
 
+export const ACTION_OPTIONS = ACTION_ORDER.map((value) => ({
+  label: ACTION_META[value].label,
+  value,
+}))
+
 export const PROVIDER_OPTIONS: Array<{ label: string; value: ProviderOption }> = [
   { label: 'Env 默认 · default', value: '' },
   { label: 'Nodemailer (SMTP)', value: 'nodemailer' },

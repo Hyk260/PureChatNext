@@ -13,9 +13,12 @@ import type {
 } from '@/libs/better-auth/email-templates/preview'
 
 type Props = {
+  initialTemplateKey?: EmailTemplateKey
+  initialTemplateParams?: EmailTemplateParams
   onRendered: (template: RenderedEmailTemplate) => void
   onRenderError?: (error: string | null) => void
   onRenderStateChange?: (state: { error: string | null; isLoading: boolean }) => void
+  onTemplateStateChange?: (state: { key: EmailTemplateKey; params: EmailTemplateParams }) => void
   onTemplateChange?: (key: EmailTemplateKey, label: string) => void
 }
 
@@ -46,20 +49,34 @@ type RenderTemplateFailure = {
   success: false
 }
 
-export function EmailTemplateComposer({ onRendered, onRenderError, onRenderStateChange, onTemplateChange }: Props) {
-  const [activeTemplate, setActiveTemplate] = useState<EmailTemplateKey>(EMAIL_TEMPLATE_CATALOG[0]!.key)
-  const [params, setParams] = useState<EmailTemplateParams>(getDefaultTemplateParams)
+export function EmailTemplateComposer({
+  initialTemplateKey,
+  initialTemplateParams,
+  onRendered,
+  onRenderError,
+  onRenderStateChange,
+  onTemplateStateChange,
+  onTemplateChange,
+}: Props) {
+  const [activeTemplate, setActiveTemplate] = useState<EmailTemplateKey>(
+    () => initialTemplateKey ?? EMAIL_TEMPLATE_CATALOG[0]!.key
+  )
+  const [params, setParams] = useState<EmailTemplateParams>(
+    () => initialTemplateParams ?? getDefaultTemplateParams(initialTemplateKey)
+  )
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const onRenderedRef = useRef(onRendered)
   const onRenderErrorRef = useRef(onRenderError)
   const onRenderStateChangeRef = useRef(onRenderStateChange)
+  const onTemplateStateChangeRef = useRef(onTemplateStateChange)
   const onTemplateChangeRef = useRef(onTemplateChange)
 
   useEffect(() => {
     onRenderedRef.current = onRendered
     onRenderErrorRef.current = onRenderError
     onRenderStateChangeRef.current = onRenderStateChange
+    onTemplateStateChangeRef.current = onTemplateStateChange
     onTemplateChangeRef.current = onTemplateChange
   })
 
@@ -79,6 +96,10 @@ export function EmailTemplateComposer({ onRendered, onRenderError, onRenderState
   useEffect(() => {
     onRenderStateChangeRef.current?.({ error, isLoading })
   }, [error, isLoading])
+
+  useEffect(() => {
+    onTemplateStateChangeRef.current?.({ key: activeTemplate, params })
+  }, [activeTemplate, params])
 
   useEffect(() => {
     let cancelled = false

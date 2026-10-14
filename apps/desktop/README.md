@@ -75,7 +75,7 @@ pnpm package:desktop:win:portable
 
 Windows 使用 `windows-2022`，macOS 使用 `macos-15`，均使用 Node.js 22.23.2 和 pnpm 10.33.4。Node 版本与 Docker 工作流保持一致，满足当前依赖要求的 `>=22.22.0`。构建前先检查稳定版本、发行说明、服务地址和工作流分支条件；每个平台打包后校验安装文件和更新元数据存在且非空，再上传。一端失败不会取消另一端，成功端的 Artifact 仍可下载，但不会创建或更新草稿；不会上传解包目录或构建调试 YAML。
 
-默认官方服务地址为 `https://next.purechat.cn`。需要覆盖时，在仓库 **Settings → Secrets and variables → Actions → Variables** 设置非敏感变量 `PURECHAT_DESKTOP_CLOUD_URL`，必须是无用户名/密码的 HTTP(S) 地址，不要误填到 Secrets。生产更新源固定为 `Hyk260/PureChatNext` 的公开 GitHub Releases；工作流清空 `PURECHAT_DESKTOP_UPDATE_URL`，避免把本地 Generic 测试地址写入发行包。不需要数据库、AI Key、签名证书或 PAT；草稿汇总 job 使用内置 `GITHUB_TOKEN` 的 `contents: write` 权限，其余 job 仅有读取权限。仓库默认令牌权限保持只读即可，GitHub 会按 job 声明授予草稿写权限。
+默认官方服务地址为 `https://next.purechat.cn`。需要覆盖时，在仓库 **Settings → Secrets and variables → Actions → Variables** 设置非敏感变量 `PURECHAT_DESKTOP_CLOUD_URL`，必须是无用户名/密码的 HTTP(S) 地址，不要误填到 Secrets。生产更新源默认使用 `Hyk260/PureChatNext` 的公开 GitHub Releases；设置仓库 Variable `PURECHAT_DESKTOP_UPDATE_URL` 后，构建将使用指定的 Generic 更新源。COS 场景需填写正式 `desktop/` 公共下载地址，不能使用本地测试地址。不需要数据库、AI Key、签名证书或 PAT；草稿汇总 job 使用内置 `GITHUB_TOKEN` 的 `contents: write` 权限，其余 job 仅有读取权限。S3 密钥只注入独立 COS 同步 job。
 
 草稿记录完整 commit SHA。同版本、同 commit 重跑会替换安装文件及更新元数据；已公开版本、不同 commit 的草稿、指向不同 commit 的 tag 均会明确失败。源代码变化后应使用新版本；若需要重建未发布的同版本，应先人工处理旧草稿及冲突 tag。API 或网络错误也会直接失败，不会被当作版本不存在。
 
@@ -241,6 +241,51 @@ PURECHAT_DESKTOP_UPDATE_URL= pnpm package:desktop:mac
 GitHub Release tag 沿用 `vX.Y.Z`，只在草稿资产全部就绪后手动发布；`--publish never` 配合现有 `gh` 草稿汇总流程，无需向 Builder 传 token。旧版没有内置更新源的应用需要先手动安装带 GitHub 配置的新版本，补传远端 YAML 不会改变旧安装包的配置。
 
 桌面开发环境可在启动 `pnpm dev:desktop` 前设置 `PURECHAT_DESKTOP_UPDATE_URL`，从 Generic 更新源手动检查并下载更新。开发版本下载完成后只显示下载完成状态，不会提示或执行安装；安装验证仍需使用已打包的发行版本。
+
+### 腾讯云 COS 上传与最新版本保留
+
+本地上传复用根 `.env.local` 中的 `S3_ACCESS_KEY_ID`、`S3_SECRET_ACCESS_KEY`、`S3_BUCKET`、`S3_ENDPOINT`、`S3_REGION`、`S3_ENABLE_PATH_STYLE`、`S3_SET_ACL` 和 `S3_PUBLIC_DOMAIN`。Shell/CI 已设置的字段优先；也可通过 `--env-file` 指定另一个环境文件。COS 配置示例见[环境变量文档](../../docs/self-hosting/configuration/environment.md#腾讯云-cos)。脚本仅接受 HTTPS COS 地域 Endpoint、匹配的 Region 和 virtual-hosted 模式，避免将开发 RustFS/MinIO 当成发行源。
+
+固定使用桶内 `desktop/` 前缀。未指定 `PURECHAT_DESKTOP_UPDATE_URL` 时，脚本使用 `S3_PUBLIC_DOMAIN`（缺省为 COS 桶域名）下的 `desktop/` 公共地址；显式更新地址必须为 HTTPS，且路径与该前缀一致。不要把临时签名 URL 作为更新源。
+
+```bash
+# 校验本地产物，读取远端版本并预览上传/删除计划；无写入、加锁或删除
+pnpm desktop:upload --platform windows --dry-run
+pnpm desktop:upload --platform mac --dry-run
+
+# 自动设置 COS 更新地址，打包成功后上传当前平台
+pnpm package:desktop:win:upload
+pnpm package:desktop:mac:upload
+
+# 上传已按相同 COS 更新地址打包的产物
+pnpm desktop:upload --platform mac --dir apps/desktop/release
+pnpm desktop:upload --platform all --dir /path/to/combined-release --version 0.3.0
+
+# 显式指定配置文件；路径可为绝对路径
+pnpm desktop:upload --platform windows --env-file .env.local --dry-run
+```
+
+纯 `package:desktop:*` 命令继续只打包。上传包装命令将正式更新地址传给构建子进程，并移除子进程中的 S3 密钥。直接上传时，如果目录存在 `builder-effective-config.yaml`，脚本会确认其第一个 provider 为匹配地址的 Generic；GitHub 下载的纯资产没有该配置文件，必须来自已写入 COS 更新地址的构建。`--package --dry-run` 不构建，仍校验目录中已有的产物。
+
+Windows x64 和 macOS arm64 分别保留最新稳定版。Windows 的 NSIS、portable 和 blockmap 校验通过后上传，最后覆盖 `latest.yml`；macOS 的 DMG、ZIP 和 blockmap 上传后覆盖 `latest-mac.yml`。YAML 的版本、文件大小、SHA-512 必须与本地产物一致；公开文件必须支持匿名 GET 和 Range，公开 YAML 必须与上传内容一致。渠道 YAML 使用 `Cache-Control: no-cache`，版本化安装包使用长期缓存。
+
+确认公开渠道生效后，脚本只删除 `desktop/` 根目录内本平台命名规则匹配、且版本号更低的发行文件。上传 Windows 不删除 macOS，头像、用户文件、嵌套目录和未知文件不参与清理。不能降级；同版本内容不同必须递增版本号。同版本重复上传可恢复中断任务，并重试旧文件清理。失败任务的未发布新文件可能暂时保留，重试成功后完成发布。
+
+**COS 访问与并发要求：**
+
+- 推荐保持 `S3_SET_ACL=0`，在 COS 桶策略中仅允许匿名读取 `desktop/*`，不开放整个共享桶；脚本使用真实公开 URL 检查访问权限。
+- 上传账号需要读取桶版本控制、列出 `desktop/`、读写和删除发行文件，以及读写和删除 `.desktop-publish-locks/` 中的发布锁。读取对象权限还用于校验同名旧对象。
+- 首版要求桶从未启用版本控制。COS 的 `x-cos-forbid-overwrite` 在已启用或暂停版本控制的桶中无效，脚本会拒绝发布和 dry-run，不会修改共享桶配置。此条件同时保证旧文件删除后不留下历史对象版本。[COS PUT Object](https://cloud.tencent.cn/document/product/436/7749)
+- 发布锁分别使用 `.desktop-publish-locks/windows.json` 和 `.desktop-publish-locks/mac.json`，覆盖本地和 Actions 并发。正常退出释放锁；进程被强制终止时，确认没有同平台任务运行后，在 COS 控制台删除报错指明的锁再重试，脚本不会自动抢占锁。
+- 删除旧 blockmap 后，缺少本地缓存的旧客户端可能回退完整下载。已获取旧版本下载地址的客户端在旧文件删除后可能遇到 404，需要重新检查更新；COS 清理不撤销 CDN 已缓存的旧文件，接入 CDN 后需同步配置缓存清理策略。
+
+**GitHub Actions 配置：**
+
+在仓库 Actions Secrets 中设置 `S3_ACCESS_KEY_ID`、`S3_SECRET_ACCESS_KEY`；在 Variables 中设置 `S3_BUCKET`、`S3_ENDPOINT`、`S3_REGION`、可选 `S3_PUBLIC_DOMAIN`，以及必填的正式 `PURECHAT_DESKTOP_UPDATE_URL`。同步 job 固定采用 `S3_ENABLE_PATH_STYLE=0`、`S3_SET_ACL=0`，公开读取通过桶策略授权。不要将 `.env.local` 提交到仓库。
+
+现有 `Desktop release` 工作流将该公开更新地址写入双平台安装包，仍只生成 GitHub 草稿。手动将草稿正式发布后，`Sync desktop release to COS` 工作流下载该版本的九个发行资产，调用同一上传脚本并分别清理各平台旧版；草稿和预发布不会同步。没有设置更新地址时，原 GitHub 发行流程保持可用，自动 COS 同步跳过。
+
+需要补同步时，打开该同步工作流的 **Run workflow**，填写 `v0.3.0` 等已公开稳定 tag、选择 `all/windows/mac`。手动运行默认开启 `dry_run`，检查计划后关闭该选项再执行。同步脚本使用默认分支代码，指定 tag 只用于下载资产；版本判断依据该 tag，不依赖当前主分支版本。使用 `GITHUB_TOKEN` 自动发布的 Release 不会触发另一条 workflow，需要手动运行同步任务；本仓库桌面草稿由用户在 GitHub 页面正式发布，因此可触发自动同步。
 
 ### 本地真实发布更新验证
 

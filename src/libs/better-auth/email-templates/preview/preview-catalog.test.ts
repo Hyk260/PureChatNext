@@ -1,9 +1,10 @@
 // @vitest-environment node
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { SITE_DEFAULT_URL } from '@/const/site'
+import * as desktopFetch from '@/utils/desktopFetch'
 
-import { EMAIL_TEMPLATE_PREVIEW_MOCK } from './preview-catalog'
+import { EMAIL_TEMPLATE_PREVIEW_MOCK, getEmailTemplatePreviewParams } from './preview-catalog'
 
 const VERIFY_PATH = '/verify-email?token=preview-token'
 
@@ -16,6 +17,8 @@ describe('EMAIL_TEMPLATE_PREVIEW_MOCK.url', () => {
   const originalAppUrl = process.env.APP_URL
 
   afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
     setNodeEnv(originalNodeEnv)
     if (originalAppUrl === undefined) {
       delete process.env.APP_URL
@@ -29,6 +32,32 @@ describe('EMAIL_TEMPLATE_PREVIEW_MOCK.url', () => {
     process.env.APP_URL = 'https://chat.example.com'
 
     expect(EMAIL_TEMPLATE_PREVIEW_MOCK.url).toBe(`http://localhost:5174${VERIFY_PATH}`)
+  })
+
+  it('uses the invitation route for referral defaults', () => {
+    expect(getEmailTemplatePreviewParams('referral').url).toBe(
+      'http://localhost:5174/accept-referral?referral_context=preview-token'
+    )
+    expect(getEmailTemplatePreviewParams('verification').url).toBe(`http://localhost:5174${VERIFY_PATH}`)
+  })
+
+  it('uses the configured remote server for desktop invitation links', () => {
+    setNodeEnv('development')
+    vi.stubGlobal('window', { location: { origin: 'http://127.0.0.1:5176' } })
+    vi.spyOn(desktopFetch, 'getDesktopRemoteBaseUrl').mockReturnValue('https://chat.example.com/')
+
+    expect(getEmailTemplatePreviewParams('referral').url).toBe(
+      'https://chat.example.com/accept-referral?referral_context=preview-token'
+    )
+  })
+
+  it('uses the current site for browser invitation links', () => {
+    setNodeEnv('development')
+    vi.stubGlobal('window', { location: { origin: 'https://chat.example.com' } })
+
+    expect(getEmailTemplatePreviewParams('referral').url).toBe(
+      'https://chat.example.com/accept-referral?referral_context=preview-token'
+    )
   })
 
   it('uses APP_URL in production', () => {

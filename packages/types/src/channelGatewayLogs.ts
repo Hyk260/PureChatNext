@@ -18,6 +18,9 @@ export const CHANNEL_LOG_MESSAGES = {
   needs_rebind: '授权已过期，需要重新绑定',
   authorization_failed: '渠道授权失败，请检查凭据或签名配置',
   callback_failed: '渠道回调转发或处理失败',
+  webhook_inbound: 'QQ Webhook 收到已验签回调',
+  inbound_message: 'QQ Gateway 收到入站消息',
+  agent_reply: 'Agent 已生成回复',
   processing_failed: '消息处理失败',
   send_failed: '回复发送失败',
 } as const
@@ -32,6 +35,34 @@ export type ChannelLogInput = {
   code?: string
   attempt?: number
   delayMs?: number
+  inboundMessage?: {
+    applicationId?: string
+    contactHash?: string
+    contentLength?: number
+    content?: string
+    identityType?: 'member_openid' | 'user_openid' | 'user_id'
+    identity?: string
+    messageKind?: 'audio' | 'command' | 'file' | 'image' | 'text' | 'unsupported' | 'video'
+    username?: string
+  }
+  agentReply?: {
+    agentId?: string
+    aiOutput?: string
+    contextMessageCount?: number
+    durationMs?: number
+    finish?: string
+    model?: string
+    platform?: string
+    provider?: string
+    steps?: Array<{
+      finish?: string
+      resultCount?: number
+      step?: number
+      tools?: string[]
+    }>
+    toolsAvailable?: string[]
+    toolsCalled?: string[]
+  }
 }
 
 export const isChannelLogPlatform = (value: string): value is ChannelLogPlatform =>

@@ -323,6 +323,25 @@ export async function processNextWechatEvent(owner = `processor-${createNanoId(1
     const response = await buildResponse(event)
     const saved = await model.saveResponse(event.id, owner, response)
     if (!saved) throw new Error('Event lease lost')
+    if (response.diagnostics) {
+      const { diagnostics } = response
+      await recordBindingGatewayLog(event.bindingId, {
+        agentReply: {
+          agentId: diagnostics.agentId,
+          aiOutput: response.text,
+          contextMessageCount: diagnostics.contextMessageCount,
+          durationMs: response.durationMs,
+          finish: diagnostics.finish,
+          model: response.model,
+          platform: 'wechat',
+          provider: response.provider,
+          steps: diagnostics.steps,
+          toolsAvailable: diagnostics.toolsAvailable,
+          toolsCalled: diagnostics.toolsCalled,
+        },
+        event: 'agent_reply',
+      })
+    }
     diagnosticStage = 'send_failed'
     await sendResponse(event, owner, response.text)
     diagnosticStage = 'processing_failed'

@@ -53,7 +53,8 @@ vi.mock('../updateInstallationSupport', () => ({ checkUpdateInstallationSupport:
 
 class FakeUpdater extends EventEmitter {
   logger = mocks.logger
-  loadUpdateConfig = vi.fn(async () => ({ url: 'http://127.0.0.1:5500' }))
+  loadUpdateConfig = vi.fn<() => Promise<{ provider: string; url?: string; owner?: string; repo?: string }>>()
+    .mockResolvedValue({ provider: 'generic', url: 'http://127.0.0.1:5500' })
   forceDevUpdateConfig = false
   disableDifferentialDownload = false
   autoDownload = true
@@ -65,8 +66,11 @@ class FakeUpdater extends EventEmitter {
   downloadUpdate = vi.fn().mockResolvedValue([])
   setFeedURL = vi.fn()
   quitAndInstall = vi.fn()
-  downloadHelper: Pick<DownloadedUpdateHelper, 'cacheDir' | 'clear'> = {
+  closeServerIfExists = vi.fn()
+  squirrelDownloadedUpdate = false
+  downloadHelper: Pick<DownloadedUpdateHelper, 'cacheDir' | 'cacheDirForPendingUpdate' | 'clear'> = {
     cacheDir: '/tmp/purechat-test-update-cache',
+    cacheDirForPendingUpdate: '/tmp/purechat-test-update-cache/pending',
     clear: vi.fn().mockResolvedValue(undefined),
   }
   getOrCreateDownloadHelper = vi.fn(async () => this.downloadHelper)
@@ -103,6 +107,7 @@ beforeEach(() => {
   mocks.packaged = true
   mocks.installationSupport.mockResolvedValue({ supported: true, signature: 'valid', message: '签名校验通过' })
   preferences = { ...DEFAULT_UPDATE_PREFERENCES }
+  config.setUpdatePreferences.mockImplementation(async (next) => { preferences = next })
   Object.defineProperty(process, 'platform', { configurable: true, value: 'darwin' })
   Object.defineProperty(process, 'resourcesPath', { configurable: true, value: '/tmp/purechat-test-resources' })
   vi.spyOn(fs, 'access').mockResolvedValue(undefined)
@@ -392,6 +397,184 @@ describe('desktop updater', () => {
       expect(updater.checkForUpdates).not.toHaveBeenCalled()
     }
   )
+})
+
+describe('runtime update sources', () => {
+  it('keeps the packaged GitHub feed until the user explicitly overrides it', async () => {
+    updater.loadUpdateConfig.mockResolvedValue({ provider: 'github', owner: 'Hyk260', repo: 'PureChatNext' })
+    expect(await service.getState()).toMatchObject({
+      effectiveSource: { type: 'github', owner: 'Hyk260', repo: 'PureChatNext' },
+      preferences: DEFAULT_UPDATE_PREFERENCES,
+    })
+    await service.setPreferences({ ...preferences, autoUpdate: false })
+    expect(updater.setFeedURL).not.toHaveBeenCalled()
+  })
+
+  it.each([true, false])('restores a saved custom source on startup, packaged=%s', async (packaged) => {
+    mocks.packaged = packaged
+    preferences = { ...preferences, updateSource: 'custom', customUpdateUrl: 'https://cdn.example.com/desktop/' }
+    vi.stubEnv('PURECHAT_DESKTOP_UPDATE_URL', 'invalid ignored environment')
+    expect(await service.getState()).toMatchObject({
+      status: 'idle', effectiveSource: { type: 'custom', url: 'https://cdn.example.com/desktop/' },
+    })
+    expect(updater.setFeedURL).toHaveBeenCalledWith({ provider: 'generic', url: 'https://cdn.example.com/desktop/' })
+  })
+
+  it('configures an unsupported development client without requiring an environment variable or restart', async () => {
+    mocks.packaged = false
+    vi.stubEnv('PURECHAT_DESKTOP_UPDATE_URL', '')
+    expect((await service.getState()).status).toBe('unsupported')
+    const saved = await service.setPreferences({ ...preferences, autoUpdate: false, updateSource: 'local' })
+    expect(saved).toMatchObject({
+      status: 'idle', effectiveSource: { type: 'local', url: 'http://127.0.0.1:5500' },
+      installationSupport: { supported: true, signature: 'valid' },
+      developmentCachePath: updater.downloadHelper.cacheDir,
+    })
+    expect(updater.setFeedURL).toHaveBeenCalledWith({ provider: 'generic', url: 'http://127.0.0.1:5500' })
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(updater.checkForUpdates).not.toHaveBeenCalled()
+    await service.check()
+    await settle()
+    expect(updater.checkForUpdates).toHaveBeenCalledTimes(1)
+    await expect(service.install()).rejects.toThrow('开发版本')
+  })
+
+  it.each(['darwin', 'win32'])('switches all sources on %s while retaining the custom directory and test channel', async (platform) => {
+    Object.defineProperty(process, 'platform', { configurable: true, value: platform })
+    const customUpdateUrl = 'https://cdn.example.com/desktop/'
+    await service.setPreferences({ ...preferences, autoUpdate: false, updateSource: 'github', customUpdateUrl })
+    expect(updater.setFeedURL).toHaveBeenLastCalledWith({ provider: 'github', owner: 'Hyk260', repo: 'PureChatNext' })
+    await service.setPreferences({ ...preferences, updateSource: 'custom', testPlan: true, testChannel: 'beta' })
+    expect(updater.setFeedURL).toHaveBeenLastCalledWith({ provider: 'generic', url: customUpdateUrl })
+    await service.setPreferences({ ...preferences, updateSource: 'local' })
+    expect(await service.getState()).toMatchObject({ preferences: { customUpdateUrl, testPlan: true, testChannel: 'beta' } })
+    const calls = updater.setFeedURL.mock.calls.length
+    await service.setPreferences(preferences)
+    expect(updater.setFeedURL).toHaveBeenCalledTimes(calls)
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(updater.checkForUpdates).not.toHaveBeenCalled()
+    await service.check()
+    await settle()
+    expect(updater.channel).toBe('beta')
+    expect(updater.allowDowngrade).toBe(false)
+  })
+
+  it('drains a superseded check before applying a new provider and blocks concurrent saves', async () => {
+    let finish!: (value: UpdateCheckResult) => void
+    updater.checkForUpdates.mockReturnValueOnce(new Promise((resolve) => { finish = resolve }))
+    await service.check()
+    const saving = service.setPreferences({ ...preferences, updateSource: 'github' })
+    await settle()
+    expect(updater.setFeedURL).not.toHaveBeenCalled()
+    await expect(service.setPreferences(preferences)).rejects.toThrow('正在保存')
+    finish(result())
+    await saving
+    await settle()
+    expect(updater.downloadUpdate).not.toHaveBeenCalled()
+    expect(updater.setFeedURL).toHaveBeenCalledTimes(1)
+    expect((await service.getState()).status).toBe('idle')
+  })
+
+  it('cancels an active download and ignores its events until the new source is saved', async () => {
+    let finish!: () => void
+    updater.downloadUpdate.mockReturnValueOnce(new Promise<void>((resolve) => { finish = resolve }))
+    await service.check()
+    await settle()
+    const token = updater.downloadUpdate.mock.calls[0][0]
+    const saving = service.setPreferences({ ...preferences, updateSource: 'github' })
+    await settle()
+    expect(token.cancelled).toBe(true)
+    updater.emit('update-downloaded', release)
+    updater.emit('download-progress', { percent: 95 })
+    expect(await service.getState()).toMatchObject({ status: 'idle', progress: 0, release: null })
+    await expect(service.install()).rejects.toThrow('尚未就绪')
+    expect(updater.downloadHelper.clear).not.toHaveBeenCalled()
+    finish()
+    await saving
+    expect(updater.downloadHelper.clear).toHaveBeenCalledTimes(1)
+    expect(updater.closeServerIfExists).toHaveBeenCalledTimes(1)
+    await service.check()
+    await settle()
+    updater.emit('update-downloaded', release)
+    expect((await service.getState()).status).toBe('ready')
+  })
+
+  it('removes an old ready installer from disk and memory before switching sources', async () => {
+    const cacheDir = await fs.mkdtemp(path.join(tmpdir(), 'purechat-source-cache-'))
+    const helper = new DownloadedUpdateHelper(cacheDir)
+    updater.getOrCreateDownloadHelper.mockResolvedValue(helper)
+    try {
+      const file = path.join(helper.cacheDirForPendingUpdate, 'update.zip')
+      await fs.mkdir(helper.cacheDirForPendingUpdate)
+      await fs.writeFile(file, 'old installer')
+      await helper.setDownloadedFile(file, null, release,
+        { url: new URL('http://127.0.0.1:5500/update.zip'), info: { url: 'update.zip', sha512: 'old checksum' } },
+        'update.zip', true)
+      await service.check()
+      await settle()
+      updater.emit('update-downloaded', release)
+      updater.squirrelDownloadedUpdate = true
+      const saved = await service.setPreferences({ ...preferences, updateSource: 'github' })
+      expect(saved).toMatchObject({ status: 'idle', release: null, progress: 0 })
+      expect(helper.file).toBeNull()
+      await expect(fs.stat(file)).rejects.toMatchObject({ code: 'ENOENT' })
+      expect(updater.closeServerIfExists).toHaveBeenCalled()
+      expect(updater.squirrelDownloadedUpdate).toBe(false)
+      await expect(service.install()).rejects.toThrow('尚未就绪')
+    } finally {
+      await fs.rm(cacheDir, { recursive: true, force: true })
+    }
+  })
+
+  it.each(['storage', 'feed', 'cache'])('retains the previous source after a %s failure without restoring the old ready package', async (failure) => {
+    await service.check()
+    await settle()
+    updater.emit('update-downloaded', release)
+    const original = await service.getState()
+    if (failure === 'storage') config.setUpdatePreferences.mockRejectedValueOnce(new Error('storage failed'))
+    if (failure === 'feed') updater.setFeedURL.mockImplementationOnce(() => { throw new Error('feed failed') })
+    if (failure === 'cache') vi.spyOn(fs, 'rm').mockRejectedValueOnce(new Error('cache failed'))
+    await expect(service.setPreferences({ ...preferences, updateSource: 'github' })).rejects.toThrow(`${failure} failed`)
+    expect(await service.getState()).toMatchObject({
+      status: 'error', release: null, preferences: original.preferences, effectiveSource: original.effectiveSource,
+    })
+    if (failure !== 'cache') {
+      expect(updater.setFeedURL).toHaveBeenLastCalledWith({ provider: 'generic', url: 'http://127.0.0.1:5500' })
+    }
+    await expect(service.install()).rejects.toThrow('尚未就绪')
+  })
+
+  it('rejects invalid source input before cancelling a ready update, and prevents changes during installation', async () => {
+    await service.check()
+    await settle()
+    updater.emit('update-downloaded', release)
+    await expect(service.setPreferences({ ...preferences, updateSource: 'custom', customUpdateUrl: 'file:///tmp' }))
+      .rejects.toThrow('更新设置无效')
+    expect((await service.getState()).status).toBe('ready')
+    expect(updater.downloadHelper.clear).not.toHaveBeenCalled()
+    await service.install()
+    await expect(service.setPreferences({ ...preferences, updateSource: 'github' })).rejects.toThrow('正在安装')
+  })
+
+  it('disables checks if an override is removed and there is no default development source', async () => {
+    mocks.packaged = false
+    vi.stubEnv('PURECHAT_DESKTOP_UPDATE_URL', '')
+    preferences = { ...preferences, updateSource: 'github' }
+    await service.start()
+    expect((await service.setPreferences(DEFAULT_UPDATE_PREFERENCES)).status).toBe('unsupported')
+    await service.check()
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(updater.checkForUpdates).not.toHaveBeenCalled()
+  })
+
+  it('reports an unreachable saved directory on check without falling back to another provider', async () => {
+    await service.setPreferences({ ...preferences, autoUpdate: false, updateSource: 'custom', customUpdateUrl: 'http://127.0.0.1:5501/' })
+    updater.checkForUpdates.mockRejectedValueOnce(new Error('ECONNREFUSED'))
+    await service.check()
+    await settle()
+    expect(await service.getState()).toMatchObject({ status: 'error', effectiveSource: { type: 'custom', url: 'http://127.0.0.1:5501/' } })
+    expect(updater.setFeedURL).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('updater diagnostics', () => {

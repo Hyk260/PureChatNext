@@ -1,7 +1,8 @@
 'use client'
 
 import { Button } from '@pure/ui'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Settings2 } from 'lucide-react'
+import { useNavigate } from 'react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
@@ -128,6 +129,7 @@ function useVisiblePeriodicRefresh(
 }
 
 export default function WechatConversationPage() {
+  const navigate = useNavigate()
   const [status, setStatus] = useState<WechatStatus | null>(null)
   const [sessions, setSessions] = useState<WechatDevSession[]>([])
   const [bound, setBound] = useState(false)
@@ -550,6 +552,18 @@ export default function WechatConversationPage() {
       }
       subtitle='Agent ↔ 微信用户'
       title='微信对话监控'
+      titleExtra={
+        <Button
+          aria-label='打开微信设置'
+          icon={<Settings2 className='size-3.5' />}
+          size='small'
+          title='微信设置'
+          type='text'
+          onClick={() => navigate('/settings/messenger/wechat')}
+        >
+          设置
+        </Button>
+      }
     >
       <WechatMessagePane
         copiedMessageId={copiedMessageId}

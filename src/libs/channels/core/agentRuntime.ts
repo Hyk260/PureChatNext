@@ -155,6 +155,7 @@ export class ChannelAgentRuntime {
     const { languageModel, settlement } = await resolveRuntimeModel(params.userId, modelId, provider, params.platform)
 
     const startedAt = Date.now()
+    const steps: Array<{ finish: string; resultCount: number; step: number; tools: string[] }> = []
     let result: Awaited<ReturnType<typeof generateText>>
     try {
       const generation = params.generation
@@ -164,6 +165,21 @@ export class ChannelAgentRuntime {
         instructions: generationInstructions(generation, agent.systemRole),
         messages: generationMessages(params, generation),
         model: languageModel,
+        onStepEnd: (event) => {
+          const step = event as {
+            finishReason?: string
+            stepNumber?: number
+            toolCalls?: Array<{ toolName: string }>
+            toolResults?: unknown[]
+          }
+          steps.push({
+            finish: step.finishReason ?? '-',
+            resultCount: step.toolResults?.length ?? 0,
+            step: step.stepNumber ?? 0,
+            tools: step.toolCalls?.map((call) => call.toolName) ?? [],
+          })
+          generation?.onStepEnd?.(event)
+        },
       } as Parameters<typeof generateText>[0])
     } catch (error) {
       if (isPureChatRestrictedModelError(error)) throw new Error(PURECHAT_MODEL_UNAVAILABLE_MESSAGE)
@@ -202,6 +218,14 @@ export class ChannelAgentRuntime {
 
     return {
       artifacts: [],
+      diagnostics: {
+        agentId: agent.id,
+        contextMessageCount: generationMessages(params, params.generation).length,
+        finish: result.finishReason,
+        steps,
+        toolsAvailable: generationToolNames(params.generation),
+        toolsCalled: result.toolCalls?.map((toolCall) => toolCall.toolName) ?? [],
+      },
       durationMs,
       model: modelId,
       provider,

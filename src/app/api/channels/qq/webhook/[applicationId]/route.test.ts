@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { createPrivateKey, sign } from 'node:crypto'
 import { NextRequest } from 'next/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -52,6 +53,20 @@ vi.mock('@/server/channel-gateway/diagnostics', async () => ({
 import { GET, POST } from './route'
 
 const context = { params: Promise.resolve({ applicationId: 'app-1' }) }
+const ED25519_PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex')
+const createInboundSignature = (timestamp: string, body: string, secret: string) => {
+  const secretBytes = Buffer.from(secret, 'utf8')
+  const seed = Buffer.alloc(32)
+  for (let offset = 0; offset < seed.length; offset += secretBytes.length) {
+    secretBytes.copy(seed, offset, 0, Math.min(secretBytes.length, seed.length - offset))
+  }
+  const privateKey = createPrivateKey({
+    format: 'der',
+    key: Buffer.concat([ED25519_PKCS8_PREFIX, seed]),
+    type: 'pkcs8',
+  })
+  return sign(null, Buffer.from(timestamp + body), privateKey).toString('hex')
+}
 const createRequest = (body: unknown, headers: Record<string, string> = {}) => {
   const bodyText = typeof body === 'string' ? body : JSON.stringify(body)
   const url = new URL('http://localhost/api/channels/qq/webhook/app-1')
@@ -203,7 +218,7 @@ describe('POST /api/channels/qq/webhook/[applicationId]', () => {
     const timestamp = '1725442341'
     mocks.handleWebhook.mockRejectedValueOnce(new Error('qq-app-secret private-message-body'))
     const response = await POST(createRequest(body, {
-      'X-Signature-Ed25519': signWebhookResponse(timestamp, body, 'qq-app-secret'),
+      'X-Signature-Ed25519': createInboundSignature(timestamp, body, 'qq-app-secret'),
       'X-Signature-Timestamp': timestamp,
     }), context)
     expect(response.status).toBe(500)
@@ -216,7 +231,7 @@ describe('POST /api/channels/qq/webhook/[applicationId]', () => {
     const bodyText = JSON.stringify(payload)
     const timestamp = '1725442341'
     const request = createRequest(bodyText, {
-      'X-Signature-Ed25519': signWebhookResponse(timestamp, bodyText, 'qq-app-secret'),
+      'X-Signature-Ed25519': createInboundSignature(timestamp, bodyText, 'qq-app-secret'),
       'X-Signature-Timestamp': timestamp,
     })
     mocks.handleWebhook.mockImplementationOnce(async (forwardedRequest: NextRequest) =>

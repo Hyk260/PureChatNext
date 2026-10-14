@@ -11,7 +11,8 @@
 #   - 无需数据库、AI Key、Apple 证书或 PAT；GH_TOKEN 使用 GitHub 自动提供的 GITHUB_TOKEN。
 #   - 默认 contents: read；只有草稿 job 申请 contents: write，无需全局开启写权限。
 #   - GITHUB_TOKEN 不能获得 workflow 写权限；所选分支的工作流必须与默认分支一致，预检会提前检查。
-#   - 生产更新源使用 Hyk260/PureChatNext 的 GitHub Releases，公开下载链接需发布草稿后才能使用。
+#   - PURECHAT_DESKTOP_UPDATE_URL 可指定 COS 的 desktop/ 公共地址；未配置时使用 GitHub Releases。
+#   - COS 同步仅在草稿正式发布后由 desktop-cos-sync.yml 执行，不向构建 job 注入 S3 密钥。
 #   - macOS 仅 ad-hoc 签名，不公证；支持检测和下载更新，不支持自动安装。
 # 详细说明与失败排查见 apps/desktop/README.md 的“GitHub Actions 手动打包”。
 name: Desktop release
@@ -91,8 +92,8 @@ jobs:
       NODE_OPTIONS: --max-old-space-size=4096
       # 构建时固化的公开服务地址；不需要 APP_URL、DATABASE_URL 或任何服务端密钥。
       PURECHAT_DESKTOP_CLOUD_URL: ${{ vars.PURECHAT_DESKTOP_CLOUD_URL || 'https://next.purechat.cn' }}
-      # 清除本地 Generic 地址覆盖，使用默认 GitHub 更新源；--publish never 只禁止 Builder 上传。
-      PURECHAT_DESKTOP_UPDATE_URL: ''
+      # 仅注入公开更新地址；S3 密钥留在独立同步任务。未配置时使用 GitHub 更新源。
+      PURECHAT_DESKTOP_UPDATE_URL: ${{ vars.PURECHAT_DESKTOP_UPDATE_URL || '' }}
       # 禁用正式证书自动发现；macOS 命令仍显式使用 identity=- 生成 arm64 所需的 ad-hoc 签名。
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:

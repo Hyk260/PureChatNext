@@ -137,6 +137,7 @@ export function parseRange(header, size) {
 async function productionFeed(releaseDir, manifestPath, platform, arch, channel) {
   const manifestFile = await resolveReleaseFile(releaseDir, manifestPath.slice(1))
   const body = await readFile(manifestFile)
+  /** @type {import('./lib/desktop-publish').DesktopReleaseMetadata} */
   const metadata = load(body.toString('utf8'))
   if (!metadata || typeof metadata !== 'object') throw new Error('Invalid release metadata')
   validateVersion(metadata.version, channel)

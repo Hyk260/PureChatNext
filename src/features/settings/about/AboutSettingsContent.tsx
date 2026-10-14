@@ -25,6 +25,7 @@ import { getDesktopApi } from '@/types/desktop'
 
 import { UpdateLogo } from './UpdateLogo'
 import { UpdateLogsModal } from './UpdateLogsModal'
+import { UpdateSourceSettings } from './UpdateSourceSettings'
 import { canShowInstallConfirmation, getUpdateButtonLabel } from './updatePresentation'
 import { useDelayedLoading } from './useDelayedLoading'
 import { useAboutUpdate } from './useAboutUpdate'
@@ -244,6 +245,15 @@ export function AboutSettingsContent() {
             </Button>
           ) : null}
         </Flex>
+        {update.isDesktop && update.desktopState ? (
+          <UpdateSourceSettings
+            key={JSON.stringify([preferences?.updateSource, preferences?.customUpdateUrl, update.desktopState.effectiveSource])}
+            preferences={update.desktopState.preferences}
+            source={update.desktopState.effectiveSource}
+            disabled={preferencesDisabled}
+            onSave={update.savePreferences}
+          />
+        ) : null}
         {update.isDesktop ? (
           <Flex className='flex-between gap-4 border-t border-app-border-secondary py-4'>
             <Flex className='flex-col gap-1'>

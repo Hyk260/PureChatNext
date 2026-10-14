@@ -1,5 +1,6 @@
 // @ts-ignore
 import fetch from 'node-fetch'
+import { Readable } from 'node:stream'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ssrfSafeFetch } from './index'
@@ -76,6 +77,19 @@ describe('ssrfSafeFetch (@pure/ssrf-safe-fetch)', () => {
           agent: expect.any(Function),
         })
       )
+    })
+
+    it('preserves incremental response bodies when streaming is requested', async () => {
+      const mockResponse = {
+        ...createMockResponse(),
+        body: Readable.from([Buffer.from('event: message\n'), Buffer.from('data: {}\n\n')]),
+      }
+      mockFetch.mockResolvedValue(mockResponse)
+
+      const response = await ssrfSafeFetch('https://provider.example/v1/chat/completions', {}, { streamResponse: true })
+
+      await expect(response.text()).resolves.toBe('event: message\ndata: {}\n\n')
+      expect(mockResponse.arrayBuffer).not.toHaveBeenCalled()
     })
   })
 

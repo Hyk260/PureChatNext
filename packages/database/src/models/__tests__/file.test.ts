@@ -121,3 +121,30 @@ describe('FileModel storage refs', () => {
     expect(db.delete).not.toHaveBeenCalled()
   })
 })
+
+describe('FileModel update', () => {
+  it('only persists the supported metadata fields', async () => {
+    const set = vi.fn(() => ({
+      where: vi.fn(() => ({ returning: vi.fn(async () => [{ id: 'file-1' }]) })),
+    }))
+    const db = { update: vi.fn(() => ({ set })) } as unknown as ChatDatabase
+    const input = {
+      fileType: 'text/plain',
+      metadata: { label: 'safe' },
+      name: 'renamed.txt',
+      parentId: 'folder-1',
+      size: 999,
+      url: 'https://attacker.example/object',
+      userId: 'other-user',
+    }
+
+    await new FileModel('user-1', db).update('file-1', input)
+
+    expect(set).toHaveBeenCalledWith({
+      metadata: { label: 'safe' },
+      name: 'renamed.txt',
+      parentId: 'folder-1',
+      updatedAt: expect.any(Date),
+    })
+  })
+})

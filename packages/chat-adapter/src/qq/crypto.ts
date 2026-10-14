@@ -12,6 +12,15 @@ import { createPrivateKey, createPublicKey, sign, verify } from 'node:crypto'
  */
 const ED25519_PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex')
 
+const isWebhookTimestamp = (value: string) => /^\d{1,20}$/.test(value)
+
+/** Challenge signatures must never cover JSON dispatch objects or arrays. */
+export function isValidWebhookChallenge(eventTs: unknown, plainToken: unknown): boolean {
+  return typeof eventTs === 'string' && isWebhookTimestamp(eventTs) &&
+    typeof plainToken === 'string' && plainToken.length > 0 && plainToken.length <= 1024 &&
+    !/[{}\[\]]/.test(plainToken)
+}
+
 function createWebhookPrivateKey(clientSecret: string) {
   const secret = Buffer.from(clientSecret, 'utf8')
   if (secret.length === 0) {
@@ -35,6 +44,7 @@ function createWebhookPrivateKey(clientSecret: string) {
  * 4. 返回十六进制格式的签名。
  */
 export function signWebhookResponse(eventTs: string, plainToken: string, clientSecret: string): string {
+  if (!isValidWebhookChallenge(eventTs, plainToken)) throw new Error('Invalid QQ verification challenge')
   const privateKey = createWebhookPrivateKey(clientSecret)
   const message = Buffer.from(eventTs + plainToken)
   const signature = sign(null, message, privateKey)
@@ -50,7 +60,7 @@ export function verifyWebhookSignature(
   clientSecret: string
 ): boolean {
   try {
-    if (!timestamp || !/^[\da-f]{128}$/i.test(signature)) return false
+    if (!isWebhookTimestamp(timestamp) || !/^[\da-f]{128}$/i.test(signature)) return false
 
     const privateKey = createWebhookPrivateKey(clientSecret)
     const publicKey = createPublicKey(privateKey)

@@ -57,9 +57,6 @@ const ACCESS_POLICY_META: Record<QQAccessPolicy, { description: Record<AccessPol
 
 const ACCESS_POLICY_VALUES = ['open', 'allowlist', 'disabled'] as const satisfies QQAccessPolicy[]
 
-const COMPACT_CONTROL_WIDTH = 140
-const PLATFORM_ID_CONTROL_WIDTH = 280
-
 function createDefaultDraft(): AdvancedSettingsDraft {
   return {
     allowedUsers: [],
@@ -124,24 +121,22 @@ function AdvancedSettingRow({
   icon,
   label,
   labelExtra,
-  wide,
 }: {
   children?: ReactNode
   icon: ReactNode
   label: string
   labelExtra?: ReactNode
-  wide?: boolean
 }) {
   return (
     <div className='border-b border-border py-3.5 last:border-b-0'>
-      <Flex className={`gap-4 ${wide ? 'items-start' : 'items-center justify-between'}`}>
+      <div className='grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4'>
         <Flex className='min-w-0 shrink-0 items-center gap-2.5'>
           <span className='flex-center size-5 shrink-0 text-muted-foreground'>{icon}</span>
           <span className='text-sm text-foreground'>{label}</span>
           {labelExtra}
         </Flex>
-        {children ? <div className={wide ? 'min-w-0 flex-1' : 'shrink-0'}>{children}</div> : null}
-      </Flex>
+        {children ? <div className='min-w-0'>{children}</div> : null}
+      </div>
     </div>
   )
 }
@@ -172,7 +167,7 @@ function AccessPolicySelect({
         value: policy,
       }))}
       popupMatchSelectWidth={360}
-      style={{ width: COMPACT_CONTROL_WIDTH }}
+      style={{ width: '100%' }}
       value={value}
       onChange={(next) => {
         if (typeof next === 'string') onChange(next as QQAccessPolicy)
@@ -196,7 +191,7 @@ function AllowedUsersEditor({
     <Flex className='flex-col gap-2'>
       {users.length === 0 ? (
         <Text className='text-[13px]' type='secondary'>
-          尚未添加任何用户——任何人都可以与机器人交互（受策略约束）。
+          尚未添加任何用户（受策略约束）
         </Text>
       ) : null}
       {users.map((user) => (
@@ -209,7 +204,7 @@ function AllowedUsersEditor({
           />
           <Input
             className='min-w-0 flex-[1.2]'
-            placeholder='如：张三（仅你自己可见）'
+            placeholder='昵称（仅自己可见）'
             value={user.remark}
             onChange={(event) => onChange(user.id, { remark: event.target.value })}
           />
@@ -309,15 +304,18 @@ const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(({ initialSet
       open={open}
       title='高级设置'
       width={720}
+      footer={(_, { CancelBtn, OkBtn }) => (
+        <>
+          <Button disabled={saving} icon={<RotateCcw size={14} />} onClick={resetDefaults}>
+            恢复默认配置
+          </Button>
+          <CancelBtn />
+          <OkBtn />
+        </>
+      )}
       onCancel={onClose}
       onOk={handleSave}
     >
-      <Flex className='mb-3 items-center justify-end'>
-        <Button disabled={saving} icon={<RotateCcw size={14} />} size='small' onClick={resetDefaults}>
-          恢复默认配置
-        </Button>
-      </Flex>
-
       <div className='px-0.5'>
         <AdvancedSettingRow
           icon={<ScanFace className='size-4' />}
@@ -329,8 +327,8 @@ const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(({ initialSet
           }
         >
           <Input
+            className='w-full'
             placeholder='QQ tiny_id'
-            style={{ width: PLATFORM_ID_CONTROL_WIDTH }}
             value={draft.platformUserId}
             onChange={(event) => patchDraft({ platformUserId: event.target.value })}
           />
@@ -346,9 +344,9 @@ const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(({ initialSet
           }
         >
           <Input
+            className='w-full'
             inputMode='numeric'
             placeholder={String(QQ_DEFAULT_CHAR_LIMIT)}
-            style={{ width: COMPACT_CONTROL_WIDTH }}
             value={draft.charLimit}
             onBlur={() => patchDraft({ charLimit: clampCharLimit(draft.charLimit) })}
             onChange={(event) => patchDraft({ charLimit: digitsOnly(event.target.value) })}
@@ -367,7 +365,15 @@ const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(({ initialSet
           />
         </AdvancedSettingRow>
 
-        <AdvancedSettingRow icon={<Users className='size-4' />} label='允许的用户' wide>
+        <AdvancedSettingRow
+          icon={<Users className='size-4' />}
+          label='允许的用户'
+          labelExtra={
+            <Tooltip title='此名单仅在私信策略或群组策略设为「白名单」时生效。开放策略允许任何用户，禁用策略会拒绝所有用户。'>
+              <CircleHelp className='size-3.5 cursor-help text-muted-foreground' />
+            </Tooltip>
+          }
+        >
           <AllowedUsersEditor
             users={draft.allowedUsers}
             onAdd={addAllowedUser}

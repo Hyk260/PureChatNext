@@ -2,7 +2,7 @@ import { waitUntil } from '@vercel/functions'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { QQ_OP_CODES, signWebhookResponse, verifyWebhookSignature } from '@pure/chat-adapter/qq'
+import { isValidWebhookChallenge, QQ_OP_CODES, signWebhookResponse, verifyWebhookSignature } from '@pure/chat-adapter/qq'
 import { decryptCredentials } from '@/libs/channels/qq/encrypt'
 import { authorizeQQInternalWebhook } from '@/libs/channels/qq/webhookAuth'
 import { logger } from '@/libs/logger'
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (isQQVerifyOp(payload?.op)) {
       const eventTs = asNonEmptyString(payload?.d?.event_ts)
       const plainToken = asNonEmptyString(payload?.d?.plain_token)
-      if (!eventTs || !plainToken) {
+      if (!eventTs || !plainToken || !isValidWebhookChallenge(eventTs, plainToken)) {
         authorizedLog({
           reason: 'verify-missing-fields',
           secretLength: credentials.appSecret.length,
@@ -226,6 +226,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     authorizedLog({ reason: 'dispatch', status: 200 })
+    if (credentials.connectionMode === 'webhook') {
+      await recordChannelGatewayLog({
+        bindingId: binding.id,
+        event: 'webhook_inbound',
+        platform: 'qq',
+        inboundMessage: { applicationId: credentials.appId },
+        userId: binding.userId,
+      })
+    }
 
     const { getOrCreateQQChat } = await import('@/libs/channels/qq/chatBot')
 

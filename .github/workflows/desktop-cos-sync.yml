@@ -1,0 +1,98 @@
+# 仅同步已公开的稳定版桌面资产；两个平台分别发布、清理各自旧版。
+# 手动发布草稿会触发 release.published；GITHUB_TOKEN 创建的普通 Release 需手动运行本工作流。
+name: Sync desktop release to COS
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 已公开的稳定版本，例如 v0.3.0
+        required: true
+        type: string
+      platform:
+        description: 同步平台
+        type: choice
+        default: all
+        options: [all, windows, mac]
+      dry_run:
+        description: 只校验和预览，不上传或删除
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-cos-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    # 没有配置 COS 更新地址时，原 GitHub 发行流程继续工作。
+    if: github.event_name == 'workflow_dispatch' || (vars.PURECHAT_DESKTOP_UPDATE_URL != '' && !github.event.release.prerelease)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      TARGET_PLATFORM: ${{ inputs.platform || 'all' }}
+      DRY_RUN: ${{ inputs.dry_run || false }}
+      S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+      S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+      S3_BUCKET: ${{ vars.S3_BUCKET }}
+      S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}
+      S3_REGION: ${{ vars.S3_REGION }}
+      S3_PUBLIC_DOMAIN: ${{ vars.S3_PUBLIC_DOMAIN }}
+      S3_ENABLE_PATH_STYLE: '0'
+      S3_SET_ACL: '0'
+      PURECHAT_DESKTOP_UPDATE_URL: ${{ vars.PURECHAT_DESKTOP_UPDATE_URL }}
+    steps:
+      # 使用默认分支的发布脚本，不执行下载资产内或任意输入 ref 中的代码。
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.2
+          cache: pnpm
+      - name: Check release and public update address
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || { echo 'Invalid stable release tag'; exit 1; }
+          test -n "$PURECHAT_DESKTOP_UPDATE_URL" || { echo 'Missing PURECHAT_DESKTOP_UPDATE_URL repository variable'; exit 1; }
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease |
+            jq -e '.isDraft == false and .isPrerelease == false'
+      - name: Install script dependencies without lifecycle hooks
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Download desktop release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          patterns=()
+          if [[ "$TARGET_PLATFORM" == 'all' || "$TARGET_PLATFORM" == 'windows' ]]; then
+            patterns+=(--pattern "PureChat-${version}-setup.exe" --pattern "PureChat-${version}-portable.exe" \
+              --pattern "PureChat-${version}-setup.exe.blockmap" --pattern 'latest.yml')
+          fi
+          if [[ "$TARGET_PLATFORM" == 'all' || "$TARGET_PLATFORM" == 'mac' ]]; then
+            patterns+=(--pattern "PureChat-${version}-arm64.dmg" --pattern "PureChat-${version}-arm64.zip" \
+              --pattern "PureChat-${version}-arm64.dmg.blockmap" --pattern "PureChat-${version}-arm64.zip.blockmap" \
+              --pattern 'latest-mac.yml')
+          fi
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir "$RUNNER_TEMP/desktop-release" \
+            "${patterns[@]}"
+      - name: Publish and prune the selected platforms
+        shell: bash
+        run: |
+          set -euo pipefail
+          publish_args=()
+          if [[ "$DRY_RUN" == 'true' ]]; then publish_args+=(--dry-run); fi
+          pnpm desktop:upload --platform "$TARGET_PLATFORM" --dir "$RUNNER_TEMP/desktop-release" \
+            --version "${RELEASE_TAG#v}" "${publish_args[@]}"

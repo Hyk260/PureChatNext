@@ -5,12 +5,12 @@ import { getResetPasswordEmailTemplate } from '../reset-password'
 import { getVerificationEmailTemplate } from '../verification'
 import { getVerificationOTPEmailTemplate } from '../verification-otp'
 
-import { EMAIL_TEMPLATE_PREVIEW_MOCK } from './preview-catalog'
+import { getEmailTemplatePreviewParams } from './preview-catalog'
 import type { EmailTemplateKey, EmailTemplateParams, RenderedEmailTemplate } from './preview-catalog'
 
-const resolveTemplateParams = (params: EmailTemplateParams = {}) => {
+const resolveTemplateParams = (key: EmailTemplateKey, params: EmailTemplateParams = {}) => {
   const { url, userName, expiresInSeconds, otp } = {
-    ...EMAIL_TEMPLATE_PREVIEW_MOCK,
+    ...getEmailTemplatePreviewParams(key),
     ...params,
   }
 
@@ -18,7 +18,7 @@ const resolveTemplateParams = (params: EmailTemplateParams = {}) => {
 }
 
 export function renderEmailTemplate(key: EmailTemplateKey, params: EmailTemplateParams = {}): RenderedEmailTemplate {
-  const { url, userName, expiresInSeconds, otp } = resolveTemplateParams(params)
+  const { url, userName, expiresInSeconds, otp } = resolveTemplateParams(key, params)
 
   switch (key) {
     case 'referral':

@@ -41,10 +41,10 @@ describe('createProviderLanguageModel', () => {
     })
   })
 
-  it('does not wrap fetch when timeoutMs is omitted', () => {
+  it('attaches the SSRF-safe fetch transport even when no timeout is requested', () => {
     createProviderLanguageModel('deepseek', 'deepseek-chat', 'sk-test', undefined)
 
-    expect(mocks.createTimedFetch).not.toHaveBeenCalled()
-    expect(mocks.createDeepSeek).toHaveBeenCalledWith({ apiKey: 'sk-test' })
+    expect(mocks.createTimedFetch).toHaveBeenCalledWith(undefined)
+    expect(mocks.createDeepSeek).toHaveBeenCalledWith({ apiKey: 'sk-test', fetch: expect.any(Function) })
   })
 })

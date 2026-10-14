@@ -21,6 +21,7 @@ const initial: DesktopUpdateState = {
   developmentCachePath: null,
   installationSupport: { supported: true, signature: 'valid', message: '签名校验通过' },
   preferences: DEFAULT_UPDATE_PREFERENCES,
+  effectiveSource: { type: 'github', owner: 'Hyk260', repo: 'PureChatNext' },
   progress: 0,
   release: null,
   message: null,
@@ -329,6 +330,31 @@ describe('about update subscription', () => {
     })
     expect(result.current.autoUpdate).toBe(true)
     expect(ui.error).toHaveBeenCalledWith('storage unavailable')
+  })
+
+  it('saves a source patch with the confirmed switches, closes the old install confirmation and retains state on failure', async () => {
+    const ready = { ...initial, status: 'ready' as const, release: { version: '0.3.0', notes: '' } }
+    updater.getState.mockResolvedValue(ready)
+    const { result } = renderHook(useAboutUpdate, { wrapper })
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    act(() => result.current.confirmInstall())
+    const saved: DesktopUpdateState = {
+      ...initial, revision: 2, preferences: { ...initial.preferences, updateSource: 'custom', customUpdateUrl: 'https://cdn.example.com/desktop/' },
+      effectiveSource: { type: 'custom', url: 'https://cdn.example.com/desktop/' },
+    }
+    updater.setPreferences.mockResolvedValueOnce(saved)
+    await act(async () => {
+      expect(await result.current.savePreferences({ updateSource: 'custom', customUpdateUrl: 'https://cdn.example.com/desktop/' })).toBe(true)
+    })
+    expect(updater.setPreferences).toHaveBeenCalledWith(saved.preferences)
+    expect(result.current.installConfirmationOpen).toBe(false)
+    expect(ui.success).toHaveBeenCalledWith('更新来源已保存')
+    updater.setPreferences.mockRejectedValueOnce(new Error('storage failed'))
+    await act(async () => {
+      expect(await result.current.savePreferences({ updateSource: 'local' })).toBe(false)
+    })
+    expect(result.current.desktopState?.effectiveSource).toEqual(saved.effectiveSource)
+    expect(ui.error).toHaveBeenCalledWith('storage failed')
   })
 
   it('resets the downloaded snapshot after clearing cache and preserves it if clearing fails', async () => {

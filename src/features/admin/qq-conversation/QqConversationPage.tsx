@@ -1,5 +1,8 @@
 'use client'
 
+import { Button } from '@pure/ui'
+import { Settings2 } from 'lucide-react'
+import { useNavigate } from 'react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
@@ -28,6 +31,7 @@ import { createQQConversationExport, createQQExportFilename } from './qqConversa
 import { QQ_MAX_OUTBOUND_FILE_BYTES, QQ_MAX_OUTBOUND_FILES } from '@/libs/channels/qq/outboundLimits'
 
 export default function QqConversationPage() {
+  const navigate = useNavigate()
   const [status, setStatus] = useState<QQStatus | null>(null)
   const [sessions, setSessions] = useState<QQSession[]>([])
   const [bound, setBound] = useState(false)
@@ -318,6 +322,18 @@ export default function QqConversationPage() {
       }
       subtitle='Agent ↔ QQ 用户'
       title='QQ 对话监控'
+      titleExtra={
+        <Button
+          aria-label='打开 QQ 设置'
+          icon={<Settings2 className='size-3.5' />}
+          size='small'
+          title='QQ 设置'
+          type='text'
+          onClick={() => navigate('/settings/messenger/qq')}
+        >
+          设置
+        </Button>
+      }
     >
       <QqMessagePane
         copiedMessageId={copiedMessageId}

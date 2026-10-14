@@ -1,19 +1,27 @@
-import { Agent, fetch as undiciFetch } from 'undici'
+import { ssrfSafeFetch } from '@pure/ssrf-safe-fetch'
 
 /**
- * Fetch that honors `timeoutMs` for connect / headers / body.
- * Global `fetch` uses undici's 10s connectTimeout, which aborts before the check's 15–60s budget.
+ * Connection-filtered provider transport. Keep timeout and cancellation active
+ * through response consumption, including SSE. Never redirect provider credentials.
  */
-export const createTimedFetch = (timeoutMs: number) => {
-  const dispatcher = new Agent({
-    bodyTimeout: timeoutMs,
-    connectTimeout: timeoutMs,
-    headersTimeout: timeoutMs,
-  })
+export const createTimedFetch = (timeoutMs?: number): typeof fetch => {
+  return async (input, init) => {
+    const inputUrl = input instanceof Request ? input.url : String(input)
+    const url = new URL(inputUrl)
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.hash) {
+      throw new Error('Invalid provider URL')
+    }
+    const request = new Request(input, init)
+    const signal = timeoutMs
+      ? AbortSignal.any([request.signal, AbortSignal.timeout(timeoutMs)])
+      : request.signal
 
-  return (input: RequestInfo | URL, init?: RequestInit) =>
-    undiciFetch(input as Parameters<typeof undiciFetch>[0], {
-      ...(init as object),
-      dispatcher,
-    } as Parameters<typeof undiciFetch>[1]) as unknown as ReturnType<typeof fetch>
+    return ssrfSafeFetch(request.url, {
+      body: request.body ? await request.arrayBuffer() : undefined,
+      headers: request.headers,
+      method: request.method,
+      redirect: 'error',
+      signal,
+    }, { streamResponse: true })
+  }
 }

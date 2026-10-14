@@ -94,4 +94,25 @@ describe('resolveUserProviderCredentials', () => {
       })
     ).resolves.toEqual({ apiKey: 'sk-header', baseURL: 'https://proxy.example/v1' })
   })
+
+  it('never forwards an authenticated app bearer token as a provider key', async () => {
+    await expect(
+      resolveUserProviderCredentials({
+        allowEnvFallback: false,
+        headerKey: 'app-jwt',
+        provider: 'openai',
+        userId: 'authenticated-user',
+      })
+    ).resolves.toBeNull()
+  })
+
+  it('does not mistake a rejected JWT for an anonymous BYOK key', async () => {
+    await expect(
+      resolveUserProviderCredentials({
+        allowEnvFallback: false,
+        headerKey: 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJ1MSJ9.signature',
+        provider: 'openai',
+      })
+    ).resolves.toBeNull()
+  })
 })

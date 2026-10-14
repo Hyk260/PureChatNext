@@ -20,7 +20,7 @@ import { resolveMimeTypeFromBytes } from '@pure/utils'
 import { QQ_MAX_PASSIVE_REPLIES, QQ_MAX_TEXT_LENGTH, chunkQQText, chunkQQTextLimited } from '@pure/utils/qqText'
 import { QQApiClient } from './api'
 import { toQQMediaFileType } from './mediaType'
-import { signWebhookResponse } from './crypto'
+import { isValidWebhookChallenge, signWebhookResponse } from './crypto'
 import { QQFormatConverter } from './format-converter'
 import { QQGatewayConnection } from './gateway'
 import { QQ_EVENT_TYPES, QQ_OP_CODES } from './types'
@@ -120,7 +120,7 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     // 处理 Webhook 地址验证（op: 13）。
     if (payload.op === QQ_OP_CODES.VERIFY) {
       const verifyData = payload.d as { event_ts: string; plain_token: string }
-      if (verifyData.plain_token && verifyData.event_ts) {
+      if (verifyData && isValidWebhookChallenge(verifyData.event_ts, verifyData.plain_token)) {
         const signature = signWebhookResponse(verifyData.event_ts, verifyData.plain_token, this.clientSecret)
         return Response.json({
           plain_token: verifyData.plain_token,

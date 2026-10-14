@@ -45,6 +45,13 @@ export class ChannelGatewayLogModel {
     return formatChannelGatewayLogs(rows)
   }
 
+  async clear(userId: string, platform: ChannelLogPlatform) {
+    await this.db.delete(channelGatewayLogs).where(and(
+      eq(channelGatewayLogs.userId, userId),
+      eq(channelGatewayLogs.platform, platform),
+    ))
+  }
+
   async prune(now = new Date()) {
     await this.db.delete(channelGatewayLogs).where(lt(channelGatewayLogs.createdAt, new Date(now.getTime() - CHANNEL_LOG_RETENTION_MS)))
   }

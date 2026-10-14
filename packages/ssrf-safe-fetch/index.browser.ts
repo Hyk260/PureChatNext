@@ -5,6 +5,7 @@
 
 /** Per-call SSRF overrides (ignored in browser; kept for API parity with Node). */
 export interface SSRFOptions {
+  streamResponse?: boolean
   allowIPAddressList?: string[]
   allowPrivateIPAddress?: boolean
   /** Server-only body cap; ignored in browser. */

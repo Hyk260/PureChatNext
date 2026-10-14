@@ -1,6 +1,6 @@
 {
   "name": "pure-chat-next",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "把 AI 助手接入 Web、微信与 QQ 的开源自托管平台，支持多模型、联网搜索、文件处理和私有部署。",
   "homepage": "https://next.purechat.cn",
   "repository": {
@@ -34,6 +34,9 @@
     "package:desktop:mac": "pnpm --filter purechat-desktop package:mac",
     "package:desktop:win": "pnpm --filter purechat-desktop package:win",
     "package:desktop:win:portable": "pnpm --filter purechat-desktop package:win:portable",
+    "desktop:upload": "node --import tsx scripts/electron/publish-desktop.mts",
+    "package:desktop:win:upload": "pnpm desktop:upload --platform windows --package",
+    "package:desktop:mac:upload": "pnpm desktop:upload --platform mac --package",
     "build:docs": "pnpm --filter @pure/docs build",
     "build:docker:migrate": "node scripts/build-docker-migrate.mjs",
     "build:docker": "pnpm run build && pnpm run build:docker:migrate",

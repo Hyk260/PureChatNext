@@ -1,76 +1,59 @@
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { UserModel } from '@pure/database/models/user'
+import { auth } from '@/auth'
 import { logger } from '@/libs/logger'
 
-import type { User } from '@pure/database/schemas/user'
-
 /**
- * 注册接口
- * POST /api/auth/register
+ * Legacy registration endpoint. Delegate account creation to Better Auth so
+ * signup policy, verification, origin checks, and rate limits stay centralized.
  */
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, password } = body as User
+    const email = typeof body?.email === 'string' ? body.email.trim() : ''
+    const password = typeof body?.password === 'string' ? body.password : ''
 
     if (!email || !password) {
-      return NextResponse.json(
-        {
-          error: '邮箱和密码不能为空',
-        },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '邮箱和密码不能为空' }, { status: 400 })
     }
 
-    // 验证邮箱格式
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: '邮箱格式不正确' }, { status: 400 })
     }
 
-    // 验证密码长度
-    if (password.length < 6) {
-      return NextResponse.json({ error: '密码长度至少为 6 个字符' }, { status: 400 })
-    }
-
-    const userModel = new UserModel()
-
-    if (email) {
-      const existingEmail = await userModel.findByEmail(email)
-      if (existingEmail) {
-        return NextResponse.json(
-          {
-            error: '该邮箱已被注册',
-          },
-          { status: 400 }
-        )
-      }
-    }
-
-    // 创建用户
-    const newUser = await userModel.createUser({
-      email,
-      password,
+    const target = new URL(request.url)
+    target.pathname = '/api/auth/sign-up/email'
+    const headers = new Headers(request.headers)
+    headers.delete('content-length')
+    headers.delete('transfer-encoding')
+    headers.set('content-type', 'application/json')
+    const authRequest = new Request(target, {
+      body: JSON.stringify({ email, name: email.split('@')[0], password }),
+      headers,
+      method: 'POST',
     })
+    const response = await auth.handler(authRequest)
+    if (!response.ok) return response
 
-    return NextResponse.json(
+    const result = (await response.clone().json().catch(() => null)) as {
+      user?: { email?: string; userId?: string }
+    } | null
+    if (!result?.user) return response
+
+    const responseHeaders = new Headers(response.headers)
+    responseHeaders.delete('content-length')
+    responseHeaders.delete('transfer-encoding')
+    responseHeaders.set('content-type', 'application/json')
+
+    return Response.json(
       {
         message: '注册成功',
         code: 200,
-        data: {
-          email: newUser?.user?.email,
-          userId: newUser?.user?.userId,
-        },
+        data: { email: result.user.email, userId: result.user.userId },
       },
-      { status: 200 }
+      { headers: responseHeaders, status: response.status }
     )
   } catch (error) {
     logger.error(error, 'Register error:')
-    return NextResponse.json(
-      {
-        error: '服务器内部错误',
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 })
   }
 }

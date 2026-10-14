@@ -39,7 +39,9 @@ export async function resolveUserProviderCredentials(params: {
   }
 
   const headerKey = params.headerKey?.trim()
-  if (headerKey) {
+  // A verified application's Bearer token must never become an upstream key.
+  const looksLikeJwt = headerKey ? /^[\w-]+\.[\w-]+\.[\w-]+$/.test(headerKey) : false
+  if (headerKey && !params.userId && !looksLikeJwt) {
     return { apiKey: headerKey, baseURL: requestBaseURL }
   }
 

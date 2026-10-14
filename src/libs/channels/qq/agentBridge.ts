@@ -17,11 +17,19 @@ import { createChannelGenerationControls, generateChannelAgentReply } from '../c
 import { buildChannelContextMessages } from '../core/context'
 import { getChannelHistoryTokenBudget, trimChannelHistory } from '../core/history'
 import { resolveChannelModelConfig } from '../core/modelResolver'
+import type { ChannelAgentResponse } from '../core/types'
 import { listWechatConversationFiles, persistWechatFile, readWechatFile } from '../wechat/fileArtifacts'
 import { prepareQQFileForAgent } from './inboundMedia'
 import type { PreparedQQFile } from './inboundMedia'
 import { beginQQGeneration, endQQGeneration, flushQQChatInvalidation, tryHandleQQCommand } from './commands'
-import { formatQQAttachmentContext, formatQQUnsupportedMessage, logQQInbound, resolveQQInboundKind } from './inboundLog'
+import {
+  formatQQAttachmentContext,
+  formatQQUnsupportedMessage,
+  logQQInbound,
+  recordQQAgentReplyDiagnostic,
+  recordQQInboundDiagnostic,
+  resolveQQInboundKind,
+} from './inboundLog'
 import {
   evaluateQQInboundAccess,
   normalizeQQChannelSettings,
@@ -104,7 +112,7 @@ export async function generateQQAgentReply(params: {
   userContent?: string
   userText: string
   toolContext?: ChannelToolContext
-}): Promise<string> {
+}): Promise<ChannelAgentResponse> {
   const channelContext = params.toolContext
   const tools = resolveChatTools({ channel: 'qq', channelContext, searchMode: 'auto' })
   const instructions = [
@@ -131,7 +139,7 @@ export async function generateQQAgentReply(params: {
     text: params.userText,
     userId: params.userId,
   })
-  return result.text
+  return result
 }
 
 type QQPreparedAttachment = {
@@ -262,16 +270,28 @@ export async function handleQQMention(params: {
   const userText = buildQQUserText(message, message.text?.trim())
   const externalUserId = thread.id
   const messageKind = resolveQQInboundKind({ attachments: message.attachments, text: userText })
+  const threadType = resolveQQThreadType(thread.id)
+  const authorId = message.author?.userId || 'unknown'
   logQQInbound({
     applicationId,
     content: userText || '',
     externalUserId: message.author?.userId || 'unknown',
     messageKind,
   })
+  const recordInboundDiagnostic = () =>
+    recordQQInboundDiagnostic({
+      applicationId,
+      bindingId,
+      content: userText || '',
+      externalUserId: message.author?.userId || 'unknown',
+      identityType: threadType === 'group' ? 'member_openid' : 'user_openid',
+      messageKind,
+      openid: authorId,
+      username: resolveQQAuthorLabel(message),
+      userId,
+    })
 
   const eventModel = new ChannelEventModel()
-  const threadType = resolveQQThreadType(thread.id)
-  const authorId = message.author?.userId || 'unknown'
   const platformPayload = buildQQPlatformPayload({
     attachments: message.attachments,
     authorId,
@@ -297,6 +317,7 @@ export async function handleQQMention(params: {
       threadType,
     })
     if (!inserted) return
+    await recordInboundDiagnostic()
     const posted = await postQQMarkdown(thread, access.notice, settings.charLimit, { userId, bindingId }).catch((error) => {
       log('access rejection reply failed app=%s: %O', applicationId, error)
       return { sentCount: 0, text: access.notice }
@@ -320,6 +341,7 @@ export async function handleQQMention(params: {
       threadType,
     })
     if (!inserted) return
+    await recordInboundDiagnostic()
     const posted = await postQQMarkdown(thread, unsupportedMessage, settings.charLimit, { userId, bindingId }).catch((error) => {
       log('unsupported message reply failed app=%s: %O', applicationId, error)
       return { sentCount: 0, text: unsupportedMessage }
@@ -343,6 +365,7 @@ export async function handleQQMention(params: {
     threadType,
   })
   if (!inserted) return
+  await recordInboundDiagnostic()
 
   if (message.attachments?.length) {
     log('processing attachments agent=%s count=%d', agentId, message.attachments.length)
@@ -409,7 +432,7 @@ export async function handleQQMention(params: {
           : { userContent: undefined, userText }
       const conversationFiles = await listWechatConversationFiles(event.sessionId, event.conversationVersion)
       const producedArtifacts: ChannelToolArtifact[] = []
-      const reply = await generateQQAgentReply({
+      const replyResult = await generateQQAgentReply({
         abortSignal: abortController.signal,
         agentId,
         attachmentContext: buildQQConversationFileContext(conversationFiles),
@@ -428,6 +451,22 @@ export async function handleQQMention(params: {
           userId,
         },
       })
+      await recordQQAgentReplyDiagnostic({
+        agentId: replyResult.diagnostics.agentId,
+        aiOutput: replyResult.text,
+        bindingId,
+        contextMessageCount: replyResult.diagnostics.contextMessageCount,
+        durationMs: replyResult.durationMs,
+        finish: replyResult.diagnostics.finish,
+        model: replyResult.model,
+        platform: 'qq',
+        provider: replyResult.provider,
+        steps: replyResult.diagnostics.steps,
+        toolsAvailable: replyResult.diagnostics.toolsAvailable,
+        toolsCalled: replyResult.diagnostics.toolsCalled,
+        userId,
+      })
+      const reply = replyResult.text
       const finalReply = await finalizeQQOutbound({ agentId, reply, userId })
       diagnosticStage = 'send_failed'
       const outbound = await postQQMarkdown(thread, finalReply, settings.charLimit, { userId, bindingId })

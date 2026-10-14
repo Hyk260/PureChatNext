@@ -9,7 +9,7 @@ import type { ChannelToolArtifact, ChannelToolContext } from '@/server/chat/tool
 
 import { createChannelGenerationControls, generateChannelAgentReply } from '../core/agentRuntime'
 import { buildChannelContextMessages } from '../core/context'
-import type { ChannelGenerationOptions } from '../core/types'
+import type { ChannelAgentResponse, ChannelGenerationOptions } from '../core/types'
 import { listWechatConversationFiles, persistWechatFile, readWechatFile } from './fileArtifacts'
 
 const log = debug('channel:wechat:bridge')
@@ -24,6 +24,7 @@ type WechatUserContent =
 export type WechatAgentReply = {
   artifacts: ChannelToolArtifact[]
   durationMs: number
+  diagnostics: ChannelAgentResponse['diagnostics']
   model: string
   provider: string
   text: string
@@ -87,6 +88,7 @@ export async function generateWechatAgentReply(params: {
 
   return {
     artifacts: params.wechatToolContext?.producedArtifacts ?? [],
+    diagnostics: result.diagnostics,
     durationMs: result.durationMs,
     model: result.model,
     provider: result.provider,

@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+import { Readable } from 'node:stream'
 import { RequestFilteringHttpAgent, RequestFilteringHttpsAgent } from 'request-filtering-agent'
 import type { RequestFilteringAgentOptions } from 'request-filtering-agent'
 
@@ -6,6 +7,8 @@ import type { RequestFilteringAgentOptions } from 'request-filtering-agent'
  * Options for per-call SSRF configuration overrides
  */
 export interface SSRFOptions {
+  /** Preserve incremental response delivery for provider SSE streams. */
+  streamResponse?: boolean
   /** List of IP addresses to allow */
   allowIPAddressList?: string[]
   /** Whether to allow private/local IP addresses */
@@ -90,15 +93,19 @@ export const ssrfSafeFetch = async (
     } as any)
 
     const cap = ssrfOptions?.maxContentLength
-    const body: BodyInit =
-      cap && cap > 0
+    const body: BodyInit | null =
+      ssrfOptions?.streamResponse
+        ? response.body
+          ? Readable.toWeb(response.body as unknown as Readable) as ReadableStream<Uint8Array>
+          : null
+        : cap && cap > 0
         ? // Buffer is a Uint8Array subclass; the Response constructor accepts it at
           // runtime even though the BodyInit lib type doesn't list Uint8Array.
           ((await readBodyWithCap(response.body as NodeJS.ReadableStream | null, cap)) as any)
         : await response.arrayBuffer()
 
     // Convert node-fetch Response to standard Response
-    return new Response(body, {
+    return new Response([204, 205, 304].includes(response.status) ? null : body, {
       headers: response.headers as any,
       status: response.status,
       statusText: response.statusText,

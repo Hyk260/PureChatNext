@@ -14,6 +14,7 @@ const initial: DesktopUpdateState = {
   developmentCachePath: null,
   installationSupport: null,
   preferences: DEFAULT_UPDATE_PREFERENCES,
+  effectiveSource: null,
   progress: 0,
   release: null,
   message: null,

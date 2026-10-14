@@ -1,7 +1,7 @@
 import { createPrivateKey, createPublicKey, sign, verify } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 
-import { signWebhookResponse, verifyWebhookSignature } from '../crypto'
+import { isValidWebhookChallenge, signWebhookResponse, verifyWebhookSignature } from '../crypto'
 
 const ED25519_PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex')
 const OFFICIAL_SECRET = 'DG5g3B4j9X2KOErG'
@@ -28,6 +28,16 @@ describe('QQ webhook crypto', () => {
     )
   })
 
+  it('rejects challenge values that could turn the signing oracle into a dispatch signer', () => {
+    expect(isValidWebhookChallenge('1725442341', '{"op":0,"d":{}}')).toBe(false)
+    expect(() => signWebhookResponse('1725442341', '{"op":0}', OFFICIAL_SECRET)).toThrow(
+      'Invalid QQ verification challenge'
+    )
+    expect(isValidWebhookChallenge('not-a-timestamp', 'plain-token')).toBe(false)
+    expect(isValidWebhookChallenge('1725442341{"op":0}', 'plain-token')).toBe(false)
+    expect(isValidWebhookChallenge('1725442341', 'Arq0D5A61EgUu4OxUvOp')).toBe(true)
+  })
+
   it('verifies an independently signed inbound request with its exact raw body', () => {
     const bodyText = '{ "op": 0,"d": {}, "t": "GATEWAY_EVENT_NAME"}'
     const timestamp = '1725442341'
@@ -47,6 +57,10 @@ describe('QQ webhook crypto', () => {
 
   it.each(['', 'not-hex', '00'])('returns false for malformed signature %j', (signature) => {
     expect(verifyWebhookSignature('{}', '1725442341', signature, OFFICIAL_SECRET)).toBe(false)
+  })
+
+  it('rejects nondecimal signature timestamps', () => {
+    expect(verifyWebhookSignature('{}', '1725442341{}', '00'.repeat(64), OFFICIAL_SECRET)).toBe(false)
   })
 
   it('returns false instead of throwing for invalid key material', () => {

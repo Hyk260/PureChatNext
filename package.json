@@ -41,6 +41,7 @@
     "start": "next start -p 3210",
     "preview:prod": "bun --no-env-file scripts/web/preview-prod.mts",
     "gateway": "bun scripts/gateway.ts",
+    "env:setup": "bun scripts/env.mts",
     "docker:setup:dev": "bun scripts/docker.mts setup-dev",
     "docker:setup:deploy": "bun scripts/docker.mts setup-deploy",
     "docker:deploy": "bun scripts/docker.mts deploy",

@@ -6,8 +6,15 @@ import { autoUpdater, CancellationToken } from 'electron-updater'
 import type { AppUpdater, ProgressInfo, UpdateInfo } from 'electron-updater'
 
 import { getDesktopUpdateConfig } from '@/envs/desktop'
-import type { DesktopUpdatePreferences, DesktopUpdateRelease, DesktopUpdateState } from '@/types/desktopUpdater'
-import { DEFAULT_UPDATE_PREFERENCES, getUpdateChannel, normalizeUpdatePreferences } from '@/types/desktopUpdater'
+import type { DesktopUpdatePreferences, DesktopUpdateRelease, DesktopUpdateSource, DesktopUpdateState } from '@/types/desktopUpdater'
+import {
+  DEFAULT_UPDATE_PREFERENCES,
+  getUpdateChannel,
+  getUpdateSourceFromUrl,
+  isUpdatePreferences,
+  normalizeUpdatePreferences,
+  resolveUpdateSource,
+} from '@/types/desktopUpdater'
 
 import { createLogger, redactLogText } from '../logger'
 import type { DesktopConfigService } from './DesktopConfigService'
@@ -17,6 +24,13 @@ import { readUpdateLogs } from './updateLogs'
 const INITIAL_CHECK_DELAY = 5_000
 const CHECK_INTERVAL = 4 * 60 * 60 * 1_000
 const RETRY_DELAY = 5 * 60 * 1_000
+
+type UpdateFeed = Parameters<AppUpdater['setFeedURL']>[0]
+
+function toFeed(source: DesktopUpdateSource): UpdateFeed {
+  if (source.type === 'github') return { provider: 'github', owner: source.owner, repo: source.repo }
+  return { provider: 'generic', url: source.url }
+}
 
 function getUpdateErrorMessage(error: unknown, status: DesktopUpdateState['status']) {
   const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : ''
@@ -49,6 +63,8 @@ export class UpdateService {
   private clearingCache = false
   private disposed = false
   private failures = 0
+  private defaultSource: DesktopUpdateSource | null = null
+  private defaultFeed: UpdateFeed | null = null
   private removeRunListeners: (() => void) | null = null
   private state: DesktopUpdateState = {
     revision: 0,
@@ -57,6 +73,7 @@ export class UpdateService {
     developmentCachePath: null,
     installationSupport: null,
     preferences: { ...DEFAULT_UPDATE_PREFERENCES },
+    effectiveSource: null,
     progress: 0,
     release: null,
     message: null,
@@ -90,6 +107,15 @@ export class UpdateService {
     const config = await this.config.read()
     if (this.disposed) return
     this.state.preferences = normalizeUpdatePreferences(config.updatePreferences)
+    this.updater.autoDownload = false
+    this.updater.autoInstallOnAppQuit = false
+    this.updater.allowDowngrade = false
+    // Keep an error listener even when a missing development source is configured later.
+    this.updater.on('error', this.logError)
+    if (!app.isPackaged) {
+      this.updater.forceDevUpdateConfig = true
+      this.updater.disableDifferentialDownload = true
+    }
     this.state.installationSupport = await checkUpdateInstallationSupport({
       isPackaged: app.isPackaged,
       platform: process.platform,
@@ -105,55 +131,48 @@ export class UpdateService {
       this.update({ status: 'unsupported', message: reason })
       return
     }
-    if (!app.isPackaged) {
-      const updateUrl = getDesktopUpdateConfig().PURECHAT_DESKTOP_UPDATE_URL
-      if (!updateUrl) {
-        this.update({ status: 'unsupported', message: '开发版下载更新需要配置 PURECHAT_DESKTOP_UPDATE_URL。' })
+    try {
+      if (app.isPackaged) {
+        const feed = await this.updater['loadUpdateConfig']()
+        this.defaultFeed = feed
+        if ('url' in feed && typeof feed.url === 'string') {
+          this.defaultSource = getUpdateSourceFromUrl(feed.url)
+          this.logger.info('Packaged update source', redactLogText(feed.url))
+        } else if (feed.provider === 'github') {
+          this.defaultSource = { type: 'github', owner: feed.owner, repo: feed.repo }
+        }
+      } else if (!this.state.preferences.updateSource) {
+        const updateUrl = getDesktopUpdateConfig().PURECHAT_DESKTOP_UPDATE_URL
+        if (updateUrl) {
+          this.defaultSource = getUpdateSourceFromUrl(updateUrl)
+          this.defaultFeed = { provider: 'generic', url: updateUrl }
+          this.logger.info('Development update source', redactLogText(updateUrl))
+        }
+      }
+      const source = resolveUpdateSource(this.state.preferences, this.defaultSource)
+      if (!source && !app.isPackaged) {
+        this.update({ status: 'unsupported', message: '开发版下载更新需要配置 PURECHAT_DESKTOP_UPDATE_URL，或在更新来源中保存地址。' })
         return
       }
-      try {
-        this.updater.forceDevUpdateConfig = true
-        // Local download tests use the full artifact, independent of cached blockmaps.
-        this.updater.disableDifferentialDownload = true
-        this.updater.setFeedURL({ provider: 'generic', url: updateUrl })
-        this.logger.info('Development update source', redactLogText(updateUrl))
-        // electron-updater 6 has no public cache API; use its helper to resolve the actual configured path.
+      if (source && (this.state.preferences.updateSource || !app.isPackaged)) {
+        this.updater.setFeedURL(this.state.preferences.updateSource ? toFeed(source) : this.defaultFeed!)
+      }
+      this.state.effectiveSource = source
+      if (!app.isPackaged) {
         const helper = await this.updater['getOrCreateDownloadHelper']()
         this.state.developmentCachePath = helper.cacheDir
         this.logger.info('Development update cache', helper.cacheDir)
-      } catch (error) {
-        this.logger.error('Development updater initialization failed', error)
-        this.update({ status: 'unsupported', message: '开发更新源配置无效，请检查 PURECHAT_DESKTOP_UPDATE_URL。' })
-        return
       }
-    } else {
-      // Read the updater's own parsed configuration; never override the packaged feed.
-      try {
-        const source: { url?: string } = await this.updater['loadUpdateConfig']()
-        if (typeof source?.url === 'string') this.logger.info('Packaged update source', redactLogText(source.url))
-      } catch (error) {
-        this.logger.error('Unable to read packaged update source', error)
-      }
+    } catch (error) {
+      this.logger.error('Updater source initialization failed', error)
+      this.update({ status: 'unsupported', message: '更新源配置无效，请检查更新来源设置或打包配置。' })
+      return
     }
-    this.updater.autoDownload = false
-    this.updater.autoInstallOnAppQuit = false
-    this.updater.allowDowngrade = false
-    // Keep an error listener while cancelled requests drain (EventEmitter's error is special).
-    this.updater.on('error', this.logError)
     this.update({ status: 'idle', message: this.state.installationSupport.supported ? null : this.state.installationSupport.message })
     this.schedule(INITIAL_CHECK_DELAY)
   }
 
   private async unsupportedReason(): Promise<string | null> {
-    if (!app.isPackaged) {
-      try {
-        if (!getDesktopUpdateConfig().PURECHAT_DESKTOP_UPDATE_URL) {
-          return '开发版下载更新需要配置 PURECHAT_DESKTOP_UPDATE_URL。'
-        }
-      } catch {
-        return '开发更新源配置无效，请检查 PURECHAT_DESKTOP_UPDATE_URL。'
-      }
-    }
     // electron-builder supplies this runtime marker for portable executables.
     if (process.platform === 'win32' && 'PORTABLE_EXECUTABLE_DIR' in process.env) {
       return '便携版请前往发布页面下载新版本。'
@@ -189,6 +208,7 @@ export class UpdateService {
     return {
       ...this.state,
       preferences: { ...this.state.preferences },
+      effectiveSource: this.state.effectiveSource ? { ...this.state.effectiveSource } : null,
       installationSupport: this.state.installationSupport ? { ...this.state.installationSupport } : null,
       release: this.state.release ? { ...this.state.release } : null,
     }
@@ -324,34 +344,86 @@ export class UpdateService {
 
   async setPreferences(preferences: DesktopUpdatePreferences): Promise<DesktopUpdateState> {
     await this.start()
+    if (this.disposed) throw new Error('更新服务已关闭')
+    if (!isUpdatePreferences(preferences)) throw new Error('更新设置无效')
     if (this.clearingCache) throw new Error('正在清理更新缓存，请稍后再试')
     if (this.state.status === 'installing') throw new Error('正在安装更新，暂时不能修改设置')
     if (this.changingPreferences) throw new Error('正在保存更新设置，请稍后再试')
     this.changingPreferences = true
+    const normalized = normalizeUpdatePreferences(preferences)
+    const previous = this.state.preferences
+    const previousSource = this.state.effectiveSource
+    const source = resolveUpdateSource(normalized, this.defaultSource)
+    const sourceChanged = JSON.stringify(source) !== JSON.stringify(previousSource)
+    let feedChanged = false
     try {
-      await this.config.setUpdatePreferences(preferences)
-      const previous = this.state.preferences
-      const channelChanged = getUpdateChannel(previous) !== getUpdateChannel(preferences)
-      const stopBackground = !preferences.autoUpdate && !this.state.manual && this.operation !== null
+      if (sourceChanged) {
+        const reason = await this.unsupportedReason()
+        if (reason) throw new Error(reason)
+        this.clearTimer()
+        this.cancelRun()
+        this.update({ status: 'idle', progress: 0, release: null, message: null, manual: false })
+        // The updater singleton retains check promises and a provider during downloads.
+        // Drain those before changing its feed or deleting pending files.
+        if (this.operation) await this.operation
+        if (this.disposed) throw new Error('更新服务已关闭')
+        await this.clearPendingUpdate()
+        if (source) {
+          feedChanged = true
+          this.updater.setFeedURL(toFeed(source))
+        }
+      }
+      await this.config.setUpdatePreferences(normalized)
+      const channelChanged = getUpdateChannel(previous) !== getUpdateChannel(normalized)
+      const stopBackground = !normalized.autoUpdate && !this.state.manual && this.operation !== null
       if (channelChanged || stopBackground) this.cancelRun()
-      const normalized = normalizeUpdatePreferences(preferences)
-      this.logger.info('Update preferences saved', normalized)
-      if (channelChanged || stopBackground) {
-        const status = this.state.status === 'unsupported' ? 'unsupported' : 'idle'
+      this.logger.info('Update preferences saved', {
+        ...normalized,
+        customUpdateUrl: normalized.customUpdateUrl ? redactLogText(normalized.customUpdateUrl) : undefined,
+      })
+      if (sourceChanged || channelChanged || stopBackground) {
+        const unsupported = (sourceChanged && !source) || (!sourceChanged && this.state.status === 'unsupported')
+        const status = unsupported ? 'unsupported' : 'idle'
+        if (sourceChanged) this.failures = 0
         this.update({
           preferences: normalized,
+          effectiveSource: source,
           status,
           progress: 0,
           release: null,
           manual: false,
-          message: status === 'unsupported' ? this.state.message : null,
+          message: unsupported ? this.state.message || '尚未配置更新来源，请选择来源后保存。' : null,
         })
       } else this.update({ preferences: normalized })
-      this.schedule(INITIAL_CHECK_DELAY)
       return this.snapshot()
+    } catch (error) {
+      if (feedChanged) {
+        const previousFeed = previous.updateSource && previousSource ? toFeed(previousSource) : this.defaultFeed
+        if (previousFeed) this.updater.setFeedURL(previousFeed)
+      }
+      if (sourceChanged && this.invalidated) {
+        this.update({
+          status: previousSource ? 'error' : 'unsupported',
+          message: '保存更新来源失败，请重试或重新检查更新。',
+        })
+      }
+      throw error
     } finally {
       this.changingPreferences = false
+      this.schedule(INITIAL_CHECK_DELAY)
     }
+  }
+
+  private async clearPendingUpdate() {
+    // electron-updater 6 exposes no public cache reset; reuse its configured helper.
+    const helper = await this.updater['getOrCreateDownloadHelper']()
+    if ('closeServerIfExists' in this.updater && typeof this.updater.closeServerIfExists === 'function') {
+      this.updater.closeServerIfExists()
+    }
+    if ('squirrelDownloadedUpdate' in this.updater) this.updater.squirrelDownloadedUpdate = false
+    await fs.rm(helper.cacheDirForPendingUpdate, { recursive: true, force: true })
+    await helper.clear()
+    if (!app.isPackaged) this.state.developmentCachePath = helper.cacheDir
   }
 
   async clearCache(): Promise<DesktopUpdateState> {
@@ -423,7 +495,7 @@ export class UpdateService {
 
   private schedule(delay: number) {
     this.clearTimer()
-    if (this.disposed || !this.state.preferences.autoUpdate || this.state.status === 'unsupported') return
+    if (this.disposed || this.changingPreferences || !this.state.preferences.autoUpdate || this.state.status === 'unsupported') return
     if (this.state.status === 'ready' || this.state.status === 'downloaded' || this.state.status === 'installing')
       return
     this.logger.info(this.failures ? 'Scheduling update retry' : 'Scheduling update check', {

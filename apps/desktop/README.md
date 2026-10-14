@@ -216,6 +216,8 @@ Electron 下载镜像统一配置在 workspace 根目录 `.npmrc`，可用 `ELEC
 
 关于页的自动更新开关控制后台检测与下载；关闭后仍可手动检查。更新设置保存在客户端配置中，测试计划默认关闭，启用后可选择 RC 或 Beta。渠道切换会取消旧下载并清除安装就绪状态，禁止自动降级。Web 端在浏览器 tab 重新可见时检测部署变化并提示用户刷新，关于页不提供更新按钮或更新开关。
 
+桌面关于页的“更新来源”支持本地、GitHub 和自定义，统一点击“保存”后生效，无需重启：本地固定为 `http://127.0.0.1:5500`；GitHub 使用 `Hyk260/PureChatNext` 的公开 Releases；自定义填写 HTTP(S) 更新目录，例如 `https://cdn.purechat.cn/desktop/`。地址不能包含用户名、密码或 fragment，保存只校验格式，可达性在检查更新时验证。页面展示当前生效来源，未保存的编辑不影响下载；切换来源会取消并等待旧任务结束、清除待安装缓存和就绪状态。自动更新关闭时，保存来源不会启动检测或下载；需手动检查。来源选择和自定义地址保存在本机客户端配置中，切换到其他来源仍保留已保存的自定义地址；更新渠道与来源独立。
+
 版本号旁的日志图标可打开桌面更新日志弹框，查看 `desktop:update` 记录和对应错误堆栈，并手动刷新。日志读取开发或生产环境对应目录最近三个日志文件（含轮转文件），每个文件及弹框内容均限制在 256 KiB；较早内容省略时会显示提示，完整日志仍可通过帮助菜单打开日志目录查看。
 
 客户端启动时检查当前构建的安装条件。macOS 使用系统 `codesign` 检查 Developer ID Application 签名并进行严格校验；开发版、ad-hoc／未签名构建以及校验无法完成的构建仅支持下载，安装确认按钮禁用，主进程也会拒绝安装。弹框会显示具体原因。此检查只确认当前应用的安装条件，每个更新包仍必须通过 Squirrel.Mac 的签名身份兼容性校验；Windows 保留原生安装器校验，portable 和不支持的平台仍使用手动更新。
@@ -236,11 +238,11 @@ Electron 下载镜像统一配置在 workspace 根目录 `.npmrc`，可用 `ELEC
 PURECHAT_DESKTOP_UPDATE_URL= pnpm package:desktop:mac
 ```
 
-如需本地安装版下载测试或自托管更新服务，设置 `PURECHAT_DESKTOP_UPDATE_URL` 为 HTTP(S) 地址可覆盖为 Generic provider。两种 provider 都会写入安装包的 `resources/app-update.yml`；macOS 对应路径为 `PureChat.app/Contents/Resources/app-update.yml`。安装后的客户端读取该文件，无需运行时再设置环境变量；修改更新源后必须重新打包。可通过 `apps/desktop/release/builder-effective-config.yaml` 的 `publish` 字段和安装包中的 `app-update.yml` 确认配置。
+如需本地安装版下载测试或自托管更新服务，设置 `PURECHAT_DESKTOP_UPDATE_URL` 为 HTTP(S) 地址可覆盖为 Generic provider。两种 provider 都会写入安装包的 `resources/app-update.yml`；macOS 对应路径为 `PureChat.app/Contents/Resources/app-update.yml`。未保存界面来源设置时，安装版沿用包内配置，无需运行时再设置环境变量；界面保存的来源优先于包内默认值，并跨重启保留。修改打包默认值仍需重新打包，安装后切换来源则直接在关于页保存即可。可通过 `apps/desktop/release/builder-effective-config.yaml` 的 `publish` 字段和安装包中的 `app-update.yml` 确认初始配置。
 
 GitHub Release tag 沿用 `vX.Y.Z`，只在草稿资产全部就绪后手动发布；`--publish never` 配合现有 `gh` 草稿汇总流程，无需向 Builder 传 token。旧版没有内置更新源的应用需要先手动安装带 GitHub 配置的新版本，补传远端 YAML 不会改变旧安装包的配置。
 
-桌面开发环境可在启动 `pnpm dev:desktop` 前设置 `PURECHAT_DESKTOP_UPDATE_URL`，从 Generic 更新源手动检查并下载更新。开发版本下载完成后只显示下载完成状态，不会提示或执行安装；安装验证仍需使用已打包的发行版本。
+桌面开发环境未保存界面来源时，使用启动 `pnpm dev:desktop` 前设置的 `PURECHAT_DESKTOP_UPDATE_URL`；也可直接在关于页保存本地、GitHub 或自定义来源，即使没有环境变量也能配置，无需重启。开发版本下载完成后可预览安装确认弹框，但不能执行安装；安装验证仍需使用已打包的发行版本。
 
 ### 腾讯云 COS 上传与最新版本保留
 

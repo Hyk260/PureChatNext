@@ -131,13 +131,26 @@ export function useAboutUpdate() {
   }
 
   const savePreferences = async (patch: Partial<DesktopUpdatePreferences>) => {
-    if (!api || !desktopState || busyRef.current) return
+    if (!api || !desktopState || busyRef.current) return false
     busyRef.current = true
     setPending(true)
+    if (patch.updateSource !== undefined) {
+      setInstallConfirmationOpen(false)
+      clearInstallRequest()
+      if (checkMessageRef.current) {
+        checkMessageRef.current = false
+        message.destroy(CHECK_MESSAGE_KEY)
+      }
+    }
     try {
       receive(await api.updater.setPreferences({ ...desktopState.preferences, ...patch }))
+      if (patch.updateSource !== undefined) {
+        message.success('更新来源已保存')
+      }
+      return true
     } catch (error) {
       message.error(error instanceof Error ? error.message : '保存更新设置失败。')
+      return false
     } finally {
       busyRef.current = false
       if (aliveRef.current) setPending(false)

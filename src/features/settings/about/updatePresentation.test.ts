@@ -14,6 +14,7 @@ const state: DesktopUpdateState = {
   status: 'ready',
   revision: 10,
   preferences: DEFAULT_UPDATE_PREFERENCES,
+  effectiveSource: null,
   currentVersion: '0.2.0',
   developmentCachePath: null,
   installationSupport: null,

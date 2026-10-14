@@ -52,6 +52,23 @@ describe('DesktopConfigService', () => {
     await expect(restarted.setUpdatePreferences(invalid)).rejects.toThrow('更新设置无效')
     expect((await restarted.read()).updatePreferences).toEqual(preferences)
   })
+  it('restores a saved update source and retained custom URL across restart', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-update-source-'))
+    tempDirs.push(dir)
+    const store = new DesktopConfigService(dir)
+    const preferences: DesktopUpdatePreferences = {
+      autoUpdate: false, testPlan: true, testChannel: 'beta', updateSource: 'github',
+      customUpdateUrl: ' https://cdn.example.com/desktop/ ',
+    }
+    await store.setUpdatePreferences(preferences)
+    expect((await new DesktopConfigService(dir).read()).updatePreferences).toEqual({
+      ...preferences, customUpdateUrl: 'https://cdn.example.com/desktop/',
+    })
+    await expect(store.setUpdatePreferences({ ...preferences, updateSource: 'custom', customUpdateUrl: '' }))
+      .rejects.toThrow('更新设置无效')
+    expect((await store.read()).updatePreferences?.updateSource).toBe('github')
+  })
+
   it('persists the remote server without exposing an arbitrary file path', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-desktop-'))
     tempDirs.push(dir)

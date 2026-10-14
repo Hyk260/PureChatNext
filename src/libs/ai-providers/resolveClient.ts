@@ -61,7 +61,7 @@ export const createProviderLanguageModel = (
   } = {}
   if (apiKey) clientOptions.apiKey = apiKey
   if (baseURL) clientOptions.baseURL = baseURL
-  if (options?.timeoutMs) clientOptions.fetch = createTimedFetch(options.timeoutMs)
+  clientOptions.fetch = createTimedFetch(options?.timeoutMs)
 
   const providerOptions = Object.keys(clientOptions).length > 0 ? clientOptions : undefined
 
@@ -87,7 +87,7 @@ export const fetchOpenAICompatibleModels = async (params: {
   baseURL: string
 }): Promise<RemoteModelListItem[]> => {
   const base = params.baseURL.replace(/\/+$/, '')
-  const response = await fetch(`${base}/models`, {
+  const response = await createTimedFetch(30_000)(`${base}/models`, {
     headers: {
       Authorization: `Bearer ${params.apiKey}`,
       'Content-Type': 'application/json',

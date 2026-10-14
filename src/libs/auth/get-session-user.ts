@@ -7,6 +7,7 @@ import { auth } from '@/auth'
 import { isAdminRole } from '@/const/auth'
 import { verifyAccessToken } from '@/libs/auth/jwt'
 import { touchUserLastActive } from '@/libs/auth/touch-last-active'
+import { isUserCurrentlyBanned } from '@/libs/auth/user-status'
 
 async function getAuthenticatedUser() {
   const requestHeaders = await headers()
@@ -18,6 +19,7 @@ async function getAuthenticatedUser() {
     if (!payload?.userId) return null
 
     const user = await new UserModel().findByUserId(payload.userId)
+    if (isUserCurrentlyBanned(user)) return null
     if (user?.id) touchUserLastActive(user.id)
     return user ?? null
   }
@@ -26,6 +28,7 @@ async function getAuthenticatedUser() {
   if (!session?.user?.id) return null
 
   const user = await new UserModel().findById(session.user.id)
+  if (isUserCurrentlyBanned(user)) return null
   if (user?.id) touchUserLastActive(user.id)
   return user
 }

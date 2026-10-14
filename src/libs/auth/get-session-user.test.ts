@@ -6,6 +6,7 @@ import { USER_ROLE } from '@pure/const'
 
 const mocks = vi.hoisted(() => ({
   findById: vi.fn(),
+  findByUserId: vi.fn(),
   getSession: vi.fn(),
 }))
 
@@ -20,6 +21,7 @@ vi.mock('@/auth', () => ({
 vi.mock('@pure/database/models/user', () => ({
   UserModel: class {
     findById = mocks.findById
+    findByUserId = mocks.findByUserId
   },
 }))
 
@@ -71,5 +73,16 @@ describe('withAdmin', () => {
     expect(handler).toHaveBeenCalledOnce()
     expect(handler.mock.calls[0]?.[1]).toMatchObject({ userId: 'u1' })
     expect(touchUserLastActive).toHaveBeenCalledWith('u1')
+  })
+
+  it('rejects a banned cookie session before running the protected handler', async () => {
+    mocks.getSession.mockResolvedValue({ user: { id: 'u1' } })
+    mocks.findById.mockResolvedValue({ banned: true, banExpires: null, id: 'u1', role: USER_ROLE.Admin })
+
+    const response = await withAdmin(handler)(new NextRequest('http://localhost/api/admin/web-search'))
+
+    expect(response.status).toBe(401)
+    expect(handler).not.toHaveBeenCalled()
+    expect(touchUserLastActive).not.toHaveBeenCalled()
   })
 })

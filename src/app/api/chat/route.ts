@@ -15,6 +15,7 @@ import debug from 'debug'
 import { createNanoId } from '@pure/utils'
 
 import { isSupportedProviderId } from '@/libs/ai-providers/resolveClient'
+import { createTimedFetch } from '@/libs/ai-providers/timedFetch'
 import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 import { ChatSDKError } from '@/libs/errors'
@@ -130,7 +131,7 @@ const resolveApiKeyFromHeader = (request: Request) => {
 }
 
 const resolveProviderOptions = (apiKey: string | undefined, baseURL: string | undefined) => {
-  const options: { apiKey?: string; baseURL?: string } = {}
+  const options: { apiKey?: string; baseURL?: string; fetch: typeof fetch } = { fetch: createTimedFetch() }
   if (apiKey) options.apiKey = apiKey
   if (baseURL) options.baseURL = baseURL
   return Object.keys(options).length > 0 ? options : undefined

@@ -2,6 +2,8 @@ import type { NextRequest } from 'next/server'
 import { verifyAccessToken } from '@/libs/auth/jwt'
 import type { AccessTokenPayload } from '@/libs/auth/jwt'
 import { logger } from '@/libs/logger'
+import { UserModel } from '@pure/database/models/user'
+import { isUserCurrentlyBanned } from './user-status'
 
 /**
  * 鉴权中间件
@@ -55,6 +57,11 @@ export async function verifyAuth(request: NextRequest): Promise<{
         user: null,
         error: 'Token payload 缺少必要字段',
       }
+    }
+
+    const account = await new UserModel().findByUserId(payload.userId)
+    if (!account || isUserCurrentlyBanned(account)) {
+      return { user: null, error: '账号不可用' }
     }
 
     return {

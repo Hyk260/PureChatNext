@@ -145,9 +145,16 @@ export class FileModel {
   }
 
   update = async (id: string, data: Partial<Pick<FileItem, 'name' | 'parentId' | 'metadata'>>) => {
+    const update: Partial<Pick<FileItem, 'name' | 'parentId' | 'metadata'>> = {}
+    if (typeof data.name === 'string') update.name = data.name
+    if (data.parentId === null || typeof data.parentId === 'string') update.parentId = data.parentId
+    if (data.metadata === null || (typeof data.metadata === 'object' && !Array.isArray(data.metadata))) {
+      update.metadata = data.metadata
+    }
+
     const [item] = await this.db
       .update(files)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...update, updatedAt: new Date() })
       .where(and(eq(files.id, id), this.ownership()))
       .returning()
     return item

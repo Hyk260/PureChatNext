@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server'
 import { DESKTOP_AUTH_CLIENT_ID, DESKTOP_AUTH_REDIRECT_URI } from '@/const/desktopAuth'
 import { authEnv } from '@/envs/auth'
 import { signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
+import { isUserCurrentlyBanned } from '@/libs/auth/user-status'
 
 const ACCESS_TOKEN_EXPIRES_IN = (() => {
   const match = authEnv.JWT_ACCESS_EXPIRATION.match(/^(\d+)([smhd])$/i)
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
   if (!consumed) return getError('授权码已使用或已过期', 400)
 
   const user = await new UserModel().findById(consumed.userId)
-  if (!user) return getError('用户不存在', 404)
+  if (!user || isUserCurrentlyBanned(user)) return getError('账号不可用', 403)
 
   const accessToken = await signAccessToken(user.userId, user.role ?? undefined)
   const { token: refreshToken } = await signRefreshToken(user.userId)

@@ -6,6 +6,7 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 import { auth } from '@/auth'
+import { isUserCurrentlyBanned } from '@/libs/auth/user-status'
 import {
   DESKTOP_AUTH_CLIENT_ID,
   DESKTOP_AUTH_REDIRECT_URI,
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
   }
 
   const user = await new UserModel().findById(session.user.id)
-  if (!user) return NextResponse.json({ error: '用户不存在' }, { status: 404 })
+  if (!user || isUserCurrentlyBanned(user)) return NextResponse.json({ error: '账号不可用' }, { status: 403 })
 
   const code = randomBytes(32).toString('base64url')
   const codeHash = createHash('sha256').update(code).digest('hex')

@@ -8,7 +8,7 @@ export {
   QQ_MAX_TEXT_LENGTH,
 } from '@pure/utils/qqText'
 export { toQQMediaFileType } from './mediaType'
-export { signWebhookResponse, verifyWebhookSignature } from './crypto'
+export { isValidWebhookChallenge, signWebhookResponse, verifyWebhookSignature } from './crypto'
 export { QQFormatConverter } from './format-converter'
 export { QQGatewayConnection, type GatewayLogger, type QQGatewayOptions } from './gateway'
 export {

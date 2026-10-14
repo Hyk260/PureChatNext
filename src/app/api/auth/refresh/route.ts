@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyRefreshToken, signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
+import { UserModel } from '@pure/database/models/user'
+import { isUserCurrentlyBanned } from '@/libs/auth/user-status'
 import { authEnv } from '@/envs/auth'
 import debug from 'debug'
 
@@ -40,6 +42,11 @@ export async function POST(request: NextRequest) {
 
     if (!verifyResult.userId) {
       return NextResponse.json({ error: '令牌信息不完整' }, { status: 400 })
+    }
+
+    const user = await new UserModel().findByUserId(verifyResult.userId)
+    if (!user || isUserCurrentlyBanned(user)) {
+      return NextResponse.json({ error: '账号不可用' }, { status: 401 })
     }
 
     const accessToken = await signAccessToken(verifyResult.userId)

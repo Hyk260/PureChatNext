@@ -1,4 +1,6 @@
 import { SITE_DEFAULT_URL } from '@/const/site'
+import { referralCallback } from '@/libs/referrals/helpers'
+import { getDesktopRemoteBaseUrl } from '@/utils/desktopFetch'
 
 const PREVIEW_VERIFY_PATH = '/verify-email?token=preview-token'
 const LOCAL_PREVIEW_ORIGIN = 'http://localhost:5174'
@@ -7,6 +9,11 @@ const trimTrailingSlash = (value: string) => value.replace(/\/$/, '')
 
 // 浏览器走当前站点；这里不引 appEnv，避免 SPA 打包进服务端 env。
 const previewEmailOrigin = () => {
+  const desktopServerUrl = getDesktopRemoteBaseUrl()
+  if (desktopServerUrl) {
+    return new URL(desktopServerUrl).origin
+  }
+
   if (process.env.NODE_ENV === 'test') {
     return LOCAL_PREVIEW_ORIGIN
   }
@@ -45,6 +52,15 @@ export type EmailTemplateParams = {
   otp?: string
   url?: string
   userName?: string | null
+}
+
+export function getEmailTemplatePreviewParams(key: EmailTemplateKey = 'verification') {
+  return {
+    ...EMAIL_TEMPLATE_PREVIEW_MOCK,
+    url: key === 'referral'
+      ? `${previewEmailOrigin()}${referralCallback('preview-token')}`
+      : EMAIL_TEMPLATE_PREVIEW_MOCK.url,
+  }
 }
 
 export type EmailTemplateCatalogEntry = {

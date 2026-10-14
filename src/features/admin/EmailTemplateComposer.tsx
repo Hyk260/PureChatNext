@@ -3,7 +3,7 @@
 import { Input, Select, Text } from '@pure/ui'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { EMAIL_TEMPLATE_CATALOG, EMAIL_TEMPLATE_PREVIEW_MOCK } from '@/libs/better-auth/email-templates/preview'
+import { EMAIL_TEMPLATE_CATALOG, EMAIL_TEMPLATE_PREVIEW_MOCK, getEmailTemplatePreviewParams } from '@/libs/better-auth/email-templates/preview'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 import type {
   EmailTemplateKey,
@@ -48,7 +48,7 @@ type RenderTemplateFailure = {
 
 export function EmailTemplateComposer({ onRendered, onRenderError, onRenderStateChange, onTemplateChange }: Props) {
   const [activeTemplate, setActiveTemplate] = useState<EmailTemplateKey>(EMAIL_TEMPLATE_CATALOG[0]!.key)
-  const [params, setParams] = useState<EmailTemplateParams>({ ...EMAIL_TEMPLATE_PREVIEW_MOCK })
+  const [params, setParams] = useState<EmailTemplateParams>(getDefaultTemplateParams)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const onRenderedRef = useRef(onRendered)
@@ -172,6 +172,15 @@ export function EmailTemplateComposer({ onRendered, onRenderError, onRenderState
   }
 
   const activeParams = activeEntry?.params ?? []
+  const defaultParams = getDefaultTemplateParams(activeTemplate)
+
+  const selectTemplate = (key: EmailTemplateKey) => {
+    setParams((current) => {
+      if (current.url !== defaultParams.url) return current
+      return { ...current, url: getDefaultTemplateParams(key).url }
+    })
+    setActiveTemplate(key)
+  }
 
   return (
     <div className='min-w-0'>
@@ -181,7 +190,7 @@ export function EmailTemplateComposer({ onRendered, onRenderError, onRenderState
       <Select
         id='email-template-select'
         value={activeTemplate}
-        onChange={setActiveTemplate}
+        onChange={selectTemplate}
         options={TEMPLATE_OPTIONS}
         className='mt-2 w-full'
       />
@@ -201,7 +210,7 @@ export function EmailTemplateComposer({ onRendered, onRenderError, onRenderState
               min={field === 'expiresInSeconds' ? 1 : undefined}
               value={paramValue(field)}
               onChange={(event) => updateParam(field, event.target.value)}
-              placeholder={PARAM_PLACEHOLDERS[field]}
+              placeholder={field === 'url' ? defaultParams.url : PARAM_PLACEHOLDERS[field]}
               className='mt-2 w-full min-w-0'
             />
           </div>
@@ -214,6 +223,6 @@ export function EmailTemplateComposer({ onRendered, onRenderError, onRenderState
   )
 }
 
-export function getDefaultTemplateParams(): EmailTemplateParams {
-  return { ...EMAIL_TEMPLATE_PREVIEW_MOCK }
+export function getDefaultTemplateParams(key: EmailTemplateKey = 'verification'): EmailTemplateParams {
+  return getEmailTemplatePreviewParams(key)
 }

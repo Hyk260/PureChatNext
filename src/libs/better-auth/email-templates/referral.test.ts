@@ -22,5 +22,14 @@ describe('PureChat invitation email', () => {
     expect(() => getReferralEmailTemplate({ url: 'javascript:alert(1)' })).toThrow()
     expect(EMAIL_TEMPLATE_CATALOG.find((item) => item.key === 'referral')).toBeTruthy()
     expect(renderEmailTemplate('referral', { url, userName: '好友' }).html).toContain('好友')
+    expect(renderEmailTemplate('referral', { url }).text).toContain(url)
+  })
+  it('renders the invitation link in both preview bodies when no URL is provided', () => {
+    const result = renderEmailTemplate('referral')
+    const previewUrl = 'http://localhost:5174/accept-referral?referral_context=preview-token'
+
+    expect(result.text).toContain(previewUrl)
+    expect(result.html).toContain(previewUrl)
+    expect(result.text).not.toContain('/verify-email')
   })
 })

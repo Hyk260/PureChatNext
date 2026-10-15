@@ -1,7 +1,7 @@
 'use client'
 
+import type { InputRef } from 'antd'
 import { Button, Flex, Input, Text } from '@pure/ui'
-import type { InputRef } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { Loader2 } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'

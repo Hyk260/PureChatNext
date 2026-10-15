@@ -55,6 +55,7 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
     routes: [
       { href: '/dev/code-block', label: 'CodeBlock' },
       { href: '/dev/approval-card', label: 'ApprovalCard' },
+      { href: '/dev/context-window', label: 'Context Window' },
       { href: '/dev/accept-referral', label: '接受邀请' },
       { href: '/dev/desktop-login', label: 'DesktopLoginPage' },
     ],

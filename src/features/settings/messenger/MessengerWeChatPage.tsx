@@ -5,7 +5,7 @@ import { ActionIcon, Alert, Button, confirmModal, Text, Flex } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
 import { isAdminRole } from '@/const/auth'
-import { FileText, MessagesSquareIcon, Trash2Icon } from 'lucide-react'
+import { Code2, FileText, MessagesSquareIcon, Trash2Icon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -24,6 +24,8 @@ import {
 } from './const'
 import MessengerAgentSelect from './MessengerAgentSelect'
 import { ChannelGatewayLogsModal } from './ChannelGatewayLogsModal'
+import { ChannelGatewayStatusIndicator } from './ChannelGatewayStatusIndicator'
+import type { ChannelGatewayStatus } from './ChannelGatewayStatusIndicator'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
@@ -53,6 +55,77 @@ const DISCONNECTED_STATUS: WechatStatus = {
 function wechatBoundDescription(status: WechatStatus) {
   if (status.lastActiveAt) return `最近活动：${formatMessengerActiveAt(status.lastActiveAt)}`
   return '打开微信私聊机器人即可对话。'
+}
+
+function getWechatGatewayStatus(params: {
+  bound: boolean
+  error: unknown
+  gatewaySupported: boolean
+  needsRebind: boolean
+  status: WechatStatus | null | undefined
+}): ChannelGatewayStatus {
+  const { bound, error, gatewaySupported, needsRebind, status } = params
+
+  if (error) {
+    return {
+      description: error instanceof Error ? error.message : '无法读取微信网关状态。',
+      title: '状态读取失败',
+      type: 'error',
+    }
+  }
+
+  if (!bound) {
+    return { description: '扫码连接微信后会在这里显示网关运行状态。', title: '尚未连接微信', type: 'info' }
+  }
+
+  if (!gatewaySupported) {
+    return {
+      description: '当前部署不支持常驻微信 Gateway，请使用本地或 Docker Compose 部署。',
+      title: 'Gateway 不可用',
+      type: 'warning',
+    }
+  }
+
+  if (needsRebind || status?.runtimeStatus === 'needs_rebind') {
+    return { description: '微信会话已过期，请重新扫码连接。', title: '需要重新连接微信', type: 'warning' }
+  }
+
+  const runtimeStatus = status?.runtimeStatus
+  const lastError = status?.lastError?.message
+
+  if (runtimeStatus === 'online') {
+    return {
+      description: status ? wechatBoundDescription(status) : '微信 Gateway 已连接。',
+      title: '微信 Gateway 正常',
+      type: 'success',
+    }
+  }
+
+  if (runtimeStatus === 'starting') {
+    return { description: '凭证已保存，等待 Gateway 首次轮询成功。', title: 'Gateway 启动中', type: 'info' }
+  }
+
+  if (runtimeStatus === 'degraded' || runtimeStatus === 'reconnecting') {
+    const failedCount = status?.failedEventCount ?? 0
+    const failedMessage = failedCount ? `有 ${failedCount} 条消息处理失败。` : ''
+    return {
+      description: [failedMessage, lastError || 'Gateway 正在自动恢复。'].filter(Boolean).join(' '),
+      title: runtimeStatus === 'reconnecting' ? 'Gateway 正在重连' : '微信渠道需要关注',
+      type: 'warning',
+    }
+  }
+
+  if (runtimeStatus === 'offline' || runtimeStatus === 'stopped') {
+    return {
+      description: lastError || '超过 90 秒未收到 Gateway 心跳，请检查服务状态。',
+      title: '微信 Gateway 离线',
+      type: 'error',
+    }
+  }
+
+  return status?.connected
+    ? { description: '微信渠道已连接。', title: '微信连接正常', type: 'success' }
+    : { description: lastError || '请检查连接配置或查看诊断日志。', title: '微信连接异常', type: 'warning' }
 }
 
 function wechatConnectHint() {
@@ -125,7 +198,21 @@ function renderWechatStatusBanner(params: {
   }
 
   if (bound && status) {
-    return <Alert showIcon type='success' title='已连接微信' description={wechatBoundDescription(status)} />
+    if (!import.meta.env.DEV) return null
+
+    return (
+      <Alert
+        showIcon
+        type='success'
+        title={
+          <Flex className='items-center gap-2'>
+            <span>已连接微信</span>
+            <Code2 aria-hidden='true' size={16} />
+          </Flex>
+        }
+        description={wechatBoundDescription(status)}
+      />
+    )
   }
 
   return null
@@ -306,6 +393,13 @@ const MessengerWeChatPage = memo(() => {
   const needsRebind = Boolean(status?.needsRebind) || (bound && status?.enabled === false)
   const showConnect = !bound || needsRebind
   const controlsDisabled = binding || saving
+  const gatewayStatus = getWechatGatewayStatus({
+    bound,
+    error: statusError,
+    gatewaySupported,
+    needsRebind,
+    status,
+  })
 
   // Gateway 不可用（Vercel / 未开启内置进程）时不展示连接配置与操作按钮。
   const headerAction = gatewaySupported ? (
@@ -330,6 +424,7 @@ const MessengerWeChatPage = memo(() => {
       <Flex className='items-center gap-2'>
         <Text className='text-[15px]' strong>连接微信</Text>
         <ActionIcon icon={FileText} size='small' title='查看微信网关诊断日志' aria-label='查看微信网关诊断日志' onClick={() => setLogsOpen(true)} />
+        <ChannelGatewayStatusIndicator {...gatewayStatus} />
       </Flex>
       {!gatewaySupported ? (
         <Alert

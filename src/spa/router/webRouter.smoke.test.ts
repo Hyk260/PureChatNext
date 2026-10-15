@@ -44,10 +44,24 @@ describe('webRouter.config smoke', () => {
   })
 
   it('exposes the desktop authorization page as a dev test route', () => {
-    const devRoutes = source.split('// —— Dev (dev-only; production can 404 later) ——')[1]?.split('// —— Fallback ——')[0]
+    const devRoutes = source
+      .split('// —— Dev (dev-only; production can 404 later) ——')[1]
+      ?.split('// —— Fallback ——')[0]
 
     expect(devRoutes).toContain("path: 'desktop-authorize'")
     expect(devRoutes).toContain("import('@/features/desktop/DesktopAuthorizePage')")
+  })
+
+  it('exposes Context Window in the dev preview route and navigation', () => {
+    const devRoutes = source
+      .split('// —— Dev (dev-only; production can 404 later) ——')[1]
+      ?.split('// —— Fallback ——')[0]
+    const navigationPath = path.resolve(path.dirname(configPath), '../../const/frontend-routes.ts')
+    const navigationSource = readFileSync(navigationPath, 'utf-8')
+
+    expect(devRoutes).toContain("path: 'context-window'")
+    expect(devRoutes).toContain("import('@/features/dev/ContextWindowPage')")
+    expect(navigationSource).toContain("{ href: '/dev/context-window', label: 'Context Window' }")
   })
 
   it('uses RequireAuth for chat layout', () => {

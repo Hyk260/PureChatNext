@@ -6,7 +6,7 @@ import { copyToClipboard } from '@pure/utils/client'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
-import { FileText, MessagesSquareIcon, Settings2Icon, Trash2Icon } from 'lucide-react'
+import { Code2, FileText, MessagesSquareIcon, Settings2Icon, Trash2Icon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -27,6 +27,8 @@ import {
 } from './const'
 import MessengerAgentSelect from './MessengerAgentSelect'
 import { ChannelGatewayLogsModal } from './ChannelGatewayLogsModal'
+import { ChannelGatewayStatusIndicator } from './ChannelGatewayStatusIndicator'
+import type { ChannelGatewayStatus } from './ChannelGatewayStatusIndicator'
 import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
@@ -56,6 +58,92 @@ function qqBoundDescription(status: QQStatus) {
   return `模式：${mode}。在 QQ 私聊或群内 @ 机器人即可对话。`
 }
 
+function getQqGatewayStatus(params: {
+  error: unknown
+  gatewaySupported: boolean
+  showConnect: boolean
+  status: QQStatus | null | undefined
+}): ChannelGatewayStatus {
+  const { error, gatewaySupported, showConnect, status } = params
+
+  if (error) {
+    return {
+      description: error instanceof Error ? error.message : '无法读取 QQ 网关状态。',
+      title: '状态读取失败',
+      type: 'error',
+    }
+  }
+
+  if (showConnect) {
+    return { description: '连接 QQ 后会在这里显示网关运行状态。', title: '尚未连接 QQ', type: 'info' }
+  }
+
+  if (status?.connectionMode === 'webhook' && status.enabled !== false) {
+    return {
+      description: 'Webhook 回调已启用，无需常驻 Gateway。',
+      title: 'QQ Webhook 正常',
+      type: 'success',
+    }
+  }
+
+  if (!gatewaySupported) {
+    return {
+      description: '当前部署不支持 QQ WebSocket Gateway。',
+      title: 'Gateway 不可用',
+      type: 'warning',
+    }
+  }
+
+  const runtimeStatus = status?.runtimeStatus
+  const lastError = status?.lastError?.message
+
+  if (runtimeStatus === 'online') {
+    return {
+      description: status?.lastHeartbeatAt
+        ? `最近心跳：${formatMessengerActiveAt(status.lastHeartbeatAt)}`
+        : 'Gateway 已建立 WebSocket 连接。',
+      title: 'QQ Gateway 正常',
+      type: 'success',
+    }
+  }
+
+  if (runtimeStatus === 'starting') {
+    return { description: '凭证已保存，Gateway 正在建立连接。', title: 'Gateway 启动中', type: 'info' }
+  }
+
+  if (runtimeStatus === 'reconnecting') {
+    return {
+      description: lastError || 'Gateway 正在恢复连接，请稍后查看诊断日志。',
+      title: 'Gateway 正在重连',
+      type: 'warning',
+    }
+  }
+
+  if (runtimeStatus === 'degraded') {
+    return {
+      description: lastError || 'Gateway 仍在运行，但当前处于异常状态。',
+      title: 'QQ Gateway 异常',
+      type: 'warning',
+    }
+  }
+
+  if (runtimeStatus === 'needs_rebind') {
+    return { description: lastError || '请重新连接 QQ。', title: 'QQ 需要重新连接', type: 'warning' }
+  }
+
+  if (runtimeStatus === 'offline' || runtimeStatus === 'stopped') {
+    return {
+      description: lastError || 'Gateway 尚未连接或已停止运行。',
+      title: 'QQ Gateway 离线',
+      type: 'error',
+    }
+  }
+
+  return status?.connected
+    ? { description: 'QQ 渠道已连接。', title: 'QQ 连接正常', type: 'success' }
+    : { description: lastError || '请检查连接配置或查看诊断日志。', title: 'QQ 连接异常', type: 'warning' }
+}
+
 function renderQqStatusBanner(params: {
   connected: boolean
   gatewaySupported: boolean
@@ -69,19 +157,34 @@ function renderQqStatusBanner(params: {
     return <Alert showIcon type='info' {...qqConnectHint(gatewaySupported)} />
   }
 
-  const boundType = connected ? 'success' : 'warning'
   const boundTitle = connected ? '已连接 QQ' : 'QQ 绑定已保存，当前离线'
   const webhookUrl = status?.connectionMode === 'webhook' ? status.webhookUrl : undefined
   const showWebsocketOffline = status?.connectionMode === 'websocket' && status.runtimeStatus !== 'online'
 
   return (
     <>
-      <Alert
-        showIcon
-        type={boundType}
-        title={boundTitle}
-        description={status ? qqBoundDescription(status) : undefined}
-      />
+      {connected ? (
+        import.meta.env.DEV ? (
+          <Alert
+            showIcon
+            type='success'
+            title={
+              <Flex className='items-center gap-2'>
+                <span>{boundTitle}</span>
+                <Code2 aria-hidden='true' size={16} />
+              </Flex>
+            }
+            description={status ? qqBoundDescription(status) : undefined}
+          />
+        ) : null
+      ) : (
+        <Alert
+          showIcon
+          type='warning'
+          title={boundTitle}
+          description={status ? qqBoundDescription(status) : undefined}
+        />
+      )}
       {webhookUrl ? (
         <Alert
           showIcon
@@ -236,7 +339,7 @@ const MessengerQQPage = memo(() => {
 
   const handleDisconnect = useCallback(() => {
     confirmModal({
-      content: '断开后需重新填写 App ID / Secret 才能在 QQ 中对话。',
+      content: '断开后需重新扫码才能在 QQ 中对话。',
       okText: '断开',
       cancelText: '取消',
       okButtonProps: { danger: true },
@@ -268,6 +371,12 @@ const MessengerQQPage = memo(() => {
   const gatewaySupported = status?.gatewaySupported !== false
   const showConnect = !status?.applicationId
   const controlsDisabled = binding || saving
+  const gatewayStatus = getQqGatewayStatus({
+    error: statusError,
+    gatewaySupported,
+    showConnect,
+    status,
+  })
 
   const headerAction = (
     <Flex className='items-center gap-2'>
@@ -306,6 +415,7 @@ const MessengerQQPage = memo(() => {
         <Flex className='items-center gap-2'>
           <Text className='text-[15px]' strong>连接 QQ</Text>
           <ActionIcon icon={FileText} size='small' title='查看 QQ 网关诊断日志' aria-label='查看 QQ 网关诊断日志' onClick={() => setLogsOpen(true)} />
+          <ChannelGatewayStatusIndicator {...gatewayStatus} />
         </Flex>
 
         <Flex className='flex-col gap-2'>

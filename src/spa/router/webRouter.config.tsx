@@ -337,6 +337,10 @@ export const webRoutes: RouteObject[] = [
               path: 'approval-card',
             },
             {
+              element: dynamicElement(() => import('@/features/dev/ContextWindowPage'), 'Dev > ContextWindow'),
+              path: 'context-window',
+            },
+            {
               element: dynamicElement(() => import('@/features/referrals/AcceptReferralPage'), 'Dev > AcceptReferral'),
               path: 'accept-referral',
             },

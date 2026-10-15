@@ -1,6 +1,7 @@
 'use client'
 
-import { Block, Button, InputOPT, Text, Flex } from '@pure/ui'
+import { Input } from 'antd'
+import { Block, Button, Text, Flex } from '@pure/ui'
 import { RefreshCw } from 'lucide-react'
 
 import { useAuthConfig } from '@/libs/better-auth/client'
@@ -42,7 +43,7 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
       </Block>
 
       <Flex className='flex-col-center'>
-        <InputOPT length={6} size='large' value={otp} onChange={setOtp} />
+        <Input.OTP length={6} size='large' value={otp} onChange={setOtp} />
       </Flex>
 
       <Button block loading={verifying} onClick={handleVerify} size='large' type='primary'>

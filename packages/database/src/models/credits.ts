@@ -136,6 +136,45 @@ export class CreditsModel {
     }
   }
 
+  /** 管理员重置当前 period 已用额度，并写入正向 reset 流水。 */
+  resetPeriod = async (userId: string, period: string): Promise<CreditsBalance> => {
+    await this.ensurePeriod(userId, period)
+
+    return this.db.transaction(async (tx) => {
+      const [before] = await tx
+        .select({ grant: userCredits.grant, used: userCredits.used })
+        .from(userCredits)
+        .where(and(eq(userCredits.userId, userId), eq(userCredits.period, period)))
+        .limit(1)
+        .for('update')
+
+      if (!before) throw new Error('Credits row missing after ensure')
+
+      if (before.used > 0) {
+        await tx
+          .update(userCredits)
+          .set({ used: 0, updatedAt: new Date() })
+          .where(and(eq(userCredits.userId, userId), eq(userCredits.period, period)))
+
+        await tx.insert(creditLedger).values({
+          credits: before.used,
+          delta: before.used,
+          id: newLedgerId(),
+          period,
+          reason: 'reset',
+          userId,
+        })
+      }
+
+      return {
+        grant: before.grant,
+        period,
+        remaining: before.grant,
+        used: 0,
+      }
+    })
+  }
+
   /**
    * beforeChat 预检：余额不足或低于 MIN_RESERVE 则抛 FreePlanLimitError。
    * V1 不做金额预扣锁。

@@ -3,7 +3,7 @@
 import { ActionIcon, Block, Button, Flex, Github, Modal, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { Segmented, Switch } from 'antd'
-import { BadgeHelp, Bug, CircleX, Code2, Copy, FileText, Globe, MessageSquare, MessagesSquare, Rss, TriangleAlert } from 'lucide-react'
+import { BadgeHelp, Bug, CheckCircle2, CircleX, Code2, Copy, FileText, Globe, MessageSquare, MessagesSquare, Rss, TriangleAlert } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -90,7 +90,9 @@ export function AboutSettingsContent() {
   const showTestPlan = installationSupport?.signature === 'development'
   const canInstall = update.status === 'ready' && installationSupport?.supported
   const feedbackIsError = update.status === 'error' || Boolean(update.loadError)
-  const currentFeedback = update.feedback ? { message: update.feedback, isError: feedbackIsError } : null
+  const currentFeedback = update.feedback
+    ? { message: update.feedback, isError: feedbackIsError, isUpToDate: update.status === 'upToDate' }
+    : null
   const showDebugPanel = update.isDesktop
 
   const [settledFeedback, setSettledFeedback] = useState(() => ({
@@ -101,16 +103,23 @@ export function AboutSettingsContent() {
     update.status !== 'checking' &&
     (settledFeedback.status !== update.status ||
       settledFeedback.feedback?.message !== currentFeedback?.message ||
-      settledFeedback.feedback?.isError !== currentFeedback?.isError)
+      settledFeedback.feedback?.isError !== currentFeedback?.isError ||
+      settledFeedback.feedback?.isUpToDate !== currentFeedback?.isUpToDate)
   ) {
     setSettledFeedback({ status: update.status, feedback: currentFeedback })
   }
 
   const displayedFeedback = update.status === 'checking' ? settledFeedback.feedback : currentFeedback
-  const displayedFeedbackIcon = displayedFeedback?.isError ? CircleX : TriangleAlert
+  const displayedFeedbackIcon = displayedFeedback?.isError
+    ? CircleX
+    : displayedFeedback?.isUpToDate
+      ? CheckCircle2
+      : TriangleAlert
   const displayedFeedbackColor = displayedFeedback?.isError
     ? 'text-red!'
-    : 'text-amber-600! dark:text-amber-400!'
+    : displayedFeedback?.isUpToDate
+      ? 'text-green!'
+      : 'text-amber-600! dark:text-amber-400!'
 
   const openExternal = async (href: string) => {
     try {

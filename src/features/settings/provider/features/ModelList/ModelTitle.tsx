@@ -27,13 +27,17 @@ const TOOLBAR_ACTION_ICON_SIZE = { blockSize: 32, border: 16 } as const
 
 const styles = createStaticStyles(({ css }) => ({
   actions: css`
+    width: min(360px, 48%);
+    min-width: 0;
+
+    > div:first-child {
+      flex: 1;
+      min-width: 0;
+      width: auto !important;
+    }
+
     @media (max-width: 768px) {
       width: 100%;
-
-      > div:first-child {
-        flex: 1;
-        width: auto !important;
-      }
     }
   `,
   header: css`
@@ -124,10 +128,10 @@ const ModelTitle = memo<ModelTitleProps>(
 
           <Flex className={[styles.actions, 'items-center gap-1']}>
             <SearchBar
-              className='h-8'
+              className='h-8 min-w-0 flex-1'
               placeholder='搜索模型'
               size='middle'
-              style={{ width: 180 }}
+              style={{ flex: 1, minWidth: 0 }}
               styles={{ input: { height: 32 } }}
               value={searchKeyword}
               onInputChange={onKeywordChange}

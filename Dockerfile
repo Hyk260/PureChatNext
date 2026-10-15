@@ -26,6 +26,7 @@ RUN set -e; \
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages ./packages
+COPY patches ./patches
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked set -e; \
     if [ -n "${NPM_REGISTRY:-}" ]; then \

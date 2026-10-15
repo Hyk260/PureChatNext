@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => {
     fetchMessages: vi.fn(),
     fetchTopics: vi.fn(),
     navigation,
+    permissionMode: 'auto' as 'ask' | 'auto' | 'full',
     searchMode: 'off' as 'auto' | 'off',
     chatError: undefined as Error | undefined,
     clearChatError: vi.fn(),
@@ -164,9 +165,15 @@ vi.mock('@/features/chat/store/useChatUiStore', () => ({
   useChatUiStore: (selector: (state: unknown) => unknown) =>
     selector({
       paramsByAgent: {},
+      permissionMode: mocks.permissionMode,
+      permissionModeInitialized: true,
       searchMode: mocks.searchMode,
       wideScreen: false,
       setParams: vi.fn(),
+      setPermissionMode: (mode: 'ask' | 'auto' | 'full') => {
+        mocks.permissionMode = mode
+      },
+      initializePermissionMode: vi.fn(),
       setSearchMode: vi.fn(),
     }),
 }))
@@ -237,6 +244,7 @@ describe('ChatPage message loading state', () => {
     mocks.clearChatError.mockClear()
     mocks.chatError = undefined
     mocks.searchMode = 'off'
+    mocks.permissionMode = 'auto'
     setPendingTopicSend('')
   })
 
@@ -289,6 +297,7 @@ describe('ChatPage message loading state', () => {
 
   it('persists desktop permission changes for an existing topic', async () => {
     const existingTopic = { ...createdTopic, id: 'topic-existing', permissionMode: 'full' as const }
+    mocks.permissionMode = 'full'
     mocks.desktop = true
     mocks.navigation.query = 'agent=agt_inbox&topic=topic-existing'
     mocks.fetchTopics.mockResolvedValue([existingTopic])

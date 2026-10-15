@@ -6,7 +6,7 @@ import path from 'node:path'
 import type { DesktopLocalToolRequest, DesktopLocalToolResult } from '@/types/desktop'
 
 import { resolveSafePath } from '../security/PathPolicy'
-import { requiresNativeApproval } from '../security/PermissionPolicy'
+import { requiresApproval } from '../security/PermissionPolicy'
 import { readTextFileWithAutoEncoding } from '../utils/file'
 import type { CommandService } from './CommandService'
 import type { DesktopConfigService } from './DesktopConfigService'
@@ -83,14 +83,14 @@ export class LocalToolService {
           break
         }
         case 'writeFile': {
-          await this.assertHighRiskApproval(request, '文件写入')
+          this.assertHighRiskApproval(request, '文件写入')
           const filePath = await resolveSafePath(request, config, String(args.path ?? ''))
           await fs.writeFile(filePath, String(args.content ?? ''), 'utf8')
           output = result(`已写入 ${filePath}`, true, { path: filePath })
           break
         }
         case 'editFile': {
-          await this.assertHighRiskApproval(request, '文件编辑')
+          this.assertHighRiskApproval(request, '文件编辑')
           const filePath = await resolveSafePath(request, config, String(args.path ?? ''))
           const content = await fs.readFile(filePath, 'utf8')
           const search = String(args.search ?? '')
@@ -100,7 +100,7 @@ export class LocalToolService {
           break
         }
         case 'moveFile': {
-          await this.assertHighRiskApproval(request, '文件移动')
+          this.assertHighRiskApproval(request, '文件移动')
           const source = await resolveSafePath(request, config, String(args.source ?? ''))
           const destination = await resolveSafePath(request, config, String(args.destination ?? ''))
           await fs.rename(source, destination)
@@ -112,7 +112,7 @@ export class LocalToolService {
             request.topicId,
             request.mode,
             String(args.command ?? ''),
-            request.toolCallId,
+            request.approved === true,
             config
           )
           break
@@ -132,11 +132,8 @@ export class LocalToolService {
     }
   }
 
-  private async assertHighRiskApproval(request: DesktopLocalToolRequest, description: string) {
-    if (!requiresNativeApproval(request.mode, 'write')) return
-    if (!(await this.permissions.requestToolApproval(request.topicId, request.toolCallId, description))) {
-      throw new Error(`${description}需要审批`)
-    }
+  private assertHighRiskApproval(request: DesktopLocalToolRequest, description: string) {
+    if (requiresApproval(request.mode, 'write') && !request.approved) throw new Error(`${description}需要审批`)
   }
 
   dispose() {

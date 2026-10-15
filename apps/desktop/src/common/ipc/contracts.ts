@@ -21,6 +21,7 @@ import type { DesktopUpdateLogs } from '@/types/desktopUpdater'
 export interface DesktopIpcContractMap {
   'updater.getState': { args: []; result: DesktopUpdateState }
   'updater.getLogs': { args: []; result: DesktopUpdateLogs }
+  'updater.clearLogs': { args: []; result: void }
   'updater.check': { args: []; result: DesktopUpdateState }
   'updater.clearCache': { args: []; result: DesktopUpdateState }
   'updater.setPreferences': { args: [preferences: DesktopUpdatePreferences]; result: DesktopUpdateState }
@@ -71,6 +72,7 @@ export const DESKTOP_IPC_CHANNELS = {
   updater: {
     getState: 'updater.getState',
     getLogs: 'updater.getLogs',
+    clearLogs: 'updater.clearLogs',
     check: 'updater.check',
     clearCache: 'updater.clearCache',
     setPreferences: 'updater.setPreferences',

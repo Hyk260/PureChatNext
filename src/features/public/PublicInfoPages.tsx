@@ -4,6 +4,7 @@ import { Button, Flex, Text } from '@pure/ui'
 import type { ReactNode } from 'react'
 
 import { SITE_DISCUSSIONS_URL, SITE_ISSUES_URL, SITE_REPOSITORY_URL } from '@/const/site'
+import InsetContentFrame from '@/layout/InsetContentFrame'
 import { useRouter } from 'next/navigation'
 
 const UPDATED_AT = '2026 年 8 月 19 日'
@@ -51,8 +52,8 @@ const BackLink = () => {
 }
 
 const PublicInfoPage = ({ description, sections, title }: PublicInfoPageProps) => (
-  <div className='h-full overflow-y-auto bg-background text-foreground'>
-    <main className='mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-12 md:px-10 md:py-16'>
+  <div className='h-full min-h-0 min-w-0 w-full flex-1 overflow-y-auto bg-background text-foreground'>
+    <main className='flex w-full flex-col gap-10 px-6 py-12 md:px-10 md:py-16'>
       <header className='flex flex-col gap-4 border-b border-border pb-8'>
         <BackLink />
         <h1 className='m-0 text-3xl font-bold tracking-tight md:text-4xl'>{title}</h1>
@@ -78,6 +79,10 @@ const PublicInfoPage = ({ description, sections, title }: PublicInfoPageProps) =
       </footer>
     </main>
   </div>
+)
+
+const InsetPublicInfoFrame = ({ children }: { children: ReactNode }) => (
+  <InsetContentFrame sidebarCollapsed>{children}</InsetContentFrame>
 )
 
 const PrivacyContent = () => (
@@ -257,6 +262,20 @@ const HelpContent = () => (
   />
 )
 
-export const PrivacyPage = PrivacyContent
-export const TermsPage = TermsContent
-export const HelpPage = HelpContent
+export const PrivacyPage = () => (
+  <InsetPublicInfoFrame>
+    <PrivacyContent />
+  </InsetPublicInfoFrame>
+)
+
+export const TermsPage = () => (
+  <InsetPublicInfoFrame>
+    <TermsContent />
+  </InsetPublicInfoFrame>
+)
+
+export const HelpPage = () => (
+  <InsetPublicInfoFrame>
+    <HelpContent />
+  </InsetPublicInfoFrame>
+)

@@ -2,8 +2,21 @@
 
 import { Form, Pagination, Select, Table } from 'antd'
 import type { TableProps } from 'antd'
-import { ActionIcon, Block, Button, Checkbox, confirmModal, Flex, Input, InputPassword, Modal, SearchBar, Tag, Text } from '@pure/ui'
-import { SHANGHAI_TIMEZONE, USER_ROLE } from '@pure/const'
+import {
+  ActionIcon,
+  Block,
+  Button,
+  Checkbox,
+  confirmModal,
+  Flex,
+  Input,
+  InputPassword,
+  Modal,
+  SearchBar,
+  Tag,
+  Text,
+} from '@pure/ui'
+import { MONTHLY_FREE_CREDITS, SHANGHAI_TIMEZONE, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { EMPTY_PLACEHOLDER, formatCompactDateTime, formatNumber } from '@pure/utils/client'
 import { ArrowLeft } from 'lucide-react'
@@ -18,6 +31,7 @@ import {
   createAdminUser,
   deleteAdminUser,
   fetchAdminUsers,
+  resetAdminUserCredits,
   updateAdminUser,
 } from './users'
 import type { AdminUser, AdminUserSortBy, CreateAdminUserInput } from './users'
@@ -94,6 +108,7 @@ export default function AdminUsersPage() {
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [resettingCredits, setResettingCredits] = useState(false)
   const [formMode, setFormMode] = useState<UserFormMode | null>(null)
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
   const [sortBy, setSortBy] = useState<AdminUserSortBy>()
@@ -161,7 +176,7 @@ export default function AdminUsersPage() {
         return
       } else if (editingUser) {
         await updateAdminUser({
-          banReason: values.banned ? (values.banReason?.trim() || null) : null,
+          banReason: values.banned ? values.banReason?.trim() || null : null,
           banned: values.banned,
           fullName: values.fullName?.trim() || null,
           id: editingUser.id,
@@ -178,6 +193,33 @@ export default function AdminUsersPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleResetUserCredits = () => {
+    if (!editingUser || resettingCredits) return
+
+    const target = editingUser
+    const grant = target.credits?.grant ?? MONTHLY_FREE_CREDITS
+    confirmModal({
+      cancelText: '取消',
+      content: `将清零 ${target.email ?? target.username ?? target.id} 本月已用额度，恢复为 ${formatNumber(grant)}。此操作立即生效。`,
+      okText: '重置额度',
+      title: '重置用户本月额度？',
+      onOk: async () => {
+        setResettingCredits(true)
+        try {
+          const credits = await resetAdminUserCredits(target.id)
+          setItems((current) => current.map((user) => (user.id === target.id ? { ...user, credits } : user)))
+          setEditingUser((current) => (current?.id === target.id ? { ...current, credits } : current))
+          message.success('已重置用户本月额度')
+        } catch (error) {
+          message.error(error instanceof Error ? error.message : '重置用户额度失败')
+          throw error
+        } finally {
+          setResettingCredits(false)
+        }
+      },
+    })
   }
 
   const handleDelete = (user: AdminUser) => {
@@ -204,6 +246,7 @@ export default function AdminUsersPage() {
     {
       dataIndex: 'email',
       ellipsis: true,
+      fixed: 'left',
       render: (value: string | null) => value || EMPTY_PLACEHOLDER,
       title: '邮箱',
       width: 180,
@@ -233,6 +276,7 @@ export default function AdminUsersPage() {
     {
       dataIndex: 'fullName',
       ellipsis: true,
+      fixed: 'left',
       render: (value: string | null) => value || EMPTY_PLACEHOLDER,
       title: '全名',
       width: 120,
@@ -270,6 +314,7 @@ export default function AdminUsersPage() {
     },
     {
       dataIndex: 'lastActiveAt',
+      fixed: 'right',
       key: 'lastActiveAt',
       render: formatUserDateTime,
       sortOrder: sortBy === 'lastActiveAt' ? ANTD_SORT_ORDER[sortOrder] : null,
@@ -279,6 +324,7 @@ export default function AdminUsersPage() {
     },
     {
       key: 'actions',
+      fixed: 'right',
       render: (_value: unknown, user) => {
         const isSelf = user.id === actorId
         return (
@@ -450,6 +496,20 @@ export default function AdminUsersPage() {
                   <Input placeholder='可选' />
                 </Form.Item>
               ) : null}
+              <Flex className='flex-col gap-2 border-t border-border pt-4'>
+                <Text className='font-medium'>本月额度</Text>
+                <Flex className='flex-between gap-3'>
+                  <Text type='secondary'>{formatUserCredits(editingUser?.credits)}</Text>
+                  <Button
+                    disabled={saving || resettingCredits}
+                    htmlType='button'
+                    loading={resettingCredits}
+                    onClick={handleResetUserCredits}
+                  >
+                    重置额度
+                  </Button>
+                </Flex>
+              </Flex>
             </>
           ) : null}
         </Form>

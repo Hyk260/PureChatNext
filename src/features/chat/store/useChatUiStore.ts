@@ -11,6 +11,8 @@ import {
 } from '@/features/chat/WorkPanel/tabs'
 import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
 import type { ChatLlmParams, ChatSearchMode, TopicGroupMode, TopicPageSize, TopicSortBy } from '@/features/chat/types'
+import { CHAT_PERMISSION_MODES, DEFAULT_CHAT_PERMISSION_MODE } from '@pure/types'
+import type { ChatPermissionMode } from '@pure/types'
 
 type ChatUiState = {
   leftCollapsed: boolean
@@ -21,6 +23,9 @@ type ChatUiState = {
   paramsByAgent: Record<string, ChatLlmParams>
   /** Shared across all agents */
   searchMode: ChatSearchMode
+  /** Shared permission mode across all conversations */
+  permissionMode: ChatPermissionMode
+  permissionModeInitialized: boolean
   topicGroupMode: TopicGroupMode
   topicPageSize: TopicPageSize
   topicSortBy: TopicSortBy
@@ -38,6 +43,8 @@ type ChatUiState = {
   getParams: (agentId: string) => ChatLlmParams
   setParams: (agentId: string, patch: Partial<ChatLlmParams>) => void
   setSearchMode: (mode: ChatSearchMode) => void
+  setPermissionMode: (mode: ChatPermissionMode) => void
+  initializePermissionMode: (mode: ChatPermissionMode) => void
   setTopicGroupMode: (mode: TopicGroupMode) => void
   setTopicPageSize: (pageSize: TopicPageSize) => void
   setTopicSortBy: (sortBy: TopicSortBy) => void
@@ -57,6 +64,8 @@ export const useChatUiStore = create<ChatUiState>()(
       wideScreen: false,
       paramsByAgent: {},
       searchMode: 'off',
+      permissionMode: DEFAULT_CHAT_PERMISSION_MODE,
+      permissionModeInitialized: false,
       topicGroupMode: 'byTime',
       topicPageSize: 40,
       topicSortBy: 'updatedAt',
@@ -131,13 +140,18 @@ export const useChatUiStore = create<ChatUiState>()(
         }))
       },
       setSearchMode: (searchMode) => set({ searchMode }),
+      setPermissionMode: (permissionMode) => set({ permissionMode, permissionModeInitialized: true }),
+      initializePermissionMode: (permissionMode) =>
+        set((state) =>
+          state.permissionModeInitialized ? state : { permissionMode, permissionModeInitialized: true }
+        ),
       setTopicGroupMode: (topicGroupMode) => set({ topicGroupMode }),
       setTopicPageSize: (topicPageSize) => set({ topicPageSize }),
       setTopicSortBy: (topicSortBy) => set({ topicSortBy }),
     }),
     {
       name: 'purechat:chat:v2:ui',
-      version: 7,
+      version: 8,
       migrate: (persisted, version) => {
         let state = (persisted ?? {}) as Record<string, unknown>
         if (version < 4) {
@@ -164,6 +178,10 @@ export const useChatUiStore = create<ChatUiState>()(
             : (workPanelOpenTabs[0] ?? DEFAULT_WORK_PANEL_ACTIVE_TAB)
         return {
           ...rest,
+          permissionMode: CHAT_PERMISSION_MODES.includes(rest.permissionMode as ChatPermissionMode)
+            ? (rest.permissionMode as ChatPermissionMode)
+            : DEFAULT_CHAT_PERMISSION_MODE,
+          permissionModeInitialized: rest.permissionModeInitialized === true,
           searchMode: rest.searchMode === 'auto' ? 'auto' : 'off',
           workPanelActiveTab,
           workPanelOpenTabs,

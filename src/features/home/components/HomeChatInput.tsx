@@ -16,7 +16,6 @@ import type { MenuProps } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { FileText, Paperclip, Plus, X } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { DEFAULT_CHAT_PERMISSION_MODE } from '@pure/types'
 import type { ChatPermissionMode } from '@pure/types'
 
 import { useApp } from '@/components/AntdStaticMethods'
@@ -33,6 +32,7 @@ import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
 import ModelLabel from '@/features/chat/ModelLabel'
 import PermissionModeSelector from '@/features/chat/PermissionModeSelector'
 import SendButton from '@/features/chat/SendArea/SendButton'
+import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
 import HomeAgentSelect from '@/features/home/components/HomeAgentSelect'
 import HomeProjectBar from '@/features/home/components/HomeProjectBar'
@@ -65,21 +65,30 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   shell: css`
     position: relative;
+    z-index: 1;
     overflow: visible;
-    border-radius: 20px;
+    background: ${cssVar.colorBgContainer};
+    border-radius: 18px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
   `,
-  // 选择项目胶囊叠在输入框上沿，贴近 Codex 首页布局
-  projectDock: css`
+  projectContext: css`
     position: absolute;
-    z-index: 2;
+    z-index: 0;
     inset-block-start: 0;
-    inset-inline-start: 14px;
-    transform: translateY(-50%);
+    inset-inline: 2%;
+    display: flex;
+    align-items: center;
+    height: 38px;
+    padding-inline: 10px;
+    border-radius: 18px 18px 0 0;
+    background: ${cssVar.colorFillSecondary};
   `,
   composerWrap: css`
     position: relative;
-    padding-block-start: 14px;
+  `,
+  desktopComposerWrap: css`
+    position: relative;
+    padding-block-start: 36px;
   `,
   mascot: css`
     pointer-events: none;
@@ -178,7 +187,6 @@ const HomeChatInput = memo(() => {
   const [input, setInput] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [plusOpen, setPlusOpen] = useState(false)
-  const [permissionMode, setPermissionMode] = useState<ChatPermissionMode>(DEFAULT_CHAT_PERMISSION_MODE)
   const [selectedProject, setSelectedProject] = useState<DesktopProject | null>(null)
   const [sending, setSending] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -188,18 +196,23 @@ const HomeChatInput = memo(() => {
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
   const activeAgent = useHomeStore((s) => s.activeAgent)
   const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
+  const permissionMode = useChatUiStore((s) => s.permissionMode)
+  const setPermissionMode = useChatUiStore((s) => s.setPermissionMode)
 
   const agents = useAgentsStore((s) => s.agents)
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
   const canSend = Boolean(input.trim() || files.length > 0) && !sending
 
-  const handlePermissionModeChange = useCallback(async (mode: ChatPermissionMode) => {
-    if (mode === 'full') {
-      const result = await getDesktopApi()?.requestFullAccess?.('draft')
-      if (result && !result.granted) throw new Error('完全访问权限未确认')
-    }
-    setPermissionMode(mode)
-  }, [])
+  const handlePermissionModeChange = useCallback(
+    async (mode: ChatPermissionMode) => {
+      if (mode === 'full') {
+        const result = await getDesktopApi()?.requestFullAccess?.('draft')
+        if (result && !result.granted) throw new Error('完全访问权限未确认')
+      }
+      setPermissionMode(mode)
+    },
+    [setPermissionMode]
+  )
 
   const handleProjectChange = useCallback(
     async (project: DesktopProject | null) => {
@@ -306,9 +319,9 @@ const HomeChatInput = memo(() => {
   }
 
   return (
-    <div className={styles.composerWrap}>
+    <div className={isDesktop ? styles.desktopComposerWrap : styles.composerWrap}>
       {isDesktop ? (
-        <div className={styles.projectDock}>
+        <div className={styles.projectContext}>
           <HomeProjectBar
             disabled={sending}
             value={selectedProject}
@@ -316,7 +329,6 @@ const HomeChatInput = memo(() => {
           />
         </div>
       ) : null}
-
       <Block className={styles.shell} padding={12} variant='outlined'>
         {/* <img alt='' aria-hidden className={styles.mascot} src={mechaCatSrc} /> */}
         <input
@@ -387,7 +399,6 @@ const HomeChatInput = memo(() => {
             {isDesktop ? (
               <PermissionModeSelector
                 disabled={sending}
-                topicId='draft'
                 value={permissionMode}
                 onChange={handlePermissionModeChange}
               />

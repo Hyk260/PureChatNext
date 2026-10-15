@@ -138,6 +138,29 @@ const ChatView = memo<ChatViewProps>(
       })
     }, [desktopApi, permissionMode, topicId])
 
+    const requestBody = useMemo(
+      () => ({
+        ...(topicId ? { topicId } : {}),
+        ...(desktopApi ? { clientCapabilities: { desktop: true } } : {}),
+        model: selectedModel,
+        ...(selectedModelAbilities ? { modelAbilities: selectedModelAbilities } : {}),
+        ...(permissionMode ? { permissionMode } : {}),
+        provider: selectedProvider,
+        searchMode,
+        ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
+      }),
+      [
+        activeAgent,
+        desktopApi,
+        permissionMode,
+        searchMode,
+        selectedModel,
+        selectedModelAbilities,
+        selectedProvider,
+        topicId,
+      ]
+    )
+
     const {
       addToolApprovalResponse,
       addToolOutput,
@@ -189,7 +212,12 @@ const ChatView = memo<ChatViewProps>(
               output.success ? undefined : output.content
             )
           }
-          addToolOutput({ output, tool: toolCall.toolName as never, toolCallId: toolCall.toolCallId })
+          addToolOutput({
+            options: { body: requestBody },
+            output,
+            tool: toolCall.toolName as never,
+            toolCallId: toolCall.toolCallId,
+          })
         })
       },
     })
@@ -314,29 +342,6 @@ const ChatView = memo<ChatViewProps>(
       }
     }, [onCacheMessages, topicId])
 
-    const requestBody = useMemo(
-      () => ({
-        ...(topicId ? { topicId } : {}),
-        ...(desktopApi ? { clientCapabilities: { desktop: true } } : {}),
-        model: selectedModel,
-        ...(selectedModelAbilities ? { modelAbilities: selectedModelAbilities } : {}),
-        ...(permissionMode ? { permissionMode } : {}),
-        provider: selectedProvider,
-        searchMode,
-        ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
-      }),
-      [
-        activeAgent,
-        desktopApi,
-        permissionMode,
-        searchMode,
-        selectedModel,
-        selectedModelAbilities,
-        selectedProvider,
-        topicId,
-      ]
-    )
-
     const sendWithBody = useCallback(
       async (text: string, files: File[] = []) => {
         clearError()
@@ -443,6 +448,7 @@ const ChatView = memo<ChatViewProps>(
         if (!approved) {
           updateToolApproval(topicId, toolCallId, 'denied')
           addToolOutput({
+            options: { body: requestBody },
             output: { content: '用户拒绝了该操作', success: false },
             tool: toolName as never,
             toolCallId,
@@ -464,18 +470,18 @@ const ChatView = memo<ChatViewProps>(
             output.success ? 'completed' : 'failed',
             output.success ? undefined : output.content
           )
-          addToolOutput({ output, tool: toolName as never, toolCallId })
+          addToolOutput({ options: { body: requestBody }, output, tool: toolName as never, toolCallId })
         })
       },
-      [addToolOutput, desktopApi, permissionMode, topicId]
+      [addToolOutput, desktopApi, permissionMode, requestBody, topicId]
     )
 
     const handleServerToolApproval = useCallback(
       (approvalId: string, toolCallId: string, approved: boolean) => {
         if (topicId) updateToolApproval(topicId, toolCallId, approved ? 'approved' : 'denied')
-        addToolApprovalResponse({ approved, id: approvalId })
+        addToolApprovalResponse({ approved, id: approvalId, options: { body: requestBody } })
       },
-      [addToolApprovalResponse, topicId]
+      [addToolApprovalResponse, requestBody, topicId]
     )
 
     const agents = useAgentsStore((s) => s.agents)

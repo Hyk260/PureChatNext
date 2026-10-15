@@ -7,6 +7,7 @@ export class UpdateController {
   register(ipc: IpcRegistry) {
     ipc.register('updater.getState', () => this.service.getState())
     ipc.register('updater.getLogs', () => this.service.getLogs())
+    ipc.register('updater.clearLogs', () => this.service.clearLogs())
     ipc.register('updater.check', () => this.service.check())
     ipc.register('updater.clearCache', () => this.service.clearCache())
     ipc.register('updater.setPreferences', (preferences) => this.service.setPreferences(preferences))

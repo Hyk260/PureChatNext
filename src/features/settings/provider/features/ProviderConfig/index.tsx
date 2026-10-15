@@ -294,9 +294,9 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
             </div>
           </div>
 
-          <Text className={`${styles.hint} mt-2`}>
+          {/* <Text className={`${styles.hint} mt-2`}>
             {AES_GCM_HINT}
-          </Text>
+          </Text> */}
         </>
       )}
     </Flex>

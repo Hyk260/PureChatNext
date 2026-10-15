@@ -95,6 +95,13 @@ export async function updateAdminUser(input: UpdateAdminUserInput) {
   return payload.user
 }
 
+export async function resetAdminUserCredits(id: string) {
+  const response = await apiFetch('/api/admin/users/credits/reset', jsonInit({ id }, { method: 'POST' }))
+  if (!response.ok) throw new Error(await readError(response, '重置用户额度失败'))
+  const payload = (await response.json()) as { credits: AdminUserCredits }
+  return payload.credits
+}
+
 export async function deleteAdminUser(id: string) {
   const response = await apiFetch('/api/admin/users', jsonInit({ id }, { method: 'DELETE' }))
   if (!response.ok) throw new Error(await readError(response, '删除用户失败'))

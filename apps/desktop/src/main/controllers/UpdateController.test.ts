@@ -17,6 +17,7 @@ describe('update IPC boundary', () => {
     const service = {
       getState: vi.fn(),
       getLogs: vi.fn().mockResolvedValue({ text: 'desktop:update log', truncated: false }),
+      clearLogs: vi.fn(),
       check: vi.fn(),
       clearCache: vi.fn(),
       install: vi.fn(),
@@ -25,13 +26,14 @@ describe('update IPC boundary', () => {
     const registry = new IpcRegistry(() => contents as unknown as Electron.WebContents, 'purechat://renderer')
     new UpdateController(service as unknown as UpdateService).register(registry)
     const handlers = new Map<string, Handler>(ipc.handle.mock.calls.map(([name, handler]) => [name, handler]))
-    for (const channel of ['updater.getLogs', 'updater.check', 'updater.clearCache', 'updater.install', 'updater.setPreferences']) {
+    for (const channel of ['updater.getLogs', 'updater.clearLogs', 'updater.check', 'updater.clearCache', 'updater.install', 'updater.setPreferences']) {
       const handler = handlers.get(channel)!
       const rejected = await handler({ sender: contents, senderFrame: { url: 'https://example.com' } })
       expect(rejected).toMatchObject({ __pureChatIpcError: true })
     }
     expect(service.check).not.toHaveBeenCalled()
     expect(service.getLogs).not.toHaveBeenCalled()
+    expect(service.clearLogs).not.toHaveBeenCalled()
     expect(service.clearCache).not.toHaveBeenCalled()
     expect(service.install).not.toHaveBeenCalled()
     expect(service.setPreferences).not.toHaveBeenCalled()
@@ -43,7 +45,9 @@ describe('update IPC boundary', () => {
       text: 'desktop:update log', truncated: false,
     })
     expect(service.getLogs).toHaveBeenCalledOnce()
+    await handlers.get('updater.clearLogs')!({ sender: contents, senderFrame: frame })
+    expect(service.clearLogs).toHaveBeenCalledOnce()
     registry.unregisterAll()
-    expect(ipc.removeHandler).toHaveBeenCalledTimes(6)
+    expect(ipc.removeHandler).toHaveBeenCalledTimes(7)
   })
 })

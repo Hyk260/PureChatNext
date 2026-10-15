@@ -20,7 +20,7 @@ const styles = createStaticStyles(({ css }) => ({
 
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     justify-content: center;
 
@@ -65,16 +65,15 @@ const styles = createStaticStyles(({ css }) => ({
     gap: 6px;
     align-items: center;
 
-    max-width: 240px;
+    max-width: min(280px, 100%);
     height: 28px;
-    padding-inline: 10px;
-    border: 1px solid color-mix(in srgb, ${cssVar.colorBorder} 80%, transparent);
-    border-radius: 999px;
+    padding-inline: 4px;
+    border: none;
+    border-radius: 10px;
 
     color: ${cssVar.colorTextSecondary};
-    font-size: 12px;
-    background: ${cssVar.colorBgContainer};
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    font-size: 14px;
+    background: transparent;
 
     &:hover:not(:disabled) {
       color: ${cssVar.colorText} !important;
@@ -286,12 +285,12 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
           aria-label={triggerAriaLabel}
           className={styles.trigger}
           disabled={disabled}
-          icon={<Icon icon={Folder} size={13} />}
+          icon={<Icon icon={Folder} size={16} />}
           size='small'
           title={value?.rootPath}
           type='text'
         >
-          <Text className='text-[12px]' ellipsis>
+          <Text className='text-[14px]' ellipsis>
             {triggerLabel}
           </Text>
         </Button>

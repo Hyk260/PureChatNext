@@ -19,7 +19,7 @@ import {
 import { createLogger, redactLogText } from '../logger'
 import type { DesktopConfigService } from './DesktopConfigService'
 import { checkUpdateInstallationSupport } from './updateInstallationSupport'
-import { readUpdateLogs } from './updateLogs'
+import { clearUpdateLogs, readUpdateLogs } from './updateLogs'
 
 const INITIAL_CHECK_DELAY = 5_000
 const CHECK_INTERVAL = 4 * 60 * 60 * 1_000
@@ -221,6 +221,10 @@ export class UpdateService {
 
   getLogs() {
     return readUpdateLogs()
+  }
+
+  clearLogs() {
+    return clearUpdateLogs()
   }
 
   async check(manual = true): Promise<DesktopUpdateState> {

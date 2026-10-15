@@ -114,6 +114,7 @@ export interface DesktopApi {
   updater: {
     getState: () => Promise<DesktopUpdateState>
     getLogs: () => Promise<DesktopUpdateLogs>
+    clearLogs: () => Promise<void>
     check: () => Promise<DesktopUpdateState>
     clearCache: () => Promise<DesktopUpdateState>
     setPreferences: (preferences: DesktopUpdatePreferences) => Promise<DesktopUpdateState>

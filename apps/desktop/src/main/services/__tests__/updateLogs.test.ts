@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('electron', () => ({ app: {} }))
 
-import { readUpdateLogs } from '../updateLogs'
+import { clearUpdateLogs, readUpdateLogs } from '../updateLogs'
 
 let root: string
 const header = '2026-10-12 16:00:00'
@@ -55,5 +55,34 @@ describe('update log reader', () => {
 
   it('returns an empty result for a missing log directory', async () => {
     expect(await readUpdateLogs(path.join(root, 'missing'))).toEqual({ text: '', truncated: false })
+  })
+
+  it('clears updater records from current and rotated logs while preserving other categories', async () => {
+    const content = [
+      `${header} [info] (desktop:startup) keep this`,
+      '  keep this continuation',
+      `${header} [error] (desktop:update) remove this`,
+      '  remove this stack',
+      `${header} [info] (desktop:window) keep this too`,
+      '  keep this continuation too',
+    ].join('\n')
+    await writeFile(path.join(root, '2026-10-12.old.log'), content)
+    await writeFile(path.join(root, '2026-10-12.log'), content)
+
+    await clearUpdateLogs(root)
+
+    const expected = [
+      `${header} [info] (desktop:startup) keep this`,
+      '  keep this continuation',
+      `${header} [info] (desktop:window) keep this too`,
+      '  keep this continuation too',
+    ].join('\n')
+    expect(await readFile(path.join(root, '2026-10-12.old.log'), 'utf8')).toBe(expected)
+    expect(await readFile(path.join(root, '2026-10-12.log'), 'utf8')).toBe(expected)
+    expect(await readUpdateLogs(root)).toEqual({ text: '', truncated: false })
+  })
+
+  it('does not fail when the log directory is missing', async () => {
+    await expect(clearUpdateLogs(path.join(root, 'missing'))).resolves.toBeUndefined()
   })
 })

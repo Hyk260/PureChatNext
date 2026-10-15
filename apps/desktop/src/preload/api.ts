@@ -9,6 +9,7 @@ export const createDesktopApi = (): DesktopApi => ({
   updater: {
     getState: () => invoke('updater.getState'),
     getLogs: () => invoke('updater.getLogs'),
+    clearLogs: () => invoke('updater.clearLogs'),
     check: () => invoke('updater.check'),
     clearCache: () => invoke('updater.clearCache'),
     setPreferences: (preferences) => invoke('updater.setPreferences', preferences),

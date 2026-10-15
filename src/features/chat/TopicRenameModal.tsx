@@ -60,7 +60,7 @@ const TopicRenameModal = memo<TopicRenameModalProps>(
       onCancel={onCancel}
       onOk={onOk}
     >
-      <Flex className='flex-col gap-3 py-2'>
+      <Flex className='flex-col gap-3'>
         <Text type='secondary'>保持简短且易于识别。</Text>
         <Input
           autoFocus

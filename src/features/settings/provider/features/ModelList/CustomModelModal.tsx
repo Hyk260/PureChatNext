@@ -1,6 +1,6 @@
 'use client'
 
-import { Checkbox, Flex, Input, Modal, Text } from '@pure/ui'
+import { Flex, Input, Modal, Select, Text } from '@pure/ui'
 import { Slider } from 'antd'
 import type { ModelAbilities } from '@pure/model-bank'
 import { memo, useEffect, useMemo, useState } from 'react'
@@ -49,42 +49,13 @@ const ABILITY_OPTIONS: Array<{ description: string; key: keyof ModelAbilities; l
   // },
 ]
 
-interface AbilityOptionProps {
-  checked: boolean
-  description: string
-  label: string
-  onToggle: (next: boolean) => void
-}
+type AbilityKey = (typeof ABILITY_OPTIONS)[number]['key']
 
-const AbilityOption = memo<AbilityOptionProps>(({ checked, description, label, onToggle }) => {
-  const toggle = () => onToggle(!checked)
-
-  return (
-    <Flex
-      aria-checked={checked}
-      className='w-full cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-(--ant-color-fill-quaternary)'
-      role='checkbox'
-      tabIndex={0}
-      onClick={toggle}
-      onKeyDown={(event) => {
-        if (event.key !== 'Enter' && event.key !== ' ') return
-        event.preventDefault()
-        toggle()
-      }}
-    >
-      {/* Custom Checkbox is not a native input, so label association cannot toggle it. */}
-      <span onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
-        <Checkbox checked={checked} onChange={onToggle} />
-      </span>
-      <Flex className='-mt-0.5 min-w-0 flex-1 flex-col gap-1'>
-        <span className='text-sm font-medium'>{label}</span>
-        <Text type='secondary'>{description}</Text>
-      </Flex>
-    </Flex>
-  )
-})
-
-AbilityOption.displayName = 'AbilityOption'
+const ABILITY_SELECT_OPTIONS = ABILITY_OPTIONS.map(({ description, key, label }) => ({
+  label,
+  value: key,
+  description,
+}))
 
 export interface CustomModelFormValues {
   abilities: ModelAbilities
@@ -120,9 +91,10 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
     setAbilities(model?.abilities ?? {})
   }, [model, open])
 
-  const handleAbilityChange = (key: keyof ModelAbilities, checked: boolean) => {
-    setAbilities((current) => ({ ...current, [key]: checked }))
-  }
+  const selectedAbilityKeys = useMemo(
+    () => ABILITY_OPTIONS.filter(({ key }) => Boolean(abilities[key])).map(({ key }) => key),
+    [abilities]
+  )
 
   const handleSubmit = () => {
     if (!normalizedModelId || duplicate) return
@@ -173,11 +145,11 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
       onCancel={onCancel}
       onOk={handleSubmit}
     >
-      <div className='grid gap-x-4 gap-y-4 py-2 md:grid-cols-[160px_minmax(0,1fr)] md:items-start'>
-        <div className='pt-2 text-right text-sm font-medium'>
-          <span className='mr-1 text-red-500'>*</span>模型 ID
-        </div>
-        <Flex className='flex-col gap-1'>
+      <Flex className='w-full flex-col gap-5 py-2'>
+        <Flex className='w-full flex-col gap-1.5'>
+          <Text className='text-sm font-medium'>
+            <span className='mr-1 text-red-500'>*</span>模型 ID
+          </Text>
           <Input
             autoFocus={!model}
             disabled={Boolean(model)}
@@ -190,8 +162,8 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
           {duplicate ? <Text type='danger'>该模型 ID 已存在</Text> : null}
         </Flex>
 
-        <div className='pt-2 text-right text-sm font-medium'>模型展示名称</div>
-        <Flex className='flex-col gap-1'>
+        <Flex className='w-full flex-col gap-1.5'>
+          <Text className='text-sm font-medium'>模型展示名称</Text>
           <Input
             placeholder='请输入模型展示名称，例如 DeepSeek Chat、DeepSeek Reasoner 等'
             value={displayName}
@@ -200,8 +172,8 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
           <Text type='secondary'>留空时使用模型 ID 作为展示名称。</Text>
         </Flex>
 
-        <div className='pt-2 text-right text-sm font-medium'>最大上下文窗口</div>
-        <Flex className='min-w-0 flex-col gap-2'>
+        <Flex className='w-full flex-col gap-1.5'>
+          <Text className='text-sm font-medium'>最大上下文窗口</Text>
           <Flex className='items-start gap-4'>
             <Slider
               className='min-w-0 flex-1 pb-5'
@@ -230,19 +202,36 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
           <Text type='secondary'>设置模型支持的最大 Token 数，设为 0 表示不指定。</Text>
         </Flex>
 
-        <div className='pt-2 text-right text-sm font-medium'>模型能力</div>
-        <Flex className='w-full flex-col gap-1'>
-          {ABILITY_OPTIONS.map(({ description, key, label }) => (
-            <AbilityOption
-              checked={Boolean(abilities[key])}
-              description={description}
-              key={key}
-              label={label}
-              onToggle={(next) => handleAbilityChange(key, next)}
-            />
-          ))}
+        <Flex className='w-full flex-col gap-1.5'>
+          <Text className='text-sm font-medium'>模型能力</Text>
+          <Select
+            className='w-full'
+            mode='multiple'
+            options={ABILITY_SELECT_OPTIONS}
+            placeholder='请选择模型能力'
+            value={selectedAbilityKeys}
+            optionRender={(option) => {
+              const ability = ABILITY_SELECT_OPTIONS.find(({ value }) => value === option.value)
+              return (
+                <Flex className='flex-col gap-1 py-1'>
+                  <span>{option.label}</span>
+                  {ability ? <Text type='secondary'>{ability.description}</Text> : null}
+                </Flex>
+              )
+            }}
+            onChange={(value) => {
+              const nextKeys = Array.isArray(value) ? value : value ? [value] : []
+              const selectedKeys = new Set(nextKeys)
+              setAbilities((current) => {
+                const nextAbilities = { ...current }
+                for (const { key } of ABILITY_OPTIONS) nextAbilities[key] = selectedKeys.has(key)
+                return nextAbilities
+              })
+            }}
+          />
+          <Text type='secondary'>可多选，用于标记模型支持的能力。</Text>
         </Flex>
-      </div>
+      </Flex>
     </Modal>
   )
 })

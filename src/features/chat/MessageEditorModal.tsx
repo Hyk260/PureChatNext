@@ -40,9 +40,7 @@ const MessageEditorModal = memo<MessageEditorModalProps>(({ onCancel, onSubmit, 
   return (
     <Modal
       cancelText='取消'
-      closable={false}
       confirmLoading={confirmLoading}
-      destroyOnHidden
       okText='保存'
       open={open}
       title={null}

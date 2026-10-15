@@ -349,7 +349,6 @@ const ChatInput = memo<ChatInputProps>((props) => {
           {permissionMode && onPermissionModeChange ? (
             <PermissionModeSelector
               disabled={isBusy}
-              topicId={topicId ?? 'draft'}
               value={permissionMode}
               onChange={onPermissionModeChange}
             />

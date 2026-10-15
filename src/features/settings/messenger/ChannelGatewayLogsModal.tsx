@@ -106,9 +106,9 @@ export function ChannelGatewayLogsModal(props: Props) {
         <pre
           aria-label='服务端诊断日志'
           aria-busy={isValidating}
-          className='m-0 max-h-[55vh] overflow-auto whitespace-pre-wrap break-words rounded-lg bg-secondary p-3 text-xs'
+          className='m-0 max-h-[55vh] overflow-auto whitespace-pre-wrap wrap-break-word rounded-lg bg-secondary p-3 text-xs'
         >
-          {logText}
+          {logText.replaceAll('\n', '\n\n')}
         </pre>
       </Flex>
     </Modal>

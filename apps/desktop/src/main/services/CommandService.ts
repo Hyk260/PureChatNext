@@ -6,7 +6,7 @@ import type { DesktopLocalToolResult } from '@/types/desktop'
 
 import { assertCommandAllowed } from '../security/CommandPolicy'
 import { resolveCommandCwd } from '../security/PathPolicy'
-import { requiresNativeApproval } from '../security/PermissionPolicy'
+import { requiresApproval } from '../security/PermissionPolicy'
 import type { DesktopConfig } from './DesktopConfigService'
 import type { PermissionService } from './PermissionService'
 
@@ -33,13 +33,10 @@ export class CommandService {
     topicId: string,
     mode: 'ask' | 'auto' | 'full',
     command: string,
-    toolCallId: string,
+    approved: boolean,
     config: DesktopConfig
   ): Promise<DesktopLocalToolResult> {
-    if (
-      requiresNativeApproval(mode, 'command') &&
-      !(await this.permissions.requestToolApproval(topicId, toolCallId, `运行命令：${command.slice(0, 120)}`))
-    ) {
+    if (requiresApproval(mode, 'command') && !approved) {
       return failure('终端命令需要审批')
     }
     this.permissions.assertExecutionAllowed(topicId, mode)

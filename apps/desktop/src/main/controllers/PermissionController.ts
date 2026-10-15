@@ -48,19 +48,4 @@ export class PermissionController {
       return confirmation.response === 1
     }
   }
-
-  static createToolConfirmation() {
-    return async (description: string) => {
-      const confirmation = await dialog.showMessageBox({
-        buttons: ['取消', '确认'],
-        cancelId: 0,
-        defaultId: 0,
-        detail: `${description}\n此操作由桌面主进程再次确认。`,
-        message: '要允许此桌面操作吗？',
-        noLink: true,
-        type: 'warning',
-      })
-      return confirmation.response === 1
-    }
-  }
 }

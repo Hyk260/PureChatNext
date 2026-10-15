@@ -5,7 +5,6 @@ import { createStaticStyles } from 'antd-style'
 import type { UIMessage } from 'ai'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { DEFAULT_CHAT_PERMISSION_MODE } from '@pure/types'
 import type { ChatPermissionMode } from '@pure/types'
 
 import { useApp } from '@/components/AntdStaticMethods'
@@ -99,15 +98,16 @@ const ChatPage = memo(() => {
   const agents = useAgentsStore((s) => s.agents)
 
   const paramsByAgent = useChatUiStore((s) => s.paramsByAgent)
+  const permissionMode = useChatUiStore((s) => s.permissionMode)
+  const permissionModeInitialized = useChatUiStore((s) => s.permissionModeInitialized)
   const searchMode = useChatUiStore((s) => s.searchMode)
+  const initializePermissionMode = useChatUiStore((s) => s.initializePermissionMode)
+  const setPermissionMode = useChatUiStore((s) => s.setPermissionMode)
   const setParams = useChatUiStore((s) => s.setParams)
   const setSearchMode = useChatUiStore((s) => s.setSearchMode)
   const params: ChatLlmParams = paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS
 
   const [topics, setTopics] = useState<LocalChatTopic[]>([])
-  const [draftPermissionMode, setDraftPermissionMode] = useState<ChatPermissionMode>(() =>
-    typeof window === 'undefined' ? DEFAULT_CHAT_PERMISSION_MODE : getPendingChatPermissionMode()
-  )
   const [topicsLoadedAgentId, setTopicsLoadedAgentId] = useState<string | null>(null)
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>(EMPTY_MESSAGES)
   // Tracks which topicId the currently-loaded initialMessages belong to.
@@ -163,10 +163,6 @@ const ChatPage = memo(() => {
 
   const handleBusyChange = useCallback((busy: boolean) => {
     setIsBusy(busy)
-  }, [])
-
-  const handleInputSend = useCallback(async (text: string, files: File[]) => {
-    await chatActionsRef.current.send(text, files)
   }, [])
 
   const handleInputStop = useCallback(() => {
@@ -292,7 +288,6 @@ const ChatPage = memo(() => {
   const handleNewTopic = useCallback(() => {
     // Already on draft for this agent — no-op.
     if (activeTopicId === null) return
-    setDraftPermissionMode(DEFAULT_CHAT_PERMISSION_MODE)
     pushChatHref(agentId)
   }, [activeTopicId, agentId, pushChatHref])
 
@@ -303,7 +298,6 @@ const ChatPage = memo(() => {
         return
       }
       setPendingChatProject({ name: projectName })
-      setDraftPermissionMode(DEFAULT_CHAT_PERMISSION_MODE)
       pushChatHref(agentId)
     },
     [activeTopicId, agentId, pushChatHref]
@@ -314,7 +308,6 @@ const ChatPage = memo(() => {
       setSelectedAgentId(agent.id)
       setActiveAgent(toActiveCommunityAgent(agent))
       if (agent.id === agentId && activeTopicId === null) return
-      setDraftPermissionMode(DEFAULT_CHAT_PERMISSION_MODE)
       if (agent.id !== agentId) {
         setTopics([])
         setTopicsLoadedAgentId(null)
@@ -484,28 +477,27 @@ const ChatPage = memo(() => {
         if (result && !result.granted) throw new Error('完全访问权限未确认')
       }
       if (!activeTopicId) {
-        setDraftPermissionMode(mode)
+        setPermissionMode(mode)
         return
       }
 
       try {
         const updated = await updateTopic(activeTopicId, { permissionMode: mode })
         setTopics((previous) => previous.map((topic) => (topic.id === activeTopicId ? updated : topic)))
+        setPermissionMode(mode)
       } catch (error) {
         console.error('[chat] update permission mode failed', error)
         message.error('权限模式保存失败')
         throw error
       }
     },
-    [activeTopicId, message]
+    [activeTopicId, message, setPermissionMode]
   )
 
   const handleTopicsRefresh = useCallback(() => {
     refreshTopics()
   }, [refreshTopics])
 
-  const messagesReady = activeTopicId === null ? true : loadedTopicId === activeTopicId
-  const inputBusy = isBusy || !messagesReady
   const topicsLoading = topicsLoadedAgentId !== agentId
 
   const topicTitle = useMemo(() => {
@@ -517,7 +509,96 @@ const ChatPage = memo(() => {
     [activeTopicId, topics]
   )
   const isDesktop = isClient && Boolean(getDesktopApi())
-  const permissionMode = activeTopic?.permissionMode ?? draftPermissionMode
+  const permissionSyncKey = `${activeTopicId ?? 'draft'}:${permissionMode}`
+  const [syncedPermissionKey, setSyncedPermissionKey] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!isDesktop || permissionModeInitialized) return
+    if (activeTopicId === null) {
+      initializePermissionMode(getPendingChatPermissionMode())
+      return
+    }
+    if (topicsLoadedAgentId !== agentId || !activeTopic) return
+    initializePermissionMode(activeTopic.permissionMode)
+  }, [
+    activeTopic,
+    activeTopicId,
+    agentId,
+    initializePermissionMode,
+    isDesktop,
+    permissionModeInitialized,
+    topicsLoadedAgentId,
+  ])
+
+  useEffect(() => {
+    if (!isDesktop || activeTopicId === null) {
+      setSyncedPermissionKey(permissionSyncKey)
+      return
+    }
+    if (!permissionModeInitialized) return
+    if (topicsLoadedAgentId !== agentId) return
+    if (!activeTopic) {
+      setSyncedPermissionKey(permissionSyncKey)
+      return
+    }
+    if (activeTopic.permissionMode === permissionMode) {
+      setSyncedPermissionKey(permissionSyncKey)
+      return
+    }
+
+    let cancelled = false
+    const syncMode = async () => {
+      if (permissionMode === 'full') {
+        const result = await getDesktopApi()?.requestFullAccess(activeTopicId)
+        if (result && !result.granted) throw new Error('完全访问权限未确认')
+      }
+      return updateTopic(activeTopicId, { permissionMode })
+    }
+
+    syncMode()
+      .then((updated) => {
+        if (cancelled) return
+        setTopics((previous) => previous.map((topic) => (topic.id === activeTopicId ? updated : topic)))
+        setSyncedPermissionKey(permissionSyncKey)
+      })
+      .catch((error) => {
+        if (cancelled) return
+        console.error('[chat] sync global permission mode failed', error)
+        message.error('会话权限同步失败，请重试')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [
+    activeTopic,
+    activeTopicId,
+    agentId,
+    isDesktop,
+    message,
+    permissionMode,
+    permissionModeInitialized,
+    permissionSyncKey,
+    topicsLoadedAgentId,
+  ])
+
+  const messagesReady = activeTopicId === null ? true : loadedTopicId === activeTopicId
+  const permissionModeReady =
+    !isDesktop ||
+    (permissionModeInitialized &&
+      (activeTopicId === null ||
+        (topicsLoadedAgentId === agentId && (!activeTopic || syncedPermissionKey === permissionSyncKey))))
+  const chatReady = messagesReady && permissionModeReady
+  const inputBusy = isBusy || !messagesReady
+  const handleInputSend = useCallback(
+    async (text: string, files: File[]) => {
+      if (!permissionModeReady) {
+        message.error('会话权限仍在同步，请稍后重试')
+        return
+      }
+      await chatActionsRef.current.send(text, files)
+    },
+    [message, permissionModeReady]
+  )
 
   return (
     <ChatLayout
@@ -560,7 +641,7 @@ const ChatPage = memo(() => {
         <div className={styles.shell} />
       ) : (
         <Flex className={[styles.page, 'flex-col']}>
-          {messagesReady ? (
+          {chatReady ? (
             <ChatView
               key={`${agentId}:${activeTopicId ?? 'draft'}`}
               agentId={agentId}

@@ -52,7 +52,7 @@ const BackLink = () => {
 }
 
 const PublicInfoPage = ({ description, sections, title }: PublicInfoPageProps) => (
-  <div className='h-full min-h-0 min-w-0 w-full flex-1 overflow-y-auto bg-background text-foreground'>
+  <div className='size-full min-h-0 min-w-0 flex-1 overflow-y-auto bg-background text-foreground'>
     <main className='flex w-full flex-col gap-10 px-6 py-12 md:px-10 md:py-16'>
       <header className='flex flex-col gap-4 border-b border-border pb-8'>
         <BackLink />

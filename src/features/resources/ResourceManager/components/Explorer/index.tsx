@@ -148,7 +148,7 @@ const Explorer = memo(() => {
   }, [clearSelection, message, resourceList, selectedFileIds])
 
   return (
-    <Flex className='flex-col flex-1 h-full w-full'>
+    <Flex className='flex-col flex-1 size-full'>
       <ExplorerHeader
         title={libraryId ? undefined : CATEGORY_TITLES[category]}
         onDelete={handleBatchDelete}

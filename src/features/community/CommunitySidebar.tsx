@@ -28,7 +28,7 @@ const CommunitySidebar = memo(() => {
 
   return (
     <Flex className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}>
-      <Scrollbar className='h-full w-full'>
+      <Scrollbar className='size-full'>
         <Flex className='flex-col gap-px h-full'>
           <CommunitySidebarHeader />
         </Flex>

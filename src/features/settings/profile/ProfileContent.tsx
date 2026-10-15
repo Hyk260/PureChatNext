@@ -106,11 +106,11 @@ export function ProfileContent({ user }: ProfileContentProps) {
             {user.avatar ? (
               <img
                 alt={displayName}
-                className='h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border'
+                className='size-16 shrink-0 rounded-full object-cover ring-2 ring-border'
                 src={user.avatar}
               />
             ) : (
-              <Flex className='flex-center h-16 w-16 shrink-0 rounded-full bg-linear-to-br from-primary/20 to-primary/5 text-xl font-semibold text-primary ring-2 ring-border'>
+              <Flex className='flex-center size-16 shrink-0 rounded-full bg-linear-to-br from-primary/20 to-primary/5 text-xl font-semibold text-primary ring-2 ring-border'>
                 {initials}
               </Flex>
             )}

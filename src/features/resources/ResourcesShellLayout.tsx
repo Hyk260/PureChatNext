@@ -40,7 +40,7 @@ const ResourcesShellLayout = ({
   }, [sidebarCollapsed, sidebarCollapsible])
 
   return (
-    <Flex className='h-full w-full overflow-hidden'>
+    <Flex className='size-full overflow-hidden'>
       <div
         className={sidebarResizeStyles.sidebarWrapper}
         style={

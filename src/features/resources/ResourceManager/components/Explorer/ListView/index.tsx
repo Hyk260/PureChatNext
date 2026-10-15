@@ -125,7 +125,7 @@ interface ListViewProps {
 
 const ListView = memo<ListViewProps>(({ items, onOpen }) => {
   return (
-    <Flex className='flex-col h-full w-full'>
+    <Flex className='flex-col size-full'>
       <div className={styles.scrollContainer}>
         <ListViewHeader data={items} />
         <Flex className='flex-col w-full'>

@@ -84,7 +84,7 @@ const AgentModeButton = memo(() => {
 
         onClick={() => handleSelect('agent')}
       >
-        <Flex className={[styles.optionIcon, 'flex-col-center h-[32px] w-[32px]']}>
+        <Flex className={[styles.optionIcon, 'flex-col-center size-[32px]']}>
           <Icon icon={InfinityIcon} size={16} />
         </Flex>
         <Flex className='flex-col flex-1'>
@@ -98,7 +98,7 @@ const AgentModeButton = memo(() => {
 
         onClick={() => handleSelect('chat')}
       >
-        <Flex className={[styles.optionIcon, 'flex-col-center h-[32px] w-[32px]']}>
+        <Flex className={[styles.optionIcon, 'flex-col-center size-[32px]']}>
           <Icon icon={MessageCircleIcon} size={16} />
         </Flex>
         <Flex className='flex-col flex-1'>

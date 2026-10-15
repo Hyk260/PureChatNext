@@ -11,9 +11,9 @@ export default function AdminRouteLayout({ children }: { children?: ReactNode })
   return (
     <RequireAuth>
       <RequireAdmin>
-        <Flex className='h-full min-h-0 w-full flex-col'>
+        <Flex className='size-full min-h-0 flex-col'>
           <InsetContentFrame sidebarCollapsed>
-            <div className='h-full min-h-0 w-full overflow-hidden'>{children}</div>
+            <div className='size-full min-h-0 overflow-hidden'>{children}</div>
           </InsetContentFrame>
         </Flex>
       </RequireAdmin>

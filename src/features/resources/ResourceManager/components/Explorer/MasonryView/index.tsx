@@ -158,7 +158,7 @@ interface MasonryViewProps {
 
 const MasonryView = memo<MasonryViewProps>(({ items, onOpen }) => {
   return (
-    <Flex className='flex-col h-full w-full'>
+    <Flex className='flex-col size-full'>
       <MasonryHeader data={items} />
       <Grid gap={12} padding={16} rows={4} width='100%'>
         {items.map((item) => (

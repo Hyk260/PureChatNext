@@ -9,7 +9,7 @@ export const PulseDots = () => (
       <m.div
         key={i}
         animate={{ opacity: [0.2, 1, 0.2] }}
-        className='h-2.5 w-2.5 rounded-full bg-zinc-800 dark:bg-white'
+        className='size-2.5 rounded-full bg-zinc-800 dark:bg-white'
         transition={{ delay: i * 0.2, duration: 1.4, repeat: Infinity }}
       />
     ))}

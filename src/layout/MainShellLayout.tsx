@@ -38,7 +38,7 @@ const MainShellLayout = ({ children, header, scrollable = true, sidebar }: MainS
   }, [sidebarCollapsed])
 
   return (
-    <Flex className='h-full w-full overflow-hidden'>
+    <Flex className='size-full overflow-hidden'>
       <div
         className={sidebarResizeStyles.sidebarWrapper}
         style={

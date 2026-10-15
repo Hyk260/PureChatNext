@@ -77,7 +77,7 @@ export function AvatarSetting({ avatar, displayName, initials, onUploaded, s3Con
   return (
     <SettingRow
       action={
-        <Spin indicator={<Loader2 className='h-4 w-4 animate-spin' />} spinning={uploading}>
+        <Spin indicator={<Loader2 className='size-4 animate-spin' />} spinning={uploading}>
           {avatarContent}
         </Spin>
       }

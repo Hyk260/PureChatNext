@@ -189,7 +189,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
 
   const savingStatus = saving ? (
     <Flex className='items-center gap-1 text-muted-foreground'>
-      <Loader2 aria-hidden className='h-4 w-4 animate-spin' />
+      <Loader2 aria-hidden className='size-4 animate-spin' />
       <Text className='text-[12px]' type='secondary'>
         保存中
       </Text>

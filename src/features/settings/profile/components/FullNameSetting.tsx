@@ -41,7 +41,7 @@ export function FullNameSetting({ fullName, onUpdated }: FullNameSettingProps) {
   return (
     <SettingRow label='全名'>
       <Flex className='items-center gap-2 min-w-0 w-full'>
-        {saving ? <Loader2 className='h-4 w-4 shrink-0 animate-spin' /> : null}
+        {saving ? <Loader2 className='size-4 shrink-0 animate-spin' /> : null}
         <Input
           defaultValue={fullName || ''}
           disabled={saving}

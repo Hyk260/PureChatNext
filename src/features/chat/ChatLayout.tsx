@@ -93,7 +93,7 @@ const ChatLayout = memo<Props>(
     }, [leftCollapsed])
 
     return (
-      <Flex className='h-full w-full overflow-hidden'>
+      <Flex className='size-full overflow-hidden'>
         <div
           className={sidebarResizeStyles.sidebarWrapper}
           style={
@@ -103,7 +103,7 @@ const ChatLayout = memo<Props>(
             } as CSSProperties
           }
         >
-          <Flex className='h-full w-full flex-col overflow-hidden'>{left}</Flex>
+          <Flex className='size-full flex-col overflow-hidden'>{left}</Flex>
         </div>
         <InsetContentFrame
           onResizeStart={leftCollapsed ? undefined : handleResizeStart}

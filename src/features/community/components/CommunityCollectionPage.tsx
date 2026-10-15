@@ -32,7 +32,7 @@ export function CommunityCollectionPage<T>({
   )
 
   return (
-    <Flex className='gap-6 h-full min-h-0 overflow-hidden w-full'>
+    <Flex className='gap-6 size-full min-h-0 overflow-hidden'>
       {sidebar}
       <ScrollArea className='min-h-0 min-w-0 flex-1' viewportClassName='community-scroll-viewport pe-6'>
         <Flex className='flex-col gap-8 w-full'>

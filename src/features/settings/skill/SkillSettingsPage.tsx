@@ -255,7 +255,7 @@ const SkillDetailPane = ({ skillId }: { skillId: string }) => {
 
   if (!detail) {
     return (
-      <Flex className='flex-center flex-1 h-full w-full'>
+      <Flex className='flex-center flex-1 size-full'>
         <Text type='secondary'>正在加载…</Text>
       </Flex>
     )
@@ -369,14 +369,14 @@ export default function SkillSettingsPage() {
 
   if (skills === null) {
     return (
-      <Flex className='flex-center h-full w-full'>
+      <Flex className='flex-center size-full'>
         <Text type='secondary'>正在加载…</Text>
       </Flex>
     )
   }
 
   return (
-    <Flex className='h-full min-h-0 w-full'>
+    <Flex className='size-full min-h-0'>
       <Flex className={[styles.list, 'flex-col min-h-0']}>
         <Flex className='flex-between h-10 flex-none gap-2 border-b border-border px-3 py-2'>
           <Text strong>技能</Text>

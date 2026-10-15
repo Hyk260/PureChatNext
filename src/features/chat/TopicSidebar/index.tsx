@@ -77,7 +77,7 @@ const TopicSidebar = memo<Props>(
     const unfavoritedCount = useMemo(() => topics.filter((topic) => !topic.favorite).length, [topics])
 
     return (
-      <Flex className='flex-col gap-2 h-full w-full min-w-0 overflow-hidden'>
+      <Flex className='flex-col gap-2 size-full min-w-0 overflow-hidden'>
         <SideBarHeaderLayout
           collapsed={leftCollapsed}
           left={

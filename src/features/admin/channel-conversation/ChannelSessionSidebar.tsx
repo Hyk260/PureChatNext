@@ -31,7 +31,7 @@ export function ChannelSessionSidebar<T extends ChannelSessionListItem>({
   titleOf,
 }: ChannelSessionSidebarProps<T>) {
   return (
-    <aside className='flex h-full min-h-0 w-full shrink-0 flex-col overflow-hidden border-r border-border bg-card md:w-[300px]'>
+    <aside className='flex size-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-border bg-card md:w-[300px]'>
       <Flex className='flex-between h-14 shrink-0 border-b border-border px-5'>
         <span className='text-sm font-semibold'>会话列表</span>
         <Tag shape='round' size='small'>

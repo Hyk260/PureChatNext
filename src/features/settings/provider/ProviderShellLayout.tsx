@@ -10,9 +10,9 @@ import SettingsHeader from '@/features/settings/SettingsHeader'
 /** Provider settings split pane — shared by Next layout and SPA routes. */
 export default function ProviderShellLayout({ children }: { children: ReactNode }) {
   return (
-    <Flex className='h-full max-h-[100vh] min-h-[0px] overflow-hidden w-full'>
+    <Flex className='size-full max-h-[100vh] min-h-[0px] overflow-hidden'>
       <ProviderSettingsNav />
-      <Flex className='flex-col flex-1 h-full max-h-[100vh] min-w-0 w-full'>
+      <Flex className='flex-col flex-1 size-full max-h-[100vh] min-w-0'>
         <SettingsHeader />
         <Scrollbar style={{ flex: 1, minHeight: 0, minWidth: 0, width: '100%' }}>{children}</Scrollbar>
       </Flex>

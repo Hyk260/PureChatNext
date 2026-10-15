@@ -83,7 +83,7 @@ const MessengerPage = memo(() => {
   }
 
   return (
-    <Flex className='flex-col gap-5 h-full w-full'>
+    <Flex className='flex-col gap-5 size-full'>
       <Text type='secondary'>{MESSENGER_SUBTITLE}</Text>
       <Flex className={[styles.list, 'gap-3']}>
         {MESSENGER_PLATFORMS.map((item) => (

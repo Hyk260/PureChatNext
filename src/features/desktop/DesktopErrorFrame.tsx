@@ -5,7 +5,7 @@ import InsetContentFrame from '@/layout/InsetContentFrame'
 
 const DesktopErrorFrame = ({ children }: PropsWithChildren) => (
   <InsetContentFrame sidebarCollapsed>
-    <Flex className='h-full min-h-0 w-full flex-col overflow-y-auto'>{children}</Flex>
+    <Flex className='size-full min-h-0 flex-col overflow-y-auto'>{children}</Flex>
   </InsetContentFrame>
 )
 

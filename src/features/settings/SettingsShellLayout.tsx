@@ -41,7 +41,7 @@ const SettingsShellLayout = ({ children }: { children: ReactNode }) => {
     >
       <Flex
         className={[
-          'relative flex-col flex-1 h-full min-h-0 w-full',
+          'relative flex-col flex-1 size-full min-h-0',
           isFullBleed ? 'm-0 max-w-none overflow-hidden' : 'mx-auto max-w-[1024px] overflow-auto',
         ]}
       >

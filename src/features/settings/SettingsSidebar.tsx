@@ -62,7 +62,7 @@ const SettingsSidebar = memo(() => {
           showHomeIcon
         />
         <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }}>
-          <Flex className='flex-col px-1'>
+          <Flex className='flex-col ps-1 pe-3'>
             <Accordion
               defaultExpandedKeys={[
                 SettingsGroupKey.General,

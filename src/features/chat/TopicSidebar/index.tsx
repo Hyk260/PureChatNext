@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Button, Text, Flex } from '@pure/ui'
+import { ActionIcon, Flex, Text } from '@pure/ui'
 import { ChevronLeft, MessageSquarePlus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { memo, useMemo } from 'react'
@@ -90,11 +90,6 @@ const TopicSidebar = memo<Props>(
           onToggleCollapsed={toggleLeftCollapsed}
         />
         <Flex className='flex-col flex-1 gap-2 min-h-0'>
-          <Flex className='px-2'>
-            <Button block icon={<MessageSquarePlus size={16} />} type='fill' onClick={onNewTopic}>
-              开启新话题
-            </Button>
-          </Flex>
           <Scrollbar viewStyle={{ paddingInline: 12 }}>
             <Flex className='flex-col gap-2'>
               <Flex className='flex-between gap-1 min-h-[28px] px-2'>
@@ -108,6 +103,7 @@ const TopicSidebar = memo<Props>(
                 </Flex>
 
                 <Flex className='items-center gap-0.5'>
+                  <ActionIcon icon={MessageSquarePlus} size='small' title='开启新话题' onClick={onNewTopic} />
                   <TopicFilter
                     groupMode={groupMode}
                     sortBy={sortBy}

@@ -6,7 +6,7 @@ import HomeSidebar from '@/features/home/HomeSidebar'
 import MainShellLayout from '@/layout/MainShellLayout'
 import RequireAuth from '@/spa/auth/RequireAuth'
 
-/** SPA / shared main shell (home). */
+/** SPA / 共享主框架（首页）。 */
 export default function MainLayout({ children }: { children: ReactNode }) {
   return (
     <RequireAuth>

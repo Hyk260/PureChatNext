@@ -65,12 +65,12 @@ describe('webRouter.config smoke', () => {
   })
 
   it('uses RequireAuth for chat layout', () => {
-    expect(source).toContain("import('@/routes/chat/_layout')")
+    expect(source).toContain("import('@/routes/chat/layout')")
   })
 
   it('gates home, settings, and resources layouts with RequireAuth', () => {
     const routesDir = path.resolve(path.dirname(configPath), '../../routes')
-    const layoutFiles = ['main/_layout.tsx', 'settings/_layout.tsx', 'resources/_layout.tsx', 'chat/_layout.tsx']
+    const layoutFiles = ['main/layout.tsx', 'settings/layout.tsx', 'resources/layout.tsx', 'chat/layout.tsx']
 
     for (const file of layoutFiles) {
       const layoutSource = readFileSync(path.join(routesDir, file), 'utf-8')

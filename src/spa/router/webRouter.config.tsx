@@ -59,7 +59,7 @@ export const webRoutes: RouteObject[] = [
         index: true,
       },
     ],
-    element: dynamicLayout(() => import('@/routes/main/_layout'), 'MainLayout'),
+    element: dynamicLayout(() => import('@/routes/main/layout'), 'MainLayout'),
   },
 
   // —— Chat ——
@@ -70,7 +70,7 @@ export const webRoutes: RouteObject[] = [
         index: true,
       },
     ],
-    element: dynamicLayout(() => import('@/routes/chat/_layout'), 'ChatLayout'),
+    element: dynamicLayout(() => import('@/routes/chat/layout'), 'ChatLayout'),
     path: 'chat',
   },
 
@@ -84,7 +84,7 @@ export const webRoutes: RouteObject[] = [
             index: true,
           },
         ],
-        element: dynamicLayout(() => import('@/routes/resources/home/_layout'), 'Resources > HomeLayout'),
+        element: dynamicLayout(() => import('@/routes/resources/home/layout'), 'Resources > HomeLayout'),
       },
       {
         children: [
@@ -100,11 +100,11 @@ export const webRoutes: RouteObject[] = [
             path: '*',
           },
         ],
-        element: dynamicLayout(() => import('@/routes/resources/library/$id/_layout'), 'Resources > LibraryLayout'),
+        element: dynamicLayout(() => import('@/routes/resources/library/$id/layout'), 'Resources > LibraryLayout'),
         path: 'library/:id',
       },
     ],
-    element: dynamicLayout(() => import('@/routes/resources/_layout'), 'ResourcesLayout'),
+    element: dynamicLayout(() => import('@/routes/resources/layout'), 'ResourcesLayout'),
     path: 'resources',
   },
 
@@ -245,11 +245,11 @@ export const webRoutes: RouteObject[] = [
             path: ':id',
           },
         ],
-        element: dynamicLayout(() => import('@/routes/settings/provider/_layout'), 'Settings > ProviderLayout'),
+        element: dynamicLayout(() => import('@/routes/settings/provider/layout'), 'Settings > ProviderLayout'),
         path: 'provider',
       },
     ],
-    element: dynamicLayout(() => import('@/routes/settings/_layout'), 'SettingsLayout'),
+    element: dynamicLayout(() => import('@/routes/settings/layout'), 'SettingsLayout'),
     path: 'settings',
   },
 
@@ -277,7 +277,7 @@ export const webRoutes: RouteObject[] = [
         path: 'provider',
       },
     ],
-    element: dynamicLayout(() => import('@/routes/community/_layout'), 'CommunityLayout'),
+    element: dynamicLayout(() => import('@/routes/community/layout'), 'CommunityLayout'),
     path: 'community',
   },
 
@@ -319,7 +319,7 @@ export const webRoutes: RouteObject[] = [
         path: 'wechat-conversation',
       },
     ],
-    element: dynamicLayout(() => import('@/routes/admin/_layout'), 'AdminLayout'),
+    element: dynamicLayout(() => import('@/routes/admin/layout'), 'AdminLayout'),
     path: 'admin',
   },
 
@@ -356,7 +356,7 @@ export const webRoutes: RouteObject[] = [
               path: 'desktop-authorize',
             },
           ],
-          element: dynamicLayout(() => import('@/routes/dev/_layout'), 'DevLayout'),
+          element: dynamicLayout(() => import('@/routes/dev/layout'), 'DevLayout'),
           path: 'dev',
         },
       ] satisfies RouteObject[])

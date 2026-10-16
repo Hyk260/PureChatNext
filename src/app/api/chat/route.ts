@@ -51,7 +51,7 @@ const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024
 const MAX_ATTACHMENTS = 8
 const MAX_EXTRACTED_CHARS = 40_000
 const DESKTOP_CLIENT_INSTRUCTION =
-  '桌面本地工具只可通过客户端执行；先说明计划并等待必要的用户审批，不要重复尝试被拒绝的调用。'
+  '用户要求读取或操作本机环境时（例如查询运行时版本或执行命令），优先调用桌面 runCommand 工具；不要声称无法在本机执行，也不要要求用户手动复制命令。桌面应用会按当前权限模式和命令风险自动处理审批；调用工具前不要先用自然语言要求用户确认。若应用展示审批请求，等待用户选择；未获批准或命令被拒绝后不要重试。等待工具返回实际输出后再作答。'
 const RATE_LIMIT_PUBLIC_MESSAGE = '上游限流，请稍后重试。'
 
 type ChatPermissionMode = (typeof CHAT_PERMISSION_MODES)[number]

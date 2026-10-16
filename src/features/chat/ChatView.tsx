@@ -8,7 +8,7 @@ import {
   lastAssistantMessageIsCompleteWithToolCalls,
 } from 'ai'
 import type { UIMessage } from 'ai'
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ChatPermissionMode } from '@pure/types'
 
 import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
@@ -41,6 +41,7 @@ import { useProviderConfigStore } from '@/features/settings/provider/store/usePr
 import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { useRouter } from 'next/navigation'
 import { LOCAL_TOOL_NAMES, SAFE_LOCAL_TOOL_NAMES } from '@/features/chat/localTools'
+import { isLowRiskCommand } from '@/libs/commandSafety'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopLocalToolRequest } from '@/types/desktop'
 
@@ -127,6 +128,14 @@ const ChatView = memo<ChatViewProps>(
 
     const desktopApi = getDesktopApi()
     const fullGrantTopicRef = useRef<string | null>(null)
+    const stopRequestedRef = useRef(false)
+    const runningCommandCallIdsRef = useRef(new Set<string>())
+    const [runningCommandCallIds, setRunningCommandCallIds] = useState<ReadonlySet<string>>(() => new Set())
+    const markCommandCall = useCallback((toolCallId: string, running: boolean) => {
+      if (running) runningCommandCallIdsRef.current.add(toolCallId)
+      else runningCommandCallIdsRef.current.delete(toolCallId)
+      setRunningCommandCallIds(new Set(runningCommandCallIdsRef.current))
+    }, [])
     useEffect(() => {
       if (!desktopApi || permissionMode !== 'full' || !topicId || fullGrantTopicRef.current === topicId) return
       fullGrantTopicRef.current = topicId
@@ -174,16 +183,20 @@ const ChatView = memo<ChatViewProps>(
       // throttle: 50,
       transport: chatTransport,
       sendAutomaticallyWhen: ({ messages: nextMessages }) =>
-        lastAssistantMessageIsCompleteWithToolCalls({ messages: nextMessages }) ||
-        lastAssistantMessageIsCompleteWithApprovalResponses({ messages: nextMessages }),
+        !stopRequestedRef.current &&
+        (lastAssistantMessageIsCompleteWithToolCalls({ messages: nextMessages }) ||
+          lastAssistantMessageIsCompleteWithApprovalResponses({ messages: nextMessages })),
       onToolCall: async ({ toolCall }) => {
         if (toolCall.dynamic || !desktopApi || !LOCAL_TOOL_NAMES.has(toolCall.toolName)) return
         const args = (toolCall.input && typeof toolCall.input === 'object' ? toolCall.input : {}) as Record<
           string,
           unknown
         >
-        const shouldApprove =
-          permissionMode === 'ask' || (permissionMode === 'auto' && !SAFE_LOCAL_TOOL_NAMES.has(toolCall.toolName))
+        const needsApprovalInAutoMode =
+          toolCall.toolName === 'runCommand'
+            ? !isLowRiskCommand(typeof args.command === 'string' ? args.command : '')
+            : !SAFE_LOCAL_TOOL_NAMES.has(toolCall.toolName)
+        const shouldApprove = permissionMode === 'ask' || (permissionMode === 'auto' && needsApprovalInAutoMode)
         if (topicId) {
           await upsertToolApproval(topicId, {
             apiName: toolCall.toolName,
@@ -200,11 +213,21 @@ const ChatView = memo<ChatViewProps>(
           toolName: toolCall.toolName as DesktopLocalToolRequest['toolName'],
           topicId: topicId ?? 'draft',
         }
-        desktopApi.executeLocalTool(request).then((output) => {
+        await executeDesktopTool(request)
+      },
+    })
+
+    const executeDesktopTool = useCallback(
+      async (request: DesktopLocalToolRequest) => {
+        const isCommand = request.toolName === 'runCommand'
+        if (isCommand) markCommandCall(request.toolCallId, true)
+
+        try {
+          const output = await desktopApi!.executeLocalTool(request)
           if (topicId) {
             updateToolApproval(
               topicId,
-              toolCall.toolCallId,
+              request.toolCallId,
               output.success ? 'completed' : 'failed',
               output.success ? undefined : output.content
             )
@@ -212,12 +235,27 @@ const ChatView = memo<ChatViewProps>(
           addToolOutput({
             options: { body: requestBody },
             output,
-            tool: toolCall.toolName as never,
-            toolCallId: toolCall.toolCallId,
+            tool: request.toolName as never,
+            toolCallId: request.toolCallId,
           })
-        })
+        } catch (error) {
+          const output = {
+            content: error instanceof Error ? error.message : '本地工具执行失败',
+            success: false,
+          }
+          if (topicId) updateToolApproval(topicId, request.toolCallId, 'failed', output.content)
+          addToolOutput({
+            options: { body: requestBody },
+            output,
+            tool: request.toolName as never,
+            toolCallId: request.toolCallId,
+          })
+        } finally {
+          if (isCommand) markCommandCall(request.toolCallId, false)
+        }
       },
-    })
+      [addToolOutput, desktopApi, markCommandCall, requestBody, topicId]
+    )
 
     // Keep a ref so edit callbacks and unmount PUT flush see the latest messages
     // even if the syncing effect has not run yet. Sync in layout effect — React
@@ -341,6 +379,7 @@ const ChatView = memo<ChatViewProps>(
 
     const sendWithBody = useCallback(
       async (text: string, files: File[] = []) => {
+        stopRequestedRef.current = false
         clearError()
         const fileParts = await Promise.all(files.map(fileToPart))
         await sendMessage(
@@ -436,8 +475,14 @@ const ChatView = memo<ChatViewProps>(
     )
 
     const handleStop = useCallback(() => {
+      stopRequestedRef.current = true
+      for (const toolCallId of runningCommandCallIdsRef.current) {
+        desktopApi
+          ?.cancelLocalCommand({ topicId: topicId ?? 'draft', toolCallId })
+          .catch((error) => console.error('[chat] command cancellation failed', error))
+      }
       stop()
-    }, [stop])
+    }, [desktopApi, stop, topicId])
 
     const handleToolApproval = useCallback(
       (toolCallId: string, toolName: string, args: Record<string, unknown>, approved: boolean) => {
@@ -460,17 +505,9 @@ const ChatView = memo<ChatViewProps>(
           toolName: toolName as DesktopLocalToolRequest['toolName'],
           topicId,
         }
-        desktopApi.executeLocalTool(request).then((output) => {
-          updateToolApproval(
-            topicId,
-            toolCallId,
-            output.success ? 'completed' : 'failed',
-            output.success ? undefined : output.content
-          )
-          addToolOutput({ options: { body: requestBody }, output, tool: toolName as never, toolCallId })
-        })
+        executeDesktopTool(request)
       },
-      [addToolOutput, desktopApi, permissionMode, requestBody, topicId]
+      [addToolOutput, desktopApi, executeDesktopTool, permissionMode, requestBody, topicId]
     )
 
     const handleServerToolApproval = useCallback(
@@ -501,6 +538,7 @@ const ChatView = memo<ChatViewProps>(
 
     const handleRegenerate = useCallback(
       async (id: string) => {
+        stopRequestedRef.current = false
         const idx = messagesRef.current.findIndex((m) => m.id === id)
         if (idx < 0) return
         const prevUser = messagesRef.current
@@ -527,6 +565,7 @@ const ChatView = memo<ChatViewProps>(
           initialScrollToBottom={topicId !== null}
           isStreaming={isStreaming}
           messages={messages}
+          runningCommandCallIds={runningCommandCallIds}
           onDelete={handleDelete}
           onEdit={handleEdit}
           onRegenerate={handleRegenerate}

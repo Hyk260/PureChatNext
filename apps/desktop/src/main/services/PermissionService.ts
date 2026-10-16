@@ -2,11 +2,6 @@ import type { ChatPermissionMode } from '@pure/types'
 
 export class PermissionService {
   private readonly grantedTopics = new Set<string>()
-  private readonly showFullAccessConfirmation: () => Promise<boolean>
-
-  constructor(showFullAccessConfirmation: () => Promise<boolean>) {
-    this.showFullAccessConfirmation = showFullAccessConfirmation
-  }
 
   async requestFullAccess(topicId: string) {
     if (this.grantedTopics.has(topicId)) return { granted: true }
@@ -14,9 +9,8 @@ export class PermissionService {
       this.grantedTopics.add(topicId)
       return { granted: true }
     }
-    const granted = await this.showFullAccessConfirmation()
-    if (granted) this.grantedTopics.add(topicId)
-    return { granted }
+    this.grantedTopics.add(topicId)
+    return { granted: true }
   }
 
   hasFullAccess(topicId: string) {

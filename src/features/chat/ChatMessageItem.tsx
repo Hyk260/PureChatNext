@@ -16,6 +16,7 @@ import MessageMarkdown from '@/features/chat/MessageMarkdown'
 import MessageUsage from '@/features/chat/MessageUsage'
 import Thinking from '@/features/chat/Thinking'
 import { getMessageReasoning, getMessageText } from '@/features/chat/messageText'
+import CommandExecutionCard, { isCommandExecutionPart } from '@/features/chat/CommandExecutionCard'
 import WebSearchStatus, { hasWebSearchToolPart } from '@/features/chat/WebSearchStatus'
 import { getToolApprovalTitle } from '@/features/chat/localTools'
 import { getToolApprovalItems } from '@/features/chat/toolApprovalParts'
@@ -76,6 +77,7 @@ export interface ChatMessageItemProps {
   agentMeta?: AgentMeta
   isStreaming?: boolean
   message: UIMessage
+  runningCommandCallIds?: ReadonlySet<string>
   onDelete: (id: string) => void
   onEdit: (id: string, text: string) => void | Promise<void>
   onRegenerate: (id: string) => void
@@ -110,7 +112,17 @@ const applyToolApprovalDecision = (
 }
 
 const ChatMessageItem = memo<ChatMessageItemProps>(
-  ({ message, agentMeta, isStreaming, onDelete, onEdit, onRegenerate, onServerToolApproval, onToolApproval }) => {
+  ({
+    message,
+    agentMeta,
+    isStreaming,
+    runningCommandCallIds,
+    onDelete,
+    onEdit,
+    onRegenerate,
+    onServerToolApproval,
+    onToolApproval,
+  }) => {
     const { message: antdMessage } = useApp()
     const [editing, setEditing] = useState(false)
     const text = getMessageText(message)
@@ -135,9 +147,27 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
     }, [message.id, onDelete])
 
     const hasAttachments = message.parts.some((part) => part.type === 'file')
+    const hasRunningCommand = message.parts.some(
+      (part) => isCommandExecutionPart(part) && runningCommandCallIds?.has(part.toolCallId)
+    )
+    const hasCommandExecution = message.parts.some(
+      (part) =>
+        isCommandExecutionPart(part) &&
+        (runningCommandCallIds?.has(part.toolCallId) ||
+          part.state === 'output-available' ||
+          part.state === 'output-error')
+    )
     const approvalItems = getToolApprovalItems(message.parts)
 
-    if (!text && !reasoning && !hasWebSearch && !hasAttachments && approvalItems.length === 0 && !isStreaming) {
+    if (
+      !text &&
+      !reasoning &&
+      !hasWebSearch &&
+      !hasAttachments &&
+      !hasCommandExecution &&
+      approvalItems.length === 0 &&
+      !isStreaming
+    ) {
       return null
     }
 
@@ -173,15 +203,34 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
             />
           ))}
           {/* <LoadingState /> */}
-          {text ? (
-            <MessageMarkdown
-              className={cx(styles.markdown, isUser && styles.userMarkdown)}
-              isStreaming={isStreaming}
-              text={text}
-            />
-          ) : isStreaming && !reasoning && !hasWebSearch ? (
-            <LoadingState />
-          ) : null}
+          {isUser ? (
+            text ? (
+              <MessageMarkdown className={cx(styles.markdown, styles.userMarkdown)} text={text} />
+            ) : null
+          ) : (
+            message.parts.map((part, index) => {
+              if (part.type === 'text' && part.text) {
+                return (
+                  <MessageMarkdown
+                    key={`text-${index}`}
+                    className={styles.markdown}
+                    isStreaming={isStreaming}
+                    text={part.text}
+                  />
+                )
+              }
+
+              if (isCommandExecutionPart(part)) {
+                const running = runningCommandCallIds?.has(part.toolCallId) ?? false
+                if (running || part.state === 'output-available' || part.state === 'output-error') {
+                  return <CommandExecutionCard key={part.toolCallId} part={part} running={running} />
+                }
+              }
+
+              return null
+            })
+          )}
+          {!text && isStreaming && !reasoning && !hasWebSearch && !hasRunningCommand ? <LoadingState /> : null}
         </div>
 
         {!isUser && (metadata || isStreaming) ? <MessageUsage isStreaming={isStreaming} metadata={metadata} /> : null}
@@ -205,6 +254,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
   (prev, next) =>
     prev.isStreaming === next.isStreaming &&
     prev.message === next.message &&
+    prev.runningCommandCallIds === next.runningCommandCallIds &&
     prev.onDelete === next.onDelete &&
     prev.onEdit === next.onEdit &&
     prev.onRegenerate === next.onRegenerate &&

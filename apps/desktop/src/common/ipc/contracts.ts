@@ -7,6 +7,7 @@ import type {
   DesktopFileSelection,
   DesktopLocalToolRequest,
   DesktopLocalToolResult,
+  DesktopLocalCommandCancellation,
   DesktopNotificationInput,
   DesktopProject,
   DesktopProjectEntries,
@@ -55,6 +56,7 @@ export interface DesktopIpcContractMap {
     result: DesktopProjectEntries
   }
   'localSystem.execute': { args: [request: DesktopLocalToolRequest]; result: DesktopLocalToolResult }
+  'localSystem.cancel': { args: [request: DesktopLocalCommandCancellation]; result: void }
   'shell.openPath': { args: [targetPath: string]; result: void }
   'window.openExternal': { args: [url: string]; result: void }
   'window.getState': { args: []; result: DesktopWindowState }
@@ -92,7 +94,7 @@ export const DESKTOP_IPC_CHANNELS = {
     setRemoteServer: 'config.setRemoteServer',
   },
   dialog: { chooseDirectory: 'dialog.chooseDirectory', chooseFile: 'dialog.chooseFile' },
-  localSystem: { execute: 'localSystem.execute' },
+  localSystem: { cancel: 'localSystem.cancel', execute: 'localSystem.execute' },
   notification: { show: 'notification.show' },
   permission: {
     getScope: 'permission.getScope',

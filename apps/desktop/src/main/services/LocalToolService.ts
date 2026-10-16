@@ -110,6 +110,7 @@ export class LocalToolService {
         case 'runCommand':
           output = await this.commands.run(
             request.topicId,
+            request.toolCallId,
             request.mode,
             String(args.command ?? ''),
             request.approved === true,
@@ -130,6 +131,10 @@ export class LocalToolService {
     } catch (error) {
       return result(error instanceof Error ? error.message : '本地工具执行失败', false)
     }
+  }
+
+  cancelCommand(topicId: string, toolCallId: string) {
+    this.commands.cancel(topicId, toolCallId)
   }
 
   private assertHighRiskApproval(request: DesktopLocalToolRequest, description: string) {

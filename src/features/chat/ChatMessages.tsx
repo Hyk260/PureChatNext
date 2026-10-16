@@ -8,6 +8,7 @@ import { memo, useCallback, useEffect, useRef } from 'react'
 import Scrollbar from '@/components/Scrollbar'
 import type { ScrollbarRef } from '@/components/Scrollbar'
 import ChatMessageItem from '@/features/chat/ChatMessageItem'
+import { isCommandExecutionPart } from '@/features/chat/CommandExecutionCard'
 import { getMessageReasoning, getMessageText } from '@/features/chat/messageText'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { useAutoScroll } from '@/features/chat/useAutoScroll'
@@ -79,6 +80,7 @@ interface ChatMessagesProps {
   initialScrollToBottom?: boolean
   isStreaming?: boolean
   messages: UIMessage[]
+  runningCommandCallIds?: ReadonlySet<string>
   onDelete: (id: string) => void
   onEdit: (id: string, text: string) => void | Promise<void>
   onRegenerate: (id: string) => void
@@ -90,6 +92,7 @@ interface ChatMessagesProps {
 const ChatMessages = memo<ChatMessagesProps>(
   ({
     messages,
+    runningCommandCallIds,
     agentMeta,
     disabled,
     initialScrollToBottom = false,
@@ -108,13 +111,19 @@ const ChatMessages = memo<ChatMessagesProps>(
     const lastReasoning = lastMessage ? getMessageReasoning(lastMessage) : ''
     const lastWebSearchStatus = lastMessage ? getWebSearchStatusSignature(lastMessage) : ''
     const lastAttachmentCount = lastMessage ? lastMessage.parts.filter((part) => part.type === 'file').length : 0
+    const lastCommandStatus = lastMessage
+      ? lastMessage.parts
+          .filter(isCommandExecutionPart)
+          .map((part) => `${part.toolCallId}:${part.state}:${runningCommandCallIds?.has(part.toolCallId) ?? false}`)
+          .join('|')
+      : ''
 
     const openingMessage = agentMeta?.openingMessage?.trim() || ''
     const openingQuestions = (agentMeta?.openingQuestions ?? []).filter((q) => q.trim().length > 0).slice(0, 5)
 
     const getScrollElement = useCallback(() => scrollbarRef.current?.wrapRef ?? null, [])
     const { handleScroll, resetScrollLock } = useAutoScroll<HTMLDivElement>({
-      deps: [messages.length, lastText, lastReasoning, lastWebSearchStatus, lastAttachmentCount],
+      deps: [messages.length, lastText, lastReasoning, lastWebSearchStatus, lastAttachmentCount, lastCommandStatus],
       enabled: isStreaming || disabled === true,
       getScrollElement,
       initialScrollToBottom,
@@ -190,6 +199,7 @@ const ChatMessages = memo<ChatMessagesProps>(
                 isStreaming={streamingThis}
                 key={message.id}
                 message={message}
+                runningCommandCallIds={runningCommandCallIds}
                 onDelete={onDelete}
                 onEdit={onEdit}
                 onRegenerate={onRegenerate}

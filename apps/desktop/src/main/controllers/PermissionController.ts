@@ -1,8 +1,6 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
-import { dialog } from 'electron'
-
 import type { IpcRegistry } from '../ipc/IpcRegistry'
 import type { DesktopConfigService } from '../services/DesktopConfigService'
 import type { PermissionService } from '../services/PermissionService'
@@ -32,20 +30,5 @@ export class PermissionController {
       assertNotSensitive(resolved)
       return this.config.setPermissionScope(topicId, resolved)
     })
-  }
-
-  static createConfirmation() {
-    return async () => {
-      const confirmation = await dialog.showMessageBox({
-        buttons: ['取消', '确认'],
-        cancelId: 0,
-        defaultId: 0,
-        detail: 'PureChat 将可以在未经逐次许可的情况下访问文件、运行命令和使用联网工具。危险系统操作仍会被阻止。',
-        message: '要开启完全访问权限吗？',
-        noLink: true,
-        type: 'warning',
-      })
-      return confirmation.response === 1
-    }
   }
 }

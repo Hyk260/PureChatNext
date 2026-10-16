@@ -35,7 +35,8 @@ export const desktopTools: ToolSet = {
     inputSchema: z.object({ destination: pathInput, source: pathInput }),
   }),
   runCommand: tool({
-    description: 'Run a shell command on the desktop after explicit approval.',
+    description:
+      'Run a shell command in the user’s desktop environment. This tool waits for the command to finish and returns its output, exit code, and duration. Use it when the user asks you to inspect or operate the local environment; follow the desktop approval flow and do not ask the user to run the command manually when this tool is available.',
     inputSchema: z.object({ command: z.string().trim().min(1).max(20_000) }),
   }),
   getCommandOutput: tool({

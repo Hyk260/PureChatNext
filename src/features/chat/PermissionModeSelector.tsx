@@ -46,7 +46,7 @@ const OPTIONS: PermissionOption[] = [
 
 const RISKS = [
   { description: '读取、创建、修改、上传或删除任意位置的文件', icon: Folder, label: '文件和文件夹' },
-  { description: '运行命令、安装软件和更改系统设置', icon: SquareTerminal, label: '终端命令' },
+  { description: '运行会修改数据、访问网络或更改系统设置的命令', icon: SquareTerminal, label: '终端命令' },
   { description: '访问网站、发送数据并使用已连接的应用', icon: Globe2, label: '互联网和已连接的应用' },
 ]
 

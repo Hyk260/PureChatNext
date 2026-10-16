@@ -589,6 +589,10 @@ const ChatPage = memo(() => {
         (topicsLoadedAgentId === agentId && (!activeTopic || syncedPermissionKey === permissionSyncKey))))
   const chatReady = messagesReady && permissionModeReady
   const inputBusy = isBusy || !messagesReady
+  const hasActiveMessages =
+    activeTopicId !== null &&
+    ((messagesCache.get(activeTopicId)?.length ?? 0) > 0 ||
+      (loadedTopicId === activeTopicId && initialMessages.length > 0))
   const handleInputSend = useCallback(
     async (text: string, files: File[]) => {
       if (!permissionModeReady) {
@@ -603,7 +607,7 @@ const ChatPage = memo(() => {
   return (
     <ChatLayout
       busy={isBusy}
-      hasMessages={initialMessages.length > 0}
+      hasMessages={hasActiveMessages}
       left={
         <TopicSidebar
           activeTopicId={activeTopicId}

@@ -10,7 +10,7 @@ import { LocalToolService } from '../services/LocalToolService'
 import { PermissionService } from '../services/PermissionService'
 
 const tempDirs: string[] = []
-const createTools = async (scope: string, confirm = false) => {
+const createTools = async (scope: string) => {
   const config = new DesktopConfigService(scope)
   await config.write({
     permissionScopes: { topic: [scope] },
@@ -18,7 +18,7 @@ const createTools = async (scope: string, confirm = false) => {
     remoteServerUrl: null,
     secrets: {},
   })
-  const permissions = new PermissionService(async () => confirm)
+  const permissions = new PermissionService()
   return new LocalToolService(config, permissions, new CommandService(permissions))
 }
 
@@ -30,7 +30,7 @@ describe('desktop local tools', () => {
   it('enforces topic scope and caches repeated calls', async () => {
     const scope = await mkdtemp(path.join(os.tmpdir(), 'purechat-local-'))
     tempDirs.push(scope)
-    const tools = await createTools(scope, true)
+    const tools = await createTools(scope)
     const request = {
       approved: true,
       args: { content: 'hello', path: 'note.txt' },

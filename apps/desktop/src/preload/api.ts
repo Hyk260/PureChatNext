@@ -31,6 +31,7 @@ export const createDesktopApi = (): DesktopApi => ({
   deleteProject: (id) => invoke('project.delete', id),
   deleteSecret: (key) => invoke('storage.deleteSecret', key),
   executeLocalTool: (request) => invoke('localSystem.execute', request),
+  cancelLocalCommand: (request) => invoke('localSystem.cancel', request),
   getAppInfo: () => invoke('app.getInfo'),
   getWindowState: () => invoke('window.getState'),
   getSystemTools: () => invoke('app.getSystemTools'),

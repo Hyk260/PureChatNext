@@ -1,10 +1,12 @@
 'use client'
 
-import { ActionIcon, DropdownMenu, Icon, Text, Flex } from '@pure/ui'
+import { ActionIcon, Button, DropdownMenu, Icon, Modal, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { createStaticStyles, cssVar } from 'antd-style'
 import {
+  Check,
   Hash,
+  Link2,
   Maximize2,
   MoreHorizontal,
   PanelLeftOpen,
@@ -15,7 +17,7 @@ import {
   Star,
   Trash2,
 } from 'lucide-react'
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import { createTopicShare } from '@/features/chat/chatApi'
@@ -84,6 +86,10 @@ const ChatHeader = memo<Props>(
     const toggleRightCollapsed = useChatUiStore((s) => s.toggleRightCollapsed)
     const toggleWideScreen = useChatUiStore((s) => s.toggleWideScreen)
     const rename = useTopicRename((title) => (topic ? onRename(topic.id, title) : undefined))
+    const [shareOpen, setShareOpen] = useState(false)
+    const [shareLoading, setShareLoading] = useState(false)
+    const [shareUrl, setShareUrl] = useState('')
+    const [shareCopied, setShareCopied] = useState(false)
 
     const handleOpenRename = useCallback(() => {
       if (!topic) return
@@ -107,17 +113,33 @@ const ChatHeader = memo<Props>(
     }, [message, topic])
 
     const handleShare = useCallback(async () => {
-      if (!topic) return
+      if (!topic || shareLoading) return
+      setShareOpen(true)
+      setShareLoading(true)
+      setShareUrl('')
+      setShareCopied(false)
       try {
         const { shareId } = await createTopicShare(topic.id)
-        const url = `${window.location.origin}/share/t/${shareId}`
-        await copyToClipboard(url)
-        message.success('分享链接已复制')
+        setShareUrl(`${window.location.origin}/share/t/${shareId}`)
       } catch (error) {
         console.error('[chat] share failed', error)
+        message.error('生成分享链接失败')
+      } finally {
+        setShareLoading(false)
+      }
+    }, [message, shareLoading, topic])
+
+    const handleCopyShareLink = useCallback(async () => {
+      if (!shareUrl) return
+      try {
+        await copyToClipboard(shareUrl)
+        setShareCopied(true)
+        message.success('分享链接已复制')
+      } catch (error) {
+        console.error('[chat] copy share link failed', error)
         message.error('复制分享链接失败')
       }
-    }, [message, topic])
+    }, [message, shareUrl])
 
     const handleDelete = useCallback(() => {
       if (!topic) return
@@ -232,6 +254,35 @@ const ChatHeader = memo<Props>(
           onCancel={rename.close}
           onOk={rename.submit}
         />
+        <Modal
+          footer={null}
+          open={shareOpen}
+          title={`分享「${title}」`}
+          width='min(92vw, 720px)'
+          onCancel={() => setShareOpen(false)}
+        >
+          <Flex className='flex-col gap-5 pb-2'>
+            <div className='flex min-h-56 flex-col justify-between rounded-2xl border border-border p-5'>
+              <Text type='secondary'>对话预览</Text>
+              <Flex className='justify-end'>
+                <div className='max-w-[85%] rounded-2xl bg-secondary px-4 py-3'>
+                  <Text ellipsis>{title}</Text>
+                </div>
+              </Flex>
+            </div>
+            <Flex className='items-center justify-between gap-4'>
+              <Text type='secondary'>任何知道此链接的人都可以查看此聊天</Text>
+              <Button
+                disabled={!shareUrl}
+                icon={shareCopied ? <Check size={16} /> : <Link2 size={16} />}
+                loading={shareLoading}
+                onClick={handleCopyShareLink}
+              >
+                {shareCopied ? '已复制' : '复制链接'}
+              </Button>
+            </Flex>
+          </Flex>
+        </Modal>
       </>
     )
   }

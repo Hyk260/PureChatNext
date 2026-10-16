@@ -147,7 +147,7 @@ const ModelTitle = memo<ModelTitleProps>(
             ) : null}
             <DropdownMenu
               items={menuItems}
-              nativeButton
+              nativeButton={false}
               placement='bottomRight'
               triggerProps={{ className: 'size-8', title: '更多' }}
             >

@@ -145,7 +145,7 @@ function renderWechatStatusBanner(params: {
   const { bound, message, refreshStatus, showConnect, status } = params
 
   if (showConnect) {
-    return <Alert showIcon type='info' {...wechatConnectHint()} />
+    return import.meta.env.DEV ? <Alert showIcon type='info' {...wechatConnectHint()} /> : null
   }
 
   if (status?.runtimeStatus === 'starting') {

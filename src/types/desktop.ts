@@ -97,7 +97,26 @@ export type DesktopLocalToolRequest = {
 export type DesktopLocalToolResult = {
   content: string
   data?: unknown
+  execution?: DesktopCommandExecution
   success: boolean
+}
+
+export interface DesktopCommandExecution {
+  command: string
+  cwd: string
+  durationMs: number
+  exitCode: number | null
+  output: string
+  shellId: string
+  signal: string | null
+  startedAt: number
+  status: 'cancelled' | 'completed' | 'failed' | 'timedOut'
+  truncated: boolean
+}
+
+export interface DesktopLocalCommandCancellation {
+  topicId: string
+  toolCallId: string
 }
 
 export type DesktopLogRetentionDays = 0 | 7 | 14 | 30 | 90
@@ -143,6 +162,7 @@ export interface DesktopApi {
   toggleMaximizeWindow: () => Promise<DesktopWindowState>
   closeWindow: () => Promise<void>
   executeLocalTool: (request: DesktopLocalToolRequest) => Promise<DesktopLocalToolResult>
+  cancelLocalCommand: (request: DesktopLocalCommandCancellation) => Promise<void>
   getPermissionScope: (topicId: string) => Promise<{ scope: string | null }>
   requestFullAccess: (topicId: string) => Promise<{ granted: boolean }>
   setPermissionScope: (topicId: string, scope: string) => Promise<{ scope: string }>

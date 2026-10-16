@@ -31,7 +31,7 @@ export const registerDesktopIpc = async (options: {
   updater: UpdateService
 }) => {
   const config = options.config ?? new DesktopConfigService(app.getPath('userData'))
-  const permissions = new PermissionService(PermissionController.createConfirmation())
+  const permissions = new PermissionService()
   const commands = new CommandService(permissions)
   const tools = new LocalToolService(config, permissions, commands)
   const registry = new IpcRegistry(options.getTrustedContents, options.rendererUrl)

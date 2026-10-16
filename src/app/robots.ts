@@ -8,7 +8,7 @@ export const revalidate = 86_400
 export const dynamic = 'force-static'
 
 const robots = (): MetadataRoute.Robots => {
-  const siteUrl = new URL(appEnv.APP_URL ?? SITE_DEFAULT_URL)
+  const siteUrl = new URL(appEnv.SITE_CANONICAL_URL ?? appEnv.APP_URL ?? SITE_DEFAULT_URL)
 
   return {
     host: siteUrl.origin,

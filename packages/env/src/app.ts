@@ -9,7 +9,9 @@ declare global {
     interface ProcessEnv {
       /** 对外访问地址，用于 Better Auth、邮件和 OAuth 回调；本地应使用 Vite SPA 的 `5174` 端口。 */
       APP_URL?: string
-      /** Electron 桌面端官方授权服务地址；发布构建时通常与 APP_URL 相同。 */
+      /** SEO canonical、robots 与 sitemap 的主站地址；备用部署可与 APP_URL 不同。 */
+      SITE_CANONICAL_URL?: string
+      /** Electron 桌面端官方授权服务地址；备用部署应明确指向正式主站。 */
       PURECHAT_DESKTOP_CLOUD_URL?: string
       /** CORS 额外允许来源，逗号分隔；省略时使用 `APP_URL` */
       ALLOWED_ORIGINS?: string
@@ -43,6 +45,8 @@ export const getAppConfig = () => {
     server: {
       /** 对外访问地址，用于 Better Auth、邮件和 OAuth 回调；本地应使用 Vite SPA 的 `5174` 端口。 */
       APP_URL: z.string().optional(),
+      /** 公开页面 canonical、robots 与 sitemap 的站点基址；省略时回退到 APP_URL 或默认主站。 */
+      SITE_CANONICAL_URL: optionalUrlEnv(),
       PURECHAT_DESKTOP_CLOUD_URL: z.string().optional(),
       /** Vercel Edge Config 连接字符串。 */
       VERCEL_EDGE_CONFIG: z.string().optional(),
@@ -57,6 +61,7 @@ export const getAppConfig = () => {
     },
     runtimeEnv: {
       APP_URL,
+      SITE_CANONICAL_URL: process.env.SITE_CANONICAL_URL,
       PURECHAT_DESKTOP_CLOUD_URL: process.env.PURECHAT_DESKTOP_CLOUD_URL,
       VERCEL_EDGE_CONFIG: process.env.VERCEL_EDGE_CONFIG,
       ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,

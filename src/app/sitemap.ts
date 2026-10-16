@@ -7,7 +7,7 @@ export const revalidate = 86_400
 export const dynamic = 'force-static'
 
 const sitemap = (): MetadataRoute.Sitemap => {
-  const siteUrl = new URL(appEnv.APP_URL ?? SITE_DEFAULT_URL)
+  const siteUrl = new URL(appEnv.SITE_CANONICAL_URL ?? appEnv.APP_URL ?? SITE_DEFAULT_URL)
   const now = new Date()
 
   return PUBLIC_SPA_PATHS.map((pathname) => ({

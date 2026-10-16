@@ -54,7 +54,18 @@ NODE_ENV=development
 | 环境     | 推荐值                                    | 说明                                                                    |
 | -------- | ----------------------------------------- | ----------------------------------------------------------------------- |
 | 本地开发 | `http://localhost:5174`                   | UI 在 Vite SPA；邮件/OAuth 链接同源，`/api` 经 Vite 代理到 Next `:3000` |
-| 生产     | 正式域名（如 `https://next.purechat.cn`） | 前后端同域，见 `.env.production`                                        |
+| 生产主站 | `https://app.purechat.cn`                | 主站实例自己的认证、邮件和 OAuth 回调地址                             |
+| Vercel 备用站 | `https://next.purechat.cn`              | 备用实例自己的认证回调地址；Gateway 功能受运行环境限制                 |
+
+`APP_URL` 表示**当前部署实例自己的公开地址**，用于认证与回调。主站设置为 `https://app.purechat.cn`；Vercel 备用实例设置为 `https://next.purechat.cn`。
+
+`SITE_CANONICAL_URL` 控制公开页面的 canonical、robots 和 sitemap 地址。主站可以省略（默认使用正式主站地址）；Vercel 备用实例设置为 `https://app.purechat.cn`，这样备用站继续使用自己的认证/邮件回调地址，但搜索引擎将主站视为规范地址。自托管者若使用自己的正式域名，可省略该变量并让它回退到 `APP_URL`。
+
+Vercel 的生产环境变量需在部署构建前设置并重新部署；`robots.txt` 和 sitemap 使用静态生成，不能只在部署后修改运行时变量。
+
+Vercel 备用实例还应设置 `PURECHAT_DESKTOP_CLOUD_URL=https://app.purechat.cn`，避免从备用部署打开桌面登录时将桌面端指回功能受限的 Vercel 站点。
+
+两套部署若要共享账号、配置和对话，必须使用一致的 `DATABASE_URL`、`AUTH_SECRET`、`KEY_VAULTS_SECRET`、兼容的对象存储配置和同一版本数据库迁移；OAuth 提供方与邮件链接还需允许对应回调域名。只保留 `next.purechat.cn` 的独立数据副本不能构成可用备站。
 
 **不要**在本地把 `APP_URL` 设为 `http://localhost:3000`：邮件点开后会落在 Next 壳而不是 SPA，重置密码 / 验证邮箱体验会错乱。
 

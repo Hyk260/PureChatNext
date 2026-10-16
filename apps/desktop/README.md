@@ -75,7 +75,7 @@ pnpm package:desktop:win:portable
 
 Windows 使用 `windows-2022`，macOS 使用 `macos-15`，均使用 Node.js 22.23.2 和 pnpm 10.33.4。Node 版本与 Docker 工作流保持一致，满足当前依赖要求的 `>=22.22.0`。构建前先检查稳定版本、发行说明、服务地址和工作流分支条件；每个平台打包后校验安装文件和更新元数据存在且非空，再上传。一端失败不会取消另一端，成功端的 Artifact 仍可下载，但不会创建或更新草稿；不会上传解包目录或构建调试 YAML。
 
-默认官方服务地址为 `https://next.purechat.cn`。需要覆盖时，在仓库 **Settings → Secrets and variables → Actions → Variables** 设置非敏感变量 `PURECHAT_DESKTOP_CLOUD_URL`，必须是无用户名/密码的 HTTP(S) 地址，不要误填到 Secrets。生产更新源默认使用 `Hyk260/PureChatNext` 的公开 GitHub Releases；设置仓库 Variable `PURECHAT_DESKTOP_UPDATE_URL` 后，构建将使用指定的 Generic 更新源。COS 场景需填写正式 `desktop/` 公共下载地址，不能使用本地测试地址。不需要数据库、AI Key、签名证书或 PAT；草稿汇总 job 使用内置 `GITHUB_TOKEN` 的 `contents: write` 权限，其余 job 仅有读取权限。S3 密钥只注入独立 COS 同步 job。
+默认官方服务地址为 `https://app.purechat.cn`。`https://next.purechat.cn` 是 Vercel 备用站；只有主备共享数据库、认证密钥和必要依赖时，才能在主站不可用时继续访问 Web 工作台。Vercel 不运行持久 Channel Gateway，因此不支持微信长连接及 QQ 扫码/WebSocket。需要覆盖官方服务地址时，在仓库 **Settings → Secrets and variables → Actions → Variables** 设置非敏感变量 `PURECHAT_DESKTOP_CLOUD_URL`，必须是无用户名/密码的 HTTP(S) 地址，不要误填到 Secrets。生产更新源默认使用 `Hyk260/PureChatNext` 的公开 GitHub Releases；设置仓库 Variable `PURECHAT_DESKTOP_UPDATE_URL` 后，构建将使用指定的 Generic 更新源。COS 场景需填写正式 `desktop/` 公共下载地址，不能使用本地测试地址。不需要数据库、AI Key、签名证书或 PAT；草稿汇总 job 使用内置 `GITHUB_TOKEN` 的 `contents: write` 权限，其余 job 仅有读取权限。S3 密钥只注入独立 COS 同步 job。
 
 草稿记录完整 commit SHA。同版本、同 commit 重跑会替换安装文件及更新元数据；已公开版本、不同 commit 的草稿、指向不同 commit 的 tag 均会明确失败。源代码变化后应使用新版本；若需要重建未发布的同版本，应先人工处理旧草稿及冲突 tag。API 或网络错误也会直接失败，不会被当作版本不存在。
 

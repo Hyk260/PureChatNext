@@ -1,5 +1,6 @@
 import { analyticsEnv } from '@/envs/analytics'
 import { appEnv, IS_VERCEL } from '@/envs/app'
+import { SITE_DEFAULT_URL } from '@/const/site'
 import { getProviderEnvKeyFlags } from '@/libs/ai-providers/envKeys'
 import { sanitizeReferralTelemetryUrl } from '@/libs/referrals/helpers'
 import { renderSpaHtml } from '@/server/spaHtml'
@@ -13,7 +14,7 @@ export const dynamic = 'force-dynamic'
 
 function buildServerConfig(origin: string): SPAServerConfig {
   return {
-    desktopCloudUrl: appEnv.APP_URL ?? origin,
+    desktopCloudUrl: appEnv.PURECHAT_DESKTOP_CLOUD_URL ?? appEnv.APP_URL ?? origin,
     renderedAt: new Date().toISOString(),
     enableVercelAnalytics: analyticsEnv.ENABLE_VERCEL_ANALYTICS,
     debugVercelAnalytics: analyticsEnv.DEBUG_VERCEL_ANALYTICS,
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest, context: SpaRouteContext) {
 
   const response = renderSpaHtml(spaHtmlTemplate, {
     publicMetadata: {
-      baseUrl: appEnv.APP_URL ?? request.nextUrl.origin,
+      baseUrl: appEnv.SITE_CANONICAL_URL ?? appEnv.APP_URL ?? SITE_DEFAULT_URL,
       pathname,
     },
     serverConfig: buildServerConfig(request.nextUrl.origin),

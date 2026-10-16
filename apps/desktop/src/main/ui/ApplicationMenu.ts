@@ -71,16 +71,12 @@ export const installApplicationMenu = (rootDir?: string) => {
       {
         label: '文档',
         click: () =>
-          shell
-            .openExternal('https://next-docs.purechat.cn')
-            .catch((error) => logger.error('打开文档失败', error)),
+          shell.openExternal('https://next-docs.purechat.cn').catch((error) => logger.error('打开文档失败', error)),
       },
       {
         label: '网站',
         click: () =>
-          shell
-            .openExternal('https://next.purechat.cn')
-            .catch((error) => logger.error('打开网站失败', error)),
+          shell.openExternal('https://app.purechat.cn').catch((error) => logger.error('打开网站失败', error)),
       },
       {
         label: '反馈',

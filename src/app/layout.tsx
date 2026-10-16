@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   },
   keywords: SITE_KEYWORDS,
   manifest: '/manifest.webmanifest',
-  metadataBase: new URL(appEnv.APP_URL ?? SITE_DEFAULT_URL),
+  metadataBase: new URL(appEnv.SITE_CANONICAL_URL ?? appEnv.APP_URL ?? SITE_DEFAULT_URL),
   openGraph: {
     description: SITE_DESCRIPTION,
     images: [{ alt: SITE_TITLE, height: 630, url: '/opengraph-image', width: 1200 }],

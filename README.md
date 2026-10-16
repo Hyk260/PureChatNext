@@ -8,7 +8,7 @@
 
 面向中文用户和小团队的开源自托管 AI 工作台，支持多模型、联网搜索、文件处理和私有部署。
 
-[在线体验(vercel)][online-demo-link] · [腾讯云备用][tencent-cloud-demo-link] · [Vercel 部署][vercel-deploy-link] · [Docker 自托管](./docs/self-hosting/platform/docker.md) · [文档站][docs-site-link] · [讨论区][github-discussions-link]
+[在线体验（正式主站）][primary-demo-link] · [Vercel 备用站（功能受限）][vercel-backup-link] · [Vercel 部署（Gateway 功能受限）][vercel-deploy-link] · [Docker 自托管](./docs/self-hosting/platform/docker.md) · [文档站][docs-site-link] · [讨论区][github-discussions-link]
 
 [![Docs][docs-shield]][docs-site-link]
 [![GitHub license][github-license-shield]][github-license-link]
@@ -46,7 +46,7 @@
 
 ## 项目简介
 
-PureChat（仓库名：[PureChatNext][repo-link]）让同一个 AI 助手同时服务于 **Web、微信和 QQ**。你可以直接使用 [在线体验][online-demo-link] 或 [腾讯云备用][tencent-cloud-demo-link]，也可以把数据库、模型密钥、文件和聊天记录完整部署在自己的环境中。
+PureChat（仓库名：[PureChatNext][repo-link]）让同一个 AI 助手同时服务于 **Web、微信和 QQ**。你可以先使用[正式主站][primary-demo-link]，也可以在主备共享数据库、密钥和必要依赖的前提下使用 [Vercel 备用站][vercel-backup-link]；也可把数据库、模型密钥、文件和聊天记录完整部署在自己的环境中。Vercel 备用站不运行持久 Channel Gateway，因此不支持微信持久连接、QQ 扫码或 WebSocket，仅支持 QQ Webhook。
 
 与通用 ChatGPT Clone 相比，PureChat 优先解决中文用户的三个具体问题：
 
@@ -251,7 +251,8 @@ pnpm docker:upload -- --up                                           # 升级
 
 | 变量 | 用途 | 说明 |
 | --- | --- | --- |
-| `APP_URL` | 应用对外地址 | 本地使用 `http://localhost:5174`，生产使用正式域名；CORS 默认允许该地址 |
+| `APP_URL` | 当前部署的对外地址 | 本地使用 `http://localhost:5174`；主站为 `https://app.purechat.cn`，Vercel 备用站使用 `https://next.purechat.cn`；CORS 默认允许该地址 |
+| `SITE_CANONICAL_URL` | 公开页面的 SEO 主域 | 可选；备用站设置为 `https://app.purechat.cn`，认证回调仍由 `APP_URL` 决定 |
 | `ALLOWED_ORIGINS` | CORS 额外来源 | 可选；省略时使用 `APP_URL`。不要使用 `*` |
 | `DATABASE_DRIVER` | 数据库连接模式 | 云数据库使用 `neon`；本地 / Docker PostgreSQL 使用 `node` |
 | `DATABASE_URL` | PostgreSQL 连接字符串 | Supabase、Neon 或本地 PostgreSQL 均可 |
@@ -361,9 +362,9 @@ Copyright © 2025–2026 [Hyk260][profile-link].
 [github-release-shield]: https://img.shields.io/github/v/release/Hyk260/PureChatNext?logo=github
 [github-stars-link]: https://github.com/Hyk260/PureChatNext/stargazers
 [github-stars-shield]: https://img.shields.io/github/stars/Hyk260/PureChatNext
-[online-demo-link]: https://next.purechat.cn
+[primary-demo-link]: https://app.purechat.cn
+[vercel-backup-link]: https://next.purechat.cn
 [profile-link]: https://github.com/Hyk260
-[tencent-cloud-demo-link]: https://app.purechat.cn
 [repo-link]: https://github.com/Hyk260/PureChatNext
 [vercel-deploy-link]: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHyk260%2FPureChatNext
 [vercel-deploy-shield]: https://img.shields.io/badge/Deploy-Vercel-000000?style=flat&labelColor=555&logo=vercel&logoColor=fff

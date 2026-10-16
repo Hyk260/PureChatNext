@@ -13,9 +13,9 @@ QQ 支持三种连接方式：
 
 ## 部署支持
 
+- 主站 `app.purechat.cn`：应部署在支持持久 Node.js 进程的运行环境；启用 Gateway 后可使用扫码、WebSocket 和 Webhook。Docker 生产 Compose 已开启 WebSocket Gateway。
+- Vercel 备用站 `next.purechat.cn`：仅支持 Webhook；UI 与服务端都会拒绝创建或切换到扫码/WebSocket。切换备用站时需确认 QQ 开放平台的回调地址指向该站可访问的 Webhook Route。
 - 本地 WebSocket：设置 `CHANNEL_GATEWAY_ENABLED=1` 后正常运行 `pnpm dev`。
-- Docker：生产 Compose 已开启，WebSocket 随单一 `app` 容器启动。
-- Vercel：仅支持 Webhook；UI 与服务端都会拒绝创建或切换到 WebSocket。
 
 ## 本地 TryCloudflare 测试 → Vercel 上线
 

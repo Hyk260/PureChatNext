@@ -9,9 +9,9 @@ description: 在 PureChatNext 中配置微信 iLink 渠道、模型凭证和运�
 
 ## 部署支持
 
+- 主站 `app.purechat.cn`：应部署在支持持久 Node.js 进程的运行环境，并启用 `CHANNEL_GATEWAY_ENABLED=1`；Docker Compose 已显式开启，单一 `app` 容器同时运行 Next 与 Gateway。
+- Vercel 备用站 `next.purechat.cn`：不支持持久连接；设置页保留入口但禁用微信扫码和 Gateway 绑定。它可用于访问 Web 工作台，不能替代主站的微信渠道运行时。
 - 本地：默认关闭。在 `.env.local` 设置 `CHANNEL_GATEWAY_ENABLED=1`，然后正常运行 `pnpm dev`。
-- Docker：生产 Compose 已显式开启，单一 `app` 容器同时运行 Next 与 Gateway。
-- Vercel：不支持持久连接；设置页保留入口但禁用扫码和绑定。
 
 ## 必需配置
 

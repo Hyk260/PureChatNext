@@ -1,6 +1,14 @@
 import type { SPAServerConfig } from '@/types/spaServerConfig'
 
-import { isPublicSpaPath, SITE_DESCRIPTION, SITE_NAME, SITE_REPOSITORY_URL, SITE_TITLE } from '@/const/site'
+import {
+  isPublicSpaPath,
+  SITE_BAIDU_WEBMASTER_VERIFICATION,
+  SITE_BING_WEBMASTER_VERIFICATION,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_REPOSITORY_URL,
+  SITE_TITLE,
+} from '@/const/site'
 
 import { serializeForHtml } from './serializeForHtml'
 
@@ -43,6 +51,8 @@ const publicMetadataTags = ({ baseUrl, pathname }: NonNullable<RenderSpaHtmlOpti
   })
 
   return [
+    `<meta name="baidu-site-verification" content="${SITE_BAIDU_WEBMASTER_VERIFICATION}" />`,
+    `<meta name="msvalidate.01" content="${SITE_BING_WEBMASTER_VERIFICATION}" />`,
     `<link rel="canonical" href="${escapeHtmlAttribute(canonicalUrl)}" />`,
     `<meta name="robots" content="${robots}" />`,
     '<meta property="og:type" content="website" />',

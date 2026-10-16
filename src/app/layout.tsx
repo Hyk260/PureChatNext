@@ -6,7 +6,9 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import Analytics from '@/components/Analytics'
 import { appEnv, IS_VERCEL } from '@/envs/app'
 import {
+  SITE_BAIDU_WEBMASTER_VERIFICATION,
   SITE_DEFAULT_URL,
+  SITE_BING_WEBMASTER_VERIFICATION,
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
   SITE_NAME,
@@ -51,7 +53,12 @@ export const metadata: Metadata = {
     images: ['/opengraph-image'],
     title: SITE_TITLE,
   },
-  verification: {},
+  verification: {
+    other: {
+      'baidu-site-verification': SITE_BAIDU_WEBMASTER_VERIFICATION,
+      'msvalidate.01': SITE_BING_WEBMASTER_VERIFICATION,
+    },
+  },
   other: {
     'code-repository': SITE_REPOSITORY_URL,
   },

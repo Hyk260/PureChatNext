@@ -163,28 +163,27 @@ function renderQqStatusBanner(params: {
 
   return (
     <>
-      {connected ? (
-        import.meta.env.DEV ? (
-          <Alert
-            showIcon
-            type='success'
-            title={
-              <Flex className='items-center gap-2'>
-                <span>{boundTitle}</span>
-                <Code2 aria-hidden='true' size={16} />
-              </Flex>
-            }
-            description={status ? qqBoundDescription(status) : undefined}
-          />
-        ) : null
-      ) : (
+      {connected && import.meta.env.DEV ? (
+        <Alert
+          showIcon
+          type='success'
+          title={
+            <Flex className='items-center gap-2'>
+              <span>{boundTitle}</span>
+              <Code2 aria-hidden='true' size={16} />
+            </Flex>
+          }
+          description={status ? qqBoundDescription(status) : undefined}
+        />
+      ) : null}
+      {!connected ? (
         <Alert
           showIcon
           type='warning'
           title={boundTitle}
           description={status ? qqBoundDescription(status) : undefined}
         />
-      )}
+      ) : null}
       {webhookUrl ? (
         <Alert
           showIcon

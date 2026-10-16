@@ -19,9 +19,8 @@ import {
 import { MONTHLY_FREE_CREDITS, SHANGHAI_TIMEZONE, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { EMPTY_PLACEHOLDER, formatCompactDateTime, formatNumber } from '@pure/utils/client'
-import { ArrowLeft } from 'lucide-react'
+import { RefreshCw, UserPlus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
 
 import { useApp } from '@/components/AntdStaticMethods'
 import { getUserRoleLabel } from '@/const/auth'
@@ -85,18 +84,8 @@ const toEditValues = (user: AdminUser): UserFormValues => ({
 
 export default function AdminUsersPage() {
   const { message } = useApp()
-  const navigate = useNavigate()
   const { data: session } = useSession()
   const actorId = session?.user?.id
-
-  const goBack = () => {
-    const idx = window.history.state?.idx
-    if (typeof idx === 'number' && idx > 0) {
-      navigate(-1)
-      return
-    }
-    navigate('/')
-  }
 
   const [form] = Form.useForm<UserFormValues>()
   const banned = Form.useWatch('banned', form)
@@ -130,6 +119,7 @@ export default function AdminUsersPage() {
     },
     [message, page, pageSize, query, sortBy, sortOrder]
   )
+  const refreshUsers = () => loadUsers()
 
   useEffect(() => {
     const controller = new AbortController()
@@ -360,27 +350,13 @@ export default function AdminUsersPage() {
   return (
     <main className='h-full min-h-0 overflow-y-auto'>
       <Flex className='mx-auto w-full max-w-6xl flex-col gap-4 px-6 py-6'>
-        <Flex className='flex-between gap-3 flex-wrap'>
-          <Flex className='items-center gap-2'>
-            {/* <ActionIcon
-              aria-label='返回上一页'
-              icon={ArrowLeft}
-              size='small'
-              title='返回上一页'
-              onClick={goBack}
-            /> */}
-            <Flex className='flex-col gap-1'>
-              <Text className='text-xl font-semibold'>用户管理</Text>
-              <Text type='secondary'>管理员可创建、编辑、封禁和删除用户</Text>
-            </Flex>
-          </Flex>
-          <Button type='primary' onClick={openCreate}>
-            新建用户
-          </Button>
+        <Flex className='flex-col gap-1'>
+          <Text className='text-xl font-semibold'>用户管理</Text>
+          <Text type='secondary'>管理员可创建、编辑、封禁和删除用户</Text>
         </Flex>
 
         <Block padding={0} variant='outlined'>
-          <Flex className='gap-2.5 flex-wrap border-b border-border px-4 py-2.5'>
+          <Flex className='flex-between gap-2.5 flex-wrap border-b border-border px-4 py-2.5'>
             <SearchBar
               placeholder='搜索邮箱、用户名或全名'
               style={{ flex: '1 1 260px' }}
@@ -397,6 +373,25 @@ export default function AdminUsersPage() {
                 setPage(1)
               }}
             />
+            <Flex className='shrink-0 gap-2'>
+              <ActionIcon
+                variant='outlined'
+                aria-label='新建用户'
+                icon={<UserPlus size={16} />}
+                size='middle'
+                title='新建用户'
+                onClick={openCreate}
+              />
+              <ActionIcon
+                variant='outlined'
+                aria-label='刷新表格数据'
+                disabled={loading}
+                size='middle'
+                icon={<RefreshCw size={16} className={loading ? 'animate-spin' : undefined} />}
+                title='刷新表格数据'
+                onClick={refreshUsers}
+              />
+            </Flex>
           </Flex>
 
           <Table<AdminUser>

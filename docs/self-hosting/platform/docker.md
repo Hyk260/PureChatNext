@@ -1,13 +1,37 @@
 ---
 title: Docker 自托管
-description: 本地开发依赖、生产应用容器，以及 pnpm Docker 命令与参数说明。
+description: PureChatNext Docker 自托管部署：准备 PostgreSQL、对象存储和模型密钥，生成配置、启动应用并检查健康状态、升级与备份。
 ---
 
 # Docker 自托管
 
-PureChatNext 同时支持 Vercel 与 Docker 自托管。本地开发用 Compose 启动 PostgreSQL、Redis、RustFS 和 SearXNG。生产只运行应用容器，连接宿主机已有的 PostgreSQL（必须）和 Redis（可选）；文件使用云对象存储，联网搜索使用云 API。HTTPS 由宿主机 Nginx 或 Caddy 提供。默认资源档案为 `2g`。
+Docker 是 PureChatNext 的完整自托管方式：本地开发用 Compose 启动 PostgreSQL、Redis、RustFS 和 SearXNG；生产只运行应用容器，连接已有 PostgreSQL 与按需配置的 Redis、S3 对象存储和搜索服务。HTTPS 由宿主机 Nginx 或 Caddy 提供，默认资源档案为 `2g`。
+
+当前项目主备站的角色约定是：`app.purechat.cn` 指向支持持久 Node.js 进程的主站；`next.purechat.cn` 是 Vercel 备用 Web 入口，只支持 QQ Webhook，不支持微信轮询、QQ 扫码或 WebSocket。自托管者应使用自己的正式域名与持久运行环境；可用能力由部署运行时决定，不由域名决定。详见[微信渠道](../channels/wechat/setup.md)和[QQ 渠道](../channels/qq/setup.md)。
 
 相关 `pnpm` 脚本的用途与参数见 [命令参考](#命令参考)。向脚本传参时，标志写在 `--` 后面，例如 `pnpm docker:pack -- --skip-build`。
+
+## 快速部署与验收
+
+本指南适用于仓库当前的 Docker Compose 部署。生产应用需要 Docker Compose v2、可访问的 PostgreSQL、至少一个模型服务凭证，以及已配置 HTTPS 的正式域名；要使用文件 / 附件上传，还需配置 S3 兼容对象存储。Redis 和联网搜索服务可选。默认 `2g` 资源档案将应用容器内存上限设为 512 MiB，主机仍需为数据库和其他容器预留内存。
+
+在仓库根目录生成生产配置，编辑生成的 `.env`，然后启动应用：
+
+```bash
+pnpm docker:setup:deploy
+# 编辑 docker-compose/deploy/.env：填写 APP_URL、S3 配置和模型服务凭证
+pnpm docker:deploy
+```
+
+将下方域名替换为 `.env` 中的 `APP_URL`，检查应用和已配置依赖：
+
+```bash
+curl --fail --silent --show-error https://chat.example.com/api/health
+```
+
+返回 HTTP 200 且 JSON 的 `status` 为 `ok` 表示基础健康检查通过；`checks` 中可选的 Redis、对象存储或搜索依赖显示 `skipped` 表示未配置。若返回 503 或 `unhealthy`，先查看 `checks` 和 `gateway`，再按下方[故障排查](#故障排查)检查应用日志与依赖连通性。首次部署完整步骤见[云服务器部署](./1panel.md)。
+
+> 配置项与命令已于 2026-10-16 对照仓库源码核对；这不是对读者目标服务器的部署实测。升级时使用与文档相同版本的仓库代码。
 
 ## 本地开发依赖
 
@@ -269,3 +293,18 @@ sudo ./install.sh up --force-recreate
 说明见 [云服务器部署 · 更新环境变量](./1panel.md#更新环境变量)。
 
 应用日志停在 `[Database] waiting for PostgreSQL` 时检查数据库健康与密码；迁移报 schema 不一致时按 [Drizzle 指南](../../development/database/drizzle.md#迁移失败) 修复，禁止清卷绕过。
+
+## 常见问题
+
+**Redis 是生产必需的吗？** 不是。Compose 可接入已有 Redis；未配置时健康检查会将其标记为 `skipped`。
+
+**不配置 S3 会怎样？** 应用可跳过启动时建桶，但文件 / 附件存储需要可用的 S3 兼容配置。
+
+**开发环境如何安全停止？** 使用 `pnpm dev:docker:down` 保留 named volumes。`pnpm dev:docker:reset` 会删除开发卷数据；生产环境不要运行 `down -v`。
+
+## 继续了解
+
+- [云服务器部署](./1panel.md)：在线安装、离线包、反向代理与升级步骤。
+- [环境变量配置](../configuration/environment.md)：生产域名、数据库和渠道密钥说明。
+- [微信 iLink 渠道](../channels/wechat/setup.md) 与 [QQ 机器人渠道](../channels/qq/setup.md)：配置渠道、检查 Gateway 状态。
+- [体验 PureChat](https://app.purechat.cn/?utm_source=docs&utm_medium=organic&utm_campaign=self_hosting_guide&utm_content=docker) · [GitHub 源码](https://github.com/Hyk260/PureChatNext)

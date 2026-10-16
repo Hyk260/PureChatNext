@@ -1,8 +1,8 @@
 'use client'
 
-import { Accordion, AccordionItem, Flex, Icon, ProviderIcon, SearchBar, Text } from '@pure/ui'
+import { Accordion, AccordionItem, ActionIcon, Flex, Icon, SearchBar, Text } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
-import { LayoutGrid, Search } from 'lucide-react'
+import { LayoutGrid, Plus, Search } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { memo, useMemo, useState } from 'react'
@@ -10,9 +10,15 @@ import { memo, useMemo, useState } from 'react'
 import NavItem from '@/components/NavItem'
 import Scrollbar from '@/components/Scrollbar'
 
+import { useApp } from '@/components/AntdStaticMethods'
+
+import { createCustomProvider } from './customProvidersApi'
+import CustomProviderModal from './CustomProviderModal'
 import { SETTINGS_PROVIDER_IDS, getSettingsProviderMeta } from './const'
+import ProviderMark from './ProviderMark'
 import { useProviderConfigStore } from './store/useProviderConfigStore'
-import type { ProviderId } from './types'
+import { useCustomProviderRegistry } from './useCustomProviderRegistry'
+import type { CustomProviderDefinition, ProviderId } from './types'
 
 const MENU_WIDTH = 280
 
@@ -44,8 +50,13 @@ const styles = createStaticStyles(({ css }) => ({
   `,
 }))
 
-const ProviderNavItem = memo<{ id: ProviderId; active: boolean; enabled: boolean }>(({ id, active, enabled }) => {
-  const meta = getSettingsProviderMeta(id)
+const ProviderNavItem = memo<{
+  active: boolean
+  customProviders: CustomProviderDefinition[]
+  enabled: boolean
+  id: ProviderId
+}>(({ customProviders, id, active, enabled }) => {
+  const meta = getSettingsProviderMeta(id, customProviders)
 
   return (
     <Link className='text-inherit no-underline' href={`/settings/provider/${id}`}>
@@ -54,7 +65,7 @@ const ProviderNavItem = memo<{ id: ProviderId; active: boolean; enabled: boolean
         clickable
         title={
           <Flex className='items-center gap-2 w-full'>
-            <ProviderIcon provider={id} size={18} type='color' />
+            <ProviderMark id={id} logo={meta.logo} name={meta.name} size={18} />
             <Text className='min-w-0 flex-1' ellipsis>
               {meta.name}
             </Text>
@@ -69,9 +80,20 @@ const ProviderNavItem = memo<{ id: ProviderId; active: boolean; enabled: boolean
 ProviderNavItem.displayName = 'ProviderNavItem'
 
 const ProviderSettingsNav = memo(() => {
+  const { message } = useApp()
   const pathname = usePathname()
   const [keyword, setKeyword] = useState('')
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const registry = useCustomProviderRegistry()
   const configs = useProviderConfigStore((s) => s.configs)
+  const customProviders = useProviderConfigStore((s) => s.customProviders)
+  const setCustomProviders = useProviderConfigStore((s) => s.setCustomProviders)
+  const availableCustomProviders = registry.data ?? customProviders
+  const allProviderIds = useMemo(
+    () => [...SETTINGS_PROVIDER_IDS, ...availableCustomProviders.map((provider) => provider.id)],
+    [availableCustomProviders]
+  )
 
   const activeId = useMemo(() => {
     const segment = pathname.split('/')[3]
@@ -82,28 +104,53 @@ const ProviderSettingsNav = memo(() => {
 
   const filteredIds = useMemo(() => {
     const q = keyword.trim().toLowerCase()
-    if (!q) return SETTINGS_PROVIDER_IDS
+    if (!q) return allProviderIds
 
-    return SETTINGS_PROVIDER_IDS.filter((id) => {
-      const meta = getSettingsProviderMeta(id)
+    return allProviderIds.filter((id) => {
+      const meta = getSettingsProviderMeta(id, availableCustomProviders)
       return meta.name.toLowerCase().includes(q) || meta.identifier.toLowerCase().includes(q)
     })
-  }, [keyword])
+  }, [allProviderIds, availableCustomProviders, keyword])
 
-  const enabledIds = filteredIds.filter((id) => configs[id]?.enabled)
-  const disabledIds = filteredIds.filter((id) => !configs[id]?.enabled)
+  const enabledIds = filteredIds.filter(
+    (id) => configs[id]?.enabled ?? availableCustomProviders.find((provider) => provider.id === id)?.enabled ?? false
+  )
+  const disabledIds = filteredIds.filter((id) => !enabledIds.includes(id))
+
+  const handleCreateProvider = async (provider: Parameters<typeof createCustomProvider>[0]) => {
+    setCreating(true)
+    try {
+      const created = await createCustomProvider(provider)
+      const nextProviders = [...availableCustomProviders, created]
+      await registry.mutate(nextProviders, { revalidate: false })
+      setCustomProviders(nextProviders)
+      setCreateModalOpen(false)
+      message.success(`已创建服务商 ${created.name}`)
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '创建服务商失败')
+    } finally {
+      setCreating(false)
+    }
+  }
 
   return (
-    <Flex className={[styles.menu, 'flex-col h-[100vh]']}>
-      <Flex className={[styles.searchBar, 'flex-col-center']}>
+    <Flex className={[styles.menu, 'flex-col h-screen']}>
+      <Flex className={[styles.searchBar, 'items-center gap-1 px-2']}>
         <SearchBar
           allowClear
+          className='min-w-0 flex-1'
           placeholder='搜索服务商'
           prefix={<Icon color={cssVar.colorTextDescription} icon={Search} size={14} style={{ marginInlineEnd: 4 }} />}
-          style={{ width: '100%' }}
           value={keyword}
           variant='borderless'
           onInputChange={setKeyword}
+        />
+        <ActionIcon
+          aria-label='创建自定义服务商'
+          icon={Plus}
+          size='small'
+          title='创建自定义服务商'
+          onClick={() => setCreateModalOpen(true)}
         />
       </Flex>
       <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }}>
@@ -124,7 +171,15 @@ const ProviderSettingsNav = memo(() => {
             >
               <Flex className='flex-col gap-px py-px'>
                 {enabledIds.length > 0 ? (
-                  enabledIds.map((id) => <ProviderNavItem active={activeId === id} enabled id={id} key={id} />)
+                  enabledIds.map((id) => (
+                    <ProviderNavItem
+                      active={activeId === id}
+                      customProviders={availableCustomProviders}
+                      enabled
+                      id={id}
+                      key={id}
+                    />
+                  ))
                 ) : (
                   <Text className='px-3 py-1.5 text-[12px]' type='secondary'>
                     暂无
@@ -144,7 +199,15 @@ const ProviderSettingsNav = memo(() => {
             >
               <Flex className='flex-col gap-px py-px'>
                 {disabledIds.length > 0 ? (
-                  disabledIds.map((id) => <ProviderNavItem active={activeId === id} enabled={false} id={id} key={id} />)
+                  disabledIds.map((id) => (
+                    <ProviderNavItem
+                      active={activeId === id}
+                      customProviders={availableCustomProviders}
+                      enabled={false}
+                      id={id}
+                      key={id}
+                    />
+                  ))
                 ) : (
                   <Text className='px-3 py-1.5 text-[12px]' type='secondary'>
                     暂无
@@ -155,6 +218,13 @@ const ProviderSettingsNav = memo(() => {
           </Accordion>
         </Flex>
       </Scrollbar>
+      <CustomProviderModal
+        existingProviderIds={allProviderIds}
+        loading={creating}
+        open={createModalOpen}
+        onCancel={() => setCreateModalOpen(false)}
+        onCreate={handleCreateProvider}
+      />
     </Flex>
   )
 })

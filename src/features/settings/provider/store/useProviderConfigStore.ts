@@ -1,6 +1,7 @@
 'use client'
 
 import { getAiModel } from '@pure/model-bank'
+import type { ModelProviderId } from '@pure/model-bank'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
@@ -10,10 +11,18 @@ import {
   isServerManagedProvider,
   LEGACY_PROVIDER_DEFAULT_BASE_URLS,
 } from '../const'
-import type { ProviderConfig, ProviderConfigs, ProviderId, ProviderModelHealth, ProviderModelItem } from '../types'
+import type {
+  CustomProviderDefinition,
+  ProviderConfig,
+  ProviderConfigs,
+  ProviderId,
+  ProviderModelHealth,
+  ProviderModelItem,
+} from '../types'
 
 interface ProviderConfigState {
   configs: ProviderConfigs
+  customProviders: CustomProviderDefinition[]
   addCustomModel: (id: ProviderId, model: CustomModelPatch & { id: string }) => void
   clearRemoteModels: (id: ProviderId) => void
   getConfig: (id: ProviderId) => ProviderConfig
@@ -23,6 +32,8 @@ interface ProviderConfigState {
   removeCustomModel: (id: ProviderId, modelId: string) => void
   setCheckModel: (id: ProviderId, checkModel: string) => void
   setEnabled: (id: ProviderId, enabled: boolean) => void
+  setCustomProviders: (providers: CustomProviderDefinition[]) => void
+  removeCustomProvider: (id: ProviderId) => void
   setModelHealth: (id: ProviderId, modelId: string, health: ProviderModelHealth) => void
   setModels: (id: ProviderId, models: ProviderModelItem[]) => void
   setAllModelsEnabled: (id: ProviderId, enabled: boolean) => void
@@ -45,7 +56,7 @@ export const mergeProviderConfig = (
   const defaults = createDefaultProviderConfig(id)
   if (!partial) return defaults
 
-  const legacyDefault = LEGACY_PROVIDER_DEFAULT_BASE_URLS[id]
+  const legacyDefault = isBuiltinProviderId(id) ? LEGACY_PROVIDER_DEFAULT_BASE_URLS[id] : undefined
   const rawBaseURL = typeof partial.baseURL === 'string' ? partial.baseURL : defaults.baseURL
   const baseURL = rawBaseURL.trim() === legacyDefault ? '' : rawBaseURL
 
@@ -82,11 +93,26 @@ export const mergeProviderConfig = (
   }
 }
 
-const normalizePersistedConfigs = (configs?: Partial<ProviderConfigs>): ProviderConfigs => ({
-  deepseek: mergeProviderConfig('deepseek', configs?.deepseek),
-  openai: mergeProviderConfig('openai', configs?.openai),
-  purechat: mergeProviderConfig('purechat', configs?.purechat),
-})
+const isBuiltinProviderId = (id: string): id is 'openai' | 'deepseek' | 'purechat' =>
+  id === 'openai' || id === 'deepseek' || id === 'purechat'
+
+const isValidProviderId = (id: string) =>
+  /^[a-z0-9][a-z0-9_-]{0,31}$/.test(id) && !['__proto__', 'constructor', 'prototype'].includes(id)
+
+const normalizePersistedConfigs = (configs?: Partial<ProviderConfigs>): ProviderConfigs => {
+  const next: ProviderConfigs = {
+    deepseek: mergeProviderConfig('deepseek', configs?.deepseek),
+    openai: mergeProviderConfig('openai', configs?.openai),
+    purechat: mergeProviderConfig('purechat', configs?.purechat),
+  }
+
+  for (const [id, config] of Object.entries(configs ?? {})) {
+    if (!isValidProviderId(id) || isBuiltinProviderId(id)) continue
+    next[id] = mergeProviderConfig(id, config)
+  }
+
+  return next
+}
 
 const normalizePersistedHealth = (configs: ProviderConfigs): ProviderConfigs => {
   const next = { ...configs }
@@ -104,16 +130,23 @@ const normalizePersistedHealth = (configs: ProviderConfigs): ProviderConfigs => 
   return next
 }
 
-const stripSecretFields = (configs: ProviderConfigs): ProviderConfigs => ({
-  deepseek: { ...configs.deepseek, apiKey: '', baseURL: '' },
-  openai: { ...configs.openai, apiKey: '', baseURL: '' },
-  purechat: { ...configs.purechat, apiKey: '', baseURL: '' },
-})
+const stripSecretFields = (configs: ProviderConfigs): ProviderConfigs =>
+  Object.fromEntries(
+    Object.entries(configs).map(([id, config]) => [
+      id,
+      {
+        ...config,
+        apiKey: '',
+        ...(isBuiltinProviderId(id) ? { baseURL: '' } : {}),
+      },
+    ])
+  )
 
 export const useProviderConfigStore = create<ProviderConfigState>()(
   persist(
     (set, get) => ({
       configs: DEFAULT_PROVIDER_CONFIGS,
+      customProviders: [],
       addCustomModel: (id, model) => {
         set((state) => {
           const current = state.configs[id] ?? createDefaultProviderConfig(id)
@@ -166,7 +199,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
 
           for (const model of config.models) {
             if (!model.enabled) continue
-            if (getAiModel(providerId, model.id)?.enabled === false) continue
+            if (getAiModel(providerId as ModelProviderId, model.id)?.enabled === false) continue
             result.push({
               displayName: model.displayName,
               model: model.id,
@@ -270,6 +303,37 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
           },
         }))
       },
+      setCustomProviders: (providers) => {
+        set((state) => {
+          const validIds = new Set(providers.map((provider) => provider.id))
+          const configs: ProviderConfigs = { ...DEFAULT_PROVIDER_CONFIGS }
+
+          for (const [id, config] of Object.entries(state.configs)) {
+            if (isBuiltinProviderId(id) || validIds.has(id)) configs[id] = config
+          }
+
+          for (const provider of providers) {
+            const current = configs[provider.id]
+            configs[provider.id] = {
+              ...mergeProviderConfig(provider.id, current),
+              baseURL: provider.baseURL,
+              enabled: provider.enabled,
+            }
+          }
+
+          return { configs, customProviders: providers }
+        })
+      },
+      removeCustomProvider: (id) => {
+        set((state) => {
+          const configs = { ...state.configs }
+          delete configs[id]
+          return {
+            configs,
+            customProviders: state.customProviders.filter((provider) => provider.id !== id),
+          }
+        })
+      },
       setModelHealth: (id, modelId, health) => {
         set((state) => {
           const current = state.configs[id] ?? createDefaultProviderConfig(id)
@@ -305,7 +369,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
                 ...current,
                 models: current.models.map((model) => ({
                   ...model,
-                  enabled: getAiModel(id, model.id)?.enabled === false ? false : enabled,
+                  enabled: getAiModel(id as ModelProviderId, model.id)?.enabled === false ? false : enabled,
                 })),
               },
             },

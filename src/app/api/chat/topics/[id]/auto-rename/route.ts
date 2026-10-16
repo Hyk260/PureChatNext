@@ -1,5 +1,6 @@
 import { PURECHAT_PROVIDER_ID } from '@pure/const'
 import { FreePlanLimitError } from '@pure/database/models/credits'
+import { isValidProviderId } from '@pure/database/models/customProvider'
 import { ChatMessageModel } from '@pure/database/models/chatMessage'
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import { generateText } from 'ai'
@@ -10,6 +11,7 @@ import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import {
+  createOpenAICompatibleLanguageModel,
   createProviderLanguageModel,
   isSupportedProviderId,
   resolveApiKeyFromHeader,
@@ -90,7 +92,9 @@ const createSelfHostedModel = async (
   model: string,
   baseURL?: string
 ): Promise<HostedModelResult> => {
-  if (!isSupportedProviderId(provider)) return { error: 'Unsupported provider', languageModel: null }
+  if (!isSupportedProviderId(provider) && !isValidProviderId(provider)) {
+    return { error: 'Unsupported provider', languageModel: null }
+  }
 
   const credentials = await resolveUserProviderCredentials({
     allowEnvFallback: true,
@@ -103,15 +107,14 @@ const createSelfHostedModel = async (
     return { error: MISSING_USER_PROVIDER_SECRET_MESSAGE, languageModel: null }
   }
 
-  return {
-    error: null,
-    languageModel: createProviderLanguageModel(
-      provider,
-      model,
-      credentials.apiKey,
-      credentials.baseURL ?? resolveOptionalBaseURL(baseURL)
-    ),
-  }
+  const resolvedBaseURL = credentials.baseURL ?? resolveOptionalBaseURL(baseURL)
+  if (!resolvedBaseURL) return { error: 'Missing provider base URL', languageModel: null }
+
+  const languageModel = isSupportedProviderId(provider)
+    ? createProviderLanguageModel(provider, model, credentials.apiKey, resolvedBaseURL)
+    : createOpenAICompatibleLanguageModel(model, credentials.apiKey, resolvedBaseURL)
+
+  return { error: null, languageModel }
 }
 
 /**
@@ -162,7 +165,6 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
     languageModel = createPureChatLanguageModel(model)
     if (!languageModel) return jsonError('PureChat temporarily unavailable', 503)
   } else {
-    if (!isSupportedProviderId(provider)) return jsonError('Unsupported provider')
     const hosted = await createSelfHostedModel(request, userId, provider, model, baseURL)
     if (hosted.error) return jsonError(hosted.error)
     languageModel = hosted.languageModel

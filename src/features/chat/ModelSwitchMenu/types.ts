@@ -4,6 +4,7 @@ export type GroupMode = 'byModel' | 'byProvider'
 
 export interface EnabledProviderGroup {
   id: string
+  logo?: string | null
   name: string
   models: HomeModelItem[]
 }
@@ -13,7 +14,7 @@ export interface ModelWithProviders {
   contextWindowTokens?: number
   displayName: string
   model: string
-  providers: Array<{ id: string; name: string }>
+  providers: Array<{ id: string; logo?: string | null; name: string }>
 }
 
 export type ListItem =

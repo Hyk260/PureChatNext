@@ -1,6 +1,6 @@
 'use client'
 
-import { Flex, Input, InputPassword, ProviderCombine, Text } from '@pure/ui'
+import { Flex, Input, InputPassword, Text } from '@pure/ui'
 import { Switch } from 'antd'
 import { Loader2 } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
@@ -9,8 +9,11 @@ import type { ChangeEvent, FocusEvent, FormEvent } from 'react'
 import { useApp } from '@/components/AntdStaticMethods'
 
 import { getSettingsProviderMeta, isServerManagedProvider, PROVIDER_DEFAULT_BASE_URLS } from '../../const'
+import { updateCustomProvider } from '../../customProvidersApi'
+import ProviderMark from '../../ProviderMark'
 import { deleteProviderSecret, saveProviderSecret, secretForProvider, useProviderSecrets } from '../../secretsApi'
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
+import { useCustomProviderRegistry } from '../../useCustomProviderRegistry'
 import { providerDetailStyles as styles } from '../../styles'
 import type { ProviderId } from '../../types'
 import Checker from './Checker'
@@ -19,16 +22,19 @@ interface ProviderConfigProps {
   id: ProviderId
 }
 
-const AES_GCM_HINT = '你的密钥与代理地址等将使用 AES-GCM 加密算法进行加密'
-
-const isByokProvider = (id: ProviderId): id is 'openai' | 'deepseek' => id === 'openai' || id === 'deepseek'
+const isByokProvider = (id: ProviderId) => id !== 'purechat'
 
 const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
   const { message } = useApp()
-  const meta = getSettingsProviderMeta(id)
+  const registry = useCustomProviderRegistry()
+  const storedCustomProviders = useProviderConfigStore((s) => s.customProviders)
+  const customProviders = registry.data ?? storedCustomProviders
+  const customProvider = customProviders.find((provider) => provider.id === id)
+  const meta = getSettingsProviderMeta(id, customProviders)
   const config = useProviderConfigStore((s) => s.configs[id])
   const patchConfig = useProviderConfigStore((s) => s.patchConfig)
   const setEnabled = useProviderConfigStore((s) => s.setEnabled)
+  const setCustomProviders = useProviderConfigStore((s) => s.setCustomProviders)
   const serverManaged = isServerManagedProvider(id)
   const { data: secrets, mutate } = useProviderSecrets()
   const saved = secretForProvider(secrets, id)
@@ -41,6 +47,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
 
   const enabled = config?.enabled ?? false
   const baseURL = config?.baseURL ?? ''
+  const baseURLPlaceholder = customProvider?.baseURL ?? PROVIDER_DEFAULT_BASE_URLS[id as keyof typeof PROVIDER_DEFAULT_BASE_URLS]
   const savedApiKey = saved?.apiKey ?? ''
 
   useEffect(() => {
@@ -54,9 +61,9 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
   }, [id, savedApiKey, serverManaged])
 
   useEffect(() => {
-    if (serverManaged || saved?.baseURL === undefined) return
+    if (serverManaged || customProvider || saved?.baseURL === undefined) return
     patchConfig(id, { baseURL: saved.baseURL })
-  }, [id, patchConfig, saved?.baseURL, serverManaged])
+  }, [customProvider, id, patchConfig, saved?.baseURL, serverManaged])
 
   const persistSecrets = useCallback(
     async (next: { apiKey?: string; baseURL?: string }) => {
@@ -66,7 +73,10 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
       const run = (async () => {
         setSaving(true)
         try {
-          const item = await saveProviderSecret({ ...next, provider: id })
+          const item = await saveProviderSecret({
+            ...(customProvider ? { apiKey: next.apiKey } : next),
+            provider: id,
+          })
           await mutate(
             (current) => {
               const rest = (current ?? []).filter((entry) => entry.providerId !== id)
@@ -79,7 +89,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
             setKeyVisible(false)
           }
           draftDirtyRef.current = false
-          patchConfig(id, { baseURL: item.baseURL })
+          if (!customProvider) patchConfig(id, { baseURL: item.baseURL })
           return true
         } catch (error) {
           message.error(error instanceof Error ? error.message : '保存失败')
@@ -96,7 +106,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
         if (persistInflightRef.current === run) persistInflightRef.current = null
       }
     },
-    [id, message, mutate, patchConfig]
+    [customProvider, id, message, mutate, patchConfig]
   )
 
   const clearSecrets = useCallback(async () => {
@@ -158,6 +168,22 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
 
   const handleBaseURLBlur = () => {
     if (saving) return
+    if (customProvider) {
+      if (customProvider.baseURL === baseURL.trim()) return
+      setSaving(true)
+      updateCustomProvider(id, { baseURL: baseURL.trim() })
+        .then((updated) => {
+          const nextProviders = customProviders.map((provider) => (provider.id === id ? updated : provider))
+          setCustomProviders(nextProviders)
+          return registry.mutate(nextProviders, { revalidate: false })
+        })
+        .catch((error: unknown) => {
+          patchConfig(id, { baseURL: customProvider.baseURL })
+          message.error(error instanceof Error ? error.message : '保存代理地址失败')
+        })
+        .finally(() => setSaving(false))
+      return
+    }
     if ((saved?.baseURL ?? '') === baseURL) return
     const apiKey = resolveApiKey()
     if (!saved && !apiKey) {
@@ -196,10 +222,28 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
     </Flex>
   ) : null
 
+  const handleEnabledChange = (checked: boolean) => {
+    setEnabled(id, checked)
+    if (!customProvider) return
+
+    setSaving(true)
+    updateCustomProvider(id, { enabled: checked })
+      .then((updated) => {
+        const nextProviders = customProviders.map((provider) => (provider.id === id ? updated : provider))
+        setCustomProviders(nextProviders)
+        return registry.mutate(nextProviders, { revalidate: false })
+      })
+      .catch((error: unknown) => {
+        setEnabled(id, !checked)
+        message.error(error instanceof Error ? error.message : '更新服务商状态失败')
+      })
+      .finally(() => setSaving(false))
+  }
+
   return (
     <Flex aria-busy={saving} className='flex-col gap-2 w-full'>
       <Flex className='flex-between py-2 w-full'>
-        <ProviderCombine provider={id} size={32} />
+        <ProviderMark combined id={id} logo={meta.logo} name={meta.name} size={32} />
         {serverManaged ? null : (
           <Flex className='items-center gap-2'>
             {savingStatus}
@@ -207,7 +251,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
               aria-label={`${enabled ? '停用' : '启用'} ${meta.name}`}
               checked={enabled}
               disabled={saving}
-              onChange={(checked) => setEnabled(id, checked)}
+              onChange={handleEnabledChange}
             />
           </Flex>
         )}
@@ -267,7 +311,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
               <Input
                 allowClear
                 disabled={saving}
-                placeholder={PROVIDER_DEFAULT_BASE_URLS[id]}
+                placeholder={baseURLPlaceholder}
                 value={baseURL}
                 onBlur={handleBaseURLBlur}
                 onChange={(event) => {

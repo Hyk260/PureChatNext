@@ -1,12 +1,13 @@
 'use client'
 
-import { ActionIcon, Icon, ProviderIcon, Text, Flex } from '@pure/ui'
+import { ActionIcon, Icon, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { LucideArrowRight, LucideBolt } from 'lucide-react'
 import { memo } from 'react'
 import { useNavigate } from 'react-router'
 
 import { menuKey } from './types'
+import ProviderMark from '@/features/settings/provider/ProviderMark'
 import type { ListItem } from './types'
 import { ModelRow, MultiProviderModelRow } from './ModelRow'
 
@@ -81,7 +82,12 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
                   className={[styles.groupHeader, 'flex-between py-[12px_4px] px-[12px_8px]']}
                 >
                   <Flex className='items-center gap-2 min-w-0'>
-                    <ProviderIcon provider={item.provider.id} size={18} type='color' />
+                    <ProviderMark
+                      id={item.provider.id}
+                      logo={item.provider.logo}
+                      name={item.provider.name}
+                      size={18}
+                    />
                     <Text className='text-[12px]' ellipsis>
                       {item.provider.name}
                     </Text>

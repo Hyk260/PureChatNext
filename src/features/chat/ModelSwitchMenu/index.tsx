@@ -22,6 +22,7 @@ import {
   SETTINGS_PROVIDER_IDS,
 } from '@/features/settings/provider/const'
 import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
+import { useCustomProviderRegistry } from '@/features/settings/provider/useCustomProviderRegistry'
 
 import ModelSwitchList from './List'
 import Toolbar from './Toolbar'
@@ -30,8 +31,8 @@ import type { EnabledProviderGroup, GroupMode } from './types'
 import { useBuildListItems } from './useBuildListItems'
 
 /** model-bank `enabled: false` 的模型不进入切换列表（即使本地 store 曾被打开）。 */
-const isCatalogEnabled = (providerId: ModelProviderId, modelId: string) =>
-  getAiModel(providerId, modelId)?.enabled !== false
+const isCatalogEnabled = (providerId: string, modelId: string) =>
+  getAiModel(providerId as ModelProviderId, modelId)?.enabled !== false
 
 const styles = createStaticStyles(({ css }) => ({
   container: css`
@@ -82,15 +83,22 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
     const storeProvider = useHomeStore((s) => s.selectedProvider)
     const setStoreModel = useHomeStore((s) => s.setSelectedModel)
     const configs = useProviderConfigStore((s) => s.configs)
-    const scrollListenersRef = useRef(new Set<() => void>())
+    const storedCustomProviders = useProviderConfigStore((s) => s.customProviders)
+    const registry = useCustomProviderRegistry()
+    const customProviders = registry.data ?? storedCustomProviders
     const isControlled = onSelect != null
+    const providerIds = useMemo(
+      () => [...SETTINGS_PROVIDER_IDS, ...(isControlled ? [] : customProviders.map((provider) => provider.id))],
+      [customProviders, isControlled]
+    )
+    const scrollListenersRef = useRef(new Set<() => void>())
     const selectedModel = selectedModelProp ?? storeModel
     const selectedProvider = selectedProviderProp ?? storeProvider
 
     const enabledProviders = useMemo<EnabledProviderGroup[]>(() => {
       const groups: EnabledProviderGroup[] = []
 
-      for (const providerId of SETTINGS_PROVIDER_IDS) {
+      for (const providerId of providerIds) {
         const config = configs[providerId]
         if (!config?.enabled) continue
 
@@ -99,8 +107,9 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
           if (!model.enabled) continue
           if (!isCatalogEnabled(providerId, model.id)) continue
           models.push({
-            abilities: model.abilities ?? getAiModel(providerId, model.id)?.abilities,
-            contextWindowTokens: model.contextWindowTokens ?? getAiModel(providerId, model.id)?.contextWindowTokens,
+            abilities: model.abilities ?? getAiModel(providerId as ModelProviderId, model.id)?.abilities,
+            contextWindowTokens:
+              model.contextWindowTokens ?? getAiModel(providerId as ModelProviderId, model.id)?.contextWindowTokens,
             displayName: model.displayName,
             model: model.id,
             provider: providerId,
@@ -109,8 +118,9 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
 
         groups.push({
           id: providerId,
+          logo: customProviders.find((provider) => provider.id === providerId)?.logo,
           models,
-          name: getSettingsProviderMeta(providerId).name,
+          name: getSettingsProviderMeta(providerId, customProviders).name,
         })
       }
 
@@ -127,7 +137,7 @@ const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
       }
 
       return groups
-    }, [configs])
+    }, [configs, customProviders, providerIds])
 
     const availableModels = useMemo(() => enabledProviders.flatMap((group) => group.models), [enabledProviders])
 
@@ -211,18 +221,16 @@ export const useCurrentHomeModel = () => {
   const configs = useProviderConfigStore((s) => s.configs)
 
   return useMemo(() => {
-    if (isSettingsProviderId(selectedProvider)) {
-      const model = configs[selectedProvider]?.models.find((item) => item.id === selectedModel)
-      if (model) {
-        const catalog = getAiModel(selectedProvider, model.id)
-        return {
-          abilities: model.abilities ?? catalog?.abilities,
-          contextWindowTokens: model.contextWindowTokens ?? catalog?.contextWindowTokens,
-          displayName: model.displayName,
-          model: model.id,
-          provider: selectedProvider,
-        } satisfies HomeModelItem
-      }
+    const configuredModel = configs[selectedProvider]?.models.find((item) => item.id === selectedModel)
+    if (configuredModel) {
+      const catalog = getAiModel(selectedProvider as ModelProviderId, configuredModel.id)
+      return {
+        abilities: configuredModel.abilities ?? catalog?.abilities,
+        contextWindowTokens: configuredModel.contextWindowTokens ?? catalog?.contextWindowTokens,
+        displayName: configuredModel.displayName,
+        model: configuredModel.id,
+        provider: selectedProvider,
+      } satisfies HomeModelItem
     }
 
     const homeModel = findHomeModel(selectedProvider, selectedModel)

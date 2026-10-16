@@ -1,13 +1,18 @@
 'use client'
 
-import { Block, Flex, ProviderCombine, Text } from '@pure/ui'
+import { Block, Flex, Text } from '@pure/ui'
 import { Switch } from 'antd'
 import { createStaticStyles, cssVar } from 'antd-style'
 import { useRouter } from 'next/navigation'
 import { memo } from 'react'
 
+import { useApp } from '@/components/AntdStaticMethods'
+
+import { updateCustomProvider } from './customProvidersApi'
 import { getSettingsProviderMeta, isServerManagedProvider } from './const'
+import ProviderMark from './ProviderMark'
 import { useProviderConfigStore } from './store/useProviderConfigStore'
+import { useCustomProviderRegistry } from './useCustomProviderRegistry'
 import type { ProviderId } from './types'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -38,12 +43,33 @@ interface SettingsProviderCardProps {
 }
 
 const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
+  const { message } = useApp()
   const router = useRouter()
-  const meta = getSettingsProviderMeta(id)
+  const registry = useCustomProviderRegistry()
+  const customProviders = useProviderConfigStore((s) => s.customProviders)
+  const setCustomProviders = useProviderConfigStore((s) => s.setCustomProviders)
+  const availableCustomProviders = registry.data ?? customProviders
+  const meta = getSettingsProviderMeta(id, availableCustomProviders)
+  const customProvider = availableCustomProviders.find((provider) => provider.id === id)
   const enabled = useProviderConfigStore((s) => s.configs[id]?.enabled ?? false)
   const setEnabled = useProviderConfigStore((s) => s.setEnabled)
   const serverManaged = isServerManagedProvider(id)
   const isEnabled = serverManaged || enabled
+
+  const handleEnabledChange = async (checked: boolean) => {
+    setEnabled(id, checked)
+    if (!customProvider) return
+
+    try {
+      const updated = await updateCustomProvider(id, { enabled: checked })
+      const nextProviders = availableCustomProviders.map((provider) => (provider.id === id ? updated : provider))
+      await registry.mutate(nextProviders, { revalidate: false })
+      setCustomProviders(nextProviders)
+    } catch (error) {
+      setEnabled(id, !checked)
+      message.error(error instanceof Error ? error.message : '更新服务商状态失败')
+    }
+  }
 
   return (
     <Block
@@ -55,7 +81,7 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
       onClick={() => router.push(`/settings/provider/${id}`)}
     >
       <Flex className='flex-col gap-3 w-full'>
-        <ProviderCombine provider={id} size={28} style={{ flex: 'none' }} />
+        <ProviderMark combined id={id} logo={meta.logo} name={meta.name} size={28} />
         <Flex className='flex-col gap-1.5'>
           <Text className='font-semibold'>{meta.name}</Text>
           {meta.description ? (
@@ -76,7 +102,7 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
             size='small'
             onChange={(checked, event) => {
               event.stopPropagation()
-              setEnabled(id, checked)
+              handleEnabledChange(checked)
             }}
             onClick={(_, event) => event.stopPropagation()}
           />

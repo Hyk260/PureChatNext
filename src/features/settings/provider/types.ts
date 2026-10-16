@@ -1,6 +1,15 @@
 import type { ModelAbilities } from '@pure/model-bank'
 
-export type ProviderId = 'openai' | 'deepseek' | 'purechat'
+export type ProviderId = string
+
+export interface CustomProviderDefinition {
+  baseURL: string
+  description: string
+  enabled: boolean
+  id: ProviderId
+  logo?: string | null
+  name: string
+}
 
 export type ProviderModelSource = 'builtin' | 'custom' | 'remote'
 

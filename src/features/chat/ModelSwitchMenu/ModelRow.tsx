@@ -15,7 +15,6 @@ import {
   DropdownMenuSubmenuTrigger,
   Icon,
   ModelIcon,
-  ProviderIcon,
   Text,
   Flex,
 } from '@pure/ui'
@@ -26,6 +25,7 @@ import { memo, useEffect, useState } from 'react'
 import ModelFeatureTags from '@/features/community/components/ModelFeatureTags'
 
 import ModelDetailPanel from './ModelDetailPanel'
+import ProviderMark from '@/features/settings/provider/ProviderMark'
 import { menuKey } from './types'
 import type { ModelWithProviders } from './types'
 
@@ -194,7 +194,12 @@ export const MultiProviderModelRow = memo<MultiProviderModelRowProps>(
                         <DropdownMenuItemIcon>{isProviderActive ? <Check size={16} /> : null}</DropdownMenuItemIcon>
                         <DropdownMenuItemLabel>
                           <Flex className='items-center gap-2'>
-                            <ProviderIcon provider={provider.id} size={20} type='color' />
+                            <ProviderMark
+                              id={provider.id}
+                              logo={provider.logo}
+                              name={provider.name}
+                              size={20}
+                            />
                             <Text className='text-[13px]' ellipsis>
                               {provider.name}
                             </Text>

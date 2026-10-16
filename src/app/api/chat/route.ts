@@ -14,7 +14,7 @@ import type { ToolExecutionEndEvent, ToolSet, UIMessage } from 'ai'
 import debug from 'debug'
 import { createNanoId } from '@pure/utils'
 
-import { isSupportedProviderId } from '@/libs/ai-providers/resolveClient'
+import { createOpenAICompatibleLanguageModel, isSupportedProviderId } from '@/libs/ai-providers/resolveClient'
 import { createTimedFetch } from '@/libs/ai-providers/timedFetch'
 import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
@@ -40,6 +40,7 @@ import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/too
 import { desktopTools } from '@/server/chat/desktopTools'
 import { CHAT_TOOL_CAPABILITIES, isToolApprovalRequired } from '@/server/chat/permissionPolicy'
 import { safeFileName } from '@/libs/utils/safeFileName'
+import { isValidProviderId } from '@pure/database/models/customProvider'
 
 import { createMessageMetadata } from './messageMetadata'
 
@@ -486,7 +487,11 @@ export async function POST(request: Request) {
     }
   }
 
-  if (!isSupportedProviderId(resolvedProvider)) {
+  if (
+    resolvedProvider !== PURECHAT_PROVIDER_ID &&
+    !isSupportedProviderId(resolvedProvider) &&
+    !isValidProviderId(resolvedProvider)
+  ) {
     return new ChatSDKError('bad_request:api', `Unsupported provider "${resolvedProvider}"`).toResponse()
   }
 
@@ -505,9 +510,19 @@ export async function POST(request: Request) {
   }
 
   try {
-    const resolvedModel = resolveModel(provider, model, credentials.apiKey, credentials.baseURL)
+    let resolvedModel
+    if (isSupportedProviderId(resolvedProvider)) {
+      resolvedModel = resolveModel(provider, model, credentials.apiKey, credentials.baseURL)
+    } else {
+      if (!credentials.baseURL) return new ChatSDKError('bad_request:api', 'Missing provider base URL').toResponse()
+      resolvedModel = createOpenAICompatibleLanguageModel(
+        model ?? 'deepseek-v4-flash',
+        credentials.apiKey,
+        credentials.baseURL
+      )
+    }
 
-    log('modelId: %o, provider: %o', resolvedModel.modelId, resolvedModel.provider)
+    log('model=%o, provider=%o', model, resolvedProvider)
 
     const result = streamText({
       messages: await convertToModelMessages(messages),

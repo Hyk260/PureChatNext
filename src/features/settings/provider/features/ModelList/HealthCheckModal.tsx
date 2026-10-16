@@ -5,6 +5,8 @@ import { Switch } from 'antd'
 import { useMemo, useState } from 'react'
 
 import { getSettingsProviderMeta } from '../../const'
+import { useProviderConfigStore } from '../../store/useProviderConfigStore'
+import { useCustomProviderRegistry } from '../../useCustomProviderRegistry'
 import type { ProviderId } from '../../types'
 import {
   DEFAULT_HEALTH_CHECK_CONCURRENCY,
@@ -27,7 +29,10 @@ interface HealthCheckModalProps {
 }
 
 const HealthCheckModal = ({ enabledModelCount, loading, open, provider, onCancel, onStart }: HealthCheckModalProps) => {
-  const meta = getSettingsProviderMeta(provider)
+  const storedCustomProviders = useProviderConfigStore((state) => state.customProviders)
+  const registry = useCustomProviderRegistry()
+  const customProviders = registry.data ?? storedCustomProviders
+  const meta = getSettingsProviderMeta(provider, customProviders)
   const [timeoutSeconds, setTimeoutSeconds] = useState(String(DEFAULT_HEALTH_TIMEOUT_SECONDS))
   const [concurrencyEnabled, setConcurrencyEnabled] = useState(DEFAULT_HEALTH_CONCURRENCY_ENABLED)
   const [concurrencyValue, setConcurrencyValue] = useState(String(DEFAULT_HEALTH_CHECK_CONCURRENCY))

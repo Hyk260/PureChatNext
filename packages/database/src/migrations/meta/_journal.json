@@ -239,6 +239,13 @@
       "when": 1791876123825,
       "tag": "0033_goofy_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1792054969499,
+      "tag": "0034_conscious_shooting_star",
+      "breakpoints": true
     }
   ]
 }

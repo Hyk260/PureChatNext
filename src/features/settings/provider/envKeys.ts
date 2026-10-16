@@ -2,8 +2,6 @@
 
 import { apiFetch } from '@/utils/apiFetch'
 
-import type { ProviderId } from './types'
-
 export type ProviderEnvKeyFlags = {
   deepseek: boolean
   openai: boolean
@@ -57,8 +55,9 @@ export const loadProviderEnvKeyFlags = (): Promise<ProviderEnvKeyFlags> => {
 }
 
 /** `undefined` means we could not tell (config fetch failed) — caller should not block. */
-export const providerHasEnvApiKey = async (provider: ProviderId): Promise<boolean | undefined> => {
+export const providerHasEnvApiKey = async (provider: string): Promise<boolean | undefined> => {
   if (provider === 'purechat') return true
+  if (provider !== 'openai' && provider !== 'deepseek') return undefined
 
   try {
     const flags = await loadProviderEnvKeyFlags()

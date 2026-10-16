@@ -1,6 +1,7 @@
 'use client'
 
 import { DEFAULT_MODEL_PROVIDER_LIST, getAiModel } from '@pure/model-bank'
+import type { ModelProviderId } from '@pure/model-bank'
 import { ActionIcon, confirmModal, Flex, SortableList, Tabs } from '@pure/ui'
 import { useApp } from '@/components/AntdStaticMethods'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
@@ -28,6 +29,7 @@ interface ModelListProps {
 const ModelList = memo<ModelListProps>(({ id }) => {
   const { message } = useApp()
   const config = useProviderConfigStore((s) => s.configs[id])
+  const customProviders = useProviderConfigStore((s) => s.customProviders)
   const addCustomModel = useProviderConfigStore((s) => s.addCustomModel)
   const clearRemoteModels = useProviderConfigStore((s) => s.clearRemoteModels)
   const mergeRemoteModels = useProviderConfigStore((s) => s.mergeRemoteModels)
@@ -59,7 +61,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   const filteredModels = useMemo(() => {
     const query = keyword.trim().toLowerCase()
     // All current providers only expose chat models; keep a single tab for now.
-    const list = models.filter((model) => getAiModel(id, model.id)?.enabled !== false)
+    const list = models.filter((model) => getAiModel(id as ModelProviderId, model.id)?.enabled !== false)
 
     if (!query) return list
 
@@ -71,7 +73,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   const enabledModels = filteredModels.filter((model) => model.enabled)
   const disabledModels = filteredModels.filter((model) => !model.enabled)
   const enabledHealthModels = useMemo(
-    () => models.filter((model) => model.enabled && getAiModel(id, model.id)?.enabled !== false),
+    () => models.filter((model) => model.enabled && getAiModel(id as ModelProviderId, model.id)?.enabled !== false),
     [id, models]
   )
   const remoteModelCount = useMemo(() => models.filter((model) => model.source === 'remote').length, [models])
@@ -350,7 +352,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
     healthAbortRef.current = null
     healthModelIdsRef.current = []
     setHealthLoading(false)
-    message.info(`${getSettingsProviderMeta(id).name}：成功 ${successCount} 个，失败 ${failureCount} 个`)
+    message.info(`${getSettingsProviderMeta(id, customProviders).name}：成功 ${successCount} 个，失败 ${failureCount} 个`)
   }
 
   return (

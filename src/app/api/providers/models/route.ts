@@ -7,6 +7,7 @@ import {
   resolveModelsListBaseURL,
 } from '@/libs/ai-providers/resolveClient'
 import type { SupportedProviderId } from '@/libs/ai-providers/resolveClient'
+import { isValidProviderId } from '@pure/database/models/customProvider'
 import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 import { ChatSDKError } from '@/libs/errors'
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
   }
 
   const provider = body.provider
-  if (!provider || !isSupportedProviderId(provider)) {
+  if (!provider || (!isSupportedProviderId(provider) && !isValidProviderId(provider))) {
     return new ChatSDKError('bad_request:api', 'Unsupported provider').toResponse()
   }
 
@@ -66,7 +67,11 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api', message).toResponse()
   }
 
-  const baseURL = resolveModelsListBaseURL(provider, credentials.baseURL ?? body.baseURL)
+  const baseURL = isSupportedProviderId(provider)
+    ? resolveModelsListBaseURL(provider, credentials.baseURL ?? body.baseURL)
+    : credentials.baseURL
+
+  if (!baseURL) return new ChatSDKError('bad_request:api', 'Missing provider base URL').toResponse()
 
   log('list models provider=%o baseURL=%o', provider, baseURL)
 
@@ -76,6 +81,10 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     log('list models failed, fallback builtin: %o', message)
+
+    if (!isSupportedProviderId(provider)) {
+      return Response.json({ fallback: false, message, models: [] }, { status: 502 })
+    }
 
     return Response.json({
       fallback: true,

@@ -7,6 +7,7 @@ import { memo, useMemo } from 'react'
 import { SETTINGS_PROVIDER_IDS } from './const'
 import SettingsProviderCard from './SettingsProviderCard'
 import { useProviderConfigStore } from './store/useProviderConfigStore'
+import { useCustomProviderRegistry } from './useCustomProviderRegistry'
 import type { ProviderId } from './types'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -58,12 +59,23 @@ ProviderSection.displayName = 'ProviderSection'
 
 const ProviderAllPage = memo(() => {
   const configs = useProviderConfigStore((s) => s.configs)
+  const storedCustomProviders = useProviderConfigStore((s) => s.customProviders)
+  const registry = useCustomProviderRegistry()
+  const customProviders = registry.data ?? storedCustomProviders
+  const allProviderIds = useMemo(
+    () => [...SETTINGS_PROVIDER_IDS, ...customProviders.map((provider) => provider.id)],
+    [customProviders]
+  )
+  const enabledCustomIds = useMemo(
+    () => new Set(customProviders.filter((provider) => provider.enabled).map((provider) => provider.id)),
+    [customProviders]
+  )
 
   const { enabledIds, disabledIds } = useMemo(() => {
-    const enabled = SETTINGS_PROVIDER_IDS.filter((id) => configs[id]?.enabled)
-    const disabled = SETTINGS_PROVIDER_IDS.filter((id) => !configs[id]?.enabled)
+    const enabled = allProviderIds.filter((id) => configs[id]?.enabled ?? enabledCustomIds.has(id))
+    const disabled = allProviderIds.filter((id) => !(configs[id]?.enabled ?? enabledCustomIds.has(id)))
     return { disabledIds: disabled, enabledIds: enabled }
-  }, [configs])
+  }, [allProviderIds, configs, enabledCustomIds])
 
   return (
     <Flex className={[styles.page, 'flex-col gap-8 w-full']}>

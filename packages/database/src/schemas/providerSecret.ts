@@ -5,10 +5,10 @@ import { timestamps } from './_helpers'
 import { users } from './user'
 
 export const USER_PROVIDER_SECRET_IDS = ['openai', 'deepseek'] as const
-export type UserProviderSecretId = (typeof USER_PROVIDER_SECRET_IDS)[number]
+export type UserProviderSecretId = string
 
 export const isUserProviderSecretId = (value: string): value is UserProviderSecretId =>
-  (USER_PROVIDER_SECRET_IDS as readonly string[]).includes(value)
+  /^[a-z0-9][a-z0-9_-]{0,31}$/.test(value)
 
 /**
  * 用户自备服务商密钥（BYOK）。

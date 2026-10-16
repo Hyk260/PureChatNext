@@ -74,6 +74,19 @@ export const createProviderLanguageModel = (
   }
 }
 
+/** OpenAI-compatible providers use Chat Completions for maximum endpoint compatibility. */
+export const createOpenAICompatibleLanguageModel = (
+  model: string,
+  apiKey: string,
+  baseURL: string,
+  options?: ProviderLanguageModelOptions
+): LanguageModel =>
+  createOpenAI({
+    apiKey,
+    baseURL,
+    fetch: createTimedFetch(options?.timeoutMs),
+  }).chat(model)
+
 export interface RemoteModelListItem {
   displayName?: string
   id: string

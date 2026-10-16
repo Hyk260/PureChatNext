@@ -98,7 +98,7 @@ export class UserProviderSecretModel {
 
   upsert = async (
     userId: string,
-    providerId: UserProviderSecretId,
+    providerId: string,
     patch: { apiKey?: string; baseURL?: string }
   ): Promise<ProviderSecretPublic> => {
     const existing = await this.db.query.userProviderSecrets.findFirst({

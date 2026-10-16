@@ -37,7 +37,6 @@ import { getMessageText, withMessageText } from '@/features/chat/messageText'
 import type { ChatSearchMode } from '@/features/chat/types'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
-import { isSettingsProviderId } from '@/features/settings/provider/const'
 import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
 import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { useRouter } from 'next/navigation'
@@ -120,9 +119,7 @@ const ChatView = memo<ChatViewProps>(
     const selectedProvider = useHomeStore((s) => s.selectedProvider)
     const activeAgent = useHomeStore((s) => s.activeAgent)
     const selectedModelConfig = useProviderConfigStore((s) =>
-      isSettingsProviderId(selectedProvider)
-        ? s.configs[selectedProvider]?.models.find((model) => model.id === selectedModel)
-        : undefined
+      s.configs[selectedProvider]?.models.find((model) => model.id === selectedModel)
     )
     const selectedModelAbilities = selectedModelConfig?.abilities
 

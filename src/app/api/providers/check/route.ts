@@ -2,12 +2,14 @@ import { generateText } from 'ai'
 import debug from 'debug'
 
 import { FreePlanLimitError } from '@pure/database/models/credits'
+import { isValidProviderId } from '@pure/database/models/customProvider'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 
 import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
 import {
   createProviderLanguageModel,
+  createOpenAICompatibleLanguageModel,
   isSupportedProviderId,
   resolveApiKeyFromHeader,
   resolveOptionalBaseURL,
@@ -151,7 +153,10 @@ export async function POST(request: Request) {
   const model = typeof body.model === 'string' ? body.model.trim() : ''
   const timeoutMs = normalizeTimeoutMs(body.timeoutMs)
 
-  if (!provider || (provider !== 'purechat' && !isSupportedProviderId(provider))) {
+  const isCustomProvider = Boolean(
+    provider && provider !== 'purechat' && !isSupportedProviderId(provider) && isValidProviderId(provider)
+  )
+  if (!provider || (provider !== 'purechat' && !isSupportedProviderId(provider) && !isCustomProvider)) {
     return new ChatSDKError('bad_request:api', 'Unsupported provider').toResponse()
   }
 
@@ -208,9 +213,12 @@ export async function POST(request: Request) {
       return new ChatSDKError('bad_request:api', message).toResponse()
     }
 
-    languageModel = createProviderLanguageModel(provider, model, credentials.apiKey, credentials.baseURL ?? baseURL, {
-      timeoutMs,
-    })
+    const resolvedBaseURL = credentials.baseURL ?? baseURL
+    if (!resolvedBaseURL) return new ChatSDKError('bad_request:api', 'Missing provider base URL').toResponse()
+
+    languageModel = isSupportedProviderId(provider)
+      ? createProviderLanguageModel(provider, model, credentials.apiKey, resolvedBaseURL, { timeoutMs })
+      : createOpenAICompatibleLanguageModel(model, credentials.apiKey, resolvedBaseURL, { timeoutMs })
   }
 
   log('check provider=%o model=%o baseURL=%o timeoutMs=%o', provider, model, baseURL ?? '(default)', timeoutMs)

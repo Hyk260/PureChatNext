@@ -10,10 +10,12 @@ import { createStaticStyles, cssVar } from 'antd-style'
 import { memo, useEffect, useMemo, useState } from 'react'
 
 import { getAiModel } from '@pure/model-bank'
+import type { ModelProviderId } from '@pure/model-bank'
 
 import { getSettingsProviderMeta } from '../../const'
 import { secretForProvider, useProviderSecrets } from '../../secretsApi'
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
+import { useCustomProviderRegistry } from '../../useCustomProviderRegistry'
 import type { ProviderId } from '../../types'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -31,14 +33,17 @@ interface CheckerProps {
 const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
   const { modal } = useApp()
   const config = useProviderConfigStore((s) => s.configs[provider])
+  const storedCustomProviders = useProviderConfigStore((s) => s.customProviders)
+  const registry = useCustomProviderRegistry()
+  const customProviders = registry.data ?? storedCustomProviders
   const setCheckModel = useProviderConfigStore((s) => s.setCheckModel)
-  const meta = getSettingsProviderMeta(provider)
+  const meta = getSettingsProviderMeta(provider, customProviders)
 
   const { data: secrets } = useProviderSecrets()
   const hasVaultKey = Boolean(secretForProvider(secrets, provider))
   const models = useMemo(() => config?.models ?? [], [config?.models])
   const availableModelIds = useMemo(
-    () => models.filter((model) => getAiModel(provider, model.id)?.enabled !== false).map((model) => model.id),
+    () => models.filter((model) => getAiModel(provider as ModelProviderId, model.id)?.enabled !== false).map((model) => model.id),
     [models, provider]
   )
   const persistedCheckModel = useMemo(() => {

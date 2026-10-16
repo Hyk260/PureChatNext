@@ -15,6 +15,7 @@ const prefixes = {
   channelEvents: 'che',
   channelEventFiles: 'cef',
   channelGatewayLogs: 'cgl',
+  customProviders: 'cpr',
   toolApprovals: 'tapp',
   providerSecrets: 'ups',
   userSkills: 'usk',

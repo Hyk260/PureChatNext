@@ -2,7 +2,7 @@ import { apiFetch, jsonInit } from '@/utils/apiFetch'
 import { useSession } from '@/libs/better-auth/client'
 import useSWR from 'swr'
 
-export type ProviderSecretId = 'openai' | 'deepseek'
+export type ProviderSecretId = string
 
 export type ProviderSecretPublic = {
   apiKey: string

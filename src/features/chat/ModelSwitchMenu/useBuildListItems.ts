@@ -41,7 +41,7 @@ export const buildListItems = (
             contextWindowTokens: model.contextWindowTokens,
             displayName: model.displayName,
             model: model.model,
-            providers: [{ id: provider.id, name: provider.name }],
+            providers: [{ id: provider.id, logo: provider.logo, name: provider.name }],
           })
           continue
         }
@@ -51,7 +51,7 @@ export const buildListItems = (
           existing.contextWindowTokens = model.contextWindowTokens
         }
 
-        existing.providers.push({ id: provider.id, name: provider.name })
+        existing.providers.push({ id: provider.id, logo: provider.logo, name: provider.name })
       }
     }
 

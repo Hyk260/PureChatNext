@@ -7,17 +7,25 @@ import {
   MissingProviderApiKeyError,
   UserProviderSecretModel,
 } from '@pure/database/models/userProviderSecret'
+import { CustomProviderModel } from '@pure/database/models/customProvider'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
 const putSchema = z.object({
   apiKey: z.string().max(8192).optional(),
   baseURL: z.string().max(2048).optional(),
-  provider: z.enum(['openai', 'deepseek']),
+  provider: z.string().trim().min(1).max(32).refine(isUserProviderSecretId),
 })
 
 const deleteSchema = z.object({
-  provider: z.enum(['openai', 'deepseek']),
+  provider: z.string().trim().min(1).max(32).refine(isUserProviderSecretId),
 })
+
+const isBuiltinSecretProvider = (provider: string) => provider === 'openai' || provider === 'deepseek'
+
+const isOwnedProvider = async (userId: string, provider: string) => {
+  if (isBuiltinSecretProvider(provider)) return true
+  return Boolean(await new CustomProviderModel(userId).find(provider))
+}
 
 const isMissingVaultSecretError = (error: unknown) =>
   error instanceof Error && error.message.includes('KEY_VAULTS_SECRET')
@@ -42,6 +50,7 @@ export const PUT = withAuth(async (request: NextRequest, { userId }) => {
 
   const { apiKey, baseURL, provider } = parsed.data
   if (apiKey === undefined && baseURL === undefined) return jsonError('apiKey or baseURL is required')
+  if (!(await isOwnedProvider(userId, provider))) return jsonError('Unsupported provider', 400)
 
   try {
     const item = await new UserProviderSecretModel().upsert(userId, provider, { apiKey, baseURL })
@@ -63,7 +72,7 @@ export const PUT = withAuth(async (request: NextRequest, { userId }) => {
 export const DELETE = withAuth(async (request: NextRequest, { userId }) => {
   const parsed = deleteSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return jsonError('Invalid secret request')
-  if (!isUserProviderSecretId(parsed.data.provider)) return jsonError('Unsupported provider')
+  if (!(await isOwnedProvider(userId, parsed.data.provider))) return jsonError('Unsupported provider')
 
   await new UserProviderSecretModel().delete(userId, parsed.data.provider)
   return NextResponse.json({ ok: true })

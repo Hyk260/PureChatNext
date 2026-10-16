@@ -15,7 +15,7 @@ description: 在 PureChatNext 配置联网搜索 Provider 与 API Key，使用�
 
 使用第三方搜索或抓取 API 可能产生费用、配额或速率限制；请在选用前查看服务商当前套餐。自托管 SearXNG 可不使用第三方搜索 API Key，但需自行维护服务器、搜索引擎可达性与 JSON 接口。
 
-## 快速配置：SearXNG 搜索 + 内置抓取
+## 快速配置：SearXNG 搜索 + Fetch
 
 本地开发可使用仓库 Docker 开发依赖自带的 SearXNG。运行 `pnpm dev:docker` 后，在 Next 应用读取的环境文件中配置：
 
@@ -31,7 +31,7 @@ CRAWLER_IMPLS=naive
 
 ## 个人网络搜索设置
 
-登录后打开 `/settings/web-search`（设置 → 智能体 → 网络搜索）。配置按账号同步，Web、桌面及绑定账号的 QQ / 微信聊天共用；设置变更在下一次请求生效。
+登录后打开 `/settings/web-search`（设置 → 工具 → 网络搜索）。配置按账号同步，Web、桌面及绑定账号的 QQ / 微信聊天共用；设置变更在下一次请求生效。
 
 - 搜索和 URL 获取分别选择服务商，范围限于下表中已支持的实现。选择“跟随服务器配置”继续使用环境变量中的服务顺序。
 - 每个字段依次使用用户配置、对应环境变量、产品默认值。用户选择服务商后，调用失败不切换到服务器的其他服务商；清空用户字段可恢复继承。
@@ -45,7 +45,7 @@ CRAWLER_IMPLS=naive
 
 ## 验证搜索和抓取
 
-管理员登录后打开 `/admin/web-search`。该诊断页面使用管理接口，可分别检查查询、Provider 回退和抓取：
+管理员登录后打开 `/settings/web-search-console`（设置 → 管理 → 联网搜索测试台）。该诊断页面使用管理接口，可分别检查查询、Provider 回退和抓取：
 
 1. **Query**：输入关键词，可指定单个 Provider。返回非空 `results`，说明该 Provider 的关键词搜索可用。
 2. **Web Search**：留空 Provider，使用 `SEARCH_PROVIDERS` 顺序执行。检查结果数量及实际返回的 Provider；若过滤条件没有结果，界面会显示回退层级。
@@ -92,7 +92,7 @@ CRAWLER_RETRY=1
 
 | 值 | 凭证 / 环境变量 | 说明 |
 | --- | --- | --- |
-| `naive` | 无 | 内置抓取，适合可直接读取的标准网页。 |
+| `naive` | 无 | Fetch：由应用服务器直接请求目标网页并提取正文，不调用第三方抓取 API。 |
 | `jina` | `JINA_READER_API_KEY`（也兼容 `JINA_API_KEY`） | 通过 Jina Reader 提取网页内容。 |
 | `browserless` | `BROWSERLESS_TOKEN` 或 `BROWSERLESS_URL` | 使用 Browserless 浏览器服务；自定义地址时设置 `BROWSERLESS_URL`。 |
 | `search1api` | `SEARCH1API_CRAWL_API_KEY` 或 `SEARCH1API_API_KEY` | Search1API 网页抓取；也可另设 `SEARCH1API_SEARCH_API_KEY` 供搜索使用。 |

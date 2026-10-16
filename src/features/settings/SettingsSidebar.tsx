@@ -67,6 +67,7 @@ const SettingsSidebar = memo(() => {
               defaultExpandedKeys={[
                 SettingsGroupKey.General,
                 SettingsGroupKey.Agent,
+                SettingsGroupKey.Tools,
                 SettingsGroupKey.System,
                 SettingsGroupKey.Manage,
               ]}

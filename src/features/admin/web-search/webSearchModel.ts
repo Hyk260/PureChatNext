@@ -124,7 +124,7 @@ const STATIC_SEARXNG_ENGINES = [
 ] satisfies SearXNGEngine[]
 
 export const CRAWLER_IMPLS = [
-  { label: 'Naive', value: 'naive' },
+  { label: 'Fetch', value: 'naive' },
   { label: 'Jina', value: 'jina' },
   { label: 'Browserless', value: 'browserless' },
   { label: 'Search1API', value: 'search1api' },

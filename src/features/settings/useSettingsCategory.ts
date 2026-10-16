@@ -36,6 +36,7 @@ export enum SettingsGroupKey {
   General = 'general',
   Manage = 'manage',
   System = 'system',
+  Tools = 'tools',
 }
 
 export enum SettingsTab {
@@ -61,6 +62,7 @@ export enum SettingsTab {
   Usage = 'usage',
   Users = 'users',
   WebSearch = 'web-search',
+  WebSearchConsole = 'web-search-console',
   Email = 'email-service',
   ReadFile = 'read-file',
   S3 = 's3',
@@ -92,6 +94,7 @@ export const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
   [SettingsTab.Usage]: '用量',
   [SettingsTab.Users]: '用户管理',
   [SettingsTab.WebSearch]: '网络搜索',
+  [SettingsTab.WebSearchConsole]: '联网搜索测试台',
   [SettingsTab.Email]: '邮件服务',
   [SettingsTab.ReadFile]: '文件读取',
   [SettingsTab.S3]: 'S3 测试',
@@ -158,6 +161,12 @@ const MANAGE_GROUP: SettingsCategoryGroup = {
       icon: MessageCircleIcon,
       key: SettingsTab.WechatConversation,
       label: '微信对话',
+    },
+    {
+      href: tabHref(SettingsTab.WebSearchConsole),
+      icon: Globe2,
+      key: SettingsTab.WebSearchConsole,
+      label: '联网搜索测试台',
     },
   ],
   key: SettingsGroupKey.Manage,
@@ -246,12 +255,6 @@ export function useSettingsCategory(isAdmin = false): SettingsCategoryGroup[] {
             label: 'AI 服务商',
           },
           {
-            href: tabHref(SettingsTab.WebSearch),
-            icon: Globe2,
-            key: SettingsTab.WebSearch,
-            label: '网络搜索',
-          },
-          {
             href: tabHref(SettingsTab.ServiceModel),
             icon: Sparkles,
             key: SettingsTab.ServiceModel,
@@ -290,6 +293,18 @@ export function useSettingsCategory(isAdmin = false): SettingsCategoryGroup[] {
         ],
         key: SettingsGroupKey.Agent,
         title: '智能体',
+      },
+      {
+        items: [
+          {
+            href: tabHref(SettingsTab.WebSearch),
+            icon: Globe2,
+            key: SettingsTab.WebSearch,
+            label: '网络搜索',
+          },
+        ],
+        key: SettingsGroupKey.Tools,
+        title: '工具',
       },
       {
         items: [

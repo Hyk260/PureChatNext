@@ -19,6 +19,7 @@ const HEADERLESS_PREFIXES = [
   '/settings/s3',
   '/settings/qq-conversation',
   '/settings/wechat-conversation',
+  '/settings/web-search-console',
 ]
 
 const FULL_BLEED_PREFIXES = ['/settings/provider', '/settings/skill', ...HEADERLESS_PREFIXES]

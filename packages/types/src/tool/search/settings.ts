@@ -137,7 +137,11 @@ export const WEB_PROVIDER_CATALOG: Record<
     description: '通过浏览器渲染读取动态网页。',
     fetchBaseURL: 'https://chrome.browserless.io',
   },
-  naive: { name: '内置抓取', website: '', description: '直接读取公开网页并提取正文，无需 API 密钥。' },
+  naive: {
+    name: 'Fetch',
+    website: '',
+    description: '由应用服务器直接访问目标网页并提取正文，不调用第三方抓取 API。',
+  },
 }
 
 export type WebSearchSettingsResponse = {

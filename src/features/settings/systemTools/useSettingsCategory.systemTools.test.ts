@@ -30,9 +30,9 @@ describe('useSettingsCategory system tools', () => {
     expect(webSystemGroup?.items.some((item) => item.key === SettingsTab.Data)).toBe(false)
   })
 
-  it.each([false, true])('exposes network search in agent settings for admin=%s', (isAdmin) => {
+  it.each([false, true])('exposes network search in tools settings for admin=%s', (isAdmin) => {
     const { result } = renderHook(() => useSettingsCategory(isAdmin))
-    const group = result.current.find((item) => item.title === '智能体')
+    const group = result.current.find((item) => item.title === '工具')
     expect(group?.items).toContainEqual(
       expect.objectContaining({
         key: SettingsTab.WebSearch,
@@ -56,6 +56,7 @@ describe('useSettingsCategory system tools', () => {
       'S3 测试',
       'QQ 对话',
       '微信对话',
+      '联网搜索测试台',
     ])
     expect(manage?.items.map((item) => item.href)).toEqual([
       '/settings/users',
@@ -64,6 +65,7 @@ describe('useSettingsCategory system tools', () => {
       '/settings/s3',
       '/settings/qq-conversation',
       '/settings/wechat-conversation',
+      '/settings/web-search-console',
     ])
 
     mocks.getDesktopApi.mockReturnValue({})

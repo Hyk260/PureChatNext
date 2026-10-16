@@ -49,7 +49,8 @@ const SETTINGS_SEGMENT_LABELS: Record<string, string> = {
   'system-tools': '系统工具',
   usage: '用量',
   users: '用户管理',
-  'web-search': '联网搜索',
+  'web-search': '网络搜索',
+  'web-search-console': '联网搜索测试台',
   'wechat-conversation': '微信对话',
 }
 
@@ -59,7 +60,6 @@ const ADMIN_SEGMENT_LABELS: Record<string, string> = {
   'read-file': '文件读取',
   s3: 'S3 测试',
   users: '用户管理',
-  'web-search': '联网搜索',
   'wechat-conversation': '微信对话',
 }
 

@@ -96,15 +96,17 @@ export function resolveWebProviderOptions(
   settings: WebSearchSettings,
   id: WebProviderId,
   capability: WebCapability,
-  userKey?: string
+  userKey?: string,
+  useUserConfig = true
 ): SearchProviderOptions {
-  const config = settings.providers?.[id] ?? {}
+  const config = useUserConfig ? (settings.providers?.[id] ?? {}) : {}
   const baseURL = config[`${capability}BaseURL`]?.replace(/\/+$/, '') || providerEnvURL(id, capability)
   const envKey = providerEnvKey(id, capability)
   const serverURL = providerEnvURL(id, capability)?.replace(/\/+$/, '')
-  if (baseURL !== serverURL && envKey && !userKey) throw new Error('自定义 API 地址需要填写自己的 API 密钥')
+  const activeUserKey = useUserConfig ? userKey : undefined
+  if (baseURL !== serverURL && envKey && !activeUserKey) throw new Error('自定义 API 地址需要填写自己的 API 密钥')
   return {
-    apiKey: userKey ?? envKey ?? '',
+    apiKey: activeUserKey ?? envKey ?? '',
     baseURL,
     engineId: config.engineId || toolsEnv.GOOGLE_PSE_ENGINE_ID,
     basicAuthUsername: config.basicAuthUsername,
@@ -129,15 +131,30 @@ export function createUserSearchService(
   const activeSearchIds = capability === 'fetch' ? [] : searchIds
   const activeFetchIds = capability === 'search' ? [] : fetchIds
   const keys = new Map<WebProviderId, string | undefined>()
-  for (const id of new Set([...activeSearchIds, ...activeFetchIds]) as Set<WebProviderId>) {
-    keys.set(id, rotateWebKey(owner, id, settings.providers?.[id]?.apiKeys ?? []))
+  const keyFor = (id: WebProviderId, providerCapability: WebCapability) => {
+    const selected = providerCapability === 'search' ? settings.searchProvider : settings.fetchProvider
+    if (!selected) return undefined
+    if (!keys.has(id)) keys.set(id, rotateWebKey(owner, id, settings.providers?.[id]?.apiKeys ?? []))
+    return keys.get(id)
   }
   const providers: Partial<Record<SearchImplType, SearchProviderOptions>> = {}
   const crawlerConfigs: Partial<Record<CrawlImplType, CrawlProviderOptions>> = {}
   for (const id of activeSearchIds as SearchImplType[])
-    providers[id] = resolveWebProviderOptions(settings, id, 'search', keys.get(id))
+    providers[id] = resolveWebProviderOptions(
+      settings,
+      id,
+      'search',
+      keyFor(id, 'search'),
+      Boolean(settings.searchProvider)
+    )
   for (const id of activeFetchIds as CrawlImplType[])
-    crawlerConfigs[id] = resolveWebProviderOptions(settings, id, 'fetch', keys.get(id))
+    crawlerConfigs[id] = resolveWebProviderOptions(
+      settings,
+      id,
+      'fetch',
+      keyFor(id, 'fetch'),
+      Boolean(settings.fetchProvider)
+    )
   return new SearchService({
     searchProviders: searchIds as SearchImplType[],
     ...(settings.fetchProvider ? { crawlerImpls: [settings.fetchProvider] } : {}),

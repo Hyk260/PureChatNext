@@ -193,6 +193,13 @@ export const webRoutes: RouteObject[] = [
         path: 'web-search',
       },
       {
+        element: dynamicElement(
+          () => import('@/routes/settings/web-search-console/page'),
+          'Settings > Web Search Console'
+        ),
+        path: 'web-search-console',
+      },
+      {
         element: dynamicElement(() => import('@/routes/settings/email-service/page'), 'Settings > Email'),
         path: 'email-service',
       },
@@ -284,10 +291,6 @@ export const webRoutes: RouteObject[] = [
   // —— 管理 ——
   {
     children: [
-      {
-        element: dynamicElement(() => import('@/features/admin/web-search/WebSearchPage'), 'Admin > WebSearch'),
-        path: 'web-search',
-      },
       {
         element: dynamicElement(() => import('@/features/admin/UsersPage'), 'Admin > Users'),
         path: 'users',

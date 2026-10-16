@@ -109,6 +109,21 @@ export default function WebSearchSettingsPage() {
     )
   return (
     <Flex className='w-full flex-col gap-5 px-4 py-5 sm:px-8'>
+      <Block variant='outlined' className='rounded-2xl p-5 sm:p-6'>
+        <Flex className='flex-between gap-4'>
+          <Flex className='items-center gap-2'>
+            <Text weight={600}>优先使用模型内置 Web 工具</Text>
+            <Tooltip title='优先使用模型内置的网页搜索和 URL 获取功能；模型不支持或需要应用黑名单、工具审批时，使用下方服务商。'>
+              <Info size={15} className='cursor-help text-muted-foreground' aria-label='内置 Web 工具说明' />
+            </Tooltip>
+          </Flex>
+          <Switch
+            aria-label='优先使用模型内置 Web 工具'
+            checked={config.modelToolsPreferred}
+            onChange={(checked) => persist({ modelToolsPreferred: checked })}
+          />
+        </Flex>
+      </Block>
       <ProviderCard
         key={`search:${data.settings.searchProvider ?? data.server.searchProviders[0]}`}
         capability='search'
@@ -208,21 +223,6 @@ export default function WebSearchSettingsPage() {
         data={data}
         save={save}
       />
-      <Block variant='outlined' className='rounded-2xl p-5 sm:p-6'>
-        <Flex className='flex-between gap-4'>
-          <Flex className='flex-col gap-1'>
-            <Text weight={600}>优先使用模型内置 Web 工具</Text>
-            <Text type='secondary' fontSize={12}>
-              受支持的 OpenAI 官方模型优先使用内置搜索；其他模型使用上方服务商。黑名单或逐次工具审批生效时使用外部服务。
-            </Text>
-          </Flex>
-          <Switch
-            aria-label='优先使用模型内置 Web 工具'
-            checked={config.modelToolsPreferred}
-            onChange={(checked) => persist({ modelToolsPreferred: checked })}
-          />
-        </Flex>
-      </Block>
       <Flex className='flex-between-wrap gap-3'>
         <Text type='secondary' fontSize={12} role='status'>
           {saving ? '正在保存…' : '按账号同步，未填写字段继承服务器配置。'}

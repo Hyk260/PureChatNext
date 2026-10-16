@@ -41,7 +41,7 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
     adminOnly: true,
     title: '管理',
     routes: [
-      { href: '/admin/web-search', label: '联网搜索' },
+      { href: '/settings/web-search-console', label: '联网搜索测试台' },
       { href: '/admin/users', label: '用户管理' },
       { href: '/admin/email-service', label: '邮件服务' },
       { href: '/admin/read-file', label: '文件读取' },

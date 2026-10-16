@@ -25,10 +25,24 @@ RUN set -e; \
     rm -rf /var/lib/apt/lists/*
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY packages ./packages
+# Keep dependency installation cached when workspace package source changes.
+# Add each new workspace package manifest here; sources are copied in the builder stage.
+COPY packages/chat-adapter/package.json ./packages/chat-adapter/package.json
+COPY packages/const/package.json ./packages/const/package.json
+COPY packages/database/package.json ./packages/database/package.json
+COPY packages/env/package.json ./packages/env/package.json
+COPY packages/fetch-sse/package.json ./packages/fetch-sse/package.json
+COPY packages/file-loaders/package.json ./packages/file-loaders/package.json
+COPY packages/model-bank/package.json ./packages/model-bank/package.json
+COPY packages/ssrf-safe-fetch/package.json ./packages/ssrf-safe-fetch/package.json
+COPY packages/types/package.json ./packages/types/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
+COPY packages/utils/package.json ./packages/utils/package.json
+COPY packages/web-crawler/package.json ./packages/web-crawler/package.json
 COPY patches ./patches
 
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked set -e; \
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
+    --mount=type=cache,target=/root/.npm,sharing=locked set -e; \
     if [ -n "${NPM_REGISTRY:-}" ]; then \
       npm config set registry "${NPM_REGISTRY}"; \
     elif [ "${USE_CN_MIRROR:-false}" = "true" ]; then \
@@ -36,7 +50,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked set -
     fi; \
     export npm_config_nodedir="/usr/local"; \
     npm install --global "$(sed -n 's/.*"packageManager": "\(.*\)".*/\1/p' package.json)"; \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --store-dir /root/.local/share/pnpm/store
 
 FROM deps AS builder
 WORKDIR /app
@@ -49,7 +63,8 @@ ENV APP_URL="http://localhost:3210" \
     NODE_ENV="production" \
     NODE_OPTIONS="--max-old-space-size=8192"
 
-RUN AUTH_SECRET="docker-build-placeholder-not-a-secret" \
+RUN --mount=type=cache,target=/app/.next/cache,sharing=locked \
+    AUTH_SECRET="docker-build-placeholder-not-a-secret" \
     KEY_VAULTS_SECRET="docker-build-placeholder-not-a-secret" \
     pnpm run build:docker
 

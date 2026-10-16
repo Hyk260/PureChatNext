@@ -221,7 +221,9 @@ pnpm docker:deploy -- --no-build
 | --- | --- | --- |
 | `--platform` | `linux/amd64` | 导出架构。云服务器通常是 amd64；Apple Silicon 上默认仍按 amd64 重建 |
 | `--skip-build` | 关 | 只导出已有 `purechat-next:local`，**不**按当前源码重建。升级不要加这个参数 |
-| `--no-cn-mirror` | 关 | 不走 Docker Hub / GHCR 国内镜像站 |
+| `--compressor` | `auto` | 首次导出优先使用已安装的 `pigz` 多核压缩，否则使用内置 gzip；可指定 `pigz` 或 `gzip` |
+| `--no-export-cache` | 关 | 强制重新导出、压缩镜像，并更新导出缓存 |
+| `--no-cn-mirror` | 关 | 拉取 Node 基础镜像时不走 Docker Hub 国内镜像站 |
 | `--output DIR` | `dist/docker-offline` | 离线包输出目录 |
 | `--app-only` | 可省略 | 生产包本来就只含应用镜像，加上只打印提示 |
 
@@ -230,9 +232,17 @@ pnpm docker:pack
 pnpm docker:pack -- --skip-build
 pnpm docker:pack -- --platform linux/amd64 --output dist/docker-offline
 pnpm docker:pack -- --no-cn-mirror
+pnpm docker:pack -- --compressor pigz
+pnpm docker:pack -- --no-export-cache
 ```
 
-拉基础镜像时可用环境变量覆盖镜像站：`DOCKER_HUB_MIRROR`（默认 `docker.m.daocloud.io`）、`GHCR_MIRROR`（默认 `ghcr.nju.edu.cn`）。
+默认每次仍检查并构建当前源码，复用 Docker 构建缓存。依赖层只复制 workspace 清单，修改包内源码不会重新安装依赖；pnpm store、npm 下载和 Next 构建缓存也会跨构建复用。
+
+构建后的镜像 ID、tag 与目标平台相同，就复用 `<输出目录>/.cache/images/` 中的压缩镜像，省去 `docker save` 与压缩。每个平台只保留最近一次成功导出的缓存；镜像变化时自动重新导出。缓存通过硬链接放入包目录，不支持硬链接的文件系统回退为复制。删除 `.cache` 或使用 `--no-export-cache` 可强制重建导出结果。
+
+安装 `pigz` 可加快首次导出时的压缩，脚本不会自动安装依赖。压缩格式仍是 gzip，与现有安装脚本兼容。日志分别显示镜像准备、导出、归档和总耗时；只有完整生成后才替换最终 tar 文件，失败时保留上次成功的 tar 包。
+
+拉 Node 基础镜像时可用 `DOCKER_HUB_MIRROR`（默认 `docker.m.daocloud.io`）覆盖镜像站。
 
 `docker:upload` 读取 `docker-compose/deploy/upload.env`（或当前 shell 里已 export 的变量），不要把 SSH 私钥写进应用 `.env`。连接变量见 [云服务器部署 · 上传](./1panel.md#2-上传)。
 

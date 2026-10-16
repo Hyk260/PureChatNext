@@ -1,15 +1,15 @@
-import { chmod, copyFile, cp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
-import { createWriteStream, existsSync, readFileSync } from 'node:fs'
-import { randomBytes } from 'node:crypto'
+import { chmod, copyFile, cp, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
+import { existsSync, readFileSync } from 'node:fs'
+import { createHash, randomBytes } from 'node:crypto'
 import path from 'node:path'
 import process from 'node:process'
-import { spawn, spawnSync } from 'node:child_process'
-import { pipeline } from 'node:stream/promises'
-import { createGzip } from 'node:zlib'
+import { spawnSync } from 'node:child_process'
 
 import { CreateBucketCommand, HeadBucketCommand, S3Client } from '@aws-sdk/client-s3'
 import { parse } from 'dotenv'
 import { exportJWK, generateKeyPair } from 'jose'
+
+import { exportPackImage, parsePackCompressor } from './lib/docker-pack'
 
 const root = path.resolve(import.meta.dirname, '..')
 const devDir = path.join(root, 'docker-compose/dev')
@@ -536,41 +536,9 @@ function dockerHubMirrorRef(nameTag: string, mirror: string) {
   return nameTag.includes('/') ? `${mirror}/${nameTag}` : `${mirror}/library/${nameTag}`
 }
 
-/** 无 registry 主机名的引用视为 Docker Hub（含 library/ 与 user/repo） */
-function isDockerHubNameTag(nameTag: string) {
-  if (!nameTag.includes('/')) return true
-  const registry = nameTag.split('/')[0] ?? ''
-  return !registry.includes('.') && !registry.includes(':') && registry !== 'localhost'
-}
-
-function isGhcrNameTag(nameTag: string) {
-  return nameTag.startsWith('ghcr.io/')
-}
-
-/** 国内默认先走镜像站，再回落到官方；避免 pack 拉 amd64 依赖时卡在 registry-1.docker.io */
-function packDepPullCandidates(image: string, useCnMirror: boolean) {
-  const { digest, nameTag } = parsePinnedImage(image)
-  const refs: string[] = []
-  if (useCnMirror && isDockerHubNameTag(nameTag)) {
-    const mirror = process.env.DOCKER_HUB_MIRROR || 'docker.m.daocloud.io'
-    const mirrorNameTag = dockerHubMirrorRef(nameTag, mirror)
-    // 先按 tag 拉：digest 在 Docker Desktop 上常挂到已有的多架构 index，平台选择不可靠
-    refs.push(mirrorNameTag)
-    if (digest) refs.push(`${mirrorNameTag}@${digest}`)
-  }
-  if (useCnMirror && isGhcrNameTag(nameTag)) {
-    const mirror = process.env.GHCR_MIRROR || 'ghcr.nju.edu.cn'
-    const mirrorNameTag = nameTag.replace(/^ghcr\.io\//, `${mirror}/`)
-    refs.push(mirrorNameTag)
-    if (digest) refs.push(`${mirrorNameTag}@${digest}`)
-  }
-  refs.push(nameTag)
-  if (digest) refs.push(image)
-  return [...new Set(refs)]
-}
-
-function packNodeBaseAlias(platform: string) {
-  return `purechat-node-base:${platform.replaceAll('/', '-')}`
+function packNodeBaseAlias(platform: string, pinned: string) {
+  const version = createHash('sha256').update(pinned).digest('hex').slice(0, 12)
+  return `purechat-node-base:${platform.replaceAll('/', '-')}-${version}`
 }
 
 function tagPackNodeBase(source: string, alias: string, platform: string) {
@@ -603,13 +571,13 @@ function materializePackNodeBase(source: string, alias: string, platform: string
 
 /** 交叉构建 amd64 时先拿到本地 Node 基础镜像，避免 BuildKit 去 Docker Hub 解析 digest 超时 */
 function ensurePackNodeBaseImage(platform: string, useCnMirror: boolean) {
-  const alias = packNodeBaseAlias(platform)
+  const { nameTag, pinned } = readDockerfileNodeBaseImage()
+  const alias = packNodeBaseAlias(platform, pinned)
   if (inspectImagePlatform(alias, platform).status === 'present') {
     console.log(`使用本地 Node 基础镜像 ${alias}（${platform}）`)
     return alias
   }
 
-  const { nameTag, pinned } = readDockerfileNodeBaseImage()
   const mirror = process.env.DOCKER_HUB_MIRROR || 'docker.m.daocloud.io'
   const mirrorRef = dockerHubMirrorRef(nameTag, mirror)
   const localRefs = [useCnMirror ? mirrorRef : undefined, nameTag, pinned].filter((image): image is string => {
@@ -682,31 +650,6 @@ function packManifest(appImage: string) {
   ].join('\n')
 }
 
-async function saveGzippedImages(images: string[], destFile: string, platform: string) {
-  await mkdir(path.dirname(destFile), { recursive: true })
-  console.log(`导出 ${images.length} 个镜像（${platform}）→ ${path.relative(root, destFile)}`)
-  const child = spawn('docker', ['save', '--platform', platform, ...images], {
-    cwd: root,
-    stdio: ['ignore', 'pipe', 'inherit'],
-  })
-  if (!child.stdout) throw new Error('docker save 未产生输出')
-  try {
-    await pipeline(child.stdout, createGzip({ level: 1 }), createWriteStream(destFile))
-  } catch (error) {
-    child.kill()
-    throw error
-  }
-  const status = await new Promise<number>((resolve, reject) => {
-    if (child.exitCode != null) {
-      resolve(child.exitCode)
-      return
-    }
-    child.once('error', reject)
-    child.once('close', (code) => resolve(code ?? 1))
-  })
-  if (status !== 0) throw new Error(`docker save 失败 (exit ${status})`)
-}
-
 function buildPackAppImage(platform: string, useCnMirror: boolean) {
   const nodeBaseImage = ensurePackNodeBaseImage(platform, useCnMirror)
   const args = [
@@ -735,48 +678,6 @@ function buildPackAppImage(platform: string, useCnMirror: boolean) {
   }
 }
 
-/** Apple Silicon 上多架构 digest 的 inspect 常报 arm64，需物化成单平台再 save */
-function materializePackDepImage(source: string, nameTag: string, platform: string) {
-  console.log(`将 ${source} 物化为单平台镜像 ${nameTag}（${platform}）`)
-  const result = spawnSync(
-    'docker',
-    ['build', '--platform', platform, '--provenance=false', '--sbom=false', '--pull=false', '-t', nameTag, '-'],
-    {
-      cwd: root,
-      encoding: 'utf8',
-      input: `FROM ${source}\n`,
-      stdio: ['pipe', 'inherit', 'inherit'],
-    }
-  )
-  if (result.status !== 0) return undefined
-  if (inspectImagePlatform(nameTag, platform).status !== 'present') return undefined
-  return nameTag
-}
-
-function pullPackDepImage(image: string, platform: string, useCnMirror: boolean) {
-  const { nameTag } = parsePinnedImage(image)
-  const candidates = packDepPullCandidates(image, useCnMirror)
-  for (const ref of candidates) {
-    console.log(`拉取 ${platform} ${image} ← ${ref}`)
-    if (!tryRun('docker', ['pull', '--platform', platform, ref])) continue
-    const materialized = materializePackDepImage(ref, nameTag, platform)
-    if (materialized) return
-  }
-
-  const hub = process.env.DOCKER_HUB_MIRROR || 'docker.m.daocloud.io'
-  const ghcr = process.env.GHCR_MIRROR || 'ghcr.nju.edu.cn'
-  throw new Error(
-    [
-      `无法拉取并物化 ${platform} 依赖镜像 ${image}。`,
-      'Docker Hub / GHCR 在国内常超时；Apple Silicon 上还需把多架构镜像物化为单平台。',
-      '',
-      '可手动拉取后重试，或指定镜像站：',
-      `  docker pull --platform ${platform} ${packDepPullCandidates(image, true)[0] ?? image}`,
-      `  DOCKER_HUB_MIRROR=${hub} GHCR_MIRROR=${ghcr} pnpm docker:pack`,
-    ].join('\n')
-  )
-}
-
 async function copyPackStack(staging: string) {
   const installScript = path.join(deployDir, 'install.sh')
   const startIpScript = path.join(deployDir, 'start-ip.sh')
@@ -800,9 +701,11 @@ async function copyPackStack(staging: string) {
 }
 
 async function pack() {
-  ensureDockerReady()
+  const started = performance.now()
   const platform = flagValue('platform') ?? 'linux/amd64'
   const skipBuild = flags.has('--skip-build')
+  const compressor = parsePackCompressor(flagValue('compressor'))
+  ensureDockerReady()
   if (flags.has('--app-only')) {
     console.log('ℹ️  生产离线包默认只含应用镜像，--app-only 可省略')
   }
@@ -812,6 +715,7 @@ async function pack() {
   const tarPath = path.join(outputDir, 'purechat-next-offline.tar')
   const { appImage } = readDeployPackImages()
 
+  const buildStarted = performance.now()
   const appState = inspectImagePlatform(appImage, platform)
   if (skipBuild) {
     if (appState.status !== 'present') {
@@ -830,17 +734,43 @@ async function pack() {
     }
     buildPackAppImage(platform, useCnMirror)
   }
+  console.log(`⏱ 镜像准备：${((performance.now() - buildStarted) / 1000).toFixed(1)}s`)
 
   await rm(staging, { recursive: true, force: true })
   await copyPackStack(staging)
   await writeFile(path.join(staging, 'images/manifest.txt'), packManifest(appImage), 'utf8')
-  await saveGzippedImages([appImage], path.join(staging, PACK_APP_ARCHIVE), platform)
+  const id = imageId(appImage)
+  if (!id) throw new Error(`无法读取 ${appImage} 的镜像 ID`)
+  const exportStarted = performance.now()
+  const { cacheHit } = await exportPackImage({
+    cacheDir: path.join(outputDir, '.cache/images'),
+    compressor,
+    cwd: root,
+    destFile: path.join(staging, PACK_APP_ARCHIVE),
+    image: appImage,
+    imageId: id,
+    platform,
+    useCache: !flags.has('--no-export-cache'),
+  })
+  console.log(
+    `⏱ 镜像导出：${((performance.now() - exportStarted) / 1000).toFixed(1)}s${cacheHit ? '（复用镜像 ID 对应的压缩缓存）' : ''}`
+  )
 
-  await rm(tarPath, { force: true })
-  run('tar', ['-cf', tarPath, '-C', staging, '.'], { env: { COPYFILE_DISABLE: '1' } })
+  const archiveStarted = performance.now()
+  const temporaryTar = `${tarPath}.${randomBytes(6).toString('hex')}.tmp`
+  try {
+    if (!tryRun('tar', ['-cf', temporaryTar, '-C', staging, '.'], { env: { COPYFILE_DISABLE: '1' } })) {
+      throw new Error('离线包归档失败，已保留上次成功的 tar 文件')
+    }
+    await rename(temporaryTar, tarPath)
+  } finally {
+    await rm(temporaryTar, { force: true })
+  }
+  console.log(`⏱ 离线包归档：${((performance.now() - archiveStarted) / 1000).toFixed(1)}s`)
 
   const tarStat = await stat(tarPath)
   console.log(`✅ 离线包已生成：${path.relative(root, tarPath)}（${formatBytes(tarStat.size)}）`)
+  console.log(`⏱ 总耗时：${((performance.now() - started) / 1000).toFixed(1)}s`)
   console.log('包内仅含应用镜像。目标主机需已有 PostgreSQL（必须）与 Redis（可选），并配置对象存储。')
   console.log('本机一键（先复制 docker-compose/deploy/upload.env.example → upload.env）：')
   console.log('  # 首次上传并安装（把 APP_URL 换成你的 HTTPS 地址）')
@@ -887,7 +817,7 @@ async function main() {
       break
     default:
       throw new Error(
-        '用法: bun scripts/docker.mts {setup-dev|setup-deploy|deploy|pack|up|down|reset|validate} [--profile 2g] [--no-build] [--skip-build] [--app-only]'
+        '用法: bun scripts/docker.mts {setup-dev|setup-deploy|deploy|pack|up|down|reset|validate} [--profile 2g] [--no-build] [--skip-build] [--app-only] [--compressor auto|gzip|pigz] [--no-export-cache]'
       )
   }
 }

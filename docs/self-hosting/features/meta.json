@@ -1,5 +1,5 @@
 {
   "title": "功能",
   "icon": "Search",
-  "pages": ["online-search"]
+  "pages": ["file-processing", "online-search"]
 }

@@ -12,6 +12,7 @@ description: PureChatNext 的快速开始、开发指南与自托管文档入口
 - [快速开始](./getting-started/quick-start.md)：安装依赖、准备环境并启动本地开发。
 - [开发指南](./development/README.md)：数据库、质量检查和前端样式约定。
 - [自托管指南](./self-hosting/README.md)：配置、部署、基础设施和消息渠道。
+- [自托管解决方案索引](./self-hosting/solutions/README.md)：按部署与微信/QQ多渠道需求选择方案。
 
 ## 文档维护规则
 

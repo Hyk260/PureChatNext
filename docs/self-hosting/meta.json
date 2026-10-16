@@ -4,5 +4,5 @@
   "icon": "ServerCog",
   "root": true,
   "pagesIndex": "README",
-  "pages": ["README", "configuration", "platform", "infrastructure", "features", "auth", "channels"]
+  "pages": ["README", "solutions", "configuration", "platform", "infrastructure", "features", "auth", "channels"]
 }

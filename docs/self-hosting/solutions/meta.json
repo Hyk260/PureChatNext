@@ -1,0 +1,6 @@
+{
+  "title": "解决方案",
+  "icon": "Blocks",
+  "pagesIndex": "README",
+  "pages": ["README", "self-hosted-ai-chat", "wechat-qq-ai-assistant"]
+}

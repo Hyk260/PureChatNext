@@ -23,6 +23,12 @@ import {
   serializeThemeMode,
   THEME_STORAGE_KEY,
 } from '@/layout/themeMode'
+import {
+  getThemeColorForeground,
+  parseStoredThemeColor,
+  ThemeColorContext,
+  THEME_COLOR_STORAGE_KEY,
+} from '@/layout/themeColor'
 
 dayjs.locale('zh-cn')
 
@@ -35,6 +41,9 @@ const ThemeProviders = ({ children }: PropsWithChildren) => {
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     return parseStoredThemeMode(localStg.getString(THEME_STORAGE_KEY))
   })
+  const [themeColor, setThemeColor] = useState(() => {
+    return parseStoredThemeColor(localStg.getString(THEME_COLOR_STORAGE_KEY))
+  })
   const appearance = resolveThemeAppearance(themeMode, systemAppearance)
 
   const handleThemeModeChange = useCallback((nextThemeMode: ThemeMode) => {
@@ -43,9 +52,19 @@ const ThemeProviders = ({ children }: PropsWithChildren) => {
     localStg.setString(THEME_STORAGE_KEY, serializeThemeMode(nextThemeMode))
   }, [])
 
+  const handleThemeColorChange = useCallback((nextThemeColor: string) => {
+    setThemeColor(nextThemeColor)
+    localStg.setString(THEME_COLOR_STORAGE_KEY, nextThemeColor)
+  }, [])
+
   useEffect(() => {
     document.documentElement.dataset.theme = appearance
   }, [appearance])
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--theme-primary', themeColor)
+    document.documentElement.style.setProperty('--theme-primary-foreground', getThemeColorForeground(themeColor))
+  }, [themeColor])
 
   return (
     <StyleProvider ssrInline={false} speedy>
@@ -57,13 +76,15 @@ const ThemeProviders = ({ children }: PropsWithChildren) => {
           onThemeModeChange={handleThemeModeChange}
           themeMode={themeMode}
           style={{ height: '100%' }}
-          theme={{ cssVar: { key: 'pure-vars' } }}
+          theme={{ cssVar: { key: 'pure-vars' }, token: { colorPrimary: themeColor } }}
         >
           <AntdStaticMethods />
           <LazyMotion features={domAnimation}>
             <ConfigProvider motion={m}>
               <ModalHost />
-              {children}
+              <ThemeColorContext.Provider value={{ themeColor, setThemeColor: handleThemeColorChange }}>
+                {children}
+              </ThemeColorContext.Provider>
             </ConfigProvider>
           </LazyMotion>
         </ThemeProvider>

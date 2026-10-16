@@ -12,8 +12,8 @@ type RequireAdminProps = {
 }
 
 /**
- * SPA admin gate — 403 when the signed-in user is not an admin.
- * Nest inside RequireAuth so guests are sent to sign-in first.
+ * SPA 管理员门禁：已登录用户不是管理员时返回 403。
+ * 应嵌套在 RequireAuth 中，确保访客先跳转到登录页面。
  */
 export default function RequireAdmin({ children }: RequireAdminProps) {
   const { data: session, isPending } = useSession()

@@ -1,5 +1,5 @@
 /**
- * Vite-only shim for `next/link` → react-router `Link`.
+ * 仅供 Vite 使用的兼容层：将 `next/link` 映射到 react-router 的 `Link`。
  */
 import { forwardRef } from 'react'
 import type { AnchorHTMLAttributes, CSSProperties, MouseEvent, ReactNode } from 'react'

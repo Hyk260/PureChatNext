@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 /**
- * Lightweight route smoke — asserts the SPA router config source lists
- * expected paths without importing the full React tree (avoids UI/emoji deps).
+ * 轻量级路由冒烟测试：检查 SPA 路由配置源码是否包含预期路径，
+ * 不导入完整的 React 组件树，以避免加载 UI 和 emoji 依赖。
  */
 const configPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'webRouter.config.tsx')
 const source = readFileSync(configPath, 'utf-8')

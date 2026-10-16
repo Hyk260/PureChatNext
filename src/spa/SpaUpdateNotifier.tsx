@@ -12,21 +12,21 @@ import {
 } from '@/spa/spaUpdateCheck'
 
 type SpaUpdateNotifierProps = {
-  /** Production default: skip Vite HMR. Tests pass `true` to exercise the listener. */
+  /** 生产环境默认跳过 Vite HMR；测试传入 `true` 以验证监听器。 */
   enabled?: boolean
-  /** Force the toast (local `VITE_SPA_UPDATE_PREVIEW` / `?spaUpdatePreview=1`). */
+  /** 强制显示提示（本地设置 `VITE_SPA_UPDATE_PREVIEW` 或使用 `?spaUpdatePreview=1`）。 */
   preview?: boolean
 }
 
 /**
- * When a long-lived SPA tab becomes visible, compare the document buildTime meta
- * with `/api/version`. If the deployed shell is newer, prompt a reload.
+ * 长时间打开的 SPA 标签页重新变为可见时，将文档中的 buildTime 元信息
+ * 与 `/api/version` 比较。如果已部署的外壳更新，则提示重新加载。
  *
- * Local preview (force the toast without a new deploy): `VITE_SPA_UPDATE_PREVIEW=1`
- * or open any SPA URL with `?spaUpdatePreview=1`.
+ * 本地预览（无需重新部署即可强制显示提示）：设置 `VITE_SPA_UPDATE_PREVIEW=1`，
+ * 或在任意 SPA 地址后添加 `?spaUpdatePreview=1`。
  *
- * Buttons use antd (not `@pure/ui`) because the notification portal sits outside
- * the shared `ConfigProvider` / `MotionProvider`.
+ * 按钮使用 antd（而非 `@pure/ui`），因为通知 Portal 位于共享的
+ * `ConfigProvider` / `MotionProvider` 之外。
  */
 const SpaUpdateNotifier = ({
   preview = isSpaUpdatePreview(),

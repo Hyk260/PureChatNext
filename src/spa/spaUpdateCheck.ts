@@ -3,7 +3,7 @@ import { sessionStg } from '@pure/utils/storage'
 export const SPA_UPDATE_DISMISS_KEY = 'spa-update-dismissed-build-time'
 export const SPA_UPDATE_NOTIFICATION_KEY = 'spa-update'
 
-/** Local preview: `VITE_SPA_UPDATE_PREVIEW=1` or `?spaUpdatePreview=1`. */
+/** 本地预览：设置 `VITE_SPA_UPDATE_PREVIEW=1` 或使用 `?spaUpdatePreview=1`。 */
 export function isSpaUpdatePreview(
   search = typeof window === 'undefined' ? '' : window.location.search,
   envPreview = import.meta.env.VITE_SPA_UPDATE_PREVIEW

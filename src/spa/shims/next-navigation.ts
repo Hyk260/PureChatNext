@@ -1,6 +1,6 @@
 /**
- * Vite-only shim: map Next App Router navigation APIs → react-router.
- * Aliased in vite.config.ts; Next builds keep using real `next/navigation`.
+ * 仅供 Vite 使用的兼容层：将 Next App Router 导航 API 映射到 react-router。
+ * 在 vite.config.ts 中配置别名；Next 构建仍使用真正的 `next/navigation`。
  */
 import {
   Navigate,
@@ -49,7 +49,7 @@ export function usePathname() {
   return useLocation().pathname
 }
 
-/** Next returns URLSearchParams; RR returns a tuple — unwrap for compatibility. */
+/** Next 返回 URLSearchParams；RR 返回元组，这里解包以保持兼容。 */
 export function useSearchParams() {
   const [searchParams] = useRRSearchParams()
   return searchParams
@@ -70,7 +70,7 @@ export function notFound(): never {
   throw new Response('Not Found', { status: 404, statusText: 'Not Found' })
 }
 
-/** No-op in SPA (Next layout CSS injection only). */
+/** 在 SPA 中不执行任何操作（Next 布局仅用它注入 CSS）。 */
 export function useServerInsertedHTML(_callback: () => unknown) {}
 
 export { Navigate }

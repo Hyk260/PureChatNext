@@ -12,13 +12,13 @@ import { isDesktopRenderer, resolveDesktopCallbackUrl } from '@/utils/desktopAut
 
 type RequireAuthProps = {
   children: ReactNode
-  /** Shown while session is loading */
+  /** 会话加载期间显示的内容 */
   fallback?: ReactNode
 }
 
 /**
- * SPA client auth gate — redirects unauthenticated Web users to `/signin` and Electron users to `/desktop-login`.
- * Replaces Next SSR `headers()` + `redirect()` for routes mounted under Vite.
+ * SPA 客户端认证门禁：未认证的 Web 用户跳转到 `/signin`，Electron 用户跳转到 `/desktop-login`。
+ * 用于替代 Vite 路由中的 Next SSR `headers()` 和 `redirect()`。
  */
 export default function RequireAuth({ children, fallback }: RequireAuthProps) {
   const { data: session, isPending } = useSession()

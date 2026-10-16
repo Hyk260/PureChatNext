@@ -4,12 +4,12 @@ import NotFound from '@/components/404'
 import { dynamicElement, dynamicLayout } from '@/utils/router'
 
 /**
- * Web SPA route tree (react-router).
- * Web and desktop share this tree; desktop only swaps the fetch transport.
- * Layouts / pages live in `src/routes/*` (thin) → `@/features/*`.
+ * Web SPA 的 react-router 路由树。
+ * Web 和桌面端共用此路由树；桌面端仅替换 fetch 传输层。
+ * 布局和页面位于 `src/routes/*`（轻量封装）→ `@/features/*`。
  */
 
-/** Named exports from `settings/empty` — one chunk, path is the settings tab. */
+/** `settings/empty` 中的具名导出共用一个代码块，路径对应设置标签页。 */
 const SETTINGS_FROM_EMPTY = [
   ['appearance', 'AppearancePage'],
   ['language', 'LanguagePage'],
@@ -51,7 +51,7 @@ function publicPage([path, page]: (typeof PUBLIC_PAGES)[number]): RouteObject {
 }
 
 export const webRoutes: RouteObject[] = [
-  // —— Main (home) ——
+  // —— 主页面（首页） ——
   {
     children: [
       {
@@ -62,7 +62,7 @@ export const webRoutes: RouteObject[] = [
     element: dynamicLayout(() => import('@/routes/main/layout'), 'MainLayout'),
   },
 
-  // —— Chat ——
+  // —— 聊天 ——
   {
     children: [
       {
@@ -74,7 +74,7 @@ export const webRoutes: RouteObject[] = [
     path: 'chat',
   },
 
-  // —— Resources ——
+  // —— 资源 ——
   {
     children: [
       {
@@ -113,7 +113,7 @@ export const webRoutes: RouteObject[] = [
     path: 'accept-referral',
   },
 
-  // —— Auth / account ——
+  // —— 认证与账户 ——
   {
     element: dynamicElement(() => import('@/routes/signin/page'), 'SignIn'),
     path: 'signin',
@@ -143,14 +143,14 @@ export const webRoutes: RouteObject[] = [
     path: 'profile',
   },
 
-  // —— Public information ——
+  // —— 公开信息 ——
   ...PUBLIC_PAGES.map(publicPage),
   {
     element: dynamicElement(() => import('@/routes/share/t/$id/page'), 'Share > Topic'),
     path: 'share/t/:id',
   },
 
-  // —— Settings ——
+  // —— 设置 ——
   {
     children: [
       {
@@ -253,7 +253,7 @@ export const webRoutes: RouteObject[] = [
     path: 'settings',
   },
 
-  // —— Community ——
+  // —— 社区 ——
   {
     children: [
       {
@@ -281,7 +281,7 @@ export const webRoutes: RouteObject[] = [
     path: 'community',
   },
 
-  // —— Admin ——
+  // —— 管理 ——
   {
     children: [
       {
@@ -323,7 +323,7 @@ export const webRoutes: RouteObject[] = [
     path: 'admin',
   },
 
-  // —— Dev (dev-only; production can 404 later) ——
+  // —— 开发工具（仅开发环境；生产环境后续可返回 404） ——
   ...(import.meta.env.DEV
     ? ([
         {
@@ -362,7 +362,7 @@ export const webRoutes: RouteObject[] = [
       ] satisfies RouteObject[])
     : []),
 
-  // —— Fallback ——
+  // —— 兜底路由 ——
   // 根路由 errorElement 已静态引入 404，这里再动态 import 无法拆 chunk。
   {
     element: <NotFound />,

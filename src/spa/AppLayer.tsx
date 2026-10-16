@@ -7,9 +7,9 @@ import SpaTelemetry from '@/spa/SpaTelemetry'
 import SpaUpdateNotifier from '@/spa/SpaUpdateNotifier'
 
 /**
- * SPA global providers (Theme / URL state / telemetry).
- * Auth session via better-auth client hooks — no Provider required.
- * Extracted from the former Next App Router shell for Vite runtime.
+ * SPA 全局 Provider（主题、URL 状态和遥测）。
+ * 认证会话通过 better-auth 客户端 Hook 获取，无需额外的 Provider。
+ * 从原有的 Next App Router 外壳中提取，供 Vite 运行时使用。
  */
 const AppLayer = ({ children }: PropsWithChildren) => {
   useLayoutEffect(() => {

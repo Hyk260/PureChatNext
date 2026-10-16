@@ -30,6 +30,18 @@ describe('useSettingsCategory system tools', () => {
     expect(webSystemGroup?.items.some((item) => item.key === SettingsTab.Data)).toBe(false)
   })
 
+  it.each([false, true])('exposes network search in agent settings for admin=%s', (isAdmin) => {
+    const { result } = renderHook(() => useSettingsCategory(isAdmin))
+    const group = result.current.find((item) => item.title === '智能体')
+    expect(group?.items).toContainEqual(
+      expect.objectContaining({
+        key: SettingsTab.WebSearch,
+        label: '网络搜索',
+        href: '/settings/web-search',
+      })
+    )
+  })
+
   it('includes the manage group only for admins', () => {
     mocks.getDesktopApi.mockReturnValue(undefined)
     const { result: user } = renderHook(useSettingsCategory)
@@ -39,7 +51,6 @@ describe('useSettingsCategory system tools', () => {
     const manage = admin.current.find((group) => group.title === '管理')
     expect(manage?.items.map((item) => item.label)).toEqual([
       '用户管理',
-      '联网搜索',
       '邮件服务',
       '文件读取',
       'S3 测试',
@@ -48,7 +59,6 @@ describe('useSettingsCategory system tools', () => {
     ])
     expect(manage?.items.map((item) => item.href)).toEqual([
       '/settings/users',
-      '/settings/web-search',
       '/settings/email-service',
       '/settings/read-file',
       '/settings/s3',

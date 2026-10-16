@@ -14,7 +14,6 @@ import SettingsSidebar from './SettingsSidebar'
 
 const HEADERLESS_PREFIXES = [
   '/settings/users',
-  '/settings/web-search',
   '/settings/email-service',
   '/settings/read-file',
   '/settings/s3',

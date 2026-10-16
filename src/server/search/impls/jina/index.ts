@@ -5,20 +5,22 @@ import urlJoin from 'url-join'
 
 import { toolsEnv } from '@/envs/tools'
 
-import type { SearchServiceImpl } from '../type'
+import type { SearchProviderOptions, SearchServiceImpl } from '../type'
 import type { JinaResponse, JinaSearchParameters } from './type'
 
 const log = debug('search:Jina')
 
 export class JinaImpl implements SearchServiceImpl {
+  constructor(private readonly options: SearchProviderOptions = {}) {}
+
   private get apiKey(): string | undefined {
-    return process.env.JINA_READER_API_KEY || process.env.JINA_API_KEY
+    return this.options.apiKey ?? (process.env.JINA_READER_API_KEY || process.env.JINA_API_KEY)
   }
 
   private get baseUrl(): string {
     // Prefer live process.env so tests / runtime toggles apply (toolsEnv is load-time).
     const useCn = process.env.JINA_USE_CN_DOMAINS === 'true' || toolsEnv.JINA_USE_CN_DOMAINS === 'true'
-    return getJinaSearchBaseUrl(useCn)
+    return this.options.baseURL ?? getJinaSearchBaseUrl(useCn)
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
@@ -36,7 +38,7 @@ export class JinaImpl implements SearchServiceImpl {
     let costTime: number
     try {
       log('Sending request to endpoint: %s', endpoint)
-      response = await fetch(endpoint, {
+      response = await (this.options.fetch ?? fetch)(endpoint, {
         body: JSON.stringify(body),
         headers: {
           Accept: 'application/json',

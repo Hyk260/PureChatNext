@@ -1,7 +1,7 @@
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 
-import { parseEnvBooleanDefaultTrue } from './helpers'
+import { optionalUrlEnv, parseEnvBooleanDefaultTrue } from './helpers'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -11,6 +11,8 @@ declare global {
       API_KEY_SELECT_MODE?: string
       /** 是否启用 OpenAI Provider；默认开启。 */
       ENABLED_OPENAI?: string
+      /** OpenAI SDK 服务地址，省略时使用官方地址。 */
+      OPENAI_BASE_URL?: string
       /** OpenAI API Key。 */
       OPENAI_API_KEY?: string
       /** DeepSeek API Key。 */
@@ -36,6 +38,8 @@ export const getLLMConfig = () => {
       API_KEY_SELECT_MODE: z.string().optional(),
       /** 是否启用 OpenAI Provider；默认开启。 */
       ENABLED_OPENAI: z.boolean(),
+      /** OpenAI SDK 服务地址，省略时使用官方地址。 */
+      OPENAI_BASE_URL: optionalUrlEnv(),
       /** OpenAI API Key。 */
       OPENAI_API_KEY: z.string().optional(),
       /** 是否启用 DeepSeek Provider；由 `DEEPSEEK_API_KEY` 是否存在决定。 */
@@ -58,6 +62,7 @@ export const getLLMConfig = () => {
       API_KEY_SELECT_MODE: process.env.API_KEY_SELECT_MODE,
       // OpenAI
       ENABLED_OPENAI: parseEnvBooleanDefaultTrue(process.env.ENABLED_OPENAI),
+      OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
       OPENAI_API_KEY: process.env.OPENAI_API_KEY,
       // Deepseek
       ENABLED_DEEPSEEK: !!process.env.DEEPSEEK_API_KEY,

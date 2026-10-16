@@ -2,7 +2,7 @@ import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@
 import debug from 'debug'
 import urlJoin from 'url-join'
 
-import type { SearchServiceImpl } from '../type'
+import type { SearchProviderOptions, SearchServiceImpl } from '../type'
 import type { BraveResponse, BraveSearchParameters } from './type'
 
 const log = debug('search:Brave')
@@ -15,12 +15,14 @@ const timeRangeMapping = {
 }
 
 export class BraveImpl implements SearchServiceImpl {
+  constructor(private readonly options: SearchProviderOptions = {}) {}
+
   private get apiKey(): string | undefined {
-    return process.env.BRAVE_API_KEY
+    return this.options.apiKey ?? process.env.BRAVE_API_KEY
   }
 
   private get baseUrl(): string {
-    return 'https://api.search.brave.com/res/v1'
+    return this.options.baseURL ?? 'https://api.search.brave.com/res/v1'
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
@@ -28,7 +30,7 @@ export class BraveImpl implements SearchServiceImpl {
     const endpoint = urlJoin(this.baseUrl, '/web/search')
 
     const defaultQueryParams: BraveSearchParameters = {
-      count: 15,
+      count: Math.min(params.maxResults ?? 15, 20),
       q: query,
       result_filter: 'web',
     }
@@ -53,7 +55,7 @@ export class BraveImpl implements SearchServiceImpl {
     let costTime: number
     try {
       log('Sending request to endpoint: %s', endpoint)
-      response = await fetch(`${endpoint}?${searchParams.toString()}`, {
+      response = await (this.options.fetch ?? fetch)(`${endpoint}?${searchParams.toString()}`, {
         headers: {
           Accept: 'application/json',
           'Accept-Encoding': 'gzip',

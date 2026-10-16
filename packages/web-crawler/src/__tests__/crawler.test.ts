@@ -77,6 +77,32 @@ describe('Crawler', () => {
     })
   })
 
+  it('injects request credentials and preserves an explicit provider over URL rules', async () => {
+    const { crawlImpls } = await import('../crawImpl')
+    const { applyUrlRules } = await import('../utils/appUrlRules')
+    vi.mocked(applyUrlRules).mockReturnValue({
+      transformedUrl: 'https://example.com',
+      filterOptions: {},
+      impls: ['browserless'],
+    })
+    vi.mocked(crawlImpls.jina).mockResolvedValue({
+      content: '正文'.repeat(100),
+      contentType: 'text',
+      url: 'https://example.com',
+    })
+    const configured = new Crawler({
+      impls: ['jina'],
+      providerConfigs: { jina: { apiKey: 'owner-key', baseURL: 'https://reader.example' } },
+    })
+    const result = await configured.crawl({ url: 'https://example.com', impls: ['jina'] })
+    expect(result.crawler).toBe('jina')
+    expect(crawlImpls.jina).toHaveBeenCalledWith(
+      'https://example.com',
+      expect.objectContaining({ apiKey: 'owner-key', baseURL: 'https://reader.example' })
+    )
+    expect(crawlImpls.browserless).not.toHaveBeenCalled()
+  })
+
   it('should handle crawl errors', async () => {
     const mockError = new Error('Crawl failed')
     mockError.name = 'CrawlError'

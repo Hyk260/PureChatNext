@@ -21,16 +21,16 @@ interface TavilyResponse {
   results: TavilyResults[]
 }
 
-export const tavily: CrawlImpl = async (url) => {
+export const tavily: CrawlImpl = async (url, options) => {
   // Get API key from environment variable
-  const apiKey = process.env.TAVILY_API_KEY
+  const apiKey = options.apiKey ?? process.env.TAVILY_API_KEY
 
   let res: Response
 
   try {
     res = await withTimeout(
       (signal) =>
-        fetch('https://api.tavily.com/extract', {
+        (options.fetch ?? fetch)(`${options.baseURL ?? 'https://api.tavily.com'}/extract`, {
           body: JSON.stringify({
             extract_depth: process.env.TAVILY_EXTRACT_DEPTH || 'basic', // basic or advanced
             include_images: false,

@@ -91,7 +91,7 @@ export const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
   [SettingsTab.SystemTools]: '系统工具',
   [SettingsTab.Usage]: '用量',
   [SettingsTab.Users]: '用户管理',
-  [SettingsTab.WebSearch]: '联网搜索',
+  [SettingsTab.WebSearch]: '网络搜索',
   [SettingsTab.Email]: '邮件服务',
   [SettingsTab.ReadFile]: '文件读取',
   [SettingsTab.S3]: 'S3 测试',
@@ -128,12 +128,6 @@ const MANAGE_GROUP: SettingsCategoryGroup = {
       icon: Users,
       key: SettingsTab.Users,
       label: '用户管理',
-    },
-    {
-      href: tabHref(SettingsTab.WebSearch),
-      icon: Globe2,
-      key: SettingsTab.WebSearch,
-      label: '联网搜索',
     },
     {
       href: tabHref(SettingsTab.Email),
@@ -250,6 +244,12 @@ export function useSettingsCategory(isAdmin = false): SettingsCategoryGroup[] {
             icon: Brain,
             key: SettingsTab.Provider,
             label: 'AI 服务商',
+          },
+          {
+            href: tabHref(SettingsTab.WebSearch),
+            icon: Globe2,
+            key: SettingsTab.WebSearch,
+            label: '网络搜索',
           },
           {
             href: tabHref(SettingsTab.ServiceModel),

@@ -1,3 +1,5 @@
+import type { SearchProviderOptions } from '../type'
+
 import qs from 'query-string'
 import urlJoin from 'url-join'
 
@@ -34,7 +36,10 @@ export interface SearXNGSearchResponse {
 export class SearXNGClient {
   private baseUrl: string
 
-  constructor(baseUrl: string) {
+  constructor(
+    baseUrl: string,
+    private readonly options: SearchProviderOptions = {}
+  ) {
     this.baseUrl = baseUrl
   }
 
@@ -54,7 +59,15 @@ export class SearXNGClient {
         q: query,
       })
 
-      const response = await fetch(urlJoin(this.baseUrl, `/search?${searchParams}`))
+      const response = await (this.options.fetch ?? fetch)(urlJoin(this.baseUrl, `/search?${searchParams}`), {
+        ...(this.options.basicAuthUsername
+          ? {
+              headers: {
+                Authorization: `Basic ${Buffer.from(`${this.options.basicAuthUsername}:${this.options.basicAuthPassword ?? ''}`).toString('base64')}`,
+              },
+            }
+          : {}),
+      })
 
       if (response.ok) {
         return await response.json()

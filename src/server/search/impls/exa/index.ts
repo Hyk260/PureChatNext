@@ -2,19 +2,21 @@ import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@
 import debug from 'debug'
 import urlJoin from 'url-join'
 
-import type { SearchServiceImpl } from '../type'
+import type { SearchProviderOptions, SearchServiceImpl } from '../type'
 import { getSearchTimeRangeDays } from '../../timeRange'
 import type { ExaResponse, ExaSearchParameters } from './type'
 
 const log = debug('search:Exa')
 
 export class ExaImpl implements SearchServiceImpl {
+  constructor(private readonly options: SearchProviderOptions = {}) {}
+
   private get apiKey(): string | undefined {
-    return process.env.EXA_API_KEY
+    return this.options.apiKey ?? process.env.EXA_API_KEY
   }
 
   private get baseUrl(): string {
-    return 'https://api.exa.ai'
+    return this.options.baseURL ?? 'https://api.exa.ai'
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
@@ -22,7 +24,7 @@ export class ExaImpl implements SearchServiceImpl {
     const endpoint = urlJoin(this.baseUrl, '/search')
 
     const defaultQueryParams: ExaSearchParameters = {
-      numResults: 10,
+      numResults: Math.min(params.maxResults ?? 10, 100),
       query,
       type: 'auto',
     }
@@ -51,7 +53,7 @@ export class ExaImpl implements SearchServiceImpl {
     let costTime: number
     try {
       log('Sending request to endpoint: %s', endpoint)
-      response = await fetch(endpoint, {
+      response = await (this.options.fetch ?? fetch)(endpoint, {
         body: JSON.stringify(body),
         headers: {
           'Content-Type': 'application/json',

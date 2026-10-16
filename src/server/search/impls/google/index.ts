@@ -2,7 +2,7 @@ import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@
 import debug from 'debug'
 import urlJoin from 'url-join'
 
-import type { SearchServiceImpl } from '../type'
+import type { SearchProviderOptions, SearchServiceImpl } from '../type'
 import type { GoogleResponse, GoogleSearchParameters } from './type'
 
 const log = debug('search:Google')
@@ -19,17 +19,19 @@ const timeRangeMapping = {
  * Primarily used for web crawling
  */
 export class GoogleImpl implements SearchServiceImpl {
+  constructor(private readonly options: SearchProviderOptions = {}) {}
+
   private get apiKey(): string | undefined {
-    return process.env.GOOGLE_PSE_API_KEY
+    return this.options.apiKey ?? process.env.GOOGLE_PSE_API_KEY
   }
 
   private get engineId(): string | undefined {
-    return process.env.GOOGLE_PSE_ENGINE_ID
+    return this.options.engineId ?? process.env.GOOGLE_PSE_ENGINE_ID
   }
 
   private get baseUrl(): string {
     // Assuming the base URL is consistent with the crawl endpoint
-    return 'https://www.googleapis.com'
+    return this.options.baseURL ?? 'https://www.googleapis.com'
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
@@ -39,7 +41,7 @@ export class GoogleImpl implements SearchServiceImpl {
     const defaultQueryParams: GoogleSearchParameters = {
       cx: this.engineId || '',
       key: this.apiKey || '',
-      num: 10,
+      num: Math.min(params.maxResults ?? 10, 10),
       q: query,
     }
 
@@ -51,7 +53,7 @@ export class GoogleImpl implements SearchServiceImpl {
           : undefined,
     }
 
-    log('Constructed request body: %o', body)
+    log('Constructed request body: %o', { ...body, key: body.key ? '[configured]' : '' })
 
     const searchParams = new URLSearchParams()
     for (const [key, value] of Object.entries(body)) {
@@ -63,7 +65,7 @@ export class GoogleImpl implements SearchServiceImpl {
     let costTime: number
     try {
       log('Sending request to endpoint: %s', endpoint)
-      response = await fetch(`${endpoint}?${searchParams.toString()}`, {
+      response = await (this.options.fetch ?? fetch)(`${endpoint}?${searchParams.toString()}`, {
         method: 'GET',
       })
       log('Received response with status: %d', response.status)

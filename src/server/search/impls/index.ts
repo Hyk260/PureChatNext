@@ -9,7 +9,7 @@ import { KagiImpl } from './kagi'
 import { Search1APIImpl } from './search1api'
 import { SearXNGImpl } from './searxng'
 import { TavilyImpl } from './tavily'
-import type { SearchServiceImpl } from './type'
+import type { SearchProviderOptions, SearchServiceImpl } from './type'
 
 /**
  * Available search service implementations
@@ -37,50 +37,53 @@ export const isSearchImplType = (value: string): value is SearchImplType => {
 /**
  * Create a search service implementation instance
  */
-export const createSearchServiceImpl = (type: SearchImplType = SearchImplType.SearXNG): SearchServiceImpl => {
+export const createSearchServiceImpl = (
+  type: SearchImplType = SearchImplType.SearXNG,
+  options: SearchProviderOptions = {}
+): SearchServiceImpl => {
   switch (type) {
     case SearchImplType.Anspire: {
-      return new AnspireImpl()
+      return new AnspireImpl(options)
     }
 
     case SearchImplType.Bocha: {
-      return new BochaImpl()
+      return new BochaImpl(options)
     }
 
     case SearchImplType.Brave: {
-      return new BraveImpl()
+      return new BraveImpl(options)
     }
 
     case SearchImplType.Exa: {
-      return new ExaImpl()
+      return new ExaImpl(options)
     }
 
     case SearchImplType.Firecrawl: {
-      return new FirecrawlImpl()
+      return new FirecrawlImpl(options)
     }
 
     case SearchImplType.Google: {
-      return new GoogleImpl()
+      return new GoogleImpl(options)
     }
 
     case SearchImplType.Jina: {
-      return new JinaImpl()
+      return new JinaImpl(options)
     }
 
     case SearchImplType.Kagi: {
-      return new KagiImpl()
+      return new KagiImpl(options)
     }
 
     case SearchImplType.SearXNG: {
-      return new SearXNGImpl()
+      return new SearXNGImpl(options)
     }
 
     case SearchImplType.Tavily: {
-      return new TavilyImpl()
+      return new TavilyImpl(options)
     }
 
     default: {
-      return new Search1APIImpl()
+      return new Search1APIImpl(options)
     }
   }
 }

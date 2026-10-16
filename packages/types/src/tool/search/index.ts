@@ -1,4 +1,7 @@
+export * from './settings'
+
 export interface SearchParams {
+  maxResults?: number
   searchCategories?: string[]
   searchEngines?: string[]
   searchTimeRange?: string

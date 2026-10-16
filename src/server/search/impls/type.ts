@@ -9,3 +9,12 @@ export interface SearchServiceImpl {
    */
   query: (query: string, params?: SearchParams) => Promise<UniformSearchResponse>
 }
+
+export type SearchProviderOptions = {
+  apiKey?: string
+  baseURL?: string
+  engineId?: string
+  basicAuthUsername?: string
+  basicAuthPassword?: string
+  fetch?: typeof fetch
+}

@@ -12,6 +12,13 @@ const { assertCanChat, chargeChatUsage, createModel, createOpenAI, streamText } 
   }
 })
 
+vi.mock('@pure/database/models/webSearchSettings', () => ({
+  WebSearchSettingsModel: class {
+    get = vi.fn().mockResolvedValue({})
+  },
+}))
+vi.mock('@pure/database/models/customProvider', () => ({ isValidProviderId: (id: string) => /^[a-z0-9_-]+$/.test(id) }))
+
 vi.mock('@ai-sdk/openai', () => ({ createOpenAI }))
 vi.mock('@ai-sdk/deepseek', () => ({ createDeepSeek: vi.fn() }))
 vi.mock('@pure/database/models/credits', () => ({
@@ -35,7 +42,9 @@ vi.mock('@/envs/llm', () => ({
 }))
 vi.mock('@/server/search/chatTool', () => ({
   webSearchTool: { description: 'search tool' },
+  createWebSearchTool: () => ({ description: 'search tool' }),
 }))
+vi.mock('@/server/search/fetchTool', () => ({ createFetchUrlsTool: () => ({ description: 'fetch tool' }) }))
 vi.mock('@/server/weather/chatTool', () => ({
   weatherTool: { description: 'weather tool' },
 }))
@@ -141,6 +150,7 @@ describe('POST /api/chat PureChat model availability', () => {
         tools: {
           getWeather: { description: 'weather tool' },
           webSearch: { description: 'search tool' },
+          fetchUrls: { description: 'fetch tool' },
         },
       })
     )
@@ -156,6 +166,7 @@ describe('POST /api/chat PureChat model availability', () => {
         tools: {
           getWeather: { description: 'weather tool' },
           webSearch: { description: 'search tool' },
+          fetchUrls: { description: 'fetch tool' },
         },
       })
     )

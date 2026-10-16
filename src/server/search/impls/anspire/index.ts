@@ -2,7 +2,7 @@ import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@
 import debug from 'debug'
 import urlJoin from 'url-join'
 
-import type { SearchServiceImpl } from '../type'
+import type { SearchProviderOptions, SearchServiceImpl } from '../type'
 import { getSearchTimeRangeDays } from '../../timeRange'
 import type { AnspireResponse, AnspireSearchParameters } from './type'
 
@@ -13,13 +13,15 @@ const log = debug('search:Anspire')
  * Primarily used for web crawling
  */
 export class AnspireImpl implements SearchServiceImpl {
+  constructor(private readonly options: SearchProviderOptions = {}) {}
+
   private get apiKey(): string | undefined {
-    return process.env.ANSPIRE_API_KEY
+    return this.options.apiKey ?? process.env.ANSPIRE_API_KEY
   }
 
   private get baseUrl(): string {
     // Assuming the base URL is consistent with the crawl endpoint
-    return 'https://plugin.anspire.cn/api'
+    return this.options.baseURL ?? 'https://plugin.anspire.cn/api'
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
@@ -29,7 +31,7 @@ export class AnspireImpl implements SearchServiceImpl {
     const defaultQueryParams: AnspireSearchParameters = {
       mode: 0,
       query,
-      top_k: 20,
+      top_k: Math.min(params.maxResults ?? 20, 100),
     }
     const searchTimeRangeDays = getSearchTimeRangeDays(params.searchTimeRange)
 
@@ -62,7 +64,7 @@ export class AnspireImpl implements SearchServiceImpl {
     let costTime: number
     try {
       log('Sending request to endpoint: %s', endpoint)
-      response = await fetch(`${endpoint}?${searchParams.toString()}`, {
+      response = await (this.options.fetch ?? fetch)(`${endpoint}?${searchParams.toString()}`, {
         headers: {
           Accept: '*/*',
           Authorization: this.apiKey ? `Bearer ${this.apiKey}` : '',

@@ -1,5 +1,6 @@
 // @vitest-environment node
 import type { ChatWebSearchToolResult, SearchQuery, UniformSearchResponse } from '@pure/types'
+import { estimateTokenCount } from '@pure/utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createWebSearchTool, sanitizeWebSearchQuery } from '../chatTool'
@@ -44,7 +45,7 @@ describe('sanitizeWebSearchQuery', () => {
 })
 
 describe('webSearchTool', () => {
-  it('limits results, trims content, and excludes unsafe URLs', async () => {
+  it('limits results, applies token compression, and excludes unsafe URLs', async () => {
     const longContent = `  ${'content '.repeat(100)}  `
     const results = Array.from({ length: 7 }, (_, index) => ({
       content: longContent,
@@ -64,8 +65,7 @@ describe('webSearchTool', () => {
     expect(output.results).toHaveLength(5)
     expect(output.results[0].url).toBe('https://example.com/1')
     expect(new Set(output.results.map((result) => result.url)).size).toBe(5)
-    expect(output.results[0].content.length).toBeLessThanOrEqual(600)
-    expect(output.results[0].content).not.toMatch(/\s{2,}/)
+    expect(estimateTokenCount(output.results.map((result) => result.content).join(''))).toBeLessThanOrEqual(2005)
   })
 
   it('sanitizes calendar dates and forwards optional news filters', async () => {

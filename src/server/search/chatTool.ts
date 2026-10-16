@@ -1,12 +1,11 @@
-import type { ChatWebSearchResultItem, ChatWebSearchToolResult, SearchQuery } from '@pure/types'
+import type { ChatWebSearchResultItem, ChatWebSearchToolResult, SearchQuery, WebSearchSettings } from '@pure/types'
 import { tool } from 'ai'
 import debug from 'debug'
 import { z } from 'zod'
 
 import { searchService } from '@/server/search'
+import { processWebResults } from './resultProcessing'
 
-const MAX_CONTENT_LENGTH = 600
-const MAX_RESULT_COUNT = 5
 const MAX_TITLE_LENGTH = 200
 const SEARCH_UNAVAILABLE_MESSAGE = '联网搜索暂不可用，请检查搜索服务配置后重试。'
 const log = debug('chat:web-search')
@@ -31,7 +30,10 @@ const normalizeHttpUrl = (value: string) => {
 
 const compactText = (value: string, maxLength: number) => value.replace(/\s+/g, ' ').trim().slice(0, maxLength)
 
-const compactResults = (results: Awaited<ReturnType<WebSearchService['webSearch']>>['results']) => {
+const compactResults = (
+  results: Awaited<ReturnType<WebSearchService['webSearch']>>['results'],
+  settings: WebSearchSettings
+) => {
   const compacted: ChatWebSearchResultItem[] = []
   const seenUrls = new Set<string>()
 
@@ -41,16 +43,14 @@ const compactResults = (results: Awaited<ReturnType<WebSearchService['webSearch'
     seenUrls.add(url)
 
     compacted.push({
-      content: compactText(result.content, MAX_CONTENT_LENGTH),
+      content: result.content,
       ...(result.publishedDate ? { publishedDate: result.publishedDate } : {}),
       title: compactText(result.title, MAX_TITLE_LENGTH) || url,
       url,
     })
-
-    if (compacted.length === MAX_RESULT_COUNT) break
   }
 
-  return compacted
+  return processWebResults(compacted, settings)
 }
 
 /** Models often copy the runtime clock into keywords, which turns news search into year/calendar pages. */
@@ -72,7 +72,7 @@ export const resolveWebSearchQuery = (input: {
   }
 }
 
-export const createWebSearchTool = (service: WebSearchService = searchService) =>
+export const createWebSearchTool = (service: WebSearchService = searchService, settings: WebSearchSettings = {}) =>
   tool({
     description:
       'Search the public web when the question needs current or externally verifiable information. Use topic keywords only; never put calendar dates such as 2026-09-07 or 2026年9月7日 in the query. For news, search with queries like "中国 今日新闻 要闻". If results are encyclopedias, calendars, homepages, or otherwise unusable, search once more with a different query, then answer. After two search rounds, write the user-facing answer from the sources you have; never emit XML, DSML, or tool-call markup. When the user asks to continue, summarize, or narrow the topic after a previous search, search again instead of asking them to choose a format. Base the answer on returned sources and cite URLs.',
@@ -98,7 +98,7 @@ export const createWebSearchTool = (service: WebSearchService = searchService) =
       const request = resolveWebSearchQuery({ query, searchCategories, searchTimeRange })
       try {
         const response = await service.webSearch(request, { filterIrrelevant: true })
-        const results = compactResults(response.results)
+        const results = compactResults(response.results, settings)
 
         log(
           'completed q=%d sanitized=%d results=%d durationMs=%d',

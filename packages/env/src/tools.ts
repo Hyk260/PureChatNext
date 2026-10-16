@@ -7,6 +7,24 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface ProcessEnv {
+      ANSPIRE_API_KEY?: string
+      BOCHA_API_KEY?: string
+      BRAVE_API_KEY?: string
+      EXA_API_KEY?: string
+      FIRECRAWL_API_KEY?: string
+      FIRECRAWL_URL?: string
+      GOOGLE_PSE_API_KEY?: string
+      GOOGLE_PSE_ENGINE_ID?: string
+      JINA_READER_API_KEY?: string
+      JINA_API_KEY?: string
+      KAGI_API_KEY?: string
+      SEARCH1API_API_KEY?: string
+      SEARCH1API_SEARCH_API_KEY?: string
+      SEARCH1API_CRAWL_API_KEY?: string
+      TAVILY_API_KEY?: string
+      BROWSERLESS_TOKEN?: string
+      BROWSERLESS_URL?: string
+
       /** 网页抓取并发数，取值范围为 `1`–`10`。 */
       CRAWL_CONCURRENCY?: string
       /** 网页抓取失败重试次数，取值范围为 `0`–`3`。 */
@@ -32,6 +50,24 @@ declare global {
 export const getToolsConfig = () => {
   return createEnv({
     runtimeEnv: {
+      ANSPIRE_API_KEY: process.env.ANSPIRE_API_KEY,
+      BOCHA_API_KEY: process.env.BOCHA_API_KEY,
+      BRAVE_API_KEY: process.env.BRAVE_API_KEY,
+      EXA_API_KEY: process.env.EXA_API_KEY,
+      FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY,
+      FIRECRAWL_URL: process.env.FIRECRAWL_URL,
+      GOOGLE_PSE_API_KEY: process.env.GOOGLE_PSE_API_KEY,
+      GOOGLE_PSE_ENGINE_ID: process.env.GOOGLE_PSE_ENGINE_ID,
+      JINA_READER_API_KEY: process.env.JINA_READER_API_KEY,
+      JINA_API_KEY: process.env.JINA_API_KEY,
+      KAGI_API_KEY: process.env.KAGI_API_KEY,
+      SEARCH1API_API_KEY: process.env.SEARCH1API_API_KEY,
+      SEARCH1API_SEARCH_API_KEY: process.env.SEARCH1API_SEARCH_API_KEY,
+      SEARCH1API_CRAWL_API_KEY: process.env.SEARCH1API_CRAWL_API_KEY,
+      TAVILY_API_KEY: process.env.TAVILY_API_KEY,
+      BROWSERLESS_TOKEN: process.env.BROWSERLESS_TOKEN,
+      BROWSERLESS_URL: process.env.BROWSERLESS_URL,
+
       CRAWL_CONCURRENCY: process.env.CRAWL_CONCURRENCY,
       CRAWLER_RETRY: process.env.CRAWLER_RETRY,
       CRAWLER_IMPLS: process.env.CRAWLER_IMPLS,
@@ -43,6 +79,24 @@ export const getToolsConfig = () => {
       VISUAL_UNDERSTANDING_PROVIDER: process.env.VISUAL_UNDERSTANDING_PROVIDER,
     },
     server: {
+      ANSPIRE_API_KEY: z.string().optional(),
+      BOCHA_API_KEY: z.string().optional(),
+      BRAVE_API_KEY: z.string().optional(),
+      EXA_API_KEY: z.string().optional(),
+      FIRECRAWL_API_KEY: z.string().optional(),
+      FIRECRAWL_URL: optionalUrlEnv(),
+      GOOGLE_PSE_API_KEY: z.string().optional(),
+      GOOGLE_PSE_ENGINE_ID: z.string().optional(),
+      JINA_READER_API_KEY: z.string().optional(),
+      JINA_API_KEY: z.string().optional(),
+      KAGI_API_KEY: z.string().optional(),
+      SEARCH1API_API_KEY: z.string().optional(),
+      SEARCH1API_SEARCH_API_KEY: z.string().optional(),
+      SEARCH1API_CRAWL_API_KEY: z.string().optional(),
+      TAVILY_API_KEY: z.string().optional(),
+      BROWSERLESS_TOKEN: z.string().optional(),
+      BROWSERLESS_URL: optionalUrlEnv(),
+
       /** 网页抓取并发数，取值范围为 `1`–`10`。 */
       CRAWL_CONCURRENCY: optionalNumberEnv(1, 10),
       /** 网页抓取失败重试次数，取值范围为 `0`–`3`。 */

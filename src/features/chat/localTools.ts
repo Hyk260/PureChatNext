@@ -41,6 +41,8 @@ const OTHER_TOOL_APPROVAL_TITLE: Record<string, string> = {
   getWeather: '允许查询天气？',
   weather: '允许查询天气？',
   webSearch: '允许联网搜索？',
+  web_search: '允许使用模型联网搜索？',
+  fetchUrls: '允许读取网页内容？',
 }
 
 /** String set so `.has(toolName: string)` stays ergonomic at call sites. */

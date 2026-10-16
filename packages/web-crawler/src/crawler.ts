@@ -1,19 +1,20 @@
 import { crawlImpls } from './crawImpl'
 import type { CrawlImplType } from './crawImpl'
-import type { CrawlUniformResult, CrawlUrlRule } from './type'
+import type { CrawlProviderOptions, CrawlUniformResult, CrawlUrlRule } from './type'
 import { crawUrlRules } from './urlRules'
 import { applyUrlRules } from './utils/appUrlRules'
 
 const defaultImpls = ['jina', 'naive', 'search1api', 'browserless'] as CrawlImplType[]
 
-interface CrawlOptions {
+export interface CrawlOptions {
+  providerConfigs?: Partial<Record<CrawlImplType, CrawlProviderOptions>>
   impls?: string[]
 }
 
 export class Crawler {
   impls: CrawlImplType[]
 
-  constructor(options: CrawlOptions = {}) {
+  constructor(private readonly options: CrawlOptions = {}) {
     this.impls = !!options.impls?.length
       ? (options.impls.filter((impl) => Object.keys(crawlImpls).includes(impl)) as CrawlImplType[])
       : defaultImpls
@@ -56,7 +57,10 @@ export class Crawler {
     // Try each implementation in the built-in order
     for (const impl of finalImpls) {
       try {
-        const res = await crawlImpls[impl](transformedUrl, { filterOptions: mergedFilterOptions })
+        const res = await crawlImpls[impl](transformedUrl, {
+          ...this.options.providerConfigs?.[impl],
+          filterOptions: mergedFilterOptions,
+        })
 
         if (res && res.content && res.content.length > 100) {
           return {
@@ -71,7 +75,7 @@ export class Crawler {
         finalError.name = 'EmptyCrawlResultError'
         finalCrawler = impl
       } catch (error) {
-        console.error(error)
+        console.error('[Crawler] request failed:', impl, error instanceof Error ? error.name : 'UnknownError')
         finalError = error as Error
         finalCrawler = impl
       }

@@ -2,7 +2,7 @@ import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@
 import debug from 'debug'
 import urlJoin from 'url-join'
 
-import type { SearchServiceImpl } from '../type'
+import type { SearchProviderOptions, SearchServiceImpl } from '../type'
 import type { FirecrawlResponse, FirecrawlSearchParameters } from './type'
 
 const log = debug('search:Firecrawl')
@@ -37,13 +37,15 @@ const toSearchResult = (
  * Primarily used for web crawling
  */
 export class FirecrawlImpl implements SearchServiceImpl {
+  constructor(private readonly options: SearchProviderOptions = {}) {}
+
   private get apiKey(): string | undefined {
-    return process.env.FIRECRAWL_API_KEY
+    return this.options.apiKey ?? process.env.FIRECRAWL_API_KEY
   }
 
   private get baseUrl(): string {
     // Assuming the base URL is consistent with the crawl endpoint
-    return process.env.FIRECRAWL_URL || 'https://api.firecrawl.dev/v2'
+    return this.options.baseURL ?? (process.env.FIRECRAWL_URL || 'https://api.firecrawl.dev/v2')
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
@@ -51,7 +53,7 @@ export class FirecrawlImpl implements SearchServiceImpl {
     const endpoint = urlJoin(this.baseUrl, '/search')
 
     const defaultQueryParams: FirecrawlSearchParameters = {
-      limit: 20,
+      limit: Math.min(params.maxResults ?? 20, 100),
       query,
       /*
       scrapeOptions: {
@@ -75,7 +77,7 @@ export class FirecrawlImpl implements SearchServiceImpl {
       log('Sending request to endpoint: %s', endpoint)
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
       if (this.apiKey) headers.Authorization = `Bearer ${this.apiKey}`
-      response = await fetch(endpoint, {
+      response = await (this.options.fetch ?? fetch)(endpoint, {
         body: JSON.stringify(body),
         headers,
         method: 'POST',
@@ -101,7 +103,12 @@ export class FirecrawlImpl implements SearchServiceImpl {
 
       // V2 API returns data as object with web/images/news arrays
       const { web: webResults = [], images: imageResults = [], news: newsResults = [] } = firecrawlResponse.data
-      log('Parsed Firecrawl response: web=%d news=%d images=%d', webResults.length, newsResults.length, imageResults.length)
+      log(
+        'Parsed Firecrawl response: web=%d news=%d images=%d',
+        webResults.length,
+        newsResults.length,
+        imageResults.length
+      )
 
       const mappedWebResults = webResults.map((result) =>
         toSearchResult(result, 'general', result.description || result.markdown || '', result.url)

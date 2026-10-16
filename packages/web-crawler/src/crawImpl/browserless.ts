@@ -22,8 +22,8 @@ class BrowserlessInitError extends Error {
   }
 }
 
-export const browserless: CrawlImpl = async (url, { filterOptions }) => {
-  if (!process.env.BROWSERLESS_URL && !process.env.BROWSERLESS_TOKEN) {
+export const browserless: CrawlImpl = async (url, { filterOptions, apiKey, baseURL, fetch: requestFetch }) => {
+  if (!baseURL && !apiKey && !process.env.BROWSERLESS_URL && !process.env.BROWSERLESS_TOKEN) {
     throw new BrowserlessInitError()
   }
 
@@ -38,14 +38,14 @@ export const browserless: CrawlImpl = async (url, { filterOptions }) => {
   try {
     res = await withTimeout(
       (signal) =>
-        fetch(
+        (requestFetch ?? fetch)(
           qs.stringifyUrl({
             query: {
               blockAds: BROWSERLESS_BLOCK_ADS,
               launch: JSON.stringify({ stealth: BROWSERLESS_STEALTH_MODE }),
-              token: BROWSERLESS_TOKEN,
+              token: apiKey ?? BROWSERLESS_TOKEN,
             },
-            url: urlJoin(BASE_URL, '/content'),
+            url: urlJoin(baseURL ?? BASE_URL, '/content'),
           }),
           {
             body: JSON.stringify(input),

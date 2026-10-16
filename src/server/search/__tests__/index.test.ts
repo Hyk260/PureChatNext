@@ -45,28 +45,28 @@ describe('SearchService', () => {
 
   describe('constructor', () => {
     it('should create instance with default search implementation when no providers configured', () => {
-      expect(createSearchServiceImpl).toHaveBeenCalledWith()
+      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.SearXNG, undefined)
     })
 
     it('should create instances for all providers from SEARCH_PROVIDERS', () => {
       vi.mocked(toolsEnv).SEARCH_PROVIDERS = 'tavily,brave'
       searchService = new SearchService()
-      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Tavily)
-      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Brave)
+      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Tavily, undefined)
+      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Brave, undefined)
     })
 
     it('should handle full-width comma in SEARCH_PROVIDERS', () => {
       vi.mocked(toolsEnv).SEARCH_PROVIDERS = 'tavily，brave'
       searchService = new SearchService()
-      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Tavily)
-      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Brave)
+      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Tavily, undefined)
+      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Brave, undefined)
     })
 
     it('should trim whitespace in SEARCH_PROVIDERS', () => {
       vi.mocked(toolsEnv).SEARCH_PROVIDERS = '  tavily  ,  brave  '
       searchService = new SearchService()
-      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Tavily)
-      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Brave)
+      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Tavily, undefined)
+      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Brave, undefined)
     })
   })
 
@@ -107,17 +107,19 @@ describe('SearchService', () => {
     })
 
     it('should use the specified provider for query', async () => {
-      const mockTavily = { query: vi.fn().mockResolvedValue({
-        costTime: 10,
-        query: 'test query',
-        resultNumbers: 0,
-        results: [],
-      }) }
+      const mockTavily = {
+        query: vi.fn().mockResolvedValue({
+          costTime: 10,
+          query: 'test query',
+          resultNumbers: 0,
+          results: [],
+        }),
+      }
       vi.mocked(createSearchServiceImpl).mockReturnValue(mockTavily as any)
 
       const result = await searchService.query('test query', undefined, { provider: SearchImplType.Tavily })
 
-      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Tavily)
+      expect(createSearchServiceImpl).toHaveBeenCalledWith(SearchImplType.Tavily, undefined)
       expect(mockTavily.query).toHaveBeenCalledWith('test query', undefined)
       expect(result.provider).toBe(SearchImplType.Tavily)
     })
@@ -212,11 +214,13 @@ describe('SearchService', () => {
         searchEngines: undefined,
         searchTimeRange: '1d',
       })
-      expect(result).toEqual(expect.objectContaining({
-        ...successResponse,
-        fallback: expect.objectContaining({ level: 'engine-removed' }),
-        provider: SearchImplType.SearXNG,
-      }))
+      expect(result).toEqual(
+        expect.objectContaining({
+          ...successResponse,
+          fallback: expect.objectContaining({ level: 'engine-removed' }),
+          provider: SearchImplType.SearXNG,
+        })
+      )
     })
 
     it('should retry without any params when still no results found', async () => {
@@ -257,11 +261,13 @@ describe('SearchService', () => {
 
       expect(mockSearchImpl.query).toHaveBeenCalledTimes(3)
       expect(mockSearchImpl.query).toHaveBeenNthCalledWith(3, 'test', undefined)
-      expect(result).toEqual(expect.objectContaining({
-        ...successResponse,
-        fallback: expect.objectContaining({ level: 'all-filters-removed' }),
-        provider: SearchImplType.SearXNG,
-      }))
+      expect(result).toEqual(
+        expect.objectContaining({
+          ...successResponse,
+          fallback: expect.objectContaining({ level: 'all-filters-removed' }),
+          provider: SearchImplType.SearXNG,
+        })
+      )
     })
 
     it('should skip second retry if searchEngines not provided', async () => {
@@ -302,11 +308,13 @@ describe('SearchService', () => {
         searchTimeRange: undefined,
       })
       expect(mockSearchImpl.query).toHaveBeenNthCalledWith(2, 'test', undefined)
-      expect(result).toEqual(expect.objectContaining({
-        ...successResponse,
-        fallback: expect.objectContaining({ level: 'all-filters-removed' }),
-        provider: SearchImplType.SearXNG,
-      }))
+      expect(result).toEqual(
+        expect.objectContaining({
+          ...successResponse,
+          fallback: expect.objectContaining({ level: 'all-filters-removed' }),
+          provider: SearchImplType.SearXNG,
+        })
+      )
     })
 
     it('should return empty results after all retries fail', async () => {
@@ -356,12 +364,14 @@ describe('SearchService', () => {
     })
 
     it('should only use the specified provider without fallback', async () => {
-      const mockImpl1 = { query: vi.fn().mockResolvedValue({
-        costTime: 100,
-        query: 'test',
-        resultNumbers: 0,
-        results: [],
-      }) }
+      const mockImpl1 = {
+        query: vi.fn().mockResolvedValue({
+          costTime: 100,
+          query: 'test',
+          resultNumbers: 0,
+          results: [],
+        }),
+      }
       const mockImpl2 = { query: vi.fn() }
 
       vi.mocked(createSearchServiceImpl)

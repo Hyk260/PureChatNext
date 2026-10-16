@@ -1,5 +1,5 @@
 import type { SearchParams, SearchQuery, UniformSearchResponse } from '@pure/types'
-import type { Crawler, CrawlImplType, CrawlUniformResult } from '@pure/web-crawler'
+import type { Crawler, CrawlImplType, CrawlUniformResult, CrawlProviderOptions } from '@pure/web-crawler'
 import debug from 'debug'
 import pMap from 'p-map'
 
@@ -7,6 +7,7 @@ import { toolsEnv } from '@/envs/tools'
 
 import { createSearchServiceImpl, isSearchImplType, SearchImplType } from './impls'
 import type { SearchServiceImpl } from './impls'
+import type { SearchProviderOptions } from './impls/type'
 import { filterRelevantSearchResults } from './searchQuality'
 
 const DEFAULT_CRAWL_CONCURRENCY = 3
@@ -38,11 +39,19 @@ const getMemorySnapshot = () => {
   return `rss=${(rss / 1024 / 1024).toFixed(1)}MB heap=${(heapUsed / 1024 / 1024).toFixed(1)}MB`
 }
 
+export type SearchServiceOptions = {
+  searchProviders?: SearchImplType[]
+  crawlerImpls?: CrawlImplType[]
+  providers?: Partial<Record<SearchImplType, SearchProviderOptions>>
+  crawlerConfigs?: Partial<Record<CrawlImplType, CrawlProviderOptions>>
+  maxResults?: number
+}
+
 export class SearchService {
   private searchImpList: SearchProviderEntry[]
 
   private get crawlerImpls() {
-    return parseImplEnv(toolsEnv.CRAWLER_IMPLS)
+    return this.options.crawlerImpls ?? parseImplEnv(toolsEnv.CRAWLER_IMPLS)
   }
 
   private get crawlConcurrency() {
@@ -53,11 +62,11 @@ export class SearchService {
     return toolsEnv.CRAWLER_RETRY ?? DEFAULT_CRAWLER_RETRY
   }
 
-  constructor() {
+  constructor(private readonly options: SearchServiceOptions = {}) {
     const configured = this.searchImpls
     const implTypes = configured.length > 0 ? configured : [SearchImplType.SearXNG]
     this.searchImpList = implTypes.map((type) => ({
-      impl: createSearchServiceImpl(type),
+      impl: createSearchServiceImpl(type, this.options.providers?.[type]),
       type,
     }))
   }
@@ -75,12 +84,12 @@ export class SearchService {
     } catch {}
 
     const { Crawler } = await import('@pure/web-crawler')
-    const crawler = new Crawler({ impls: this.crawlerImpls })
+    const crawler = new Crawler({ impls: this.crawlerImpls, providerConfigs: this.options.crawlerConfigs })
 
     const results = await pMap(
       input.urls,
       async (url) => {
-        return await this.crawlWithRetry(crawler, url, input.impls)
+        return await this.crawlWithRetry(crawler, url, input.impls ?? this.options.crawlerImpls)
       },
       { concurrency: this.crawlConcurrency }
     )
@@ -135,7 +144,7 @@ export class SearchService {
   }
 
   private get searchImpls() {
-    return parseImplEnv(toolsEnv.SEARCH_PROVIDERS).filter(isSearchImplType)
+    return this.options.searchProviders ?? parseImplEnv(toolsEnv.SEARCH_PROVIDERS).filter(isSearchImplType)
   }
 
   private resolveProviders(provider?: SearchImplType): SearchProviderEntry[] {
@@ -148,7 +157,7 @@ export class SearchService {
       return [existing]
     }
 
-    return [{ impl: createSearchServiceImpl(provider), type: provider }]
+    return [{ impl: createSearchServiceImpl(provider, this.options.providers?.[provider]), type: provider }]
   }
 
   /**
@@ -161,7 +170,10 @@ export class SearchService {
     provider: SearchImplType
   ) {
     try {
-      const data = await impl.query(query, params)
+      const data = await impl.query(
+        query,
+        this.options.maxResults ? { ...params, maxResults: this.options.maxResults } : params
+      )
       return {
         ...data,
         provider,
@@ -229,11 +241,16 @@ export class SearchService {
         }
       } catch {}
 
-      let data = await this.queryWithImpl(impl, query, {
-        searchCategories,
-        searchEngines,
-        searchTimeRange,
-      }, type)
+      let data = await this.queryWithImpl(
+        impl,
+        query,
+        {
+          searchCategories,
+          searchEngines,
+          searchTimeRange,
+        },
+        type
+      )
       if (data.errorDetail) lastErrorDetail = data.errorDetail
 
       if (options?.filterIrrelevant) {
@@ -245,11 +262,16 @@ export class SearchService {
 
       // 第一次重试：如果没有结果，移除搜索引擎限制
       if (data.results.length === 0 && searchEngines && searchEngines?.length > 0) {
-        data = await this.queryWithImpl(impl, query, {
-          searchCategories,
-          searchEngines: undefined,
-          searchTimeRange,
-        }, type)
+        data = await this.queryWithImpl(
+          impl,
+          query,
+          {
+            searchCategories,
+            searchEngines: undefined,
+            searchTimeRange,
+          },
+          type
+        )
         if (data.errorDetail) lastErrorDetail = data.errorDetail
         if (options?.filterIrrelevant) {
           const results = filterRelevantSearchResults(query, data.results)

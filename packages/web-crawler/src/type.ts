@@ -9,9 +9,16 @@ export interface FilterOptions {
   pureText?: boolean
 }
 
-type CrawlImplParams<T> = T & {
-  filterOptions: FilterOptions
+export type CrawlProviderOptions = {
+  apiKey?: string
+  baseURL?: string
+  fetch?: typeof fetch
 }
+
+type CrawlImplParams<T> = T &
+  CrawlProviderOptions & {
+    filterOptions: FilterOptions
+  }
 
 export type CrawlImpl<Params = object> = (
   url: string,

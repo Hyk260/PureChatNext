@@ -11,7 +11,11 @@ vi.mock('antd-style', () => ({
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
 }))
 
-import WebSearchStatus, { getWebSearchStatusSignature, hasWebSearchToolPart } from '../WebSearchStatus'
+import WebSearchStatus, {
+  getWebSearchParts,
+  getWebSearchStatusSignature,
+  hasWebSearchToolPart,
+} from '../WebSearchStatus'
 
 const createMessage = (part: Record<string, unknown>): UIMessage =>
   ({
@@ -88,4 +92,29 @@ describe('WebSearchStatus', () => {
     expect(screen.getByText('联网搜索失败，请稍后重试')).toBeTruthy()
     expect(screen.queryByText(/secret/)).toBeNull()
   })
+})
+
+it('normalizes native sources and webpage errors without altering persisted parts', () => {
+  const native = createMessage({
+    type: 'tool-web_search',
+    state: 'output-available',
+    output: {
+      action: { queries: ['query'] },
+      sources: [
+        { type: 'url', url: 'https://example.com' },
+        { type: 'url', url: 'javascript:alert(1)' },
+      ],
+    },
+  })
+  const original = JSON.stringify(native)
+  expect(getWebSearchParts(native)[0]).toMatchObject({
+    output: { query: 'query', success: true, results: [{ url: 'https://example.com/' }] },
+  })
+  expect(JSON.stringify(native)).toBe(original)
+  const fetched = createMessage({
+    type: 'tool-fetchUrls',
+    state: 'output-available',
+    output: { query: 'https://example.com', success: false, results: [], errors: [{ error: '读取失败' }] },
+  })
+  expect(getWebSearchParts(fetched)[0]).toMatchObject({ output: { error: '读取失败' } })
 })

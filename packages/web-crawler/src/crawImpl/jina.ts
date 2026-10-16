@@ -16,7 +16,7 @@ export const jina: CrawlImpl<{ apiKey?: string }> = async (url, params) => {
   try {
     res = await withTimeout(
       (signal) =>
-        fetch(`${getJinaReaderBaseUrl(jinaUseCnDomains())}/${url}`, {
+        (params.fetch ?? fetch)(`${params.baseURL ?? getJinaReaderBaseUrl(jinaUseCnDomains())}/${url}`, {
           headers: {
             Accept: 'application/json',
             Authorization: token ? `Bearer ${token}` : '',

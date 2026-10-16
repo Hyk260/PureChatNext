@@ -4,12 +4,14 @@ import type { UniformSearchResponse } from '@pure/types'
 import { toolsEnv } from '@/envs/tools'
 import { SearXNGClient } from './client'
 
-import type { SearchServiceImpl } from '../type'
+import type { SearchProviderOptions, SearchServiceImpl } from '../type'
 
 /**
  * SearXNG implementation of the search service
  */
 export class SearXNGImpl implements SearchServiceImpl {
+  constructor(private readonly options: SearchProviderOptions = {}) {}
+
   async query(
     query: string,
     params?: {
@@ -18,11 +20,11 @@ export class SearXNGImpl implements SearchServiceImpl {
       searchTimeRange?: string
     }
   ): Promise<UniformSearchResponse> {
-    if (!toolsEnv.SEARXNG_URL) {
+    if (!(this.options.baseURL ?? toolsEnv.SEARXNG_URL)) {
       throw new Error(SEARCH_SEARXNG_NOT_CONFIG)
     }
 
-    const client = new SearXNGClient(toolsEnv.SEARXNG_URL)
+    const client = new SearXNGClient(this.options.baseURL ?? toolsEnv.SEARXNG_URL!, this.options)
 
     try {
       let costTime = 0
@@ -36,8 +38,7 @@ export class SearXNGImpl implements SearchServiceImpl {
 
       // SearXNG 常省略 number_of_results；undefined 经 JSON 序列化会被丢弃，
       // 导致前端用 resultNumbers 做类型判断时识别失败。
-      const resultNumbers =
-        typeof data.number_of_results === 'number' ? data.number_of_results : data.results.length
+      const resultNumbers = typeof data.number_of_results === 'number' ? data.number_of_results : data.results.length
 
       return {
         costTime,

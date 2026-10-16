@@ -135,10 +135,12 @@ const styles = createStaticStyles(({ css }) => ({
   `,
 }))
 
+const WEB_TOOL_NAMES = new Set(['webSearch', 'fetchUrls', 'web_search'])
+
 type MessagePart = UIMessage['parts'][number]
 
 const isWebSearchPart = (part: MessagePart): part is ToolUIPart =>
-  isToolUIPart(part) && part.type !== 'dynamic-tool' && getToolName(part) === 'webSearch'
+  isToolUIPart(part) && part.type !== 'dynamic-tool' && WEB_TOOL_NAMES.has(getToolName(part))
 
 const isWebSearchOutput = (value: unknown): value is ChatWebSearchToolResult => {
   if (!isRecord(value) || typeof value.query !== 'string' || typeof value.success !== 'boolean') return false
@@ -159,6 +161,7 @@ const isWebSearchOutput = (value: unknown): value is ChatWebSearchToolResult => 
 const safeHttpUrl = (value: string) => {
   try {
     const url = new URL(value)
+    if (url.username || url.password) return null
     return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null
   } catch {
     return null
@@ -178,11 +181,49 @@ const getUrlMeta = (value: string) => {
   }
 }
 
+export const getWebSearchParts = (message: UIMessage): ToolUIPart[] => {
+  const sources = message.parts.filter((part) => part.type === 'source-url')
+  return message.parts.filter(isWebSearchPart).map((part) => {
+    if (part.state !== 'output-available' || isWebSearchOutput(part.output)) return part
+    if (!isRecord(part.output)) return part
+    if (getToolName(part) === 'fetchUrls') {
+      const errors = Array.isArray(part.output.errors) ? part.output.errors : []
+      return {
+        ...part,
+        output: {
+          ...part.output,
+          error:
+            errors
+              .map((item) => (isRecord(item) ? item.error : ''))
+              .filter(Boolean)
+              .join('；') || '网页读取失败',
+        },
+      }
+    }
+    if (getToolName(part) !== 'web_search') return part
+    const nativeSources = Array.isArray(part.output.sources) ? part.output.sources : []
+    const urls = new Set<string>()
+    const results = [...sources, ...nativeSources].flatMap((source) => {
+      if (!isRecord(source) || typeof source.url !== 'string') return []
+      const url = safeHttpUrl(source.url)
+      if (!url || urls.has(url)) return []
+      urls.add(url)
+      return [{ url, title: typeof source.title === 'string' ? source.title : url, content: '' }]
+    })
+    const action = isRecord(part.output.action) ? part.output.action : {}
+    const query = Array.isArray(action.queries)
+      ? action.queries.join(' · ')
+      : typeof action.query === 'string'
+        ? action.query
+        : '模型内置 Web'
+    return { ...part, output: { query, results, success: true } }
+  })
+}
+
 export const hasWebSearchToolPart = (message: UIMessage) => message.parts.some(isWebSearchPart)
 
 export const getWebSearchStatusSignature = (message: UIMessage) =>
-  message.parts
-    .filter(isWebSearchPart)
+  getWebSearchParts(message)
     .map((part) => {
       if (part.state !== 'output-available') return part.state
       if (!isWebSearchOutput(part.output)) return 'invalid-output'
@@ -191,7 +232,7 @@ export const getWebSearchStatusSignature = (message: UIMessage) =>
     .join('|')
 
 const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
-  const parts = message.parts.filter(isWebSearchPart)
+  const parts = getWebSearchParts(message)
 
   if (parts.length === 0) return null
 
@@ -203,7 +244,7 @@ const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
             <div className={styles.panel} key={part.toolCallId} role='status'>
               <div className={styles.summary}>
                 <Loader2 className={`${styles.icon} ${styles.spinner}`} size={15} aria-hidden />
-                <span>正在联网搜索…</span>
+                <span>{getToolName(part) === 'fetchUrls' ? '正在读取网页…' : '正在联网搜索…'}</span>
               </div>
             </div>
           )
@@ -223,6 +264,8 @@ const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
         if (part.state !== 'output-available') return null
 
         const output = isWebSearchOutput(part.output) ? part.output : null
+        const isFetch = getToolName(part) === 'fetchUrls'
+        const failures = isRecord(part.output) && Array.isArray(part.output.errors) ? part.output.errors.length : 0
         if (!output || !output.success) {
           return (
             <div className={`${styles.panel} ${styles.error}`} key={part.toolCallId} role='status'>
@@ -249,7 +292,10 @@ const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
           <details className={styles.panel} key={part.toolCallId}>
             <summary className={styles.summary}>
               <Globe className={styles.icon} size={15} aria-hidden />
-              <span>已搜索 {output.results.length} 个来源</span>
+              <span>
+                {isFetch ? '已读取' : '已搜索'} {output.results.length} 个来源
+                {failures > 0 ? ` · ${failures} 个失败` : ''}
+              </span>
               <span className={styles.avatars} aria-hidden>
                 {output.results.slice(0, 6).map((result, index) => {
                   const href = safeHttpUrl(result.url)
@@ -262,7 +308,7 @@ const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
             </summary>
             <div className={styles.detail}>
               <div className={styles.query} title={output.query}>
-                搜索：{output.query}
+                {isFetch ? '网页' : '搜索'}：{output.query}
               </div>
               <div className={styles.cards}>
                 {output.results.map((result, index) => {

@@ -49,30 +49,27 @@ interface FirecrawlResponse {
   success: boolean
 }
 
-export const firecrawl: CrawlImpl = async (url) => {
+export const firecrawl: CrawlImpl = async (url, options) => {
   // Get API key from environment variable
-  const apiKey = process.env.FIRECRAWL_API_KEY
-  const baseUrl = process.env.FIRECRAWL_URL || 'https://api.firecrawl.dev/v2'
+  const apiKey = options.apiKey ?? process.env.FIRECRAWL_API_KEY
+  const baseUrl = options.baseURL ?? (process.env.FIRECRAWL_URL || 'https://api.firecrawl.dev/v2')
 
   let res: Response
 
   try {
-    res = await withTimeout(
-      (signal) => {
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-        if (apiKey) headers.Authorization = `Bearer ${apiKey}`
-        return fetch(`${baseUrl}/scrape`, {
-          body: JSON.stringify({
-            formats: ['markdown'], // ["markdown", "html"]
-            url,
-          }),
-          headers,
-          method: 'POST',
-          signal,
-        })
-      },
-      DEFAULT_TIMEOUT
-    )
+    res = await withTimeout((signal) => {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (apiKey) headers.Authorization = `Bearer ${apiKey}`
+      return (options.fetch ?? fetch)(`${baseUrl}/scrape`, {
+        body: JSON.stringify({
+          formats: ['markdown'], // ["markdown", "html"]
+          url,
+        }),
+        headers,
+        method: 'POST',
+        signal,
+      })
+    }, DEFAULT_TIMEOUT)
   } catch (e) {
     throw toFetchError(e)
   }

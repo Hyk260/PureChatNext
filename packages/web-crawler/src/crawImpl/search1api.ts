@@ -14,16 +14,16 @@ interface Search1ApiResponse {
   }
 }
 
-export const search1api: CrawlImpl = async (url) => {
+export const search1api: CrawlImpl = async (url, options) => {
   // Get API key from environment variable
-  const apiKey = process.env.SEARCH1API_CRAWL_API_KEY || process.env.SEARCH1API_API_KEY
+  const apiKey = options.apiKey ?? (process.env.SEARCH1API_CRAWL_API_KEY || process.env.SEARCH1API_API_KEY)
 
   let res: Response
 
   try {
     res = await withTimeout(
       (signal) =>
-        fetch('https://api.search1api.com/crawl', {
+        (options.fetch ?? fetch)(`${options.baseURL ?? 'https://api.search1api.com'}/crawl`, {
           body: JSON.stringify({
             url,
           }),

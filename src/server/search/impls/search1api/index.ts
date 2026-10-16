@@ -2,7 +2,7 @@ import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@
 import debug from 'debug'
 import urlJoin from 'url-join'
 
-import type { SearchServiceImpl } from '../type'
+import type { SearchProviderOptions, SearchServiceImpl } from '../type'
 import type { Search1ApiRawResponse, TimeRange } from './type'
 
 const timeRangeMapping: Record<string, TimeRange | undefined> = {
@@ -31,13 +31,15 @@ const log = debug('search:search1api')
  * Primarily used for web crawling
  */
 export class Search1APIImpl implements SearchServiceImpl {
+  constructor(private readonly options: SearchProviderOptions = {}) {}
+
   private get apiKey(): string | undefined {
-    return process.env.SEARCH1API_SEARCH_API_KEY || process.env.SEARCH1API_API_KEY
+    return this.options.apiKey ?? (process.env.SEARCH1API_SEARCH_API_KEY || process.env.SEARCH1API_API_KEY)
   }
 
   private get baseUrl(): string {
     // Assuming the base URL is consistent with the crawl endpoint
-    return 'https://api.search1api.com'
+    return this.options.baseURL ?? 'https://api.search1api.com'
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
@@ -49,7 +51,7 @@ export class Search1APIImpl implements SearchServiceImpl {
     const defaultQueryParams: Search1APIQueryParams = {
       crawl_results: 0, // Default is no crawling
       image: false,
-      max_results: 15, // Default max results
+      max_results: Math.min(params.maxResults ?? 15, 50), // Default max results
       query,
     }
 
@@ -87,7 +89,7 @@ export class Search1APIImpl implements SearchServiceImpl {
     let costTime: number
     try {
       log('Sending request to endpoint: %s', endpoint)
-      response = await fetch(endpoint, {
+      response = await (this.options.fetch ?? fetch)(endpoint, {
         body: JSON.stringify(body),
         headers: {
           Authorization: this.apiKey ? `Bearer ${this.apiKey}` : '',

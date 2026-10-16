@@ -2,18 +2,20 @@ import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@
 import debug from 'debug'
 import urlJoin from 'url-join'
 
-import type { SearchServiceImpl } from '../type'
+import type { SearchProviderOptions, SearchServiceImpl } from '../type'
 import type { TavilyResponse, TavilySearchParameters } from './type'
 
 const log = debug('search:Tavily')
 
 export class TavilyImpl implements SearchServiceImpl {
+  constructor(private readonly options: SearchProviderOptions = {}) {}
+
   private get apiKey(): string | undefined {
-    return process.env.TAVILY_API_KEY
+    return this.options.apiKey ?? process.env.TAVILY_API_KEY
   }
 
   private get baseUrl(): string {
-    return 'https://api.tavily.com'
+    return this.options.baseURL ?? 'https://api.tavily.com'
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
@@ -25,7 +27,7 @@ export class TavilyImpl implements SearchServiceImpl {
       include_image_descriptions: true,
       include_images: false,
       include_raw_content: false,
-      max_results: 15,
+      max_results: Math.min(params.maxResults ?? 15, 20),
       query,
       search_depth: process.env.TAVILY_SEARCH_DEPTH || 'basic', // basic or advanced
     }
@@ -44,7 +46,7 @@ export class TavilyImpl implements SearchServiceImpl {
     let costTime: number
     try {
       log('Sending request to endpoint: %s', endpoint)
-      response = await fetch(endpoint, {
+      response = await (this.options.fetch ?? fetch)(endpoint, {
         body: JSON.stringify(body),
         headers: {
           Authorization: this.apiKey ? `Bearer ${this.apiKey}` : '',

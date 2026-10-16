@@ -2,7 +2,7 @@ import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@
 import debug from 'debug'
 import urlJoin from 'url-join'
 
-import type { SearchServiceImpl } from '../type'
+import type { SearchProviderOptions, SearchServiceImpl } from '../type'
 import type { KagiResponse, KagiSearchParameters } from './type'
 
 const log = debug('search:Kagi')
@@ -12,13 +12,15 @@ const log = debug('search:Kagi')
  * Primarily used for web crawling
  */
 export class KagiImpl implements SearchServiceImpl {
+  constructor(private readonly options: SearchProviderOptions = {}) {}
+
   private get apiKey(): string | undefined {
-    return process.env.KAGI_API_KEY
+    return this.options.apiKey ?? process.env.KAGI_API_KEY
   }
 
   private get baseUrl(): string {
     // Assuming the base URL is consistent with the crawl endpoint
-    return 'https://kagi.com/api/v0'
+    return this.options.baseURL ?? 'https://kagi.com/api/v0'
   }
 
   async query(query: string, params: SearchParams = {}): Promise<UniformSearchResponse> {
@@ -26,7 +28,7 @@ export class KagiImpl implements SearchServiceImpl {
     const endpoint = urlJoin(this.baseUrl, '/search')
 
     const body: KagiSearchParameters = {
-      limit: 15,
+      limit: Math.min(params.maxResults ?? 15, 100),
       q: query,
     }
 
@@ -42,7 +44,7 @@ export class KagiImpl implements SearchServiceImpl {
     let costTime: number
     try {
       log('Sending request to endpoint: %s', endpoint)
-      response = await fetch(`${endpoint}?${searchParams.toString()}`, {
+      response = await (this.options.fetch ?? fetch)(`${endpoint}?${searchParams.toString()}`, {
         headers: {
           Authorization: this.apiKey ? `Bot ${this.apiKey}` : '',
         },

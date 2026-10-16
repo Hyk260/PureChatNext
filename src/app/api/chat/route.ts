@@ -42,6 +42,8 @@ import { CHAT_TOOL_CAPABILITIES, isToolApprovalRequired } from '@/server/chat/pe
 import { safeFileName } from '@/libs/utils/safeFileName'
 import { isValidProviderId } from '@pure/database/models/customProvider'
 
+import { prepareWebSearchHistory, resolveUserWebTools, WEB_FETCH_INSTRUCTION } from '@/server/search/webTools'
+
 import { createMessageMetadata } from './messageMetadata'
 
 export const maxDuration = 60
@@ -396,18 +398,48 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api', message).toResponse()
   }
 
-  const toolContext = { channel: 'web', searchMode } as const
-  const tools = {
-    ...resolveChatTools(toolContext),
-    ...(desktopClient ? desktopTools : {}),
-  }
-  const instructionParts = [system?.trim(), buildChatRuntimeInstructions(), ...resolveChatToolInstructions(toolContext)]
-  if (desktopClient) instructionParts.push(DESKTOP_CLIENT_INSTRUCTION)
-  const instructions = instructionParts.filter(Boolean).join('\n\n')
   const toolApproval = desktopClient
     ? createDesktopToolApproval({ requestUserId, topicId, topicPermissionMode })
     : undefined
-  const searchOptions = buildSearchOptions({ desktopClient, requestUserId, topicId, toolApproval, tools })
+  const prepareWebRuntime = async (
+    userId: string | null,
+    runtimeProvider: string,
+    runtimeModel: string,
+    runtimeBaseURL?: string
+  ) => {
+    const toolContext = { channel: 'web', searchMode } as const
+    const web =
+      searchMode === 'auto'
+        ? await resolveUserWebTools({
+            userId,
+            provider: runtimeProvider,
+            model: runtimeModel,
+            baseURL: runtimeBaseURL ?? (runtimeProvider === 'openai' ? llmEnv.OPENAI_BASE_URL : undefined),
+            desktop: desktopClient,
+            permissionMode: topicPermissionMode,
+          })
+        : null
+    const tools = {
+      ...resolveChatTools(toolContext),
+      ...web?.tools,
+      ...(desktopClient ? desktopTools : {}),
+    }
+    if (web?.native) delete tools.webSearch
+    const toolInstructions = web?.native
+      ? [
+          ...resolveChatToolInstructions({ ...toolContext, searchMode: 'off' }),
+          '需要最新信息时使用 web_search，回答保留可点击来源引用。',
+        ]
+      : resolveChatToolInstructions(toolContext)
+    const instructionParts = [system?.trim(), buildChatRuntimeInstructions(), ...toolInstructions]
+    if (web && !web.native) instructionParts.push(WEB_FETCH_INSTRUCTION)
+    if (desktopClient) instructionParts.push(DESKTOP_CLIENT_INSTRUCTION)
+    return {
+      native: web?.native ?? false,
+      instructions: instructionParts.filter(Boolean).join('\n\n'),
+      searchOptions: buildSearchOptions({ desktopClient, requestUserId: userId, topicId, toolApproval, tools }),
+    }
+  }
 
   const resolvedProvider = provider ?? 'deepseek'
   const isPureChat = resolvedProvider === PURECHAT_PROVIDER_ID
@@ -453,10 +485,16 @@ export async function POST(request: Request) {
       const usageStartedAt = Date.now()
       const resolvedModel = resolveModel(PURECHAT_PROVIDER_ID, displayModel, gatewayKey, resolveAiGatewayBaseURL())
 
+      const { instructions, searchOptions, native } = await prepareWebRuntime(
+        userId,
+        PURECHAT_PROVIDER_ID,
+        displayModel
+      )
+
       log('purechat modelId: %o', resolvedModel.modelId)
 
       const result = streamText({
-        messages: await convertToModelMessages(messages),
+        messages: await convertToModelMessages(prepareWebSearchHistory(messages, native)),
         model: resolvedModel,
         ...searchOptions,
         instructions,
@@ -479,6 +517,7 @@ export async function POST(request: Request) {
           messageMetadata: createMessageMetadata(displayModel, PURECHAT_PROVIDER_ID),
           onError: getPureChatStreamErrorMessage,
           sendReasoning: true,
+          sendSources: true,
           stream: result.stream,
         }),
       })
@@ -522,10 +561,17 @@ export async function POST(request: Request) {
       )
     }
 
+    const { instructions, searchOptions, native } = await prepareWebRuntime(
+      userId,
+      resolvedProvider,
+      model ?? 'deepseek-v4-flash',
+      credentials.baseURL
+    )
+
     log('model=%o, provider=%o', model, resolvedProvider)
 
     const result = streamText({
-      messages: await convertToModelMessages(messages),
+      messages: await convertToModelMessages(prepareWebSearchHistory(messages, native)),
       model: resolvedModel,
       ...searchOptions,
       instructions,
@@ -535,6 +581,7 @@ export async function POST(request: Request) {
       stream: toUIMessageStream({
         messageMetadata: createMessageMetadata(model?.trim() || 'deepseek-v4-flash', resolvedProvider),
         sendReasoning: true,
+        sendSources: true,
         stream: result.stream,
       }),
     })

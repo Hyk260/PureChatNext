@@ -14,6 +14,8 @@ export type ToolCapability = {
 }
 
 export const CHAT_TOOL_CAPABILITIES: readonly ToolCapability[] = [
+  { apiName: 'web_search', execution: 'server', identifier: 'builtin-web-search', risk: 'network' },
+  { apiName: 'fetchUrls', execution: 'server', identifier: 'builtin-web-search', risk: 'network' },
   { apiName: 'webSearch', execution: 'server', identifier: 'builtin-web-search', risk: 'network' },
   { apiName: 'getWeather', execution: 'server', identifier: 'builtin-weather', risk: 'network' },
   { apiName: 'readFile', execution: 'desktop', identifier: 'desktop-local-system', risk: 'read' },

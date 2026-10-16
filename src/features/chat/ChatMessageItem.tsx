@@ -22,6 +22,7 @@ import { getToolApprovalTitle } from '@/features/chat/localTools'
 import { getToolApprovalItems } from '@/features/chat/toolApprovalParts'
 import type { ToolApprovalItem } from '@/features/chat/toolApprovalParts'
 
+import { formatNativeWebCitations } from './nativeWebCitations'
 import type { AgentMeta } from './ChatMessages'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -215,7 +216,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
                     key={`text-${index}`}
                     className={styles.markdown}
                     isStreaming={isStreaming}
-                    text={part.text}
+                    text={formatNativeWebCitations(part)}
                   />
                 )
               }

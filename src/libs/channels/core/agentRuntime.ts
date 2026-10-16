@@ -11,6 +11,10 @@ import { assertPureChatCanChat, chargePureChatGenerateUsage, createPureChatLangu
 import type { PureChatSettlement } from '@/server/purechat'
 import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 
+import { llmEnv } from '@/envs/llm'
+import { WEB_SEARCH_SYSTEM_INSTRUCTION } from '@/server/chat/toolRegistry'
+import { resolveUserWebTools, WEB_FETCH_INSTRUCTION } from '@/server/search/webTools'
+
 import { resolveChannelModelConfig } from './modelResolver'
 import { CHANNEL_FINAL_ANSWER_INSTRUCTION, resolveChannelReplyText } from './replyText'
 import type { ChannelAgentRequest, ChannelAgentResponse, ChannelGenerationOptions, ChannelPlatform } from './types'
@@ -83,6 +87,7 @@ function generationToolNames(generation?: ChannelGenerationOptions): string[] {
 type RuntimeModel = {
   languageModel: LanguageModel
   settlement?: PureChatSettlement
+  baseURL?: string
 }
 
 async function resolveRuntimeModel(
@@ -114,6 +119,7 @@ async function resolveRuntimeModel(
 
   return {
     languageModel: createProviderLanguageModel(provider, modelId, credentials.apiKey, credentials.baseURL),
+    baseURL: credentials.baseURL ?? (provider === 'openai' ? llmEnv.OPENAI_BASE_URL : undefined),
   }
 }
 
@@ -152,13 +158,38 @@ export class ChannelAgentRuntime {
       model: params.model,
       provider: params.provider,
     })
-    const { languageModel, settlement } = await resolveRuntimeModel(params.userId, modelId, provider, params.platform)
+    const { languageModel, settlement, baseURL } = await resolveRuntimeModel(
+      params.userId,
+      modelId,
+      provider,
+      params.platform
+    )
 
     const startedAt = Date.now()
     const steps: Array<{ finish: string; resultCount: number; step: number; tools: string[] }> = []
     let result: Awaited<ReturnType<typeof generateText>>
+    let generation = params.generation
     try {
-      const generation = params.generation
+      const originalGeneration = params.generation
+      const tools = { ...(originalGeneration?.tools as Record<string, unknown> | undefined) }
+      const web = Object.hasOwn(tools, 'webSearch')
+        ? await resolveUserWebTools({ userId: params.userId, provider, model: modelId, baseURL })
+        : null
+      if (web?.native) delete tools.webSearch
+      generation = web
+        ? {
+            ...originalGeneration,
+            tools: { ...tools, ...web.tools },
+            instructions: [
+              web.native
+                ? originalGeneration?.instructions?.replace(WEB_SEARCH_SYSTEM_INSTRUCTION, '')
+                : originalGeneration?.instructions,
+              web.native ? '使用 web_search 获取最新资料，回答附上来源 URL。' : WEB_FETCH_INSTRUCTION,
+            ]
+              .filter(Boolean)
+              .join('\n\n'),
+          }
+        : originalGeneration
       result = await generateText({
         ...(generation as Record<string, unknown> | undefined),
         abortSignal: params.abortSignal,
@@ -199,7 +230,7 @@ export class ChannelAgentRuntime {
       platform: params.platform,
       provider,
       tools: {
-        available: generationToolNames(params.generation),
+        available: generationToolNames(generation),
         called: result.toolCalls?.map((toolCall) => toolCall.toolName) ?? [],
       },
     })
@@ -223,7 +254,7 @@ export class ChannelAgentRuntime {
         contextMessageCount: generationMessages(params, params.generation).length,
         finish: result.finishReason,
         steps,
-        toolsAvailable: generationToolNames(params.generation),
+        toolsAvailable: generationToolNames(generation),
         toolsCalled: result.toolCalls?.map((toolCall) => toolCall.toolName) ?? [],
       },
       durationMs,

@@ -10,7 +10,7 @@ import { createAppRouter } from '@/utils/router'
 import '@/styles/globals.css'
 import '@/styles/scrollbar.css'
 
-const router = createAppRouter(webRoutes)
+const router = createAppRouter(webRoutes, { syncPageTitle: true })
 
 const rootEl = document.getElementById('root')
 

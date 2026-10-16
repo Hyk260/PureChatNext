@@ -1,13 +1,14 @@
 'use client'
 
-import { lazy, memo, Suspense } from 'react'
+import { lazy, memo, Suspense, useEffect } from 'react'
 import type { ComponentType, ReactElement } from 'react'
-import { createBrowserRouter, isRouteErrorResponse, Navigate, Outlet, useRouteError } from 'react-router'
+import { createBrowserRouter, isRouteErrorResponse, Navigate, Outlet, useLocation, useRouteError } from 'react-router'
 import type { RouteObject } from 'react-router'
 
 import NotFound from '@/components/404'
 import Loading from '@/components/Loading/BrandTextLoading'
 import ErrorPage from '@/components/Error'
+import { getPublicSpaRouteMetadata, PUBLIC_SPA_FILTER_PARAMS } from '@/const/publicSpaMetadata'
 import AppLayer from '@/spa/AppLayer'
 
 /** Loose component type so layout modules with required `children` stay assignable. */
@@ -93,10 +94,27 @@ export function RouterErrorElement(): ReactElement {
 
 export interface CreateAppRouterOptions {
   basename?: string
+  syncPageTitle?: boolean
 }
 
-const RouterRoot = memo(() => (
+const SpaPageTitleSync = memo(() => {
+  const location = useLocation()
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    const hasFilters = PUBLIC_SPA_FILTER_PARAMS.some((key) => searchParams.has(key))
+
+    document.title = getPublicSpaRouteMetadata(location.pathname, hasFilters).title
+  }, [location.pathname, location.search])
+
+  return null
+})
+
+SpaPageTitleSync.displayName = 'SpaPageTitleSync'
+
+const RouterRoot = memo(({ syncPageTitle = false }: { syncPageTitle?: boolean }) => (
   <AppLayer>
+    {syncPageTitle ? <SpaPageTitleSync /> : null}
     <Outlet />
   </AppLayer>
 ))
@@ -117,7 +135,7 @@ export function createAppRouter(routes: RouteObject[], options?: CreateAppRouter
             errorElement: <RouterErrorElement />,
           },
         ],
-        element: <RouterRoot />,
+        element: <RouterRoot syncPageTitle={options?.syncPageTitle} />,
         path: '/',
       },
     ],

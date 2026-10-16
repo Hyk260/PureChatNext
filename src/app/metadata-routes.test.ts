@@ -13,8 +13,9 @@ describe('public metadata routes', () => {
     const robotsConfig = robots()
 
     expect(sitemapEntries.map((entry) => new URL(entry.url).pathname)).toEqual([
-      '/',
-      '/community',
+      '/community/agent',
+      '/community/provider',
+      '/community/skill',
       '/help',
       '/privacy',
       '/terms',

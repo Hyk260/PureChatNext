@@ -1,6 +1,7 @@
 import { analyticsEnv } from '@/envs/analytics'
 import { appEnv, IS_VERCEL } from '@/envs/app'
 import { SITE_DEFAULT_URL } from '@/const/site'
+import { PUBLIC_SPA_FILTER_PARAMS } from '@/const/publicSpaMetadata'
 import { getProviderEnvKeyFlags } from '@/libs/ai-providers/envKeys'
 import { sanitizeReferralTelemetryUrl } from '@/libs/referrals/helpers'
 import { renderSpaHtml } from '@/server/spaHtml'
@@ -42,6 +43,7 @@ export async function GET(request: NextRequest, context: SpaRouteContext) {
   const response = renderSpaHtml(spaHtmlTemplate, {
     publicMetadata: {
       baseUrl: appEnv.SITE_CANONICAL_URL ?? appEnv.APP_URL ?? SITE_DEFAULT_URL,
+      hasFilters: PUBLIC_SPA_FILTER_PARAMS.some((key) => request.nextUrl.searchParams.has(key)),
       pathname,
     },
     serverConfig: buildServerConfig(request.nextUrl.origin),

@@ -7,7 +7,7 @@ export const SITE_DESCRIPTION =
 
 export const SITE_DEFAULT_URL = 'https://app.purechat.cn'
 
-// bin SEO
+// Search engine ownership verification
 export const SITE_BING_WEBMASTER_VERIFICATION = '7161D4067A1AEA20B5FD9BA4B392FAEE'
 
 export const SITE_BAIDU_WEBMASTER_VERIFICATION = 'codeva-WavZPALjhx'
@@ -41,10 +41,3 @@ export const SITE_KEYWORDS = [
   'Next.js',
   'React',
 ]
-
-export const PUBLIC_SPA_PATHS = ['/', '/community', '/help', '/privacy', '/terms'] as const
-
-export const isPublicSpaPath = (pathname: string) =>
-  PUBLIC_SPA_PATHS.some((publicPath) =>
-    publicPath === '/' ? pathname === '/' : pathname === publicPath || pathname.startsWith(`${publicPath}/`)
-  )

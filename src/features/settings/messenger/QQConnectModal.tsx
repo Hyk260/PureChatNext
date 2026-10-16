@@ -1,7 +1,7 @@
 'use client'
 
 import { Button as AntButton, QRCode, Radio, Spin } from 'antd'
-import { Alert, Button, Flex, Input, InputPassword, Select, Text } from '@pure/ui'
+import { Button, Flex, Input, InputPassword, Select, Text } from '@pure/ui'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
@@ -201,12 +201,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
         </Radio.Group>
 
         {!gatewaySupported && (
-          <Alert
-            showIcon
-            type='info'
-            title='当前部署仅支持 URL 回调'
-            description='扫码和 WebSocket 需要开启内置 Channel Gateway 的本地或 Docker 单实例环境。'
-          />
+          <Text type='secondary'>当前部署仅支持 URL 回调。扫码和 WebSocket 需要本地或 Docker 单实例环境。</Text>
         )}
 
         {mode === 'qr' ? (
@@ -235,7 +230,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
             )}
             {qrStatus?.status === 'selecting' && (
               <Flex className='flex-col gap-3 w-full'>
-                <Alert showIcon type='info' title='请选择要连接的 QQ 机器人' />
+                <Text type='secondary'>请选择要连接的 QQ 机器人</Text>
                 <Select
                   options={qrStatus.appIds.map((value) => ({ label: `QQ Bot ${value}`, value }))}
                   value={selectedAppId}
@@ -248,7 +243,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
             )}
             {error && (
               <Flex className='flex-col-center'>
-                <Alert showIcon type='warning' title={error} />
+                <Text className='text-center' type='danger'>{error}</Text>
                 <AntButton icon={<RefreshCw size={16} />} onClick={startQr}>
                   重新获取二维码
                 </AntButton>
@@ -268,7 +263,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
                 ? '由内置 Gateway 维护长连接，无需公网回调地址。'
                 : '保存后将在设置页显示需要配置到 QQ 开放平台的回调地址。'}
             </Text>
-            {error && <Alert showIcon type='warning' title={error} />}
+            {error && <Text type='danger'>{error}</Text>}
             <Flex className='justify-end gap-2'>
               <AntButton onClick={close}>取消</AntButton>
               <AntButton loading={loading} type='primary' onClick={handleManualBind}>

@@ -1,7 +1,7 @@
 'use client'
 
 import { QRCode, Spin } from 'antd'
-import { Alert, Button, Modal, Text, Flex } from '@pure/ui'
+import { Button, Modal, Text, Flex } from '@pure/ui'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
@@ -175,7 +175,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
             minHeight: QR_PLACEHOLDER_HEIGHT,
           }}
         >
-          <Alert showIcon title={error} type='warning' />
+          <Text className='text-center' type='danger'>{error}</Text>
           <Button icon={<RefreshCw size={16} />} onClick={handleRefresh}>
             刷新二维码
           </Button>

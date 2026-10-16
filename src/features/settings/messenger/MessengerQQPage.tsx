@@ -1,13 +1,11 @@
 'use client'
 
 import { Spin } from 'antd'
-import { ActionIcon, Alert, Button, confirmModal, Text, Flex } from '@pure/ui'
+import { ActionIcon, Button, confirmModal, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
-import { Code2, FileText, MessagesSquareIcon, Settings2Icon, Trash2Icon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { Copy, FileText, MessagesSquareIcon, Settings2Icon, Trash2Icon } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import useSWR from 'swr'
@@ -37,27 +35,6 @@ import { QQConnectButton } from './QQConnectModal'
 import { fetchQQStatus, unbindQQ, updateQQConfiguration } from './qqApi'
 import type { QQProviderId, QQStatus } from './qqApi'
 
-function qqConnectHint(gatewaySupported: boolean) {
-  if (gatewaySupported) {
-    return {
-      title: '支持扫码、WebSocket 与 URL 回调',
-      description: '点击右上角「连接」，使用手机 QQ 扫码自动完成机器人授权。',
-    }
-  }
-  return {
-    title: '当前部署仅支持 URL 回调',
-    description: '扫码和 WebSocket 需要常驻 Gateway；点击右上角「连接」可使用 App ID / Secret 配置 URL 回调。',
-  }
-}
-
-function qqBoundDescription(status: QQStatus) {
-  const mode = status.connectionMode ?? 'websocket'
-  if (status.lastActiveAt) {
-    return `最近活动：${formatMessengerActiveAt(status.lastActiveAt)} · 模式：${mode}`
-  }
-  return `模式：${mode}。在 QQ 私聊或群内 @ 机器人即可对话。`
-}
-
 function getQqGatewayStatus(params: {
   error: unknown
   gatewaySupported: boolean
@@ -75,7 +52,13 @@ function getQqGatewayStatus(params: {
   }
 
   if (showConnect) {
-    return { description: '连接 QQ 后会在这里显示网关运行状态。', title: '尚未连接 QQ', type: 'info' }
+    return {
+      description: gatewaySupported
+        ? '点击右上角「连接」，使用手机 QQ 扫码或选择其他连接方式。'
+        : '当前部署仅支持 URL 回调；点击右上角「连接」使用 App ID 和 Secret 配置。',
+      title: '尚未连接 QQ',
+      type: 'info',
+    }
   }
 
   if (status?.connectionMode === 'webhook' && status.enabled !== false) {
@@ -142,84 +125,6 @@ function getQqGatewayStatus(params: {
   return status?.connected
     ? { description: 'QQ 渠道已连接。', title: 'QQ 连接正常', type: 'success' }
     : { description: lastError || '请检查连接配置或查看诊断日志。', title: 'QQ 连接异常', type: 'warning' }
-}
-
-function renderQqStatusBanner(params: {
-  connected: boolean
-  gatewaySupported: boolean
-  message: { success: (content: string) => void }
-  showConnect: boolean
-  status: QQStatus | null
-}): ReactNode {
-  const { connected, gatewaySupported, message, showConnect, status } = params
-
-  if (showConnect) {
-    return <Alert showIcon type='info' {...qqConnectHint(gatewaySupported)} />
-  }
-
-  const boundTitle = connected ? '已连接 QQ' : 'QQ 绑定已保存，当前离线'
-  const webhookUrl = status?.connectionMode === 'webhook' ? status.webhookUrl : undefined
-  const showWebsocketOffline = status?.connectionMode === 'websocket' && status.runtimeStatus !== 'online'
-
-  return (
-    <>
-      {connected && import.meta.env.DEV ? (
-        <Alert
-          showIcon
-          type='success'
-          title={
-            <Flex className='items-center gap-2'>
-              <span>{boundTitle}</span>
-              <Code2 aria-hidden='true' size={16} />
-            </Flex>
-          }
-          description={status ? qqBoundDescription(status) : undefined}
-        />
-      ) : null}
-      {!connected ? (
-        <Alert
-          showIcon
-          type='warning'
-          title={boundTitle}
-          description={status ? qqBoundDescription(status) : undefined}
-        />
-      ) : null}
-      {webhookUrl ? (
-        <Alert
-          showIcon
-          type='info'
-          title='Webhook 回调地址'
-          description={
-            <Text
-              className='cursor-copy text-[13px]'
-              title='点击复制'
-              onClick={async () => {
-                await copyToClipboard(webhookUrl)
-                message.success('已复制 Webhook 回调地址')
-              }}
-            >
-              {webhookUrl}
-            </Text>
-          }
-        />
-      ) : null}
-      {showWebsocketOffline ? (
-        <Alert
-          showIcon
-          type='warning'
-          title='QQ WebSocket 当前离线'
-          description={status?.lastError?.message || 'Next Server Gateway 正在等待连接或恢复。'}
-          extra={
-            status ? (
-              <Highlighter actionIconSize={'small'} language={'json'} padding={8} variant={'borderless'}>
-                {JSON.stringify(status?.lastError, null, 2)}
-              </Highlighter>
-            ) : null
-          }
-        />
-      ) : null}
-    </>
-  )
 }
 
 const DISCONNECTED_STATUS: QQStatus = {
@@ -366,9 +271,9 @@ const MessengerQQPage = memo(() => {
     )
   }
 
-  const connected = Boolean(status?.connected)
   const gatewaySupported = status?.gatewaySupported !== false
   const showConnect = !status?.applicationId
+  const webhookUrl = status?.connectionMode === 'webhook' ? status.webhookUrl : undefined
   const controlsDisabled = binding || saving
   const gatewayStatus = getQqGatewayStatus({
     error: statusError,
@@ -435,7 +340,23 @@ const MessengerQQPage = memo(() => {
           provider={provider}
           onSelect={handleModelSelect}
         />
-        {renderQqStatusBanner({ connected, gatewaySupported, message, showConnect, status: status ?? null })}
+        {webhookUrl ? (
+          <Flex className='items-center gap-2 rounded-lg bg-secondary px-3 py-2'>
+            <Text className='shrink-0 text-[13px]' type='secondary'>Webhook 回调地址</Text>
+            <Text className='min-w-0 flex-1 truncate text-[13px]' title={webhookUrl}>
+              {webhookUrl}
+            </Text>
+            <ActionIcon
+              icon={Copy}
+              size='small'
+              title='复制 Webhook 回调地址'
+              onClick={async () => {
+                await copyToClipboard(webhookUrl)
+                message.success('已复制 Webhook 回调地址')
+              }}
+            />
+          </Flex>
+        ) : null}
       </Flex>
 
       <MessengerCommandList platform='qq' />

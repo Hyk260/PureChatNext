@@ -6,6 +6,7 @@ type EventProperties = Record<string, boolean | null | number | string>
 type Attribution = {
   campaign: string
   capturedAt: string
+  content?: string
   landingPath: string
   medium: string
   referrer: string
@@ -19,6 +20,7 @@ const isAttribution = (value: unknown): value is Attribution => {
   return (
     typeof attribution.campaign === 'string' &&
     typeof attribution.capturedAt === 'string' &&
+    (attribution.content === undefined || typeof attribution.content === 'string') &&
     typeof attribution.landingPath === 'string' &&
     typeof attribution.medium === 'string' &&
     typeof attribution.referrer === 'string' &&
@@ -60,15 +62,19 @@ const sanitizeReferrer = (referrer: string) => {
   }
 }
 
+const readUtmValue = (url: URL, key: string) => url.searchParams.get(key)?.trim().slice(0, 200) || '(none)'
+
 export const captureAcquisitionAttribution = (location: Location, referrer: string) => {
   const url = new URL(location.href)
   const attribution: Attribution = {
-    campaign: url.searchParams.get('utm_campaign')?.trim() || '(none)',
+    campaign: readUtmValue(url, 'utm_campaign'),
     capturedAt: new Date().toISOString(),
+    content: readUtmValue(url, 'utm_content'),
     landingPath: url.pathname.slice(0, 500),
-    medium: url.searchParams.get('utm_medium')?.trim() || (referrer ? 'referral' : '(none)'),
+    medium:
+      url.searchParams.get('utm_medium')?.trim().slice(0, 200) || (referrer ? 'referral' : '(none)'),
     referrer: sanitizeReferrer(referrer),
-    source: inferSource(url, referrer),
+    source: inferSource(url, referrer).slice(0, 200),
   }
 
   if (!readAttribution(FIRST_ATTRIBUTION_KEY)) writeStorage(FIRST_ATTRIBUTION_KEY, attribution)
@@ -80,9 +86,13 @@ const attributionProperties = (): EventProperties => {
   const last = readAttribution(LAST_ATTRIBUTION_KEY)
 
   return {
+    first_campaign: first?.campaign ?? '(none)',
+    first_content: first?.content ?? '(none)',
+    first_medium: first?.medium ?? '(none)',
     first_source: first?.source ?? 'unknown',
     landing_path: first?.landingPath ?? 'unknown',
     last_campaign: last?.campaign ?? '(none)',
+    last_content: last?.content ?? '(none)',
     last_medium: last?.medium ?? '(none)',
     last_source: last?.source ?? 'unknown',
   }

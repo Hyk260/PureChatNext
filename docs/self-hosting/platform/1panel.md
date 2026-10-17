@@ -286,7 +286,7 @@ docker exec -T postgresql pg_dump -U purechat -d purechat --format=custom --no-o
 
 **在线**：见上文「升级」；会拉取新镜像并 `up`，**不要覆盖** `.env`。
 
-**离线**：本机拉代码后执行 `pnpm docker:pack`（不要加 `--skip-build`），用 `pnpm docker:upload -- --up` 传到主机并解压（会覆盖镜像档案和 `install.sh`，**不要覆盖** `docker-compose/deploy/.env`）。也可手动：
+**离线**：本机拉代码后执行 `pnpm docker:pack:upgrade`（依次打包、上传并执行升级；不要使用 `--skip-build`）。上传会覆盖镜像档案和 `install.sh`，**不会覆盖** `docker-compose/deploy/.env`。也可手动：
 
 ```bash
 sudo tar -xf /opt/purechat-next-offline.tar -C /opt/purechat

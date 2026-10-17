@@ -238,9 +238,11 @@ curl -fsSL https://raw.githubusercontent.com/Hyk260/PureChatNext/main/docker-com
 不便拉镜像时，改用离线包：
 
 ```bash
+# 首次安装
 pnpm docker:pack
 pnpm docker:upload -- --install --app-url https://chat.example.com   # 首次
-pnpm docker:upload -- --up                                           # 升级
+# 日后升级（自动重新打包并上传）
+pnpm docker:pack:upgrade
 ```
 
 完整说明见 [Docker 自托管](./docs/self-hosting/platform/docker.md)。云服务器与 1Panel 见 [云服务器部署](./docs/self-hosting/platform/1panel.md)。

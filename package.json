@@ -50,6 +50,7 @@
     "docker:deploy": "bun scripts/docker.mts deploy",
     "docker:pack": "bun scripts/docker.mts pack",
     "docker:upload": "bash scripts/upload-offline.sh",
+    "docker:pack:upgrade": "pnpm run docker:pack && pnpm run docker:upload -- --up",
     "docker:validate": "bun scripts/docker.mts validate",
     "docker:verify:local": "bun scripts/docker-verify-local.mts",
     "agents:sync": "bun scripts/community/fetch-community-agents.ts",

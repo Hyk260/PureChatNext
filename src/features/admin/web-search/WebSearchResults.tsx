@@ -240,7 +240,7 @@ export function WebSearchResults({
   })
 
   return (
-    <section className='flex min-h-[32rem] min-w-0 flex-col overflow-hidden rounded-card border border-border bg-card lg:h-full lg:min-h-0'>
+    <section className='flex min-h-0 min-w-0 flex-col overflow-hidden rounded-card border border-border bg-card lg:h-full lg:min-h-0'>
       <Flex className='gap-2 shrink-0 flex-col space-y-3 border-b border-border p-4'>
         {requestStatusAlert(error, payload?.action)}
         <Flex className='flex-col gap-3 lg:flex-row lg:items-start lg:justify-between'>
@@ -261,7 +261,10 @@ export function WebSearchResults({
           />
         </Flex>
       </Flex>
-      <Scrollbar className='min-h-0 flex-1'>
+      <Scrollbar
+        className='min-h-0 flex-1 max-lg:!h-auto max-lg:!flex-none max-lg:!overflow-visible'
+        wrapClassName='max-lg:!min-h-fit max-lg:!overflow-visible'
+      >
         <div className='min-w-0 p-4'>
           <ResultBody payload={payload} rawJson={rawJson} view={view} />
         </div>

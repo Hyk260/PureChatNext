@@ -103,8 +103,11 @@ export function WebSearchForm({
   const canSend = canSubmit(action, values)
 
   return (
-    <section className='flex min-h-[32rem] flex-col overflow-hidden rounded-card border border-border bg-card lg:h-full lg:min-h-0'>
-      <Scrollbar className='min-h-0 flex-1'>
+    <section className='flex min-h-0 flex-col overflow-hidden rounded-card border border-border bg-card lg:h-full lg:min-h-0'>
+      <Scrollbar
+        className='min-h-0 flex-1 max-lg:!h-auto max-lg:!flex-none max-lg:!overflow-visible'
+        wrapClassName='max-lg:!min-h-fit max-lg:!overflow-visible'
+      >
         <Flex className='flex-col gap-4 p-4'>
           <p className='text-sm leading-6 text-muted-foreground'>{ACTION_META[action].description}</p>
 

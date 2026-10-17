@@ -106,10 +106,11 @@ curl -fsSL https://raw.githubusercontent.com/Hyk260/PureChatNext/main/docker-com
 应用镜像：`ghcr.io/hyk260/purechat-next`，通过 **Actions → Docker → Run workflow** 手动发布。选择 `main` 时更新 `latest`，每次发布同时生成 `sha-*` 标签；选择版本 tag 时生成对应版本标签。取消勾选 `publish` 只执行依赖审计、配置校验、镜像构建、冒烟和漏洞扫描，不推送镜像。PR、push 和创建 tag 均不会自动运行此工作流。不便拉镜像时再本机打离线包：
 
 ```bash
+# 首次安装
 pnpm docker:pack
-# 连接信息见 docker-compose/deploy/upload.env.example
 pnpm docker:upload -- --install --app-url https://chat.example.com   # 首次
-pnpm docker:upload -- --up                                           # 升级
+# 日后升级（连接信息见 docker-compose/deploy/upload.env.example）
+pnpm docker:pack:upgrade
 ```
 
 完整步骤见 [云服务器部署](./1panel.md)。
@@ -169,6 +170,7 @@ docker exec -T postgresql pg_dump -U purechat -d purechat --format=custom --no-o
 | `docker:deploy` | 本机构建并启动生产 Compose |
 | `docker:pack` | 打离线包（仅应用镜像） |
 | `docker:upload` | 上传离线包；`--install` 首次安装，`--up` 一键升级 |
+| `docker:pack:upgrade` | 先打离线包，再上传并执行 `--up` 升级 |
 | `docker:validate` | 校验 Compose 配置与安装脚本语法 |
 | `docker:verify:local` | 隔离环境冒烟：安全基线、健康检查、持久化 |
 

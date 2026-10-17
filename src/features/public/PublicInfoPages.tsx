@@ -3,7 +3,13 @@
 import { Button, Flex, Text } from '@pure/ui'
 import type { ReactNode } from 'react'
 
-import { SITE_DISCUSSIONS_URL, SITE_ISSUES_URL, SITE_REPOSITORY_URL } from '@/const/site'
+import {
+  SITE_DISCUSSIONS_URL,
+  SITE_DOCS_URL,
+  SITE_ISSUES_URL,
+  SITE_RELEASES_URL,
+  SITE_REPOSITORY_URL,
+} from '@/const/site'
 import InsetContentFrame from '@/layout/InsetContentFrame'
 import { useRouter } from 'next/navigation'
 
@@ -212,22 +218,27 @@ const HelpContent = () => (
         content: (
           <ul className='list-disc space-y-2 pl-6'>
             <li>
-              <ExternalLink href={`${SITE_REPOSITORY_URL}#快速开始`}>本地开发与快速开始</ExternalLink>
+              <ExternalLink href={`${SITE_DOCS_URL}/getting-started/quick-start`}>本地开发与快速开始</ExternalLink>
             </li>
             <li>
-              <ExternalLink href={`${SITE_REPOSITORY_URL}/blob/main/docs/self-hosting/platform/docker.md`}>
+              <ExternalLink href={`${SITE_DOCS_URL}/self-hosting/platform/docker`}>
                 Docker 自托管
               </ExternalLink>
             </li>
             <li>
-              <ExternalLink href={`${SITE_REPOSITORY_URL}/blob/main/docs/self-hosting/configuration/environment.md`}>
+              <ExternalLink href={`${SITE_DOCS_URL}/self-hosting/configuration/environment`}>
                 环境变量与生产配置
               </ExternalLink>
             </li>
             <li>
-              <ExternalLink href={`${SITE_REPOSITORY_URL}/tree/main/docs/self-hosting`}>
-                微信、QQ、搜索和认证文档
-              </ExternalLink>
+              <ExternalLink href={`${SITE_DOCS_URL}/self-hosting/channels/overview`}>微信和 QQ 接入方式</ExternalLink>
+            </li>
+            <li>
+              <ExternalLink href={`${SITE_DOCS_URL}/self-hosting/features/online-search`}>联网搜索配置</ExternalLink>
+            </li>
+            <li>
+              <ExternalLink href={SITE_REPOSITORY_URL}>GitHub 源码</ExternalLink> ·{' '}
+              <ExternalLink href={SITE_RELEASES_URL}>Releases</ExternalLink>
             </li>
           </ul>
         ),

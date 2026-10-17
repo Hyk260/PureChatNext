@@ -1,9 +1,9 @@
 ---
-title: PureChatNext 文档
-description: PureChatNext 的快速开始、开发指南与自托管文档入口。
+title: PureChatNext 文档：自托管部署与微信、QQ AI 助手
+description: PureChatNext 的中文指南，涵盖 AI 工作台自托管部署、Docker 配置、微信与 QQ AI 助手接入及开发参考。
 ---
 
-# PureChatNext 文档
+# PureChatNext 文档：自托管部署与微信、QQ AI 助手
 
 这里收录 PureChatNext 的公开中文文档。请按读者任务进入对应分类：
 

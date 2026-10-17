@@ -5,7 +5,7 @@ import { AskAI } from '@/components/ask-ai'
 import { CategorySwitcher } from '@/components/category-switcher'
 import { SidebarFooter } from '@/components/sidebar-footer'
 import { baseOptions } from '@/lib/layout'
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL } from '@/lib/site'
 import { source } from '@/lib/source'
 import { docsI18n } from '@/lib/translations'
 import './global.css'
@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   openGraph: {
     description: SITE_DESCRIPTION,
+    images: [{ alt: SITE_NAME, height: 630, url: SOCIAL_IMAGE_URL, width: 1200 }],
     locale: 'zh_CN',
     siteName: SITE_NAME,
     title: SITE_NAME,
@@ -31,6 +32,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     description: SITE_DESCRIPTION,
+    images: [SOCIAL_IMAGE_URL],
     title: SITE_NAME,
   },
 }

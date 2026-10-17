@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 
 import manifest from './manifest'
 import OpenGraphImage, { contentType, size } from './opengraph-image'
-import robots from './robots'
-import sitemap from './sitemap'
+import robots, { dynamic as robotsDynamic } from './robots'
+import sitemap, { dynamic as sitemapDynamic } from './sitemap'
 
 vi.mock('@/envs/app', () => ({ appEnv: { APP_URL: 'https://purechat.test' } }))
 
@@ -12,6 +12,8 @@ describe('public metadata routes', () => {
     const sitemapEntries = sitemap()
     const robotsConfig = robots()
 
+    expect(robotsDynamic).toBe('force-dynamic')
+    expect(sitemapDynamic).toBe('force-dynamic')
     expect(sitemapEntries.map((entry) => new URL(entry.url).pathname)).toEqual([
       '/community/agent',
       '/community/provider',
@@ -21,6 +23,9 @@ describe('public metadata routes', () => {
       '/terms',
     ])
     expect(robotsConfig.sitemap).toMatch(/\/sitemap\.xml$/)
+    expect(robotsConfig.host).toBe('https://purechat.test')
+    expect(sitemapEntries.every((entry) => entry.url.startsWith('https://purechat.test/'))).toBe(true)
+    expect(sitemapEntries.every((entry) => entry.lastModified === undefined)).toBe(true)
   })
 
   it('exposes install metadata and a social image response', () => {

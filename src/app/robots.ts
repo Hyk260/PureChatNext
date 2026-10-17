@@ -3,9 +3,8 @@ import type { MetadataRoute } from 'next'
 import { appEnv } from '@/envs/app'
 import { SITE_DEFAULT_URL } from '@/const/site'
 
-/** Revalidate robots.txt every 24 hours. */
-export const revalidate = 86_400
-export const dynamic = 'force-static'
+/** Resolve the canonical origin from the serving deployment at request time. */
+export const dynamic = 'force-dynamic'
 
 const robots = (): MetadataRoute.Robots => {
   const siteUrl = new URL(appEnv.SITE_CANONICAL_URL ?? appEnv.APP_URL ?? SITE_DEFAULT_URL)

@@ -1,9 +1,9 @@
 ---
-title: 微信 iLink 渠道
+title: PureChatNext 微信 AI 机器人配置教程
 description: 配置 PureChatNext 微信 iLink 机器人：检查持久在线 Gateway、选择 Agent 和模型、扫码绑定并验证消息收发。
 ---
 
-# 微信 iLink 渠道
+# PureChatNext 微信 AI 机器人配置教程
 
 微信渠道由 Next Node Server 内置 Channel Gateway 维护，不再运行独立进程。Gateway 长轮询 iLink，将完整批次回调到应用内部 Webhook；Webhook 在同一事务中写入事件队列并推进 cursor，4 个 processor 从 PostgreSQL 队列生成与分片发送回复。
 

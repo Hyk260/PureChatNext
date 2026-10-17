@@ -23,6 +23,7 @@ export type RenderSpaHtmlOptions = {
     pathname: string
   }
   serverConfig: SPAServerConfig
+  status?: number
 }
 
 const escapeHtmlAttribute = (value: string) =>
@@ -77,7 +78,7 @@ const publicMetadataTags = ({ baseUrl, hasFilters, pathname }: NonNullable<Rende
 
 /** Inject runtime config into the Vite-built HTML template and return a Response. */
 export function renderSpaHtml(template: string, options: RenderSpaHtmlOptions): Response {
-  const { publicMetadata, serverConfig } = options
+  const { publicMetadata, serverConfig, status = 200 } = options
   const serverInjection = serverConfigScript(serverConfig)
 
   let html = template.includes(SERVER_CONFIG_PLACEHOLDER)
@@ -95,6 +96,7 @@ export function renderSpaHtml(template: string, options: RenderSpaHtmlOptions): 
   }
 
   return new Response(html, {
+    status,
     headers: {
       'Cache-Control': 'no-cache',
       'Content-Type': 'text/html; charset=utf-8',

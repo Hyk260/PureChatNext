@@ -8,7 +8,8 @@ import type { RouteObject } from 'react-router'
 import NotFound from '@/components/404'
 import Loading from '@/components/Loading/BrandTextLoading'
 import ErrorPage from '@/components/Error'
-import { getPublicSpaRouteMetadata, PUBLIC_SPA_FILTER_PARAMS } from '@/const/publicSpaMetadata'
+import { PUBLIC_SPA_FILTER_PARAMS } from '@/const/publicSpaMetadata'
+import { syncSpaPageMetadata } from '@/utils/spaPageMetadata'
 import AppLayer from '@/spa/AppLayer'
 
 /** Loose component type so layout modules with required `children` stay assignable. */
@@ -104,7 +105,7 @@ const SpaPageTitleSync = memo(() => {
     const searchParams = new URLSearchParams(location.search)
     const hasFilters = PUBLIC_SPA_FILTER_PARAMS.some((key) => searchParams.has(key))
 
-    document.title = getPublicSpaRouteMetadata(location.pathname, hasFilters).title
+    syncSpaPageMetadata(document, location.pathname, hasFilters)
   }, [location.pathname, location.search])
 
   return null

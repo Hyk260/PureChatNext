@@ -1,9 +1,9 @@
 ---
-title: Docker 自托管
+title: PureChatNext Docker 部署教程
 description: PureChatNext Docker 自托管部署：准备 PostgreSQL、对象存储和模型密钥，生成配置、启动应用并检查健康状态、升级与备份。
 ---
 
-# Docker 自托管
+# PureChatNext Docker 部署教程
 
 Docker 是 PureChatNext 的完整自托管方式：本地开发用 Compose 启动 PostgreSQL、Redis、RustFS 和 SearXNG；生产只运行应用容器，连接已有 PostgreSQL 与按需配置的 Redis、S3 对象存储和搜索服务。HTTPS 由宿主机 Nginx 或 Caddy 提供，默认资源档案为 `2g`。
 

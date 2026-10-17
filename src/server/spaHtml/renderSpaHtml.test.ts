@@ -49,6 +49,16 @@ describe('renderSpaHtml', () => {
       serverConfig: { renderedAt: '2026-01-01T00:00:00.000Z' },
     })
 
-    expect(await res.text()).toContain('<meta name="robots" content="noindex,nofollow"')
+    expect(await res.text()).toContain('<meta name="robots" content="noindex,follow"')
+  })
+
+  it('returns the requested HTTP status for unmatched SPA routes', async () => {
+    const response = renderSpaHtml('<!doctype html><html><head></head><body></body></html>', {
+      serverConfig: { renderedAt: '2026-01-01T00:00:00.000Z' },
+      status: 404,
+    })
+
+    expect(response.status).toBe(404)
+    expect(await response.text()).toContain('<body></body>')
   })
 })

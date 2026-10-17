@@ -38,7 +38,8 @@ const ACTION_ICONS = {
   webSearch: Globe2,
 } as const
 
-const ACTION_ORDER: ActionMode[] = ['query', 'webSearch', 'crawlPages']
+// 'query','webSearch','crawlPages'
+const ACTION_ORDER: ActionMode[] = ['webSearch', 'crawlPages']
 
 const segmentedIconLabel = (Icon: (typeof ACTION_ICONS)[ActionMode], text: string, title: string) => (
   <span className='inline-flex items-center gap-1.5' title={title}>

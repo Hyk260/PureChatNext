@@ -7,7 +7,7 @@ import { HomeCards } from '@/components/home-cards'
 import { PageActions } from '@/components/page-actions'
 import { TocFooter } from '@/components/toc-footer'
 import { getMarkdownUrl } from '@/lib/markdown'
-import { SITE_NAME, SITE_URL } from '@/lib/site'
+import { SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL } from '@/lib/site'
 import { getGitHubEditUrl, getGitHubSourceUrl, source } from '@/lib/source'
 
 export const dynamicParams = false
@@ -57,15 +57,17 @@ export async function generateMetadata({ params }: PageProps<'/[[...slug]]'>): P
     description: page.data.description,
     openGraph: {
       description: page.data.description,
+      images: [{ alt: page.data.title, height: 630, url: SOCIAL_IMAGE_URL, width: 1200 }],
       siteName: SITE_NAME,
       title: page.data.title,
       type: 'article',
       url: canonical,
     },
-    title: page.data.title,
+    title: page.url === '/' ? { absolute: page.data.title } : page.data.title,
     twitter: {
       card: 'summary_large_image',
       description: page.data.description,
+      images: [SOCIAL_IMAGE_URL],
       title: page.data.title,
     },
   }

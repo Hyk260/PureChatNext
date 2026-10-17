@@ -1,9 +1,9 @@
 ---
-title: QQ 机器人渠道
+title: PureChatNext QQ 机器人配置教程
 description: 配置 QQ 开放平台机器人接入 PureChatNext：选择扫码、WebSocket 或 Webhook，完成回调校验、消息验证和故障排查。
 ---
 
-# QQ 机器人渠道
+# PureChatNext QQ 机器人配置教程
 
 本文说明如何把 QQ 开放平台机器人连接到 PureChatNext，并验证机器人能收到消息和返回 Agent 回复。持久 Node.js 部署可使用扫码、WebSocket 和 Webhook；Vercel 备用站只支持 Webhook。源码配置核对日期：2026-10-16；QQ 开放平台控制台名称可能随平台更新调整。
 

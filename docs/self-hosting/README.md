@@ -20,6 +20,7 @@ description: 部署、配置和维护 PureChatNext 自托管实例的文档入�
 
 - [Docker 自托管](./platform/docker.md)
 - [云服务器部署](./platform/1panel.md)
+- [桌面版发布到腾讯云 COS](./platform/desktop-cos-sync.md)
 
 ## 基础设施
 

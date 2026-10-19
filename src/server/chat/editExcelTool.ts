@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import path from 'node:path'
 
-import { editExcelBuffer, ExcelEditError } from '@pure/utils'
+import { editExcelBuffer, ExcelEditError } from '@pure/utils/server'
 import { tool } from 'ai'
 import { z } from 'zod'
 

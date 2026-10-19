@@ -76,7 +76,7 @@ const ChatLayout = memo<Props>(
   }) => {
     const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
     const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
-    const { handleResizeStart, sidebarWidth } = useSidebarResize()
+    const { handleResizeStart, isResizing, sidebarWidth } = useSidebarResize()
 
     useEffect(() => {
       const handleToggle = () => useChatUiStore.getState().toggleLeftCollapsed()
@@ -96,9 +96,12 @@ const ChatLayout = memo<Props>(
       <Flex className='size-full overflow-hidden'>
         <div
           className={sidebarResizeStyles.sidebarWrapper}
+          data-collapsed={leftCollapsed}
+          data-resizing={isResizing}
+          inert={leftCollapsed}
           style={
             {
-              '--main-shell-sidebar-width': leftCollapsed ? '0px' : `${sidebarWidth}px`,
+              '--main-shell-sidebar-width': `${sidebarWidth}px`,
               width: leftCollapsed ? 0 : sidebarWidth,
             } as CSSProperties
           }

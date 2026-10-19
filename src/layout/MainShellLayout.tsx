@@ -21,7 +21,7 @@ interface MainShellLayoutProps {
 
 const MainShellLayout = ({ children, header, scrollable = true, sidebar }: MainShellLayoutProps) => {
   const sidebarCollapsed = useHomeStore((state) => state.sidebarCollapsed)
-  const { handleResizeStart, sidebarWidth } = useSidebarResize()
+  const { handleResizeStart, isResizing, sidebarWidth } = useSidebarResize()
 
   useEffect(() => {
     const handleToggle = () => useHomeStore.getState().toggleSidebarCollapsed()
@@ -41,9 +41,12 @@ const MainShellLayout = ({ children, header, scrollable = true, sidebar }: MainS
     <Flex className='size-full overflow-hidden'>
       <div
         className={sidebarResizeStyles.sidebarWrapper}
+        data-collapsed={sidebarCollapsed}
+        data-resizing={isResizing}
+        inert={sidebarCollapsed}
         style={
           {
-            '--main-shell-sidebar-width': sidebarCollapsed ? '0px' : `${sidebarWidth}px`,
+            '--main-shell-sidebar-width': `${sidebarWidth}px`,
             width: sidebarCollapsed ? 0 : sidebarWidth,
           } as CSSProperties
         }

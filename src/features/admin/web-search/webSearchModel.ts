@@ -73,7 +73,8 @@ export const WEB_SEARCH_API_PATH = '/api/admin/web-search'
 export const WEB_SEARCH_ENDPOINT_LABEL = 'POST /api/admin/web-search'
 export const EMPTY_SELECT_VALUE = '__empty__'
 export const EXAMPLE_QUERY = '今日新闻'
-export const EXAMPLE_URLS = 'https://vercel.com/\nhttps://nextjs.org'
+export const EXAMPLE_URLS =
+  'https://vercel.com/\nhttps://nextjs.org\nhttps://app.purechat.cn\nhttps://docs.purechat.cn\nhttps://next-docs.purechat.cn\nhttps://landing.purechat.cn'
 
 export const COPY_LABEL: Record<CopyState, string> = {
   idle: '复制',

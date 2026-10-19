@@ -1,6 +1,7 @@
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react'
 
 import { getDesktopApi } from '@/types/desktop'
+import { sidebarResizeStyles } from '@/layout/sidebarResize'
 
 const InsetContentFrame = ({
   children,
@@ -15,7 +16,9 @@ const InsetContentFrame = ({
   const padding = sidebarCollapsed ? 'p-2' : 'p-2 ps-0'
 
   return (
-    <div className={`relative min-h-0 min-w-0 flex-1 bg-app-layout ${padding}${isDesktop ? ' pt-0' : ''}`}>
+    <div
+      className={`${sidebarResizeStyles.contentFrame} relative min-h-0 min-w-0 flex-1 bg-app-layout ${padding}${isDesktop ? ' pt-0' : ''}`}
+    >
       {onResizeStart ? (
         <div
           aria-hidden='true'

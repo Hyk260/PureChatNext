@@ -24,7 +24,7 @@ import DesktopWindowControls from '@/features/desktop/DesktopWindowControls'
 import MacTrafficLights from '@/features/desktop/MacTrafficLights'
 import { desktopHref, useDesktopTabsStore } from '@/features/desktop/useDesktopTabsStore'
 import { useDesktopUpdateVersion } from '@/features/desktop/useDesktopUpdateVersion'
-import { DEFAULT_SIDEBAR_WIDTH, useSidebarLayoutStore } from '@/layout/sidebarResize'
+import { DEFAULT_SIDEBAR_WIDTH, SIDEBAR_TRANSITION, useSidebarLayoutStore } from '@/layout/sidebarResize'
 import { getDesktopApi } from '@/types/desktop'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -53,7 +53,15 @@ const styles = createStaticStyles(({ css }) => ({
     gap: 4px;
     height: 100%;
     padding-inline: 8px;
-    transition: width 0.2s ease;
+    transition: width ${SIDEBAR_TRANSITION};
+
+    &[data-resizing='true'] {
+      transition: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   `,
   leadingStart: css`
     display: flex;
@@ -261,6 +269,7 @@ const DesktopTitleBarChrome = ({
   const tabs = useDesktopTabsStore((s) => s.tabs)
   const activeTabId = useDesktopTabsStore((s) => s.activeTabId)
   const sidebarWidth = useSidebarLayoutStore((s) => s.sidebarWidth)
+  const isResizing = useSidebarLayoutStore((s) => s.isResizing)
   const updateVersion = useDesktopUpdateVersion()
 
   if (!api) return null
@@ -293,11 +302,13 @@ const DesktopTitleBarChrome = ({
   }
 
   const sidebarLabel = isSidebarCollapsed ? '展开侧栏' : '折叠侧栏'
-  const leadingWidth = isSidebarCollapsed ? undefined : (sidebarWidth || DEFAULT_SIDEBAR_WIDTH)
+  // Controls, gaps and padding must fit even when the sidebar is hidden.
+  const collapsedLeadingWidth = isMac ? 212 : 136
+  const leadingWidth = isSidebarCollapsed ? collapsedLeadingWidth : sidebarWidth || DEFAULT_SIDEBAR_WIDTH
 
   return (
     <header className={styles.bar}>
-      <div className={styles.leading} style={leadingWidth ? { width: leadingWidth } : undefined}>
+      <div className={styles.leading} data-resizing={isResizing} style={{ width: leadingWidth }}>
         <div className={styles.leadingStart}>
           {isMac ? (
             <MacTrafficLights
@@ -311,6 +322,7 @@ const DesktopTitleBarChrome = ({
           <Tooltip title={sidebarLabel}>
             <span className={styles.tooltipTarget}>
               <button
+                aria-expanded={!isSidebarCollapsed}
                 aria-label={sidebarLabel}
                 className={styles.iconButton}
                 onClick={onToggleSidebar}

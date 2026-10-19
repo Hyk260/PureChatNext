@@ -61,6 +61,8 @@ export function getDesktopPublishConfig() {
       endpoint: endpoint.href,
       region: env.S3_REGION!,
       forcePathStyle: false,
+      // COS 不保证及时返回 100-continue；SDK 默认可能等到 requestTimeout 才开始发送大文件。
+      expectContinueHeader: false,
       // 单次请求最多 15 分钟；外层发布重试负责重试，避免 SDK 内部重试把单步等待拉长。
       maxAttempts: 1,
       requestHandler: {

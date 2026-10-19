@@ -1,5 +1,16 @@
-# 仅同步已公开的稳定版桌面资产；两个平台分别发布、清理各自旧版。
-# 手动发布草稿会触发 release.published；GITHUB_TOKEN 创建的普通 Release 需手动运行本工作流。
+# 桌面发行同步：将已公开的稳定版 Release 资产同步到腾讯云 COS，并清理所选平台的旧版本。
+#
+# 使用方法：
+#   1. 发布正式版 Release 会自动触发；GITHUB_TOKEN 创建的 Release 需在 Actions 中手动运行本工作流。
+#   2. 手动运行时填写 vX.Y.Z 标签并选择平台；首次保持 dry_run=true 检查上传和清理计划，再关闭后正式同步。
+#   3. 选择 all 会依次同步 Windows 与 macOS；失败后也可选择单个平台重新运行。
+#
+# 配置与权限：
+#   - Secrets：S3_ACCESS_KEY_ID、S3_SECRET_ACCESS_KEY；Variables：S3_BUCKET、S3_ENDPOINT、S3_REGION、PURECHAT_DESKTOP_UPDATE_URL。
+#   - 可选 Variable：S3_PUBLIC_DOMAIN；S3_ENABLE_PATH_STYLE 与 S3_SET_ACL 固定为 0。
+#   - 仅需 contents: read；工作流从默认分支检出发布脚本，并禁用依赖 lifecycle scripts。
+#   - 安装包、更新清单校验及 COS 发布锁由 desktop:upload 执行；COS 同步不构建安装包。
+# 详细配置与故障排查见 docs/self-hosting/platform/desktop-cos-sync.md。
 name: Sync desktop release to COS
 
 on:
@@ -22,23 +33,31 @@ on:
         default: true
 
 permissions:
+  # 只读取 Release 资产；发布目标是 COS，不需要写 GitHub Release。
   contents: read
 
 concurrency:
   group: desktop-cos-sync
+  # 已开始的 COS 发布不能被后续运行打断；queue: max 允许最多 100 个运行等待，不替换旧的排队运行。
   cancel-in-progress: false
+  queue: max
 
 jobs:
   sync:
     # 没有配置 COS 更新地址时，原 GitHub 发行流程继续工作。
     if: github.event_name == 'workflow_dispatch' || (vars.PURECHAT_DESKTOP_UPDATE_URL != '' && !github.event.release.prerelease)
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # all 会串行上传两个平台并校验公共下载地址，预留较长时间完成 COS 同步。
+    timeout-minutes: 120
     env:
+      # 下载 GitHub Release 资产；该令牌只需 contents: read。
       GH_TOKEN: ${{ github.token }}
+      # Release 事件使用触发版本；手动运行时使用输入的标签和平台。
       RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
       TARGET_PLATFORM: ${{ inputs.platform || 'all' }}
+      # 手动运行默认为 dry run；正式 Release 事件会执行实际同步。
       DRY_RUN: ${{ inputs.dry_run || false }}
+      # COS 凭据只注入独立同步 job，不进入桌面构建流程。
       S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
       S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
       S3_BUCKET: ${{ vars.S3_BUCKET }}
@@ -70,12 +89,14 @@ jobs:
           gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease |
             jq -e '.isDraft == false and .isPrerelease == false'
       - name: Install script dependencies without lifecycle hooks
+        # 发布只需运行校验与上传脚本，不执行仓库依赖的安装脚本。
         run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Download desktop release assets
         shell: bash
         run: |
           set -euo pipefail
           version="${RELEASE_TAG#v}"
+          # 只下载所选平台及其更新清单需要的文件，避免执行 Release 中的代码。
           patterns=()
           if [[ "$TARGET_PLATFORM" == 'all' || "$TARGET_PLATFORM" == 'windows' ]]; then
             patterns+=(--pattern "PureChat-${version}-setup.exe" --pattern "PureChat-${version}-portable.exe" \
@@ -94,5 +115,19 @@ jobs:
           set -euo pipefail
           publish_args=()
           if [[ "$DRY_RUN" == 'true' ]]; then publish_args+=(--dry-run); fi
-          pnpm desktop:upload --platform "$TARGET_PLATFORM" --dir "$RUNNER_TEMP/desktop-release" \
-            --version "${RELEASE_TAG#v}" "${publish_args[@]}"
+          # 发布器会校验已有文件并支持同版本续传；失败后重新校验并重试，最多 3 次。
+          attempt=1
+          while true; do
+            if pnpm desktop:upload --platform "$TARGET_PLATFORM" --dir "$RUNNER_TEMP/desktop-release" \
+              --version "${RELEASE_TAG#v}" "${publish_args[@]}"; then
+              break
+            fi
+            if (( attempt >= 3 )); then
+              echo "Desktop sync failed after ${attempt} attempts" >&2
+              exit 1
+            fi
+            delay=$((attempt * 15))
+            echo "Desktop sync failed; retrying in ${delay}s (attempt ${attempt}/3)" >&2
+            sleep "$delay"
+            attempt=$((attempt + 1))
+          done

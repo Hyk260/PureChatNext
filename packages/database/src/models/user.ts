@@ -2,11 +2,11 @@ import { isAdminRole, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { createNanoId, generateCompactUuid } from '@pure/utils'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
-import { and, asc, count, desc, eq, ilike, inArray, lt, or } from 'drizzle-orm'
+import { and, asc, count, desc, eq, ilike, inArray, lt, or, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { account, passkey, session, twoFactor, users, verification } from '../schemas'
-import type { User, UserItem, UserWithoutPassword } from '../schemas'
+import type { User, UserDeviceInfo, UserItem, UserWithoutPassword } from '../schemas'
 import { generateAuthUserId } from '../utils/idGenerator'
 
 import type { ChatDatabase } from '../type'
@@ -40,6 +40,7 @@ export type AdminUserListItem = {
   banned: boolean | null
   banReason: string | null
   createdAt: Date
+  deviceInfo: UserDeviceInfo | null
   email: string | null
   emailVerified: boolean
   fullName: string | null
@@ -91,6 +92,7 @@ const adminUserColumns = {
   banned: users.banned,
   banReason: users.banReason,
   createdAt: users.createdAt,
+  deviceInfo: users.deviceInfo,
   email: users.email,
   emailVerified: users.emailVerified,
   fullName: users.fullName,
@@ -127,16 +129,23 @@ export class UserModel {
   }
 
   /**
-   * 节流更新 `last_active_at`：仅当库内值早于窗口阈值写入。
+   * 节流更新 `last_active_at`；设备快照变化时可提前写入，避免短时间内切换设备后状态滞后。
    * 不改 `updatedAt`（资料变更语义）。
    * @returns 是否实际写库
    */
-  touchLastActiveAt = async (userId: string, now: Date = new Date()) => {
+  touchLastActiveAt = async (userId: string, now: Date = new Date(), deviceInfo?: UserDeviceInfo) => {
     const threshold = new Date(now.getTime() - LAST_ACTIVE_TOUCH_INTERVAL_MS)
+    const values = { lastActiveAt: now, ...(deviceInfo ? { deviceInfo } : {}) }
+    const shouldTouch = deviceInfo
+      ? or(
+          lt(users.lastActiveAt, threshold),
+          sql`${users.deviceInfo} IS DISTINCT FROM ${JSON.stringify(deviceInfo)}::jsonb`
+        )
+      : lt(users.lastActiveAt, threshold)
     const [updated] = await this.db
       .update(users)
-      .set({ lastActiveAt: now })
-      .where(and(eq(users.id, userId), lt(users.lastActiveAt, threshold)))
+      .set(values)
+      .where(and(eq(users.id, userId), shouldTouch))
       .returning({ id: users.id })
 
     return Boolean(updated)

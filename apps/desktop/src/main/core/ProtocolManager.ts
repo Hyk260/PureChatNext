@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { protocol, session } from 'electron'
+import { app, protocol, session } from 'electron'
 
 import { createAppProtocolHandler } from '../appProtocol'
 
@@ -39,6 +39,13 @@ export class ProtocolManager {
       protocolScheme,
       createAppProtocolHandler({
         fetch: (input, init) => session.defaultSession.fetch(input, init),
+        deviceInfoHeaders: {
+          'x-purechat-app-version': app.getVersion(),
+          'x-purechat-architecture': process.arch,
+          'x-purechat-client': 'electron',
+          'x-purechat-os-version': process.getSystemVersion(),
+          'x-purechat-platform': process.platform,
+        },
         getAuthorizationHeader: () => this.authorizationHeaderGetter(),
         getRemoteServerUrl: () => this.remoteServerUrlGetter(),
         rendererDir: path.resolve(this.rendererDir),

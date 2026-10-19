@@ -10,11 +10,23 @@ export type AdminUserCredits = {
   remaining: number
 }
 
+export type AdminUserDeviceInfo = {
+  appVersion: string | null
+  architecture: string | null
+  browser: string | null
+  browserVersion: string | null
+  clientType: 'electron' | 'web'
+  deviceType: 'desktop' | 'mobile' | 'tablet' | 'unknown'
+  os: string | null
+  osVersion: string | null
+}
+
 export type AdminUser = {
   banned: boolean
   banReason: string | null
   createdAt: string
   credits?: AdminUserCredits
+  deviceInfo: AdminUserDeviceInfo | null
   email: string | null
   emailVerified: boolean
   fullName: string | null

@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 
 import { MONTHLY_FREE_CREDITS, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
+import type { UserDeviceInfo } from '@pure/database/schemas'
 import { isRecord, toTrimmedString } from '@pure/utils/object'
 import { CreditsModel } from '@pure/database/models/credits'
 import { isAdminUserError, UserModel } from '@pure/database/models/user'
@@ -40,6 +41,7 @@ type AdminUserJson = {
   banReason: string | null
   createdAt: string
   credits?: AdminUserCreditsJson
+  deviceInfo: UserDeviceInfo | null
   email: string | null
   emailVerified: boolean
   fullName: string | null
@@ -66,6 +68,7 @@ const serializeAdminUser = (user: {
   banned?: boolean | null
   banReason?: string | null
   createdAt: Date
+  deviceInfo?: UserDeviceInfo | null
   email?: string | null
   emailVerified: boolean
   fullName?: string | null
@@ -81,6 +84,7 @@ const serializeAdminUser = (user: {
     banned: user.banned === true,
     banReason: user.banReason ?? null,
     createdAt: createdAt.toISOString(),
+    deviceInfo: user.deviceInfo ?? null,
     email: user.email ?? null,
     emailVerified: user.emailVerified,
     fullName: user.fullName ?? null,

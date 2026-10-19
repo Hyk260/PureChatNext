@@ -6,8 +6,15 @@ import { UserModel } from '@pure/database/models/user'
 import { auth } from '@/auth'
 import { isAdminRole } from '@/const/auth'
 import { verifyAccessToken } from '@/libs/auth/jwt'
+import { getUserDeviceInfo } from '@/libs/auth/get-user-device-info'
 import { touchUserLastActive } from '@/libs/auth/touch-last-active'
 import { isUserCurrentlyBanned } from '@/libs/auth/user-status'
+
+function touchAuthenticatedUser(userId: string, requestHeaders: Headers) {
+  const deviceInfo = getUserDeviceInfo(requestHeaders)
+  if (deviceInfo) touchUserLastActive(userId, deviceInfo)
+  else touchUserLastActive(userId)
+}
 
 async function getAuthenticatedUser() {
   const requestHeaders = await headers()
@@ -20,7 +27,7 @@ async function getAuthenticatedUser() {
 
     const user = await new UserModel().findByUserId(payload.userId)
     if (isUserCurrentlyBanned(user)) return null
-    if (user?.id) touchUserLastActive(user.id)
+    if (user?.id) touchAuthenticatedUser(user.id, requestHeaders)
     return user ?? null
   }
 
@@ -29,7 +36,7 @@ async function getAuthenticatedUser() {
 
   const user = await new UserModel().findById(session.user.id)
   if (isUserCurrentlyBanned(user)) return null
-  if (user?.id) touchUserLastActive(user.id)
+  if (user?.id) touchAuthenticatedUser(user.id, requestHeaders)
   return user
 }
 

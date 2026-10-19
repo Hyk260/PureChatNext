@@ -253,6 +253,13 @@
       "when": 1792140286518,
       "tag": "0035_robust_northstar",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792377595366,
+      "tag": "0036_small_purple_man",
+      "breakpoints": true
     }
   ]
 }

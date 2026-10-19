@@ -11,6 +11,10 @@ vi.mock('@pure/database/models/userProviderSecret', () => ({
     getDecrypted = mocks.getDecrypted
   },
 }))
+vi.mock('@pure/database/models/customProvider', () => ({
+  CustomProviderModel: class {},
+  isValidProviderId: (id: string) => /^[a-z0-9][a-z0-9_-]{0,31}$/.test(id),
+}))
 vi.mock('./resolveClient', () => ({
   isSupportedProviderId: (id: string) => id === 'openai' || id === 'deepseek',
   PROVIDER_RUNTIME_DEFAULT_BASE_URLS: {

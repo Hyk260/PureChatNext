@@ -33,7 +33,7 @@ import {
   resetAdminUserCredits,
   updateAdminUser,
 } from './users'
-import type { AdminUser, AdminUserSortBy, CreateAdminUserInput } from './users'
+import type { AdminUser, AdminUserDeviceInfo, AdminUserSortBy, CreateAdminUserInput } from './users'
 
 type UserFormMode = 'create' | 'edit'
 
@@ -56,6 +56,37 @@ const formatUserCredits = (credits: AdminUser['credits']) => {
   if (!credits) return EMPTY_PLACEHOLDER
   const percent = credits.grant <= 0 ? 0 : Math.round((credits.remaining / credits.grant) * 100)
   return `${formatNumber(credits.remaining)} / ${formatNumber(credits.grant)} · 剩余 ${percent}%`
+}
+
+const DEVICE_TYPE_LABELS: Record<AdminUserDeviceInfo['deviceType'], string> = {
+  desktop: '电脑端',
+  mobile: '移动端',
+  tablet: '平板',
+  unknown: '设备未知',
+}
+
+const formatDeviceParts = (separator: string, ...parts: Array<string | null>) => parts.filter(Boolean).join(separator)
+
+const renderUserDeviceInfo = (deviceInfo: AdminUserDeviceInfo | null) => {
+  if (!deviceInfo) return EMPTY_PLACEHOLDER
+
+  const clientLabel =
+    deviceInfo.clientType === 'electron'
+      ? formatDeviceParts(' ', 'Electron', deviceInfo.appVersion)
+      : formatDeviceParts(' ', deviceInfo.browser ?? 'Web 浏览器', deviceInfo.browserVersion)
+  const platformLabel =
+    deviceInfo.clientType === 'electron'
+      ? formatDeviceParts(' · ', deviceInfo.os, deviceInfo.osVersion, deviceInfo.architecture)
+      : formatDeviceParts(' · ', deviceInfo.os, deviceInfo.osVersion, DEVICE_TYPE_LABELS[deviceInfo.deviceType])
+
+  return (
+    <Flex className='min-w-0 flex-col gap-0.5'>
+      <Text className='truncate'>{clientLabel}</Text>
+      <Text className='truncate text-xs' type='secondary'>
+        {platformLabel || DEVICE_TYPE_LABELS[deviceInfo.deviceType]}
+      </Text>
+    </Flex>
+  )
 }
 
 const renderUserStatus = (banned: boolean) =>
@@ -297,6 +328,12 @@ export default function AdminUsersPage() {
       width: 240,
     },
     {
+      dataIndex: 'deviceInfo',
+      render: (value: AdminUserDeviceInfo | null) => renderUserDeviceInfo(value),
+      title: '最近设备',
+      width: 220,
+    },
+    {
       dataIndex: 'createdAt',
       render: formatUserDateTime,
       title: '创建时间',
@@ -400,7 +437,7 @@ export default function AdminUsersPage() {
             loading={loading}
             pagination={false}
             rowKey='id'
-            scroll={{ x: 1280 }}
+            scroll={{ x: 1640 }}
             sortDirections={TABLE_SORT_DIRECTIONS}
             onChange={handleTableChange}
           />

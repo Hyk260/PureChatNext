@@ -3,6 +3,17 @@ import { sql } from 'drizzle-orm'
 
 import { timestamps, timestamptz } from './_helpers'
 
+export type UserDeviceInfo = {
+  appVersion: string | null
+  architecture: string | null
+  browser: string | null
+  browserVersion: string | null
+  clientType: 'electron' | 'web'
+  deviceType: 'desktop' | 'mobile' | 'tablet' | 'unknown'
+  os: string | null
+  osVersion: string | null
+}
+
 /** 用户主表，存储账户基本信息及 Better Auth 所需的扩展字段 */
 export const users = pgTable(
   'users',
@@ -42,6 +53,8 @@ export const users = pgTable(
     phoneNumberVerified: boolean('phone_number_verified'),
     // 用户最后活跃时间，用于统计在线状态
     lastActiveAt: timestamptz('last_active_at').notNull().defaultNow(),
+    // 用户最近一次活跃时识别到的客户端设备信息（不保存原始 User-Agent）
+    deviceInfo: jsonb('device_info').$type<UserDeviceInfo>(),
 
     // Better Auth 必需字段：邮箱是否已验证
     emailVerified: boolean('email_verified').default(false).notNull(),

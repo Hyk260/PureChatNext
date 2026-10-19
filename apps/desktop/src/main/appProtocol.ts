@@ -5,6 +5,7 @@ import { isAppRendererUrl } from './rendererSecurity'
 
 interface AppProtocolOptions {
   fetch: (url: string, init?: RequestInit) => Promise<Response>
+  deviceInfoHeaders?: Record<string, string>
   getAuthorizationHeader?: () => Promise<string | null>
   getRemoteServerUrl: () => Promise<string | null>
   rendererDir: string
@@ -52,6 +53,7 @@ export const createAppProtocolHandler = (options: AppProtocolOptions) => {
       headers.delete('authorization')
       const authorization = await options.getAuthorizationHeader?.()
       if (authorization) headers.set('authorization', authorization)
+      for (const [name, value] of Object.entries(options.deviceInfoHeaders ?? {})) headers.set(name, value)
       const init: RequestInit = {
         credentials: 'include', headers, method: request.method, signal: request.signal,
       }

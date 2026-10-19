@@ -11,8 +11,10 @@ import {
 } from '@/features/chat/WorkPanel/tabs'
 import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
 import type { ChatLlmParams, ChatSearchMode, TopicGroupMode, TopicPageSize, TopicSortBy } from '@/features/chat/types'
+import { PENDING_CHAT_PERMISSION_MODE_KEY } from '@/features/chat/chatLocalStorage'
 import { CHAT_PERMISSION_MODES, DEFAULT_CHAT_PERMISSION_MODE } from '@pure/types'
 import type { ChatPermissionMode } from '@pure/types'
+import { sessionStg } from '@pure/utils/storage'
 
 type ChatUiState = {
   leftCollapsed: boolean
@@ -151,7 +153,7 @@ export const useChatUiStore = create<ChatUiState>()(
     }),
     {
       name: 'purechat:chat:v2:ui',
-      version: 8,
+      version: 9,
       migrate: (persisted, version) => {
         let state = (persisted ?? {}) as Record<string, unknown>
         if (version < 4) {
@@ -176,12 +178,19 @@ export const useChatUiStore = create<ChatUiState>()(
           isWorkPanelTabId(rest.workPanelActiveTab) && workPanelOpenTabs.includes(rest.workPanelActiveTab)
             ? rest.workPanelActiveTab
             : (workPanelOpenTabs[0] ?? DEFAULT_WORK_PANEL_ACTIVE_TAB)
+        const resetPersistedFullPermission = version < 9 && rest.permissionMode === 'full'
+        const resetPendingFullPermission =
+          version < 9 && sessionStg.getString(PENDING_CHAT_PERMISSION_MODE_KEY) === 'full'
+        const resetLocalFullPermission = resetPersistedFullPermission || resetPendingFullPermission
+        if (resetLocalFullPermission) sessionStg.remove(PENDING_CHAT_PERMISSION_MODE_KEY)
+        const permissionMode =
+          !resetLocalFullPermission && CHAT_PERMISSION_MODES.includes(rest.permissionMode as ChatPermissionMode)
+            ? (rest.permissionMode as ChatPermissionMode)
+            : DEFAULT_CHAT_PERMISSION_MODE
         return {
           ...rest,
-          permissionMode: CHAT_PERMISSION_MODES.includes(rest.permissionMode as ChatPermissionMode)
-            ? (rest.permissionMode as ChatPermissionMode)
-            : DEFAULT_CHAT_PERMISSION_MODE,
-          permissionModeInitialized: rest.permissionModeInitialized === true,
+          permissionMode,
+          permissionModeInitialized: resetLocalFullPermission ? false : rest.permissionModeInitialized === true,
           searchMode: rest.searchMode === 'auto' ? 'auto' : 'off',
           workPanelActiveTab,
           workPanelOpenTabs,

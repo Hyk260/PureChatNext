@@ -46,6 +46,7 @@ export type ChannelToolContext = {
 export interface ChatToolContext {
   channel: ChatToolChannel
   searchMode: ChatToolSearchMode
+  userId?: string | null
   channelContext?: ChannelToolContext
 }
 
@@ -67,7 +68,8 @@ export const WEB_SEARCH_SYSTEM_INSTRUCTION =
 const registrations: ChatToolRegistration[] = [
   {
     apiName: 'webSearch',
-    enabled: ({ channel, searchMode }) => channel === 'wechat' || searchMode === 'auto',
+    enabled: ({ channel, searchMode, userId }) =>
+      channel === 'wechat' || (searchMode === 'auto' && (channel === 'qq' || Boolean(userId))),
     identifier: 'builtin-web-search',
     modelName: 'webSearch',
     systemInstruction: WEB_SEARCH_SYSTEM_INSTRUCTION,

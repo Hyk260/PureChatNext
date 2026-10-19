@@ -1,5 +1,5 @@
 import debug from 'debug'
-import { importJWK, jwtVerify, SignJWT } from 'jose'
+import { decodeJwt, importJWK, jwtVerify, SignJWT } from 'jose'
 import { randomBytes } from 'node:crypto'
 
 import { authEnv } from '@/envs/auth'
@@ -22,10 +22,12 @@ export interface RefreshTokenPayload {
   sub: string
   userId: string
   family: string
+  jti: string
 }
 
 export type VerifyRefreshResult =
-  { valid: true; expired: false; userId: string; family: string } | { valid: false; expired: boolean }
+  | { valid: true; expired: false; expiresAt: Date; userId: string; family: string; tokenId: string }
+  | { valid: false; expired: boolean }
 
 interface JwkKey {
   alg?: string
@@ -169,9 +171,13 @@ export const verifyAccessToken = async (token: string): Promise<AccessTokenPaylo
 /**
  * Sign a refresh token with a token family identifier.
  */
-export const signRefreshToken = async (userId: string): Promise<{ token: string; family: string }> => {
+export const signRefreshToken = async (
+  userId: string,
+  existingFamily?: string
+): Promise<{ token: string; family: string; tokenId: string; expiresAt: Date }> => {
   const { key, kid } = await getSigningKey()
-  const tokenFamily = randomBytes(16).toString('hex')
+  const tokenFamily = existingFamily ?? randomBytes(16).toString('hex')
+  const tokenId = randomBytes(16).toString('hex')
 
   const token = await new SignJWT({
     purpose: REFRESH_TOKEN_PURPOSE,
@@ -181,11 +187,15 @@ export const signRefreshToken = async (userId: string): Promise<{ token: string;
     .setProtectedHeader({ alg: 'RS256', kid })
     .setSubject(userId)
     .setIssuedAt()
+    .setJti(tokenId)
     .setExpirationTime(authEnv.JWT_REFRESH_EXPIRATION)
     .sign(key)
+  const expiration = decodeJwt(token).exp
+  if (typeof expiration !== 'number') throw new Error('Signed refresh token is missing an expiration')
+  const expiresAt = new Date(expiration * 1000)
 
   log('Signing refresh token for user %s', userId)
-  return { token, family: tokenFamily }
+  return { token, family: tokenFamily, tokenId, expiresAt }
 }
 
 /**
@@ -207,11 +217,21 @@ export const verifyRefreshToken = async (token: string): Promise<VerifyRefreshRe
 
     const userId = typeof payload.userId === 'string' ? payload.userId : payload.sub
     const family = payload.family
+    const expiresAt = typeof payload.exp === 'number' ? new Date(payload.exp * 1000) : null
 
-    if (typeof userId !== 'string' || !userId || typeof family !== 'string' || !family) {
+    if (
+      typeof userId !== 'string' ||
+      !userId ||
+      typeof family !== 'string' ||
+      !family ||
+      (payload.jti !== undefined && (typeof payload.jti !== 'string' || !payload.jti)) ||
+      !expiresAt
+    ) {
       log('Refresh token missing required claims')
       return { valid: false, expired: false }
     }
+
+    const tokenId = typeof payload.jti === 'string' ? payload.jti : `legacy:${family}`
 
     log('Refresh token verification successful for user %s', userId)
     return {
@@ -219,6 +239,8 @@ export const verifyRefreshToken = async (token: string): Promise<VerifyRefreshRe
       expired: false,
       userId,
       family,
+      tokenId,
+      expiresAt,
     }
   } catch (error) {
     log('Refresh token verification failed: %O', error)

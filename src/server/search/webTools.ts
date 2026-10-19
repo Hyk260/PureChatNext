@@ -37,6 +37,8 @@ export async function resolveUserWebTools(input: {
   desktop?: boolean
   permissionMode?: ChatPermissionMode
 }): Promise<{ tools: ToolSet; native: boolean }> {
+  if (!input.userId) return { tools: {}, native: false }
+
   const settings = await loadWebSearchSettings(input.userId)
   if (input.userId && supportsNativeWeb(input, settings)) {
     return { tools: { web_search: createOpenAI().tools.webSearch() }, native: true }

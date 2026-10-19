@@ -5,8 +5,8 @@ const mocks = vi.hoisted(() => ({
   findByEmail: vi.fn(),
   findByUserId: vi.fn(),
   handler: vi.fn(),
+  issueRefreshToken: vi.fn(),
   signAccessToken: vi.fn(),
-  signRefreshToken: vi.fn(),
 }))
 
 vi.mock('@pure/database/models/user', () => ({
@@ -18,8 +18,8 @@ vi.mock('@pure/database/models/user', () => ({
 vi.mock('@/auth', () => ({ auth: { handler: mocks.handler } }))
 vi.mock('@/libs/auth/jwt', () => ({
   signAccessToken: mocks.signAccessToken,
-  signRefreshToken: mocks.signRefreshToken,
 }))
+vi.mock('@/libs/auth/refreshTokenStore', () => ({ issueRefreshToken: mocks.issueRefreshToken }))
 vi.mock('@/libs/utils/signature', () => ({ generateUserSig: () => 'user-sig' }))
 
 import { POST } from './route'
@@ -31,7 +31,7 @@ describe('POST /api/auth/login compatibility', () => {
     mocks.findByEmail.mockResolvedValue({ banned: false, email: 'person@example.com', userId: 'user-1' })
     mocks.handler.mockResolvedValue(Response.json({ token: 'ba-session', user: { userId: 'user-1' } }))
     mocks.signAccessToken.mockResolvedValue('legacy-access')
-    mocks.signRefreshToken.mockResolvedValue({ token: 'legacy-refresh' })
+    mocks.issueRefreshToken.mockResolvedValue({ expiresAt: new Date('2030-01-01T00:00:00.000Z'), token: 'legacy-refresh' })
   })
 
   it('routes userId login through Better Auth before issuing legacy JWTs', async () => {
@@ -51,11 +51,15 @@ describe('POST /api/auth/login compatibility', () => {
     )
 
     expect(response.status).toBe(200)
+    expect(response.headers.get('set-cookie')).toContain('purechat_refresh_token=legacy-refresh')
+    expect(response.headers.get('set-cookie')).toContain('HttpOnly')
+    expect(response.headers.get('set-cookie')).toContain('Secure')
     await expect(response.json()).resolves.toMatchObject({
       code: 200,
       data: { userId: 'user-1', userSig: 'user-sig', accessToken: 'legacy-access', refreshToken: 'legacy-refresh' },
     })
     expect(mocks.signAccessToken).toHaveBeenCalledWith('user-1')
+    expect(mocks.issueRefreshToken).toHaveBeenCalledWith('user-1')
   })
 
   it('does not issue tokens for banned accounts or failed Better Auth sign-ins', async () => {
@@ -81,5 +85,6 @@ describe('POST /api/auth/login compatibility', () => {
     )
     expect(noSessionResponse.status).toBe(200)
     expect(mocks.signAccessToken).not.toHaveBeenCalled()
+    expect(mocks.issueRefreshToken).not.toHaveBeenCalled()
   })
 })

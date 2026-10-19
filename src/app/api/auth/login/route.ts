@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server'
 import { UserModel } from '@pure/database/models/user'
 import { auth } from '@/auth'
 import { isUserCurrentlyBanned } from '@/libs/auth/user-status'
-import { signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
+import { signAccessToken } from '@/libs/auth/jwt'
+import { issueRefreshToken } from '@/libs/auth/refreshTokenStore'
 import { generateUserSig } from '@/libs/utils/signature'
+import { setRefreshTokenCookie } from '@/libs/auth/refreshTokenCookie'
 
 /**
  * Legacy login endpoint. Use Better Auth for credential verification so email
@@ -45,14 +47,14 @@ export async function POST(request: Request) {
     if (!authenticatedUserId || !result?.token || isUserCurrentlyBanned(account)) return response
 
     const accessToken = await signAccessToken(authenticatedUserId)
-    const { token: refreshToken } = await signRefreshToken(authenticatedUserId)
+    const { expiresAt, token: refreshToken } = await issueRefreshToken(authenticatedUserId)
 
     const responseHeaders = new Headers(response.headers)
     responseHeaders.delete('content-length')
     responseHeaders.delete('transfer-encoding')
     responseHeaders.set('content-type', 'application/json')
 
-    return Response.json(
+    const tokenResponse = Response.json(
       {
         message: '登录成功',
         code: 200,
@@ -65,6 +67,7 @@ export async function POST(request: Request) {
       },
       { headers: responseHeaders, status: response.status }
     )
+    return setRefreshTokenCookie(tokenResponse, request, refreshToken, expiresAt)
   } catch {
     return NextResponse.json({ error: '服务器内部错误' }, { status: 500 })
   }

@@ -3,23 +3,30 @@ import type { UIMessage } from 'ai'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { setPendingTopicSend } from '@/features/chat/chatLocalStorage'
+import { setPendingChatPermissionMode, setPendingTopicSend } from '@/features/chat/chatLocalStorage'
 
 const mocks = vi.hoisted(() => {
   const navigation = {
     listeners: new Set<() => void>(),
     query: 'agent=agt_inbox',
   }
+  const desktopApi = { requestFullAccess: vi.fn().mockResolvedValue({ granted: true }) }
 
   return {
     autoRenameTopic: vi.fn(),
     createTopic: vi.fn(),
     desktop: false,
+    desktopApi,
+    permissionModeInitialized: true,
     fetchAgents: vi.fn(),
     fetchMessages: vi.fn(),
     fetchTopics: vi.fn(),
     navigation,
     permissionMode: 'auto' as 'ask' | 'auto' | 'full',
+    initializePermissionMode: vi.fn((mode: 'ask' | 'auto' | 'full') => {
+      mocks.permissionMode = mode
+      mocks.permissionModeInitialized = true
+    }),
     searchMode: 'off' as 'auto' | 'off',
     chatError: undefined as Error | undefined,
     clearChatError: vi.fn(),
@@ -166,14 +173,14 @@ vi.mock('@/features/chat/store/useChatUiStore', () => ({
     selector({
       paramsByAgent: {},
       permissionMode: mocks.permissionMode,
-      permissionModeInitialized: true,
+      permissionModeInitialized: mocks.permissionModeInitialized,
       searchMode: mocks.searchMode,
       wideScreen: false,
       setParams: vi.fn(),
       setPermissionMode: (mode: 'ask' | 'auto' | 'full') => {
         mocks.permissionMode = mode
       },
-      initializePermissionMode: vi.fn(),
+      initializePermissionMode: mocks.initializePermissionMode,
       setSearchMode: vi.fn(),
     }),
 }))
@@ -214,7 +221,7 @@ vi.mock('@/features/settings/provider/store/useProviderConfigStore', () => {
   return { useProviderConfigStore }
 })
 
-vi.mock('@/types/desktop', () => ({ getDesktopApi: () => (mocks.desktop ? {} : undefined) }))
+vi.mock('@/types/desktop', () => ({ getDesktopApi: () => (mocks.desktop ? mocks.desktopApi : undefined) }))
 
 import ChatPage from '@/features/chat/ChatPage'
 
@@ -236,6 +243,7 @@ describe('ChatPage message loading state', () => {
     mocks.autoRenameTopic.mockReset()
     mocks.createTopic.mockReset().mockResolvedValue(createdTopic)
     mocks.desktop = false
+    mocks.permissionModeInitialized = true
     mocks.fetchMessages.mockReset().mockReturnValue(new Promise(() => {}))
     mocks.fetchTopics.mockReset().mockResolvedValue([])
     mocks.fetchAgents.mockReset()
@@ -245,6 +253,9 @@ describe('ChatPage message loading state', () => {
     mocks.chatError = undefined
     mocks.searchMode = 'off'
     mocks.permissionMode = 'auto'
+    mocks.initializePermissionMode.mockClear()
+    mocks.desktopApi.requestFullAccess.mockClear()
+    setPendingChatPermissionMode('auto')
     setPendingTopicSend('')
   })
 
@@ -309,6 +320,23 @@ describe('ChatPage message loading state', () => {
 
     await waitFor(() => expect(mocks.updateTopic).toHaveBeenCalledWith('topic-existing', { permissionMode: 'ask' }))
     expect(await screen.findByRole('button', { name: '权限模式：ask' })).toBeTruthy()
+  })
+
+  it('does not initialize local desktop access from a remote full permission setting', async () => {
+    const existingTopic = { ...createdTopic, id: 'topic-existing', permissionMode: 'full' as const }
+    mocks.desktop = true
+    mocks.permissionModeInitialized = false
+    mocks.permissionMode = 'auto'
+    setPendingChatPermissionMode('ask')
+    mocks.navigation.query = 'agent=agt_inbox&topic=topic-existing'
+    mocks.fetchTopics.mockResolvedValue([existingTopic])
+    mocks.fetchMessages.mockResolvedValue([])
+    mocks.updateTopic.mockResolvedValue({ ...existingTopic, permissionMode: 'ask' })
+
+    render(<ChatPage />)
+
+    await waitFor(() => expect(mocks.initializePermissionMode).toHaveBeenCalledWith('ask'))
+    expect(mocks.desktopApi.requestFullAccess).not.toHaveBeenCalled()
   })
 
   it('keeps the message skeleton for an uncached existing topic', async () => {

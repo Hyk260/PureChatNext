@@ -6,7 +6,8 @@ import { NextResponse } from 'next/server'
 
 import { DESKTOP_AUTH_CLIENT_ID, DESKTOP_AUTH_REDIRECT_URI } from '@/const/desktopAuth'
 import { authEnv } from '@/envs/auth'
-import { signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
+import { signAccessToken } from '@/libs/auth/jwt'
+import { issueRefreshToken } from '@/libs/auth/refreshTokenStore'
 import { isUserCurrentlyBanned } from '@/libs/auth/user-status'
 
 const ACCESS_TOKEN_EXPIRES_IN = (() => {
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
   if (!user || isUserCurrentlyBanned(user)) return getError('账号不可用', 403)
 
   const accessToken = await signAccessToken(user.userId, user.role ?? undefined)
-  const { token: refreshToken } = await signRefreshToken(user.userId)
+  const { token: refreshToken } = await issueRefreshToken(user.userId)
 
   return NextResponse.json({
     access_token: accessToken,

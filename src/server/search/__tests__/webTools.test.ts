@@ -2,13 +2,35 @@
 import type { UIMessage } from 'ai'
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('../userSettings', () => ({ loadWebSearchSettings: vi.fn(), createUserSearchService: vi.fn() }))
+const userSettingsMocks = vi.hoisted(() => ({
+  createUserSearchService: vi.fn(),
+  loadWebSearchSettings: vi.fn(),
+}))
 
-import { prepareWebSearchHistory, supportsNativeWeb } from '../webTools'
+vi.mock('../userSettings', () => userSettingsMocks)
+
+import { prepareWebSearchHistory, resolveUserWebTools, supportsNativeWeb } from '../webTools'
 import { createFetchUrlsTool } from '../fetchTool'
 
 describe('web tool routing', () => {
   const official = { provider: 'openai', model: 'gpt-5.6-sol' }
+  it('does not grant anonymous requests server-backed web search tools', async () => {
+    const result = await resolveUserWebTools({ userId: null, ...official })
+
+    expect(result).toEqual({ native: false, tools: {} })
+    expect(userSettingsMocks.loadWebSearchSettings).not.toHaveBeenCalled()
+    expect(userSettingsMocks.createUserSearchService).not.toHaveBeenCalled()
+  })
+
+  it('keeps server-configured tools available to authenticated requests', async () => {
+    userSettingsMocks.loadWebSearchSettings.mockResolvedValueOnce({})
+
+    const result = await resolveUserWebTools({ baseURL: 'https://proxy.example/v1', userId: 'user-1', ...official })
+
+    expect(Object.keys(result.tools).sort()).toEqual(['fetchUrls', 'webSearch'])
+    expect(userSettingsMocks.loadWebSearchSettings).toHaveBeenCalledWith('user-1')
+  })
+
   it('enables only supported official models when preference and permissions allow', () => {
     expect(supportsNativeWeb(official, {})).toBe(true)
     expect(supportsNativeWeb(official, { modelToolsPreferred: false })).toBe(false)

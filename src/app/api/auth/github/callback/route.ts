@@ -4,9 +4,11 @@ import type { NextRequest } from 'next/server'
 
 import GitHubAPI from '@/libs/auth/gtihub'
 import type { ClientType } from '@/libs/auth/gtihub'
-import { signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
+import { signAccessToken } from '@/libs/auth/jwt'
+import { issueRefreshToken } from '@/libs/auth/refreshTokenStore'
 import { generateUserSig } from '@/libs/utils/signature'
 import { registerAccount } from '@/libs/utils/register'
+import { setRefreshTokenCookie } from '@/libs/auth/refreshTokenCookie'
 
 const log = debug('auth:github-callback')
 
@@ -50,9 +52,9 @@ export async function GET(request: NextRequest) {
 
     const userSig = generateUserSig({ identifier: githubId })
     const accessToken = await signAccessToken(githubId)
-    const { token: refreshToken } = await signRefreshToken(githubId)
+    const { expiresAt, token: refreshToken } = await issueRefreshToken(githubId)
 
-    return NextResponse.json(
+    const tokenResponse = NextResponse.json(
       {
         message: 'Authorization successful',
         code: 200,
@@ -65,6 +67,7 @@ export async function GET(request: NextRequest) {
       },
       { status: 200 }
     )
+    return setRefreshTokenCookie(tokenResponse, request, refreshToken, expiresAt)
   } catch (error) {
     log('callback error: %O', error)
 

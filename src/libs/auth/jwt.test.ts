@@ -28,6 +28,7 @@ vi.mock('@/envs/auth', () => ({
 const signMock = vi.fn().mockResolvedValue('signed.jwt.token')
 const setExpirationTimeMock = vi.fn()
 const setIssuedAtMock = vi.fn()
+const setJtiMock = vi.fn()
 const setSubjectMock = vi.fn()
 const setProtectedHeaderMock = vi.fn()
 
@@ -35,6 +36,7 @@ const buildSignJWTChain = () => {
   const chain = {
     setExpirationTime: setExpirationTimeMock,
     setIssuedAt: setIssuedAtMock,
+    setJti: setJtiMock,
     setProtectedHeader: setProtectedHeaderMock,
     setSubject: setSubjectMock,
     sign: signMock,
@@ -43,6 +45,7 @@ const buildSignJWTChain = () => {
   setProtectedHeaderMock.mockReturnValue(chain)
   setSubjectMock.mockReturnValue(chain)
   setIssuedAtMock.mockReturnValue(chain)
+  setJtiMock.mockReturnValue(chain)
   setExpirationTimeMock.mockReturnValue(chain)
 
   return chain
@@ -51,9 +54,11 @@ const buildSignJWTChain = () => {
 const SignJWTMock = vi.fn()
 const importJWKMock = vi.fn().mockResolvedValue('mock-crypto-key')
 const jwtVerifyMock = vi.fn()
+const decodeJwtMock = vi.fn()
 
 vi.mock('jose', () => ({
   SignJWT: SignJWTMock,
+  decodeJwt: (...args: unknown[]) => decodeJwtMock(...args),
   importJWK: (...args: unknown[]) => importJWKMock(...args),
   jwtVerify: (...args: unknown[]) => jwtVerifyMock(...args),
 }))
@@ -63,6 +68,7 @@ describe('auth/jwt', () => {
     vi.clearAllMocks()
     importJWKMock.mockResolvedValue('mock-crypto-key')
     signMock.mockResolvedValue('signed.jwt.token')
+    decodeJwtMock.mockReturnValue({ exp: 1_800_000_000 })
     SignJWTMock.mockImplementation(buildSignJWTChain)
   })
 
@@ -104,12 +110,15 @@ describe('auth/jwt', () => {
 
       expect(result.token).toBe('signed.jwt.token')
       expect(result.family).toMatch(/^[a-f0-9]{32}$/)
+      expect(result.tokenId).toMatch(/^[a-f0-9]{32}$/)
+      expect(result.expiresAt).toEqual(new Date(1_800_000_000_000))
       expect(SignJWTMock).toHaveBeenCalledWith({
         purpose: 'refresh',
         userId: 'user-123',
         family: result.family,
       })
       expect(setExpirationTimeMock).toHaveBeenCalledWith('7d')
+      expect(setJtiMock).toHaveBeenCalledWith(result.tokenId)
     })
   })
 
@@ -168,6 +177,7 @@ describe('auth/jwt', () => {
           sub: 'user-123',
           userId: 'user-123',
           family: 'family-abc',
+          exp: 1_800_000_000,
         },
       })
 
@@ -179,7 +189,27 @@ describe('auth/jwt', () => {
         expired: false,
         userId: 'user-123',
         family: 'family-abc',
+        tokenId: 'legacy:family-abc',
+        expiresAt: new Date(1_800_000_000_000),
       })
+    })
+
+    it('returns the token id from the JWT jti claim', async () => {
+      jwtVerifyMock.mockResolvedValue({
+        payload: {
+          purpose: 'refresh',
+          sub: 'user-123',
+          userId: 'user-123',
+          family: 'family-abc',
+          jti: 'token-abc',
+          exp: 1_800_000_000,
+        },
+      })
+
+      const { verifyRefreshToken } = await import('./jwt')
+      const result = await verifyRefreshToken('valid.refresh.token')
+
+      expect(result).toMatchObject({ valid: true, tokenId: 'token-abc', family: 'family-abc' })
     })
 
     it('returns invalid result when purpose mismatches', async () => {

@@ -19,38 +19,74 @@ export interface ExtractedFile {
   path: string
 }
 
+export interface ExtractFilesLimits {
+  maxBytesPerFile: number
+  maxEntries: number
+  maxFiles: number
+  maxTotalBytes: number
+}
+
 /**
  * Pull matching entries from a ZIP (buffer or path).
  * `filterFn` receives each entry name and returns whether to extract it.
  */
 export function extractFiles(
   zipInput: Buffer | string,
-  filterFn: (fileName: string) => boolean
+  filterFn: (fileName: string) => boolean,
+  limits: ExtractFilesLimits
 ): Promise<ExtractedFile[]> {
   return new Promise((resolve, reject) => {
     const processZipfile = (zipfile: yauzl.ZipFile) => {
       const extractedFiles: ExtractedFile[] = []
+      let entryCount = 0
+      let extractedBytes = 0
+      let settled = false
+
+      const fail = (error: Error, stream?: { destroy?: () => void }) => {
+        if (settled) return
+        settled = true
+        stream?.destroy?.()
+        zipfile.close()
+        reject(error)
+      }
+
       zipfile.readEntry()
 
       zipfile.on('entry', (entry: yauzl.Entry) => {
+        entryCount += 1
+        if (entryCount > limits.maxEntries) {
+          fail(new Error('ZIP entry limit exceeded'))
+          return
+        }
         if (entry.fileName.endsWith('/')) {
           zipfile.readEntry()
           return
         }
 
         if (filterFn(entry.fileName)) {
+          if (extractedFiles.length >= limits.maxFiles || entry.uncompressedSize > limits.maxBytesPerFile) {
+            fail(new Error('ZIP extracted file limit exceeded'))
+            return
+          }
           zipfile.openReadStream(entry, (err, readStream) => {
             if (err) {
-              zipfile.close()
-              return reject(err)
+              return fail(err)
             }
             if (!readStream) {
-              zipfile.close()
-              return reject(new Error(`Could not open read stream for ${entry.fileName}`))
+              return fail(new Error(`Could not open read stream for ${entry.fileName}`))
             }
 
+            let fileBytes = 0
+            readStream.on('data', (chunk: Buffer) => {
+              fileBytes += chunk.byteLength
+              extractedBytes += chunk.byteLength
+              if (fileBytes > limits.maxBytesPerFile || extractedBytes > limits.maxTotalBytes) {
+                fail(new Error('ZIP extracted byte limit exceeded'), readStream)
+              }
+            })
             readStream.pipe(
               concat((data) => {
+                if (settled) return
                 extractedFiles.push({
                   content: data.toString('utf8'),
                   path: entry.fileName,
@@ -59,8 +95,7 @@ export function extractFiles(
               })
             )
             readStream.on('error', (streamErr) => {
-              zipfile.close()
-              reject(streamErr)
+              fail(streamErr, readStream)
             })
           })
         } else {
@@ -69,13 +104,14 @@ export function extractFiles(
       })
 
       zipfile.on('end', () => {
+        if (settled) return
+        settled = true
         resolve(extractedFiles)
         zipfile.close()
       })
 
       zipfile.on('error', (err) => {
-        zipfile.close()
-        reject(err)
+        fail(err)
       })
     }
 

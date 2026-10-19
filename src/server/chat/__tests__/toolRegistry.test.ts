@@ -19,10 +19,19 @@ describe('chat tool registry', () => {
   })
 
   it('exposes weather and web search to web chat in auto mode', () => {
-    expect(resolveChatTools({ channel: 'web', searchMode: 'auto' })).toEqual({
+    expect(resolveChatTools({ channel: 'web', searchMode: 'auto', userId: 'user-1' })).toEqual({
       getWeather: mocks.weatherTool,
       webSearch: mocks.webSearchTool,
     })
+  })
+
+  it('does not expose server-backed search tools to anonymous web chat', () => {
+    expect(resolveChatTools({ channel: 'web', searchMode: 'auto', userId: null })).toEqual({
+      getWeather: mocks.weatherTool,
+    })
+    expect(resolveChatToolInstructions({ channel: 'web', searchMode: 'auto', userId: null }).join('\n')).not.toMatch(
+      /webSearch/
+    )
   })
 
   it('exposes weather and search to WeChat by default', () => {

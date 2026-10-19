@@ -37,6 +37,8 @@ const getResponseError = async (response: Response, fallback: string) => {
 
 export class DesktopAuthService {
   private refreshPromise: Promise<string | null> | null = null
+  private authEpoch = 0
+  private loggedOut = false
 
   constructor(
     private readonly config: DesktopConfigService,
@@ -45,6 +47,8 @@ export class DesktopAuthService {
   ) {}
 
   async start(serverUrl: string) {
+    this.authEpoch += 1
+    this.loggedOut = false
     const normalizedUrl = normalizeRemoteServerUrl(serverUrl)
     if (!isSafeExternalUrl(normalizedUrl)) {
       throw new Error('授权服务必须使用 HTTPS，或使用 localhost/127.0.0.1')
@@ -108,8 +112,21 @@ export class DesktopAuthService {
   }
 
   async logout() {
+    this.authEpoch += 1
+    this.loggedOut = true
+    const config = await this.config.read()
+    const refreshToken = await this.config.readSecret('auth.refreshToken')
     await this.config.clearPendingAuth()
     await this.clearTokens()
+    if (config.remoteServerUrl && refreshToken) {
+      const endpoint = new URL('/api/auth/logout', `${config.remoteServerUrl}/`).toString()
+      await this.fetchImpl(endpoint, {
+        body: JSON.stringify({ refreshToken }),
+        headers: { 'content-type': 'application/json' },
+        method: 'POST',
+        signal: AbortSignal.timeout(5000),
+      }).catch(() => null)
+    }
     return this.setStatus({ status: 'signedOut' })
   }
 
@@ -182,6 +199,7 @@ export class DesktopAuthService {
   }
 
   private async getAccessToken() {
+    if (this.loggedOut) return null
     const accessToken = await this.config.readSecret('auth.accessToken')
     const expiresAt = Number(await this.config.readSecret('auth.expiresAt'))
     if (accessToken && Number.isFinite(expiresAt) && expiresAt > Date.now() + REFRESH_SKEW_MS) return accessToken
@@ -189,6 +207,7 @@ export class DesktopAuthService {
   }
 
   private async refreshAccessToken() {
+    if (this.loggedOut) return null
     if (this.refreshPromise) return this.refreshPromise
     this.refreshPromise = this.performRefresh().finally(() => {
       this.refreshPromise = null
@@ -197,8 +216,10 @@ export class DesktopAuthService {
   }
 
   private async performRefresh() {
+    const authEpoch = this.authEpoch
     const config = await this.config.read()
     const refreshToken = await this.config.readSecret('auth.refreshToken')
+    if (authEpoch !== this.authEpoch || this.loggedOut) return null
     if (!config.remoteServerUrl || !refreshToken) return null
 
     const response = await this.fetchImpl(new URL('/api/auth/refresh', `${config.remoteServerUrl}/`).toString(), {
@@ -206,6 +227,7 @@ export class DesktopAuthService {
       headers: { 'content-type': 'application/json' },
       method: 'POST',
     }).catch(() => null)
+    if (authEpoch !== this.authEpoch || this.loggedOut) return null
     if (!response?.ok) {
       await this.clearTokens()
       this.setStatus({ status: 'signedOut' })
@@ -215,6 +237,7 @@ export class DesktopAuthService {
     const body = (await response.json()) as {
       data?: TokenResponse & { accessToken?: string; refreshToken?: string }
     }
+    if (authEpoch !== this.authEpoch || this.loggedOut) return null
     const accessToken = body.data?.access_token ?? body.data?.accessToken
     const nextRefreshToken = body.data?.refresh_token ?? body.data?.refreshToken
     if (!accessToken || !nextRefreshToken) {
@@ -223,9 +246,12 @@ export class DesktopAuthService {
       return null
     }
     await this.config.storeSecret('auth.accessToken', accessToken)
+    if (authEpoch !== this.authEpoch || this.loggedOut) return null
     await this.config.storeSecret('auth.refreshToken', nextRefreshToken)
+    if (authEpoch !== this.authEpoch || this.loggedOut) return null
     const expiresIn = body.data?.expires_in ?? body.data?.expiresIn ?? parseTokenExpiry(process.env.JWT_ACCESS_EXPIRATION)
     await this.config.storeSecret('auth.expiresAt', String(Date.now() + expiresIn * 1000))
+    if (authEpoch !== this.authEpoch || this.loggedOut) return null
     return accessToken
   }
 

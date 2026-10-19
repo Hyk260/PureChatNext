@@ -52,6 +52,9 @@ const log = debug('chat:route')
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024
 const MAX_ATTACHMENTS = 8
 const MAX_EXTRACTED_CHARS = 40_000
+const MAX_CHAT_MESSAGES = 200
+const MAX_CHAT_MESSAGE_PARTS = 100
+const MAX_CHAT_TOTAL_PARTS = 600
 const DESKTOP_CLIENT_INSTRUCTION =
   '用户要求读取或操作本机环境时（例如查询运行时版本或执行命令），优先调用桌面 runCommand 工具；不要声称无法在本机执行，也不要要求用户手动复制命令。桌面应用会按当前权限模式和命令风险自动处理审批；调用工具前不要先用自然语言要求用户确认。若应用展示审批请求，等待用户选择；未获批准或命令被拒绝后不要重试。等待工具返回实际输出后再作答。'
 const RATE_LIMIT_PUBLIC_MESSAGE = '上游限流，请稍后重试。'
@@ -81,7 +84,27 @@ type ToolApprovalCall = { toolCallId?: string; toolName: string; input: unknown 
 const dataUrlToBuffer = (url: string) => {
   const match = /^data:([^;,]+);base64,(.+)$/s.exec(url)
   if (!match) throw new Error('附件数据格式无效')
-  return { buffer: Buffer.from(match[2], 'base64'), mediaType: match[1] }
+  const encoded = match[2]
+  const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0
+  if (Math.floor((encoded.length * 3) / 4) - padding > MAX_ATTACHMENT_BYTES) {
+    throw new Error('附件超过 10MB 限制')
+  }
+  return { buffer: Buffer.from(encoded, 'base64'), mediaType: match[1] }
+}
+
+const hasValidMessageParts = (value: unknown): value is UIMessage[] => {
+  if (!Array.isArray(value) || value.length > MAX_CHAT_MESSAGES) return false
+
+  let totalParts = 0
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return false
+    const parts = (item as { parts?: unknown }).parts
+    if (!Array.isArray(parts) || parts.length > MAX_CHAT_MESSAGE_PARTS) return false
+    totalParts += parts.length
+    if (totalParts > MAX_CHAT_TOTAL_PARTS) return false
+  }
+
+  return true
 }
 
 const normalizeAttachmentMessages = async (messages: UIMessage[], supportsVision: boolean): Promise<UIMessage[]> => {
@@ -350,7 +373,7 @@ export async function POST(request: Request) {
   let messages = requestBody.messages
   const provider = requestBody.provider
 
-  if (!Array.isArray(messages)) {
+  if (!hasValidMessageParts(messages)) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
   if (isInvalidClientCapabilities(requestBody.clientCapabilities)) {
@@ -391,11 +414,14 @@ export async function POST(request: Request) {
     requestBody.modelAbilities?.vision ??
     getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision
   )
-  try {
-    messages = await normalizeAttachmentMessages(messages, supportsVision)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : '附件解析失败'
-    return new ChatSDKError('bad_request:api', message).toResponse()
+  const normalizeRequestMessages = async () => {
+    try {
+      messages = await normalizeAttachmentMessages(messages, supportsVision)
+      return null
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '附件解析失败'
+      return new ChatSDKError('bad_request:api', message).toResponse()
+    }
   }
 
   const toolApproval = desktopClient
@@ -481,6 +507,9 @@ export async function POST(request: Request) {
       throw error
     }
 
+    const attachmentError = await normalizeRequestMessages()
+    if (attachmentError) return attachmentError
+
     try {
       const usageStartedAt = Date.now()
       const resolvedModel = resolveModel(PURECHAT_PROVIDER_ID, displayModel, gatewayKey, resolveAiGatewayBaseURL())
@@ -547,6 +576,9 @@ export async function POST(request: Request) {
     const message = userId ? MISSING_USER_PROVIDER_SECRET_MESSAGE : `Missing API key for provider "${resolvedProvider}"`
     return new ChatSDKError('bad_request:api', message).toResponse()
   }
+
+  const attachmentError = await normalizeRequestMessages()
+  if (attachmentError) return attachmentError
 
   try {
     let resolvedModel

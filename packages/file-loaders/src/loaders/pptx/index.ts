@@ -35,7 +35,16 @@ export class PptxLoader implements FileLoaderInterface {
 
       log('Extracting slide XML files from PPTX')
       // Extract only slide XML files
-      const slideFiles: ExtractedFile[] = await extractFiles(filePath, (fileName) => slidesRegex.test(fileName))
+      const slideFiles: ExtractedFile[] = await extractFiles(
+        filePath,
+        (fileName) => slidesRegex.test(fileName),
+        {
+          maxBytesPerFile: 2 * 1024 * 1024,
+          maxEntries: 512,
+          maxFiles: 100,
+          maxTotalBytes: 8 * 1024 * 1024,
+        }
+      )
       log('Extracted slide files:', slideFiles.length)
 
       // --- Validation Step ---

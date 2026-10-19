@@ -519,7 +519,7 @@ const ChatPage = memo(() => {
       return
     }
     if (topicsLoadedAgentId !== agentId || !activeTopic) return
-    initializePermissionMode(activeTopic.permissionMode)
+    initializePermissionMode(getPendingChatPermissionMode())
   }, [
     activeTopic,
     activeTopicId,

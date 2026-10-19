@@ -2,7 +2,13 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, it, vi } from 'vitest'
 
-const mocks = vi.hoisted(() => ({ consume: vi.fn(), findValid: vi.fn(), findById: vi.fn(), signAccessToken: vi.fn(), signRefreshToken: vi.fn() }))
+const mocks = vi.hoisted(() => ({
+  consume: vi.fn(),
+  findValid: vi.fn(),
+  findById: vi.fn(),
+  issueRefreshToken: vi.fn(),
+  signAccessToken: vi.fn(),
+}))
 
 vi.mock('@pure/database/models/desktopAuth', () => ({
   DesktopAuthCodeModel: class {
@@ -11,7 +17,8 @@ vi.mock('@pure/database/models/desktopAuth', () => ({
   },
 }))
 vi.mock('@pure/database/models/user', () => ({ UserModel: class { findById = mocks.findById } }))
-vi.mock('@/libs/auth/jwt', () => ({ signAccessToken: mocks.signAccessToken, signRefreshToken: mocks.signRefreshToken }))
+vi.mock('@/libs/auth/jwt', () => ({ signAccessToken: mocks.signAccessToken }))
+vi.mock('@/libs/auth/refreshTokenStore', () => ({ issueRefreshToken: mocks.issueRefreshToken }))
 vi.mock('@/envs/auth', () => ({ authEnv: { JWT_ACCESS_EXPIRATION: '15m' } }))
 
 import { POST } from './route'
@@ -42,6 +49,6 @@ describe('POST /api/auth/desktop/token ban enforcement', () => {
 
     expect(response.status).toBe(403)
     expect(mocks.signAccessToken).not.toHaveBeenCalled()
-    expect(mocks.signRefreshToken).not.toHaveBeenCalled()
+    expect(mocks.issueRefreshToken).not.toHaveBeenCalled()
   })
 })

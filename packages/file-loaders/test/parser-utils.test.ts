@@ -4,6 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { extractFiles, parseString } from '../src/utils/parser-utils'
 import type { ExtractedFile } from '../src/utils/parser-utils'
 
+const extractionLimits = {
+  maxBytesPerFile: 1024,
+  maxEntries: 16,
+  maxFiles: 4,
+  maxTotalBytes: 2048,
+}
+
 describe('parser-utils', () => {
   describe('parseString', () => {
     it('should parse valid XML string into XMLDocument', () => {
@@ -27,7 +34,7 @@ describe('parser-utils', () => {
 
     it('should reject on invalid input type', async () => {
       // @ts-expect-error intentional wrong type
-      await expect(extractFiles(123, () => true)).rejects.toThrow(
+      await expect(extractFiles(123, () => true, extractionLimits)).rejects.toThrow(
         '[file-loaders]: Expected a Buffer or a readable file path'
       )
     })
@@ -43,7 +50,7 @@ describe('parser-utils', () => {
 
       const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils')
 
-      await expect(mockedExtractFiles(Buffer.from('corrupted'), () => true)).rejects.toThrow()
+      await expect(mockedExtractFiles(Buffer.from('corrupted'), () => true, extractionLimits)).rejects.toThrow()
     })
 
     it('should read entries via yauzl.fromBuffer and filter matches', async () => {
@@ -104,8 +111,72 @@ describe('parser-utils', () => {
       // Re-import module to use mocked yauzl
       const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils')
 
-      const files: ExtractedFile[] = await mockedExtractFiles(Buffer.from('zip'), (name) => name.endsWith('.txt'))
+      const files: ExtractedFile[] = await mockedExtractFiles(
+        Buffer.from('zip'),
+        (name) => name.endsWith('.txt'),
+        extractionLimits
+      )
       expect(files).toEqual([{ path: 'keep.txt', content: 'hello world' }])
+    })
+
+    it('should reject an entry whose declared uncompressed size exceeds its limit', async () => {
+      const listeners: Record<string, Function[]> = { entry: [], end: [], error: [] }
+      const fakeZipfile = {
+        readEntry: vi.fn().mockImplementation(() => {
+          queueMicrotask(() => listeners.entry.forEach((handler) => handler({ fileName: 'slide.xml', uncompressedSize: 5 })))
+        }),
+        openReadStream: vi.fn(),
+        on: vi.fn((event: string, handler: Function) => listeners[event].push(handler)),
+        close: vi.fn(),
+      }
+      vi.doMock('yauzl', () => ({
+        default: { fromBuffer: (_buf: Buffer, _opts: any, callback: (err: any, zipfile: any) => void) => callback(null, fakeZipfile) },
+      }))
+      const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils')
+
+      await expect(
+        mockedExtractFiles(Buffer.from('zip'), () => true, { ...extractionLimits, maxBytesPerFile: 4 })
+      ).rejects.toThrow('ZIP extracted file limit exceeded')
+      expect(fakeZipfile.openReadStream).not.toHaveBeenCalled()
+    })
+
+    it('should reject a stream that exceeds its declared uncompressed size', async () => {
+      const listeners: Record<string, Function[]> = { entry: [], end: [], error: [] }
+      let onData: (chunk: Buffer) => void = () => undefined
+      const stream = {
+        destroy: vi.fn(),
+        on: vi.fn((event: string, handler: (chunk: Buffer) => void) => {
+          if (event === 'data') onData = handler
+        }),
+        pipe: (destination: { end: (chunk: Buffer) => void }) => {
+          const oversizedChunk = Buffer.alloc(5)
+          onData(oversizedChunk)
+          destination.end(oversizedChunk)
+          return destination
+        },
+      }
+      const fakeZipfile = {
+        readEntry: vi.fn().mockImplementation(() => {
+          queueMicrotask(() =>
+            listeners.entry.forEach((handler) => handler({ fileName: 'slide.xml', uncompressedSize: 1 }))
+          )
+        }),
+        openReadStream: vi.fn((_entry: unknown, callback: (err: null, readStream: typeof stream) => void) =>
+          callback(null, stream)
+        ),
+        on: vi.fn((event: string, handler: Function) => listeners[event].push(handler)),
+        close: vi.fn(),
+      }
+      vi.doMock('yauzl', () => ({
+        default: { fromBuffer: (_buf: Buffer, _opts: any, callback: (err: any, zipfile: any) => void) => callback(null, fakeZipfile) },
+      }))
+      const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils')
+
+      await expect(
+        mockedExtractFiles(Buffer.from('zip'), () => true, { ...extractionLimits, maxBytesPerFile: 4 })
+      ).rejects.toThrow('ZIP extracted byte limit exceeded')
+      expect(stream.destroy).toHaveBeenCalledOnce()
+      expect(fakeZipfile.close).toHaveBeenCalledOnce()
     })
 
     it('should open zip by file path when input is string', async () => {
@@ -153,7 +224,7 @@ describe('parser-utils', () => {
 
       const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils')
 
-      const files = await mockedExtractFiles('/tmp/file.zip', (name) => name === 'keep.txt')
+      const files = await mockedExtractFiles('/tmp/file.zip', (name) => name === 'keep.txt', extractionLimits)
       expect(files).toEqual([{ path: 'keep.txt', content: 'A' }])
     })
 
@@ -183,7 +254,9 @@ describe('parser-utils', () => {
 
       const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils')
 
-      await expect(mockedExtractFiles(Buffer.from('zip'), () => true)).rejects.toThrow('Failed to open stream')
+      await expect(mockedExtractFiles(Buffer.from('zip'), () => true, extractionLimits)).rejects.toThrow(
+        'Failed to open stream'
+      )
     })
 
     it('should handle null readStream', async () => {
@@ -212,7 +285,9 @@ describe('parser-utils', () => {
 
       const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils')
 
-      await expect(mockedExtractFiles(Buffer.from('zip'), () => true)).rejects.toThrow('Could not open read stream')
+      await expect(mockedExtractFiles(Buffer.from('zip'), () => true, extractionLimits)).rejects.toThrow(
+        'Could not open read stream'
+      )
     })
 
     it('should handle readStream error', async () => {
@@ -253,7 +328,7 @@ describe('parser-utils', () => {
 
       const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils')
 
-      await expect(mockedExtractFiles(Buffer.from('zip'), () => true)).rejects.toThrow('Stream error')
+      await expect(mockedExtractFiles(Buffer.from('zip'), () => true, extractionLimits)).rejects.toThrow('Stream error')
     })
 
     it('should handle zipfile error', async () => {
@@ -279,7 +354,7 @@ describe('parser-utils', () => {
 
       const { extractFiles: mockedExtractFiles } = await import('../src/utils/parser-utils')
 
-      await expect(mockedExtractFiles(Buffer.from('zip'), () => true)).rejects.toThrow('Zipfile error')
+      await expect(mockedExtractFiles(Buffer.from('zip'), () => true, extractionLimits)).rejects.toThrow('Zipfile error')
     })
   })
 })

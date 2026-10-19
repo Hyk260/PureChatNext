@@ -1,13 +1,14 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { assertCanChat, chargeChatUsage, createModel, createOpenAI, streamText } = vi.hoisted(() => {
+const { assertCanChat, chargeChatUsage, createModel, createOpenAI, getAuthenticatedUserId, streamText } = vi.hoisted(() => {
   const modelFactory = vi.fn((modelId: string) => ({ modelId, provider: 'openai.responses' }))
   return {
     assertCanChat: vi.fn(),
     chargeChatUsage: vi.fn(),
     createModel: modelFactory,
     createOpenAI: vi.fn(() => modelFactory),
+    getAuthenticatedUserId: vi.fn().mockResolvedValue('user-1'),
     streamText: vi.fn(),
   }
 })
@@ -29,7 +30,7 @@ vi.mock('@pure/database/models/credits', () => ({
   FreePlanLimitError: class extends Error {},
 }))
 vi.mock('@/libs/auth/get-session-user', () => ({
-  getAuthenticatedUserId: vi.fn().mockResolvedValue('user-1'),
+  getAuthenticatedUserId,
 }))
 vi.mock('@/libs/ai-providers/userSecrets', () => ({
   MISSING_USER_PROVIDER_SECRET_MESSAGE: '请先在设置中保存该服务商 API Key',
@@ -92,6 +93,7 @@ const createPermissionRequest = (permissionMode: unknown) =>
 describe('POST /api/chat PureChat model availability', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getAuthenticatedUserId.mockResolvedValue('user-1')
     assertCanChat.mockResolvedValue(undefined)
     chargeChatUsage.mockResolvedValue(undefined)
     streamText.mockReturnValue({ stream: new ReadableStream() })
@@ -172,6 +174,50 @@ describe('POST /api/chat PureChat model availability', () => {
     )
   })
 
+  it('does not expose server-backed search to anonymous BYOK requests', async () => {
+    getAuthenticatedUserId.mockResolvedValueOnce(null)
+    const response = await POST(createExternalRequest('auto'))
+
+    expect(response.status).toBe(200)
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        instructions: expect.not.stringMatching(/webSearch/),
+        tools: { getWeather: { description: 'weather tool' } },
+      })
+    )
+  })
+
+  it('rejects anonymous BYOK document attachments before parsing', async () => {
+    getAuthenticatedUserId.mockResolvedValueOnce(null)
+    const response = await POST(
+      new Request('http://localhost/api/chat', {
+        body: JSON.stringify({
+          messages: [
+            {
+              id: 'message-1',
+              role: 'user',
+              parts: [
+                {
+                  type: 'file',
+                  filename: 'invalid.pptx',
+                  mediaType: 'image/png',
+                  url: 'data:application/vnd.openxmlformats-officedocument.presentationml.presentation;base64,AA==',
+                },
+              ],
+            },
+          ],
+          model: 'gpt-custom',
+          provider: 'openai',
+        }),
+        headers: { Authorization: 'Bearer user-key', 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+    )
+
+    expect(response.status).toBe(401)
+    expect(streamText).not.toHaveBeenCalled()
+  })
+
   it('settles a multi-step PureChat stream through one onEnd callback', async () => {
     await POST(createRequest('gpt-5.2', 'auto'))
 
@@ -194,6 +240,53 @@ describe('POST /api/chat PureChat model availability', () => {
 
     expect(response.status).toBe(400)
     expect(payload.cause).toBe('Invalid search mode')
+    expect(streamText).not.toHaveBeenCalled()
+  })
+
+  it('rejects excessive message cardinality before authentication or attachment parsing', async () => {
+    const messages = Array.from({ length: 201 }, () => ({ parts: [] }))
+    const response = await POST(
+      new Request('http://localhost/api/chat', {
+        body: JSON.stringify({ messages, model: 'gpt-5.2', provider: 'purechat' }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+    )
+
+    expect(response.status).toBe(400)
+    expect(getAuthenticatedUserId).not.toHaveBeenCalled()
+    expect(streamText).not.toHaveBeenCalled()
+  })
+
+  it('does not parse attachments for unauthenticated PureChat requests', async () => {
+    getAuthenticatedUserId.mockResolvedValueOnce(null)
+    const response = await POST(
+      new Request('http://localhost/api/chat', {
+        body: JSON.stringify({
+          messages: [
+            {
+              id: 'message-1',
+              role: 'user',
+              parts: [
+                {
+                  type: 'file',
+                  filename: 'invalid.pptx',
+                  mediaType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                  url: 'data:application/vnd.openxmlformats-officedocument.presentationml.presentation;base64,AA==',
+                },
+              ],
+            },
+          ],
+          model: 'gpt-5.2',
+          provider: 'purechat',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+    )
+
+    expect(response.status).toBe(401)
+    expect(assertCanChat).not.toHaveBeenCalled()
     expect(streamText).not.toHaveBeenCalled()
   })
 

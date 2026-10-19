@@ -25,6 +25,7 @@ describe('signOutWorkspace', () => {
   afterEach(() => {
     useAgentsStore.getState().reset()
     vi.mocked(signOut).mockReset()
+    vi.unstubAllGlobals()
   })
 
   it('resets cached agents before ending the session', async () => {
@@ -38,5 +39,16 @@ describe('signOutWorkspace', () => {
       loaded: false,
     })
     expect(signOut).toHaveBeenCalledTimes(1)
+  })
+
+  it('revokes the browser refresh session before ending Better Auth', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    vi.mocked(signOut).mockResolvedValue(undefined)
+
+    await signOutWorkspace()
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/logout', { method: 'POST' })
+    expect(signOut).toHaveBeenCalledOnce()
   })
 })

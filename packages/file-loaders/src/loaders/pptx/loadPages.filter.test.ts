@@ -20,11 +20,18 @@ vi.mock('../../utils/parser-utils', async (importOriginal) => {
 })
 
 import { PptxLoader } from './index'
+import { extractFiles } from '../../utils/parser-utils'
 
 describe('PptxLoader slide filtering', () => {
   it('extracts consecutive slide XML entries without skipping', async () => {
     const pages = await new PptxLoader().loadPages('slides.pptx')
 
     expect(pages.map((page) => page.metadata.slideNumber)).toEqual([1, 2])
+    expect(extractFiles).toHaveBeenCalledWith('slides.pptx', expect.any(Function), {
+      maxBytesPerFile: 2 * 1024 * 1024,
+      maxEntries: 512,
+      maxFiles: 100,
+      maxTotalBytes: 8 * 1024 * 1024,
+    })
   })
 })

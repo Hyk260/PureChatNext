@@ -1,7 +1,7 @@
 import { isRecord } from '@pure/utils/object'
 import { localStg } from '@pure/utils/storage'
 
-export type ActionMode = 'query' | 'webSearch' | 'crawlPages'
+export type ActionMode = 'webSearch' | 'crawlPages'
 
 export const WEB_SEARCH_CACHE_KEY = 'purechat:admin:web-search:v1'
 
@@ -26,7 +26,7 @@ export type WebSearchCacheStore<TPayload = unknown, TRunState = unknown> = Parti
 >
 
 const isActionMode = (value: unknown): value is ActionMode => {
-  return value === 'query' || value === 'webSearch' || value === 'crawlPages'
+  return value === 'webSearch' || value === 'crawlPages'
 }
 
 const parseForm = (value: unknown): WebSearchCachedForm => {

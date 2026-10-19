@@ -15,20 +15,16 @@ const form = (patch: Partial<WebSearchFormValues> = {}): WebSearchFormValues => 
 })
 
 describe('buildRequestBody', () => {
-  it('puts query filters under params', () => {
-    expect(buildRequestBody('query', form({ engines: 'bing', provider: 'tavily', timeRange: 'day' }))).toEqual({
-      action: 'query',
-      params: {
-        searchCategories: ['general'],
-        searchEngines: ['bing'],
-        searchTimeRange: 'day',
-      },
+  it('builds webSearch requests with optional filters', () => {
+    expect(buildRequestBody('webSearch', form({ engines: 'bing', provider: 'tavily', timeRange: 'day' }))).toEqual({
+      action: 'webSearch',
       provider: 'tavily',
       query: '今日新闻',
+      searchCategories: ['general'],
+      searchEngines: ['bing'],
+      searchTimeRange: 'day',
     })
-  })
 
-  it('flattens webSearch filters and omits empty ones', () => {
     expect(buildRequestBody('webSearch', form())).toEqual({
       action: 'webSearch',
       query: '今日新闻',

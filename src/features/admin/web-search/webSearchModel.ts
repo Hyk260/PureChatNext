@@ -87,10 +87,6 @@ export const ACTION_META: Record<ActionMode, { description: string; label: strin
     description: '批量抓取 URL 内容并查看 crawler 输出',
     label: 'Crawl Pages',
   },
-  query: {
-    description: '调用第一个 provider 的 query 方法',
-    label: 'Query',
-  },
   webSearch: {
     description: '验证聚合搜索、降级重试和 provider fallback',
     label: 'Web Search',
@@ -201,19 +197,6 @@ export const buildRequestBody = (action: ActionMode, values: WebSearchFormValues
   const searchEngines = parseList(values.engines)
   const searchTimeRange = values.timeRange.trim()
   const provider = values.provider.trim()
-
-  if (action === 'query') {
-    return {
-      action,
-      params: {
-        ...(searchCategories.length > 0 ? { searchCategories } : {}),
-        ...(searchEngines.length > 0 ? { searchEngines } : {}),
-        ...(searchTimeRange ? { searchTimeRange } : {}),
-      },
-      ...(provider ? { provider } : {}),
-      query: values.query.trim(),
-    }
-  }
 
   return {
     action,

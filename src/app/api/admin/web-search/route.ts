@@ -11,9 +11,9 @@ import { toolsEnv } from '@/envs/tools'
 import { withAdmin } from '@/libs/auth/get-session-user'
 import { devActionSuccess, devError } from '../../dev/_utils'
 
-type WebSearchAction = 'query' | 'webSearch' | 'crawlPages'
+type WebSearchAction = 'webSearch' | 'crawlPages'
 
-const availableActions: WebSearchAction[] = ['query', 'webSearch', 'crawlPages']
+const availableActions: WebSearchAction[] = ['webSearch', 'crawlPages']
 
 const stringArrayOrUndefined = (value: unknown) => {
   if (value === undefined) {
@@ -79,27 +79,6 @@ export const POST = withAdmin(async (req: NextRequest) => {
   }
 
   try {
-    if (action === 'query') {
-      const query = toTrimmedString(body.query)
-
-      if (!query) {
-        return devError('Missing or invalid "query" field')
-      }
-
-      const rawParams = isRecord(body.params) ? body.params : {}
-      const result = await searchService.query(
-        query,
-        {
-          searchCategories: stringArrayOrUndefined(rawParams.searchCategories),
-          searchEngines: stringArrayOrUndefined(rawParams.searchEngines),
-          searchTimeRange: toTrimmedString(rawParams.searchTimeRange),
-        },
-        { provider }
-      )
-
-      return devActionSuccess(action, result)
-    }
-
     if (action === 'webSearch') {
       const query = toTrimmedString(body.query)
 

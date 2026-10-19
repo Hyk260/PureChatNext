@@ -16,26 +16,27 @@ describe('webSearchCache', () => {
     clearWebSearchCache()
   })
 
-  it('writes and reads validated action slots', () => {
+  it('writes and reads supported action slots', () => {
     const slot = { form: { query: 'hello' }, payload: { results: [] }, runState: { status: 200 } }
 
-    writeWebSearchCacheSlot('query', slot)
+    writeWebSearchCacheSlot('webSearch', slot)
 
-    expect(readWebSearchCache()).toEqual({ query: slot })
+    expect(readWebSearchCache()).toEqual({ webSearch: slot })
   })
 
-  it('keeps the runtime slot validation when reading unknown JSON', () => {
+  it('ignores removed and unknown action slots when reading cached JSON', () => {
     localStorage.setItem(
       WEB_SEARCH_CACHE_KEY,
       JSON.stringify({
         query: { form: { query: 'valid' }, payload: false, runState: 0 },
-        webSearch: { payload: 'missing run state' },
+        webSearch: { form: { query: 'valid' }, payload: true, runState: true },
+        crawlPages: { payload: 'missing run state' },
         unknown: { form: {}, payload: true, runState: true },
       })
     )
 
     expect(readWebSearchCache()).toEqual({
-      query: { form: { query: 'valid' }, payload: false, runState: 0 },
+      webSearch: { form: { query: 'valid' }, payload: true, runState: true },
     })
   })
 })

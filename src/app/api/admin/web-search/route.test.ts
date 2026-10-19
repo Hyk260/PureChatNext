@@ -47,12 +47,12 @@ describe('/api/admin/web-search', () => {
     vi.mocked(toolsEnv).SEARCH_PROVIDERS = 'searxng,tavily'
   })
 
-  it('returns available actions from GET', async () => {
+  it('returns supported actions from GET', async () => {
     const response = await GET(undefined as never)
     const payload = await response.json()
 
     expect(response.status).toBe(200)
-    expect(payload.actions).toEqual(['query', 'webSearch', 'crawlPages'])
+    expect(payload.actions).toEqual(['webSearch', 'crawlPages'])
     expect(payload.configuredProviders).toEqual(['searxng', 'tavily'])
     expect(payload.providers).toContain('searxng')
     expect(payload.providers).toContain('tavily')
@@ -65,40 +65,6 @@ describe('/api/admin/web-search', () => {
     const payload = await response.json()
 
     expect(payload.configuredProviders).toEqual(['searxng', 'brave', 'exa'])
-  })
-
-  it('dispatches query action to searchService.query', async () => {
-    const result = {
-      costTime: 12,
-      provider: 'searxng',
-      query: 'nextjs',
-      resultNumbers: 0,
-      results: [],
-    }
-    vi.mocked(searchService.query).mockResolvedValue(result)
-
-    const response = await postJson({
-      action: 'query',
-      params: {
-        searchCategories: ['general'],
-        searchEngines: ['google'],
-        searchTimeRange: 'day',
-      },
-      query: ' nextjs ',
-    })
-    const payload = await response.json()
-
-    expect(response.status).toBe(200)
-    expect(searchService.query).toHaveBeenCalledWith(
-      'nextjs',
-      {
-        searchCategories: ['general'],
-        searchEngines: ['google'],
-        searchTimeRange: 'day',
-      },
-      { provider: undefined }
-    )
-    expect(payload).toEqual({ action: 'query', result, success: true })
   })
 
   it('dispatches webSearch action to searchService.webSearch', async () => {
@@ -190,6 +156,15 @@ describe('/api/admin/web-search', () => {
     expect(response.status).toBe(400)
     expect(payload.success).toBe(false)
     expect(payload.error).toContain('Invalid action')
+  })
+
+  it('rejects the removed query action', async () => {
+    const response = await postJson({ action: 'query', query: 'test' })
+    const payload = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(payload.error).toContain('Invalid action')
+    expect(searchService.query).not.toHaveBeenCalled()
   })
 
   it('returns 400 for missing query', async () => {

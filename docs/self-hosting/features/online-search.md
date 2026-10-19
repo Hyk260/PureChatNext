@@ -45,12 +45,11 @@ CRAWLER_IMPLS=naive
 
 ## 验证搜索和抓取
 
-管理员登录后打开 `/settings/web-search-console`（设置 → 管理 → 联网搜索测试台）。该诊断页面使用管理接口，可分别检查查询、Provider 回退和抓取：
+管理员登录后打开 `/settings/web-search-console`（设置 → 管理 → 联网搜索测试台）。该诊断页面使用管理接口，可分别检查联网搜索、Provider 回退和网页抓取：
 
-1. **Query**：输入关键词，可指定单个 Provider。返回非空 `results`，说明该 Provider 的关键词搜索可用。
-2. **Web Search**：留空 Provider，使用 `SEARCH_PROVIDERS` 顺序执行。检查结果数量及实际返回的 Provider；若过滤条件没有结果，界面会显示回退层级。
-3. **Crawl Pages**：输入一条可公开访问的页面 URL。返回正文且结果中有 crawler 名称，说明抓取服务可用；搜索正常但抓取失败时，单独检查抓取配置。
-4. 最后在启用了联网搜索能力的 Agent 对话中提出一个需要新资料的问题，确认聊天工具链也能调用搜索。
+1. **Web Search**：输入关键词，留空 Provider 时使用 `SEARCH_PROVIDERS` 顺序执行；也可指定单个 Provider。检查结果数量及实际返回的 Provider；若过滤条件没有结果，界面会显示回退层级。
+2. **Crawl Pages**：输入一条可公开访问的页面 URL。返回正文且结果中有 crawler 名称，说明抓取服务可用；搜索正常但抓取失败时，单独检查抓取配置。
+3. 最后在启用了联网搜索能力的 Agent 对话中提出一个需要新资料的问题，确认聊天工具链也能调用搜索。
 
 页面测试结果会显示请求状态码与耗时。失败时先看响应错误，再按下表排查；`/api/health` 的 `checks.search` 只检查已配置 SearXNG 的进程连通性；其他 Provider、关键词结果和网页正文仍需在管理页单独验证。
 
@@ -108,7 +107,7 @@ CRAWLER_RETRY=1
 | --- | --- | --- |
 | 搜索提示未配置 SearXNG | `SEARCH_PROVIDERS` 留空，应用默认选了 SearXNG，但 `SEARXNG_URL` 为空 | 配置可访问的 `SEARXNG_URL`，或明确设置其他 Provider 及其 Key；重启 Next。 |
 | SearXNG 返回格式错误 / HTTP 4xx | 实例未启用 JSON 输出，或应用容器访问不到地址 | 在 SearXNG `settings.yml` 的 `search.formats` 中启用 `json`；从 Next 运行环境验证 URL、DNS 和网络策略。 |
-| Provider 返回空结果 | Key、配额、服务商限制或查询过滤条件有误 | 在管理页选择该 Provider 做 Query；先移除分类 / 引擎 / 时间范围过滤，再检查服务商错误详情。 |
+| Provider 返回空结果 | Key、配额、服务商限制或查询过滤条件有误 | 在管理页选择该 Provider 做 Web Search；先移除分类 / 引擎 / 时间范围过滤，再检查服务商错误详情。 |
 | Provider 回退没有发生 | `SEARCH_PROVIDERS` 只有一个值，或前置 Provider 已返回结果 | 用逗号配置第二个 Provider；该链路遇到第一家有结果即停止，不会合并所有来源。 |
 | 搜索有结果但网页没有正文 | `CRAWLER_IMPLS` 未包含可用实现、抓取 Key 无效或目标站不可访问 | 用 Crawl Pages 单独验证公开 URL，检查返回的 crawler 与错误信息，再核对对应 Key 和容器网络。 |
 | 改了 Key 后仍使用旧配置 | Next 进程尚未重启，或密钥改在错误的部署环境 | 在应用实际读取的环境中更新变量并重启 / 重新部署；检查运行日志，不要打印 Key。 |

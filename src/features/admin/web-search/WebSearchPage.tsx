@@ -3,7 +3,7 @@
 import { Flex } from '@pure/ui'
 import { useEffect, useState } from 'react'
 import { Segmented } from 'antd'
-import { Compass, Globe2, Search } from 'lucide-react'
+import { Compass, Globe2 } from 'lucide-react'
 
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
@@ -34,11 +34,9 @@ import type {
 
 const ACTION_ICONS = {
   crawlPages: Compass,
-  query: Search,
   webSearch: Globe2,
 } as const
 
-// 'query','webSearch','crawlPages'
 const ACTION_ORDER: ActionMode[] = ['webSearch', 'crawlPages']
 
 const segmentedIconLabel = (Icon: (typeof ACTION_ICONS)[ActionMode], text: string, title: string) => (
@@ -254,7 +252,7 @@ export default function WebSearchPage() {
           <div className='pl-8 lg:pl-2'>
             <h1 className='text-2xl font-semibold text-foreground'>联网搜索功能测试台</h1>
             <p className='mt-1 max-w-2xl text-sm leading-6 text-muted-foreground'>
-              验证 query、webSearch、crawlPages 三条路径。
+              验证联网搜索与网页抓取。
             </p>
           </div>
           <Segmented

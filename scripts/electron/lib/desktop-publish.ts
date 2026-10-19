@@ -225,9 +225,12 @@ export async function publishDesktopRelease(
   const fetchPublic = options.fetchPublic ?? fetch
   const key = (name: string) => `${DESKTOP_OBJECT_PREFIX}${name}`
   const manifestKey = key(release.manifestName)
+  log(`检查 COS 桶版本控制: ${config.bucket}`)
   await requireUnversionedBucket(client, config.bucket)
+  if (!options.dryRun) log(`获取 ${release.platform} 发布锁`)
   const releaseLock = options.dryRun ? undefined : await acquirePublishLock(client, config.bucket, release.platform)
   try {
+    log(`读取当前渠道清单: ${manifestKey}`)
     const previous = await getText(client, config.bucket, manifestKey)
     if (previous !== undefined) {
       const metadata = metadataSchema.parse(load(previous))
@@ -236,6 +239,7 @@ export async function publishDesktopRelease(
       if (order === 0 && previous !== release.manifest.toString('utf8'))
         throw new Error('同版本渠道内容不同，必须递增版本号')
     }
+    log(`扫描 ${release.platform} 旧版本文件`)
     const oldKeys = await listOldAssets(client, config.bucket, release)
     log(`${options.dryRun ? '[dry-run] ' : ''}${release.platform} ${release.version} → ${config.updateUrl}`)
     if (options.dryRun) {
@@ -246,12 +250,14 @@ export async function publishDesktopRelease(
 
     const assets = release.files.filter((file) => file.name !== release.manifestName)
     for (const asset of assets) {
+      log(`检查 COS 文件: ${asset.name}`)
       let existingHash: string | undefined
       try {
         const remote = await client.send(new HeadObjectCommand({ Bucket: config.bucket, Key: key(asset.name) }))
         if (remote.ContentLength !== asset.size) throw new Error(`同版本远端文件长度不同: ${asset.name}`)
         existingHash = remote.Metadata?.sha512
         if (!existingHash) {
+          log(`COS 文件无 SHA-512 元数据，下载并复核: ${asset.name}`)
           const response = await client.send(new GetObjectCommand({ Bucket: config.bucket, Key: key(asset.name) }))
           if (!response.Body) throw new Error(`远端文件内容为空: ${asset.name}`)
           existingHash = await sha512(response.Body as AsyncIterable<Uint8Array>)
@@ -261,6 +267,7 @@ export async function publishDesktopRelease(
       }
       if (existingHash && existingHash !== asset.sha512) throw new Error(`同版本远端文件内容不同: ${asset.name}`)
       if (!existingHash) {
+        log(`上传 COS 文件: ${asset.name} (${asset.size} bytes)`)
         const body = createReadStream(asset.file)
         try {
           await client.send(
@@ -278,10 +285,16 @@ export async function publishDesktopRelease(
         } finally {
           body.destroy()
         }
+        log(`COS 上传完成: ${asset.name}`)
+      } else {
+        log(`复用已校验的 COS 文件: ${asset.name}`)
       }
+      log(`校验公开下载: ${asset.name}`)
       await checkPublicFile(new URL(asset.name, config.updateUrl).href, asset.size, fetchPublic)
+      log(`公开下载校验通过: ${asset.name}`)
     }
 
+    log(`上传渠道清单: ${release.manifestName}`)
     await client.send(
       new PutObjectCommand({
         Bucket: config.bucket,
@@ -292,6 +305,7 @@ export async function publishDesktopRelease(
         ACL: config.setAcl ? 'public-read' : undefined,
       })
     )
+    log(`校验公开渠道清单: ${release.manifestName}`)
     const response = await fetchPublic(new URL(release.manifestName, config.updateUrl), {
       signal: AbortSignal.timeout(30_000),
       cache: 'no-store',
@@ -299,12 +313,16 @@ export async function publishDesktopRelease(
     if (!response.ok || (await response.text()) !== release.manifest.toString('utf8')) {
       throw new Error('公开渠道校验失败，保留旧文件；修复域名/缓存后重试')
     }
+    log(`公开渠道清单校验通过: ${release.manifestName}`)
+    log(`清理 ${oldKeys.length} 个旧版 ${release.platform} 文件`)
     for (const oldKey of oldKeys) {
       // 一次删除一个对象，避免 COS 对 AWS SDK 新版批量删除校验头的兼容差异。
+      log(`删除旧版 COS 文件: ${oldKey}`)
       await client.send(new DeleteObjectCommand({ Bucket: config.bucket, Key: oldKey }))
     }
     log(`已发布 ${release.version}，清理 ${oldKeys.length} 个旧 ${release.platform} 文件`)
   } finally {
+    if (releaseLock) log(`释放 ${release.platform} 发布锁`)
     await releaseLock?.()
   }
 }

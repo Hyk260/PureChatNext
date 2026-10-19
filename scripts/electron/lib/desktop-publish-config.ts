@@ -61,6 +61,14 @@ export function getDesktopPublishConfig() {
       endpoint: endpoint.href,
       region: env.S3_REGION!,
       forcePathStyle: false,
+      // 单次请求最多 15 分钟；外层发布重试负责重试，避免 SDK 内部重试把单步等待拉长。
+      maxAttempts: 1,
+      requestHandler: {
+        connectionTimeout: 10_000,
+        requestTimeout: 15 * 60_000,
+        throwOnRequestTimeout: true,
+        socketTimeout: 120_000,
+      },
       requestChecksumCalculation: 'WHEN_REQUIRED' as const,
       responseChecksumValidation: 'WHEN_REQUIRED' as const,
     },

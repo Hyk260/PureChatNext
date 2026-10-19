@@ -7,8 +7,6 @@ import { withTimeout } from '../utils/withTimeout'
 
 const JINA_TIMEOUT = 15_000
 
-const jinaUseCnDomains = () => process.env.JINA_USE_CN_DOMAINS?.trim().toLowerCase() === 'true'
-
 export const jina: CrawlImpl<{ apiKey?: string }> = async (url, params) => {
   const token = params.apiKey ?? process.env.JINA_READER_API_KEY ?? process.env.JINA_API_KEY
   let res: Response
@@ -16,7 +14,7 @@ export const jina: CrawlImpl<{ apiKey?: string }> = async (url, params) => {
   try {
     res = await withTimeout(
       (signal) =>
-        (params.fetch ?? fetch)(`${params.baseURL ?? getJinaReaderBaseUrl(jinaUseCnDomains())}/${url}`, {
+        (params.fetch ?? fetch)(`${params.baseURL ?? getJinaReaderBaseUrl()}/${url}`, {
           headers: {
             Accept: 'application/json',
             Authorization: token ? `Bearer ${token}` : '',

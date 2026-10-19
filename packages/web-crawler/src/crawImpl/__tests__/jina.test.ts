@@ -17,7 +17,7 @@ describe('jina crawler', () => {
     vi.spyOn(withTimeoutModule, 'withTimeout').mockImplementation((fn) => fn(new AbortController().signal))
     delete process.env.JINA_API_KEY
     delete process.env.JINA_READER_API_KEY
-    delete process.env.JINA_USE_CN_DOMAINS
+    process.env.JINA_USE_CN_DOMAINS = 'false'
   })
 
   afterEach(() => {
@@ -151,6 +151,29 @@ describe('jina crawler', () => {
       },
       signal: expect.any(AbortSignal),
     })
+  })
+
+  it('should use cn reader domain by default', async () => {
+    delete process.env.JINA_USE_CN_DOMAINS
+
+    const mockResponse = createMockResponse(
+      {
+        code: 200,
+        data: {
+          content: 'test content',
+        },
+      },
+      { ok: true }
+    )
+
+    mockFetch.mockResolvedValue(mockResponse)
+
+    await jina('https://example.com', { filterOptions: {} })
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://r.jinaai.cn/https://example.com',
+      expect.objectContaining({ headers: expect.any(Object) })
+    )
   })
 
   it('should use cn reader domain when JINA_USE_CN_DOMAINS is true', async () => {

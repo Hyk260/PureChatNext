@@ -7,8 +7,12 @@ const CN_JINA_SEARCH_BASE_URL = 'https://s.jinaai.cn'
  * Prefer passing `useCn` from `toolsEnv.JINA_USE_CN_DOMAINS === 'true'`
  * so env validation stays the single source of truth.
  */
-export const isJinaCnDomainsEnabled = (useCn?: boolean) =>
-  useCn ?? process.env.JINA_USE_CN_DOMAINS?.trim().toLowerCase() === 'true'
+export const isJinaCnDomainsEnabled = (useCn?: boolean) => {
+  if (useCn !== undefined) return useCn
+
+  const envValue = process.env.JINA_USE_CN_DOMAINS
+  return envValue === undefined || envValue.trim().toLowerCase() === 'true'
+}
 
 export const getJinaReaderBaseUrl = (useCn?: boolean) =>
   isJinaCnDomainsEnabled(useCn) ? CN_JINA_READER_BASE_URL : DEFAULT_JINA_READER_BASE_URL

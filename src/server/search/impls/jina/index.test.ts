@@ -38,7 +38,7 @@ describe('JinaImpl', () => {
     delete process.env.JINA_USE_CN_DOMAINS
   })
 
-  it('should query the default jina search domain', async () => {
+  it('should use the cn search domain by default', async () => {
     process.env.JINA_READER_API_KEY = 'test-jina-key'
 
     vi.mocked(fetch).mockResolvedValueOnce(
@@ -55,7 +55,7 @@ describe('JinaImpl', () => {
 
     const result = await impl.query('test query')
 
-    expect(fetch).toHaveBeenCalledWith('https://s.jina.ai/', {
+    expect(fetch).toHaveBeenCalledWith('https://s.jinaai.cn/', {
       body: JSON.stringify({ q: 'test query' }),
       headers: {
         Accept: 'application/json',
@@ -81,6 +81,25 @@ describe('JinaImpl', () => {
         },
       ],
     })
+  })
+
+  it('should query the default jina search domain when JINA_USE_CN_DOMAINS is false', async () => {
+    process.env.JINA_USE_CN_DOMAINS = 'false'
+
+    vi.mocked(fetch).mockResolvedValueOnce(
+      createMockResponse({
+        data: [],
+      })
+    )
+
+    await impl.query('test query')
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://s.jina.ai/',
+      expect.objectContaining({
+        method: 'POST',
+      })
+    )
   })
 
   it('should query the cn search domain when JINA_USE_CN_DOMAINS is true', async () => {

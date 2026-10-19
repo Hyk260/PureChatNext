@@ -72,7 +72,7 @@ BRAVE_API_KEY=replace-with-your-key
 | `exa` | `EXA_API_KEY` | Exa 搜索 API。 |
 | `firecrawl` | `FIRECRAWL_API_KEY` | Firecrawl Search API。 |
 | `google` | `GOOGLE_PSE_API_KEY`、`GOOGLE_PSE_ENGINE_ID` | Google Programmable Search Engine；两项都要配置。 |
-| `jina` | `JINA_READER_API_KEY`（也兼容 `JINA_API_KEY`） | Jina Search；可选 `JINA_USE_CN_DOMAINS=true` 切换到备用域名。 |
+| `jina` | `JINA_READER_API_KEY`（也兼容 `JINA_API_KEY`） | Jina Search；`JINA_USE_CN_DOMAINS` 默认 `true`，设为 `false` 使用默认域名。 |
 | `kagi` | `KAGI_API_KEY` | Kagi Search API。 |
 | `search1api` | `SEARCH1API_SEARCH_API_KEY` 或 `SEARCH1API_API_KEY` | Search1API Search；通用 Key 也可供抓取实现使用。 |
 | `searxng` | `SEARXNG_URL` | 自托管或可访问的 SearXNG 实例，必须开启 JSON 格式。 |
@@ -100,7 +100,7 @@ CRAWLER_RETRY=1
 | `exa` | `EXA_API_KEY` | Exa 网页内容读取。 |
 | `tavily` | `TAVILY_API_KEY` | Tavily 网页内容提取。 |
 
-`CRAWL_CONCURRENCY` 范围为 1–10，默认 3；`CRAWLER_RETRY` 范围为 0–3，默认 1，表示失败后最多额外重试一次。Browserless 的 `BROWSERLESS_BLOCK_ADS=1` 可开启资源过滤；`BROWSERLESS_STEALTH_MODE=1` 控制 Browserless stealth 选项，默认关闭。Jina 可通过 `JINA_USE_CN_DOMAINS=true` 使用备用域名。
+`CRAWL_CONCURRENCY` 范围为 1–10，默认 3；`CRAWLER_RETRY` 范围为 0–3，默认 1，表示失败后最多额外重试一次。Browserless 的 `BROWSERLESS_BLOCK_ADS=1` 可开启资源过滤；`BROWSERLESS_STEALTH_MODE=1` 控制 Browserless stealth 选项，默认关闭。Jina 默认使用国内域名；设置 `JINA_USE_CN_DOMAINS=false` 可改用默认域名。
 
 ## 常见故障
 

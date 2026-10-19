@@ -106,7 +106,7 @@ export const getToolsConfig = () => {
       /** 工具调用审批签名密钥，至少 32 个字符。 */
       TOOL_APPROVAL_SECRET: z.string().min(32).optional(),
       /** 是否优先使用国内域名访问 Jina 服务。 */
-      JINA_USE_CN_DOMAINS: z.enum(['true', 'false']).optional(),
+      JINA_USE_CN_DOMAINS: z.enum(['true', 'false']).default('true'),
       /** 搜索提供商列表；多个提供商使用逗号分隔。 */
       SEARCH_PROVIDERS: z.string().optional(),
       /** SearXNG 服务地址。 */

@@ -19,7 +19,7 @@ export class JinaImpl implements SearchServiceImpl {
 
   private get baseUrl(): string {
     // Prefer live process.env so tests / runtime toggles apply (toolsEnv is load-time).
-    const useCn = process.env.JINA_USE_CN_DOMAINS === 'true' || toolsEnv.JINA_USE_CN_DOMAINS === 'true'
+    const useCn = (process.env.JINA_USE_CN_DOMAINS ?? toolsEnv.JINA_USE_CN_DOMAINS) === 'true'
     return this.options.baseURL ?? getJinaSearchBaseUrl(useCn)
   }
 

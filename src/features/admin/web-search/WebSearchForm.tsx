@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Clipboard, RefreshCcw, Sparkles, Trash2 } from 'lucide-react'
+import { Tooltip } from 'antd'
+import { CircleHelp, Clipboard, RefreshCcw, Sparkles, Trash2 } from 'lucide-react'
 
 import { Flex, ActionIcon, Button, Checkbox, CodeBlock, Select, TextArea } from '@pure/ui'
 
@@ -32,7 +33,6 @@ const IMPL_OFF =
 const metaRows = (runState: RunState | null): Array<[string, string]> => [
   ['Endpoint', WEB_SEARCH_ENDPOINT_LABEL],
   ['状态码', runState ? String(runState.status) : 'N/A'],
-  ['耗时', runState ? `${runState.durationMs.toLocaleString()} ms` : 'N/A'],
   ['提交时间', runState?.submittedAt ?? 'N/A'],
 ]
 
@@ -42,8 +42,10 @@ function Field({
   htmlFor,
   label,
   labelId,
+  helpText,
 }: {
   children: ReactNode
+  helpText?: string
   hint?: string
   htmlFor?: string
   label: string
@@ -51,15 +53,29 @@ function Field({
 }) {
   return (
     <div>
-      {htmlFor ? (
-        <label className={LABEL_CLASS} htmlFor={htmlFor}>
-          {label}
-        </label>
-      ) : (
-        <div className={LABEL_CLASS} id={labelId}>
-          {label}
-        </div>
-      )}
+      <Flex className='items-center gap-1.5'>
+        {htmlFor ? (
+          <label className={LABEL_CLASS} htmlFor={htmlFor}>
+            {label}
+          </label>
+        ) : (
+          <div className={LABEL_CLASS} id={labelId}>
+            {label}
+          </div>
+        )}
+        {helpText ? (
+          <Tooltip placement='bottom' title={helpText}>
+            <span
+              aria-label={`${label}说明`}
+              className='inline-flex cursor-help text-muted-foreground hover:text-foreground'
+              role='img'
+              tabIndex={0}
+            >
+              <CircleHelp aria-hidden='true' className='size-3.5' />
+            </span>
+          </Tooltip>
+        ) : null}
+      </Flex>
       <div className='mt-2'>{children}</div>
       {hint ? <p className='mt-2 text-xs leading-5 text-muted-foreground'>{hint}</p> : null}
     </div>
@@ -254,7 +270,11 @@ function SearchFields({
 }) {
   return (
     <>
-      <Field htmlFor='web-search-query' label='搜索关键词 · Query'>
+      <Field
+        helpText='搜索关键词会按填写内容提交给所选搜索服务商。'
+        htmlFor='web-search-query'
+        label='搜索关键词 · Query'
+      >
         <TextArea
           id='web-search-query'
           placeholder='输入搜索关键词'
@@ -264,7 +284,7 @@ function SearchFields({
         />
       </Field>
       <Field
-        hint='选择后仅调用该服务商；留空则按环境变量顺序尝试并 fallback。'
+        helpText='选择后仅调用该服务商；留空则按环境变量顺序尝试并 fallback。'
         htmlFor='web-search-provider'
         label='搜索服务商 · Provider'
       >

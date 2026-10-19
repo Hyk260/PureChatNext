@@ -20,6 +20,8 @@ import type { ApiSuccess, CrawlResponse, ResultView, RunState, SearchResponse } 
 
 const BODY_CLASS = 'mt-3 text-sm leading-6 break-words text-muted-foreground'
 const TAG_CLASS = 'rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground'
+const TAG_PROVIDER_CLASS =
+  'rounded-md bg-primary/10 px-2 py-1 text-xs font-semibold text-primary ring-1 ring-primary/30'
 const TAG_ERROR_CLASS = 'rounded-md bg-red-tint px-2 py-1 text-xs font-medium text-red'
 const ENGINE_CLASS = 'rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-muted-foreground'
 
@@ -123,11 +125,6 @@ function SearchList({ result }: { result: SearchResponse }) {
       {result.errorDetail ? (
         <p className='mb-3 rounded-lg bg-red-tint px-3 py-2 text-sm text-red'>{result.errorDetail}</p>
       ) : null}
-      {result.provider ? (
-        <p className='mb-3 rounded-lg bg-secondary px-3 py-2 text-sm text-foreground'>
-          结果来自服务商 <span className='font-mono font-semibold'>{result.provider}</span>
-        </p>
-      ) : null}
       {fallback ? (
         <p className='mb-3 rounded-lg bg-secondary px-3 py-2 text-sm text-foreground'>搜索已降级：{fallback}</p>
       ) : null}
@@ -139,7 +136,7 @@ function SearchList({ result }: { result: SearchResponse }) {
               key={`${item.url}-${index}`}
               badges={
                 <>
-                  {result.provider ? <span className={TAG_CLASS}>{result.provider}</span> : null}
+                  {result.provider ? <span className={TAG_PROVIDER_CLASS}>{result.provider}</span> : null}
                   {item.category ? <span className={TAG_CLASS}>{item.category}</span> : null}
                   <span className={TAG_CLASS}>score {formatNumber(item.score)}</span>
                 </>
@@ -211,7 +208,6 @@ function ResultBody({ payload, rawJson, view }: { payload: ApiSuccess | null; ra
 }
 
 export function WebSearchResults({
-  action,
   error,
   onViewChange,
   payload,
@@ -220,7 +216,6 @@ export function WebSearchResults({
   runState,
   view,
 }: {
-  action: ActionMode
   error: string | null
   onViewChange: (view: ResultView) => void
   payload: ApiSuccess | null
@@ -231,9 +226,7 @@ export function WebSearchResults({
 }) {
   const result = payload?.result ?? null
   const summary = buildResultSummary({
-    action,
     crawl: isCrawlResponse(result) ? result : null,
-    payloadAction: payload?.action,
     provider,
     runState,
     search: isSearchResponse(result) ? result : null,
@@ -244,7 +237,7 @@ export function WebSearchResults({
       <Flex className='gap-2 shrink-0 flex-col space-y-3 border-b border-border p-4'>
         {requestStatusAlert(error, payload?.action)}
         <Flex className='flex-col gap-3 lg:flex-row lg:items-start lg:justify-between'>
-          <dl className='grid flex-1 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5'>
+          <dl className='grid flex-1 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4'>
             {summary.map((item) => (
               <div key={item.label} className='rounded-lg bg-secondary px-3 py-2'>
                 <dt className='text-xs text-muted-foreground'>{item.label}</dt>

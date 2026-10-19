@@ -281,7 +281,6 @@ export default function WebSearchPage() {
             onToggleImpl={(value) => updateValues({ impls: toggleImplList(values.impls, value) })}
           />
           <WebSearchResults
-            action={action}
             error={error}
             payload={payload}
             provider={values.provider}

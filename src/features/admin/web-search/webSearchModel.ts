@@ -270,9 +270,7 @@ const display = (value: string | number | undefined) => {
 }
 
 export const buildResultSummary = (input: {
-  action: ActionMode
   crawl: CrawlResponse | null
-  payloadAction?: ActionMode
   provider: string
   runState: RunState | null
   search: SearchResponse | null
@@ -282,7 +280,6 @@ export const buildResultSummary = (input: {
     : input.crawl?.results.length
 
   return [
-    { label: 'Action', value: input.payloadAction ?? input.action },
     { label: '服务商', value: display(input.search?.provider ?? (input.provider || undefined)) },
     { label: '结果数', value: count === undefined ? 'N/A' : count.toLocaleString() },
     {

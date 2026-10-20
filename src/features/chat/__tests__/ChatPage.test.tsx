@@ -3,6 +3,7 @@ import type { UIMessage } from 'ai'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { LocalChatTopic } from '@/features/chat/types'
 import { setPendingChatPermissionMode, setPendingTopicSend } from '@/features/chat/chatLocalStorage'
 
 const mocks = vi.hoisted(() => {
@@ -112,7 +113,7 @@ vi.mock('@/features/chat/ChatInput', () => ({
     onSend,
     permissionMode,
   }: {
-    onPermissionModeChange?: (mode: 'ask') => void
+    onPermissionModeChange?: (mode: 'ask' | 'full') => void
     onSend: (text: string) => void
     permissionMode?: string
   }) => (
@@ -121,13 +122,18 @@ vi.mock('@/features/chat/ChatInput', () => ({
         send
       </button>
       {permissionMode ? (
-        <button
-          aria-label={`权限模式：${permissionMode}`}
-          type='button'
-          onClick={() => onPermissionModeChange?.('ask')}
-        >
-          permission
-        </button>
+        <>
+          <button
+            aria-label={`权限模式：${permissionMode}`}
+            type='button'
+            onClick={() => onPermissionModeChange?.('ask')}
+          >
+            permission
+          </button>
+          <button aria-label='切换到完全访问权限' type='button' onClick={() => onPermissionModeChange?.('full')}>
+            full permission
+          </button>
+        </>
       ) : null}
     </>
   ),
@@ -320,6 +326,46 @@ describe('ChatPage message loading state', () => {
 
     await waitFor(() => expect(mocks.updateTopic).toHaveBeenCalledWith('topic-existing', { permissionMode: 'ask' }))
     expect(await screen.findByRole('button', { name: '权限模式：ask' })).toBeTruthy()
+  })
+
+  it('keeps the active topic when switching it to full access', async () => {
+    const existingTopic = { ...createdTopic, id: 'topic-existing', permissionMode: 'auto' as const }
+    mocks.desktop = true
+    mocks.navigation.query = 'agent=agt_inbox&topic=topic-existing'
+    mocks.fetchTopics.mockResolvedValue([existingTopic])
+    mocks.fetchMessages.mockResolvedValue([])
+    mocks.updateTopic.mockResolvedValue({ ...existingTopic, permissionMode: 'full' })
+
+    render(<ChatPage />)
+    fireEvent.click(await screen.findByRole('button', { name: '切换到完全访问权限' }))
+
+    await waitFor(() => expect(mocks.updateTopic).toHaveBeenCalledWith('topic-existing', { permissionMode: 'full' }))
+    expect(mocks.desktopApi.requestFullAccess).toHaveBeenCalledTimes(1)
+    expect(mocks.desktopApi.requestFullAccess).toHaveBeenCalledWith('topic-existing')
+    expect(mocks.createTopic).not.toHaveBeenCalled()
+    expect(mocks.navigation.query).toBe('agent=agt_inbox&topic=topic-existing')
+  })
+
+  it('keeps an existing conversation mounted while its full access setting syncs', async () => {
+    const existingTopic = { ...createdTopic, id: 'topic-existing', permissionMode: 'auto' as const }
+    let finishTopicUpdate: (topic: LocalChatTopic) => void = () => {}
+    mocks.desktop = true
+    mocks.permissionMode = 'full'
+    mocks.navigation.query = 'agent=agt_inbox&topic=topic-existing'
+    mocks.fetchTopics.mockResolvedValue([existingTopic])
+    mocks.fetchMessages.mockResolvedValue([])
+    mocks.updateTopic.mockReturnValue(
+      new Promise<LocalChatTopic>((resolve) => {
+        finishTopicUpdate = resolve
+      })
+    )
+
+    render(<ChatPage />)
+
+    expect(await screen.findByTestId('messages')).toBeTruthy()
+    expect(screen.queryByTestId('messages-skeleton')).toBeNull()
+    await waitFor(() => expect(mocks.updateTopic).toHaveBeenCalledWith('topic-existing', { permissionMode: 'full' }))
+    finishTopicUpdate({ ...existingTopic, permissionMode: 'full' })
   })
 
   it('does not initialize local desktop access from a remote full permission setting', async () => {

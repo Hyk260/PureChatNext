@@ -31,7 +31,7 @@ const OPTIONS: PermissionOption[] = [
     mode: 'ask',
   },
   {
-    description: '仅对检测到的风险操作请求批准',
+    description: '自动处理已知工具；危险命令仍会拦截',
     icon: ShieldCheck,
     label: '帮我批准',
     mode: 'auto',

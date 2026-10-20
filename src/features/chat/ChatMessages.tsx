@@ -3,6 +3,7 @@
 import { Avatar, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar } from 'antd-style'
 import type { UIMessage } from 'ai'
+import type { ChatPermissionMode } from '@pure/types'
 import { memo, useCallback, useEffect, useRef } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
@@ -80,6 +81,7 @@ interface ChatMessagesProps {
   initialScrollToBottom?: boolean
   isStreaming?: boolean
   messages: UIMessage[]
+  permissionMode?: ChatPermissionMode
   runningCommandCallIds?: ReadonlySet<string>
   onDelete: (id: string) => void
   onEdit: (id: string, text: string) => void | Promise<void>
@@ -97,6 +99,7 @@ const ChatMessages = memo<ChatMessagesProps>(
     disabled,
     initialScrollToBottom = false,
     isStreaming = false,
+    permissionMode,
     onDelete,
     onEdit,
     onRegenerate,
@@ -199,6 +202,7 @@ const ChatMessages = memo<ChatMessagesProps>(
                 isStreaming={streamingThis}
                 key={message.id}
                 message={message}
+                permissionMode={permissionMode}
                 runningCommandCallIds={runningCommandCallIds}
                 onDelete={onDelete}
                 onEdit={onEdit}

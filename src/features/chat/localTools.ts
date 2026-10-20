@@ -15,14 +15,6 @@ const LOCAL_TOOL_NAME_LIST = [
   'writeFile',
 ] as const satisfies readonly LocalToolName[]
 
-const SAFE_LOCAL_TOOL_NAME_LIST = [
-  'getCommandOutput',
-  'getSystemInfo',
-  'listFiles',
-  'readFile',
-  'searchFiles',
-] as const satisfies readonly LocalToolName[]
-
 /** User-facing approval titles — ask what the action does, not the API name. */
 const LOCAL_TOOL_APPROVAL_TITLE = {
   editFile: '允许编辑文件？',
@@ -47,8 +39,6 @@ const OTHER_TOOL_APPROVAL_TITLE: Record<string, string> = {
 
 /** String set so `.has(toolName: string)` stays ergonomic at call sites. */
 export const LOCAL_TOOL_NAMES: ReadonlySet<string> = new Set(LOCAL_TOOL_NAME_LIST)
-
-export const SAFE_LOCAL_TOOL_NAMES: ReadonlySet<string> = new Set(SAFE_LOCAL_TOOL_NAME_LIST)
 
 export const isLocalToolName = (name: string): name is LocalToolName => LOCAL_TOOL_NAMES.has(name)
 

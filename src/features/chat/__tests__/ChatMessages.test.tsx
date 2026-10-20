@@ -388,6 +388,7 @@ describe('ChatMessages message layout', () => {
     const { getByTestId, getByText } = render(
       <ChatMessages
         messages={[message]}
+        permissionMode='ask'
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onRegenerate={vi.fn()}
@@ -409,6 +410,33 @@ describe('ChatMessages message layout', () => {
     )
   })
 
+  it.each(['auto', 'full'] as const)('does not render ApprovalCard in %s mode', (permissionMode) => {
+    const message = {
+      id: 'assistant-local-approval',
+      parts: [
+        {
+          input: { path: '/tmp/file.txt' },
+          state: 'input-available',
+          toolCallId: 'local-1',
+          type: 'tool-writeFile',
+        },
+      ],
+      role: 'assistant',
+    } as UIMessage
+
+    const { queryByTestId } = render(
+      <ChatMessages
+        messages={[message]}
+        permissionMode={permissionMode}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onRegenerate={vi.fn()}
+      />
+    )
+
+    expect(queryByTestId('approval-card')).toBeNull()
+  })
+
   it('dispatches server tool approval from ApprovalCard reject', () => {
     const onServerToolApproval = vi.fn()
     const message = {
@@ -428,6 +456,7 @@ describe('ChatMessages message layout', () => {
     const { getByText } = render(
       <ChatMessages
         messages={[message]}
+        permissionMode='ask'
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onRegenerate={vi.fn()}

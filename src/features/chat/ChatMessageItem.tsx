@@ -2,7 +2,7 @@
 
 import { ApprovalCard, Avatar, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import type { ChatMessageMetadata } from '@pure/types'
+import type { ChatMessageMetadata, ChatPermissionMode } from '@pure/types'
 import { useApp } from '@/components/AntdStaticMethods'
 import { createStaticStyles, cssVar, cx } from 'antd-style'
 import type { UIMessage } from 'ai'
@@ -78,6 +78,7 @@ export interface ChatMessageItemProps {
   agentMeta?: AgentMeta
   isStreaming?: boolean
   message: UIMessage
+  permissionMode?: ChatPermissionMode
   runningCommandCallIds?: ReadonlySet<string>
   onDelete: (id: string) => void
   onEdit: (id: string, text: string) => void | Promise<void>
@@ -115,6 +116,7 @@ const applyToolApprovalDecision = (
 const ChatMessageItem = memo<ChatMessageItemProps>(
   ({
     message,
+    permissionMode,
     agentMeta,
     isStreaming,
     runningCommandCallIds,
@@ -158,7 +160,8 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
           part.state === 'output-available' ||
           part.state === 'output-error')
     )
-    const approvalItems = getToolApprovalItems(message.parts)
+    const showApprovalCard = permissionMode === undefined || permissionMode === 'ask'
+    const approvalItems = showApprovalCard ? getToolApprovalItems(message.parts) : []
 
     if (
       !text &&
@@ -255,6 +258,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
   (prev, next) =>
     prev.isStreaming === next.isStreaming &&
     prev.message === next.message &&
+    prev.permissionMode === next.permissionMode &&
     prev.runningCommandCallIds === next.runningCommandCallIds &&
     prev.onDelete === next.onDelete &&
     prev.onEdit === next.onEdit &&

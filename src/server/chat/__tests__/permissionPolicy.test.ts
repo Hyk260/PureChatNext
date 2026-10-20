@@ -13,12 +13,17 @@ describe('permission policy', () => {
     ).toBe('approved')
   })
 
-  it('requires approval for writes in ask and auto modes', () => {
-    for (const mode of ['ask', 'auto'] as const) {
-      expect(isToolApprovalRequired({ apiName: 'writeFile', identifier: 'desktop-local-system', mode }).decision).toBe(
-        'user-approval'
-      )
-    }
+  it('keeps user choice in ask mode and handles known tools automatically in auto mode', () => {
+    expect(isToolApprovalRequired({ apiName: 'writeFile', identifier: 'desktop-local-system', mode: 'ask' }).decision)
+      .toBe('user-approval')
+    expect(isToolApprovalRequired({ apiName: 'writeFile', identifier: 'desktop-local-system', mode: 'auto' }).decision)
+      .toBe('approved')
+  })
+
+  it('denies unknown tools in auto mode instead of creating a manual approval request', () => {
+    expect(isToolApprovalRequired({ apiName: 'unknownTool', identifier: 'unknown', mode: 'auto' })).toMatchObject({
+      decision: 'denied',
+    })
   })
 
   it('keeps full mode subject to dangerous command blacklist', () => {

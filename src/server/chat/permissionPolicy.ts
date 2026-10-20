@@ -1,5 +1,5 @@
 import type { ChatPermissionMode } from '@pure/types'
-import { isDangerousCommand, isLowRiskCommand } from '@/libs/commandSafety'
+import { isDangerousCommand } from '@/libs/commandSafety'
 
 export { isDangerousCommand }
 
@@ -47,7 +47,10 @@ export const isToolApprovalRequired = ({
   mode: ChatPermissionMode
 }) => {
   const capability = findToolCapability(identifier, apiName)
-  if (!capability) return { decision: 'user-approval' as const, reason: '未知工具需要确认' }
+  if (!capability) {
+    if (mode === 'ask') return { decision: 'user-approval' as const, reason: '未知工具需要确认' }
+    return { decision: 'denied' as const, reason: '未知工具无法自动审核' }
+  }
 
   const command = capability.apiName === 'runCommand' ? args?.command : undefined
   if (typeof command === 'string' && isDangerousCommand(command)) {
@@ -56,12 +59,7 @@ export const isToolApprovalRequired = ({
 
   if (mode === 'full') return { decision: 'approved' as const }
   if (mode === 'ask') return { decision: 'user-approval' as const }
-
-  if (capability.risk === 'read') return { decision: 'approved' as const }
-  if (capability.risk === 'command' && typeof command === 'string' && isLowRiskCommand(command)) {
-    return { decision: 'approved' as const }
-  }
-  return { decision: 'user-approval' as const, reason: '检测到可能影响数据或隐私的操作' }
+  return { decision: 'approved' as const }
 }
 
 export const getCapabilityKey = (identifier: string, apiName: string) => capabilityKey(identifier, apiName)

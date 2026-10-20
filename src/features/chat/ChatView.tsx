@@ -40,8 +40,7 @@ import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
 import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { useRouter } from 'next/navigation'
-import { LOCAL_TOOL_NAMES, SAFE_LOCAL_TOOL_NAMES } from '@/features/chat/localTools'
-import { isLowRiskCommand } from '@/libs/commandSafety'
+import { LOCAL_TOOL_NAMES } from '@/features/chat/localTools'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopLocalToolRequest } from '@/types/desktop'
 
@@ -127,7 +126,6 @@ const ChatView = memo<ChatViewProps>(
     const chatId = `purechat-${agentId}-${topicId ?? 'draft'}`
 
     const desktopApi = getDesktopApi()
-    const fullGrantTopicRef = useRef<string | null>(null)
     const stopRequestedRef = useRef(false)
     const runningCommandCallIdsRef = useRef(new Set<string>())
     const [runningCommandCallIds, setRunningCommandCallIds] = useState<ReadonlySet<string>>(() => new Set())
@@ -136,14 +134,6 @@ const ChatView = memo<ChatViewProps>(
       else runningCommandCallIdsRef.current.delete(toolCallId)
       setRunningCommandCallIds(new Set(runningCommandCallIdsRef.current))
     }, [])
-    useEffect(() => {
-      if (!desktopApi || permissionMode !== 'full' || !topicId || fullGrantTopicRef.current === topicId) return
-      fullGrantTopicRef.current = topicId
-      desktopApi.requestFullAccess?.(topicId).then((result) => {
-        if (!result?.granted) fullGrantTopicRef.current = null
-      })
-    }, [desktopApi, permissionMode, topicId])
-
     const requestBody = useMemo(
       () => ({
         ...(topicId ? { topicId } : {}),
@@ -192,11 +182,7 @@ const ChatView = memo<ChatViewProps>(
           string,
           unknown
         >
-        const needsApprovalInAutoMode =
-          toolCall.toolName === 'runCommand'
-            ? !isLowRiskCommand(typeof args.command === 'string' ? args.command : '')
-            : !SAFE_LOCAL_TOOL_NAMES.has(toolCall.toolName)
-        const shouldApprove = permissionMode === 'ask' || (permissionMode === 'auto' && needsApprovalInAutoMode)
+        const shouldApprove = permissionMode === 'ask'
         if (topicId) {
           await upsertToolApproval(topicId, {
             apiName: toolCall.toolName,
@@ -208,6 +194,7 @@ const ChatView = memo<ChatViewProps>(
         if (shouldApprove) return
         const request: DesktopLocalToolRequest = {
           args,
+          ...(permissionMode === 'auto' ? { approved: true } : {}),
           mode: permissionMode ?? 'auto',
           toolCallId: toolCall.toolCallId,
           toolName: toolCall.toolName as DesktopLocalToolRequest['toolName'],
@@ -565,6 +552,7 @@ const ChatView = memo<ChatViewProps>(
           initialScrollToBottom={topicId !== null}
           isStreaming={isStreaming}
           messages={messages}
+          permissionMode={permissionMode}
           runningCommandCallIds={runningCommandCallIds}
           onDelete={handleDelete}
           onEdit={handleEdit}

@@ -130,6 +130,13 @@ const ChatPage = memo(() => {
     send: async () => {},
     stop: () => {},
   })
+  const grantedFullAccessTopicsRef = useRef(new Set<string>())
+  const ensureFullAccess = useCallback(async (topicId: string) => {
+    if (grantedFullAccessTopicsRef.current.has(topicId)) return
+    const result = await getDesktopApi()?.requestFullAccess(topicId)
+    if (result && !result.granted) throw new Error('完全访问权限未确认')
+    grantedFullAccessTopicsRef.current.add(topicId)
+  }, [])
 
   // Sync draft/cache seed when the active topic changes (React "adjust state on
   // props change" pattern — avoids an effect that setStates synchronously).
@@ -473,8 +480,7 @@ const ChatPage = memo(() => {
   const handlePermissionModeChange = useCallback(
     async (mode: ChatPermissionMode) => {
       if (mode === 'full') {
-        const result = await getDesktopApi()?.requestFullAccess(activeTopicId ?? 'draft')
-        if (result && !result.granted) throw new Error('完全访问权限未确认')
+        await ensureFullAccess(activeTopicId ?? 'draft')
       }
       if (!activeTopicId) {
         setPermissionMode(mode)
@@ -491,7 +497,7 @@ const ChatPage = memo(() => {
         throw error
       }
     },
-    [activeTopicId, message, setPermissionMode]
+    [activeTopicId, ensureFullAccess, message, setPermissionMode]
   )
 
   const handleTopicsRefresh = useCallback(() => {
@@ -541,17 +547,15 @@ const ChatPage = memo(() => {
       setSyncedPermissionKey(permissionSyncKey)
       return
     }
-    if (activeTopic.permissionMode === permissionMode) {
+    if (activeTopic.permissionMode === permissionMode && permissionMode !== 'full') {
       setSyncedPermissionKey(permissionSyncKey)
       return
     }
 
     let cancelled = false
     const syncMode = async () => {
-      if (permissionMode === 'full') {
-        const result = await getDesktopApi()?.requestFullAccess(activeTopicId)
-        if (result && !result.granted) throw new Error('完全访问权限未确认')
-      }
+      if (permissionMode === 'full') await ensureFullAccess(activeTopicId)
+      if (activeTopic.permissionMode === permissionMode) return activeTopic
       return updateTopic(activeTopicId, { permissionMode })
     }
 
@@ -575,6 +579,7 @@ const ChatPage = memo(() => {
     agentId,
     isDesktop,
     message,
+    ensureFullAccess,
     permissionMode,
     permissionModeInitialized,
     permissionSyncKey,
@@ -587,8 +592,10 @@ const ChatPage = memo(() => {
     (permissionModeInitialized &&
       (activeTopicId === null ||
         (topicsLoadedAgentId === agentId && (!activeTopic || syncedPermissionKey === permissionSyncKey))))
-  const chatReady = messagesReady && permissionModeReady
-  const inputBusy = isBusy || !messagesReady
+  // Keep ChatView mounted while a permission mode is being synced. Remounting
+  // useChat for a settings change can reset the active topic's in-memory turn.
+  const chatReady = messagesReady
+  const inputBusy = isBusy || !messagesReady || !permissionModeReady
   const hasActiveMessages =
     activeTopicId !== null &&
     ((messagesCache.get(activeTopicId)?.length ?? 0) > 0 ||

@@ -44,13 +44,14 @@
     "./Text": "./src/Text/index.ts",
     "./ThemeProvider": "./src/ThemeProvider/index.ts",
     "./Tooltip": "./src/Tooltip/index.ts",
+    "./TypewriterEffect": "./src/TypewriterEffect/index.ts",
     "./icons": "./src/icons/index.ts"
   },
   "main": "./src/index.ts",
   "peerDependencies": {
     "@base-ui/react": "*",
     "@lobehub/icons": "^5.15.0",
-    "@lobehub/ui": "^5.28.1",
+    "@lobehub/ui": "^5.32.3",
     "antd": "*",
     "antd-style": "*",
     "clsx": "*",

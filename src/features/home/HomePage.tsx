@@ -9,9 +9,9 @@ import HomeContent from '@/features/home/HomeContent'
 
 const HomePage = memo(() => {
   return (
-    <Flex className='flex-col flex-1 size-full min-h-[0px]'>
+    <Flex className='flex-col flex-1 size-full min-h-0'>
       <NavHeader />
-      <Flex className='flex-col-center flex-1 min-h-[0px] overflow-y-auto py-6 w-full'>
+      <Flex className='flex-col-center flex-1 min-h-0 overflow-y-auto py-6 w-full'>
         <WideScreenContainer>
           <HomeContent />
         </WideScreenContainer>

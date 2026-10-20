@@ -2,13 +2,12 @@
 
 import { Avatar, Button, Flex, Icon, Modal, Tag, Text } from '@pure/ui'
 import { Collapse } from 'antd'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { DotIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { memo, useCallback, useEffect, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { githubAssetAvatar } from '@/const/community/githubAssetUrl'
 import { SKILL_CATEGORY_LABELS } from '@/const/community/skills'
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
@@ -180,7 +179,6 @@ const SkillActionButton = ({
 }
 
 const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, onUninstalled, open, skill }) => {
-  const { message } = useApp()
   const { data: session, isPending: sessionPending } = useSession()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -229,12 +227,12 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
         } catch {
           // 409 already means installed; list refresh is best-effort
         }
-        message.info('已安装')
+        toast.info('已安装')
         onInstalled?.(foundId ?? undefined)
         return
       }
       if (!response.ok) {
-        message.error(getInstallErrorMessage(response.status))
+        toast.error(getInstallErrorMessage(response.status))
         return
       }
       const payload = (await response.json()) as { id?: string }
@@ -242,14 +240,14 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
         installedIdCache.set(skill.identifier, payload.id)
         setFetchedInstall({ id: payload.id, identifier: skill.identifier })
       }
-      message.success('已安装，可在设置中查看')
+      toast.success('已安装，可在设置中查看')
       onInstalled?.(payload.id)
     } catch {
-      message.error('安装失败')
+      toast.error('安装失败')
     } finally {
       setInstalling(false)
     }
-  }, [installing, message, onInstalled, skill])
+  }, [installing, onInstalled, skill])
 
   const handleUninstall = useCallback(() => {
     if (!skill || !installedId || uninstalling) return
@@ -259,15 +257,15 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
         await deleteUserSkill(installedId)
         installedIdCache.delete(skill.identifier)
         setFetchedInstall({ id: null, identifier: skill.identifier })
-        message.success('已卸载')
+        toast.success('已卸载')
         onUninstalled?.()
       } catch {
-        message.error('卸载失败')
+        toast.error('卸载失败')
       } finally {
         setUninstalling(false)
       }
     })
-  }, [installedId, message, onUninstalled, skill, uninstalling])
+  }, [installedId, onUninstalled, skill, uninstalling])
 
   if (!skill) return null
 

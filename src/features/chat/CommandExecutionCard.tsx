@@ -1,7 +1,7 @@
 'use client'
 
 import { isRecord } from '@pure/utils/object'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { CircleAlert, CircleCheck, LoaderCircle } from 'lucide-react'
 import type { UIMessage } from 'ai'
 

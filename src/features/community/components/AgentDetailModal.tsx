@@ -3,12 +3,11 @@
 import { ActionIcon, Avatar, Block, Button, Flex, Icon, Modal, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { Collapse, Tabs } from 'antd'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { Copy, MessageCircleHeartIcon, MessageCircleQuestionIcon } from 'lucide-react'
 import { memo, useCallback, useMemo } from 'react'
 import useSWRImmutable from 'swr/immutable'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { loadCommunityAgent } from '@/const/community/agentDetails'
 import { ASSISTANT_CATEGORY_LABELS } from '@/const/community/agents'
 import MessageMarkdown from '@/features/chat/MessageMarkdown'
@@ -122,13 +121,12 @@ const OverviewTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
 OverviewTab.displayName = 'OverviewTab'
 
 const IntroTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
-  const { message } = useApp()
   const systemRole = agent.systemRole.trimEnd()
 
   const handleCopySystemRole = useCallback(async () => {
     await copyToClipboard(systemRole)
-    message.success('已复制')
-  }, [message, systemRole])
+    toast.success('已复制')
+  }, [systemRole])
 
   return (
     <Flex className='flex-col gap-4'>

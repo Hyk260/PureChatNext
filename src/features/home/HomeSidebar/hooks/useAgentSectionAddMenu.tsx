@@ -1,7 +1,7 @@
 'use client'
 
 import { Icon } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
+import type { DropdownItem, MenuInfo } from '@pure/ui'
 import { BotIcon, StoreIcon } from 'lucide-react'
 import { useMemo } from 'react'
 
@@ -10,7 +10,7 @@ import { stopMenuEvent } from '@/libs/utils/menu'
 export const useAgentSectionAddMenu = (options: {
   onCreateAgent: () => void
   onAddFromMarket: () => void
-}): MenuProps['items'] => {
+}): DropdownItem[] => {
   const { onCreateAgent, onAddFromMarket } = options
 
   return useMemo(
@@ -19,7 +19,7 @@ export const useAgentSectionAddMenu = (options: {
         icon: <Icon icon={BotIcon} />,
         key: 'createAgent',
         label: '创建助理',
-        onClick: (info) => {
+        onClick: (info: MenuInfo) => {
           stopMenuEvent(info)
           onCreateAgent()
         },
@@ -28,7 +28,7 @@ export const useAgentSectionAddMenu = (options: {
         icon: <Icon icon={StoreIcon} />,
         key: 'addFromMarket',
         label: '从市场添加助理',
-        onClick: (info) => {
+        onClick: (info: MenuInfo) => {
           stopMenuEvent(info)
           onAddFromMarket()
         },

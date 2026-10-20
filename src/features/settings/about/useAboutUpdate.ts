@@ -1,7 +1,7 @@
+import { toast } from '@lobehub/ui'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { CURRENT_VERSION } from '@/const/version'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopApi } from '@/types/desktop'
@@ -14,7 +14,6 @@ const CHECK_MESSAGE_KEY = 'desktop-update-check'
 const updateSnapshots = new WeakMap<DesktopApi, DesktopUpdateState>()
 
 export function useAboutUpdate() {
-  const { message } = useApp()
   const [searchParams, setSearchParams] = useSearchParams()
   const api = getDesktopApi()
   const isDesktop = Boolean(api)
@@ -58,18 +57,23 @@ export function useAboutUpdate() {
       unsubscribe()
       if (checkMessageRef.current) {
         checkMessageRef.current = false
-        message.destroy(CHECK_MESSAGE_KEY)
+        toast.dismiss(CHECK_MESSAGE_KEY)
       }
     }
-  }, [api, receive, message])
+  }, [api, receive])
 
   useEffect(() => {
     if (!checkMessageRef.current || !desktopState) return
     const feedback = getUpdateCheckFeedback(desktopState)
     if (!feedback) return
     checkMessageRef.current = false
-    message.open({ key: CHECK_MESSAGE_KEY, ...feedback, duration: 3 })
-  }, [desktopState, message])
+    toast({
+      id: CHECK_MESSAGE_KEY,
+      type: feedback.type,
+      description: feedback.content,
+      duration: 3000,
+    })
+  }, [desktopState])
 
   const requestedInstallConfirmation =
     isDesktop && canShowInstallConfirmation(desktopState?.status || 'idle') && searchParams.get('update') === 'install'
@@ -100,7 +104,7 @@ export function useAboutUpdate() {
       setInstallConfirmationOpen(false)
       clearInstallRequest()
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '安装失败，请重试。')
+      toast.error(error instanceof Error ? error.message : '安装失败，请重试。')
     } finally {
       setInstalling(false)
     }
@@ -111,17 +115,16 @@ export function useAboutUpdate() {
     busyRef.current = true
     setPending(true)
     checkMessageRef.current = true
-    message.open({ key: CHECK_MESSAGE_KEY, type: 'loading', content: '正在检查更新…', duration: 0 })
+    toast.loading({ id: CHECK_MESSAGE_KEY, description: '正在检查更新…', duration: 0 })
     try {
       receive(await api.updater.check())
     } catch (error) {
       checkMessageRef.current = false
       if (aliveRef.current) {
-        message.open({
-          key: CHECK_MESSAGE_KEY,
-          type: 'error',
-          content: error instanceof Error ? error.message : '检查更新失败，请重试。',
-          duration: 3,
+        toast.error({
+          id: CHECK_MESSAGE_KEY,
+          description: error instanceof Error ? error.message : '检查更新失败，请重试。',
+          duration: 3000,
         })
       }
     } finally {
@@ -139,17 +142,17 @@ export function useAboutUpdate() {
       clearInstallRequest()
       if (checkMessageRef.current) {
         checkMessageRef.current = false
-        message.destroy(CHECK_MESSAGE_KEY)
+        toast.dismiss(CHECK_MESSAGE_KEY)
       }
     }
     try {
       receive(await api.updater.setPreferences({ ...desktopState.preferences, ...patch }))
       if (patch.updateSource !== undefined) {
-        message.success('更新来源已保存')
+        toast.success('更新来源已保存')
       }
       return true
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '保存更新设置失败。')
+      toast.error(error instanceof Error ? error.message : '保存更新设置失败。')
       return false
     } finally {
       busyRef.current = false
@@ -164,9 +167,9 @@ export function useAboutUpdate() {
     setClearingCache(true)
     try {
       receive(await api.updater.clearCache())
-      message.success('下载安装包缓存已清理')
+      toast.success('下载安装包缓存已清理')
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '清理更新缓存失败，请重试。')
+      toast.error(error instanceof Error ? error.message : '清理更新缓存失败，请重试。')
     } finally {
       busyRef.current = false
       if (aliveRef.current) {

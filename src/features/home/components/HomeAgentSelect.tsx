@@ -14,7 +14,7 @@ import {
   DropdownMenuSubmenuTrigger,
   Icon,
 } from '@pure/ui'
-import { createStaticStyles } from 'antd-style'
+import { createStaticStyles } from '@lobehub/ui'
 import { BotIcon, Check, ChevronRight } from 'lucide-react'
 import { memo, useEffect, useMemo } from 'react'
 

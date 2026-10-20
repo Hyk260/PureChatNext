@@ -1,9 +1,10 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { Center, confirmModal, Grid, Text } from '@pure/ui'
 import { lazy, memo, Suspense, useCallback, useMemo, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
 import { toDiscoverAgentFromListItem } from '@/features/community/customAgents'
 import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
@@ -25,7 +26,6 @@ export interface CustomAgentListProps {
 }
 
 const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => {
-  const { message } = useApp()
   const router = useRouter()
   const [editing, setEditing] = useState<AgentListItem | null>(null)
   const [saving, setSaving] = useState(false)
@@ -77,15 +77,15 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
           setActiveAgent(toActiveCommunityAgent(agent))
         }
         setEditing(null)
-        message.success('已保存')
+        toast.success('已保存')
       } catch (editError) {
         console.error('[community] update custom agent failed:', editError)
-        message.error('保存失败')
+        toast.error('保存失败')
       } finally {
         setSaving(false)
       }
     },
-    [editing, message, selectedAgentId, setActiveAgent, upsertLocal]
+    [editing, selectedAgentId, setActiveAgent, upsertLocal]
   )
 
   const handleDelete = useCallback(
@@ -101,7 +101,7 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
             removeLocal(agent.id)
             if (detailAgentId === agent.id) setDetailAgentId(null)
             if (editing?.id === agent.id) setEditing(null)
-            message.success('已删除')
+            toast.success('已删除')
             if (selectedAgentId === agent.id) {
               const next = agents.find((item) => item.id !== agent.id)
               if (next) {
@@ -111,15 +111,15 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
             }
           } catch (error) {
             const code = error instanceof Error ? error.message : ''
-            if (code === 'BUILTIN') message.error('系统内置助理不可删除')
-            else message.error('删除失败')
+            if (code === 'BUILTIN') toast.error('系统内置助理不可删除')
+            else toast.error('删除失败')
             throw error
           }
         },
         title: '删除该助理？',
       })
     },
-    [agents, detailAgentId, editing, message, removeLocal, selectedAgentId, setActiveAgent, setSelectedAgentId]
+    [agents, detailAgentId, editing, removeLocal, selectedAgentId, setActiveAgent, setSelectedAgentId]
   )
 
   const handleEditFromDetail = useCallback(() => {

@@ -1,7 +1,7 @@
 'use client'
 
 import { Text } from '@pure/ui'
-import { createStaticStyles } from 'antd-style'
+import { createStaticStyles } from '@lobehub/ui'
 import type { ReactNode } from 'react'
 
 interface SettingRowProps {

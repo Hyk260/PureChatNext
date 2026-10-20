@@ -1,4 +1,9 @@
+@layer theme, base, lobe-base, lobe-popup, lobe-ui, components, utilities;
+
 @import 'tailwindcss';
+@import '@lobehub/ui/theme.css';
+@import '@lobehub/ui/style.css';
+@import '@lobehub/ui/global.css';
 @import './utilities.css';
 
 /* Electron renderer uses apps/desktop as Vite root; keep the shared SPA classes discoverable. */
@@ -8,7 +13,7 @@
 :root {
   --background: #fff;
   --foreground: #171717;
-  --theme-primary: #00b96b;
+  --theme-primary: #007aff;
   --theme-primary-foreground: #fff;
   --primary: var(--theme-primary);
   --primary-foreground: var(--theme-primary-foreground);
@@ -18,6 +23,8 @@
   --card: #fff;
   --border: #e5e5ea;
   --ring: var(--theme-primary);
+  --input-focus-border-color: var(--lobe-color-border-secondary);
+  --input-focus-shadow: 0 0 0 2px color-mix(in srgb, var(--lobe-color-border-secondary) 40%, transparent);
   --ink: #1c1917;
   --ink-2: #44403c;
   --ink-3: #a8a29e;
@@ -41,9 +48,9 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-card: var(--card);
   --color-border: var(--border);
-  --color-app-layout: var(--ant-color-bg-layout);
-  --color-app-surface: var(--ant-color-bg-container);
-  --color-app-border-secondary: var(--ant-color-border-secondary);
+  --color-app-layout: var(--lobe-color-bg-layout);
+  --color-app-surface: var(--lobe-color-bg-container);
+  --color-app-border-secondary: var(--lobe-color-border-secondary);
   --color-ring: var(--ring);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
@@ -63,6 +70,8 @@
 }
 
 :root[data-theme='dark'] {
+  --theme-primary: #2e8dff;
+  --theme-primary-foreground: #000;
   --background: #0a0a0a;
   --foreground: #ededed;
   --primary: var(--theme-primary);
@@ -88,6 +97,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
+    --theme-primary: #2e8dff;
+    --theme-primary-foreground: #000;
     --background: #0a0a0a;
     --foreground: #ededed;
     --primary: var(--theme-primary);

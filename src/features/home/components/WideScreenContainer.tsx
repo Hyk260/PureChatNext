@@ -1,6 +1,6 @@
 'use client'
 
-import { createStaticStyles } from 'antd-style'
+import { createStaticStyles } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
 import type { FlexProps } from '@pure/ui'
 import { memo } from 'react'

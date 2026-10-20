@@ -5,7 +5,6 @@ import AuthAgreement, { withAuthAgreement } from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
 import { Button, Icon, Input, InputPassword, Text } from '@pure/ui'
 import { Form } from 'antd'
-import type { InputRef } from 'antd'
 import type { Rule } from 'antd/es/form'
 import { Lock, Mail } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -65,8 +64,8 @@ const SignUpFormContent = () => {
   const { loading, onSubmit } = useSignUp()
   const searchParams = useSearchParams()
 
-  const emailInputRef = useRef<InputRef>(null)
-  const passwordInputRef = useRef<InputRef>(null)
+  const emailInputRef = useRef<HTMLInputElement>(null)
+  const passwordInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const email = searchParams.get('email')

@@ -1,4 +1,4 @@
-import { createStaticStyles } from 'antd-style'
+import { createStaticStyles } from '@lobehub/ui'
 import { Minus, Plus, X } from 'lucide-react'
 
 const styles = createStaticStyles(({ css }) => ({

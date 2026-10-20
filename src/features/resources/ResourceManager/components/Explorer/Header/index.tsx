@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, Button, confirmModal, DropdownMenu, Icon, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import {
   ArrowDownAZ,
   CalendarIcon,
@@ -18,8 +18,6 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { useResourceManagerStore } from '@/features/resources/store'
-import { useApp } from '@/components/AntdStaticMethods'
-
 import ActionIconWithChevron from '../ToolBar/ActionIconWithChevron'
 import SearchInput from './SearchInput'
 
@@ -40,7 +38,6 @@ interface ExplorerHeaderProps {
 }
 
 const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFolder, title }) => {
-  const { message } = useApp()
   const { selectedFileIds, setSorter, setViewMode, sorter, viewMode } = useResourceManagerStore(
     useShallow((s) => ({
       selectedFileIds: s.selectedFileIds,
@@ -146,7 +143,7 @@ const ExplorerHeader = memo<ExplorerHeaderProps>(({ onDelete, onUpload, onNewFol
                 okText: '删除',
                 onOk: async () => {
                   await onDelete()
-                  message.success('删除成功')
+                  toast.success('删除成功')
                 },
                 title: '删除',
               })

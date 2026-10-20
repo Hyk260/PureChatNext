@@ -3,7 +3,7 @@
 import type { ChatWebSearchToolResult } from '@pure/types'
 import { Avatar } from '@pure/ui'
 import { isRecord } from '@pure/utils/object'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { getToolName, isToolUIPart } from 'ai'
 import type { ToolUIPart, UIMessage } from 'ai'
 import { ChevronRight, CircleAlert, Globe, Loader2 } from 'lucide-react'

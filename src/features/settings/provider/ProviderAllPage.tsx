@@ -1,7 +1,7 @@
 'use client'
 
 import { Flex, Grid, Tag, Text } from '@pure/ui'
-import { createStaticStyles } from 'antd-style'
+import { createStaticStyles } from '@lobehub/ui'
 import { memo, useMemo } from 'react'
 
 import { SETTINGS_PROVIDER_IDS } from './const'

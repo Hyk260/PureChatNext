@@ -1,7 +1,7 @@
 'use client'
 
 import { Center, FileTypeIcon, Icon, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { ArrowUpIcon } from 'lucide-react'
 import { memo, useRef } from 'react'
 import type { ChangeEvent } from 'react'

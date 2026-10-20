@@ -1,9 +1,10 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { Spin } from 'antd'
 import { ActionIcon, Button, confirmModal, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
 import { Copy, FileText, MessagesSquareIcon, Settings2Icon, Trash2Icon } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
@@ -133,7 +134,6 @@ const DISCONNECTED_STATUS: QQStatus = {
 }
 
 const MessengerQQPage = memo(() => {
-  const { message } = useApp()
   const navigate = useNavigate()
   const platformMeta = getMessengerPlatform('qq')!
   const { data: session } = useSession()
@@ -167,8 +167,8 @@ const MessengerQQPage = memo(() => {
   useEffect(() => {
     const error = statusError ?? agentsError
     if (!error || status || agentList?.length) return
-    message.error(error instanceof Error ? error.message : '加载失败')
-  }, [agentList?.length, agentsError, message, status, statusError])
+    toast.error(error instanceof Error ? error.message : '加载失败')
+  }, [agentList?.length, agentsError, status, statusError])
 
   useEffect(() => {
     if (status?.agentId) setAgentId(status.agentId)
@@ -193,18 +193,18 @@ const MessengerQQPage = memo(() => {
       setSaving(true)
       try {
         await updateQQConfiguration(next)
-        message.success('已更新 QQ 渠道配置')
+        toast.success('已更新 QQ 渠道配置')
         await refreshStatus()
       } catch (error) {
         setAgentId(previous.agentId)
         setProvider(previous.provider)
         setModelId(previous.model)
-        message.error(error instanceof Error ? error.message : '更新失败')
+        toast.error(error instanceof Error ? error.message : '更新失败')
       } finally {
         setSaving(false)
       }
     },
-    [message, refreshStatus, status]
+    [refreshStatus, status]
   )
 
   const handleAgentChange = useCallback(
@@ -230,7 +230,7 @@ const MessengerQQPage = memo(() => {
   const handleConnected = useCallback(async () => {
     setBinding(true)
     try {
-      message.success('QQ 凭证已保存，正在建立连接')
+      toast.success('QQ 凭证已保存，正在建立连接')
       await refreshStatus()
       trackAcquisitionEvent('channel_connected', {
         first: markFirstConversion('channel_connected'),
@@ -239,7 +239,7 @@ const MessengerQQPage = memo(() => {
     } finally {
       setBinding(false)
     }
-  }, [message, refreshStatus])
+  }, [refreshStatus])
 
   const handleDisconnect = useCallback(() => {
     confirmModal({
@@ -250,7 +250,7 @@ const MessengerQQPage = memo(() => {
       onOk: async () => {
         await unbindQQ()
         await mutateStatus(DISCONNECTED_STATUS, { revalidate: false })
-        message.success('已断开 QQ')
+        toast.success('已断开 QQ')
         try {
           await refreshStatus()
         } catch {
@@ -259,7 +259,7 @@ const MessengerQQPage = memo(() => {
       },
       title: '断开 QQ 连接？',
     })
-  }, [message, mutateStatus, refreshStatus])
+  }, [mutateStatus, refreshStatus])
 
   if (loading) {
     return (
@@ -352,7 +352,7 @@ const MessengerQQPage = memo(() => {
               title='复制 Webhook 回调地址'
               onClick={async () => {
                 await copyToClipboard(webhookUrl)
-                message.success('已复制 Webhook 回调地址')
+                toast.success('已复制 Webhook 回调地址')
               }}
             />
           </Flex>

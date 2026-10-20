@@ -9,7 +9,7 @@ import {
 } from '@pure/ui'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
-import { createStaticStyles } from 'antd-style'
+import { createStaticStyles } from '@lobehub/ui'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
@@ -52,7 +52,7 @@ const styles = createStaticStyles(({ css }) => ({
   `,
 }))
 
-export interface ModelSwitchMenuProps {
+export interface ModelSwitchDropdownItem {
   children: ReactNode
   disabled?: boolean
   openOnHover?: boolean
@@ -66,7 +66,7 @@ export interface ModelSwitchMenuProps {
 /**
  * Shared model dropdown shell with by-model / by-provider views and hover details.
  */
-const ModelSwitchMenu = memo<ModelSwitchMenuProps>(
+const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
   ({
     children,
     disabled,

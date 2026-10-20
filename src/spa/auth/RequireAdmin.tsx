@@ -21,7 +21,7 @@ export default function RequireAdmin({ children }: RequireAdminProps) {
   if (isPending) {
     return (
       <Flex className='flex-col h-full p-6'>
-        <Skeleton active paragraph={{ rows: 6 }} />
+        <Skeleton.Text rows={7} />
       </Flex>
     )
   }

@@ -1,12 +1,12 @@
 'use client'
 
-import { Flex, Input, Text } from '@pure/ui'
+import { Button, Flex, Input, Text } from '@pure/ui'
 import { Monitor, Moon, Sun } from 'lucide-react'
 import { useState } from 'react'
-import { useThemeMode } from 'antd-style'
-import type { ThemeMode } from 'antd-style'
+import { useAppThemeMode } from '@/layout/themeMode'
+import type { ThemeMode } from '@/layout/themeMode'
 
-import { useThemeColor } from '@/layout/themeColor'
+import { DEFAULT_THEME_COLOR, useThemeColor } from '@/layout/themeColor'
 
 const themeModeOptions: { icon: typeof Sun; label: string; value: ThemeMode }[] = [
   { icon: Sun, label: '浅色', value: 'light' },
@@ -77,19 +77,21 @@ const ThemePreviewPanel = ({ mode, className }: { mode: 'light' | 'dark'; classN
 }
 
 const ThemeColorPicker = () => {
-  const { themeColor, setThemeColor } = useThemeColor()
-  const [draftColor, setDraftColor] = useState(themeColor)
+  const { themeColor, resolvedThemeColor, setThemeColor } = useThemeColor()
+  const [draftColor, setDraftColor] = useState<string | null>(null)
+  const isDefaultThemeColor = themeColor === DEFAULT_THEME_COLOR
 
   const handleThemeColorChange = (nextColor: string) => {
-    setDraftColor(nextColor)
+    setDraftColor(null)
     setThemeColor(nextColor)
   }
 
   const handleHexBlur = () => {
+    if (draftColor === null) return
     const normalizedColor = normalizeHexColor(draftColor)
 
     if (!normalizedColor) {
-      setDraftColor(themeColor)
+      setDraftColor(null)
       return
     }
 
@@ -99,6 +101,15 @@ const ThemeColorPicker = () => {
   return (
     <Flex className='flex-wrap items-center justify-end gap-3'>
       <Flex className='flex-wrap items-center gap-3' role='group' aria-label='主题颜色预设'>
+        <Button
+          aria-label='默认主题颜色'
+          aria-pressed={isDefaultThemeColor}
+          size='small'
+          type={isDefaultThemeColor ? 'primary' : 'default'}
+          onClick={() => handleThemeColorChange(DEFAULT_THEME_COLOR)}
+        >
+          默认
+        </Button>
         {themeColorPresets.map((color) => {
           const isSelected = themeColor.toUpperCase() === color
           const selectedClass = isSelected ? 'border-primary' : 'border-transparent'
@@ -120,19 +131,19 @@ const ThemeColorPicker = () => {
       <label className='relative flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-app-border-secondary bg-app-surface shadow-sm outline-none focus-within:ring-2 focus-within:ring-primary'>
         <input
           type='color'
-          value={themeColor}
+          value={resolvedThemeColor}
           aria-label='自定义主题颜色'
           className='absolute inset-0 size-full cursor-pointer opacity-0'
           onChange={(event) => handleThemeColorChange(event.currentTarget.value.toUpperCase())}
         />
         <span
           className='size-7 rounded-md border border-app-border-secondary'
-          style={{ backgroundColor: themeColor }}
+          style={{ backgroundColor: resolvedThemeColor }}
         />
       </label>
       <Input
         aria-label='主题颜色十六进制值'
-        value={draftColor}
+        value={draftColor ?? resolvedThemeColor}
         className='w-32 text-center font-mono uppercase'
         spellCheck={false}
         onChange={(event) => setDraftColor(event.currentTarget.value)}
@@ -143,7 +154,7 @@ const ThemeColorPicker = () => {
 }
 
 const AppearanceSettingsContent = () => {
-  const { setThemeMode, themeMode } = useThemeMode()
+  const { setThemeMode, themeMode } = useAppThemeMode()
 
   return (
     <Flex className='w-full flex-col gap-6 px-6 pb-16 pt-6'>

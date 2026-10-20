@@ -96,7 +96,7 @@ export default defineConfig({
         ...desktopAliases,
         ...sharedResolveAlias(rootDir),
       },
-      dedupe: ['react', 'react-dom'],
+      dedupe: ['react', 'react-dom', '@lobehub/icons', '@lobehub/ui'],
       tsconfigPaths: true,
     },
     server: {

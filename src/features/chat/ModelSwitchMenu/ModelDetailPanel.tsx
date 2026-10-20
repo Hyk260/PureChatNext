@@ -5,7 +5,7 @@ import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId, ModelTokenPricing } from '@pure/model-bank'
 import { Icon, Tag, Text, Flex } from '@pure/ui'
 import { formatTokenNumber } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import {
   ArrowDownToDot,
   ArrowUpFromDot,

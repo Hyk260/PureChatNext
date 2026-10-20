@@ -1,5 +1,7 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { Form, Pagination, Select, Table } from 'antd'
 import type { TableProps } from 'antd'
 import {
@@ -22,7 +24,6 @@ import { EMPTY_PLACEHOLDER, formatCompactDateTime, formatNumber } from '@pure/ut
 import { RefreshCw, UserPlus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { getUserRoleLabel } from '@/const/auth'
 import { useSession } from '@/libs/better-auth/client'
 import {
@@ -114,7 +115,6 @@ const toEditValues = (user: AdminUser): UserFormValues => ({
 })
 
 export default function AdminUsersPage() {
-  const { message } = useApp()
   const { data: session } = useSession()
   const actorId = session?.user?.id
 
@@ -143,12 +143,12 @@ export default function AdminUsersPage() {
         setTotal(result.total)
       } catch (error) {
         if (signal?.aborted) return
-        message.error(error instanceof Error ? error.message : '加载用户失败')
+        toast.error(error instanceof Error ? error.message : '加载用户失败')
       } finally {
         if (!signal?.aborted) setLoading(false)
       }
     },
-    [message, page, pageSize, query, sortBy, sortOrder]
+    [page, pageSize, query, sortBy, sortOrder]
   )
   const refreshUsers = () => loadUsers()
 
@@ -190,7 +190,7 @@ export default function AdminUsersPage() {
         const username = values.username?.trim()
         if (username) input.username = username
         await createAdminUser(input)
-        message.success('用户已创建')
+        toast.success('用户已创建')
         closeForm()
         if (page === 1) await loadUsers()
         else setPage(1)
@@ -204,12 +204,12 @@ export default function AdminUsersPage() {
           role: values.role,
           username: values.username?.trim(),
         })
-        message.success('用户已更新')
+        toast.success('用户已更新')
       }
       closeForm()
       await loadUsers()
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '保存失败')
+      toast.error(error instanceof Error ? error.message : '保存失败')
       throw error
     } finally {
       setSaving(false)
@@ -232,9 +232,9 @@ export default function AdminUsersPage() {
           const credits = await resetAdminUserCredits(target.id)
           setItems((current) => current.map((user) => (user.id === target.id ? { ...user, credits } : user)))
           setEditingUser((current) => (current?.id === target.id ? { ...current, credits } : current))
-          message.success('已重置用户本月额度')
+          toast.success('已重置用户本月额度')
         } catch (error) {
-          message.error(error instanceof Error ? error.message : '重置用户额度失败')
+          toast.error(error instanceof Error ? error.message : '重置用户额度失败')
           throw error
         } finally {
           setResettingCredits(false)
@@ -252,10 +252,10 @@ export default function AdminUsersPage() {
       onOk: async () => {
         try {
           await deleteAdminUser(user.id)
-          message.success('用户已删除')
+          toast.success('用户已删除')
           await loadUsers()
         } catch (error) {
-          message.error(error instanceof Error ? error.message : '删除失败')
+          toast.error(error instanceof Error ? error.message : '删除失败')
           throw error
         }
       },

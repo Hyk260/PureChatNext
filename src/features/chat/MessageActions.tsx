@@ -1,8 +1,8 @@
 'use client'
 
 import { ActionIcon, DropdownMenu, Flex } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import type { DropdownItem } from '@pure/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { Copy, Edit, MoreHorizontal, Trash } from 'lucide-react'
 import { memo, useMemo } from 'react'
 
@@ -49,7 +49,7 @@ interface MessageActionsProps {
 }
 
 const MessageActions = memo<MessageActionsProps>(({ isStreaming, isUser, onCopy, onDelete, onEdit }) => {
-  const moreMenuItems = useMemo<MenuProps['items']>(
+  const moreMenuItems = useMemo<DropdownItem[]>(
     () => [
       { icon: Copy, key: 'copy', label: '复制', onClick: onCopy },
       { icon: Edit, key: 'edit', label: '编辑', onClick: onEdit },

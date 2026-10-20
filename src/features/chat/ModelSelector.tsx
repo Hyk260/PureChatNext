@@ -1,7 +1,7 @@
 'use client'
 
 import { Center, ModelIcon } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { memo } from 'react'
 
 import ModelSwitchMenu, { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'

@@ -3,7 +3,7 @@
 import { ModelIcon, Text, Flex } from '@pure/ui'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { ChevronDownIcon } from 'lucide-react'
 import { memo } from 'react'
 

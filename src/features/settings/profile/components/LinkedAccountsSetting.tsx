@@ -1,9 +1,10 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import AuthIcons from '@/components/AuthIcons'
 import { ActionIcon, confirmModal, DropdownMenu, Text, Flex } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
-import { useApp } from '@/components/AntdStaticMethods'
+import type { DropdownItem } from '@pure/ui'
 import { ArrowRight, Plus, Unlink } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -33,7 +34,6 @@ function isBuiltinProvider(provider: string) {
 }
 
 export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps) {
-  const { message } = useApp()
   const { config, ready } = useAuthConfig()
   const [accounts, setAccounts] = useState<LinkedAccount[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,17 +45,17 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
       const { data, error } = await listAccounts()
 
       if (error) {
-        message.error(error.message ?? '加载关联账户失败')
+        toast.error(error.message ?? '加载关联账户失败')
         return
       }
 
       setAccounts((data ?? []) as LinkedAccount[])
     } catch {
-      message.error('加载关联账户失败')
+      toast.error('加载关联账户失败')
     } finally {
       setLoading(false)
     }
-  }, [message])
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -64,13 +64,13 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
       .then(({ data, error }) => {
         if (cancelled) return
         if (error) {
-          message.error(error.message ?? '加载关联账户失败')
+          toast.error(error.message ?? '加载关联账户失败')
           return
         }
         setAccounts((data ?? []) as LinkedAccount[])
       })
       .catch(() => {
-        if (!cancelled) message.error('加载关联账户失败')
+        if (!cancelled) toast.error('加载关联账户失败')
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -79,7 +79,7 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
     return () => {
       cancelled = true
     }
-  }, [message])
+  }, [])
 
   const oauthAccounts = useMemo(() => accounts.filter((account) => account.providerId !== 'credential'), [accounts])
 
@@ -102,10 +102,10 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
         : await oauth2.link({ callbackURL: CALLBACK_URL, providerId: provider })
 
       if (result && 'error' in result && result.error) {
-        message.error(result.error.message ?? '关联账户失败')
+        toast.error(result.error.message ?? '关联账户失败')
       }
     } catch {
-      message.error('关联账户失败')
+      toast.error('关联账户失败')
     } finally {
       setLinkingProvider(null)
     }
@@ -113,7 +113,7 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
 
   const confirmUnlink = (account: LinkedAccount) => {
     if (!allowUnlink) {
-      message.warning('至少需要保留一种登录方式')
+      toast.warning('至少需要保留一种登录方式')
       return
     }
 
@@ -136,20 +136,20 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
       })
 
       if (error) {
-        message.error(error.message ?? '解绑失败')
+        toast.error(error.message ?? '解绑失败')
         return
       }
 
-      message.success('账户已解绑')
+      toast.success('账户已解绑')
       await loadAccounts()
     } catch {
-      message.error('解绑失败')
+      toast.error('解绑失败')
     } finally {
       setUnlinkingId(null)
     }
   }
 
-  const linkMenuItems: MenuProps['items'] = availableProviders.map((provider) => ({
+  const linkMenuItems: DropdownItem[] = availableProviders.map((provider) => ({
     icon: AuthIcons(provider, 16),
     key: provider,
     label: getProviderLabel(provider),

@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, DropdownMenu, Icon } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
+import type { DropdownItem } from '@pure/ui'
 import { Check, ListFilter } from 'lucide-react'
 import { memo, useMemo, useState } from 'react'
 
@@ -16,7 +16,7 @@ type Props = {
 
 const TopicFilter = memo<Props>(({ groupMode, sortBy, onGroupModeChange, onSortByChange }) => {
   const [open, setOpen] = useState(false)
-  const items = useMemo<MenuProps['items']>(
+  const items = useMemo<DropdownItem[]>(
     () => [
       {
         children: [['byTime', '按时间'] as const, ['byProject', '按项目'] as const, ['flat', '平铺'] as const].map(

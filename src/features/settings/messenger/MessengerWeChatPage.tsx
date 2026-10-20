@@ -1,8 +1,9 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { Spin } from 'antd'
 import { ActionIcon, Button, confirmModal, Text, Flex } from '@pure/ui'
-import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
 import { isAdminRole } from '@/const/auth'
 import { FileText, MessagesSquareIcon, Trash2Icon } from 'lucide-react'
@@ -128,7 +129,6 @@ function getWechatGatewayStatus(params: {
 }
 
 const MessengerWeChatPage = memo(() => {
-  const { message } = useApp()
   const navigate = useNavigate()
   const platformMeta = getMessengerPlatform('wechat')!
   const { data: session } = useSession()
@@ -165,8 +165,8 @@ const MessengerWeChatPage = memo(() => {
   useEffect(() => {
     const error = statusError ?? agentsError
     if (!error || status || agentList?.length) return
-    message.error(error instanceof Error ? error.message : '加载失败')
-  }, [agentList?.length, agentsError, message, status, statusError])
+    toast.error(error instanceof Error ? error.message : '加载失败')
+  }, [agentList?.length, agentsError, status, statusError])
 
   useEffect(() => {
     if (status?.agentId) setAgentId(status.agentId)
@@ -186,14 +186,14 @@ const MessengerWeChatPage = memo(() => {
     setRetryingFailedEvents(true)
     try {
       const count = await retryFailedWechatEvents()
-      message.success(`已重新入队 ${count} 条消息`)
+      toast.success(`已重新入队 ${count} 条消息`)
       await refreshStatus()
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '重试失败')
+      toast.error(error instanceof Error ? error.message : '重试失败')
     } finally {
       setRetryingFailedEvents(false)
     }
-  }, [message, refreshStatus])
+  }, [refreshStatus])
 
   const handleAuthenticated = useCallback(
     async (credentials: WechatAuthCredentials) => {
@@ -224,14 +224,14 @@ const MessengerWeChatPage = memo(() => {
           first: markFirstConversion('channel_connected'),
           platform: 'wechat',
         })
-        message.success('凭证已保存，正在等待 Gateway')
+        toast.success('凭证已保存，正在等待 Gateway')
       } catch (error) {
-        message.error(error instanceof Error ? error.message : '绑定失败')
+        toast.error(error instanceof Error ? error.message : '绑定失败')
       } finally {
         setBinding(false)
       }
     },
-    [agentId, message, modelId, mutateStatus, provider]
+    [agentId, modelId, mutateStatus, provider]
   )
 
   const saveConfiguration = useCallback(
@@ -240,24 +240,24 @@ const MessengerWeChatPage = memo(() => {
       setSaving(true)
       try {
         await updateWechatConfiguration(next)
-        message.success('已更新微信渠道配置，新消息将使用全新对话')
+        toast.success('已更新微信渠道配置，新消息将使用全新对话')
       } catch (error) {
         setAgentId(previous.agentId)
         setProvider(previous.provider)
         setModelId(previous.model)
-        message.error(error instanceof Error ? error.message : '更新失败')
+        toast.error(error instanceof Error ? error.message : '更新失败')
         setSaving(false)
         return
       }
       try {
         await refreshStatus()
       } catch {
-        message.warning('配置已保存，状态将在稍后自动刷新')
+        toast.warning('配置已保存，状态将在稍后自动刷新')
       } finally {
         setSaving(false)
       }
     },
-    [message, refreshStatus, status]
+    [refreshStatus, status]
   )
 
   const handleAgentChange = useCallback(
@@ -290,7 +290,7 @@ const MessengerWeChatPage = memo(() => {
         await unbindWechat()
         // 先乐观更新，避免仍显示「已连接」
         await mutateStatus(DISCONNECTED_STATUS, { revalidate: false })
-        message.success('已断开微信')
+        toast.success('已断开微信')
         try {
           await refreshStatus()
         } catch {
@@ -299,7 +299,7 @@ const MessengerWeChatPage = memo(() => {
       },
       title: '断开微信连接？',
     })
-  }, [message, mutateStatus, refreshStatus])
+  }, [mutateStatus, refreshStatus])
 
   if (loading) {
     return (

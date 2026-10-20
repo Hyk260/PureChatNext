@@ -1,11 +1,12 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { ActionIcon, confirmModal, DropdownMenu, Icon } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
+import type { DropdownItem } from '@pure/ui'
 import { FolderOpen, MessageSquarePlus, MoreHorizontal, Trash2 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { getDesktopApi } from '@/types/desktop'
 
 type Props = {
@@ -17,14 +18,13 @@ type Props = {
 }
 
 const ProjectGroupMenu = memo<Props>(({ disabled, projectName, topicCount, onDeleteProject, onNewTopicInProject }) => {
-  const { message } = useApp()
   const [open, setOpen] = useState(false)
   const isDesktop = Boolean(getDesktopApi())
 
   const handleOpenFolder = useCallback(async () => {
     const api = getDesktopApi()
     if (!api?.listProjects || !api.openPath) {
-      message.error('当前环境不支持打开文件夹')
+      toast.error('当前环境不支持打开文件夹')
       return
     }
     setOpen(false)
@@ -32,14 +32,14 @@ const ProjectGroupMenu = memo<Props>(({ disabled, projectName, topicCount, onDel
       const projects = await api.listProjects()
       const project = projects.find((item) => item.name === projectName)
       if (!project) {
-        message.error('未找到该项目的源文件夹')
+        toast.error('未找到该项目的源文件夹')
         return
       }
       await api.openPath(project.rootPath)
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '打开文件夹失败')
+      toast.error(error instanceof Error ? error.message : '打开文件夹失败')
     }
-  }, [message, projectName])
+  }, [projectName])
 
   const handleDeleteProject = useCallback(() => {
     if (!onDeleteProject) return
@@ -54,8 +54,8 @@ const ProjectGroupMenu = memo<Props>(({ disabled, projectName, topicCount, onDel
     })
   }, [onDeleteProject, projectName, topicCount])
 
-  const items = useMemo<MenuProps['items']>(() => {
-    const next: MenuProps['items'] = []
+  const items = useMemo<DropdownItem[]>(() => {
+    const next: DropdownItem[] = []
     if (onNewTopicInProject) {
       next.push({
         icon: <Icon icon={MessageSquarePlus} />,

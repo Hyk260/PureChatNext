@@ -1,7 +1,7 @@
 'use client'
 
 import { Pagination as AntPagination } from 'antd'
-import { createStaticStyles } from 'antd-style'
+import { createStaticStyles } from '@lobehub/ui'
 import { memo, useCallback } from 'react'
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'

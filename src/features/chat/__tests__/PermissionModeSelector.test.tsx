@@ -59,7 +59,8 @@ vi.mock('@pure/ui', () => ({
   ),
 }))
 
-vi.mock('antd-style', () => ({
+vi.mock('@lobehub/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@lobehub/ui')>()),
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
 }))
 

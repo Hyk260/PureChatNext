@@ -1,13 +1,15 @@
 import { createContext, useContext } from 'react'
 
 export const THEME_COLOR_STORAGE_KEY = 'theme-color'
-export const DEFAULT_THEME_COLOR = '#00B96B'
+export const DEFAULT_THEME_COLOR = 'default'
+
+export type ThemeColor = typeof DEFAULT_THEME_COLOR | `#${string}`
 
 const HEX_COLOR_PATTERN = /^#[\da-f]{6}$/i
 
-export const parseStoredThemeColor = (value: string | null): string => {
+export const parseStoredThemeColor = (value: string | null): ThemeColor => {
   if (!value || !HEX_COLOR_PATTERN.test(value)) return DEFAULT_THEME_COLOR
-  return value.toUpperCase()
+  return `#${value.slice(1).toUpperCase()}`
 }
 
 export const getThemeColorForeground = (color: string): string => {
@@ -22,7 +24,8 @@ export const getThemeColorForeground = (color: string): string => {
 }
 
 interface ThemeColorContextValue {
-  themeColor: string
+  themeColor: ThemeColor
+  resolvedThemeColor: string
   setThemeColor: (color: string) => void
 }
 

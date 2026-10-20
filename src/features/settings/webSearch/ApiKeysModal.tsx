@@ -1,8 +1,7 @@
+import { toast } from '@lobehub/ui'
 import { ActionIcon, Button, Flex, InputPassword, Modal, Text } from '@pure/ui'
 import { Copy, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-
-import { useApp } from '@/components/AntdStaticMethods'
 
 export const parseApiKeys = (value: string) => [
   ...new Set(
@@ -24,10 +23,9 @@ export function ApiKeysModal({
 }) {
   const [draft, setDraft] = useState(keys)
   const [saving, setSaving] = useState(false)
-  const { message } = useApp()
   const save = async () => {
     if (draft.some((key) => !key.trim())) {
-      message.error('请填写密钥或删除空白行')
+      toast.error('请填写密钥或删除空白行')
       return
     }
     setSaving(true)
@@ -40,9 +38,9 @@ export function ApiKeysModal({
   const copy = async (key: string) => {
     try {
       await navigator.clipboard.writeText(key)
-      message.success('已复制')
+      toast.success('已复制')
     } catch {
-      message.error('复制失败')
+      toast.error('复制失败')
     }
   }
   return (

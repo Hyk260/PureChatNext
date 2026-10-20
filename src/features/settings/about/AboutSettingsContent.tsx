@@ -1,5 +1,7 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { ActionIcon, Block, Button, Flex, Github, Modal, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { Segmented, Switch } from 'antd'
@@ -8,7 +10,6 @@ import type { LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import {
   SITE_DEFAULT_URL,
   SITE_DESCRIPTION,
@@ -68,7 +69,6 @@ function ResourceRow({
 }
 
 export function AboutSettingsContent() {
-  const { message } = useApp()
   const update = useAboutUpdate()
   const [logsOpen, setLogsOpen] = useState(false)
   const progress = update.desktopState?.progress || 0
@@ -127,7 +127,7 @@ export function AboutSettingsContent() {
       if (api) await api.openExternal(href)
       else window.open(href, '_blank', 'noopener,noreferrer')
     } catch {
-      message.error('无法打开链接，请稍后重试。')
+      toast.error('无法打开链接，请稍后重试。')
     }
   }
 
@@ -141,9 +141,9 @@ export function AboutSettingsContent() {
     if (!update.version) return
     try {
       await copyToClipboard(`v${update.version}`)
-      message.success('已复制版本号')
+      toast.success('已复制版本号')
     } catch {
-      message.error('复制失败，请手动复制版本号。')
+      toast.error('复制失败，请手动复制版本号。')
     }
   }
 
@@ -155,7 +155,7 @@ export function AboutSettingsContent() {
       try {
         await api.openDevTools()
       } catch {
-        message.error('无法打开开发者工具，请通过桌面托盘重试。')
+        toast.error('无法打开开发者工具，请通过桌面托盘重试。')
       }
       return
     }

@@ -1,6 +1,7 @@
 'use client'
 
-import { useApp } from '@/components/AntdStaticMethods'
+
+import { toast } from '@lobehub/ui'
 import { useState } from 'react'
 
 import { requestPasswordReset } from '@/libs/better-auth/client'
@@ -14,7 +15,6 @@ interface PasswordSettingProps {
 }
 
 export function PasswordSetting({ email, hasCredentialAccount }: PasswordSettingProps) {
-  const { message } = useApp()
   const [loading, setLoading] = useState(false)
 
   const handleReset = () => {
@@ -34,13 +34,13 @@ export function PasswordSetting({ email, hasCredentialAccount }: PasswordSetting
           })
 
           if (error) {
-            message.error(error.message ?? '发送重置邮件失败')
+            toast.error(error.message ?? '发送重置邮件失败')
             return
           }
 
-          message.success('密码重置链接已发送到您的邮箱')
+          toast.success('密码重置链接已发送到您的邮箱')
         } catch {
-          message.error('发送重置邮件失败')
+          toast.error('发送重置邮件失败')
         } finally {
           setLoading(false)
         }

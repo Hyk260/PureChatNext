@@ -6,6 +6,7 @@ import { memo, useEffect, useState } from 'react'
 import type { CustomProviderInput } from './customProvidersApi'
 
 interface CustomProviderModalProps {
+  afterClose?: () => void
   existingProviderIds: string[]
   loading?: boolean
   open: boolean
@@ -23,7 +24,7 @@ const isHttpUrl = (value: string) => {
 }
 
 const CustomProviderModal = memo<CustomProviderModalProps>(
-  ({ existingProviderIds, loading = false, onCancel, onCreate, open }) => {
+  ({ afterClose, existingProviderIds, loading = false, onCancel, onCreate, open }) => {
     const [id, setId] = useState('')
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
@@ -66,6 +67,7 @@ const CustomProviderModal = memo<CustomProviderModalProps>(
 
     return (
       <Modal
+        afterClose={afterClose}
         cancelText='取消'
         confirmLoading={loading}
         destroyOnHidden

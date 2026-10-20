@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, Avatar, Block, Icon, Popover, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { ChevronsUpDownIcon, PinIcon } from 'lucide-react'
 import { memo, useMemo, useState } from 'react'
 

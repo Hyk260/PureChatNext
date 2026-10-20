@@ -12,13 +12,12 @@ import {
   Icon,
   renderDropdownMenuItems,
 } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import type { DropdownItem } from '@pure/ui'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { FileText, Paperclip, Plus, X } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatPermissionMode } from '@pure/types'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import mechaCat from '@/assets/mascots/purechat-mecha-cat.png'
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import { CHAT_ATTACHMENT_ACCEPT, validateChatAttachments } from '@/features/chat/attachmentRules'
@@ -182,7 +181,6 @@ const AttachmentImagePreview = memo<{ file: File }>(({ file }) => {
 AttachmentImagePreview.displayName = 'AttachmentImagePreview'
 
 const HomeChatInput = memo(() => {
-  const { message } = useApp()
   const router = useRouter()
   const [input, setInput] = useState('')
   const [files, setFiles] = useState<File[]>([])
@@ -223,10 +221,10 @@ const HomeChatInput = memo(() => {
       try {
         await api.setPermissionScope('draft', project.rootPath)
       } catch (error) {
-        message.error(error instanceof Error ? error.message : '设置项目工作目录失败')
+        toast.error(error instanceof Error ? error.message : '设置项目工作目录失败')
       }
     },
-    [message]
+    []
   )
 
   useEffect(() => {
@@ -241,18 +239,18 @@ const HomeChatInput = memo(() => {
 
       const validationError = validateChatAttachments(selected, files.length)
       if (validationError) {
-        message.error(validationError)
+        toast.error(validationError)
         return
       }
 
       if (selected.some((file) => file.type.startsWith('image/')) && !currentModel.abilities?.vision) {
-        message.error('当前模型不支持图片理解')
+        toast.error('当前模型不支持图片理解')
         return
       }
 
       setFiles((previous) => [...previous, ...selected])
     },
-    [currentModel.abilities?.vision, files.length, message]
+    [currentModel.abilities?.vision, files.length]
   )
 
   const handleAttachmentClick = useCallback(() => {
@@ -264,7 +262,7 @@ const HomeChatInput = memo(() => {
     setPlusOpen(false)
   }, [])
 
-  const plusMenuItems = useMemo<MenuProps['items']>(
+  const plusMenuItems = useMemo<DropdownItem[]>(
     () => [
       {
         icon: Paperclip,
@@ -313,7 +311,7 @@ const HomeChatInput = memo(() => {
       router.push(`/chat?agent=${encodeURIComponent(agentId)}`)
     } catch (error) {
       console.error('[home] start chat failed:', error)
-      message.error('无法开始对话')
+      toast.error('无法开始对话')
       setSending(false)
     }
   }

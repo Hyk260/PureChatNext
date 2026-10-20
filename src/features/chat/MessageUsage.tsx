@@ -4,7 +4,7 @@ import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { Icon, ModelIcon, Popover, Tooltip, Flex } from '@pure/ui'
 import type { ChatMessageMetadata } from '@pure/types'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { CircleHelpIcon, CoinsIcon } from 'lucide-react'
 import { memo } from 'react'
 

@@ -1,8 +1,8 @@
+import { toast } from '@lobehub/ui'
 import { Button, confirmModal, Flex, Modal, Text } from '@pure/ui'
 import useSWR from 'swr'
 import { useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopUpdateInstallationSupport } from '@/types/desktopUpdater'
 
@@ -12,7 +12,6 @@ export function UpdateLogsModal({ open, onClose, installationSupport }: {
   installationSupport: DesktopUpdateInstallationSupport | null
 }) {
   const api = getDesktopApi()
-  const { message } = useApp()
   const [isClearing, setIsClearing] = useState(false)
   const { data: logs, error, isValidating: loading, mutate } = useSWR(
     open && api ? 'desktop:update:logs' : null,
@@ -35,9 +34,9 @@ export function UpdateLogsModal({ open, onClose, installationSupport }: {
           if (!api) throw new Error('桌面 API 不可用')
           await api.updater.clearLogs()
           await mutate({ text: '', truncated: false }, { revalidate: false })
-          message.success('更新诊断日志已清除')
+          toast.success('更新诊断日志已清除')
         } catch {
-          message.error('清除更新诊断日志失败，请重试')
+          toast.error('清除更新诊断日志失败，请重试')
         } finally {
           setIsClearing(false)
         }

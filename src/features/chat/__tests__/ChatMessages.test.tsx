@@ -8,13 +8,11 @@ const autoScrollMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@pure/ui', () => ({
-  Accordion: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-  AccordionItem: ({ children, title }: { children?: React.ReactNode; title?: React.ReactNode }) => (
-    <div>
-      {title}
-      {children}
-    </div>
-  ),
+  AccordionRoot: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AccordionHeader: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AccordionTrigger: ({ children }: { children?: React.ReactNode }) => <button>{children}</button>,
+  AccordionPanel: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AccordionItem: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   ActionIcon: ({ icon: _icon, title, ...props }: { icon: unknown; title: string }) => (
     <button aria-label={title} type='button' {...props} />
   ),

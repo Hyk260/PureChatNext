@@ -3,7 +3,7 @@
 import type { ModelAbilities } from '@pure/model-bank'
 import { Icon, Tag, Tooltip, Flex } from '@pure/ui'
 import { formatTokenNumber } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { AtomIcon, EyeIcon, Globe2, ImageIcon, WrenchIcon } from 'lucide-react'
 import { memo } from 'react'
 

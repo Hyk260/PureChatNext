@@ -1,9 +1,10 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { Avatar, Input, Text, TextArea, Modal, Flex, Button } from '@pure/ui'
 import { lazy, memo, Suspense, useEffect, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import type { AgentListItem } from '@/const/home/agents'
 import { generateAgentProfile } from '@/features/home/agentApi'
 
@@ -43,7 +44,6 @@ const emptyValues: AgentFormValues = {
 }
 
 const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCancel, onSubmit, open }) => {
-  const { message } = useApp()
   const [values, setValues] = useState<AgentFormValues>(emptyValues)
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -95,9 +95,9 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
         openingMessage: profile.openingMessage,
         openingQuestions: padOpeningQuestions(profile.openingQuestions),
       }))
-      message.success('已生成开场内容')
+      toast.success('已生成开场内容')
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '生成失败')
+      toast.error(error instanceof Error ? error.message : '生成失败')
     } finally {
       setGenerating(false)
     }

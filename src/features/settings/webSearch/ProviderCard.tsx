@@ -1,3 +1,4 @@
+import { toast } from '@lobehub/ui'
 import { FETCH_PROVIDER_IDS, SEARCH_PROVIDER_IDS, WEB_PROVIDER_CATALOG } from '@pure/types'
 import type {
   WebCapability,
@@ -10,8 +11,6 @@ import { ActionIcon, Block, Flex, Input, InputPassword, Select, Text, Tooltip } 
 import { Activity, CircleHelp, ExternalLink, List } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-
-import { useApp } from '@/components/AntdStaticMethods'
 
 import { ApiKeysModal, parseApiKeys } from './ApiKeysModal'
 import { checkWebProvider } from './api'
@@ -42,7 +41,6 @@ export function ProviderCard({
   save: (patch: WebSearchSettingsPatch) => Promise<unknown>
   children?: ReactNode
 }) {
-  const { message } = useApp()
   const selectionKey = capability === 'search' ? 'searchProvider' : 'fetchProvider'
   const selected = data.settings[selectionKey]
   const followingServer = selected == null
@@ -89,7 +87,7 @@ export function ProviderCard({
       })
       return true
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '保存失败')
+      toast.error(error instanceof Error ? error.message : '保存失败')
       return false
     }
   }
@@ -98,7 +96,7 @@ export function ProviderCard({
     try {
       await save({ [selectionKey]: value === 'server' ? null : value })
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '保存失败')
+      toast.error(error instanceof Error ? error.message : '保存失败')
     }
   }
   const openKeys = async () => {
@@ -110,8 +108,8 @@ export function ProviderCard({
     try {
       const result = await checkWebProvider(capability, provider)
       setCheckMessage(`${result.message} · ${result.durationMs} ms`)
-      if (result.success) message.success('连接成功')
-      else message.error(result.message)
+      if (result.success) toast.success('连接成功')
+      else toast.error(result.message)
     } catch (error) {
       setCheckMessage(error instanceof Error ? error.message : '检测失败')
     } finally {

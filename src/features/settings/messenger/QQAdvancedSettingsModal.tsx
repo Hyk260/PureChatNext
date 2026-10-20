@@ -1,11 +1,11 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { ActionIcon, Button, Flex, Input, Modal, Select, Text, Tooltip } from '@pure/ui'
 import { CircleHelp, Hash, ListFilter, Plus, RotateCcw, ScanFace, Trash2, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { memo, useCallback, useState } from 'react'
-
-import { useApp } from '@/components/AntdStaticMethods'
 
 import type { QQAccessPolicy, QQAdvancedSettings } from './qqApi'
 import { updateQQAdvancedSettings } from './qqApi'
@@ -231,7 +231,6 @@ type QQAdvancedSettingsModalProps = {
 }
 
 const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(({ initialSettings, onClose, onSaved, open }) => {
-  const { message } = useApp()
   const [draft, setDraft] = useState<AdvancedSettingsDraft>(() => settingsToDraft(initialSettings))
   const [saving, setSaving] = useState(false)
 
@@ -270,26 +269,26 @@ const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(({ initialSet
   const settingsReady = Boolean(initialSettings)
   const handleSave = useCallback(async () => {
     if (!settingsReady) {
-      message.warning('设置尚未加载，请稍后再试')
+      toast.warning('设置尚未加载，请稍后再试')
       return
     }
     const blankRows = draft.allowedUsers.filter((user) => !user.platformUserId.trim())
     if (blankRows.length > 0) {
-      message.warning('请填写白名单用户的平台用户 ID，或移除空行')
+      toast.warning('请填写白名单用户的平台用户 ID，或移除空行')
       return
     }
     setSaving(true)
     try {
       const next = await updateQQAdvancedSettings(draftToSettings(draft))
-      message.success('已保存高级设置')
+      toast.success('已保存高级设置')
       onSaved(next)
       onClose()
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '保存失败')
+      toast.error(error instanceof Error ? error.message : '保存失败')
     } finally {
       setSaving(false)
     }
-  }, [draft, message, onClose, onSaved, settingsReady])
+  }, [draft, onClose, onSaved, settingsReady])
 
   return (
     <Modal

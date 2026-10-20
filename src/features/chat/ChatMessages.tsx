@@ -1,7 +1,7 @@
 'use client'
 
 import { Avatar, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import type { UIMessage } from 'ai'
 import type { ChatPermissionMode } from '@pure/types'
 import { memo, useCallback, useEffect, useRef } from 'react'

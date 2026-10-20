@@ -1,7 +1,7 @@
 'use client'
 
 import { Icon } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
+import type { DropdownItem, MenuInfo } from '@pure/ui'
 import { FolderCogIcon, SlidersHorizontalIcon } from 'lucide-react'
 import { useMemo } from 'react'
 
@@ -10,14 +10,14 @@ import { openCustomizeSidebarModal } from '@/features/home/HomeSidebar/modals/Cu
 import { stopMenuEvent } from '@/libs/utils/menu'
 
 /** 「⋯」菜单：分类管理 / 自定义侧边栏（创建入口在「+」菜单） */
-export const useAgentSectionDropdownMenu = (): MenuProps['items'] => {
+export const useAgentSectionDropdownMenu = (): DropdownItem[] => {
   return useMemo(
     () => [
       {
         icon: <Icon icon={FolderCogIcon} />,
         key: 'config',
         label: '分类管理',
-        onClick: (info) => {
+        onClick: (info: MenuInfo) => {
           stopMenuEvent(info)
           openConfigGroupModal()
         },
@@ -27,7 +27,7 @@ export const useAgentSectionDropdownMenu = (): MenuProps['items'] => {
         icon: <Icon icon={SlidersHorizontalIcon} />,
         key: 'customizeSidebar',
         label: '自定义侧边栏',
-        onClick: (info) => {
+        onClick: (info: MenuInfo) => {
           stopMenuEvent(info)
           openCustomizeSidebarModal()
         },

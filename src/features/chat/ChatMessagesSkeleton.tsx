@@ -1,7 +1,7 @@
 'use client'
 
 import { Flex, Skeleton } from '@pure/ui'
-import { createStaticStyles } from 'antd-style'
+import { createStaticStyles } from '@lobehub/ui'
 import { memo } from 'react'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -19,9 +19,9 @@ const styles = createStaticStyles(({ css }) => ({
 /** Message-area placeholder while a topic's history is loading. Keeps ChatInput mounted. */
 const ChatMessagesSkeleton = memo(() => (
   <Flex className={[styles.root, 'flex-col gap-5']}>
-    <Skeleton active className={styles.row} paragraph={{ rows: 3 }} title={{ width: '30%' }} />
-    <Skeleton active className={styles.row} paragraph={{ rows: 5 }} title={{ width: '40%' }} />
-    <Skeleton active className={styles.row} paragraph={{ rows: 2 }} title={false} />
+    <Skeleton.Text className={styles.row} rows={4} />
+    <Skeleton.Text className={styles.row} rows={6} />
+    <Skeleton.Text className={styles.row} rows={2} />
   </Flex>
 ))
 

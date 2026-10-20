@@ -12,7 +12,7 @@ import {
   formatSize,
   getPercentage,
 } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { MessageSquareText, RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ComponentProps } from 'react'
@@ -363,7 +363,7 @@ export function UsageSettingsContent() {
         </Flex>
         {loading && !data ? (
           <Block padding={16} variant='outlined'>
-            <Skeleton active paragraph={{ rows: 2 }} />
+            <Skeleton.Text rows={3} />
           </Block>
         ) : error && !data ? (
           <Block variant='outlined'>

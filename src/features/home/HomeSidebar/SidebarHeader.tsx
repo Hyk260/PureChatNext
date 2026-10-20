@@ -2,8 +2,7 @@
 
 import { ActionIcon, Flex } from '@pure/ui'
 import { Badge } from 'antd'
-import { useApp } from '@/components/AntdStaticMethods'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { BellIcon } from 'lucide-react'
 import { memo } from 'react'
 
@@ -17,8 +16,6 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 const SidebarHeader = memo(() => {
-  const { message } = useApp()
-
   return (
     <SideBarHeaderLayout
       left={<HomeUserTrigger />}

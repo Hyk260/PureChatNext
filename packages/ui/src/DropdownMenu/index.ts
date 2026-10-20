@@ -21,5 +21,6 @@ export {
   DropdownMenuTrigger,
   renderDropdownMenuItems,
   type MenuInfo,
-  type MenuProps,
+  type DropdownItem,
+  type DropdownMenuProps,
 } from '@lobehub/ui'

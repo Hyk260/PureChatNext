@@ -5,11 +5,10 @@ import { copyToClipboard, formatDuration, formatTokenNumber } from '@pure/utils/
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { Switch } from 'antd'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { Check, CircleX, Code2, Eye, Globe2, ImageIcon, Lightbulb, Loader2, Pencil, Trash2, Wrench } from 'lucide-react'
 import { memo } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
 import type { ProviderId, ProviderModelItem } from '../../types'
 
@@ -65,7 +64,6 @@ interface ModelItemProps {
 
 const ModelItem = memo<ModelItemProps>(
   ({ model, onDeleteCustomModel, onEditCustomModel, provider, showDragHandle = false }) => {
-    const { message } = useApp()
     const toggleModelEnabled = useProviderConfigStore((s) => s.toggleModelEnabled)
     const card = getAiModel(provider as ModelProviderId, model.id)
     const pricing = card?.pricing
@@ -116,7 +114,7 @@ const ModelItem = memo<ModelItemProps>(
                   className={styles.id}
                   onClick={async () => {
                     await copyToClipboard(model.id)
-                    message.success('已复制模型 ID')
+                    toast.success('已复制模型 ID')
                   }}
                 >
                   {model.id}

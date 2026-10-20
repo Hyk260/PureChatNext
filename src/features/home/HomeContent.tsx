@@ -3,7 +3,7 @@
 import { memo } from 'react'
 
 import { Flex, TypewriterEffect } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import HomeChatInput from '@/features/home/components/HomeChatInput'
 
 const welcomeMessages = {

@@ -1,11 +1,12 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
 import { useEffect, useState } from 'react'
 import { Segmented } from 'antd'
 import { Download, HardDrive, Pencil, Trash2, Upload } from 'lucide-react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 import { S3Form } from './S3Form'
@@ -68,7 +69,6 @@ async function fetchDownloadUrl(key: string): Promise<string> {
 }
 
 export default function S3Page() {
-  const { message } = useApp()
   const [action, setAction] = useState<ActionMode>('list')
   const [view, setView] = useState<ResultView>('results')
   const [values, setValues] = useState<S3FormValues>(initialForm)
@@ -200,13 +200,13 @@ export default function S3Page() {
       const response = await apiFetch(withSearch(S3_API_PATH, { action: 'deleteOne', key }), { method: 'DELETE' })
       const json: unknown = await response.json()
       if (!response.ok || !isApiSuccess(json)) {
-        message.error(readApiError(json, response.status))
+        toast.error(readApiError(json, response.status))
         return
       }
-      message.success('已删除')
+      toast.success('已删除')
       await refreshList()
     } catch {
-      message.error('删除失败')
+      toast.error('删除失败')
     }
   }
 
@@ -214,7 +214,7 @@ export default function S3Page() {
     try {
       window.open(await fetchDownloadUrl(key), '_blank', 'noopener')
     } catch (requestError) {
-      message.error(requestError instanceof Error ? requestError.message : '下载失败')
+      toast.error(requestError instanceof Error ? requestError.message : '下载失败')
     }
   }
 
@@ -223,7 +223,7 @@ export default function S3Page() {
     try {
       setImagePreview({ key, url: await fetchDownloadUrl(key) })
     } catch (requestError) {
-      message.error(requestError instanceof Error ? requestError.message : '预览失败')
+      toast.error(requestError instanceof Error ? requestError.message : '预览失败')
     } finally {
       setPreviewLoadingKey(null)
     }
@@ -232,9 +232,9 @@ export default function S3Page() {
   const copyKey = async (key: string) => {
     try {
       await navigator.clipboard.writeText(key)
-      message.success('Key 已复制')
+      toast.success('Key 已复制')
     } catch {
-      message.error('复制失败')
+      toast.error('复制失败')
     }
   }
 

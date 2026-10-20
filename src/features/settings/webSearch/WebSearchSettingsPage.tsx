@@ -1,6 +1,7 @@
+import { toast } from '@lobehub/ui'
 import { DEFAULT_WEB_SEARCH_SETTINGS } from '@pure/types'
 import type { WebSearchSettingsPatch } from '@pure/types'
-import { AccordionItem, Block, Button, Flex, Text, TextArea, Tooltip } from '@pure/ui'
+import { Collapsible, Block, Button, Flex, Text, TextArea, Tooltip } from '@pure/ui'
 import { InputNumber, Segmented, Switch } from 'antd'
 import { ChevronDown, ChevronUp, Info } from 'lucide-react'
 import { useState } from 'react'
@@ -42,7 +43,7 @@ function NumberSetting({
 
 export default function WebSearchSettingsPage() {
   const { data, error, save, reset, saving, mutate } = useWebSearchSettings()
-  const { message, modal } = useApp()
+  const { modal } = useApp()
   const config = { ...DEFAULT_WEB_SEARCH_SETTINGS, ...data?.settings }
   const savedBlacklist = config.blacklist.join('\n')
   const [advancedOpen, setAdvancedOpen] = useState(true)
@@ -55,7 +56,7 @@ export default function WebSearchSettingsPage() {
       await save(patch)
       return true
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '保存失败')
+      toast.error(error instanceof Error ? error.message : '保存失败')
       return false
     }
   }
@@ -71,11 +72,11 @@ export default function WebSearchSettingsPage() {
     ]
     if (await persist({ blacklist: rules })) {
       setBlacklistDraft((current) => (current === submitted ? undefined : current))
-      message.success('黑名单已保存')
+      toast.success('黑名单已保存')
     }
   }
   const retry = () => {
-    mutate().catch(() => message.error('重新加载失败'))
+    mutate().catch(() => toast.error('重新加载失败'))
   }
   const restore = () => {
     modal.confirm({
@@ -85,9 +86,9 @@ export default function WebSearchSettingsPage() {
         try {
           await reset()
           setBlacklistDraft(undefined)
-          message.success('已恢复服务器配置')
+          toast.success('已恢复服务器配置')
         } catch (error) {
-          message.error(error instanceof Error ? error.message : '恢复失败')
+          toast.error(error instanceof Error ? error.message : '恢复失败')
           throw error
         }
       },
@@ -130,24 +131,17 @@ export default function WebSearchSettingsPage() {
         data={data}
         save={save}
       >
-        <AccordionItem
-          itemKey='advanced'
-          title='高级设置'
-          expand={advancedOpen}
-          onExpandChange={setAdvancedOpen}
-          headerWrapper={() => (
-            <Button
-              type='text'
-              className='w-full justify-between'
-              aria-expanded={advancedOpen}
-              aria-controls='web-search-advanced'
-              icon={advancedOpen ? ChevronUp : ChevronDown}
-              onClick={toggleAdvanced}
-            >
-              高级设置
-            </Button>
-          )}
+        <Button
+          type='text'
+          className='w-full justify-between'
+          aria-expanded={advancedOpen}
+          aria-controls='web-search-advanced'
+          icon={advancedOpen ? ChevronUp : ChevronDown}
+          onClick={toggleAdvanced}
         >
+          高级设置
+        </Button>
+        <Collapsible open={advancedOpen}>
           <Flex id='web-search-advanced' className='flex-col gap-4 pt-3'>
             <Flex className='flex-between-wrap gap-3'>
               <Text>搜索结果个数</Text>
@@ -215,7 +209,7 @@ export default function WebSearchSettingsPage() {
               结果数量和正文压缩适用于外部搜索及抓取；实际数量可能低于上限。有黑名单时使用外部服务以保证过滤生效。
             </Text>
           </Flex>
-        </AccordionItem>
+        </Collapsible>
       </ProviderCard>
       <ProviderCard
         key={`fetch:${data.settings.fetchProvider ?? data.server.fetchProviders[0]}`}

@@ -2,7 +2,7 @@
 
 import { Block, Center, Icon, Text, Flex } from '@pure/ui'
 import type { BlockProps, IconProps } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { memo } from 'react'
 import type { ReactNode } from 'react'
 

@@ -76,12 +76,13 @@ vi.mock('@pure/ui', () => ({
       ))}
     </select>
   ),
-  Skeleton: () => <div>加载中</div>,
+  Skeleton: Object.assign(() => <div>加载中</div>, { Text: () => <div>加载中</div> }),
   Tag: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }))
 
-vi.mock('antd-style', () => ({
+vi.mock('@lobehub/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@lobehub/ui')>()),
   createStaticStyles: () => new Proxy({}, { get: (_, key) => String(key) }),
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
 }))

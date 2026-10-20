@@ -1,6 +1,6 @@
 'use client'
 
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties, MouseEvent as ReactMouseEvent, ReactNode, UIEvent } from 'react'
 

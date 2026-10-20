@@ -1,12 +1,13 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { ActionIcon, Avatar, Block, Button, DropdownMenu, Empty, Flex, Grid, Modal, SearchBar, Text } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
+import type { DropdownItem } from '@pure/ui'
 import { Pagination, Segmented } from 'antd'
 import { Box, Ellipsis, Loader2, Plus } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import Scrollbar from '@/components/Scrollbar'
 import { githubAssetAvatar } from '@/const/community/githubAssetUrl'
 import { COMMUNITY_SKILLS, filterCommunitySkills } from '@/const/community/skills'
@@ -63,7 +64,7 @@ const StoreSkillRow = memo(function StoreSkillRow({
   onUninstall: (skillId: string) => void
   uninstalling: boolean
 }) {
-  const menuItems = useMemo<MenuProps['items']>(
+  const menuItems = useMemo<DropdownItem[]>(
     () => [
       {
         danger: true,
@@ -128,7 +129,6 @@ const StoreSkillRow = memo(function StoreSkillRow({
 })
 
 const SkillStoreModal = memo<SkillStoreModalProps>(({ installedSkills, onClose, onInstalled, onUninstalled, open }) => {
-  const { message } = useApp()
   const [tab, setTab] = useState<StoreTab>('skill')
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
@@ -172,24 +172,24 @@ const SkillStoreModal = memo<SkillStoreModalProps>(({ installedSkills, onClose, 
           method: 'POST',
         })
         if (response.status === 409) {
-          message.info('已安装')
+          toast.info('已安装')
           onInstalled?.()
           return
         }
         if (!response.ok) {
-          message.error(getSkillInstallErrorMessage(response.status))
+          toast.error(getSkillInstallErrorMessage(response.status))
           return
         }
         const payload = (await response.json()) as { id?: string }
-        message.success('已安装')
+        toast.success('已安装')
         onInstalled?.(payload.id)
       } catch {
-        message.error('安装失败')
+        toast.error('安装失败')
       } finally {
         setInstallingIdentifier(null)
       }
     },
-    [installingIdentifier, message, onInstalled]
+    [installingIdentifier, onInstalled]
   )
 
   const handleUninstall = useCallback(
@@ -199,16 +199,16 @@ const SkillStoreModal = memo<SkillStoreModalProps>(({ installedSkills, onClose, 
         setUninstallingId(skillId)
         try {
           await deleteUserSkill(skillId)
-          message.success('已卸载')
+          toast.success('已卸载')
           onUninstalled?.()
         } catch {
-          message.error('卸载失败')
+          toast.error('卸载失败')
         } finally {
           setUninstallingId(null)
         }
       })
     },
-    [message, onUninstalled, uninstallingId]
+    [onUninstalled, uninstallingId]
   )
 
   return (

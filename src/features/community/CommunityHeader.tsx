@@ -1,12 +1,11 @@
 'use client'
 
 import { ActionIcon, Button, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { PanelLeftOpen, Plus } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { memo, useMemo, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { AssistantCategory } from '@/features/community/types'
 import { createAgent } from '@/features/home/agentApi'
 import AgentFormModal from '@/features/home/HomeSidebar/modals/AgentFormModal'
@@ -38,7 +37,6 @@ const useSearchPlaceholder = () => {
 }
 
 const CommunityHeader = memo(() => {
-  const { message } = useApp()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -58,7 +56,7 @@ const CommunityHeader = memo(() => {
       const agent = await createAgent(values)
       upsertLocal(agent)
       setCreateOpen(false)
-      message.success('已创建助理')
+      toast.success('已创建助理')
 
       const next = new URLSearchParams(searchParams.toString())
       next.set('category', AssistantCategory.Custom)
@@ -67,7 +65,7 @@ const CommunityHeader = memo(() => {
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
     } catch (error) {
       console.error('[community] create custom agent failed:', error)
-      message.error('创建失败，请先登录后再试')
+      toast.error('创建失败，请先登录后再试')
     } finally {
       setSaving(false)
     }

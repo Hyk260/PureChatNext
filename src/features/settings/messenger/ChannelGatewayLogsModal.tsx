@@ -1,9 +1,9 @@
+import { toast } from '@lobehub/ui'
 import { Button, confirmModal, Flex, Modal, Text } from '@pure/ui'
 import type { ChannelGatewayLogs, ChannelLogPlatform } from '@pure/types'
 import useSWR from 'swr'
 import { useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { apiFetch } from '@/utils/apiFetch'
 import { getDesktopRemoteBaseUrl } from '@/utils/desktopFetch'
 
@@ -31,7 +31,6 @@ async function fetchLogs(platform: ChannelLogPlatform): Promise<ChannelGatewayLo
 
 export function ChannelGatewayLogsModal(props: Props) {
   const { platform, userId, onClose } = props
-  const { message } = useApp()
   const [isClearing, setIsClearing] = useState(false)
   const service = getDesktopRemoteBaseUrl() || window.location.origin
   const { data, error, isValidating, mutate } = useSWR(
@@ -60,9 +59,9 @@ export function ChannelGatewayLogsModal(props: Props) {
           const response = await apiFetch(`/api/channels/${platform}/logs`, { method: 'DELETE' })
           if (!response.ok) throw new Error('清除日志失败')
           await mutate({ text: '', truncated: false }, { revalidate: false })
-          message.success('诊断日志已清除')
+          toast.success('诊断日志已清除')
         } catch {
-          message.error('清除诊断日志失败，请重试')
+          toast.error('清除诊断日志失败，请重试')
         } finally {
           setIsClearing(false)
         }

@@ -3,11 +3,10 @@
 import { ActionIcon, Avatar, Button, Empty, Flex, Text } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { formatDate } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { ChevronDown, ChevronRight, CircleX, LayoutGrid } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import FileIcon from '@/components/FileIcon'
 import Scrollbar from '@/components/Scrollbar'
 import { githubAssetAvatar } from '@/const/community/githubAssetUrl'
@@ -225,7 +224,6 @@ const SkillFilePreview = ({ path, skillId }: { path: string; skillId: string }) 
 }
 
 const SkillDetailPane = ({ skillId }: { skillId: string }) => {
-  const { message } = useApp()
   const [detail, setDetail] = useState<SkillDetail | null>(null)
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
 
@@ -242,13 +240,13 @@ const SkillDetailPane = ({ skillId }: { skillId: string }) => {
       })
       .catch((error: unknown) => {
         if (cancelled || (error instanceof DOMException && error.name === 'AbortError')) return
-        message.error('无法加载技能详情')
+        toast.error('无法加载技能详情')
       })
     return () => {
       cancelled = true
       controller.abort()
     }
-  }, [message, skillId])
+  }, [skillId])
 
   const tree = useMemo(() => buildFileTree(detail?.files.map((file) => file.path) ?? []), [detail])
   const updatedLabel = detail ? getSkillUpdatedLabel(detail.identifier, detail.updatedAt ?? detail.createdAt) : null
@@ -307,7 +305,6 @@ const SkillDetailPane = ({ skillId }: { skillId: string }) => {
 }
 
 export default function SkillSettingsPage() {
-  const { message } = useApp()
   const [skills, setSkills] = useState<InstalledSkill[] | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [communityOpen, setCommunityOpen] = useState(true)
@@ -327,10 +324,10 @@ export default function SkillSettingsPage() {
         .catch(() => {
           setSkills([])
           setSelectedId(null)
-          message.error('无法加载已安装技能')
+          toast.error('无法加载已安装技能')
         })
     },
-    [message]
+    []
   )
 
   useEffect(() => {
@@ -348,16 +345,16 @@ export default function SkillSettingsPage() {
         setUninstallingId(skillId)
         try {
           await deleteUserSkill(skillId)
-          message.success('已卸载')
+          toast.success('已卸载')
           await refreshList(null)
         } catch {
-          message.error('卸载失败')
+          toast.error('卸载失败')
         } finally {
           setUninstallingId(null)
         }
       })
     },
-    [message, refreshList, uninstallingId]
+    [refreshList, uninstallingId]
   )
 
   const handleInstalled = useCallback(

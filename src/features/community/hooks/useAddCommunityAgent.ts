@@ -1,6 +1,7 @@
 'use client'
 
-import { useApp } from '@/components/AntdStaticMethods'
+
+import { toast } from '@lobehub/ui'
 import { useCallback, useState } from 'react'
 
 import { loadCommunityAgent } from '@/const/community/agentDetails'
@@ -13,7 +14,6 @@ import { useRouter } from 'next/navigation'
 import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 
 export function useAddCommunityAgent() {
-  const { message } = useApp()
   const router = useRouter()
   const [adding, setAdding] = useState(false)
   const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
@@ -40,16 +40,16 @@ export function useAddCommunityAgent() {
         upsertLocal(agent)
         setSelectedAgentId(agent.id)
         setActiveAgent(toActiveCommunityAgent(agent))
-        message.success(`已添加「${agent.title}」到助理列表`)
+        toast.success(`已添加「${agent.title}」到助理列表`)
         router.push(`/chat?agent=${encodeURIComponent(agent.id)}`)
       } catch (error) {
         console.error('[community] add agent failed:', error)
-        message.error('添加助理失败，请先登录后再试')
+        toast.error('添加助理失败，请先登录后再试')
       } finally {
         setAdding(false)
       }
     },
-    [adding, message, router, setActiveAgent, setSelectedAgentId, upsertLocal]
+    [adding, router, setActiveAgent, setSelectedAgentId, upsertLocal]
   )
 
   return { addAgent, adding }

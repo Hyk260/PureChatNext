@@ -1,8 +1,7 @@
 'use client'
 
 import { Block, Icon, Text, Flex } from '@pure/ui'
-import { useApp } from '@/components/AntdStaticMethods'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { ChevronRightIcon } from 'lucide-react'
 import { memo, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -53,7 +52,6 @@ const isMessengerPlatform = (value: string | undefined): value is MessengerPlatf
 
 const MessengerPage = memo(() => {
   const navigate = useNavigate()
-  const { message } = useApp()
   const { platform } = useParams<{ platform?: string }>()
 
   // TODO: 第一期所有渠道暂未开放，点击仅提示「敬请期待」。
@@ -61,7 +59,7 @@ const MessengerPage = memo(() => {
   const handleSelectPlatform = (item: { id: MessengerPlatformId }) => {
     // TODO(messenger): 接入该平台详情页后启用跳转
     navigate(`/settings/messenger/${item.id}`)
-    // message.info('敬请期待')
+    // toast.info('敬请期待')
   }
 
   useEffect(() => {

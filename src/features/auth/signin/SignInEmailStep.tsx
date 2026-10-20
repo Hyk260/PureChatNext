@@ -1,7 +1,7 @@
 'use client'
 
 import { Alert, Badge, Divider, Form } from 'antd'
-import type { FormInstance, InputRef } from 'antd'
+import type { FormInstance } from 'antd'
 import { User } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -50,7 +50,7 @@ const getProviderLabel = (provider: string) => {
 
 const withLastUsedBadge = (node: ReactNode, enabled: boolean) =>
   enabled ? (
-    <Badge color='var(--ant-color-info)' count='上次使用' styles={LAST_USED_BADGE_STYLES}>
+    <Badge color='var(--lobe-color-info)' count='上次使用' styles={LAST_USED_BADGE_STYLES}>
       {node}
     </Badge>
   ) : (
@@ -68,7 +68,7 @@ export const SignInEmailStep = ({
   onSocialSignIn,
   serverConfigInit,
 }: SignInEmailStepProps) => {
-  const emailInputRef = useRef<InputRef>(null)
+  const emailInputRef = useRef<HTMLInputElement>(null)
   const pendingProviderRef = useRef<string | null>(null)
   const [pendingProvider, setPendingProvider] = useState<string | null>(null)
   const searchParams = useSearchParams()
@@ -114,8 +114,8 @@ export const SignInEmailStep = ({
       <Flex className='flex-col gap-3'>
         {!serverConfigInit && (
           <>
-            <Skeleton.Button active block size='large' />
-            <Skeleton.Button active block size='large' />
+            <Skeleton animated height={40} width='100%' />
+            <Skeleton animated height={40} width='100%' />
             {divider}
           </>
         )}

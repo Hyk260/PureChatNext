@@ -13,7 +13,7 @@ import {
   useResourceStore,
 } from '@/features/resources/store/resourceStore'
 import { Icon, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { ChevronLeft, FolderIcon } from 'lucide-react'
 
 const styles = createStaticStyles(({ css }) => ({

@@ -4,7 +4,7 @@ import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
 import { Button, Flex, Icon, InputPassword, Text, confirmModal } from '@pure/ui'
 import { Alert, Form } from 'antd'
-import type { FormInstance, InputRef } from 'antd'
+import type { FormInstance } from 'antd'
 import { ChevronLeft, Lock } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
 
@@ -42,7 +42,7 @@ export const SignInPasswordStep = ({
   onSendMagicLink,
   onSignIn,
 }: SignInPasswordStepProps) => {
-  const passwordInputRef = useRef<InputRef>(null)
+  const passwordInputRef = useRef<HTMLInputElement>(null)
 
   const handleForgotPasswordClick = () => {
     if (forgotPasswordLoading || !email) return

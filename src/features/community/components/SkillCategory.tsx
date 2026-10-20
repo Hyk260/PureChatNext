@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, Icon, Tag, Text, Flex } from '@pure/ui'
-import { cx } from 'antd-style'
+import { cx } from '@lobehub/ui'
 import {
   Apple,
   BarChart2,

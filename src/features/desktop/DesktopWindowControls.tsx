@@ -1,4 +1,4 @@
-import { createStaticStyles } from 'antd-style'
+import { createStaticStyles } from '@lobehub/ui'
 import { Copy, Minus, Square, X } from 'lucide-react'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -19,15 +19,15 @@ const styles = createStaticStyles(({ css }) => ({
     min-width: 28px;
     min-height: 28px;
     padding: 0;
-    color: var(--ant-color-text-secondary, #666);
+    color: var(--lobe-color-text-secondary, #666);
     background: transparent;
     border: 0;
     border-radius: 6px;
     cursor: pointer;
 
     &:hover {
-      color: var(--ant-color-text, #1f1f1f);
-      background: var(--ant-color-fill-secondary, #f0f0f0);
+      color: var(--lobe-color-text, #1f1f1f);
+      background: var(--lobe-color-fill-secondary, #f0f0f0);
     }
   `,
   closeButton: css`

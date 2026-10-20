@@ -36,7 +36,7 @@ export default function RequireAuth({ children, fallback }: RequireAuthProps) {
     return (
       fallback ?? (
         <Flex className='flex-col h-full p-6'>
-          <Skeleton active paragraph={{ rows: 6 }} />
+          <Skeleton.Text rows={7} />
         </Flex>
       )
     )

@@ -2,7 +2,7 @@
 
 import { Button, Flex, Text } from '@pure/ui'
 import { Spin } from 'antd'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { Download } from 'lucide-react'
 import { lazy, memo, Suspense, useEffect, useState } from 'react'
 

@@ -1,29 +1,31 @@
 'use client'
 
-import { ConfigProvider, ThemeProvider } from '@pure/ui/ThemeProvider'
+import { ConfigProvider, setLobeTheme } from '@pure/ui/ThemeProvider'
 import { ModalHost } from '@pure/ui/ModalHost'
-import { ConfigProvider as AntdConfigProvider } from 'antd'
+import { zhCn as lobeZhCn } from '@lobehub/ui/i18n'
+import { createLobeToken, ToastHost } from '@lobehub/ui'
+import { App as AntdApp, ConfigProvider as AntdConfigProvider, theme as antdTheme } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
-import { StyleProvider } from 'antd-style'
-import type { ThemeMode } from 'antd-style'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import { LazyMotion, domAnimation } from 'motion/react'
 import * as m from 'motion/react-m'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import type { PropsWithChildren } from 'react'
 import { localStg } from '@pure/utils/storage'
 
 import AntdStaticMethods from '@/components/AntdStaticMethods'
 import { useSystemAppearance } from '@/hooks/useSystemAppearance'
 import {
-  DEFAULT_THEME_MODE,
   parseStoredThemeMode,
   resolveThemeAppearance,
   serializeThemeMode,
   THEME_STORAGE_KEY,
+  ThemeModeContext,
 } from '@/layout/themeMode'
+import type { ThemeMode } from '@/layout/themeMode'
 import {
+  DEFAULT_THEME_COLOR,
   getThemeColorForeground,
   parseStoredThemeColor,
   ThemeColorContext,
@@ -31,6 +33,11 @@ import {
 } from '@/layout/themeColor'
 
 dayjs.locale('zh-cn')
+
+const NEUTRAL_INPUT_FOCUS_TOKENS = {
+  activeBorderColor: 'var(--input-focus-border-color)',
+  activeShadow: 'var(--input-focus-shadow)',
+}
 
 /**
  * Client theme stack shared by Vite SPA AppLayer (and legacy Next root if needed).
@@ -45,6 +52,8 @@ const ThemeProviders = ({ children }: PropsWithChildren) => {
     return parseStoredThemeColor(localStg.getString(THEME_COLOR_STORAGE_KEY))
   })
   const appearance = resolveThemeAppearance(themeMode, systemAppearance)
+  const isDefaultThemeColor = themeColor === DEFAULT_THEME_COLOR
+  const resolvedThemeColor = isDefaultThemeColor ? createLobeToken({ appearance }).colorPrimary : themeColor
 
   const handleThemeModeChange = useCallback((nextThemeMode: ThemeMode) => {
     setThemeMode(nextThemeMode)
@@ -53,43 +62,59 @@ const ThemeProviders = ({ children }: PropsWithChildren) => {
   }, [])
 
   const handleThemeColorChange = useCallback((nextThemeColor: string) => {
-    setThemeColor(nextThemeColor)
-    localStg.setString(THEME_COLOR_STORAGE_KEY, nextThemeColor)
+    const color = parseStoredThemeColor(nextThemeColor)
+    setThemeColor(color)
+    if (color === DEFAULT_THEME_COLOR) {
+      localStg.remove(THEME_COLOR_STORAGE_KEY)
+    } else {
+      localStg.setString(THEME_COLOR_STORAGE_KEY, color)
+    }
   }, [])
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = appearance
-  }, [appearance])
+  useLayoutEffect(() => {
+    setLobeTheme({ appearance, primaryColor: isDefaultThemeColor ? undefined : themeColor })
+  }, [appearance, isDefaultThemeColor, themeColor])
 
   useEffect(() => {
+    if (isDefaultThemeColor) {
+      document.documentElement.style.removeProperty('--theme-primary')
+      document.documentElement.style.removeProperty('--theme-primary-foreground')
+      return
+    }
     document.documentElement.style.setProperty('--theme-primary', themeColor)
     document.documentElement.style.setProperty('--theme-primary-foreground', getThemeColorForeground(themeColor))
-  }, [themeColor])
+  }, [isDefaultThemeColor, themeColor])
 
   return (
-    <StyleProvider ssrInline={false} speedy>
-      <AntdConfigProvider locale={zhCN}>
-        <ThemeProvider
-          appearance={appearance}
-          defaultAppearance='light'
-          defaultThemeMode='auto'
-          onThemeModeChange={handleThemeModeChange}
-          themeMode={themeMode}
-          style={{ height: '100%' }}
-          theme={{ cssVar: { key: 'pure-vars' }, token: { colorPrimary: themeColor } }}
+    <LazyMotion features={domAnimation}>
+      <ConfigProvider locale='zh-CN' resources={lobeZhCn} motion={m}>
+        <AntdConfigProvider
+          locale={zhCN}
+          theme={{
+            algorithm: appearance === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+            cssVar: { key: 'pure-vars' },
+            components: {
+              Input: NEUTRAL_INPUT_FOCUS_TOKENS,
+              InputNumber: NEUTRAL_INPUT_FOCUS_TOKENS,
+            },
+            token: { colorPrimary: resolvedThemeColor },
+          }}
         >
-          <AntdStaticMethods />
-          <LazyMotion features={domAnimation}>
-            <ConfigProvider motion={m}>
+          <AntdApp className='h-full'>
+            <AntdStaticMethods />
+            <ThemeModeContext value={{ themeMode, setThemeMode: handleThemeModeChange }}>
               <ModalHost />
-              <ThemeColorContext.Provider value={{ themeColor, setThemeColor: handleThemeColorChange }}>
+              <ToastHost />
+              <ThemeColorContext.Provider
+                value={{ themeColor, resolvedThemeColor, setThemeColor: handleThemeColorChange }}
+              >
                 {children}
               </ThemeColorContext.Provider>
-            </ConfigProvider>
-          </LazyMotion>
-        </ThemeProvider>
-      </AntdConfigProvider>
-    </StyleProvider>
+            </ThemeModeContext>
+          </AntdApp>
+        </AntdConfigProvider>
+      </ConfigProvider>
+    </LazyMotion>
   )
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, Icon, Flex } from '@pure/ui'
-import { cssVar } from 'antd-style'
+import { cssVar } from '@lobehub/ui'
 import { ChevronDownIcon } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { memo } from 'react'

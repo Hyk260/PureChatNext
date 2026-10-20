@@ -1,7 +1,7 @@
 'use client'
 
 import { Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { memo, useState } from 'react'
 
 const styles = createStaticStyles(({ css }) => ({

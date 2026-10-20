@@ -1,8 +1,7 @@
-import { Button, Flex } from 'antd'
+import { toast } from '@lobehub/ui'
 import { sessionStg } from '@pure/utils/storage'
 import { useEffect, useRef } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { isDesktopRenderer } from '@/utils/desktopAuth'
 import {
   SPA_UPDATE_DISMISS_KEY,
@@ -25,14 +24,11 @@ type SpaUpdateNotifierProps = {
  * 本地预览（无需重新部署即可强制显示提示）：设置 `VITE_SPA_UPDATE_PREVIEW=1`，
  * 或在任意 SPA 地址后添加 `?spaUpdatePreview=1`。
  *
- * 按钮使用 antd（而非 `@pure/ui`），因为通知 Portal 位于共享的
- * `ConfigProvider` / `MotionProvider` 之外。
  */
 const SpaUpdateNotifier = ({
   preview = isSpaUpdatePreview(),
   enabled = !import.meta.env.DEV || preview,
 }: SpaUpdateNotifierProps) => {
-  const { notification } = useApp()
   const isShowingRef = useRef(false)
 
   useEffect(() => {
@@ -48,26 +44,28 @@ const SpaUpdateNotifier = ({
 
     const notify = (remote: string) => {
       isShowingRef.current = true
-      notification.open({
-        actions: (
-          <Flex gap={8}>
-            <Button
-              onClick={() => {
-                rememberDismissed(remote)
-                notification.destroy(SPA_UPDATE_NOTIFICATION_KEY)
-              }}
-            >
-              稍后再说
-            </Button>
-            <Button type='primary' onClick={() => location.reload()}>
-              立即刷新
-            </Button>
-          </Flex>
-        ),
-        duration: false,
-        key: SPA_UPDATE_NOTIFICATION_KEY,
+      toast({
+        actions: [
+          {
+            label: '稍后再说',
+            onClick: () => {
+              rememberDismissed(remote)
+              toast.dismiss(SPA_UPDATE_NOTIFICATION_KEY)
+            },
+            variant: 'secondary',
+          },
+          {
+            label: '立即刷新',
+            onClick: () => location.reload(),
+            variant: 'primary',
+          },
+        ],
+        duration: 0,
+        id: SPA_UPDATE_NOTIFICATION_KEY,
         onClose: () => rememberDismissed(remote),
-        title: '检测到系统有新版本发布，是否立即刷新页面？',
+        placement: 'top-right',
+        title: '检测到新版本发布，是否立即刷新页面？',
+        type: 'info',
       })
     }
 
@@ -99,10 +97,10 @@ const SpaUpdateNotifier = ({
     return () => {
       cancelled = true
       isShowingRef.current = false
-      notification.destroy(SPA_UPDATE_NOTIFICATION_KEY)
+      toast.dismiss(SPA_UPDATE_NOTIFICATION_KEY)
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
-  }, [enabled, notification, preview])
+  }, [enabled, preview])
 
   return null
 }

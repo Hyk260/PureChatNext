@@ -3,9 +3,8 @@
 import { DEFAULT_MODEL_PROVIDER_LIST, getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { ActionIcon, confirmModal, Flex, SortableList, Tabs } from '@pure/ui'
-import { useApp } from '@/components/AntdStaticMethods'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { ArrowDownUp, Eye, EyeOff } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -27,7 +26,6 @@ interface ModelListProps {
 }
 
 const ModelList = memo<ModelListProps>(({ id }) => {
-  const { message } = useApp()
   const config = useProviderConfigStore((s) => s.configs[id])
   const customProviders = useProviderConfigStore((s) => s.customProviders)
   const addCustomModel = useProviderConfigStore((s) => s.addCustomModel)
@@ -103,7 +101,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
       }
 
       if (!response.ok) {
-        message.error(json.cause || json.message || '获取模型列表失败')
+        toast.error(json.cause || json.message || '获取模型列表失败')
         return
       }
 
@@ -111,12 +109,12 @@ const ModelList = memo<ModelListProps>(({ id }) => {
       mergeRemoteModels(id, remoteModels)
 
       if (json.fallback) {
-        message.warning(json.message || '远程拉取失败，已使用内置模型列表')
+        toast.warning(json.message || '远程拉取失败，已使用内置模型列表')
       } else {
-        message.success(`已获取 ${remoteModels.length} 个模型`)
+        toast.success(`已获取 ${remoteModels.length} 个模型`)
       }
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '获取模型列表失败')
+      toast.error(error instanceof Error ? error.message : '获取模型列表失败')
     } finally {
       setLoading(false)
     }
@@ -135,9 +133,9 @@ const ModelList = memo<ModelListProps>(({ id }) => {
       }
       setCustomModelModalOpen(false)
       setEditingCustomModel(undefined)
-      message.success(editingCustomModel ? `已更新模型 ${model.displayName}` : `已添加模型 ${model.displayName}`)
+      toast.success(editingCustomModel ? `已更新模型 ${model.displayName}` : `已添加模型 ${model.displayName}`)
     },
-    [addCustomModel, canManageCustomModels, editingCustomModel, id, message, updateCustomModel]
+    [addCustomModel, canManageCustomModels, editingCustomModel, id, updateCustomModel]
   )
 
   const handleOpenAddCustomModel = useCallback(() => {
@@ -163,11 +161,11 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         title: '删除自定义模型？',
         onOk: () => {
           removeCustomModel(id, model.id)
-          message.success(`已删除模型 ${model.displayName}`)
+          toast.success(`已删除模型 ${model.displayName}`)
         },
       })
     },
-    [id, message, removeCustomModel]
+    [id, removeCustomModel]
   )
 
   const clearCheckingHealth = useCallback(
@@ -193,9 +191,9 @@ const ModelList = memo<ModelListProps>(({ id }) => {
       clearCheckingHealth(modelIds)
       setHealthLoading(false)
       setHealthModalOpen(false)
-      if (notify) message.info('模型健康检查已取消')
+      if (notify) toast.info('模型健康检查已取消')
     },
-    [clearCheckingHealth, message]
+    [clearCheckingHealth]
   )
 
   useEffect(() => () => cancelHealthCheck(false), [cancelHealthCheck])
@@ -210,10 +208,10 @@ const ModelList = memo<ModelListProps>(({ id }) => {
       title: '清除获取的模型？',
       onOk: () => {
         clearRemoteModels(id)
-        message.success('已清除获取的模型')
+        toast.success('已清除获取的模型')
       },
     })
-  }, [clearRemoteModels, id, message, remoteModelCount])
+  }, [clearRemoteModels, id, remoteModelCount])
 
   const handleResetModels = useCallback(() => {
     if (!canManageCustomModels) return
@@ -228,17 +226,17 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         if (healthLoading) cancelHealthCheck(false)
         resetModels(id)
         setKeyword('')
-        message.success('已重置所有模型修改')
+        toast.success('已重置所有模型修改')
       },
     })
-  }, [canManageCustomModels, cancelHealthCheck, healthLoading, id, message, resetModels])
+  }, [canManageCustomModels, cancelHealthCheck, healthLoading, id, resetModels])
 
   const handleSetAllModelsEnabled = useCallback(
     (enabled: boolean) => {
       setAllModelsEnabled(id, enabled)
-      message.success(enabled ? '已全部启用模型' : '已全部禁用模型')
+      toast.success(enabled ? '已全部启用模型' : '已全部禁用模型')
     },
-    [id, message, setAllModelsEnabled]
+    [id, setAllModelsEnabled]
   )
 
   const renderSortableModels = useCallback(
@@ -352,7 +350,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
     healthAbortRef.current = null
     healthModelIdsRef.current = []
     setHealthLoading(false)
-    message.info(`${getSettingsProviderMeta(id, customProviders).name}：成功 ${successCount} 个，失败 ${failureCount} 个`)
+    toast.info(`${getSettingsProviderMeta(id, customProviders).name}：成功 ${successCount} 个，失败 ${failureCount} 个`)
   }
 
   return (

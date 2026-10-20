@@ -1,6 +1,6 @@
 'use client'
 
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { forwardRef } from 'react'
 import type { CSSProperties, ComponentPropsWithoutRef, ReactNode } from 'react'
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { Block, Icon, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { ArrowLeftIcon } from 'lucide-react'
 import { memo } from 'react'
 import type { ReactNode } from 'react'

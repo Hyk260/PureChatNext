@@ -2,7 +2,7 @@
 
 import { Center, Checkbox, Flex, Text } from '@pure/ui'
 import { formatDateTime, formatSize } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { memo, useCallback } from 'react'
 import type { MouseEvent, PointerEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'

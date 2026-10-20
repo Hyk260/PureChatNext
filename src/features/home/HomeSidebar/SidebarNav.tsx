@@ -1,8 +1,9 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
 import { Drawer } from 'antd'
-import { useApp } from '@/components/AntdStaticMethods'
 import { Route } from 'lucide-react'
 import { memo, useState } from 'react'
 
@@ -15,7 +16,6 @@ import { usePathname } from 'next/navigation'
 
 const SidebarNav = memo(() => {
   const pathname = usePathname()
-  const { message } = useApp()
   const [routeNavOpen, setRouteNavOpen] = useState(false)
 
   return (
@@ -30,7 +30,7 @@ const SidebarNav = memo(() => {
                 key={item.key}
                 icon={item.icon}
                 title={item.title}
-                onItemClick={() => message.info('搜索功能即将推出')}
+                onItemClick={() => toast.info('搜索功能即将推出')}
               />
             )
           }
@@ -41,7 +41,7 @@ const SidebarNav = memo(() => {
                 key={item.key}
                 icon={item.icon}
                 title={item.title}
-                onItemClick={() => message.info('功能即将推出')}
+                onItemClick={() => toast.info('功能即将推出')}
               />
             )
           }

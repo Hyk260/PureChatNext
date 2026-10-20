@@ -1,6 +1,5 @@
 'use client'
 
-import type { InputRef } from 'antd'
 import { ActionIcon, Input } from '@pure/ui'
 import { SearchIcon, XIcon } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
@@ -13,7 +12,7 @@ const SearchInput = memo(() => {
   const [showIcon, setShowIcon] = useState(true)
   const [localQuery, setLocalQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
-  const inputRef = useRef<InputRef>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const setSearchQuery = useResourceManagerStore((s) => s.setSearchQuery)
 
   useEffect(() => {

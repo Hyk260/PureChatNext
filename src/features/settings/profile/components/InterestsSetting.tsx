@@ -1,8 +1,7 @@
 'use client'
 
 import { Block, Icon, Input, Text, Flex } from '@pure/ui'
-import { useApp } from '@/components/AntdStaticMethods'
-import { cssVar } from 'antd-style'
+import { toast, cssVar } from '@lobehub/ui'
 import { BriefcaseIcon } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 
@@ -22,7 +21,6 @@ interface InterestsSettingProps {
 }
 
 export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps) {
-  const { message } = useApp()
   const [customInput, setCustomInput] = useState('')
   const [showCustomInput, setShowCustomInput] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -35,12 +33,12 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
         const result = await patchUserProfile({ interests: updated })
         onUpdated(result.interests)
       } catch (error) {
-        message.error(error instanceof Error ? error.message : '兴趣领域更新失败')
+        toast.error(error instanceof Error ? error.message : '兴趣领域更新失败')
       } finally {
         setSaving(false)
       }
     },
-    [message, onUpdated]
+    [onUpdated]
   )
 
   const toggleInterest = useCallback(

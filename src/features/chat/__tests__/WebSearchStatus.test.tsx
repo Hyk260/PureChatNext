@@ -6,7 +6,8 @@ vi.mock('@pure/ui', () => ({
   Avatar: ({ avatar }: { avatar: string }) => <span data-avatar={avatar} />,
 }))
 
-vi.mock('antd-style', () => ({
+vi.mock('@lobehub/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@lobehub/ui')>()),
   createStaticStyles: () => new Proxy({}, { get: (_, key) => String(key) }),
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
 }))

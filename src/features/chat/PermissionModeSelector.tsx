@@ -1,7 +1,7 @@
 'use client'
 
 import { Flex, Icon, Modal, Popover } from '@pure/ui'
-import { cssVar } from 'antd-style'
+import { cssVar } from '@lobehub/ui'
 import {
   Check,
   Folder,

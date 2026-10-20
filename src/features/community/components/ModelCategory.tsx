@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, Icon, ProviderIcon, Tag, Text, Flex } from '@pure/ui'
-import { cx } from 'antd-style'
+import { cx } from '@lobehub/ui'
 import { LayoutPanelTop } from 'lucide-react'
 import { memo, useCallback, useMemo } from 'react'
 

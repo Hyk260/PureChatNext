@@ -42,6 +42,7 @@ export default defineConfig({
   ],
   resolve: {
     alias,
+    dedupe: ['@lobehub/icons', '@lobehub/ui'],
   },
   test: {
     alias,

@@ -2,7 +2,7 @@
 
 import { Avatar } from 'antd'
 import { ActionIcon, Flex } from '@pure/ui'
-import { createStaticStyles } from 'antd-style'
+import { createStaticStyles } from '@lobehub/ui'
 import { PanelLeftOpen } from 'lucide-react'
 import Link from 'next/link'
 import { memo } from 'react'

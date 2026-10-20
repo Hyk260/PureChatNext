@@ -3,21 +3,11 @@
 import { ActionIcon } from '@pure/ui'
 import type { MarkdownProps } from '@pure/ui/Markdown'
 import { Markdown } from '@pure/ui/Markdown'
-import { createStaticStyles, cx } from 'antd-style'
 import { Eye } from 'lucide-react'
 import { memo, useMemo, useState } from 'react'
 
 import HtmlPreviewModal from '@/features/chat/HtmlPreviewModal'
 import { isHtmlPreviewLanguage } from '@/features/chat/htmlPreview'
-
-const styles = createStaticStyles(({ css }) => ({
-  colorfulFileIcons: css`
-    .ant-highlighter .languageTitle {
-      opacity: 1;
-      filter: grayscale(0%);
-    }
-  `,
-}))
 
 const STATIC_HIGHLIGHT_PROPS = {
   animated: false,
@@ -73,7 +63,7 @@ const MessageMarkdown = memo<MessageMarkdownProps>(({ text, className, isStreami
       <Markdown
         {...MARKDOWN_PROPS}
         animated={isStreaming}
-        className={cx(styles.colorfulFileIcons, className)}
+        className={className}
         componentProps={componentProps}
       >
         {text}

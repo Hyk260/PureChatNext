@@ -1,13 +1,12 @@
 'use client'
 
 import { Avatar, Center, confirmModal, DropdownMenu, Block, Icon, Text, Flex } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import type { DropdownItem, MenuInfo } from '@pure/ui'
+import { toast, createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { MoreHorizontal, Pencil, PinIcon, PinOff, Trash2 } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'
-import { useApp } from '@/components/AntdStaticMethods'
 import { stopMenuEvent } from '@/libs/utils/menu'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -76,7 +75,6 @@ interface AgentItemProps {
 }
 
 const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSelect }) => {
-  const { message } = useApp()
   const [menuOpen, setMenuOpen] = useState(false)
   const [actionsMounted, setActionsMounted] = useState(false)
   const canOperate = !agent.isBuiltin
@@ -98,19 +96,19 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
       await onDelete(agent.id)
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      if (code === 'BUILTIN') message.error('系统内置助理不可删除')
-      else message.error('删除失败')
+      if (code === 'BUILTIN') toast.error('系统内置助理不可删除')
+      else toast.error('删除失败')
       throw error
     }
-  }, [agent.id, message, onDelete])
+  }, [agent.id, onDelete])
 
-  const menuItems = useMemo<MenuProps['items']>(
+  const menuItems = useMemo<DropdownItem[]>(
     () => [
       {
         icon: <Icon icon={isPinned ? PinOff : PinIcon} />,
         key: 'pin',
         label: isPinned ? '取消置顶' : '置顶',
-        onClick: (info) => {
+        onClick: (info: MenuInfo) => {
           stopMenuEvent(info)
           onPin(agent, !isPinned)
         },
@@ -119,7 +117,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
       //   icon: <Icon icon={Pencil} />,
       //   key: 'rename',
       //   label: '重命名',
-      //   onClick: (info) => {
+      //   onClick: (info: MenuInfo) => {
       //     stopMenuEvent(info)
       //     onEdit(agent)
       //   },
@@ -130,7 +128,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         icon: <Icon icon={Trash2} />,
         key: 'delete',
         label: '删除',
-        onClick: (info) => {
+        onClick: (info: MenuInfo) => {
           stopMenuEvent(info)
           confirmModal({
             cancelText: '取消',

@@ -2,7 +2,7 @@
 
 import { Block, Icon, Text, Flex } from '@pure/ui'
 import { Divider } from 'antd'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { BotIcon, CircleStopIcon, HelpCircleIcon, MegaphoneIcon, SquarePlusIcon } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Fragment, memo } from 'react'

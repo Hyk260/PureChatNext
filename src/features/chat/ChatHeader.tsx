@@ -2,7 +2,7 @@
 
 import { ActionIcon, Button, DropdownMenu, Icon, Modal, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import {
   Check,
   Hash,
@@ -19,7 +19,6 @@ import {
 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { createTopicShare } from '@/features/chat/chatApi'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { LocalChatTopic } from '@/features/chat/types'
@@ -78,7 +77,6 @@ type Props = {
 
 const ChatHeader = memo<Props>(
   ({ autoRenameDisabled, autoRenaming, hasMessages, title, topic, onAutoRename, onDelete, onFavorite, onRename }) => {
-    const { message } = useApp()
     const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
     const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
     const wideScreen = useChatUiStore((s) => s.wideScreen)
@@ -105,12 +103,12 @@ const ChatHeader = memo<Props>(
       if (!topic) return
       try {
         await copyToClipboard(topic.id)
-        message.success('会话 ID 已复制')
+        toast.success('会话 ID 已复制')
       } catch (error) {
         console.error('[chat] copy topic id failed', error)
-        message.error('复制会话 ID 失败')
+        toast.error('复制会话 ID 失败')
       }
-    }, [message, topic])
+    }, [topic])
 
     const handleShare = useCallback(async () => {
       if (!topic || shareLoading) return
@@ -123,23 +121,23 @@ const ChatHeader = memo<Props>(
         setShareUrl(`${window.location.origin}/share/t/${shareId}`)
       } catch (error) {
         console.error('[chat] share failed', error)
-        message.error('生成分享链接失败')
+        toast.error('生成分享链接失败')
       } finally {
         setShareLoading(false)
       }
-    }, [message, shareLoading, topic])
+    }, [shareLoading, topic])
 
     const handleCopyShareLink = useCallback(async () => {
       if (!shareUrl) return
       try {
         await copyToClipboard(shareUrl)
         setShareCopied(true)
-        message.success('分享链接已复制')
+        toast.success('分享链接已复制')
       } catch (error) {
         console.error('[chat] copy share link failed', error)
-        message.error('复制分享链接失败')
+        toast.error('复制分享链接失败')
       }
-    }, [message, shareUrl])
+    }, [shareUrl])
 
     const handleDelete = useCallback(() => {
       if (!topic) return

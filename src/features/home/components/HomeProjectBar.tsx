@@ -1,11 +1,10 @@
 'use client'
 
 import { ActionIcon, Button, Flex, Icon, Input, Modal, Popover, Text } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { Check, Folder, FolderPlus, Plus, X } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopProject } from '@/types/desktop'
 
@@ -89,7 +88,6 @@ export interface HomeProjectBarProps {
 }
 
 const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value }) => {
-  const { message } = useApp()
   const [open, setOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [projects, setProjects] = useState<DesktopProject[]>([])
@@ -105,11 +103,11 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
     try {
       setProjects(await api.listProjects())
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '加载项目失败')
+      toast.error(error instanceof Error ? error.message : '加载项目失败')
     } finally {
       setLoading(false)
     }
-  }, [message])
+  }, [])
 
   useEffect(() => {
     refreshProjects()
@@ -129,7 +127,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
   const handleChooseFolder = useCallback(async () => {
     const api = getDesktopApi()
     if (!api?.chooseDirectory) {
-      message.error('当前环境不支持选择文件夹')
+      toast.error('当前环境不支持选择文件夹')
       return
     }
     try {
@@ -141,23 +139,23 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
       setRootPath(selected)
       setName((current) => current.trim() || pathBasename(selected))
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '选择文件夹失败')
+      toast.error(error instanceof Error ? error.message : '选择文件夹失败')
     }
-  }, [message])
+  }, [])
 
   const handleCreate = useCallback(async () => {
     const api = getDesktopApi()
     if (!api?.createProject) {
-      message.error('当前环境不支持创建项目')
+      toast.error('当前环境不支持创建项目')
       return
     }
     const nextName = name.trim()
     if (!nextName) {
-      message.error('请填写项目名称')
+      toast.error('请填写项目名称')
       return
     }
     if (!rootPath) {
-      message.error('请添加源文件夹')
+      toast.error('请添加源文件夹')
       return
     }
 
@@ -168,13 +166,13 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
       onChange(project)
       setCreateOpen(false)
       resetCreateForm()
-      message.success(`已创建项目：${project.name}`)
+      toast.success(`已创建项目：${project.name}`)
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '创建项目失败')
+      toast.error(error instanceof Error ? error.message : '创建项目失败')
     } finally {
       setCreating(false)
     }
-  }, [message, name, onChange, resetCreateForm, rootPath])
+  }, [name, onChange, resetCreateForm, rootPath])
 
   const handleSelect = useCallback(
     (project: DesktopProject) => {
@@ -197,12 +195,12 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
         await api.deleteProject(project.id)
         setProjects((current) => current.filter((item) => item.id !== project.id))
         if (value?.id === project.id) onChange(null)
-        message.success(`已删除项目：${project.name}`)
+        toast.success(`已删除项目：${project.name}`)
       } catch (error) {
-        message.error(error instanceof Error ? error.message : '删除项目失败')
+        toast.error(error instanceof Error ? error.message : '删除项目失败')
       }
     },
-    [message, onChange, value?.id]
+    [onChange, value?.id]
   )
 
   const triggerLabel = value ? value.name : '选择项目'
@@ -254,7 +252,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
             )
           })}
         </Flex>
-        <Flex className='flex-col gap-1 mt-1 pt-1 border-t border-(--ant-color-border-secondary)'>
+        <Flex className='flex-col gap-1 mt-1 pt-1 border-t border-(--lobe-color-border-secondary)'>
           {value ? (
             <Button className={styles.menuAction} type='text' onClick={handleClear}>
               <Text className='text-[12px]' type='secondary'>

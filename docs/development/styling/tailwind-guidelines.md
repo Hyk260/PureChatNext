@@ -109,10 +109,10 @@ const styles = createStaticStyles(({ css }) => ({
 
 - 业务组件优先使用主题语义：文字、次级文字、容器背景、边框、主色、错误色等。
 - Tailwind 只能使用 [`src/styles/globals.css`](../../../src/styles/globals.css) 中已经定义的语义 token；迁移时不要直接复制 dev 页面中的 `slate-*`、`cyan-*` 等展示色作为主应用 token。
-- 当前主题由 `@pure/ui/ThemeProvider` 与 `antd-style` 共同提供。除非 `@pure/ui` 的主题桥接也已替换，否则不要移除 `StyleProvider` 或假设 Tailwind 能独立提供全部主题能力。
-- `theme={{ cssVar: { key: 'pure-vars' } }}` 中的 `pure-vars` 是 CSS 变量作用域 key，不是变量名前缀。不得根据 key 猜测或拼接变量名。
-- `antd-style` 的 `cssVar` 当前对应 kebab-case 的 `--ant-*` 变量，例如 `cssVar.colorTextSecondary` 是 `var(--ant-color-text-secondary)`，`cssVar.colorError` 是 `var(--ant-color-error)`。
-- 组件需要尚未映射为 Tailwind 语义 token 的 antd 主题色时，优先在 `createStaticStyles` 中使用 `cssVar`。只有确认真实运行时变量并在浅色、深色主题下验证后，才可在 `globals.css` 的 `@theme inline` 中新增全局语义映射。
+- Lobe UI v6 由 `@pure/ui/ThemeProvider` 暴露的 `ConfigProvider` 和 `setLobeTheme` 配置；全局入口加载 `theme.css`、`style.css` 和 `global.css`。主题模式由应用的 `useAppThemeMode` 保存，系统模式随系统外观变化。
+- `globals.css` 必须先声明 Tailwind 与 Lobe UI 的 cascade layer 顺序。保留直接使用的 antd 组件时，通过独立的 antd `ConfigProvider` 和 `App` 同步主题；`pure-vars` 仅是 antd CSS 变量作用域 key。
+- `createStaticStyles`、`cssVar`、`cx` 等样式工具统一从 `@lobehub/ui` 导入。`cssVar` 对应 `--lobe-*` 变量，例如 `cssVar.colorTextSecondary` 是 `var(--lobe-color-text-secondary)`，`cssVar.colorError` 是 `var(--lobe-color-error)`。
+- 组件需要尚未映射为 Tailwind 语义 token 的主题色时，优先在 `createStaticStyles` 中使用 `cssVar`。只有确认真实运行时变量并在浅色、深色主题下验证后，才可在 `globals.css` 的 `@theme inline` 中新增全局语义映射。
 - 不要把一次性 inline `style` 当成 Tailwind 的替代品。动态尺寸、动画延迟、滚动位置等运行时值仍可使用 `style`。
 
 ## 什么时候保留 `createStaticStyles`
@@ -152,7 +152,7 @@ AI 创建或修改 React 组件时必须遵循：
 - 先迁移布局、间距、颜色和简单状态，再处理复杂交互样式。
 - 迁移后若 className 变得比原实现更难读，应退回 `createStaticStyles` 或拆分组件，而不是追求形式上的 Tailwind 化。
 - 迁移后若静态 `className` 超过 120 字符，应先复用已有 utility，仍超限则退回 `createStaticStyles`，不得机械拆分字符串。
-- 删除 `createStaticStyles` 后，必须确认对应的 `antd-style` import、测试 mock 和无用样式变量也一并清理。
+- 删除 `createStaticStyles` 后，必须确认对应的样式 helper import、测试 mock 和无用样式变量也一并清理。
 
 ## 相关文件
 

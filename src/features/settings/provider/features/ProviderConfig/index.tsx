@@ -1,12 +1,12 @@
 'use client'
 
-import { Flex, Input, InputPassword, Text } from '@pure/ui'
+
+import { toast } from '@lobehub/ui'
+import { ActionIcon, Flex, Input, Text } from '@pure/ui'
 import { Switch } from 'antd'
-import { Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FocusEvent, FormEvent } from 'react'
-
-import { useApp } from '@/components/AntdStaticMethods'
 
 import { getSettingsProviderMeta, isServerManagedProvider, PROVIDER_DEFAULT_BASE_URLS } from '../../const'
 import { updateCustomProvider } from '../../customProvidersApi'
@@ -25,7 +25,6 @@ interface ProviderConfigProps {
 const isByokProvider = (id: ProviderId) => id !== 'purechat'
 
 const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
-  const { message } = useApp()
   const registry = useCustomProviderRegistry()
   const storedCustomProviders = useProviderConfigStore((s) => s.customProviders)
   const customProviders = registry.data ?? storedCustomProviders
@@ -92,7 +91,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
           if (!customProvider) patchConfig(id, { baseURL: item.baseURL })
           return true
         } catch (error) {
-          message.error(error instanceof Error ? error.message : '保存失败')
+          toast.error(error instanceof Error ? error.message : '保存失败')
           return false
         } finally {
           setSaving(false)
@@ -106,7 +105,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
         if (persistInflightRef.current === run) persistInflightRef.current = null
       }
     },
-    [customProvider, id, message, mutate, patchConfig]
+    [customProvider, id, mutate, patchConfig]
   )
 
   const clearSecrets = useCallback(async () => {
@@ -123,7 +122,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
         draftDirtyRef.current = false
         return true
       } catch (error) {
-        message.error(error instanceof Error ? error.message : '删除密钥失败')
+        toast.error(error instanceof Error ? error.message : '删除密钥失败')
         setApiKeyDraft(savedApiKey)
         return false
       } finally {
@@ -137,7 +136,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
     } finally {
       if (persistInflightRef.current === run) persistInflightRef.current = null
     }
-  }, [id, message, mutate, savedApiKey])
+  }, [id, mutate, savedApiKey])
 
   const resolveApiKey = () => {
     const input = apiKeyWrapRef.current?.querySelector('input')
@@ -179,7 +178,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
         })
         .catch((error: unknown) => {
           patchConfig(id, { baseURL: customProvider.baseURL })
-          message.error(error instanceof Error ? error.message : '保存代理地址失败')
+          toast.error(error instanceof Error ? error.message : '保存代理地址失败')
         })
         .finally(() => setSaving(false))
       return
@@ -187,7 +186,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
     if ((saved?.baseURL ?? '') === baseURL) return
     const apiKey = resolveApiKey()
     if (!saved && !apiKey) {
-      message.info('请先填写 API Key')
+      toast.info('请先填写 API Key')
       return
     }
     persistSecrets({ apiKey: apiKey || undefined, baseURL })
@@ -235,7 +234,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
       })
       .catch((error: unknown) => {
         setEnabled(id, !checked)
-        message.error(error instanceof Error ? error.message : '更新服务商状态失败')
+        toast.error(error instanceof Error ? error.message : '更新服务商状态失败')
       })
       .finally(() => setSaving(false))
   }
@@ -277,18 +276,23 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
             </Flex>
             <div className={styles.rowBody}>
               <div ref={apiKeyWrapRef} className='w-full' onInput={handleApiKeyInput}>
-                <InputPassword
+                <Input
                   autoComplete='off'
                   disabled={saving}
                   placeholder={`${meta.name} API Key`}
                   value={apiKeyDraft}
-                  visibilityToggle={{
-                    onVisibleChange: (visible) => {
-                      if (saving) return
-                      setKeyVisible(visible)
-                    },
-                    visible: keyVisible,
-                  }}
+                  type={keyVisible ? 'text' : 'password'}
+                  suffix={
+                    <ActionIcon
+                      aria-label={keyVisible ? '隐藏 API Key' : '显示 API Key'}
+                      disabled={saving}
+                      icon={keyVisible ? EyeOff : Eye}
+                      size='small'
+                      title={keyVisible ? '隐藏 API Key' : '显示 API Key'}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => setKeyVisible((visible) => !visible)}
+                    />
+                  }
                   onBlur={handleApiKeyBlur}
                   onChange={handleApiKeyChange}
                   onPressEnter={(event) => {

@@ -1,7 +1,7 @@
 'use client'
 
 import { Block, MaskShadow, ModelTag, ProviderCombine, ActionIcon, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { GlobeIcon } from 'lucide-react'
 import { memo } from 'react'
 

@@ -11,13 +11,12 @@ import {
   Icon,
   Flex,
 } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import type { DropdownItem } from '@pure/ui'
+import { toast, createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { Check, ChevronRight, FileText, Globe, GlobeOff, LibraryBig, Plus, Settings2, X } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatPermissionMode } from '@pure/types'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { CHAT_ATTACHMENT_ACCEPT, validateChatAttachments } from '@/features/chat/attachmentRules'
 import ModelSelector from '@/features/chat/ModelSelector'
 import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
@@ -179,7 +178,6 @@ const ChatInput = memo<ChatInputProps>((props) => {
   const [plusOpen, setPlusOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { message } = useApp()
   const currentModel = useCurrentHomeModel()
   const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
   const openParamsPanel = useChatUiStore((s) => s.openParamsPanel)
@@ -213,19 +211,19 @@ const ChatInput = memo<ChatInputProps>((props) => {
 
       const validationError = validateChatAttachments(selected, files.length)
       if (validationError) {
-        message.error(validationError)
+        toast.error(validationError)
         return
       }
 
       const imageFiles = selected.filter((file) => file.type.startsWith('image/'))
       if (imageFiles.length > 0 && !currentModel.abilities?.vision) {
-        message.error('当前模型不支持图片理解')
+        toast.error('当前模型不支持图片理解')
         return
       }
 
       setFiles((previous) => [...previous, ...selected])
     },
-    [currentModel.abilities?.vision, files.length, message]
+    [currentModel.abilities?.vision, files.length]
   )
 
   const handleStop = useCallback(() => {
@@ -241,7 +239,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
     onSearchModeChange(searchMode === 'auto' ? 'off' : 'auto')
   }, [onSearchModeChange, searchMode])
 
-  const plusMenuItems = useMemo<MenuProps['items']>(
+  const plusMenuItems = useMemo<DropdownItem[]>(
     () => [
       {
         icon: LibraryBig,
@@ -288,7 +286,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
             <Flex
               className='items-center gap-1.5 max-w-[260px] rounded-lg p-[5px_8px]'
               key={`${file.name}-${file.lastModified}-${index}`}
-              style={{ background: 'var(--ant-color-fill-quaternary)' }}
+              style={{ background: 'var(--lobe-color-fill-quaternary)' }}
             >
               {file.type.startsWith('image/') ? (
                 <img

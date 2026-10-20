@@ -1,7 +1,7 @@
 'use client'
 
 import { Center, Checkbox, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { memo, useCallback } from 'react'
 import type { MouseEvent, PointerEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'

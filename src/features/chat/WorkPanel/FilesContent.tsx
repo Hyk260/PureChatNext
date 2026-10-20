@@ -1,10 +1,11 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { ActionIcon, Icon, Input, Text, Flex } from '@pure/ui'
 import { File, FileText, Folder, FolderOpen, Search } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import type { LocalChatTopic } from '@/features/chat/types'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopProject, DesktopProjectEntry } from '@/types/desktop'
@@ -30,7 +31,6 @@ function joinProjectPath(rootPath: string, relativePath: string, name: string) {
 }
 
 const FilesContent = memo<Props>(({ topic }) => {
-  const { message } = useApp()
   const [project, setProject] = useState<DesktopProject | null>(null)
   const [relativePath, setRelativePath] = useState('')
   const [entries, setEntries] = useState<DesktopProjectEntry[]>([])
@@ -119,10 +119,10 @@ const FilesContent = memo<Props>(({ topic }) => {
       try {
         await api.openPath(fullPath)
       } catch (openError) {
-        message.error(openError instanceof Error ? openError.message : '打开文件失败')
+        toast.error(openError instanceof Error ? openError.message : '打开文件失败')
       }
     },
-    [loadEntries, message, project, relativePath]
+    [loadEntries, project, relativePath]
   )
 
   const handleGoUp = useCallback(async () => {
@@ -141,7 +141,7 @@ const FilesContent = memo<Props>(({ topic }) => {
 
   return (
     <Flex className='flex-col h-full min-h-0'>
-      <Flex className='flex-col gap-2 p-3 flex-none border-b border-(--ant-color-border-secondary)'>
+      <Flex className='flex-col gap-2 p-3 flex-none border-b border-(--lobe-color-border-secondary)'>
         <Input
           allowClear
           placeholder='筛选文件...'
@@ -172,7 +172,7 @@ const FilesContent = memo<Props>(({ topic }) => {
         ) : (
           filteredEntries.map((entry) => (
             <button
-              className='flex items-center gap-2 w-full px-3 py-2 text-left border-0 bg-transparent cursor-pointer hover:bg-(--ant-color-fill-quaternary)'
+              className='flex items-center gap-2 w-full px-3 py-2 text-left border-0 bg-transparent cursor-pointer hover:bg-(--lobe-color-fill-quaternary)'
               key={`${entry.isDirectory ? 'dir' : 'file'}:${entry.name}`}
               type='button'
               onClick={() => handleOpenEntry(entry)}
@@ -192,7 +192,7 @@ FilesContent.displayName = 'FilesContent'
 function EmptyState({ description, icon }: { description: string; icon: typeof File }) {
   return (
     <Flex className='flex-col-center gap-3 flex-1 min-h-[240px] p-6'>
-      <Icon icon={icon} size={36} style={{ color: 'var(--ant-color-text-quaternary)' }} />
+      <Icon icon={icon} size={36} style={{ color: 'var(--lobe-color-text-quaternary)' }} />
       <Text type='secondary'>{description}</Text>
     </Flex>
   )

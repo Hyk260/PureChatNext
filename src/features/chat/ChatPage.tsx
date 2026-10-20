@@ -1,13 +1,12 @@
 'use client'
 
 import { Flex } from '@pure/ui'
-import { createStaticStyles } from 'antd-style'
+import { toast, createStaticStyles } from '@lobehub/ui'
 import type { UIMessage } from 'ai'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { ChatPermissionMode } from '@pure/types'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import type { AgentListItem } from '@/const/home/agents'
 import {
@@ -70,7 +69,6 @@ const ChatPage = memo(() => {
   const isClient = useSyncExternalStore(subscribeNoop, getClientSnapshot, getServerSnapshot)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { message } = useApp()
 
   const agentFromQuery = searchParams.get('agent')
   const topicFromQuery = searchParams.get('topic')
@@ -339,10 +337,10 @@ const ChatPage = memo(() => {
         setTopics((prev) => prev.map((topic) => (topic.id === id ? updated : topic)))
       } catch (error) {
         console.error('[chat] updateTopic failed', error)
-        message.error(errorText)
+        toast.error(errorText)
       }
     },
-    [message]
+    []
   )
 
   const handleRenameTopic = useCallback(
@@ -370,16 +368,16 @@ const ChatPage = memo(() => {
           provider: selectedProvider,
         })
         setTopics((prev) => prev.map((topic) => (topic.id === id ? updated : topic)))
-        message.success('已智能重命名')
+        toast.success('已智能重命名')
       } catch (error) {
         console.error('[chat] auto rename topic failed', error)
-        message.error('智能重命名失败')
+        toast.error('智能重命名失败')
       } finally {
         if (autoRenamingTopicIdRef.current === id) autoRenamingTopicIdRef.current = null
         setAutoRenamingTopicId((currentId) => (currentId === id ? null : currentId))
       }
     },
-    [isBusy, message, messagesCache, selectedModel, selectedProvider]
+    [isBusy, messagesCache, selectedModel, selectedProvider]
   )
 
   const handleProjectChange = useCallback(
@@ -422,14 +420,14 @@ const ChatPage = memo(() => {
         })
         setTopics((prev) => prev.filter((topic) => !deleted.has(topic.id)))
         if (activeTopicId && deleted.has(activeTopicId)) pushChatHref(agentId)
-        message.success(`已删除 ${deletedIds.length} 个话题`)
+        toast.success(`已删除 ${deletedIds.length} 个话题`)
       } catch (error) {
         console.error('[chat] deleteTopics failed', error)
-        message.error('批量删除话题失败')
+        toast.error('批量删除话题失败')
         throw error
       }
     },
-    [activeTopicId, agentId, message, pushChatHref]
+    [activeTopicId, agentId, pushChatHref]
   )
 
   const handleDeleteProject = useCallback(
@@ -453,14 +451,14 @@ const ChatPage = memo(() => {
           if (desktopProject) await api.deleteProject(desktopProject.id)
         }
 
-        message.success(`已删除项目「${projectName}」及 ${topicIds.length} 个话题`)
+        toast.success(`已删除项目「${projectName}」及 ${topicIds.length} 个话题`)
       } catch (error) {
         console.error('[chat] deleteProject failed', error)
-        message.error('删除项目失败')
+        toast.error('删除项目失败')
         throw error
       }
     },
-    [activeTopicId, agentId, message, pushChatHref, topics]
+    [activeTopicId, agentId, pushChatHref, topics]
   )
 
   const handleParamsChange = useCallback(
@@ -493,11 +491,11 @@ const ChatPage = memo(() => {
         setPermissionMode(mode)
       } catch (error) {
         console.error('[chat] update permission mode failed', error)
-        message.error('权限模式保存失败')
+        toast.error('权限模式保存失败')
         throw error
       }
     },
-    [activeTopicId, ensureFullAccess, message, setPermissionMode]
+    [activeTopicId, ensureFullAccess, setPermissionMode]
   )
 
   const handleTopicsRefresh = useCallback(() => {
@@ -568,7 +566,7 @@ const ChatPage = memo(() => {
       .catch((error) => {
         if (cancelled) return
         console.error('[chat] sync global permission mode failed', error)
-        message.error('会话权限同步失败，请重试')
+        toast.error('会话权限同步失败，请重试')
       })
     return () => {
       cancelled = true
@@ -578,7 +576,6 @@ const ChatPage = memo(() => {
     activeTopicId,
     agentId,
     isDesktop,
-    message,
     ensureFullAccess,
     permissionMode,
     permissionModeInitialized,
@@ -603,12 +600,12 @@ const ChatPage = memo(() => {
   const handleInputSend = useCallback(
     async (text: string, files: File[]) => {
       if (!permissionModeReady) {
-        message.error('会话权限仍在同步，请稍后重试')
+        toast.error('会话权限仍在同步，请稍后重试')
         return
       }
       await chatActionsRef.current.send(text, files)
     },
-    [message, permissionModeReady]
+    [permissionModeReady]
   )
 
   return (

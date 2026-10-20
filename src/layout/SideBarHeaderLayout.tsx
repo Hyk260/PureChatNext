@@ -3,7 +3,7 @@
 import { ActionIcon, Icon, Text, Flex } from '@pure/ui'
 import { Breadcrumb } from 'antd'
 import type { BreadcrumbProps } from 'antd'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { ChevronRightIcon, HomeIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { memo } from 'react'

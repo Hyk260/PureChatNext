@@ -1,8 +1,8 @@
 'use client'
 
-import type { InputRef } from 'antd'
+
+import { toast } from '@lobehub/ui'
 import { Button, Flex, Input, Text } from '@pure/ui'
-import { useApp } from '@/components/AntdStaticMethods'
 import { Loader2 } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
@@ -23,11 +23,10 @@ const isUsernameConflictError = (error: { code?: string | null; message?: string
 }
 
 export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
-  const { message } = useApp()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [dirty, setDirty] = useState(false)
-  const inputRef = useRef<InputRef>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const validateUsername = (value: string) => {
     const trimmed = value.trim()
@@ -40,7 +39,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
   }
 
   const handleSave = useCallback(async () => {
-    const value = inputRef.current?.input?.value?.trim()
+    const value = inputRef.current?.value?.trim()
 
     if (!value || value === username) {
       setError('')
@@ -73,13 +72,13 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
 
       onUpdated(value)
       setDirty(false)
-      message.success('用户名已更新')
+      toast.success('用户名已更新')
     } catch {
       setError('用户名更新失败')
     } finally {
       setSaving(false)
     }
-  }, [message, onUpdated, username])
+  }, [onUpdated, username])
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
@@ -99,10 +98,10 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
   }
 
   const handleCancel = useCallback(() => {
-    if (inputRef.current?.input) {
+    if (inputRef.current) {
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
-      nativeInputValueSetter?.call(inputRef.current.input, username || '')
-      inputRef.current.input.dispatchEvent(new Event('input', { bubbles: true }))
+      nativeInputValueSetter?.call(inputRef.current, username || '')
+      inputRef.current.dispatchEvent(new Event('input', { bubbles: true }))
     }
 
     setError('')
@@ -145,7 +144,7 @@ export function UsernameSetting({ onUpdated, username }: UsernameSettingProps) {
           onPressEnter={handleSave}
           placeholder='字母、数字或下划线'
           ref={inputRef}
-          status={error ? 'error' : undefined}
+          aria-invalid={Boolean(error)}
           style={{ flex: 1, maxWidth: 320 }}
           variant='filled'
         />

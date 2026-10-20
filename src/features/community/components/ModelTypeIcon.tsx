@@ -1,7 +1,7 @@
 'use client'
 
 import { Icon, Tooltip } from '@pure/ui'
-import { cssVar } from 'antd-style'
+import { cssVar } from '@lobehub/ui'
 import { ImageIcon, MessageSquareTextIcon } from 'lucide-react'
 import { memo } from 'react'
 

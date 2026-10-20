@@ -2,11 +2,9 @@
 
 import { Block, Flex, Text } from '@pure/ui'
 import { Switch } from 'antd'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { useRouter } from 'next/navigation'
 import { memo } from 'react'
-
-import { useApp } from '@/components/AntdStaticMethods'
 
 import { updateCustomProvider } from './customProvidersApi'
 import { getSettingsProviderMeta, isServerManagedProvider } from './const'
@@ -43,7 +41,6 @@ interface SettingsProviderCardProps {
 }
 
 const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
-  const { message } = useApp()
   const router = useRouter()
   const registry = useCustomProviderRegistry()
   const customProviders = useProviderConfigStore((s) => s.customProviders)
@@ -67,7 +64,7 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
       setCustomProviders(nextProviders)
     } catch (error) {
       setEnabled(id, !checked)
-      message.error(error instanceof Error ? error.message : '更新服务商状态失败')
+      toast.error(error instanceof Error ? error.message : '更新服务商状态失败')
     }
   }
 

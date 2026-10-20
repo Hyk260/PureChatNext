@@ -1,7 +1,8 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { ActionIcon, Button, confirmModal, Text, Flex } from '@pure/ui'
-import { useApp } from '@/components/AntdStaticMethods'
 import { Plus, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -12,7 +13,6 @@ import { useFetchKnowledgeBaseList, useResourceStore } from '@/features/resource
 
 const LibraryList = memo(() => {
   const pathname = usePathname()
-  const { message } = useApp()
   const { data: libraries } = useFetchKnowledgeBaseList()
   const createKnowledgeBase = useResourceStore((s) => s.createKnowledgeBase)
   const deleteKnowledgeBase = useResourceStore((s) => s.deleteKnowledgeBase)
@@ -22,9 +22,9 @@ const LibraryList = memo(() => {
     if (!name) return
     try {
       await createKnowledgeBase(name)
-      message.success('知识库已创建')
+      toast.success('知识库已创建')
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '创建失败')
+      toast.error(err instanceof Error ? err.message : '创建失败')
     }
   }
 

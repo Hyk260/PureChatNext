@@ -1,7 +1,8 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { Spin } from 'antd'
-import { useApp } from '@/components/AntdStaticMethods'
 import { Avatar, Center, Icon } from '@pure/ui'
 import { Loader2, Pencil } from 'lucide-react'
 import { useRef, useState } from 'react'
@@ -18,7 +19,6 @@ interface AvatarSettingProps {
 }
 
 export function AvatarSetting({ avatar, displayName, initials, onUploaded, s3Configured }: AvatarSettingProps) {
-  const { message } = useApp()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
 
@@ -42,16 +42,16 @@ export function AvatarSetting({ avatar, displayName, initials, onUploaded, s3Con
       const data = (await response.json()) as { avatar?: string; error?: string }
 
       if (!response.ok) {
-        message.error(data.error ?? '头像上传失败')
+        toast.error(data.error ?? '头像上传失败')
         return
       }
 
       if (data.avatar) {
         onUploaded(data.avatar)
-        message.success('头像已更新')
+        toast.success('头像已更新')
       }
     } catch {
-      message.error('头像上传失败')
+      toast.error('头像上传失败')
     } finally {
       setUploading(false)
     }

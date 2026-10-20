@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, confirmModal, DropdownMenu, Icon } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
+import type { DropdownItem } from '@pure/ui'
 import { Check, Hash, MoreHorizontal, Trash2 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
@@ -40,7 +40,7 @@ const TopicActions = memo<Props>(({ disabled, pageSize, totalCount, unfavoritedC
     [onDelete, totalCount, unfavoritedCount]
   )
 
-  const items = useMemo<MenuProps['items']>(
+  const items = useMemo<DropdownItem[]>(
     () => [
       {
         children: PAGE_SIZES.map((size) => ({

@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, DropdownMenu, Tooltip } from '@pure/ui'
-import { createStaticStyles } from 'antd-style'
+import { createStaticStyles } from '@lobehub/ui'
 import {
   ArrowLeft,
   ArrowRight,
@@ -41,8 +41,8 @@ const styles = createStaticStyles(({ css }) => ({
     flex: none;
     align-items: center;
     height: 38px;
-    color: var(--ant-color-text, #1f1f1f);
-    background: var(--ant-color-bg-layout, #f8f8f8);
+    color: var(--lobe-color-text, #1f1f1f);
+    background: var(--lobe-color-bg-layout, #f8f8f8);
     -webkit-app-region: drag;
   `,
   leading: css`
@@ -84,7 +84,7 @@ const styles = createStaticStyles(({ css }) => ({
     width: 28px;
     height: 28px;
     padding: 0;
-    color: var(--ant-color-text-secondary, #666);
+    color: var(--lobe-color-text-secondary, #666);
     background: transparent;
     border: 0;
     border-radius: 6px;
@@ -92,8 +92,8 @@ const styles = createStaticStyles(({ css }) => ({
     -webkit-app-region: no-drag;
 
     &:hover:not(:disabled) {
-      color: var(--ant-color-text, #1f1f1f);
-      background: var(--ant-color-fill-secondary, #f0f0f0);
+      color: var(--lobe-color-text, #1f1f1f);
+      background: var(--lobe-color-fill-secondary, #f0f0f0);
     }
 
     &:disabled {
@@ -131,7 +131,7 @@ const styles = createStaticStyles(({ css }) => ({
     height: 28px;
     padding: 0 8px 0 10px;
     overflow: hidden;
-    color: var(--ant-color-text-secondary, #666);
+    color: var(--lobe-color-text-secondary, #666);
     background: transparent;
     border: 0;
     border-radius: 8px;
@@ -139,8 +139,8 @@ const styles = createStaticStyles(({ css }) => ({
     -webkit-app-region: no-drag;
 
     &:hover {
-      color: var(--ant-color-text, #1f1f1f);
-      background: var(--ant-color-fill-tertiary, #f5f5f5);
+      color: var(--lobe-color-text, #1f1f1f);
+      background: var(--lobe-color-fill-tertiary, #f5f5f5);
     }
 
     &:hover .desktop-tab-close,
@@ -149,12 +149,12 @@ const styles = createStaticStyles(({ css }) => ({
     }
   `,
   tabActive: css`
-    color: var(--ant-color-text, #1f1f1f);
-    background: var(--ant-color-bg-container, #fff);
-    box-shadow: 0 0 0 1px var(--ant-color-border-secondary, #e5e5e5);
+    color: var(--lobe-color-text, #1f1f1f);
+    background: var(--lobe-color-bg-container, #fff);
+    box-shadow: 0 0 0 1px var(--lobe-color-border-secondary, #e5e5e5);
 
     &:hover {
-      background: var(--ant-color-bg-container, #fff);
+      background: var(--lobe-color-bg-container, #fff);
     }
   `,
   tabIcon: css`
@@ -178,7 +178,7 @@ const styles = createStaticStyles(({ css }) => ({
     width: 16px;
     height: 16px;
     padding: 0;
-    color: var(--ant-color-text-tertiary, #999);
+    color: var(--lobe-color-text-tertiary, #999);
     background: transparent;
     border: 0;
     border-radius: 4px;
@@ -186,8 +186,8 @@ const styles = createStaticStyles(({ css }) => ({
     opacity: 0;
 
     &:hover {
-      color: var(--ant-color-text, #1f1f1f);
-      background: var(--ant-color-fill-secondary, #f0f0f0);
+      color: var(--lobe-color-text, #1f1f1f);
+      background: var(--lobe-color-fill-secondary, #f0f0f0);
     }
 
     &:disabled {
@@ -204,7 +204,7 @@ const styles = createStaticStyles(({ css }) => ({
     min-width: 28px;
     min-height: 28px;
     padding: 0;
-    color: var(--ant-color-text-secondary, #666);
+    color: var(--lobe-color-text-secondary, #666);
     background: transparent;
     border: 0;
     border-radius: 6px;
@@ -212,8 +212,8 @@ const styles = createStaticStyles(({ css }) => ({
     -webkit-app-region: no-drag;
 
     &:hover {
-      color: var(--ant-color-text, #1f1f1f);
-      background: var(--ant-color-fill-secondary, #f0f0f0);
+      color: var(--lobe-color-text, #1f1f1f);
+      background: var(--lobe-color-fill-secondary, #f0f0f0);
     }
   `,
   content: css`

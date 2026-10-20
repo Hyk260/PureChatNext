@@ -1,7 +1,7 @@
 'use client'
 
 import { Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { memo } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'

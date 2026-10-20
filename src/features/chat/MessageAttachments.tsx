@@ -2,7 +2,7 @@
 
 import { Flex } from '@pure/ui'
 import { Image } from 'antd'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import type { UIMessage } from 'ai'
 import { FileText } from 'lucide-react'
 import { memo } from 'react'

@@ -3,7 +3,7 @@
 import { ActionIcon, Avatar, Block, Flex, Icon, Tag, Text } from '@pure/ui'
 import { Github } from '@pure/ui/icons'
 import { formatDate } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { ClockIcon, FileTextIcon, StarIcon } from 'lucide-react'
 import { memo, useCallback } from 'react'
 

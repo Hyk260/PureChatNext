@@ -1,8 +1,8 @@
 'use client'
 
 import { DropdownMenu, Icon, Flex } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import type { DropdownItem } from '@pure/ui'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { MoreHorizontalIcon, PlusIcon } from 'lucide-react'
 import { memo } from 'react'
 
@@ -47,8 +47,8 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 interface SectionActionsProps {
-  addMenuItems?: MenuProps['items']
-  menuItems: MenuProps['items']
+  addMenuItems?: DropdownItem[]
+  menuItems: DropdownItem[]
 }
 
 const SectionActions = memo<SectionActionsProps>(({ addMenuItems, menuItems }) => {

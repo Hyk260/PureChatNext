@@ -1,7 +1,7 @@
 'use client'
 
-import { Accordion, AccordionItem, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { AccordionRoot, AccordionHeader, AccordionItem, AccordionPanel, AccordionTrigger, Text, Flex } from '@pure/ui'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { memo, useMemo } from 'react'
@@ -14,6 +14,14 @@ import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
 import { useSession } from '@/libs/better-auth/client'
 
 import { SettingsGroupKey, SettingsTab, useSettingsCategory } from './useSettingsCategory'
+
+const DEFAULT_EXPANDED_GROUPS = [
+  SettingsGroupKey.General,
+  SettingsGroupKey.Agent,
+  SettingsGroupKey.Tools,
+  SettingsGroupKey.System,
+  SettingsGroupKey.Manage,
+]
 
 const styles = createStaticStyles(({ css }) => ({
   sidebar: css`
@@ -63,38 +71,32 @@ const SettingsSidebar = memo(() => {
         />
         <Scrollbar style={{ flex: 1, minHeight: 0, width: '100%' }}>
           <Flex className='flex-col ps-1 pe-3'>
-            <Accordion
-              defaultExpandedKeys={[
-                SettingsGroupKey.General,
-                SettingsGroupKey.Agent,
-                SettingsGroupKey.Tools,
-                SettingsGroupKey.System,
-                SettingsGroupKey.Manage,
-              ]}
-              gap={8}
+            <AccordionRoot
+              multiple
+              defaultValue={DEFAULT_EXPANDED_GROUPS}
+              style={{ gap: 8 }}
             >
               {categoryGroups.map((group) => (
-                <AccordionItem
-                  itemKey={group.key}
-                  key={group.key}
-                  paddingBlock={4}
-                  paddingInline='8px 4px'
-                  title={
-                    <Text className='text-[12px] font-medium' ellipsis type='secondary'>
-                      {group.title}
-                    </Text>
-                  }
-                >
-                  <Flex className='flex-col gap-px py-px'>
-                    {group.items.map((item) => (
-                      <Link className='text-inherit no-underline' href={item.href} key={item.key}>
-                        <NavItem active={activeTab === item.key} clickable icon={item.icon} title={item.label} />
-                      </Link>
-                    ))}
-                  </Flex>
+                <AccordionItem value={group.key} key={group.key}>
+                  <AccordionHeader style={{ paddingBlock: 4, paddingInline: '8px 4px' }}>
+                    <AccordionTrigger>
+                      <Text className='text-[12px] font-medium' ellipsis type='secondary'>
+                        {group.title}
+                      </Text>
+                    </AccordionTrigger>
+                  </AccordionHeader>
+                  <AccordionPanel>
+                    <Flex className='flex-col gap-px py-px'>
+                      {group.items.map((item) => (
+                        <Link className='text-inherit no-underline' href={item.href} key={item.key}>
+                          <NavItem active={activeTab === item.key} clickable icon={item.icon} title={item.label} />
+                        </Link>
+                      ))}
+                    </Flex>
+                  </AccordionPanel>
                 </AccordionItem>
               ))}
-            </Accordion>
+            </AccordionRoot>
           </Flex>
         </Scrollbar>
       </Flex>

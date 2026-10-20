@@ -1,4 +1,4 @@
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 
 export const communityCategoryStyles = createStaticStyles(({ css }) => ({
   count: css`

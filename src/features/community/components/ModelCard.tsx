@@ -2,7 +2,7 @@
 
 import { Block, Icon, ModelIcon, ProviderIcon, Text, Flex } from '@pure/ui'
 import { formatDate } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { ClockIcon } from 'lucide-react'
 import { memo } from 'react'
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, Icon, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { LucideArrowRight, LucideBolt } from 'lucide-react'
 import { memo } from 'react'
 import { useNavigate } from 'react-router'

@@ -26,7 +26,7 @@ vi.mock('@pure/ui', () => ({
     </button>
   ),
   Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-  Skeleton: () => <div>loading</div>,
+  Skeleton: Object.assign(() => <div>loading</div>, { Text: () => <div>loading</div> }),
   Tag: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }))

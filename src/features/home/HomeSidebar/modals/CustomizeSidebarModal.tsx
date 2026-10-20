@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, Button, Icon, Text, Tooltip, SortableList, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { ArrowDownToLine, Eye, EyeOff, PinIcon, RotateCcw } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 

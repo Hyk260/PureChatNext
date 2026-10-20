@@ -1,6 +1,6 @@
 'use client'
 
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
 import { memo, useCallback, useRef, useState } from 'react'
 import type { DragEvent, ReactNode } from 'react'

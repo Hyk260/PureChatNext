@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MotionProvider } from '@lobehub/ui'
+import { motion } from 'motion/react'
 
 import { DEFAULT_PROVIDER_CONFIGS } from './const'
 import { useProviderConfigStore } from './store/useProviderConfigStore'
@@ -46,14 +48,14 @@ vi.mock('antd', () => ({
   ),
 }))
 
-vi.mock('@pure/ui', () => ({
-  Accordion: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-  AccordionItem: ({ children, title }: { children?: React.ReactNode; title?: React.ReactNode }) => (
-    <section>
-      {title}
-      {children}
-    </section>
-  ),
+vi.mock('@pure/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@pure/ui')>()),
+  AccordionRoot: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AccordionHeader: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AccordionTrigger: ({ children }: { children?: React.ReactNode }) => <button>{children}</button>,
+  AccordionPanel: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AccordionItem: ({ children }: { children?: React.ReactNode }) => <section>{children}</section>,
+  Modal: () => null,
   Block: ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => (
     <section onClick={onClick}>{children}</section>
   ),
@@ -75,17 +77,24 @@ vi.mock('@pure/ui', () => ({
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }))
 
+vi.mock('@/components/AntdStaticMethods', () => ({
+  useApp: () => ({ message: { error: vi.fn(), success: vi.fn() } }),
+}))
+
 vi.mock('@/components/Scrollbar', () => ({
   default: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))
 
-vi.mock('antd-style', () => ({
+vi.mock('@lobehub/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@lobehub/ui')>()),
   createStaticStyles: () => new Proxy({}, { get: (_, key) => String(key) }),
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
 }))
 
 import ProviderAllPage from './ProviderAllPage'
 import ProviderSettingsNav from './ProviderSettingsNav'
+
+const renderWithUI = (element: React.ReactNode) => render(<MotionProvider motion={motion}>{element}</MotionProvider>)
 
 describe('provider settings pages', () => {
   beforeEach(() => {
@@ -97,7 +106,7 @@ describe('provider settings pages', () => {
   })
 
   it('groups providers and keeps the card switch from navigating', () => {
-    render(<ProviderAllPage />)
+    renderWithUI(<ProviderAllPage />)
 
     expect(screen.getByText('已启用服务商')).toBeTruthy()
     expect(screen.getByText('未启用服务商')).toBeTruthy()
@@ -116,7 +125,7 @@ describe('provider settings pages', () => {
   })
 
   it('filters provider navigation and marks the current provider active', () => {
-    render(<ProviderSettingsNav />)
+    renderWithUI(<ProviderSettingsNav />)
 
     const openAiLink = screen.getByText('OpenAI').closest('a')
     expect(openAiLink?.querySelector('[data-active="true"]')).toBeTruthy()

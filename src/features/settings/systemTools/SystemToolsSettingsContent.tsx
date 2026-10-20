@@ -1,12 +1,13 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { ActionIcon, Block, Button, Flex, Skeleton, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { Divider } from 'antd'
 import { Check, CircleX, Copy, RefreshCw } from 'lucide-react'
 import { Fragment, useCallback, useEffect, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import type { DesktopBuiltinTool, DesktopRuntimeTool, DesktopSystemTools } from '@/types/desktop'
 import { getDesktopApi } from '@/types/desktop'
 
@@ -24,7 +25,7 @@ function SectionTitle({ title }: { title: string }) {
 function RuntimeToolRow({ onCopyPath, tool }: { onCopyPath: (path: string) => void; tool: DesktopRuntimeTool }) {
   const statusLabel = tool.available ? '可用' : '不可用'
   const StatusIcon = tool.available ? Check : CircleX
-  const statusClassName = tool.available ? 'text-[var(--ant-color-success)]' : 'text-[var(--ant-color-text-tertiary)]'
+  const statusClassName = tool.available ? 'text-[var(--lobe-color-success)]' : 'text-[var(--lobe-color-text-tertiary)]'
 
   return (
     <Flex className='items-center gap-3 min-h-[64px] py-3 w-full min-w-0'>
@@ -53,7 +54,7 @@ function RuntimeToolRow({ onCopyPath, tool }: { onCopyPath: (path: string) => vo
         <StatusIcon size={14} />
         <Text
           className='text-[13px]'
-          color={tool.available ? 'var(--ant-color-success)' : 'var(--ant-color-text-tertiary)'}
+          color={tool.available ? 'var(--lobe-color-success)' : 'var(--lobe-color-text-tertiary)'}
         >
           {statusLabel}
         </Text>
@@ -79,7 +80,6 @@ function BuiltinToolRow({ tool }: { tool: DesktopBuiltinTool }) {
 }
 
 export function SystemToolsSettingsContent() {
-  const { message } = useApp()
   const hasDesktopApi = Boolean(getDesktopApi()?.getSystemTools)
   const [state, setState] = useState<LoadState>(hasDesktopApi ? 'loading' : 'idle')
   const [data, setData] = useState<DesktopSystemTools | null>(null)
@@ -121,7 +121,7 @@ export function SystemToolsSettingsContent() {
 
   const handleCopyPath = async (path: string) => {
     await copyToClipboard(path)
-    message.success('已复制路径')
+    toast.success('已复制路径')
   }
 
   if (!hasDesktopApi) {
@@ -139,10 +139,10 @@ export function SystemToolsSettingsContent() {
       {state === 'loading' ? (
         <Flex className='flex-col gap-6'>
           <Block padding={16} variant='filled'>
-            <Skeleton active paragraph={{ rows: 6 }} title={{ width: 120 }} />
+            <Skeleton.Text rows={7} />
           </Block>
           <Block padding={16} variant='filled'>
-            <Skeleton active paragraph={{ rows: 3 }} title={{ width: 140 }} />
+            <Skeleton.Text rows={4} />
           </Block>
         </Flex>
       ) : null}

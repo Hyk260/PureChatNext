@@ -1,13 +1,13 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { DropdownMenu, Flex, Text } from '@pure/ui'
 import { Github } from '@pure/ui/icons'
-import type { MenuProps } from '@pure/ui'
+import type { DropdownItem } from '@pure/ui'
 import { Box, FileArchive, Link } from 'lucide-react'
 import { useMemo } from 'react'
 import type { ReactNode } from 'react'
-
-import { useApp } from '@/components/AntdStaticMethods'
 
 const SkillImportLabel = ({ description, title }: { description: string; title: string }) => (
   <Flex className='flex-col gap-0.5'>
@@ -19,30 +19,29 @@ const SkillImportLabel = ({ description, title }: { description: string; title: 
 )
 
 export const SkillImportMenu = ({ children }: { children?: ReactNode }) => {
-  const { message } = useApp()
 
-  const items = useMemo<MenuProps['items']>(
+  const items = useMemo<DropdownItem[]>(
     () => [
       {
         icon: <Link size={16} />,
         key: 'url',
         label: <SkillImportLabel description='通过 SKILL.md 的直接链接导入' title='从 URL 导入' />,
-        onClick: () => message.info('即将推出'),
+        onClick: () => toast.info('即将推出'),
       },
       {
         icon: <Github size={16} />,
         key: 'github',
         label: <SkillImportLabel description='从公开的 GitHub 仓库导入' title='从 GitHub 导入' />,
-        onClick: () => message.info('即将推出'),
+        onClick: () => toast.info('即将推出'),
       },
       {
         icon: <FileArchive size={16} />,
         key: 'zip',
         label: <SkillImportLabel description='上传本地 .zip 或 .skill 文件' title='上传 Zip' />,
-        onClick: () => message.info('即将推出'),
+        onClick: () => toast.info('即将推出'),
       },
     ],
-    [message]
+    []
   )
 
   return (

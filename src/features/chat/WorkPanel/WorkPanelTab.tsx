@@ -1,7 +1,7 @@
 'use client'
 
 import { Tag } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { X } from 'lucide-react'
 import { memo, useCallback } from 'react'
 
@@ -29,7 +29,7 @@ const styles = createStaticStyles(({ css }) => ({
       background 0.15s ${cssVar.motionEaseInOut},
       color 0.15s ${cssVar.motionEaseInOut};
 
-    .ant-tag-close-icon {
+    > button {
       display: inline-flex !important;
       flex: none;
       align-items: center;
@@ -38,6 +38,10 @@ const styles = createStaticStyles(({ css }) => ({
       width: 14px;
       height: 14px;
       margin-inline-start: 2px !important;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
 
       color: inherit;
       opacity: 0;
@@ -48,7 +52,7 @@ const styles = createStaticStyles(({ css }) => ({
       color: ${cssVar.colorText} !important;
       background: ${cssVar.colorFillTertiary} !important;
 
-      .ant-tag-close-icon {
+      > button {
         opacity: 1;
       }
     }
@@ -57,7 +61,7 @@ const styles = createStaticStyles(({ css }) => ({
     color: ${cssVar.colorText} !important;
     background: ${cssVar.colorFillSecondary} !important;
 
-    .ant-tag-close-icon {
+    > button {
       opacity: 1;
     }
   `,
@@ -89,14 +93,14 @@ const WorkPanelTab = memo<Props>(({ active, label, onClose, onSelect }) => {
   return (
     <Tag
       className={cx(styles.tab, active && styles.tabActive)}
-      closable
-      closeIcon={<X aria-label={`关闭${label}`} size={12} strokeWidth={2} />}
       size='small'
       variant='borderless'
       onClick={onSelect}
-      onClose={handleClose}
     >
       <span className={styles.tabLabel}>{label}</span>
+      <button aria-label={`关闭${label}`} type='button' onClick={handleClose}>
+        <X aria-hidden='true' size={12} strokeWidth={2} />
+      </button>
     </Tag>
   )
 })

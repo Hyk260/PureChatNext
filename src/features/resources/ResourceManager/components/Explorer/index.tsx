@@ -1,8 +1,9 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
 import { Spin } from 'antd'
-import { useApp } from '@/components/AntdStaticMethods'
 import { memo, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryState } from 'nuqs'
@@ -36,7 +37,6 @@ import MasonryView from './MasonryView'
 const Explorer = memo(() => {
   useResourceManagerUrlSync()
   const router = useRouter()
-  const { message } = useApp()
   const [, setFileParam] = useQueryState('file')
   const { currentFolderSlug, libraryId, folderPath } = useFolderPath()
 
@@ -89,13 +89,13 @@ const Explorer = memo(() => {
             parentId: currentFolderSlug ?? undefined,
           })
         } catch (err) {
-          message.error(err instanceof Error ? err.message : '上传失败')
+          toast.error(err instanceof Error ? err.message : '上传失败')
         }
       }
       revalidateResources()
-      message.success('上传完成')
+      toast.success('上传完成')
     },
-    [currentFolderSlug, libraryId, message]
+    [currentFolderSlug, libraryId]
   )
 
   const handleOpen = useCallback(
@@ -123,11 +123,11 @@ const Explorer = memo(() => {
         parentId: currentFolderSlug,
       })
       revalidateResources()
-      message.success('文件夹已创建')
+      toast.success('文件夹已创建')
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '创建失败')
+      toast.error(err instanceof Error ? err.message : '创建失败')
     }
-  }, [currentFolderSlug, libraryId, message])
+  }, [currentFolderSlug, libraryId])
 
   const handleBatchDelete = useCallback(async () => {
     if (selectedFileIds.length === 0) return
@@ -142,10 +142,10 @@ const Explorer = memo(() => {
       await useResourceStore.getState().batchDelete(items)
       clearSelection()
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '删除失败')
+      toast.error(err instanceof Error ? err.message : '删除失败')
       throw err
     }
-  }, [clearSelection, message, resourceList, selectedFileIds])
+  }, [clearSelection, resourceList, selectedFileIds])
 
   return (
     <Flex className='flex-col flex-1 size-full'>

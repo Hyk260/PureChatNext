@@ -1,7 +1,7 @@
 'use client'
 
 import { Progress } from 'antd'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { memo } from 'react'
 import useSWR from 'swr'
 
@@ -18,7 +18,6 @@ type CreditsSummary = {
 const styles = createStaticStyles(({ css }) => ({
   link: css`
     display: block;
-    margin-block: 4px;
     margin-inline: 4px;
     border-radius: 8px;
     color: inherit;

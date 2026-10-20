@@ -1,7 +1,7 @@
 'use client'
 
 import { Center, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { ChevronDownIcon } from 'lucide-react'
 import { memo } from 'react'
 

@@ -1,12 +1,12 @@
 'use client'
 
-import { CheckCircleFilled } from '@ant-design/icons'
+import { CircleCheck } from 'lucide-react'
 import { Alert, Button, Flex, ModelIcon, Select } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { useApp } from '@/components/AntdStaticMethods'
 import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { memo, useEffect, useMemo, useState } from 'react'
 
 import { getAiModel } from '@pure/model-bank'
@@ -152,7 +152,7 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
         />
         <Button
           disabled={disabled}
-          icon={pass ? <CheckCircleFilled style={{ color: cssVar.colorSuccess }} /> : undefined}
+          icon={pass ? <CircleCheck aria-hidden='true' color={cssVar.colorSuccess} size={16} /> : undefined}
           loading={loading}
           style={
             pass

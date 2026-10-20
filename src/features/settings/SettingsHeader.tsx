@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, Flex, Text } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { PanelLeftOpen } from 'lucide-react'
 import { memo, useMemo } from 'react'
 

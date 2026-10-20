@@ -1,9 +1,9 @@
 'use client'
 
 import { Avatar } from 'antd'
-import { useApp } from '@/components/AntdStaticMethods'
-import { Block, Button, Icon, Menu, Popover, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { Block, Button, Icon, List, Popover, Text, Flex } from '@pure/ui'
+import type { ListClickInfo } from '@pure/ui'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { ChevronDownIcon, LogOut, Settings2, Send } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -74,7 +74,6 @@ const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planL
 UserInfoSection.displayName = 'UserInfoSection'
 
 const HomeUserTrigger = memo(() => {
-  const { message } = useApp()
   const router = useRouter()
   const { data: session } = useSession()
   const [open, setOpen] = useState(false)
@@ -89,27 +88,24 @@ const HomeUserTrigger = memo(() => {
   const handleSignOut = useCallback(async () => {
     await signOutWorkspace()
     setOpen(false)
-    message.success('已退出登录')
+    toast.success('已退出登录')
     router.replace('/signin')
-  }, [message, router])
+  }, [router])
 
   const menuItems = useMemo(
     () =>
       session?.user
         ? [
             {
-              icon: <Icon icon={Settings2} />,
+              icon: Settings2,
+              href: '/settings/profile',
               key: 'setting',
-              label: (
-                <Link className='text-inherit' href='/settings/profile'>
-                  账号设置
-                </Link>
-              ),
+              label: '账号设置',
             },
-            { icon: <Icon icon={Send} />, key: 'referral', label: '邀请好友' },
+            { icon: Send, key: 'referral', label: '邀请好友' },
             {
               danger: true,
-              icon: <Icon icon={LogOut} />,
+              icon: LogOut,
               key: 'logout',
               label: <span>退出登录</span>,
             },
@@ -119,7 +115,13 @@ const HomeUserTrigger = memo(() => {
   )
 
   const handleMenuClick = useCallback(
-    ({ key }: { key: string }) => {
+    ({ key, domEvent }: ListClickInfo) => {
+      if (key === 'setting') {
+        domEvent.preventDefault()
+        setOpen(false)
+        router.push('/settings/profile')
+        return
+      }
       if (key === 'referral') {
         setOpen(false)
         setReferralOpen(true)
@@ -132,7 +134,7 @@ const HomeUserTrigger = memo(() => {
 
       setOpen(false)
     },
-    [handleSignOut]
+    [handleSignOut, router]
   )
 
   const menuContent = session?.user ? (
@@ -141,7 +143,7 @@ const HomeUserTrigger = memo(() => {
       <DataStatistics />
       <FreeCreditsSummary onClick={() => setOpen(false)} />
       <div className={styles.divider} />
-      <Menu compact items={menuItems} onClick={handleMenuClick} />
+      <List compact className='p-1' selectable={false} items={menuItems} onClick={handleMenuClick} />
     </Flex>
   ) : (
     <Flex className='flex-col gap-0.5 min-w-[300px]'>

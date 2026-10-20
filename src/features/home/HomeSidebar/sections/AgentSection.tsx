@@ -1,8 +1,7 @@
 'use client'
 
-import { AccordionItem, Flex, Skeleton, Text } from '@pure/ui'
-import { useApp } from '@/components/AntdStaticMethods'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { AccordionHeader, AccordionItem, AccordionPanel, AccordionTrigger, Flex, Skeleton, Text } from '@pure/ui'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { useRouter } from 'next/navigation'
 import { memo, useCallback, useEffect, useState } from 'react'
 
@@ -36,7 +35,6 @@ interface AgentSectionProps {
 }
 
 const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
-  const { message } = useApp()
   const router = useRouter()
 
   const [createOpen, setCreateOpen] = useState(false)
@@ -79,11 +77,11 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
       const agent = await createAgent(values)
       upsertLocal(agent)
       setCreateOpen(false)
-      message.success('已创建助理')
+      toast.success('已创建助理')
       applyAgent(agent)
     } catch (error) {
       console.error('[agents] create failed:', error)
-      message.error('创建失败')
+      toast.error('创建失败')
     } finally {
       setSaving(false)
     }
@@ -99,10 +97,10 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
         setActiveAgent(toActiveCommunityAgent(agent))
       }
       setEditing(null)
-      message.success('已保存')
+      toast.success('已保存')
     } catch (error) {
       console.error('[agents] update failed:', error)
-      message.error('保存失败')
+      toast.error('保存失败')
     } finally {
       setSaving(false)
     }
@@ -112,17 +110,17 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
     try {
       await updateAgent(agent.id, { pinned })
       await fetchAgentsList({ force: true })
-      message.success(pinned ? '已置顶' : '已取消置顶')
+      toast.success(pinned ? '已置顶' : '已取消置顶')
     } catch (error) {
       console.error('[agents] pin failed:', error)
-      message.error('操作失败')
+      toast.error('操作失败')
     }
   }
 
   const handleDelete = async (id: string) => {
     await deleteAgent(id)
     removeLocal(id)
-    message.success('已删除')
+    toast.success('已删除')
     if (selectedAgentId === id && agents[0]) {
       applyAgent(agents.find((a) => a.id !== id) ?? agents[0])
     }
@@ -130,44 +128,42 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
 
   return (
     <>
-      <AccordionItem
-        action={<SectionActions addMenuItems={addMenu} menuItems={dropdownMenu} />}
-        itemKey={itemKey}
-        paddingBlock={4}
-        paddingInline='8px 4px'
-        title={
-          <Text className='text-[12px] font-medium' ellipsis type='secondary'>
-            助理
-          </Text>
-        }
-      >
-        <Flex className='flex-col gap-px py-px'>
-          {!loaded && loading ? (
-            Array.from({ length: 6 }).map((_, index) => (
-              <div className={styles.skeletonRow} key={index}>
-                <Skeleton.Avatar active size={28} />
-                <Skeleton active paragraph={{ rows: 1 }} title={false} style={{ flex: 1 }} />
-              </div>
-            ))
-          ) : agents.length > 0 ? (
-            agents.map((agent) => (
-              <AgentItem
-                key={agent.id}
-                agent={agent}
-                onDelete={handleDelete}
-                onEdit={setEditing}
-                onPin={handlePin}
-                onSelect={applyAgent}
-              />
-            ))
-          ) : (
-            <Flex className='flex-col py-1 px-3'>
-              <Text className={`${styles.empty} text-[12px]`}>
-                暂无内容
-              </Text>
-            </Flex>
-          )}
-        </Flex>
+      <AccordionItem value={itemKey}>
+        <AccordionHeader style={{ paddingBlock: 4, paddingInline: '8px 4px' }}>
+          <AccordionTrigger>
+            <Text className='text-[12px] font-medium' ellipsis type='secondary'>
+              助理
+            </Text>
+          </AccordionTrigger>
+          {<SectionActions addMenuItems={addMenu} menuItems={dropdownMenu} />}
+        </AccordionHeader>
+        <AccordionPanel>
+          <Flex className='flex-col gap-px py-px'>
+            {!loaded && loading ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <div className={styles.skeletonRow} key={index}>
+                  <Skeleton.Avatar animated size={28} />
+                  <Skeleton.Text rows={1} style={{ flex: 1 }} />
+                </div>
+              ))
+            ) : agents.length > 0 ? (
+              agents.map((agent) => (
+                <AgentItem
+                  key={agent.id}
+                  agent={agent}
+                  onDelete={handleDelete}
+                  onEdit={setEditing}
+                  onPin={handlePin}
+                  onSelect={applyAgent}
+                />
+              ))
+            ) : (
+              <Flex className='flex-col py-1 px-3'>
+                <Text className={`${styles.empty} text-[12px]`}>暂无内容</Text>
+              </Flex>
+            )}
+          </Flex>
+        </AccordionPanel>
       </AccordionItem>
 
       <AgentFormModal

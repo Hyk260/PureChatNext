@@ -1,8 +1,9 @@
 'use client'
 
+
+import { toast } from '@lobehub/ui'
 import { Form } from 'antd'
 import { Button, Input, Text, Modal, Flex } from '@pure/ui'
-import { useApp } from '@/components/AntdStaticMethods'
 import { useState } from 'react'
 
 import { changeEmail } from '@/libs/better-auth/client'
@@ -18,7 +19,6 @@ interface ChangeEmailFormValues {
 }
 
 export function EmailSetting({ email }: EmailSettingProps) {
-  const { message } = useApp()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [form] = Form.useForm<ChangeEmailFormValues>()
@@ -33,15 +33,15 @@ export function EmailSetting({ email }: EmailSettingProps) {
       })
 
       if (error) {
-        message.error(error.message ?? '修改邮箱失败')
+        toast.error(error.message ?? '修改邮箱失败')
         return
       }
 
-      message.success('验证邮件已发送到新邮箱，请查收并完成验证')
+      toast.success('验证邮件已发送到新邮箱，请查收并完成验证')
       setOpen(false)
       form.resetFields()
     } catch {
-      message.error('修改邮箱失败')
+      toast.error('修改邮箱失败')
     } finally {
       setLoading(false)
     }

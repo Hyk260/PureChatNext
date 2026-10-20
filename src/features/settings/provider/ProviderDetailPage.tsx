@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, confirmModal, Flex, Text } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { memo } from 'react'
@@ -18,8 +18,6 @@ import { useCustomProviderRegistry } from './useCustomProviderRegistry'
 import { useProviderSecrets } from './secretsApi'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { DEFAULT_HOME_MODEL } from '@/const/home/models'
-import { useApp } from '@/components/AntdStaticMethods'
-
 interface ProviderDetailPageProps {
   id: ProviderId
 }
@@ -41,7 +39,6 @@ const localStyles = createStaticStyles(({ css }) => ({
 }))
 
 const ProviderDetailPage = memo<ProviderDetailPageProps>(({ id }) => {
-  const { message } = useApp()
   const router = useRouter()
   const registry = useCustomProviderRegistry()
   const customProviders = useProviderConfigStore((state) => state.customProviders)
@@ -69,10 +66,10 @@ const ProviderDetailPage = memo<ProviderDetailPageProps>(({ id }) => {
           removeCustomProvider(id)
           await mutateSecrets((items) => (items ?? []).filter((item) => item.providerId !== id), { revalidate: false })
           if (selectedProvider === id) setSelectedModel(DEFAULT_HOME_MODEL.provider, DEFAULT_HOME_MODEL.model)
-          message.success(`已删除服务商 ${meta.name}`)
+          toast.success(`已删除服务商 ${meta.name}`)
           router.push('/settings/provider/all')
         } catch (error) {
-          message.error(error instanceof Error ? error.message : '删除服务商失败')
+          toast.error(error instanceof Error ? error.message : '删除服务商失败')
         }
       },
     })

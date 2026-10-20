@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { ArrowLeft } from 'lucide-react'
 import { memo } from 'react'
 import { useQueryState } from 'nuqs'

@@ -1,20 +1,24 @@
-import { ActionIcon, Block, Button, Flex, Modal, Skeleton, Text } from '@pure/ui'
+import { toast } from '@lobehub/ui'
+import { ActionIcon, Block, Button, Flex, Modal, Select, Skeleton, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import { Alert, Select } from 'antd'
+import { Alert } from 'antd'
 import { Copy, RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import type { DesktopDataDirectory, DesktopDataInfo, DesktopLogRetentionDays } from '@/types/desktop'
 import { getDesktopApi } from '@/types/desktop'
 
-const RETENTION_OPTIONS = [
+const RETENTION_OPTIONS: { label: string; value: DesktopLogRetentionDays }[] = [
   { label: '7 天', value: 7 },
   { label: '14 天', value: 14 },
   { label: '30 天', value: 30 },
   { label: '90 天', value: 90 },
   { label: '永久保留', value: 0 },
 ]
+
+function isDesktopLogRetentionDays(value: unknown): value is DesktopLogRetentionDays {
+  return RETENTION_OPTIONS.some((option) => option.value === value)
+}
 
 function cacheLabel(bytes: number | null): string {
   if (bytes === null) return '统计失败'
@@ -68,7 +72,6 @@ function DirectoryRow({
 
 export function DataSettingsContent() {
   const api = getDesktopApi()
-  const { message } = useApp()
   const [data, setData] = useState<DesktopDataInfo | null>(null)
   const [loading, setLoading] = useState(Boolean(api))
   const [error, setError] = useState<string | null>(null)
@@ -126,13 +129,17 @@ export function DataSettingsContent() {
     try {
       await api.setLogRetentionDays(days)
       setData((current) => (current ? { ...current, logRetentionDays: days } : current))
-      message.success('日志保留期已保存')
+      toast.success('日志保留期已保存')
     } catch {
       setError('保存日志保留期失败，请重新选择以重试')
     } finally {
       operation.current = false
       setBusy(false)
     }
+  }
+
+  const handleRetentionChange = async (value: unknown) => {
+    if (isDesktopLogRetentionDays(value)) await setRetention(value)
   }
 
   const clearCache = () => {
@@ -148,7 +155,7 @@ export function DataSettingsContent() {
     setError(null)
     try {
       await api.clearHttpCache()
-      message.success('缓存已清除')
+      toast.success('缓存已清除')
       await load()
     } catch {
       setError('清除缓存失败，请重试')
@@ -200,7 +207,7 @@ export function DataSettingsContent() {
           }
         />
       ) : null}
-      {loading && !data ? <Skeleton active paragraph={{ rows: 6 }} /> : null}
+      {loading && !data ? <Skeleton.Text rows={7} /> : null}
       {data ? (
         <Block padding={24} variant='filled'>
           <Text className='mb-2 block text-base font-semibold'>数据目录</Text>
@@ -208,14 +215,16 @@ export function DataSettingsContent() {
           <DirectoryRow label='应用日志' directory='logs' path={data.logsPath} onError={setError} />
           <Flex className='flex-col gap-3 border-b border-border py-4'>
             <Flex className='flex-between gap-4'>
-              <Text>日志保留期</Text>
-              <Select<DesktopLogRetentionDays>
+              <label className='flex items-center' htmlFor='log-retention-days'>
+                <Text>日志保留期</Text>
+              </label>
+              <Select
+                id='log-retention-days'
                 className='w-40'
-                aria-label='日志保留期'
                 options={RETENTION_OPTIONS}
                 value={data.logRetentionDays}
                 disabled={busy || loading}
-                onChange={setRetention}
+                onChange={handleRetentionChange}
               />
             </Flex>
             <Text type='secondary' className='text-sm'>

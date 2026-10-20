@@ -1,11 +1,10 @@
 'use client'
 
 import { ActionIcon, confirmModal, EditableText, SortableList } from '@pure/ui'
-import { createStaticStyles } from 'antd-style'
+import { toast, createStaticStyles } from '@lobehub/ui'
 import { PencilLine, Trash } from 'lucide-react'
 import { memo, useCallback, useRef, useState } from 'react'
 
-import { useApp } from '@/components/AntdStaticMethods'
 import type { HomeAgentGroup } from '@/features/home/store/sidebarDefaults'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
@@ -27,7 +26,6 @@ interface GroupItemProps extends HomeAgentGroup {
 }
 
 const GroupItem = memo<GroupItemProps>(({ canRemove, id, name }) => {
-  const { message } = useApp()
   const [editing, setEditing] = useState(false)
   const draftRef = useRef(name)
   const committedRef = useRef(false)
@@ -51,25 +49,25 @@ const GroupItem = memo<GroupItemProps>(({ canRemove, id, name }) => {
       const nextName = raw.trim()
 
       if (!nextName) {
-        message.warning('分类名称不能为空')
+        toast.warning('分类名称不能为空')
         setEditing(false)
         return
       }
 
       if (nextName.length > 20) {
-        message.warning('分类名称不能超过 20 个字符')
+        toast.warning('分类名称不能超过 20 个字符')
         setEditing(false)
         return
       }
 
       if (nextName !== name) {
         updateAgentGroupName(id, nextName)
-        message.success('分类已重命名')
+        toast.success('分类已重命名')
       }
 
       setEditing(false)
     },
-    [id, message, name, updateAgentGroupName]
+    [id, name, updateAgentGroupName]
   )
 
   return (

@@ -1,7 +1,7 @@
 'use client'
 
 import { Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { X } from 'lucide-react'
 import { memo } from 'react'
 

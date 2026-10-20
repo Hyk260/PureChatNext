@@ -3,8 +3,7 @@
 import { ApprovalCard, Avatar, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import type { ChatMessageMetadata, ChatPermissionMode } from '@pure/types'
-import { useApp } from '@/components/AntdStaticMethods'
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import { toast, createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import type { UIMessage } from 'ai'
 import { memo, useCallback, useState } from 'react'
 
@@ -126,7 +125,6 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
     onServerToolApproval,
     onToolApproval,
   }) => {
-    const { message: antdMessage } = useApp()
     const [editing, setEditing] = useState(false)
     const text = getMessageText(message)
     const reasoning = getMessageReasoning(message)
@@ -138,8 +136,8 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
 
     const handleCopy = useCallback(async () => {
       await copyToClipboard(text)
-      antdMessage.success('已复制')
-    }, [antdMessage, text])
+      toast.success('已复制')
+    }, [text])
 
     const handleEdit = useCallback(() => {
       setEditing(true)

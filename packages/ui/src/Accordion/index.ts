@@ -1,5 +1,2 @@
-/**
- * Expose the shared Accordion component through the application UI package.
- * Call sites should import from `@pure/ui`; swap for a local implementation later.
- */
-export { Accordion, AccordionItem } from '@lobehub/ui'
+export { Accordion, AccordionItem, Collapsible } from '@lobehub/ui'
+export { AccordionHeader, AccordionPanel, AccordionRoot, AccordionTrigger } from './Accordion'

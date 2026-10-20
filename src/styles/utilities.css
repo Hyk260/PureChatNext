@@ -54,3 +54,11 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Keep the shared input focus ring neutral while preserving validation and borderless states. */
+@layer utilities {
+  .input-focus-neutral:not([data-variant='borderless']):focus-within:not(:has([data-invalid], [aria-invalid='true'])) {
+    border-color: var(--input-focus-border-color);
+    box-shadow: var(--input-focus-shadow);
+  }
+}

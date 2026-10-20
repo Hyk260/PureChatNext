@@ -57,7 +57,7 @@ export default function SettingsProfilePage() {
   if (isPending) {
     return (
       <Flex className='flex-col p-6'>
-        <Skeleton active paragraph={{ rows: 8 }} />
+        <Skeleton.Text rows={9} />
       </Flex>
     )
   }
@@ -73,7 +73,7 @@ export default function SettingsProfilePage() {
   if (isLoading || !payload) {
     return (
       <Flex className='flex-col p-6'>
-        <Skeleton active paragraph={{ rows: 8 }} />
+        <Skeleton.Text rows={9} />
       </Flex>
     )
   }

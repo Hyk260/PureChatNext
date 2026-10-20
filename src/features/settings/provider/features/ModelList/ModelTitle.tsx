@@ -1,8 +1,8 @@
 'use client'
 
 import { ActionIcon, DropdownMenu, Flex, SearchBar, Text } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import type { DropdownItem } from '@pure/ui'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { Activity, CircleX, Ellipsis, Plus, RefreshCcwDot, RotateCcw, X } from 'lucide-react'
 import { memo, useMemo } from 'react'
 
@@ -64,7 +64,7 @@ const ModelTitle = memo<ModelTitleProps>(
     showModelFetcher = true,
     onResetModels,
   }) => {
-    const menuItems = useMemo<MenuProps['items']>(
+    const menuItems = useMemo<DropdownItem[]>(
       () => [
         ...(onResetModels
           ? [

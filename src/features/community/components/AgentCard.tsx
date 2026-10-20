@@ -2,7 +2,7 @@
 
 import { Avatar, Block, Button, Icon, Tag, Text, Flex } from '@pure/ui'
 import { formatDate } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from 'antd-style'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { BookTextIcon, ClockIcon, CoinsIcon, GitForkIcon, PuzzleIcon } from 'lucide-react'
 import { memo, useCallback } from 'react'
 import type { MouseEvent } from 'react'

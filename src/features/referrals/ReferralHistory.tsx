@@ -1,10 +1,10 @@
+import { toast } from '@lobehub/ui'
 import { Text, Flex, Button, Select } from '@pure/ui'
 import { Spin } from 'antd'
 import { ArrowLeft, Copy } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { ReferralBatchResponse, ReferralHistoryResponse, ReferralItem } from '@pure/types'
-import { useApp } from '@/components/AntdStaticMethods'
 import { REFERRAL_DAYS, REFERRAL_STATUS_LABELS } from '@/libs/referrals/helpers'
 
 import { referralRequest } from './api'
@@ -12,7 +12,6 @@ import { referralRequest } from './api'
 const RANGE_OPTIONS = REFERRAL_DAYS.map((days) => ({ value: days, label: days ? `过去 ${days} 天` : '全部' }))
 
 export function ReferralHistory({ onBack }: { onBack: () => void }) {
-  const { message } = useApp()
   const [days, setDays] = useState(90)
   const [data, setData] = useState<ReferralHistoryResponse>()
   const [error, setError] = useState('')
@@ -63,9 +62,9 @@ export function ReferralHistory({ onBack }: { onBack: () => void }) {
     try {
       await navigator.clipboard.writeText(item.link)
       setCopied(item.id)
-      message.success('邀请链接已复制')
+      toast.success('邀请链接已复制')
     } catch {
-      message.error('无法复制，请检查浏览器剪贴板权限')
+      toast.error('无法复制，请检查浏览器剪贴板权限')
     }
   }
 
@@ -79,11 +78,11 @@ export function ReferralHistory({ onBack }: { onBack: () => void }) {
       })
       retryRef.current = null
       const first = result.results[0]
-      if (first?.invitation?.status === 'sent') message.success('邀请已重新发送')
-      else message.warning(first?.error || first?.invitation?.error || '发送结果待确认')
+      if (first?.invitation?.status === 'sent') toast.success('邀请已重新发送')
+      else toast.warning(first?.error || first?.invitation?.error || '发送结果待确认')
       await load()
     } catch (requestError) {
-      message.error(requestError instanceof Error ? requestError.message : '重发失败')
+      toast.error(requestError instanceof Error ? requestError.message : '重发失败')
     } finally {
       setResending(null)
     }

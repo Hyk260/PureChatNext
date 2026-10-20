@@ -1,7 +1,16 @@
 'use client'
 
-import { Accordion, AccordionItem, Block, Icon, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import {
+  AccordionRoot,
+  AccordionHeader,
+  AccordionItem,
+  AccordionPanel,
+  AccordionTrigger,
+  Block,
+  Icon,
+  Flex,
+} from '@pure/ui'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { AtomIcon, Loader2Icon } from 'lucide-react'
 import { memo, useEffect, useState } from 'react'
 
@@ -51,45 +60,45 @@ const Thinking = memo<ThinkingProps>(({ text, thinking = false, duration }) => {
   const label = getThinkingLabel(thinking, duration)
 
   return (
-    <Accordion
-      expandedKeys={open ? ['thinking'] : []}
-      gap={8}
+    <AccordionRoot
+      multiple
+      value={open ? ['thinking'] : []}
+      style={{ gap: 8 }}
       indicatorPlacement='end'
       variant='filled'
-      onExpandedChange={(keys) => setOpen(keys.length > 0)}
+      onValueChange={(keys) => setOpen(keys.length > 0)}
     >
-      <AccordionItem
-        itemKey='thinking'
-        paddingBlock={4}
-        paddingInline={4}
-        styles={{ header: { maxWidth: '100%', width: 'fit-content' } }}
-        title={
-          <Flex className='items-center gap-1.5'>
-            <Block
-              align='center'
-              flex='none'
-              gap={4}
-              height={24}
-              horizontal
-              justify='center'
-              style={{ fontSize: 12 }}
-              variant='filled'
-              width={24}
-            >
-              <Icon
-                color={thinking ? cssVar.colorTextDescription : cssVar.purple}
-                icon={thinking ? Loader2Icon : AtomIcon}
-                size={14}
-                spin={thinking}
-              />
-            </Block>
-            <span className={styles.thinkingLabel}>{label}</span>
-          </Flex>
-        }
-      >
-        <MessageMarkdown className={styles.thinkingBody} isStreaming={thinking} text={text} />
+      <AccordionItem value='thinking'>
+        <AccordionHeader style={{ paddingBlock: 4, paddingInline: 4, maxWidth: '100%', width: 'fit-content' }}>
+          <AccordionTrigger>
+            <Flex className='items-center gap-1.5'>
+              <Block
+                align='center'
+                flex='none'
+                gap={4}
+                height={24}
+                horizontal
+                justify='center'
+                style={{ fontSize: 12 }}
+                variant='filled'
+                width={24}
+              >
+                <Icon
+                  color={thinking ? cssVar.colorTextDescription : cssVar.purple}
+                  icon={thinking ? Loader2Icon : AtomIcon}
+                  size={14}
+                  spin={thinking}
+                />
+              </Block>
+              <span className={styles.thinkingLabel}>{label}</span>
+            </Flex>
+          </AccordionTrigger>
+        </AccordionHeader>
+        <AccordionPanel>
+          <MessageMarkdown className={styles.thinkingBody} isStreaming={thinking} text={text} />
+        </AccordionPanel>
       </AccordionItem>
-    </Accordion>
+    </AccordionRoot>
   )
 })
 

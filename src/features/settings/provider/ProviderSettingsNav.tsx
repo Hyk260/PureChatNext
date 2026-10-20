@@ -1,16 +1,25 @@
 'use client'
 
-import { Accordion, AccordionItem, ActionIcon, Flex, Icon, SearchBar, Text } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import {
+  AccordionRoot,
+  AccordionHeader,
+  AccordionItem,
+  AccordionPanel,
+  AccordionTrigger,
+  ActionIcon,
+  Flex,
+  Icon,
+  SearchBar,
+  Text,
+} from '@pure/ui'
+import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { LayoutGrid, Plus, Search } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { memo, useMemo, useState } from 'react'
+import { memo, useMemo, useRef, useState } from 'react'
 
 import NavItem from '@/components/NavItem'
 import Scrollbar from '@/components/Scrollbar'
-
-import { useApp } from '@/components/AntdStaticMethods'
 
 import { createCustomProvider } from './customProvidersApi'
 import CustomProviderModal from './CustomProviderModal'
@@ -80,11 +89,11 @@ const ProviderNavItem = memo<{
 ProviderNavItem.displayName = 'ProviderNavItem'
 
 const ProviderSettingsNav = memo(() => {
-  const { message } = useApp()
   const pathname = usePathname()
   const [keyword, setKeyword] = useState('')
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [creating, setCreating] = useState(false)
+  const createButtonRef = useRef<HTMLButtonElement>(null)
   const registry = useCustomProviderRegistry()
   const configs = useProviderConfigStore((s) => s.configs)
   const customProviders = useProviderConfigStore((s) => s.customProviders)
@@ -125,9 +134,9 @@ const ProviderSettingsNav = memo(() => {
       await registry.mutate(nextProviders, { revalidate: false })
       setCustomProviders(nextProviders)
       setCreateModalOpen(false)
-      message.success(`已创建服务商 ${created.name}`)
+      toast.success(`已创建服务商 ${created.name}`)
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '创建服务商失败')
+      toast.error(error instanceof Error ? error.message : '创建服务商失败')
     } finally {
       setCreating(false)
     }
@@ -146,6 +155,7 @@ const ProviderSettingsNav = memo(() => {
           onInputChange={setKeyword}
         />
         <ActionIcon
+          ref={createButtonRef}
           aria-label='创建自定义服务商'
           icon={Plus}
           size='small'
@@ -158,67 +168,68 @@ const ProviderSettingsNav = memo(() => {
           <Link className='text-inherit no-underline' href='/settings/provider/all'>
             <NavItem active={isAllActive} clickable icon={LayoutGrid} title='全部' />
           </Link>
-          <Accordion defaultExpandedKeys={['enabled', 'disabled']} gap={4}>
-            <AccordionItem
-              itemKey='enabled'
-              paddingBlock={4}
-              paddingInline='8px 4px'
-              title={
-                <Text className='text-[12px] font-medium' ellipsis type='secondary'>
-                  已启用 · {enabledIds.length}
-                </Text>
-              }
-            >
-              <Flex className='flex-col gap-px py-px'>
-                {enabledIds.length > 0 ? (
-                  enabledIds.map((id) => (
-                    <ProviderNavItem
-                      active={activeId === id}
-                      customProviders={availableCustomProviders}
-                      enabled
-                      id={id}
-                      key={id}
-                    />
-                  ))
-                ) : (
-                  <Text className='px-3 py-1.5 text-[12px]' type='secondary'>
-                    暂无
+          <AccordionRoot multiple defaultValue={['enabled', 'disabled']} style={{ gap: 4 }}>
+            <AccordionItem value='enabled'>
+              <AccordionHeader style={{ paddingBlock: 4, paddingInline: '8px 4px' }}>
+                <AccordionTrigger>
+                  <Text className='text-[12px] font-medium' ellipsis type='secondary'>
+                    已启用 · {enabledIds.length}
                   </Text>
-                )}
-              </Flex>
+                </AccordionTrigger>
+              </AccordionHeader>
+              <AccordionPanel>
+                <Flex className='flex-col gap-px py-px'>
+                  {enabledIds.length > 0 ? (
+                    enabledIds.map((id) => (
+                      <ProviderNavItem
+                        active={activeId === id}
+                        customProviders={availableCustomProviders}
+                        enabled
+                        id={id}
+                        key={id}
+                      />
+                    ))
+                  ) : (
+                    <Text className='px-3 py-1.5 text-[12px]' type='secondary'>
+                      暂无
+                    </Text>
+                  )}
+                </Flex>
+              </AccordionPanel>
             </AccordionItem>
-            <AccordionItem
-              itemKey='disabled'
-              paddingBlock={4}
-              paddingInline='8px 4px'
-              title={
-                <Text className='text-[12px] font-medium' ellipsis type='secondary'>
-                  未启用 · {disabledIds.length}
-                </Text>
-              }
-            >
-              <Flex className='flex-col gap-px py-px'>
-                {disabledIds.length > 0 ? (
-                  disabledIds.map((id) => (
-                    <ProviderNavItem
-                      active={activeId === id}
-                      customProviders={availableCustomProviders}
-                      enabled={false}
-                      id={id}
-                      key={id}
-                    />
-                  ))
-                ) : (
-                  <Text className='px-3 py-1.5 text-[12px]' type='secondary'>
-                    暂无
+            <AccordionItem value='disabled'>
+              <AccordionHeader style={{ paddingBlock: 4, paddingInline: '8px 4px' }}>
+                <AccordionTrigger>
+                  <Text className='text-[12px] font-medium' ellipsis type='secondary'>
+                    未启用 · {disabledIds.length}
                   </Text>
-                )}
-              </Flex>
+                </AccordionTrigger>
+              </AccordionHeader>
+              <AccordionPanel>
+                <Flex className='flex-col gap-px py-px'>
+                  {disabledIds.length > 0 ? (
+                    disabledIds.map((id) => (
+                      <ProviderNavItem
+                        active={activeId === id}
+                        customProviders={availableCustomProviders}
+                        enabled={false}
+                        id={id}
+                        key={id}
+                      />
+                    ))
+                  ) : (
+                    <Text className='px-3 py-1.5 text-[12px]' type='secondary'>
+                      暂无
+                    </Text>
+                  )}
+                </Flex>
+              </AccordionPanel>
             </AccordionItem>
-          </Accordion>
+          </AccordionRoot>
         </Flex>
       </Scrollbar>
       <CustomProviderModal
+        afterClose={() => createButtonRef.current?.focus({ preventScroll: true })}
         existingProviderIds={allProviderIds}
         loading={creating}
         open={createModalOpen}

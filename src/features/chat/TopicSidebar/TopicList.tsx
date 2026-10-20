@@ -1,7 +1,17 @@
 'use client'
 
-import { Accordion, AccordionItem, Flex, Icon, Skeleton, Text } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import {
+  AccordionRoot,
+  AccordionHeader,
+  AccordionItem,
+  AccordionPanel,
+  AccordionTrigger,
+  Flex,
+  Icon,
+  Skeleton,
+  Text,
+} from '@pure/ui'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { Folder, Star } from 'lucide-react'
 import { memo, useMemo, useState } from 'react'
 
@@ -97,7 +107,7 @@ const TopicList = memo<Props>(
         <Flex className='flex-col gap-px'>
           {SKELETON_WIDTHS.map((width) => (
             <Flex className='items-center h-9 px-2.5' key={width}>
-              <Skeleton.Block active height={16} width={width} />
+              <Skeleton animated height={16} width={width} />
             </Flex>
           ))}
         </Flex>
@@ -107,9 +117,7 @@ const TopicList = memo<Props>(
     if (topics.length === 0) {
       return (
         <Flex className='flex-col py-1 px-3'>
-          <Text className={`${styles.empty} text-[12px]`}>
-            暂无话题
-          </Text>
+          <Text className={`${styles.empty} text-[12px]`}>暂无话题</Text>
         </Flex>
       )
     }
@@ -120,41 +128,46 @@ const TopicList = memo<Props>(
 
     const groupIds = groups.map((group) => group.id)
     return (
-      <Accordion defaultExpandedKeys={groupIds} gap={2} key={`${groupMode}:${sortBy}:${groupIds.join('|')}`}>
+      <AccordionRoot
+        multiple
+        defaultValue={groupIds}
+        style={{ gap: 2 }}
+        key={`${groupMode}:${sortBy}:${groupIds.join('|')}`}
+      >
         {groups.map((group) => {
           const projectName = group.id.startsWith('project:') ? group.id.slice('project:'.length) : null
-          const showProjectMenu = groupMode === 'byProject' && Boolean(projectName) && (Boolean(onDeleteProject) || Boolean(onNewTopicInProject))
+          const showProjectMenu =
+            groupMode === 'byProject' &&
+            Boolean(projectName) &&
+            (Boolean(onDeleteProject) || Boolean(onNewTopicInProject))
 
           return (
-            <AccordionItem
-              action={
-                showProjectMenu && projectName ? (
+            <AccordionItem value={group.id} key={group.id}>
+              <AccordionHeader style={{ paddingBlock: 4, paddingInline: '8px 4px' }}>
+                <AccordionTrigger>
+                  <Flex className='items-center gap-1.5 min-w-0'>
+                    {getGroupTitleIcon(group.id, groupMode)}
+                    <Text className='text-[12px] font-medium' ellipsis type='secondary'>
+                      {group.title}
+                    </Text>
+                  </Flex>
+                </AccordionTrigger>
+                {showProjectMenu && projectName ? (
                   <ProjectGroupMenu
                     projectName={projectName}
                     topicCount={group.topics.length}
                     onDeleteProject={onDeleteProject}
                     onNewTopicInProject={onNewTopicInProject}
                   />
-                ) : null
-              }
-              itemKey={group.id}
-              key={group.id}
-              paddingBlock={4}
-              paddingInline='8px 4px'
-              title={
-                <Flex className='items-center gap-1.5 min-w-0'>
-                  {getGroupTitleIcon(group.id, groupMode)}
-                  <Text className='text-[12px] font-medium' ellipsis type='secondary'>
-                    {group.title}
-                  </Text>
-                </Flex>
-              }
-            >
-              <Flex className='flex-col gap-px py-px'>{group.topics.map(renderTopic)}</Flex>
+                ) : null}
+              </AccordionHeader>
+              <AccordionPanel>
+                <Flex className='flex-col gap-px py-px'>{group.topics.map(renderTopic)}</Flex>
+              </AccordionPanel>
             </AccordionItem>
           )
         })}
-      </Accordion>
+      </AccordionRoot>
     )
   }
 )

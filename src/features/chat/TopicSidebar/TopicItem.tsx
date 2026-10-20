@@ -1,8 +1,8 @@
 'use client'
 
 import { DropdownMenu, Icon, Input, Modal, Text, Flex } from '@pure/ui'
-import type { MenuInfo, MenuProps } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import type { MenuInfo, DropdownItem } from '@pure/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import {
   Check,
   Copy,
@@ -127,13 +127,13 @@ const TopicItem = memo<Props>(
       }
     }
 
-    const menuItems = useMemo<MenuProps['items']>(
+    const menuItems = useMemo<DropdownItem[]>(
       () => [
         {
           icon: <Icon icon={Star} />,
           key: 'favorite',
           label: topic.favorite ? '取消收藏' : '收藏',
-          onClick: (info) => {
+          onClick: (info: MenuInfo) => {
             stopMenuEvent(info)
             onFavorite(topic.id, !topic.favorite)
           },
@@ -179,7 +179,7 @@ const TopicItem = memo<Props>(
           icon: <Icon icon={Sparkles} />,
           key: 'smart-rename',
           label: autoRenaming ? '正在智能重命名…' : '智能重命名',
-          onClick: (info) => {
+          onClick: (info: MenuInfo) => {
             stopMenuEvent(info)
             if (autoRenameDisabled) return
             onAutoRename(topic.id)
@@ -189,7 +189,7 @@ const TopicItem = memo<Props>(
           icon: <Icon icon={Pencil} />,
           key: 'rename',
           label: '重命名',
-          onClick: (info) => {
+          onClick: (info: MenuInfo) => {
             stopMenuEvent(info)
             handleOpenRename()
           },
@@ -213,7 +213,7 @@ const TopicItem = memo<Props>(
           icon: <Icon icon={Trash2} />,
           key: 'delete',
           label: '删除',
-          onClick: (info) => {
+          onClick: (info: MenuInfo) => {
             stopMenuEvent(info)
             confirmDeleteTopic(() => onDelete(topic.id))
           },

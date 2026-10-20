@@ -1,8 +1,8 @@
 'use client'
 
 import { ActionIcon, DropdownMenu, Flex, Icon } from '@pure/ui'
-import type { MenuProps } from '@pure/ui'
-import { createStaticStyles, cssVar } from 'antd-style'
+import type { DropdownItem } from '@pure/ui'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { Check, PanelRightClose, Plus } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
@@ -65,7 +65,7 @@ const WorkPanel = memo<Props>(({ value, onChange, topic, topicTitle }) => {
     [closeWorkPanelTab, openTabs, openWorkPanelTab]
   )
 
-  const menuItems = useMemo<MenuProps['items']>(() => {
+  const menuItems = useMemo<DropdownItem[]>(() => {
     const toMenuChildren = (tabs: typeof WORKSPACE_MENU_TABS) =>
       tabs.map((tab) => ({
         icon: openTabs.includes(tab.id) ? <Icon icon={Check} /> : <Icon icon={tab.icon} />,

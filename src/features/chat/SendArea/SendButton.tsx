@@ -1,11 +1,9 @@
 'use client'
 
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { memo } from 'react'
 import type { CSSProperties, MouseEventHandler } from 'react'
 import { Button } from '@pure/ui'
-
-const prefixCls = 'ant'
 
 const iconStyles = createStaticStyles(({ css }) => ({
   icon: css`
@@ -17,7 +15,7 @@ const iconStyles = createStaticStyles(({ css }) => ({
 /** Send button idle icon */
 const SendIcon = ({ size = '1em' }: { size?: number | string }) => (
   <svg
-    className={cx('anticon', iconStyles.icon)}
+    className={iconStyles.icon}
     fill='currentColor'
     fillRule='evenodd'
     height={size}
@@ -32,7 +30,7 @@ const SendIcon = ({ size = '1em' }: { size?: number | string }) => (
 /** Send button stop icon */
 const StopIcon = ({ size = '1.5em' }: { size?: number | string }) => (
   <svg
-    className={cx('anticon', iconStyles.icon)}
+    className={iconStyles.icon}
     color='currentColor'
     height={size}
     viewBox='0 0 1024 1024'
@@ -63,26 +61,19 @@ const StopIcon = ({ size = '1.5em' }: { size?: number | string }) => (
 
 const styles = createStaticStyles(({ css }) => ({
   button: css`
-    &.${prefixCls}-btn {
-      flex: none;
-      width: var(--send-button-size, 32px) !important;
-      height: var(--send-button-size, 32px);
-      padding-inline: 0 !important;
-    }
+    flex: none;
+    width: var(--send-button-size, 32px) !important;
+    height: var(--send-button-size, 32px);
+    padding-inline: 0 !important;
   `,
   disabled: css`
-    &.${prefixCls}-btn {
-      cursor: default;
-      border-color: ${cssVar.colorBorderSecondary};
-      background: transparent;
-    }
+    cursor: default;
+    border-color: ${cssVar.colorBorderSecondary};
   `,
   loadingButton: css`
-    &.${prefixCls}-btn {
-      flex: none;
-      height: var(--send-button-size, 32px);
-      padding-inline: 0 !important;
-    }
+    flex: none;
+    height: var(--send-button-size, 32px);
+    padding-inline: 0 !important;
   `,
 }))
 

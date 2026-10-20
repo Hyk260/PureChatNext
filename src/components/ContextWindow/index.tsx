@@ -1,6 +1,6 @@
 'use client'
 
-import { createStaticStyles, cssVar, keyframes } from 'antd-style'
+import { createStaticStyles, cssVar, keyframes } from '@lobehub/ui'
 import clsx from 'clsx'
 import { ArrowRight, LockKeyhole, Sparkles, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'

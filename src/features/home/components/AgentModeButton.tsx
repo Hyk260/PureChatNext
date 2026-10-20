@@ -1,7 +1,7 @@
 'use client'
 
 import { Icon, Popover, Tooltip, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from 'antd-style'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { ChevronDownIcon, InfinityIcon, MessageCircleIcon } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
 

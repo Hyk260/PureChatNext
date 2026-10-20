@@ -1,11 +1,12 @@
 'use client'
 
-import { ActionIcon, Accordion, Flex } from '@pure/ui'
-import { useApp } from '@/components/AntdStaticMethods'
+
+import { toast } from '@lobehub/ui'
+import { ActionIcon, AccordionRoot, Flex } from '@pure/ui'
 import Scrollbar from '@/components/Scrollbar'
 import { Settings } from 'lucide-react'
 import { memo, useCallback, useMemo } from 'react'
-import type { Key, ReactElement } from 'react'
+import type { ReactElement } from 'react'
 
 import NavItem from '@/components/NavItem'
 import { findSidebarSection, SIDEBAR_ACCORDION_KEYS, SIDEBAR_SPACER_ID } from '@/const/home/nav'
@@ -23,7 +24,6 @@ const sectionComponents = {
 
 const SidebarBody = memo(() => {
   const pathname = usePathname()
-  const { message } = useApp()
   const hiddenSidebarSections = useHomeStore((s) => s.hiddenSidebarSections)
   const sidebarExpandedKeys = useHomeStore((s) => s.sidebarExpandedKeys)
   const sidebarItems = useHomeStore((s) => s.sidebarItems)
@@ -38,7 +38,7 @@ const SidebarBody = memo(() => {
   )
 
   const handleAccordionExpandedChange = useCallback(
-    (accordionKeys: string[], expandedKeys: Key[]) => {
+    (accordionKeys: string[], expandedKeys: readonly unknown[]) => {
       setSidebarAccordionExpandedKeys(accordionKeys, expandedKeys.map(String))
     },
     [setSidebarAccordionExpandedKeys]
@@ -55,7 +55,7 @@ const SidebarBody = memo(() => {
             key={key}
             icon={section.icon}
             title={section.title}
-            onItemClick={() => message.info('功能即将推出')}
+            onItemClick={() => toast.info('功能即将推出')}
           />
         )
       }
@@ -67,7 +67,7 @@ const SidebarBody = memo(() => {
         </Link>
       )
     },
-    [message, pathname]
+    [pathname]
   )
 
   const buildContent = useCallback(
@@ -82,14 +82,15 @@ const SidebarBody = memo(() => {
         const expandedKeys = pickAccordionExpandedKeys(sidebarExpandedKeys, accordionKeys)
 
         elements.push(
-          <Accordion
-            expandedKeys={expandedKeys}
-            gap={8}
+          <AccordionRoot
+            multiple
+            value={expandedKeys}
+            style={{ gap: 8 }}
             key={`acc-${elements.length}`}
-            onExpandedChange={(keys) => handleAccordionExpandedChange(accordionKeys, keys)}
+            onValueChange={(keys) => handleAccordionExpandedChange(accordionKeys, keys)}
           >
             {accGroup.map((item) => item.element)}
-          </Accordion>
+          </AccordionRoot>
         )
         accGroup = []
       }

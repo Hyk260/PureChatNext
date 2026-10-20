@@ -1,7 +1,7 @@
 'use client'
 
 import { ProviderCombine, ProviderIcon } from '@pure/ui'
-import { Avatar } from 'antd'
+import { Avatar } from '@lobehub/ui'
 import { memo } from 'react'
 
 interface ProviderMarkProps {
@@ -17,17 +17,20 @@ const BUILTIN_PROVIDER_IDS = new Set(['purechat', 'openai', 'deepseek'])
 const ProviderMark = memo<ProviderMarkProps>(({ combined = false, id, logo, name, size }) => {
   if (logo) {
     return (
-      <Avatar alt={name} className='shrink-0' shape='square' size={size} src={logo}>
-        {name.slice(0, 1).toUpperCase()}
-      </Avatar>
+      <Avatar
+        alt={name}
+        avatar={logo}
+        className='shrink-0'
+        shape='square'
+        size={size}
+        title={name.slice(0, 1).toUpperCase()}
+      />
     )
   }
 
   if (!BUILTIN_PROVIDER_IDS.has(id)) {
     return (
-      <Avatar className='shrink-0' shape='square' size={size}>
-        {name.slice(0, 1).toUpperCase()}
-      </Avatar>
+      <Avatar className='shrink-0' shape='square' size={size} title={name.slice(0, 1).toUpperCase()} />
     )
   }
 

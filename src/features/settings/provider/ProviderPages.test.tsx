@@ -27,27 +27,6 @@ vi.mock('@/components/NavItem', () => ({
   ),
 }))
 
-vi.mock('antd', () => ({
-  Switch: ({
-    checked,
-    onChange,
-    onClick,
-  }: {
-    checked?: boolean
-    onChange?: (checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void
-    onClick?: (checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void
-  }) => (
-    <button
-      aria-pressed={checked}
-      type='button'
-      onClick={(event) => {
-        onClick?.(Boolean(checked), event)
-        onChange?.(!checked, event)
-      }}
-    />
-  ),
-}))
-
 vi.mock('@pure/ui', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@pure/ui')>()),
   AccordionRoot: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
@@ -89,6 +68,24 @@ vi.mock('@lobehub/ui', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@lobehub/ui')>()),
   createStaticStyles: () => new Proxy({}, { get: (_, key) => String(key) }),
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
+  Switch: ({
+    checked,
+    onChange,
+    onClick,
+  }: {
+    checked?: boolean
+    onChange?: (checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void
+    onClick?: (checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void
+  }) => (
+    <button
+      aria-pressed={checked}
+      type='button'
+      onClick={(event) => {
+        onClick?.(Boolean(checked), event)
+        onChange?.(!checked, event)
+      }}
+    />
+  ),
 }))
 
 import ProviderAllPage from './ProviderAllPage'

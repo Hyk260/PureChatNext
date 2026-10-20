@@ -1,9 +1,8 @@
 'use client'
 
 
-import { toast } from '@lobehub/ui'
+import { toast, Switch } from '@lobehub/ui'
 import { ActionIcon, Flex, Input, Text } from '@pure/ui'
-import { Switch } from 'antd'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FocusEvent, FormEvent } from 'react'

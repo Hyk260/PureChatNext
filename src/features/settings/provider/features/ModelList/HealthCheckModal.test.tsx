@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('antd', () => ({
+vi.mock('@lobehub/ui', () => ({
   Switch: ({ checked, onChange }: { checked?: boolean; onChange?: (checked: boolean) => void }) => (
     <button aria-label='concurrency-toggle' aria-pressed={checked} onClick={() => onChange?.(!checked)} type='button' />
   ),

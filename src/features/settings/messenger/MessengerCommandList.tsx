@@ -1,8 +1,7 @@
 'use client'
 
 import { Block, Icon, Text, Flex } from '@pure/ui'
-import { Divider } from 'antd'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, Divider } from '@lobehub/ui'
 import { BotIcon, CircleStopIcon, HelpCircleIcon, MegaphoneIcon, SquarePlusIcon } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Fragment, memo } from 'react'
@@ -60,7 +59,7 @@ const MessengerCommandList = memo(({ platform }: MessengerCommandListProps) => {
       <Block className={styles.list} variant='outlined'>
         {MESSENGER_COMMANDS.map((item, index) => (
           <Fragment key={item.command}>
-            {index > 0 && <Divider style={{ margin: 0 }} />}
+            {index > 0 && <Divider />}
             <Flex className='items-center gap-3 py-3.5 px-4'>
               <Flex className={[styles.icon, 'flex-center']}>
                 <Icon icon={COMMAND_ICONS[item.icon]} size={18} />

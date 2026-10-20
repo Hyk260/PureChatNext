@@ -1,7 +1,7 @@
 'use client'
 
 import { Block, Flex } from '@pure/ui'
-import { Divider } from 'antd'
+import { Divider } from '@lobehub/ui'
 import { Fragment, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
@@ -106,7 +106,7 @@ export function ProfileSettingsContent({
         <Flex className='flex-col p-4'>
           {accountRows.map((row, index) => (
             <Fragment key={row.key}>
-              {index > 0 ? <Divider style={{ margin: 0 }} /> : null}
+              {index > 0 ? <Divider /> : null}
               {row.node}
             </Fragment>
           ))}

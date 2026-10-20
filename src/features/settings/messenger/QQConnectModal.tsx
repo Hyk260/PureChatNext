@@ -1,6 +1,7 @@
 'use client'
 
-import { Button as AntButton, QRCode, Radio, Spin } from 'antd'
+import { Button as AntButton, QRCode, Radio } from 'antd'
+import { Spin } from '@lobehub/ui'
 import { Button, Flex, Input, InputPassword, Select, Text } from '@pure/ui'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'

@@ -4,8 +4,7 @@ import { ActionIcon, Flex, Icon, ModelIcon, SortableList, Tag, Text, Tooltip } f
 import { copyToClipboard, formatDuration, formatTokenNumber } from '@pure/utils/client'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
-import { Switch } from 'antd'
-import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
+import { toast, createStaticStyles, cssVar, Switch } from '@lobehub/ui'
 import { Check, CircleX, Code2, Eye, Globe2, ImageIcon, Lightbulb, Loader2, Pencil, Trash2, Wrench } from 'lucide-react'
 import { memo } from 'react'
 

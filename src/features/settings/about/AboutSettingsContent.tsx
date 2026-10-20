@@ -1,10 +1,10 @@
 'use client'
 
 
-import { toast } from '@lobehub/ui'
+import { toast, Switch } from '@lobehub/ui'
 import { ActionIcon, Block, Button, Flex, Github, Modal, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import { Segmented, Switch } from 'antd'
+import { Segmented } from 'antd'
 import { BadgeHelp, Bug, CheckCircle2, CircleX, Code2, Copy, FileText, Globe, MessageSquare, MessagesSquare, Rss, TriangleAlert } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useState } from 'react'

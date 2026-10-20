@@ -1,8 +1,7 @@
 'use client'
 
 import { Block, Flex, Text } from '@pure/ui'
-import { Switch } from 'antd'
-import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
+import { toast, createStaticStyles, cssVar, Switch } from '@lobehub/ui'
 import { useRouter } from 'next/navigation'
 import { memo } from 'react'
 

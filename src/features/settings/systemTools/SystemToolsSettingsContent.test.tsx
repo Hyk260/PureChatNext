@@ -6,11 +6,13 @@ const mocks = vi.hoisted(() => ({
   copyToClipboard: vi.fn().mockResolvedValue(undefined),
   getDesktopApi: vi.fn(),
   getSystemTools: vi.fn(),
-  messageSuccess: vi.fn(),
+  toastSuccess: vi.fn(),
 }))
 
-vi.mock('antd', () => ({
+vi.mock('@lobehub/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@lobehub/ui')>()),
   Divider: () => <hr />,
+  toast: { success: mocks.toastSuccess },
 }))
 
 vi.mock('@pure/ui', () => ({
@@ -33,10 +35,6 @@ vi.mock('@pure/ui', () => ({
 
 vi.mock('@pure/utils/client', () => ({
   copyToClipboard: mocks.copyToClipboard,
-}))
-
-vi.mock('@/components/AntdStaticMethods', () => ({
-  useApp: () => ({ message: { success: mocks.messageSuccess } }),
 }))
 
 vi.mock('@/types/desktop', () => ({
@@ -75,7 +73,7 @@ describe('SystemToolsSettingsContent', () => {
   beforeEach(() => {
     mocks.copyToClipboard.mockClear()
     mocks.getSystemTools.mockReset()
-    mocks.messageSuccess.mockClear()
+    mocks.toastSuccess.mockClear()
     mocks.getDesktopApi.mockReset()
   })
 
@@ -112,7 +110,7 @@ describe('SystemToolsSettingsContent', () => {
     fireEvent.click(screen.getByRole('button', { name: '复制路径' }))
     await waitFor(() => {
       expect(mocks.copyToClipboard).toHaveBeenCalledWith('/usr/local/bin/node')
-      expect(mocks.messageSuccess).toHaveBeenCalledWith('已复制路径')
+      expect(mocks.toastSuccess).toHaveBeenCalledWith('已复制路径')
     })
   })
 

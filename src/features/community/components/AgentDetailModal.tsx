@@ -2,8 +2,7 @@
 
 import { ActionIcon, Avatar, Block, Button, Flex, Icon, Modal, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import { Collapse, Tabs } from 'antd'
-import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
+import { toast, createStaticStyles, cssVar, Accordion, Tabs } from '@lobehub/ui'
 import { Copy, MessageCircleHeartIcon, MessageCircleQuestionIcon } from 'lucide-react'
 import { memo, useCallback, useMemo } from 'react'
 import useSWRImmutable from 'swr/immutable'
@@ -99,14 +98,15 @@ const OverviewTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
 
   return (
     <Flex className='flex-col gap-4'>
-      <Collapse
-        defaultActiveKey={['usage']}
-        expandIconPlacement='end'
+      <Accordion
+        defaultValue={['usage']}
+        indicatorPlacement='end'
+        variant='outlined'
         items={[
           {
             children: <Text className='whitespace-pre-wrap'>{usageText}</Text>,
             key: 'usage',
-            label: '你可以使用该助理做什么？',
+            title: '你可以使用该助理做什么？',
           },
         ]}
       />
@@ -267,6 +267,7 @@ const AgentDetailModal = memo<AgentDetailModalProps>(({ agent, onClose, onEdit, 
         {detail ? (
           <Tabs
             defaultActiveKey='overview'
+            variant='square'
             items={[
               {
                 children: <OverviewTab agent={detail} />,

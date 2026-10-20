@@ -1,8 +1,8 @@
-import { toast } from '@lobehub/ui'
+import { toast, Switch } from '@lobehub/ui'
 import { DEFAULT_WEB_SEARCH_SETTINGS } from '@pure/types'
 import type { WebSearchSettingsPatch } from '@pure/types'
 import { Collapsible, Block, Button, Flex, Text, TextArea, Tooltip } from '@pure/ui'
-import { InputNumber, Segmented, Switch } from 'antd'
+import { InputNumber, Segmented } from 'antd'
 import { ChevronDown, ChevronUp, Info } from 'lucide-react'
 import { useState } from 'react'
 

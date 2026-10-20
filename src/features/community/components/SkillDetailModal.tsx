@@ -1,8 +1,7 @@
 'use client'
 
 import { Avatar, Button, Flex, Icon, Modal, Tag, Text } from '@pure/ui'
-import { Collapse } from 'antd'
-import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
+import { toast, createStaticStyles, cssVar, Accordion } from '@lobehub/ui'
 import { DotIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
@@ -343,9 +342,10 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
           </Flex>
         ) : null}
 
-        <Collapse
-          defaultActiveKey={['skill']}
-          expandIconPlacement='end'
+        <Accordion
+          defaultValue={['skill']}
+          indicatorPlacement='end'
+          variant='outlined'
           items={[
             {
               children: (
@@ -354,7 +354,7 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
                 </div>
               ),
               key: 'skill',
-              label: 'SKILL.md',
+              title: 'SKILL.md',
             },
           ]}
         />

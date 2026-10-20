@@ -1,7 +1,7 @@
 'use client'
 
 import { Alert, Flex, Input, Modal, Text } from '@pure/ui'
-import { Switch } from 'antd'
+import { Switch } from '@lobehub/ui'
 import { useMemo, useState } from 'react'
 
 import { getSettingsProviderMeta } from '../../const'

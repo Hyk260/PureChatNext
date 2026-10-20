@@ -1,5 +1,6 @@
 import { Flex, PureChatMark } from '@pure/ui'
-import { Progress, Spin } from 'antd'
+import { Progress } from 'antd'
+import { Spin } from '@lobehub/ui'
 
 import type { DesktopUpdateStatus } from '@/types/desktopUpdater'
 import { getUpdateProgressPresentation } from './updatePresentation'

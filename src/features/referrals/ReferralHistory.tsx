@@ -1,6 +1,5 @@
-import { toast } from '@lobehub/ui'
+import { toast, Spin } from '@lobehub/ui'
 import { Text, Flex, Button, Select } from '@pure/ui'
-import { Spin } from 'antd'
 import { ArrowLeft, Copy } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 

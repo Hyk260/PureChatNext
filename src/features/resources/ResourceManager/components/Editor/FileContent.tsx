@@ -1,8 +1,7 @@
 'use client'
 
 import { Button, Flex, Text } from '@pure/ui'
-import { Spin } from 'antd'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, Spin } from '@lobehub/ui'
 import { Download } from 'lucide-react'
 import { lazy, memo, Suspense, useEffect, useState } from 'react'
 

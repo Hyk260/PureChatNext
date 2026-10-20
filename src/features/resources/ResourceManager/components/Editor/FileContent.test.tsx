@@ -29,12 +29,11 @@ vi.mock('@pure/ui', () => ({
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }))
 
-vi.mock('antd', () => ({ Spin: () => <span data-testid='spinner' /> }))
-
 vi.mock('@lobehub/ui', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@lobehub/ui')>()),
   createStaticStyles: () => new Proxy({}, { get: (_, key) => String(key) }),
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
+  Spin: () => <span data-testid='spinner' />,
 }))
 
 vi.mock('./SourcePreview', () => ({

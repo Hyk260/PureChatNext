@@ -1,9 +1,8 @@
 'use client'
 
 
-import { toast } from '@lobehub/ui'
+import { toast, Spin } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
-import { Spin } from 'antd'
 import { memo, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryState } from 'nuqs'

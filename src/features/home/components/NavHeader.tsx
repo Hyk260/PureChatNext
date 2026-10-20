@@ -1,6 +1,5 @@
 'use client'
 
-import { Avatar } from 'antd'
 import { ActionIcon, Flex } from '@pure/ui'
 import { createStaticStyles } from '@lobehub/ui'
 import { PanelLeftOpen } from 'lucide-react'

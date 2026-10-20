@@ -1,5 +1,5 @@
 import { Button, Flex, Text } from '@pure/ui'
-import { Spin } from 'antd'
+import { Spin } from '@lobehub/ui'
 import { CheckCircle2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'

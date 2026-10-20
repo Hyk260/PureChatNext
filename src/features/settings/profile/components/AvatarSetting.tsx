@@ -1,8 +1,7 @@
 'use client'
 
 
-import { toast } from '@lobehub/ui'
-import { Spin } from 'antd'
+import { toast, Spin } from '@lobehub/ui'
 import { Avatar, Center, Icon } from '@pure/ui'
 import { Loader2, Pencil } from 'lucide-react'
 import { useRef, useState } from 'react'

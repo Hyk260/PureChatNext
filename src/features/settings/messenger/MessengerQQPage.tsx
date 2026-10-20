@@ -1,8 +1,7 @@
 'use client'
 
 
-import { toast } from '@lobehub/ui'
-import { Spin } from 'antd'
+import { toast, Spin } from '@lobehub/ui'
 import { ActionIcon, Button, confirmModal, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import type { AgentListItem } from '@/const/home/agents'

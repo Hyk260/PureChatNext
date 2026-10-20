@@ -1,9 +1,8 @@
 'use client'
 
-import { Avatar } from 'antd'
 import { Block, Button, Icon, List, Popover, Text, Flex } from '@pure/ui'
 import type { ListClickInfo } from '@pure/ui'
-import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
+import { toast, createStaticStyles, cssVar, Avatar } from '@lobehub/ui'
 import { ChevronDownIcon, LogOut, Settings2, Send } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -51,10 +50,13 @@ interface UserInfoSectionProps {
 const UserInfoSection = memo<UserInfoSectionProps>(({ avatar, email, name, planLabel }) => (
   <Flex className='items-center gap-3 py-3 px-3'>
     <Flex className='items-center gap-2.5'>
-      <Avatar size={36} src={avatar}>
-        {' '}
-        {name.slice(0, 3).toUpperCase()}{' '}
-      </Avatar>
+      <Avatar
+        alt={name}
+        avatar={avatar}
+        shape='circle'
+        size={36}
+        title={name.slice(0, 3).toUpperCase()}
+      />
       <Flex className='flex-col flex-1'>
         <Flex className='items-center gap-2'>
           <Text as='span' className='leading-[1.4]' weight='bold'>
@@ -190,9 +192,13 @@ const HomeUserTrigger = memo(() => {
             paddingInlineStart: 2,
           }}
         >
-          <Avatar shape='square' size={28} src={avatar}>
-            {displayName.slice(0, 3).toUpperCase()}
-          </Avatar>
+          <Avatar
+            alt={displayName}
+            avatar={avatar}
+            shape='square'
+            size={28}
+            title={displayName.slice(0, 3).toUpperCase()}
+          />
           <Flex className='items-center gap-1 overflow-hidden'>
             <Text as='span' className='min-w-0 flex-1' ellipsis weight={500}>
               {displayName}

@@ -1,6 +1,7 @@
 'use client'
 
-import { Alert, Badge, Divider, Form } from 'antd'
+import { Alert, Badge, Form } from 'antd'
+import { Divider } from '@lobehub/ui'
 import type { FormInstance } from 'antd'
 import { User } from 'lucide-react'
 import Link from 'next/link'

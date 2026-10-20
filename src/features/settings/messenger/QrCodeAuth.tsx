@@ -1,6 +1,7 @@
 'use client'
 
-import { QRCode, Spin } from 'antd'
+import { QRCode } from 'antd'
+import { Spin } from '@lobehub/ui'
 import { Button, Modal, Text, Flex } from '@pure/ui'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'

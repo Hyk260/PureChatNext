@@ -1,10 +1,9 @@
 'use client'
 
 
-import { toast } from '@lobehub/ui'
+import { toast, Divider } from '@lobehub/ui'
 import { ActionIcon, Block, Button, Flex, Skeleton, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import { Divider } from 'antd'
 import { Check, CircleX, Copy, RefreshCw } from 'lucide-react'
 import { Fragment, useCallback, useEffect, useState } from 'react'
 
@@ -165,7 +164,7 @@ export function SystemToolsSettingsContent() {
             <Flex className='flex-col px-4'>
               {data.runtime.map((tool, index) => (
                 <Fragment key={tool.id}>
-                  {index > 0 ? <Divider style={{ margin: 0 }} /> : null}
+                  {index > 0 ? <Divider /> : null}
                   <RuntimeToolRow tool={tool} onCopyPath={(path) => handleCopyPath(path)} />
                 </Fragment>
               ))}
@@ -177,7 +176,7 @@ export function SystemToolsSettingsContent() {
             <Flex className='flex-col px-4'>
               {data.builtin.map((tool, index) => (
                 <Fragment key={tool.id}>
-                  {index > 0 ? <Divider style={{ margin: 0 }} /> : null}
+                  {index > 0 ? <Divider /> : null}
                   <BuiltinToolRow tool={tool} />
                 </Fragment>
               ))}

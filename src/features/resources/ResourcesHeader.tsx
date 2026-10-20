@@ -1,6 +1,6 @@
 'use client'
 
-import { Avatar } from 'antd'
+import { Avatar } from '@lobehub/ui'
 import { Text, Flex } from '@pure/ui'
 import { memo } from 'react'
 
@@ -14,7 +14,12 @@ const ResourcesHeader = memo(() => {
       <Text className='text-[16px]' strong>
         资源
       </Text>
-      <Avatar src={session?.user?.image ?? undefined} size={32} />
+      <Avatar
+        alt={session?.user?.name ?? '用户头像'}
+        avatar={session?.user?.image ?? undefined}
+        shape='circle'
+        size={32}
+      />
     </Flex>
   )
 })

@@ -36,6 +36,12 @@ description: 配置 GitHub Actions 仓库变量与密钥，并将公开的 PureC
 
 `S3_ENABLE_PATH_STYLE` 和 `S3_SET_ACL` 已由工作流固定为 `0`，无需配置。发布检查也要求 HTTPS 的 COS 地域 Endpoint、正确的桶名和相同的地域。
 
+### COS 上传权限
+
+超过 8 MiB 的安装包使用分块上传，每次只将一块读入内存后发送。COS 确认该块上传成功后，日志才会累计已上传字节数；临时失败只重试当前块，最多 3 次，每次请求限时 2 分钟。较小文件使用固定长度的普通上传。
+
+除了原有的读取、上传和清理对象权限，发布密钥还需要 `cos:InitiateMultipartUpload`、`cos:UploadPart`、`cos:CompleteMultipartUpload` 和 `cos:AbortMultipartUpload` 权限。最后一项用于失败时清理未完成的分块。权限说明见[腾讯云上传对象文档](https://cloud.tencent.cn/document/product/436/65820)。
+
 ## 手动运行同步
 
 1. 确保桌面发行工作流已生成稳定版 Release 草稿，并检查安装包和更新清单。
@@ -51,3 +57,5 @@ description: 配置 GitHub Actions 仓库变量与密钥，并将公开的 PureC
 - `桌面发布缺少 ...`：检查对应 Secret 或 Variable 的名称和值是否正确。
 - `S3_REGION 与 Endpoint 地域一致`：确认 `S3_REGION` 与 `S3_ENDPOINT` 中的地域一致，例如 `ap-shanghai`。
 - 客户端下载更新返回 403：检查 COS 桶或自定义域名是否允许客户端公开读取 `desktop/` 下的更新文件。
+- 旧脚本停在 `上传请求流已处理 ... 65536/... bytes`：这是本地文件流预读日志，不能说明 COS 已收到数据。将修复合入默认分支后重新同步，最新日志应显示 `上传 COS 分块` 和 `COS 已确认上传`；工作流固定检出默认分支的脚本，无需重新构建同版本安装包。
+- 初始化、上传或合并分块返回 `AccessDenied`：检查密钥是否具有上述分块上传权限，且授权资源包含 `desktop/*`。

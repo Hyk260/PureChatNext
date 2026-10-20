@@ -2,7 +2,6 @@ import { createHash, randomUUID } from 'node:crypto'
 import { createReadStream } from 'node:fs'
 import { lstat, readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { Transform } from 'node:stream'
 
 import {
   DeleteObjectCommand,
@@ -19,6 +18,7 @@ import { z } from 'zod'
 import { desktopReleaseAssets } from '../../github-desktop-release.mjs'
 import { DESKTOP_OBJECT_PREFIX } from './desktop-publish-config'
 import type { DesktopPublishConfig } from './desktop-publish-config'
+import { uploadDesktopAsset } from './desktop-upload'
 
 export type DesktopPlatform = 'windows' | 'mac'
 export const DESKTOP_PLATFORMS: DesktopPlatform[] = ['windows', 'mac']
@@ -91,36 +91,6 @@ async function sha512(body: AsyncIterable<Uint8Array>): Promise<string> {
   const hash = createHash('sha512')
   for await (const chunk of body) hash.update(chunk)
   return hash.digest('base64')
-}
-
-function createUploadProgressStream(
-  file: string,
-  name: string,
-  size: number,
-  log: (message: string) => void
-) {
-  const source = createReadStream(file)
-  let transferred = 0
-  let nextReport = 1
-  const body = new Transform({
-    transform(chunk: Buffer, _encoding, callback) {
-      transferred += chunk.length
-      if (transferred >= nextReport || transferred === size) {
-        log(`上传请求流已处理: ${name} ${Math.min(transferred, size)}/${size} bytes`)
-        nextReport = transferred + 16 * 1024 * 1024
-      }
-      callback(null, chunk)
-    },
-  })
-  source.once('error', (error) => body.destroy(error))
-  source.pipe(body)
-  return {
-    body,
-    destroy() {
-      source.destroy()
-      body.destroy()
-    },
-  }
 }
 
 /** 只读取发行清单中的普通文件，拒绝链接、跨目录路径和不匹配的元数据。 */
@@ -299,23 +269,7 @@ export async function publishDesktopRelease(
       if (existingHash && existingHash !== asset.sha512) throw new Error(`同版本远端文件内容不同: ${asset.name}`)
       if (!existingHash) {
         log(`上传 COS 文件: ${asset.name} (${asset.size} bytes)`)
-        const upload = createUploadProgressStream(asset.file, asset.name, asset.size, log)
-        try {
-          await client.send(
-            new PutObjectCommand({
-              Bucket: config.bucket,
-              Key: key(asset.name),
-              Body: upload.body,
-              ContentLength: asset.size,
-              ContentType: 'application/octet-stream',
-              CacheControl: 'public, max-age=31536000, immutable',
-              Metadata: { sha512: asset.sha512 },
-              ACL: config.setAcl ? 'public-read' : undefined,
-            })
-          )
-        } finally {
-          upload.destroy()
-        }
+        await uploadDesktopAsset(client, config, asset, key(asset.name), log)
         log(`COS 上传完成: ${asset.name}`)
       } else {
         log(`复用已校验的 COS 文件: ${asset.name}`)

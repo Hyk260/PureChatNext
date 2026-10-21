@@ -124,6 +124,7 @@ const renderHeader = (overrides?: Partial<React.ComponentProps<typeof ChatHeader
     autoRenameDisabled: false,
     autoRenaming: false,
     hasMessages: false,
+    messages: [],
     title: overrides?.topic?.title ?? '新话题',
     topic: null,
     onAutoRename: vi.fn(),
@@ -175,11 +176,28 @@ describe('ChatHeader menu', () => {
   })
 
   it('creates and copies a topic share link', async () => {
-    renderHeader({ hasMessages: true, topic, title: topic.title })
+    renderHeader({
+      hasMessages: true,
+      messages: [
+        { id: 'system', role: 'system', parts: [{ type: 'text', text: '系统提示不展示' }] },
+        { id: 'empty', role: 'assistant', parts: [] },
+        { id: 'first', role: 'user', parts: [{ type: 'text', text: '第一条实际问题' }] },
+        { id: 'second', role: 'assistant', parts: [{ type: 'text', text: '第二条实际回答' }] },
+        { id: 'third', role: 'user', parts: [{ type: 'text', text: '第三条追问' }] },
+        { id: 'fourth', role: 'assistant', parts: [{ type: 'text', text: '第四条不展示' }] },
+      ],
+      topic,
+      title: topic.title,
+    })
 
     fireEvent.click(screen.getByRole('button', { name: '分享' }))
 
     await waitFor(() => expect(mocks.createTopicShare).toHaveBeenCalledWith(topic.id))
+    expect(screen.getByText('第一条实际问题')).toBeTruthy()
+    expect(screen.getByText('第二条实际回答')).toBeTruthy()
+    expect(screen.getByText('第三条追问')).toBeTruthy()
+    expect(screen.queryByText('系统提示不展示')).toBeNull()
+    expect(screen.queryByText('第四条不展示')).toBeNull()
     const copy = screen.getByRole('button', { name: '复制链接' })
     await waitFor(() => expect((copy as HTMLButtonElement).disabled).toBe(false))
     fireEvent.click(copy)

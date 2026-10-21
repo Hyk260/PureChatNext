@@ -589,6 +589,8 @@ const ChatPage = memo(() => {
   // useChat for a settings change can reset the active topic's in-memory turn.
   const chatReady = messagesReady
   const inputBusy = isBusy || !messagesReady || !permissionModeReady
+  const cachedMessages = activeTopicId ? messagesCache.get(activeTopicId) : undefined
+  const activeMessages = cachedMessages ?? (loadedTopicId === activeTopicId ? initialMessages : EMPTY_MESSAGES)
   const hasActiveMessages =
     activeTopicId !== null &&
     ((messagesCache.get(activeTopicId)?.length ?? 0) > 0 ||
@@ -608,6 +610,7 @@ const ChatPage = memo(() => {
     <ChatLayout
       busy={isBusy}
       hasMessages={hasActiveMessages}
+      messages={activeMessages}
       left={
         <TopicSidebar
           activeTopicId={activeTopicId}

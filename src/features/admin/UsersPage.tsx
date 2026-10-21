@@ -307,7 +307,7 @@ export default function AdminUsersPage() {
     {
       dataIndex: 'fullName',
       ellipsis: true,
-      fixed: 'left',
+      // fixed: 'left',
       render: (value: string | null) => value || EMPTY_PLACEHOLDER,
       title: '全名',
       width: 120,

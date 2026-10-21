@@ -2,6 +2,7 @@
 
 import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
+import type { UIMessage } from 'ai'
 import { memo } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 
@@ -38,6 +39,7 @@ type Props = {
   autoRenamingTopicId: string | null
   busy: boolean
   hasMessages: boolean
+  messages: UIMessage[]
   left: ReactNode
   right: ReactNode
   topic: LocalChatTopic | null
@@ -54,6 +56,7 @@ const ChatLayout = memo<Props>(
     autoRenamingTopicId,
     busy,
     hasMessages,
+    messages,
     left,
     right,
     topic,
@@ -93,6 +96,7 @@ const ChatLayout = memo<Props>(
               autoRenameDisabled={busy || autoRenamingTopicId !== null}
               autoRenaming={topic?.id === autoRenamingTopicId}
               hasMessages={hasMessages}
+              messages={messages}
               title={title}
               topic={topic}
               onAutoRename={onAutoRenameTopic}

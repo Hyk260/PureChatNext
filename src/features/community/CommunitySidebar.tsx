@@ -1,30 +1,15 @@
 'use client'
 
 import { Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { memo } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
-import { useHomeStore } from '@/features/home/store/useHomeStore'
 
 import CommunitySidebarHeader from './CommunitySidebarHeader'
 
-const styles = createStaticStyles(({ css }) => ({
-  sidebar: css`
-    flex: none;
-    width: 100%;
-    min-width: 0;
-    height: 100%;
-    overflow: hidden;
-    background: ${cssVar.colorBgLayout};
-  `,
-}))
-
 const CommunitySidebar = memo(() => {
-  const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
-
   return (
-    <Flex className={[styles.sidebar, sidebarCollapsed && '!w-0', 'flex-col h-full']}>
+    <Flex className='size-full min-w-0 flex-none flex-col overflow-hidden bg-app-layout'>
       <Scrollbar className='size-full'>
         <Flex className='flex-col gap-px h-full'>
           <CommunitySidebarHeader />

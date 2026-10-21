@@ -4,6 +4,7 @@ import {
   dedupeHistoryEntries,
   desktopHref,
   titleFromLocation,
+  useDesktopPinnedHistoryStore,
   useDesktopTabsStore,
 } from './useDesktopTabsStore'
 
@@ -19,6 +20,7 @@ describe('useDesktopTabsStore', () => {
       historyStack: [desktopHref({ path: '/', search: '' })],
       tabs: tab ? [{ ...tab, path: '/', search: '', title: 'PureChat' }] : [],
     })
+    useDesktopPinnedHistoryStore.setState({ entries: [] })
   })
 
   it('derives specific titles from path', () => {
@@ -51,6 +53,44 @@ describe('useDesktopTabsStore', () => {
     expect(result).toEqual({ closedActive: false, next: null })
     expect(useDesktopTabsStore.getState().tabs).toEqual([lastTab])
     expect(useDesktopTabsStore.getState().activeTabId).toBe(lastTab.id)
+  })
+
+  it('reuses a matching open tab when opening a history entry', () => {
+    const existing = useDesktopTabsStore.getState().addTab('/settings/about')
+    useDesktopTabsStore.getState().addTab('/chat')
+    const tabCount = useDesktopTabsStore.getState().tabs.length
+
+    const opened = useDesktopTabsStore.getState().openHistoryEntry({
+      path: existing.path,
+      search: existing.search,
+      title: existing.title,
+    })
+
+    expect(opened.id).toBe(existing.id)
+    expect(useDesktopTabsStore.getState().activeTabId).toBe(existing.id)
+    expect(useDesktopTabsStore.getState().tabs).toHaveLength(tabCount)
+  })
+
+  it('creates a tab for a history entry that is not open', () => {
+    const opened = useDesktopTabsStore.getState().openHistoryEntry({
+      path: '/settings/about',
+      search: '?source=history',
+      title: '关于',
+    })
+
+    expect(useDesktopTabsStore.getState().tabs).toHaveLength(2)
+    expect(useDesktopTabsStore.getState().activeTabId).toBe(opened.id)
+    expect(desktopHref(opened)).toBe('/settings/about?source=history')
+  })
+
+  it('pins and unpins a history entry', () => {
+    const entry = { id: 'history-1', path: '/settings/about', search: '', title: '关于', visitedAt: 123 }
+
+    useDesktopPinnedHistoryStore.getState().toggle(entry)
+    expect(useDesktopPinnedHistoryStore.getState().entries).toMatchObject([{ ...entry, pinnedAt: expect.any(Number) }])
+
+    useDesktopPinnedHistoryStore.getState().toggle(entry)
+    expect(useDesktopPinnedHistoryStore.getState().entries).toEqual([])
   })
 
   it('tracks history stack on push and back', () => {

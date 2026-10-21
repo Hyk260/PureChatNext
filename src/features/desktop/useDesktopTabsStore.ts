@@ -1,5 +1,6 @@
 import { createNanoId } from '@pure/utils'
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export type DesktopTab = {
   id: string
@@ -14,6 +15,10 @@ export type DesktopHistoryEntry = {
   search: string
   title: string
   visitedAt: number
+}
+
+export type DesktopPinnedHistoryEntry = DesktopHistoryEntry & {
+  pinnedAt: number
 }
 
 const MAX_HISTORY = 20
@@ -128,6 +133,7 @@ interface DesktopTabsState {
   closeTab: (id: string) => { closedActive: boolean; next: DesktopTab | null }
   markBack: () => void
   markForward: () => void
+  openHistoryEntry: (entry: Pick<DesktopHistoryEntry, 'path' | 'search' | 'title'>) => DesktopTab
   syncLocation: (path: string, search: string, navigationType: NavigationType) => void
 }
 
@@ -152,6 +158,22 @@ export const useDesktopTabsStore = create<DesktopTabsState>((set, get) => ({
 
   addTab: (path = '/', search = '') => {
     const tab = createTab(path, search)
+    set((state) => ({
+      activeTabId: tab.id,
+      tabs: [...state.tabs, tab],
+    }))
+    return tab
+  },
+
+  openHistoryEntry: (entry) => {
+    const href = desktopHref(entry)
+    const existingTab = get().tabs.find((tab) => desktopHref(tab) === href)
+    if (existingTab) {
+      set({ activeTabId: existingTab.id })
+      return existingTab
+    }
+
+    const tab = createTab(entry.path, entry.search, entry.title)
     set((state) => ({
       activeTabId: tab.id,
       tabs: [...state.tabs, tab],
@@ -237,3 +259,31 @@ export const useDesktopTabsStore = create<DesktopTabsState>((set, get) => ({
     })
   },
 }))
+
+interface DesktopPinnedHistoryState {
+  entries: DesktopPinnedHistoryEntry[]
+  toggle: (entry: DesktopHistoryEntry) => void
+}
+
+export const useDesktopPinnedHistoryStore = create<DesktopPinnedHistoryState>()(
+  persist(
+    (set) => ({
+      entries: [],
+      toggle: (entry) => {
+        const href = desktopHref(entry)
+        set((state) => {
+          const alreadyPinned = state.entries.some((item) => desktopHref(item) === href)
+          return {
+            entries: alreadyPinned
+              ? state.entries.filter((item) => desktopHref(item) !== href)
+              : [{ ...entry, pinnedAt: Date.now() }, ...state.entries],
+          }
+        })
+      },
+    }),
+    {
+      name: 'purechat:desktop:pinned-history',
+      partialize: ({ entries }) => ({ entries }),
+    }
+  )
+)

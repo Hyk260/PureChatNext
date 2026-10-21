@@ -3,6 +3,7 @@
 import { ActionIcon, Button, DropdownMenu, Icon, Modal, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
+import type { UIMessage } from 'ai'
 import {
   Check,
   Hash,
@@ -20,6 +21,7 @@ import {
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import { createTopicShare } from '@/features/chat/chatApi'
+import { getMessageText } from '@/features/chat/messageText'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { LocalChatTopic } from '@/features/chat/types'
 import TopicRenameModal, { confirmDeleteTopic, useTopicRename } from '@/features/chat/TopicRenameModal'
@@ -62,12 +64,23 @@ const styles = createStaticStyles(({ css }) => ({
     font-size: 14px;
     font-weight: 600;
   `,
+  // 保留 createStaticStyles：渐变遮罩让底部内容淡出并融入弹窗背景。
+  sharePreviewFade: css`
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 64px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, ${cssVar.colorBgElevated});
+    mask-image: linear-gradient(to bottom, transparent, #000 85%);
+  `,
 }))
 
 type Props = {
   autoRenameDisabled: boolean
   autoRenaming: boolean
   hasMessages: boolean
+  messages: UIMessage[]
   title: string
   topic: LocalChatTopic | null
   onAutoRename: (id: string) => void | Promise<void>
@@ -77,7 +90,7 @@ type Props = {
 }
 
 const ChatHeader = memo<Props>(
-  ({ autoRenameDisabled, autoRenaming, hasMessages, title, topic, onAutoRename, onDelete, onFavorite, onRename }) => {
+  ({ autoRenameDisabled, autoRenaming, hasMessages, messages, title, topic, onAutoRename, onDelete, onFavorite, onRename }) => {
     const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
     const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
     const wideScreen = useChatUiStore((s) => s.wideScreen)
@@ -89,6 +102,15 @@ const ChatHeader = memo<Props>(
     const [shareLoading, setShareLoading] = useState(false)
     const [shareUrl, setShareUrl] = useState('')
     const [shareCopied, setShareCopied] = useState(false)
+    const sharePreviewMessages = useMemo(
+      () =>
+        messages
+          .filter((message) => message.role === 'user' || message.role === 'assistant')
+          .map((message) => ({ id: message.id, isUser: message.role === 'user', text: getMessageText(message) }))
+          .filter((message) => message.text.trim())
+          .slice(0, 3),
+      [messages]
+    )
 
     const handleOpenRename = useCallback(() => {
       if (!topic) return
@@ -261,13 +283,20 @@ const ChatHeader = memo<Props>(
           onCancel={() => setShareOpen(false)}
         >
           <Flex className='flex-col gap-5 pb-2'>
-            <div className='flex min-h-56 flex-col justify-between rounded-2xl border border-border p-5'>
-              <Text type='secondary'>对话预览</Text>
-              <Flex className='justify-end'>
-                <div className='max-w-[85%] rounded-2xl bg-secondary px-4 py-3'>
-                  <Text ellipsis>{title}</Text>
-                </div>
+            <div className='relative h-56 overflow-hidden rounded-2xl border border-border'>
+              <Flex className='flex-col gap-3 p-5'>
+                {sharePreviewMessages.map((message) => (
+                  <div
+                    className={message.isUser ? 'max-w-[85%] self-end rounded-2xl bg-secondary px-4 py-3' : 'self-start'}
+                    key={message.id}
+                  >
+                    <Text as='p' className='m-0 whitespace-pre-wrap break-words text-sm leading-6'>
+                      {message.text}
+                    </Text>
+                  </div>
+                ))}
               </Flex>
+              <div aria-hidden='true' className={styles.sharePreviewFade} />
             </div>
             <Flex className='items-center justify-between gap-4'>
               <Text type='secondary'>任何知道此链接的人都可以查看此聊天</Text>

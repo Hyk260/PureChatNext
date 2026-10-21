@@ -1,7 +1,6 @@
 'use client'
 
 import { AccordionRoot, AccordionHeader, AccordionItem, AccordionPanel, AccordionTrigger, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { memo, useMemo } from 'react'
@@ -9,7 +8,6 @@ import { memo, useMemo } from 'react'
 import NavItem from '@/components/NavItem'
 import Scrollbar from '@/components/Scrollbar'
 import { isAdminRole } from '@/const/auth'
-import { useHomeStore } from '@/features/home/store/useHomeStore'
 import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
 import { useSession } from '@/libs/better-auth/client'
 
@@ -22,18 +20,6 @@ const DEFAULT_EXPANDED_GROUPS = [
   SettingsGroupKey.System,
   SettingsGroupKey.Manage,
 ]
-
-const styles = createStaticStyles(({ css }) => ({
-  sidebar: css`
-    flex: none;
-    width: 240px;
-    min-width: 0;
-    height: 100%;
-    overflow: hidden;
-    background: ${cssVar.colorBgLayout};
-    transition: width 0.25s ${cssVar.motionEaseInOut};
-  `,
-}))
 
 function useActiveSettingsTab(): SettingsTab {
   const pathname = usePathname()
@@ -51,10 +37,9 @@ const SettingsSidebar = memo(() => {
   const { data: session } = useSession()
   const categoryGroups = useSettingsCategory(isAdminRole(session?.user?.role))
   const activeTab = useActiveSettingsTab()
-  const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flex className={[styles.sidebar, sidebarCollapsed && '!w-0', 'flex-col h-full']}>
+    <Flex className='h-full w-60 min-w-0 flex-none flex-col overflow-hidden bg-app-layout'>
       <Flex className='flex-col gap-px h-full w-[240px]'>
         <SideBarHeaderLayout
           breadcrumb={[

@@ -1,4 +1,4 @@
-import { createStaticStyles } from '@lobehub/ui'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { useCallback } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { create } from 'zustand'
@@ -32,13 +32,14 @@ export const useSidebarLayoutStore = create<SidebarLayoutState>()(
 )
 
 export const sidebarResizeStyles = createStaticStyles(({ css }) => ({
-  // Keep the inner width stable during collapse so content scales without reflowing.
+  // Keep the themed backdrop opaque while stable-width content scales and fades without reflowing.
   sidebarWrapper: css`
     position: relative;
     flex: none;
     min-width: 0;
     height: 100%;
     overflow: hidden;
+    background: ${cssVar.colorBgLayout};
     transition: width ${SIDEBAR_TRANSITION};
 
     & > * {

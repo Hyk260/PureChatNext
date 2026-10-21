@@ -7,24 +7,35 @@ import {
   ArrowRight,
   CircleFadingArrowUp,
   History,
+  Home,
   ListTodo,
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
+  Pin,
+  PinOff,
   Plus,
   X,
 } from 'lucide-react'
-import type { PropsWithChildren } from 'react'
+import type { ComponentProps, PropsWithChildren } from 'react'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Outlet, useInRouterContext, useLocation, useNavigate, useNavigationType } from 'react-router'
 
 import DesktopWindowControls from '@/features/desktop/DesktopWindowControls'
 import MacTrafficLights from '@/features/desktop/MacTrafficLights'
-import { desktopHref, useDesktopTabsStore } from '@/features/desktop/useDesktopTabsStore'
+import {
+  desktopHref,
+  useDesktopPinnedHistoryStore,
+  useDesktopTabsStore,
+} from '@/features/desktop/useDesktopTabsStore'
 import { useDesktopUpdateVersion } from '@/features/desktop/useDesktopUpdateVersion'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { DEFAULT_SIDEBAR_WIDTH, SIDEBAR_TRANSITION, useSidebarLayoutStore } from '@/layout/sidebarResize'
 import { getDesktopApi } from '@/types/desktop'
+
+type HistoryEntry = ReturnType<typeof useDesktopTabsStore.getState>['historyEntries'][number]
+type PinnedHistoryEntry = ReturnType<typeof useDesktopPinnedHistoryStore.getState>['entries'][number]
+type HistoryMenuItem = Extract<NonNullable<ComponentProps<typeof DropdownMenu>['items']>, unknown[]>[number]
 
 const styles = createStaticStyles(({ css }) => ({
   root: css`
@@ -225,15 +236,45 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 function tabIconForPath(path: string) {
+  if (path === '/') return Home
   if (path.startsWith('/resources') || path.startsWith('/community')) return ListTodo
   return MessageSquare
+}
+
+function toHistoryMenuItem(
+  entry: HistoryEntry | PinnedHistoryEntry,
+  pinned: boolean,
+  onOpen: () => void,
+  onTogglePin: () => void
+): HistoryMenuItem {
+  return {
+    extra: (
+      <button
+        aria-label={pinned ? `取消置顶 ${entry.title}` : `置顶 ${entry.title}`}
+        className='flex-center size-7 shrink-0 rounded-md border-0 p-0 text-muted-foreground hover:bg-secondary'
+        title={pinned ? '取消置顶' : '置顶'}
+        type='button'
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          onTogglePin()
+        }}
+      >
+        {pinned ? <PinOff size={14} /> : <Pin size={14} />}
+      </button>
+    ),
+    icon: tabIconForPath(entry.path),
+    key: `${pinned ? 'pinned' : 'recent'}:${desktopHref(entry)}`,
+    label: entry.title,
+    onClick: onOpen,
+  }
 }
 
 type ChromeProps = {
   canGoBack: boolean
   canGoForward: boolean
   hideNavigation?: boolean
-  historyMenuItems: Array<{ key: string; label: string; onClick: () => void }>
+  historyMenuItems: HistoryMenuItem[]
   isMaximized: boolean
   isSidebarCollapsed: boolean
   onActivateTab: (id: string) => void
@@ -488,9 +529,12 @@ const DesktopTitleBarNav = () => {
   const canGoBack = useDesktopTabsStore((s) => s.canGoBack)
   const canGoForward = useDesktopTabsStore((s) => s.canGoForward)
   const historyEntries = useDesktopTabsStore((s) => s.historyEntries)
+  const pinnedHistoryEntries = useDesktopPinnedHistoryStore((s) => s.entries)
+  const togglePinnedHistoryEntry = useDesktopPinnedHistoryStore((s) => s.toggle)
   const addTab = useDesktopTabsStore((s) => s.addTab)
   const closeTab = useDesktopTabsStore((s) => s.closeTab)
   const activateTab = useDesktopTabsStore((s) => s.activateTab)
+  const openHistoryEntry = useDesktopTabsStore((s) => s.openHistoryEntry)
   const syncLocation = useDesktopTabsStore((s) => s.syncLocation)
   const markBack = useDesktopTabsStore((s) => s.markBack)
   const markForward = useDesktopTabsStore((s) => s.markForward)
@@ -499,15 +543,44 @@ const DesktopTitleBarNav = () => {
     syncLocation(location.pathname, location.search, navigationType)
   }, [location.pathname, location.search, location.key, navigationType, syncLocation])
 
-  const historyMenuItems = useMemo(
-    () =>
-      historyEntries.map((entry) => ({
-        key: entry.id,
-        label: entry.title,
-        onClick: () => navigate(desktopHref(entry)),
-      })),
-    [historyEntries, navigate]
-  )
+  const historyMenuItems = useMemo<HistoryMenuItem[]>(() => {
+    const pinnedHrefs = new Set(pinnedHistoryEntries.map(desktopHref))
+    const recentEntries = historyEntries.filter((entry) => !pinnedHrefs.has(desktopHref(entry)))
+    const items: HistoryMenuItem[] = []
+
+    if (pinnedHistoryEntries.length > 0) {
+      items.push({
+        children: [...pinnedHistoryEntries]
+          .sort((a, b) => b.pinnedAt - a.pinnedAt)
+          .map((entry) =>
+            toHistoryMenuItem(entry, true, () => {
+              const tab = openHistoryEntry(entry)
+              navigate(desktopHref(tab))
+            }, () => togglePinnedHistoryEntry(entry))
+          ),
+        key: 'pinned-history',
+        label: '已固定',
+        type: 'group',
+      })
+    }
+
+    if (recentEntries.length > 0) {
+      items.push({
+        children: recentEntries.map((entry) =>
+          toHistoryMenuItem(entry, false, () => {
+            const tab = openHistoryEntry(entry)
+            navigate(desktopHref(tab))
+          }, () => togglePinnedHistoryEntry(entry))
+        ),
+        key: 'recent-history',
+        label: '最近访问',
+        type: 'group',
+      })
+    }
+
+    if (items.length === 0) items.push({ disabled: true, key: 'empty-history', label: '暂无访问记录' })
+    return items
+  }, [historyEntries, navigate, openHistoryEntry, pinnedHistoryEntries, togglePinnedHistoryEntry])
 
   return (
     <DesktopTitleBarChrome

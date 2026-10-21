@@ -398,11 +398,6 @@ export function UsageSettingsContent() {
 
           <Table<UsageItem>
             className={'rounded-none'}
-            classNames={{
-              body: { cell: 'py-2 rounded-none' },
-              content: 'rounded-none shadow-none',
-              header: { cell: styles.tableHeaderCell },
-            }}
             columns={columns}
             dataSource={data?.items ?? []}
             loading={loading}

@@ -56,10 +56,6 @@ vi.mock('@pure/ui', async (importOriginal) => ({
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }))
 
-vi.mock('@/components/AntdStaticMethods', () => ({
-  useApp: () => ({ message: { error: vi.fn(), success: vi.fn() } }),
-}))
-
 vi.mock('@/components/Scrollbar', () => ({
   default: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))

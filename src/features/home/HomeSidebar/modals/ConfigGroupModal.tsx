@@ -1,13 +1,12 @@
 'use client'
 
 import { Button, SortableList, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createModal, createStaticStyles, cssVar } from '@lobehub/ui'
 import { Plus } from 'lucide-react'
 import { memo } from 'react'
 
 import type { HomeAgentGroup } from '@/features/home/store/sidebarDefaults'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
-import { modal } from '@/components/AntdStaticMethods'
 
 import GroupItem from './GroupItem'
 
@@ -57,10 +56,9 @@ const ConfigGroupContent = memo(() => {
 ConfigGroupContent.displayName = 'ConfigGroupContent'
 
 export const openConfigGroupModal = () =>
-  modal.info({
+  createModal({
     content: <ConfigGroupContent />,
     footer: null,
-    icon: null,
     maskClosable: true,
     title: '分类管理',
     width: 400,

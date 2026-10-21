@@ -1,67 +1,46 @@
 'use client'
 
 import { Block, Button, Icon, InputPassword, Text } from '@pure/ui'
-import { Form } from 'antd'
+import { Form, useForm } from '@lobehub/ui/form'
 import { Lock } from 'lucide-react'
 
 import { useResetPassword } from './useResetPassword'
 import type { ResetPasswordFormValues } from './useResetPassword'
+import { resetPasswordSchema } from '../authFormSchemas'
 
 export const ResetPasswordForm = () => {
-  const [form] = Form.useForm<ResetPasswordFormValues>()
   const { handleResetPassword, loading, token } = useResetPassword()
+  const form = useForm<ResetPasswordFormValues>({ schema: resetPasswordSchema, onSubmit: handleResetPassword })
 
   if (!token) {
     return (
       <Block padding={24}>
-        <Text className='text-center text-[16px]'>
-          重置链接无效或已过期。请返回登录页重新申请密码重置邮件。
-        </Text>
+        <Text className='text-center text-[16px]'>重置链接无效或已过期。请返回登录页重新申请密码重置邮件。</Text>
       </Block>
     )
   }
 
-  const passwordRules = [
-    { message: '请输入新密码', required: true },
-    { message: '密码至少 8 个字符', min: 8 },
-    { message: '密码最多 64 个字符', max: 64 },
-  ]
-
-  const confirmPasswordRules = [
-    { message: '请确认密码', required: true },
-    ({ getFieldValue }: { getFieldValue: (name: string) => string }) => ({
-      validator(_: unknown, value: string) {
-        if (!value || getFieldValue('password') === value) {
-          return Promise.resolve()
-        }
-        return Promise.reject(new Error('两次输入的密码不一致'))
-      },
-    }),
-  ]
-
   return (
-    <Form form={form} layout='vertical' onFinish={handleResetPassword}>
-      <Form.Item name='password' rules={passwordRules}>
+    <Form form={form} layout='vertical'>
+      <Form.Field name='password'>
         <InputPassword
           placeholder='请输入新密码'
           size='large'
           prefix={<Icon icon={Lock} style={{ marginInline: 6 }} />}
         />
-      </Form.Item>
+      </Form.Field>
 
-      <Form.Item dependencies={['password']} name='confirmPassword' rules={confirmPasswordRules}>
+      <Form.Field deps={['password']} name='confirmPassword'>
         <InputPassword
           placeholder='请再次输入新密码'
           size='large'
           prefix={<Icon icon={Lock} style={{ marginInline: 6 }} />}
         />
-      </Form.Item>
+      </Form.Field>
 
-      <Form.Item style={{ marginBottom: 0 }}>
-        <Button block htmlType='submit' loading={loading} size='large' type='primary'>
-          重置密码
-        </Button>
-      </Form.Item>
+      <Button block htmlType='submit' loading={loading} size='large' type='primary'>
+        重置密码
+      </Button>
     </Form>
   )
 }

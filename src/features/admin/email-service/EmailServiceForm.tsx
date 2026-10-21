@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Segmented } from 'antd'
+import { Segmented } from '@lobehub/ui'
 import { Clipboard, RefreshCcw, Sparkles, Trash2 } from 'lucide-react'
 
 import { Flex, ActionIcon, Button, Input, Select, TextArea } from '@pure/ui'
@@ -171,7 +171,12 @@ export function EmailServiceForm({
             >
               发送请求
             </Button>
-            <ActionIcon disabled={isLoading} icon={Trash2} title='清除浏览器保存的表单与请求状态' onClick={onClearCache} />
+            <ActionIcon
+              disabled={isLoading}
+              icon={Trash2}
+              title='清除浏览器保存的表单与请求状态'
+              onClick={onClearCache}
+            />
             <ActionIcon disabled={isLoading} icon={RefreshCcw} title='重置测试' onClick={onReset} />
           </div>
 

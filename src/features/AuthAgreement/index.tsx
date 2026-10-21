@@ -1,15 +1,12 @@
 'use client'
 
-import { Checkbox, confirmModal } from '@pure/ui'
+import { confirmModal } from '@lobehub/ui'
+import { Checkbox } from '@pure/ui'
 import { memo, useSyncExternalStore } from 'react'
 
 import Link from 'next/link'
 
-import {
-  isAuthAgreementAccepted,
-  setAuthAgreementAccepted,
-  subscribeAuthAgreement,
-} from './agreement'
+import { isAuthAgreementAccepted, setAuthAgreementAccepted, subscribeAuthAgreement } from './agreement'
 
 const AGREEMENT_TEXT_PROPS = {
   style: { fontSize: 13, lineHeight: '16px' },

@@ -1,6 +1,6 @@
 /**
  * Expose brand/model icons through the application UI package.
- * No antd equivalent exists; keep this adapter until self-hosted icons are ready.
+ * Keep this adapter until self-hosted icons are ready.
  * Call sites should import from `@pure/ui` or `@pure/ui/icons`.
  *
  * `ProviderIcon` / `ProviderCombine` are wrapped to render PureChat brand assets

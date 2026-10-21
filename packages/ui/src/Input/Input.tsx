@@ -7,7 +7,7 @@ export const mergeInputFocusClassName = (className?: string) =>
   className ? `input-focus-neutral ${className}` : 'input-focus-neutral'
 
 export function Input({ className, ...props }: InputProps) {
-  // antd Form supplies an explicit undefined before the first edit.
+  // FormKit supplies an explicit undefined before the first edit.
   const value = 'value' in props ? (props.value ?? '') : undefined
   return <LobeInput {...props} className={mergeInputFocusClassName(className)} value={value} />
 }

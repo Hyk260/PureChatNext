@@ -1,8 +1,8 @@
 'use client'
 
-import { Avatar, Center, confirmModal, DropdownMenu, Block, Icon, Text, Flex } from '@pure/ui'
+import { Avatar, Center, DropdownMenu, Block, Icon, Text, Flex } from '@pure/ui'
 import type { DropdownItem, MenuInfo } from '@pure/ui'
-import { toast, createStaticStyles, cssVar, cx } from '@lobehub/ui'
+import { confirmModal, toast, createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { MoreHorizontal, Pencil, PinIcon, PinOff, Trash2 } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 

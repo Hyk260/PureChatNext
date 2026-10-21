@@ -1,5 +1,5 @@
-import { toast } from '@lobehub/ui'
-import { Button, confirmModal, Flex, Modal, Text } from '@pure/ui'
+import { confirmModal, toast } from '@lobehub/ui'
+import { Button, Flex, Modal, Text } from '@pure/ui'
 import type { ChannelGatewayLogs, ChannelLogPlatform } from '@pure/types'
 import useSWR from 'swr'
 import { useState } from 'react'
@@ -40,7 +40,7 @@ export function ChannelGatewayLogsModal(props: Props) {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       shouldRetryOnError: false,
-    },
+    }
   )
 
   const handleRefresh = () => {
@@ -83,13 +83,17 @@ export function ChannelGatewayLogsModal(props: Props) {
       title={`${platform === 'qq' ? 'QQ' : '微信'}网关诊断日志`}
       width={880}
       onCancel={onClose}
-      footer={(
+      footer={
         <Flex className='justify-end gap-2'>
-          <Button danger disabled={isClearing} loading={isClearing} onClick={handleClear}>清除日志</Button>
-          <Button loading={isValidating} onClick={handleRefresh}>更新</Button>
+          <Button danger disabled={isClearing} loading={isClearing} onClick={handleClear}>
+            清除日志
+          </Button>
+          <Button loading={isValidating} onClick={handleRefresh}>
+            更新
+          </Button>
           <Button onClick={onClose}>关闭</Button>
         </Flex>
-      )}
+      }
     >
       <Flex className='flex-col gap-3'>
         <Text>{statusDescription(props)}</Text>
@@ -100,7 +104,9 @@ export function ChannelGatewayLogsModal(props: Props) {
           {data?.truncated ? '已达到保留或显示上限，较早的日志可能已省略。' : ''}
         </Text>
         {error ? (
-          <Text role='alert' className='text-red'>无法读取服务端诊断日志，请检查服务连接后刷新重试。{data ? '下方显示上次读取的记录。' : ''}</Text>
+          <Text role='alert' className='text-red'>
+            无法读取服务端诊断日志，请检查服务连接后刷新重试。{data ? '下方显示上次读取的记录。' : ''}
+          </Text>
         ) : null}
         <pre
           aria-label='服务端诊断日志'

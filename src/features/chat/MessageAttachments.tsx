@@ -1,8 +1,7 @@
 'use client'
 
 import { Flex } from '@pure/ui'
-import { Image } from 'antd'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { Image, createStaticStyles, cssVar } from '@lobehub/ui'
 import type { UIMessage } from 'ai'
 import { FileText } from 'lucide-react'
 import { memo } from 'react'

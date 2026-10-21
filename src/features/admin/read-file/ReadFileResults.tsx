@@ -1,4 +1,4 @@
-import { Segmented } from 'antd'
+import { Segmented } from '@lobehub/ui'
 import { Clipboard, Code2, Download, FileJson, FileText, Layers } from 'lucide-react'
 
 import type { DocumentPage, FileDocument } from '@pure/file-loaders'

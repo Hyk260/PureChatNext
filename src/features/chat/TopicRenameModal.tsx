@@ -1,6 +1,7 @@
 'use client'
 
-import { confirmModal, Input, Modal, Text, Flex } from '@pure/ui'
+import { confirmModal } from '@lobehub/ui'
+import { Input, Modal, Text, Flex } from '@pure/ui'
 import { memo, useCallback, useState } from 'react'
 
 /**

@@ -1,4 +1,4 @@
-import { Segmented } from 'antd'
+import { Segmented } from '@lobehub/ui'
 import { Code2, ExternalLink, Eye, FileJson, Mail, ShieldCheck } from 'lucide-react'
 
 import { Alert, Flex } from '@pure/ui'

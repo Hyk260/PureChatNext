@@ -1,12 +1,11 @@
 'use client'
 
-
-import { toast } from '@lobehub/ui'
+import { confirmModal, toast } from '@lobehub/ui'
 import { useState } from 'react'
 
 import { requestPasswordReset } from '@/libs/better-auth/client'
 
-import { Button, confirmModal } from '@pure/ui'
+import { Button } from '@pure/ui'
 import { SettingRow } from './SettingRow'
 
 interface PasswordSettingProps {

@@ -1,8 +1,7 @@
 'use client'
 
-
-import { toast, Spin } from '@lobehub/ui'
-import { ActionIcon, Button, confirmModal, Text, Flex } from '@pure/ui'
+import { confirmModal, toast, Spin } from '@lobehub/ui'
+import { ActionIcon, Button, Text, Flex } from '@pure/ui'
 import type { AgentListItem } from '@/const/home/agents'
 import { isAdminRole } from '@/const/auth'
 import { FileText, MessagesSquareIcon, Trash2Icon } from 'lucide-react'
@@ -344,8 +343,16 @@ const MessengerWeChatPage = memo(() => {
   return (
     <MessengerDetailShell headerAction={headerAction} platform='wechat' platformMeta={platformMeta}>
       <Flex className='items-center gap-2'>
-        <Text className='text-[15px]' strong>连接微信</Text>
-        <ActionIcon icon={FileText} size='small' title='查看微信网关诊断日志' aria-label='查看微信网关诊断日志' onClick={() => setLogsOpen(true)} />
+        <Text className='text-[15px]' strong>
+          连接微信
+        </Text>
+        <ActionIcon
+          icon={FileText}
+          size='small'
+          title='查看微信网关诊断日志'
+          aria-label='查看微信网关诊断日志'
+          onClick={() => setLogsOpen(true)}
+        />
         <ChannelGatewayStatusIndicator {...gatewayStatus} />
         {status?.runtimeStatus === 'degraded' && status.failedEventCount ? (
           <Button
@@ -383,7 +390,13 @@ const MessengerWeChatPage = memo(() => {
 
       <MessengerCommandList platform='wechat' />
       {logsOpen ? (
-        <ChannelGatewayLogsModal userId={userId} platform='wechat' bound={bound} gatewaySupported={gatewaySupported} onClose={() => setLogsOpen(false)} />
+        <ChannelGatewayLogsModal
+          userId={userId}
+          platform='wechat'
+          bound={bound}
+          gatewaySupported={gatewaySupported}
+          onClose={() => setLogsOpen(false)}
+        />
       ) : null}
     </MessengerDetailShell>
   )

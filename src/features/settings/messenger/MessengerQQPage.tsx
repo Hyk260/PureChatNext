@@ -1,8 +1,7 @@
 'use client'
 
-
-import { toast, Spin } from '@lobehub/ui'
-import { ActionIcon, Button, confirmModal, Text, Flex } from '@pure/ui'
+import { confirmModal, toast, Spin } from '@lobehub/ui'
+import { ActionIcon, Button, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import type { AgentListItem } from '@/const/home/agents'
 import { Copy, FileText, MessagesSquareIcon, Settings2Icon, Trash2Icon } from 'lucide-react'
@@ -316,8 +315,16 @@ const MessengerQQPage = memo(() => {
     <MessengerDetailShell headerAction={headerAction} platform='qq' platformMeta={platformMeta}>
       <Flex className='flex-col gap-3'>
         <Flex className='items-center gap-2'>
-          <Text className='text-[15px]' strong>连接 QQ</Text>
-          <ActionIcon icon={FileText} size='small' title='查看 QQ 网关诊断日志' aria-label='查看 QQ 网关诊断日志' onClick={() => setLogsOpen(true)} />
+          <Text className='text-[15px]' strong>
+            连接 QQ
+          </Text>
+          <ActionIcon
+            icon={FileText}
+            size='small'
+            title='查看 QQ 网关诊断日志'
+            aria-label='查看 QQ 网关诊断日志'
+            onClick={() => setLogsOpen(true)}
+          />
           <ChannelGatewayStatusIndicator {...gatewayStatus} />
         </Flex>
 
@@ -341,7 +348,9 @@ const MessengerQQPage = memo(() => {
         />
         {webhookUrl ? (
           <Flex className='items-center gap-2 rounded-lg bg-secondary px-3 py-2'>
-            <Text className='shrink-0 text-[13px]' type='secondary'>Webhook 回调地址</Text>
+            <Text className='shrink-0 text-[13px]' type='secondary'>
+              Webhook 回调地址
+            </Text>
             <Text className='min-w-0 flex-1 truncate text-[13px]' title={webhookUrl}>
               {webhookUrl}
             </Text>
@@ -360,7 +369,14 @@ const MessengerQQPage = memo(() => {
 
       <MessengerCommandList platform='qq' />
       {logsOpen ? (
-        <ChannelGatewayLogsModal userId={userId} platform='qq' bound={!showConnect} gatewaySupported={gatewaySupported} connectionMode={status?.connectionMode} onClose={() => setLogsOpen(false)} />
+        <ChannelGatewayLogsModal
+          userId={userId}
+          platform='qq'
+          bound={!showConnect}
+          gatewaySupported={gatewaySupported}
+          connectionMode={status?.connectionMode}
+          onClose={() => setLogsOpen(false)}
+        />
       ) : null}
 
       {advancedOpen ? (
@@ -369,10 +385,7 @@ const MessengerQQPage = memo(() => {
           open
           onClose={() => setAdvancedOpen(false)}
           onSaved={(settings) => {
-            mutateStatus(
-              (current) => (current ? { ...current, settings } : current),
-              { revalidate: false }
-            )
+            mutateStatus((current) => (current ? { ...current, settings } : current), { revalidate: false })
           }}
         />
       ) : null}

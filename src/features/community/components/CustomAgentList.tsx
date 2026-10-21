@@ -1,8 +1,7 @@
 'use client'
 
-
-import { toast } from '@lobehub/ui'
-import { Center, confirmModal, Grid, Text } from '@pure/ui'
+import { confirmModal, toast } from '@lobehub/ui'
+import { Center, Grid, Text } from '@pure/ui'
 import { lazy, memo, Suspense, useCallback, useMemo, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'
@@ -40,10 +39,7 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
   const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
 
-  const detailAgent = useMemo(
-    () => data.find((item) => item.id === detailAgentId) ?? null,
-    [data, detailAgentId]
-  )
+  const detailAgent = useMemo(() => data.find((item) => item.id === detailAgentId) ?? null, [data, detailAgentId])
   const detailDiscoverAgent = useMemo(
     () => (detailAgent ? toDiscoverAgentFromListItem(detailAgent) : null),
     [detailAgent]

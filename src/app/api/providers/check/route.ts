@@ -12,6 +12,7 @@ import {
   createOpenAICompatibleLanguageModel,
   isSupportedProviderId,
   resolveApiKeyFromHeader,
+  resolveModelsListBaseURL,
   resolveOptionalBaseURL,
 } from '@/libs/ai-providers/resolveClient'
 import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
@@ -213,7 +214,9 @@ export async function POST(request: Request) {
       return new ChatSDKError('bad_request:api', message).toResponse()
     }
 
-    const resolvedBaseURL = credentials.baseURL ?? baseURL
+    const resolvedBaseURL = isSupportedProviderId(provider)
+      ? resolveModelsListBaseURL(provider, credentials.baseURL ?? baseURL)
+      : credentials.baseURL ?? baseURL
     if (!resolvedBaseURL) return new ChatSDKError('bad_request:api', 'Missing provider base URL').toResponse()
 
     languageModel = isSupportedProviderId(provider)

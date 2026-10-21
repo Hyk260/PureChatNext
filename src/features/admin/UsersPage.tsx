@@ -1,28 +1,15 @@
 'use client'
 
-
-import { toast } from '@lobehub/ui'
-import { Form, Pagination, Select, Table } from 'antd'
-import type { TableProps } from 'antd'
-import {
-  ActionIcon,
-  Block,
-  Button,
-  Checkbox,
-  confirmModal,
-  Flex,
-  Input,
-  InputPassword,
-  Modal,
-  SearchBar,
-  Tag,
-  Text,
-} from '@pure/ui'
+import { confirmModal, toast, Pagination, Select, Table } from '@lobehub/ui'
+import { Form, useForm, useWatch } from '@lobehub/ui/form'
+import type { TableProps } from '@lobehub/ui'
+import { ActionIcon, Block, Button, Checkbox, Flex, Input, InputPassword, Modal, SearchBar, Tag, Text } from '@pure/ui'
 import { MONTHLY_FREE_CREDITS, SHANGHAI_TIMEZONE, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { EMPTY_PLACEHOLDER, formatCompactDateTime, formatNumber } from '@pure/utils/client'
 import { RefreshCw, UserPlus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { z } from 'zod'
 
 import { getUserRoleLabel } from '@/const/auth'
 import { useSession } from '@/libs/better-auth/client'
@@ -49,7 +36,7 @@ type UserFormValues = {
 }
 
 const PAGE_SIZE = 20
-const ANTD_SORT_ORDER = { asc: 'ascend', desc: 'descend' } as const
+const SORT_ORDER = { asc: 'ascend', desc: 'descend' } as const
 const TABLE_SORT_DIRECTIONS: Array<'ascend' | 'descend'> = ['descend', 'ascend', 'descend']
 const formatUserDateTime = (value: string) => formatCompactDateTime(value, { timeZone: SHANGHAI_TIMEZONE })
 
@@ -106,6 +93,22 @@ const emptyCreateValues: UserFormValues = {
   role: USER_ROLE.User,
 }
 
+const CREATE_USER_SCHEMA = z.object({
+  email: z.string().trim().min(1, '请输入邮箱').email('请输入有效的邮箱地址'),
+  password: z.string().min(1, '请输入密码').min(8, '密码至少 8 个字符').max(64, '密码最多 64 个字符'),
+  role: z.string().min(1, '请选择角色'),
+})
+
+const EDIT_USER_SCHEMA = z.object({
+  banned: z.boolean(),
+  banReason: z.string().optional(),
+  fullName: z.string().optional(),
+  role: z.string().min(1, '请选择角色'),
+  username: z.string().trim().min(1, '请输入用户名'),
+})
+
+const INITIAL_FORM_VALUES: UserFormValues = { ...emptyCreateValues, email: '', password: '', username: '' }
+
 const toEditValues = (user: AdminUser): UserFormValues => ({
   banned: user.banned,
   banReason: user.banReason ?? '',
@@ -118,8 +121,12 @@ export default function AdminUsersPage() {
   const { data: session } = useSession()
   const actorId = session?.user?.id
 
-  const [form] = Form.useForm<UserFormValues>()
-  const banned = Form.useWatch('banned', form)
+  const form = useForm<UserFormValues>({
+    initialValues: INITIAL_FORM_VALUES,
+    schema: CREATE_USER_SCHEMA,
+    onSubmit: (values) => handleSubmit(values),
+  })
+  const banned = useWatch(form, 'banned')
   const [items, setItems] = useState<AdminUser[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -148,7 +155,7 @@ export default function AdminUsersPage() {
         if (!signal?.aborted) setLoading(false)
       }
     },
-    [page, pageSize, query, sortBy, sortOrder]
+    [page, pageSize, query, setItems, setLoading, setTotal, sortBy, sortOrder]
   )
   const refreshUsers = () => loadUsers()
 
@@ -161,21 +168,24 @@ export default function AdminUsersPage() {
   }, [loadUsers])
 
   const openCreate = () => {
+    form.setSchema(CREATE_USER_SCHEMA)
+    form.reset(INITIAL_FORM_VALUES)
     setFormMode('create')
     setEditingUser(null)
-    form.setFieldsValue(emptyCreateValues)
   }
 
   const openEdit = (user: AdminUser) => {
+    form.setSchema(EDIT_USER_SCHEMA)
+    form.reset({ ...INITIAL_FORM_VALUES, ...toEditValues(user) })
     setFormMode('edit')
     setEditingUser(user)
-    form.setFieldsValue(toEditValues(user))
   }
 
   const closeForm = () => {
     setFormMode(null)
     setEditingUser(null)
-    form.resetFields()
+    form.setSchema(CREATE_USER_SCHEMA)
+    form.reset(INITIAL_FORM_VALUES)
   }
 
   const handleSubmit = async (values: UserFormValues) => {
@@ -310,7 +320,7 @@ export default function AdminUsersPage() {
           {getUserRoleLabel(value)}
         </Tag>
       ),
-      sortOrder: sortBy === 'role' ? ANTD_SORT_ORDER[sortOrder] : null,
+      sortOrder: sortBy === 'role' ? SORT_ORDER[sortOrder] : null,
       sorter: true,
       title: '角色',
       width: 100,
@@ -344,7 +354,7 @@ export default function AdminUsersPage() {
       fixed: 'right',
       key: 'lastActiveAt',
       render: formatUserDateTime,
-      sortOrder: sortBy === 'lastActiveAt' ? ANTD_SORT_ORDER[sortOrder] : null,
+      sortOrder: sortBy === 'lastActiveAt' ? SORT_ORDER[sortOrder] : null,
       sorter: true,
       title: '最近活跃',
       width: 160,
@@ -466,67 +476,52 @@ export default function AdminUsersPage() {
         cancelText='取消'
         confirmLoading={saving}
         destroyOnHidden
-        okText={formMode === 'create' ? '创建' : '保存'}
+        footer={null}
         open={formMode !== null}
         title={formTitle}
         width={440}
         onCancel={closeForm}
-        onOk={() => form.validateFields().then(handleSubmit)}
       >
         <Form form={form} layout='vertical'>
           {formMode === 'create' ? (
             <>
-              <Form.Item
-                label='邮箱'
-                name='email'
-                rules={[
-                  { message: '请输入邮箱', required: true },
-                  { message: '请输入有效的邮箱地址', type: 'email' },
-                ]}
-              >
+              <Form.Field label='邮箱' name='email' required>
                 <Input placeholder='user@example.com' />
-              </Form.Item>
-              <Form.Item
-                label='密码'
-                name='password'
-                rules={[
-                  { message: '请输入密码', required: true },
-                  { message: '密码至少 8 个字符', min: 8 },
-                  { max: 64, message: '密码最多 64 个字符' },
-                ]}
-              >
+              </Form.Field>
+              <Form.Field label='密码' name='password' required>
                 <InputPassword placeholder='至少 8 位' />
-              </Form.Item>
+              </Form.Field>
             </>
           ) : null}
 
-          <Form.Item
-            label='用户名'
-            name='username'
-            rules={formMode === 'create' ? [] : [{ message: '请输入用户名', required: true }]}
-          >
+          <Form.Field label='用户名' name='username' required={formMode === 'edit'}>
             <Input placeholder={formMode === 'create' ? '可留空，将自动分配' : '用户名'} />
-          </Form.Item>
+          </Form.Field>
 
           {formMode === 'edit' ? (
-            <Form.Item label='全名' name='fullName'>
+            <Form.Field label='全名' name='fullName'>
               <Input placeholder='展示名称' />
-            </Form.Item>
+            </Form.Field>
           ) : null}
 
-          <Form.Item label='角色' name='role' rules={[{ message: '请选择角色', required: true }]}>
+          <Form.Field label='角色' name='role' required>
             <Select disabled={editingSelf} options={[...ADMIN_ROLE_OPTIONS]} />
-          </Form.Item>
+          </Form.Field>
 
           {formMode === 'edit' ? (
             <>
-              <Form.Item name='banned' valuePropName='checked'>
-                <Checkbox disabled={editingSelf}>封禁该用户</Checkbox>
-              </Form.Item>
+              <Form.Field
+                name='banned'
+                render={({ onChange, value }) => (
+                  <Checkbox checked={Boolean(value)} disabled={editingSelf} onChange={onChange}>
+                    封禁该用户
+                  </Checkbox>
+                )}
+              />
               {banned ? (
-                <Form.Item label='封禁原因' name='banReason'>
+                <Form.Field label='封禁原因' name='banReason'>
                   <Input placeholder='可选' />
-                </Form.Item>
+                </Form.Field>
               ) : null}
               <Flex className='flex-col gap-2 border-t border-border pt-4'>
                 <Text className='font-medium'>本月额度</Text>
@@ -544,6 +539,14 @@ export default function AdminUsersPage() {
               </Flex>
             </>
           ) : null}
+          <Flex className='justify-end gap-2 border-t border-border pt-4'>
+            <Button htmlType='button' onClick={closeForm}>
+              取消
+            </Button>
+            <Button htmlType='submit' loading={saving} type='primary'>
+              {formMode === 'create' ? '创建' : '保存'}
+            </Button>
+          </Flex>
         </Form>
       </Modal>
     </main>

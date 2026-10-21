@@ -1,16 +1,16 @@
-import { Form } from 'antd'
+import { toast } from '@lobehub/ui'
+import { useForm } from '@lobehub/ui/form'
+import type { FormInstance } from '@lobehub/ui/form'
 import { localStg } from '@pure/utils/storage'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { message } from '@/components/AntdStaticMethods'
+import { withAuthAgreement } from '@/features/AuthAgreement'
 
-import {
-  BUILTIN_BETTER_AUTH_PROVIDERS,
-  normalizeLoginIdentifier,
-} from '@/libs/better-auth/shared'
+import { BUILTIN_BETTER_AUTH_PROVIDERS, normalizeLoginIdentifier } from '@/libs/better-auth/shared'
 import { checkUserByEmail, requestPasswordReset, signIn, useAuthConfig } from '@/libs/better-auth/client'
 import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { resolveCallbackUrl } from '@/utils/safeCallbackUrl'
+import { signInEmailSchema, signInPasswordSchema } from '../authFormSchemas'
 
 type Step = 'email' | 'password'
 
@@ -25,7 +25,6 @@ export const useSignIn = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { config, ready: serverConfigInit } = useAuthConfig()
-  const [form] = Form.useForm<SignInFormValues>()
   const [loading, setLoading] = useState(false)
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false)
   const [step, setStep] = useState<Step>('email')
@@ -34,19 +33,31 @@ export const useSignIn = () => {
   const [isSocialOnly, setIsSocialOnly] = useState(false)
   const [lastAuthProvider] = useState<string | null>(() => localStg.getString(LAST_AUTH_PROVIDER_KEY))
 
+  const form = useForm<SignInFormValues>({
+    initialValues: { email: '', password: '' },
+    schema: signInEmailSchema,
+    onSubmit: (values) => {
+      if (step === 'email') {
+        withAuthAgreement(() => handleCheckUser({ email: values.email }))
+      } else {
+        handleSignIn({ password: values.password })
+      }
+    },
+  })
+
   const { enableEmailVerification, enableMagicLink, oAuthSSOProviders } = config
 
   useEffect(() => {
     if (!serverConfigInit) return
 
     const emailParam = searchParams.get('email')
-    if (emailParam) form.setFieldValue('email', emailParam)
+    if (emailParam) form.setValue('email', emailParam)
   }, [searchParams, form, serverConfigInit])
 
   const handleSendMagicLink = async (targetEmail?: string) => {
     const resolvedEmail = (targetEmail ?? email).trim()
     if (!resolvedEmail) {
-      message.error('请输入邮箱')
+      toast.error('请输入邮箱')
       return
     }
 
@@ -59,11 +70,11 @@ export const useSignIn = () => {
       })
 
       if (error) {
-        message.error(error.message ?? '发送登录链接失败')
+        toast.error(error.message ?? '发送登录链接失败')
         return
       }
 
-      message.success('登录链接已发送到您的邮箱，请查收')
+      toast.success('登录链接已发送到您的邮箱，请查收')
     } finally {
       setLoading(false)
     }
@@ -72,7 +83,7 @@ export const useSignIn = () => {
   const handleCheckUser = async (values: Pick<SignInFormValues, 'email'>) => {
     const identifier = normalizeLoginIdentifier(values.email)
     if (!identifier) {
-      message.error('请输入有效的邮箱或用户名')
+      toast.error('请输入有效的邮箱或用户名')
       return
     }
 
@@ -84,11 +95,11 @@ export const useSignIn = () => {
 
       if (!result.exists) {
         if (identifier.kind === 'username') {
-          message.error('该用户名尚未注册')
+          toast.error('该用户名尚未注册')
           return
         }
 
-        message.info('该邮箱尚未注册，请先创建账户')
+        toast.info('该邮箱尚未注册，请先创建账户')
         const params = new URLSearchParams({ email: identifier.value })
         if (callbackUrlParam) params.set('callbackUrl', callbackUrlParam)
         router.push(`/signup?${params.toString()}`)
@@ -97,13 +108,13 @@ export const useSignIn = () => {
 
       const loginEmail = result.email?.trim()
       if (!loginEmail) {
-        message.error('该账户未绑定邮箱，请使用第三方登录')
+        toast.error('该账户未绑定邮箱，请使用第三方登录')
         return
       }
 
       // 未验证邮箱不能进密码页，先完成验证
       if (enableEmailVerification && result.emailVerified === false) {
-        message.info('请先完成邮箱验证')
+        toast.info('请先完成邮箱验证')
         router.push(
           `/verify-email?email=${encodeURIComponent(loginEmail)}&callbackUrl=${encodeURIComponent(callbackUrl)}`
         )
@@ -115,6 +126,7 @@ export const useSignIn = () => {
 
       if (result.hasPassword) {
         setIsSocialOnly(false)
+        form.setSchema(signInPasswordSchema)
         setStep('password')
         return
       }
@@ -125,10 +137,11 @@ export const useSignIn = () => {
       }
 
       setIsSocialOnly(true)
+      form.setSchema(signInPasswordSchema)
       setStep('password')
     } catch (error) {
       console.error('Check user error:', error)
-      message.error('检查账户失败，请重试')
+      toast.error('检查账户失败，请重试')
     } finally {
       setLoading(false)
     }
@@ -167,16 +180,16 @@ export const useSignIn = () => {
 
       if (result.error && result.error.code !== 'EMAIL_NOT_VERIFIED') {
         if (result.error.status === 401 && result.error.code === 'INVALID_EMAIL_OR_PASSWORD') {
-          message.error('账号或密码错误')
+          toast.error('账号或密码错误')
         } else if (result.error.code === 'INVALID_ORIGIN') {
-          message.error('当前访问域名未授权，请检查隧道 / Origin 配置后重试')
+          toast.error('当前访问域名未授权，请检查隧道 / Origin 配置后重试')
         } else {
-          message.error(result.error.message || '登录遇到了问题。请检查账号与密码后重试')
+          toast.error(result.error.message || '登录遇到了问题。请检查账号与密码后重试')
         }
       }
     } catch (error) {
       console.error('Sign in error:', error)
-      message.error('登录遇到了问题，请重试')
+      toast.error('登录遇到了问题，请重试')
     } finally {
       setLoading(false)
     }
@@ -201,12 +214,13 @@ export const useSignIn = () => {
       if (result && 'error' in result && result.error) throw result.error
     } catch (error) {
       console.error(`${provider} sign in error:`, error)
-      message.error('登录遇到了问题，请重试')
+      toast.error('登录遇到了问题，请重试')
       throw error
     }
   }
 
   const handleBackToEmail = () => {
+    form.setSchema(signInEmailSchema)
     setStep('email')
     setIsSocialOnly(false)
   }
@@ -232,13 +246,13 @@ export const useSignIn = () => {
 
       if (error) {
         const isRateLimited = error.status === 429 || error.code === 'RATE_LIMIT_EXCEEDED'
-        message.error(isRateLimited ? '请求过于频繁，请 60 秒后再试' : (error.message ?? '发送重置邮件失败'))
+        toast.error(isRateLimited ? '请求过于频繁，请 60 秒后再试' : (error.message ?? '发送重置邮件失败'))
         return
       }
 
-      message.success('密码重置链接已发送到您的邮箱')
+      toast.success('密码重置链接已发送到您的邮箱')
     } catch {
-      message.error('发送重置邮件失败')
+      toast.error('发送重置邮件失败')
     } finally {
       setForgotPasswordLoading(false)
     }

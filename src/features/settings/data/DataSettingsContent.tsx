@@ -1,7 +1,6 @@
-import { toast } from '@lobehub/ui'
+import { toast, Alert } from '@lobehub/ui'
 import { ActionIcon, Block, Button, Flex, Modal, Select, Skeleton, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import { Alert } from 'antd'
 import { Copy, RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 

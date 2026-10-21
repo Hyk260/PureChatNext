@@ -1,7 +1,7 @@
 'use client'
 
 import { Flex, Input, Modal, Select, Text } from '@pure/ui'
-import { Slider } from 'antd'
+import { Slider } from '@lobehub/ui'
 import type { ModelAbilities } from '@pure/model-bank'
 import { memo, useEffect, useMemo, useState } from 'react'
 
@@ -57,6 +57,11 @@ const ABILITY_SELECT_OPTIONS = ABILITY_OPTIONS.map(({ description, key, label })
   description,
 }))
 
+const CONTEXT_WINDOW_MARK_ENTRIES = Object.entries(CONTEXT_WINDOW_MARKS).map(([index, label]) => ({
+  index: Number(index),
+  label,
+}))
+
 export interface CustomModelFormValues {
   abilities: ModelAbilities
   contextWindowTokens?: number
@@ -110,29 +115,6 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
     })
   }
 
-  const contextWindowMarks = useMemo(
-    () =>
-      Object.fromEntries(
-        Object.entries(CONTEXT_WINDOW_MARKS).map(([key, label]) => {
-          const index = Number(key)
-          const isFirst = index === 0
-          const isLast = index === CONTEXT_WINDOW_STEPS.length - 1
-          return [
-            index,
-            {
-              label: <span className='inline-block whitespace-nowrap'>{label}</span>,
-              style: {
-                whiteSpace: 'nowrap' as const,
-                ...(isFirst ? { transform: 'translateX(0)' } : {}),
-                ...(isLast ? { transform: 'translateX(-100%)' } : {}),
-              },
-            },
-          ]
-        })
-      ),
-    []
-  )
-
   return (
     <Modal
       destroyOnHidden
@@ -175,19 +157,35 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
         <Flex className='w-full flex-col gap-1.5'>
           <Text className='text-sm font-medium'>最大上下文窗口</Text>
           <Flex className='items-start gap-4'>
-            <Slider
-              className='min-w-0 flex-1 pb-5'
-              marks={contextWindowMarks}
-              max={CONTEXT_WINDOW_STEPS.length - 1}
-              min={0}
-              step={1}
-              tooltip={{ open: false }}
-              value={nearestContextWindowStepIndex(contextWindowTokens)}
-              onChange={(value) => {
-                const index = Array.isArray(value) ? (value[0] ?? 0) : value
-                setContextWindowTokens(CONTEXT_WINDOW_STEPS[index] ?? 0)
-              }}
-            />
+            <div className='relative min-w-0 flex-1 pb-6'>
+              <Slider
+                className='min-w-0'
+                max={CONTEXT_WINDOW_STEPS.length - 1}
+                min={0}
+                step={1}
+                value={nearestContextWindowStepIndex(contextWindowTokens)}
+                onChange={(index) => setContextWindowTokens(CONTEXT_WINDOW_STEPS[index] ?? 0)}
+              />
+              <div className='pointer-events-none absolute inset-x-0 bottom-0 h-5 text-xs text-muted-foreground'>
+                {CONTEXT_WINDOW_MARK_ENTRIES.map(({ index, label }) => {
+                  const isFirst = index === 0
+                  const isLast = index === CONTEXT_WINDOW_STEPS.length - 1
+                  const position = (index / (CONTEXT_WINDOW_STEPS.length - 1)) * 100
+                  return (
+                    <span
+                      className='absolute whitespace-nowrap'
+                      key={index}
+                      style={{
+                        left: `${position}%`,
+                        transform: isFirst ? 'none' : isLast ? 'translateX(-100%)' : 'translateX(-50%)',
+                      }}
+                    >
+                      {label}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
             <Flex className='shrink-0 items-center gap-2 pt-0.5'>
               <Input
                 className='w-28'

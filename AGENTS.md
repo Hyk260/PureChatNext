@@ -21,7 +21,7 @@
 
 ## 架构不变量
 
-- 业务 UI 使用 Vite SPA、React 19 和 react-router，主要位于 `src/spa/` 与 `src/features/`；样式与组件按需使用 Tailwind CSS 4、`@lobehub/ui` 和 antd。
+- 业务 UI 使用 Vite SPA、React 19 和 react-router，主要位于 `src/spa/` 与 `src/features/`；样式优先使用 Tailwind CSS 4，组件优先直接使用 `@lobehub/ui`，`@pure/ui` 保留项目定制能力。
 - 主应用的 Next.js 16 只负责 API、认证和生产 SPA HTML 壳；不要把新业务页面迁回 Next.js 页面路由。`apps/docs/` 是独立部署的公开文档站，不属于主应用页面路由。
 - 本地开发访问 `http://localhost:5174`；Vite 将 `/api` 代理到 `http://localhost:3000` 的 Next BFF。
 - 本地 `APP_URL` 使用 `http://localhost:5174`；生产环境使用正式同域地址。
@@ -105,7 +105,7 @@ pnpm exec vitest run --silent='passed-only' '<test-file>'
 
 - 遵循 `eslint.config.mjs`；类型导入使用顶层 `import type`，不要把同一来源拆成重复 import。
 - 新组件和简单静态样式默认使用 Tailwind CSS；复杂选择器、动画、SVG、滚动条或动态几何值可保留 `createStaticStyles`。
-- 新页面和业务功能优先使用 `@pure/ui` 的 `Flex`、`Text`、`Button`、`ActionIcon`、`Select`、`Input` 等组件；保留必要原生语义及依赖原生行为的特殊控件，替换时确认组件 API、键盘和 ref 行为。
+- 新页面和业务功能优先直接使用 `@lobehub/ui` 公开组件；`@pure/ui` 用于项目定制组件和稳定的项目能力，不新增纯转发封装。保留必要原生语义及依赖原生行为的特殊控件，替换时确认组件 API、键盘和 ref 行为。开发规范见 [Lobe UI 指南](docs/development/styling/lobe-ui-guidelines.md)。
 - 已有等价对齐组合时优先复用 `utilities.css` 中的 `flex-center`、`flex-between`、`flex-between-wrap`、`flex-col-center`，不要重复堆叠 `flex items-center justify-center` 等基础类；`Flex` 普通布局不重复写 `flex`。
 - 仅将跨页面高频且语义稳定的样式组合加入 `src/styles/utilities.css`；新增前先搜索仓库验证复用需求。
 - Tailwind 细则见 `docs/development/styling/tailwind-guidelines.md` 与 `docs/development/styling/tailwind-migration.md`。

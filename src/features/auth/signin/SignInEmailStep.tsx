@@ -1,8 +1,8 @@
 'use client'
 
-import { Alert, Badge, Form } from 'antd'
-import { Divider } from '@lobehub/ui'
-import type { FormInstance } from 'antd'
+import { Alert, Badge, Divider } from '@lobehub/ui'
+import { Form } from '@lobehub/ui/form'
+import type { FormInstance } from '@lobehub/ui/form'
 import { User } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -13,7 +13,7 @@ import AuthIcons from '@/components/AuthIcons'
 import { BRANDING_NAME } from '@/const/branding'
 import AuthAgreement, { withAuthAgreement } from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
-import { SSO_PROVIDER_LABELS, normalizeLoginIdentifier } from '@/libs/better-auth/shared'
+import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
 
 interface SignInFormValues {
   email: string
@@ -28,7 +28,6 @@ interface SignInEmailStepProps {
   lastAuthProvider?: string | null
   loading: boolean
   oAuthSSOProviders: readonly string[]
-  onCheckUser: (values: Pick<SignInFormValues, 'email'>) => Promise<void>
   onSocialSignIn: (provider: string) => Promise<void>
   serverConfigInit: boolean
 }
@@ -39,10 +38,6 @@ const PROVIDER_ICON_STYLE: CSSProperties = {
   top: '50%',
   transform: 'translateY(-50%)',
 }
-const INPUT_ICON_STYLE: CSSProperties = { marginInline: 6 }
-const LAST_USED_BADGE_STYLES = {
-  root: { display: 'block', paddingTop: 8, width: '100%' },
-}
 
 const getProviderLabel = (provider: string) => {
   const label = SSO_PROVIDER_LABELS[provider] ?? provider
@@ -51,7 +46,7 @@ const getProviderLabel = (provider: string) => {
 
 const withLastUsedBadge = (node: ReactNode, enabled: boolean) =>
   enabled ? (
-    <Badge color='var(--lobe-color-info)' count='上次使用' styles={LAST_USED_BADGE_STYLES}>
+    <Badge className='block w-full pt-2' color='var(--lobe-color-info)' count='上次使用'>
       {node}
     </Badge>
   ) : (
@@ -65,7 +60,6 @@ export const SignInEmailStep = ({
   lastAuthProvider,
   loading,
   oAuthSSOProviders,
-  onCheckUser,
   onSocialSignIn,
   serverConfigInit,
 }: SignInEmailStepProps) => {
@@ -157,52 +151,32 @@ export const SignInEmailStep = ({
         )}
 
         {!disableEmailPassword && (
-          <Form
-            form={form}
-            layout='vertical'
-            onFinish={(values) => {
-              withAuthAgreement(() => {
-                onCheckUser(values)
-              })
-            }}
-          >
-            <Form.Item
-              name='email'
-              rules={[
-                { message: '请输入邮箱或用户名', required: true },
-                {
-                  validator: async (_, value: string) => {
-                    const raw = value?.trim() ?? ''
-                    if (!raw) return
-                    if (normalizeLoginIdentifier(raw)) return
-                    if (raw.includes('@')) throw new Error('请输入有效的邮箱地址')
-                    throw new Error('用户名只能包含字母、数字和下划线')
-                  },
-                },
-              ]}
-              style={{ marginBottom: 0 }}
-            >
+          <Form form={form} layout='vertical'>
+            <Form.Field name='email'>
               <Input
                 placeholder='请输入邮箱或用户名'
-                prefix={<Icon icon={User} style={INPUT_ICON_STYLE} />}
+                prefix={<Icon icon={User} />}
                 ref={emailInputRef}
                 size='large'
-                onPressEnter={() => form.submit()}
+                onPressEnter={(event) => {
+                  event.preventDefault()
+                  form.submit()
+                }}
               />
-            </Form.Item>
+            </Form.Field>
           </Form>
         )}
 
-        {isSocialOnly && (
-          <Alert showIcon title='此账户未设置密码，请使用第三方登录或魔法链接登录。' type='info' />
-        )}
+        {isSocialOnly && <Alert showIcon title='此账户未设置密码，请使用第三方登录或魔法链接登录。' type='info' />}
 
-        <AuthAgreement />
-        {!disableEmailPassword && (
-          <Button block loading={loading} size='large' type='primary' onClick={() => form.submit()}>
-            下一步
-          </Button>
-        )}
+        <Flex className='flex-col gap-4 py-1'>
+          <AuthAgreement />
+          {!disableEmailPassword && (
+            <Button block loading={loading} size='large' type='primary' onClick={() => form.submit()}>
+              下一步
+            </Button>
+          )}
+        </Flex>
         <Text className='w-full text-center'>
           还没有账号？ <Link href={signupHref}>创建账号</Link>
         </Text>

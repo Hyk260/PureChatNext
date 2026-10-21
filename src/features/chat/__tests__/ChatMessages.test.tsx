@@ -85,10 +85,6 @@ vi.mock('@pure/utils/client', () => ({
   copyToClipboard: vi.fn(),
 }))
 
-vi.mock('@/components/AntdStaticMethods', () => ({
-  useApp: () => ({ message: { success: vi.fn() } }),
-}))
-
 vi.mock('@/components/Loading', () => ({
   LoadingState: () => <span data-testid='loading-state' />,
   PulseDots: () => <span data-testid='pulse-dots' />,
@@ -400,12 +396,7 @@ describe('ChatMessages message layout', () => {
     expect(getByText('/tmp')).toBeTruthy()
 
     fireEvent.click(getByText('批准'))
-    expect(onToolApproval).toHaveBeenCalledWith(
-      'local-1',
-      'runCommand',
-      { command: 'ls -la', cwd: '/tmp' },
-      true
-    )
+    expect(onToolApproval).toHaveBeenCalledWith('local-1', 'runCommand', { command: 'ls -la', cwd: '/tmp' }, true)
   })
 
   it.each(['auto', 'full'] as const)('does not render ApprovalCard in %s mode', (permissionMode) => {

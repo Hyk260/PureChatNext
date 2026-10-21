@@ -330,6 +330,10 @@ export const webRoutes: RouteObject[] = [
   ...(import.meta.env.DEV
     ? ([
         {
+          element: <NotFound />,
+          path: '__dev/404-preview',
+        },
+        {
           children: [
             {
               element: dynamicElement(() => import('@/features/dev/CodeBlockPage'), 'Dev > CodeBlock'),

@@ -1,12 +1,9 @@
-import { toast, Switch } from '@lobehub/ui'
+import { confirmModal, InputNumber, Segmented, Switch, toast } from '@lobehub/ui'
 import { DEFAULT_WEB_SEARCH_SETTINGS } from '@pure/types'
 import type { WebSearchSettingsPatch } from '@pure/types'
 import { Collapsible, Block, Button, Flex, Text, TextArea, Tooltip } from '@pure/ui'
-import { InputNumber, Segmented } from 'antd'
 import { ChevronDown, ChevronUp, Info } from 'lucide-react'
 import { useState } from 'react'
-
-import { useApp } from '@/components/AntdStaticMethods'
 
 import { useWebSearchSettings } from './api'
 import { ProviderCard } from './ProviderCard'
@@ -43,7 +40,6 @@ function NumberSetting({
 
 export default function WebSearchSettingsPage() {
   const { data, error, save, reset, saving, mutate } = useWebSearchSettings()
-  const { modal } = useApp()
   const config = { ...DEFAULT_WEB_SEARCH_SETTINGS, ...data?.settings }
   const savedBlacklist = config.blacklist.join('\n')
   const [advancedOpen, setAdvancedOpen] = useState(true)
@@ -79,7 +75,7 @@ export default function WebSearchSettingsPage() {
     mutate().catch(() => toast.error('重新加载失败'))
   }
   const restore = () => {
-    modal.confirm({
+    confirmModal({
       title: '恢复服务器配置？',
       content: '将删除当前账号的网络搜索设置及密钥，重新继承服务器配置和产品默认值。',
       onOk: async () => {

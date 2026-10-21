@@ -1,7 +1,7 @@
 'use client'
 
-import { DatePicker, Pagination, Progress, Table } from 'antd'
-import type { TableProps } from 'antd'
+import { DayjsDateRangePicker, Pagination, Progress, Table, createStaticStyles, cssVar } from '@lobehub/ui'
+import type { DayjsDateRangeValue, TableProps } from '@lobehub/ui'
 import { Block, Button, Empty, Grid, ModelIcon, SearchBar, Select, Skeleton, Tag, Text, Flex } from '@pure/ui'
 import { SHANGHAI_TIMEZONE } from '@pure/const'
 import {
@@ -12,16 +12,12 @@ import {
   formatSize,
   getPercentage,
 } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { MessageSquareText, RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { ComponentProps } from 'react'
 
 import type { UsageItem, UsageResponse } from './types'
 
-const { RangePicker } = DatePicker
-type PickerValue = Exclude<NonNullable<ComponentProps<typeof RangePicker>['value']>[number], null | undefined>
-type DateRange = [PickerValue, PickerValue]
+type DateRange = DayjsDateRangeValue
 
 const formatUsageDateTime = (value: string) => formatCompactDateTime(value, { timeZone: SHANGHAI_TIMEZONE })
 const formatResetHint = (days: number, hours: number) => {
@@ -90,7 +86,7 @@ const styles = createStaticStyles(({ css }) => ({
       align-items: flex-start !important;
       flex-direction: column;
 
-      .ant-pagination-options {
+      .lobe-pagination__size-changer {
         display: none;
       }
     }
@@ -107,29 +103,26 @@ const styles = createStaticStyles(({ css }) => ({
     font-weight: 600;
   `,
   table: css`
-    .ant-table,
-    .ant-table-container,
-    .ant-table-thead > tr > th:first-child,
-    .ant-table-thead > tr > th:last-child,
-    .ant-table-tbody > tr > td:first-child,
-    .ant-table-tbody > tr > td:last-child {
-      border-radius: 0 !important;
-    }
-
-    .ant-table-container,
-    .ant-table-header,
-    .ant-table-thead > tr > th {
-      box-shadow: none !important;
-    }
-
-    .ant-table-thead > tr > th {
-      padding-block: 10px;
-      font-weight: 600;
-      background: ${cssVar.colorBgContainer};
-    }
-
-    .ant-table-tbody > tr > td {
-      padding-block: 8px;
+    border-radius: 0;
+  `,
+  tableBodyCell: css`
+    padding-block: 8px;
+    border-radius: 0;
+  `,
+  tableContent: css`
+    border-radius: 0;
+    box-shadow: none;
+  `,
+  tableHeaderCell: css`
+    padding-block: 10px;
+    font-weight: 600;
+    background: ${cssVar.colorBgContainer};
+    border-radius: 0;
+    box-shadow: none;
+  `,
+  metricProgress: css`
+    .lobe-progress__track {
+      stroke: ${cssVar.colorFillSecondary};
     }
   `,
   toolbar: css`
@@ -159,12 +152,11 @@ const UsageMetric = ({ hint, label, limit, used, value }: UsageMetricProps) => {
         {hint ? <Text className={styles.metricHint}>{hint}</Text> : null}
       </Flex>
       <Progress
+        className={styles.metricProgress}
         percent={Math.min(100, percentage)}
         showInfo={false}
         size={42}
         strokeColor={cssVar.colorSuccess}
-        strokeWidth={8}
-        railColor={cssVar.colorFillSecondary}
         type='circle'
       />
     </Flex>
@@ -210,7 +202,7 @@ const triggerFilterOptions = [
   { label: triggerLabels.qq, value: 'qq' },
 ] as const
 
-const ANTD_SORT_ORDER = { asc: 'ascend', desc: 'descend' } as const
+const SORT_ORDER = { asc: 'ascend', desc: 'descend' } as const
 /** 升降序循环，不含取消。默认时间倒序时，悬停提示为「点击升序」。 */
 const TABLE_SORT_DIRECTIONS: Array<'ascend' | 'descend'> = ['descend', 'ascend', 'descend']
 
@@ -239,7 +231,7 @@ export function UsageSettingsContent() {
       trigger,
     })
     if (modelQuery) params.set('model', modelQuery)
-    if (range) {
+    if (range?.[0] && range[1]) {
       params.set('startDate', range[0].format('YYYY-MM-DD'))
       params.set('endDate', range[1].format('YYYY-MM-DD'))
     }
@@ -285,7 +277,7 @@ export function UsageSettingsContent() {
   }
 
   const activeSortOrder = useCallback(
-    (key: string) => (sortBy === key ? ANTD_SORT_ORDER[sortOrder] : null),
+    (key: string) => (sortBy === key ? SORT_ORDER[sortOrder] : null),
     [sortBy, sortOrder]
   )
 
@@ -422,10 +414,10 @@ export function UsageSettingsContent() {
                 setPage(1)
               }}
             />
-            <RangePicker
+            <DayjsDateRangePicker
               size='small'
               showTime={{ format: 'HH:mm' }}
-              format="YYYY-MM-DD HH:mm"
+              format='YYYY-MM-DD HH:mm'
               style={{ flex: '1 1 280px' }}
               value={range}
               onChange={(value) => {
@@ -449,6 +441,11 @@ export function UsageSettingsContent() {
 
           <Table<UsageItem>
             className={styles.table}
+            classNames={{
+              body: { cell: styles.tableBodyCell },
+              content: styles.tableContent,
+              header: { cell: styles.tableHeaderCell },
+            }}
             columns={columns}
             dataSource={data?.items ?? []}
             loading={loading}

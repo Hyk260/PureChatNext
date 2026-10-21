@@ -1,11 +1,22 @@
 'use client'
 
-
-import { toast, Switch } from '@lobehub/ui'
+import { toast, Switch, Segmented } from '@lobehub/ui'
 import { ActionIcon, Block, Button, Flex, Github, Modal, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import { Segmented } from 'antd'
-import { BadgeHelp, Bug, CheckCircle2, CircleX, Code2, Copy, FileText, Globe, MessageSquare, MessagesSquare, Rss, TriangleAlert } from 'lucide-react'
+import {
+  BadgeHelp,
+  Bug,
+  CheckCircle2,
+  CircleX,
+  Code2,
+  Copy,
+  FileText,
+  Globe,
+  MessageSquare,
+  MessagesSquare,
+  Rss,
+  TriangleAlert,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -185,7 +196,9 @@ export function AboutSettingsContent() {
       >
         应用将重启，进行中的聊天和工具任务会被中断。请先完成当前操作。
         {installationSupport && !installationSupport.supported ? (
-          <Text as='p' className='mb-0 mt-3 text-amber-600! dark:text-amber-400!'>{installationSupport.message}</Text>
+          <Text as='p' className='mb-0 mt-3 text-amber-600! dark:text-amber-400!'>
+            {installationSupport.message}
+          </Text>
         ) : null}
       </Modal>
       <Block variant='outlined' className='rounded-2xl px-5 sm:px-6'>
@@ -256,7 +269,11 @@ export function AboutSettingsContent() {
         </Flex>
         {update.isDesktop && update.desktopState ? (
           <UpdateSourceSettings
-            key={JSON.stringify([preferences?.updateSource, preferences?.customUpdateUrl, update.desktopState.effectiveSource])}
+            key={JSON.stringify([
+              preferences?.updateSource,
+              preferences?.customUpdateUrl,
+              update.desktopState.effectiveSource,
+            ])}
             preferences={update.desktopState.preferences}
             source={update.desktopState.effectiveSource}
             disabled={preferencesDisabled}
@@ -286,11 +303,7 @@ export function AboutSettingsContent() {
             <Flex className='flex-col gap-1'>
               <Flex className='items-center gap-1.5'>
                 <Text>测试计划</Text>
-                <Code2
-                  aria-label='开发环境'
-                  className='size-4 text-amber-600 dark:text-amber-400'
-                  role='img'
-                />
+                <Code2 aria-label='开发环境' className='size-4 text-amber-600 dark:text-amber-400' role='img' />
               </Flex>
               <Text className='text-xs' type='secondary'>
                 提前体验新功能，测试版本可能不稳定
@@ -326,11 +339,7 @@ export function AboutSettingsContent() {
             <Flex className='flex-col gap-1 min-w-0 flex-1'>
               <Flex className='items-center gap-1.5'>
                 <Text>清理下载安装包缓存</Text>
-                <Code2
-                  aria-label='开发环境'
-                  className='size-4 text-amber-600 dark:text-amber-400'
-                  role='img'
-                />
+                <Code2 aria-label='开发环境' className='size-4 text-amber-600 dark:text-amber-400' role='img' />
               </Flex>
               <Text className='text-xs' type='secondary'>
                 仅开发环境使用，清理后可重新检查更新测试下载

@@ -1,7 +1,6 @@
 'use client'
 
-import { Progress } from 'antd'
-import { Spin } from '@lobehub/ui'
+import { Progress, Spin } from '@lobehub/ui'
 import { Text, Flex } from '@pure/ui'
 import { formatNumber, getPercentage } from '@pure/utils/client'
 import { useEffect, useState } from 'react'

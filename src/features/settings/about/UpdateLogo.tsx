@@ -1,9 +1,23 @@
 import { Flex, PureChatMark } from '@pure/ui'
-import { Progress } from 'antd'
-import { Spin } from '@lobehub/ui'
+import { Progress, Spin, createStaticStyles } from '@lobehub/ui'
 
 import type { DesktopUpdateStatus } from '@/types/desktopUpdater'
 import { getUpdateProgressPresentation } from './updatePresentation'
+
+const styles = createStaticStyles(({ css }) => ({
+  completed: css`
+    .lobe-progress__bar {
+      transition: none !important;
+    }
+  `,
+  progress: css`
+    @media (prefers-reduced-motion: reduce) {
+      .lobe-progress__bar {
+        transition: none;
+      }
+    }
+  `,
+}))
 
 export function UpdateLogo({
   status,
@@ -29,15 +43,12 @@ export function UpdateLogo({
       </div>
       {visible ? (
         <Progress
-          className='absolute inset-0'
-          classNames={{ track: completed ? 'transition-none!' : 'motion-reduce:transition-none!' }}
+          className={`absolute inset-0 ${styles.progress} ${completed ? styles.completed : ''}`}
           aria-label={`下载进度 ${Math.floor(percent)}%`}
           type='circle'
           percent={percent}
           size={80}
-          strokeWidth={4}
           strokeColor='var(--color-green)'
-          railColor='var(--color-border)'
           showInfo={false}
         />
       ) : null}

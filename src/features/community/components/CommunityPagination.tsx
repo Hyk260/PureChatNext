@@ -1,17 +1,14 @@
 'use client'
 
-import { Pagination as AntPagination } from 'antd'
-import { createStaticStyles } from '@lobehub/ui'
+import { Pagination as AntPagination, createStaticStyles } from '@lobehub/ui'
 import { memo, useCallback } from 'react'
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 const COMMUNITY_SCROLL_VIEWPORT_CLASS = 'community-scroll-viewport'
-const ANT_PREFIX_CLASS = 'ant'
-
 const communityPaginationStyles = createStaticStyles(({ css, cssVar }) => ({
   page: css`
-    .${ANT_PREFIX_CLASS}-pagination-item-active {
+    & button[aria-current='page'] {
       border-color: ${cssVar.colorFillSecondary};
       background: ${cssVar.colorFillSecondary};
 

@@ -9,6 +9,10 @@ const mocks = vi.hoisted(() => ({
   generateText: vi.fn(),
   getAuthenticatedUserId: vi.fn(),
   resolveApiKeyFromHeader: vi.fn(),
+  resolveModelsListBaseURL: vi.fn((provider: 'openai' | 'deepseek', baseURL?: string) => {
+    const defaults = { deepseek: 'https://api.deepseek.com', openai: 'https://api.openai.com/v1' }
+    return baseURL?.trim() || defaults[provider]
+  }),
   resolveOptionalBaseURL: vi.fn((value?: string) => value?.trim() || undefined),
   resolveUserProviderCredentials: vi.fn(),
   withHealthTimeout: vi.fn(),
@@ -18,10 +22,14 @@ vi.mock('ai', () => ({ generateText: mocks.generateText }))
 vi.mock('@pure/database/models/credits', () => ({
   FreePlanLimitError: class FreePlanLimitError extends Error {},
 }))
+vi.mock('@pure/database/models/customProvider', () => ({
+  isValidProviderId: (id: string) => /^[a-z0-9][a-z0-9_-]{0,31}$/.test(id),
+}))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
   createProviderLanguageModel: mocks.createProviderLanguageModel,
   isSupportedProviderId: (id: string) => id === 'openai' || id === 'deepseek',
   resolveApiKeyFromHeader: mocks.resolveApiKeyFromHeader,
+  resolveModelsListBaseURL: mocks.resolveModelsListBaseURL,
   resolveOptionalBaseURL: mocks.resolveOptionalBaseURL,
 }))
 vi.mock('@/libs/ai-providers/userSecrets', () => ({
@@ -41,6 +49,7 @@ vi.mock('@/server/purechat/runtime', () => ({
 }))
 
 import { POST } from './route'
+import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
 
 const requestFor = (body: unknown, headers?: HeadersInit) =>
   new Request('http://localhost/api/providers/check', {
@@ -95,6 +104,19 @@ describe('POST /api/providers/check', () => {
         model: { modelId: 'openai-model' },
         prompt: 'Reply with exactly pong.',
       })
+    )
+  })
+
+  it('uses the built-in provider URL when no proxy URL is configured', async () => {
+    const response = await POST(requestFor({ model: 'deepseek-v4-flash', provider: 'deepseek' }))
+
+    expect(response.status).toBe(200)
+    expect(mocks.createProviderLanguageModel).toHaveBeenCalledWith(
+      'deepseek',
+      'deepseek-v4-flash',
+      'test-key',
+      'https://api.deepseek.com',
+      { timeoutMs: DEFAULT_PROVIDER_CHECK_TIMEOUT_MS }
     )
   })
 

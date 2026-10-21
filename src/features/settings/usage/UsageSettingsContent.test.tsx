@@ -1,29 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import dayjs from 'dayjs'
 
 const fetchMock = vi.fn()
-
-vi.mock('antd', () => ({
-  DatePicker: {
-    RangePicker: ({ onChange }: { onChange?: (value: unknown) => void }) => (
-      <button type='button' onClick={() => onChange?.(null)}>
-        日期范围
-      </button>
-    ),
-  },
-  Pagination: ({ onChange, pageSize }: { onChange?: (page: number, pageSize: number) => void; pageSize: number }) => (
-    <button type='button' onClick={() => onChange?.(2, pageSize)}>
-      下一页
-    </button>
-  ),
-  Progress: ({ percent }: { percent?: number }) => <span data-testid='progress'>{percent}</span>,
-  Table: ({ onChange }: { onChange?: (pagination: unknown, filters: unknown, sorter: unknown) => void }) => (
-    <button type='button' onClick={() => onChange?.({}, {}, { columnKey: 'credits', order: 'ascend' })}>
-      积分排序
-    </button>
-  ),
-}))
 
 vi.mock('@pure/ui', () => ({
   Flex: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
@@ -83,6 +63,22 @@ vi.mock('@pure/ui', () => ({
 
 vi.mock('@lobehub/ui', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@lobehub/ui')>()),
+  DayjsDateRangePicker: ({ onChange }: { onChange?: (value: [dayjs.Dayjs, dayjs.Dayjs]) => void }) => (
+    <button type='button' onClick={() => onChange?.([dayjs('2026-06-01'), dayjs('2026-06-30')])}>
+      日期范围
+    </button>
+  ),
+  Pagination: ({ onChange, pageSize }: { onChange?: (page: number, pageSize: number) => void; pageSize: number }) => (
+    <button type='button' onClick={() => onChange?.(2, pageSize)}>
+      下一页
+    </button>
+  ),
+  Progress: ({ percent }: { percent?: number }) => <span data-testid='progress'>{percent}</span>,
+  Table: ({ onChange }: { onChange?: (pagination: unknown, filters: unknown, sorter: unknown) => void }) => (
+    <button type='button' onClick={() => onChange?.({}, {}, { columnKey: 'credits', order: 'ascend' })}>
+      积分排序
+    </button>
+  ),
   createStaticStyles: () => new Proxy({}, { get: (_, key) => String(key) }),
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
 }))
@@ -136,6 +132,13 @@ describe('UsageSettingsContent', () => {
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'web' } })
     await waitFor(() => expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain('trigger=web'))
+
+    fireEvent.click(screen.getByText('日期范围'))
+    await waitFor(() => {
+      const url = String(fetchMock.mock.calls.at(-1)?.[0])
+      expect(url).toContain('startDate=2026-06-01')
+      expect(url).toContain('endDate=2026-06-30')
+    })
 
     fireEvent.click(screen.getByText('积分排序'))
     await waitFor(() => expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain('sortBy=credits'))

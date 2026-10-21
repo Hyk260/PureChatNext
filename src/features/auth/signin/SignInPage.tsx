@@ -18,10 +18,8 @@ const SignInContent = () => {
     form,
     forgotPasswordLoading,
     handleBackToEmail,
-    handleCheckUser,
     handleForgotPassword,
     handleSendMagicLink,
-    handleSignIn,
     handleSocialSignIn,
     isSocialOnly,
     lastAuthProvider,
@@ -46,7 +44,6 @@ const SignInContent = () => {
           loading={loading}
           oAuthSSOProviders={oAuthSSOProviders}
           serverConfigInit={serverConfigInit}
-          onCheckUser={handleCheckUser}
           onSocialSignIn={handleSocialSignIn}
         />
       ) : (
@@ -62,7 +59,6 @@ const SignInContent = () => {
           onBack={handleBackToEmail}
           onForgotPassword={handleForgotPassword}
           onSendMagicLink={handleSendMagicLink}
-          onSignIn={handleSignIn}
         />
       )}
     </AuthPageContainer>

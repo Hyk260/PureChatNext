@@ -1,0 +1,21 @@
+---
+description: Lobe UI 6 components and project conventions; use when building or migrating React UI.
+globs: "**/*.{tsx,ts}"
+alwaysApply: false
+---
+
+# Lobe UI
+
+Before implementation, read [llms.txt](https://ui.lobehub.com/llms.txt) and [skills.md](https://ui.lobehub.com/skills.md), then read the target component documentation. Confirm the installed `@lobehub/ui` version and local declaration before choosing props or event signatures. Never infer an API from antd.
+
+## Project conventions
+
+- Prefer direct imports from the public `@lobehub/ui` entry point. Use `@lobehub/ui/form` for `useForm`, `Form` and `Form.Field`; use `@pure/ui` only for project-specific components and stable capabilities.
+- Do not add thin re-export wrappers for Lobe UI components. Keep native controls when they are required for semantic or browser behavior.
+- Use Standard Schema validation with FormKit. Shared step forms keep one instance and explicitly switch schemas and submission handlers. Reset conditional admin fields when opening and send only fields accepted by the API.
+- Use `toast` for status messages, `confirmModal` for confirmations and `createModal` for custom or detailed content. The shared `ModalHost` and `ToastHost` are mounted in `src/layout/ThemeProviders.tsx`.
+- Keep the application theme boundary in `src/layout/ThemeProviders.tsx`; do not add a second Provider or static feedback bridge.
+- Prefer Tailwind for layout. Use component `classNames` / `styles` slots or documented `lobe-*` stable classes for customization; complex styles may use `createStaticStyles` from `@lobehub/ui`.
+- Do not add antd, antd-style, `@ant-design/*`, `.ant-*` selectors or legacy antd Provider configuration.
+
+Full component rules: [`docs/development/styling/lobe-ui-guidelines.md`](../../docs/development/styling/lobe-ui-guidelines.md).

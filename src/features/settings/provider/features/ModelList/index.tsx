@@ -2,9 +2,9 @@
 
 import { DEFAULT_MODEL_PROVIDER_LIST, getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
-import { ActionIcon, confirmModal, Flex, SortableList, Tabs } from '@pure/ui'
+import { ActionIcon, Flex, SortableList, Tabs } from '@pure/ui'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
-import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
+import { confirmModal, toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { ArrowDownUp, Eye, EyeOff } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -447,7 +447,7 @@ interface ModelSectionHeaderProps {
   onToggleSort?: () => void
 }
 
-// 保留 createStaticStyles：完整的 Tailwind className 会超过 120 字符，且颜色来自 antd 主题。
+// 保留 createStaticStyles：完整的 Tailwind className 会超过 120 字符，颜色来自 Lobe UI 主题。
 const styles = createStaticStyles(({ css }) => ({
   sectionHeader: css`
     display: flex;

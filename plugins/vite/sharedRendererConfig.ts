@@ -27,11 +27,6 @@ function sharedManualChunks(id: string): string | undefined {
   // Keep that route-specific data out of the generic shared vendor chunks.
   if (isNodePackage(id, '@primer/octicons')) return 'vendor-octicons'
 
-  // antd：从 eager 主入口拆出，独立可缓存 vendor chunk。
-  // antd 本就被 ThemeProviders eager 引用，拆出后主入口骨架降至 ~65kB，
-  // 且 antd 版本稳定时跨部署可复用缓存。
-  if (isNodePackage(id, 'antd')) return 'vendor-antd'
-
   // 注意：shiki / mermaid / katex / Markdown 渲染器仅被 chat 懒加载路由使用，
   // 不可用 codeSplitting.groups 手动命名分包 —— rolldown 会将命名 chunk 全部
   // modulepreload（eager），导致首屏额外加载 ~2.3MB。保持 rolldown 默认拆分即可懒加载。
@@ -152,7 +147,6 @@ export const sharedOptimizeDeps = {
     'react-dom/client',
     'react-router',
     'react-router/dom',
-    'antd',
     '@lobehub/ui',
     '@lobehub/ui > @emotion/react',
     'zustand',

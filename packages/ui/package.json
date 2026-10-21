@@ -42,7 +42,6 @@
     "./SortableList": "./src/SortableList/index.ts",
     "./Tabs": "./src/Tabs/index.ts",
     "./Text": "./src/Text/index.ts",
-    "./ThemeProvider": "./src/ThemeProvider/index.ts",
     "./Tooltip": "./src/Tooltip/index.ts",
     "./TypewriterEffect": "./src/TypewriterEffect/index.ts",
     "./icons": "./src/icons/index.ts"

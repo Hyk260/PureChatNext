@@ -1,14 +1,13 @@
 'use client'
 
 import { Center, Text } from '@pure/ui'
-import { Empty } from 'antd'
+import { Empty } from '@lobehub/ui'
 import { memo } from 'react'
 
 const ProviderEmpty = memo(() => {
   return (
     <Center height='100%' style={{ minHeight: '50vh' }} width='100%'>
       <Empty
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
         description={
           <>
             <Text strong>暂无模型服务商</Text>

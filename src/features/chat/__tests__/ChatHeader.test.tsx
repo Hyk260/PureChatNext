@@ -84,11 +84,9 @@ vi.mock('@lobehub/ui', async (importOriginal) => ({
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
 }))
 
-vi.mock('@/components/AntdStaticMethods', () => ({
-  useApp: () => ({
-    message: { error: mocks.error, success: mocks.success },
-    modal: { confirm: mocks.confirm },
-  }),
+vi.mock('@lobehub/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@lobehub/ui')>()),
+  toast: Object.assign(vi.fn(), { error: mocks.error, success: mocks.success }),
 }))
 
 vi.mock('@/features/chat/store/useChatUiStore', () => ({

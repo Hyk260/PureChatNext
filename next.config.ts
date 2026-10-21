@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   experimental: {
-    optimizePackageImports: ['@ant-design/icons', '@lobehub/icons', '@lobehub/ui', 'antd', 'lodash-es', 'lucide-react'],
+    optimizePackageImports: ['@lobehub/icons', '@lobehub/ui', 'lodash-es', 'lucide-react'],
     webVitalsAttribution: ['CLS', 'LCP'],
   },
   logging: {

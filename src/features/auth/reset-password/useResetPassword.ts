@@ -1,7 +1,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
-import { message } from '@/components/AntdStaticMethods'
+import { toast } from '@lobehub/ui'
 import { resetPassword } from '@/libs/better-auth/client'
 
 export interface ResetPasswordFormValues {
@@ -19,7 +19,7 @@ export const useResetPassword = () => {
 
   const handleResetPassword = async (values: ResetPasswordFormValues) => {
     if (!token) {
-      message.error('重置链接无效或已过期，请重新申请')
+      toast.error('重置链接无效或已过期，请重新申请')
       return
     }
 
@@ -32,16 +32,16 @@ export const useResetPassword = () => {
       })
 
       if (error) {
-        message.error(error.message ?? '重置密码失败，请重试')
+        toast.error(error.message ?? '重置密码失败，请重试')
         return
       }
 
-      message.success('密码已重置，请使用新密码登录')
+      toast.success('密码已重置，请使用新密码登录')
       const params = new URLSearchParams()
       if (email) params.set('email', email)
       router.push(params.size > 0 ? `/signin?${params.toString()}` : '/signin')
     } catch {
-      message.error('重置密码失败，请重试')
+      toast.error('重置密码失败，请重试')
     } finally {
       setLoading(false)
     }

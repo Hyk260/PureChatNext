@@ -43,10 +43,17 @@ describe('webRouter.config smoke', () => {
     expect(source).toMatch(/path:\s*'dev'/)
   })
 
+  it('exposes the 404 preview route only in development', () => {
+    const devOnlyRoutes = source.split('...(import.meta.env.DEV')[1]?.split('// —— 兜底路由')[0]
+
+    expect(devOnlyRoutes).toContain("path: '__dev/404-preview'")
+    expect(devOnlyRoutes).toContain('<NotFound />')
+  })
+
   it('exposes the desktop authorization page as a dev test route', () => {
     const devRoutes = source
-      .split('// —— Dev (dev-only; production can 404 later) ——')[1]
-      ?.split('// —— Fallback ——')[0]
+      .split('// —— 开发工具')[1]
+      ?.split('// —— 兜底路由')[0]
 
     expect(devRoutes).toContain("path: 'desktop-authorize'")
     expect(devRoutes).toContain("import('@/features/desktop/DesktopAuthorizePage')")
@@ -54,8 +61,8 @@ describe('webRouter.config smoke', () => {
 
   it('exposes Context Window in the dev preview route and navigation', () => {
     const devRoutes = source
-      .split('// —— Dev (dev-only; production can 404 later) ——')[1]
-      ?.split('// —— Fallback ——')[0]
+      .split('// —— 开发工具')[1]
+      ?.split('// —— 兜底路由')[0]
     const navigationPath = path.resolve(path.dirname(configPath), '../../const/frontend-routes.ts')
     const navigationSource = readFileSync(navigationPath, 'utf-8')
 

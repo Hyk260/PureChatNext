@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, Button, Icon, Text, Tooltip, SortableList, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, createModal } from '@lobehub/ui'
 import { ArrowDownToLine, Eye, EyeOff, PinIcon, RotateCcw } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
@@ -14,7 +14,6 @@ import {
 } from '@/const/home/nav'
 import { DEFAULT_HIDDEN_SIDEBAR_SECTIONS } from '@/features/home/store/sidebarDefaults'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
-import { modal } from '@/components/AntdStaticMethods'
 
 const styles = createStaticStyles(({ css }) => ({
   accordionGroup: css`
@@ -230,10 +229,9 @@ const CustomizeSidebarContent = memo<CustomizeSidebarContentProps>(({ close }) =
 CustomizeSidebarContent.displayName = 'CustomizeSidebarContent'
 
 export const openCustomizeSidebarModal = () => {
-  const instance = modal.info({
+  const instance = createModal({
     content: <CustomizeSidebarContent close={() => instance.destroy()} />,
     footer: null,
-    icon: null,
     maskClosable: true,
     title: '自定义侧边栏',
     width: 360,

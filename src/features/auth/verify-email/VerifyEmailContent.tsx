@@ -1,6 +1,6 @@
 'use client'
 
-import { Input } from 'antd'
+import { InputOTP } from '@lobehub/ui'
 import { Block, Button, Text, Flex } from '@pure/ui'
 import { RefreshCw } from 'lucide-react'
 
@@ -37,26 +37,18 @@ const VerifyEmailOtpContent = ({ email, callbackUrl, mode }: VerifyEmailModeCont
   return (
     <Flex className='flex-col gap-4'>
       <Block padding={24}>
-        <Text className='text-center'>
-          验证码将在 {expirationText} 后过期；如未收到，请检查垃圾邮件文件夹。
-        </Text>
+        <Text className='text-center'>验证码将在 {expirationText} 后过期；如未收到，请检查垃圾邮件文件夹。</Text>
       </Block>
 
       <Flex className='flex-col-center'>
-        <Input.OTP length={6} size='large' value={otp} onChange={setOtp} />
+        <InputOTP length={6} size='large' value={otp} onChange={setOtp} />
       </Flex>
 
       <Button block loading={verifying} onClick={handleVerify} size='large' type='primary'>
         验证邮箱
       </Button>
 
-      <Button
-        block
-        loading={resending}
-        onClick={handleResend}
-        size='large'
-        type='default'
-      >
+      <Button block loading={resending} onClick={handleResend} size='large' type='default'>
         重新发送验证码
       </Button>
     </Flex>

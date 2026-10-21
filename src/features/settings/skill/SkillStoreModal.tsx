@@ -1,10 +1,8 @@
 'use client'
 
-
-import { toast } from '@lobehub/ui'
+import { toast, Pagination, Segmented } from '@lobehub/ui'
 import { ActionIcon, Avatar, Block, Button, DropdownMenu, Empty, Flex, Grid, Modal, SearchBar, Text } from '@pure/ui'
 import type { DropdownItem } from '@pure/ui'
-import { Pagination, Segmented } from 'antd'
 import { Box, Ellipsis, Loader2, Plus } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 

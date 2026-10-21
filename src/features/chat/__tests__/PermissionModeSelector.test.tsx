@@ -64,10 +64,6 @@ vi.mock('@lobehub/ui', async (importOriginal) => ({
   cssVar: new Proxy({}, { get: (_, key) => String(key) }),
 }))
 
-vi.mock('@/components/AntdStaticMethods', () => ({
-  useApp: () => ({ message: mocks.message }),
-}))
-
 vi.mock('@/types/desktop', () => ({
   getDesktopApi: () => ({
     chooseDirectory: mocks.chooseDirectory,

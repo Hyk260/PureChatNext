@@ -3,7 +3,7 @@
 import type { HtmlPreviewProps } from '@pure/ui'
 import { ActionIcon, HtmlPreview, Modal } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import { Segmented } from 'antd'
+import { Segmented } from '@lobehub/ui'
 import { Copy, Download } from 'lucide-react'
 import { memo } from 'react'
 

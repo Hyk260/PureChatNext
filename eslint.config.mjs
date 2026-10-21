@@ -63,6 +63,18 @@ const restrictedSpaNavigationPaths = [
   },
 ]
 
+const legacyUiImportMessage = '本仓库统一使用 @lobehub/ui；不要重新引入 antd、antd-style 或 @ant-design/*。'
+const restrictedLegacyUiPaths = [
+  { message: legacyUiImportMessage, name: 'antd' },
+  { message: legacyUiImportMessage, name: 'antd-style' },
+]
+const restrictedLegacyUiPatterns = [
+  {
+    group: ['antd/*', 'antd-style/*', '@ant-design/*'],
+    message: legacyUiImportMessage,
+  },
+]
+
 /** components：允许 Analytics 读 @/envs/analytics（Next layout）；其余 server env 仍禁止。 */
 const restrictedServerEnvPathsExceptAnalytics = serverEnvModules
   .filter((name) => !name.endsWith('/analytics'))
@@ -135,6 +147,18 @@ const eslintConfig = defineConfig([
       'purechat/no-useless-event-arrow': 'error',
     },
   },
+  {
+    files: ['**/*.{cjs,js,mjs,mts,ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: restrictedLegacyUiPaths,
+          patterns: restrictedLegacyUiPatterns,
+        },
+      ],
+    },
+  },
   // Enforce: `import type { Foo }` + `import { Bar }` from 'pkg'（含 packages/**）
   {
     files: ['**/*.{ts,tsx}'],
@@ -164,8 +188,9 @@ const eslintConfig = defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          paths: [...restrictedServerEnvPaths, ...restrictedSpaNavigationPaths],
+          paths: [...restrictedLegacyUiPaths, ...restrictedServerEnvPaths, ...restrictedSpaNavigationPaths],
           patterns: [
+            ...restrictedLegacyUiPatterns,
             {
               group: ['@/envs/*', '@pure/env/*'],
               message: serverEnvImportMessage,
@@ -183,8 +208,9 @@ const eslintConfig = defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          paths: [...restrictedServerEnvPaths, ...restrictedSpaNavigationPaths],
+          paths: [...restrictedLegacyUiPaths, ...restrictedServerEnvPaths, ...restrictedSpaNavigationPaths],
           patterns: [
+            ...restrictedLegacyUiPatterns,
             {
               group: ['@/envs/*', '@pure/env/*'],
               message: serverEnvImportMessage,
@@ -201,7 +227,8 @@ const eslintConfig = defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          paths: [...restrictedServerEnvPathsExceptAnalytics, ...restrictedSpaNavigationPaths],
+          paths: [...restrictedLegacyUiPaths, ...restrictedServerEnvPathsExceptAnalytics, ...restrictedSpaNavigationPaths],
+          patterns: restrictedLegacyUiPatterns,
         },
       ],
     },

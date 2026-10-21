@@ -1,4 +1,4 @@
-import { Segmented } from 'antd'
+import { Segmented } from '@lobehub/ui'
 import {
   Clipboard,
   Code2,

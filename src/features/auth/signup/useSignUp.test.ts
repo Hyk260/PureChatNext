@@ -12,8 +12,9 @@ const mocks = vi.hoisted(() => ({
   warning: vi.fn(),
 }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: mocks.push }), useSearchParams: () => mocks.params }))
-vi.mock('@/components/AntdStaticMethods', () => ({
-  message: { error: vi.fn(), info: vi.fn(), warning: mocks.warning },
+vi.mock('@lobehub/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@lobehub/ui')>()),
+  toast: Object.assign(vi.fn(), { error: vi.fn(), info: vi.fn(), warning: mocks.warning }),
 }))
 vi.mock('@/libs/better-auth/client', () => ({
   checkUserByEmail: mocks.check,

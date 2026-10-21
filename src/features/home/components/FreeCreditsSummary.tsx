@@ -1,7 +1,6 @@
 'use client'
 
-import { Progress } from 'antd'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { Progress, createStaticStyles, cssVar } from '@lobehub/ui'
 import { memo } from 'react'
 import useSWR from 'swr'
 
@@ -66,7 +65,7 @@ const FreeCreditsSummary = memo<{ onClick?: () => void }>(({ onClick }) => {
         <Text type='secondary'>积分</Text>
         <Flex className='items-center gap-2.5'>
           <Text className={styles.value}>{value}</Text>
-          <Progress percent={percent} showInfo={false} size={16} strokeWidth={12} type='circle' />
+          <Progress percent={percent} showInfo={false} size={16} type='circle' />
         </Flex>
       </Flex>
     </Link>

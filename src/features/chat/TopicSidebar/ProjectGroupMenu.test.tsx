@@ -6,15 +6,12 @@ const mocks = vi.hoisted(() => ({
   confirmModal: vi.fn(),
   deleteProject: vi.fn(),
   listProjects: vi.fn(),
-  message: { error: vi.fn(), success: vi.fn() },
+  toastError: vi.fn(),
   openPath: vi.fn(),
 }))
 
 vi.mock('@pure/ui', () => ({
-  ActionIcon: ({
-    title,
-    ...props
-  }: React.ComponentProps<'button'> & { icon?: unknown; title?: string }) => (
+  ActionIcon: ({ title, ...props }: React.ComponentProps<'button'> & { icon?: unknown; title?: string }) => (
     <button type='button' title={title} {...props} />
   ),
   DropdownMenu: ({
@@ -34,11 +31,7 @@ vi.mock('@pure/ui', () => ({
         : children}
       {open
         ? items?.map((item) => (
-            <button
-              key={String(item.key)}
-              type='button'
-              onClick={() => (item.onClick as (() => void) | undefined)?.()}
-            >
+            <button key={String(item.key)} type='button' onClick={() => (item.onClick as (() => void) | undefined)?.()}>
               {item.label as React.ReactNode}
             </button>
           ))
@@ -49,8 +42,9 @@ vi.mock('@pure/ui', () => ({
   confirmModal: mocks.confirmModal,
 }))
 
-vi.mock('@/components/AntdStaticMethods', () => ({
-  useApp: () => ({ message: mocks.message }),
+vi.mock('@lobehub/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@lobehub/ui')>()),
+  toast: Object.assign(vi.fn(), { error: mocks.toastError }),
 }))
 
 vi.mock('@/types/desktop', () => ({

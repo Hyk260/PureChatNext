@@ -1,4 +1,4 @@
-import { confirmModal } from '@pure/ui'
+import { confirmModal } from '@lobehub/ui'
 
 export async function deleteUserSkill(skillId: string) {
   const response = await fetch(`/api/user/skills/${encodeURIComponent(skillId)}`, { method: 'DELETE' })

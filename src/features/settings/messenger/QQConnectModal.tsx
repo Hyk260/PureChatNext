@@ -1,12 +1,9 @@
 'use client'
 
-import { Button as AntButton, QRCode, Radio } from 'antd'
-import { Spin } from '@lobehub/ui'
+import { Button as LobeButton, createModal, QRCode, RadioGroup, Spin } from '@lobehub/ui'
 import { Button, Flex, Input, InputPassword, Select, Text } from '@pure/ui'
 import { LinkIcon, RefreshCw } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-
-import { modal } from '@/components/AntdStaticMethods'
 
 import { PlatformAvatar } from './PlatformAvatar'
 import {
@@ -191,15 +188,16 @@ const QQConnectContent = memo<QQConnectContentProps>(
     return (
       <Flex className='flex-col gap-[18px] py-1'>
         <Text type='secondary'>选择连接方式，将当前助手绑定到 QQ 机器人。</Text>
-        <Radio.Group value={mode} onChange={(event) => setMode(event.target.value as ConnectMode)}>
-          <Radio disabled={!gatewaySupported} value='qr'>
-            扫码绑定
-          </Radio>
-          <Radio disabled={!gatewaySupported} value='websocket'>
-            WebSocket 长连接
-          </Radio>
-          <Radio value='webhook'>使用 URL 回调</Radio>
-        </Radio.Group>
+        <RadioGroup
+          horizontal={false}
+          options={[
+            { disabled: !gatewaySupported, label: '扫码绑定', value: 'qr' },
+            { disabled: !gatewaySupported, label: 'WebSocket 长连接', value: 'websocket' },
+            { label: '使用 URL 回调', value: 'webhook' },
+          ]}
+          value={mode}
+          onChange={(value) => setMode(value as ConnectMode)}
+        />
 
         {!gatewaySupported && (
           <Text type='secondary'>当前部署仅支持 URL 回调。扫码和 WebSocket 需要本地或 Docker 单实例环境。</Text>
@@ -237,17 +235,19 @@ const QQConnectContent = memo<QQConnectContentProps>(
                   value={selectedAppId}
                   onChange={setSelectedAppId}
                 />
-                <AntButton block loading={loading} type='primary' onClick={handleSelection}>
+                <LobeButton block loading={loading} type='primary' onClick={handleSelection}>
                   连接所选机器人
-                </AntButton>
+                </LobeButton>
               </Flex>
             )}
             {error && (
               <Flex className='flex-col-center'>
-                <Text className='text-center' type='danger'>{error}</Text>
-                <AntButton icon={<RefreshCw size={16} />} onClick={startQr}>
+                <Text className='text-center' type='danger'>
+                  {error}
+                </Text>
+                <LobeButton icon={<RefreshCw size={16} />} onClick={startQr}>
                   重新获取二维码
-                </AntButton>
+                </LobeButton>
               </Flex>
             )}
           </Flex>
@@ -266,10 +266,10 @@ const QQConnectContent = memo<QQConnectContentProps>(
             </Text>
             {error && <Text type='danger'>{error}</Text>}
             <Flex className='justify-end gap-2'>
-              <AntButton onClick={close}>取消</AntButton>
-              <AntButton loading={loading} type='primary' onClick={handleManualBind}>
+              <LobeButton onClick={close}>取消</LobeButton>
+              <LobeButton loading={loading} type='primary' onClick={handleManualBind}>
                 注册
-              </AntButton>
+              </LobeButton>
             </Flex>
           </Flex>
         )}
@@ -281,11 +281,10 @@ const QQConnectContent = memo<QQConnectContentProps>(
 QQConnectContent.displayName = 'QQConnectContent'
 
 export function openQQConnectModal(props: Omit<QQConnectContentProps, 'close'>) {
-  const instance = modal.info({
+  const instance = createModal({
     content: <QQConnectContent {...props} close={() => instance.destroy()} />,
     footer: null,
-    icon: null,
-    mask: { closable: true },
+    maskClosable: true,
     title: '注册 QQ 通道',
     width: 620,
   })

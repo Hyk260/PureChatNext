@@ -253,7 +253,7 @@ className={`${styles.row} ${active ? styles.rowActive : ''} ${disabled ? styles.
 className={cx(styles.row, active && styles.rowActive, disabled && styles.rowDisabled)}
 ```
 
-本仓库 CSS modules / antd-style 场景常见 `cx`。布尔为 false 时 `&&` 得到 falsy，由 `cx` 忽略即可。
+本仓库样式组合使用 `cx`。布尔为 false 时 `&&` 得到 falsy，由 `cx` 忽略即可。
 
 ---
 

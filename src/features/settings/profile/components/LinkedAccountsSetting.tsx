@@ -1,9 +1,8 @@
 'use client'
 
-
-import { toast } from '@lobehub/ui'
+import { confirmModal, toast } from '@lobehub/ui'
 import AuthIcons from '@/components/AuthIcons'
-import { ActionIcon, confirmModal, DropdownMenu, Text, Flex } from '@pure/ui'
+import { ActionIcon, DropdownMenu, Text, Flex } from '@pure/ui'
 import type { DropdownItem } from '@pure/ui'
 import { ArrowRight, Plus, Unlink } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'

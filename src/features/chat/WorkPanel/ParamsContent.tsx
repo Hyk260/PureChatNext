@@ -1,8 +1,7 @@
 'use client'
 
 import { Text, Flex } from '@pure/ui'
-import { Slider } from 'antd'
-import { Switch } from '@lobehub/ui'
+import { Slider, Switch } from '@lobehub/ui'
 import { memo } from 'react'
 
 import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'

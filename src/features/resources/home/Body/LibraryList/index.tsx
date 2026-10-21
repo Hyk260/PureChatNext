@@ -1,8 +1,7 @@
 'use client'
 
-
-import { toast } from '@lobehub/ui'
-import { ActionIcon, Button, confirmModal, Text, Flex } from '@pure/ui'
+import { confirmModal, toast } from '@lobehub/ui'
+import { ActionIcon, Button, Text, Flex } from '@pure/ui'
 import { Plus, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'

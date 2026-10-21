@@ -1,6 +1,7 @@
 'use client'
 
-import { ActionIcon, confirmModal, DropdownMenu, Icon } from '@pure/ui'
+import { confirmModal } from '@lobehub/ui'
+import { ActionIcon, DropdownMenu, Icon } from '@pure/ui'
 import type { DropdownItem } from '@pure/ui'
 import { Check, Hash, MoreHorizontal, Trash2 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'

@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { message } from '@/components/AntdStaticMethods'
+import { toast } from '@lobehub/ui'
 import { emailOtp, sendVerificationEmail } from '@/libs/better-auth/client'
 import { formatExpirationText } from '@/libs/better-auth/email-templates/utils/format-expiration-text'
 import { OTP_EXPIRES_IN } from '@/libs/better-auth/shared'
@@ -23,7 +23,7 @@ export const useVerifyEmail = ({ email, callbackUrl, mode }: UseVerifyEmailParam
 
   const sendOtp = useCallback(async () => {
     if (!email) {
-      message.error('缺少邮箱地址，请返回登录页重试')
+      toast.error('缺少邮箱地址，请返回登录页重试')
       return false
     }
 
@@ -36,18 +36,18 @@ export const useVerifyEmail = ({ email, callbackUrl, mode }: UseVerifyEmailParam
 
       if (result.error) {
         if (result.error.status === 429 && result.error.statusText === 'Too Many Requests') {
-          message.error('发送验证码过于频繁，请稍后重试')
+          toast.error('发送验证码过于频繁，请稍后重试')
           return false
         }
-        message.error(result.error.message || '发送验证码失败，请稍后重试')
+        toast.error(result.error.message || '发送验证码失败，请稍后重试')
         return false
       }
 
-      message.success('验证码已发送，请查收邮箱')
+      toast.success('验证码已发送，请查收邮箱')
       return true
     } catch (error) {
       console.error('Error sending verification OTP:', error)
-      message.error('发送验证码失败，请稍后重试')
+      toast.error('发送验证码失败，请稍后重试')
       return false
     } finally {
       setSending(false)
@@ -56,7 +56,7 @@ export const useVerifyEmail = ({ email, callbackUrl, mode }: UseVerifyEmailParam
 
   const resendLinkEmail = useCallback(async () => {
     if (!email) {
-      message.error('缺少邮箱地址，请返回登录页重试')
+      toast.error('缺少邮箱地址，请返回登录页重试')
       return false
     }
 
@@ -68,15 +68,15 @@ export const useVerifyEmail = ({ email, callbackUrl, mode }: UseVerifyEmailParam
       })
 
       if (result.error) {
-        message.error(result.error.message || '发送验证邮件失败，请稍后重试')
+        toast.error(result.error.message || '发送验证邮件失败，请稍后重试')
         return false
       }
 
-      message.success('验证邮件已重新发送，请查收邮箱')
+      toast.success('验证邮件已重新发送，请查收邮箱')
       return true
     } catch (error) {
       console.error('Error resending verification email:', error)
-      message.error('发送验证邮件失败，请稍后重试')
+      toast.error('发送验证邮件失败，请稍后重试')
       return false
     } finally {
       setSending(false)
@@ -92,12 +92,12 @@ export const useVerifyEmail = ({ email, callbackUrl, mode }: UseVerifyEmailParam
 
   const handleVerify = async () => {
     if (!email) {
-      message.error('缺少邮箱地址，请返回登录页重试')
+      toast.error('缺少邮箱地址，请返回登录页重试')
       return
     }
 
     if (otp.length !== 6) {
-      message.error('请输入 6 位验证码')
+      toast.error('请输入 6 位验证码')
       return
     }
 
@@ -106,15 +106,15 @@ export const useVerifyEmail = ({ email, callbackUrl, mode }: UseVerifyEmailParam
       const result = await emailOtp.verifyEmail({ email, otp })
 
       if (result.error) {
-        message.error(result.error.message || '验证失败，请检查验证码后重试')
+        toast.error(result.error.message || '验证失败，请检查验证码后重试')
         return
       }
 
-      message.success('邮箱验证成功')
+      toast.success('邮箱验证成功')
       router.push(resolveCallbackUrl(callbackUrl))
     } catch (error) {
       console.error('Error verifying email OTP:', error)
-      message.error('验证失败，请稍后重试')
+      toast.error('验证失败，请稍后重试')
     } finally {
       setVerifying(false)
     }

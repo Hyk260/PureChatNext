@@ -1,11 +1,8 @@
 'use client'
 
-import { ConfigProvider, setLobeTheme } from '@pure/ui/ThemeProvider'
 import { ModalHost } from '@pure/ui/ModalHost'
+import { ConfigProvider, createLobeToken, setLobeTheme, ToastHost } from '@lobehub/ui'
 import { zhCn as lobeZhCn } from '@lobehub/ui/i18n'
-import { createLobeToken, ToastHost } from '@lobehub/ui'
-import { App as AntdApp, ConfigProvider as AntdConfigProvider, theme as antdTheme } from 'antd'
-import zhCN from 'antd/locale/zh_CN'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import { LazyMotion, domAnimation } from 'motion/react'
@@ -14,7 +11,6 @@ import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import type { PropsWithChildren } from 'react'
 import { localStg } from '@pure/utils/storage'
 
-import AntdStaticMethods from '@/components/AntdStaticMethods'
 import { useSystemAppearance } from '@/hooks/useSystemAppearance'
 import {
   parseStoredThemeMode,
@@ -33,11 +29,6 @@ import {
 } from '@/layout/themeColor'
 
 dayjs.locale('zh-cn')
-
-const NEUTRAL_INPUT_FOCUS_TOKENS = {
-  activeBorderColor: 'var(--input-focus-border-color)',
-  activeShadow: 'var(--input-focus-shadow)',
-}
 
 /**
  * Client theme stack shared by Vite SPA AppLayer (and legacy Next root if needed).
@@ -88,31 +79,13 @@ const ThemeProviders = ({ children }: PropsWithChildren) => {
   return (
     <LazyMotion features={domAnimation}>
       <ConfigProvider locale='zh-CN' resources={lobeZhCn} motion={m}>
-        <AntdConfigProvider
-          locale={zhCN}
-          theme={{
-            algorithm: appearance === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
-            cssVar: { key: 'pure-vars' },
-            components: {
-              Input: NEUTRAL_INPUT_FOCUS_TOKENS,
-              InputNumber: NEUTRAL_INPUT_FOCUS_TOKENS,
-            },
-            token: { colorPrimary: resolvedThemeColor },
-          }}
-        >
-          <AntdApp className='h-full'>
-            <AntdStaticMethods />
-            <ThemeModeContext value={{ themeMode, setThemeMode: handleThemeModeChange }}>
-              <ModalHost />
-              <ToastHost />
-              <ThemeColorContext.Provider
-                value={{ themeColor, resolvedThemeColor, setThemeColor: handleThemeColorChange }}
-              >
-                {children}
-              </ThemeColorContext.Provider>
-            </ThemeModeContext>
-          </AntdApp>
-        </AntdConfigProvider>
+        <ThemeModeContext value={{ themeMode, setThemeMode: handleThemeModeChange }}>
+          <ModalHost />
+          <ToastHost />
+          <ThemeColorContext.Provider value={{ themeColor, resolvedThemeColor, setThemeColor: handleThemeColorChange }}>
+            {children}
+          </ThemeColorContext.Provider>
+        </ThemeModeContext>
       </ConfigProvider>
     </LazyMotion>
   )

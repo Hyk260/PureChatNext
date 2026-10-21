@@ -3,10 +3,9 @@
 import { CircleCheck } from 'lucide-react'
 import { Alert, Button, Flex, ModelIcon, Select } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
-import { useApp } from '@/components/AntdStaticMethods'
+import { createModal, createStaticStyles, cssVar } from '@lobehub/ui'
 import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { memo, useEffect, useMemo, useState } from 'react'
 
 import { getAiModel } from '@pure/model-bank'
@@ -31,7 +30,6 @@ interface CheckerProps {
 }
 
 const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
-  const { modal } = useApp()
   const config = useProviderConfigStore((s) => s.configs[provider])
   const storedCustomProviders = useProviderConfigStore((s) => s.customProviders)
   const registry = useCustomProviderRegistry()
@@ -43,7 +41,10 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
   const hasVaultKey = Boolean(secretForProvider(secrets, provider))
   const models = useMemo(() => config?.models ?? [], [config?.models])
   const availableModelIds = useMemo(
-    () => models.filter((model) => getAiModel(provider as ModelProviderId, model.id)?.enabled !== false).map((model) => model.id),
+    () =>
+      models
+        .filter((model) => getAiModel(provider as ModelProviderId, model.id)?.enabled !== false)
+        .map((model) => model.id),
     [models, provider]
   )
   const persistedCheckModel = useMemo(() => {
@@ -77,9 +78,9 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
     if (disabled) return
     const hasSavedKey = ensureSecret ? await ensureSecret() : hasVaultKey
     if (!hasSavedKey) {
-      modal.error({
+      createModal({
         title: '缺少 API Key',
-        content: `尚未保存 ${meta.name} API Key。请先填写，离开输入框后会自动保存。`,
+        content: <Alert title={`尚未保存 ${meta.name} API Key。请先填写，离开输入框后会自动保存。`} type='error' />,
       })
       return
     }
@@ -90,12 +91,18 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
 
     try {
       const baseURL = config?.baseURL.trim() ?? ''
-      const response = await apiFetch('/api/providers/check', jsonInit({
-        baseURL: baseURL || undefined,
-        model: checkModel,
-        provider,
-        timeoutMs: DEFAULT_PROVIDER_CHECK_TIMEOUT_MS,
-      }, { method: 'POST' }))
+      const response = await apiFetch(
+        '/api/providers/check',
+        jsonInit(
+          {
+            baseURL: baseURL || undefined,
+            model: checkModel,
+            provider,
+            timeoutMs: DEFAULT_PROVIDER_CHECK_TIMEOUT_MS,
+          },
+          { method: 'POST' }
+        )
+      )
 
       const json = (await response.json()) as {
         error?: { body?: unknown; message?: string }

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Segmented } from 'antd'
+import { Segmented } from '@lobehub/ui'
 import { Code2, FileJson, Globe2, Search } from 'lucide-react'
 
 import { Alert, Flex } from '@pure/ui'

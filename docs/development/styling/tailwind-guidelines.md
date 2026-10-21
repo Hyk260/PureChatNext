@@ -9,7 +9,7 @@ description: PureChatNext 的 Tailwind 优先样式规则、主题边界与 AI �
 
 ## 一句话规则
 
-新页面和业务功能优先复用 `@pure/ui` 的组件，Tailwind 负责布局与外观；格式化后单个静态 `className` 不得超过 120 字符。先复用 Tailwind 内置工具和 `utilities.css` 组合，仍然超限时必须改用 `createStaticStyles`。
+新页面和业务功能优先直接使用 `@lobehub/ui` 公开组件，Tailwind 负责布局与外观；`@pure/ui` 用于项目定制能力。格式化后单个静态 `className` 不得超过 120 字符。先复用 Tailwind 内置工具和 `utilities.css` 组合，仍然超限时必须改用 `createStaticStyles`。
 
 ## 选择方式
 
@@ -20,7 +20,7 @@ description: PureChatNext 的 Tailwind 优先样式规则、主题边界与 AI �
 | 格式化后静态 `className` 超过 120 字符 | `utilities.css` 或 `createStaticStyles` | 先复用稳定组合；仍超限则必须使用 `createStaticStyles` |
 | 多状态组合、复杂伪类、响应式或 container query | Tailwind 或 `createStaticStyles` | 以可读性和维护成本为准 |
 | 动画、keyframes、SVG 图形、滚动条、动态几何尺寸 | `createStaticStyles` | 允许保留，避免把动态值硬塞进 className |
-| `@pure/ui` / antd 组件内部 DOM 的定制 | 组件 API、token、`classNames` / `styles` | 不依赖不稳定的内部类名 |
+| `@lobehub/ui` / `@pure/ui` 组件内部 DOM 的定制 | 组件 API、token、`classNames` / `styles` | 使用公开语义槽位或稳定类名，不依赖未文档化内部类名 |
 | 主题变量 | 语义化 Tailwind token | 不要在业务 JSX 中散落硬编码颜色 |
 
 120 字符是硬限制，不以声明数量替代。即使只有两三项样式，只要包含动态计算值或复杂状态，也可以保留 `createStaticStyles`；即使全是简单样式，只要静态 `className` 在格式化后仍超过 120 字符，也必须迁移。
@@ -44,8 +44,8 @@ export const EmptyState = ({ title }: { title: string }) => (
 
 ### UI 组件优先（新页面与新功能）
 
-- 非语义布局容器优先使用 `Flex`，文字和标题优先使用 `Text`，普通操作优先使用 `Button` / `ActionIcon`，选择与输入优先使用 `Select` / `Input` / `TextArea`，统一从 `@pure/ui` 导入已有组件。
-- `Flex` 默认是 `div`，不支持 antd Flex 的 `align` / `justify` props；通过 `className` 设置布局。`Text` 使用 `as='h1'` / `as='h2'` / `as='p'` / `as='span'` 保留语义，优先通过 `fontSize`、`weight`、`type` 等现有 API 设置文字外观。
+- 组件优先从 `@lobehub/ui` 导入；只有需要项目定制行为时才从 `@pure/ui` 导入。非语义布局容器优先使用 `Flex`，文字优先使用 `Text`，普通操作使用 `Button` / `ActionIcon`，选择与输入使用 `Select` / `Input` / `TextArea`。
+- `@pure/ui` 的 `Flex` 默认是 `div`，布局通过 `className` 设置。`Text` 使用 `as='h1'` / `as='h2'` / `as='p'` / `as='span'` 保留语义，优先通过 `fontSize`、`weight`、`type` 等现有 API 设置文字外观。
 - `Button` 的视觉类型使用 `type`，表单提交使用 `htmlType='submit'`；`Select` 使用 `options` 和值回调，不沿用原生 select 的 `event.target.value`。
 - 保留 `main`、`section`、`header`、`nav`、`form`、`label`、`ul` / `li`、表格等必要原生语义。文件输入、IME / 自动高度受控编辑器、桌面窗口控制等依赖原生行为的特殊控件允许保留，不能为统一组件而破坏焦点、键盘、ref 或 DOM 结构。
 - 修改存量代码时先确认组件 API 和样式优先级，按功能域迁移；不要把所有原生标签机械替换为 `Flex` 或 `Text`。UI 组件负责交互、可访问性与主题，Tailwind 负责业务布局和外观。
@@ -109,8 +109,8 @@ const styles = createStaticStyles(({ css }) => ({
 
 - 业务组件优先使用主题语义：文字、次级文字、容器背景、边框、主色、错误色等。
 - Tailwind 只能使用 [`src/styles/globals.css`](../../../src/styles/globals.css) 中已经定义的语义 token；迁移时不要直接复制 dev 页面中的 `slate-*`、`cyan-*` 等展示色作为主应用 token。
-- Lobe UI v6 由 `@pure/ui/ThemeProvider` 暴露的 `ConfigProvider` 和 `setLobeTheme` 配置；全局入口加载 `theme.css`、`style.css` 和 `global.css`。主题模式由应用的 `useAppThemeMode` 保存，系统模式随系统外观变化。
-- `globals.css` 必须先声明 Tailwind 与 Lobe UI 的 cascade layer 顺序。保留直接使用的 antd 组件时，通过独立的 antd `ConfigProvider` 和 `App` 同步主题；`pure-vars` 仅是 antd CSS 变量作用域 key。
+- Lobe UI v6 由 `src/layout/ThemeProviders.tsx` 的单一 Provider 和 `setLobeTheme` 配置；全局入口加载 `theme.css`、`style.css` 和 `global.css`。主题模式由应用状态持久化，系统模式随系统外观变化。
+- `globals.css` 必须先声明 Tailwind 与 Lobe UI 的 cascade layer 顺序。业务代码直接从 `@lobehub/ui` 使用组件、语义 token 和稳定样式 API；不要新增第二套组件 Provider 或旧的 antd 主题桥接。
 - `createStaticStyles`、`cssVar`、`cx` 等样式工具统一从 `@lobehub/ui` 导入。`cssVar` 对应 `--lobe-*` 变量，例如 `cssVar.colorTextSecondary` 是 `var(--lobe-color-text-secondary)`，`cssVar.colorError` 是 `var(--lobe-color-error)`。
 - 组件需要尚未映射为 Tailwind 语义 token 的主题色时，优先在 `createStaticStyles` 中使用 `cssVar`。只有确认真实运行时变量并在浅色、深色主题下验证后，才可在 `globals.css` 的 `@theme inline` 中新增全局语义映射。
 - 不要把一次性 inline `style` 当成 Tailwind 的替代品。动态尺寸、动画延迟、滚动位置等运行时值仍可使用 `style`。
@@ -160,4 +160,4 @@ AI 创建或修改 React 组件时必须遵循：
 - [全局 Tailwind 入口](../../../src/styles/globals.css)
 - [语义化 Tailwind utilities](../../../src/styles/utilities.css)
 - [主题 Provider](../../../src/layout/ThemeProviders.tsx)
-- [UI 包主题桥接](../../../packages/ui/src/ThemeProvider/index.ts)
+- [Lobe UI 指南](lobe-ui-guidelines.md)

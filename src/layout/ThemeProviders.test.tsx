@@ -3,33 +3,28 @@ import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-  antdConfigProviderProps: null as Record<string, unknown> | null,
+  lobeTheme: null as Record<string, unknown> | null,
   dayjsLocale: null as string | null,
   configProviderProps: null as Record<string, unknown> | null,
-  zhCN: { locale: 'zh-cn' },
 }))
 
-vi.mock('@pure/ui/ThemeProvider', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@pure/ui/ThemeProvider')>()
+vi.mock('@lobehub/ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@lobehub/ui')>()
   return {
     ...actual,
     ConfigProvider: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => {
       mocks.configProviderProps = props
       return <>{children}</>
     },
+    ToastHost: () => null,
+    createLobeToken: ({ appearance }: { appearance: 'dark' | 'light' }) => ({
+      colorPrimary: appearance === 'dark' ? '#eeeeee' : '#222222',
+    }),
+    setLobeTheme: (theme: Record<string, unknown>) => {
+      mocks.lobeTheme = theme
+    },
   }
 })
-
-vi.mock('antd', () => ({
-  App: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
-  ConfigProvider: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => {
-    mocks.antdConfigProviderProps = props
-    return <>{children}</>
-  },
-  theme: { darkAlgorithm: 'dark', defaultAlgorithm: 'light' },
-}))
-
-vi.mock('antd/locale/zh_CN', () => ({ default: mocks.zhCN }))
 
 vi.mock('dayjs', () => ({
   default: {
@@ -51,7 +46,6 @@ vi.mock('motion/react', () => ({
 }))
 
 vi.mock('motion/react-m', () => ({}))
-vi.mock('@/components/AntdStaticMethods', () => ({ default: () => null }))
 
 import ThemeProviders from './ThemeProviders'
 import { useAppThemeMode } from './themeMode'
@@ -81,7 +75,7 @@ describe('ThemeProviders', () => {
     isDark = false
     listeners.clear()
     localStorage.clear()
-    mocks.antdConfigProviderProps = null
+    mocks.lobeTheme = null
     mocks.configProviderProps = null
     document.documentElement.removeAttribute('data-theme')
     document.documentElement.removeAttribute('data-primary-color')
@@ -104,15 +98,15 @@ describe('ThemeProviders', () => {
     vi.unstubAllGlobals()
   })
 
-  it('applies the Chinese antd locale globally', () => {
+  it('applies Chinese resources to Lobe UI and sets the dayjs locale', () => {
     render(<ThemeProviders>content</ThemeProviders>)
 
     expect(mocks.dayjsLocale).toBe('zh-cn')
-    expect(mocks.antdConfigProviderProps?.locale).toBe(mocks.zhCN)
     expect(mocks.configProviderProps?.locale).toBe('zh-CN')
+    expect(mocks.configProviderProps?.resources).toBeDefined()
   })
 
-  it('reads the stored mode and updates data-theme and storage when changed', () => {
+  it('reads the stored mode and updates Lobe UI appearance and storage when changed', () => {
     localStorage.setItem('theme', 'dark')
     render(
       <ThemeProviders>
@@ -121,27 +115,27 @@ describe('ThemeProviders', () => {
     )
 
     expect(screen.getByRole('button', { name: 'dark' })).toBeTruthy()
-    expect(document.documentElement.dataset.theme).toBe('dark')
+    expect(mocks.lobeTheme).toMatchObject({ appearance: 'dark' })
 
     fireEvent.click(screen.getByRole('button', { name: 'dark' }))
 
-    expect(document.documentElement.dataset.theme).toBe('light')
+    expect(mocks.lobeTheme).toMatchObject({ appearance: 'light' })
     expect(localStorage.getItem('theme')).toBe('light')
   })
 
-  it('updates auto mode when the system appearance changes', () => {
+  it('updates Lobe UI appearance when the system appearance changes', () => {
     render(<ThemeProviders>content</ThemeProviders>)
-    expect(document.documentElement.dataset.theme).toBe('light')
+    expect(mocks.lobeTheme).toMatchObject({ appearance: 'light' })
 
     isDark = true
     act(() => {
       for (const listener of listeners) listener(new Event('change'))
     })
 
-    expect(document.documentElement.dataset.theme).toBe('dark')
+    expect(mocks.lobeTheme).toMatchObject({ appearance: 'dark' })
   })
 
-  it('keeps Lobe and antd on the same persisted custom primary color', () => {
+  it('applies the persisted custom primary color to Lobe UI', () => {
     localStorage.setItem('theme', 'dark')
     localStorage.setItem('theme-color', '#EF4444')
     render(
@@ -150,18 +144,15 @@ describe('ThemeProviders', () => {
       </ThemeProviders>
     )
 
-    expect(document.documentElement.dataset.primaryColor).toBe('#ef4444')
-    expect(mocks.antdConfigProviderProps?.theme).toMatchObject({
-      algorithm: 'dark',
-      token: { colorPrimary: '#EF4444' },
-    })
+    expect(document.documentElement.style.getPropertyValue('--theme-primary')).toBe('#EF4444')
+    expect(mocks.lobeTheme).toMatchObject({ appearance: 'dark', primaryColor: '#EF4444' })
 
     fireEvent.click(screen.getByRole('button', { name: '蓝色' }))
 
-    expect(document.documentElement.dataset.primaryColor).toBe('#3b82f6')
+    expect(document.documentElement.style.getPropertyValue('--theme-primary')).toBe('#3B82F6')
     expect(document.documentElement.style.getPropertyValue('--theme-primary')).toBe('#3B82F6')
     expect(localStorage.getItem('theme-color')).toBe('#3B82F6')
-    expect(mocks.antdConfigProviderProps?.theme).toMatchObject({ token: { colorPrimary: '#3B82F6' } })
+    expect(mocks.lobeTheme).toMatchObject({ appearance: 'dark', primaryColor: '#3B82F6' })
   })
 
   it('clears custom color overrides and storage when restored to the default theme', () => {
@@ -171,22 +162,20 @@ describe('ThemeProviders', () => {
         <ThemeColorControl />
       </ThemeProviders>
     )
-    expect(document.documentElement.dataset.primaryColor).toBe('#ef4444')
+    expect(document.documentElement.style.getPropertyValue('--theme-primary')).toBe('#EF4444')
 
     fireEvent.click(screen.getByRole('button', { name: '默认颜色' }))
 
     expect(localStorage.getItem('theme-color')).toBeNull()
-    expect(document.documentElement.hasAttribute('data-primary-color')).toBe(false)
     expect(document.documentElement.style.getPropertyValue('--theme-primary')).toBe('')
     expect(document.documentElement.style.getPropertyValue('--theme-primary-foreground')).toBe('')
-    expect(mocks.antdConfigProviderProps?.theme).toMatchObject({ token: { colorPrimary: '#222222' } })
+    expect(mocks.lobeTheme).toMatchObject({ appearance: 'light', primaryColor: undefined })
 
     isDark = true
     act(() => {
       for (const listener of listeners) listener(new Event('change'))
     })
 
-    expect(document.documentElement.hasAttribute('data-primary-color')).toBe(false)
-    expect(mocks.antdConfigProviderProps?.theme).toMatchObject({ token: { colorPrimary: '#eeeeee' } })
+    expect(mocks.lobeTheme).toMatchObject({ appearance: 'dark', primaryColor: undefined })
   })
 })

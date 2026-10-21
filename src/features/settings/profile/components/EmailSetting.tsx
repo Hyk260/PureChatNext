@@ -1,14 +1,14 @@
 'use client'
 
-
 import { toast } from '@lobehub/ui'
-import { Form } from 'antd'
+import { Form, useForm } from '@lobehub/ui/form'
 import { Button, Input, Text, Modal, Flex } from '@pure/ui'
 import { useState } from 'react'
 
 import { changeEmail } from '@/libs/better-auth/client'
 
 import { SettingRow } from './SettingRow'
+import { changeEmailSchema } from '@/features/auth/authFormSchemas'
 
 interface EmailSettingProps {
   email: string | null
@@ -21,7 +21,11 @@ interface ChangeEmailFormValues {
 export function EmailSetting({ email }: EmailSettingProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [form] = Form.useForm<ChangeEmailFormValues>()
+  const form = useForm<ChangeEmailFormValues>({
+    initialValues: { newEmail: '' },
+    schema: changeEmailSchema,
+    onSubmit: (values) => handleSubmit(values),
+  })
 
   const handleSubmit = async (values: ChangeEmailFormValues) => {
     setLoading(true)
@@ -39,7 +43,7 @@ export function EmailSetting({ email }: EmailSettingProps) {
 
       toast.success('验证邮件已发送到新邮箱，请查收并完成验证')
       setOpen(false)
-      form.resetFields()
+      form.reset({ newEmail: '' })
     } catch {
       toast.error('修改邮箱失败')
     } finally {
@@ -66,25 +70,16 @@ export function EmailSetting({ email }: EmailSettingProps) {
         <Text className='mb-4 block' type='secondary'>
           验证邮件将发送到新邮箱地址，验证完成后邮箱才会更新。
         </Text>
-        <Form form={form} layout='vertical' onFinish={handleSubmit}>
-          <Form.Item
-            label='新邮箱'
-            name='newEmail'
-            rules={[
-              { required: true, message: '请输入新邮箱' },
-              { type: 'email', message: '请输入有效的邮箱地址' },
-            ]}
-          >
+        <Form form={form} layout='vertical'>
+          <Form.Field label='新邮箱' name='newEmail' required>
             <Input placeholder='new@example.com' type='email' />
-          </Form.Item>
-          <Form.Item className='mb-0!'>
-            <Flex className='justify-end gap-2'>
-              <Button onClick={() => setOpen(false)}>取消</Button>
-              <Button htmlType='submit' loading={loading} type='primary'>
-                确认
-              </Button>
-            </Flex>
-          </Form.Item>
+          </Form.Field>
+          <Flex className='justify-end gap-2'>
+            <Button onClick={() => setOpen(false)}>取消</Button>
+            <Button htmlType='submit' loading={loading} type='primary'>
+              确认
+            </Button>
+          </Flex>
         </Form>
       </Modal>
     </>

@@ -1,9 +1,7 @@
 'use client'
 
-
-import { toast } from '@lobehub/ui'
+import { toast, Drawer } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
-import { Drawer } from 'antd'
 import { Route } from 'lucide-react'
 import { memo, useState } from 'react'
 
@@ -59,7 +57,7 @@ const SidebarNav = memo(() => {
           onClose={() => setRouteNavOpen(false)}
           open={routeNavOpen}
           placement='left'
-          size={224}
+          width={224}
           title={
             <div>
               <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>页面导航</p>

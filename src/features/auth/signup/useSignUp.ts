@@ -1,7 +1,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
-import { message } from '@/components/AntdStaticMethods'
+import { toast } from '@lobehub/ui'
 import {
   checkUserByEmail,
   reclaimUnverifiedEmail,
@@ -63,7 +63,7 @@ export const useSignUp = () => {
       const existingUser = await checkUserByEmail(email)
       if (existingUser.exists) {
         if (existingUser.emailVerified) {
-          message.info('该邮箱已注册，请前往登录')
+          toast.info('该邮箱已注册，请前往登录')
           redirectToSignIn(router, searchParams, email)
           return
         }
@@ -85,17 +85,17 @@ export const useSignUp = () => {
         const signUpError = error as SignUpErrorLike
 
         if (isEmailDuplicateSignupError(signUpError)) {
-          message.info('该邮箱已注册，请前往登录')
+          toast.info('该邮箱已注册，请前往登录')
           redirectToSignIn(router, searchParams, email)
           return
         }
 
         if (signUpError.code === 'INVALID_EMAIL' || signUpError.message === 'Invalid email') {
-          message.error('请输入有效的邮箱地址')
+          toast.error('请输入有效的邮箱地址')
           return
         }
 
-        message.error(signUpError.message || '注册失败，请重试')
+        toast.error(signUpError.message || '注册失败，请重试')
         return
       }
 
@@ -108,9 +108,9 @@ export const useSignUp = () => {
         if (!config.enableEmailVerification && config.emailVerificationMode === 'link') {
           try {
             const verification = await sendVerificationEmail({ email, callbackURL: callbackUrl })
-            if (verification.error) message.warning('账号已创建，验证邮件发送失败，请在验证页重试')
+            if (verification.error) toast.warning('账号已创建，验证邮件发送失败，请在验证页重试')
           } catch {
-            message.warning('账号已创建，验证邮件发送失败，请在验证页重试')
+            toast.warning('账号已创建，验证邮件发送失败，请在验证页重试')
           }
         }
         router.push(`/verify-email?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`)
@@ -119,7 +119,7 @@ export const useSignUp = () => {
 
       router.push(callbackUrl)
     } catch {
-      message.error('注册失败，请重试')
+      toast.error('注册失败，请重试')
     } finally {
       setLoading(false)
     }

@@ -1,11 +1,12 @@
 'use client'
 
 import { Check, Copy, Download, Loader2, X } from 'lucide-react'
-import { Alert, Segmented } from 'antd'
+import { Alert, Segmented } from '@lobehub/ui'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { formatSize } from '@pure/utils/client'
 import { Flex, Button, Image, MaterialFileTypeIcon, Modal, Tag } from '@pure/ui'
+import type { ChannelExportMode } from './channelConversationExport'
 
 import SendButton from '@/features/chat/SendArea/SendButton'
 import { READ_FILE_API_PATH } from '@/features/admin/read-file/readFileModel'
@@ -36,17 +37,17 @@ export function StatusChip({ status }: { status?: string }) {
   )
 }
 
-type ConversationExportDialogProps<Message, Session, Mode extends string> = {
-  createExport: (mode: Mode, messages: Message[], session: Session) => unknown
+type ConversationExportDialogProps<Message, Session> = {
+  createExport: (mode: ChannelExportMode, messages: Message[], session: Session) => unknown
   createFilename: (session: Session) => string
-  exportMode: Mode
+  exportMode: ChannelExportMode
   messages: Message[]
   onClose: () => void
   session: Session
   title: string
 }
 
-export function ConversationExportDialog<Message, Session, Mode extends string>({
+export function ConversationExportDialog<Message, Session>({
   createExport,
   createFilename,
   exportMode,
@@ -54,8 +55,8 @@ export function ConversationExportDialog<Message, Session, Mode extends string>(
   onClose,
   session,
   title,
-}: ConversationExportDialogProps<Message, Session, Mode>) {
-  const [mode, setMode] = useState<Mode>(exportMode)
+}: ConversationExportDialogProps<Message, Session>) {
+  const [mode, setMode] = useState<ChannelExportMode>(exportMode)
   const [feedback, setFeedback] = useState<string | null>(null)
   const content = useMemo(
     () => JSON.stringify(createExport(mode, messages, session), null, 2),
@@ -112,7 +113,7 @@ export function ConversationExportDialog<Message, Session, Mode extends string>(
             </div>
             <div className='mt-0.5 truncate text-xs font-normal text-muted-foreground'>仅包含当前页面已加载的消息</div>
           </div>
-          <Segmented
+          <Segmented<ChannelExportMode>
             className='shrink-0'
             options={[
               { label: '完整 JSON', value: 'full' },
@@ -121,7 +122,7 @@ export function ConversationExportDialog<Message, Session, Mode extends string>(
             size='small'
             value={mode}
             onChange={(value) => {
-              setMode(value as Mode)
+              setMode(value)
               setFeedback(null)
             }}
           />

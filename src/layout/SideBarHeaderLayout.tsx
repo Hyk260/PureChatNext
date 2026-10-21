@@ -1,9 +1,8 @@
 'use client'
 
 import { ActionIcon, Icon, Text, Flex } from '@pure/ui'
-import { Breadcrumb } from 'antd'
-import type { BreadcrumbProps } from 'antd'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { Breadcrumb, createStaticStyles, cssVar } from '@lobehub/ui'
+import type { BreadcrumbProps } from '@lobehub/ui'
 import { ChevronRightIcon, HomeIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { memo } from 'react'
@@ -12,9 +11,23 @@ import type { MouseEvent, ReactNode } from 'react'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { getDesktopApi } from '@/types/desktop'
 
-const prefixCls = 'ant'
-
 const styles = createStaticStyles(({ css, cssVar: token }) => ({
+  breadcrumbItem: css`
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: ${token.colorTextDescription};
+
+    a,
+    button {
+      color: inherit;
+      text-decoration: none;
+
+      &:hover {
+        color: ${token.colorText};
+      }
+    }
+  `,
   breadcrumb: css`
     min-width: 0;
 
@@ -22,26 +35,6 @@ const styles = createStaticStyles(({ css, cssVar: token }) => ({
       align-items: center;
       flex-wrap: nowrap;
       white-space: nowrap;
-    }
-
-    .${prefixCls}-breadcrumb-separator {
-      margin-inline: 4px;
-    }
-
-    .${prefixCls}-breadcrumb-link {
-      display: flex !important;
-      align-items: center !important;
-      font-size: 12px;
-      color: ${token.colorTextDescription};
-    }
-
-    a.${prefixCls}-breadcrumb-link {
-      color: inherit;
-      text-decoration: none;
-
-      &:hover {
-        color: ${token.colorText};
-      }
     }
   `,
   container: css`
@@ -120,7 +113,9 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
       <Flex className='flex-col flex-1 min-w-0 px-1.5'>
         <Breadcrumb
           className={styles.breadcrumb}
+          classNames={{ item: styles.breadcrumbItem }}
           separator={<Icon color={cssVar.colorTextDescription} icon={ChevronRightIcon} size={12} />}
+          styles={{ separator: { marginInline: 4 } }}
           items={breadcrumbItems}
         />
       </Flex>

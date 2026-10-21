@@ -1,7 +1,7 @@
 'use client'
 
-import { ActionIcon, confirmModal, EditableText, SortableList } from '@pure/ui'
-import { toast, createStaticStyles } from '@lobehub/ui'
+import { ActionIcon, EditableText, SortableList } from '@pure/ui'
+import { confirmModal, toast, createStaticStyles } from '@lobehub/ui'
 import { PencilLine, Trash } from 'lucide-react'
 import { memo, useCallback, useRef, useState } from 'react'
 

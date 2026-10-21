@@ -27,7 +27,7 @@ description: >-
 ## 本仓库惯例
 
 - **正例**：`src/features/dev/WechatConversationPage.tsx` 中 `statusChip` 用 `Record` 做状态→样式/文案映射——同类映射优先对齐这种写法。
-- **`cx`**：antd-style / CSS modules 文件沿用已有 `cx`，扁平布尔组合（`cx(base, cond && variant)`）。
+- **`cx`**：使用 Lobe UI `cx` 或现有 CSS Modules 组合工具，扁平布尔组合（`cx(base, cond && variant)`）。
 - **Tailwind 模板字符串**：优先映射表或小 helper；不要为了「用上 cn」新建工具函数。仅当文件/包已有 `cn` / `clsx` / `cx` 时推荐用它们组合 className。
 
 ## 规则优先级

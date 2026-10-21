@@ -88,7 +88,9 @@ const PublicInfoPage = ({ description, sections, title }: PublicInfoPageProps) =
 )
 
 const InsetPublicInfoFrame = ({ children }: { children: ReactNode }) => (
-  <InsetContentFrame sidebarCollapsed>{children}</InsetContentFrame>
+  <div className='flex size-full min-h-0 min-w-0 flex-col'>
+    <InsetContentFrame sidebarCollapsed>{children}</InsetContentFrame>
+  </div>
 )
 
 const PrivacyContent = () => (

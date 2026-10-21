@@ -1,10 +1,8 @@
 'use client'
 
-
-import { toast } from '@lobehub/ui'
+import { toast, Segmented } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
 import { useEffect, useState } from 'react'
-import { Segmented } from 'antd'
 import { Download, HardDrive, Pencil, Trash2, Upload } from 'lucide-react'
 
 import { apiFetch, jsonInit } from '@/utils/apiFetch'

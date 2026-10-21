@@ -1,7 +1,7 @@
 'use client'
 
-import { ActionIcon, confirmModal, Flex, Text } from '@pure/ui'
-import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
+import { ActionIcon, Flex, Text } from '@pure/ui'
+import { confirmModal, toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { memo } from 'react'

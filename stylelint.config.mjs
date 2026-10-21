@@ -22,8 +22,8 @@ export default {
         ],
       },
     ],
-    // 项目 CSS Modules 使用 camelCase 类名（如 .notFoundPage）与 antd token 变量
-    // （如 --colorText），关闭 kebab-case 强制
+    // 项目 CSS Modules 使用 camelCase 类名（如 .notFoundPage）与组件库 token 变量
+    // （如 --lobe-colorText），关闭 kebab-case 强制
     'selector-class-pattern': null,
     'custom-property-pattern': null,
     // 全局样式存在少量层叠与同优先级覆盖

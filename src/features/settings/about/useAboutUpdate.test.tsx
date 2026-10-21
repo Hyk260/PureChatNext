@@ -7,9 +7,21 @@ import type { DesktopApi } from '@/types/desktop'
 import type { DesktopUpdateState } from '@/types/desktopUpdater'
 import { DEFAULT_UPDATE_PREFERENCES } from '@/types/desktopUpdater'
 
-const ui = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), open: vi.fn(), destroy: vi.fn() }))
-vi.mock('@/components/AntdStaticMethods', () => ({
-  useApp: () => ({ message: ui, modal: {} }),
+const ui = vi.hoisted(() => ({
+  dismiss: vi.fn(),
+  error: vi.fn(),
+  loading: vi.fn(),
+  success: vi.fn(),
+  toast: vi.fn(),
+}))
+vi.mock('@lobehub/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@lobehub/ui')>()),
+  toast: Object.assign(ui.toast, {
+    dismiss: ui.dismiss,
+    error: ui.error,
+    loading: ui.loading,
+    success: ui.success,
+  }),
 }))
 
 import { useAboutUpdate } from './useAboutUpdate'
@@ -64,10 +76,14 @@ describe('about update subscription', () => {
     const { result } = renderHook(useAboutUpdate, { wrapper })
     await waitFor(() => expect(result.current.desktopState).toEqual(initial))
     act(() => listener({ ...initial, revision: 2, status: 'upToDate' }))
-    expect(ui.open).not.toHaveBeenCalled()
+    expect(ui.toast).not.toHaveBeenCalled()
 
     let resolve!: (state: DesktopUpdateState) => void
-    updater.check.mockReturnValue(new Promise((done) => { resolve = done }))
+    updater.check.mockReturnValue(
+      new Promise((done) => {
+        resolve = done
+      })
+    )
     let request!: Promise<void>
     act(() => {
       request = result.current.check()
@@ -75,37 +91,48 @@ describe('about update subscription', () => {
     })
     expect(result.current.pending).toBe(true)
     expect(result.current.clearingCache).toBe(false)
-    expect(ui.open).toHaveBeenCalledTimes(1)
-    expect(ui.open).toHaveBeenLastCalledWith({
-      key: 'desktop-update-check', type: 'loading', content: '正在检查更新…', duration: 0,
+    expect(ui.loading).toHaveBeenCalledTimes(1)
+    expect(ui.loading).toHaveBeenLastCalledWith({
+      id: 'desktop-update-check',
+      description: '正在检查更新…',
+      duration: 0,
     })
     await act(async () => {
       resolve({ ...initial, revision: 3, status: 'checking' })
       await request
     })
     expect(result.current.pending).toBe(false)
-    expect(ui.open).toHaveBeenCalledTimes(1)
+    expect(ui.loading).toHaveBeenCalledTimes(1)
     act(() => listener({ ...initial, revision: 4, status: 'upToDate', message: '当前已是最新版本。' }))
-    expect(ui.open).toHaveBeenLastCalledWith({
-      key: 'desktop-update-check', type: 'success', content: '当前已是最新版本。', duration: 3,
+    expect(ui.toast).toHaveBeenLastCalledWith({
+      id: 'desktop-update-check',
+      type: 'success',
+      description: '当前已是最新版本。',
+      duration: 3000,
     })
     act(() => listener({ ...initial, revision: 5, status: 'checking' }))
     act(() => listener({ ...initial, revision: 6, status: 'upToDate' }))
-    expect(ui.open).toHaveBeenCalledTimes(2)
+    expect(ui.toast).toHaveBeenCalledTimes(1)
   })
 
   it('replaces the check tip on IPC failure and removes an unfinished tip on page exit', async () => {
     const { result, unmount } = renderHook(useAboutUpdate, { wrapper })
     await waitFor(() => expect(result.current.desktopState).toEqual(initial))
     updater.check.mockRejectedValueOnce(new Error('network unavailable'))
-    await act(async () => { await result.current.check() })
-    expect(ui.open).toHaveBeenLastCalledWith({
-      key: 'desktop-update-check', type: 'error', content: 'network unavailable', duration: 3,
+    await act(async () => {
+      await result.current.check()
+    })
+    expect(ui.error).toHaveBeenLastCalledWith({
+      id: 'desktop-update-check',
+      description: 'network unavailable',
+      duration: 3000,
     })
     updater.check.mockResolvedValueOnce({ ...initial, revision: 2, status: 'checking' })
-    await act(async () => { await result.current.check() })
+    await act(async () => {
+      await result.current.check()
+    })
     unmount()
-    expect(ui.destroy).toHaveBeenCalledWith('desktop-update-check')
+    expect(ui.dismiss).toHaveBeenCalledWith('desktop-update-check')
   })
 
   it('marks only a cache clearing request as clearingCache and resets it on completion', async () => {
@@ -113,9 +140,15 @@ describe('about update subscription', () => {
     const { result } = renderHook(useAboutUpdate, { wrapper })
     await waitFor(() => expect(result.current.desktopState?.developmentCachePath).toBeTruthy())
     let resolve!: (state: DesktopUpdateState) => void
-    updater.clearCache.mockReturnValue(new Promise((done) => { resolve = done }))
+    updater.clearCache.mockReturnValue(
+      new Promise((done) => {
+        resolve = done
+      })
+    )
     let request!: Promise<void>
-    act(() => { request = result.current.clearCache() })
+    act(() => {
+      request = result.current.clearCache()
+    })
     expect(result.current.clearingCache).toBe(true)
     expect(result.current.pending).toBe(true)
     await act(async () => {
@@ -142,7 +175,11 @@ describe('about update subscription', () => {
     unmount()
 
     let resolve!: (state: DesktopUpdateState) => void
-    updater.getState.mockReturnValue(new Promise((done) => { resolve = done }))
+    updater.getState.mockReturnValue(
+      new Promise((done) => {
+        resolve = done
+      })
+    )
     const reopened = renderHook(useAboutUpdate, { wrapper })
     expect(reopened.result.current.autoUpdate).toBe(enabled)
     expect(reopened.result.current.desktopState?.preferences.testPlan).toBe(enabled)
@@ -161,14 +198,17 @@ describe('about update subscription', () => {
 
   it('allows inspecting a downloaded update but never installs when the current signature is ineligible', async () => {
     updater.getState.mockResolvedValue({
-      ...initial, status: 'ready',
+      ...initial,
+      status: 'ready',
       installationSupport: { supported: false, signature: 'ad-hoc', message: '仅支持下载更新' },
     })
     const { result } = renderHook(useAboutUpdate, { wrapper })
     await waitFor(() => expect(result.current.status).toBe('ready'))
     act(() => result.current.confirmInstall())
     expect(result.current.installConfirmationOpen).toBe(true)
-    await act(async () => { await result.current.installUpdate() })
+    await act(async () => {
+      await result.current.installUpdate()
+    })
     expect(updater.install).not.toHaveBeenCalled()
   })
 
@@ -339,12 +379,23 @@ describe('about update subscription', () => {
     await waitFor(() => expect(result.current.status).toBe('ready'))
     act(() => result.current.confirmInstall())
     const saved: DesktopUpdateState = {
-      ...initial, revision: 2, preferences: { ...initial.preferences, updateSource: 'custom', customUpdateUrl: 'https://cdn.example.com/desktop/' },
+      ...initial,
+      revision: 2,
+      preferences: {
+        ...initial.preferences,
+        updateSource: 'custom',
+        customUpdateUrl: 'https://cdn.example.com/desktop/',
+      },
       effectiveSource: { type: 'custom', url: 'https://cdn.example.com/desktop/' },
     }
     updater.setPreferences.mockResolvedValueOnce(saved)
     await act(async () => {
-      expect(await result.current.savePreferences({ updateSource: 'custom', customUpdateUrl: 'https://cdn.example.com/desktop/' })).toBe(true)
+      expect(
+        await result.current.savePreferences({
+          updateSource: 'custom',
+          customUpdateUrl: 'https://cdn.example.com/desktop/',
+        })
+      ).toBe(true)
     })
     expect(updater.setPreferences).toHaveBeenCalledWith(saved.preferences)
     expect(result.current.installConfirmationOpen).toBe(false)

@@ -2,7 +2,7 @@
 
 import { Flex } from '@pure/ui'
 import { useEffect, useState } from 'react'
-import { Segmented } from 'antd'
+import { Segmented } from '@lobehub/ui'
 import { Compass, Globe2 } from 'lucide-react'
 
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
@@ -251,9 +251,7 @@ export default function WebSearchPage() {
         <header className='flex shrink-0 flex-col justify-between gap-3 border-b border-border pb-4 lg:flex-row lg:items-end'>
           <div className='pl-8 lg:pl-2'>
             <h1 className='text-2xl font-semibold text-foreground'>联网搜索功能测试台</h1>
-            <p className='mt-1 max-w-2xl text-sm leading-6 text-muted-foreground'>
-              验证联网搜索与网页抓取。
-            </p>
+            <p className='mt-1 max-w-2xl text-sm leading-6 text-muted-foreground'>验证联网搜索与网页抓取。</p>
           </div>
           <Segmented
             className='shrink-0'

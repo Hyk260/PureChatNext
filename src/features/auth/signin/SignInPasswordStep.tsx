@@ -2,9 +2,10 @@
 
 import { AuthCard } from '@/features/AuthCard'
 import { SSO_PROVIDER_LABELS } from '@/libs/better-auth/shared'
-import { Button, Flex, Icon, InputPassword, Text, confirmModal } from '@pure/ui'
-import { Alert, Form } from 'antd'
-import type { FormInstance } from 'antd'
+import { Button, Flex, Icon, InputPassword, Text } from '@pure/ui'
+import { Alert, confirmModal } from '@lobehub/ui'
+import { Form } from '@lobehub/ui/form'
+import type { FormInstance } from '@lobehub/ui/form'
 import { ChevronLeft, Lock } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
 
@@ -25,7 +26,6 @@ interface SignInPasswordStepProps {
   onBack: () => void
   onForgotPassword: () => Promise<void>
   onSendMagicLink?: () => Promise<void>
-  onSignIn: (values: Pick<SignInFormValues, 'password'>) => Promise<void>
 }
 
 export const SignInPasswordStep = ({
@@ -40,7 +40,6 @@ export const SignInPasswordStep = ({
   onBack,
   onForgotPassword,
   onSendMagicLink,
-  onSignIn,
 }: SignInPasswordStepProps) => {
   const passwordInputRef = useRef<HTMLInputElement>(null)
 
@@ -130,16 +129,19 @@ export const SignInPasswordStep = ({
       subtitle='请输入密码'
     >
       <Text className='text-[20px]'>{accountLabel}</Text>
-      <Form form={form} layout='vertical' onFinish={onSignIn}>
-        <Form.Item name='password' rules={[{ message: '请输入密码', required: true }]} style={{ marginBottom: 0 }}>
+      <Form form={form} layout='vertical'>
+        <Form.Field name='password'>
           <InputPassword
             placeholder='请输入密码'
             ref={passwordInputRef}
             size='large'
             prefix={<Icon icon={Lock} style={{ marginInline: 6 }} />}
-            onPressEnter={() => form.submit()}
+            onPressEnter={(event) => {
+              event.preventDefault()
+              form.submit()
+            }}
           />
-        </Form.Item>
+        </Form.Field>
       </Form>
     </AuthCard>
   )

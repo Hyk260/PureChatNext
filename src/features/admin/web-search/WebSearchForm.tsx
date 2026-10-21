@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Tooltip } from 'antd'
+import { Tooltip } from '@lobehub/ui'
 import { CircleHelp, Clipboard, RefreshCcw, Sparkles, Trash2 } from 'lucide-react'
 
 import { Flex, ActionIcon, Button, Checkbox, CodeBlock, Select, TextArea } from '@pure/ui'

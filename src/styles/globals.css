@@ -36,6 +36,8 @@
   --line: #e7e5e4;
   --hover: #f5f5f4;
   --overlay: 0 0 0;
+
+  --lobe-form-item-padding-block: 12px;
 }
 
 @theme inline {

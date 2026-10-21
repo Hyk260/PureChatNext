@@ -14,6 +14,11 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@pure/ui', () => ({
+  Button: ({
+    icon: _icon,
+    loading: _loading,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { icon?: unknown; loading?: boolean }) => <button {...props} />,
   ActionIcon: ({ icon: _icon, title, ...props }: { icon: unknown; title?: string }) => (
     <button aria-label={title} type='button' {...props} />
   ),
@@ -43,7 +48,6 @@ vi.mock('@pure/ui', () => ({
       </section>
     ) : null,
   Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
-  confirmModal: mocks.confirm,
   DropdownMenu: ({ children, items }: { children?: React.ReactNode; items?: Array<Record<string, unknown>> }) => (
     <div>
       <button aria-label='更多'>{children}</button>
@@ -86,15 +90,14 @@ vi.mock('@lobehub/ui', async (importOriginal) => ({
 
 vi.mock('@lobehub/ui', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@lobehub/ui')>()),
+  confirmModal: mocks.confirm,
   toast: Object.assign(vi.fn(), { error: mocks.error, success: mocks.success }),
 }))
 
 vi.mock('@/features/chat/store/useChatUiStore', () => ({
   useChatUiStore: (selector: (state: Record<string, unknown>) => unknown) =>
     selector({
-      leftCollapsed: false,
       rightCollapsed: false,
-      toggleLeftCollapsed: vi.fn(),
       toggleRightCollapsed: vi.fn(),
       toggleWideScreen: mocks.toggleWideScreen,
       wideScreen: false,
@@ -177,7 +180,10 @@ describe('ChatHeader menu', () => {
     fireEvent.click(screen.getByRole('button', { name: '分享' }))
 
     await waitFor(() => expect(mocks.createTopicShare).toHaveBeenCalledWith(topic.id))
-    expect(mocks.copyToClipboard).toHaveBeenCalledWith(`${window.location.origin}/share/t/share-1`)
+    const copy = screen.getByRole('button', { name: '复制链接' })
+    await waitFor(() => expect((copy as HTMLButtonElement).disabled).toBe(false))
+    fireEvent.click(copy)
+    await waitFor(() => expect(mocks.copyToClipboard).toHaveBeenCalledWith(`${window.location.origin}/share/t/share-1`))
     expect(mocks.success).toHaveBeenCalledWith('分享链接已复制')
   })
 

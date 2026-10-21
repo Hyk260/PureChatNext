@@ -59,8 +59,6 @@ const TopicSidebar = memo<Props>(
     onNewTopicInProject,
   }) => {
     const router = useRouter()
-    const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
-    const toggleLeftCollapsed = useChatUiStore((s) => s.toggleLeftCollapsed)
     const groupMode = useChatUiStore((s) => s.topicGroupMode)
     const pageSize = useChatUiStore((s) => s.topicPageSize)
     const sortBy = useChatUiStore((s) => s.topicSortBy)
@@ -79,7 +77,6 @@ const TopicSidebar = memo<Props>(
     return (
       <Flex className='flex-col gap-2 size-full min-w-0 overflow-hidden'>
         <SideBarHeaderLayout
-          collapsed={leftCollapsed}
           left={
             <Flex className='items-center flex-1 gap-0.5 min-w-0'>
               <ActionIcon icon={ChevronLeft} size='small' title='返回首页' onClick={() => router.push('/')} />
@@ -87,7 +84,6 @@ const TopicSidebar = memo<Props>(
             </Flex>
           }
           showHomeIcon={false}
-          onToggleCollapsed={toggleLeftCollapsed}
         />
         <Flex className='flex-col flex-1 gap-2 min-h-0'>
           <Scrollbar viewStyle={{ paddingInline: 12 }}>

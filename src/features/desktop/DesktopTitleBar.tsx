@@ -18,12 +18,11 @@ import type { PropsWithChildren } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { Outlet, useInRouterContext, useLocation, useNavigate, useNavigationType } from 'react-router'
 
-import { DESKTOP_SIDEBAR_STATE_EVENT, DESKTOP_TOGGLE_SIDEBAR_EVENT } from '@/features/desktop/desktopEvents'
-import type { DesktopSidebarStateDetail } from '@/features/desktop/desktopEvents'
 import DesktopWindowControls from '@/features/desktop/DesktopWindowControls'
 import MacTrafficLights from '@/features/desktop/MacTrafficLights'
 import { desktopHref, useDesktopTabsStore } from '@/features/desktop/useDesktopTabsStore'
 import { useDesktopUpdateVersion } from '@/features/desktop/useDesktopUpdateVersion'
+import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { DEFAULT_SIDEBAR_WIDTH, SIDEBAR_TRANSITION, useSidebarLayoutStore } from '@/layout/sidebarResize'
 import { getDesktopApi } from '@/types/desktop'
 
@@ -445,7 +444,8 @@ const DesktopTitleBarChrome = ({
 function useWindowChromeState() {
   const api = getDesktopApi()
   const [isMaximized, setIsMaximized] = useState(false)
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const isSidebarCollapsed = useHomeStore((state) => state.sidebarCollapsed)
+  const toggleSidebar = useHomeStore((state) => state.toggleSidebarCollapsed)
   const [platform, setPlatform] = useState<NodeJS.Platform | null>(null)
 
   useEffect(() => {
@@ -461,15 +461,6 @@ function useWindowChromeState() {
     }
   }, [api])
 
-  useEffect(() => {
-    const handleSidebarState = (event: Event) => {
-      const detail = (event as CustomEvent<DesktopSidebarStateDetail>).detail
-      if (detail) setIsSidebarCollapsed(detail.collapsed)
-    }
-    window.addEventListener(DESKTOP_SIDEBAR_STATE_EVENT, handleSidebarState)
-    return () => window.removeEventListener(DESKTOP_SIDEBAR_STATE_EVENT, handleSidebarState)
-  }, [])
-
   const handleToggleMaximize = async () => {
     if (!api) return
     const state = await api.toggleMaximizeWindow()
@@ -481,7 +472,7 @@ function useWindowChromeState() {
     isSidebarCollapsed,
     platform,
     toggleMaximize: handleToggleMaximize,
-    toggleSidebar: () => window.dispatchEvent(new Event(DESKTOP_TOGGLE_SIDEBAR_EVENT)),
+    toggleSidebar,
   }
 }
 

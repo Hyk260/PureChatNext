@@ -1,12 +1,9 @@
 'use client'
 
 import { Flex } from '@pure/ui'
-import { useEffect } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
-import { DESKTOP_SIDEBAR_STATE_EVENT, DESKTOP_TOGGLE_SIDEBAR_EVENT } from '@/features/desktop/desktopEvents'
-import type { DesktopSidebarStateDetail } from '@/features/desktop/desktopEvents'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import InsetContentFrame from '@/layout/InsetContentFrame'
 import { sidebarResizeStyles, useSidebarResize } from '@/layout/sidebarResize'
@@ -22,20 +19,6 @@ interface MainShellLayoutProps {
 const MainShellLayout = ({ children, header, scrollable = true, sidebar }: MainShellLayoutProps) => {
   const sidebarCollapsed = useHomeStore((state) => state.sidebarCollapsed)
   const { handleResizeStart, isResizing, sidebarWidth } = useSidebarResize()
-
-  useEffect(() => {
-    const handleToggle = () => useHomeStore.getState().toggleSidebarCollapsed()
-    window.addEventListener(DESKTOP_TOGGLE_SIDEBAR_EVENT, handleToggle)
-    return () => window.removeEventListener(DESKTOP_TOGGLE_SIDEBAR_EVENT, handleToggle)
-  }, [])
-
-  useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent<DesktopSidebarStateDetail>(DESKTOP_SIDEBAR_STATE_EVENT, {
-        detail: { collapsed: sidebarCollapsed },
-      })
-    )
-  }, [sidebarCollapsed])
 
   return (
     <Flex className='size-full overflow-hidden'>

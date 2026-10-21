@@ -23,6 +23,7 @@ import { createTopicShare } from '@/features/chat/chatApi'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { LocalChatTopic } from '@/features/chat/types'
 import TopicRenameModal, { confirmDeleteTopic, useTopicRename } from '@/features/chat/TopicRenameModal'
+import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { getDesktopApi } from '@/types/desktop'
 
 const styles = createStaticStyles(({ css }) => ({
@@ -77,10 +78,10 @@ type Props = {
 
 const ChatHeader = memo<Props>(
   ({ autoRenameDisabled, autoRenaming, hasMessages, title, topic, onAutoRename, onDelete, onFavorite, onRename }) => {
-    const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
+    const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
     const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
     const wideScreen = useChatUiStore((s) => s.wideScreen)
-    const toggleLeftCollapsed = useChatUiStore((s) => s.toggleLeftCollapsed)
+    const toggleSidebarCollapsed = useHomeStore((s) => s.toggleSidebarCollapsed)
     const toggleRightCollapsed = useChatUiStore((s) => s.toggleRightCollapsed)
     const toggleWideScreen = useChatUiStore((s) => s.toggleWideScreen)
     const rename = useTopicRename((title) => (topic ? onRename(topic.id, title) : undefined))
@@ -217,8 +218,8 @@ const ChatHeader = memo<Props>(
       <>
         <Flex className={[styles.header, 'flex-between']}>
           <Flex className='items-center flex-1 gap-1 min-w-0 overflow-hidden'>
-            {leftCollapsed && !getDesktopApi() ? (
-              <ActionIcon icon={PanelLeftOpen} size='small' title='展开话题栏' onClick={toggleLeftCollapsed} />
+            {sidebarCollapsed && !getDesktopApi() ? (
+              <ActionIcon icon={PanelLeftOpen} size='small' title='展开话题栏' onClick={toggleSidebarCollapsed} />
             ) : null}
             <Text className={styles.title} ellipsis>
               {title}

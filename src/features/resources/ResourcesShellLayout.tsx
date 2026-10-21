@@ -1,12 +1,8 @@
 'use client'
 
 import { Flex } from '@pure/ui'
-import { useEffect } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 
-import { DESKTOP_SIDEBAR_STATE_EVENT, DESKTOP_TOGGLE_SIDEBAR_EVENT } from '@/features/desktop/desktopEvents'
-import type { DesktopSidebarStateDetail } from '@/features/desktop/desktopEvents'
-import { useHomeStore } from '@/features/home/store/useHomeStore'
 import InsetContentFrame from '@/layout/InsetContentFrame'
 import { sidebarResizeStyles, useSidebarResize } from '@/layout/sidebarResize'
 
@@ -14,30 +10,12 @@ const ResourcesShellLayout = ({
   children,
   innerSidebar,
   sidebarCollapsed = false,
-  sidebarCollapsible = false,
 }: {
   children: ReactNode
   innerSidebar?: ReactNode
   sidebarCollapsed?: boolean
-  sidebarCollapsible?: boolean
 }) => {
   const { handleResizeStart, isResizing, sidebarWidth } = useSidebarResize()
-
-  useEffect(() => {
-    if (!sidebarCollapsible) return
-    const handleToggle = () => useHomeStore.getState().toggleSidebarCollapsed()
-    window.addEventListener(DESKTOP_TOGGLE_SIDEBAR_EVENT, handleToggle)
-    return () => window.removeEventListener(DESKTOP_TOGGLE_SIDEBAR_EVENT, handleToggle)
-  }, [sidebarCollapsible])
-
-  useEffect(() => {
-    if (!sidebarCollapsible) return
-    window.dispatchEvent(
-      new CustomEvent<DesktopSidebarStateDetail>(DESKTOP_SIDEBAR_STATE_EVENT, {
-        detail: { collapsed: sidebarCollapsed },
-      })
-    )
-  }, [sidebarCollapsed, sidebarCollapsible])
 
   return (
     <Flex className='size-full overflow-hidden'>

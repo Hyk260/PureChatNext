@@ -35,7 +35,7 @@ describe('useChatUiStore search mode', () => {
     await useChatUiStore.persist.rehydrate()
 
     expect(useChatUiStore.getState()).toMatchObject({ permissionMode: 'auto', permissionModeInitialized: false })
-    expect(JSON.parse(localStorage.getItem('purechat:chat:v2:ui') || '{}').version).toBe(9)
+    expect(JSON.parse(localStorage.getItem('purechat:chat:v2:ui') || '{}').version).toBe(10)
     expect(sessionStorage.getItem(PENDING_CHAT_PERMISSION_MODE_KEY)).toBeNull()
 
     sessionStorage.setItem(PENDING_CHAT_PERMISSION_MODE_KEY, 'full')
@@ -68,5 +68,36 @@ describe('useChatUiStore search mode', () => {
 
     useChatUiStore.getState().openParamsPanel()
     expect(useChatUiStore.getState().rightCollapsed).toBe(true)
+  })
+
+  it('drops the old chat-only sidebar switch without resetting other current preferences', async () => {
+    localStorage.setItem(
+      'purechat:chat:v2:ui',
+      JSON.stringify({
+        state: {
+          leftCollapsed: true,
+          rightCollapsed: false,
+          wideScreen: true,
+          searchMode: 'auto',
+          permissionMode: 'full',
+          permissionModeInitialized: true,
+        },
+        version: 9,
+      })
+    )
+
+    await useChatUiStore.persist.rehydrate()
+
+    expect(useChatUiStore.getState()).not.toHaveProperty('leftCollapsed')
+    expect(useChatUiStore.getState()).toMatchObject({
+      rightCollapsed: false,
+      wideScreen: true,
+      searchMode: 'auto',
+      permissionMode: 'full',
+      permissionModeInitialized: true,
+    })
+    const persisted = JSON.parse(localStorage.getItem('purechat:chat:v2:ui') || '{}')
+    expect(persisted.state).not.toHaveProperty('leftCollapsed')
+    expect(persisted.version).toBe(10)
   })
 })

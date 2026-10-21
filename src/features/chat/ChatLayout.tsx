@@ -2,14 +2,13 @@
 
 import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
-import { memo, useEffect } from 'react'
+import { memo } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 
 import ChatHeader from '@/features/chat/ChatHeader'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { LocalChatTopic } from '@/features/chat/types'
-import { DESKTOP_SIDEBAR_STATE_EVENT, DESKTOP_TOGGLE_SIDEBAR_EVENT } from '@/features/desktop/desktopEvents'
-import type { DesktopSidebarStateDetail } from '@/features/desktop/desktopEvents'
+import { useHomeStore } from '@/features/home/store/useHomeStore'
 import InsetContentFrame from '@/layout/InsetContentFrame'
 import { sidebarResizeStyles, useSidebarResize } from '@/layout/sidebarResize'
 
@@ -74,43 +73,29 @@ const ChatLayout = memo<Props>(
     onFavoriteTopic,
     onRenameTopic,
   }) => {
-    const leftCollapsed = useChatUiStore((s) => s.leftCollapsed)
+    const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
     const rightCollapsed = useChatUiStore((s) => s.rightCollapsed)
     const { handleResizeStart, isResizing, sidebarWidth } = useSidebarResize()
 
-    useEffect(() => {
-      const handleToggle = () => useChatUiStore.getState().toggleLeftCollapsed()
-      window.addEventListener(DESKTOP_TOGGLE_SIDEBAR_EVENT, handleToggle)
-      return () => window.removeEventListener(DESKTOP_TOGGLE_SIDEBAR_EVENT, handleToggle)
-    }, [])
-
-    useEffect(() => {
-      window.dispatchEvent(
-        new CustomEvent<DesktopSidebarStateDetail>(DESKTOP_SIDEBAR_STATE_EVENT, {
-          detail: { collapsed: leftCollapsed },
-        })
-      )
-    }, [leftCollapsed])
-
     return (
-      <Flex className='size-full overflow-hidden'>
+      <Flex className='size-full overflow-hidden bg-app-layout'>
         <div
           className={sidebarResizeStyles.sidebarWrapper}
-          data-collapsed={leftCollapsed}
+          data-collapsed={sidebarCollapsed}
           data-resizing={isResizing}
-          inert={leftCollapsed}
+          inert={sidebarCollapsed}
           style={
             {
               '--main-shell-sidebar-width': `${sidebarWidth}px`,
-              width: leftCollapsed ? 0 : sidebarWidth,
+              width: sidebarCollapsed ? 0 : sidebarWidth,
             } as CSSProperties
           }
         >
           <Flex className='size-full flex-col overflow-hidden'>{left}</Flex>
         </div>
         <InsetContentFrame
-          onResizeStart={leftCollapsed ? undefined : handleResizeStart}
-          sidebarCollapsed={leftCollapsed}
+          onResizeStart={sidebarCollapsed ? undefined : handleResizeStart}
+          sidebarCollapsed={sidebarCollapsed}
         >
           <Flex className={[styles.main, 'h-full min-w-0 flex-col']}>
             <ChatHeader

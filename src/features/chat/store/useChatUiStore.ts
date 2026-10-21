@@ -17,7 +17,6 @@ import type { ChatPermissionMode } from '@pure/types'
 import { sessionStg } from '@pure/utils/storage'
 
 type ChatUiState = {
-  leftCollapsed: boolean
   rightCollapsed: boolean
   /** true = 聊天区占满主栏宽度；false = 居中限宽 */
   wideScreen: boolean
@@ -33,10 +32,8 @@ type ChatUiState = {
   topicSortBy: TopicSortBy
   workPanelOpenTabs: WorkPanelTabId[]
   workPanelActiveTab: WorkPanelTabId
-  toggleLeftCollapsed: () => void
   toggleRightCollapsed: () => void
   toggleWideScreen: (value?: boolean) => void
-  setLeftCollapsed: (v: boolean) => void
   setRightCollapsed: (v: boolean) => void
   openWorkPanelTab: (tab: WorkPanelTabId) => void
   closeWorkPanelTab: (tab: WorkPanelTabId) => void
@@ -61,7 +58,6 @@ function normalizeOpenTabs(tabs: unknown): WorkPanelTabId[] {
 export const useChatUiStore = create<ChatUiState>()(
   persist(
     (set, get) => ({
-      leftCollapsed: false,
       rightCollapsed: true,
       wideScreen: false,
       paramsByAgent: {},
@@ -73,7 +69,6 @@ export const useChatUiStore = create<ChatUiState>()(
       topicSortBy: 'updatedAt',
       workPanelOpenTabs: [...DEFAULT_WORK_PANEL_OPEN_TABS],
       workPanelActiveTab: DEFAULT_WORK_PANEL_ACTIVE_TAB,
-      toggleLeftCollapsed: () => set((s) => ({ leftCollapsed: !s.leftCollapsed })),
       toggleRightCollapsed: () =>
         set((s) => {
           const nextCollapsed = !s.rightCollapsed
@@ -90,7 +85,6 @@ export const useChatUiStore = create<ChatUiState>()(
         set((s) => ({
           wideScreen: typeof value === 'boolean' ? value : !s.wideScreen,
         })),
-      setLeftCollapsed: (leftCollapsed) => set({ leftCollapsed }),
       setRightCollapsed: (rightCollapsed) => set({ rightCollapsed }),
       openWorkPanelTab: (tab) => {
         if (!isWorkPanelTabId(tab)) return
@@ -153,7 +147,7 @@ export const useChatUiStore = create<ChatUiState>()(
     }),
     {
       name: 'purechat:chat:v2:ui',
-      version: 9,
+      version: 10,
       migrate: (persisted, version) => {
         let state = (persisted ?? {}) as Record<string, unknown>
         if (version < 4) {
@@ -172,7 +166,8 @@ export const useChatUiStore = create<ChatUiState>()(
             workPanelOpenTabs: [...DEFAULT_WORK_PANEL_OPEN_TABS],
           }
         }
-        const { searchModeByAgent: _dropped, ...rest } = state
+        // 左侧栏已统一使用全局开关，丢弃聊天页过去独立保存的折叠状态。
+        const { searchModeByAgent: _dropped, leftCollapsed: _leftCollapsed, ...rest } = state
         const workPanelOpenTabs = normalizeOpenTabs(rest.workPanelOpenTabs)
         const workPanelActiveTab =
           isWorkPanelTabId(rest.workPanelActiveTab) && workPanelOpenTabs.includes(rest.workPanelActiveTab)

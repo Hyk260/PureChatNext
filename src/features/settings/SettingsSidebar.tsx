@@ -33,9 +33,6 @@ const styles = createStaticStyles(({ css }) => ({
     background: ${cssVar.colorBgLayout};
     transition: width 0.25s ${cssVar.motionEaseInOut};
   `,
-  sidebarCollapsed: css`
-    width: 0 !important;
-  `,
 }))
 
 function useActiveSettingsTab(): SettingsTab {
@@ -57,7 +54,7 @@ const SettingsSidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flex className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}>
+    <Flex className={[styles.sidebar, sidebarCollapsed && '!w-0', 'flex-col h-full']}>
       <Flex className='flex-col gap-px h-full w-[240px]'>
         <SideBarHeaderLayout
           breadcrumb={[

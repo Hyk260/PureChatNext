@@ -17,12 +17,10 @@ const styles = createStaticStyles(({ css }) => ({
       background: ${cssVar.colorFillTertiary};
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   modeBtnActive: css`
     color: ${cssVar.colorText};
     background: ${cssVar.colorFillSecondary};
-  `,
-  toolbar: css`
-    border-block-end: 1px solid ${cssVar.colorBorderSecondary};
   `,
 }))
 
@@ -34,7 +32,7 @@ export interface ToolbarProps {
 }
 
 const Toolbar = memo<ToolbarProps>(({ groupMode, keyword, onGroupModeChange, onKeywordChange }) => (
-  <Flex className={[styles.toolbar, 'items-center gap-1 py-2 px-2']}>
+  <Flex className={['border-b border-app-border-secondary', 'items-center gap-1 py-2 px-2']}>
     <SearchBar
       placeholder='搜索模型...'
       size='small'

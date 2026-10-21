@@ -60,8 +60,8 @@ const styles = createStaticStyles(({ css }) => ({
       background: ${cssVar.colorFillSecondary};
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   pinBadge: css`
-    flex: none;
     color: ${cssVar.colorTextTertiary};
   `,
 }))
@@ -166,7 +166,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         </Text>
       </Flex>
       {isPinned ? (
-        <Center className={styles.pinBadge} flex='none' height={24} title='已置顶' width={20}>
+        <Center className={cx(styles.pinBadge, 'flex-none')} flex='none' height={24} title='已置顶' width={20}>
           <Icon icon={PinIcon} size={14} />
         </Center>
       ) : null}

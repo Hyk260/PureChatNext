@@ -48,6 +48,7 @@ const styles = createStaticStyles(({ css }) => ({
       pointer-events: auto;
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   itemActive: css`
     background: ${cssVar.colorFillTertiary};
   `,

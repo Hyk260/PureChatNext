@@ -1,25 +1,24 @@
 'use client'
 
 import { Block, MaskShadow, ModelTag, ProviderCombine, ActionIcon, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { GlobeIcon } from 'lucide-react'
 import { memo } from 'react'
 
 import type { DiscoverProviderItem } from '@/features/community/types'
 
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   author: css`
     color: ${cssVar.colorTextDescription};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   desc: css`
-    flex: none;
-    margin: 0 !important;
     color: ${cssVar.colorTextSecondary};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   footer: css`
-    margin-block-start: 16px;
     border-block-start: 1px dashed ${cssVar.colorBorder};
-    background: ${cssVar.colorBgContainer};
   `,
 }))
 
@@ -51,7 +50,7 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
         {description ? (
           <Text
             as='p'
-            className={styles.desc}
+            className={cx(styles.desc, 'flex-none !m-0')}
             ellipsis={{
               rows: 3,
             }}
@@ -60,7 +59,7 @@ const ProviderCard = memo<DiscoverProviderItem>(({ url, name, description, ident
           </Text>
         ) : null}
       </Flex>
-      <Flex className={[styles.footer, 'flex-between p-4']}>
+      <Flex className={[cx(styles.footer, 'mt-4 bg-app-surface'), 'flex-between p-4']}>
         <MaskShadow horizontal gap={6} position='right' size={10} width='100%'>
           {models
             .slice(0, 6)

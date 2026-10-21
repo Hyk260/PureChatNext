@@ -25,14 +25,6 @@ import { formatNativeWebCitations } from './nativeWebCitations'
 import type { AgentMeta } from './ChatMessages'
 
 const styles = createStaticStyles(({ css }) => ({
-  assistant: css`
-    align-self: flex-start;
-    width: 100%;
-    max-width: 100%;
-  `,
-  bubble: css`
-    position: relative;
-  `,
   header: css`
     display: flex;
     align-items: center;
@@ -55,9 +47,8 @@ const styles = createStaticStyles(({ css }) => ({
     width: 100%;
     margin-block-end: 8px;
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   title: css`
-    font-size: 13px;
-    font-weight: 600;
     color: ${cssVar.colorText};
   `,
   user: css`
@@ -67,9 +58,6 @@ const styles = createStaticStyles(({ css }) => ({
     border-radius: 16px;
     background: ${cssVar.colorFillTertiary};
     color: ${cssVar.colorText};
-  `,
-  userMarkdown: css`
-    color: inherit;
   `,
 }))
 
@@ -178,11 +166,11 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
         {!isUser && agentMeta ? (
           <div className={styles.header}>
             <Avatar avatar={agentMeta.avatar} size={28} />
-            <span className={styles.title}>{agentMeta.title}</span>
+            <span className={cx(styles.title, 'text-[13px] font-semibold')}>{agentMeta.title}</span>
           </div>
         ) : null}
 
-        <div className={cx(styles.bubble, isUser ? styles.user : styles.assistant)} data-message-content>
+        <div className={cx('relative', isUser ? styles.user : 'self-start w-full max-w-full')} data-message-content>
           {!isUser && hasWebSearch ? <WebSearchStatus message={message} /> : null}
 
           {!isUser && reasoning ? (
@@ -207,7 +195,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
           {/* <LoadingState /> */}
           {isUser ? (
             text ? (
-              <MessageMarkdown className={cx(styles.markdown, styles.userMarkdown)} text={text} />
+              <MessageMarkdown className={cx(styles.markdown, 'text-inherit')} text={text} />
             ) : null
           ) : (
             message.parts.map((part, index) => {

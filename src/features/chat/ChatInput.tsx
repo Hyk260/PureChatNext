@@ -58,9 +58,6 @@ const styles = createStaticStyles(({ css }) => ({
       white-space: nowrap;
     }
   `,
-  menuPopup: css`
-    min-width: 220px;
-  `,
   plusTrigger: css`
     cursor: pointer;
 
@@ -87,11 +84,8 @@ const styles = createStaticStyles(({ css }) => ({
       opacity: 0.45;
     }
   `,
-  shell: css`
-    border-radius: 16px;
-  `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   submenuChevron: css`
-    flex: none;
     color: ${cssVar.colorTextQuaternary};
   `,
   toggle: css`
@@ -103,6 +97,7 @@ const styles = createStaticStyles(({ css }) => ({
     background: ${cssVar.colorFillSecondary};
     transition: background-color 0.2s;
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   toggleActive: css`
     background: ${cssVar.colorPrimary};
   `,
@@ -119,9 +114,6 @@ const styles = createStaticStyles(({ css }) => ({
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
 
     transition: transform 0.2s;
-  `,
-  toggleThumbActive: css`
-    transform: translateX(12px);
   `,
 }))
 
@@ -148,10 +140,10 @@ const MenuLabel = memo<{
     <span>{label}</span>
     {toggle ? (
       <div aria-hidden className={cx(styles.toggle, active && styles.toggleActive)}>
-        <div className={cx(styles.toggleThumb, active && styles.toggleThumbActive)} />
+        <div className={cx(styles.toggleThumb, active && 'translate-x-3')} />
       </div>
     ) : chevron ? (
-      <Icon className={styles.submenuChevron} icon={ChevronRight} size={16} />
+      <Icon className={cx(styles.submenuChevron, 'flex-none')} icon={ChevronRight} size={16} />
     ) : active ? (
       <Icon icon={Check} size={16} />
     ) : null}
@@ -340,7 +332,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
             </DropdownMenuTrigger>
             <DropdownMenuPortal>
               <DropdownMenuPositioner placement='topLeft'>
-                <DropdownMenuPopup className={styles.menuPopup}>{plusMenuContent}</DropdownMenuPopup>
+                <DropdownMenuPopup className={'min-w-[220px]'}>{plusMenuContent}</DropdownMenuPopup>
               </DropdownMenuPositioner>
             </DropdownMenuPortal>
           </DropdownMenuRoot>

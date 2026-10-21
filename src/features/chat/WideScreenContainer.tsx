@@ -23,10 +23,6 @@ const styles = createStaticStyles(({ css }) => ({
     height: 100%;
     min-height: 0;
   `,
-  wrapperCompact: css`
-    flex: none;
-    height: auto;
-  `,
 }))
 
 type Props = {
@@ -40,7 +36,7 @@ const WideScreenContainer = memo<Props>(({ children, className, fill = true, max
   const wideScreen = useChatUiStore((s) => s.wideScreen)
 
   return (
-    <Flex className={[cx(styles.wrapper, !fill && styles.wrapperCompact), 'flex-col']}>
+    <Flex className={[cx(styles.wrapper, !fill && 'flex-none !h-auto'), 'flex-col']}>
       <Flex
         className={[cx(styles.container, className), 'flex-col px-4']}
         style={{ height: fill ? '100%' : 'auto', width: wideScreen ? '100%' : `min(${maxWidth}px, 100%)` }}

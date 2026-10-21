@@ -33,10 +33,6 @@ const styles = createStaticStyles(({ css }) => ({
     padding-block: 0.375rem;
     padding-inline: 0.75rem;
   `,
-  value: css`
-    font-variant-numeric: tabular-nums;
-    line-height: 2;
-  `,
 }))
 
 const fetchCredits = async (): Promise<CreditsSummary> => {
@@ -64,7 +60,7 @@ const FreeCreditsSummary = memo<{ onClick?: () => void }>(({ onClick }) => {
       <Flex className={[styles.row, 'flex-between']}>
         <Text type='secondary'>积分</Text>
         <Flex className='items-center gap-2.5'>
-          <Text className={styles.value}>{value}</Text>
+          <Text className={'tabular-nums leading-[2]'}>{value}</Text>
           <Progress percent={percent} showInfo={false} size={16} type='circle' />
         </Flex>
       </Flex>

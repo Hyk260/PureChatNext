@@ -1,7 +1,7 @@
 'use client'
 
 import { Block, Icon, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { ArrowLeftIcon } from 'lucide-react'
 import { memo } from 'react'
 import type { ReactNode } from 'react'
@@ -24,8 +24,8 @@ const styles = createStaticStyles(({ css }) => ({
       color: ${cssVar.colorText};
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   card: css`
-    padding: 16px;
     border: 1px solid ${cssVar.colorBorder};
     border-radius: ${cssVar.borderRadius};
   `,
@@ -69,7 +69,7 @@ export const MessengerDetailShell = memo<MessengerDetailShellProps>(
           </Text>
         </span>
 
-        <Block className={styles.card}>
+        <Block className={cx(styles.card, 'p-4')}>
           <Flex className='items-center gap-4'>
             <PlatformAvatar platform={platform} size={48} />
             <Flex className='flex-col flex-1 gap-0.5'>

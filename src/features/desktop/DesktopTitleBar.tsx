@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, DropdownMenu, Tooltip } from '@pure/ui'
-import { createStaticStyles } from '@lobehub/ui'
+import { Divider, createStaticStyles, cx } from '@lobehub/ui'
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,7 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import type { PropsWithChildren } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Outlet, useInRouterContext, useLocation, useNavigate, useNavigationType } from 'react-router'
 
 import DesktopWindowControls from '@/features/desktop/DesktopWindowControls'
@@ -100,8 +100,8 @@ const styles = createStaticStyles(({ css }) => ({
       opacity: 0.35;
     }
   `,
+  // 保留 createStaticStyles：依赖 Electron 窗口拖拽区域属性。
   tooltipTarget: css`
-    display: inline-flex;
     -webkit-app-region: no-drag;
   `,
   main: css`
@@ -319,7 +319,7 @@ const DesktopTitleBarChrome = ({
           ) : null}
 
           <Tooltip title={sidebarLabel}>
-            <span className={styles.tooltipTarget}>
+            <span className={cx(styles.tooltipTarget, 'inline-flex')}>
               <button
                 aria-expanded={!isSidebarCollapsed}
                 aria-label={sidebarLabel}
@@ -335,7 +335,7 @@ const DesktopTitleBarChrome = ({
 
         <div className={styles.leadingEnd}>
           <Tooltip title='后退'>
-            <span className={styles.tooltipTarget}>
+            <span className={cx(styles.tooltipTarget, 'inline-flex')}>
               <button
                 aria-label='后退'
                 className={styles.iconButton}
@@ -349,7 +349,7 @@ const DesktopTitleBarChrome = ({
           </Tooltip>
 
           <Tooltip title='前进'>
-            <span className={styles.tooltipTarget}>
+            <span className={cx(styles.tooltipTarget, 'inline-flex')}>
               <button
                 aria-label='前进'
                 className={styles.iconButton}
@@ -362,10 +362,10 @@ const DesktopTitleBarChrome = ({
             </span>
           </Tooltip>
 
-          <Tooltip title='显示历史记录'>
-            <span className={styles.tooltipTarget}>
+          <Tooltip title='历史记录'>
+            <span className={cx(styles.tooltipTarget, 'inline-flex')}>
               <DropdownMenu items={historyMenuItems} nativeButton placement='bottomLeft'>
-                <button aria-label='显示历史记录' className={styles.iconButton} type='button'>
+                <button aria-label='历史记录' className={styles.iconButton} type='button'>
                   <History size={16} />
                 </button>
               </DropdownMenu>
@@ -376,40 +376,42 @@ const DesktopTitleBarChrome = ({
 
       <div className={styles.main}>
         <div className={styles.tabs}>
-          {tabs.map((tab) => {
+          {tabs.map((tab, index) => {
             const active = tab.id === activeTabId
             const Icon = tabIconForPath(tab.path)
             return (
-              <div
-                className={`${styles.tab} ${active ? `${styles.tabActive} active` : ''}`}
-                key={tab.id}
-                role='tab'
-                tabIndex={0}
-                onClick={() => onActivateTab(tab.id)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    onActivateTab(tab.id)
-                  }
-                }}
-              >
-                {/* <span className={styles.tabIcon}>
-                  <Icon size={14} />
-                </span> */}
-                <span className={styles.tabTitle}>{tab.title}</span>
-                <button
-                  aria-label={`关闭 ${tab.title}`}
-                  className={`desktop-tab-close ${styles.tabClose}`}
-                  disabled={tabs.length <= 1}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    onCloseTab(tab.id)
+              <Fragment key={tab.id}>
+                {index > 0 ? <Divider orientation='vertical' /> : null}
+                <div
+                  className={`${styles.tab} ${active ? `${styles.tabActive} active` : ''}`}
+                  role='tab'
+                  tabIndex={0}
+                  onClick={() => onActivateTab(tab.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      onActivateTab(tab.id)
+                    }
                   }}
-                  type='button'
                 >
-                  <X size={12} />
-                </button>
-              </div>
+                  {/* <span className={styles.tabIcon}>
+                    <Icon size={14} />
+                  </span> */}
+                  <span className={styles.tabTitle}>{tab.title}</span>
+                  <button
+                    aria-label={`关闭 ${tab.title}`}
+                    className={`desktop-tab-close ${styles.tabClose}`}
+                    disabled={tabs.length <= 1}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onCloseTab(tab.id)
+                    }}
+                    type='button'
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              </Fragment>
             )
           })}
           <button aria-label='新建选项卡' className={styles.addTab} onClick={onAddTab} type='button'>

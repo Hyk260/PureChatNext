@@ -2,7 +2,7 @@
 
 import { ActionIcon, Avatar, Block, Button, Flex, Icon, Modal, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
-import { toast, createStaticStyles, cssVar, Accordion, Tabs } from '@lobehub/ui'
+import { toast, createStaticStyles, cssVar, Accordion, Tabs, cx } from '@lobehub/ui'
 import { Copy, MessageCircleHeartIcon, MessageCircleQuestionIcon } from 'lucide-react'
 import { memo, useCallback, useMemo } from 'react'
 import useSWRImmutable from 'swr/immutable'
@@ -23,21 +23,13 @@ const styles = createStaticStyles(({ css }) => ({
     white-space: pre-wrap;
     word-break: break-word;
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   demoUser: css`
-    margin-inline-start: auto;
     background: ${cssVar.colorFillTertiary};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   meta: css`
-    font-size: 13px;
     color: ${cssVar.colorTextDescription};
-  `,
-  sectionTitle: css`
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-  `,
-  tag: css`
-    border-radius: 4px;
   `,
 }))
 
@@ -64,7 +56,7 @@ const DemoChat = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
   const messages = useMemo(() => buildDemoMessages(agent), [agent])
 
   if (messages.length === 0) {
-    return <Text className={styles.meta}>暂无演示对话</Text>
+    return <Text className={cx(styles.meta, 'text-[13px]')}>暂无演示对话</Text>
   }
 
   return (
@@ -82,7 +74,11 @@ const DemoChat = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
               style={{ flex: 'none' }}
             />
           ) : null}
-          <div className={[styles.demoBubble, item.role === 'user' ? styles.demoUser : ''].filter(Boolean).join(' ')}>
+          <div
+            className={[styles.demoBubble, item.role === 'user' ? cx(styles.demoUser, 'ms-auto') : '']
+              .filter(Boolean)
+              .join(' ')}
+          >
             {item.content}
           </div>
         </Flex>
@@ -110,7 +106,7 @@ const OverviewTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
           },
         ]}
       />
-      <Text as='h3' className={styles.sectionTitle}>
+      <Text as='h3' className={'m-0 text-[15px] font-semibold'}>
         助理演示
       </Text>
       <DemoChat agent={agent} />
@@ -133,7 +129,7 @@ const IntroTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
       {systemRole ? (
         <Flex className='flex-col gap-2'>
           <Flex className='flex-between'>
-            <Text as='h3' className={styles.sectionTitle}>
+            <Text as='h3' className={'m-0 text-[15px] font-semibold'}>
               助理简介
             </Text>
             <ActionIcon icon={Copy} size='small' title='复制' onClick={handleCopySystemRole} />
@@ -143,7 +139,7 @@ const IntroTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
             {agent.tags && agent.tags.length > 0 ? (
               <Flex className='mt-3 flex-wrap gap-1'>
                 {agent.tags.map((tag) => (
-                  <Tag className={styles.tag} key={tag} size='small'>
+                  <Tag className={'rounded'} key={tag} size='small'>
                     {tag}
                   </Tag>
                 ))}
@@ -155,7 +151,7 @@ const IntroTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
 
       {agent.openingMessage ? (
         <Flex className='flex-col gap-2'>
-          <Text as='h3' className={styles.sectionTitle}>
+          <Text as='h3' className={'m-0 text-[15px] font-semibold'}>
             开场消息
           </Text>
           <Block className='flex items-start gap-3 p-4' variant='outlined'>
@@ -168,7 +164,7 @@ const IntroTab = memo<{ agent: DiscoverAgentItem }>(({ agent }) => {
       {agent.openingQuestions && agent.openingQuestions.length > 0 ? (
         <Flex className='flex-col gap-2'>
           <Flex className='items-center gap-2'>
-            <Text as='h3' className={styles.sectionTitle}>
+            <Text as='h3' className={'m-0 text-[15px] font-semibold'}>
               开场问题
             </Text>
             <Tag size='small'>{agent.openingQuestions.length}</Tag>

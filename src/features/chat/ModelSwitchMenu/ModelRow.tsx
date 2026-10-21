@@ -30,17 +30,9 @@ import { menuKey } from './types'
 import type { ModelWithProviders } from './types'
 
 const styles = createStaticStyles(({ css }) => ({
-  detailPopup: css`
-    user-select: none;
-    overscroll-behavior: contain;
-    width: 400px;
-  `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   itemActive: css`
     background: ${cssVar.colorFillTertiary};
-  `,
-  rowWrap: css`
-    margin-block: 1px;
-    margin-inline: 4px;
   `,
   rowTrigger: css`
     width: 100%;
@@ -99,7 +91,7 @@ export const ModelRow = memo<ModelRowProps>(
     useEffect(() => subscribeScroll?.(() => setDetailOpen(false)), [subscribeScroll])
 
     return (
-      <div className={styles.rowWrap}>
+      <div className={'my-px mx-1'}>
         <DropdownMenuSubmenuRoot open={detailOpen} onOpenChange={setDetailOpen}>
           <DropdownMenuSubmenuTrigger
             className={cx(styles.rowTrigger, active && styles.itemActive)}
@@ -119,7 +111,7 @@ export const ModelRow = memo<ModelRowProps>(
           </DropdownMenuSubmenuTrigger>
           <DropdownMenuPortal>
             <DropdownMenuPositioner anchor={null} placement='right' sideOffset={12}>
-              <DropdownMenuPopup className={styles.detailPopup}>
+              <DropdownMenuPopup className={'select-none overscroll-contain w-[400px]'}>
                 <ModelDetailPanel model={model} provider={detailProvider} />
               </DropdownMenuPopup>
             </DropdownMenuPositioner>
@@ -153,7 +145,7 @@ export const MultiProviderModelRow = memo<MultiProviderModelRowProps>(
     if (!defaultProvider) return null
 
     return (
-      <div className={styles.rowWrap}>
+      <div className={'my-px mx-1'}>
         <DropdownMenuSubmenuRoot open={detailOpen} onOpenChange={setDetailOpen}>
           <DropdownMenuSubmenuTrigger
             className={cx(styles.rowTrigger, isActive && styles.itemActive)}
@@ -174,7 +166,7 @@ export const MultiProviderModelRow = memo<MultiProviderModelRowProps>(
           </DropdownMenuSubmenuTrigger>
           <DropdownMenuPortal>
             <DropdownMenuPositioner anchor={null} placement='right' sideOffset={12}>
-              <DropdownMenuPopup className={styles.detailPopup}>
+              <DropdownMenuPopup className={'select-none overscroll-contain w-[400px]'}>
                 <ModelDetailPanel model={data.model} provider={detailProvider} />
                 <DropdownMenuGroup>
                   <DropdownMenuGroupLabel>使用此模型来自</DropdownMenuGroupLabel>

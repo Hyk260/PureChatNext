@@ -50,7 +50,7 @@ const ModelCategory = memo(() => {
             <Text ellipsis>全部</Text>
             {counts.all > 0 ? (
               <Tag
-                className={communityCategoryStyles.count}
+                className={'ms-auto'}
                 size='small'
                 style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
               >
@@ -73,7 +73,7 @@ const ModelCategory = memo(() => {
                 <Text ellipsis>{provider.name}</Text>
                 {count > 0 ? (
                   <Tag
-                    className={communityCategoryStyles.count}
+                    className={'ms-auto'}
                     size='small'
                     style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
                   >

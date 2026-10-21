@@ -2,7 +2,7 @@
 
 import { Center, Checkbox, Flex, Text } from '@pure/ui'
 import { formatDateTime, formatSize } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { memo, useCallback } from 'react'
 import type { MouseEvent, PointerEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
@@ -32,14 +32,9 @@ const styles = createStaticStyles(({ css }) => ({
       background: ${cssVar.colorFillTertiary};
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   item: css`
-    padding-block: 0;
-    padding-inline: 0 24px;
     color: ${cssVar.colorTextSecondary};
-  `,
-  scrollContainer: css`
-    overflow: auto hidden;
-    flex: 1;
   `,
   selected: css`
     background: ${cssVar.colorFillTertiary};
@@ -98,7 +93,7 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
         <Checkbox checked={selected} style={{ pointerEvents: 'none' }} />
       </Center>
       <Flex
-        className={[styles.item, 'shrink-0 items-center gap-2 px-2']}
+        className={[cx(styles.item, 'ps-0 pe-6 py-0'), 'shrink-0 items-center gap-2 px-2']}
         style={{ maxWidth: columnWidths.name, minWidth: columnWidths.name, width: columnWidths.name }}
       >
         <FileIcon fileName={item.name} isDirectory={isFolder} size={24} />
@@ -106,10 +101,10 @@ const ListItem = memo<ListItemProps>(({ index, item, onOpen }) => {
           {item.name}
         </Text>
       </Flex>
-      <Flex className={[styles.item, 'shrink-0 flex-col']} style={{ width: columnWidths.date }}>
+      <Flex className={[cx(styles.item, 'ps-0 pe-6 py-0'), 'shrink-0 flex-col']} style={{ width: columnWidths.date }}>
         {formatDateTime(item.createdAt)}
       </Flex>
-      <Flex className={[styles.item, 'shrink-0 flex-col']} style={{ width: columnWidths.size }}>
+      <Flex className={[cx(styles.item, 'ps-0 pe-6 py-0'), 'shrink-0 flex-col']} style={{ width: columnWidths.size }}>
         {isFolder ? '-' : formatSize(item.size)}
       </Flex>
     </Flex>
@@ -126,7 +121,7 @@ interface ListViewProps {
 const ListView = memo<ListViewProps>(({ items, onOpen }) => {
   return (
     <Flex className='flex-col size-full'>
-      <div className={styles.scrollContainer}>
+      <div className={'overflow-x-auto overflow-y-hidden flex-1'}>
         <ListViewHeader data={items} />
         <Flex className='flex-col w-full'>
           {items.map((item, index) => (

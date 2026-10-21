@@ -2,7 +2,7 @@
 
 import { Avatar, Block, Button, Icon, Tag, Text, Flex } from '@pure/ui'
 import { formatDate } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { BookTextIcon, ClockIcon, CoinsIcon, GitForkIcon, PuzzleIcon } from 'lucide-react'
 import { memo, useCallback } from 'react'
 import type { MouseEvent } from 'react'
@@ -12,24 +12,17 @@ import type { DiscoverAgentSummary } from '@/features/community/types'
 import { useAddCommunityAgent } from '@/features/community/hooks/useAddCommunityAgent'
 
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   desc: css`
-    flex: 1;
-    margin: 0 !important;
     color: ${cssVar.colorTextSecondary};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   footer: css`
-    margin-block-start: 16px;
     border-block-start: 1px dashed ${cssVar.colorBorder};
-    background: ${cssVar.colorBgContainer};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   secondaryDesc: css`
-    font-size: 12px;
     color: ${cssVar.colorTextDescription};
-  `,
-  title: css`
-    margin: 0 !important;
-    font-size: 16px !important;
-    font-weight: 500 !important;
   `,
   token: css`
     border-radius: 4px;
@@ -98,7 +91,7 @@ const AgentCard = memo<AgentCardProps>(({ onOpenDetail, ...item }) => {
             style={{ flex: 'none' }}
           />
           <Flex className='flex-col flex-1 gap-0.5 overflow-hidden'>
-            <Text className={styles.title} ellipsis>
+            <Text className={'!m-0 !text-base !font-medium'} ellipsis>
               {title}
             </Text>
           </Flex>
@@ -106,7 +99,7 @@ const AgentCard = memo<AgentCardProps>(({ onOpenDetail, ...item }) => {
       </Flex>
 
       <Flex className='flex-col flex-1 gap-3 px-4'>
-        <Text as='p' className={styles.desc} ellipsis={{ rows: 3 }}>
+        <Text as='p' className={cx(styles.desc, 'flex-1 !m-0')} ellipsis={{ rows: 3 }}>
           {description}
         </Text>
         <Flex className='items-center gap-1'>
@@ -133,13 +126,13 @@ const AgentCard = memo<AgentCardProps>(({ onOpenDetail, ...item }) => {
         </Flex>
       </Flex>
 
-      <Flex className={[styles.footer, 'flex-between p-4']}>
-        <Flex className={[styles.secondaryDesc, 'items-center gap-1']}>
+      <Flex className={[cx(styles.footer, 'mt-4 bg-app-surface'), 'flex-between p-4']}>
+        <Flex className={[cx(styles.secondaryDesc, 'text-xs'), 'items-center gap-1']}>
           <Icon icon={ClockIcon} size={14} />
           <span>{formatDate(createdAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         </Flex>
         <Flex className='items-center gap-2'>
-          <span className={styles.secondaryDesc}>{ASSISTANT_CATEGORY_LABELS[category]}</span>
+          <span className={cx(styles.secondaryDesc, 'text-xs')}>{ASSISTANT_CATEGORY_LABELS[category]}</span>
           {/* <Button
             data-testid='assistant-use-button'
             loading={adding}

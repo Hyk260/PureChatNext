@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, Button, Icon, Text, Tooltip, SortableList, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar, createModal } from '@lobehub/ui'
+import { createStaticStyles, cssVar, createModal, cx } from '@lobehub/ui'
 import { ArrowDownToLine, Eye, EyeOff, PinIcon, RotateCcw } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
@@ -38,9 +38,8 @@ const styles = createStaticStyles(({ css }) => ({
       background: ${cssVar.colorFillTertiary};
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   spacerLine: css`
-    flex: 1;
-    block-size: 1px;
     background: ${cssVar.colorBorderSecondary};
   `,
 }))
@@ -94,11 +93,11 @@ SidebarSortableItemRow.displayName = 'SidebarSortableItemRow'
 const BoundSpacerItem = memo(() => (
   <Flex className={[styles.item, 'items-center gap-2']}>
     <Icon icon={ArrowDownToLine} size={14} style={{ color: cssVar.colorTextQuaternary }} />
-    <div className={styles.spacerLine} />
+    <div className={cx(styles.spacerLine, 'flex-1 h-px')} />
     <Text className='text-[12px]' type='secondary'>
       下方条目锚定到底部
     </Text>
-    <div className={styles.spacerLine} />
+    <div className={cx(styles.spacerLine, 'flex-1 h-px')} />
   </Flex>
 ))
 

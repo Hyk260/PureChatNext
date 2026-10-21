@@ -16,8 +16,9 @@ import WorkPanelTab from './WorkPanelTab'
 import type { WorkPanelTabId } from './tabs'
 import { CONFIG_MENU_TABS, WORK_PANEL_TAB_BY_ID, WORKSPACE_MENU_TABS } from './tabs'
 
-// 标题栏与滚动条隐藏：嵌套选择器与伪元素，保留 createStaticStyles
+// 保留标题栏与 tab 样式：依赖逻辑方向边框、嵌套悬停选择器及滚动条伪元素。
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：该主题色暂无对应的语义 Tailwind token。
   addTrigger: css`
     color: ${cssVar.colorTextSecondary};
   `,

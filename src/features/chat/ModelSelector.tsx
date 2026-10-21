@@ -7,6 +7,7 @@ import { memo } from 'react'
 import ModelSwitchMenu, { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
 
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：包含动画或主题过渡。
   icon: css`
     transition: scale 400ms cubic-bezier(0.215, 0.61, 0.355, 1);
   `,

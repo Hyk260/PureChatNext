@@ -1,7 +1,6 @@
 'use client'
 
 import { ActionIcon, Flex } from '@pure/ui'
-import { createStaticStyles } from '@lobehub/ui'
 import { PanelLeftOpen } from 'lucide-react'
 import Link from 'next/link'
 import { memo } from 'react'
@@ -9,12 +8,6 @@ import { memo } from 'react'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { useSession } from '@/libs/better-auth/client'
 import { getDesktopApi } from '@/types/desktop'
-
-const styles = createStaticStyles(({ css }) => ({
-  header: css`
-    flex: none;
-  `,
-}))
 
 const NavHeader = memo(() => {
   const { data: session } = useSession()
@@ -24,7 +17,7 @@ const NavHeader = memo(() => {
   const displayName = session?.user?.name ?? session?.user?.email?.split('@')[0] ?? '访客'
 
   return (
-    <Flex className={[styles.header, 'flex-between h-[40px] p-2']}>
+    <Flex className={['flex-none', 'flex-between h-[40px] p-2']}>
       <Flex className='items-center gap-0.5'>
         {sidebarCollapsed && !getDesktopApi() ? (
           <ActionIcon icon={PanelLeftOpen} size='small' title='展开侧栏' onClick={toggleSidebarCollapsed} />

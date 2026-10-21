@@ -1,7 +1,7 @@
 'use client'
 
 import { Block, Flex, Text } from '@pure/ui'
-import { toast, createStaticStyles, cssVar, Switch } from '@lobehub/ui'
+import { toast, createStaticStyles, cssVar, Switch, cx } from '@lobehub/ui'
 import { useRouter } from 'next/navigation'
 import { memo } from 'react'
 
@@ -24,13 +24,12 @@ const styles = createStaticStyles(({ css }) => ({
       box-shadow: 0 0 1px 1px ${cssVar.colorFill} inset;
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   desc: css`
-    min-height: 40px;
-    margin: 0 !important;
     color: ${cssVar.colorTextSecondary};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   footer: css`
-    padding-block-start: 12px;
     border-block-start: 1px solid ${cssVar.colorBorderSecondary};
   `,
 }))
@@ -81,13 +80,13 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
         <Flex className='flex-col gap-1.5'>
           <Text className='font-semibold'>{meta.name}</Text>
           {meta.description ? (
-            <Text as='p' className={`${styles.desc} text-[13px]`} ellipsis={{ rows: 2 }}>
+            <Text as='p' className={`${cx(styles.desc, 'min-h-[40px] !m-0')} text-[13px]`} ellipsis={{ rows: 2 }}>
               {meta.description}
             </Text>
           ) : null}
         </Flex>
       </Flex>
-      <Flex className={[styles.footer, 'flex-between w-full']}>
+      <Flex className={[cx(styles.footer, 'pt-3'), 'flex-between w-full']}>
         <Text className='text-[12px]' type='secondary'>
           {isEnabled ? '已启用' : '未启用'}
         </Text>

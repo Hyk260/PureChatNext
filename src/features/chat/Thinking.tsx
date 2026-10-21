@@ -10,7 +10,7 @@ import {
   Icon,
   Flex,
 } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { AtomIcon, Loader2Icon } from 'lucide-react'
 import { memo, useEffect, useState } from 'react'
 
@@ -31,10 +31,9 @@ const styles = createStaticStyles(({ css }) => ({
       color: ${cssVar.colorTextDescription};
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   thinkingLabel: css`
     color: ${cssVar.colorTextSecondary};
-    font-size: 12px;
-    user-select: none;
   `,
 }))
 
@@ -90,7 +89,7 @@ const Thinking = memo<ThinkingProps>(({ text, thinking = false, duration }) => {
                   spin={thinking}
                 />
               </Block>
-              <span className={styles.thinkingLabel}>{label}</span>
+              <span className={cx(styles.thinkingLabel, 'text-xs select-none')}>{label}</span>
             </Flex>
           </AccordionTrigger>
         </AccordionHeader>

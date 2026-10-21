@@ -9,6 +9,7 @@ import { useHomeStore } from '@/features/home/store/useHomeStore'
 import type { HomeAgentMode } from '@/features/home/store/useHomeStore'
 
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   activeOption: css`
     background: ${cssVar.colorFillSecondary};
   `,
@@ -42,9 +43,8 @@ const styles = createStaticStyles(({ css }) => ({
       background: ${cssVar.colorFillSecondary};
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   optionDesc: css`
-    font-size: 12px;
-    line-height: 1.4;
     color: ${cssVar.colorTextDescription};
   `,
   optionIcon: css`
@@ -89,7 +89,7 @@ const AgentModeButton = memo(() => {
         </Flex>
         <Flex className='flex-col flex-1'>
           <div className={styles.optionTitle}>智能</div>
-          <div className={styles.optionDesc}>工具、联网、文件与环境</div>
+          <div className={cx(styles.optionDesc, 'text-xs leading-[1.4]')}>工具、联网、文件与环境</div>
         </Flex>
       </Flex>
 
@@ -103,7 +103,7 @@ const AgentModeButton = memo(() => {
         </Flex>
         <Flex className='flex-col flex-1'>
           <div className={styles.optionTitle}>对话</div>
-          <div className={styles.optionDesc}>快速问答与日常聊天</div>
+          <div className={cx(styles.optionDesc, 'text-xs leading-[1.4]')}>快速问答与日常聊天</div>
         </Flex>
       </Flex>
     </Flex>

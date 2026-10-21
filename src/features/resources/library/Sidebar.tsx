@@ -23,10 +23,6 @@ const styles = createStaticStyles(({ css }) => ({
     height: 100%;
     background: ${cssVar.colorBgLayout};
   `,
-  header: css`
-    padding: 12px 16px;
-    border-block-end: 1px solid ${cssVar.colorBorderSecondary};
-  `,
 }))
 
 const LibraryHierarchy = memo(() => {
@@ -80,7 +76,7 @@ const LibrarySidebar = memo(() => {
 
   return (
     <Flex className={[styles.sidebar, 'flex-col h-full']}>
-      <Flex className={[styles.header, 'items-center gap-2']}>
+      <Flex className={['py-3 px-4 border-b border-app-border-secondary', 'items-center gap-2']}>
         <Icon icon={ChevronLeft} size={16} style={{ cursor: 'pointer' }} onClick={() => router.push('/resources')} />
         <Text ellipsis strong>
           {kb?.name ?? '知识库'}

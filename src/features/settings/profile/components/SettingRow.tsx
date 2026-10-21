@@ -12,10 +12,6 @@ interface SettingRowProps {
 }
 
 const styles = createStaticStyles(({ css, responsive }) => ({
-  action: css`
-    flex-shrink: 0;
-    margin-inline-start: auto;
-  `,
   body: css`
     display: flex;
     flex: 1;
@@ -55,7 +51,7 @@ export function SettingRow({ action, children, label, labelSlot }: SettingRowPro
       <div className={styles.label}>{labelSlot ?? (label ? <Text strong>{label}</Text> : null)}</div>
       <div className={styles.body}>
         {children}
-        {action ? <div className={styles.action}>{action}</div> : null}
+        {action ? <div className={'shrink-0 ms-auto'}>{action}</div> : null}
       </div>
     </div>
   )

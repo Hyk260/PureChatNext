@@ -5,6 +5,7 @@ import type { DesktopUpdateStatus } from '@/types/desktopUpdater'
 import { getUpdateProgressPresentation } from './updatePresentation'
 
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：依赖组件内部或状态选择器。
   completed: css`
     .lobe-progress__bar {
       transition: none !important;

@@ -58,10 +58,6 @@ const styles = createStaticStyles(({ css }) => ({
     min-height: 0;
     padding-block-end: 8px;
   `,
-  shell: css`
-    width: 100%;
-    height: 100%;
-  `,
 }))
 
 const ChatPage = memo(() => {
@@ -646,7 +642,7 @@ const ChatPage = memo(() => {
       onRenameTopic={handleRenameTopic}
     >
       {!isClient ? (
-        <div className={styles.shell} />
+        <div className={'w-full h-full'} />
       ) : (
         <Flex className={[styles.page, 'flex-col']}>
           {chatReady ? (

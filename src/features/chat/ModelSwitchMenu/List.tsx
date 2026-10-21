@@ -1,7 +1,7 @@
 'use client'
 
 import { ActionIcon, Icon, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { LucideArrowRight, LucideBolt } from 'lucide-react'
 import { memo } from 'react'
 import { useNavigate } from 'react-router'
@@ -18,8 +18,8 @@ const styles = createStaticStyles(({ css }) => ({
     font-size: 13px;
     text-align: center;
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   groupHeader: css`
-    width: 100%;
     color: ${cssVar.colorTextSecondary};
   `,
   list: css`
@@ -79,7 +79,7 @@ const ModelSwitchList = memo<ModelSwitchListProps>(
               return (
                 <Flex
                   key={`header-${item.provider.id}`}
-                  className={[styles.groupHeader, 'flex-between py-[12px_4px] px-[12px_8px]']}
+                  className={[cx(styles.groupHeader, 'w-full'), 'flex-between py-[12px_4px] px-[12px_8px]']}
                 >
                   <Flex className='items-center gap-2 min-w-0'>
                     <ProviderMark

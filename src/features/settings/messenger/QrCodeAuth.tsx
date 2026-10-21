@@ -160,9 +160,9 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
         </Flex>
       )}
       {qrImgUrl && !error && (
-        <Flex className='relative rounded-2xl border border-line bg-surface p-[14px]'>
+        <Flex className='relative rounded-2xl border border-line bg-surface'>
           <QRCode bordered={false} size={QR_SIZE} value={qrImgUrl} />
-          <Flex className='pointer-events-none absolute-center z-[1] rounded-full border-[3px] border-surface'>
+          <Flex className='pointer-events-none absolute-center z-1 rounded-full border-[3px] border-surface'>
             <PlatformAvatar platform='wechat' size={44} />
           </Flex>
         </Flex>

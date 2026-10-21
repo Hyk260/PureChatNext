@@ -12,14 +12,6 @@ import { getPreviewKind } from './fileType'
 const SourcePreview = lazy(() => import('./SourcePreview'))
 
 const styles = createStaticStyles(({ css }) => ({
-  audio: css`
-    width: min(640px, 100%);
-  `,
-  centered: css`
-    width: 100%;
-    height: 100%;
-    padding: 24px;
-  `,
   frame: css`
     width: 100%;
     height: 100%;
@@ -39,11 +31,6 @@ const styles = createStaticStyles(({ css }) => ({
     overflow: auto;
     padding: 16px 24px;
     box-sizing: border-box;
-  `,
-  video: css`
-    display: block;
-    max-width: 100%;
-    max-height: 100%;
   `,
 }))
 
@@ -91,7 +78,7 @@ const PreviewMessage = memo<PreviewMessageProps>(({ description, fileName, url }
   const [downloading, setDownloading] = useState(false)
 
   return (
-    <Flex className={[styles.centered, 'flex-col-center ']}>
+    <Flex className={['w-full h-full p-6', 'flex-col-center ']}>
       <Text strong>{fileName}</Text>
       <Text type='secondary'>{description}</Text>
       {url && (
@@ -132,7 +119,7 @@ const LoadedTextPreview = ({ content, fileName, url }: { content: string; fileNa
     <div className={styles.source}>
       <Suspense
         fallback={
-          <Flex className={[styles.centered, 'flex-col-center']}>
+          <Flex className={['w-full h-full p-6', 'flex-col-center']}>
             <Spin />
           </Flex>
         }
@@ -168,7 +155,7 @@ const RemoteTextPreview = ({ fileName, url }: { fileName: string; url: string })
 
   if (requestState.url !== url) {
     return (
-      <Flex className={[styles.centered, 'flex-col-center']}>
+      <Flex className={['w-full h-full p-6', 'flex-col-center']}>
         <Spin />
       </Flex>
     )
@@ -201,7 +188,7 @@ const ImagePreview = memo<ImagePreviewProps>(({ fileName, onError, url }) => {
   const [loaded, setLoaded] = useState(false)
 
   return (
-    <Flex className={[styles.centered, 'flex-col-center']}>
+    <Flex className={['w-full h-full p-6', 'flex-col-center']}>
       {!loaded && <Spin />}
       {/* The preview URL may be authenticated or remote and has no known dimensions. */}
       <img
@@ -244,16 +231,16 @@ const FileContent = memo<FileContentProps>(({ item }) => {
 
   if (previewKind === 'video') {
     return (
-      <Flex className={[styles.centered, 'flex-col-center']}>
-        <video controls className={styles.video} src={item.url} onError={() => setMediaFailed(true)} />
+      <Flex className={['w-full h-full p-6', 'flex-col-center']}>
+        <video controls className={'block max-w-full max-h-full'} src={item.url} onError={() => setMediaFailed(true)} />
       </Flex>
     )
   }
 
   if (previewKind === 'audio') {
     return (
-      <Flex className={[styles.centered, 'flex-col-center']}>
-        <audio controls className={styles.audio} src={item.url} onError={() => setMediaFailed(true)} />
+      <Flex className={['w-full h-full p-6', 'flex-col-center']}>
+        <audio controls className={'w-[min(640px,100%)]'} src={item.url} onError={() => setMediaFailed(true)} />
       </Flex>
     )
   }

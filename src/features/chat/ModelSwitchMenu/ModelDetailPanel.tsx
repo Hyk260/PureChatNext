@@ -5,7 +5,7 @@ import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId, ModelTokenPricing } from '@pure/model-bank'
 import { Icon, Tag, Text, Flex } from '@pure/ui'
 import { formatTokenNumber } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import {
   ArrowDownToDot,
   ArrowUpFromDot,
@@ -28,9 +28,6 @@ const styles = createStaticStyles(({ css }) => ({
     height: 14px;
     border-radius: 2px;
   `,
-  container: css`
-    padding-block-end: 8px;
-  `,
   description: css`
     margin: 0;
     padding-block: 8px;
@@ -45,9 +42,8 @@ const styles = createStaticStyles(({ css }) => ({
     font-size: 12px;
     color: ${cssVar.colorTextSecondary};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   sectionTitle: css`
-    font-size: 14px;
-    font-weight: 400;
     color: ${cssVar.colorTextSecondary};
   `,
   tag: css`
@@ -97,7 +93,7 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
 
   if (!card && !configuredModel) {
     return (
-      <div className={styles.container}>
+      <div className={'pb-2'}>
         <Text as='p' className={styles.description} fontSize={12} type='secondary'>
           暂无该模型的详细信息
         </Text>
@@ -123,7 +119,7 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
       : null
 
   return (
-    <Flex className={[styles.container, 'flex-col gap-1']}>
+    <Flex className={['pb-2', 'flex-col gap-1']}>
       {description ? (
         <Text as='p' className={styles.description} fontSize={12} type='secondary'>
           {description}
@@ -134,7 +130,7 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
         <Flex className={[styles.row, 'flex-between']}>
           <Flex className='items-center gap-2'>
             <div className={`${styles.bar} bg-[#1677ff]`} />
-            <span className={styles.sectionTitle}>上下文长度</span>
+            <span className={cx(styles.sectionTitle, 'text-sm font-normal')}>上下文长度</span>
           </Flex>
           <Text fontSize={13} weight={500}>
             {contextLabel}
@@ -146,7 +142,7 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
         <Flex className={[styles.row, 'flex-between']}>
           <Flex className='items-center gap-2'>
             <div className={`${styles.bar} bg-[#722ed1]`} />
-            <span className={styles.sectionTitle}>能力</span>
+            <span className={cx(styles.sectionTitle, 'text-sm font-normal')}>能力</span>
           </Flex>
           <Flex className='gap-1'>
             {ABILITY_TAG_MAP.map(({ key, color, icon }) =>
@@ -165,7 +161,7 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
           <Flex className={[styles.row, 'flex-between']}>
             <Flex className='items-center gap-2'>
               <div className={`${styles.bar} bg-[#fa8c16]`} />
-              <span className={styles.sectionTitle}>价格</span>
+              <span className={cx(styles.sectionTitle, 'text-sm font-normal')}>价格</span>
             </Flex>
             <Text fontSize={11} type='secondary'>
               {priceUnitLabel(pricing.currency)}

@@ -1,6 +1,6 @@
 'use client'
 
-import { createStaticStyles, keyframes } from '@lobehub/ui'
+import { createStaticStyles, keyframes, cx } from '@lobehub/ui'
 import { memo } from 'react'
 import type { CSSProperties } from 'react'
 
@@ -45,28 +45,24 @@ const scaleAnim = keyframes`
 `
 
 const styles = createStaticStyles(({ css, cssVar }) => ({
+  // 保留 createStaticStyles：包含动画或主题过渡。
   center: css`
     fill: ${cssVar.colorTextSecondary};
     animation: ${scaleAnim} 2s infinite;
   `,
 
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   connection: css`
-    opacity: 0.3;
     stroke: ${cssVar.colorTextSecondary};
-    stroke-width: 0.5;
   `,
 
-  container: css`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  `,
-
+  // 保留 createStaticStyles：包含动画或主题过渡。
   node: css`
     fill: ${cssVar.colorTextSecondary};
     animation: ${pulseAnim} 2s infinite;
   `,
 
+  // 保留 createStaticStyles：包含动画或主题过渡。
   particle: css`
     fill: ${cssVar.colorTextSecondary};
     animation: ${flowAnim} 2s infinite;
@@ -81,11 +77,6 @@ const styles = createStaticStyles(({ css, cssVar }) => ({
     stroke-width: 1;
 
     animation: ${rotateAnim} 20s infinite linear;
-  `,
-
-  svg: css`
-    width: 100%;
-    height: 100%;
   `,
 }))
 
@@ -126,7 +117,7 @@ const NeuralNetworkLoading = memo<NeuralNetworkLoadingProps>(({ size = 16 }) => 
         const y2 = 25 + targetIndex * 25
         connections.push(
           <line
-            className={styles.connection}
+            className={cx(styles.connection, 'opacity-30 [stroke-width:0.5]')}
             key={`connection-${layerIndex}-${nodeIndex}-${targetIndex}`}
             x1={x1}
             x2={x2}
@@ -155,8 +146,8 @@ const NeuralNetworkLoading = memo<NeuralNetworkLoadingProps>(({ size = 16 }) => 
   ))
 
   return (
-    <div className={styles.container} style={{ height: size, width: size }}>
-      <svg className={styles.svg} viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'>
+    <div className={'flex-center'} style={{ height: size, width: size }}>
+      <svg className={'w-full h-full'} viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'>
         {connections}
 
         {nodes}

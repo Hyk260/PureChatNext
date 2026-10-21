@@ -1,9 +1,6 @@
 import { createStaticStyles, cssVar } from '@lobehub/ui'
 
 export const communityCategoryStyles = createStaticStyles(({ css }) => ({
-  count: css`
-    margin-inline-start: auto;
-  `,
   item: css`
     /* Preserve navigation-row geometry over the shared Button's default sizing. */
     && {

@@ -4,7 +4,7 @@ import { ActionIcon, Flex, Icon, ModelIcon, SortableList, Tag, Text, Tooltip } f
 import { copyToClipboard, formatDuration, formatTokenNumber } from '@pure/utils/client'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
-import { toast, createStaticStyles, cssVar, Switch } from '@lobehub/ui'
+import { toast, createStaticStyles, cssVar, Switch, cx } from '@lobehub/ui'
 import { Check, CircleX, Code2, Eye, Globe2, ImageIcon, Lightbulb, Loader2, Pencil, Trash2, Wrench } from 'lucide-react'
 import { memo } from 'react'
 
@@ -23,10 +23,6 @@ const styles = createStaticStyles(({ css }) => ({
       background: ${cssVar.colorFillTertiary};
     }
   `,
-  desc: css`
-    flex: 1;
-    min-width: 0;
-  `,
   id: css`
     overflow: hidden;
     text-overflow: ellipsis;
@@ -35,12 +31,9 @@ const styles = createStaticStyles(({ css }) => ({
     color: ${cssVar.colorTextDescription};
     font-size: 12px;
   `,
-  meta: css`
-    min-width: 0;
-  `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   metadata: css`
     color: ${cssVar.colorTextSecondary};
-    font-size: 12px;
   `,
   status: css`
     display: inline-flex;
@@ -100,10 +93,10 @@ const ModelItem = memo<ModelItemProps>(
 
     return (
       <Flex className={[styles.container, 'flex-between  w-full']}>
-        <Flex className={[styles.desc, 'items-center gap-3']}>
+        <Flex className={['flex-1 min-w-0', 'items-center gap-3']}>
           {showDragHandle ? <SortableList.DragHandle size='small' title='拖动排序' /> : null}
           <ModelIcon model={model.id} size={32} />
-          <Flex className={[styles.meta, 'flex-col gap-1']}>
+          <Flex className={['min-w-0', 'flex-col gap-1']}>
             <Flex className='min-w-0 flex-wrap items-center gap-x-2 gap-y-1'>
               <Text className='font-medium' ellipsis>
                 {model.displayName}
@@ -121,7 +114,9 @@ const ModelItem = memo<ModelItemProps>(
               </Tooltip>
               <ModelCapabilityTags abilities={abilities} contextWindowTokens={contextWindowTokens} />
             </Flex>
-            {metadata.length > 0 ? <Text className={styles.metadata}>{metadata.join(' · ')}</Text> : null}
+            {metadata.length > 0 ? (
+              <Text className={cx(styles.metadata, 'text-xs')}>{metadata.join(' · ')}</Text>
+            ) : null}
           </Flex>
         </Flex>
 

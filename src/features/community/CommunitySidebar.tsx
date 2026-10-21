@@ -18,16 +18,13 @@ const styles = createStaticStyles(({ css }) => ({
     overflow: hidden;
     background: ${cssVar.colorBgLayout};
   `,
-  sidebarCollapsed: css`
-    width: 0 !important;
-  `,
 }))
 
 const CommunitySidebar = memo(() => {
   const sidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
 
   return (
-    <Flex className={[styles.sidebar, sidebarCollapsed && styles.sidebarCollapsed, 'flex-col h-full']}>
+    <Flex className={[styles.sidebar, sidebarCollapsed && '!w-0', 'flex-col h-full']}>
       <Scrollbar className='size-full'>
         <Flex className='flex-col gap-px h-full'>
           <CommunitySidebarHeader />

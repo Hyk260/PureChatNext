@@ -33,6 +33,8 @@ export class WindowManager {
     if (this.window) return this.window
     const savedState = await this.config?.read().then((value) => value.windowState)
     const window = new BrowserWindow({
+      // Let the first click on custom titlebar controls reach the renderer when macOS activates the window.
+      ...(process.platform === 'darwin' ? { acceptFirstMouse: true } : {}),
       frame: false,
       height: savedState?.height ?? 800,
       icon: this.iconPath,

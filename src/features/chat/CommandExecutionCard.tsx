@@ -1,7 +1,7 @@
 'use client'
 
 import { isRecord } from '@pure/utils/object'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { CircleAlert, CircleCheck, LoaderCircle } from 'lucide-react'
 import type { UIMessage } from 'ai'
 
@@ -25,9 +25,6 @@ const styles = createStaticStyles(({ css }) => ({
     color: ${cssVar.colorTextSecondary};
     font-size: 13px;
   `,
-  icon: css`
-    flex: none;
-  `,
   spinner: css`
     animation: command-execution-spin 1s linear infinite;
 
@@ -44,10 +41,9 @@ const styles = createStaticStyles(({ css }) => ({
     text-overflow: ellipsis;
     white-space: nowrap;
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   duration: css`
-    flex: none;
     color: ${cssVar.colorTextQuaternary};
-    font-size: 12px;
   `,
   output: css`
     overflow: auto;
@@ -164,17 +160,19 @@ const CommandExecutionCard = ({ part, running }: { part: CommandExecutionPart; r
     >
       <div className={styles.header}>
         {isRunning ? (
-          <LoaderCircle className={`${styles.icon} ${styles.spinner}`} size={16} aria-hidden />
+          <LoaderCircle className={cx('flex-none', styles.spinner)} size={16} aria-hidden />
         ) : isSuccessful ? (
-          <CircleCheck className={styles.icon} size={16} aria-hidden />
+          <CircleCheck className='flex-none' size={16} aria-hidden />
         ) : (
-          <CircleAlert className={styles.icon} size={16} aria-hidden />
+          <CircleAlert className='flex-none' size={16} aria-hidden />
         )}
         <span>{statusText}</span>
         <code className={styles.command} title={command}>
           {command}
         </code>
-        {execution ? <span className={styles.duration}>{formatDuration(execution.durationMs)}</span> : null}
+        {execution ? (
+          <span className={cx(styles.duration, 'flex-none text-xs')}>{formatDuration(execution.durationMs)}</span>
+        ) : null}
       </div>
       {output ? <pre className={styles.output}>{output}</pre> : null}
       {execution && execution.exitCode !== 0 ? (

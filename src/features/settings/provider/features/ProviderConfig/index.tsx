@@ -260,14 +260,12 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
           <Text className='text-[13px]' type='secondary'>
             由 PureChat 官方托管，无需填写 API Key。用量计入每月免费积分；用尽后可等待下月重置，或改用下方自配服务商。
           </Text>
-          <Text className={`${styles.hint} mt-2`}>
-            设置中不提供购买积分入口。
-          </Text>
+          <Text className={`${styles.hint} mt-2`}>设置中不提供购买积分入口。</Text>
         </>
       ) : (
         <>
           <div className={styles.row}>
-            <Flex className={[styles.rowLabel, 'flex-col gap-1']}>
+            <Flex className='flex-1 min-w-0 flex-col gap-1'>
               <Text className='font-medium'>API Key</Text>
               <Text className='text-[12px]' type='secondary'>
                 请填写你的 {meta.name} API Key
@@ -304,7 +302,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
           </div>
 
           <div className={styles.row}>
-            <Flex className={[styles.rowLabel, 'flex-col gap-1']}>
+            <Flex className='flex-1 min-w-0 flex-col gap-1'>
               <Text className='font-medium'>API 代理地址</Text>
               <Text className='text-[12px]' type='secondary'>
                 必须包含 http(s)://
@@ -330,7 +328,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
           </div>
 
           <div className={styles.row}>
-            <Flex className={[styles.rowLabel, 'flex-col gap-1']}>
+            <Flex className='flex-1 min-w-0 flex-col gap-1'>
               <Text className='font-medium'>连通性检查</Text>
               <Text className='text-[12px]' type='secondary'>
                 测试 API Key 与代理地址是否正确填写

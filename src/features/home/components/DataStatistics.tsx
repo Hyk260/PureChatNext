@@ -1,6 +1,6 @@
 'use client'
 
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
 import { memo } from 'react'
 import type { ReactNode } from 'react'
@@ -32,9 +32,8 @@ const styles = createStaticStyles(({ css }) => ({
     font-weight: bold;
     line-height: 20px;
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   title: css`
-    font-size: 12px;
-    line-height: 1.2;
     color: ${cssVar.colorTextDescription};
   `,
 }))
@@ -48,7 +47,7 @@ const fetchUserStats = async (): Promise<UserStats> => {
 const StatCard = memo<{ count: ReactNode; title: string }>(({ count, title }) => (
   <Flex className={[styles.card, 'flex-col flex-1 gap-0.5']}>
     <div className={styles.count}>{count}</div>
-    <div className={styles.title}>{title}</div>
+    <div className={cx(styles.title, 'text-xs leading-[1.2]')}>{title}</div>
   </Flex>
 ))
 

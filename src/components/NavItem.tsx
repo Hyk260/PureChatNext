@@ -2,17 +2,9 @@
 
 import { Block, Center, Icon, Text, Flex } from '@pure/ui'
 import type { BlockProps, IconProps } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
+import { cssVar, cx } from '@lobehub/ui'
 import { memo } from 'react'
 import type { ReactNode } from 'react'
-
-const styles = createStaticStyles(({ css }) => ({
-  container: css`
-    user-select: none;
-    overflow: hidden;
-    min-width: 32px;
-  `,
-}))
 
 export interface NavItemProps extends Omit<BlockProps, 'children' | 'title'> {
   active?: boolean
@@ -32,7 +24,7 @@ const NavItem = memo<NavItemProps>(
       <Block
         horizontal
         align='center'
-        className={cx(styles.container, className)}
+        className={cx('select-none overflow-hidden min-w-[32px]', className)}
         clickable={clickable ?? Boolean(onItemClick)}
         gap={8}
         height={36}

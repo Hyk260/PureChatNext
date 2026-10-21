@@ -3,15 +3,15 @@
 import { ModelIcon, Text, Flex } from '@pure/ui'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { ChevronDownIcon } from 'lucide-react'
 import { memo } from 'react'
 
 import ModelSwitchMenu from '@/features/chat/ModelSwitchMenu'
 
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   chevron: css`
-    flex: none;
     color: ${cssVar.colorTextQuaternary};
   `,
   // 与渠道页「绑定助手」Select 同为带边框触发器
@@ -54,14 +54,12 @@ export const MessengerModelSwitch = memo<MessengerModelSwitchProps>(
           selectedProvider={provider}
           onSelect={onSelect}
         >
-          <Flex
-            className={[styles.modelTrigger, 'items-center gap-1.5', disabled && 'pointer-events-none opacity-50']}
-          >
+          <Flex className={[styles.modelTrigger, 'items-center gap-1.5', disabled && 'pointer-events-none opacity-50']}>
             <ModelIcon model={modelId} size={18} />
             <Text className='min-w-0 flex-1 text-[13px]' ellipsis>
               {currentDisplayName}
             </Text>
-            <ChevronDownIcon className={styles.chevron} size={14} />
+            <ChevronDownIcon className={cx(styles.chevron, 'flex-none')} size={14} />
           </Flex>
         </ModelSwitchMenu>
       </Flex>

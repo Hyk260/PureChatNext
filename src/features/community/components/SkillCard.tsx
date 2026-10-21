@@ -3,7 +3,7 @@
 import { ActionIcon, Avatar, Block, Flex, Icon, Tag, Text } from '@pure/ui'
 import { Github } from '@pure/ui/icons'
 import { formatDate } from '@pure/utils/client'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { ClockIcon, FileTextIcon, StarIcon } from 'lucide-react'
 import { memo, useCallback } from 'react'
 
@@ -12,27 +12,21 @@ import { SKILL_CATEGORY_LABELS } from '@/const/community/skills'
 import type { DiscoverSkillItem } from '@/features/community/types'
 
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   author: css`
     color: ${cssVar.colorTextDescription};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   desc: css`
-    flex: 1;
-    margin: 0 !important;
     color: ${cssVar.colorTextSecondary};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   footer: css`
-    margin-block-start: 16px;
     border-block-start: 1px dashed ${cssVar.colorBorder};
-    background: ${cssVar.colorBgContainer};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   secondaryDesc: css`
-    font-size: 12px;
     color: ${cssVar.colorTextDescription};
-  `,
-  title: css`
-    margin: 0 !important;
-    font-size: 16px !important;
-    font-weight: 500 !important;
   `,
 }))
 
@@ -78,10 +72,10 @@ const SkillCard = memo<SkillCardProps>(({ onOpenDetail, ...item }) => {
             style={{ flex: 'none' }}
           />
           <Flex className='flex-col flex-1 gap-0.5 overflow-hidden'>
-            <Text className={styles.title} ellipsis>
+            <Text className={'!m-0 !text-base !font-medium'} ellipsis>
               {name}
             </Text>
-            <span className={styles.secondaryDesc}>{author}</span>
+            <span className={cx(styles.secondaryDesc, 'text-xs')}>{author}</span>
           </Flex>
         </Flex>
         {github?.url ? (
@@ -92,7 +86,7 @@ const SkillCard = memo<SkillCardProps>(({ onOpenDetail, ...item }) => {
       </Flex>
 
       <Flex className='flex-col flex-1 gap-3 px-4'>
-        <Text as='p' className={styles.desc} ellipsis={{ rows: 3 }}>
+        <Text as='p' className={cx(styles.desc, 'flex-1 !m-0')} ellipsis={{ rows: 3 }}>
           {description}
         </Text>
         <Flex className='flex-between'>
@@ -124,12 +118,12 @@ const SkillCard = memo<SkillCardProps>(({ onOpenDetail, ...item }) => {
         </Flex>
       </Flex>
 
-      <Flex className={[styles.footer, 'flex-between p-4']}>
-        <Flex className={[styles.secondaryDesc, 'items-center gap-1']}>
+      <Flex className={[cx(styles.footer, 'mt-4 bg-app-surface'), 'flex-between p-4']}>
+        <Flex className={[cx(styles.secondaryDesc, 'text-xs'), 'items-center gap-1']}>
           <Icon icon={ClockIcon} size={14} />
           <span>{formatDate(updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         </Flex>
-        <Flex className={[styles.secondaryDesc, 'items-center gap-1']}>
+        <Flex className={[cx(styles.secondaryDesc, 'text-xs'), 'items-center gap-1']}>
           <Icon icon={StarIcon} size={14} />
           <span>{formatCompactNumber(github?.stars)}</span>
         </Flex>

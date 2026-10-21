@@ -82,13 +82,6 @@ const styles = createStaticStyles(({ css }) => ({
     border-radius: 18px 18px 0 0;
     background: ${cssVar.colorFillSecondary};
   `,
-  composerWrap: css`
-    position: relative;
-  `,
-  desktopComposerWrap: css`
-    position: relative;
-    padding-block-start: 36px;
-  `,
   mascot: css`
     pointer-events: none;
     position: absolute;
@@ -128,14 +121,13 @@ const styles = createStaticStyles(({ css }) => ({
     border-radius: 8px;
     background: ${cssVar.colorFillQuaternary};
   `,
+  // 保留 createStaticStyles：包含容器查询。
   footer: css`
     @container (max-width: 360px) {
       gap: 8px;
     }
   `,
-  menuPopup: css`
-    min-width: 220px;
-  `,
+  // 保留 createStaticStyles：包含容器查询。
   modelLabel: css`
     @container (max-width: 360px) {
       display: none;
@@ -317,7 +309,7 @@ const HomeChatInput = memo(() => {
   }
 
   return (
-    <div className={isDesktop ? styles.desktopComposerWrap : styles.composerWrap}>
+    <div className={isDesktop ? 'relative pt-9' : 'relative'}>
       {isDesktop ? (
         <div className={styles.projectContext}>
           <HomeProjectBar
@@ -387,7 +379,7 @@ const HomeChatInput = memo(() => {
               </DropdownMenuTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuPositioner placement='topLeft'>
-                  <DropdownMenuPopup className={styles.menuPopup}>
+                  <DropdownMenuPopup className='min-w-[220px]'>
                     <HomeAgentSelect onSelect={handleAgentSelected} />
                     {plusMenuContent}
                   </DropdownMenuPopup>

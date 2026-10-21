@@ -24,20 +24,6 @@ const styles = createStaticStyles(({ css }) => ({
     margin-inline: 12px;
     background: ${cssVar.colorSplit};
   `,
-  popover: css`
-    inset-block-start: 8px !important;
-    inset-inline-start: 8px !important;
-    border-radius: 10px;
-  `,
-  desktopPopover: css`
-    inset-block-start: 38px !important;
-  `,
-  popoverContent: css`
-    padding: 0;
-  `,
-  trigger: css`
-    user-select: none;
-  `,
 }))
 
 interface UserInfoSectionProps {
@@ -160,7 +146,7 @@ const HomeUserTrigger = memo(() => {
     </Flex>
   )
 
-  const popoverClassName = isDesktop ? `${styles.popover} ${styles.desktopPopover}` : styles.popover
+  const popoverClassName = isDesktop ? '!top-[38px] !start-2 rounded-[10px]' : '!top-2 !start-2 rounded-[10px]'
 
   return (
     <>
@@ -172,7 +158,7 @@ const HomeUserTrigger = memo(() => {
         placement='topLeft'
         trigger='click'
         classNames={{
-          content: styles.popoverContent,
+          content: 'p-0',
           root: popoverClassName,
         }}
         onOpenChange={setOpen}
@@ -181,7 +167,7 @@ const HomeUserTrigger = memo(() => {
           clickable
           horizontal
           align='center'
-          className={styles.trigger}
+          className={'select-none'}
           gap={8}
           paddingBlock={2}
           variant='borderless'

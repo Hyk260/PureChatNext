@@ -36,9 +36,6 @@ const styles = createStaticStyles(({ css }) => ({
       }
     }
   `,
-  view: css`
-    box-sizing: border-box;
-  `,
   bar: css`
     position: absolute;
     z-index: 1;
@@ -438,7 +435,7 @@ const Scrollbar = memo(
             style={wrapStyleMerged}
             onScroll={handleScroll}
           >
-            <div ref={viewRef} className={cx(styles.view, viewClassName)} style={viewStyle}>
+            <div ref={viewRef} className={cx('box-border', viewClassName)} style={viewStyle}>
               {children}
             </div>
           </div>

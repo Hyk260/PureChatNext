@@ -24,11 +24,6 @@ const styles = createStaticStyles(({ css }) => ({
       opacity: 1;
     }
   `,
-  zone: css`
-    position: relative;
-    width: 100%;
-    height: 100%;
-  `,
 }))
 
 interface DragUploadZoneProps {
@@ -78,7 +73,7 @@ const DragUploadZone = memo<DragUploadZoneProps>(({ children, disabled, onUpload
 
   return (
     <div
-      className={styles.zone}
+      className={'relative w-full h-full'}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}

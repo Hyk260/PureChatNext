@@ -7,15 +7,6 @@ import { Copy, Edit, MoreHorizontal, Trash } from 'lucide-react'
 import { memo, useMemo } from 'react'
 
 const styles = createStaticStyles(({ css }) => ({
-  actions: css`
-    margin-block-start: 4px;
-    visibility: hidden;
-    pointer-events: none;
-  `,
-  actionsVisible: css`
-    visibility: visible;
-    pointer-events: auto;
-  `,
   moreTrigger: css`
     cursor: pointer;
 
@@ -62,7 +53,7 @@ const MessageActions = memo<MessageActionsProps>(({ isStreaming, isUser, onCopy,
   return (
     <Flex
       className={[
-        cx(styles.actions, !isStreaming && styles.actionsVisible),
+        cx('mt-1 invisible pointer-events-none', !isStreaming && 'visible pointer-events-auto'),
         'items-center gap-0.5',
         isUser ? 'justify-end' : 'justify-start',
       ]}

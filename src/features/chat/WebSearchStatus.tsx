@@ -3,7 +3,7 @@
 import type { ChatWebSearchToolResult } from '@pure/types'
 import { Avatar } from '@pure/ui'
 import { isRecord } from '@pure/utils/object'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { getToolName, isToolUIPart } from 'ai'
 import type { ToolUIPart, UIMessage } from 'ai'
 import { ChevronRight, CircleAlert, Globe, Loader2 } from 'lucide-react'
@@ -66,8 +66,8 @@ const styles = createStaticStyles(({ css }) => ({
     width: 100%;
     padding-block-end: 2px;
   `,
+  // 保留 createStaticStyles：包含动画或主题过渡。
   chevron: css`
-    flex: none;
     transition: transform 0.2s ${cssVar.motionEaseInOut};
   `,
   detail: css`
@@ -77,12 +77,10 @@ const styles = createStaticStyles(({ css }) => ({
     width: 100%;
     margin-block-start: 10px;
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   error: css`
     color: ${cssVar.colorWarningText};
     background: ${cssVar.colorWarningBg};
-  `,
-  icon: css`
-    flex: none;
   `,
   panel: css`
     width: fit-content;
@@ -243,7 +241,7 @@ const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
           return (
             <div className={styles.panel} key={part.toolCallId} role='status'>
               <div className={styles.summary}>
-                <Loader2 className={`${styles.icon} ${styles.spinner}`} size={15} aria-hidden />
+                <Loader2 className={cx('flex-none', styles.spinner)} size={15} aria-hidden />
                 <span>{getToolName(part) === 'fetchUrls' ? '正在读取网页…' : '正在联网搜索…'}</span>
               </div>
             </div>
@@ -254,7 +252,7 @@ const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
           return (
             <div className={`${styles.panel} ${styles.error}`} key={part.toolCallId} role='status'>
               <div className={styles.summary}>
-                <CircleAlert className={styles.icon} size={15} aria-hidden />
+                <CircleAlert className='flex-none' size={15} aria-hidden />
                 <span>联网搜索失败，请稍后重试</span>
               </div>
             </div>
@@ -270,7 +268,7 @@ const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
           return (
             <div className={`${styles.panel} ${styles.error}`} key={part.toolCallId} role='status'>
               <div className={styles.summary}>
-                <CircleAlert className={styles.icon} size={15} aria-hidden />
+                <CircleAlert className='flex-none' size={15} aria-hidden />
                 <span>{output?.error || '联网搜索失败，请稍后重试'}</span>
               </div>
             </div>
@@ -281,7 +279,7 @@ const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
           return (
             <div className={styles.panel} key={part.toolCallId} role='status'>
               <div className={styles.summary}>
-                <Globe className={styles.icon} size={15} aria-hidden />
+                <Globe className='flex-none' size={15} aria-hidden />
                 <span>未找到相关网页来源</span>
               </div>
             </div>
@@ -291,7 +289,7 @@ const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
         return (
           <details className={styles.panel} key={part.toolCallId}>
             <summary className={styles.summary}>
-              <Globe className={styles.icon} size={15} aria-hidden />
+              <Globe className='flex-none' size={15} aria-hidden />
               <span>
                 {isFetch ? '已读取' : '已搜索'} {output.results.length} 个来源
                 {failures > 0 ? ` · ${failures} 个失败` : ''}
@@ -304,7 +302,7 @@ const WebSearchStatus = memo<{ message: UIMessage }>(({ message }) => {
                   return <Avatar avatar={favicon || '🌐'} key={`${href}:${index}`} size={16} />
                 })}
               </span>
-              <ChevronRight className={styles.chevron} data-chevron size={14} aria-hidden />
+              <ChevronRight className={cx(styles.chevron, 'flex-none')} data-chevron size={14} aria-hidden />
             </summary>
             <div className={styles.detail}>
               <div className={styles.query} title={output.query}>

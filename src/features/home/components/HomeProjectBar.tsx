@@ -252,7 +252,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
             )
           })}
         </Flex>
-        <Flex className='flex-col gap-1 mt-1 pt-1 border-t border-(--lobe-color-border-secondary)'>
+        <Flex className='flex-col gap-1 mt-1 pt-1 border-t border-app-border-secondary'>
           {value ? (
             <Button className={styles.menuAction} type='text' onClick={handleClear}>
               <Text className='text-[12px]' type='secondary'>

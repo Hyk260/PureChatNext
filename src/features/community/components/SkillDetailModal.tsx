@@ -1,7 +1,7 @@
 'use client'
 
 import { Avatar, Button, Flex, Icon, Modal, Tag, Text } from '@pure/ui'
-import { toast, createStaticStyles, cssVar, Accordion } from '@lobehub/ui'
+import { toast, createStaticStyles, cssVar, Accordion, cx } from '@lobehub/ui'
 import { DotIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
@@ -15,17 +15,9 @@ import { confirmUninstallSkill, deleteUserSkill } from '@/features/community/uni
 import { useSession } from '@/libs/better-auth/client'
 
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   meta: css`
-    font-size: 13px;
     color: ${cssVar.colorTextDescription};
-  `,
-  sectionTitle: css`
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-  `,
-  tag: css`
-    border-radius: 4px;
   `,
 }))
 
@@ -314,13 +306,13 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
           />
         </Flex>
 
-        <Flex className={[styles.meta, 'items-center gap-3 flex-wrap']}>
-          <span className={styles.meta}>{skill.author}</span>
+        <Flex className={[cx(styles.meta, 'text-[13px]'), 'items-center gap-3 flex-wrap']}>
+          <span className={cx(styles.meta, 'text-[13px]')}>{skill.author}</span>
           {skill.homepage ? (
             <>
               <Icon icon={DotIcon} size={8} />
               <a
-                className={`${styles.meta} hover:underline`}
+                className={`${cx(styles.meta, 'text-[13px]')} hover:underline`}
                 href={skill.homepage}
                 rel='noopener noreferrer'
                 target='_blank'
@@ -333,7 +325,7 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
 
         {skill.description ? (
           <Flex className='flex-col gap-3'>
-            <Text as='h3' className={styles.sectionTitle}>
+            <Text as='h3' className={'m-0 text-[15px] font-semibold'}>
               关于
             </Text>
             <Text as='p' className='m-0 leading-relaxed' type='secondary'>
@@ -361,12 +353,12 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
 
         {skill.tags && skill.tags.length > 0 ? (
           <Flex className='flex-col gap-2'>
-            <Text as='h3' className={styles.sectionTitle}>
+            <Text as='h3' className={'m-0 text-[15px] font-semibold'}>
               标签
             </Text>
             <Flex className='flex-wrap gap-2'>
               {skill.tags.map((tag) => (
-                <Tag className={styles.tag} key={tag} size='small'>
+                <Tag className={'rounded'} key={tag} size='small'>
                   {tag}
                 </Tag>
               ))}

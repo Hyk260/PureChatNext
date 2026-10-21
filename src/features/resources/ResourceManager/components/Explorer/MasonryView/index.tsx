@@ -25,6 +25,7 @@ const styles = createStaticStyles(({ css }) => ({
       border-color: ${cssVar.colorPrimary};
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   selected: css`
     border-color: ${cssVar.colorPrimary};
     background: ${cssVar.colorPrimaryBg};

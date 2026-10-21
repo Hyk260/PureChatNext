@@ -45,11 +45,6 @@ const styles = createStaticStyles(({ css }) => ({
       display: none;
     }
   `,
-  searchBar: css`
-    height: 40px;
-    background: ${cssVar.colorBgContainer};
-    border-block-end: 1px solid ${cssVar.colorBorderSecondary};
-  `,
   status: css`
     width: 6px;
     height: 6px;
@@ -144,7 +139,7 @@ const ProviderSettingsNav = memo(() => {
 
   return (
     <Flex className={[styles.menu, 'flex-col h-screen']}>
-      <Flex className={[styles.searchBar, 'items-center gap-1 px-2']}>
+      <Flex className={['h-10 bg-app-surface border-b border-app-border-secondary', 'items-center gap-1 px-2']}>
         <SearchBar
           allowClear
           className='min-w-0 flex-1'

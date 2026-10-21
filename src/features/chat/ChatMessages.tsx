@@ -1,7 +1,7 @@
 'use client'
 
 import { Avatar, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import type { UIMessage } from 'ai'
 import type { ChatPermissionMode } from '@pure/types'
 import { memo, useCallback, useEffect, useRef } from 'react'
@@ -31,9 +31,9 @@ const styles = createStaticStyles(({ css }) => ({
     padding: 16px 16px 28px;
     transition: width 0.25s ${cssVar.motionEaseInOut};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   empty: css`
     color: ${cssVar.colorTextQuaternary};
-    text-align: center;
   `,
   openingMessage: css`
     max-width: 640px;
@@ -58,20 +58,13 @@ const styles = createStaticStyles(({ css }) => ({
       color: ${cssVar.colorText};
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   questionsTitle: css`
-    margin: 0;
-    font-size: 13px;
     color: ${cssVar.colorTextDescription};
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   title: css`
-    font-size: 13px;
-    font-weight: 600;
     color: ${cssVar.colorText};
-  `,
-  list: css`
-    flex: 1;
-    min-height: 0;
-    width: 100%;
   `,
 }))
 
@@ -143,7 +136,7 @@ const ChatMessages = memo<ChatMessagesProps>(
       return (
         <Scrollbar
           ref={scrollbarRef}
-          className={styles.list}
+          className={'flex-1 min-h-0 w-full'}
           viewStyle={{ height: '100%', minHeight: '100%' }}
           onScroll={handleScroll}
         >
@@ -156,13 +149,13 @@ const ChatMessages = memo<ChatMessagesProps>(
                 {agentMeta ? (
                   <Flex className='flex-col-center gap-2'>
                     <Avatar avatar={agentMeta.avatar} size={48} />
-                    <Text className={styles.title}>{agentMeta.title}</Text>
+                    <Text className={cx(styles.title, 'text-[13px] font-semibold')}>{agentMeta.title}</Text>
                   </Flex>
                 ) : null}
                 {openingMessage ? <Text className={styles.openingMessage}>{openingMessage}</Text> : null}
                 {openingQuestions.length > 0 ? (
                   <Flex className='w-full max-w-[640px] flex-col-center gap-2'>
-                    <p className={styles.questionsTitle}>试试这些问题</p>
+                    <p className={cx(styles.questionsTitle, 'm-0 text-[13px]')}>试试这些问题</p>
                     <Flex className='flex-wrap justify-center gap-2'>
                       {openingQuestions.map((question) => (
                         <button
@@ -180,7 +173,7 @@ const ChatMessages = memo<ChatMessagesProps>(
                 ) : null}
               </>
             ) : (
-              <Text className={styles.empty}>开始对话吧</Text>
+              <Text className={cx(styles.empty, 'text-center')}>开始对话吧</Text>
             )}
           </Flex>
         </Scrollbar>
@@ -188,7 +181,12 @@ const ChatMessages = memo<ChatMessagesProps>(
     }
 
     return (
-      <Scrollbar ref={scrollbarRef} className={styles.list} viewStyle={{ minHeight: '100%' }} onScroll={handleScroll}>
+      <Scrollbar
+        ref={scrollbarRef}
+        className={'flex-1 min-h-0 w-full'}
+        viewStyle={{ minHeight: '100%' }}
+        onScroll={handleScroll}
+      >
         <Flex
           className={[styles.content, 'flex-col gap-4']}
           style={{ width: wideScreen ? '100%' : `min(${CONVERSATION_MAX_WIDTH}px, 100%)` }}

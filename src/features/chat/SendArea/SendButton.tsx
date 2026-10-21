@@ -5,17 +5,10 @@ import { memo } from 'react'
 import type { CSSProperties, MouseEventHandler } from 'react'
 import { Button } from '@pure/ui'
 
-const iconStyles = createStaticStyles(({ css }) => ({
-  icon: css`
-    flex: none;
-    line-height: 1;
-  `,
-}))
-
 /** Send button idle icon */
 const SendIcon = ({ size = '1em' }: { size?: number | string }) => (
   <svg
-    className={iconStyles.icon}
+    className={'flex-none leading-none'}
     fill='currentColor'
     fillRule='evenodd'
     height={size}
@@ -30,7 +23,7 @@ const SendIcon = ({ size = '1em' }: { size?: number | string }) => (
 /** Send button stop icon */
 const StopIcon = ({ size = '1.5em' }: { size?: number | string }) => (
   <svg
-    className={iconStyles.icon}
+    className={'flex-none leading-none'}
     color='currentColor'
     height={size}
     viewBox='0 0 1024 1024'
@@ -66,14 +59,9 @@ const styles = createStaticStyles(({ css }) => ({
     height: var(--send-button-size, 32px);
     padding-inline: 0 !important;
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   disabled: css`
-    cursor: default;
     border-color: ${cssVar.colorBorderSecondary};
-  `,
-  loadingButton: css`
-    flex: none;
-    height: var(--send-button-size, 32px);
-    padding-inline: 0 !important;
   `,
 }))
 
@@ -94,7 +82,7 @@ const SendButton = memo<SendButtonProps>(
     if (generating) {
       return (
         <Button
-          className={styles.loadingButton}
+          className={'flex-none h-[var(--send-button-size, 32px)] !px-0'}
           shape={shape}
           style={{ ...cssVariables, width: size }}
           title='停止'
@@ -113,7 +101,7 @@ const SendButton = memo<SendButtonProps>(
     if (loading) {
       return (
         <Button
-          className={styles.loadingButton}
+          className={'flex-none h-[var(--send-button-size, 32px)] !px-0'}
           disabled
           loading
           shape={shape}
@@ -125,7 +113,7 @@ const SendButton = memo<SendButtonProps>(
 
     return (
       <Button
-        className={cx(styles.button, disabled && styles.disabled)}
+        className={cx(styles.button, disabled && cx(styles.disabled, 'cursor-default'))}
         disabled={disabled}
         icon={<SendIcon />}
         shape={shape}

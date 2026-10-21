@@ -41,8 +41,4 @@ export const providerDetailStyles = createStaticStyles(({ css }) => ({
       width: 100%;
     }
   `,
-  rowLabel: css`
-    flex: 1;
-    min-width: 0;
-  `,
 }))

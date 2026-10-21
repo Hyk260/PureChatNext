@@ -21,10 +21,6 @@ const styles = createStaticStyles(({ css }) => ({
 
     background: ${cssVar.colorFillTertiary};
   `,
-  list: css`
-    overflow: hidden;
-    padding: 0 !important;
-  `,
 }))
 
 const COMMAND_ICONS: Record<MessengerCommandItem['icon'], LucideIcon> = {
@@ -56,7 +52,7 @@ const MessengerCommandList = memo(({ platform }: MessengerCommandListProps) => {
         {hint}
       </Text>
 
-      <Block className={styles.list} variant='outlined'>
+      <Block className={'overflow-hidden !p-0'} variant='outlined'>
         {MESSENGER_COMMANDS.map((item, index) => (
           <Fragment key={item.command}>
             {index > 0 && <Divider />}

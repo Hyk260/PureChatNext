@@ -21,11 +21,6 @@ const styles = createStaticStyles(({ css }) => ({
     min-height: 0;
     overflow: hidden;
   `,
-  main: css`
-    flex: 1;
-    min-width: 0;
-    height: 100%;
-  `,
   right: css`
     flex: none;
     width: ${RIGHT_WIDTH}px;
@@ -36,10 +31,6 @@ const styles = createStaticStyles(({ css }) => ({
     transition:
       width 0.25s ${cssVar.motionEaseInOut},
       border-color 0.25s ${cssVar.motionEaseInOut};
-  `,
-  rightCollapsed: css`
-    width: 0 !important;
-    border-inline-start-color: transparent;
   `,
 }))
 
@@ -97,7 +88,7 @@ const ChatLayout = memo<Props>(
           onResizeStart={sidebarCollapsed ? undefined : handleResizeStart}
           sidebarCollapsed={sidebarCollapsed}
         >
-          <Flex className={[styles.main, 'h-full min-w-0 flex-col']}>
+          <Flex className='flex-1 min-w-0 h-full flex-col'>
             <ChatHeader
               autoRenameDisabled={busy || autoRenamingTopicId !== null}
               autoRenaming={topic?.id === autoRenamingTopicId}
@@ -111,7 +102,7 @@ const ChatLayout = memo<Props>(
             />
             <div className={styles.content}>{children}</div>
           </Flex>
-          <aside className={cx(styles.right, rightCollapsed && styles.rightCollapsed)}>
+          <aside className={cx(styles.right, rightCollapsed && '!w-0 !border-s-transparent')}>
             <Flex className='h-full w-[320px]'>{right}</Flex>
           </aside>
         </InsetContentFrame>

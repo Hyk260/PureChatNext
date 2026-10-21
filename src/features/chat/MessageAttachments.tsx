@@ -25,11 +25,6 @@ const styles = createStaticStyles(({ css }) => ({
     object-fit: contain;
     border-radius: 8px;
   `,
-  attachmentName: css`
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  `,
 }))
 
 const MessageAttachments = memo<{ message: UIMessage }>(({ message }) => {
@@ -68,7 +63,7 @@ const MessageAttachments = memo<{ message: UIMessage }>(({ message }) => {
         return (
           <div className={styles.attachment} key={`${name}-${index}`} title={name}>
             <FileText size={18} />
-            <span className={styles.attachmentName}>{name}</span>
+            <span className={'truncate'}>{name}</span>
           </div>
         )
       })}

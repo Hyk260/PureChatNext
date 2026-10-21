@@ -8,6 +8,7 @@ import { memo } from 'react'
 import ModelSwitchMenu, { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
 
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   chevron: css`
     color: ${cssVar.colorTextQuaternary};
   `,

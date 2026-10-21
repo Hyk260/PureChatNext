@@ -25,10 +25,6 @@ const styles = createStaticStyles(({ css }) => ({
     pointer-events: none;
     text-align: center;
   `,
-  toggle: css`
-    position: relative;
-    z-index: 1;
-  `,
 }))
 
 const SettingsHeader = memo(() => {
@@ -42,7 +38,7 @@ const SettingsHeader = memo(() => {
     <Flex className={[styles.header, 'items-center']}>
       {sidebarCollapsed && !getDesktopApi() ? (
         <ActionIcon
-          className={styles.toggle}
+          className={'relative z-[1]'}
           icon={PanelLeftOpen}
           onClick={toggleSidebarCollapsed}
           size='small'

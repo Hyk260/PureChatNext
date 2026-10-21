@@ -125,7 +125,7 @@ const SkillCategoryNav = memo(() => {
                 <Text ellipsis>{SKILL_CATEGORY_LABELS[key]}</Text>
                 {counts[key] > 0 ? (
                   <Tag
-                    className={communityCategoryStyles.count}
+                    className={'ms-auto'}
                     size='small'
                     style={{ borderRadius: 12, paddingInline: 6, fontSize: 12, lineHeight: '20px' }}
                   >

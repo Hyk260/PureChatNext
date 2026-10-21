@@ -1,6 +1,6 @@
 'use client'
 
-import { DayjsDateRangePicker, Pagination, Progress, Table, createStaticStyles, cssVar } from '@lobehub/ui'
+import { DayjsDateRangePicker, Pagination, Progress, Table, createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import type { DayjsDateRangeValue, TableProps } from '@lobehub/ui'
 import { Block, Button, Empty, Grid, ModelIcon, SearchBar, Select, Skeleton, Tag, Text, Flex } from '@pure/ui'
 import { SHANGHAI_TIMEZONE } from '@pure/const'
@@ -27,16 +27,6 @@ const formatResetHint = (days: number, hours: number) => {
 }
 
 const styles = createStaticStyles(({ css }) => ({
-  details: css`
-    overflow: hidden;
-  `,
-  error: css`
-    padding: 10px 16px;
-    border-bottom: 1px solid ${cssVar.colorBorderSecondary};
-  `,
-  header: css`
-    width: 100%;
-  `,
   metric: css`
     min-width: 0;
     padding: 16px 20px;
@@ -52,31 +42,19 @@ const styles = createStaticStyles(({ css }) => ({
       }
     }
   `,
-  metricGrid: css`
-    width: 100%;
-  `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   metricHint: css`
     color: ${cssVar.colorTextTertiary};
-    font-size: 13px;
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   metricLabel: css`
     color: ${cssVar.colorTextSecondary};
-    font-size: 14px;
-  `,
-  metricValue: css`
-    font-size: 16px;
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
   `,
   model: css`
     display: inline-flex;
     align-items: center;
     gap: 7px;
     min-width: 0;
-  `,
-  page: css`
-    width: 100%;
-    padding: 24px 24px 64px;
   `,
   pagination: css`
     padding: 10px 16px;
@@ -91,27 +69,9 @@ const styles = createStaticStyles(({ css }) => ({
       }
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   plan: css`
     color: ${cssVar.colorTextSecondary};
-    font-size: 13px;
-  `,
-  section: css`
-    padding: 16px;
-  `,
-  sectionTitle: css`
-    font-size: 18px;
-    font-weight: 600;
-  `,
-  table: css`
-    border-radius: 0;
-  `,
-  tableBodyCell: css`
-    padding-block: 8px;
-    border-radius: 0;
-  `,
-  tableContent: css`
-    border-radius: 0;
-    box-shadow: none;
   `,
   tableHeaderCell: css`
     padding-block: 10px;
@@ -120,14 +80,11 @@ const styles = createStaticStyles(({ css }) => ({
     border-radius: 0;
     box-shadow: none;
   `,
+  // 保留 createStaticStyles：依赖组件内部或状态选择器。
   metricProgress: css`
     .lobe-progress__track {
       stroke: ${cssVar.colorFillSecondary};
     }
-  `,
-  toolbar: css`
-    padding: 10px 16px;
-    border-bottom: 1px solid ${cssVar.colorBorderSecondary};
   `,
 }))
 
@@ -145,11 +102,11 @@ const UsageMetric = ({ hint, label, limit, used, value }: UsageMetricProps) => {
   return (
     <Flex className={[styles.metric, 'flex-between']}>
       <Flex className='flex-col gap-1'>
-        <Text className={styles.metricLabel}>{label}</Text>
-        <Text className={styles.metricValue}>
+        <Text className={cx(styles.metricLabel, 'text-sm')}>{label}</Text>
+        <Text className={'text-base tabular-nums font-medium'}>
           {value} ({percentage}%)
         </Text>
-        {hint ? <Text className={styles.metricHint}>{hint}</Text> : null}
+        {hint ? <Text className={cx(styles.metricHint, 'text-[13px]')}>{hint}</Text> : null}
       </Flex>
       <Progress
         className={styles.metricProgress}
@@ -347,11 +304,11 @@ export function UsageSettingsContent() {
   const rangeEnd = Math.min(page * pageSize, total)
 
   return (
-    <Flex className={[styles.page, 'flex-col gap-10']}>
-      <Block className={styles.section} gap={16} variant='filled'>
-        <Flex className={[styles.header, 'flex-between']}>
-          <Text className={styles.sectionTitle}>总览</Text>
-          <Text className={styles.plan}>当前方案：免费版</Text>
+    <Flex className={['w-full pt-6 px-6 pb-16', 'flex-col gap-10']}>
+      <Block className={'p-4'} gap={16} variant='filled'>
+        <Flex className={['w-full', 'flex-between']}>
+          <Text className={'text-lg font-semibold'}>总览</Text>
+          <Text className={cx(styles.plan, 'text-[13px]')}>当前方案：免费版</Text>
         </Flex>
         {loading && !data ? (
           <Block padding={16} variant='outlined'>
@@ -363,7 +320,7 @@ export function UsageSettingsContent() {
           </Block>
         ) : data ? (
           <Block padding={0} variant='outlined'>
-            <Grid className={styles.metricGrid} gap={0} maxItemWidth={160} rows={1}>
+            <Grid className={'w-full'} gap={0} maxItemWidth={160} rows={1}>
               <UsageMetric
                 hint={formatResetHint(data.balance.resetIn.days, data.balance.resetIn.hours)}
                 label='积分'
@@ -382,10 +339,10 @@ export function UsageSettingsContent() {
         ) : null}
       </Block>
 
-      <Block className={styles.section} gap={16} variant='filled'>
-        <Text className={styles.sectionTitle}>明细</Text>
-        <Block className={styles.details} padding={0} variant='outlined'>
-          <Flex className={[styles.toolbar, 'gap-2.5 flex-wrap']}>
+      <Block className={'p-4'} gap={16} variant='filled'>
+        <Text className={'text-lg font-semibold'}>明细</Text>
+        <Block className={'overflow-hidden'} padding={0} variant='outlined'>
+          <Flex className={['py-2.5 px-4 border-b border-app-border-secondary', 'gap-2.5 flex-wrap']}>
             <SearchBar
               size='small'
               loading={loading}
@@ -431,7 +388,7 @@ export function UsageSettingsContent() {
           </Flex>
 
           {error && data ? (
-            <Flex className={[styles.error, 'items-center gap-3']}>
+            <Flex className={['py-2.5 px-4 border-b border-app-border-secondary', 'items-center gap-3']}>
               <Text type='danger'>{error}</Text>
               <Button size='small' onClick={retry}>
                 重试
@@ -440,10 +397,10 @@ export function UsageSettingsContent() {
           ) : null}
 
           <Table<UsageItem>
-            className={styles.table}
+            className={'rounded-none'}
             classNames={{
-              body: { cell: styles.tableBodyCell },
-              content: styles.tableContent,
+              body: { cell: 'py-2 rounded-none' },
+              content: 'rounded-none shadow-none',
               header: { cell: styles.tableHeaderCell },
             }}
             columns={columns}

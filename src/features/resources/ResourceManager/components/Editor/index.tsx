@@ -25,19 +25,6 @@ const styles = createStaticStyles(({ css }) => ({
     padding: 0px 16px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
   `,
-  headerTitle: css`
-    min-width: 0;
-  `,
-  name: css`
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  `,
-  preview: css`
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-  `,
 }))
 
 const FileEditor = memo(() => {
@@ -63,13 +50,13 @@ const FileEditor = memo(() => {
     <Flex className={[styles.overlay, 'flex-col h-full']}>
       <Flex className={[styles.header, 'items-center gap-1']}>
         <ActionIcon size='small' icon={ArrowLeft} onClick={handleBack} title='返回' />
-        <Flex className={[styles.headerTitle, 'items-center flex-1 gap-2']}>
-          <Text strong className={styles.name} title={item.name}>
+        <Flex className={['min-w-0', 'items-center flex-1 gap-2']}>
+          <Text strong className={'truncate'} title={item.name}>
             {item.name}
           </Text>
         </Flex>
       </Flex>
-      <Flex className={[styles.preview, 'flex-col']}>
+      <Flex className={['flex-1 min-h-0 overflow-hidden', 'flex-col']}>
         <FileContent key={item.id} item={item} />
       </Flex>
     </Flex>

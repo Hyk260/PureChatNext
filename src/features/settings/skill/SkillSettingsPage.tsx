@@ -70,11 +70,6 @@ const styles = createStaticStyles(({ css }) => ({
       background: ${cssVar.colorFillSecondary};
     }
   `,
-  pane: css`
-    min-width: 0;
-    height: 100%;
-    background: ${cssVar.colorBgContainer};
-  `,
   tree: css`
     flex: none;
     width: 240px;
@@ -431,7 +426,7 @@ export default function SkillSettingsPage() {
         </Scrollbar>
       </Flex>
 
-      <Flex className={[styles.pane, 'flex-col flex-1 min-w-0']}>
+      <Flex className={['min-w-0 h-full bg-app-surface', 'flex-col flex-1 min-w-0']}>
         <SettingsHeader />
         {selectedId ? (
           <SkillDetailPane skillId={selectedId} />

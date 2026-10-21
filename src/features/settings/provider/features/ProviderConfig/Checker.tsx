@@ -3,7 +3,7 @@
 import { CircleCheck } from 'lucide-react'
 import { Alert, Button, Flex, ModelIcon, Select } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
-import { createModal, createStaticStyles, cssVar } from '@lobehub/ui'
+import { createModal, cssVar } from '@lobehub/ui'
 import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 import { memo, useEffect, useMemo, useState } from 'react'
@@ -16,12 +16,6 @@ import { secretForProvider, useProviderSecrets } from '../../secretsApi'
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
 import { useCustomProviderRegistry } from '../../useCustomProviderRegistry'
 import type { ProviderId } from '../../types'
-
-const styles = createStaticStyles(({ css }) => ({
-  popup: css`
-    min-width: 280px;
-  `,
-}))
 
 interface CheckerProps {
   disabled?: boolean
@@ -136,7 +130,7 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
     <Flex className='flex-col gap-2 w-full'>
       <Flex className='gap-2 w-full'>
         <Select
-          className={styles.popup}
+          className={'min-w-[280px]'}
           disabled={disabled}
           options={sortedModelIds.map((id) => ({
             label: (

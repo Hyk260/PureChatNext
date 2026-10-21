@@ -9,10 +9,6 @@ import type { HomeAgentGroup } from '@/features/home/store/sidebarDefaults'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
 const styles = createStaticStyles(({ css }) => ({
-  editor: css`
-    flex: 1;
-    min-width: 0;
-  `,
   title: css`
     flex: 1;
     height: 28px;
@@ -97,7 +93,7 @@ const GroupItem = memo<GroupItemProps>(({ canRemove, id, name }) => {
         </>
       ) : (
         <div
-          className={styles.editor}
+          className={'flex-1 min-w-0'}
           onMouseDown={(event) => {
             const target = event.target as HTMLElement | null
             // ControlInput 后缀的 Reset / Save

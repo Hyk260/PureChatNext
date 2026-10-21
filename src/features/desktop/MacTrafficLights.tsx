@@ -38,15 +38,6 @@ const styles = createStaticStyles(({ css }) => ({
       stroke-width: 4;
     }
   `,
-  closeButton: css`
-    background: #ff5f57;
-  `,
-  minimizeButton: css`
-    background: #febc2e;
-  `,
-  maximizeButton: css`
-    background: #28c840;
-  `,
 }))
 
 type MacTrafficLightsProps = {
@@ -60,7 +51,7 @@ const MacTrafficLights = ({ isMaximized, onClose, onMaximize, onMinimize }: MacT
   <div className={styles.root}>
     <button
       aria-label='关闭窗口'
-      className={`${styles.button} ${styles.closeButton}`}
+      className={`${styles.button} bg-[#ff5f57]`}
       onClick={(_event) => onClose()}
       type='button'
     >
@@ -68,7 +59,7 @@ const MacTrafficLights = ({ isMaximized, onClose, onMaximize, onMinimize }: MacT
     </button>
     <button
       aria-label='最小化窗口'
-      className={`${styles.button} ${styles.minimizeButton}`}
+      className={`${styles.button} bg-[#febc2e]`}
       onClick={(_event) => onMinimize()}
       type='button'
     >
@@ -76,7 +67,7 @@ const MacTrafficLights = ({ isMaximized, onClose, onMaximize, onMinimize }: MacT
     </button>
     <button
       aria-label={isMaximized ? '还原窗口' : '最大化窗口'}
-      className={`${styles.button} ${styles.maximizeButton}`}
+      className={`${styles.button} bg-[#28c840]`}
       onClick={(_event) => onMaximize()}
       type='button'
     >

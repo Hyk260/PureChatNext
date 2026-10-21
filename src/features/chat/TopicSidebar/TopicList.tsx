@@ -22,6 +22,7 @@ import TopicItem from './TopicItem'
 import { organizeTopics } from './topicGrouping'
 
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   empty: css`
     color: ${cssVar.colorTextQuaternary};
   `,

@@ -4,7 +4,7 @@ import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { Icon, ModelIcon, Popover, Tooltip, Flex } from '@pure/ui'
 import type { ChatMessageMetadata } from '@pure/types'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { CircleHelpIcon, CoinsIcon } from 'lucide-react'
 import { memo } from 'react'
 
@@ -14,9 +14,6 @@ import type { UsageDetailItem } from '@/features/chat/usageDetails'
 const tokenFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
 
 const styles = createStaticStyles(({ css }) => ({
-  detail: css`
-    min-width: 240px;
-  `,
   detailLabel: css`
     display: inline-flex;
     align-items: center;
@@ -31,21 +28,15 @@ const styles = createStaticStyles(({ css }) => ({
     min-height: 24px;
     font-size: 13px;
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   detailTitle: css`
     color: ${cssVar.colorTextDescription};
-    font-size: 13px;
-    font-weight: 500;
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   divider: css`
-    height: 1px;
-    margin-block: 8px;
     background: ${cssVar.colorBorderSecondary};
   `,
-  dot: css`
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-  `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   info: css`
     color: ${cssVar.colorTextQuaternary};
   `,
@@ -55,11 +46,6 @@ const styles = createStaticStyles(({ css }) => ({
     gap: 4px;
     min-width: 0;
   `,
-  placeholder: css`
-    width: 120px;
-    height: 14px;
-    visibility: hidden;
-  `,
   progress: css`
     overflow: hidden;
     display: flex;
@@ -67,11 +53,6 @@ const styles = createStaticStyles(({ css }) => ({
     height: 6px;
     border-radius: 999px;
     background: ${cssVar.colorFillSecondary};
-  `,
-  section: css`
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
   `,
   summary: css`
     display: flex;
@@ -100,10 +81,9 @@ const styles = createStaticStyles(({ css }) => ({
       outline: none;
     }
   `,
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   value: css`
     color: ${cssVar.colorText};
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
   `,
 }))
 
@@ -127,10 +107,10 @@ const DetailRows = memo<{ items: UsageDetailItem[] }>(({ items }) => (
     {items.map((item) => (
       <div className={styles.detailRow} key={item.key}>
         <span className={styles.detailLabel}>
-          <span className={styles.dot} style={{ background: item.color }} />
+          <span className={'w-[7px] h-[7px] rounded-full'} style={{ background: item.color }} />
           {item.label}
         </span>
-        <span className={styles.value}>{tokenFormatter.format(item.value)}</span>
+        <span className={cx(styles.value, 'tabular-nums font-medium')}>{tokenFormatter.format(item.value)}</span>
       </div>
     ))}
   </>
@@ -146,7 +126,7 @@ const PerformanceLabel = memo<{ label: string; tooltip: string; value: string }>
         <Icon className={styles.info} icon={CircleHelpIcon} size={13} />
       </Tooltip>
     </span>
-    <span className={styles.value}>{value}</span>
+    <span className={cx(styles.value, 'tabular-nums font-medium')}>{value}</span>
   </div>
 ))
 
@@ -162,7 +142,7 @@ const MessageUsage = memo<MessageUsageProps>(({ isStreaming = false, metadata })
     return (
       <div aria-hidden className={styles.summary}>
         <span className={styles.left}>
-          <span className={styles.placeholder} />
+          <span className={'w-[120px] h-3.5 invisible'} />
         </span>
       </div>
     )
@@ -180,28 +160,30 @@ const MessageUsage = memo<MessageUsageProps>(({ isStreaming = false, metadata })
   if (!model && !hasDetail) return null
 
   const detailContent = (
-    <Flex className={[styles.detail, 'flex-col gap-2']}>
-      <div className={styles.detailTitle}>输出明细</div>
+    <Flex className={['min-w-[240px]', 'flex-col gap-2']}>
+      <div className={cx(styles.detailTitle, 'text-[13px] font-medium')}>输出明细</div>
 
       {details.output.length > 0 ? (
-        <div className={styles.section}>
+        <div className={'flex flex-col gap-1'}>
           <SegmentedProgress items={details.output} />
           <DetailRows items={details.output} />
         </div>
       ) : null}
 
       {details.input.length > 0 ? (
-        <div className={styles.section}>
+        <div className={'flex flex-col gap-1'}>
           <SegmentedProgress items={details.input} />
           <DetailRows items={details.input} />
         </div>
       ) : null}
 
-      {hasDetail ? <div className={styles.divider} /> : null}
+      {hasDetail ? <div className={cx(styles.divider, 'h-px my-2')} /> : null}
       {details.totalTokens ? (
         <div className={styles.detailRow}>
           <span className={styles.detailLabel}>总消耗</span>
-          <span className={styles.value}>{tokenFormatter.format(details.totalTokens)}</span>
+          <span className={cx(styles.value, 'tabular-nums font-medium')}>
+            {tokenFormatter.format(details.totalTokens)}
+          </span>
         </div>
       ) : null}
       {tps ? (

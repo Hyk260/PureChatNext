@@ -37,10 +37,6 @@ const styles = createStaticStyles(({ css, cssVar: token }) => ({
       white-space: nowrap;
     }
   `,
-  container: css`
-    width: 100%;
-    min-width: 0;
-  `,
 }))
 
 interface SideBarHeaderLayoutProps {
@@ -122,7 +118,7 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     )
 
     return (
-      <Flex className={[styles.container, 'flex-between flex-none p-2 h-[40px]']}>
+      <Flex className={['w-full min-w-0', 'flex-between flex-none p-2 h-[40px]']}>
         {leftContent}
         <Flex className='items-center flex-none gap-0.5 justify-end'>
           {right}

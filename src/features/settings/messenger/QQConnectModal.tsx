@@ -188,16 +188,18 @@ const QQConnectContent = memo<QQConnectContentProps>(
     return (
       <Flex className='flex-col gap-[18px] py-1'>
         <Text type='secondary'>选择连接方式，将当前助手绑定到 QQ 机器人。</Text>
-        <RadioGroup
-          horizontal={false}
-          options={[
-            { disabled: !gatewaySupported, label: '扫码绑定', value: 'qr' },
-            { disabled: !gatewaySupported, label: 'WebSocket 长连接', value: 'websocket' },
-            { label: '使用 URL 回调', value: 'webhook' },
-          ]}
-          value={mode}
-          onChange={(value) => setMode(value as ConnectMode)}
-        />
+        <Flex>
+          <RadioGroup
+            horizontal
+            options={[
+              { disabled: !gatewaySupported, label: '扫码绑定', value: 'qr' },
+              { disabled: !gatewaySupported, label: 'WebSocket 长连接', value: 'websocket' },
+              { label: '使用 URL 回调', value: 'webhook' },
+            ]}
+            value={mode}
+            onChange={(value) => setMode(value as ConnectMode)}
+          />
+        </Flex>
 
         {!gatewaySupported && (
           <Text type='secondary'>当前部署仅支持 URL 回调。扫码和 WebSocket 需要本地或 Docker 单实例环境。</Text>
@@ -212,9 +214,9 @@ const QQConnectContent = memo<QQConnectContentProps>(
             ) : null}
             {qrStatus?.status === 'waiting' && (
               <>
-                <Flex className='relative rounded-[14px] border border-line bg-surface p-3'>
+                <Flex className='relative rounded-[14px] border border-line bg-surface'>
                   <QRCode bordered={false} size={QR_SIZE} value={qrStatus.qrCodeUrl} />
-                  <Flex className='pointer-events-none absolute-center z-[1] rounded-full border-[3px] border-surface'>
+                  <Flex className='pointer-events-none absolute-center z-1 rounded-full border-[3px] border-surface'>
                     <PlatformAvatar platform='qq' size={42} />
                   </Flex>
                 </Flex>

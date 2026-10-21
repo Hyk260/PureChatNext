@@ -1,7 +1,7 @@
 'use client'
 
 import { Center, FileTypeIcon, Icon, Text, Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { ArrowUpIcon } from 'lucide-react'
 import { memo, useRef } from 'react'
 import type { ChangeEvent } from 'react'
@@ -9,9 +9,8 @@ import type { ChangeEvent } from 'react'
 const ICON_SIZE = 80
 
 const styles = createStaticStyles(({ css }) => ({
+  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
   actionTitle: css`
-    margin-block-start: 12px;
-    font-size: 16px;
     color: ${cssVar.colorTextSecondary};
   `,
   card: css`
@@ -80,7 +79,7 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
       </Flex>
       <Flex className='gap-3'>
         <Flex className={[styles.card, 'flex-col p-4']} onClick={() => fileInputRef.current?.click()}>
-          <span className={styles.actionTitle}>上传文件</span>
+          <span className={cx(styles.actionTitle, 'mt-3 text-base')}>上传文件</span>
           <div className={styles.glow} style={{ background: cssVar.gold }} />
           <FileTypeIcon
             className={styles.icon}
@@ -90,7 +89,7 @@ const EmptyPlaceholder = memo<EmptyPlaceholderProps>(({ onUpload }) => {
           />
         </Flex>
         <Flex className={[styles.card, 'flex-col p-4']} onClick={() => folderInputRef.current?.click()}>
-          <span className={styles.actionTitle}>上传文件夹</span>
+          <span className={cx(styles.actionTitle, 'mt-3 text-base')}>上传文件夹</span>
           <div className={styles.glow} style={{ background: cssVar.geekblue }} />
           <FileTypeIcon
             className={styles.icon}

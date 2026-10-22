@@ -17,11 +17,14 @@ import { Check, ChevronRight, FileText, Globe, GlobeOff, LibraryBig, Plus, Setti
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatPermissionMode } from '@pure/types'
 
+import { PURE_AI_AGENT_ID } from '@/const/home/agents'
 import { CHAT_ATTACHMENT_ACCEPT, validateChatAttachments } from '@/features/chat/attachmentRules'
+import ComposerImageAttachment from '@/features/chat/ComposerImageAttachment'
 import ModelSelector from '@/features/chat/ModelSelector'
 import { useCurrentHomeModel } from '@/features/chat/ModelSwitchMenu'
 import PermissionModeSelector from '@/features/chat/PermissionModeSelector'
 import SendButton from '@/features/chat/SendArea/SendButton'
+import { EMPTY_DRAFT_FILES, getChatDraftKey, useChatDraftStore } from '@/features/chat/store/useChatDraftStore'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { ChatSearchMode } from '@/features/chat/types'
 import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
@@ -120,6 +123,7 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 interface ChatInputProps {
+  agentId?: string
   isBusy?: boolean
   onPermissionModeChange?: (mode: ChatPermissionMode) => Promise<void> | void
   onProjectChange?: (project: DesktopProject | null) => Promise<void> | void
@@ -158,6 +162,7 @@ MenuLabel.displayName = 'MenuLabel'
 
 const ChatInput = memo<ChatInputProps>((props) => {
   const {
+    agentId = PURE_AI_AGENT_ID,
     isBusy,
     onPermissionModeChange,
     onProjectChange,
@@ -171,8 +176,16 @@ const ChatInput = memo<ChatInputProps>((props) => {
     searchMode,
     topicId,
   } = props
-  const [input, setInput] = useState('')
-  const [files, setFiles] = useState<File[]>([])
+  const draftKey = getChatDraftKey(agentId, topicId)
+  const input = useChatDraftStore((state) => state.texts[draftKey] ?? '')
+  const files = useChatDraftStore((state) => state.files[draftKey] ?? EMPTY_DRAFT_FILES)
+  const setDraftText = useChatDraftStore((state) => state.setText)
+  const setDraftFiles = useChatDraftStore((state) => state.setFiles)
+  const setInput = useCallback((text: string) => setDraftText(draftKey, text), [draftKey, setDraftText])
+  const setFiles = useCallback(
+    (update: File[] | ((previous: File[]) => File[])) => setDraftFiles(draftKey, update),
+    [draftKey, setDraftFiles]
+  )
   const [plusOpen, setPlusOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -182,10 +195,9 @@ const ChatInput = memo<ChatInputProps>((props) => {
   const { onCompositionEnd, onCompositionStart, shouldIgnoreEnter } = useImeEnterGuard()
 
   useEffect(() => {
-    if (!prefill) return
-    setInput(prefill)
-    textareaRef.current?.focus()
-  }, [prefill, prefillKey])
+    if (prefill) setInput(prefill)
+    if (prefill || prefillKey) textareaRef.current?.focus()
+  }, [prefill, prefillKey, setInput])
 
   const handleSend = useCallback(() => {
     const text = input.trim()
@@ -194,7 +206,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
     const pendingFiles = files
     setFiles([])
     onSend(text, pendingFiles)
-  }, [files, input, isBusy, onSend])
+  }, [files, input, isBusy, onSend, setFiles, setInput])
 
   const handleAttachmentClick = useCallback(() => {
     setPlusOpen(false)
@@ -221,7 +233,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
 
       setFiles((previous) => [...previous, ...selected])
     },
-    [currentModel.abilities?.vision, files.length]
+    [currentModel.abilities?.vision, files.length, setFiles]
   )
 
   const handleStop = useCallback(() => {
@@ -279,34 +291,33 @@ const ChatInput = memo<ChatInputProps>((props) => {
       />
 
       {files.length > 0 ? (
-        <Flex className='mb-2 gap-2 flex-wrap'>
-          {files.map((file, index) => (
-            <Flex
-              className='items-center gap-1.5 max-w-[260px] rounded-lg p-[5px_8px]'
-              key={`${file.name}-${file.lastModified}-${index}`}
-              style={{ background: 'var(--lobe-color-fill-quaternary)' }}
-            >
-              {file.type.startsWith('image/') ? (
-                <img
-                  alt=''
-                  height={28}
-                  src={URL.createObjectURL(file)}
-                  className='size-7 rounded object-cover'
-                />
-              ) : (
-                <Icon icon={FileText} size={16} />
-              )}
-              <span className='truncate'>{file.name}</span>
-              <button
-                aria-label={`删除 ${file.name}`}
-                className={styles.plusTrigger}
-                type='button'
-                onClick={() => setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index))}
+        <Flex className='mb-3 gap-3 flex-wrap items-start pt-1.5'>
+          {files.map((file, index) =>
+            file.type.startsWith('image/') ? (
+              <ComposerImageAttachment
+                file={file}
+                key={`${file.name}-${file.lastModified}-${index}`}
+                onRemove={() => setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index))}
+              />
+            ) : (
+              <Flex
+                className='items-center gap-1.5 max-w-[260px] rounded-lg p-[5px_8px]'
+                key={`${file.name}-${file.lastModified}-${index}`}
+                style={{ background: 'var(--lobe-color-fill-quaternary)' }}
               >
-                <Icon icon={X} size={14} />
-              </button>
-            </Flex>
-          ))}
+                <Icon icon={FileText} size={16} />
+                <span className='truncate'>{file.name}</span>
+                <button
+                  aria-label={`删除 ${file.name}`}
+                  className={styles.plusTrigger}
+                  type='button'
+                  onClick={() => setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index))}
+                >
+                  <Icon icon={X} size={14} />
+                </button>
+              </Flex>
+            )
+          )}
         </Flex>
       ) : null}
 
@@ -349,7 +360,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
               onChange={onPermissionModeChange}
             />
           ) : null}
-          {onProjectChange ? (
+          {onProjectChange && !topicId ? (
             <HomeProjectBar
               disabled={isBusy}
               projectName={projectName ?? null}

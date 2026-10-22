@@ -405,7 +405,7 @@ const ChatView = memo<ChatViewProps>(
           return
         }
 
-        await sendWithBody(text)
+        await sendWithBody(text, files)
       },
       [agentId, onCacheMessages, onTopicsRefresh, permissionMode, router, sendWithBody, topicId]
     )

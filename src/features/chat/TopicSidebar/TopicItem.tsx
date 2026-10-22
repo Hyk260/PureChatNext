@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 
+import { getChatDraftKey, useChatDraftStore } from '@/features/chat/store/useChatDraftStore'
 import type { LocalChatTopic } from '@/features/chat/types'
 import TopicRenameModal, { confirmDeleteTopic, useTopicRename } from '@/features/chat/TopicRenameModal'
 import { stopMenuEvent } from '@/libs/utils/menu'
@@ -105,6 +106,10 @@ const TopicItem = memo<Props>(
     onFavorite,
     onProjectChange,
   }) => {
+    const draftKey = getChatDraftKey(topic.agentId, topic.id)
+    const hasDraft = useChatDraftStore((state) =>
+      Boolean(state.texts[draftKey]?.trim() || state.files[draftKey]?.length)
+    )
     const [menuOpen, setMenuOpen] = useState(false)
     const [projectOpen, setProjectOpen] = useState(false)
     const [draftProject, setDraftProject] = useState('')
@@ -244,6 +249,11 @@ const TopicItem = memo<Props>(
               spin={autoRenaming}
               style={{ flex: 'none' }}
             />
+            {hasDraft && !active ? (
+              <Text className='shrink-0 text-xs' color={cssVar.colorError}>
+                [草稿]
+              </Text>
+            ) : null}
             <Text
               className='min-w-0 flex-1'
               color={active ? cssVar.colorText : cssVar.colorTextSecondary}

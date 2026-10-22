@@ -33,6 +33,7 @@ import ChatView from '@/features/chat/ChatView'
 import WorkPanel from '@/features/chat/WorkPanel'
 import TopicSidebar from '@/features/chat/TopicSidebar'
 import WideScreenContainer from '@/features/chat/WideScreenContainer'
+import { getChatDraftKey, useChatDraftStore } from '@/features/chat/store/useChatDraftStore'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
 import type {
@@ -121,7 +122,6 @@ const ChatPage = memo(() => {
     isClient ? activeTopicId : undefined
   )
   const [isBusy, setIsBusy] = useState(false)
-  const [inputPrefill, setInputPrefill] = useState('')
   const [inputPrefillKey, setInputPrefillKey] = useState(0)
   const [autoRenamingTopicId, setAutoRenamingTopicId] = useState<string | null>(null)
   // Per-topic message cache. Lets topic switches
@@ -179,9 +179,9 @@ const ChatPage = memo(() => {
   }, [])
 
   const handleSelectOpeningQuestion = useCallback((question: string) => {
-    setInputPrefill(question)
+    useChatDraftStore.getState().setText(getChatDraftKey(agentId, activeTopicId), question)
     setInputPrefillKey((key) => key + 1)
-  }, [])
+  }, [activeTopicId, agentId])
 
   const refreshTopics = useCallback(async () => {
     if (!agentId) return
@@ -443,6 +443,7 @@ const ChatPage = memo(() => {
     async (id: string) => {
       try {
         await deleteTopic(id)
+        useChatDraftStore.getState().clearDrafts([getChatDraftKey(agentId, id)])
         setMessagesCache((prev) => {
           if (!prev.has(id)) return prev
           const next = new Map(prev)
@@ -465,6 +466,7 @@ const ChatPage = memo(() => {
     async (scope: TopicDeleteScope) => {
       try {
         const deletedIds = await deleteTopicsApi(agentId, scope)
+        useChatDraftStore.getState().clearDrafts(deletedIds.map((id) => getChatDraftKey(agentId, id)))
         const deleted = new Set(deletedIds)
         setMessagesCache((prev) => {
           if (deleted.size === 0) return prev
@@ -489,6 +491,7 @@ const ChatPage = memo(() => {
       const topicIds = topics.filter((topic) => topic.projectName === projectName).map((topic) => topic.id)
       try {
         await Promise.all(topicIds.map((id) => deleteTopic(id)))
+        useChatDraftStore.getState().clearDrafts(topicIds.map((id) => getChatDraftKey(agentId, id)))
         const deleted = new Set(topicIds)
         setMessagesCache((prev) => {
           if (deleted.size === 0) return prev
@@ -727,9 +730,9 @@ const ChatPage = memo(() => {
           )}
           <WideScreenContainer fill={false}>
             <ChatInput
+              agentId={agentId}
               isBusy={inputBusy}
               permissionMode={isDesktop ? permissionMode : undefined}
-              prefill={inputPrefill}
               prefillKey={inputPrefillKey}
               projectName={activeTopicId === null ? draftProjectName : (activeTopic?.projectName ?? null)}
               searchMode={searchMode}

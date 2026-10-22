@@ -21,6 +21,7 @@ import type { ChatPermissionMode } from '@pure/types'
 import mechaCat from '@/assets/mascots/purechat-mecha-cat.png'
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import { CHAT_ATTACHMENT_ACCEPT, validateChatAttachments } from '@/features/chat/attachmentRules'
+import ComposerImageAttachment from '@/features/chat/ComposerImageAttachment'
 import {
   setPendingChatFiles,
   setPendingChatPermissionMode,
@@ -161,16 +162,6 @@ const styles = createStaticStyles(({ css }) => ({
     }
   `,
 }))
-
-const AttachmentImagePreview = memo<{ file: File }>(({ file }) => {
-  const [source] = useState(() => URL.createObjectURL(file))
-
-  useEffect(() => () => URL.revokeObjectURL(source), [source])
-
-  return <img alt='' height={28} src={source} className='size-7 rounded object-cover' />
-})
-
-AttachmentImagePreview.displayName = 'AttachmentImagePreview'
 
 const HomeChatInput = memo(() => {
   const router = useRouter()
@@ -343,26 +334,30 @@ const HomeChatInput = memo(() => {
         />
 
         {files.length > 0 ? (
-          <Flex className='mb-2.5 gap-2 flex-wrap'>
-            {files.map((file, index) => (
-              <Flex
-                className={[styles.attachment, 'items-center gap-1.5']}
-                key={`${file.name}-${file.lastModified}-${index}`}
-              >
-                {file.type.startsWith('image/') ? (
-                  <AttachmentImagePreview file={file} />
-                ) : (
-                  <Icon icon={FileText} size={16} />
-                )}
-                <span className='truncate'>{file.name}</span>
-                <ActionIcon
-                  icon={X}
-                  size={{ blockSize: 24, size: 14 }}
-                  title={`删除 ${file.name}`}
-                  onClick={() => setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index))}
+          <Flex className='mb-3 gap-3 flex-wrap items-start pt-1.5'>
+            {files.map((file, index) =>
+              file.type.startsWith('image/') ? (
+                <ComposerImageAttachment
+                  file={file}
+                  key={`${file.name}-${file.lastModified}-${index}`}
+                  onRemove={() => setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index))}
                 />
-              </Flex>
-            ))}
+              ) : (
+                <Flex
+                  className={[styles.attachment, 'items-center gap-1.5']}
+                  key={`${file.name}-${file.lastModified}-${index}`}
+                >
+                  <Icon icon={FileText} size={16} />
+                  <span className='truncate'>{file.name}</span>
+                  <ActionIcon
+                    icon={X}
+                    size={{ blockSize: 24, size: 14 }}
+                    title={`删除 ${file.name}`}
+                    onClick={() => setFiles((previous) => previous.filter((_, fileIndex) => fileIndex !== index))}
+                  />
+                </Flex>
+              )
+            )}
           </Flex>
         ) : null}
 

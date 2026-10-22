@@ -39,6 +39,11 @@ export class ProjectController {
 
   register(ipc: IpcRegistry) {
     ipc.register('project.list', () => this.config.listProjects())
+    ipc.register('project.getDefault', () => this.config.getDefaultProject())
+    ipc.register('project.setDefault', (id) => {
+      if (id !== null && (typeof id !== 'string' || !id || id.length > 80)) throw new Error('项目标识无效')
+      return this.config.setDefaultProject(id)
+    })
     ipc.register('project.create', async (input) => {
       if (!input || typeof input !== 'object') throw new Error('项目参数无效')
       const name = typeof input.name === 'string' ? input.name.trim() : ''

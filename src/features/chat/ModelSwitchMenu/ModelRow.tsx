@@ -28,6 +28,7 @@ import ModelDetailPanel from './ModelDetailPanel'
 import ProviderMark from '@/features/settings/provider/ProviderMark'
 import { menuKey } from './types'
 import type { ModelWithProviders } from './types'
+import { useModelDetails } from './useModelDetails'
 
 const styles = createStaticStyles(({ css }) => ({
   // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
@@ -87,27 +88,43 @@ export interface ModelRowProps {
 export const ModelRow = memo<ModelRowProps>(
   ({ abilities, active, contextWindowTokens, detailProvider, displayName, model, onSelect, subscribeScroll }) => {
     const [detailOpen, setDetailOpen] = useState(false)
+    const { hasDetails } = useModelDetails(detailProvider, model)
 
     useEffect(() => subscribeScroll?.(() => setDetailOpen(false)), [subscribeScroll])
+
+    const rowClassName = cx(styles.rowTrigger, active && styles.itemActive)
+    const rowContent = (
+      <ModelRowContent
+        abilities={abilities}
+        contextWindowTokens={contextWindowTokens}
+        displayName={displayName}
+        model={model}
+        provider={detailProvider}
+      />
+    )
+
+    if (!hasDetails) {
+      return (
+        <div className={'my-px mx-1'}>
+          <DropdownMenuItem className={rowClassName} onClick={onSelect}>
+            {rowContent}
+          </DropdownMenuItem>
+        </div>
+      )
+    }
 
     return (
       <div className={'my-px mx-1'}>
         <DropdownMenuSubmenuRoot open={detailOpen} onOpenChange={setDetailOpen}>
           <DropdownMenuSubmenuTrigger
-            className={cx(styles.rowTrigger, active && styles.itemActive)}
+            className={rowClassName}
             onClick={(event) => {
               event.preventDefault()
               setDetailOpen(false)
               onSelect()
             }}
           >
-            <ModelRowContent
-              abilities={abilities}
-              contextWindowTokens={contextWindowTokens}
-              displayName={displayName}
-              model={model}
-              provider={detailProvider}
-            />
+            {rowContent}
           </DropdownMenuSubmenuTrigger>
           <DropdownMenuPortal>
             <DropdownMenuPositioner anchor={null} placement='right' sideOffset={12}>

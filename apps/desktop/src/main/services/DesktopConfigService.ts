@@ -15,6 +15,7 @@ export interface DesktopProject {
 }
 
 export interface DesktopConfig {
+  defaultProjectId?: string | null
   updatePreferences?: DesktopUpdatePreferences
   logRetentionDays?: DesktopLogRetentionDays
   pendingAuth?: DesktopPendingAuth | null
@@ -41,6 +42,7 @@ export interface DesktopWindowState {
 }
 
 export const DEFAULT_CONFIG: DesktopConfig = {
+  defaultProjectId: null,
   updatePreferences: DEFAULT_UPDATE_PREFERENCES,
   logRetentionDays: 30,
   pendingAuth: null,
@@ -142,13 +144,17 @@ export class DesktopConfigService {
   async read(): Promise<DesktopConfig> {
     try {
       const parsed = this.store.store
+      const projects = normalizeProjects(parsed.projects)
       return {
+        defaultProjectId: projects.some((project) => project.id === parsed.defaultProjectId)
+          ? parsed.defaultProjectId
+          : null,
         updatePreferences: normalizeUpdatePreferences(parsed.updatePreferences),
         logRetentionDays: normalizeLogRetentionDays(parsed.logRetentionDays),
         pendingAuth: normalizePendingAuth(parsed.pendingAuth),
         permissionScopes:
           parsed.permissionScopes && typeof parsed.permissionScopes === 'object' ? parsed.permissionScopes : {},
-        projects: normalizeProjects(parsed.projects),
+        projects,
         remoteServerUrl: parsed.remoteServerUrl ? normalizeRemoteServerUrl(parsed.remoteServerUrl) : null,
         secrets: parsed.secrets && typeof parsed.secrets === 'object' ? parsed.secrets : {},
         windowState: normalizeWindowState(parsed.windowState),
@@ -257,11 +263,14 @@ export class DesktopConfigService {
     })
   }
 
-  async setPermissionScope(topicId: string, scope: string) {
+  async setPermissionScope(topicId: string, scope: string | null) {
     return this.update(async (config) => {
+      const permissionScopes = { ...config.permissionScopes }
+      if (scope === null) delete permissionScopes[topicId]
+      else permissionScopes[topicId] = [scope]
       await this.persist({
         ...config,
-        permissionScopes: { ...config.permissionScopes, [topicId]: [scope] },
+        permissionScopes,
       })
       return { scope }
     })
@@ -269,6 +278,20 @@ export class DesktopConfigService {
 
   async listProjects() {
     return (await this.read()).projects
+  }
+
+  async getDefaultProject() {
+    const config = await this.read()
+    return config.projects.find((project) => project.id === config.defaultProjectId) ?? null
+  }
+
+  async setDefaultProject(id: string | null) {
+    return this.update(async (config) => {
+      const project = config.projects.find((item) => item.id === id) ?? null
+      if (id !== null && !project) throw new Error('项目不存在')
+      await this.persist({ ...config, defaultProjectId: id })
+      return project
+    })
   }
 
   async createProject(input: { name: string; rootPath: string }) {
@@ -298,7 +321,8 @@ export class DesktopConfigService {
     return this.update(async (config) => {
       const projects = config.projects.filter((project) => project.id !== id)
       if (projects.length === config.projects.length) throw new Error('项目不存在')
-      await this.persist({ ...config, projects })
+      const defaultProjectId = config.defaultProjectId === id ? null : config.defaultProjectId
+      await this.persist({ ...config, defaultProjectId, projects })
     })
   }
 

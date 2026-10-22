@@ -70,9 +70,7 @@ export const setPendingChatProject = (project: PendingChatProject | null): void 
   )
 }
 
-export const claimPendingChatProject = (): PendingChatProject | null => {
-  const raw = sessionStg.getString(PENDING_CHAT_PROJECT_KEY)
-  sessionStg.remove(PENDING_CHAT_PROJECT_KEY)
+const parsePendingChatProject = (raw: string | null): PendingChatProject | null => {
   if (!raw) return null
   try {
     const parsed = JSON.parse(raw) as Partial<PendingChatProject>
@@ -83,6 +81,15 @@ export const claimPendingChatProject = (): PendingChatProject | null => {
   } catch {
     return null
   }
+}
+
+export const getPendingChatProject = (): PendingChatProject | null =>
+  parsePendingChatProject(sessionStg.getString(PENDING_CHAT_PROJECT_KEY))
+
+export const claimPendingChatProject = (): PendingChatProject | null => {
+  const raw = sessionStg.getString(PENDING_CHAT_PROJECT_KEY)
+  sessionStg.remove(PENDING_CHAT_PROJECT_KEY)
+  return parsePendingChatProject(raw)
 }
 
 export const claimPendingChatFiles = (): File[] => {

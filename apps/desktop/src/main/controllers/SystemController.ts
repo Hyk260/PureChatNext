@@ -24,13 +24,14 @@ export class SystemController {
     })
     ipc.register('shell.openPath', async (targetPath) => {
       if (!targetPath || typeof targetPath !== 'string' || !path.isAbsolute(targetPath)) {
-        throw new Error('文件夹路径无效')
+        throw new Error('文件或文件夹路径无效')
       }
       const absolute = path.resolve(targetPath)
       const resolved = await fs.realpath(absolute).catch(() => absolute)
-      if (!(await fs.stat(resolved)).isDirectory()) throw new Error('路径必须是文件夹')
+      const stat = await fs.stat(resolved)
+      if (!stat.isDirectory() && !stat.isFile()) throw new Error('路径必须是文件或文件夹')
       assertNotSensitive(resolved)
-      // Windows / macOS 均通过 shell.openPath 用系统文件管理器打开目录
+      // 文件交给系统默认应用，目录交给系统文件管理器。
       const errorMessage = await shell.openPath(resolved)
       if (errorMessage) throw new Error(errorMessage)
     })

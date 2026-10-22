@@ -1,8 +1,7 @@
 'use client'
 
 import { CREDITS_PER_DOLLAR } from '@pure/const'
-import { getAiModel } from '@pure/model-bank'
-import type { ModelProviderId, ModelTokenPricing } from '@pure/model-bank'
+import type { ModelTokenPricing } from '@pure/model-bank'
 import { Icon, Tag, Text, Flex } from '@pure/ui'
 import { formatTokenNumber } from '@pure/utils/client'
 import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
@@ -16,10 +15,9 @@ import {
   ImageIcon,
   Wrench,
 } from 'lucide-react'
-import { memo, useMemo } from 'react'
+import { memo } from 'react'
 
-import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
-import type { ProviderId } from '@/features/settings/provider/types'
+import { useModelDetails } from './useModelDetails'
 
 const styles = createStaticStyles(({ css }) => ({
   bar: css`
@@ -86,37 +84,16 @@ export interface ModelDetailPanelProps {
 }
 
 const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider }) => {
-  const card = useMemo(() => getAiModel(provider as ModelProviderId, modelId), [modelId, provider])
-  const configuredModel = useProviderConfigStore((state) =>
-    state.configs[provider as ProviderId]?.models.find((model) => model.id === modelId)
-  )
-
-  const description = card?.description?.trim()
-  const pricing = card?.pricing
-  const abilities = configuredModel?.abilities ?? card?.abilities
-  const contextWindowTokens = configuredModel?.contextWindowTokens ?? card?.contextWindowTokens
-  const hasAbilities = Boolean(
-    abilities?.functionCall ||
-    abilities?.vision ||
-    abilities?.reasoning ||
-    abilities?.structuredOutput ||
-    abilities?.webSearch ||
-    abilities?.imageGeneration
+  const { abilities, contextWindowTokens, description, hasAbilities, hasDetails, pricing } = useModelDetails(
+    provider,
+    modelId
   )
   const contextLabel =
     typeof contextWindowTokens === 'number' && contextWindowTokens > 0
       ? `${formatTokenNumber(contextWindowTokens)} tokens`
       : null
 
-  if (!description && !contextLabel && !hasAbilities && !pricing) {
-    return (
-      <div className={'pb-2'}>
-        <Text as='p' className={styles.description} fontSize={12} type='secondary'>
-          暂无该模型的详细信息
-        </Text>
-      </div>
-    )
-  }
+  if (!hasDetails) return null
 
   return (
     <Flex className={['pb-2', 'flex-col gap-1']}>

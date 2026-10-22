@@ -23,7 +23,9 @@ export class PermissionController {
       return this.permissions.requestFullAccess(topicId)
     })
     ipc.register('permission.setScope', async (topicId, scope) => {
-      if (!topicId || topicId.length > 200 || !path.isAbsolute(scope)) throw new Error('权限范围无效')
+      if (!topicId || topicId.length > 200) throw new Error('权限范围无效')
+      if (scope === null) return this.config.setPermissionScope(topicId, null)
+      if (!path.isAbsolute(scope)) throw new Error('权限范围无效')
       const absolute = path.resolve(scope)
       const resolved = await fs.realpath(absolute).catch(() => absolute)
       if (!(await fs.stat(resolved)).isDirectory()) throw new Error('权限范围必须是目录')

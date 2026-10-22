@@ -25,6 +25,8 @@ import SendButton from '@/features/chat/SendArea/SendButton'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import type { ChatSearchMode } from '@/features/chat/types'
 import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
+import HomeProjectBar from '@/features/home/components/HomeProjectBar'
+import type { DesktopProject } from '@/types/desktop'
 
 const styles = createStaticStyles(({ css }) => ({
   input: css`
@@ -120,12 +122,14 @@ const styles = createStaticStyles(({ css }) => ({
 interface ChatInputProps {
   isBusy?: boolean
   onPermissionModeChange?: (mode: ChatPermissionMode) => Promise<void> | void
+  onProjectChange?: (project: DesktopProject | null) => Promise<void> | void
   onSend: (text: string, files: File[]) => void | Promise<void>
   onSearchModeChange: (mode: ChatSearchMode) => void
   onStop?: () => void
   permissionMode?: ChatPermissionMode
   prefill?: string
   prefillKey?: number
+  projectName?: string | null
   searchMode: ChatSearchMode
   topicId?: string | null
 }
@@ -156,12 +160,14 @@ const ChatInput = memo<ChatInputProps>((props) => {
   const {
     isBusy,
     onPermissionModeChange,
+    onProjectChange,
     onSearchModeChange,
     onSend,
     onStop,
     permissionMode,
     prefill,
     prefillKey,
+    projectName,
     searchMode,
     topicId,
   } = props
@@ -341,6 +347,14 @@ const ChatInput = memo<ChatInputProps>((props) => {
               disabled={isBusy}
               value={permissionMode}
               onChange={onPermissionModeChange}
+            />
+          ) : null}
+          {onProjectChange ? (
+            <HomeProjectBar
+              disabled={isBusy}
+              projectName={projectName ?? null}
+              value={null}
+              onChange={onProjectChange}
             />
           ) : null}
         </Flex>

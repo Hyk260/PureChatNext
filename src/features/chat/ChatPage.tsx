@@ -21,8 +21,13 @@ import {
 } from '@/features/chat/chatApi'
 import ChatInput from '@/features/chat/ChatInput'
 import ChatLayout from '@/features/chat/ChatLayout'
-import { getPendingChatPermissionMode, setPendingChatProject } from '@/features/chat/chatLocalStorage'
+import {
+  getPendingChatPermissionMode,
+  getPendingChatProject,
+  setPendingChatProject,
+} from '@/features/chat/chatLocalStorage'
 import ChatMessagesSkeleton from '@/features/chat/ChatMessagesSkeleton'
+import { resolveNewChatProject } from '@/features/chat/chatProject'
 import type { ChatViewActions } from '@/features/chat/ChatView'
 import ChatView from '@/features/chat/ChatView'
 import WorkPanel from '@/features/chat/WorkPanel'
@@ -42,6 +47,7 @@ import { fetchAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { getDesktopApi } from '@/types/desktop'
+import type { DesktopProject } from '@/types/desktop'
 
 const subscribeNoop = () => () => {}
 const getClientSnapshot = () => true
@@ -102,6 +108,8 @@ const ChatPage = memo(() => {
   const params: ChatLlmParams = paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS
 
   const [topics, setTopics] = useState<LocalChatTopic[]>([])
+  const [draftProjectName, setDraftProjectName] = useState<string | null>(null)
+  const draftProjectTouchedRef = useRef(false)
   const [topicsLoadedAgentId, setTopicsLoadedAgentId] = useState<string | null>(null)
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>(EMPTY_MESSAGES)
   // Tracks which topicId the currently-loaded initialMessages belong to.
@@ -294,6 +302,8 @@ const ChatPage = memo(() => {
 
   const handleNewTopicInProject = useCallback(
     (projectName: string) => {
+      draftProjectTouchedRef.current = true
+      setDraftProjectName(projectName)
       if (activeTopicId === null) {
         setPendingChatProject({ name: projectName })
         return
@@ -303,6 +313,20 @@ const ChatPage = memo(() => {
     },
     [activeTopicId, agentId, pushChatHref]
   )
+
+  useEffect(() => {
+    if (!isClient || activeTopicId !== null) return
+    draftProjectTouchedRef.current = false
+    let cancelled = false
+    resolveNewChatProject(getPendingChatProject())
+      .then((project) => {
+        if (!cancelled && !draftProjectTouchedRef.current) setDraftProjectName(project?.name ?? null)
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('加载默认项目失败')
+      })
+    return () => { cancelled = true }
+  }, [activeTopicId, isClient])
 
   const handleAgentSelect = useCallback(
     (agent: AgentListItem) => {
@@ -379,6 +403,40 @@ const ChatPage = memo(() => {
   const handleProjectChange = useCallback(
     (id: string, projectName: string | null) => handleUpdateTopic(id, { projectName }, '移动到项目失败'),
     [handleUpdateTopic]
+  )
+
+  const handleComposerProjectChange = useCallback(
+    async (project: DesktopProject | null) => {
+      const api = getDesktopApi()
+      const projectName = project?.name ?? null
+
+      if (activeTopicId === null) {
+        draftProjectTouchedRef.current = true
+        await api?.setPermissionScope?.('draft', project?.rootPath ?? null)
+        setDraftProjectName(projectName)
+        setPendingChatProject(project ? { name: project.name, rootPath: project.rootPath } : null)
+        return
+      }
+
+      if (!api?.getPermissionScope || !api.setPermissionScope) return
+      let previousScope: string | null = null
+      let scopeChanged = false
+      try {
+        previousScope = (await api.getPermissionScope(activeTopicId)).scope
+        await api.setPermissionScope(activeTopicId, project?.rootPath ?? null)
+        scopeChanged = true
+        const updated = await updateTopic(activeTopicId, { projectName })
+        setTopics((previous) => previous.map((topic) => (topic.id === activeTopicId ? updated : topic)))
+      } catch (error) {
+        if (scopeChanged) {
+          await api.setPermissionScope(activeTopicId, previousScope).catch((restoreError) => {
+            console.error('[chat] restore project permission scope failed', restoreError)
+          })
+        }
+        throw error
+      }
+    },
+    [activeTopicId]
   )
 
   const handleDeleteTopic = useCallback(
@@ -673,9 +731,11 @@ const ChatPage = memo(() => {
               permissionMode={isDesktop ? permissionMode : undefined}
               prefill={inputPrefill}
               prefillKey={inputPrefillKey}
+              projectName={activeTopicId === null ? draftProjectName : (activeTopic?.projectName ?? null)}
               searchMode={searchMode}
               topicId={activeTopicId}
               onPermissionModeChange={isDesktop ? handlePermissionModeChange : undefined}
+              onProjectChange={isDesktop ? handleComposerProjectChange : undefined}
               onSearchModeChange={handleSearchModeChange}
               onSend={handleInputSend}
               onStop={handleInputStop}

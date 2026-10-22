@@ -164,6 +164,8 @@ export interface DesktopApi {
   listProjectEntries: (input: { projectId: string; relativePath?: string }) => Promise<DesktopProjectEntries>
   readProjectFile: (input: { projectId: string; relativePath: string }) => Promise<DesktopProjectFile>
   listProjects: () => Promise<DesktopProject[]>
+  getDefaultProject: () => Promise<DesktopProject | null>
+  setDefaultProject: (id: string | null) => Promise<DesktopProject | null>
   notify: (input: DesktopNotificationInput) => Promise<void>
   minimizeWindow: () => Promise<void>
   toggleMaximizeWindow: () => Promise<DesktopWindowState>
@@ -172,7 +174,7 @@ export interface DesktopApi {
   cancelLocalCommand: (request: DesktopLocalCommandCancellation) => Promise<void>
   getPermissionScope: (topicId: string) => Promise<{ scope: string | null }>
   requestFullAccess: (topicId: string) => Promise<{ granted: boolean }>
-  setPermissionScope: (topicId: string, scope: string) => Promise<{ scope: string }>
+  setPermissionScope: (topicId: string, scope: string | null) => Promise<{ scope: string | null }>
   openExternal: (url: string) => Promise<void>
   openPath: (targetPath: string) => Promise<void>
   setRemoteServer: (url: string) => Promise<DesktopRemoteServer>

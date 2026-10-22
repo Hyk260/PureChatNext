@@ -32,6 +32,7 @@ import {
   truncateTitle,
 } from '@/features/chat/chatLocalStorage'
 import ChatErrorBanner from '@/features/chat/ChatErrorBanner'
+import { resolveNewChatProject } from '@/features/chat/chatProject'
 import ChatMessages from '@/features/chat/ChatMessages'
 import { getMessageText, withMessageText } from '@/features/chat/messageText'
 import type { ChatSearchMode } from '@/features/chat/types'
@@ -384,7 +385,7 @@ const ChatView = memo<ChatViewProps>(
       async (text: string, files: File[] = []) => {
         if (!topicId) {
           try {
-            const pendingProject = claimPendingChatProject()
+            const pendingProject = await resolveNewChatProject(claimPendingChatProject())
             const topic = await createTopic(agentId, buildTopicTitle(text, files), permissionMode, pendingProject?.name)
             if (pendingProject?.rootPath) {
               await getDesktopApi()

@@ -2,7 +2,7 @@
 
 import { ActionIcon, DropdownMenu, Flex } from '@pure/ui'
 import type { DropdownItem } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
+import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { Copy, Edit, MoreHorizontal, Trash } from 'lucide-react'
 import { memo, useMemo } from 'react'
 
@@ -52,15 +52,17 @@ const MessageActions = memo<MessageActionsProps>(({ isStreaming, isUser, onCopy,
 
   return (
     <Flex
+      aria-hidden={isStreaming || undefined}
       className={[
-        cx('mt-1 invisible pointer-events-none', !isStreaming && 'visible pointer-events-auto'),
-        'items-center gap-0.5',
+        'mt-1 items-center gap-0.5',
+        isStreaming ? 'invisible pointer-events-none' : 'visible pointer-events-auto',
         isUser ? 'justify-end' : 'justify-start',
       ]}
+      data-message-actions
     >
-      <ActionIcon icon={Copy} size='small' title='复制' onClick={onCopy} />
-      <ActionIcon icon={Edit} size='small' title='编辑' onClick={onEdit} />
-      <ActionIcon icon={Trash} size='small' title='删除' onClick={onDelete} />
+      <ActionIcon aria-label='复制' icon={Copy} size='small' title='复制' onClick={onCopy} />
+      <ActionIcon aria-label='编辑' icon={Edit} size='small' title='编辑' onClick={onEdit} />
+      <ActionIcon aria-label='删除' icon={Trash} size='small' title='删除' onClick={onDelete} />
       {/* <DropdownMenu items={moreMenuItems} placement={isUser ? 'bottomRight' : 'bottomLeft'}>
         <button className={styles.moreTrigger} title='更多' type='button'>
           <MoreHorizontal size={16} />

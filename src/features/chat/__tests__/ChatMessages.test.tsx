@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/react'
 import type { UIMessage } from 'ai'
 import React from 'react'
+import { copyToClipboard } from '@pure/utils/client'
 import { describe, expect, it, vi } from 'vitest'
 
 const autoScrollMocks = vi.hoisted(() => ({
@@ -198,6 +199,23 @@ describe('ChatMessages message layout', () => {
     fireEvent.click(getByText('提交编辑'))
     expect(onEdit).toHaveBeenCalledWith('user-1', 'edited message')
     expect(row).toBeTruthy()
+  })
+
+  it('copies, edits, and deletes a completed assistant message', () => {
+    const onDelete = vi.fn()
+    const onEdit = vi.fn()
+    const { getByLabelText, getByTestId, getByText } = render(
+      <ChatMessages messages={[messages[1]]} onDelete={onDelete} onEdit={onEdit} onRegenerate={vi.fn()} />
+    )
+
+    fireEvent.click(getByLabelText('复制'))
+    expect(copyToClipboard).toHaveBeenCalledWith('hi')
+    fireEvent.click(getByLabelText('编辑'))
+    expect(getByTestId('message-editor').dataset.value).toBe('hi')
+    fireEvent.click(getByText('提交编辑'))
+    expect(onEdit).toHaveBeenCalledWith('assistant-1', 'edited message')
+    fireEvent.click(getByLabelText('删除'))
+    expect(onDelete).toHaveBeenCalledWith('assistant-1')
   })
 
   it('stops the thinking state at reasoning-end while the answer keeps streaming', () => {

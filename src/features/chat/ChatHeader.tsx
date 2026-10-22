@@ -262,7 +262,13 @@ const ChatHeader = memo<Props>(
               <ActionIcon icon={Share2} size='small' title='分享' onClick={handleShare} />
             ) : null}
             {rightCollapsed ? (
-              <ActionIcon icon={PanelRightOpen} size='small' title='展开工作面板' onClick={toggleRightCollapsed} />
+              <ActionIcon
+                aria-label='展开工作面板'
+                icon={PanelRightOpen}
+                size='small'
+                title='展开工作面板'
+                onClick={toggleRightCollapsed}
+              />
             ) : null}
           </Flex>
         </Flex>

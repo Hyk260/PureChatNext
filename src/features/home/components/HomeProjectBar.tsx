@@ -1,9 +1,9 @@
 'use client'
 
-import { ActionIcon, Button, Flex, Icon, Input, Modal, Popover, Text } from '@pure/ui'
-import { toast, createStaticStyles, cssVar } from '@lobehub/ui'
-import { Check, Folder, FolderPlus, Plus, X } from 'lucide-react'
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { Flex, Modal } from '@pure/ui'
+import { ActionIcon, Button, Icon, Input, Popover, Text, toast, createStaticStyles, cssVar, cx } from '@lobehub/ui'
+import { Check, ChevronDown, Folder, FolderOpen, FolderPlus, Search, Star, X } from 'lucide-react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopProject } from '@/types/desktop'
@@ -37,27 +37,79 @@ const styles = createStaticStyles(({ css }) => ({
       background: ${cssVar.colorFillSecondary};
     }
   `,
-  menuAction: css`
-    justify-content: flex-start;
-    width: 100%;
-    height: auto;
-    padding: 8px 12px;
-    border-radius: 12px;
-  `,
+  // 行内操作在 hover / 键盘聚焦时出现；触屏始终可见。
   projectRow: css`
-    border-radius: 12px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding-inline-end: 8px;
+    border-radius: 10px;
+    transition: background 0.15s;
 
-    &:hover {
-      background: ${cssVar.colorFillSecondary};
+    &[data-active='true'], &:hover, &:focus-within {
+      background: ${cssVar.colorFillTertiary};
+    }
+
+    &:hover .project-row-actions, &:focus-within .project-row-actions {
+      pointer-events: auto;
+      opacity: 1;
     }
   `,
   selectButton: css`
-    justify-content: flex-start;
+    cursor: pointer;
+    display: flex;
     flex: 1;
+    gap: 10px;
+    align-items: center;
     min-width: 0;
-    height: auto;
-    padding: 4px;
+    padding: 9px 8px;
+    border: none;
     border-radius: 8px;
+    color: ${cssVar.colorText};
+    text-align: start;
+    background: transparent;
+
+    &:focus-visible {
+      outline: 2px solid ${cssVar.colorPrimary};
+      outline-offset: -2px;
+    }
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  `,
+  rowActions: css`
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+
+    @media (hover: none) {
+      pointer-events: auto;
+      opacity: 1;
+    }
+  `,
+  secondary: css`
+    color: ${cssVar.colorTextDescription};
+  `,
+  selected: css`
+    color: ${cssVar.colorSuccess};
+  `,
+  defaultBadge: css`
+    padding-inline: 5px;
+    border-radius: 5px;
+    color: ${cssVar.colorTextTertiary};
+    font-size: 10px;
+    line-height: 17px;
+    background: ${cssVar.colorFillSecondary};
+  `,
+  reset: css`
+    color: ${cssVar.colorTextDescription};
+    font-size: 12px;
+  `,
+  folderAction: css`
+    &:hover:not(:disabled) {
+      background: ${cssVar.colorFillTertiary};
+    }
   `,
   trigger: css`
     display: inline-flex;
@@ -83,25 +135,32 @@ const styles = createStaticStyles(({ css }) => ({
 
 export interface HomeProjectBarProps {
   disabled?: boolean
-  onChange: (project: DesktopProject | null) => void
+  onChange: (project: DesktopProject | null) => void | Promise<void>
+  projectName?: string | null
   value: DesktopProject | null
 }
 
-const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value }) => {
+const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, projectName, value }) => {
   const [open, setOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [projects, setProjects] = useState<DesktopProject[]>([])
+  const [defaultProject, setDefaultProject] = useState<DesktopProject | null>(null)
   const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState('')
   const [rootPath, setRootPath] = useState('')
+  const activeRowRef = useRef<HTMLButtonElement>(null)
 
   const refreshProjects = useCallback(async () => {
     const api = getDesktopApi()
     if (!api?.listProjects) return
     setLoading(true)
     try {
-      setProjects(await api.listProjects())
+      const [items, defaultItem] = await Promise.all([api.listProjects(), api.getDefaultProject?.() ?? null])
+      setProjects(items)
+      setDefaultProject(defaultItem)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '加载项目失败')
     } finally {
@@ -112,6 +171,28 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
   useEffect(() => {
     refreshProjects()
   }, [refreshProjects])
+
+  useEffect(() => {
+    if (!open) return
+    const frame = window.requestAnimationFrame(() => activeRowRef.current?.scrollIntoView({ block: 'nearest' }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [open, projects])
+
+  const handleSelect = useCallback(
+    async (project: DesktopProject | null) => {
+      setSaving(true)
+      try {
+        await onChange(project)
+        setOpen(false)
+        setSearch('')
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : '切换项目失败')
+      } finally {
+        setSaving(false)
+      }
+    },
+    [onChange]
+  )
 
   const resetCreateForm = useCallback(() => {
     setName('')
@@ -163,110 +244,171 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
     try {
       const project = await api.createProject({ name: nextName, rootPath })
       setProjects((current) => [project, ...current.filter((item) => item.id !== project.id)])
-      onChange(project)
       setCreateOpen(false)
       resetCreateForm()
       toast.success(`已创建项目：${project.name}`)
+      await handleSelect(project)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '创建项目失败')
     } finally {
       setCreating(false)
     }
-  }, [name, onChange, resetCreateForm, rootPath])
+  }, [handleSelect, name, resetCreateForm, rootPath])
 
-  const handleSelect = useCallback(
-    (project: DesktopProject) => {
-      onChange(project)
-      setOpen(false)
-    },
-    [onChange]
-  )
-
-  const handleClear = useCallback(() => {
-    onChange(null)
-    setOpen(false)
-  }, [onChange])
+  const handleToggleDefault = async (project: DesktopProject) => {
+    const api = getDesktopApi()
+    if (!api?.setDefaultProject) {
+      toast.error('请重启桌面端后再设置默认项目')
+      return
+    }
+    setSaving(true)
+    try {
+      const next = await api.setDefaultProject(defaultProject?.id === project.id ? null : project.id)
+      setDefaultProject(next)
+      if (!currentProjectName && next) await onChange(next)
+      toast.success(next ? `已设为默认项目：${next.name}` : '已取消默认项目')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '设置默认项目失败')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleDelete = useCallback(
     async (project: DesktopProject) => {
       const api = getDesktopApi()
       if (!api?.deleteProject) return
+      setSaving(true)
       try {
         await api.deleteProject(project.id)
         setProjects((current) => current.filter((item) => item.id !== project.id))
-        if (value?.id === project.id) onChange(null)
+        if (defaultProject?.id === project.id) setDefaultProject(null)
         toast.success(`已删除项目：${project.name}`)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : '删除项目失败')
+      } finally {
+        setSaving(false)
       }
     },
-    [onChange, value?.id]
+    [defaultProject?.id]
   )
 
-  const triggerLabel = value ? value.name : '选择项目'
+  const currentProject = value ?? projects.find((project) => project.name === projectName) ?? null
+  const currentProjectName = currentProject?.name ?? projectName
+  const currentTriggerLabel = currentProjectName ?? '选择项目'
   const canCreate = Boolean(name.trim() && rootPath) && !creating
-  const triggerAriaLabel = value ? `当前项目：${value.name}` : '选择项目'
+  const triggerAriaLabel = currentProjectName ? `当前项目：${currentProjectName}` : '选择项目'
 
-  const popoverContent = useMemo(
-    () => (
-      <Flex className='flex-col w-[min(320px,calc(100vw-32px))] p-1'>
-        <Text className='px-3 pb-2 pt-1' type='secondary'>
-          项目
-        </Text>
-        <Flex className='flex-col gap-1 max-h-64 overflow-y-auto'>
-          {loading ? (
-            <Text className='px-3 py-2 text-[12px]' type='secondary'>
-              加载中…
-            </Text>
-          ) : null}
-          {!loading && projects.length === 0 ? (
-            <Text className='px-3 py-2 text-[12px]' type='secondary'>
-              还没有项目，先创建一个吧
-            </Text>
-          ) : null}
-          {projects.map((project) => {
-            const active = value?.id === project.id
-            return (
-              <Flex className={[styles.projectRow, 'items-center gap-1 px-2 py-1.5']} key={project.id}>
-                <Button
-                  className={styles.selectButton}
-                  type='text'
-                  onClick={() => handleSelect(project)}
-                >
-                  <Icon icon={Folder} size={16} />
-                  <Flex className='flex-col flex-1 min-w-0'>
-                    <Text ellipsis>{project.name}</Text>
-                    <Text className='text-[12px]' ellipsis type='secondary'>
-                      {project.rootPath}
-                    </Text>
-                  </Flex>
-                  {active ? <Icon icon={Check} size={16} /> : null}
-                </Button>
-                <ActionIcon
-                  icon={X}
-                  size='small'
-                  title={`删除项目 ${project.name}`}
-                  onClick={() => handleDelete(project)}
-                />
-              </Flex>
-            )
-          })}
-        </Flex>
-        <Flex className='flex-col gap-1 mt-1 pt-1 border-t border-app-border-secondary'>
-          {value ? (
-            <Button className={styles.menuAction} type='text' onClick={handleClear}>
-              <Text className='text-[12px]' type='secondary'>
-                不使用项目
-              </Text>
-            </Button>
-          ) : null}
-          <Button className={styles.menuAction} icon={<Icon icon={Plus} size={16} />} type='text' onClick={handleOpenCreate}>
-            创建项目
-          </Button>
-        </Flex>
+  const busy = Boolean(disabled || saving)
+  const canReset = (currentProjectName ?? null) !== (defaultProject?.name ?? null)
+  const query = search.trim().toLocaleLowerCase()
+  const filteredProjects = projects.filter((project) =>
+    `${project.name} ${project.rootPath}`.toLocaleLowerCase().includes(query)
+  )
+
+  const popoverContent = (
+    <Flex className='w-[min(360px,calc(100vw-32px))] flex-col gap-1'>
+      <Flex className='flex-between px-2 pb-1 pt-1'>
+        <Text className={styles.secondary} fontSize={12}>工作目录</Text>
+        <Button
+          className={styles.reset}
+          disabled={busy || loading || !canReset}
+          size='small'
+          title={defaultProject ? `恢复为 ${defaultProject.name}` : '恢复为无项目会话'}
+          type='text'
+          onClick={() => handleSelect(defaultProject)}
+        >
+          恢复默认
+        </Button>
       </Flex>
-    ),
-    [handleClear, handleDelete, handleOpenCreate, handleSelect, loading, projects, value]
+      {projects.length > 8 ? (
+        <Flex className='min-w-0 px-2 pb-1'>
+          <Input
+            aria-label='搜索项目'
+            className='min-w-0 w-full'
+            placeholder='搜索项目或路径'
+            prefix={<Icon icon={Search} size={14} />}
+            size='small'
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </Flex>
+      ) : null}
+      <Flex className='max-h-72 flex-col gap-0.5 overflow-y-auto'>
+        {loading && projects.length === 0 ? (
+          <Text className='px-2 py-4 text-center' fontSize={12} type='secondary'>加载中…</Text>
+        ) : null}
+        {!loading && filteredProjects.length === 0 ? (
+          <Text className='px-2 py-4 text-center' fontSize={12} type='secondary'>
+            {query ? '没有匹配的项目' : '选择文件夹，开始一个项目'}
+          </Text>
+        ) : null}
+        {filteredProjects.map((project) => {
+          const active = currentProject?.id === project.id
+          const isDefault = defaultProject?.id === project.id
+          const defaultLabel = `${isDefault ? '取消默认项目' : '设为默认项目'} ${project.name}`
+          return (
+            <Flex className={styles.projectRow} data-active={active} key={project.id}>
+              <button
+                ref={active ? activeRowRef : undefined}
+                aria-label={`选择项目 ${project.name}`}
+                aria-pressed={active}
+                className={styles.selectButton}
+                disabled={busy}
+                title={project.rootPath}
+                type='button'
+                onClick={() => handleSelect(project)}
+              >
+                <Icon className={cx(styles.secondary, 'flex-none')} icon={Folder} size={18} />
+                <span className='min-w-0 flex-1'>
+                  <span className='flex items-center gap-1.5'>
+                    <span className='truncate text-[13px] font-medium'>{project.name}</span>
+                    {isDefault ? <span className={cx(styles.defaultBadge, 'flex-none')}>默认</span> : null}
+                  </span>
+                  <span className={cx(styles.secondary, 'block truncate text-[12px] leading-5')}>
+                    {project.rootPath}
+                  </span>
+                </span>
+              </button>
+              <Flex className='flex-none items-center gap-1'>
+                <Flex className={cx(styles.rowActions, 'project-row-actions items-center gap-0.5')}>
+                  <ActionIcon
+                    active={isDefault}
+                    aria-label={defaultLabel}
+                    aria-pressed={isDefault}
+                    disabled={busy}
+                    icon={<Star fill={isDefault ? 'currentColor' : 'none'} size={14} />}
+                    size={{ blockSize: 24, size: 14 }}
+                    title={defaultLabel}
+                    onClick={() => handleToggleDefault(project)}
+                  />
+                  {!active ? (
+                    <ActionIcon
+                      aria-label={`删除项目 ${project.name}`}
+                      disabled={busy}
+                      icon={X}
+                      size={{ blockSize: 24, size: 14 }}
+                      title={`删除项目 ${project.name}`}
+                      onClick={() => handleDelete(project)}
+                    />
+                  ) : null}
+                </Flex>
+                {active ? <Icon className={styles.selected} icon={Check} size={18} /> : null}
+              </Flex>
+            </Flex>
+          )
+        })}
+      </Flex>
+      <button
+        className={cx(styles.selectButton, styles.folderAction, styles.secondary)}
+        disabled={busy}
+        type='button'
+        onClick={handleOpenCreate}
+      >
+        <Icon className='flex-none' icon={FolderOpen} size={18} />
+        <span className='text-[13px]'>选择其他文件夹</span>
+      </button>
+    </Flex>
   )
 
   return (
@@ -275,22 +417,29 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, value })
         content={popoverContent}
         open={open}
         placement='topLeft'
+        styles={{ content: { padding: 4 } }}
         trigger='click'
-        onOpenChange={(nextOpen) => !disabled && setOpen(nextOpen)}
+        onOpenChange={(nextOpen) => {
+          if (busy) return
+          setOpen(nextOpen)
+          if (nextOpen) refreshProjects()
+          else setSearch('')
+        }}
       >
         <Button
           aria-expanded={open}
           aria-label={triggerAriaLabel}
           className={styles.trigger}
-          disabled={disabled}
+          disabled={busy}
           icon={<Icon icon={Folder} size={16} />}
           size='small'
-          title={value?.rootPath}
+          title={currentProject?.rootPath}
           type='text'
         >
           <Text className='text-[14px]' ellipsis>
-            {triggerLabel}
+            {currentTriggerLabel}
           </Text>
+          <Icon className='flex-none opacity-60' icon={ChevronDown} size={12} />
         </Button>
       </Popover>
 

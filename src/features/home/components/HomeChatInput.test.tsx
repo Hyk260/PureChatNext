@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   desktop: false,
+  getDefaultProject: vi.fn(),
   messageError: vi.fn(),
   push: vi.fn(),
   setPendingChatFiles: vi.fn(),
@@ -64,7 +65,7 @@ vi.mock('@/features/chat/chatLocalStorage', () => ({
   setPendingChatText: mocks.setPendingChatText,
 }))
 vi.mock('@/features/home/components/HomeProjectBar', () => ({
-  default: () => <div>选择项目</div>,
+  default: ({ value }: { value: { name: string } | null }) => <div>{value?.name ?? '选择项目'}</div>,
 }))
 vi.mock('@/features/chat/ModelSwitchMenu', () => ({
   useCurrentHomeModel: () => ({ abilities: { vision: mocks.vision } }),
@@ -101,6 +102,7 @@ vi.mock('@/types/desktop', () => ({
   getDesktopApi: () =>
     mocks.desktop
       ? {
+          getDefaultProject: mocks.getDefaultProject,
           requestFullAccess: vi.fn().mockResolvedValue({ granted: true }),
           setPermissionScope: vi.fn().mockResolvedValue({ scope: '/tmp' }),
         }
@@ -115,6 +117,7 @@ describe('HomeChatInput', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.desktop = false
+    mocks.getDefaultProject.mockResolvedValue(null)
     mocks.vision = true
     URL.createObjectURL = vi.fn(() => 'blob:preview')
     URL.revokeObjectURL = vi.fn()
@@ -153,6 +156,16 @@ describe('HomeChatInput', () => {
   it('does not show permission controls on web', () => {
     render(<HomeChatInput />)
     expect(screen.queryByRole('button', { name: /权限模式/ })).toBeNull()
+  })
+
+  it('loads the machine default and hands its directory to a new conversation', async () => {
+    mocks.desktop = true
+    mocks.getDefaultProject.mockResolvedValue({ id: 'default', name: 'Default project', rootPath: '/tmp/default' })
+    render(<HomeChatInput />)
+    await screen.findByText('Default project')
+    fireEvent.change(screen.getByPlaceholderText('随心输入'), { target: { value: '查看项目' } })
+    fireEvent.click(screen.getByRole('button', { name: '发送' }))
+    expect(mocks.setPendingChatProject).toHaveBeenCalledWith({ name: 'Default project', rootPath: '/tmp/default' })
   })
 
   it('supports attachment-only and text-with-attachment handoff', () => {

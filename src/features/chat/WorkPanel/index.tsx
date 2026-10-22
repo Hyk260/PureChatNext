@@ -2,8 +2,10 @@
 
 import { ActionIcon, DropdownMenu, Flex, Icon } from '@pure/ui'
 import type { DropdownItem } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
+import { FocusScope, createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { Check, PanelRightClose, Plus } from 'lucide-react'
+import { AnimatePresence, useReducedMotion } from 'motion/react'
+import * as m from 'motion/react-m'
 import { memo, useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
@@ -14,6 +16,9 @@ import type { DesktopProject } from '@/types/desktop'
 import FilePreview from './FilePreview'
 import FilesContent from './FilesContent'
 import { EMPTY_FILE_TABS, fileTabsReducer } from './previewUtils'
+import { PANEL_ANIMATION_DURATION, PANEL_ANIMATION_EASE, PANEL_TRANSITION } from './panelSizing'
+import { useHorizontalWheel } from './useHorizontalWheel'
+import { usePanelResize } from './usePanelResize'
 import OverviewContent from './OverviewContent'
 import ParamsContent from './ParamsContent'
 import WorkPanelTab from './WorkPanelTab'
@@ -41,23 +46,89 @@ const styles = createStaticStyles(({ css }) => ({
     }
   `,
   workspace: css`
-    width: 320px;
-    max-width: 100%;
+    position: relative;
+    display: flex;
+    flex: none;
+    width: calc(var(--work-panel-total-width) + 1px);
     min-width: 0;
     height: 100%;
     overflow: hidden;
-    &[data-preview-open='true'] {
-      width: min(960px, 68vw);
+    border-inline-start: 1px solid ${cssVar.colorBorderSecondary};
+    opacity: 1;
+    transform: translateX(0);
+    transition:
+      width ${PANEL_TRANSITION},
+      opacity ${PANEL_TRANSITION},
+      transform ${PANEL_TRANSITION};
+
+    [data-work-panel-shell][data-collapsed='true'] > & {
+      opacity: 0;
+      transform: translateX(12px);
+    }
+    &[data-resizing='true'] {
+      transition: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
     }
   `,
   panel: css`
-    flex: 1;
+    flex: none;
+    width: var(--work-panel-width);
     min-width: 0;
     height: 100%;
     overflow: hidden;
-    [data-preview-open='true'] > & {
-      flex: 0 0 min(280px, 36%);
+    transition: width ${PANEL_TRANSITION};
+    [data-resizing='true'] & {
+      transition: none;
     }
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  `,
+  previewFrame: css`
+    flex: none;
+    width: var(--file-preview-width);
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+    transition: width ${PANEL_TRANSITION};
+    [data-resizing='true'] & {
+      transition: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  `,
+  previewContent: css`
+    width: var(--expanded-file-preview-width);
+    height: 100%;
+  `,
+  resizeHandle: css`
+    position: absolute;
+    z-index: 30;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 6px;
+    cursor: col-resize;
+    touch-action: none;
+    outline: none;
+    &::after {
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 2px;
+      width: 2px;
+      content: '';
+      opacity: 0;
+      background: ${cssVar.colorPrimary};
+    }
+    &:hover::after,
+    &:focus-visible::after {
+      opacity: 0.6;
+    }
+  `,
+  previewHandle: css`
+    inset-inline-start: calc(var(--work-panel-width) - 3px);
   `,
 }))
 
@@ -74,6 +145,10 @@ const WorkPanelWorkspace = memo<Props>(({ value, onChange, topic, topicTitle }) 
   const [projectLoading, setProjectLoading] = useState(Boolean(topic?.projectName))
   const [projectError, setProjectError] = useState<string | null>(null)
   const [fileTabs, dispatchFileTabs] = useReducer(fileTabsReducer, EMPTY_FILE_TABS)
+  const previewOpen = Boolean(project && fileTabs.activePath)
+  const { isResizing, panelRef, previewRef, rootRef, separatorProps } = usePanelResize(previewOpen)
+  const tabListRef = useHorizontalWheel<HTMLDivElement>()
+  const reducedMotion = useReducedMotion()
   const openTabs = useChatUiStore((s) => s.workPanelOpenTabs)
   const activeTab = useChatUiStore((s) => s.workPanelActiveTab)
   const openWorkPanelTab = useChatUiStore((s) => s.openWorkPanelTab)
@@ -158,10 +233,11 @@ const WorkPanelWorkspace = memo<Props>(({ value, onChange, topic, topicTitle }) 
   }, [activeTab, onChange, topic, topicTitle, value])
 
   return (
-    <Flex className={styles.workspace} data-preview-open={Boolean(fileTabs.activePath)}>
-      <Flex className={[styles.panel, 'flex-col']}>
+    <FocusScope className={styles.workspace} data-preview-open={previewOpen} data-resizing={isResizing} ref={rootRef}>
+      <div className={styles.resizeHandle} {...separatorProps('panel')} />
+      <Flex aria-label='工作面板' className={[styles.panel, 'flex-col']} ref={panelRef}>
         <Flex className={[styles.header, 'items-center gap-1']}>
-          <Flex className={[styles.tabs, 'flex-1 items-center gap-1']}>
+          <Flex className={[styles.tabs, 'flex-1 items-center gap-1']} ref={tabListRef}>
             {openTabs.map((tabId) => {
               const meta = WORK_PANEL_TAB_BY_ID[tabId]
               return (
@@ -178,7 +254,13 @@ const WorkPanelWorkspace = memo<Props>(({ value, onChange, topic, topicTitle }) 
               <ActionIcon className={styles.addTrigger} icon={Plus} size='small' title='添加面板' />
             </DropdownMenu>
           </Flex>
-          <ActionIcon icon={PanelRightClose} size='small' title='折叠工作面板' onClick={toggleRightCollapsed} />
+          <ActionIcon
+            aria-label='折叠工作面板'
+            icon={PanelRightClose}
+            size='small'
+            title='折叠工作面板'
+            onClick={toggleRightCollapsed}
+          />
         </Flex>
         <Flex className='flex-col flex-1 min-h-0 overflow-hidden'>
           {content}
@@ -194,10 +276,27 @@ const WorkPanelWorkspace = memo<Props>(({ value, onChange, topic, topicTitle }) 
           </div>
         </Flex>
       </Flex>
-      {project && fileTabs.activePath ? (
-        <FilePreview dispatch={dispatchFileTabs} project={project} tabs={fileTabs} />
+      {previewOpen ? (
+        <div className={cx(styles.resizeHandle, styles.previewHandle)} {...separatorProps('preview')} />
       ) : null}
-    </Flex>
+      <AnimatePresence initial={false}>
+        {project && fileTabs.activePath ? (
+          <m.div
+            animate={{ opacity: 1 }}
+            className={styles.previewFrame}
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            key='file-preview'
+            ref={previewRef}
+            transition={{ duration: reducedMotion ? 0 : PANEL_ANIMATION_DURATION, ease: PANEL_ANIMATION_EASE }}
+          >
+            <div className={styles.previewContent}>
+              <FilePreview dispatch={dispatchFileTabs} project={project} tabs={fileTabs} />
+            </div>
+          </m.div>
+        ) : null}
+      </AnimatePresence>
+    </FocusScope>
   )
 })
 

@@ -10,11 +10,12 @@ import {
   Image,
   MaterialFileTypeIcon,
   Text,
-  cx,
+  createStaticStyles,
+  cssVar,
   toast,
 } from '@lobehub/ui'
 import { ChevronRight, ExternalLink, MoreHorizontal, RefreshCw, X } from 'lucide-react'
-import { memo, useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import type { Dispatch, KeyboardEvent } from 'react'
 
 import { getDesktopApi } from '@/types/desktop'
@@ -24,6 +25,27 @@ import CodePreview from './CodePreview'
 import { FileEmptyState } from './FilesContent'
 import { getProjectFilePath } from './previewUtils'
 import type { FileTabsAction, FileTabsState } from './previewUtils'
+import { useHorizontalWheel } from './useHorizontalWheel'
+
+// 选中和悬停组合使用组件主题色，避免与按钮自身的悬停样式互相覆盖。
+const styles = createStaticStyles(({ css }) => ({
+  tab: css`
+    flex: none;
+    border-radius: 6px;
+    color: ${cssVar.colorTextSecondary};
+    background: transparent;
+    transition:
+      background 0.15s ${cssVar.motionEaseInOut},
+      color 0.15s ${cssVar.motionEaseInOut};
+    &:hover {
+      background: ${cssVar.colorFillTertiary};
+    }
+    &[data-active='true'] {
+      color: ${cssVar.colorText};
+      background: ${cssVar.colorFillSecondary};
+    }
+  `,
+}))
 
 async function openInSystem(project: DesktopProject, path: string) {
   try {
@@ -88,12 +110,13 @@ type Props = {
 
 const FilePreview = memo<Props>(({ dispatch, project, tabs }) => {
   const [revisions, setRevisions] = useState<Record<string, number>>({})
-  const tabListRef = useRef<HTMLDivElement>(null)
+  const tabListRef = useHorizontalWheel<HTMLDivElement>()
+  const breadcrumbRef = useHorizontalWheel<HTMLElement>()
   const activePath = tabs.activePath
 
   useEffect(() => {
     tabListRef.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-  }, [activePath])
+  }, [activePath, tabListRef])
 
   if (!activePath) return null
   const pathParts = activePath.split('/')
@@ -130,16 +153,11 @@ const FilePreview = memo<Props>(({ dispatch, project, tabs }) => {
             const name = path.split('/').at(-1) ?? path
             const active = path === activePath
             return (
-              <Flex
-                horizontal
-                align='center'
-                className={cx('shrink-0 rounded-md', active && 'bg-app-fill-secondary')}
-                key={path}
-              >
+              <Flex horizontal align='center' className={styles.tab} data-active={active} key={path}>
                 <button
                   aria-controls={`file-preview-${encodeURIComponent(path)}`}
                   aria-selected={active}
-                  className='flex h-7 max-w-48 items-center gap-2 border-0 bg-transparent ps-2 text-xs'
+                  className='flex h-7 max-w-48 items-center gap-2 border-0 bg-transparent ps-2 text-xs text-inherit'
                   onClick={() => dispatch({ type: 'open', path })}
                   role='tab'
                   tabIndex={active ? 0 : -1}
@@ -177,7 +195,11 @@ const FilePreview = memo<Props>(({ dispatch, project, tabs }) => {
         />
       </Flex>
       <Flex horizontal align='center' className='shrink-0 gap-1 border-b border-app-border-secondary px-3 py-1.5'>
-        <nav aria-label='文件路径' className='flex min-w-0 flex-1 items-center gap-1 overflow-x-auto text-xs'>
+        <nav
+          aria-label='文件路径'
+          className='flex min-w-0 flex-1 items-center gap-1 overflow-x-auto text-xs'
+          ref={breadcrumbRef}
+        >
           <Text className='shrink-0' fontSize={12} type='secondary'>
             {project.name}
           </Text>

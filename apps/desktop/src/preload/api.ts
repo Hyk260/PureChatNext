@@ -41,6 +41,8 @@ export const createDesktopApi = (): DesktopApi => ({
   listProjectEntries: (input) => invoke('project.listEntries', input),
   readProjectFile: (input) => invoke('project.readFile', input),
   listProjects: () => invoke('project.list'),
+  getDefaultProject: () => invoke('project.getDefault'),
+  setDefaultProject: (id) => invoke('project.setDefault', id),
   notify: (input) => invoke('notification.show', input),
   minimizeWindow: () => invoke('window.minimize'),
   toggleMaximizeWindow: () => invoke('window.toggleMaximize'),

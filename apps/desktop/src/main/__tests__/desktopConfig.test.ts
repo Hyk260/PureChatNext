@@ -146,4 +146,33 @@ describe('DesktopConfigService', () => {
     await store.deleteProject(project.id)
     expect(await store.listProjects()).toEqual([])
   })
+
+  it('persists the default project across restarts and validates changes', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-default-project-'))
+    tempDirs.push(dir)
+    const store = new DesktopConfigService(dir)
+    const project = await store.createProject({ name: 'Demo', rootPath: dir })
+    expect(await store.getDefaultProject()).toBeNull()
+    await store.setDefaultProject(project.id)
+
+    const restarted = new DesktopConfigService(dir)
+    expect(await restarted.getDefaultProject()).toEqual(project)
+    await expect(restarted.setDefaultProject('missing')).rejects.toThrow('项目不存在')
+    expect(await restarted.getDefaultProject()).toEqual(project)
+    await restarted.setDefaultProject(null)
+    expect(await new DesktopConfigService(dir).getDefaultProject()).toBeNull()
+  })
+
+  it('clears a deleted default without losing concurrent configuration writes', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-default-project-'))
+    tempDirs.push(dir)
+    const store = new DesktopConfigService(dir)
+    const project = await store.createProject({ name: 'Demo', rootPath: dir })
+    await Promise.all([store.setDefaultProject(project.id), store.setLogRetentionDays(7)])
+    expect((await store.read()).logRetentionDays).toBe(7)
+    await store.deleteProject(project.id)
+    const restarted = new DesktopConfigService(dir)
+    expect(await restarted.getDefaultProject()).toBeNull()
+    expect((await restarted.read()).defaultProjectId).toBeNull()
+  })
 })

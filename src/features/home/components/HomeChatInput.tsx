@@ -180,6 +180,7 @@ const HomeChatInput = memo(() => {
   const [selectedProject, setSelectedProject] = useState<DesktopProject | null>(null)
   const [sending, setSending] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const projectTouchedRef = useRef(false)
   const currentModel = useCurrentHomeModel()
   const isDesktop = Boolean(getDesktopApi())
   const { onCompositionEnd, onCompositionStart, shouldIgnoreEnter } = useImeEnterGuard()
@@ -206,18 +207,27 @@ const HomeChatInput = memo(() => {
 
   const handleProjectChange = useCallback(
     async (project: DesktopProject | null) => {
-      setSelectedProject(project)
+      projectTouchedRef.current = true
       const api = getDesktopApi()
-      if (!api?.setPermissionScope) return
-      if (!project) return
-      try {
-        await api.setPermissionScope('draft', project.rootPath)
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : '设置项目工作目录失败')
-      }
+      await api?.setPermissionScope?.('draft', project?.rootPath ?? null)
+      setSelectedProject(project)
     },
     []
   )
+
+  useEffect(() => {
+    const api = getDesktopApi()
+    if (!api?.getDefaultProject) return
+    let cancelled = false
+    api.getDefaultProject()
+      .then((project) => {
+        if (!cancelled && !projectTouchedRef.current) setSelectedProject(project)
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('加载默认项目失败')
+      })
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     fetchAgentsList()
@@ -314,6 +324,7 @@ const HomeChatInput = memo(() => {
         <div className={styles.projectContext}>
           <HomeProjectBar
             disabled={sending}
+            projectName={selectedProject?.name ?? null}
             value={selectedProject}
             onChange={(project) => handleProjectChange(project)}
           />

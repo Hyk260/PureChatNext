@@ -48,10 +48,12 @@ export interface DesktopIpcContractMap {
   'dialog.chooseFile': { args: []; result: DesktopFileSelection | null }
   'permission.getScope': { args: [topicId: string]; result: { scope: string | null } }
   'permission.requestFull': { args: [topicId: string]; result: { granted: boolean } }
-  'permission.setScope': { args: [topicId: string, scope: string]; result: { scope: string } }
+  'permission.setScope': { args: [topicId: string, scope: string | null]; result: { scope: string | null } }
   'project.create': { args: [input: { name: string; rootPath: string }]; result: DesktopProject }
   'project.delete': { args: [id: string]; result: void }
   'project.list': { args: []; result: DesktopProject[] }
+  'project.getDefault': { args: []; result: DesktopProject | null }
+  'project.setDefault': { args: [id: string | null]; result: DesktopProject | null }
   'project.listEntries': {
     args: [input: { projectId: string; relativePath?: string }]
     result: DesktopProjectEntries
@@ -107,6 +109,8 @@ export const DESKTOP_IPC_CHANNELS = {
     setScope: 'permission.setScope',
   },
   project: {
+    getDefault: 'project.getDefault',
+    setDefault: 'project.setDefault',
     create: 'project.create',
     delete: 'project.delete',
     list: 'project.list',

@@ -39,6 +39,7 @@ export const createDesktopApi = (): DesktopApi => ({
   getRemoteServer: () => invoke('config.getRemoteServer'),
   getCloudServer: () => invoke('config.getCloudServer'),
   listProjectEntries: (input) => invoke('project.listEntries', input),
+  readProjectFile: (input) => invoke('project.readFile', input),
   listProjects: () => invoke('project.list'),
   notify: (input) => invoke('notification.show', input),
   minimizeWindow: () => invoke('window.minimize'),

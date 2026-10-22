@@ -1,199 +1,304 @@
 'use client'
 
+import {
+  ActionIcon,
+  DropdownMenu,
+  Flexbox as Flex,
+  Icon,
+  Input,
+  MaterialFileTypeIcon,
+  Text,
+  Tree,
+  toast,
+} from '@lobehub/ui'
+import type { TreeDataNode } from '@lobehub/ui'
+import {
+  Copy,
+  FileText,
+  FolderOpen,
+  FolderTree,
+  FoldVertical,
+  MoreHorizontal,
+  RefreshCw,
+  Search,
+  X,
+} from 'lucide-react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { toast } from '@lobehub/ui'
-import { ActionIcon, Icon, Input, Text, Flex } from '@pure/ui'
-import { File, FileText, Folder, FolderOpen, Search } from 'lucide-react'
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-
-import type { LocalChatTopic } from '@/features/chat/types'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopProject, DesktopProjectEntry } from '@/types/desktop'
 
+type DirectoryState = { entries?: DesktopProjectEntry[]; error?: string }
+type DirectoryCache = Record<string, DirectoryState>
+const ROOT_KEY = '/'
+
+async function readDirectory(projectId: string, relativePath: string): Promise<DirectoryState> {
+  try {
+    const result = await getDesktopApi()!.listProjectEntries({ projectId, relativePath })
+    return { entries: result.entries }
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : '读取文件夹失败' }
+  }
+}
+
 type Props = {
-  topic: LocalChatTopic | null
+  activePath: string | null
+  error: string | null
+  loading: boolean
+  onOpenFile: (path: string) => void
+  project: DesktopProject | null
 }
 
-function joinRelative(parent: string, name: string) {
-  return parent ? `${parent}/${name}` : name
-}
-
-function parentRelative(relativePath: string) {
-  const parts = relativePath.split('/').filter(Boolean)
-  parts.pop()
-  return parts.join('/')
-}
-
-function joinProjectPath(rootPath: string, relativePath: string, name: string) {
-  const separator = rootPath.includes('\\') ? '\\' : '/'
-  const segments = [rootPath, ...relativePath.split(/[/\\]/).filter(Boolean), name]
-  return segments.join(separator)
-}
-
-const FilesContent = memo<Props>(({ topic }) => {
-  const [project, setProject] = useState<DesktopProject | null>(null)
-  const [relativePath, setRelativePath] = useState('')
-  const [entries, setEntries] = useState<DesktopProjectEntry[]>([])
-  const [loading, setLoading] = useState(false)
-  const [filter, setFilter] = useState('')
-  const [error, setError] = useState<string | null>(null)
-
-  const loadEntries = useCallback(async (nextProject: DesktopProject | null, nextRelativePath: string) => {
-    const api = getDesktopApi()
-    if (!api?.listProjectEntries || !nextProject) {
-      setEntries([])
-      setError(null)
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await api.listProjectEntries({
-        projectId: nextProject.id,
-        relativePath: nextRelativePath || undefined,
-      })
-      setEntries(result.entries)
-    } catch (loadError) {
-      setEntries([])
-      setError(loadError instanceof Error ? loadError.message : '读取文件失败')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    const api = getDesktopApi()
-
-    const syncProject = async () => {
-      if (!api?.listProjects || !topic?.projectName) {
-        if (!cancelled) {
-          setProject(null)
-          setRelativePath('')
-          setEntries([])
-          setError(null)
-        }
-        return
-      }
-
-      try {
-        const projects = await api.listProjects()
-        if (cancelled) return
-        const matched = projects.find((item) => item.name === topic.projectName) ?? null
-        setProject(matched)
-        setRelativePath('')
-        await loadEntries(matched, '')
-      } catch (loadError) {
-        if (cancelled) return
-        setProject(null)
-        setEntries([])
-        setError(loadError instanceof Error ? loadError.message : '加载项目失败')
-      }
-    }
-
-    syncProject()
-    return () => {
-      cancelled = true
-    }
-  }, [loadEntries, topic?.projectName])
-
-  const filteredEntries = useMemo(() => {
-    const query = filter.trim().toLowerCase()
-    if (!query) return entries
-    return entries.filter((entry) => entry.name.toLowerCase().includes(query))
-  }, [entries, filter])
-
-  const handleOpenEntry = useCallback(
-    async (entry: DesktopProjectEntry) => {
+function buildProjectTree(
+  project: DesktopProject,
+  directories: DirectoryCache,
+  expanded: Set<string>,
+  query: string
+): TreeDataNode[] {
+  const buildDirectory = (name: string, relativePath: string, parentMatches = false): TreeDataNode | null => {
+    const key = relativePath || ROOT_KEY
+    const directory = directories[relativePath]
+    const matches = parentMatches || name.toLowerCase().includes(query)
+    const children: TreeDataNode[] = []
+    for (const entry of directory?.entries ?? []) {
+      const path = relativePath ? `${relativePath}/${entry.name}` : entry.name
       if (entry.isDirectory) {
-        const nextPath = joinRelative(relativePath, entry.name)
-        setRelativePath(nextPath)
-        await loadEntries(project, nextPath)
-        return
+        const child = buildDirectory(entry.name, path, matches)
+        if (child) children.push(child)
+      } else if (!query || matches || entry.name.toLowerCase().includes(query)) {
+        children.push({
+          icon: (
+            <MaterialFileTypeIcon aria-hidden fallbackUnknownType={false} filename={entry.name} size={16} type='file' />
+          ),
+          isLeaf: true,
+          key: path,
+          title: (
+            <Text className='block truncate' fontSize={12} title={path}>
+              {entry.name}
+            </Text>
+          ),
+        })
       }
+    }
+    if (query && !matches && children.length === 0 && relativePath) return null
+    if (!children.length && (!query || matches)) {
+      let label = '展开文件夹以加载内容'
+      if (directory?.error) label = `${directory.error}（收起后展开重试）`
+      else if (directory?.entries) label = '此文件夹为空'
+      children.push({ disabled: true, isLeaf: true, key: `${key}//status`, title: label })
+    }
+    return {
+      children,
+      icon: (
+        <MaterialFileTypeIcon
+          aria-hidden
+          fallbackUnknownType={false}
+          filename={name}
+          open={expanded.has(key) || Boolean(query)}
+          size={18}
+          type='folder'
+        />
+      ),
+      key,
+      title: (
+        <Text className='block truncate' fontSize={12} title={relativePath || project.rootPath}>
+          {name}
+        </Text>
+      ),
+    }
+  }
+  const root = buildDirectory(project.name, '')
+  if (!root || (query && !root.children?.length)) return []
+  return [root]
+}
 
+function collectDirectoryKeys(nodes: TreeDataNode[]): string[] {
+  return nodes.flatMap((node) => (node.isLeaf ? [] : [node.key, ...collectDirectoryKeys(node.children ?? [])]))
+}
+
+const FilesContent = memo<Props>(({ activePath, error, loading, onOpenFile, project }) => {
+  const [directories, setDirectories] = useState<DirectoryCache>({})
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([ROOT_KEY])
+  const [filter, setFilter] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const requestsRef = useRef({ pending: new Set<string>(), generation: 0 })
+
+  const loadDirectory = useCallback(
+    async (relativePath: string) => {
       const api = getDesktopApi()
-      if (!api?.openPath || !project) return
-      const fullPath = joinProjectPath(project.rootPath, relativePath, entry.name)
+      const requests = requestsRef.current
+      if (!api?.listProjectEntries || !project || requests.pending.has(relativePath)) return
+      const generation = requests.generation
+      requests.pending.add(relativePath)
       try {
-        await api.openPath(fullPath)
-      } catch (openError) {
-        toast.error(openError instanceof Error ? openError.message : '打开文件失败')
+        const directory = await readDirectory(project.id, relativePath)
+        if (generation !== requests.generation) return
+        setDirectories((current) => ({ ...current, [relativePath]: directory }))
+      } finally {
+        if (generation === requests.generation) requests.pending.delete(relativePath)
       }
     },
-    [loadEntries, project, relativePath]
+    [project]
   )
 
-  const handleGoUp = useCallback(async () => {
-    const nextPath = parentRelative(relativePath)
-    setRelativePath(nextPath)
-    await loadEntries(project, nextPath)
-  }, [loadEntries, project, relativePath])
+  useEffect(() => {
+    if (!project || !getDesktopApi()?.listProjectEntries) return
+    const requests = requestsRef.current
+    const generation = requests.generation
+    requests.pending.add('')
+    readDirectory(project.id, '').then((directory) => {
+      if (generation !== requests.generation) return
+      setDirectories((current) => ({ ...current, '': directory }))
+      requests.pending.delete('')
+    })
+    return () => {
+      requests.generation++
+      requests.pending.clear()
+    }
+  }, [project])
 
-  if (!getDesktopApi()?.listProjectEntries) {
-    return <EmptyState description='文件列表仅在桌面端可用' icon={FileText} />
+  const handleRefresh = useCallback(() => {
+    requestsRef.current.generation++
+    requestsRef.current.pending.clear()
+    setDirectories({})
+    setExpandedKeys([ROOT_KEY])
+    loadDirectory('')
+  }, [loadDirectory])
+
+  const query = filter.trim().toLowerCase()
+  const nodes = useMemo(
+    () => (project ? buildProjectTree(project, directories, new Set(expandedKeys), query) : []),
+    [directories, expandedKeys, project, query]
+  )
+  const visibleExpandedKeys = query ? collectDirectoryKeys(nodes) : expandedKeys
+
+  const handleExpand = (keys: string[]) => {
+    setExpandedKeys(keys)
+    for (const key of keys) {
+      const path = key === ROOT_KEY ? '' : key
+      if (!directories[path]?.entries) loadDirectory(path)
+    }
   }
 
-  if (!topic?.projectName || !project) {
-    return <EmptyState description='此工作区中没有文件' icon={File} />
+  const handleCollapseAll = () => {
+    setFilter('')
+    setExpandedKeys([])
   }
+
+  const handleSelect = (_keys: string[], { node }: { node: TreeDataNode }) => {
+    if (node.isLeaf) {
+      onOpenFile(node.key)
+      return
+    }
+    const keys = expandedKeys.includes(node.key)
+      ? expandedKeys.filter((key) => key !== node.key)
+      : [...expandedKeys, node.key]
+    handleExpand(keys)
+  }
+
+  const handleOpenProject = async () => {
+    if (!project) return
+    try {
+      await getDesktopApi()?.openPath(project.rootPath)
+    } catch (openError) {
+      toast.error(openError instanceof Error ? openError.message : '打开项目失败')
+    }
+  }
+
+  const handleCopyPath = async () => {
+    if (!project) return
+    try {
+      await navigator.clipboard.writeText(project.rootPath)
+      toast.success('已复制项目路径')
+    } catch {
+      toast.error('复制路径失败')
+    }
+  }
+
+  if (!getDesktopApi()?.listProjectEntries) return <FileEmptyState description='文件列表仅在桌面端可用' />
+  if (loading) return <FileEmptyState description='正在加载项目...' />
+  if (error) return <FileEmptyState description={error} />
+  if (!project) return <FileEmptyState description='此工作区中没有文件' />
 
   return (
-    <Flex className='flex-col h-full min-h-0'>
-      <Flex className='flex-col gap-2 p-3 flex-none border-b border-(--lobe-color-border-secondary)'>
-        <Input
-          allowClear
-          placeholder='筛选文件...'
-          prefix={<Icon icon={Search} size={14} />}
-          size='small'
-          value={filter}
-          onChange={(event) => setFilter(event.target.value)}
-        />
-        <Flex className='items-center gap-1 min-w-0'>
-          {relativePath ? <ActionIcon icon={FolderOpen} size='small' title='返回上级' onClick={handleGoUp} /> : null}
-          <Text ellipsis type='secondary'>
-            {relativePath || project.name}
-          </Text>
-        </Flex>
-      </Flex>
-
-      <Flex className='flex-col min-h-0 overflow-auto flex-1'>
-        {loading ? (
-          <Text className='p-4' type='secondary'>
-            加载中...
-          </Text>
-        ) : error ? (
-          <Text className='p-4' type='danger'>
-            {error}
-          </Text>
-        ) : filteredEntries.length === 0 ? (
-          <EmptyState description={filter.trim() ? '没有匹配的文件' : '此工作区中没有文件'} icon={File} />
+    <Flex className='h-full min-h-0' direction='vertical'>
+      <Flex horizontal align='center' className='shrink-0 px-2 py-2' gap={4}>
+        {searchOpen ? (
+          <Input
+            aria-label='筛选文件'
+            autoFocus
+            className='min-w-0 flex-1'
+            placeholder='筛选已加载的文件...'
+            prefix={<Icon icon={Search} size={14} />}
+            size='small'
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          />
         ) : (
-          filteredEntries.map((entry) => (
-            <button
-              className='flex items-center gap-2 w-full px-3 py-2 text-left border-0 bg-transparent cursor-pointer hover:bg-(--lobe-color-fill-quaternary)'
-              key={`${entry.isDirectory ? 'dir' : 'file'}:${entry.name}`}
-              type='button'
-              onClick={() => handleOpenEntry(entry)}
-            >
-              <Icon icon={entry.isDirectory ? Folder : FileText} size={16} />
-              <Text ellipsis>{entry.name}</Text>
-            </button>
-          ))
+          <Flex horizontal align='center' className='min-w-0 flex-1 px-1' gap={6}>
+            <Icon icon={FolderTree} size={16} />
+            <Text fontSize={13} weight={500}>
+              项目
+            </Text>
+          </Flex>
         )}
+        <ActionIcon
+          aria-label={searchOpen ? '关闭筛选' : '筛选文件'}
+          icon={searchOpen ? X : Search}
+          size='small'
+          title={searchOpen ? '关闭筛选' : '筛选文件'}
+          onClick={() => {
+            setSearchOpen(!searchOpen)
+            setFilter('')
+          }}
+        />
+        <ActionIcon
+          aria-label='全部收起'
+          icon={FoldVertical}
+          size='small'
+          title='全部收起'
+          onClick={handleCollapseAll}
+        />
+        <DropdownMenu
+          items={[
+            { icon: <Icon icon={RefreshCw} />, key: 'refresh', label: '刷新文件列表', onClick: handleRefresh },
+            { icon: <Icon icon={FolderOpen} />, key: 'open', label: '在系统中打开项目', onClick: handleOpenProject },
+            { icon: <Icon icon={Copy} />, key: 'copy', label: '复制项目路径', onClick: handleCopyPath },
+          ]}
+        >
+          <ActionIcon aria-label='文件更多操作' icon={MoreHorizontal} size='small' title='文件更多操作' />
+        </DropdownMenu>
       </Flex>
+      <div aria-label='项目文件' className='min-h-0 flex-1 overflow-auto px-1 pb-2'>
+        {nodes.length ? (
+          <Tree
+            blockNode
+            expandedKeys={visibleExpandedKeys}
+            selectedKeys={activePath ? [activePath] : []}
+            showIcon
+            showLine
+            styles={{ node: { height: 30 }, title: { minWidth: 0 } }}
+            treeData={nodes}
+            onExpand={handleExpand}
+            onSelect={handleSelect}
+          />
+        ) : (
+          <FileEmptyState description={query ? '没有匹配的文件' : '此工作区中没有文件'} />
+        )}
+      </div>
     </Flex>
   )
 })
 
 FilesContent.displayName = 'FilesContent'
 
-function EmptyState({ description, icon }: { description: string; icon: typeof File }) {
+export function FileEmptyState({ description }: { description: string }) {
   return (
-    <Flex className='flex-col-center gap-3 flex-1 min-h-[240px] p-6'>
-      <Icon icon={icon} size={36} style={{ color: 'var(--lobe-color-text-quaternary)' }} />
-      <Text type='secondary'>{description}</Text>
+    <Flex align='center' className='min-h-40 flex-1 p-6 text-center' direction='vertical' gap={12} justify='center'>
+      <Icon icon={FileText} size={32} />
+      <Text fontSize={12} type='secondary'>
+        {description}
+      </Text>
     </Flex>
   )
 }

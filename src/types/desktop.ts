@@ -63,6 +63,12 @@ export interface DesktopProjectEntries {
   path: string
 }
 
+export type DesktopProjectFile = {
+  name: string
+  path: string
+  size: number
+} & ({ kind: 'text'; content: string } | { kind: 'image'; dataUrl: string } | { kind: 'unsupported'; reason: string })
+
 export interface DesktopFileSelection {
   name: string
   path: string
@@ -156,6 +162,7 @@ export interface DesktopApi {
   getRemoteServer: () => Promise<DesktopRemoteServer>
   getCloudServer: () => Promise<DesktopRemoteServer>
   listProjectEntries: (input: { projectId: string; relativePath?: string }) => Promise<DesktopProjectEntries>
+  readProjectFile: (input: { projectId: string; relativePath: string }) => Promise<DesktopProjectFile>
   listProjects: () => Promise<DesktopProject[]>
   notify: (input: DesktopNotificationInput) => Promise<void>
   minimizeWindow: () => Promise<void>

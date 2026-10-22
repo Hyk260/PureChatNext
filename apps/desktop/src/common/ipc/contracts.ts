@@ -11,6 +11,7 @@ import type {
   DesktopNotificationInput,
   DesktopProject,
   DesktopProjectEntries,
+  DesktopProjectFile,
   DesktopRemoteServer,
   DesktopSystemTools,
   DesktopWindowState,
@@ -54,6 +55,10 @@ export interface DesktopIpcContractMap {
   'project.listEntries': {
     args: [input: { projectId: string; relativePath?: string }]
     result: DesktopProjectEntries
+  }
+  'project.readFile': {
+    args: [input: { projectId: string; relativePath: string }]
+    result: DesktopProjectFile
   }
   'localSystem.execute': { args: [request: DesktopLocalToolRequest]; result: DesktopLocalToolResult }
   'localSystem.cancel': { args: [request: DesktopLocalCommandCancellation]; result: void }
@@ -106,6 +111,7 @@ export const DESKTOP_IPC_CHANNELS = {
     delete: 'project.delete',
     list: 'project.list',
     listEntries: 'project.listEntries',
+    readFile: 'project.readFile',
   },
   shell: { openPath: 'shell.openPath' },
   storage: { deleteSecret: 'storage.deleteSecret', storeSecret: 'storage.storeSecret' },

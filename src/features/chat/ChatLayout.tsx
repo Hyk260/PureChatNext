@@ -13,8 +13,6 @@ import { useHomeStore } from '@/features/home/store/useHomeStore'
 import InsetContentFrame from '@/layout/InsetContentFrame'
 import { sidebarResizeStyles, useSidebarResize } from '@/layout/sidebarResize'
 
-const RIGHT_WIDTH = 320
-
 const styles = createStaticStyles(({ css }) => ({
   content: css`
     flex: 1;
@@ -24,14 +22,17 @@ const styles = createStaticStyles(({ css }) => ({
   `,
   right: css`
     flex: none;
-    width: ${RIGHT_WIDTH}px;
+    width: auto;
+    max-width: calc(100% - 280px);
     min-width: 0;
     height: 100%;
     overflow: hidden;
     border-inline-start: 1px solid ${cssVar.colorBorderSecondary};
-    transition:
-      width 0.25s ${cssVar.motionEaseInOut},
-      border-color 0.25s ${cssVar.motionEaseInOut};
+    transition: border-color 0.25s ${cssVar.motionEaseInOut};
+
+    @media (max-width: 900px) {
+      max-width: 100%;
+    }
   `,
 }))
 
@@ -106,8 +107,8 @@ const ChatLayout = memo<Props>(
             />
             <div className={styles.content}>{children}</div>
           </Flex>
-          <aside className={cx(styles.right, rightCollapsed && '!w-0 !border-s-transparent')}>
-            <Flex className='h-full w-[320px]'>{right}</Flex>
+          <aside className={cx(styles.right, rightCollapsed && '!w-0 !border-s-transparent')} inert={rightCollapsed}>
+            {right}
           </aside>
         </InsetContentFrame>
       </Flex>

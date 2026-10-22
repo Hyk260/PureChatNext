@@ -10,7 +10,6 @@ export const StatusHomeButton = () => {
 
   return (
     <Button
-      className='h-12 bg-foreground px-5 text-background hover:opacity-90'
       type='primary'
       onClick={() => router.push('/')}
     >

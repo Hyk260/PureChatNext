@@ -38,7 +38,7 @@ description: 配置 GitHub Actions 仓库变量与密钥，并将公开的 PureC
 
 ### COS 上传权限
 
-超过 8 MiB 的安装包使用分块上传，每次只将一块读入内存后发送。COS 确认该块上传成功后，日志才会累计已上传字节数；临时失败只重试当前块，最多 3 次，每次请求限时 2 分钟。较小文件使用固定长度的普通上传。
+超过 2 MiB 的安装包使用分块上传，每次只将一块读入内存后发送。COS 确认该块上传成功后，日志才会累计已上传字节数，并报告本次上传的耗时和平均速度；临时失败只重试当前块，最多 3 次。每次请求总限时为 5 分钟，连续 2 分钟没有网络活动仍会触发 socket 超时。较小文件使用固定长度的普通上传。2 MiB 分块符合 [COS Upload Part](https://cloud.tencent.cn/document/product/436/7750) 的大小要求，减小了慢链路上单次超时需要重传的数据量。
 
 除了原有的读取、上传和清理对象权限，发布密钥还需要 `cos:InitiateMultipartUpload`、`cos:UploadPart`、`cos:CompleteMultipartUpload` 和 `cos:AbortMultipartUpload` 权限。最后一项用于失败时清理未完成的分块。权限说明见[腾讯云上传对象文档](https://cloud.tencent.cn/document/product/436/65820)。
 
@@ -59,3 +59,6 @@ description: 配置 GitHub Actions 仓库变量与密钥，并将公开的 PureC
 - 客户端下载更新返回 403：检查 COS 桶或自定义域名是否允许客户端公开读取 `desktop/` 下的更新文件。
 - 旧脚本停在 `上传请求流已处理 ... 65536/... bytes`：这是本地文件流预读日志，不能说明 COS 已收到数据。将修复合入默认分支后重新同步，最新日志应显示 `上传 COS 分块` 和 `COS 已确认上传`；工作流固定检出默认分支的脚本，无需重新构建同版本安装包。
 - 初始化、上传或合并分块返回 `AccessDenied`：检查密钥是否具有上述分块上传权限，且授权资源包含 `desktop/*`。
+- 分块反复报 `AbortError: Request aborted`，并带有 `cause=TimeoutError`：该次请求触发了总超时。结合日志中的耗时和成功分块的速度检查 runner 到 COS 的链路；HTTP 状态码、网络错误码和服务端 requestId 会在可用时一起打印。若仍持续超时，优先考虑与 COS 同地域的自托管 runner；不要将 CDN 下载域名填入 `S3_ENDPOINT`。
+- 已看到 `COS 已确认上传`，但文件列表里没有安装包：分块需要全部上传并合并后才形成完整对象。失败时脚本会尝试清理未完成的分块，重跑只复用已完成且校验通过的文件。
+- 提示 `.desktop-publish-locks/windows.json` 或 `mac.json` 已存在：先确认没有发布任务仍在运行，再在 COS 控制台清理对应残留锁；不要在任务上传过程中删除锁。

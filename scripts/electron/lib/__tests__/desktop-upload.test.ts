@@ -6,20 +6,21 @@ import type { IncomingMessage, Server, ServerResponse } from 'node:http'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { buffer } from 'node:stream/consumers'
+import { setTimeout as delay } from 'node:timers/promises'
 
 import { S3Client } from '@aws-sdk/client-s3'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { uploadDesktopAsset } from '../desktop-upload'
 
-const PART_SIZE = 8 * 1024 * 1024
+const PART_SIZE = 2 * 1024 * 1024
 const config = { bucket: 'test-123', setAcl: false }
 type Request = { method: string; url: URL; headers: IncomingMessage['headers']; bytes: Buffer }
 let directory: string
 let server: Server
 let client: S3Client
 let requests: Request[]
-let failure: 'retry' | 'denied' | 'stall' | undefined
+let failure: 'retry' | 'denied' | 'stall' | 'slow' | undefined
 
 async function respond(request: IncomingMessage, response: ServerResponse) {
   const url = new URL(request.url!, 'http://localhost')
@@ -31,9 +32,11 @@ async function respond(request: IncomingMessage, response: ServerResponse) {
     response.end('<InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>')
   } else if (request.method === 'PUT' && part) {
     if (failure === 'stall') return
-    if (part === '2' && failure) {
+    if (failure === 'slow') await delay(350)
+    if (part === '2' && (failure === 'retry' || failure === 'denied')) {
       const code = failure === 'retry' ? 'ServiceUnavailable' : 'AccessDenied'
       response.statusCode = failure === 'retry' ? 503 : 403
+      response.setHeader('x-amz-request-id', 'test-cos-request')
       if (failure === 'retry') failure = undefined
       response.end(`<Error><Code>${code}</Code><Message>test failure</Message></Error>`)
       return
@@ -111,6 +114,7 @@ describe('desktop upload over HTTP', () => {
     await uploadDesktopAsset(client, config, file, 'desktop/installer.exe', log)
     const parts = requests.filter(({ method }) => method === 'PUT')
     expect(parts.map(({ url }) => url.searchParams.get('partNumber'))).toEqual(['1', '2', '2'])
+    expect(parts.map(({ bytes }) => bytes.length)).toEqual([PART_SIZE, 64 * 1024, 64 * 1024])
     expect(Buffer.concat([parts[0].bytes, parts[2].bytes]).equals(file.bytes)).toBe(true)
     for (const part of parts) {
       expect(part.headers['content-length']).toBe(String(part.bytes.length))
@@ -124,13 +128,18 @@ describe('desktop upload over HTTP', () => {
       '<Part><ETag>&quot;part-1&quot;</ETag><PartNumber>1</PartNumber></Part><Part><ETag>&quot;part-2&quot;</ETag><PartNumber>2</PartNumber></Part>'
     )
     expect(log).toHaveBeenCalledWith(`COS 已确认上传: installer.exe ${file.size}/${file.size} bytes`)
+    expect(log).toHaveBeenCalledWith(expect.stringMatching(/COS 分块上传完成: .*耗时 [\d.]+s，[\d.]+ KiB\/s/))
     expect(requests.some(({ method }) => method === 'DELETE')).toBe(false)
   })
 
   it('aborts an incomplete upload immediately on a permanent error', async () => {
     failure = 'denied'
     const file = await asset(PART_SIZE + 1)
-    await expect(uploadDesktopAsset(client, config, file, 'desktop/installer.exe', vi.fn())).rejects.toThrow('test failure')
+    const log = vi.fn()
+    await expect(uploadDesktopAsset(client, config, file, 'desktop/installer.exe', log)).rejects.toThrow('test failure')
+    expect(log).toHaveBeenCalledWith(
+      expect.stringMatching(/AccessDenied: test failure.*HTTP 403.*requestId=test-cos-request/)
+    )
     expect(requests.filter(({ method }) => method === 'PUT')).toHaveLength(2)
     expect(requests.at(-1)?.method).toBe('DELETE')
     expect(requests.filter(({ method }) => method === 'POST')).toHaveLength(1)
@@ -139,11 +148,27 @@ describe('desktop upload over HTTP', () => {
   it('cancels stalled requests, bounds retries and cleans up uploaded parts', async () => {
     failure = 'stall'
     const timeout = AbortSignal.timeout.bind(AbortSignal)
-    vi.spyOn(AbortSignal, 'timeout').mockImplementation((ms) => timeout(ms === 120_000 ? 200 : ms))
+    vi.spyOn(AbortSignal, 'timeout').mockImplementation((ms) => timeout(ms === 300_000 ? 200 : ms))
     const file = await asset(PART_SIZE + 1)
-    await expect(uploadDesktopAsset(client, config, file, 'desktop/installer.exe', vi.fn())).rejects.toThrow()
+    await expect(uploadDesktopAsset(client, config, file, 'desktop/installer.exe', vi.fn())).rejects.toThrow(
+      'TimeoutError'
+    )
     expect(requests.filter(({ method }) => method === 'PUT')).toHaveLength(3)
     expect(requests.at(-1)?.method).toBe('DELETE')
     expect(requests.filter(({ method }) => method === 'POST')).toHaveLength(1)
   }, 15_000)
+
+  it('allows slow parts to finish within their own extended deadline without retrying', async () => {
+    failure = 'slow'
+    const timeout = AbortSignal.timeout.bind(AbortSignal)
+    // 将生产超时按 1:500 缩短：旧 2 分钟是 240ms，新 5 分钟是 600ms。
+    vi.spyOn(AbortSignal, 'timeout').mockImplementation((ms) => timeout(ms / 500))
+    const file = await asset(8 * 1024 * 1024 + 1)
+    const log = vi.fn()
+    await uploadDesktopAsset(client, config, file, 'desktop/installer.exe', log)
+    expect(requests.filter(({ method }) => method === 'PUT')).toHaveLength(5)
+    expect(log).not.toHaveBeenCalledWith(expect.stringContaining('COS 分块上传重试'))
+    expect(requests.at(-1)?.method).toBe('POST')
+    expect(requests.some(({ method }) => method === 'DELETE')).toBe(false)
+  })
 })

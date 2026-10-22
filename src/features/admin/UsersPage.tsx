@@ -1,14 +1,15 @@
 'use client'
 
-import { confirmModal, toast, Pagination, Select, Table } from '@lobehub/ui'
+import { ActionIcon, confirmModal, toast, Select } from '@lobehub/ui'
 import { Form, useForm, useWatch } from '@lobehub/ui/form'
-import type { TableProps } from '@lobehub/ui'
-import { ActionIcon, Block, Button, Checkbox, Flex, Input, InputPassword, Modal, SearchBar, Tag, Text } from '@pure/ui'
+import { ProTable } from '@lobehub/ui/pro-table'
+import type { ProColumns, ProTableActionType } from '@lobehub/ui/pro-table'
+import { Button, Checkbox, Flex, Input, InputPassword, Modal, SearchBar, Tag, Text } from '@pure/ui'
 import { MONTHLY_FREE_CREDITS, SHANGHAI_TIMEZONE, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import { EMPTY_PLACEHOLDER, formatCompactDateTime, formatNumber } from '@pure/utils/client'
-import { RefreshCw, UserPlus } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { Pencil, Trash2, UserPlus } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { z } from 'zod'
 
 import { getUserRoleLabel } from '@/const/auth'
@@ -36,7 +37,6 @@ type UserFormValues = {
 }
 
 const PAGE_SIZE = 20
-const SORT_ORDER = { asc: 'ascend', desc: 'descend' } as const
 const TABLE_SORT_DIRECTIONS: Array<'ascend' | 'descend'> = ['descend', 'ascend', 'descend']
 const formatUserDateTime = (value: string) => formatCompactDateTime(value, { timeZone: SHANGHAI_TIMEZONE })
 
@@ -127,45 +127,13 @@ export default function AdminUsersPage() {
     onSubmit: (values) => handleSubmit(values),
   })
   const banned = useWatch(form, 'banned')
-  const [items, setItems] = useState<AdminUser[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(PAGE_SIZE)
+  const actionRef = useRef<ProTableActionType>(null)
   const [keyword, setKeyword] = useState('')
   const [query, setQuery] = useState('')
-  const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [resettingCredits, setResettingCredits] = useState(false)
   const [formMode, setFormMode] = useState<UserFormMode | null>(null)
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
-  const [sortBy, setSortBy] = useState<AdminUserSortBy>()
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-
-  const loadUsers = useCallback(
-    async (signal?: AbortSignal) => {
-      setLoading(true)
-      try {
-        const result = await fetchAdminUsers({ page, pageSize, q: query, sortBy, sortOrder }, signal)
-        setItems(result.items)
-        setTotal(result.total)
-      } catch (error) {
-        if (signal?.aborted) return
-        toast.error(error instanceof Error ? error.message : '加载用户失败')
-      } finally {
-        if (!signal?.aborted) setLoading(false)
-      }
-    },
-    [page, pageSize, query, setItems, setLoading, setTotal, sortBy, sortOrder]
-  )
-  const refreshUsers = () => loadUsers()
-
-  useEffect(() => {
-    const controller = new AbortController()
-    queueMicrotask(() => {
-      if (!controller.signal.aborted) loadUsers(controller.signal)
-    })
-    return () => controller.abort()
-  }, [loadUsers])
 
   const openCreate = () => {
     form.setSchema(CREATE_USER_SCHEMA)
@@ -202,8 +170,7 @@ export default function AdminUsersPage() {
         await createAdminUser(input)
         toast.success('用户已创建')
         closeForm()
-        if (page === 1) await loadUsers()
-        else setPage(1)
+        await actionRef.current?.reload(true)
         return
       } else if (editingUser) {
         await updateAdminUser({
@@ -217,7 +184,7 @@ export default function AdminUsersPage() {
         toast.success('用户已更新')
       }
       closeForm()
-      await loadUsers()
+      await actionRef.current?.reload()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '保存失败')
       throw error
@@ -240,8 +207,8 @@ export default function AdminUsersPage() {
         setResettingCredits(true)
         try {
           const credits = await resetAdminUserCredits(target.id)
-          setItems((current) => current.map((user) => (user.id === target.id ? { ...user, credits } : user)))
           setEditingUser((current) => (current?.id === target.id ? { ...current, credits } : current))
+          await actionRef.current?.reload()
           toast.success('已重置用户本月额度')
         } catch (error) {
           toast.error(error instanceof Error ? error.message : '重置用户额度失败')
@@ -263,7 +230,8 @@ export default function AdminUsersPage() {
         try {
           await deleteAdminUser(user.id)
           toast.success('用户已删除')
-          await loadUsers()
+          actionRef.current?.clearSelected()
+          await actionRef.current?.reload()
         } catch (error) {
           toast.error(error instanceof Error ? error.message : '删除失败')
           throw error
@@ -273,19 +241,19 @@ export default function AdminUsersPage() {
     })
   }
 
-  const columns: TableProps<AdminUser>['columns'] = [
+  const columns: ProColumns<AdminUser>[] = [
     {
       dataIndex: 'email',
       ellipsis: true,
       fixed: 'left',
-      render: (value: string | null) => value || EMPTY_PLACEHOLDER,
       title: '邮箱',
-      width: 180,
+      copyable: true,
+      width: 200,
     },
     {
       dataIndex: 'emailVerified',
-      render: (value: boolean) =>
-        value ? (
+      render: (_value, user) =>
+        user.emailVerified ? (
           <Tag color='green' size='small'>
             已验证
           </Tag>
@@ -300,27 +268,23 @@ export default function AdminUsersPage() {
     {
       dataIndex: 'username',
       ellipsis: true,
-      render: (value: string | null) => value || EMPTY_PLACEHOLDER,
       title: '用户名',
       width: 140,
     },
     {
       dataIndex: 'fullName',
       ellipsis: true,
-      // fixed: 'left',
-      render: (value: string | null) => value || EMPTY_PLACEHOLDER,
       title: '全名',
       width: 120,
     },
     {
       dataIndex: 'role',
       key: 'role',
-      render: (value: string | null) => (
-        <Tag color={value === USER_ROLE.Admin ? 'red' : 'blue'} size='small'>
-          {getUserRoleLabel(value)}
+      render: (_value, user) => (
+        <Tag color={user.role === USER_ROLE.Admin ? 'red' : 'blue'} size='small'>
+          {getUserRoleLabel(user.role)}
         </Tag>
       ),
-      sortOrder: sortBy === 'role' ? SORT_ORDER[sortOrder] : null,
       sorter: true,
       title: '角色',
       width: 100,
@@ -339,13 +303,13 @@ export default function AdminUsersPage() {
     },
     {
       dataIndex: 'deviceInfo',
-      render: (value: AdminUserDeviceInfo | null) => renderUserDeviceInfo(value),
+      render: (_value, user) => renderUserDeviceInfo(user.deviceInfo),
       title: '最近设备',
       width: 220,
     },
     {
       dataIndex: 'createdAt',
-      render: formatUserDateTime,
+      renderText: formatUserDateTime,
       title: '创建时间',
       width: 160,
     },
@@ -353,46 +317,47 @@ export default function AdminUsersPage() {
       dataIndex: 'lastActiveAt',
       fixed: 'right',
       key: 'lastActiveAt',
-      render: formatUserDateTime,
-      sortOrder: sortBy === 'lastActiveAt' ? SORT_ORDER[sortOrder] : null,
+      renderText: formatUserDateTime,
       sorter: true,
       title: '最近活跃',
-      width: 160,
+      width: 140,
     },
     {
       key: 'actions',
       fixed: 'right',
       render: (_value: unknown, user) => {
         const isSelf = user.id === actorId
-        return (
-          <Flex className='gap-2'>
-            <Button size='small' onClick={() => openEdit(user)}>
-              编辑
-            </Button>
-            <Button danger disabled={isSelf} size='small' onClick={() => handleDelete(user)}>
-              删除
-            </Button>
-          </Flex>
-        )
+        return [
+          <ActionIcon
+            key='edit'
+            aria-label='编辑用户'
+            icon={Pencil}
+            size='small'
+            title='编辑用户'
+            variant='filled'
+            onClick={() => openEdit(user)}
+          />,
+          <ActionIcon
+            key='delete'
+            aria-label='删除用户'
+            danger
+            disabled={isSelf}
+            icon={Trash2}
+            size='small'
+            title={isSelf ? '不能删除当前用户' : '删除用户'}
+            variant='filled'
+            onClick={() => handleDelete(user)}
+          />,
+        ]
       },
       title: '操作',
-      width: 140,
+      valueType: 'option',
+      width: 96,
     },
   ]
 
-  const handleTableChange: TableProps<AdminUser>['onChange'] = (_pagination, _filters, sorter) => {
-    const current = Array.isArray(sorter) ? sorter[0] : sorter
-    const key = current?.columnKey
-    if ((key !== 'role' && key !== 'lastActiveAt') || !current?.order) return
-    setSortBy(key)
-    setSortOrder(current.order === 'ascend' ? 'asc' : 'desc')
-    setPage(1)
-  }
-
   const formTitle = formMode === 'create' ? '新建用户' : '编辑用户'
   const editingSelf = Boolean(editingUser && editingUser.id === actorId)
-  const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1
-  const rangeEnd = Math.min(page * pageSize, total)
 
   return (
     <main className='h-full min-h-0 overflow-y-auto'>
@@ -402,74 +367,66 @@ export default function AdminUsersPage() {
           <Text type='secondary'>管理员可创建、编辑、封禁和删除用户</Text>
         </Flex>
 
-        <Block padding={0} variant='outlined'>
-          <Flex className='flex-between gap-2.5 flex-wrap border-b border-border px-4 py-2.5'>
+        <ProTable<AdminUser, { q: string }>
+          actionRef={actionRef}
+          cardBordered
+          columnEmptyText={EMPTY_PLACEHOLDER}
+          columns={columns}
+          headerTitle={
             <SearchBar
+              className='w-full'
               placeholder='搜索邮箱、用户名或全名'
-              style={{ flex: '1 1 260px' }}
               value={keyword}
               onInputChange={(value) => {
                 setKeyword(value)
                 if (!value) {
                   setQuery('')
-                  setPage(1)
                 }
               }}
               onSearch={(value) => {
                 setQuery(value.trim())
-                setPage(1)
               }}
             />
-            <Flex className='shrink-0 gap-2'>
-              <ActionIcon
-                variant='outlined'
-                aria-label='新建用户'
-                icon={<UserPlus size={16} />}
-                size='middle'
-                title='新建用户'
-                onClick={openCreate}
-              />
-              <ActionIcon
-                variant='outlined'
-                aria-label='刷新表格数据'
-                disabled={loading}
-                size='middle'
-                icon={<RefreshCw size={16} className={loading ? 'animate-spin' : undefined} />}
-                title='刷新表格数据'
-                onClick={refreshUsers}
-              />
-            </Flex>
-          </Flex>
-
-          <Table<AdminUser>
-            columns={columns}
-            dataSource={items}
-            loading={loading}
-            pagination={false}
-            rowKey='id'
-            scroll={{ x: 1640 }}
-            sortDirections={TABLE_SORT_DIRECTIONS}
-            onChange={handleTableChange}
-          />
-
-          <Flex className='flex-between border-t border-border px-4 py-2.5'>
-            <Text type='secondary'>
-              第 {rangeStart}-{rangeEnd} 条，共 {total} 条
-            </Text>
-            <Pagination
-              current={page}
-              pageSize={pageSize}
-              pageSizeOptions={[10, 20, 50, 100]}
-              showSizeChanger
+          }
+          options={{ density: true, reload: true, setting: true }}
+          pagination={{
+            defaultPageSize: PAGE_SIZE,
+            pageSizeOptions: [10, 20, 50, 100],
+            showSizeChanger: true,
+            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+          }}
+          params={{ q: query }}
+          request={async ({ current = 1, pageSize = PAGE_SIZE, q }, sort) => {
+            const sortBy = Object.keys(sort).find(
+              (key): key is AdminUserSortBy => key === 'role' || key === 'lastActiveAt'
+            )
+            const result = await fetchAdminUsers({
+              page: current,
+              pageSize,
+              q,
+              sortBy,
+              sortOrder: sortBy && sort[sortBy] === 'ascend' ? 'asc' : 'desc',
+            })
+            return { data: result.items, success: true, total: result.total }
+          }}
+          rowKey='id'
+          rowSelection={{}}
+          scroll={{ x: 1640 }}
+          search={false}
+          sortDirections={TABLE_SORT_DIRECTIONS}
+          toolBarRender={() => [
+            <ActionIcon
+              key='create'
+              aria-label='新建用户'
+              icon={UserPlus}
               size='small'
-              total={total}
-              onChange={(nextPage, nextPageSize) => {
-                setPage(nextPageSize === pageSize ? nextPage : 1)
-                setPageSize(nextPageSize)
-              }}
-            />
-          </Flex>
-        </Block>
+              title='新建用户'
+              variant='outlined'
+              onClick={openCreate}
+            />,
+          ]}
+          onRequestError={(error) => toast.error(error.message || '加载用户失败')}
+        />
       </Flex>
 
       <Modal

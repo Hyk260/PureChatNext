@@ -76,7 +76,7 @@ const TopicActions = memo<Props>(({ disabled, pageSize, totalCount, unfavoritedC
 
   return (
     <DropdownMenu items={items} open={open} placement='bottomLeft' onOpenChange={setOpen}>
-      <ActionIcon disabled={disabled} icon={MoreHorizontal} size='small' title='更多话题操作' />
+      <ActionIcon disabled={disabled} icon={MoreHorizontal} size='small' title='更多操作' />
     </DropdownMenu>
   )
 })

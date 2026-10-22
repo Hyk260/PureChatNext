@@ -91,16 +91,6 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
     state.configs[provider as ProviderId]?.models.find((model) => model.id === modelId)
   )
 
-  if (!card && !configuredModel) {
-    return (
-      <div className={'pb-2'}>
-        <Text as='p' className={styles.description} fontSize={12} type='secondary'>
-          暂无该模型的详细信息
-        </Text>
-      </div>
-    )
-  }
-
   const description = card?.description?.trim()
   const pricing = card?.pricing
   const abilities = configuredModel?.abilities ?? card?.abilities
@@ -117,6 +107,16 @@ const ModelDetailPanel = memo<ModelDetailPanelProps>(({ model: modelId, provider
     typeof contextWindowTokens === 'number' && contextWindowTokens > 0
       ? `${formatTokenNumber(contextWindowTokens)} tokens`
       : null
+
+  if (!description && !contextLabel && !hasAbilities && !pricing) {
+    return (
+      <div className={'pb-2'}>
+        <Text as='p' className={styles.description} fontSize={12} type='secondary'>
+          暂无该模型的详细信息
+        </Text>
+      </div>
+    )
+  }
 
   return (
     <Flex className={['pb-2', 'flex-col gap-1']}>

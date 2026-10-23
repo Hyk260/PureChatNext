@@ -104,6 +104,9 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
     state.sessions.get(JSON.stringify([userId, agentId, activeTopicId]))
   )
   const isBusy = useChatRuntimeStore((state) => state.busy[topicRuntimeKey(agentId, activeTopicId)] ?? false)
+  const waitingApproval = useChatRuntimeStore(
+    (state) => state.waitingApproval[topicRuntimeKey(agentId, activeTopicId)] ?? false
+  )
   const topicsRevision = useChatRuntimeStore((state) => state.topicsRevision[agentId] ?? 0)
 
   const upsertLocalAgent = useAgentsStore((s) => s.upsertLocal)
@@ -581,7 +584,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
       if (mode === 'full') {
         await ensureFullAccess(activeTopicId ?? 'draft')
       }
-      if (!activeTopicId || isBusy) {
+      if (!activeTopicId || isBusy || waitingApproval) {
         setPermissionMode(mode)
         return
       }
@@ -596,7 +599,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
         throw error
       }
     },
-    [activeTopicId, ensureFullAccess, isBusy, setPermissionMode]
+    [activeTopicId, ensureFullAccess, isBusy, setPermissionMode, waitingApproval]
   )
 
   const handleTopicsRefresh = useCallback(() => {
@@ -641,7 +644,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
       return
     }
     if (!permissionModeInitialized) return
-    if (isBusy) return
+    if (isBusy || waitingApproval) return
     if (topicsLoadedAgentId !== agentId) return
     if (!activeTopic) {
       setSyncedPermissionKey(permissionSyncKey)
@@ -682,6 +685,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
     permissionMode,
     permissionModeInitialized,
     isBusy,
+    waitingApproval,
     permissionSyncKey,
     topicsLoadedAgentId,
   ])
@@ -695,7 +699,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
   // Keep ChatView mounted while a permission mode is being synced. Remounting
   // useChat for a settings change can reset the active topic's in-memory turn.
   const chatReady = messagesReady
-  const inputBusy = isBusy || !messagesReady || !permissionModeReady
+  const inputBusy = isBusy || waitingApproval || !messagesReady || !permissionModeReady
   const cachedMessages = runtimeSession?.chat.messages ?? (activeTopicId ? messagesCache.get(activeTopicId) : undefined)
   const activeMessages = cachedMessages ?? (loadedTopicId === activeTopicId ? initialMessages : EMPTY_MESSAGES)
   const hasActiveMessages =

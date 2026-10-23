@@ -190,7 +190,7 @@ const TopicItem = memo<Props>(
           disabled: renameDisabled,
           icon: <Icon icon={Sparkles} />,
           key: 'smart-rename',
-          label: autoRenaming ? '正在智能重命名…' : '智能重命名',
+          label: autoRenaming ? '正在智能重命名' : '智能重命名',
           onClick: (info: MenuInfo) => {
             stopMenuEvent(info)
             if (renameDisabled) return
@@ -240,7 +240,7 @@ const TopicItem = memo<Props>(
           <Flex className='items-center gap-1 w-full'>
             <Icon
               aria-label={iconLabel}
-              color={autoRenaming ? cssVar.colorWarning : cssVar.colorTextTertiary}
+              color={(autoRenaming || loading) ? cssVar.colorWarning : cssVar.colorTextTertiary}
               icon={loading ? Loader2 : Hash}
               size={14}
               spin={loading}

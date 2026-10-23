@@ -247,6 +247,9 @@ describe('background chat sessions with the real SDK', () => {
     expect(session.busy).toBe(false)
     expect(mocks.desktop.executeLocalTool).not.toHaveBeenCalled()
     expect(streams).toHaveLength(1)
+    expect(useChatRuntimeStore.getState().waitingApproval[topicRuntimeKey('agent-a', 'topic-a')]).toBe(true)
+    await session.send('another turn', [], { ...body, permissionMode: 'full' })
+    expect(streams).toHaveLength(1)
     await act(async () => {
       session.approveLocal('command-ask', 'runCommand', { command: 'pwd' }, true)
     })
@@ -313,6 +316,28 @@ describe('background chat sessions with the real SDK', () => {
     await text(streams[1], 'server approved')
     await finish(streams[1])
     expect(chatApi.updateToolApproval).toHaveBeenCalledWith('topic-a', 'server-tool', 'approved', undefined)
+  })
+
+  it('explicitly stops an approval wait without authorizing its tool', async () => {
+    mocks.desktop = { executeLocalTool: vi.fn(), cancelLocalCommand: vi.fn().mockResolvedValue(undefined) }
+    const session = sessionFor()
+    render(<App visible={session} />)
+    const first = await start(session, { ...body, permissionMode: 'ask' })
+    await push(first.stream, {
+      type: 'tool-input-available',
+      toolCallId: 'pending',
+      toolName: 'runCommand',
+      input: { command: 'pwd' },
+    })
+    await finish(first.stream)
+    await first.completion
+    await act(async () => {
+      session.stop()
+      session.approveLocal('pending', 'runCommand', { command: 'pwd' }, true)
+    })
+    expect(useChatRuntimeStore.getState().waitingApproval[topicRuntimeKey('agent-a', 'topic-a')]).toBe(false)
+    expect(mocks.desktop.executeLocalTool).not.toHaveBeenCalled()
+    expect(streams).toHaveLength(1)
   })
 
   it('retains a background error and partial response when returning', async () => {

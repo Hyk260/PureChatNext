@@ -113,6 +113,8 @@ const styles = createStaticStyles(({ css }) => ({
     cursor: col-resize;
     touch-action: none;
     outline: none;
+    // 隐藏Handle
+    opacity: 0;
     &::after {
       position: absolute;
       inset-block: 0;

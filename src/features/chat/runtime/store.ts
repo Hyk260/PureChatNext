@@ -7,6 +7,7 @@ type RuntimeState = {
   ownerId: string | null | undefined
   sessions: Map<string, ChatSession>
   busy: Record<string, boolean>
+  waitingApproval: Record<string, boolean>
   commands: Record<string, ReadonlySet<string>>
   topicsRevision: Record<string, number>
 }
@@ -17,6 +18,7 @@ export const useChatRuntimeStore = create<RuntimeState>(() => ({
   ownerId: undefined,
   sessions: new Map(),
   busy: {},
+  waitingApproval: {},
   commands: {},
   topicsRevision: {},
 }))
@@ -36,9 +38,15 @@ export const createChatSession = (userId: string, agentId: string, topicId: stri
       const state = useChatRuntimeStore.getState()
       if (state.sessions.get(session.key) !== session) return
       const key = topicRuntimeKey(agentId, topicId)
-      if (state.busy[key] === session.busy && state.commands[key] === session.runningCommandCallIds) return
+      if (
+        state.busy[key] === session.busy &&
+        state.waitingApproval[key] === session.waitingApproval &&
+        state.commands[key] === session.runningCommandCallIds
+      )
+        return
       useChatRuntimeStore.setState({
         busy: { ...state.busy, [key]: session.busy },
+        waitingApproval: { ...state.waitingApproval, [key]: session.waitingApproval },
         commands: { ...state.commands, [key]: session.runningCommandCallIds },
       })
     },
@@ -67,6 +75,7 @@ export const registerChatSession = (session: ChatSession) => {
   useChatRuntimeStore.setState({
     sessions: new Map(state.sessions).set(session.key, session),
     busy: { ...state.busy, [key]: session.busy },
+    waitingApproval: { ...state.waitingApproval, [key]: session.waitingApproval },
     commands: { ...state.commands, [key]: session.runningCommandCallIds },
   })
   return true
@@ -83,12 +92,14 @@ export const setChatRuntimeOwner = (ownerId: string | null) => {
   }
   const busy: RuntimeState['busy'] = {}
   const commands: RuntimeState['commands'] = {}
+  const waitingApproval: RuntimeState['waitingApproval'] = {}
   for (const session of sessions.values()) {
     const key = topicRuntimeKey(session.agentId, session.topicId)
     busy[key] = session.busy
+    waitingApproval[key] = session.waitingApproval
     commands[key] = session.runningCommandCallIds
   }
-  useChatRuntimeStore.setState({ ownerId, sessions, busy, commands, topicsRevision: {} })
+  useChatRuntimeStore.setState({ ownerId, sessions, busy, waitingApproval, commands, topicsRevision: {} })
 }
 
 /** Drain in-flight writes before deleting, and suppress all later tool/stream callbacks. */
@@ -110,15 +121,17 @@ export const deleteChatSessions = async (
     const next = new Map(state.sessions)
     const busy = { ...state.busy }
     const commands = { ...state.commands }
+    const waitingApproval = { ...state.waitingApproval }
     for (const session of sessions) {
       if (session.topicId && deletedIds.has(session.topicId)) {
         next.delete(session.key)
         const key = topicRuntimeKey(session.agentId, session.topicId)
         delete busy[key]
+        delete waitingApproval[key]
         delete commands[key]
       } else session.resume()
     }
-    useChatRuntimeStore.setState({ sessions: next, busy, commands })
+    useChatRuntimeStore.setState({ sessions: next, busy, waitingApproval, commands })
     return deleted
   } catch (error) {
     sessions.forEach((session) => session.resume())

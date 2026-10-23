@@ -151,6 +151,15 @@ export class ChatSession {
     return this.body?.permissionMode
   }
 
+  get waitingApproval() {
+    if (this.blocked || this.stopRequested) return false
+    const last = this.chat.messages.at(-1)
+    if (last?.role !== 'assistant') return false
+    return getToolApprovalItems(last.parts).some(
+      (item) => item.kind === 'server' || this.body?.permissionMode === 'ask'
+    )
+  }
+
   initializeOptions(body: ChatRequestBody) {
     this.body ??= structuredClone(body)
   }
@@ -174,7 +183,7 @@ export class ChatSession {
   }
 
   async send(text: string, files: File[], body: ChatRequestBody) {
-    if (this.blocked || this.busy) return
+    if (this.blocked || this.busy || this.waitingApproval) return
     this.body = structuredClone(body)
     this.stopRequested = false
     this.preparing = true
@@ -195,7 +204,7 @@ export class ChatSession {
   }
 
   async regenerate(id: string, body: ChatRequestBody) {
-    if (this.blocked || this.busy) return
+    if (this.blocked || this.busy || this.waitingApproval) return
     const index = this.chat.messages.findIndex((message) => message.id === id)
     if (index < 0) return
     const user = this.chat.messages
@@ -282,6 +291,10 @@ export class ChatSession {
 
   approveLocal(toolCallId: string, toolName: string, args: Record<string, unknown>, approved: boolean) {
     if (this.blocked || this.stopRequested || !this.topicId || !this.body) return
+    const pending = getToolApprovalItems(this.chat.messages.at(-1)?.parts ?? []).find(
+      (item) => item.kind === 'local' && item.toolCallId === toolCallId && item.toolName === toolName
+    )
+    if (!pending || !this.waitingApproval) return
     if (!approved) {
       this.recordToolStatus(toolCallId, 'denied')
       Promise.resolve(
@@ -306,6 +319,10 @@ export class ChatSession {
 
   approveServer(approvalId: string, toolCallId: string, approved: boolean) {
     if (this.blocked || this.stopRequested) return
+    const pending = getToolApprovalItems(this.chat.messages.at(-1)?.parts ?? []).some(
+      (item) => item.kind === 'server' && item.toolCallId === toolCallId && item.approvalId === approvalId
+    )
+    if (!pending) return
     this.recordToolStatus(toolCallId, approved ? 'approved' : 'denied')
     Promise.resolve(
       this.chat.addToolApprovalResponse({ id: approvalId, approved, options: { body: this.requestOptions() } })

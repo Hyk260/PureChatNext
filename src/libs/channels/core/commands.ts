@@ -134,7 +134,7 @@ export function buildChannelWelcomeText(
 ): string | null {
   if (options?.enabled === false) return null
   const name = agentTitle.trim() || '助手'
-  return [`「${name}」已绑定，直接发消息即可开始。`, options?.helpHint ?? '发送 /h 查看全部指令。'].join('\n')
+  return [`「${name}」已绑定，直接发消息即可开始。`, options?.helpHint ?? '发送 /h 可查看全部指令。'].join('\n')
 }
 
 export function prependChannelFirstBindWelcome(reply: string, welcome: string | null): string {

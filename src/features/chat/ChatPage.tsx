@@ -35,6 +35,12 @@ import TopicSidebar from '@/features/chat/TopicSidebar'
 import WideScreenContainer from '@/features/chat/WideScreenContainer'
 import { getChatDraftKey, useChatDraftStore } from '@/features/chat/store/useChatDraftStore'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
+import {
+  deleteChatSessions,
+  findChatSession,
+  topicRuntimeKey,
+  useChatRuntimeStore,
+} from '@/features/chat/runtime/store'
 import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
 import type {
   ChatLlmParams,
@@ -48,6 +54,7 @@ import { fetchAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { getDesktopApi } from '@/types/desktop'
+import { useSession } from '@/libs/better-auth/client'
 import type { DesktopProject } from '@/types/desktop'
 
 const subscribeNoop = () => () => {}
@@ -67,7 +74,7 @@ const styles = createStaticStyles(({ css }) => ({
   `,
 }))
 
-const ChatPage = memo(() => {
+const ChatPageContent = memo(({ userId }: { userId: string }) => {
   // Defer searchParams reads until after hydration to avoid SSR mismatch.
   const isClient = useSyncExternalStore(subscribeNoop, getClientSnapshot, getServerSnapshot)
   const router = useRouter()
@@ -93,6 +100,11 @@ const ChatPage = memo(() => {
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
 
   const agentId = agentFromQuery ?? activeAgent?.identifier ?? selectedAgentId ?? PURE_AI_AGENT_ID
+  const runtimeSession = useChatRuntimeStore((state) =>
+    state.sessions.get(JSON.stringify([userId, agentId, activeTopicId]))
+  )
+  const isBusy = useChatRuntimeStore((state) => state.busy[topicRuntimeKey(agentId, activeTopicId)] ?? false)
+  const topicsRevision = useChatRuntimeStore((state) => state.topicsRevision[agentId] ?? 0)
 
   const upsertLocalAgent = useAgentsStore((s) => s.upsertLocal)
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
@@ -112,16 +124,15 @@ const ChatPage = memo(() => {
   const [draftProjectName, setDraftProjectName] = useState<string | null>(null)
   const draftProjectTouchedRef = useRef(false)
   const [topicsLoadedAgentId, setTopicsLoadedAgentId] = useState<string | null>(null)
-  const [initialMessages, setInitialMessages] = useState<UIMessage[]>(EMPTY_MESSAGES)
+  const [initialMessages, setInitialMessages] = useState<UIMessage[]>(runtimeSession?.chat.messages ?? EMPTY_MESSAGES)
   // Tracks which topicId the currently-loaded initialMessages belong to.
   // undefined = not yet loaded; null = draft (empty); string = that topic's messages.
   const [loadedTopicId, setLoadedTopicId] = useState<string | null | undefined>(() =>
-    isClient && activeTopicId === null ? null : undefined
+    isClient && (activeTopicId === null || runtimeSession) ? activeTopicId : undefined
   )
   const [messagesTopicKey, setMessagesTopicKey] = useState<string | null | undefined>(() =>
     isClient ? activeTopicId : undefined
   )
-  const [isBusy, setIsBusy] = useState(false)
   const [inputPrefillKey, setInputPrefillKey] = useState(0)
   const [autoRenamingTopicId, setAutoRenamingTopicId] = useState<string | null>(null)
   // Per-topic message cache. Lets topic switches
@@ -148,7 +159,7 @@ const ChatPage = memo(() => {
       setInitialMessages(EMPTY_MESSAGES)
       setLoadedTopicId(null)
     } else {
-      const cached = messagesCache.get(activeTopicId)
+      const cached = runtimeSession?.chat.messages ?? messagesCache.get(activeTopicId)
       if (cached) {
         setInitialMessages(cached)
         setLoadedTopicId(activeTopicId)
@@ -160,6 +171,7 @@ const ChatPage = memo(() => {
 
   const handleCacheMessages = useCallback((id: string, messages: UIMessage[]) => {
     setMessagesCache((prev) => {
+      if (prev.get(id) === messages) return prev
       const next = new Map(prev)
       next.set(id, messages)
       return next
@@ -170,29 +182,37 @@ const ChatPage = memo(() => {
     chatActionsRef.current = actions
   }, [])
 
-  const handleBusyChange = useCallback((busy: boolean) => {
-    setIsBusy(busy)
-  }, [])
-
   const handleInputStop = useCallback(() => {
-    chatActionsRef.current.stop()
-  }, [])
+    findChatSession(userId, agentId, activeTopicId)?.stop()
+  }, [activeTopicId, agentId, userId])
 
-  const handleSelectOpeningQuestion = useCallback((question: string) => {
-    useChatDraftStore.getState().setText(getChatDraftKey(agentId, activeTopicId), question)
-    setInputPrefillKey((key) => key + 1)
-  }, [activeTopicId, agentId])
+  const handleSelectOpeningQuestion = useCallback(
+    (question: string) => {
+      useChatDraftStore.getState().setText(getChatDraftKey(agentId, activeTopicId), question)
+      setInputPrefillKey((key) => key + 1)
+    },
+    [activeTopicId, agentId]
+  )
+
+  const currentWorkspaceRef = useRef('')
+  useLayoutEffect(() => {
+    currentWorkspaceRef.current = `${userId}:${agentId}`
+    return () => {
+      currentWorkspaceRef.current = ''
+    }
+  }, [agentId, userId])
 
   const refreshTopics = useCallback(async () => {
     if (!agentId) return
     try {
       const items = await fetchTopics(agentId)
+      if (currentWorkspaceRef.current !== `${userId}:${agentId}`) return
       setTopics(items)
       setTopicsLoadedAgentId(agentId)
     } catch (error) {
       console.error('[chat] refreshTopics failed', error)
     }
-  }, [agentId])
+  }, [agentId, userId])
 
   // Deep-link / refresh: sync `?agent=` into home store from API.
   useEffect(() => {
@@ -247,14 +267,14 @@ const ChatPage = memo(() => {
     return () => {
       cancelled = true
     }
-  }, [agentId, isClient])
+  }, [agentId, isClient, topicsRevision, userId])
 
   // Soft-refresh messages for the active topic. Cache-first paint happens above
   // during render; this effect only hits the network.
   //
   // Once this topic is already on screen, do NOT push GET results into
   // `initialMessages` — a late/stale response would remount-seed older history.
-  // Live ChatView owns the message list; unmount write-through keeps the cache warm.
+  // A runtime instance is authoritative, including while its view is unmounted.
   const loadedTopicIdRef = useRef(loadedTopicId)
   useLayoutEffect(() => {
     loadedTopicIdRef.current = loadedTopicId
@@ -262,12 +282,18 @@ const ChatPage = memo(() => {
 
   useEffect(() => {
     if (!isClient || activeTopicId === null) return
+    const existingSession = findChatSession(userId, agentId, activeTopicId)
+    if (existingSession) {
+      existingSession.flush()
+      return
+    }
 
     let cancelled = false
 
     fetchMessages(activeTopicId)
       .then((msgs) => {
         if (cancelled) return
+        if (findChatSession(userId, agentId, activeTopicId)) return
 
         setMessagesCache((prev) => {
           const existing = prev.get(activeTopicId)
@@ -292,7 +318,7 @@ const ChatPage = memo(() => {
     return () => {
       cancelled = true
     }
-  }, [activeTopicId, isClient])
+  }, [activeTopicId, agentId, isClient, userId])
 
   const handleNewTopic = useCallback(() => {
     // Already on draft for this agent — no-op.
@@ -325,7 +351,9 @@ const ChatPage = memo(() => {
       .catch(() => {
         if (!cancelled) toast.error('加载默认项目失败')
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [activeTopicId, isClient])
 
   const handleAgentSelect = useCallback(
@@ -350,18 +378,15 @@ const ChatPage = memo(() => {
     [activeTopicId, agentId, pushChatHref]
   )
 
-  const handleUpdateTopic = useCallback(
-    async (id: string, patch: TopicUpdate, errorText: string) => {
-      try {
-        const updated = await updateTopic(id, patch)
-        setTopics((prev) => prev.map((topic) => (topic.id === id ? updated : topic)))
-      } catch (error) {
-        console.error('[chat] updateTopic failed', error)
-        toast.error(errorText)
-      }
-    },
-    []
-  )
+  const handleUpdateTopic = useCallback(async (id: string, patch: TopicUpdate, errorText: string) => {
+    try {
+      const updated = await updateTopic(id, patch)
+      setTopics((prev) => prev.map((topic) => (topic.id === id ? updated : topic)))
+    } catch (error) {
+      console.error('[chat] updateTopic failed', error)
+      toast.error(errorText)
+    }
+  }, [])
 
   const handleRenameTopic = useCallback(
     (id: string, title: string) => handleUpdateTopic(id, { title }, '重命名失败'),
@@ -375,13 +400,17 @@ const ChatPage = memo(() => {
 
   const handleAutoRenameTopic = useCallback(
     async (id: string) => {
-      if (isBusy || autoRenamingTopicIdRef.current) return
+      if (useChatRuntimeStore.getState().busy[topicRuntimeKey(agentId, id)] || autoRenamingTopicIdRef.current) return
 
       autoRenamingTopicIdRef.current = id
       setAutoRenamingTopicId(id)
       try {
-        const cachedMessages = messagesCache.get(id)
-        if (cachedMessages) await putMessages(id, cachedMessages)
+        const session = findChatSession(userId, agentId, id)
+        if (session) await session.flush()
+        else {
+          const cachedMessages = messagesCache.get(id)
+          if (cachedMessages) await putMessages(id, cachedMessages)
+        }
 
         const updated = await autoRenameTopic(id, {
           model: selectedModel,
@@ -397,7 +426,7 @@ const ChatPage = memo(() => {
         setAutoRenamingTopicId((currentId) => (currentId === id ? null : currentId))
       }
     },
-    [isBusy, messagesCache, selectedModel, selectedProvider]
+    [agentId, messagesCache, selectedModel, selectedProvider, userId]
   )
 
   const handleProjectChange = useCallback(
@@ -442,7 +471,10 @@ const ChatPage = memo(() => {
   const handleDeleteTopic = useCallback(
     async (id: string) => {
       try {
-        await deleteTopic(id)
+        await deleteChatSessions(userId, agentId, [id], async () => {
+          await deleteTopic(id)
+          return [id]
+        })
         useChatDraftStore.getState().clearDrafts([getChatDraftKey(agentId, id)])
         setMessagesCache((prev) => {
           if (!prev.has(id)) return prev
@@ -459,13 +491,14 @@ const ChatPage = memo(() => {
         console.error('[chat] deleteTopic failed', error)
       }
     },
-    [activeTopicId, agentId, pushChatHref]
+    [activeTopicId, agentId, pushChatHref, userId]
   )
 
   const handleDeleteTopics = useCallback(
     async (scope: TopicDeleteScope) => {
       try {
-        const deletedIds = await deleteTopicsApi(agentId, scope)
+        const candidates = topics.filter((topic) => scope === 'all' || !topic.favorite).map((topic) => topic.id)
+        const deletedIds = await deleteChatSessions(userId, agentId, candidates, () => deleteTopicsApi(agentId, scope))
         useChatDraftStore.getState().clearDrafts(deletedIds.map((id) => getChatDraftKey(agentId, id)))
         const deleted = new Set(deletedIds)
         setMessagesCache((prev) => {
@@ -483,16 +516,24 @@ const ChatPage = memo(() => {
         throw error
       }
     },
-    [activeTopicId, agentId, pushChatHref]
+    [activeTopicId, agentId, pushChatHref, topics, userId]
   )
 
   const handleDeleteProject = useCallback(
     async (projectName: string) => {
       const topicIds = topics.filter((topic) => topic.projectName === projectName).map((topic) => topic.id)
       try {
-        await Promise.all(topicIds.map((id) => deleteTopic(id)))
-        useChatDraftStore.getState().clearDrafts(topicIds.map((id) => getChatDraftKey(agentId, id)))
-        const deleted = new Set(topicIds)
+        const results = await Promise.allSettled(
+          topicIds.map((id) =>
+            deleteChatSessions(userId, agentId, [id], async () => {
+              await deleteTopic(id)
+              return [id]
+            })
+          )
+        )
+        const deletedIds = results.flatMap((result, index) => (result.status === 'fulfilled' ? [topicIds[index]] : []))
+        useChatDraftStore.getState().clearDrafts(deletedIds.map((id) => getChatDraftKey(agentId, id)))
+        const deleted = new Set(deletedIds)
         setMessagesCache((prev) => {
           if (deleted.size === 0) return prev
           const next = new Map(prev)
@@ -501,6 +542,9 @@ const ChatPage = memo(() => {
         })
         setTopics((prev) => prev.filter((topic) => !deleted.has(topic.id)))
         if (activeTopicId && deleted.has(activeTopicId)) pushChatHref(agentId)
+
+        const failure = results.find((result) => result.status === 'rejected')
+        if (failure?.status === 'rejected') throw failure.reason
 
         const api = getDesktopApi()
         if (api?.listProjects && api.deleteProject) {
@@ -515,7 +559,7 @@ const ChatPage = memo(() => {
         throw error
       }
     },
-    [activeTopicId, agentId, pushChatHref, topics]
+    [activeTopicId, agentId, pushChatHref, topics, userId]
   )
 
   const handleParamsChange = useCallback(
@@ -537,7 +581,7 @@ const ChatPage = memo(() => {
       if (mode === 'full') {
         await ensureFullAccess(activeTopicId ?? 'draft')
       }
-      if (!activeTopicId) {
+      if (!activeTopicId || isBusy) {
         setPermissionMode(mode)
         return
       }
@@ -552,7 +596,7 @@ const ChatPage = memo(() => {
         throw error
       }
     },
-    [activeTopicId, ensureFullAccess, setPermissionMode]
+    [activeTopicId, ensureFullAccess, isBusy, setPermissionMode]
   )
 
   const handleTopicsRefresh = useCallback(() => {
@@ -597,6 +641,7 @@ const ChatPage = memo(() => {
       return
     }
     if (!permissionModeInitialized) return
+    if (isBusy) return
     if (topicsLoadedAgentId !== agentId) return
     if (!activeTopic) {
       setSyncedPermissionKey(permissionSyncKey)
@@ -636,11 +681,12 @@ const ChatPage = memo(() => {
     ensureFullAccess,
     permissionMode,
     permissionModeInitialized,
+    isBusy,
     permissionSyncKey,
     topicsLoadedAgentId,
   ])
 
-  const messagesReady = activeTopicId === null ? true : loadedTopicId === activeTopicId
+  const messagesReady = activeTopicId === null || Boolean(runtimeSession) || loadedTopicId === activeTopicId
   const permissionModeReady =
     !isDesktop ||
     (permissionModeInitialized &&
@@ -650,21 +696,21 @@ const ChatPage = memo(() => {
   // useChat for a settings change can reset the active topic's in-memory turn.
   const chatReady = messagesReady
   const inputBusy = isBusy || !messagesReady || !permissionModeReady
-  const cachedMessages = activeTopicId ? messagesCache.get(activeTopicId) : undefined
+  const cachedMessages = runtimeSession?.chat.messages ?? (activeTopicId ? messagesCache.get(activeTopicId) : undefined)
   const activeMessages = cachedMessages ?? (loadedTopicId === activeTopicId ? initialMessages : EMPTY_MESSAGES)
   const hasActiveMessages =
     activeTopicId !== null &&
-    ((messagesCache.get(activeTopicId)?.length ?? 0) > 0 ||
-      (loadedTopicId === activeTopicId && initialMessages.length > 0))
+    ((cachedMessages?.length ?? 0) > 0 || (loadedTopicId === activeTopicId && initialMessages.length > 0))
   const handleInputSend = useCallback(
     async (text: string, files: File[]) => {
+      if (!messagesReady) return
       if (!permissionModeReady) {
         toast.error('会话权限仍在同步，请稍后重试')
         return
       }
       await chatActionsRef.current.send(text, files)
     },
-    [permissionModeReady]
+    [messagesReady, permissionModeReady]
   )
 
   return (
@@ -676,7 +722,7 @@ const ChatPage = memo(() => {
         <TopicSidebar
           activeTopicId={activeTopicId}
           agents={agents}
-          autoRenameDisabled={isBusy || autoRenamingTopicId !== null}
+          autoRenameDisabled={autoRenamingTopicId !== null}
           autoRenamingTopicId={autoRenamingTopicId}
           currentAgentId={agentId}
           loading={topicsLoading}
@@ -695,9 +741,7 @@ const ChatPage = memo(() => {
         />
       }
       topic={activeTopic}
-      right={
-        <WorkPanel topic={activeTopic} topicTitle={topicTitle} value={params} onChange={handleParamsChange} />
-      }
+      right={<WorkPanel topic={activeTopic} topicTitle={topicTitle} value={params} onChange={handleParamsChange} />}
       title={topicTitle}
       autoRenamingTopicId={autoRenamingTopicId}
       onAutoRenameTopic={handleAutoRenameTopic}
@@ -711,12 +755,14 @@ const ChatPage = memo(() => {
         <Flex className={[styles.page, 'flex-col']}>
           {chatReady ? (
             <ChatView
-              key={`${agentId}:${activeTopicId ?? 'draft'}`}
+              key={`${userId}:${agentId}:${activeTopicId ?? 'draft'}`}
+              userId={userId}
               agentId={agentId}
-              initialMessages={activeTopicId === null ? EMPTY_MESSAGES : initialMessages}
+              initialMessages={
+                runtimeSession?.chat.messages ?? (activeTopicId === null ? EMPTY_MESSAGES : initialMessages)
+              }
               topicId={activeTopicId}
               onBindActions={handleBindActions}
-              onBusyChange={handleBusyChange}
               onCacheMessages={handleCacheMessages}
               onSelectOpeningQuestion={handleSelectOpeningQuestion}
               onTopicsRefresh={handleTopicsRefresh}
@@ -748,6 +794,13 @@ const ChatPage = memo(() => {
       )}
     </ChatLayout>
   )
+})
+
+ChatPageContent.displayName = 'ChatPageContent'
+
+const ChatPage = memo(() => {
+  const { data: auth } = useSession()
+  return auth?.user ? <ChatPageContent key={auth.user.id} userId={auth.user.id} /> : null
 })
 
 ChatPage.displayName = 'ChatPage'

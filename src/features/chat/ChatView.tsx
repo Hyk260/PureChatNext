@@ -1,24 +1,14 @@
 'use client'
 
-import { Flex } from '@pure/ui'
 import { useChat } from '@ai-sdk/react'
-import {
-  DefaultChatTransport,
-  lastAssistantMessageIsCompleteWithApprovalResponses,
-  lastAssistantMessageIsCompleteWithToolCalls,
-} from 'ai'
-import type { UIMessage } from 'ai'
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Flex } from '@pure/ui'
 import type { ChatPermissionMode } from '@pure/types'
+import type { UIMessage } from 'ai'
+import { useRouter } from 'next/navigation'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
-import {
-  buildChatHref,
-  createTopic,
-  putMessages,
-  updateToolApproval,
-  upsertToolApproval,
-} from '@/features/chat/chatApi'
+import { buildChatHref, createTopic } from '@/features/chat/chatApi'
 import {
   claimPendingChatFiles,
   claimPendingChatProject,
@@ -27,39 +17,24 @@ import {
   claimPendingTopicSendFiles,
   finishPendingChatText,
   finishPendingTopicSend,
-  setPendingTopicSend,
-  setPendingTopicSendFiles,
   truncateTitle,
 } from '@/features/chat/chatLocalStorage'
-import ChatErrorBanner from '@/features/chat/ChatErrorBanner'
 import { resolveNewChatProject } from '@/features/chat/chatProject'
+import ChatErrorBanner from '@/features/chat/ChatErrorBanner'
 import ChatMessages from '@/features/chat/ChatMessages'
-import { getMessageText, withMessageText } from '@/features/chat/messageText'
+import {
+  createChatSession,
+  registerChatSession,
+  topicRuntimeKey,
+  useChatRuntimeStore,
+} from '@/features/chat/runtime/store'
 import type { ChatSearchMode } from '@/features/chat/types'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
-import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
-import { useRouter } from 'next/navigation'
-import { LOCAL_TOOL_NAMES } from '@/features/chat/localTools'
 import { getDesktopApi } from '@/types/desktop'
-import type { DesktopLocalToolRequest } from '@/types/desktop'
 
 const EMPTY_MESSAGES: UIMessage[] = []
-
-const fileToPart = (file: File): Promise<{ type: 'file'; mediaType: string; url: string; filename: string }> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () =>
-      resolve({
-        type: 'file',
-        mediaType: file.type || 'application/octet-stream',
-        url: String(reader.result),
-        filename: file.name,
-      })
-    reader.onerror = () => reject(reader.error ?? new Error('读取附件失败'))
-    reader.readAsDataURL(file)
-  })
 
 const buildTopicTitle = (text: string, files: File[]) => {
   const attachmentLabel = files.length > 0 ? `📎 ${files.map((file) => file.name).join('、')}` : ''
@@ -68,32 +43,16 @@ const buildTopicTitle = (text: string, files: File[]) => {
   return [trimmedText ? truncateTitle(trimmedText) : '', attachmentLabel].filter(Boolean).join(' · ')
 }
 
-/** Stable content fingerprint so hydrate / Strict Mode remounts do not re-PUT identical snapshots. */
-const messagesSignature = (messages: UIMessage[]) =>
-  JSON.stringify(
-    messages.map((message) => ({
-      id: message.id,
-      metadata: message.metadata,
-      parts: message.parts,
-      role: message.role,
-    }))
-  )
-
-const chatTransport = new DefaultChatTransport({
-  api: '/api/chat',
-  credentials: 'include',
-})
-
 export type ChatViewActions = {
   send: (text: string, files?: File[]) => void | Promise<void>
   stop: () => void
 }
 
 interface ChatViewProps {
+  userId: string
   agentId: string
   topicId: string | null
   initialMessages: UIMessage[]
-  onBusyChange: (busy: boolean) => void
   onCacheMessages: (topicId: string, messages: UIMessage[]) => void
   onBindActions: (actions: ChatViewActions) => void
   onSelectOpeningQuestion?: (question: string) => void
@@ -104,10 +63,10 @@ interface ChatViewProps {
 
 const ChatView = memo<ChatViewProps>(
   ({
+    userId,
     agentId,
     topicId,
     initialMessages,
-    onBusyChange,
     onCacheMessages,
     onBindActions,
     onSelectOpeningQuestion,
@@ -116,434 +75,137 @@ const ChatView = memo<ChatViewProps>(
     searchMode,
   }) => {
     const router = useRouter()
-    const selectedModel = useHomeStore((s) => s.selectedModel)
-    const selectedProvider = useHomeStore((s) => s.selectedProvider)
-    const activeAgent = useHomeStore((s) => s.activeAgent)
-    const selectedModelConfig = useProviderConfigStore((s) =>
-      s.configs[selectedProvider]?.models.find((model) => model.id === selectedModel)
+    const selectedModel = useHomeStore((state) => state.selectedModel)
+    const selectedProvider = useHomeStore((state) => state.selectedProvider)
+    const activeAgent = useHomeStore((state) => state.activeAgent)
+    const modelAbilities = useProviderConfigStore(
+      (state) => state.configs[selectedProvider]?.models.find((model) => model.id === selectedModel)?.abilities
     )
-    const selectedModelAbilities = selectedModelConfig?.abilities
-
-    const chatId = `purechat-${agentId}-${topicId ?? 'draft'}`
-
-    const desktopApi = getDesktopApi()
-    const stopRequestedRef = useRef(false)
-    const runningCommandCallIdsRef = useRef(new Set<string>())
-    const [runningCommandCallIds, setRunningCommandCallIds] = useState<ReadonlySet<string>>(() => new Set())
-    const markCommandCall = useCallback((toolCallId: string, running: boolean) => {
-      if (running) runningCommandCallIdsRef.current.add(toolCallId)
-      else runningCommandCallIdsRef.current.delete(toolCallId)
-      setRunningCommandCallIds(new Set(runningCommandCallIdsRef.current))
-    }, [])
+    const [session] = useState(() => createChatSession(userId, agentId, topicId, initialMessages))
+    const { messages, status, error, clearError } = useChat({ chat: session.chat })
+    const runtimeKey = topicRuntimeKey(agentId, topicId)
+    const isBusy = useChatRuntimeStore((state) => state.busy[runtimeKey] ?? false)
+    const runningCommandCallIds = useChatRuntimeStore((state) => state.commands[runtimeKey])
+    const creatingTopicRef = useRef(false)
+    const mountedRef = useRef(false)
     const requestBody = useMemo(
       () => ({
-        ...(topicId ? { topicId } : {}),
-        ...(desktopApi ? { clientCapabilities: { desktop: true } } : {}),
         model: selectedModel,
-        ...(selectedModelAbilities ? { modelAbilities: selectedModelAbilities } : {}),
-        ...(permissionMode ? { permissionMode } : {}),
         provider: selectedProvider,
         searchMode,
+        ...(modelAbilities ? { modelAbilities } : {}),
+        ...(permissionMode ? { permissionMode } : {}),
         ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
       }),
-      [
-        activeAgent,
-        desktopApi,
-        permissionMode,
-        searchMode,
-        selectedModel,
-        selectedModelAbilities,
-        selectedProvider,
-        topicId,
-      ]
+      [activeAgent?.systemRole, modelAbilities, permissionMode, searchMode, selectedModel, selectedProvider]
     )
-
-    const {
-      addToolApprovalResponse,
-      addToolOutput,
-      clearError,
-      error,
-      messages,
-      sendMessage,
-      setMessages,
-      status,
-      stop,
-    } = useChat({
-      id: chatId,
-      messages: initialMessages,
-      // throttle: 50,
-      transport: chatTransport,
-      sendAutomaticallyWhen: ({ messages: nextMessages }) =>
-        !stopRequestedRef.current &&
-        (lastAssistantMessageIsCompleteWithToolCalls({ messages: nextMessages }) ||
-          lastAssistantMessageIsCompleteWithApprovalResponses({ messages: nextMessages })),
-      onToolCall: async ({ toolCall }) => {
-        if (toolCall.dynamic || !desktopApi || !LOCAL_TOOL_NAMES.has(toolCall.toolName)) return
-        const args = (toolCall.input && typeof toolCall.input === 'object' ? toolCall.input : {}) as Record<
-          string,
-          unknown
-        >
-        const shouldApprove = permissionMode === 'ask'
-        if (topicId) {
-          await upsertToolApproval(topicId, {
-            apiName: toolCall.toolName,
-            args,
-            identifier: 'desktop-local-system',
-            toolCallId: toolCall.toolCallId,
-          }).catch((error) => console.error('[chat] tool approval record failed', error))
-        }
-        if (shouldApprove) return
-        const request: DesktopLocalToolRequest = {
-          args,
-          ...(permissionMode === 'auto' ? { approved: true } : {}),
-          mode: permissionMode ?? 'auto',
-          toolCallId: toolCall.toolCallId,
-          toolName: toolCall.toolName as DesktopLocalToolRequest['toolName'],
-          topicId: topicId ?? 'draft',
-        }
-        await executeDesktopTool(request)
-      },
-    })
-
-    const executeDesktopTool = useCallback(
-      async (request: DesktopLocalToolRequest) => {
-        const isCommand = request.toolName === 'runCommand'
-        if (isCommand) markCommandCall(request.toolCallId, true)
-
-        try {
-          const output = await desktopApi!.executeLocalTool(request)
-          if (topicId) {
-            updateToolApproval(
-              topicId,
-              request.toolCallId,
-              output.success ? 'completed' : 'failed',
-              output.success ? undefined : output.content
-            )
-          }
-          addToolOutput({
-            options: { body: requestBody },
-            output,
-            tool: request.toolName as never,
-            toolCallId: request.toolCallId,
-          })
-        } catch (error) {
-          const output = {
-            content: error instanceof Error ? error.message : '本地工具执行失败',
-            success: false,
-          }
-          if (topicId) updateToolApproval(topicId, request.toolCallId, 'failed', output.content)
-          addToolOutput({
-            options: { body: requestBody },
-            output,
-            tool: request.toolName as never,
-            toolCallId: request.toolCallId,
-          })
-        } finally {
-          if (isCommand) markCommandCall(request.toolCallId, false)
-        }
-      },
-      [addToolOutput, desktopApi, markCommandCall, requestBody, topicId]
-    )
-
-    // Keep a ref so edit callbacks and unmount PUT flush see the latest messages
-    // even if the syncing effect has not run yet. Sync in layout effect — React
-    // forbids writing refs during render (React Compiler / Strict).
-    const messagesRef = useRef(messages)
-    useLayoutEffect(() => {
-      messagesRef.current = messages
-    }, [messages])
-    const isBusy = status === 'submitted' || status === 'streaming'
-    const isStreaming = status === 'streaming'
-    const responsePendingRef = useRef(false)
-
-    useEffect(() => {
-      if (isBusy) {
-        responsePendingRef.current = true
-        return
-      }
-      if (status === 'error') {
-        responsePendingRef.current = false
-        return
-      }
-      if (!responsePendingRef.current || status !== 'ready') return
-      responsePendingRef.current = false
-
-      if (messages.at(-1)?.role !== 'assistant') return
-      trackAcquisitionEvent('chat_response_completed', {
-        first: markFirstConversion('chat_response'),
-        model: selectedModel,
-        provider: selectedProvider,
-      })
-    }, [isBusy, messages, selectedModel, selectedProvider, status])
 
     useLayoutEffect(() => {
-      onBusyChange(isBusy)
-      return () => onBusyChange(false)
-    }, [isBusy, onBusyChange])
-
-    // Debounce PUT /api/chat/topics/[id]/messages while streaming — syncing on every
-    // token blocks the main thread and makes the bubble look like it isn't streaming.
-    // Only persists when a topic has been solidified (topicId !== null).
-    // Skip the first run after mount so an empty handoff mount cannot race a PUT []
-    // past a later PUT that already saved the first user message.
-    const putControllerRef = useRef<AbortController | null>(null)
-    const skipInitialPutRef = useRef(true)
-    const lastPutSigRef = useRef(messagesSignature(initialMessages))
-    // Survives Strict Mode remount (same fiber); cancelled if setup runs again.
-    const flushTimerRef = useRef<number | null>(null)
-
-    const persistMessages = useCallback(
-      (body: UIMessage[], signal?: AbortSignal) => {
-        if (!topicId) return
-        const signature = messagesSignature(body)
-        if (signature === lastPutSigRef.current) return
-        lastPutSigRef.current = signature
-        putMessages(topicId, body, signal ? { signal } : undefined).catch((error: unknown) => {
-          if (error instanceof DOMException && error.name === 'AbortError') return
-          if (error instanceof Error && error.name === 'AbortError') return
-          // Allow a later retry with the same snapshot after a failed PUT.
-          if (lastPutSigRef.current === signature) lastPutSigRef.current = ''
-          console.error('[chat] putMessages failed', error)
-        })
-      },
-      [topicId]
-    )
-
-    useEffect(() => {
-      if (!topicId) return
-
-      if (skipInitialPutRef.current) {
-        skipInitialPutRef.current = false
-        // Align fingerprint with whatever useChat hydrated — do not PUT on open.
-        lastPutSigRef.current = messagesSignature(messages)
-        return
-      }
-
-      const fire = () => {
-        putControllerRef.current?.abort()
-        const controller = new AbortController()
-        putControllerRef.current = controller
-        persistMessages(messages, controller.signal)
-        // Write-through only when idle — avoids parent re-renders on every stream tick.
-        if (!isBusy) onCacheMessages(topicId, messages)
-      }
-
-      if (isBusy) {
-        const timer = window.setTimeout(fire, 400)
-        return () => window.clearTimeout(timer)
-      }
-      fire()
-    }, [isBusy, messages, onCacheMessages, persistMessages, topicId])
-
-    useEffect(() => {
-      if (!topicId) return
-
-      if (flushTimerRef.current != null) {
-        window.clearTimeout(flushTimerRef.current)
-        flushTimerRef.current = null
-      }
-
+      mountedRef.current = true
+      registerChatSession(session)
+      session.flush()
       return () => {
-        putControllerRef.current?.abort()
-        const snapshot = messagesRef.current
-        const id = topicId
-        if (snapshot.length === 0) return
-
-        onCacheMessages(id, snapshot)
-        flushTimerRef.current = window.setTimeout(() => {
-          flushTimerRef.current = null
-          const signature = messagesSignature(snapshot)
-          if (signature === lastPutSigRef.current) return
-          lastPutSigRef.current = signature
-          putMessages(id, snapshot).catch((error: unknown) => {
-            if (error instanceof DOMException && error.name === 'AbortError') return
-            if (error instanceof Error && error.name === 'AbortError') return
-            if (lastPutSigRef.current === signature) lastPutSigRef.current = ''
-            console.error('[chat] putMessages failed', error)
-          })
-        }, 0)
+        mountedRef.current = false
       }
-    }, [onCacheMessages, topicId])
+    }, [session])
 
-    const sendWithBody = useCallback(
-      async (text: string, files: File[] = []) => {
-        stopRequestedRef.current = false
-        clearError()
-        const fileParts = await Promise.all(files.map(fileToPart))
-        await sendMessage(
-          { text, ...(fileParts.length > 0 ? { files: fileParts } : {}) },
-          {
-            body: requestBody,
-          }
-        )
-        onTopicsRefresh()
-      },
-      [clearError, onTopicsRefresh, requestBody, sendMessage]
-    )
+    useLayoutEffect(() => {
+      session.initializeOptions(requestBody)
+    }, [requestBody, session])
+
+    useEffect(() => {
+      if (topicId && !isBusy) onCacheMessages(topicId, messages)
+    }, [isBusy, messages, onCacheMessages, topicId])
 
     const sendOrSolidify = useCallback(
       async (text: string, files: File[] = []) => {
-        if (!topicId) {
-          try {
-            const pendingProject = await resolveNewChatProject(claimPendingChatProject())
-            const topic = await createTopic(agentId, buildTopicTitle(text, files), permissionMode, pendingProject?.name)
-            if (pendingProject?.rootPath) {
-              await getDesktopApi()
-                ?.setPermissionScope?.(topic.id, pendingProject.rootPath)
-                .catch((error) => {
-                  console.error('[chat] setPermissionScope failed', error)
-                })
-            }
-            onCacheMessages(topic.id, EMPTY_MESSAGES)
-            onTopicsRefresh()
-            setPendingTopicSend(text)
-            setPendingTopicSendFiles(files)
-            router.replace(buildChatHref(agentId, topic.id))
-          } catch (error) {
-            console.error('[chat] createTopic failed', error)
-          }
+        if (topicId) {
+          await session.send(text, files, requestBody)
           return
         }
-
-        await sendWithBody(text, files)
+        if (creatingTopicRef.current) return
+        creatingTopicRef.current = true
+        try {
+          const pendingProject = await resolveNewChatProject(claimPendingChatProject())
+          const topic = await createTopic(agentId, buildTopicTitle(text, files), permissionMode, pendingProject?.name)
+          if (pendingProject?.rootPath) {
+            await getDesktopApi()
+              ?.setPermissionScope?.(topic.id, pendingProject.rootPath)
+              .catch((error) => console.error('[chat] setPermissionScope failed', error))
+          }
+          const nextSession = createChatSession(userId, agentId, topic.id, EMPTY_MESSAGES)
+          if (!registerChatSession(nextSession)) return
+          const sending = nextSession.send(text, files, requestBody)
+          // Starting the task precedes navigation, so a fast switch cannot lose the first send.
+          if (mountedRef.current) {
+            onCacheMessages(topic.id, EMPTY_MESSAGES)
+            onTopicsRefresh()
+            router.replace(buildChatHref(agentId, topic.id))
+          }
+          await sending
+        } catch (error) {
+          console.error('[chat] createTopic failed', error)
+        } finally {
+          creatingTopicRef.current = false
+        }
       },
-      [agentId, onCacheMessages, onTopicsRefresh, permissionMode, router, sendWithBody, topicId]
+      [agentId, onCacheMessages, onTopicsRefresh, permissionMode, requestBody, router, session, topicId, userId]
     )
 
-    const handleSend = useCallback(
-      async (text: string, files: File[] = []) => {
-        if (isBusy) return
-        await sendOrSolidify(text, files)
-      },
-      [isBusy, sendOrSolidify]
-    )
-
-    const sendWithBodyRef = useRef(sendWithBody)
-    const sendOrSolidifyRef = useRef(sendOrSolidify)
+    const sendRef = useRef(sendOrSolidify)
     useLayoutEffect(() => {
-      sendWithBodyRef.current = sendWithBody
-      sendOrSolidifyRef.current = sendOrSolidify
-    }, [sendOrSolidify, sendWithBody])
+      sendRef.current = sendOrSolidify
+    }, [sendOrSolidify])
     const handoffStartedRef = useRef(false)
-
     useEffect(() => {
       if (handoffStartedRef.current) return
       handoffStartedRef.current = true
-
       const pendingTopic = claimPendingTopicSend()
-      const pendingFiles = claimPendingTopicSendFiles()
-      if (pendingTopic || pendingFiles.length > 0) {
-        sendWithBodyRef.current(pendingTopic ?? '', pendingFiles).finally(() => {
-          finishPendingTopicSend()
-        })
+      const topicFiles = claimPendingTopicSendFiles()
+      if (pendingTopic || topicFiles.length > 0) {
+        sendRef
+          .current(pendingTopic ?? '', topicFiles)
+          .catch((error) => console.error('[chat] pending send failed', error))
+        finishPendingTopicSend()
         return
       }
-
       const pending = claimPendingChatText()
-      const pendingChatFiles = claimPendingChatFiles()
-      if (!pending && pendingChatFiles.length === 0) return
-
-      sendOrSolidifyRef.current(pending ?? '', pendingChatFiles).finally(() => {
-        finishPendingChatText(pending ?? '')
-      })
+      const files = claimPendingChatFiles()
+      if (!pending && files.length === 0) return
+      sendRef.current(pending ?? '', files).catch((error) => console.error('[chat] pending send failed', error))
+      finishPendingChatText(pending ?? '')
     }, [])
 
-    const handleDelete = useCallback(
-      (id: string) => {
-        setMessages((prev) => prev.filter((message) => message.id !== id))
-      },
-      [setMessages]
-    )
+    useLayoutEffect(() => {
+      onBindActions({ send: sendOrSolidify, stop: session.stop })
+    }, [onBindActions, sendOrSolidify, session])
 
-    const handleEdit = useCallback(
-      (id: string, text: string) => {
-        setMessages((prev) => prev.map((message) => (message.id === id ? withMessageText(message, text) : message)))
-      },
-      [setMessages]
-    )
-
-    const handleStop = useCallback(() => {
-      stopRequestedRef.current = true
-      for (const toolCallId of runningCommandCallIdsRef.current) {
-        desktopApi
-          ?.cancelLocalCommand({ topicId: topicId ?? 'draft', toolCallId })
-          .catch((error) => console.error('[chat] command cancellation failed', error))
-      }
-      stop()
-    }, [desktopApi, stop, topicId])
-
+    const handleDelete = useCallback((id: string) => session.deleteMessage(id), [session])
+    const handleEdit = useCallback((id: string, text: string) => session.edit(id, text), [session])
+    const handleRegenerate = useCallback((id: string) => session.regenerate(id, requestBody), [requestBody, session])
     const handleToolApproval = useCallback(
-      (toolCallId: string, toolName: string, args: Record<string, unknown>, approved: boolean) => {
-        if (!desktopApi || !topicId) return
-        if (!approved) {
-          updateToolApproval(topicId, toolCallId, 'denied')
-          addToolOutput({
-            options: { body: requestBody },
-            output: { content: '用户拒绝了该操作', success: false },
-            tool: toolName as never,
-            toolCallId,
-          })
-          return
-        }
-        const request: DesktopLocalToolRequest = {
-          approved: true,
-          args,
-          mode: permissionMode ?? 'ask',
-          toolCallId,
-          toolName: toolName as DesktopLocalToolRequest['toolName'],
-          topicId,
-        }
-        executeDesktopTool(request)
+      (id: string, name: string, args: Record<string, unknown>, approved: boolean) => {
+        session.approveLocal(id, name, args, approved)
       },
-      [addToolOutput, desktopApi, executeDesktopTool, permissionMode, requestBody, topicId]
+      [session]
     )
-
     const handleServerToolApproval = useCallback(
       (approvalId: string, toolCallId: string, approved: boolean) => {
-        if (topicId) updateToolApproval(topicId, toolCallId, approved ? 'approved' : 'denied')
-        addToolApprovalResponse({ approved, id: approvalId, options: { body: requestBody } })
+        session.approveServer(approvalId, toolCallId, approved)
       },
-      [addToolApprovalResponse, requestBody, topicId]
+      [session]
     )
 
-    const agents = useAgentsStore((s) => s.agents)
+    const agents = useAgentsStore((state) => state.agents)
     const agentMeta = useMemo(() => {
-      const a = agents.find((x) => x.id === agentId)
-      return a
-        ? {
-            avatar: a.avatar,
-            openingMessage: a.openingMessage,
-            openingQuestions: a.openingQuestions,
-            title: a.title,
-          }
-        : {
-            avatar: DEFAULT_PURE_AI_META.avatar,
-            openingMessage: DEFAULT_PURE_AI_META.openingMessage,
-            openingQuestions: DEFAULT_PURE_AI_META.openingQuestions,
-            title: DEFAULT_PURE_AI_META.title,
-          }
+      const agent = agents.find((item) => item.id === agentId) ?? DEFAULT_PURE_AI_META
+      return {
+        avatar: agent.avatar,
+        openingMessage: agent.openingMessage,
+        openingQuestions: agent.openingQuestions,
+        title: agent.title,
+      }
     }, [agents, agentId])
-
-    const handleRegenerate = useCallback(
-      async (id: string) => {
-        stopRequestedRef.current = false
-        const idx = messagesRef.current.findIndex((m) => m.id === id)
-        if (idx < 0) return
-        const prevUser = messagesRef.current
-          .slice(0, idx)
-          .reverse()
-          .find((m) => m.role === 'user')
-        if (!prevUser) return
-        clearError()
-        setMessages((prev) => prev.filter((m) => m.id !== id))
-        await sendMessage({ text: getMessageText(prevUser), messageId: prevUser.id }, { body: requestBody })
-      },
-      [clearError, requestBody, sendMessage, setMessages]
-    )
-
-    useLayoutEffect(() => {
-      onBindActions({ send: handleSend, stop: handleStop })
-    }, [handleSend, handleStop, onBindActions])
 
     return (
       <Flex className='relative min-h-0 min-w-0 flex-1 flex-col'>
@@ -551,9 +213,9 @@ const ChatView = memo<ChatViewProps>(
           agentMeta={agentMeta}
           disabled={isBusy}
           initialScrollToBottom={topicId !== null}
-          isStreaming={isStreaming}
+          isStreaming={status === 'streaming'}
           messages={messages}
-          permissionMode={permissionMode}
+          permissionMode={session.permissionMode ?? permissionMode}
           runningCommandCallIds={runningCommandCallIds}
           onDelete={handleDelete}
           onEdit={handleEdit}

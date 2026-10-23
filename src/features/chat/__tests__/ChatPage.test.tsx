@@ -1,10 +1,17 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { UIMessage } from 'ai'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { LocalChatTopic } from '@/features/chat/types'
-import { setPendingChatPermissionMode, setPendingTopicSend } from '@/features/chat/chatLocalStorage'
+import {
+  claimPendingChatFiles,
+  setPendingChatFiles,
+  setPendingChatPermissionMode,
+  setPendingChatText,
+  setPendingTopicSend,
+} from '@/features/chat/chatLocalStorage'
+import { createChatSession, registerChatSession, setChatRuntimeOwner } from '@/features/chat/runtime/store'
 
 const mocks = vi.hoisted(() => {
   const navigation = {
@@ -61,21 +68,29 @@ vi.mock('next/navigation', () => ({
   },
 }))
 
-vi.mock('@ai-sdk/react', () => ({
-  useChat: ({ messages = [] }: { messages?: UIMessage[] }) => ({
-    clearError: mocks.clearChatError,
-    error: mocks.chatError,
-    messages,
-    sendMessage: mocks.sendMessage,
-    setMessages: vi.fn(),
-    status: 'ready',
-    stop: vi.fn(),
-  }),
+vi.mock('@/libs/better-auth/client', () => ({
+  useSession: () => ({ data: { user: { id: 'test-user' } }, isPending: false }),
 }))
 
-vi.mock('ai', () => ({
-  DefaultChatTransport: class {},
-}))
+vi.mock('@ai-sdk/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@ai-sdk/react')>()
+  return {
+    ...actual,
+    Chat: class extends actual.Chat<UIMessage> {
+      sendMessage = mocks.sendMessage
+      clearError = mocks.clearChatError
+    },
+    useChat: ({ chat }: { chat: { messages: UIMessage[] } }) => ({
+      clearError: mocks.clearChatError,
+      error: mocks.chatError,
+      messages: chat.messages,
+      sendMessage: mocks.sendMessage,
+      setMessages: vi.fn(),
+      status: 'ready',
+      stop: vi.fn(),
+    }),
+  }
+})
 
 vi.mock('@pure/ui', () => ({
   Flex: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
@@ -241,6 +256,8 @@ const createdTopic = {
 
 describe('ChatPage message loading state', () => {
   beforeEach(() => {
+    setChatRuntimeOwner(null)
+    setChatRuntimeOwner('test-user')
     mocks.navigation.query = 'agent=agt_inbox'
     mocks.navigation.listeners.clear()
     mocks.autoRenameTopic.mockReset()
@@ -251,7 +268,7 @@ describe('ChatPage message loading state', () => {
     mocks.fetchTopics.mockReset().mockResolvedValue([])
     mocks.fetchAgents.mockReset()
     mocks.updateTopic.mockReset()
-    mocks.sendMessage.mockClear()
+    mocks.sendMessage.mockReset().mockResolvedValue(undefined)
     mocks.clearChatError.mockClear()
     mocks.chatError = undefined
     mocks.searchMode = 'off'
@@ -260,10 +277,16 @@ describe('ChatPage message loading state', () => {
     mocks.desktopApi.requestFullAccess.mockClear()
     setPendingChatPermissionMode('auto')
     setPendingTopicSend('')
+    setPendingChatText('')
+    setPendingChatFiles([])
   })
 
   it('opens a newly-created topic without showing a message skeleton', async () => {
-    render(<ChatPage />)
+    render(
+      <React.StrictMode>
+        <ChatPage />
+      </React.StrictMode>
+    )
 
     fireEvent.click(await screen.findByRole('button', { name: 'send' }))
 
@@ -278,6 +301,7 @@ describe('ChatPage message loading state', () => {
       { body: expect.objectContaining({ searchMode: 'off' }) }
     )
     expect(mocks.sendMessage.mock.calls.at(-1)?.[1]?.body).not.toHaveProperty('permissionMode')
+    expect(mocks.sendMessage).toHaveBeenCalledOnce()
   })
 
   it('keeps auto search enabled through the new-topic send handoff', async () => {
@@ -292,6 +316,52 @@ describe('ChatPage message loading state', () => {
         { body: expect.objectContaining({ searchMode: 'auto' }) }
       )
     )
+  })
+
+  it('does not clear a later home handoff when an earlier background response finishes', async () => {
+    let finishResponse!: () => void
+    mocks.sendMessage.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        finishResponse = resolve
+      })
+    )
+    setPendingChatText('from home')
+    render(
+      <React.StrictMode>
+        <ChatPage />
+      </React.StrictMode>
+    )
+    await waitFor(() => expect(mocks.sendMessage).toHaveBeenCalledOnce())
+    const nextFiles = [new File(['next'], 'next.txt', { type: 'text/plain' })]
+    setPendingChatText('later home request')
+    setPendingChatFiles(nextFiles)
+    await act(async () => {
+      finishResponse()
+    })
+    expect(claimPendingChatFiles()).toEqual(nextFiles)
+    expect(mocks.createTopic).toHaveBeenCalledOnce()
+  })
+
+  it('starts a newly-created topic without pulling the user back after they switch away', async () => {
+    let finishCreation!: (topic: typeof createdTopic) => void
+    mocks.createTopic.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishCreation = resolve
+      })
+    )
+    render(<ChatPage />)
+    fireEvent.click(await screen.findByRole('button', { name: 'send' }))
+    await waitFor(() => expect(mocks.createTopic).toHaveBeenCalledOnce())
+    await act(async () => {
+      mocks.navigation.query = 'agent=agt_inbox&topic=other-topic'
+      mocks.navigation.listeners.forEach((listener) => listener())
+    })
+    await act(async () => {
+      finishCreation(createdTopic)
+    })
+    await waitFor(() => expect(mocks.sendMessage).toHaveBeenCalledOnce())
+    expect(mocks.navigation.query).toBe('agent=agt_inbox&topic=other-topic')
+    expect(mocks.sendMessage.mock.calls[0][1].body.topicId).toBe('topic-new')
   })
 
   it('passes desktop draft permissions into topic creation and chat requests', async () => {
@@ -389,6 +459,44 @@ describe('ChatPage message loading state', () => {
 
     expect(await screen.findByTestId('messages-skeleton')).toBeTruthy()
     expect(screen.queryByTestId('messages')).toBeNull()
+  })
+
+  it('reuses a runtime after leaving the page without reading stale history', async () => {
+    mocks.navigation.query = 'agent=agt_inbox&topic=topic-live'
+    const messages: UIMessage[] = [
+      { id: 'user', role: 'user', parts: [{ type: 'text', text: 'hello' }] },
+      { id: 'reply', role: 'assistant', parts: [{ type: 'text', text: 'live reply' }] },
+    ]
+    registerChatSession(createChatSession('test-user', 'agt_inbox', 'topic-live', messages))
+    const first = render(<ChatPage />)
+    expect(await screen.findByTestId('messages')).toHaveProperty('textContent', '2')
+    first.unmount()
+    render(<ChatPage />)
+    expect(await screen.findByTestId('messages')).toHaveProperty('textContent', '2')
+    expect(mocks.fetchMessages).not.toHaveBeenCalled()
+  })
+
+  it('ignores a delayed history request once the topic has a live runtime', async () => {
+    mocks.navigation.query = 'agent=agt_inbox&topic=topic-live'
+    let resolveHistory!: (messages: UIMessage[]) => void
+    mocks.fetchMessages.mockReturnValue(
+      new Promise<UIMessage[]>((resolve) => {
+        resolveHistory = resolve
+      })
+    )
+    render(<ChatPage />)
+    await screen.findByTestId('messages-skeleton')
+    await act(async () => {
+      registerChatSession(
+        createChatSession('test-user', 'agt_inbox', 'topic-live', [
+          { id: 'reply', role: 'assistant', parts: [{ type: 'text', text: 'live reply' }] },
+        ])
+      )
+    })
+    await act(async () => {
+      resolveHistory([])
+    })
+    expect(screen.getByTestId('messages').textContent).toBe('1')
   })
 
   it('renders a dismissible send error without adding a message row', async () => {

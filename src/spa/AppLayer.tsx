@@ -3,6 +3,7 @@ import { useLayoutEffect } from 'react'
 import type { PropsWithChildren } from 'react'
 
 import ThemeProviders from '@/layout/ThemeProviders'
+import ChatRuntimeHost from '@/features/chat/runtime/ChatRuntimeHost'
 import SpaTelemetry from '@/spa/SpaTelemetry'
 import SpaUpdateNotifier from '@/spa/SpaUpdateNotifier'
 
@@ -19,6 +20,7 @@ const AppLayer = ({ children }: PropsWithChildren) => {
   return (
     <ThemeProviders>
       <NuqsAdapter>
+        <ChatRuntimeHost />
         {children}
         <SpaTelemetry />
         <SpaUpdateNotifier />

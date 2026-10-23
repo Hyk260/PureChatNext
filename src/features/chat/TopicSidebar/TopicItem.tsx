@@ -1,8 +1,8 @@
 'use client'
 
-import { DropdownMenu, Icon, Input, Modal, Text, Flex } from '@pure/ui'
+import { DropdownMenu, Input, Modal, Text, Flex } from '@pure/ui'
 import type { MenuInfo, DropdownItem } from '@pure/ui'
-import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
+import { createStaticStyles, cssVar, cx, Icon } from '@lobehub/ui'
 import {
   Check,
   Copy,
@@ -20,6 +20,7 @@ import {
 import { memo, useCallback, useMemo, useState } from 'react'
 
 import { getChatDraftKey, useChatDraftStore } from '@/features/chat/store/useChatDraftStore'
+import { topicRuntimeKey, useChatRuntimeStore } from '@/features/chat/runtime/store'
 import type { LocalChatTopic } from '@/features/chat/types'
 import TopicRenameModal, { confirmDeleteTopic, useTopicRename } from '@/features/chat/TopicRenameModal'
 import { stopMenuEvent } from '@/libs/utils/menu'
@@ -106,6 +107,11 @@ const TopicItem = memo<Props>(
     onFavorite,
     onProjectChange,
   }) => {
+    const generating = useChatRuntimeStore((state) => state.busy[topicRuntimeKey(topic.agentId, topic.id)] ?? false)
+    const renameDisabled = autoRenameDisabled || generating
+    const statusLabel = generating ? '正在生成' : '话题'
+    const iconLabel = autoRenaming ? '正在智能重命名' : statusLabel
+    const loading = generating || autoRenaming
     const draftKey = getChatDraftKey(topic.agentId, topic.id)
     const hasDraft = useChatDraftStore((state) =>
       Boolean(state.texts[draftKey]?.trim() || state.files[draftKey]?.length)
@@ -181,13 +187,13 @@ const TopicItem = memo<Props>(
         // },
         { type: 'divider' },
         {
-          disabled: autoRenameDisabled,
+          disabled: renameDisabled,
           icon: <Icon icon={Sparkles} />,
           key: 'smart-rename',
           label: autoRenaming ? '正在智能重命名…' : '智能重命名',
           onClick: (info: MenuInfo) => {
             stopMenuEvent(info)
-            if (autoRenameDisabled) return
+            if (renameDisabled) return
             onAutoRename(topic.id)
           },
         },
@@ -225,16 +231,7 @@ const TopicItem = memo<Props>(
           },
         },
       ],
-      [
-        autoRenameDisabled,
-        autoRenaming,
-        handleOpenRename,
-        onAutoRename,
-        onDelete,
-        onFavorite,
-        topic.favorite,
-        topic.id,
-      ]
+      [renameDisabled, autoRenaming, handleOpenRename, onAutoRename, onDelete, onFavorite, topic.favorite, topic.id]
     )
 
     return (
@@ -242,12 +239,13 @@ const TopicItem = memo<Props>(
         <Flex className={[cx(styles.item, active && styles.itemActive)]} onClick={() => onSelect(topic.id)}>
           <Flex className='items-center gap-1 w-full'>
             <Icon
-              aria-label={autoRenaming ? '正在智能重命名' : '话题'}
+              aria-label={iconLabel}
               color={autoRenaming ? cssVar.colorWarning : cssVar.colorTextTertiary}
-              icon={autoRenaming ? Loader2 : Hash}
+              icon={loading ? Loader2 : Hash}
               size={14}
-              spin={autoRenaming}
-              style={{ flex: 'none' }}
+              spin={loading}
+              className='shrink-0'
+              title={loading ? iconLabel : undefined}
             />
             {hasDraft && !active ? (
               <Text className='shrink-0 text-xs' color={cssVar.colorError}>

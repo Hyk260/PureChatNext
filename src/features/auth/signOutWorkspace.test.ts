@@ -4,6 +4,12 @@ import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
 import type { AgentListItem } from '@/const/home/agents'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { signOut } from '@/libs/better-auth/client'
+import {
+  createChatSession,
+  registerChatSession,
+  setChatRuntimeOwner,
+  useChatRuntimeStore,
+} from '@/features/chat/runtime/store'
 
 import { signOutWorkspace } from './signOutWorkspace'
 
@@ -23,6 +29,7 @@ const customAgent: AgentListItem = {
 
 describe('signOutWorkspace', () => {
   afterEach(() => {
+    setChatRuntimeOwner(null)
     useAgentsStore.getState().reset()
     vi.mocked(signOut).mockReset()
     vi.unstubAllGlobals()
@@ -50,5 +57,20 @@ describe('signOutWorkspace', () => {
 
     expect(fetchMock).toHaveBeenCalledWith('/api/auth/logout', { method: 'POST' })
     expect(signOut).toHaveBeenCalledOnce()
+  })
+
+  it('clears chat runtimes before revoking authentication', async () => {
+    setChatRuntimeOwner('test-user')
+    const session = createChatSession('test-user', 'agent', 'topic', [])
+    registerChatSession(session)
+    const stop = vi.spyOn(session.chat, 'stop')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })))
+    vi.mocked(signOut).mockImplementation(() => {
+      expect(stop).toHaveBeenCalledOnce()
+      expect(useChatRuntimeStore.getState().sessions.size).toBe(0)
+      return undefined
+    })
+    await signOutWorkspace()
+    expect(registerChatSession(session)).toBe(false)
   })
 })

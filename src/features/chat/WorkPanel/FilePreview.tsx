@@ -30,7 +30,13 @@ import { useHorizontalWheel } from './useHorizontalWheel'
 // 选中和悬停组合使用组件主题色，避免与按钮自身的悬停样式互相覆盖。
 const styles = createStaticStyles(({ css }) => ({
   tab: css`
+    display: flex;
     flex: none;
+    align-items: center;
+    gap: 2px;
+    height: 28px;
+    padding-inline-end: 4px;
+    border: 1px solid transparent;
     border-radius: 6px;
     color: ${cssVar.colorTextSecondary};
     background: transparent;
@@ -43,6 +49,32 @@ const styles = createStaticStyles(({ css }) => ({
     &[data-active='true'] {
       color: ${cssVar.colorText};
       background: ${cssVar.colorFillSecondary};
+    }
+  `,
+  tabClose: css`
+    cursor: pointer;
+
+    display: grid;
+    flex: none;
+    place-items: center;
+
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+
+    color: inherit;
+    background: transparent;
+    opacity: 0.6;
+
+    transition:
+      background 0.15s ${cssVar.motionEaseInOut},
+      opacity 0.15s ${cssVar.motionEaseInOut};
+
+    &:hover {
+      background: ${cssVar.colorFillSecondary};
+      opacity: 1;
     }
   `,
 }))
@@ -144,7 +176,7 @@ const FilePreview = memo<Props>(({ dispatch, project, tabs }) => {
       <Flex horizontal align='center' className='h-10 shrink-0 gap-1 border-b border-app-border-secondary px-2'>
         <div
           aria-label='已打开文件'
-          className='flex min-w-0 flex-1 gap-1 overflow-x-auto'
+          className='no-scrollbar flex min-w-0 flex-1 gap-1 overflow-x-auto'
           onKeyDown={handleTabKeyDown}
           ref={tabListRef}
           role='tablist'
@@ -157,7 +189,7 @@ const FilePreview = memo<Props>(({ dispatch, project, tabs }) => {
                 <button
                   aria-controls={`file-preview-${encodeURIComponent(path)}`}
                   aria-selected={active}
-                  className='flex h-7 max-w-48 items-center gap-2 border-0 bg-transparent ps-2 text-xs text-inherit'
+                  className='flex h-7 max-w-48 items-center gap-1.5 border-0 bg-transparent ps-2 text-[13px] text-inherit'
                   onClick={() => dispatch({ type: 'open', path })}
                   role='tab'
                   tabIndex={active ? 0 : -1}
@@ -167,13 +199,15 @@ const FilePreview = memo<Props>(({ dispatch, project, tabs }) => {
                   <MaterialFileTypeIcon aria-hidden fallbackUnknownType={false} filename={name} size={14} type='file' />
                   <span className='truncate'>{name}</span>
                 </button>
-                <ActionIcon
+                <button
                   aria-label={`关闭 ${name}`}
-                  icon={X}
-                  size={16}
+                  className={styles.tabClose}
                   title={`关闭 ${name}`}
+                  type='button'
                   onClick={() => dispatch({ type: 'close', path })}
-                />
+                >
+                  <X aria-hidden='true' size={12} strokeWidth={2} />
+                </button>
               </Flex>
             )
           })}

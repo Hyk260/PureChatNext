@@ -18,9 +18,9 @@ const AdvancedSettingsContent = memo<Props>(({ value, onChange }) => {
 
   return (
     <section aria-label='高级设置' className='flex min-h-0 flex-col gap-6 overflow-auto p-4'>
-      <Text as='h3' weight={500}>
+      {/* <Text as='h3' weight={500}>
         助手高级设置
-      </Text>
+      </Text> */}
       <div className='flex-between gap-3'>
         <div className='flex items-center gap-1'>
           <label htmlFor={`${id}-compression`}>自动压缩上下文</label>

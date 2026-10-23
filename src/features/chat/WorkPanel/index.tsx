@@ -26,7 +26,7 @@ import WorkPanelTab from './WorkPanelTab'
 import type { WorkPanelTabId } from './tabs'
 import { CONFIG_MENU_TABS, WORK_PANEL_TAB_BY_ID, WORKSPACE_MENU_TABS } from './tabs'
 
-// 保留样式：标题栏依赖嵌套选择器和滚动条，预览分栏宽度随打开状态调整。
+// 保留样式：工作区动态宽度、拖拽状态与主题色需要运行时样式。
 const styles = createStaticStyles(({ css }) => ({
   // 保留 createStaticStyles：该主题色暂无对应的语义 Tailwind token。
   addTrigger: css`
@@ -37,14 +37,6 @@ const styles = createStaticStyles(({ css }) => ({
     height: 40px;
     padding-inline: 8px;
     border-block-end: 1px solid ${cssVar.colorBorderSecondary};
-  `,
-  tabs: css`
-    min-width: 0;
-    overflow-x: auto;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
   `,
   workspace: css`
     position: relative;
@@ -240,7 +232,7 @@ const WorkPanelWorkspace = memo<Props>(({ value, onChange, topic, topicTitle }) 
       <div className={styles.resizeHandle} {...separatorProps('panel')} />
       <Flex aria-label='工作面板' className={[styles.panel, 'flex-col']} ref={panelRef}>
         <Flex className={[styles.header, 'items-center gap-1']}>
-          <Flex className={[styles.tabs, 'flex-1 items-center gap-1']} ref={tabListRef}>
+          <Flex className='no-scrollbar min-w-0 flex-1 items-center gap-1 overflow-x-auto' ref={tabListRef}>
             {openTabs.map((tabId) => {
               const meta = WORK_PANEL_TAB_BY_ID[tabId]
               return (

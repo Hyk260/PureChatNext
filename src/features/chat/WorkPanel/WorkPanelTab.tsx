@@ -35,17 +35,24 @@ const styles = createStaticStyles(({ css }) => ({
       align-items: center;
       justify-content: center;
 
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
       margin-inline-start: 2px !important;
       padding: 0;
       border: 0;
+      border-radius: 3px;
       background: transparent;
       cursor: pointer;
 
       color: inherit;
       opacity: 0;
-      transition: opacity 0.15s ${cssVar.motionEaseInOut};
+      transition:
+        background 0.15s ${cssVar.motionEaseInOut},
+        opacity 0.15s ${cssVar.motionEaseInOut};
+
+      &:hover {
+        background: ${cssVar.colorFillSecondary};
+      }
     }
 
     &:hover {
@@ -55,6 +62,10 @@ const styles = createStaticStyles(({ css }) => ({
       > button {
         opacity: 1;
       }
+    }
+
+    &:focus-within > button {
+      opacity: 1;
     }
   `,
   tabActive: css`

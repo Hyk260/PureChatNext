@@ -5,11 +5,14 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router/dom'
 
 import { captureAcquisitionAttribution } from '@/libs/analytics/acquisition'
+import { printConsoleWelcome } from '@/spa/consoleWelcome'
 import { webRoutes } from '@/spa/router/webRouter.config'
 import { createAppRouter } from '@/utils/router'
 
 import '@/styles/globals.css'
 import '@/styles/scrollbar.css'
+
+printConsoleWelcome()
 
 const router = createAppRouter(webRoutes, { syncPageTitle: true })
 

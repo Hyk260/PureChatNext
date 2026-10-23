@@ -1,6 +1,7 @@
 import { Text, Flex, Button, TextArea, Modal } from '@pure/ui'
 import { CheckCircle2, CircleAlert } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router'
 
 import type { ReferralBatchResponse } from '@pure/types'
 import { parseReferralEmails, REFERRAL_STATUS_LABELS } from '@/libs/referrals/helpers'
@@ -123,8 +124,11 @@ export default function ReferralModal({ open, onClose }: Props) {
                 邀请朋友使用 PureChat
               </Text>
               <Text as='p' fontSize={16} type='secondary' className='mt-3!'>
-                与好友一起体验 AI 对话、搜索和创作
+                好友通过邀请注册并验证邮箱后，双方各得 0.5M 积分。
               </Text>
+              <Link to='/settings/referral' onClick={onClose} className='text-sm underline'>
+                查看推荐奖励与邀请码
+              </Link>
             </div>
             <div className='w-full text-left'>
               <label htmlFor='referral-emails' className='sr-only'>

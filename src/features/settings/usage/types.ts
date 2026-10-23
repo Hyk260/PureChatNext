@@ -17,6 +17,10 @@ export type UsageResponse = {
     grant: number
     period: string
     remaining: number
+    rebateEarned: number
+    rebateRemaining: number
+    rebateExpiresAt: string | null
+    totalRemaining: number
     resetIn: { days: number; hours: number }
     used: number
   }

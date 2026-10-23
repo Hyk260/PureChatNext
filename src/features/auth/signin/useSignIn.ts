@@ -101,6 +101,8 @@ export const useSignIn = () => {
 
         toast.info('该邮箱尚未注册，请先创建账户')
         const params = new URLSearchParams({ email: identifier.value })
+        const referral = searchParams.get('referral')
+        if (referral) params.set('referral', referral)
         if (callbackUrlParam) params.set('callbackUrl', callbackUrlParam)
         router.push(`/signup?${params.toString()}`)
         return

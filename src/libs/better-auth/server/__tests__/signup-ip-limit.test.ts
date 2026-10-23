@@ -3,8 +3,11 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { SIGNUP_DAILY_IP_MAX } from '@/libs/better-auth/shared'
 
-import { createVerificationDailyRateLimitStorage, resetVerificationRateLimitMemoryForTests } from './rate-limit-storage'
-import { assertSignupIpAllowed, resolveSignupIp, SIGNUP_TOO_MANY_MESSAGE } from './signup-ip-limit'
+import {
+  createVerificationDailyRateLimitStorage,
+  resetVerificationRateLimitMemoryForTests,
+} from '../rate-limit-storage'
+import { assertSignupIpAllowed, resolveSignupIp, SIGNUP_TOO_MANY_MESSAGE } from '../signup-ip-limit'
 
 const headersFor = (ip: string) => new Headers({ 'cf-connecting-ip': ip })
 

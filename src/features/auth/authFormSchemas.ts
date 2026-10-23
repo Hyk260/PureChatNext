@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { normalizeLoginIdentifier } from '@/libs/better-auth/shared'
+import { referralCodeSchema } from '@/libs/referrals/helpers'
 
 const emailSchema = z.string().trim().min(1, '请输入邮箱地址').email('请输入有效的邮箱地址')
 
@@ -37,7 +38,16 @@ export const signInEmailSchema = z.object({
 export const signInPasswordSchema = z.object({ password: z.string().min(1, '请输入密码') })
 
 export const signUpSchema = z
-  .object({ email: emailSchema, password: passwordSchema, confirmPassword: z.string().min(1, '请确认密码') })
+  .object({
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, '请确认密码'),
+    referralCode: z
+      .string()
+      .trim()
+      .pipe(z.union([referralCodeSchema, z.literal('')]))
+      .optional(),
+  })
   .superRefine(matchingPasswords)
 
 export const resetPasswordSchema = z

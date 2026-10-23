@@ -1,0 +1,2 @@
+export const REFERRAL_REWARD_CREDITS = 500_000
+export const REFERRAL_INACTIVITY_MS = 90 * 24 * 60 * 60 * 1000

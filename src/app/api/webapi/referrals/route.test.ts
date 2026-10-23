@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   publicInfo: vi.fn(),
   accept: vi.fn(),
   find: vi.fn(),
+  summary: vi.fn(),
+  records: vi.fn(),
 }))
 vi.mock('server-only', () => ({}))
 vi.mock('@pure/database/core/db-adaptor', () => ({ getServerDB: vi.fn() }))
@@ -41,6 +43,8 @@ vi.mock('@/server/services/referrals', () => ({
     send = mocks.send
     publicInfo = mocks.publicInfo
     accept = mocks.accept
+    summary = mocks.summary
+    records = mocks.records
   },
   serializeReferral: (row: unknown) => row,
 }))
@@ -49,6 +53,8 @@ import { GET, POST } from './route'
 import { POST as resolveInvite } from './resolve/route'
 import { POST as acceptInvite } from './accept/route'
 import { POST as resendInvite } from './resend/route'
+import { GET as referralSummary } from './summary/route'
+import { GET as referralRecords } from './records/route'
 
 const key = '2f1dff15-a679-4f4a-9b6b-6d8f7047474a'
 const request = (body: unknown, endpoint = '', origin = 'http://localhost:5174') =>
@@ -74,6 +80,24 @@ describe('referral API boundaries', () => {
     expect((await acceptInvite(request({ context: 'token' }, '/accept'))).status).toBe(401)
     expect((await resendInvite(request({ id: key, requestKey: key }, '/resend'))).status).toBe(401)
     expect(mocks.send).not.toHaveBeenCalled()
+    expect((await referralSummary(new NextRequest('http://localhost/api/webapi/referrals/summary'))).status).toBe(401)
+    expect((await referralRecords(new NextRequest('http://localhost/api/webapi/referrals/records'))).status).toBe(401)
+  })
+  it('scopes reward summary and records to the session and rejects invalid pages', async () => {
+    mocks.summary.mockResolvedValue({ code: 'Ab12CD34' })
+    mocks.records.mockResolvedValue({ items: [], page: 2, hasMore: false })
+    const summary = await referralSummary(new NextRequest('http://localhost/api/webapi/referrals/summary?userId=other'))
+    expect(summary.status).toBe(200)
+    expect(mocks.summary).toHaveBeenCalledWith('sender')
+    expect(summary.headers.get('cache-control')).toBe('no-store')
+    expect(
+      (await referralRecords(new NextRequest('http://localhost/api/webapi/referrals/records?page=2&userId=other')))
+        .status
+    ).toBe(200)
+    expect(mocks.records).toHaveBeenCalledWith('sender', 2)
+    expect(
+      (await referralRecords(new NextRequest('http://localhost/api/webapi/referrals/records?page=-1'))).status
+    ).toBe(400)
   })
   it('normalizes recipients and passes the authenticated sender and idempotency key', async () => {
     const response = await POST(request({ emails: [' Friend@QQ.COM ', 'friend@qq.com'], requestKey: key }))

@@ -267,6 +267,20 @@
       "when": 1792387250599,
       "tag": "0037_bouncy_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1792718870393,
+      "tag": "0038_true_green_goblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792719807463,
+      "tag": "0039_bouncy_skullbuster",
+      "breakpoints": true
     }
   ]
 }

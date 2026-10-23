@@ -38,7 +38,7 @@ describe('createSecondaryStorage', () => {
     mockGetRedisConfig.mockReturnValue({ enabled: false, prefix: 'purechat', tls: false, url: '' })
     mockIsRedisEnabled.mockReturnValue(false)
 
-    const { createSecondaryStorage } = await import('./create-secondary-storage')
+    const { createSecondaryStorage } = await import('../create-secondary-storage')
     expect(createSecondaryStorage()).toBeUndefined()
   })
 
@@ -52,7 +52,7 @@ describe('createSecondaryStorage', () => {
     }
     mockInitializeRedis.mockResolvedValue(redis)
 
-    const { createSecondaryStorage } = await import('./create-secondary-storage')
+    const { createSecondaryStorage } = await import('../create-secondary-storage')
     const storage = createSecondaryStorage()
     expect(storage).toBeDefined()
 
@@ -73,7 +73,7 @@ describe('createSecondaryStorage', () => {
     enableRedis()
     mockInitializeRedis.mockRejectedValue(new Error('connect ETIMEDOUT'))
 
-    const { createSecondaryStorage } = await import('./create-secondary-storage')
+    const { createSecondaryStorage } = await import('../create-secondary-storage')
     const storage = createSecondaryStorage()
 
     await expect(storage!.get('session:1')).resolves.toBeNull()
@@ -89,7 +89,7 @@ describe('createSecondaryStorage', () => {
     }
     mockInitializeRedis.mockResolvedValue(redis)
 
-    const { createSecondaryStorage } = await import('./create-secondary-storage')
+    const { createSecondaryStorage } = await import('../create-secondary-storage')
     const storage = createSecondaryStorage()
 
     await expect(storage!.get('session:1')).resolves.toBeNull()
@@ -105,7 +105,7 @@ describe('createSecondaryStorage', () => {
     }
     mockInitializeRedis.mockResolvedValue(redis)
 
-    const { createSecondaryStorage } = await import('./create-secondary-storage')
+    const { createSecondaryStorage } = await import('../create-secondary-storage')
     const storage = createSecondaryStorage()
 
     await expect(storage!.set('session:1', 'payload', 60)).resolves.toBeUndefined()
@@ -123,7 +123,7 @@ describe('createSecondaryStorage', () => {
     }
     mockInitializeRedis.mockResolvedValue(redis)
 
-    const { createSecondaryStorage } = await import('./create-secondary-storage')
+    const { createSecondaryStorage } = await import('../create-secondary-storage')
     const storage = createSecondaryStorage()
 
     await expect(storage!.get('session:1')).resolves.toBeNull()

@@ -1,6 +1,29 @@
 import { z } from 'zod'
 
 export const REFERRAL_BATCH_MAX = 3
+export const referralCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^[A-Za-z0-9]{8}$/, '请输入 8 位字母或数字邀请码')
+
+export function maskReferralEmail(email: string) {
+  const separator = email.lastIndexOf('@')
+  if (separator < 0) return '***'
+  const local = Array.from(email.slice(0, separator))
+  const domain = email.slice(separator + 1)
+  if (local.length >= 6) return `${local.slice(0, 2).join('')}***${local.at(-1)}@${domain}`
+  if (local.length >= 4) return `${local[0]}***${local.at(-1)}@${domain}`
+  if (local.length === 3) return `${local[0]}***@${domain}`
+  return `***@${domain}`
+}
+
+export function getReferralContext(params: Pick<URLSearchParams, 'get'>) {
+  const direct = params.get('referral_context')
+  if (direct) return direct
+  const callback = params.get('callbackUrl')
+  if (!callback || !isReferralCallback(callback)) return ''
+  return new URL(callback, 'http://localhost').searchParams.get('referral_context') || ''
+}
 export const REFERRAL_DAYS = [7, 30, 90, 0] as const
 export const REFERRAL_STATUS_LABELS = {
   sending: '发送结果待确认',

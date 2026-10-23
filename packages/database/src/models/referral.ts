@@ -1,20 +1,14 @@
 import { randomUUID } from 'node:crypto'
-import { and, count, desc, eq, gt, gte, inArray, lt, or, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gte, inArray, lt, or, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
 import { referralBatches, referrals, users } from '../schemas'
 import type { Referral, ReferralReservation } from '../schemas'
 import type { ChatDatabase } from '../type'
+import { ReferralRuleError } from './referralError'
+import { ReferralRewardModel } from './referralReward'
 
-export class ReferralRuleError extends Error {
-  constructor(
-    message: string,
-    public readonly status = 400,
-    public readonly code?: string
-  ) {
-    super(message)
-  }
-}
+export { ReferralRuleError } from './referralError'
 
 export class ReferralModel {
   constructor(private readonly db: ChatDatabase = getServerDB()) {}
@@ -127,10 +121,7 @@ export class ReferralModel {
     if (days) conditions.push(gte(latest.createdAt, new Date(Date.now() - days * 86400000)))
     if (cursor)
       conditions.push(
-        or(
-          lt(latest.createdAt, cursor.date),
-          and(eq(latest.createdAt, cursor.date), lt(latest.id, cursor.id))
-        )!
+        or(lt(latest.createdAt, cursor.date), and(eq(latest.createdAt, cursor.date), lt(latest.id, cursor.id)))!
       )
     const items = await this.db
       .select()
@@ -145,28 +136,5 @@ export class ReferralModel {
     return { items: items.slice(0, 20), hasMore: items.length > 20, totalSent: total!.value }
   }
 
-  accept = async (id: string, userId: string) =>
-    this.db.transaction(async (tx) => {
-      // Lock the accepting user first: two different invites cannot win concurrently.
-      const [user] = await tx.select().from(users).where(eq(users.id, userId)).for('update')
-      const [invitation] = await tx.select().from(referrals).where(eq(referrals.id, id)).for('update')
-      if (!user || user.banned || !invitation) throw new ReferralRuleError('邀请不存在或账号不可用', 404)
-      if (invitation.acceptedUserId === userId) return invitation
-      if (invitation.status === 'accepted') throw new ReferralRuleError('邀请已被接受', 409)
-      if (invitation.expiresAt.getTime() <= Date.now()) throw new ReferralRuleError('邀请已过期', 410)
-      if (invitation.status !== 'sent' || !invitation.sentAt) throw new ReferralRuleError('邀请尚未发送成功', 409)
-      if (userId === invitation.inviterId || user.email?.toLowerCase() !== invitation.email)
-        throw new ReferralRuleError('请使用邀请收件邮箱注册的账号', 403)
-      if (user.createdAt < invitation.sentAt) throw new ReferralRuleError('此邀请仅面向新注册用户', 403)
-      if (!user.emailVerified) throw new ReferralRuleError('请先验证邀请收件邮箱', 403, 'verification_required')
-      const already = await tx.query.referrals.findFirst({ where: eq(referrals.acceptedUserId, userId) })
-      if (already) throw new ReferralRuleError('该账号已接受其他邀请', 409)
-      const [accepted] = await tx
-        .update(referrals)
-        .set({ status: 'accepted', acceptedAt: new Date(), acceptedUserId: userId })
-        .where(and(eq(referrals.id, id), eq(referrals.status, 'sent'), gt(referrals.expiresAt, new Date())))
-        .returning()
-      if (!accepted) throw new ReferralRuleError('邀请已过期', 410)
-      return accepted
-    })
+  accept = async (id: string, userId: string) => new ReferralRewardModel(this.db).acceptInvitation(id, userId)
 }

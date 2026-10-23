@@ -31,14 +31,9 @@ const styles = createStaticStyles(({ css }) => ({
     min-width: 0;
     padding: 16px 20px;
 
-    & + & {
-      border-inline-start: 1px solid ${cssVar.colorBorderSecondary};
-    }
-
     @media (width <= 640px) {
       & + & {
         border-block-start: 1px solid ${cssVar.colorBorderSecondary};
-        border-inline-start: 0;
       }
     }
   `,
@@ -302,13 +297,17 @@ export function UsageSettingsContent() {
   const total = data?.total ?? 0
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1
   const rangeEnd = Math.min(page * pageSize, total)
+  const rebateRemaining = data?.balance.rebateRemaining ?? 0
+  const rebatePercentage = data
+    ? Math.min(100, getPercentage(rebateRemaining, data.balance.rebateEarned))
+    : 0
 
   return (
     <Flex className={['w-full pt-6 px-6 pb-16', 'flex-col gap-10']}>
-      <Block className={'p-4'} gap={16} variant='filled'>
+      <Block className={'p-4'} gap={16} variant='outlined'>
         <Flex className={['w-full', 'flex-between']}>
           <Text className={'text-lg font-semibold'}>总览</Text>
-          <Text className={cx(styles.plan, 'text-[13px]')}>当前方案：免费版</Text>
+          {/* <Text className={cx(styles.plan, 'text-[13px]')}>当前方案：免费版</Text> */}
         </Flex>
         {loading && !data ? (
           <Block padding={16} variant='outlined'>
@@ -323,11 +322,32 @@ export function UsageSettingsContent() {
             <Grid className={'w-full'} gap={0} maxItemWidth={160} rows={1}>
               <UsageMetric
                 hint={formatResetHint(data.balance.resetIn.days, data.balance.resetIn.hours)}
-                label='积分'
+                label='本月免费积分'
                 limit={data.balance.grant}
                 used={data.balance.used}
                 value={`${formatNumber(data.balance.used)} / ${formatNumber(data.balance.grant)}`}
               />
+              <Flex className={[styles.metric, 'flex-between gap-3']}>
+                <Flex className='min-w-0 flex-col gap-2'>
+                  <Text type='secondary' fontSize={14}>
+                    返利可用余额
+                  </Text>
+                  <Text className='tabular-nums' weight={500}>
+                    {formatNumber(rebateRemaining)} ({rebatePercentage}%)
+                  </Text>
+                  <Text type='secondary' fontSize={13}>
+                    跨月保留，连续 90 天未活跃后清除
+                  </Text>
+                </Flex>
+                <Progress
+                  className={styles.metricProgress}
+                  percent={rebatePercentage}
+                  showInfo={false}
+                  size={42}
+                  strokeColor={cssVar.colorSuccess}
+                  type='circle'
+                />
+              </Flex>
               <UsageMetric
                 label='文件使用量'
                 limit={data.storage.limitBytes}
@@ -339,7 +359,7 @@ export function UsageSettingsContent() {
         ) : null}
       </Block>
 
-      <Block className={'p-4'} gap={16} variant='filled'>
+      <Block className={'p-4'} gap={16} variant='outlined'>
         <Text className={'text-lg font-semibold'}>明细</Text>
         <Block className={'overflow-hidden'} padding={0} variant='outlined'>
           <Flex className={['py-2.5 px-4 border-b border-app-border-secondary', 'gap-2.5 flex-wrap']}>

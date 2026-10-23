@@ -38,6 +38,10 @@ export function touchUserLastActive(userId: string, deviceInfo?: UserDeviceInfo 
     : userModel.touchLastActiveAt(userId)
   waitUntil(
     touch
+      .then(async () => {
+        const { completeSignupReferral } = await import('@/libs/better-auth/server/signup-referral')
+        await completeSignupReferral(userId)
+      })
       .catch((error: unknown) => {
         log('touch lastActiveAt failed userId=%s: %O', userId, error)
       })

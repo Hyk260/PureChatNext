@@ -1,8 +1,32 @@
 import { describe, expect, it } from 'vitest'
 
-import { isReferralCallback, parseReferralEmails, referralCallback, sanitizeReferralTelemetryUrl } from './helpers'
+import {
+  getReferralContext,
+  isReferralCallback,
+  maskReferralEmail,
+  parseReferralEmails,
+  referralCallback,
+  sanitizeReferralTelemetryUrl,
+} from './helpers'
 
 describe('referral input', () => {
+  it.each([
+    ['331234@qq.com', '33***4@qq.com'],
+    ['alice@qq.com', 'a***e@qq.com'],
+    ['abcd@qq.com', 'a***d@qq.com'],
+    ['abc@qq.com', 'a***@qq.com'],
+    ['ab@qq.com', '***@qq.com'],
+    ['a@qq.com', '***@qq.com'],
+  ])('masks %s without revealing short mailbox names', (email, masked) => {
+    expect(maskReferralEmail(email)).toBe(masked)
+  })
+  it('keeps signed email context through nested authentication callbacks', () => {
+    expect(getReferralContext(new URLSearchParams({ callbackUrl: referralCallback('signed') }))).toBe('signed')
+    expect(
+      getReferralContext(new URLSearchParams({ referral_context: 'direct', callbackUrl: referralCallback('nested') }))
+    ).toBe('direct')
+    expect(getReferralContext(new URLSearchParams({ callbackUrl: '/chat?referral_context=untrusted' }))).toBe('')
+  })
   it('normalizes mixed separators and deduplicates case-insensitively', () => {
     expect(parseReferralEmails(' A@qq.com，b@qq.com;A@QQ.COM\nc@qq.com ')).toEqual({
       emails: ['a@qq.com', 'b@qq.com', 'c@qq.com'],

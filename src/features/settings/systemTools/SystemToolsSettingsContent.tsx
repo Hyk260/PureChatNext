@@ -5,12 +5,11 @@ import { toast, Divider } from '@lobehub/ui'
 import { ActionIcon, Block, Button, Flex, Skeleton, Tag, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { Check, CircleX, Copy, RefreshCw } from 'lucide-react'
-import { Fragment, useCallback, useEffect, useState } from 'react'
+import { Fragment } from 'react'
+import useSWR from 'swr'
 
 import type { DesktopBuiltinTool, DesktopRuntimeTool, DesktopSystemTools } from '@/types/desktop'
 import { getDesktopApi } from '@/types/desktop'
-
-type LoadState = 'idle' | 'loading' | 'ready' | 'error'
 
 function truncatePath(value: string, max = 36): string {
   if (value.length <= max) return value
@@ -80,48 +79,21 @@ function BuiltinToolRow({ tool }: { tool: DesktopBuiltinTool }) {
 
 export function SystemToolsSettingsContent() {
   const hasDesktopApi = Boolean(getDesktopApi()?.getSystemTools)
-  const [state, setState] = useState<LoadState>(hasDesktopApi ? 'loading' : 'idle')
-  const [data, setData] = useState<DesktopSystemTools | null>(null)
-
-  const load = useCallback(async () => {
-    const api = getDesktopApi()
-    if (!api?.getSystemTools) return
-    setState('loading')
-    try {
-      const result = await api.getSystemTools()
-      setData(result)
-      setState('ready')
-    } catch {
-      setData(null)
-      setState('error')
-    }
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    const api = getDesktopApi()
-    if (!api?.getSystemTools) return
-    api
-      .getSystemTools()
-      .then((result) => {
-        if (cancelled) return
-        setData(result)
-        setState('ready')
-      })
-      .catch(() => {
-        if (cancelled) return
-        setData(null)
-        setState('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const { data, error, isLoading, mutate } = useSWR<DesktopSystemTools>(
+    hasDesktopApi ? 'desktop-system-tools' : null,
+    async () => {
+      const api = getDesktopApi()
+      if (!api?.getSystemTools) throw new Error('系统工具仅在桌面端可用。')
+      return api.getSystemTools()
+    },
+    { revalidateOnFocus: false }
+  )
 
   const handleCopyPath = async (path: string) => {
     await copyToClipboard(path)
     toast.success('已复制路径')
   }
+  const handleRetry = () => mutate()
 
   if (!hasDesktopApi) {
     return (
@@ -135,43 +107,38 @@ export function SystemToolsSettingsContent() {
 
   return (
     <Flex className='flex-col gap-6 py-6 pb-16 px-6 w-full'>
-      {state === 'loading' ? (
-        <Flex className='flex-col gap-6'>
-          <Block padding={16} variant='filled'>
-            <Skeleton.Text rows={7} />
-          </Block>
-          <Block padding={16} variant='filled'>
-            <Skeleton.Text rows={4} />
-          </Block>
-        </Flex>
+      {isLoading && !data ? (
+        <Block variant='outlined' className='rounded-2xl p-5 sm:p-6'>
+          <Skeleton.Text rows={6} />
+        </Block>
       ) : null}
 
-      {state === 'error' ? (
+      {error ? (
         <Block padding={16} variant='filled'>
           <Flex className='flex-between gap-3'>
             <Text type='secondary'>无法加载系统工具信息</Text>
-            <Button icon={<RefreshCw size={14} />} onClick={load}>
+            <Button icon={<RefreshCw size={14} />} onClick={handleRetry}>
               重试
             </Button>
           </Flex>
         </Block>
       ) : null}
 
-      {state === 'ready' && data ? (
+      {data ? (
         <>
-          <Block variant='filled'>
+          <Block variant='outlined'>
             <SectionTitle title='运行环境' />
             <Flex className='flex-col px-4'>
               {data.runtime.map((tool, index) => (
                 <Fragment key={tool.id}>
                   {index > 0 ? <Divider /> : null}
-                  <RuntimeToolRow tool={tool} onCopyPath={(path) => handleCopyPath(path)} />
+                  <RuntimeToolRow tool={tool} onCopyPath={handleCopyPath} />
                 </Fragment>
               ))}
             </Flex>
           </Block>
 
-          <Block variant='filled'>
+          <Block variant='outlined'>
             <SectionTitle title='内建应用工具' />
             <Flex className='flex-col px-4'>
               {data.builtin.map((tool, index) => (

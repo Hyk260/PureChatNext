@@ -149,6 +149,9 @@ function AcceptReferralContent({ context, complete }: { context: string; complet
                       {info.inviterName} 邀请你一起体验 AI 对话、搜索和创作。
                     </Text>
                   ) : null}
+                  <Text as='p' fontSize={14} type='secondary' className='m-0!'>
+                    新用户通过邀请注册并验证邮箱后，双方各得 0.5M 积分。
+                  </Text>
                   {info ? (
                     <Text as='p' fontSize={14} type='secondary' className='m-0!'>
                       请使用 {info.maskedEmail} 对应邮箱注册并验证。

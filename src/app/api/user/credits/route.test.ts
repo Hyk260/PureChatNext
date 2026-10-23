@@ -31,7 +31,15 @@ import { GET } from './route'
 describe('GET /api/user/credits', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    getBalance.mockResolvedValue({ grant: 500_000, period: '2026-07', remaining: 490_000, used: 10_000 })
+    getBalance.mockResolvedValue({
+      grant: 500_000,
+      period: '2026-07',
+      remaining: 490_000,
+      used: 10_000,
+      rebateRemaining: 500_000,
+      rebateExpiresAt: '2026-10-01T00:00:00Z',
+      totalRemaining: 990_000,
+    })
   })
 
   it('returns only the enabled PureChat model catalog', async () => {
@@ -40,6 +48,7 @@ describe('GET /api/user/credits', () => {
 
     expect(response.status).toBe(200)
     expect(payload.defaultModel).toBe('gpt-5.4-nano')
+    expect(payload).toMatchObject({ remaining: 490_000, rebateRemaining: 500_000, totalRemaining: 990_000 })
     expect(payload.models).toEqual([
       { displayId: 'gpt-5.4-nano', displayName: 'GPT 5.4 Nano', recommended: true },
       { displayId: 'gpt-5.2', displayName: 'GPT 5.2', recommended: false },

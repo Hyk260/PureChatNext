@@ -26,6 +26,7 @@ import { initBetterAuthSSOProviders, parseSSOProviders } from '@/libs/better-aut
 import { createSecondaryStorage } from './server/create-secondary-storage'
 import { createVerificationDailyRateLimitStorage } from './server/rate-limit-storage'
 import { assertSignupIpAllowed } from './server/signup-ip-limit'
+import { completeSignupReferral, resolveSignupReferral } from './server/signup-referral'
 
 const log = debug('better-auth:define-config')
 
@@ -192,6 +193,13 @@ export function defineConfig() {
     },
     // 邮箱验证（注册确认、修改邮箱等）
     emailVerification: {
+      afterEmailVerification: async (user) => {
+        try {
+          await completeSignupReferral(user.id)
+        } catch (error) {
+          log('referral reward pending retry userId=%s: %O', user.id, error)
+        }
+      },
       // 验证完成后自动登录
       autoSignInAfterVerification: true,
       // 验证链接过期时间
@@ -290,7 +298,8 @@ export function defineConfig() {
                 Boolean(await userModel.findByUsername(username))
               ),
             ])
-            return { data: { ...user, name, role } }
+            const signupReferral = await resolveSignupReferral(user.email, context)
+            return { data: { ...user, name, role, signupReferral } }
           },
           // 写入后：懒发放积分由 CreditsModel.ensurePeriod 在首次 PureChat 请求时完成；
           // 此处保留 hook 供后续扩展（如显式 grant）。
@@ -326,6 +335,7 @@ export function defineConfig() {
         enabled: true,
       },
       additionalFields: {
+        signupReferral: { type: 'json', input: false, returned: false, required: false },
         // 业务用户 ID，与 auth 主键 id 分离；客户端不可直接提交
         userId: {
           defaultValue: generateCompactUuid,

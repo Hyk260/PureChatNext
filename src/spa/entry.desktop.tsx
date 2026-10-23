@@ -11,11 +11,14 @@ import DesktopContentErrorBoundary from '@/features/desktop/DesktopContentErrorB
 import DesktopErrorFrame from '@/features/desktop/DesktopErrorFrame'
 import InsetContentFrame from '@/layout/InsetContentFrame'
 import DesktopAuthGate from '@/spa/auth/DesktopAuthGate'
+import { printConsoleWelcome } from '@/spa/consoleWelcome'
 import DesktopLoginRoute from '@/routes/desktop-login/page'
 import { webRoutes } from '@/spa/router/webRouter.config'
 import { configureDesktopFetch } from '@/utils/desktopFetch'
 import { createAppRouter, RouterErrorElement } from '@/utils/router'
 import ThemeProviders from '@/layout/ThemeProviders'
+
+printConsoleWelcome()
 
 const rootEl = document.getElementById('root')
 

@@ -2,7 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { SIGNUP_DAILY_RATE_LIMIT_PATH, VERIFICATION_DAILY_IP_MAX } from '@/libs/better-auth/shared'
 
-import { createVerificationDailyRateLimitStorage, resetVerificationRateLimitMemoryForTests } from './rate-limit-storage'
+import {
+  createVerificationDailyRateLimitStorage,
+  resetVerificationRateLimitMemoryForTests,
+} from '../rate-limit-storage'
 
 const SHORT_RULE = { max: 1, window: 60 }
 

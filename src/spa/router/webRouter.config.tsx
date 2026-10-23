@@ -166,6 +166,10 @@ export const webRoutes: RouteObject[] = [
         path: 'credits',
       },
       {
+        element: dynamicElement(() => import('@/routes/settings/referral/page'), 'Settings > Referral'),
+        path: 'referral',
+      },
+      {
         element: dynamicElement(() => import('@/routes/settings/usage/page'), 'Settings > Usage'),
         path: 'usage',
       },

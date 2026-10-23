@@ -24,8 +24,10 @@ const createChargeDb = (options?: { duplicate?: boolean }) => {
       return chain
     }),
     select: vi.fn(() => {
-      const result =
-        selectIndex++ === 0 ? (options?.duplicate ? [{ id: 'existing' }] : []) : [{ grant: 500_000, used: 1_000 }]
+      const index = selectIndex++
+      let result: Record<string, unknown>[] = [{ grant: 500_000, used: 1_000 }]
+      if (index === 0) result = [{ id: 'user-1' }]
+      if (index === 1) result = options?.duplicate ? [{ id: 'existing' }] : []
       const chain: Record<string, unknown> = {}
       chain.from = vi.fn(() => chain)
       chain.where = vi.fn(() => chain)
@@ -41,6 +43,7 @@ const createChargeDb = (options?: { duplicate?: boolean }) => {
       return chain
     }),
   }
+  Object.assign(tx, { query: { userRebates: { findFirst: async () => undefined } } })
   const db = {
     transaction: vi.fn(async (callback: (transaction: typeof tx) => unknown) => callback(tx)),
   } as unknown as ChatDatabase

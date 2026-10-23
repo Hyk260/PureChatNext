@@ -7,6 +7,8 @@ import { and, asc, count, desc, eq, ilike, inArray, lt, or, sql } from 'drizzle-
 import { getServerDB } from '../core/db-adaptor'
 import { account, passkey, session, twoFactor, users, verification } from '../schemas'
 import type { User, UserDeviceInfo, UserItem, UserWithoutPassword } from '../schemas'
+import { userRebates } from '../schemas/credits'
+import { expireRebate, rebateExpiry } from './rebate'
 import { generateAuthUserId } from '../utils/idGenerator'
 
 import type { ChatDatabase } from '../type'
@@ -142,13 +144,23 @@ export class UserModel {
           sql`${users.deviceInfo} IS DISTINCT FROM ${JSON.stringify(deviceInfo)}::jsonb`
         )
       : lt(users.lastActiveAt, threshold)
-    const [updated] = await this.db
-      .update(users)
-      .set(values)
-      .where(and(eq(users.id, userId), shouldTouch))
-      .returning({ id: users.id })
-
-    return Boolean(updated)
+    return this.db.transaction(async (tx) => {
+      const [user] = await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for('update')
+      if (!user) return false
+      await expireRebate(tx, userId, now)
+      const [updated] = await tx
+        .update(users)
+        .set(values)
+        .where(and(eq(users.id, userId), shouldTouch))
+        .returning({ id: users.id })
+      if (updated) {
+        await tx
+          .update(userRebates)
+          .set({ expiresAt: sql`greatest(${userRebates.expiresAt}, ${rebateExpiry(now).toISOString()}::timestamptz)` })
+          .where(eq(userRebates.userId, userId))
+      }
+      return Boolean(updated)
+    })
   }
 
   private normalizeUniqueUserFields = <

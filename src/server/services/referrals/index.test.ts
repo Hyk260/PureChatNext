@@ -138,6 +138,6 @@ describe('referral email service', () => {
     const context = createReferralContext(invitation.id, invitation.expiresAt, 'test-secret')
     const info = await new ReferralService(model).publicInfo(context)
     expect(JSON.stringify(info)).not.toContain(invitation.email)
-    expect(info.maskedEmail).toBe('f***@qq.com')
+    expect(info.maskedEmail).toBe('fr***d@qq.com')
   })
 })

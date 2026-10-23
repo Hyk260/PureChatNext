@@ -3,7 +3,9 @@ import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or, sql, sum } fro
 import { createNanoId } from '@pure/utils'
 
 import { getServerDB } from '../core/db-adaptor'
-import { creditLedger, userCredits } from '../schemas/credits'
+import { creditLedger, userCredits, userRebates } from '../schemas/credits'
+import { users } from '../schemas/user'
+import { expireRebate } from './rebate'
 import type { CreditUsageTrigger, UserCreditsItem } from '../schemas/credits'
 import type { ChatDatabase } from '../type'
 
@@ -11,6 +13,10 @@ export type CreditsBalance = {
   grant: number
   period: string
   remaining: number
+  rebateEarned: number
+  rebateRemaining: number
+  rebateExpiresAt: string | null
+  totalRemaining: number
   used: number
 }
 
@@ -127,20 +133,41 @@ export class CreditsModel {
   }
 
   getBalance = async (userId: string, period: string): Promise<CreditsBalance> => {
-    const row = await this.ensurePeriod(userId, period)
-    return {
-      grant: row.grant,
-      period: row.period,
-      remaining: clampRemaining(row.grant, row.used),
-      used: row.used,
-    }
+    await this.ensurePeriod(userId, period)
+    return this.db.transaction(async (tx) => {
+      await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for('update')
+      const [row] = await tx
+        .select()
+        .from(userCredits)
+        .where(and(eq(userCredits.userId, userId), eq(userCredits.period, period)))
+      if (!row) throw new Error('Credits row missing after ensure')
+      const wallet = await expireRebate(tx, userId, new Date())
+      const remaining = clampRemaining(row.grant, row.used)
+      const rebateRemaining = wallet?.balance ?? 0
+      const [rebateSummary] = await tx
+        .select({ total: sum(creditLedger.delta) })
+        .from(creditLedger)
+        .where(and(eq(creditLedger.userId, userId), eq(creditLedger.reason, 'referral_reward')))
+      const rebateEarned = Number(rebateSummary?.total ?? 0)
+      return {
+        grant: row.grant,
+        period: row.period,
+        remaining,
+        used: row.used,
+        rebateEarned,
+        rebateRemaining,
+        rebateExpiresAt: wallet?.expiresAt.toISOString() ?? null,
+        totalRemaining: remaining + rebateRemaining,
+      }
+    })
   }
 
   /** 管理员重置当前 period 已用额度，并写入正向 reset 流水。 */
   resetPeriod = async (userId: string, period: string): Promise<CreditsBalance> => {
     await this.ensurePeriod(userId, period)
 
-    return this.db.transaction(async (tx) => {
+    await this.db.transaction(async (tx) => {
+      await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for('update')
       const [before] = await tx
         .select({ grant: userCredits.grant, used: userCredits.used })
         .from(userCredits)
@@ -165,14 +192,8 @@ export class CreditsModel {
           userId,
         })
       }
-
-      return {
-        grant: before.grant,
-        period,
-        remaining: before.grant,
-        used: 0,
-      }
     })
+    return this.getBalance(userId, period)
   }
 
   /**
@@ -181,8 +202,10 @@ export class CreditsModel {
    */
   assertCanChat = async (userId: string, period: string, minReserve = MIN_RESERVE_CREDITS): Promise<CreditsBalance> => {
     const balance = await this.getBalance(userId, period)
-    if (balance.remaining <= 0 || balance.remaining < minReserve) {
-      throw new FreePlanLimitError('免费积分已用尽。请等待下月重置，或自行配置模型 API Key 继续使用。')
+    if (balance.totalRemaining <= 0 || balance.totalRemaining < minReserve) {
+      throw new FreePlanLimitError(
+        '可用积分已用尽。可邀请好友获得返利、等待下月免费积分重置，或自行配置模型 API Key 继续使用。'
+      )
     }
     return balance
   }
@@ -196,6 +219,7 @@ export class CreditsModel {
     if (credits <= 0) return { charged: 0, skipped: true }
 
     return this.db.transaction(async (tx) => {
+      await tx.select({ id: users.id }).from(users).where(eq(users.id, input.userId)).for('update')
       const [dup] = await tx
         .select({ id: creditLedger.id })
         .from(creditLedger)
@@ -224,8 +248,17 @@ export class CreditsModel {
 
       if (!before) throw new Error('Credits row missing after ensure')
 
-      const nextUsed = Math.min(before.grant, before.used + credits)
-      const actualCharged = nextUsed - before.used
+      const wallet = await expireRebate(tx, input.userId, new Date())
+      const monthlyCredits = Math.min(clampRemaining(before.grant, before.used), credits)
+      const rebateCredits = Math.min(wallet?.balance ?? 0, credits - monthlyCredits)
+      const nextUsed = before.used + monthlyCredits
+      const actualCharged = monthlyCredits + rebateCredits
+      if (rebateCredits > 0) {
+        await tx
+          .update(userRebates)
+          .set({ balance: (wallet?.balance ?? 0) - rebateCredits })
+          .where(eq(userRebates.userId, input.userId))
+      }
 
       await tx
         .update(userCredits)
@@ -236,6 +269,8 @@ export class CreditsModel {
         .where(and(eq(userCredits.userId, input.userId), eq(userCredits.period, input.period)))
 
       await tx.insert(creditLedger).values({
+        monthlyCredits,
+        rebateCredits,
         cachedInputTokens: input.cachedInputTokens,
         credits: actualCharged,
         delta: -actualCharged,
@@ -285,6 +320,8 @@ export class CreditsModel {
           cachedInputTokens: creditLedger.cachedInputTokens,
           createdAt: creditLedger.createdAt,
           credits: creditLedger.credits,
+          monthlyCredits: creditLedger.monthlyCredits,
+          rebateCredits: creditLedger.rebateCredits,
           durationMs: creditLedger.durationMs,
           id: creditLedger.id,
           inputTokens: creditLedger.inputTokens,

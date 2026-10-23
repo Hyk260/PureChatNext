@@ -1,4 +1,4 @@
-import { index, jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
+import { index, integer, jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { createdAt, timestamptz } from './_helpers'
 import { users } from './user'
@@ -45,3 +45,20 @@ export const referralBatches = pgTable(
 )
 
 export type Referral = typeof referrals.$inferSelect
+
+export const referralRewards = pgTable(
+  'referral_rewards',
+  {
+    inviteeId: text('invitee_id')
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    inviterId: text('inviter_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    invitationId: text('invitation_id').references(() => referrals.id, { onDelete: 'set null' }),
+    source: text('source', { enum: ['code', 'email'] }).notNull(),
+    amount: integer('amount').notNull(),
+    rewardedAt: timestamptz('rewarded_at').notNull(),
+  },
+  (table) => [index('referral_rewards_inviter_idx').on(table.inviterId)]
+)

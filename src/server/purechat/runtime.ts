@@ -7,6 +7,7 @@ import { createNanoId } from '@pure/utils'
 import type { LanguageModel } from 'ai'
 
 import { llmEnv, resolveAiGatewayApiKey, resolveAiGatewayBaseURL } from '@/envs/llm'
+import { touchUserLastActive } from '@/libs/auth/touch-last-active'
 import { PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 import { getShanghaiBillingPeriod } from '@/server/purechat/period'
 
@@ -51,6 +52,7 @@ export async function assertPureChatCanChat(userId: string, model: string): Prom
 
   const settlementPeriod = getShanghaiBillingPeriod()
   const settlementId = createNanoId(24)()
+  touchUserLastActive(userId)
   await new CreditsModel().assertCanChat(userId, settlementPeriod)
   return { settlementId, settlementPeriod }
 }

@@ -44,6 +44,29 @@ const signup = async () => {
 }
 
 describe('invited signup verification', () => {
+  it('submits a trimmed optional code and forces verification without the global requirement', async () => {
+    mocks.params = new URLSearchParams({ callbackUrl: '/chat' })
+    const { result } = renderHook(useSignUp)
+    await act(async () => result.current.onSubmit({ ...values, referralCode: ' Ab12CD34 ' }))
+    expect(mocks.signUp).toHaveBeenCalledWith(expect.anything(), {
+      body: { referralCode: 'Ab12CD34', referralContext: '' },
+    })
+    expect(mocks.push.mock.calls[0]![0]).toContain('/verify-email?')
+  })
+  it('never reclaims an existing unverified account to change its invitation attribution', async () => {
+    mocks.check.mockResolvedValue({ exists: true, emailVerified: false })
+    await signup()
+    expect(mocks.reclaim).not.toHaveBeenCalled()
+    expect(mocks.signUp).not.toHaveBeenCalled()
+    expect(mocks.push.mock.calls[0]![0]).toContain('/verify-email?')
+  })
+  it('surfaces invalid codes as a form field error', async () => {
+    mocks.signUp.mockResolvedValue({ error: { code: 'INVALID_REFERRAL_CODE', message: '邀请码无效' } })
+    const { result } = renderHook(useSignUp)
+    await act(async () => result.current.onSubmit({ ...values, referralCode: 'Ab12CD34' }))
+    expect(result.current.referralError).toBe('邀请码无效')
+    expect(mocks.push).not.toHaveBeenCalled()
+  })
   it('requires OTP verification even when the global requirement is disabled', async () => {
     await signup()
     expect(mocks.push).toHaveBeenCalledWith(

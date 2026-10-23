@@ -29,3 +29,28 @@ export interface PublicReferral {
   status: ReferralStatus
   expiresAt: string
 }
+
+export interface ReferralSummary {
+  code: string
+  link: string
+  totalInvited: number
+  totalRewarded: number
+  totalEarned: number
+  rebateRemaining: number
+  rebateExpiresAt: string | null
+}
+
+export interface ReferralRewardRecord {
+  id: string
+  maskedEmail: string
+  createdAt: string
+  status: 'pending' | 'rewarded' | 'ineligible'
+  amount: number
+  rewardedAt: string | null
+}
+
+export interface ReferralRecordsResponse {
+  items: ReferralRewardRecord[]
+  hasMore: boolean
+  page: number
+}

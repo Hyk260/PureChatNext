@@ -208,7 +208,7 @@ export function DataSettingsContent() {
       ) : null}
       {loading && !data ? <Skeleton.Text rows={7} /> : null}
       {data ? (
-        <Block padding={24} variant='filled'>
+        <Block padding={24} variant='outlined'>
           <Text className='mb-2 block text-base font-semibold'>数据目录</Text>
           <DirectoryRow label='应用数据' directory='data' path={data.dataPath} onError={setError} />
           <DirectoryRow label='应用日志' directory='logs' path={data.logsPath} onError={setError} />

@@ -11,7 +11,9 @@ describe('UserModel.touchLastActiveAt', () => {
   const where = vi.fn(() => ({ returning }))
   const set = vi.fn(() => ({ where }))
   const update = vi.fn(() => ({ set }))
-  const db = { update } as unknown as ChatDatabase
+  const select = vi.fn(() => ({ from: () => ({ where: () => ({ for: async () => [{ id: 'u1' }] }) }) }))
+  const tx = { update, select, query: { userRebates: { findFirst: async () => undefined } } }
+  const db = { transaction: async (run: (transaction: typeof tx) => unknown) => run(tx) } as unknown as ChatDatabase
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -26,9 +28,9 @@ describe('UserModel.touchLastActiveAt', () => {
 
     await expect(new UserModel(db).touchLastActiveAt('u1', now)).resolves.toBe(true)
 
-    expect(update).toHaveBeenCalledOnce()
+    expect(update).toHaveBeenCalledTimes(2)
     expect(set).toHaveBeenCalledWith({ lastActiveAt: now })
-    expect(where).toHaveBeenCalledOnce()
+    expect(where).toHaveBeenCalledTimes(2)
   })
 
   it('returns false when the conditional update matches no rows', async () => {

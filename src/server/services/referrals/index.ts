@@ -1,11 +1,15 @@
 import debug from 'debug'
 
 import { ReferralModel, ReferralRuleError } from '@pure/database/models/referral'
+import { ReferralRewardModel } from '@pure/database/models/referralReward'
+import { CreditsModel } from '@pure/database/models/credits'
 import { UserModel } from '@pure/database/models/user'
-import type { Referral } from '@pure/database/schemas'
-import type { ReferralItem, ReferralStatus } from '@pure/types'
+import type { Referral, SignupReferral } from '@pure/database/schemas'
+import type { ReferralItem, ReferralRewardRecord, ReferralStatus } from '@pure/types'
 import { appEnv } from '@/envs/app'
 import { authEnv } from '@/envs/auth'
+import { maskReferralEmail } from '@/libs/referrals/helpers'
+import { getShanghaiBillingPeriod } from '@pure/utils/billingPeriod'
 import { getReferralEmailTemplate } from '@/libs/better-auth/email-templates/referral'
 import { isObviousTestEmail } from '@/libs/better-auth/shared/test-email-policy'
 import { EmailService } from '@/server/services/email'
@@ -13,6 +17,10 @@ import { EmailService } from '@/server/services/email'
 import { createReferralContext, parseReferralContext } from './token'
 
 const log = debug('email:referrals')
+const recordStatus = (rewardedAt: Date | null, ineligible: boolean): ReferralRewardRecord['status'] => {
+  if (rewardedAt) return 'rewarded'
+  return ineligible ? 'ineligible' : 'pending'
+}
 const secret = () => {
   if (!authEnv.AUTH_SECRET) throw new ReferralRuleError('服务端认证密钥未配置', 503)
   return authEnv.AUTH_SECRET
@@ -147,10 +155,9 @@ export class ReferralService {
   publicInfo = async (context: string) => {
     const row = await this.resolve(context)
     const user = await new UserModel().findById(row.inviterId)
-    const [local, domain] = row.email.split('@')
     return {
       inviterName: user?.fullName || user?.username || '一位好友',
-      maskedEmail: `${local!.slice(0, 1)}***@${domain}`,
+      maskedEmail: maskReferralEmail(row.email),
       status: referralStatus(row),
       expiresAt: row.expiresAt.toISOString(),
     }
@@ -160,7 +167,48 @@ export class ReferralService {
     const row = await this.resolve(context)
     if (referralStatus(row) === 'expired') throw new ReferralRuleError('邀请已过期', 410)
     if (row.status !== 'sent') throw new ReferralRuleError('此邀请当前不可接受', 409)
-    return { email: row.email }
+    return { email: row.email, referralCode: await new ReferralRewardModel().ensureCode(row.inviterId) }
+  }
+
+  signupBinding = async (context: string, email: string): Promise<SignupReferral> => {
+    const row = await this.resolve(context)
+    if (referralStatus(row) === 'expired') throw new ReferralRuleError('邀请已过期', 410)
+    if (row.status !== 'sent' || !row.sentAt) throw new ReferralRuleError('邀请当前不可用', 409)
+    if (row.email !== email) throw new ReferralRuleError('请使用邀请收件邮箱注册', 403)
+    const inviter = await new UserModel().findById(row.inviterId)
+    if (!inviter || inviter.banned) throw new ReferralRuleError('邀请人账号不可用', 403)
+    return { inviterId: row.inviterId, invitationId: row.id, email }
+  }
+
+  summary = async (userId: string) => {
+    const model = new ReferralRewardModel()
+    await model.complete(userId)
+    const [summary, balance] = await Promise.all([
+      model.summary(userId),
+      new CreditsModel().getBalance(userId, getShanghaiBillingPeriod()),
+    ])
+    return {
+      ...summary,
+      link: `${origin()}/signup?${new URLSearchParams({ referral: summary.code })}`,
+      rebateRemaining: balance.rebateRemaining,
+      rebateExpiresAt: balance.rebateExpiresAt,
+    }
+  }
+
+  records = async (userId: string, page: number) => {
+    const result = await new ReferralRewardModel().records(userId, page)
+    return {
+      page,
+      hasMore: result.hasMore,
+      items: result.items.map((item) => ({
+        id: item.id,
+        maskedEmail: maskReferralEmail(item.email?.email ?? ''),
+        createdAt: item.createdAt.toISOString(),
+        rewardedAt: item.rewardedAt?.toISOString() ?? null,
+        amount: item.amount ?? 0,
+        status: recordStatus(item.rewardedAt, item.ineligible),
+      })),
+    }
   }
 
   accept = async (context: string, userId: string) => {

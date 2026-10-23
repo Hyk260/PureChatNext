@@ -14,6 +14,13 @@ export type UserDeviceInfo = {
   osVersion: string | null
 }
 
+/** 仅在邮箱注册创建账号时由服务端解析并写入，后续不可改绑。 */
+export type SignupReferral = {
+  inviterId: string
+  invitationId: string | null
+  email: string
+}
+
 /** 用户主表，存储账户基本信息及 Better Auth 所需的扩展字段 */
 export const users = pgTable(
   'users',
@@ -30,6 +37,8 @@ export const users = pgTable(
     userId: varchar('user_id', { length: 32 }).notNull().unique(),
     // 用户邮箱，可用于登录，全局唯一
     email: text('email').unique(),
+    referralCode: varchar('referral_code', { length: 8 }).unique(),
+    signupReferral: jsonb('signup_referral').$type<SignupReferral>(),
     // 旧版密码哈希（bcrypt），新认证流程密码存于 accounts 表
     password: varchar('password', { length: 64 }),
     // 用户头像 URL
@@ -68,6 +77,7 @@ export const users = pgTable(
     index('users_email_idx').on(table.email),
     index('users_username_idx').on(table.username),
     index('users_created_at_idx').on(table.createdAt),
+    index('users_referral_inviter_idx').on(sql`(${table.signupReferral}->>'inviterId')`),
     /**
      * 部分索引，用于加速管理员对封禁用户的查询。
      * 仅对 banned=true 的行建立索引。

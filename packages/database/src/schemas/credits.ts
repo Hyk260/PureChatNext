@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { integer, pgTable, text, uniqueIndex, index, varchar } from 'drizzle-orm/pg-core'
+import { bigint, check, integer, pgTable, text, uniqueIndex, index, varchar } from 'drizzle-orm/pg-core'
 
 import { createdAt, timestamptz } from './_helpers'
 import { users } from './user'
@@ -30,7 +30,19 @@ export const userCredits = pgTable(
   ]
 )
 
-export type CreditLedgerReason = 'grant' | 'reset' | 'chat_usage' | 'adjust'
+export const userRebates = pgTable(
+  'user_rebates',
+  {
+    userId: text('user_id')
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    balance: bigint('balance', { mode: 'number' }).notNull().default(0),
+    expiresAt: timestamptz('expires_at').notNull(),
+  },
+  (table) => [check('user_rebates_balance_nonnegative', sql`${table.balance} >= 0`)]
+)
+
+export type CreditLedgerReason = 'grant' | 'reset' | 'chat_usage' | 'adjust' | 'referral_reward' | 'referral_expire'
 export type CreditUsageTrigger = 'web' | 'wechat' | 'qq'
 
 /** 积分流水；同一 `message_id` + `reason=chat_usage` 只入账一次。 */
@@ -43,12 +55,16 @@ export const creditLedger = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     period: varchar('period', { length: 7 }).notNull(),
     /** 负数为扣减，正数为发放 */
-    delta: integer('delta').notNull(),
+    delta: bigint('delta', { mode: 'number' }).notNull(),
     reason: varchar('reason', { length: 32 }).$type<CreditLedgerReason>().notNull(),
     provider: text('provider'),
     model: text('model'),
     trigger: varchar('trigger', { length: 32 }).$type<CreditUsageTrigger>().notNull().default('web'),
     messageId: text('message_id'),
+    referralRewardId: text('referral_reward_id'),
+    /** 旧消费流水为空；新消费记录分别保存两类余额的实际扣减。 */
+    monthlyCredits: integer('monthly_credits'),
+    rebateCredits: bigint('rebate_credits', { mode: 'number' }),
     /** 模型返回的输入 Token；历史流水为空。 */
     inputTokens: integer('input_tokens'),
     /** 模型返回的输出 Token；历史流水为空。 */
@@ -58,7 +74,7 @@ export const creditLedger = pgTable(
     /** 从开始调用模型到流式生成结束的耗时（毫秒）。 */
     durationMs: integer('duration_ms'),
     /** 绝对值，便于展示 */
-    credits: integer('credits').notNull(),
+    credits: bigint('credits', { mode: 'number' }).notNull(),
     createdAt: createdAt(),
   },
   (table) => [
@@ -67,6 +83,9 @@ export const creditLedger = pgTable(
     uniqueIndex('credit_ledger_chat_usage_message_unique')
       .on(table.messageId)
       .where(sql`${table.reason} = 'chat_usage' AND ${table.messageId} IS NOT NULL`),
+    uniqueIndex('credit_ledger_referral_reward_unique')
+      .on(table.userId, table.referralRewardId)
+      .where(sql`${table.reason} = 'referral_reward'`),
   ]
 )
 

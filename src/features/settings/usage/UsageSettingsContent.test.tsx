@@ -90,6 +90,9 @@ const usageResponse = {
     grant: 500_000,
     period: '2026-07',
     remaining: 486_889,
+    rebateRemaining: 500_000,
+    rebateExpiresAt: null,
+    totalRemaining: 986_889,
     resetIn: { days: 8, hours: 3 },
     used: 13_111,
   },
@@ -112,7 +115,8 @@ describe('UsageSettingsContent', () => {
   it('renders only the requested overview metrics', async () => {
     render(<UsageSettingsContent />)
 
-    await waitFor(() => expect(screen.getByText('积分')).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('本月免费积分')).toBeTruthy())
+    expect(screen.getByText('返利可用余额')).toBeTruthy()
     expect(screen.getByText('文件使用量')).toBeTruthy()
     expect(screen.getByText(/13,111 \/ 500,000/)).toBeTruthy()
     expect(screen.getByText('当前方案：免费版')).toBeTruthy()

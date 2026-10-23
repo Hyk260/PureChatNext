@@ -10,11 +10,13 @@ const mocks = vi.hoisted(() => ({
   getPureChatModel: vi.fn(),
   resolveAiGatewayApiKey: vi.fn(),
   resolvePureChatGatewayId: vi.fn(),
+  touch: vi.fn(),
 }))
 
 vi.mock('@ai-sdk/openai', () => ({
   createOpenAI: (...args: unknown[]) => mocks.createOpenAI(...args),
 }))
+vi.mock('@/libs/auth/touch-last-active', () => ({ touchUserLastActive: mocks.touch }))
 vi.mock('@pure/database/models/credits', () => ({
   CreditsModel: vi.fn(() => ({
     assertCanChat: mocks.assertCanChat,
@@ -84,11 +86,13 @@ describe('purechat runtime', () => {
     const settlement = await assertPureChatCanChat('user-1', 'gpt-5.4-mini')
     expect(settlement).toEqual({ settlementId: 'settlement-1', settlementPeriod: '2026-08' })
     expect(mocks.assertCanChat).toHaveBeenCalledWith('user-1', '2026-08')
+    expect(mocks.touch).toHaveBeenCalledWith('user-1')
   })
 
   it('assertPureChatCanChat rejects unknown models', async () => {
     mocks.getEnabledPureChatModel.mockReturnValueOnce(undefined)
     await expect(assertPureChatCanChat('user-1', 'nope')).rejects.toThrow('模型不可用')
+    expect(mocks.touch).not.toHaveBeenCalled()
   })
 
   it('charges generateText usage', async () => {

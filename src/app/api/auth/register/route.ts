@@ -27,7 +27,13 @@ export async function POST(request: Request) {
     headers.delete('transfer-encoding')
     headers.set('content-type', 'application/json')
     const authRequest = new Request(target, {
-      body: JSON.stringify({ email, name: email.split('@')[0], password }),
+      body: JSON.stringify({
+        email,
+        name: email.split('@')[0],
+        password,
+        referralCode: body.referralCode,
+        referralContext: body.referralContext,
+      }),
       headers,
       method: 'POST',
     })

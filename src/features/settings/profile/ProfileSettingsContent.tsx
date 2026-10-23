@@ -102,8 +102,8 @@ export function ProfileSettingsContent({
 
   return (
     <Flex className='flex-col gap-6 py-[24px_64px] px-6 w-full'>
-      <Block gap={16} title='账户' variant='filled'>
-        <Flex className='flex-col p-4'>
+      <Block gap={16} title='账户' variant='outlined'>
+        <Flex className='flex-col px-4'>
           {accountRows.map((row, index) => (
             <Fragment key={row.key}>
               {index > 0 ? <Divider /> : null}

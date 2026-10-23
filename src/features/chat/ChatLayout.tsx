@@ -93,6 +93,7 @@ type Props = {
   messages: UIMessage[]
   left: ReactNode
   right: ReactNode
+  terminal?: ReactNode
   topic: LocalChatTopic | null
   title: string
   children: ReactNode
@@ -110,6 +111,7 @@ const ChatLayout = memo<Props>(
     messages,
     left,
     right,
+    terminal,
     topic,
     title,
     children,
@@ -154,24 +156,34 @@ const ChatLayout = memo<Props>(
           onResizeStart={sidebarCollapsed ? undefined : handleResizeStart}
           sidebarCollapsed={sidebarCollapsed}
         >
-          <Flex className='flex-1 min-w-0 h-full flex-col'>
-            <ChatHeader
-              autoRenameDisabled={busy || autoRenamingTopicId !== null}
-              autoRenaming={topic?.id === autoRenamingTopicId}
-              hasMessages={hasMessages}
-              messages={messages}
-              title={title}
-              topic={topic}
-              onAutoRename={onAutoRenameTopic}
-              onDelete={onDeleteTopic}
-              onFavorite={onFavoriteTopic}
-              onRename={onRenameTopic}
-            />
-            <div className={styles.content}>{children}</div>
+          <Flex className='h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden'>
+            <Flex className='min-h-0 min-w-0 flex-1 overflow-hidden'>
+              <Flex className='flex-1 min-w-0 h-full flex-col'>
+                <ChatHeader
+                  autoRenameDisabled={busy || autoRenamingTopicId !== null}
+                  autoRenaming={topic?.id === autoRenamingTopicId}
+                  hasMessages={hasMessages}
+                  messages={messages}
+                  title={title}
+                  topic={topic}
+                  onAutoRename={onAutoRenameTopic}
+                  onDelete={onDeleteTopic}
+                  onFavorite={onFavoriteTopic}
+                  onRename={onRenameTopic}
+                />
+                <div className={styles.content}>{children}</div>
+              </Flex>
+              <aside
+                className={styles.right}
+                data-collapsed={rightCollapsed}
+                data-work-panel-shell
+                inert={rightCollapsed}
+              >
+                {right}
+              </aside>
+            </Flex>
+            {terminal}
           </Flex>
-          <aside className={styles.right} data-collapsed={rightCollapsed} data-work-panel-shell inert={rightCollapsed}>
-            {right}
-          </aside>
         </InsetContentFrame>
       </Flex>
     )

@@ -31,6 +31,8 @@ const styles = createStaticStyles(({ css }) => ({
   // 保留 createStaticStyles：该主题色暂无对应的语义 Tailwind token。
   addTrigger: css`
     color: ${cssVar.colorTextSecondary};
+    min-width: 24px;
+    min-height: 24px;
   `,
   header: css`
     flex: none;

@@ -22,6 +22,7 @@ import {
 } from '@/features/chat/chatApi'
 import ChatInput from '@/features/chat/ChatInput'
 import ChatLayout from '@/features/chat/ChatLayout'
+import TerminalPanel from '@/features/chat/Terminal'
 import {
   getPendingChatPermissionMode,
   getPendingChatProject,
@@ -750,6 +751,14 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
         />
       }
       title={topicTitle}
+      terminal={
+        isDesktop ? (
+          <TerminalPanel
+            projectName={activeTopicId === null ? draftProjectName : (activeTopic?.projectName ?? null)}
+            onProjectChange={handleComposerProjectChange}
+          />
+        ) : null
+      }
       autoRenamingTopicId={autoRenamingTopicId}
       onAutoRenameTopic={handleAutoRenameTopic}
       onDeleteTopic={handleDeleteTopic}

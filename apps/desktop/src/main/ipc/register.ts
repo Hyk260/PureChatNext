@@ -22,6 +22,9 @@ import { DesktopAuthService } from '../services/DesktopAuthService'
 import { LocalToolService } from '../services/LocalToolService'
 import { PermissionService } from '../services/PermissionService'
 import { IpcRegistry } from './IpcRegistry'
+import { TerminalService } from '../services/TerminalService'
+import { TerminalController } from '../controllers/TerminalController'
+import { DESKTOP_IPC_EVENTS } from '../../common/ipc/contracts'
 
 export const registerDesktopIpc = async (options: {
   config?: DesktopConfigService
@@ -35,6 +38,23 @@ export const registerDesktopIpc = async (options: {
   const commands = new CommandService(permissions)
   const tools = new LocalToolService(config, permissions, commands)
   const registry = new IpcRegistry(options.getTrustedContents, options.rendererUrl)
+  const terminal = new TerminalService({
+    config,
+    desktopPath: app.getPath('desktop'),
+    resourcesPath: app.isPackaged ? process.resourcesPath : undefined,
+    onData: (owner, event) => {
+      const contents = options.getTrustedContents()
+      if (contents && !contents.isDestroyed() && contents.id === owner)
+        contents.send(DESKTOP_IPC_EVENTS.terminalData, event)
+    },
+    onExit: (owner, event) => {
+      const contents = options.getTrustedContents()
+      if (contents && !contents.isDestroyed() && contents.id === owner)
+        contents.send(DESKTOP_IPC_EVENTS.terminalExit, event)
+    },
+  })
+  const terminalController = new TerminalController(terminal, options.getTrustedContents)
+  terminalController.register(registry)
   const auth =
     options.auth ??
     new DesktopAuthService(config, (status) => {
@@ -47,7 +67,7 @@ export const registerDesktopIpc = async (options: {
   new DataController(data).register(registry)
 
   new ConfigController(config).register(registry)
-  new AuthController(auth).register(registry)
+  new AuthController(auth, () => terminal.reset()).register(registry)
   new StorageController(config).register(registry)
   new DialogController().register(registry)
   new PermissionController(config, permissions).register(registry)
@@ -59,12 +79,14 @@ export const registerDesktopIpc = async (options: {
 
   return {
     dispose: () => {
+      terminalController.dispose()
       data.dispose()
       tools.dispose()
       permissions.dispose()
       registry.unregisterAll()
     },
     getRemoteServerUrl: async () => (await config.read()).remoteServerUrl,
+    resetTerminals: () => terminal.reset(),
     getAuthorizationHeader: () => auth.getAuthorizationHeader(),
     auth,
   }

@@ -23,6 +23,23 @@ pnpm --filter purechat-desktop dev
 非 Windows 开发环境默认允许多开，并始终使用 `purechat-desktop-dev` 独立数据目录，因此开发版与已安装的 PureChat 可以同时运行。Windows 始终启用单实例，以确保浏览器授权回跳由已打开的应用窗口处理。将
 `PURECHAT_DESKTOP_MULTI_INSTANCE=false` 写入 `apps/desktop/.env.desktop.local` 可在其他平台切换回单实例；生产安装包未设置该变量时默认单实例。
 
+## 内置终端
+
+macOS 桌面端的聊天标题栏提供终端入口，位于分享按钮左侧；新话题也可以直接打开。底部面板支持拖拽调整高度，收起面板不会结束命令。
+
+首次打开优先进入当前聊天关联的本机项目根目录，没有项目时进入系统 Desktop；桌面目录不可用时提示并退回用户主目录。面板中的项目选择器与聊天项目联动。桌面和每个项目各保留一个独立 shell，切换项目会恢复原来的终端，不会向运行中的程序输入 `cd`。每个终端保留最多 10,000 行输出，同时最多运行 10 个终端；达到上限需要先结束一个。
+
+终端使用当前用户的登录 shell，支持交互程序和 Ctrl+C。手动输入在本机直接执行，不经过聊天 API，也不使用 AI 工具的审批模式。关闭面板和隐藏到托盘保留进程；结束当前终端、注销、渲染页重载或崩溃、窗口真正销毁、退出应用时清理会话。应用重启后仅恢复面板高度，不恢复终端进程。
+
+原生 PTY 依赖按目标 macOS 架构复制到 `Contents/Resources/terminal/`，在 ASAR 外加载，并在签名前检查原生模块架构和辅助程序执行权限。Windows 不显示终端入口，也不复制这些资源。
+
+相关验证：
+
+```bash
+pnpm exec vitest run --silent=passed-only apps/desktop/src/main/services/__tests__/TerminalService.test.ts src/features/chat/Terminal/
+pnpm test:e2e --project=electron --grep '本机终端使用真实|终端入口、上下'
+```
+
 ## 构建与打包命令
 
 ```bash

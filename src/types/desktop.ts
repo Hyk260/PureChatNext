@@ -1,4 +1,5 @@
 import type { ChatPermissionMode } from '@pure/types'
+import type { DesktopTerminalApi } from './desktopTerminal'
 import type { DesktopUpdateLogs, DesktopUpdatePreferences, DesktopUpdateState } from './desktopUpdater'
 
 export type { DesktopUpdatePreferences, DesktopUpdateState } from './desktopUpdater'
@@ -7,6 +8,14 @@ export interface DesktopAppInfo {
   isPackaged: boolean
   platform: NodeJS.Platform
   version: string
+}
+
+export interface DesktopSystemMetrics {
+  arch: string
+  cpuUsagePercent: number | null
+  hostname: string
+  memoryUsagePercent: number | null
+  platform: NodeJS.Platform
 }
 
 export interface DesktopWindowState {
@@ -136,6 +145,7 @@ export interface DesktopDataInfo {
 }
 
 export interface DesktopApi {
+  terminal: DesktopTerminalApi
   updater: {
     getState: () => Promise<DesktopUpdateState>
     getLogs: () => Promise<DesktopUpdateLogs>
@@ -157,6 +167,7 @@ export interface DesktopApi {
   deleteProject: (id: string) => Promise<void>
   deleteSecret: (key: string) => Promise<void>
   getAppInfo: () => Promise<DesktopAppInfo>
+  getSystemMetrics: () => Promise<DesktopSystemMetrics>
   getWindowState: () => Promise<DesktopWindowState>
   getSystemTools: () => Promise<DesktopSystemTools>
   getRemoteServer: () => Promise<DesktopRemoteServer>

@@ -27,6 +27,7 @@ import type { LocalChatTopic } from '@/features/chat/types'
 import TopicRenameModal, { confirmDeleteTopic, useTopicRename } from '@/features/chat/TopicRenameModal'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { getDesktopApi } from '@/types/desktop'
+import TerminalToggle from '@/features/chat/Terminal/TerminalToggle'
 
 const styles = createStaticStyles(({ css }) => ({
   header: css`
@@ -258,6 +259,7 @@ const ChatHeader = memo<Props>(
           </Flex>
 
           <Flex className='items-center flex-none gap-0.5'>
+            {getDesktopApi() ? <TerminalToggle /> : null}
             {hasMessages && topic ? (
               <ActionIcon icon={Share2} size='small' title='分享' onClick={handleShare} />
             ) : null}

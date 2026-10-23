@@ -5,6 +5,7 @@ import { loadEnv } from 'vite'
 
 import { syncDesktopVersion } from './scripts/sync-version.mjs'
 import { verifyAfterPack } from './scripts/verify-package.mjs'
+import { prepareTerminalRuntime } from './scripts/terminal-runtime.mjs'
 
 const desktopDir = path.dirname(fileURLToPath(import.meta.url))
 // 从根 package.json 同步桌面应用版本，作为安装包和更新比较的版本来源。
@@ -38,11 +39,15 @@ const config = {
   // 默认应用图标，各平台也显式复用同一图标。
   icon: appIcon,
   // 仅打包构建产物和 manifest，排除依赖目录及 sourcemap。
-  // main/preload 已打包应用代码，仅 Node/Electron 内置模块保持外部引用。
-  files: ['dist/**/*', 'package.json', '!node_modules', '!**/*.map'],
+  // main/preload 打包普通依赖，终端原生依赖在签名前单独复制到资源目录。
+  files: ['dist/**/*', 'package.json', '!node_modules', '!**/*.map', '!dist/terminal/**'],
   // 返回 false 表示 node_modules 已在 Builder 外处理，跳过原生依赖重建和 pnpm workspace 收集。
   // 不要同时设置 npmRebuild: false，否则 beforeBuild 被跳过，monorepo 依赖收集仍会执行。
   beforeBuild: () => false,
+  beforePack: async (context) => {
+    const arch = { 1: 'x64', 3: 'arm64' }[context.arch]
+    await prepareTerminalRuntime(context.electronPlatformName, arch)
+  },
   // 额外资源复制到 resources 目录，供运行时读取，不放入 app.asar。
   extraResources: [
     { from: appIcon, to: 'purechat-appicon.png' },

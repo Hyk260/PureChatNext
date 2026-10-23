@@ -14,13 +14,19 @@ import type {
   DesktopProjectFile,
   DesktopRemoteServer,
   DesktopSystemTools,
+  DesktopSystemMetrics,
   DesktopWindowState,
   DesktopUpdatePreferences,
   DesktopUpdateState,
 } from '@/types/desktop'
 import type { DesktopUpdateLogs } from '@/types/desktopUpdater'
+import type { TerminalData, TerminalOpenInput, TerminalSession, TerminalSizeInput } from '@/types/desktopTerminal'
 
 export interface DesktopIpcContractMap {
+  'terminal.open': { args: [input: TerminalOpenInput]; result: TerminalSession }
+  'terminal.write': { args: [input: TerminalData]; result: void }
+  'terminal.resize': { args: [input: TerminalSizeInput]; result: void }
+  'terminal.kill': { args: [input: { sessionId: string }]; result: void }
   'updater.getState': { args: []; result: DesktopUpdateState }
   'updater.getLogs': { args: []; result: DesktopUpdateLogs }
   'updater.clearLogs': { args: []; result: void }
@@ -34,6 +40,7 @@ export interface DesktopIpcContractMap {
   'data.setLogRetention': { args: [days: DesktopLogRetentionDays]; result: void }
   'data.clearHttpCache': { args: []; result: void }
   'app.getInfo': { args: []; result: DesktopAppInfo }
+  'app.getSystemMetrics': { args: []; result: DesktopSystemMetrics }
   'app.getSystemTools': { args: []; result: DesktopSystemTools }
   'config.getRemoteServer': { args: []; result: DesktopRemoteServer }
   'config.getCloudServer': { args: []; result: DesktopRemoteServer }
@@ -78,6 +85,7 @@ export type DesktopIpcArgs<C extends DesktopIpcChannel> = DesktopIpcContractMap[
 export type DesktopIpcResult<C extends DesktopIpcChannel> = DesktopIpcContractMap[C]['result']
 
 export const DESKTOP_IPC_CHANNELS = {
+  terminal: { open: 'terminal.open', write: 'terminal.write', resize: 'terminal.resize', kill: 'terminal.kill' },
   updater: {
     getState: 'updater.getState',
     getLogs: 'updater.getLogs',
@@ -93,7 +101,11 @@ export const DESKTOP_IPC_CHANNELS = {
     setLogRetention: 'data.setLogRetention',
     clearHttpCache: 'data.clearHttpCache',
   },
-  app: { getInfo: 'app.getInfo', getSystemTools: 'app.getSystemTools' },
+  app: {
+    getInfo: 'app.getInfo',
+    getSystemMetrics: 'app.getSystemMetrics',
+    getSystemTools: 'app.getSystemTools',
+  },
   auth: { cancel: 'auth.cancel', getStatus: 'auth.getStatus', logout: 'auth.logout', start: 'auth.start' },
   config: {
     getCloudServer: 'config.getCloudServer',
@@ -130,6 +142,8 @@ export const DESKTOP_IPC_CHANNELS = {
 } as const
 
 export const DESKTOP_IPC_EVENTS = {
+  terminalData: 'terminal.data',
+  terminalExit: 'terminal.exit',
   updateState: 'updater.state',
   authStatus: 'auth.status',
 } as const

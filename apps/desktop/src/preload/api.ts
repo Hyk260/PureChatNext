@@ -6,6 +6,22 @@ import { DESKTOP_IPC_EVENTS } from '../common/ipc/contracts'
 import { invoke } from './invoke'
 
 export const createDesktopApi = (): DesktopApi => ({
+  terminal: {
+    open: (input) => invoke('terminal.open', input),
+    write: (input) => invoke('terminal.write', input),
+    resize: (input) => invoke('terminal.resize', input),
+    kill: (input) => invoke('terminal.kill', input),
+    onData: (listener) => {
+      const handler = (_event: Electron.IpcRendererEvent, data: Parameters<typeof listener>[0]) => listener(data)
+      ipcRenderer.on(DESKTOP_IPC_EVENTS.terminalData, handler)
+      return () => ipcRenderer.removeListener(DESKTOP_IPC_EVENTS.terminalData, handler)
+    },
+    onExit: (listener) => {
+      const handler = (_event: Electron.IpcRendererEvent, data: Parameters<typeof listener>[0]) => listener(data)
+      ipcRenderer.on(DESKTOP_IPC_EVENTS.terminalExit, handler)
+      return () => ipcRenderer.removeListener(DESKTOP_IPC_EVENTS.terminalExit, handler)
+    },
+  },
   updater: {
     getState: () => invoke('updater.getState'),
     getLogs: () => invoke('updater.getLogs'),
@@ -33,6 +49,7 @@ export const createDesktopApi = (): DesktopApi => ({
   executeLocalTool: (request) => invoke('localSystem.execute', request),
   cancelLocalCommand: (request) => invoke('localSystem.cancel', request),
   getAppInfo: () => invoke('app.getInfo'),
+  getSystemMetrics: () => invoke('app.getSystemMetrics'),
   getWindowState: () => invoke('window.getState'),
   getSystemTools: () => invoke('app.getSystemTools'),
   getPermissionScope: (topicId) => invoke('permission.getScope', topicId),

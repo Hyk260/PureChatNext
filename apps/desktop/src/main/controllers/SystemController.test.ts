@@ -13,9 +13,10 @@ vi.mock('electron', () => ({
 }))
 
 import { IpcRegistry } from '../ipc/IpcRegistry'
+import { SystemMetricsService } from '../services/SystemMetricsService'
 import { SystemController } from './SystemController'
 
-type Handler = (event: unknown, targetPath: string) => Promise<unknown>
+type Handler = (event: unknown, ...args: unknown[]) => Promise<unknown>
 const temporaryDirectories: string[] = []
 
 afterEach(async () => {
@@ -77,5 +78,29 @@ describe('system open-path IPC', () => {
       __pureChatIpcError: true,
       message: '未找到可用的默认应用',
     })
+  })
+})
+
+describe('system metrics IPC', () => {
+  it('returns system metrics through the trusted desktop API', async () => {
+    const frame = { url: 'purechat://renderer/chat' }
+    const contents = { mainFrame: frame, isDestroyed: () => false }
+    const registry = new IpcRegistry(() => contents as unknown as Electron.WebContents, 'purechat://renderer')
+    const metrics = new SystemMetricsService()
+    const expectedMetrics = {
+      arch: 'arm64',
+      cpuUsagePercent: 42,
+      hostname: 'test-host',
+      memoryUsagePercent: 65,
+      platform: 'darwin' as const,
+    }
+    vi.spyOn(metrics, 'getMetrics').mockReturnValue(expectedMetrics)
+    new SystemController(undefined, metrics).register(registry)
+
+    const handlers = new Map<string, Handler>(electron.handle.mock.calls.map(([name, handler]) => [name, handler]))
+    const handler = handlers.get('app.getSystemMetrics')!
+
+    expect(await handler({ sender: contents, senderFrame: frame })).toEqual(expectedMetrics)
+    expect(metrics.getMetrics).toHaveBeenCalledOnce()
   })
 })

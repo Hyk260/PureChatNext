@@ -2,7 +2,10 @@ import type { DesktopAuthService } from '../services/DesktopAuthService'
 import type { IpcRegistry } from '../ipc/IpcRegistry'
 
 export class AuthController {
-  constructor(private readonly auth: DesktopAuthService) {}
+  constructor(
+    private readonly auth: DesktopAuthService,
+    private readonly onLogout?: () => void
+  ) {}
 
   register(ipc: IpcRegistry) {
     ipc.register('auth.start', (input) => {
@@ -13,6 +16,9 @@ export class AuthController {
     })
     ipc.register('auth.getStatus', () => this.auth.getStatus())
     ipc.register('auth.cancel', () => this.auth.cancel())
-    ipc.register('auth.logout', () => this.auth.logout())
+    ipc.register('auth.logout', () => {
+      this.onLogout?.()
+      return this.auth.logout()
+    })
   }
 }

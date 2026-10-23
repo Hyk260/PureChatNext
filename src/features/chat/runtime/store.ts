@@ -14,6 +14,8 @@ type RuntimeState = {
 
 export const topicRuntimeKey = (agentId: string, topicId: string | null) => JSON.stringify([agentId, topicId])
 
+export const countBusyTopics = (busy: Record<string, boolean>) => Object.values(busy).filter(Boolean).length
+
 export const useChatRuntimeStore = create<RuntimeState>(() => ({
   ownerId: undefined,
   sessions: new Map(),

@@ -1,16 +1,19 @@
-import { stat } from 'node:fs/promises'
+import { cp, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import { listPackage } from '@electron/asar'
+import { terminalRuntimeDir, verifyTerminalRuntime } from './terminal-runtime.mjs'
 
 export const MAX_ASAR_BYTES = 64 * 1024 * 1024
 
 export const verifyPackage = async (archivePath) => {
   const entries = listPackage(archivePath).map((entry) => entry.replaceAll('\\', '/').replace(/^\//, ''))
-  const unexpected = entries.filter((entry) =>
-    !(entry === 'package.json' || entry === 'dist' || entry.startsWith('dist/')) ||
-    /(^|\/)(node_modules|\.env(?:\.[^/]*)?)(\/|$)/.test(entry) || entry.endsWith('.map')
+  const unexpected = entries.filter(
+    (entry) =>
+      !(entry === 'package.json' || entry === 'dist' || entry.startsWith('dist/')) ||
+      /(^|\/)(node_modules|\.env(?:\.[^/]*)?)(\/|$)/.test(entry) ||
+      entry.endsWith('.map')
   )
   if (unexpected.length) throw new Error(`桌面包包含非运行时文件: ${unexpected.slice(0, 10).join(', ')}`)
 
@@ -27,10 +30,16 @@ export const verifyPackage = async (archivePath) => {
 }
 
 export const verifyAfterPack = async (context) => {
-  const resourcesDir = context.electronPlatformName === 'darwin'
-    ? path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`, 'Contents', 'Resources')
-    : path.join(context.appOutDir, 'resources')
+  const resourcesDir =
+    context.electronPlatformName === 'darwin'
+      ? path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`, 'Contents', 'Resources')
+      : path.join(context.appOutDir, 'resources')
   const result = await verifyPackage(path.join(resourcesDir, 'app.asar'))
+  if (context.electronPlatformName === 'darwin') {
+    // 原生资源在签名前复制到 ASAR 外，避免主包排除 node_modules 的规则过滤平台依赖。
+    await cp(terminalRuntimeDir, path.join(resourcesDir, 'terminal'), { recursive: true, dereference: true })
+    await verifyTerminalRuntime(path.join(resourcesDir, 'terminal'), { 1: 'x64', 3: 'arm64' }[context.arch])
+  }
   for (const resource of ['purechat-appicon.png', 'tray.png']) {
     try {
       await stat(path.join(resourcesDir, resource))

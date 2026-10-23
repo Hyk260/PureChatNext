@@ -40,6 +40,7 @@ export class DesktopApp {
   private readonly config: DesktopConfigService
   private readonly authService: DesktopAuthService
   private disposeIpc: (() => void) | null = null
+  private resetTerminals: (() => void) | null = null
   private isQuitting = false
 
   constructor(private readonly mainDir: string) {
@@ -63,6 +64,7 @@ export class DesktopApp {
       this.config
     )
     this.authService = new DesktopAuthService(this.config, (status) => {
+      if (status.status !== 'signedIn') this.resetTerminals?.()
       const contents = this.windowManager.trustedContents
       if (contents && !contents.isDestroyed()) contents.send('auth.status', status)
     })
@@ -128,6 +130,7 @@ export class DesktopApp {
       rendererUrl: this.rendererUrl,
     })
     this.disposeIpc = ipc.dispose
+    this.resetTerminals = ipc.resetTerminals
     this.protocolManager.setRemoteServerUrlGetter(ipc.getRemoteServerUrl)
     this.protocolManager.setAuthorizationHeaderGetter(ipc.getAuthorizationHeader)
     this.protocolManager.initialize()

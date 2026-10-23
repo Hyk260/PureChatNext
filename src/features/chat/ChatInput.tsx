@@ -267,7 +267,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
       {
         icon: Settings2,
         key: 'params',
-        label: <MenuLabel active={!rightCollapsed} label='参数' />,
+        label: <MenuLabel active={!rightCollapsed} label='高级设置' />,
         onClick: handleToggleParams,
       },
     ],
@@ -354,11 +354,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
             </DropdownMenuPortal>
           </DropdownMenuRoot>
           {permissionMode && onPermissionModeChange ? (
-            <PermissionModeSelector
-              disabled={isBusy}
-              value={permissionMode}
-              onChange={onPermissionModeChange}
-            />
+            <PermissionModeSelector disabled={isBusy} value={permissionMode} onChange={onPermissionModeChange} />
           ) : null}
           {onProjectChange && !topicId ? (
             <HomeProjectBar

@@ -5,11 +5,13 @@ import { z } from 'zod'
 import { ChatMessageModel } from '@pure/database/models/chatMessage'
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
+import { chatContextSummarySchema } from '@/features/chat/advancedSettings'
 
 const uiMessageSchema = z.object({
   id: z.string().min(1),
   metadata: z
     .object({
+      contextSummary: chatContextSummarySchema.optional(),
       model: z.string().min(1).max(256).optional(),
       performance: z
         .object({

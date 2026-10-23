@@ -9,7 +9,8 @@ import * as m from 'motion/react-m'
 import { memo, useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
-import type { ChatLlmParams, LocalChatTopic } from '@/features/chat/types'
+import type { ChatAdvancedSettings } from '@pure/types'
+import type { LocalChatTopic } from '@/features/chat/types'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopProject } from '@/types/desktop'
 
@@ -20,7 +21,7 @@ import { PANEL_ANIMATION_DURATION, PANEL_ANIMATION_EASE, PANEL_TRANSITION } from
 import { useHorizontalWheel } from './useHorizontalWheel'
 import { usePanelResize } from './usePanelResize'
 import OverviewContent from './OverviewContent'
-import ParamsContent from './ParamsContent'
+import AdvancedSettingsContent from './AdvancedSettingsContent'
 import WorkPanelTab from './WorkPanelTab'
 import type { WorkPanelTabId } from './tabs'
 import { CONFIG_MENU_TABS, WORK_PANEL_TAB_BY_ID, WORKSPACE_MENU_TABS } from './tabs'
@@ -135,10 +136,10 @@ const styles = createStaticStyles(({ css }) => ({
 }))
 
 type Props = {
-  onChange: (patch: Partial<ChatLlmParams>) => void
+  onChange: (patch: Partial<ChatAdvancedSettings>) => void
   topic: LocalChatTopic | null
   topicTitle: string
-  value: ChatLlmParams
+  value: ChatAdvancedSettings
 }
 
 const WorkPanelWorkspace = memo<Props>(({ value, onChange, topic, topicTitle }) => {
@@ -228,7 +229,7 @@ const WorkPanelWorkspace = memo<Props>(({ value, onChange, topic, topicTitle }) 
       case 'files':
         return null
       case 'params':
-        return <ParamsContent value={value} onChange={onChange} />
+        return <AdvancedSettingsContent value={value} onChange={onChange} />
       default:
         return null
     }

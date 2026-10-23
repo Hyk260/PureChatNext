@@ -5,18 +5,21 @@ import {
   lastAssistantMessageIsCompleteWithToolCalls,
 } from 'ai'
 import type { UIMessage } from 'ai'
-import type { ChatPermissionMode } from '@pure/types'
+import type { ChatAdvancedSettings, ChatPermissionMode } from '@pure/types'
 
 import { putMessages, updateToolApproval, upsertToolApproval } from '@/features/chat/chatApi'
 import { LOCAL_TOOL_NAMES } from '@/features/chat/localTools'
 import { getMessageText, withMessageText } from '@/features/chat/messageText'
 import { getToolApprovalItems } from '@/features/chat/toolApprovalParts'
 import type { ChatSearchMode } from '@/features/chat/types'
+import { chatAdvancedSettingsSchema, selectChatHistory } from '@/features/chat/advancedSettings'
 import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopLocalToolRequest } from '@/types/desktop'
 
 export type ChatRequestBody = {
+  advancedSettings?: ChatAdvancedSettings
+  modelContextWindow?: number
   model: string
   provider: string
   searchMode: ChatSearchMode
@@ -34,7 +37,15 @@ type SessionOptions = {
   onTopicsRefresh: () => void
 }
 
-const chatTransport = new DefaultChatTransport({ api: '/api/chat', credentials: 'include' })
+const chatTransport = new DefaultChatTransport({
+  api: '/api/chat',
+  credentials: 'include',
+  prepareSendMessagesRequest: ({ id, messages, body, trigger, messageId }) => {
+    const parsed = chatAdvancedSettingsSchema.safeParse(body?.advancedSettings ?? {})
+    const outbound = parsed.success ? selectChatHistory(messages, parsed.data) : messages
+    return { body: { ...body, id, messages: outbound, trigger, messageId } }
+  },
+})
 const signature = (messages: UIMessage[]) => JSON.stringify(messages)
 
 const fileToPart = (file: File): Promise<Extract<UIMessage['parts'][number], { type: 'file' }>> =>

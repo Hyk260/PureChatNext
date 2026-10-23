@@ -15,7 +15,7 @@ export type WorkPanelTabMeta = {
 export const WORK_PANEL_TABS: WorkPanelTabMeta[] = [
   { icon: LayoutDashboard, id: 'overview', label: '概览', section: 'workspace' },
   { icon: File, id: 'files', label: '文件', section: 'workspace' },
-  { icon: Settings2, id: 'params', label: '参数', section: 'config' },
+  { icon: Settings2, id: 'params', label: '高级设置', section: 'config' },
 ]
 
 export const WORK_PANEL_TAB_BY_ID = Object.fromEntries(WORK_PANEL_TABS.map((tab) => [tab.id, tab])) as Record<

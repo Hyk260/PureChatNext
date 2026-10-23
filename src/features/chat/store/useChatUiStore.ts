@@ -9,19 +9,18 @@ import {
   DEFAULT_WORK_PANEL_OPEN_TABS,
   isWorkPanelTabId,
 } from '@/features/chat/WorkPanel/tabs'
-import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
-import type { ChatLlmParams, ChatSearchMode, TopicGroupMode, TopicPageSize, TopicSortBy } from '@/features/chat/types'
+import { chatAdvancedSettingsSchema, getChatSettingsKey } from '@/features/chat/advancedSettings'
+import type { ChatSearchMode, TopicGroupMode, TopicPageSize, TopicSortBy } from '@/features/chat/types'
 import { PENDING_CHAT_PERMISSION_MODE_KEY } from '@/features/chat/chatLocalStorage'
-import { CHAT_PERMISSION_MODES, DEFAULT_CHAT_PERMISSION_MODE } from '@pure/types'
-import type { ChatPermissionMode } from '@pure/types'
+import { CHAT_PERMISSION_MODES, DEFAULT_CHAT_ADVANCED_SETTINGS, DEFAULT_CHAT_PERMISSION_MODE } from '@pure/types'
+import type { ChatAdvancedSettings, ChatPermissionMode } from '@pure/types'
 import { sessionStg } from '@pure/utils/storage'
 
 type ChatUiState = {
   rightCollapsed: boolean
   /** true = 聊天区占满主栏宽度；false = 居中限宽 */
   wideScreen: boolean
-  /** agentId → params */
-  paramsByAgent: Record<string, ChatLlmParams>
+  advancedSettingsByAgent: Record<string, ChatAdvancedSettings>
   /** Shared across all agents */
   searchMode: ChatSearchMode
   /** Shared permission mode across all conversations */
@@ -39,8 +38,7 @@ type ChatUiState = {
   closeWorkPanelTab: (tab: WorkPanelTabId) => void
   setWorkPanelActiveTab: (tab: WorkPanelTabId) => void
   openParamsPanel: () => void
-  getParams: (agentId: string) => ChatLlmParams
-  setParams: (agentId: string, patch: Partial<ChatLlmParams>) => void
+  setAdvancedSettings: (userId: string, agentId: string, patch: Partial<ChatAdvancedSettings>) => void
   setSearchMode: (mode: ChatSearchMode) => void
   setPermissionMode: (mode: ChatPermissionMode) => void
   initializePermissionMode: (mode: ChatPermissionMode) => void
@@ -60,7 +58,7 @@ export const useChatUiStore = create<ChatUiState>()(
     (set, get) => ({
       rightCollapsed: true,
       wideScreen: false,
-      paramsByAgent: {},
+      advancedSettingsByAgent: {},
       searchMode: 'off',
       permissionMode: DEFAULT_CHAT_PERMISSION_MODE,
       permissionModeInitialized: false,
@@ -123,13 +121,13 @@ export const useChatUiStore = create<ChatUiState>()(
             : [...workPanelOpenTabs, 'params'],
         })
       },
-      getParams: (agentId) => get().paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS,
-      setParams: (agentId, patch) => {
+      setAdvancedSettings: (userId, agentId, patch) => {
+        const key = getChatSettingsKey(userId, agentId)
         set((s) => ({
-          paramsByAgent: {
-            ...s.paramsByAgent,
-            [agentId]: {
-              ...(s.paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS),
+          advancedSettingsByAgent: {
+            ...s.advancedSettingsByAgent,
+            [key]: {
+              ...(s.advancedSettingsByAgent[key] ?? DEFAULT_CHAT_ADVANCED_SETTINGS),
               ...patch,
             },
           },
@@ -138,16 +136,14 @@ export const useChatUiStore = create<ChatUiState>()(
       setSearchMode: (searchMode) => set({ searchMode }),
       setPermissionMode: (permissionMode) => set({ permissionMode, permissionModeInitialized: true }),
       initializePermissionMode: (permissionMode) =>
-        set((state) =>
-          state.permissionModeInitialized ? state : { permissionMode, permissionModeInitialized: true }
-        ),
+        set((state) => (state.permissionModeInitialized ? state : { permissionMode, permissionModeInitialized: true })),
       setTopicGroupMode: (topicGroupMode) => set({ topicGroupMode }),
       setTopicPageSize: (topicPageSize) => set({ topicPageSize }),
       setTopicSortBy: (topicSortBy) => set({ topicSortBy }),
     }),
     {
       name: 'purechat:chat:v2:ui',
-      version: 10,
+      version: 11,
       migrate: (persisted, version) => {
         let state = (persisted ?? {}) as Record<string, unknown>
         if (version < 4) {
@@ -167,7 +163,20 @@ export const useChatUiStore = create<ChatUiState>()(
           }
         }
         // 左侧栏已统一使用全局开关，丢弃聊天页过去独立保存的折叠状态。
-        const { searchModeByAgent: _dropped, leftCollapsed: _leftCollapsed, ...rest } = state
+        const {
+          searchModeByAgent: _dropped,
+          leftCollapsed: _leftCollapsed,
+          paramsByAgent: _paramsByAgent,
+          ...rest
+        } = state
+        const advancedSettingsByAgent: Record<string, ChatAdvancedSettings> = {}
+        const storedSettings = rest.advancedSettingsByAgent
+        if (storedSettings && typeof storedSettings === 'object') {
+          for (const [key, value] of Object.entries(storedSettings)) {
+            const parsed = chatAdvancedSettingsSchema.safeParse(value)
+            if (parsed.success) advancedSettingsByAgent[key] = parsed.data
+          }
+        }
         const workPanelOpenTabs = normalizeOpenTabs(rest.workPanelOpenTabs)
         const workPanelActiveTab =
           isWorkPanelTabId(rest.workPanelActiveTab) && workPanelOpenTabs.includes(rest.workPanelActiveTab)
@@ -184,6 +193,7 @@ export const useChatUiStore = create<ChatUiState>()(
             : DEFAULT_CHAT_PERMISSION_MODE
         return {
           ...rest,
+          advancedSettingsByAgent,
           permissionMode,
           permissionModeInitialized: resetLocalFullPermission ? false : rest.permissionModeInitialized === true,
           searchMode: rest.searchMode === 'auto' ? 'auto' : 'off',

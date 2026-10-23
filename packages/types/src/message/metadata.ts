@@ -38,7 +38,14 @@ export interface MessageReasoningMetadata {
   duration?: number
 }
 
+export interface ChatContextSummary {
+  text: string
+  sourceHash: string
+  messageCount: number
+}
+
 export interface ChatMessageMetadata {
+  contextSummary?: ChatContextSummary
   model?: string
   performance?: ModelPerformance
   provider?: string

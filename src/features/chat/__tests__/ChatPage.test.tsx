@@ -189,12 +189,12 @@ vi.mock('@/features/chat/WideScreenContainer', () => ({
 vi.mock('@/features/chat/store/useChatUiStore', () => ({
   useChatUiStore: (selector: (state: unknown) => unknown) =>
     selector({
-      paramsByAgent: {},
+      advancedSettingsByAgent: {},
       permissionMode: mocks.permissionMode,
       permissionModeInitialized: mocks.permissionModeInitialized,
       searchMode: mocks.searchMode,
       wideScreen: false,
-      setParams: vi.fn(),
+      setAdvancedSettings: vi.fn(),
       setPermissionMode: (mode: 'ask' | 'auto' | 'full') => {
         mocks.permissionMode = mode
       },

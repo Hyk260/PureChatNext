@@ -1,17 +1,27 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { toUIMessageStream } from 'ai'
+import { DEFAULT_CHAT_ADVANCED_SETTINGS } from '@pure/types'
 
-const { assertCanChat, chargeChatUsage, createModel, createOpenAI, getAuthenticatedUserId, streamText } = vi.hoisted(() => {
-  const modelFactory = vi.fn((modelId: string) => ({ modelId, provider: 'openai.responses' }))
-  return {
-    assertCanChat: vi.fn(),
-    chargeChatUsage: vi.fn(),
-    createModel: modelFactory,
-    createOpenAI: vi.fn(() => modelFactory),
-    getAuthenticatedUserId: vi.fn().mockResolvedValue('user-1'),
-    streamText: vi.fn(),
-  }
-})
+vi.mock('server-only', () => ({}))
+vi.mock('@/server/purechat', async () => ({
+  ...(await import('@pure/model-bank')),
+  ...(await import('@/server/purechat/period')),
+}))
+
+const { assertCanChat, chargeChatUsage, createModel, createOpenAI, generateText, getAuthenticatedUserId, streamText } =
+  vi.hoisted(() => {
+    const modelFactory = vi.fn((modelId: string) => ({ modelId, provider: 'openai.responses' }))
+    return {
+      assertCanChat: vi.fn(),
+      chargeChatUsage: vi.fn(),
+      createModel: modelFactory,
+      createOpenAI: vi.fn(() => modelFactory),
+      generateText: vi.fn(),
+      getAuthenticatedUserId: vi.fn().mockResolvedValue('user-1'),
+      streamText: vi.fn(),
+    }
+  })
 
 vi.mock('@pure/database/models/webSearchSettings', () => ({
   WebSearchSettingsModel: class {
@@ -53,8 +63,8 @@ vi.mock('ai', async (importOriginal) => {
   const actual = await importOriginal<typeof import('ai')>()
   return {
     ...actual,
-    convertToModelMessages: vi.fn().mockResolvedValue([]),
     createUIMessageStreamResponse: vi.fn(() => new Response(null, { status: 200 })),
+    generateText,
     streamText,
     toUIMessageStream: vi.fn(() => new ReadableStream()),
   }
@@ -90,12 +100,27 @@ const createPermissionRequest = (permissionMode: unknown) =>
     method: 'POST',
   })
 
+const contextHistory = () =>
+  Array.from({ length: 8 }, (_, index) => ({
+    id: String(index),
+    role: index % 2 === 0 ? 'user' : 'assistant',
+    parts: [{ type: 'text', text: `message ${index} `.repeat(250) }],
+  }))
+
+const createAdvancedRequest = (advancedSettings: unknown, messages = contextHistory(), provider = 'purechat') =>
+  new Request('http://localhost/api/chat', {
+    body: JSON.stringify({ advancedSettings, messages, model: 'gpt-5.2', modelContextWindow: 6000, provider }),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+  })
+
 describe('POST /api/chat PureChat model availability', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     getAuthenticatedUserId.mockResolvedValue('user-1')
     assertCanChat.mockResolvedValue(undefined)
     chargeChatUsage.mockResolvedValue(undefined)
+    generateText.mockReset()
     streamText.mockReturnValue({ stream: new ReadableStream() })
   })
 
@@ -241,6 +266,75 @@ describe('POST /api/chat PureChat model availability', () => {
     expect(response.status).toBe(400)
     expect(payload.cause).toBe('Invalid search mode')
     expect(streamText).not.toHaveBeenCalled()
+  })
+
+  it('validates advanced settings before authentication or model calls', async () => {
+    for (const settings of [
+      null,
+      { historyCount: -1 },
+      { historyCount: 0.5 },
+      { historyCount: 1001 },
+      { enableContextCompression: 'yes' },
+      { inputTemplate: 'lost user input' },
+    ]) {
+      const response = await POST(createAdvancedRequest(settings))
+      expect(response.status).toBe(400)
+    }
+    expect(getAuthenticatedUserId).not.toHaveBeenCalled()
+    expect(generateText).not.toHaveBeenCalled()
+    expect(streamText).not.toHaveBeenCalled()
+  })
+
+  it('limits context and templates only the current input without changing its source', async () => {
+    const source = [
+      ...contextHistory(),
+      { id: 'current', role: 'user', parts: [{ type: 'text', text: 'original $&' }] },
+    ]
+    const snapshot = structuredClone(source)
+    const response = await POST(
+      createAdvancedRequest(
+        {
+          ...DEFAULT_CHAT_ADVANCED_SETTINGS,
+          enableHistoryCount: true,
+          historyCount: 0,
+          inputTemplate: '翻译：{{text}}',
+        },
+        source
+      )
+    )
+    expect(response.status).toBe(200)
+    expect(streamText.mock.calls[0][0].messages).toEqual([
+      { role: 'user', content: [{ type: 'text', text: '翻译：original $&' }] },
+    ])
+    expect(generateText).not.toHaveBeenCalled()
+    expect(source).toEqual(snapshot)
+  })
+
+  it('settles summary usage separately from the reply and returns reusable metadata', async () => {
+    const summaryUsage = { inputTokenDetails: { cacheReadTokens: 10 }, inputTokens: 100, outputTokens: 20 }
+    generateText.mockImplementationOnce(async (options) => {
+      await options.onEnd({ usage: summaryUsage })
+      return { text: 'retained task facts' }
+    })
+    const response = await POST(createAdvancedRequest(DEFAULT_CHAT_ADVANCED_SETTINGS))
+    expect(response.status).toBe(200)
+    expect(generateText).toHaveBeenCalledOnce()
+    expect(chargeChatUsage).toHaveBeenCalledOnce()
+    expect(chargeChatUsage).toHaveBeenCalledWith(expect.objectContaining({ inputTokens: 100, outputTokens: 20 }))
+    const metadata = vi.mocked(toUIMessageStream).mock.calls[0][0].messageMetadata?.({ part: { type: 'start' } })
+    expect(metadata).toMatchObject({ contextSummary: { text: 'retained task facts', messageCount: 4 } })
+    await streamText.mock.calls[0][0].onEnd({ usage: summaryUsage })
+    expect(chargeChatUsage).toHaveBeenCalledTimes(2)
+    expect(chargeChatUsage.mock.calls[0][0].messageId).not.toBe(chargeChatUsage.mock.calls[1][0].messageId)
+  })
+
+  it('compresses self-configured models without charging PureChat credits', async () => {
+    generateText.mockResolvedValueOnce({ text: 'retained BYOK task facts' })
+    const response = await POST(createAdvancedRequest(DEFAULT_CHAT_ADVANCED_SETTINGS, contextHistory(), 'openai'))
+    expect(response.status).toBe(200)
+    expect(generateText).toHaveBeenCalledOnce()
+    expect(chargeChatUsage).not.toHaveBeenCalled()
+    expect(streamText.mock.calls[0][0].messages[0].content).toContain('retained BYOK task facts')
   })
 
   it('rejects excessive message cardinality before authentication or attachment parsing', async () => {

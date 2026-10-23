@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as chatApi from '@/features/chat/chatApi'
 import { getMessageText } from '@/features/chat/messageText'
+import { DEFAULT_CHAT_ADVANCED_SETTINGS } from '@pure/types'
 
 import ChatRuntimeHost from '../ChatRuntimeHost'
 import type { ChatRequestBody, ChatSession } from '../chatSession'
@@ -127,6 +128,42 @@ afterEach(() => {
 })
 
 describe('background chat sessions with the real SDK', () => {
+  it('limits the real transport payload while persisting the complete raw conversation and summary metadata', async () => {
+    vi.mocked(DefaultChatTransport.prototype.sendMessages).mockRestore()
+    const contextSummary = { text: 'cached task facts', sourceHash: 'a'.repeat(64), messageCount: 1 }
+    const chunks = [
+      { type: 'start', messageId: 'new-reply', messageMetadata: { contextSummary } },
+      { type: 'text-start', id: 'text' },
+      { type: 'text-delta', id: 'text', delta: 'done' },
+      { type: 'text-end', id: 'text' },
+      { type: 'finish', finishReason: 'stop' },
+    ]
+    const fetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response(chunks.map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`).join('') + 'data: [DONE]\n\n', {
+          headers: { 'Content-Type': 'text/event-stream', 'x-vercel-ai-ui-message-stream': 'v1' },
+        })
+      )
+    const session = sessionFor('topic-a', 'agent-a', seed)
+    await session.send('original input', [], {
+      ...body,
+      advancedSettings: {
+        ...DEFAULT_CHAT_ADVANCED_SETTINGS,
+        enableHistoryCount: true,
+        historyCount: 0,
+        inputTemplate: '翻译：{{text}}',
+      },
+    })
+    const request = JSON.parse(String(fetch.mock.calls[0][1]?.body))
+    expect(request.messages).toHaveLength(1)
+    expect(request.messages[0].parts).toEqual([{ type: 'text', text: 'original input' }])
+    expect(session.chat.messages[0]).toEqual(seed[0])
+    expect(session.chat.messages.at(-1)?.metadata).toMatchObject({ contextSummary })
+    await session.flush()
+    expect(chatApi.putMessages).toHaveBeenLastCalledWith('topic-a', session.chat.messages)
+  })
+
   it('continues off-route, reuses live history and stops only the selected parallel topic', async () => {
     const a = sessionFor()
     const b = sessionFor('topic-b', 'agent-b')
@@ -196,7 +233,11 @@ describe('background chat sessions with the real SDK', () => {
     }
     const session = sessionFor()
     const app = render(<App visible={session} />)
-    const config = { ...body, permissionMode: 'auto' as const }
+    const config = {
+      ...body,
+      permissionMode: 'auto' as const,
+      advancedSettings: { ...DEFAULT_CHAT_ADVANCED_SETTINGS, inputTemplate: '翻译：{{text}}' },
+    }
     const first = await start(session, config)
     app.rerender(<App />)
     await push(first.stream, {
@@ -208,6 +249,7 @@ describe('background chat sessions with the real SDK', () => {
     await waitFor(() => expect(mocks.desktop?.executeLocalTool).toHaveBeenCalledOnce())
     expect(session.runningCommandCallIds.has('command-1')).toBe(true)
     config.model = 'changed-after-send'
+    config.advancedSettings.inputTemplate = 'changed-after-send'
     await act(async () => {
       tool.resolve({ success: true, content: '/test' })
     })
@@ -218,6 +260,7 @@ describe('background chat sessions with the real SDK', () => {
       permissionMode: 'auto',
       topicId: 'topic-a',
       system: 'Agent A',
+      advancedSettings: { ...DEFAULT_CHAT_ADVANCED_SETTINGS, inputTemplate: '翻译：{{text}}' },
     })
     await push(streams[1], { type: 'start', messageId: 'reply-0' }, { type: 'start-step' })
     await text(streams[1], 'command finished')

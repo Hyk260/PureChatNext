@@ -2,6 +2,7 @@
 
 import { useChat } from '@ai-sdk/react'
 import { Flex } from '@pure/ui'
+import { DEFAULT_CHAT_ADVANCED_SETTINGS } from '@pure/types'
 import type { ChatPermissionMode } from '@pure/types'
 import type { UIMessage } from 'ai'
 import { useRouter } from 'next/navigation'
@@ -33,6 +34,8 @@ import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
 import { getDesktopApi } from '@/types/desktop'
+import { getChatSettingsKey } from '@/features/chat/advancedSettings'
+import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 
 const EMPTY_MESSAGES: UIMessage[] = []
 
@@ -78,6 +81,13 @@ const ChatView = memo<ChatViewProps>(
     const selectedModel = useHomeStore((state) => state.selectedModel)
     const selectedProvider = useHomeStore((state) => state.selectedProvider)
     const activeAgent = useHomeStore((state) => state.activeAgent)
+    const advancedSettings = useChatUiStore(
+      (state) => state.advancedSettingsByAgent[getChatSettingsKey(userId, agentId)] ?? DEFAULT_CHAT_ADVANCED_SETTINGS
+    )
+    const modelContextWindow = useProviderConfigStore(
+      (state) =>
+        state.configs[selectedProvider]?.models.find((model) => model.id === selectedModel)?.contextWindowTokens
+    )
     const modelAbilities = useProviderConfigStore(
       (state) => state.configs[selectedProvider]?.models.find((model) => model.id === selectedModel)?.abilities
     )
@@ -93,11 +103,22 @@ const ChatView = memo<ChatViewProps>(
         model: selectedModel,
         provider: selectedProvider,
         searchMode,
+        advancedSettings,
+        ...(modelContextWindow ? { modelContextWindow } : {}),
         ...(modelAbilities ? { modelAbilities } : {}),
         ...(permissionMode ? { permissionMode } : {}),
         ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
       }),
-      [activeAgent?.systemRole, modelAbilities, permissionMode, searchMode, selectedModel, selectedProvider]
+      [
+        activeAgent?.systemRole,
+        advancedSettings,
+        modelAbilities,
+        modelContextWindow,
+        permissionMode,
+        searchMode,
+        selectedModel,
+        selectedProvider,
+      ]
     )
 
     useLayoutEffect(() => {

@@ -5,7 +5,8 @@ import { toast, createStaticStyles } from '@lobehub/ui'
 import type { UIMessage } from 'ai'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import type { ChatPermissionMode } from '@pure/types'
+import { DEFAULT_CHAT_ADVANCED_SETTINGS } from '@pure/types'
+import type { ChatAdvancedSettings, ChatPermissionMode } from '@pure/types'
 
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import type { AgentListItem } from '@/const/home/agents'
@@ -41,14 +42,8 @@ import {
   topicRuntimeKey,
   useChatRuntimeStore,
 } from '@/features/chat/runtime/store'
-import { DEFAULT_CHAT_LLM_PARAMS } from '@/features/chat/types'
-import type {
-  ChatLlmParams,
-  ChatSearchMode,
-  LocalChatTopic,
-  TopicDeleteScope,
-  TopicUpdate,
-} from '@/features/chat/types'
+import { getChatSettingsKey } from '@/features/chat/advancedSettings'
+import type { ChatSearchMode, LocalChatTopic, TopicDeleteScope, TopicUpdate } from '@/features/chat/types'
 import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 import { fetchAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
@@ -113,15 +108,16 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
   const agents = useAgentsStore((s) => s.agents)
 
-  const paramsByAgent = useChatUiStore((s) => s.paramsByAgent)
+  const advancedSettings = useChatUiStore(
+    (s) => s.advancedSettingsByAgent[getChatSettingsKey(userId, agentId)] ?? DEFAULT_CHAT_ADVANCED_SETTINGS
+  )
   const permissionMode = useChatUiStore((s) => s.permissionMode)
   const permissionModeInitialized = useChatUiStore((s) => s.permissionModeInitialized)
   const searchMode = useChatUiStore((s) => s.searchMode)
   const initializePermissionMode = useChatUiStore((s) => s.initializePermissionMode)
   const setPermissionMode = useChatUiStore((s) => s.setPermissionMode)
-  const setParams = useChatUiStore((s) => s.setParams)
+  const setAdvancedSettings = useChatUiStore((s) => s.setAdvancedSettings)
   const setSearchMode = useChatUiStore((s) => s.setSearchMode)
-  const params: ChatLlmParams = paramsByAgent[agentId] ?? DEFAULT_CHAT_LLM_PARAMS
 
   const [topics, setTopics] = useState<LocalChatTopic[]>([])
   const [draftProjectName, setDraftProjectName] = useState<string | null>(null)
@@ -565,11 +561,11 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
     [activeTopicId, agentId, pushChatHref, topics, userId]
   )
 
-  const handleParamsChange = useCallback(
-    (patch: Partial<ChatLlmParams>) => {
-      setParams(agentId, patch)
+  const handleAdvancedSettingsChange = useCallback(
+    (patch: Partial<ChatAdvancedSettings>) => {
+      setAdvancedSettings(userId, agentId, patch)
     },
-    [agentId, setParams]
+    [agentId, setAdvancedSettings, userId]
   )
 
   const handleSearchModeChange = useCallback(
@@ -745,7 +741,14 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
         />
       }
       topic={activeTopic}
-      right={<WorkPanel topic={activeTopic} topicTitle={topicTitle} value={params} onChange={handleParamsChange} />}
+      right={
+        <WorkPanel
+          topic={activeTopic}
+          topicTitle={topicTitle}
+          value={advancedSettings}
+          onChange={handleAdvancedSettingsChange}
+        />
+      }
       title={topicTitle}
       autoRenamingTopicId={autoRenamingTopicId}
       onAutoRenameTopic={handleAutoRenameTopic}

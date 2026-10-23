@@ -1,12 +1,19 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { PENDING_CHAT_PERMISSION_MODE_KEY } from '@/features/chat/chatLocalStorage'
+import { DEFAULT_CHAT_ADVANCED_SETTINGS } from '@pure/types'
+import { getChatSettingsKey } from '@/features/chat/advancedSettings'
 
 import { useChatUiStore } from './useChatUiStore'
 
 describe('useChatUiStore search mode', () => {
   afterEach(() => {
-    useChatUiStore.setState({ permissionMode: 'auto', permissionModeInitialized: false, searchMode: 'off' })
+    useChatUiStore.setState({
+      advancedSettingsByAgent: {},
+      permissionMode: 'auto',
+      permissionModeInitialized: false,
+      searchMode: 'off',
+    })
     localStorage.clear()
   })
 
@@ -35,7 +42,7 @@ describe('useChatUiStore search mode', () => {
     await useChatUiStore.persist.rehydrate()
 
     expect(useChatUiStore.getState()).toMatchObject({ permissionMode: 'auto', permissionModeInitialized: false })
-    expect(JSON.parse(localStorage.getItem('purechat:chat:v2:ui') || '{}').version).toBe(10)
+    expect(JSON.parse(localStorage.getItem('purechat:chat:v2:ui') || '{}').version).toBe(11)
     expect(sessionStorage.getItem(PENDING_CHAT_PERMISSION_MODE_KEY)).toBeNull()
 
     sessionStorage.setItem(PENDING_CHAT_PERMISSION_MODE_KEY, 'full')
@@ -98,6 +105,43 @@ describe('useChatUiStore search mode', () => {
     })
     const persisted = JSON.parse(localStorage.getItem('purechat:chat:v2:ui') || '{}')
     expect(persisted.state).not.toHaveProperty('leftCollapsed')
-    expect(persisted.version).toBe(10)
+    expect(persisted.version).toBe(11)
+  })
+
+  it('persists advanced settings independently for each account and agent', async () => {
+    const { setAdvancedSettings } = useChatUiStore.getState()
+    setAdvancedSettings('user-a', 'inbox', { historyCount: 8, enableHistoryCount: true })
+    setAdvancedSettings('user-b', 'inbox', { inputTemplate: '翻译：{{text}}' })
+    const saved = localStorage.getItem('purechat:chat:v2:ui')!
+    useChatUiStore.setState({ advancedSettingsByAgent: {} })
+    localStorage.setItem('purechat:chat:v2:ui', saved)
+    await useChatUiStore.persist.rehydrate()
+    const settings = useChatUiStore.getState().advancedSettingsByAgent
+    expect(settings[getChatSettingsKey('user-a', 'inbox')]).toEqual({
+      ...DEFAULT_CHAT_ADVANCED_SETTINGS,
+      historyCount: 8,
+      enableHistoryCount: true,
+    })
+    expect(settings[getChatSettingsKey('user-b', 'inbox')]).toEqual({
+      ...DEFAULT_CHAT_ADVANCED_SETTINGS,
+      inputTemplate: '翻译：{{text}}',
+    })
+    expect(settings[getChatSettingsKey('user-a', 'other-agent')]).toBeUndefined()
+  })
+
+  it('drops unused sampling values when migrating without interpreting them as advanced settings', async () => {
+    localStorage.setItem(
+      'purechat:chat:v2:ui',
+      JSON.stringify({
+        version: 10,
+        state: { paramsByAgent: { inbox: { temperature: 2 } }, wideScreen: true, workPanelOpenTabs: ['params'] },
+      })
+    )
+    await useChatUiStore.persist.rehydrate()
+    const persisted = JSON.parse(localStorage.getItem('purechat:chat:v2:ui')!)
+    expect(persisted.state).not.toHaveProperty('paramsByAgent')
+    expect(persisted.state.advancedSettingsByAgent).toEqual({})
+    expect(persisted.state.wideScreen).toBe(true)
+    expect(persisted.state.workPanelOpenTabs).toEqual(['params'])
   })
 })

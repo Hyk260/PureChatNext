@@ -18,6 +18,7 @@ const styles = createStaticStyles(({ css }) => ({
     min-height: 0;
     .cm-editor {
       height: 100%;
+      padding-block: 0px;
       background: ${cssVar.colorBgContainer};
     }
     .cm-scroller {

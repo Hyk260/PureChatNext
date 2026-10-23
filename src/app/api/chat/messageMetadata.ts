@@ -1,6 +1,6 @@
 import type { LanguageModelUsage, StepResultPerformance, TextStreamPart, ToolSet } from 'ai'
 
-import type { ChatMessageMetadata, ModelPerformance, ModelUsage } from '@pure/types'
+import type { ChatContextSummary, ChatMessageMetadata, ModelPerformance, ModelUsage } from '@pure/types'
 
 const finiteNumber = (value: number | undefined) =>
   typeof value === 'number' && Number.isFinite(value) ? value : undefined
@@ -23,8 +23,8 @@ export const toModelPerformance = (performance: StepResultPerformance): ModelPer
   ttft: finiteNumber(performance.timeToFirstOutputMs),
 })
 
-export const createMessageMetadata = (model: string, provider: string) => {
-  let metadata: ChatMessageMetadata = { model, provider }
+export const createMessageMetadata = (model: string, provider: string, contextSummary?: ChatContextSummary) => {
+  let metadata: ChatMessageMetadata = { model, provider, ...(contextSummary ? { contextSummary } : {}) }
   let reasoningStartedAt: number | undefined
 
   const finishReasoning = () => {

@@ -93,4 +93,13 @@ describe('chat message metadata mapping', () => {
       messageMetadata({ part: { id: 'reasoning-1', type: 'reasoning-end' } as TextStreamPart<ToolSet> })
     ).toMatchObject({ reasoning: { duration: 1450 } })
   })
+
+  it('includes the summary in the initial stream metadata so partial replies can persist it', () => {
+    const contextSummary = { text: 'Previous task facts', sourceHash: 'a'.repeat(64), messageCount: 4 }
+    const metadata = createMessageMetadata('model', 'provider', contextSummary)
+    expect(metadata({ part: { type: 'start' } })).toMatchObject({ contextSummary })
+    expect(metadata({ part: { type: 'finish', totalUsage: usage } as TextStreamPart<ToolSet> })).toMatchObject({
+      contextSummary,
+    })
+  })
 })

@@ -9,7 +9,7 @@ import { getAiModel } from '@pure/model-bank'
 import { loadFile } from '@pure/file-loaders'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
 import { CHAT_PERMISSION_MODES } from '@pure/types'
-import { convertToModelMessages, createUIMessageStreamResponse, isStepCount, streamText, toUIMessageStream } from 'ai'
+import { createUIMessageStreamResponse, isStepCount, streamText, toUIMessageStream } from 'ai'
 import type { ToolExecutionEndEvent, ToolSet, UIMessage } from 'ai'
 import debug from 'debug'
 import { createNanoId } from '@pure/utils'
@@ -36,13 +36,15 @@ import {
   PURECHAT_MODEL_UNAVAILABLE_MESSAGE,
 } from '@/server/purechat/gatewayError'
 import { buildChatRuntimeInstructions } from '@/server/chat/runtimeInstructions'
+import { prepareChatContext } from '@/server/chat/contextCompression'
+import { chatAdvancedSettingsSchema, hasInputPlaceholder } from '@/features/chat/advancedSettings'
 import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/toolRegistry'
 import { desktopTools } from '@/server/chat/desktopTools'
 import { CHAT_TOOL_CAPABILITIES, isToolApprovalRequired } from '@/server/chat/permissionPolicy'
 import { safeFileName } from '@/libs/utils/safeFileName'
 import { isValidProviderId } from '@pure/database/models/customProvider'
 
-import { prepareWebSearchHistory, resolveUserWebTools, WEB_FETCH_INSTRUCTION } from '@/server/search/webTools'
+import { resolveUserWebTools, WEB_FETCH_INSTRUCTION } from '@/server/search/webTools'
 
 import { createMessageMetadata } from './messageMetadata'
 
@@ -62,6 +64,8 @@ const RATE_LIMIT_PUBLIC_MESSAGE = '上游限流，请稍后重试。'
 type ChatPermissionMode = (typeof CHAT_PERMISSION_MODES)[number]
 
 type ChatRequestBody = {
+  advancedSettings?: unknown
+  modelContextWindow?: unknown
   baseURL?: string
   messages: UIMessage[]
   modelAbilities?: { vision?: boolean }
@@ -92,8 +96,9 @@ const dataUrlToBuffer = (url: string) => {
   return { buffer: Buffer.from(encoded, 'base64'), mediaType: match[1] }
 }
 
-const hasValidMessageParts = (value: unknown): value is UIMessage[] => {
-  if (!Array.isArray(value) || value.length > MAX_CHAT_MESSAGES) return false
+const hasValidMessageParts = (value: unknown, advanced: boolean): value is UIMessage[] => {
+  const multiplier = advanced ? 5 : 1
+  if (!Array.isArray(value) || value.length > MAX_CHAT_MESSAGES * multiplier) return false
 
   let totalParts = 0
   for (const item of value) {
@@ -101,7 +106,7 @@ const hasValidMessageParts = (value: unknown): value is UIMessage[] => {
     const parts = (item as { parts?: unknown }).parts
     if (!Array.isArray(parts) || parts.length > MAX_CHAT_MESSAGE_PARTS) return false
     totalParts += parts.length
-    if (totalParts > MAX_CHAT_TOTAL_PARTS) return false
+    if (totalParts > MAX_CHAT_TOTAL_PARTS * multiplier) return false
   }
 
   return true
@@ -274,7 +279,7 @@ const buildSearchOptions = ({
   toolApproval: ReturnType<typeof createDesktopToolApproval> | undefined
   tools: ToolSet
 }) => {
-  if (Object.keys(tools).length === 0) return {}
+  if (Object.keys(tools).length === 0) return { tools: undefined }
 
   return {
     stopWhen: isStepCount(5),
@@ -342,6 +347,7 @@ const chargePureChatUsage = async ({
 
 const toPureChatErrorResponse = (error: unknown) => {
   log('purechat streamText failed: %o', error)
+  if (error instanceof ChatSDKError) return error.toResponse()
   if (isPureChatRestrictedModelError(error)) {
     return new ChatSDKError('bad_request:api', PURECHAT_MODEL_UNAVAILABLE_MESSAGE).toResponse()
   }
@@ -370,10 +376,30 @@ export async function POST(request: Request) {
   }
 
   const { baseURL, model, system, topicId } = requestBody
-  let messages = requestBody.messages
+  const messages = requestBody.messages
   const provider = requestBody.provider
 
-  if (!hasValidMessageParts(messages)) {
+  const parsedSettings = chatAdvancedSettingsSchema.safeParse(
+    requestBody.advancedSettings === undefined ? {} : requestBody.advancedSettings
+  )
+  if (!parsedSettings.success) {
+    return new ChatSDKError('bad_request:api', '高级设置无效，请检查历史消息数量和输入模板。').toResponse()
+  }
+  const advancedSettings = parsedSettings.data
+  if (advancedSettings.inputTemplate.trim() && !hasInputPlaceholder(advancedSettings.inputTemplate)) {
+    return new ChatSDKError('bad_request:api', '用户输入预处理模板必须包含 {{text}}。').toResponse()
+  }
+  const modelContextWindow = requestBody.modelContextWindow
+  if (
+    modelContextWindow !== undefined &&
+    (typeof modelContextWindow !== 'number' ||
+      !Number.isInteger(modelContextWindow) ||
+      modelContextWindow < 1024 ||
+      modelContextWindow > 2_000_000)
+  ) {
+    return new ChatSDKError('bad_request:api', '模型上下文长度无效。').toResponse()
+  }
+  if (!hasValidMessageParts(messages, requestBody.advancedSettings !== undefined)) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
   if (isInvalidClientCapabilities(requestBody.clientCapabilities)) {
@@ -414,14 +440,19 @@ export async function POST(request: Request) {
     requestBody.modelAbilities?.vision ??
     getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision
   )
-  const normalizeRequestMessages = async () => {
+  const normalizeRequestMessages = async (selectedMessages: UIMessage[]) => {
     try {
-      messages = await normalizeAttachmentMessages(messages, supportsVision)
-      return null
+      return await normalizeAttachmentMessages(selectedMessages, supportsVision)
     } catch (error) {
       const message = error instanceof Error ? error.message : '附件解析失败'
-      return new ChatSDKError('bad_request:api', message).toResponse()
+      throw new ChatSDKError('bad_request:api', message)
     }
+  }
+  const resolveContextWindow = (runtimeProvider: string, runtimeModel: string) => {
+    const catalog = getAiModel(runtimeProvider as 'purechat' | 'deepseek' | 'openai', runtimeModel)?.contextWindowTokens
+    if (typeof modelContextWindow === 'number')
+      return catalog ? Math.min(catalog, modelContextWindow) : modelContextWindow
+    return catalog ?? 128_000
   }
 
   const toolApproval = desktopClient
@@ -507,9 +538,6 @@ export async function POST(request: Request) {
       throw error
     }
 
-    const attachmentError = await normalizeRequestMessages()
-    if (attachmentError) return attachmentError
-
     try {
       const usageStartedAt = Date.now()
       const resolvedModel = resolveModel(PURECHAT_PROVIDER_ID, displayModel, gatewayKey, resolveAiGatewayBaseURL())
@@ -522,8 +550,32 @@ export async function POST(request: Request) {
 
       log('purechat modelId: %o', resolvedModel.modelId)
 
+      const context = await prepareChatContext({
+        messages,
+        settings: advancedSettings,
+        model: resolvedModel,
+        contextWindow: resolveContextWindow(PURECHAT_PROVIDER_ID, displayModel),
+        instructions,
+        nativeSearch: native,
+        tools: searchOptions.tools,
+        signal: request.signal,
+        normalizeMessages: normalizeRequestMessages,
+        onSummaryUsage: async (usage) => {
+          await chargePureChatUsage({
+            cachedInputTokens: usage.inputTokenDetails.cacheReadTokens,
+            displayModel,
+            inputTokens: usage.inputTokens,
+            outputTokens: usage.outputTokens,
+            settlementId: createNanoId(24)(),
+            settlementPeriod,
+            usageStartedAt,
+            userId,
+          })
+        },
+      })
       const result = streamText({
-        messages: await convertToModelMessages(prepareWebSearchHistory(messages, native)),
+        messages: context.messages,
+        abortSignal: request.signal,
         model: resolvedModel,
         ...searchOptions,
         instructions,
@@ -543,7 +595,7 @@ export async function POST(request: Request) {
 
       return createUIMessageStreamResponse({
         stream: toUIMessageStream({
-          messageMetadata: createMessageMetadata(displayModel, PURECHAT_PROVIDER_ID),
+          messageMetadata: createMessageMetadata(displayModel, PURECHAT_PROVIDER_ID, context.summary),
           onError: getPureChatStreamErrorMessage,
           sendReasoning: true,
           sendSources: true,
@@ -564,6 +616,10 @@ export async function POST(request: Request) {
   }
 
   const userId = requestUserId ?? (await getAuthenticatedUserId())
+  const hasDocumentAttachments = messages.some((message) =>
+    message.parts.some((part) => part.type === 'file' && !part.url.startsWith('data:image/'))
+  )
+  if (!userId && hasDocumentAttachments) return new ChatSDKError('unauthorized:chat').toResponse()
   const credentials = await resolveUserProviderCredentials({
     allowEnvFallback: true,
     headerKey: resolveApiKeyFromHeader(request),
@@ -576,9 +632,6 @@ export async function POST(request: Request) {
     const message = userId ? MISSING_USER_PROVIDER_SECRET_MESSAGE : `Missing API key for provider "${resolvedProvider}"`
     return new ChatSDKError('bad_request:api', message).toResponse()
   }
-
-  const attachmentError = await normalizeRequestMessages()
-  if (attachmentError) return attachmentError
 
   try {
     let resolvedModel
@@ -602,8 +655,20 @@ export async function POST(request: Request) {
 
     log('model=%o, provider=%o', model, resolvedProvider)
 
+    const context = await prepareChatContext({
+      messages,
+      settings: advancedSettings,
+      model: resolvedModel,
+      contextWindow: resolveContextWindow(resolvedProvider, model ?? 'deepseek-v4-flash'),
+      instructions,
+      nativeSearch: native,
+      tools: searchOptions.tools,
+      signal: request.signal,
+      normalizeMessages: normalizeRequestMessages,
+    })
     const result = streamText({
-      messages: await convertToModelMessages(prepareWebSearchHistory(messages, native)),
+      messages: context.messages,
+      abortSignal: request.signal,
       model: resolvedModel,
       ...searchOptions,
       instructions,
@@ -611,7 +676,7 @@ export async function POST(request: Request) {
 
     return createUIMessageStreamResponse({
       stream: toUIMessageStream({
-        messageMetadata: createMessageMetadata(model?.trim() || 'deepseek-v4-flash', resolvedProvider),
+        messageMetadata: createMessageMetadata(model?.trim() || 'deepseek-v4-flash', resolvedProvider, context.summary),
         sendReasoning: true,
         sendSources: true,
         stream: result.stream,
@@ -619,6 +684,7 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     log('streamText failed: %o', error)
+    if (error instanceof ChatSDKError) return error.toResponse()
     return new ChatSDKError('bad_request:api', getPublicGatewayErrorMessage(error)).toResponse()
   }
 }

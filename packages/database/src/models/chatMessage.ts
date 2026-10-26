@@ -1,3 +1,5 @@
+import { isDeepStrictEqual } from 'node:util'
+
 import type { UIMessage } from 'ai'
 import { and, asc, eq, sql } from 'drizzle-orm'
 
@@ -39,6 +41,8 @@ const extractMetadata = (message: UIMessage) => {
   }
 }
 
+const messageSnapshot = (messages: UIMessage[]): unknown => JSON.parse(JSON.stringify(messages))
+
 export class ChatMessageModel {
   private readonly db: ChatDatabase
   private readonly userId: string
@@ -78,6 +82,13 @@ export class ChatMessageModel {
       if (!topic) {
         throw new Error('Topic not found')
       }
+
+      const existing = await tx
+        .select()
+        .from(chatMessages)
+        .where(and(eq(chatMessages.topicId, topicId), eq(chatMessages.userId, this.userId)))
+        .orderBy(asc(chatMessages.createdAt))
+      if (isDeepStrictEqual(messageSnapshot(existing.map(rowToUIMessage)), messageSnapshot(messages))) return
 
       await tx.delete(chatMessages).where(and(eq(chatMessages.topicId, topicId), eq(chatMessages.userId, this.userId)))
 

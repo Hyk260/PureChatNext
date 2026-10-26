@@ -64,6 +64,7 @@ export interface DesktopIpcContractMap {
   'app.getSystemMetrics': { args: []; result: DesktopSystemMetrics }
   'app.getSystemTools': { args: []; result: DesktopSystemTools }
   'config.getRemoteServer': { args: []; result: DesktopRemoteServer }
+  'config.getSnapshot': { args: []; result: string }
   'config.getCloudServer': { args: []; result: DesktopRemoteServer }
   'config.setRemoteServer': { args: [value: string]; result: DesktopRemoteServer }
   'auth.start': { args: [input: { serverUrl: string }]; result: DesktopAuthStatus }
@@ -144,6 +145,7 @@ export const DESKTOP_IPC_CHANNELS = {
   },
   auth: { cancel: 'auth.cancel', getStatus: 'auth.getStatus', logout: 'auth.logout', start: 'auth.start' },
   config: {
+    getSnapshot: 'config.getSnapshot',
     getCloudServer: 'config.getCloudServer',
     getRemoteServer: 'config.getRemoteServer',
     setRemoteServer: 'config.setRemoteServer',

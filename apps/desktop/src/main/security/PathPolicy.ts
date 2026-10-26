@@ -19,6 +19,16 @@ export const resolveSafePath = async (request: DesktopLocalToolRequest, config: 
   const canonicalScopes = await Promise.all(
     allowedScopes.map((allowed) => fs.realpath(path.resolve(allowed)).catch(() => path.resolve(allowed)))
   )
+  if (scopes.length > 0) {
+    const confirmedProjectRoots = await Promise.all(
+      config.projects
+        .filter((project) => project.accessConfirmed)
+        .map((project) => fs.realpath(path.resolve(project.rootPath)).catch(() => path.resolve(project.rootPath)))
+    )
+    if (canonicalScopes.some((scope) => !confirmedProjectRoots.includes(scope))) {
+      throw new Error('当前话题工作目录尚未由用户确认')
+    }
+  }
   const resolved = path.resolve(path.isAbsolute(value) ? value : path.join(scope, value))
   assertNotSensitive(resolved)
 
@@ -45,12 +55,21 @@ export const resolveSafePath = async (request: DesktopLocalToolRequest, config: 
 }
 
 export const resolveCommandCwd = async (topicId: string, config: DesktopConfig) => {
-  const configured = config.permissionScopes[topicId]?.[0] ?? process.cwd()
+  const scopes = config.permissionScopes[topicId] ?? []
+  const configured = scopes[0] ?? process.cwd()
   const cwd = await fs.realpath(path.resolve(configured)).catch(() => {
     throw new Error('命令工作目录不存在')
   })
   const stat = await fs.stat(cwd)
   if (!stat.isDirectory()) throw new Error('命令工作目录必须是目录')
   assertNotSensitive(cwd)
+  if (scopes.length > 0) {
+    const confirmedProjectRoots = await Promise.all(
+      config.projects
+        .filter((project) => project.accessConfirmed)
+        .map((project) => fs.realpath(path.resolve(project.rootPath)).catch(() => path.resolve(project.rootPath)))
+    )
+    if (!confirmedProjectRoots.includes(cwd)) throw new Error('命令工作目录尚未由用户确认')
+  }
   return cwd
 }

@@ -8,6 +8,7 @@ import { DEFAULT_UPDATE_PREFERENCES, isUpdatePreferences, normalizeUpdatePrefere
 import Store from 'electron-store'
 
 export interface DesktopProject {
+  accessConfirmed: boolean
   createdAt: number
   id: string
   name: string
@@ -88,7 +89,13 @@ const normalizeProjects = (value: unknown): DesktopProject[] => {
     const name = project.name.trim()
     const rootPath = project.rootPath.trim()
     if (!name || !rootPath || !path.isAbsolute(rootPath)) return []
-    return [{ createdAt: project.createdAt, id: project.id, name, rootPath }]
+    return [{
+      accessConfirmed: project.accessConfirmed === true,
+      createdAt: project.createdAt,
+      id: project.id,
+      name,
+      rootPath,
+    }]
   })
 }
 
@@ -294,7 +301,7 @@ export class DesktopConfigService {
     })
   }
 
-  async createProject(input: { name: string; rootPath: string }) {
+  async createProject(input: { accessConfirmed?: boolean; name: string; rootPath: string }) {
     return this.update(async (config) => {
       const name = input.name.trim()
       const rootPath = path.resolve(input.rootPath.trim())
@@ -307,12 +314,24 @@ export class DesktopConfigService {
       }
 
       const project: DesktopProject = {
+        accessConfirmed: input.accessConfirmed === true,
         createdAt: Date.now(),
         id: randomUUID(),
         name,
         rootPath,
       }
       await this.persist({ ...config, projects: [project, ...config.projects] })
+      return project
+    })
+  }
+
+  async confirmProjectAccess(id: string, rootPath: string) {
+    return this.update(async (config) => {
+      const project = config.projects.find((item) => item.id === id)
+      if (!project) throw new Error('项目不存在')
+      project.rootPath = path.resolve(rootPath)
+      project.accessConfirmed = true
+      await this.persist({ ...config, projects: [...config.projects] })
       return project
     })
   }

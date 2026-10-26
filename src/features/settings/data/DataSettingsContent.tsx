@@ -1,10 +1,10 @@
-import { toast, Alert } from '@lobehub/ui'
+import { toast, Alert, Highlighter } from '@lobehub/ui'
 import { ActionIcon, Block, Button, Flex, Modal, Select, Skeleton, Text } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import { Copy, RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import type { DesktopDataDirectory, DesktopDataInfo, DesktopLogRetentionDays } from '@/types/desktop'
+import type { DesktopDataInfo, DesktopLogRetentionDays } from '@/types/desktop'
 import { getDesktopApi } from '@/types/desktop'
 
 const RETENTION_OPTIONS: { label: string; value: DesktopLogRetentionDays }[] = [
@@ -24,22 +24,24 @@ function cacheLabel(bytes: number | null): string {
   return `约 ${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
-function DirectoryRow({
+function DataPathRow({
   label,
-  directory,
+  openLabel,
   path,
+  onOpen,
   onError,
 }: {
   label: string
-  directory: DesktopDataDirectory
+  openLabel: string
   path: string
+  onOpen: () => Promise<void>
   onError: (text: string) => void
 }) {
   const open = async () => {
     try {
-      await getDesktopApi()?.openDataDirectory(directory)
+      await onOpen()
     } catch {
-      onError(`无法打开${label}目录，请重试`)
+      onError(`无法打开${label}，请重试`)
     }
   }
   const copy = async () => {
@@ -64,7 +66,7 @@ function DirectoryRow({
           onClick={copy}
         />
       </Flex>
-      <Button onClick={open}>{directory === 'data' ? '打开目录' : '打开日志'}</Button>
+      <Button onClick={open}>{openLabel}</Button>
     </Flex>
   )
 }
@@ -76,6 +78,7 @@ export function DataSettingsContent() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [clearCacheConfirmOpen, setClearCacheConfirmOpen] = useState(false)
+  const [configSnapshot, setConfigSnapshot] = useState<string | null>(null)
   const operation = useRef(false)
   const generation = useRef(0)
   const confirming = useRef(false)
@@ -172,6 +175,13 @@ export function DataSettingsContent() {
     setClearCacheConfirmOpen(false)
   }
 
+  const showConfig = async () => {
+    if (!api) return
+    setConfigSnapshot(await api.getConfigSnapshot())
+  }
+
+  const closeConfig = () => setConfigSnapshot(null)
+
   if (!api)
     return (
       <Flex className='w-full flex-col gap-6 px-6 py-6'>
@@ -183,6 +193,23 @@ export function DataSettingsContent() {
 
   return (
     <Flex className='w-full flex-col gap-6 px-6 py-6 pb-16'>
+      <Modal
+        open={configSnapshot !== null}
+        title='应用配置'
+        footer={null}
+        width={800}
+        destroyOnHidden
+        onCancel={closeConfig}
+      >
+        <Text className='mb-3 block text-sm' type='secondary'>
+          只读查看，密钥与登录凭据已隐藏。
+        </Text>
+        <div className='max-h-[60vh] overflow-auto'>
+          <Highlighter language='json' variant='borderless' wrap>
+            {configSnapshot ?? ''}
+          </Highlighter>
+        </div>
+      </Modal>
       <Modal
         open={clearCacheConfirmOpen}
         title='清除缓存'
@@ -210,8 +237,27 @@ export function DataSettingsContent() {
       {data ? (
         <Block padding={24} variant='outlined'>
           <Text className='mb-2 block text-base font-semibold'>数据目录</Text>
-          <DirectoryRow label='应用数据' directory='data' path={data.dataPath} onError={setError} />
-          <DirectoryRow label='应用日志' directory='logs' path={data.logsPath} onError={setError} />
+          <DataPathRow
+            label='应用数据'
+            openLabel='打开目录'
+            path={data.dataPath}
+            onOpen={() => api.openDataDirectory('data')}
+            onError={setError}
+          />
+          <DataPathRow
+            label='应用配置'
+            openLabel='查看配置'
+            path={data.configPath}
+            onOpen={showConfig}
+            onError={setError}
+          />
+          <DataPathRow
+            label='应用日志'
+            openLabel='打开日志'
+            path={data.logsPath}
+            onOpen={() => api.openDataDirectory('logs')}
+            onError={setError}
+          />
           <Flex className='flex-col gap-3 border-b border-border py-4'>
             <Flex className='flex-between gap-4'>
               <label className='flex items-center' htmlFor='log-retention-days'>

@@ -4,6 +4,8 @@ import path from 'node:path'
 import { BrowserWindow, dialog } from 'electron'
 
 import type { IpcRegistry } from '../ipc/IpcRegistry'
+import { assertNotSensitive } from '../security/PathPolicy'
+import type { DirectorySelectionService } from '../services/DirectorySelectionService'
 
 function parentWindow() {
   return BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? undefined
@@ -24,6 +26,8 @@ async function showOpenDialog(options: {
 }
 
 export class DialogController {
+  constructor(private readonly directorySelections: DirectorySelectionService) {}
+
   register(ipc: IpcRegistry) {
     ipc.register('dialog.chooseFile', async () => {
       const result = await showOpenDialog({
@@ -42,7 +46,12 @@ export class DialogController {
         properties: ['openDirectory'],
         title: '选择工作目录',
       })
-      return result.canceled || !result.filePaths[0] ? null : path.resolve(result.filePaths[0])
+      if (result.canceled || !result.filePaths[0]) return null
+      const selectedPath = await fs.realpath(path.resolve(result.filePaths[0]))
+      if (!(await fs.stat(selectedPath)).isDirectory()) return null
+      assertNotSensitive(selectedPath)
+      this.directorySelections.record(selectedPath)
+      return selectedPath
     })
   }
 }

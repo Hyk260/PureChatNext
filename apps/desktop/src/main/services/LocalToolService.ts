@@ -6,13 +6,13 @@ import path from 'node:path'
 import type { DesktopLocalToolRequest, DesktopLocalToolResult } from '@/types/desktop'
 
 import { resolveSafePath } from '../security/PathPolicy'
-import { requiresApproval } from '../security/PermissionPolicy'
 import { readTextFileWithAutoEncoding } from '../utils/file'
 import type { CommandService } from './CommandService'
 import type { DesktopConfigService } from './DesktopConfigService'
 import type { PermissionService } from './PermissionService'
 
 const MAX_FILE_BYTES = 512 * 1024
+const APPROVAL_TOOLS = new Set(['writeFile', 'editFile', 'moveFile', 'runCommand'])
 
 const result = (content: string, success = true, data?: unknown): DesktopLocalToolResult => ({
   content,
@@ -30,6 +30,9 @@ export class LocalToolService {
   ) {}
 
   async execute(request: DesktopLocalToolRequest): Promise<DesktopLocalToolResult> {
+    if (request.mode === 'ask' && APPROVAL_TOOLS.has(request.toolName) && request.approved !== true) {
+      return result('请先在会话中批准此操作', false)
+    }
     const argsHash = createHash('sha256').update(JSON.stringify(request.args)).digest('hex')
     const key = `${request.topicId}:${request.toolCallId}:${argsHash}`
     const cached = this.completedCalls.get(key)
@@ -83,14 +86,12 @@ export class LocalToolService {
           break
         }
         case 'writeFile': {
-          this.assertHighRiskApproval(request, '文件写入')
           const filePath = await resolveSafePath(request, config, String(args.path ?? ''))
           await fs.writeFile(filePath, String(args.content ?? ''), 'utf8')
           output = result(`已写入 ${filePath}`, true, { path: filePath })
           break
         }
         case 'editFile': {
-          this.assertHighRiskApproval(request, '文件编辑')
           const filePath = await resolveSafePath(request, config, String(args.path ?? ''))
           const content = await fs.readFile(filePath, 'utf8')
           const search = String(args.search ?? '')
@@ -100,7 +101,6 @@ export class LocalToolService {
           break
         }
         case 'moveFile': {
-          this.assertHighRiskApproval(request, '文件移动')
           const source = await resolveSafePath(request, config, String(args.source ?? ''))
           const destination = await resolveSafePath(request, config, String(args.destination ?? ''))
           await fs.rename(source, destination)
@@ -113,7 +113,6 @@ export class LocalToolService {
             request.toolCallId,
             request.mode,
             String(args.command ?? ''),
-            request.approved === true,
             config
           )
           break
@@ -135,10 +134,6 @@ export class LocalToolService {
 
   cancelCommand(topicId: string, toolCallId: string) {
     this.commands.cancel(topicId, toolCallId)
-  }
-
-  private assertHighRiskApproval(request: DesktopLocalToolRequest, description: string) {
-    if (requiresApproval(request.mode, 'write') && !request.approved) throw new Error(`${description}需要审批`)
   }
 
   dispose() {

@@ -60,6 +60,27 @@ describe('GET /api/proxy/github-asset', () => {
     expect(fetchMock.mock.calls.map((call) => call[0])).toEqual(expect.arrayContaining([avatarCdn, wsrv, source]))
   })
 
+  it('keeps SVG support while sandboxing active document content', async () => {
+    const svgUrl = 'https://raw.githubusercontent.com/openclaw/repo/main/icon.svg'
+    const svgBody = '<svg xmlns="http://www.w3.org/2000/svg"><circle r="8" /></svg>'
+    vi.mocked(fetch).mockImplementation(async () =>
+      responseWithUrl(
+        svgBody,
+        { headers: { 'Content-Type': 'image/svg+xml' }, status: 200 },
+        svgUrl
+      )
+    )
+
+    const response = await GET(
+      new Request(`http://localhost/api/proxy/github-asset?url=${encodeURIComponent(svgUrl)}`)
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Content-Type')).toBe('image/svg+xml')
+    expect(response.headers.get('Content-Security-Policy')).toContain('sandbox')
+    expect(await response.text()).toBe(svgBody)
+  })
+
   it('rejects a redirect off GitHub and non-image payloads', async () => {
     vi.mocked(fetch).mockImplementation(async () =>
       responseWithUrl('x', { headers: { 'Content-Type': 'image/png' }, status: 200 }, 'https://evil.example/x.png')

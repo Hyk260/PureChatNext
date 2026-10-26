@@ -5,6 +5,8 @@ import type { DesktopProjectEntries, DesktopProjectFile } from '@/types/desktop'
 
 import type { IpcRegistry } from '../ipc/IpcRegistry'
 import type { DesktopConfigService } from '../services/DesktopConfigService'
+import type { DesktopApprovalHandler } from '../services/PermissionService'
+import type { DirectorySelectionService } from '../services/DirectorySelectionService'
 import { assertNotSensitive } from '../security/PathPolicy'
 
 const MAX_ENTRIES = 500
@@ -35,7 +37,13 @@ function decodeText(buffer: Buffer): string | null {
 const isInside = (target: string, root: string) => target === root || target.startsWith(`${root}${path.sep}`)
 
 export class ProjectController {
-  constructor(private readonly config: DesktopConfigService) {}
+  private readonly pendingProjectAccess = new Map<string, { promise: Promise<string> }>()
+
+  constructor(
+    private readonly config: DesktopConfigService,
+    private readonly directorySelections: DirectorySelectionService,
+    private readonly confirm: DesktopApprovalHandler = async () => false
+  ) {}
 
   register(ipc: IpcRegistry) {
     ipc.register('project.list', () => this.config.listProjects())
@@ -44,24 +52,28 @@ export class ProjectController {
       if (id !== null && (typeof id !== 'string' || !id || id.length > 80)) throw new Error('项目标识无效')
       return this.config.setDefaultProject(id)
     })
-    ipc.register('project.create', async (input) => {
-      if (!input || typeof input !== 'object') throw new Error('项目参数无效')
-      const name = typeof input.name === 'string' ? input.name.trim() : ''
-      const rootPath = typeof input.rootPath === 'string' ? input.rootPath.trim() : ''
-      if (!name || !rootPath || !path.isAbsolute(rootPath)) throw new Error('项目名称或源文件夹无效')
-
-      const absolute = path.resolve(rootPath)
-      const resolved = await fs.realpath(absolute).catch(() => absolute)
-      if (!(await fs.stat(resolved)).isDirectory()) throw new Error('源文件夹必须是目录')
-      assertNotSensitive(resolved)
-      return this.config.createProject({ name, rootPath: resolved })
-    })
+    ipc.register('project.create', (input) => this.createProject(input))
     ipc.register('project.delete', async (id) => {
       if (!id || typeof id !== 'string' || id.length > 80) throw new Error('项目标识无效')
       await this.config.deleteProject(id)
     })
     ipc.register('project.listEntries', (input) => this.listEntries(input))
     ipc.register('project.readFile', (input) => this.readFile(input))
+  }
+
+  async createProject(input: unknown) {
+    if (!input || typeof input !== 'object') throw new Error('项目参数无效')
+    const projectInput = input as { name?: unknown; rootPath?: unknown }
+    const name = typeof projectInput.name === 'string' ? projectInput.name.trim() : ''
+    const rootPath = typeof projectInput.rootPath === 'string' ? projectInput.rootPath.trim() : ''
+    if (!name || !rootPath || !path.isAbsolute(rootPath)) throw new Error('项目名称或源文件夹无效')
+
+    const absolute = path.resolve(rootPath)
+    const resolved = await fs.realpath(absolute).catch(() => absolute)
+    if (!(await fs.stat(resolved)).isDirectory()) throw new Error('源文件夹必须是目录')
+    assertNotSensitive(resolved)
+    if (!this.directorySelections.consume(resolved)) throw new Error('请先通过目录选择器选择源文件夹')
+    return this.config.createProject({ accessConfirmed: true, name, rootPath: resolved })
   }
 
   private async resolveProjectPath(input: { projectId: string; relativePath?: string }) {
@@ -72,8 +84,7 @@ export class ProjectController {
     const project = (await this.config.listProjects()).find((item) => item.id === projectId)
     if (!project) throw new Error('项目不存在')
 
-    const root = await fs.realpath(path.resolve(project.rootPath)).catch(() => path.resolve(project.rootPath))
-    assertNotSensitive(root)
+    const root = await this.resolveProjectRoot(project)
 
     const relativePath = typeof input.relativePath === 'string' ? input.relativePath : ''
     const candidate = relativePath ? path.resolve(root, relativePath) : root
@@ -82,6 +93,42 @@ export class ProjectController {
     if (!isInside(resolved, root)) throw new Error('路径不在项目目录内')
 
     return resolved
+  }
+
+  private async resolveProjectRoot(project: Awaited<ReturnType<DesktopConfigService['listProjects']>>[number]) {
+    const root = await fs.realpath(path.resolve(project.rootPath)).catch(() => path.resolve(project.rootPath))
+    assertNotSensitive(root)
+    if (project.accessConfirmed) return root
+
+    const pending = this.pendingProjectAccess.get(project.id)?.promise
+    if (pending) return pending
+
+    const confirmation = (async () => {
+      const currentProject = (await this.config.listProjects()).find((item) => item.id === project.id)
+      if (!currentProject) throw new Error('项目不存在')
+
+      const currentRoot = await fs
+        .realpath(path.resolve(currentProject.rootPath))
+        .catch(() => path.resolve(currentProject.rootPath))
+      assertNotSensitive(currentRoot)
+      if (currentProject.accessConfirmed) return currentRoot
+
+      const confirmed = await this.confirm({
+        detail: `工作目录：${JSON.stringify(currentRoot)}\n此目录来自旧版配置，请仅在确认路径可信时允许访问。`,
+        message: '允许 PureChat 读取此前添加的本地工作目录？',
+        title: '确认本地工作目录',
+      })
+      if (!confirmed) throw new Error('本地工作目录未获主进程确认')
+      await this.config.confirmProjectAccess(project.id, currentRoot)
+      return currentRoot
+    })()
+
+    const pendingAccess = { promise: confirmation }
+    this.pendingProjectAccess.set(project.id, pendingAccess)
+    pendingAccess.promise = confirmation.finally(() => {
+      if (this.pendingProjectAccess.get(project.id) === pendingAccess) this.pendingProjectAccess.delete(project.id)
+    })
+    return pendingAccess.promise
   }
 
   async listEntries(input: { projectId: string; relativePath?: string }): Promise<DesktopProjectEntries> {

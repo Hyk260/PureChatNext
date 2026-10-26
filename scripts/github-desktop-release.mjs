@@ -5,7 +5,7 @@
  *   node scripts/github-desktop-release.mjs version
  *   node scripts/github-desktop-release.mjs preflight
  *   node scripts/github-desktop-release.mjs verify apps/desktop/release mac
- *   node scripts/github-desktop-release.mjs draft desktop-release-artifacts
+ *   node scripts/github-desktop-release.mjs draft desktop-release-artifacts [source-dir]
  * preflight 读取 GITHUB_REPOSITORY、GITHUB_SHA、PURECHAT_DESKTOP_CLOUD_URL；draft 还需要 GH_TOKEN、gh 和 git。
  * API / 上传失败会返回非零状态；草稿保持未发布，修复后可用同 commit 重跑。
  */
@@ -90,6 +90,12 @@ export function desktopReleaseNotes({ version, repository, notes }) {
   ].join('\n')
 }
 
+export function readDesktopReleaseMetadata(sourceDir = '.') {
+  const { version } = JSON.parse(readFileSync(path.join(sourceDir, 'package.json'), 'utf8'))
+  const notes = readFileSync(path.join(sourceDir, 'apps/desktop/build/release-notes.md'), 'utf8')
+  return { notes, version }
+}
+
 /** 仅允许新草稿或同 commit 重跑，拒绝公开版本与来源不一致的草稿 / tag。 */
 export function validateDesktopDraft({ release, tagCommit, sha }) {
   if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error('发行必须绑定完整 commit SHA')
@@ -163,8 +169,10 @@ export function writeDesktopDraft({ directory, version, repository, sha, notes }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   try {
-    const [command, directory, platform] = process.argv.slice(2)
-    const { version } = JSON.parse(readFileSync('package.json', 'utf8'))
+    const [command, directory, platform, sourceDir] = process.argv.slice(2)
+    const metadataRoot = command === 'draft' && sourceDir ? sourceDir : '.'
+    const releaseMetadata = command === 'draft' ? readDesktopReleaseMetadata(metadataRoot) : undefined
+    const { version } = releaseMetadata ?? JSON.parse(readFileSync(path.join(metadataRoot, 'package.json'), 'utf8'))
     desktopArtifacts(version)
     if (command === 'version') {
       console.info(version)
@@ -174,7 +182,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
         repository: process.env.GITHUB_REPOSITORY,
         sha: process.env.GITHUB_SHA,
         cloudUrl: process.env.PURECHAT_DESKTOP_CLOUD_URL,
-        notes: readFileSync('apps/desktop/build/release-notes.md', 'utf8'),
+        notes: releaseMetadata?.notes ?? readFileSync(path.join(metadataRoot, 'apps/desktop/build/release-notes.md'), 'utf8'),
       })
       console.info(version)
     } else if (command === 'verify' && directory) {
@@ -186,12 +194,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
         version,
         repository: process.env.GITHUB_REPOSITORY,
         sha: process.env.GITHUB_SHA,
-        notes: readFileSync('apps/desktop/build/release-notes.md', 'utf8'),
+        notes: releaseMetadata?.notes ?? readFileSync(path.join(metadataRoot, 'apps/desktop/build/release-notes.md'), 'utf8'),
       })
       console.info(`已更新 ${tag} 的 Release 草稿，请检查安装文件和更新元数据后手动发布`)
     } else {
       throw new Error(
-        '用法: node scripts/github-desktop-release.mjs version | preflight | verify <目录> [windows|mac|all] | draft <目录>'
+        '用法: node scripts/github-desktop-release.mjs version | preflight | verify <目录> [windows|mac|all] | draft <目录> [源码目录]'
       )
     }
   } catch (error) {

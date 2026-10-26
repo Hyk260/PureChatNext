@@ -58,6 +58,7 @@ export const createDesktopApi = (): DesktopApi => ({
   },
   openDevTools: () => invoke('window.openDevTools'),
   getDataInfo: () => invoke('data.getInfo'),
+  getConfigSnapshot: () => invoke('config.getSnapshot'),
   openDataDirectory: (directory) => invoke('data.openDirectory', directory),
   setLogRetentionDays: (days) => invoke('data.setLogRetention', days),
   clearHttpCache: () => invoke('data.clearHttpCache'),

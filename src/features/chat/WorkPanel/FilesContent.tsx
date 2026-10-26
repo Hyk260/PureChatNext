@@ -294,9 +294,9 @@ FilesContent.displayName = 'FilesContent'
 
 export function FileEmptyState({ description }: { description: string }) {
   return (
-    <Flex align='center' className='min-h-40 flex-1 p-6 text-center' direction='vertical' gap={12} justify='center'>
+    <Flex align='center' className='h-full min-h-40 flex-1 p-6 text-center' direction='vertical' gap={12} justify='center'>
       <Icon icon={FileText} size={32} />
-      <Text fontSize={12} type='secondary'>
+      <Text className='w-full text-center' fontSize={12} type='secondary'>
         {description}
       </Text>
     </Flex>

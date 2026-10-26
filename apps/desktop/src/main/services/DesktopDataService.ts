@@ -76,6 +76,7 @@ export class DesktopDataService {
     }
     return {
       dataPath: app.getPath('userData'),
+      configPath: this.config.configPath,
       logsPath: getLogDirectory(),
       logRetentionDays: config.logRetentionDays ?? 30,
       cacheBytes,

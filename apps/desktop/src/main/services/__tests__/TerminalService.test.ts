@@ -13,6 +13,7 @@ const services: TerminalService[] = []
 
 function setup(projectCount = 2) {
   const projects = Array.from({ length: projectCount }, (_, i) => ({
+    accessConfirmed: true,
     id: `p${i}`,
     name: `Project ${i}`,
     rootPath: root,
@@ -107,6 +108,14 @@ describe('TerminalService', () => {
     await expect(service.open(1, { projectId: 'missing', ...size })).rejects.toThrow('项目不存在')
     projects[1].rootPath = path.join(root, 'missing')
     await expect(service.open(1, { projectId: 'p1', ...size })).rejects.toThrow('不可访问')
+  })
+
+  it('does not open a terminal in an unconfirmed legacy project', async () => {
+    const { service, projects, spawn } = setup()
+    projects[0].accessConfirmed = false
+
+    await expect(service.open(1, { projectId: 'p0', ...size })).rejects.toThrow('项目目录尚未由用户确认')
+    expect(spawn).not.toHaveBeenCalled()
   })
 
   it('preserves startup errors when the shell exits before the renderer attaches', async () => {

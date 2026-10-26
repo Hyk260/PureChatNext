@@ -7,6 +7,7 @@ const log = debug('proxy:github-asset')
 
 const FETCH_TIMEOUT_MS = 8_000
 const MAX_ASSET_BYTES = 2 * 1024 * 1024
+const SVG_CONTENT_SECURITY_POLICY = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox"
 const USER_AGENT = 'PureChat'
 
 const cacheHeaders = {
@@ -17,6 +18,7 @@ const cacheHeaders = {
 const jsonError = (message: string, status = 400) => Response.json({ error: message }, { status })
 
 const isImageContentType = (contentType: string) => contentType.startsWith('image/')
+const isSvgContentType = (contentType: string) => contentType.toLowerCase() === 'image/svg+xml'
 
 const tooLarge = (contentLength: string | null) => {
   const length = Number(contentLength)
@@ -98,9 +100,14 @@ export async function GET(request: Request) {
   try {
     const image = await Promise.any(candidates.map((candidate) => fetchValidImage(candidate, controller.signal)))
     controller.abort()
+    const svgSecurityHeaders: Record<string, string> = isSvgContentType(image.contentType)
+      ? { 'Content-Security-Policy': SVG_CONTENT_SECURITY_POLICY }
+      : {}
+
     return new Response(image.body, {
       headers: {
         ...cacheHeaders,
+        ...svgSecurityHeaders,
         'Content-Type': image.contentType,
       },
     })

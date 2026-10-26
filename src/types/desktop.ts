@@ -140,6 +140,7 @@ export type DesktopDataDirectory = 'data' | 'logs'
 
 export interface DesktopDataInfo {
   dataPath: string
+  configPath: string
   logsPath: string
   logRetentionDays: DesktopLogRetentionDays
   cacheBytes: number | null
@@ -160,6 +161,7 @@ export interface DesktopApi {
   }
   openDevTools: () => Promise<void>
   getDataInfo: () => Promise<DesktopDataInfo>
+  getConfigSnapshot: () => Promise<string>
   openDataDirectory: (directory: DesktopDataDirectory) => Promise<void>
   setLogRetentionDays: (days: DesktopLogRetentionDays) => Promise<void>
   clearHttpCache: () => Promise<void>

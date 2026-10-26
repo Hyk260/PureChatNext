@@ -2,7 +2,7 @@
 #
 # 使用方法：
 #   1. 将工作流合入 main；更新根 package.json 的 X.Y.Z 稳定版本和 apps/desktop/build/release-notes.md。
-#   2. Actions → Desktop release → Run workflow，选择源码分支；所有 job 固定使用触发时的 commit。
+#   2. Actions → Desktop release → Run workflow，选择源码分支；构建与元数据固定使用触发时的 commit，具写权限的发布脚本固定使用默认分支 commit。
 #   3. 从运行页下载两个 Artifact（保留 30 天），或检查 vX.Y.Z 草稿的安装文件和更新元数据后手动发布。
 #   4. 不要提前推送同版本 tag 让 release.yml 公开发布；已公开版本不会被本工作流覆盖。
 #
@@ -39,6 +39,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
+      trusted-sha: ${{ steps.trusted-source.outputs.trusted-sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,15 +50,17 @@ jobs:
         with:
           # 与 Docker 工作流保持一致，满足依赖要求的 Node >=22.22.0。
           node-version: 22.23.2
-      - name: Check selected workflow matches default branch
+      - name: Check selected workflow code matches default branch
+        id: trusted-source
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           git fetch --no-tags --depth=1 origin "$DEFAULT_BRANCH"
-          if ! git diff --quiet FETCH_HEAD "$GITHUB_SHA" -- .github/workflows; then
-            echo '::error::所选 commit 的工作流与默认分支不同，请先合入默认分支，避免 Release API 的 workflow 写权限错误。'
+          if ! git diff --quiet FETCH_HEAD "$GITHUB_SHA" -- .github/workflows scripts/github-desktop-release.mjs; then
+            echo '::error::所选 commit 的工作流或 Release 脚本与默认分支不同，请先合入默认分支，避免运行未审查的发布代码。'
             exit 1
           fi
+          echo "trusted-sha=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_OUTPUT"
       - name: Validate version, release notes and cloud URL
         id: version
         shell: bash
@@ -149,9 +152,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
-          # 发行脚本用 git ls-remote 校验 tag，需要保留凭据访问私有仓库。
+          ref: ${{ needs.prepare.outputs.trusted-sha }}
+          # 只从默认分支的固定 commit 运行具 Release 写权限的脚本。
           persist-credentials: true
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: selected-source
+          # 所选源码仅提供版本和发行说明数据；不执行其中的脚本。
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22.23.2
@@ -165,4 +174,4 @@ jobs:
         env:
           # gh CLI 读取 GH_TOKEN；只在需要写 Release 的步骤注入，不传入打包 job。
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/github-desktop-release.mjs draft desktop-release-artifacts
+        run: node scripts/github-desktop-release.mjs draft desktop-release-artifacts selected-source

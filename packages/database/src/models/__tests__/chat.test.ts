@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 import { generateCompactUuid } from '@pure/utils'
 import { config } from 'dotenv'
 import { drizzle } from 'drizzle-orm/postgres-js'
-import { inArray } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
@@ -119,6 +119,21 @@ describeIfDb('ChatTopicModel ownership', () => {
     expect((await topicModelA.findById(topicId))?.permissionMode).toBe('full')
   })
 
+  it('preserves the topic update time during permission sync and updates it for content changes', async () => {
+    const model = new ChatTopicModel(userAId, db)
+    const topic = await model.create({ agentId: TEST_AGENT_ID, title: 'Permission sync' })
+    const originalTime = new Date('2020-01-01T00:00:00.000Z')
+    await db.update(chatTopics).set({ updatedAt: originalTime }).where(eq(chatTopics.id, topic.id))
+
+    const synced = await model.update(topic.id, { permissionMode: 'ask' })
+    expect(synced?.permissionMode).toBe('ask')
+    expect(synced?.updatedAt).toEqual(originalTime)
+    expect((await model.findById(topic.id))?.updatedAt).toEqual(originalTime)
+
+    const renamed = await model.updateTitle(topic.id, 'Updated title')
+    expect(renamed?.updatedAt.getTime()).toBeGreaterThan(originalTime.getTime())
+  })
+
   it('has no effect when another user delete', async () => {
     await new ChatTopicModel(userBId, db).delete(topicId)
 
@@ -184,6 +199,28 @@ describeIfDb('ChatMessageModel ownership', () => {
     const messages = await new ChatMessageModel(userAId, db).listByTopic(topicId)
     expect(messages).toHaveLength(1)
     expect(messages[0]?.parts).toEqual([{ type: 'text', text: 'hello' }])
+  })
+
+  it('preserves the topic update time for unchanged message snapshots', async () => {
+    const topics = new ChatTopicModel(userAId, db)
+    const topic = await topics.create({ agentId: TEST_AGENT_ID, title: 'Unchanged messages' })
+    const model = new ChatMessageModel(userAId, db)
+    const messages = [{
+      id: `${TEST_PREFIX}-unchanged`,
+      role: 'user' as const,
+      metadata: { performance: { duration: 3 } },
+      parts: [{ type: 'text' as const, text: 'unchanged' }],
+    }]
+    await model.replaceAll(topic.id, messages)
+    const originalTime = new Date('2020-01-01T00:00:00.000Z')
+    await db.update(chatTopics).set({ updatedAt: originalTime }).where(eq(chatTopics.id, topic.id))
+
+    const reloadedMessages = JSON.parse(JSON.stringify(await model.listByTopic(topic.id)))
+    await model.replaceAll(topic.id, reloadedMessages)
+    expect((await topics.findById(topic.id))?.updatedAt).toEqual(originalTime)
+
+    await model.replaceAll(topic.id, [{ ...messages[0], parts: [{ type: 'text', text: 'changed' }] }])
+    expect((await topics.findById(topic.id))!.updatedAt.getTime()).toBeGreaterThan(originalTime.getTime())
   })
 
   it('returns empty list when another user listByTopic', async () => {

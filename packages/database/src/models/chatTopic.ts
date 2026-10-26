@@ -71,9 +71,11 @@ export class ChatTopicModel {
   }
 
   update = async (id: string, patch: ChatTopicUpdate) => {
+    const changesTopicDetails =
+      patch.title !== undefined || patch.favorite !== undefined || patch.projectName !== undefined
     const [item] = await this.db
       .update(chatTopics)
-      .set({ ...patch, updatedAt: new Date() })
+      .set({ ...patch, updatedAt: changesTopicDetails ? new Date() : sql`${chatTopics.updatedAt}` })
       .where(and(eq(chatTopics.id, id), this.ownership()))
       .returning()
     return item

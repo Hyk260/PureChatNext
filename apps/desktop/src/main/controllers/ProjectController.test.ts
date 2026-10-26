@@ -1,10 +1,11 @@
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { DesktopConfigService } from '../services/DesktopConfigService'
+import { DirectorySelectionService } from '../services/DirectorySelectionService'
 import { ProjectController } from './ProjectController'
 
 const tempDirs: string[] = []
@@ -25,8 +26,8 @@ describe('ProjectController.listEntries', () => {
     await writeFile(path.join(rootPath, 'src', 'index.ts'), 'export {}')
 
     const config = new DesktopConfigService(dir)
-    const project = await config.createProject({ name: 'Demo', rootPath })
-    const controller = new ProjectController(config)
+    const project = await config.createProject({ accessConfirmed: true, name: 'Demo', rootPath })
+    const controller = new ProjectController(config, new DirectorySelectionService())
 
     const rootEntries = await controller.listEntries({ projectId: project.id })
     expect(rootEntries.entries.map((entry) => entry.name)).toEqual(['src', '.editorconfig', 'README.md'])
@@ -47,8 +48,8 @@ describe('ProjectController.readFile', () => {
     const rootPath = path.join(dir, 'workspace')
     await mkdir(rootPath)
     const config = new DesktopConfigService(dir)
-    const project = await config.createProject({ name: 'Preview', rootPath })
-    return { controller: new ProjectController(config), dir, project, rootPath }
+    const project = await config.createProject({ accessConfirmed: true, name: 'Preview', rootPath })
+    return { controller: new ProjectController(config, new DirectorySelectionService()), dir, project, rootPath }
   }
 
   it('reads source files, empty files, and UTF-16 text without changing their content', async () => {
@@ -101,5 +102,87 @@ describe('ProjectController.readFile', () => {
     await expect(controller.readFile({ projectId: project.id, relativePath: '.' })).rejects.toThrow('目标路径不是文件')
     await expect(controller.readFile({ projectId: project.id, relativePath: 'missing.txt' })).rejects.toThrow()
     await expect(controller.readFile({ projectId: 'unknown', relativePath: 'file.txt' })).rejects.toThrow('项目不存在')
+  })
+})
+
+describe('ProjectController.createProject', () => {
+  it('requires and consumes a native directory selection before adding a project', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-project-create-'))
+    tempDirs.push(dir)
+    const rootPath = path.join(dir, 'workspace')
+    await mkdir(rootPath)
+    const config = new DesktopConfigService(dir)
+    const selections = new DirectorySelectionService()
+    const controller = new ProjectController(config, selections)
+
+    await expect(controller.createProject({ name: 'Demo', rootPath })).rejects.toThrow('请先通过目录选择器')
+    const canonicalRoot = await realpath(rootPath)
+    selections.record(canonicalRoot)
+    await expect(controller.createProject({ name: 'Demo', rootPath })).resolves.toMatchObject({
+      name: 'Demo',
+      rootPath: canonicalRoot,
+    })
+    await expect(controller.createProject({ name: 'Replay', rootPath })).rejects.toThrow('请先通过目录选择器')
+  })
+
+  it('requires main-process confirmation for projects persisted by an older version', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-project-legacy-'))
+    tempDirs.push(dir)
+    const rootPath = path.join(dir, 'workspace')
+    await mkdir(rootPath)
+    const config = new DesktopConfigService(dir)
+    const project = await config.createProject({ name: 'Legacy', rootPath })
+    const confirm = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true)
+    const controller = new ProjectController(config, new DirectorySelectionService(), confirm)
+
+    await expect(controller.listEntries({ projectId: project.id })).rejects.toThrow('未获主进程确认')
+    await expect(controller.listEntries({ projectId: project.id })).resolves.toMatchObject({ path: await realpath(rootPath) })
+    expect(confirm).toHaveBeenCalledTimes(2)
+    expect((await config.listProjects())[0].accessConfirmed).toBe(true)
+  })
+
+  it('shares one confirmation across concurrent requests for the same legacy project', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-project-confirm-once-'))
+    tempDirs.push(dir)
+    const rootPath = path.join(dir, 'workspace')
+    await mkdir(rootPath)
+    await writeFile(path.join(rootPath, 'README.md'), 'hello')
+
+    const config = new DesktopConfigService(dir)
+    const project = await config.createProject({ name: 'Legacy', rootPath })
+    const readProjects = config.listProjects.bind(config)
+    let releaseInitialReads!: () => void
+    const initialReads = new Promise<void>((resolve) => {
+      releaseInitialReads = resolve
+    })
+    let initialReadCount = 0
+    vi.spyOn(config, 'listProjects').mockImplementation(async () => {
+      const projects = await readProjects()
+      initialReadCount += 1
+      if (initialReadCount <= 2) {
+        if (initialReadCount === 2) releaseInitialReads()
+        await initialReads
+      }
+      return projects
+    })
+
+    let allowAccess!: (allowed: boolean) => void
+    const approval = new Promise<boolean>((resolve) => {
+      allowAccess = resolve
+    })
+    const confirm = vi.fn(() => approval)
+    const controller = new ProjectController(config, new DirectorySelectionService(), confirm)
+
+    const requests = Promise.all([
+      controller.listEntries({ projectId: project.id }),
+      controller.readFile({ projectId: project.id, relativePath: 'README.md' }),
+    ])
+    await vi.waitFor(() => expect(confirm).toHaveBeenCalled())
+    allowAccess(true)
+
+    const [entries, preview] = await requests
+    expect(entries.path).toBe(await realpath(rootPath))
+    expect(preview).toMatchObject({ kind: 'text', content: 'hello' })
+    expect(confirm).toHaveBeenCalledTimes(1)
   })
 })

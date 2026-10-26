@@ -96,6 +96,7 @@ describe('DesktopDataService', () => {
     const { service, session } = setup()
     expect(await service.getInfo()).toEqual({
       dataPath: root,
+      configPath: path.join(root, 'config-encrypted.json'),
       logsPath: path.join(root, 'log/dev'),
       logRetentionDays: 30,
       cacheBytes: 2048,

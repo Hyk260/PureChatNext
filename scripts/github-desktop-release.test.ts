@@ -11,6 +11,7 @@ import {
   desktopArtifacts,
   desktopReleaseAssets,
   desktopReleaseNotes,
+  readDesktopReleaseMetadata,
   remoteTagCommit,
   validateDesktopBuildConfig,
   validateDesktopDraft,
@@ -177,6 +178,16 @@ describe('desktop release notes', () => {
   it('rejects missing notes and invalid repository names', () => {
     expect(() => desktopReleaseNotes({ version, repository, notes: ' \n' })).toThrow('不能为空')
     expect(() => desktopReleaseNotes({ version, repository: '', notes })).toThrow('仓库名')
+  })
+
+  it('reads release metadata as data from the selected source directory', () => {
+    const sourceDir = path.join(directory, 'selected-source')
+    const notesDir = path.join(sourceDir, 'apps/desktop/build')
+    mkdirSync(notesDir, { recursive: true })
+    writeFileSync(path.join(sourceDir, 'package.json'), JSON.stringify({ version: '0.4.0' }))
+    writeFileSync(path.join(notesDir, 'release-notes.md'), notes)
+
+    expect(readDesktopReleaseMetadata(sourceDir)).toEqual({ notes, version: '0.4.0' })
   })
 })
 

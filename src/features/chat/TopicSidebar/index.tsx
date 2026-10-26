@@ -1,7 +1,8 @@
 'use client'
 
 import { ActionIcon, Flex, Text } from '@pure/ui'
-import { ChevronLeft, MessageSquarePlus } from 'lucide-react'
+import { ChevronLeft, MessageSquarePlus, Settings } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { memo, useMemo } from 'react'
 
@@ -137,6 +138,11 @@ const TopicSidebar = memo<Props>(
               />
             </Flex>
           </Scrollbar>
+        </Flex>
+        <Flex className='flex-none p-2'>
+          <Link className='text-inherit no-underline' href='/settings/profile'>
+            <ActionIcon icon={Settings} size='small' title='设置' />
+          </Link>
         </Flex>
       </Flex>
     )

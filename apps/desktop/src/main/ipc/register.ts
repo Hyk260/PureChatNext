@@ -1,4 +1,4 @@
-import { app } from 'electron'
+import { app, BrowserWindow, dialog } from 'electron'
 
 import { DataController } from '../controllers/DataController'
 import { DesktopDataService } from '../services/DesktopDataService'
@@ -21,12 +21,14 @@ import { DesktopConfigService } from '../services/DesktopConfigService'
 import { DesktopAuthService } from '../services/DesktopAuthService'
 import { LocalToolService } from '../services/LocalToolService'
 import { PermissionService } from '../services/PermissionService'
+import type { DesktopApprovalHandler } from '../services/PermissionService'
 import { IpcRegistry } from './IpcRegistry'
 import { TerminalService } from '../services/TerminalService'
 import { TerminalController } from '../controllers/TerminalController'
 import { DESKTOP_IPC_EVENTS } from '../../common/ipc/contracts'
 import { BrowserController } from '../controllers/BrowserController'
 import { BrowserService } from '../services/BrowserService'
+import { DirectorySelectionService } from '../services/DirectorySelectionService'
 
 export const registerDesktopIpc = async (options: {
   config?: DesktopConfigService
@@ -36,7 +38,26 @@ export const registerDesktopIpc = async (options: {
   updater: UpdateService
 }) => {
   const config = options.config ?? new DesktopConfigService(app.getPath('userData'))
-  const permissions = new PermissionService()
+  const directorySelections = new DirectorySelectionService()
+  const confirmDesktopAction: DesktopApprovalHandler = async ({ detail, message, title }) => {
+    const contents = options.getTrustedContents()
+    if (!contents || contents.isDestroyed()) return false
+    const parent = BrowserWindow.fromWebContents(contents)
+    if (!parent || parent.isDestroyed()) return false
+
+    const { response } = await dialog.showMessageBox(parent, {
+      buttons: ['允许', '取消'],
+      cancelId: 1,
+      defaultId: 1,
+      detail,
+      message,
+      noLink: true,
+      title,
+      type: 'warning',
+    })
+    return response === 0
+  }
+  const permissions = new PermissionService(confirmDesktopAction)
   const commands = new CommandService(permissions)
   const tools = new LocalToolService(config, permissions, commands)
   const registry = new IpcRegistry(options.getTrustedContents, options.rendererUrl)
@@ -79,9 +100,9 @@ export const registerDesktopIpc = async (options: {
     browser.reset().catch(() => undefined)
   }).register(registry)
   new StorageController(config).register(registry)
-  new DialogController().register(registry)
+  new DialogController(directorySelections).register(registry)
   new PermissionController(config, permissions).register(registry)
-  new ProjectController(config).register(registry)
+  new ProjectController(config, directorySelections, confirmDesktopAction).register(registry)
   new LocalSystemController(tools).register(registry)
   new SystemController().register(registry)
   new WindowController().register(registry)
@@ -94,6 +115,7 @@ export const registerDesktopIpc = async (options: {
       data.dispose()
       tools.dispose()
       permissions.dispose()
+      directorySelections.clear()
       registry.unregisterAll()
     },
     getRemoteServerUrl: async () => (await config.read()).remoteServerUrl,

@@ -116,6 +116,7 @@ export class TerminalService {
     } else {
       const project = (await this.options.config.listProjects()).find((item) => item.id === input.projectId)
       if (!project) throw new Error('本机项目不存在，请重新选择')
+      if (!project.accessConfirmed) throw new Error('项目目录尚未由用户确认，请先打开项目目录')
       try {
         cwd = await directory(project.rootPath)
       } catch {

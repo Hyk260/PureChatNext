@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
+import { ConfigProvider } from '@lobehub/ui'
+import { motion } from 'motion/react'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@pure/ui', () => ({
@@ -59,8 +61,47 @@ vi.mock('@/features/chat/store/useChatUiStore', () => ({
 }))
 
 import ChatInput from '../ChatInput'
+import { getChatDraftKey, useChatDraftStore } from '../store/useChatDraftStore'
+
+const selectedElement = {
+  id: 'element',
+  url: 'https://example.com/page',
+  pageTitle: 'Reference',
+  tag: 'p',
+  selector: '#intro',
+  text: 'Selected text',
+  html: '<p>Selected text</p>',
+}
 
 describe('ChatInput web search mode', () => {
+  it('sends an element-only draft through the existing text callback and clears its card', () => {
+    const key = getChatDraftKey('browser-send')
+    useChatDraftStore.getState().setBrowserSelections(key, [selectedElement])
+    const onSend = vi.fn()
+    render(
+      <ConfigProvider motion={motion}>
+        <ChatInput agentId='browser-send' searchMode='off' onSearchModeChange={vi.fn()} onSend={onSend} />
+      </ConfigProvider>
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'send' }))
+    expect(onSend).toHaveBeenCalledWith(expect.stringContaining('来源：https://example.com/page'), [])
+    expect(useChatDraftStore.getState().browserSelections[key]).toBeUndefined()
+  })
+
+  it('removes selected elements without changing the typed question', () => {
+    const key = getChatDraftKey('browser-remove')
+    useChatDraftStore.getState().setText(key, 'My question')
+    useChatDraftStore.getState().setBrowserSelections(key, [selectedElement])
+    render(
+      <ConfigProvider motion={motion}>
+        <ChatInput agentId='browser-remove' searchMode='off' onSearchModeChange={vi.fn()} onSend={vi.fn()} />
+      </ConfigProvider>
+    )
+    fireEvent.click(screen.getByRole('button', { name: '移除网页元素' }))
+    expect(useChatDraftStore.getState().browserSelections[key]).toBeUndefined()
+    expect(useChatDraftStore.getState().texts[key]).toBe('My question')
+    useChatDraftStore.getState().clearDrafts([key])
+  })
   it('toggles search from off to auto', () => {
     const onSearchModeChange = vi.fn()
     render(<ChatInput searchMode='off' onSearchModeChange={onSearchModeChange} onSend={vi.fn()} />)

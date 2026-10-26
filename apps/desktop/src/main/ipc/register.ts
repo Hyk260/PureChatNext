@@ -25,6 +25,8 @@ import { IpcRegistry } from './IpcRegistry'
 import { TerminalService } from '../services/TerminalService'
 import { TerminalController } from '../controllers/TerminalController'
 import { DESKTOP_IPC_EVENTS } from '../../common/ipc/contracts'
+import { BrowserController } from '../controllers/BrowserController'
+import { BrowserService } from '../services/BrowserService'
 
 export const registerDesktopIpc = async (options: {
   config?: DesktopConfigService
@@ -38,6 +40,11 @@ export const registerDesktopIpc = async (options: {
   const commands = new CommandService(permissions)
   const tools = new LocalToolService(config, permissions, commands)
   const registry = new IpcRegistry(options.getTrustedContents, options.rendererUrl)
+  const browser = new BrowserService((owner, state) => {
+    if (!owner.isDestroyed()) owner.send(DESKTOP_IPC_EVENTS.browserState, state)
+  })
+  const browserController = new BrowserController(browser, options.getTrustedContents)
+  browserController.register(registry)
   const terminal = new TerminalService({
     config,
     desktopPath: app.getPath('desktop'),
@@ -66,8 +73,11 @@ export const registerDesktopIpc = async (options: {
   await data.start()
   new DataController(data).register(registry)
 
-  new ConfigController(config).register(registry)
-  new AuthController(auth, () => terminal.reset()).register(registry)
+  new ConfigController(config, () => browser.reset()).register(registry)
+  new AuthController(auth, () => {
+    terminal.reset()
+    browser.reset().catch(() => undefined)
+  }).register(registry)
   new StorageController(config).register(registry)
   new DialogController().register(registry)
   new PermissionController(config, permissions).register(registry)
@@ -79,6 +89,7 @@ export const registerDesktopIpc = async (options: {
 
   return {
     dispose: () => {
+      browserController.dispose()
       terminalController.dispose()
       data.dispose()
       tools.dispose()
@@ -87,6 +98,9 @@ export const registerDesktopIpc = async (options: {
     },
     getRemoteServerUrl: async () => (await config.read()).remoteServerUrl,
     resetTerminals: () => terminal.reset(),
+    resetBrowsers: () => {
+      browser.reset().catch(() => undefined)
+    },
     getAuthorizationHeader: () => auth.getAuthorizationHeader(),
     auth,
   }

@@ -30,7 +30,9 @@ export function createChannelResponses() {
 
 export type ChannelResponses = ReturnType<typeof createChannelResponses>
 
-export async function startChannelServer(responses: ChannelResponses) {
+export async function startChannelServer(responses: {
+  respond: (path: string, authorization?: string) => { status: number; body: unknown }
+}) {
   const server = createServer((request, response) => {
     const path = new URL(request.url || '/', 'http://127.0.0.1').pathname
     const result = responses.respond(path, request.headers.authorization)

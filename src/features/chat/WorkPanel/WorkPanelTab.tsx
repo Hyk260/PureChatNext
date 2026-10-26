@@ -103,7 +103,7 @@ const WorkPanelTab = memo<Props>(({ active, label, onClose, onSelect }) => {
 
   return (
     <Tag
-      className={cx(styles.tab, active && styles.tabActive)}
+      className={cx(styles.tab, 'max-w-56', active && styles.tabActive)}
       size='small'
       variant='borderless'
       onClick={onSelect}

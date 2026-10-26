@@ -71,7 +71,8 @@ const styles = createStaticStyles(({ css }) => ({
     width: calc(var(--work-panel-total-width) + 1px);
     min-width: 0;
     height: 100%;
-    overflow: hidden;
+    /* Keep the external resize target reachable while clipping the panel animation. */
+    clip-path: inset(0 0 0 -6px);
     transition: width ${PANEL_TRANSITION};
 
     &[data-collapsed='true'] {

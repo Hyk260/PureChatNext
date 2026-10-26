@@ -1,5 +1,6 @@
 import type { ChatPermissionMode } from '@pure/types'
 import type { DesktopTerminalApi } from './desktopTerminal'
+import type { DesktopBrowserApi } from './desktopBrowser'
 import type { DesktopUpdateLogs, DesktopUpdatePreferences, DesktopUpdateState } from './desktopUpdater'
 
 export type { DesktopUpdatePreferences, DesktopUpdateState } from './desktopUpdater'
@@ -145,6 +146,7 @@ export interface DesktopDataInfo {
 }
 
 export interface DesktopApi {
+  browser: DesktopBrowserApi
   terminal: DesktopTerminalApi
   updater: {
     getState: () => Promise<DesktopUpdateState>

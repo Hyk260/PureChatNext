@@ -16,22 +16,27 @@ interface CpuCore {
   times: CpuTimes
 }
 
+interface SystemMemoryInfo {
+  total: number
+  free: number
+  fileBacked?: number
+  purgeable?: number
+}
+
 interface SystemReader {
   arch: () => string
   cpus: () => CpuCore[]
-  freemem: () => number
+  getSystemMemoryInfo: () => SystemMemoryInfo
   hostname: () => string
   platform: () => NodeJS.Platform
-  totalmem: () => number
 }
 
 const systemReader: SystemReader = {
   arch: os.arch,
   cpus: os.cpus,
-  freemem: os.freemem,
+  getSystemMemoryInfo: () => process.getSystemMemoryInfo(),
   hostname: os.hostname,
   platform: os.platform,
-  totalmem: os.totalmem,
 }
 
 const sumCpuTimes = (cores: CpuCore[]): CpuTimes | null => {
@@ -62,11 +67,11 @@ export const calculateCpuUsagePercent = (previous: CpuTimes | null, current: Cpu
   return Math.min(100, Math.max(0, Math.round(usage)))
 }
 
-export const calculateMemoryUsagePercent = (totalBytes: number, freeBytes: number): number | null => {
-  if (!Number.isFinite(totalBytes) || totalBytes <= 0 || !Number.isFinite(freeBytes)) return null
+export const calculateMemoryUsagePercent = (total: number, free: number, reclaimable = 0): number | null => {
+  if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(free) || !Number.isFinite(reclaimable)) return null
 
-  const usedBytes = Math.max(0, Math.min(totalBytes, totalBytes - freeBytes))
-  return Math.round((usedBytes / totalBytes) * 100)
+  const used = Math.max(0, Math.min(total, total - free - Math.max(0, reclaimable)))
+  return Math.round((used / total) * 100)
 }
 
 export class SystemMetricsService {
@@ -88,12 +93,17 @@ export class SystemMetricsService {
     this.previousCpuTimes = currentCpuTimes
     this.previousCpuSampledAt = sampledAt
 
+    const platform = this.system.platform()
+    const memory = this.system.getSystemMemoryInfo()
+    // macOS 文件缓存和可回收页可供系统复用，不计入实际内存占用；所有字段单位均为 KiB。
+    const reclaimable = platform === 'darwin' ? (memory.fileBacked ?? 0) + (memory.purgeable ?? 0) : 0
+
     return {
       arch: this.system.arch(),
       cpuUsagePercent,
       hostname: this.system.hostname(),
-      memoryUsagePercent: calculateMemoryUsagePercent(this.system.totalmem(), this.system.freemem()),
-      platform: this.system.platform(),
+      memoryUsagePercent: calculateMemoryUsagePercent(memory.total, memory.free, reclaimable),
+      platform,
     }
   }
 }

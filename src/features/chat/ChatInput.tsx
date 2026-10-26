@@ -30,6 +30,9 @@ import type { ChatSearchMode } from '@/features/chat/types'
 import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
 import HomeProjectBar from '@/features/home/components/HomeProjectBar'
 import type { DesktopProject } from '@/types/desktop'
+import ComposerBrowserSelections from '@/features/chat/ComposerBrowserSelections'
+import { browserContextText, EMPTY_BROWSER_SELECTIONS } from '@/features/chat/browserContext'
+import { useBrowserPanelStore } from '@/features/chat/WorkPanel/Browser/store'
 
 const styles = createStaticStyles(({ css }) => ({
   input: css`
@@ -179,6 +182,8 @@ const ChatInput = memo<ChatInputProps>((props) => {
   const draftKey = getChatDraftKey(agentId, topicId)
   const input = useChatDraftStore((state) => state.texts[draftKey] ?? '')
   const files = useChatDraftStore((state) => state.files[draftKey] ?? EMPTY_DRAFT_FILES)
+  const browserSelections = useChatDraftStore((state) => state.browserSelections[draftKey] ?? EMPTY_BROWSER_SELECTIONS)
+  const setBrowserSelections = useChatDraftStore((state) => state.setBrowserSelections)
   const setDraftText = useChatDraftStore((state) => state.setText)
   const setDraftFiles = useChatDraftStore((state) => state.setFiles)
   const setInput = useCallback((text: string) => setDraftText(draftKey, text), [draftKey, setDraftText])
@@ -199,14 +204,23 @@ const ChatInput = memo<ChatInputProps>((props) => {
     if (prefill || prefillKey) textareaRef.current?.focus()
   }, [prefill, prefillKey, setInput])
 
+  useEffect(() => {
+    const focus = (event: Event) => {
+      if (event instanceof CustomEvent && event.detail === draftKey) textareaRef.current?.focus()
+    }
+    window.addEventListener('purechat:focus-composer', focus)
+    return () => window.removeEventListener('purechat:focus-composer', focus)
+  }, [draftKey])
+
   const handleSend = useCallback(() => {
-    const text = input.trim()
+    const text = browserContextText(input, browserSelections)
     if ((!text && files.length === 0) || isBusy) return
     setInput('')
     const pendingFiles = files
     setFiles([])
+    setBrowserSelections(draftKey, [])
     onSend(text, pendingFiles)
-  }, [files, input, isBusy, onSend, setFiles, setInput])
+  }, [browserSelections, draftKey, files, input, isBusy, onSend, setBrowserSelections, setFiles, setInput])
 
   const handleAttachmentClick = useCallback(() => {
     setPlusOpen(false)
@@ -241,7 +255,14 @@ const ChatInput = memo<ChatInputProps>((props) => {
   }, [onStop])
 
   const handleToggleParams = useCallback(() => {
-    openParamsPanel()
+    const browser = useBrowserPanelStore.getState()
+    const key = browser.currentKey
+    if (key && browser.entries[key]?.active) {
+      browser.setActive(key, false)
+      useChatUiStore.getState().openWorkPanelTab('params')
+    } else {
+      openParamsPanel()
+    }
     setPlusOpen(false)
   }, [openParamsPanel])
 
@@ -276,7 +297,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
 
   const plusMenuContent = useMemo(() => renderDropdownMenuItems(plusMenuItems), [plusMenuItems])
 
-  const canSend = Boolean(input.trim() || files.length > 0) && !isBusy
+  const canSend = Boolean(input.trim() || files.length > 0 || browserSelections.length > 0) && !isBusy
 
   return (
     <Block padding={12} variant='outlined'>
@@ -289,6 +310,18 @@ const ChatInput = memo<ChatInputProps>((props) => {
         type='file'
         onChange={handleFilesSelected}
       />
+
+      {browserSelections.length > 0 ? (
+        <ComposerBrowserSelections
+          selections={browserSelections}
+          onRemove={(id) =>
+            setBrowserSelections(
+              draftKey,
+              browserSelections.filter((selection) => selection.id !== id)
+            )
+          }
+        />
+      ) : null}
 
       {files.length > 0 ? (
         <Flex className='mb-3 gap-3 flex-wrap items-start pt-1.5'>
@@ -322,6 +355,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
       ) : null}
 
       <textarea
+        aria-label='聊天输入框'
         ref={textareaRef}
         className={styles.input}
         placeholder='随心输入'
@@ -366,7 +400,7 @@ const ChatInput = memo<ChatInputProps>((props) => {
           ) : null}
         </Flex>
 
-        <SendButton generating={isBusy} onClick={handleSend} onStop={handleStop} />
+        <SendButton disabled={!canSend && !isBusy} generating={isBusy} onClick={handleSend} onStop={handleStop} />
       </Flex>
     </Block>
   )

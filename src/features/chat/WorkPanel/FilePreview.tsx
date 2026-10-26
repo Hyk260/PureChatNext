@@ -228,7 +228,7 @@ const FilePreview = memo<Props>(({ dispatch, project, tabs }) => {
           onClick={() => dispatch({ type: 'closeAll' })}
         />
       </Flex>
-      <Flex horizontal align='center' className='shrink-0 gap-1 border-b border-app-border-secondary px-3 py-1.5'>
+      <Flex horizontal align='center' className='h-10 shrink-0 gap-1 border-b border-app-border-secondary px-3 py-1.5'>
         <nav
           aria-label='文件路径'
           className='flex min-w-0 flex-1 items-center gap-1 overflow-x-auto text-xs'

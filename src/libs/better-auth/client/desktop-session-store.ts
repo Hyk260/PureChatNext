@@ -1,5 +1,6 @@
 import type { DesktopAuthStatus } from '@/types/desktop'
 import { getDesktopApi } from '@/types/desktop'
+import { resetBrowserWorkspace } from '@/features/chat/WorkPanel/Browser/store'
 
 export type DesktopSession = {
   session: { expiresAt: Date; id: string; userId: string }
@@ -29,6 +30,7 @@ const publish = (next: DesktopSessionSnapshot) => {
 }
 
 const clearSession = () => {
+  resetBrowserWorkspace()
   revision += 1
   controller?.abort()
   controller = null

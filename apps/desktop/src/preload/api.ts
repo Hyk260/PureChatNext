@@ -6,6 +6,26 @@ import { DESKTOP_IPC_EVENTS } from '../common/ipc/contracts'
 import { invoke } from './invoke'
 
 export const createDesktopApi = (): DesktopApi => ({
+  browser: {
+    open: (input) => invoke('browser.open', input),
+    navigate: (input) => invoke('browser.navigate', input),
+    back: (input) => invoke('browser.back', input),
+    forward: (input) => invoke('browser.forward', input),
+    reload: (input) => invoke('browser.reload', input),
+    stop: (input) => invoke('browser.stop', input),
+    layout: (input) => invoke('browser.layout', input),
+    capture: (input) => invoke('browser.capture', input),
+    openExternal: (input) => invoke('browser.openExternal', input),
+    pick: (input) => invoke('browser.pick', input),
+    cancelPick: (input) => invoke('browser.cancelPick', input),
+    close: (input) => invoke('browser.close', input),
+    reset: () => invoke('browser.reset'),
+    onStateChange: (listener) => {
+      const handler = (_event: Electron.IpcRendererEvent, state: Parameters<typeof listener>[0]) => listener(state)
+      ipcRenderer.on(DESKTOP_IPC_EVENTS.browserState, handler)
+      return () => ipcRenderer.removeListener(DESKTOP_IPC_EVENTS.browserState, handler)
+    },
+  },
   terminal: {
     open: (input) => invoke('terminal.open', input),
     write: (input) => invoke('terminal.write', input),

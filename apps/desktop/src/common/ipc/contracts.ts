@@ -21,8 +21,29 @@ import type {
 } from '@/types/desktop'
 import type { DesktopUpdateLogs } from '@/types/desktopUpdater'
 import type { TerminalData, TerminalOpenInput, TerminalSession, TerminalSizeInput } from '@/types/desktopTerminal'
+import type {
+  BrowserCapture,
+  BrowserElement,
+  BrowserLayout,
+  BrowserSessionInput,
+  BrowserSessionRef,
+  BrowserState,
+} from '@/types/desktopBrowser'
 
 export interface DesktopIpcContractMap {
+  'browser.open': { args: [input: BrowserSessionInput]; result: BrowserState }
+  'browser.navigate': { args: [input: BrowserSessionRef & { url: string }]; result: void }
+  'browser.back': { args: [input: BrowserSessionRef]; result: void }
+  'browser.forward': { args: [input: BrowserSessionRef]; result: void }
+  'browser.reload': { args: [input: BrowserSessionRef]; result: void }
+  'browser.stop': { args: [input: BrowserSessionRef]; result: void }
+  'browser.layout': { args: [input: BrowserLayout]; result: void }
+  'browser.capture': { args: [input: BrowserSessionRef]; result: BrowserCapture }
+  'browser.openExternal': { args: [input: BrowserSessionRef]; result: void }
+  'browser.pick': { args: [input: BrowserSessionRef]; result: BrowserElement | null }
+  'browser.cancelPick': { args: [input: BrowserSessionRef]; result: void }
+  'browser.close': { args: [input: BrowserSessionRef]; result: void }
+  'browser.reset': { args: []; result: void }
   'terminal.open': { args: [input: TerminalOpenInput]; result: TerminalSession }
   'terminal.write': { args: [input: TerminalData]; result: void }
   'terminal.resize': { args: [input: TerminalSizeInput]; result: void }
@@ -85,6 +106,21 @@ export type DesktopIpcArgs<C extends DesktopIpcChannel> = DesktopIpcContractMap[
 export type DesktopIpcResult<C extends DesktopIpcChannel> = DesktopIpcContractMap[C]['result']
 
 export const DESKTOP_IPC_CHANNELS = {
+  browser: {
+    open: 'browser.open',
+    navigate: 'browser.navigate',
+    back: 'browser.back',
+    forward: 'browser.forward',
+    reload: 'browser.reload',
+    stop: 'browser.stop',
+    layout: 'browser.layout',
+    capture: 'browser.capture',
+    openExternal: 'browser.openExternal',
+    pick: 'browser.pick',
+    cancelPick: 'browser.cancelPick',
+    close: 'browser.close',
+    reset: 'browser.reset',
+  },
   terminal: { open: 'terminal.open', write: 'terminal.write', resize: 'terminal.resize', kill: 'terminal.kill' },
   updater: {
     getState: 'updater.getState',
@@ -142,6 +178,7 @@ export const DESKTOP_IPC_CHANNELS = {
 } as const
 
 export const DESKTOP_IPC_EVENTS = {
+  browserState: 'browser.state',
   terminalData: 'terminal.data',
   terminalExit: 'terminal.exit',
   updateState: 'updater.state',

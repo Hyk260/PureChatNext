@@ -744,6 +744,10 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
       topic={activeTopic}
       right={
         <WorkPanel
+          agentId={agentId}
+          busy={inputBusy}
+          topicId={activeTopicId}
+          userId={userId}
           topic={activeTopic}
           topicTitle={topicTitle}
           value={advancedSettings}

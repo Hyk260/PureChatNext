@@ -94,7 +94,7 @@ export default function Content({ projectName, onProjectChange }: TerminalPanelP
       <Flex
         role='toolbar'
         aria-label='终端工具栏'
-        className='flex-between shrink-0 gap-2 border-b border-app-border-secondary px-3 py-1'
+        className='flex-between shrink-0 gap-2 border-b border-app-border-secondary px-2 py-1'
       >
         <Flex className='min-w-0 items-center gap-1.5'>
           <SquareTerminal size={13} />

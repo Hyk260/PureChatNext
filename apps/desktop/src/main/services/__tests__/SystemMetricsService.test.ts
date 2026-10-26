@@ -26,7 +26,25 @@ describe('system metrics', () => {
     expect(calculateMemoryUsagePercent(1000, 1500)).toBe(0)
     expect(calculateMemoryUsagePercent(1000, -1)).toBe(100)
     expect(calculateMemoryUsagePercent(0, 0)).toBeNull()
+    expect(calculateMemoryUsagePercent(1000, 10, 200)).toBe(79)
+    expect(calculateMemoryUsagePercent(1000, 10, 1200)).toBe(0)
+    expect(calculateMemoryUsagePercent(1000, 10, Number.NaN)).toBeNull()
   })
+
+  it.each<NodeJS.Platform>(['darwin', 'win32', 'linux'])(
+    'accounts for reclaimable cache only on macOS (%s)',
+    (platform) => {
+      const service = new SystemMetricsService({
+        arch: () => 'arm64',
+        cpus: () => [],
+        getSystemMemoryInfo: () => ({ total: 1000, free: 10, fileBacked: 180, purgeable: 20 }),
+        hostname: () => 'test-host',
+        platform: () => platform,
+      })
+
+      expect(service.getMetrics().memoryUsagePercent).toBe(platform === 'darwin' ? 79 : 99)
+    }
+  )
 
   it('returns host details and waits for a second CPU sample', () => {
     const cpus = vi
@@ -36,10 +54,9 @@ describe('system metrics', () => {
     const service = new SystemMetricsService({
       arch: () => 'arm64',
       cpus,
-      freemem: () => 600,
+      getSystemMemoryInfo: () => ({ total: 1000, free: 600 }),
       hostname: () => 'test-host',
       platform: () => 'darwin',
-      totalmem: () => 1000,
     })
 
     expect(service.getMetrics()).toEqual({
@@ -59,10 +76,9 @@ describe('system metrics', () => {
       {
         arch: () => 'arm64',
         cpus,
-        freemem: () => 600,
+        getSystemMemoryInfo: () => ({ total: 1000, free: 600 }),
         hostname: () => 'test-host',
         platform: () => 'darwin',
-        totalmem: () => 1000,
       },
       () => sampledAt
     )

@@ -3,6 +3,7 @@
 import { localStg } from '@pure/utils/storage'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import type { BrowserContextSelection } from '@/features/chat/browserContext'
 
 export const getChatDraftKey = (agentId: string, topicId?: string | null) => JSON.stringify([agentId, topicId ?? null])
 
@@ -13,6 +14,8 @@ type FilesUpdate = File[] | ((previous: File[]) => File[])
 type ChatDraftState = {
   texts: Record<string, string>
   files: Record<string, File[]>
+  browserSelections: Record<string, BrowserContextSelection[]>
+  setBrowserSelections: (key: string, selections: BrowserContextSelection[]) => void
   setText: (key: string, text: string) => void
   setFiles: (key: string, update: FilesUpdate) => void
   clearDrafts: (keys: string[]) => void
@@ -23,6 +26,14 @@ export const useChatDraftStore = create<ChatDraftState>()(
     (set) => ({
       texts: {},
       files: {},
+      browserSelections: {},
+      setBrowserSelections: (key, selections) =>
+        set((state) => {
+          const browserSelections = { ...state.browserSelections }
+          if (selections.length) browserSelections[key] = selections
+          else delete browserSelections[key]
+          return { browserSelections }
+        }),
       setText: (key, text) =>
         set((state) => {
           const texts = { ...state.texts }
@@ -42,11 +53,13 @@ export const useChatDraftStore = create<ChatDraftState>()(
         set((state) => {
           const texts = { ...state.texts }
           const files = { ...state.files }
+          const browserSelections = { ...state.browserSelections }
           for (const key of keys) {
             delete texts[key]
             delete files[key]
+            delete browserSelections[key]
           }
-          return { texts, files }
+          return { texts, files, browserSelections }
         }),
     }),
     {

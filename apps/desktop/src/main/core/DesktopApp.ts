@@ -41,6 +41,7 @@ export class DesktopApp {
   private readonly authService: DesktopAuthService
   private disposeIpc: (() => void) | null = null
   private resetTerminals: (() => void) | null = null
+  private resetBrowsers: (() => void) | null = null
   private isQuitting = false
 
   constructor(private readonly mainDir: string) {
@@ -64,7 +65,10 @@ export class DesktopApp {
       this.config
     )
     this.authService = new DesktopAuthService(this.config, (status) => {
-      if (status.status !== 'signedIn') this.resetTerminals?.()
+      if (status.status !== 'signedIn') {
+        this.resetTerminals?.()
+        this.resetBrowsers?.()
+      }
       const contents = this.windowManager.trustedContents
       if (contents && !contents.isDestroyed()) contents.send('auth.status', status)
     })
@@ -107,8 +111,10 @@ export class DesktopApp {
 
   async bootstrap() {
     const { PURECHAT_DESKTOP_MULTI_INSTANCE } = getDesktopRuntimeConfig(!app.isPackaged)
-    if (shouldEnforceSingleInstanceLock(process.platform, PURECHAT_DESKTOP_MULTI_INSTANCE) &&
-      !app.requestSingleInstanceLock()) {
+    if (
+      shouldEnforceSingleInstanceLock(process.platform, PURECHAT_DESKTOP_MULTI_INSTANCE) &&
+      !app.requestSingleInstanceLock()
+    ) {
       app.quit()
       return
     }
@@ -131,6 +137,7 @@ export class DesktopApp {
     })
     this.disposeIpc = ipc.dispose
     this.resetTerminals = ipc.resetTerminals
+    this.resetBrowsers = ipc.resetBrowsers
     this.protocolManager.setRemoteServerUrlGetter(ipc.getRemoteServerUrl)
     this.protocolManager.setAuthorizationHeaderGetter(ipc.getAuthorizationHeader)
     this.protocolManager.initialize()

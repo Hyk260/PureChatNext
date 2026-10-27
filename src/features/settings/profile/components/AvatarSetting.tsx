@@ -1,13 +1,21 @@
 'use client'
 
-
-import { toast, Spin } from '@lobehub/ui'
+import { toast, Spin, createStaticStyles, cx } from '@lobehub/ui'
 import { Avatar, Center, Icon } from '@pure/ui'
 import { Loader2, Pencil } from 'lucide-react'
 import { useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 
 import { SettingRow } from './SettingRow'
+
+// Keep the native button inline and its static className within the 120-character limit.
+const styles = createStaticStyles(({ css }) => ({
+  avatarButton: css`
+    position: relative;
+    flex-shrink: 0;
+    padding: 0;
+  `,
+}))
 
 interface AvatarSettingProps {
   avatar: string | null
@@ -58,7 +66,7 @@ export function AvatarSetting({ avatar, displayName, initials, onUploaded, s3Con
 
   const avatarContent = (
     <button
-      className='group relative inline-flex size-10 shrink-0 items-center justify-center overflow-hidden p-0 disabled:cursor-not-allowed disabled:opacity-50'
+      className={cx(styles.avatarButton, 'group inline-flex size-10 items-center justify-center overflow-hidden disabled:cursor-not-allowed disabled:opacity-50')}
       disabled={!s3Configured || uploading}
       title={s3Configured ? '点击上传头像' : '头像上传需配置 S3'}
       type='button'
@@ -66,7 +74,7 @@ export function AvatarSetting({ avatar, displayName, initials, onUploaded, s3Con
     >
       <Avatar alt={displayName} avatar={avatar || initials} key={avatar} shape='square' size={40} />
       {s3Configured ? (
-        <Center className='rounded-[8px] absolute inset-0 bg-black/45 opacity-0 transition-opacity group-hover:opacity-100'>
+        <Center className='rounded-[8px] absolute-fill bg-black/45 opacity-0 transition-opacity group-hover:opacity-100'>
           <Icon color='#fff' icon={Pencil} size={16} />
         </Center>
       ) : null}

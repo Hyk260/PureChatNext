@@ -1,8 +1,8 @@
+import { isValidProviderId } from '@pure/const'
 import { generateText } from 'ai'
 import debug from 'debug'
 
 import { FreePlanLimitError } from '@pure/database/models/credits'
-import { isValidProviderId } from '@pure/database/models/customProvider'
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 

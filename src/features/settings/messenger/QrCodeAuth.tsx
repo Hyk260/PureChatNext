@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { QRCode, Spin } from '@lobehub/ui'
 import { Button, Modal, Text, Flex } from '@pure/ui'
 import { LinkIcon, RefreshCw } from 'lucide-react'
@@ -113,7 +115,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
         beginPolling(qr.qrcode)
       } catch (err: unknown) {
         if (cancelled) return
-        setError(err instanceof Error ? err.message : '获取二维码失败')
+        setError(getErrorMessage(err, '获取二维码失败'))
         setLoading(false)
       }
     }
@@ -139,7 +141,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
       setLoading(false)
       beginPolling(qr.qrcode)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '获取二维码失败')
+      setError(getErrorMessage(err, '获取二维码失败'))
       setLoading(false)
     }
   }, [beginPolling, stopPolling])

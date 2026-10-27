@@ -8,13 +8,13 @@ describe('work panel resizing', () => {
     expect(resizePanelWidths(current, 80, 'panel', 1000, true)).toEqual({ panelWidth: 240, previewWidth: 400 })
     expect(resizePanelWidths(current, -200, 'panel', 1000, true)).toEqual({ panelWidth: 520, previewWidth: 400 })
     expect(resizePanelWidths(current, -1000, 'panel', 1000, true)).toEqual({ panelWidth: 600, previewWidth: 400 })
-    expect(resizePanelWidths(current, 1000, 'panel', 1000, true).panelWidth).toBe(220)
+    expect(resizePanelWidths(current, 1000, 'panel', 1000, true).panelWidth).toBe(285)
   })
 
   it('shares the space between adjacent panels without moving the chat boundary', () => {
     const current = { panelWidth: 320, previewWidth: 560 }
     expect(resizePanelWidths(current, 100, 'preview', 1000, true)).toEqual({ panelWidth: 420, previewWidth: 460 })
-    expect(resizePanelWidths(current, -1000, 'preview', 1000, true)).toEqual({ panelWidth: 220, previewWidth: 660 })
+    expect(resizePanelWidths(current, -1000, 'preview', 1000, true)).toEqual({ panelWidth: 285, previewWidth: 595 })
     expect(resizePanelWidths(current, 1000, 'preview', 1000, true)).toEqual({ panelWidth: 600, previewWidth: 280 })
   })
 

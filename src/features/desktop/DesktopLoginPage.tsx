@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Button, Flex, Input, Text } from '@pure/ui'
 import { AlertCircle, CheckCircle2, Cloud, Server, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -47,7 +49,7 @@ const DesktopLoginPage = ({ onSuccess, standalone = false }: DesktopLoginPagePro
         setStatus(authStatus)
       })
       .catch((cause) => {
-        if (active) setError(cause instanceof Error ? cause.message : '加载桌面授权配置失败')
+        if (active) setError(getErrorMessage(cause, '加载桌面授权配置失败'))
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -100,7 +102,7 @@ const DesktopLoginPage = ({ onSuccess, standalone = false }: DesktopLoginPagePro
     try {
       setStatus(await api.auth.start({ serverUrl: targetUrl }))
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '无法打开 Web 授权页面')
+      setError(getErrorMessage(cause, '无法打开 Web 授权页面'))
     } finally {
       setSubmitting(false)
     }

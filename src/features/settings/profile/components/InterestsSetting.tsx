@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Block, Icon, Input, Text, Flex } from '@pure/ui'
 import { toast, cssVar } from '@lobehub/ui'
 import { BriefcaseIcon } from 'lucide-react'
@@ -33,7 +35,7 @@ export function InterestsSetting({ interests, onUpdated }: InterestsSettingProps
         const result = await patchUserProfile({ interests: updated })
         onUpdated(result.interests)
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : '兴趣领域更新失败')
+        toast.error(getErrorMessage(error, '兴趣领域更新失败'))
       } finally {
         setSaving(false)
       }

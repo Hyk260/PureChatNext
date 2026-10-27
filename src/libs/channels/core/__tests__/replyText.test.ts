@@ -6,7 +6,7 @@ import {
   isLeakedToolMarkup,
   resolveChannelReplyText,
   sanitizeChannelReplyText,
-} from './replyText'
+} from '../replyText'
 
 const leakedDsml = `<｜｜DSML｜｜tool_calls>
 <｜｜DSML｜｜invoke name="webSearch">

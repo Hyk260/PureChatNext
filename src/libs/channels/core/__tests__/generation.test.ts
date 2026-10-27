@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { ChannelGenerationRegistry } from './generation'
+import { ChannelGenerationRegistry } from '../generation'
 
 describe('ChannelGenerationRegistry', () => {
   it('aborts an existing generation when a new one begins', () => {

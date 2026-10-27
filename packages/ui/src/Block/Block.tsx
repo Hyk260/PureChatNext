@@ -1,5 +1,7 @@
 'use client'
 
+import { clsx } from 'clsx'
+
 import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { forwardRef } from 'react'
 import type { CSSProperties, ComponentPropsWithoutRef, ReactNode } from 'react'
@@ -86,22 +88,6 @@ const styles = createStaticStyles(({ css }) => ({
       0 3px 6px -4px ${cssVar.colorBorderSecondary};
   `,
 }))
-
-const mergeClassNames = (...values: ClassNameValue[]) => {
-  const classNames: string[] = []
-
-  const append = (value: ClassNameValue) => {
-    if (!value) return
-    if (Array.isArray(value)) {
-      value.forEach(append)
-      return
-    }
-    classNames.push(value)
-  }
-
-  values.forEach(append)
-  return classNames.join(' ')
-}
 
 const toCssValue = (value: number | string) => (typeof value === 'number' ? `${value}px` : value)
 
@@ -224,7 +210,7 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
       <div
         ref={ref}
         {...rest}
-        className={mergeClassNames(
+        className={clsx(
           styles.root,
           variant === 'outlined' && styles.outlined,
           variant === 'filled' && styles.filled,

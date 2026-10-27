@@ -1,3 +1,4 @@
+import { isValidProviderId } from '@pure/const'
 import debug from 'debug'
 
 import {
@@ -7,7 +8,6 @@ import {
   resolveModelsListBaseURL,
 } from '@/libs/ai-providers/resolveClient'
 import type { SupportedProviderId } from '@/libs/ai-providers/resolveClient'
-import { isValidProviderId } from '@pure/database/models/customProvider'
 import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 import { ChatSDKError } from '@/libs/errors'

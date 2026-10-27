@@ -1,3 +1,5 @@
+import { formatInboundVisibleContent } from '../core/logging'
+import { CHANNEL_MESSAGE_KIND_LABEL } from '@pure/const'
 import { createHash } from 'node:crypto'
 
 import { MessageState, MessageType } from '@pure/chat-adapter/wechat'
@@ -88,30 +90,6 @@ function summarizeInboundItems(itemList: WechatRawMessage['item_list']) {
     .join(';')
 }
 
-const WECHAT_KIND_LABEL: Record<string, string> = {
-  audio: '语音',
-  command: '指令',
-  file: '文件',
-  image: '图片',
-  text: '文本',
-  unsupported: '非文本',
-  video: '视频',
-}
-
-const WECHAT_KIND_PLACEHOLDER: Record<string, string> = {
-  audio: '，内容=[语音]',
-  file: '，内容=[文件]',
-  image: '，内容=[图片]',
-  video: '，内容=[视频]',
-}
-
-function formatInboundVisibleContent(event: { content: string; messageKind: string }) {
-  if (event.messageKind === 'text' || event.messageKind === 'command') {
-    return `，内容=${JSON.stringify(event.content.replace(/[\r\n\t]+/g, ' ').slice(0, 200))}`
-  }
-  return WECHAT_KIND_PLACEHOLDER[event.messageKind] ?? ''
-}
-
 export function formatWechatInboundLog(event: {
   bindingId: string
   content: string
@@ -122,7 +100,7 @@ export function formatWechatInboundLog(event: {
   const contactHash = createHash('sha256').update(event.externalUserId).digest('hex').slice(0, 10)
   const userName = event.externalUserName?.trim()
   const userSuffix = userName ? `，用户=${JSON.stringify(userName)}` : ''
-  return `[微信 Gateway] 收到${WECHAT_KIND_LABEL[event.messageKind] ?? '文本'}消息：绑定=${event.bindingId}，联系人=sha256:${contactHash}${userSuffix}，长度=${event.content.length}${formatInboundVisibleContent(event)}`
+  return `[微信 Gateway] 收到${CHANNEL_MESSAGE_KIND_LABEL[event.messageKind] ?? '文本'}消息：绑定=${event.bindingId}，联系人=sha256:${contactHash}${userSuffix}，长度=${event.content.length}${formatInboundVisibleContent(event)}`
 }
 
 export async function ingestWechatWebhookBatch(binding: ChannelBindingItem, batch: WechatPollBatch) {

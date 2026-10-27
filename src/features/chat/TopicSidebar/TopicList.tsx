@@ -133,7 +133,7 @@ const TopicList = memo<Props>(
         multiple
         defaultValue={groupIds}
         style={{ gap: 2 }}
-        key={`${groupMode}:${sortBy}:${groupIds.join('|')}`}
+        key={`${groupMode}:${sortBy}`}
       >
         {groups.map((group) => {
           const projectName = group.id.startsWith('project:') ? group.id.slice('project:'.length) : null

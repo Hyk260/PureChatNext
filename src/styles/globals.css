@@ -10,6 +10,10 @@
 @source '../';
 @source '../../packages/ui/src';
 
+html[data-desktop] .lobe-image-viewer-close {
+  top: 38px;
+}
+
 :root {
   --background: #fff;
   --foreground: #171717;
@@ -36,7 +40,6 @@
   --line: #e7e5e4;
   --hover: #f5f5f4;
   --overlay: 0 0 0;
-
   --lobe-form-item-padding-block: 12px;
 }
 

@@ -1,7 +1,6 @@
 'use client'
 
 import { Flex } from '@pure/ui'
-import { createStaticStyles, cssVar } from '@lobehub/ui'
 import { Suspense, memo } from 'react'
 
 import Scrollbar from '@/components/Scrollbar'
@@ -9,20 +8,9 @@ import SideBarHeaderLayout from '@/layout/SideBarHeaderLayout'
 
 import CategoryMenu from './Header/CategoryMenu'
 
-const styles = createStaticStyles(({ css }) => ({
-  sidebar: css`
-    flex: none;
-    width: 240px;
-    min-width: 0;
-    height: 100%;
-    overflow: hidden;
-    background: ${cssVar.colorBgLayout};
-  `,
-}))
-
 const HomeSidebar = memo(() => {
   return (
-    <Flex className={[styles.sidebar, 'flex-col h-full']}>
+    <Flex className='h-full w-[240px] min-w-0 flex-none flex-col overflow-hidden bg-app-layout'>
       <Scrollbar className='h-full w-[240px]'>
         <Flex className='flex-col gap-px h-full'>
           <SideBarHeaderLayout

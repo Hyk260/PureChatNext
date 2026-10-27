@@ -1,3 +1,5 @@
+import { listOutboundAttachments } from '@/libs/channels/core/files/server'
+import { getErrorMessage } from '@pure/utils/error'
 import { createHash } from 'node:crypto'
 
 import { NextResponse } from 'next/server'
@@ -73,24 +75,6 @@ async function parseOutboundBody(
       ? (body as { requestId: string }).requestId.trim()
       : ''
   return { media: [], requestId, text }
-}
-
-function outboundAttachments(eventId: string) {
-  return new ChannelEventFileModel().listForEvent(eventId).then((rows) =>
-    rows
-      .filter(({ artifact }) => artifact.direction === 'output')
-      .map(({ artifact, file }) => ({
-        deliveryError: artifact.deliveryError,
-        deliveryStatus: artifact.deliveryStatus,
-        direction: artifact.direction,
-        fileId: file.id,
-        fileName: file.name,
-        fileSize: file.size,
-        id: artifact.id,
-        summary: artifact.summary,
-        version: artifact.version,
-      }))
-  )
 }
 
 /**
@@ -222,7 +206,7 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
       status: 'processing',
     })
   } else if (event.status === 'completed') {
-    const attachments = await outboundAttachments(event.id)
+    const attachments = await listOutboundAttachments(event.id)
     const [message] = expandEventsToMessages([{ ...event, attachments }])
     if (!message) return jsonError('已发送消息记录为空', 500)
     return NextResponse.json({ message })
@@ -273,13 +257,13 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
     }
     await eventModel.completeOutbound(event.id)
   } catch (error) {
-    await eventModel.failOutbound(event.id, error instanceof Error ? error.message : 'Send failed')
+    await eventModel.failOutbound(event.id, getErrorMessage(error, 'Send failed'))
     if (error instanceof WechatOutboundError) return jsonError(error.message, 400)
-    const message = error instanceof Error ? error.message : 'Send failed'
+    const message = getErrorMessage(error, 'Send failed')
     return jsonError(message.replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]').slice(0, 200), 502)
   }
 
-  const attachments = await outboundAttachments(event.id)
+  const attachments = await listOutboundAttachments(event.id)
   const [message] = expandEventsToMessages([
     {
       attachments,

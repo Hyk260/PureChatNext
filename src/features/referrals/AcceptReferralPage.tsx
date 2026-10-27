@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { Button, Flex, Text } from '@pure/ui'
 import { Spin } from '@lobehub/ui'
 import { CheckCircle2 } from 'lucide-react'
@@ -37,7 +38,7 @@ function AcceptReferralContent({ context, complete }: { context: string; complet
         if (!cancelled) setInfo(result)
       })
       .catch((requestError: unknown) => {
-        if (!cancelled) setError(requestError instanceof Error ? requestError.message : '邀请链接无效')
+        if (!cancelled) setError(getErrorMessage(requestError, '邀请链接无效'))
       })
     return () => {
       cancelled = true
@@ -53,7 +54,7 @@ function AcceptReferralContent({ context, complete }: { context: string; complet
       setNeedsVerification(false)
     } catch (requestError) {
       setNeedsVerification(requestError instanceof ReferralApiError && requestError.code === 'verification_required')
-      setError(requestError instanceof Error ? requestError.message : '接受邀请失败')
+      setError(getErrorMessage(requestError, '接受邀请失败'))
     } finally {
       setBusy(false)
     }
@@ -75,7 +76,7 @@ function AcceptReferralContent({ context, complete }: { context: string; complet
       .catch((requestError: unknown) => {
         if (cancelled) return
         setNeedsVerification(requestError instanceof ReferralApiError && requestError.code === 'verification_required')
-        setError(requestError instanceof Error ? requestError.message : '接受邀请失败')
+        setError(getErrorMessage(requestError, '接受邀请失败'))
       })
     return () => {
       cancelled = true
@@ -89,7 +90,7 @@ function AcceptReferralContent({ context, complete }: { context: string; complet
       const result = await referralRequest<{ email: string }>('/prepare', { context })
       navigate(`/signup?${new URLSearchParams({ email: result.email, callbackUrl })}`)
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : '邀请不可用')
+      setError(getErrorMessage(requestError, '邀请不可用'))
     } finally {
       setBusy(false)
     }
@@ -106,7 +107,7 @@ function AcceptReferralContent({ context, complete }: { context: string; complet
       }
       navigate(`/verify-email?${new URLSearchParams({ email: session.user.email, callbackUrl })}`)
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : '验证邮件发送失败')
+      setError(getErrorMessage(requestError, '验证邮件发送失败'))
     } finally {
       setBusy(false)
     }

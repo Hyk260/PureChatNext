@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import '@xterm/xterm/css/xterm.css'
 
 import { FitAddon } from '@xterm/addon-fit'
@@ -136,13 +137,13 @@ class TerminalManager {
       }
     } catch (error) {
       if (revision === this.revision)
-        this.update(key, { error: error instanceof Error ? error.message : '创建终端失败' })
+        this.update(key, { error: getErrorMessage(error, '创建终端失败') })
     }
   }
 
   report(entry: TerminalEntry, error: unknown) {
     if (entry.exitCode !== undefined) return
-    const message = error instanceof Error ? error.message : '终端通信失败'
+    const message = getErrorMessage(error, '终端通信失败')
     this.update(terminalProjectKey(entry.info.projectId), { entry, error: message })
   }
 

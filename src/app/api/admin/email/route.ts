@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -10,7 +11,7 @@ import {
 import { withAdmin } from '@/libs/auth/get-session-user'
 import { EmailImplType, EmailService } from '@/server/services/email'
 import type { EmailPayload } from '@/server/services/email/impls'
-import { devActionSuccess, devError, getErrorMessage } from '../../dev/_utils'
+import { devActionSuccess, devError } from '../../dev/_utils'
 
 type EmailAction = 'verify' | 'sendMail' | 'renderTemplate'
 

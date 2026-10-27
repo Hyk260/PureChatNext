@@ -1,5 +1,7 @@
 'use client'
 
+import { getSkillInstallErrorMessage } from '@/features/community/catalog'
+
 import { Avatar, Button, Flex, Icon, Modal, Tag, Text } from '@pure/ui'
 import { toast, createStaticStyles, cssVar, Accordion, cx } from '@lobehub/ui'
 import { DotIcon } from 'lucide-react'
@@ -31,14 +33,6 @@ type InstalledSkillRef = {
 const readmeCache = new Map<string, string>()
 const readmeInflight = new Map<string, Promise<string>>()
 const installedIdCache = new Map<string, string>()
-
-const getInstallErrorMessage = (status: number) => {
-  if (status === 401) return '请先登录后再安装'
-  if (status === 409) return '已安装'
-  if (status === 503) return '对象存储未配置，无法安装'
-  if (status === 404) return '技能不存在'
-  return '安装失败'
-}
 
 const findInstalledSkillId = (items: InstalledSkillRef[], identifier: string) =>
   items.find((item) => item.identifier === identifier)?.id ?? null
@@ -223,7 +217,7 @@ const SkillDetailModal = memo<SkillDetailModalProps>(({ onClose, onInstalled, on
         return
       }
       if (!response.ok) {
-        toast.error(getInstallErrorMessage(response.status))
+        toast.error(getSkillInstallErrorMessage(response.status))
         return
       }
       const payload = (await response.json()) as { id?: string }

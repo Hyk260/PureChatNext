@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -5,7 +6,12 @@ import { AgentModel } from '@pure/database/models/agent'
 import { gatewayEnv } from '@/envs/gateway'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { QQBindingError } from '@/libs/channels/qq/binding'
-import { cancelQQQrSession, completeQQQrSession, getQQQrSessionStatus, startQQQrSession } from '@/libs/channels/qq/qrSession'
+import {
+  cancelQQQrSession,
+  completeQQQrSession,
+  getQQQrSessionStatus,
+  startQQQrSession,
+} from '@/libs/channels/qq/qrSession'
 
 /**
  * POST /api/channels/qq/qrcode
@@ -35,7 +41,7 @@ export const POST = withAuth(async (request: NextRequest, { userId }) => {
       return NextResponse.json(binding)
     } catch (error) {
       if (error instanceof QQBindingError) return jsonError(error.message, error.status)
-      return jsonError(error instanceof Error ? error.message : 'QQ 绑定失败')
+      return jsonError(getErrorMessage(error, 'QQ 绑定失败'))
     }
   }
 

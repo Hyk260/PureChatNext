@@ -326,7 +326,7 @@ export function S3Results({
         <Flex
           aria-label='图片预览'
           aria-modal='true'
-          className='flex-center fixed inset-0 z-50 bg-black/60 p-4'
+          className='flex-center fixed-fill z-50 bg-black/60 p-4'
           role='dialog'
           onClick={onClosePreview}
         >

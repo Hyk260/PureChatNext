@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import debug from 'debug'
 
 import { githubSourceFetchUrls } from '@/const/community/githubAssetUrl'
@@ -60,7 +61,7 @@ export class GitHub {
 
     if (lastResponse) return lastResponse
 
-    const detail = lastNetworkError instanceof Error ? lastNetworkError.message : 'network error'
+    const detail = getErrorMessage(lastNetworkError, 'network error')
     throw new GitHubDownloadError(`Failed to request GitHub: ${detail}`)
   }
 

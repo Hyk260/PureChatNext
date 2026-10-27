@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyAccessToken } from '@/libs/auth/jwt'
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
       )
     } catch (verifyError) {
       // 单独捕获验证错误，提供更详细的错误信息
-      const errorMessage = verifyError instanceof Error ? verifyError.message : '未知错误'
+      const errorMessage = getErrorMessage(verifyError, '未知错误')
       const errorCode = (verifyError as { code?: string })?.code || 'UNKNOWN'
 
       console.error('Token 验证详细错误:', {
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: '服务器内部错误',
-        message: error instanceof Error ? error.message : '未知错误',
+        message: getErrorMessage(error, '未知错误'),
       },
       { status: 500 }
     )

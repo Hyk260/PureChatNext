@@ -1,3 +1,5 @@
+import { diagnosticStyles } from '../shared/diagnosticStyles'
+import { cx } from '@lobehub/ui'
 import type { ChangeEvent, DragEvent, ReactNode } from 'react'
 import { Clipboard, RefreshCcw, Sparkles, Upload, X } from 'lucide-react'
 import { formatSize } from '@pure/utils/client'
@@ -184,7 +186,7 @@ function UploadFields({
     <>
       <Field label='选择文件'>
         <label
-          className='flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center transition hover:border-primary hover:bg-hover'
+          className={cx(diagnosticStyles.dropzone, 'flex flex-col items-center gap-2 rounded-lg px-4 py-6 text-center transition')}
           onDragOver={(event) => event.preventDefault()}
           onDrop={onDrop}
         >

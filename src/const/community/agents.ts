@@ -1,3 +1,4 @@
+import { getCategoryCounts, filterCatalogItems } from '@/features/community/catalog'
 import { AssistantCategory } from '@/features/community/types'
 import type { DiscoverAgentSummary } from '@/features/community/types'
 
@@ -47,36 +48,12 @@ export const COMMUNITY_AGENTS: DiscoverAgentSummary[] = COMMUNITY_AGENTS_DATA
 
 export const getAssistantCategoryCounts = (
   agents: DiscoverAgentSummary[] = COMMUNITY_AGENTS
-): Record<AssistantCategory, number> => {
-  const counts = Object.fromEntries(Object.values(AssistantCategory).map((key) => [key, 0])) as Record<
-    AssistantCategory,
-    number
-  >
-
-  for (const agent of agents) {
-    counts[agent.category] += 1
-  }
-
-  counts[AssistantCategory.All] = agents.length
-  return counts
-}
+): Record<AssistantCategory, number> => getCategoryCounts(agents, Object.values(AssistantCategory), AssistantCategory.All)
 
 export const filterCommunityAgents = (
   agents: DiscoverAgentSummary[],
   options: { category?: string | null; q?: string | null }
 ): DiscoverAgentSummary[] => {
-  const category = options.category ?? AssistantCategory.All
-  const query = options.q?.trim().toLowerCase() ?? ''
-
-  if (category === AssistantCategory.Custom) return []
-
-  return agents.filter((agent) => {
-    const matchCategory = category === AssistantCategory.All || agent.category === category
-    if (!matchCategory) return false
-
-    if (!query) return true
-
-    const haystack = [agent.title, agent.description, agent.author, agent.identifier].join(' ').toLowerCase()
-    return haystack.includes(query)
-  })
+  if (options.category === AssistantCategory.Custom) return []
+  return filterCatalogItems(agents, options, (item) => [item.title, item.description, item.author, item.identifier])
 }

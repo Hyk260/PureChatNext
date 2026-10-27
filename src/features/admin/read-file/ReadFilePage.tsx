@@ -1,5 +1,9 @@
 'use client'
 
+import { useCopyState } from '../shared/useCopyState'
+
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Flex } from '@pure/ui'
 import { useState } from 'react'
 
@@ -9,7 +13,7 @@ import { apiFetch, jsonInit } from '@/utils/apiFetch'
 import { ReadFileForm } from './ReadFileForm'
 import { ReadFileResults } from './ReadFileResults'
 import { READ_FILE_API_PATH, SUPPORTED_FORMATS, canSubmit, downloadResultJson, readApiError } from './readFileModel'
-import type { ApiError, CopyState, RequestMode, ResultView, RunState } from './readFileModel'
+import type { ApiError, RequestMode, ResultView, RunState } from './readFileModel'
 
 export default function ReadFilePage() {
   const [mode, setMode] = useState<RequestMode>('file')
@@ -20,7 +24,7 @@ export default function ReadFilePage() {
   const [result, setResult] = useState<FileDocument | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [runState, setRunState] = useState<RunState | null>(null)
-  const [copyState, setCopyState] = useState<CopyState>('idle')
+  const { copyState, copyText, setCopyState } = useCopyState()
 
   const rawJson = result ? JSON.stringify(result, null, 2) : ''
 
@@ -91,7 +95,7 @@ export default function ReadFilePage() {
         status: 0,
         submittedAt,
       })
-      setError(requestError instanceof Error ? requestError.message : 'Request failed')
+      setError(getErrorMessage(requestError, 'Request failed'))
     } finally {
       setIsLoading(false)
     }
@@ -99,13 +103,7 @@ export default function ReadFilePage() {
 
   const copyJson = async () => {
     if (!rawJson) return
-    try {
-      await navigator.clipboard.writeText(rawJson)
-      setCopyState('copied')
-      window.setTimeout(() => setCopyState('idle'), 1600)
-    } catch {
-      setCopyState('failed')
-    }
+    await copyText(rawJson)
   }
 
   return (

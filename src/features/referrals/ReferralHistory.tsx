@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { toast, Spin } from '@lobehub/ui'
 import { Text, Flex, Button, Select } from '@pure/ui'
 import { ArrowLeft, Copy } from 'lucide-react'
@@ -31,7 +32,7 @@ export function ReferralHistory({ onBack }: { onBack: () => void }) {
           cursor && previous ? { ...result, items: [...previous.items, ...result.items] } : result
         )
       } catch (requestError) {
-        setError(requestError instanceof Error ? requestError.message : '加载邀请失败')
+        setError(getErrorMessage(requestError, '加载邀请失败'))
       } finally {
         setLoading(false)
       }
@@ -46,7 +47,7 @@ export function ReferralHistory({ onBack }: { onBack: () => void }) {
         if (!cancelled) setData(result)
       })
       .catch((requestError: unknown) => {
-        if (!cancelled) setError(requestError instanceof Error ? requestError.message : '加载邀请失败')
+        if (!cancelled) setError(getErrorMessage(requestError, '加载邀请失败'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -81,7 +82,7 @@ export function ReferralHistory({ onBack }: { onBack: () => void }) {
       else toast.warning(first?.error || first?.invitation?.error || '发送结果待确认')
       await load()
     } catch (requestError) {
-      toast.error(requestError instanceof Error ? requestError.message : '重发失败')
+      toast.error(getErrorMessage(requestError, '重发失败'))
     } finally {
       setResending(null)
     }

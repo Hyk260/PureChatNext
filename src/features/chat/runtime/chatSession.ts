@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { Chat } from '@ai-sdk/react'
 import {
   DefaultChatTransport,
@@ -275,7 +276,7 @@ export class ChatSession {
     this.onChange()
     try {
       const output = await desktop.executeLocalTool(request).catch((error: unknown) => ({
-        content: error instanceof Error ? error.message : '本地工具执行失败',
+        content: getErrorMessage(error, '本地工具执行失败'),
         success: false,
       }))
       if (this.blocked || this.stopRequested || epoch !== this.epoch) return

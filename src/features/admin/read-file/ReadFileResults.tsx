@@ -78,7 +78,7 @@ function PageCard({ index, page }: { index: number; page: DocumentPage }) {
           {summarizeValue(page.charCount)} chars · {summarizeValue(page.lineCount)} lines
         </div>
       </Flex>
-      <pre className='max-h-64 overflow-auto whitespace-pre-wrap p-4 font-mono text-sm leading-6 text-foreground'>
+      <pre className='max-h-64 overflow-auto whitespace-pre-wrap p-4 font-mono text-sm/6 text-foreground'>
         {page.pageContent || 'No page content.'}
       </pre>
     </article>
@@ -130,7 +130,7 @@ function ResultBody({
   }
 
   return (
-    <pre className='overflow-auto whitespace-pre-wrap rounded-lg bg-secondary p-4 font-mono text-sm leading-6 text-foreground ring-1 ring-border'>
+    <pre className='overflow-auto whitespace-pre-wrap rounded-lg bg-secondary p-4 font-mono text-sm/6 text-foreground ring-1 ring-border'>
       {result.content}
     </pre>
   )

@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { create } from 'zustand'
 
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
@@ -61,7 +62,7 @@ export const useAgentsStore = create<AgentsStoreState>((set, get) => ({
           return get().agents
         }
         set({
-          error: error instanceof Error ? error.message : 'fetch failed',
+          error: getErrorMessage(error, 'fetch failed'),
           loading: false,
         })
         return get().agents

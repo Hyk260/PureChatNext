@@ -14,11 +14,11 @@ vi.mock('@ai-sdk/deepseek', () => ({
 vi.mock('@ai-sdk/openai', () => ({
   createOpenAI: mocks.createOpenAI,
 }))
-vi.mock('./timedFetch', () => ({
+vi.mock('../timedFetch', () => ({
   createTimedFetch: mocks.createTimedFetch,
 }))
 
-import { createProviderLanguageModel } from './resolveClient'
+import { createProviderLanguageModel } from '../resolveClient'
 
 describe('createProviderLanguageModel', () => {
   beforeEach(() => {

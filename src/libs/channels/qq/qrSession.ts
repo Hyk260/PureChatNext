@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { randomUUID } from 'node:crypto'
 
 import { startQrConnect } from '@tencent-connect/qqbot-connector'
@@ -94,7 +95,7 @@ async function completeSingleCredential(session: QQQrSession, credential: QrConn
   } catch (error) {
     log('automatic QR binding failed userId=%s: %O', session.userId, error)
     session.credentials = undefined
-    session.publicStatus = { message: error instanceof Error ? error.message : 'QQ 绑定失败', status: 'failed' }
+    session.publicStatus = { message: getErrorMessage(error, 'QQ 绑定失败'), status: 'failed' }
   }
 }
 
@@ -210,7 +211,7 @@ export async function completeQQQrSession(userId: string, sessionId: string, app
     return binding
   } catch (error) {
     session.credentials = undefined
-    session.publicStatus = { message: error instanceof Error ? error.message : 'QQ 绑定失败', status: 'failed' }
+    session.publicStatus = { message: getErrorMessage(error, 'QQ 绑定失败'), status: 'failed' }
     throw error
   }
 }

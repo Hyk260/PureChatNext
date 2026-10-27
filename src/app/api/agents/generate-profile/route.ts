@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { generateText } from 'ai'
 import debug from 'debug'
 import { NextResponse } from 'next/server'
@@ -5,10 +6,7 @@ import { z } from 'zod'
 
 import { FreePlanLimitError } from '@pure/database/models/credits'
 import { getEnabledPureChatModel, PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
-import {
-  createProviderLanguageModel,
-  resolveApiKeyFromHeader,
-} from '@/libs/ai-providers/resolveClient'
+import { createProviderLanguageModel, resolveApiKeyFromHeader } from '@/libs/ai-providers/resolveClient'
 import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { assertPureChatCanChat, chargePureChatGenerateUsage, createPureChatLanguageModel } from '@/server/purechat'
@@ -74,7 +72,7 @@ const buildPrompt = (input: z.infer<typeof bodySchema>) => {
 
 const toPureChatError = (error: unknown) => {
   if (error instanceof FreePlanLimitError) return jsonError(error.message, 429)
-  const message = error instanceof Error ? error.message : 'PureChat temporarily unavailable'
+  const message = getErrorMessage(error, 'PureChat temporarily unavailable')
   if (message === PURECHAT_MODEL_UNAVAILABLE_MESSAGE) return jsonError(message)
   if (message === 'PureChat is disabled') return jsonError(MISSING_USER_PROVIDER_SECRET_MESSAGE)
   if (message === 'PureChat temporarily unavailable') return jsonError(message, 503)

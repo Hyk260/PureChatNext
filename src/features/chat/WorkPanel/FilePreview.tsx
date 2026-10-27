@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import {
   ActionIcon,
   Button,
@@ -83,7 +85,7 @@ async function openInSystem(project: DesktopProject, path: string) {
   try {
     await getDesktopApi()?.openPath(getProjectFilePath(project.rootPath, path))
   } catch (error) {
-    toast.error(error instanceof Error ? error.message : '打开文件失败')
+    toast.error(getErrorMessage(error, '打开文件失败'))
   }
 }
 
@@ -103,7 +105,7 @@ const FilePreviewBody = memo(({ project, path }: { project: DesktopProject; path
         const result = await api.readProjectFile({ projectId: project.id, relativePath: path })
         if (!cancelled) setFile(result)
       } catch (readError) {
-        if (!cancelled) setError(readError instanceof Error ? readError.message : '读取文件失败')
+        if (!cancelled) setError(getErrorMessage(readError, '读取文件失败'))
       }
     }
     read()

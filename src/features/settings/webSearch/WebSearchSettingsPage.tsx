@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { confirmModal, InputNumber, Segmented, Switch, toast } from '@lobehub/ui'
 import { DEFAULT_WEB_SEARCH_SETTINGS } from '@pure/types'
 import type { WebSearchSettingsPatch } from '@pure/types'
@@ -52,7 +53,7 @@ export default function WebSearchSettingsPage() {
       await save(patch)
       return true
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '保存失败')
+      toast.error(getErrorMessage(error, '保存失败'))
       return false
     }
   }
@@ -84,7 +85,7 @@ export default function WebSearchSettingsPage() {
           setBlacklistDraft(undefined)
           toast.success('已恢复服务器配置')
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : '恢复失败')
+          toast.error(getErrorMessage(error, '恢复失败'))
           throw error
         }
       },

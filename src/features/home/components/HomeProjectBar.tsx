@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Flex, Modal } from '@pure/ui'
 import { ActionIcon, Button, Icon, Input, Popover, Text, toast, createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { Check, ChevronDown, Folder, FolderOpen, FolderPlus, Search, Star, X } from 'lucide-react'
@@ -162,7 +164,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, projectN
       setProjects(items)
       setDefaultProject(defaultItem)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '加载项目失败')
+      toast.error(getErrorMessage(error, '加载项目失败'))
     } finally {
       setLoading(false)
     }
@@ -186,7 +188,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, projectN
         setOpen(false)
         setSearch('')
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : '切换项目失败')
+        toast.error(getErrorMessage(error, '切换项目失败'))
       } finally {
         setSaving(false)
       }
@@ -220,7 +222,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, projectN
       setRootPath(selected)
       setName((current) => current.trim() || pathBasename(selected))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '选择文件夹失败')
+      toast.error(getErrorMessage(error, '选择文件夹失败'))
     }
   }, [])
 
@@ -249,7 +251,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, projectN
       toast.success(`已创建项目：${project.name}`)
       await handleSelect(project)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '创建项目失败')
+      toast.error(getErrorMessage(error, '创建项目失败'))
     } finally {
       setCreating(false)
     }
@@ -268,7 +270,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, projectN
       if (!currentProjectName && next) await onChange(next)
       toast.success(next ? `已设为默认项目：${next.name}` : '已取消默认项目')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '设置默认项目失败')
+      toast.error(getErrorMessage(error, '设置默认项目失败'))
     } finally {
       setSaving(false)
     }
@@ -285,7 +287,7 @@ const HomeProjectBar = memo<HomeProjectBarProps>(({ disabled, onChange, projectN
         if (defaultProject?.id === project.id) setDefaultProject(null)
         toast.success(`已删除项目：${project.name}`)
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : '删除项目失败')
+        toast.error(getErrorMessage(error, '删除项目失败'))
       } finally {
         setSaving(false)
       }

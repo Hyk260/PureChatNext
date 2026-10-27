@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({ ssrfSafeFetch: vi.fn() }))
 
 vi.mock('@pure/ssrf-safe-fetch', () => ({ ssrfSafeFetch: mocks.ssrfSafeFetch }))
 
-import { createTimedFetch } from './timedFetch'
+import { createTimedFetch } from '../timedFetch'
 
 describe('provider fetch transport', () => {
   beforeEach(() => {

@@ -1,3 +1,4 @@
+import { getCategoryCounts, filterCatalogItems } from '@/features/community/catalog'
 import { SkillCategory } from '@/features/community/types'
 import type { DiscoverSkillItem, SkillMarketCategory } from '@/features/community/types'
 
@@ -90,34 +91,11 @@ export const getCommunitySkillSourceUrl = (skill: DiscoverSkillItem) => {
 
 export const getSkillCategoryCounts = (
   skills: DiscoverSkillItem[] = COMMUNITY_SKILLS
-): Record<SkillCategory, number> => {
-  const counts = Object.fromEntries(Object.values(SkillCategory).map((key) => [key, 0])) as Record<
-    SkillCategory,
-    number
-  >
-
-  for (const skill of skills) {
-    counts[skill.category] += 1
-  }
-
-  counts[SkillCategory.All] = skills.length
-  return counts
-}
+): Record<SkillCategory, number> => getCategoryCounts(skills, Object.values(SkillCategory), SkillCategory.All)
 
 export const filterCommunitySkills = (
   skills: DiscoverSkillItem[],
   options: { category?: string | null; q?: string | null }
 ): DiscoverSkillItem[] => {
-  const category = options.category ?? SkillCategory.All
-  const query = options.q?.trim().toLowerCase() ?? ''
-
-  return skills.filter((skill) => {
-    const matchCategory = category === SkillCategory.All || skill.category === category
-    if (!matchCategory) return false
-
-    if (!query) return true
-
-    const haystack = [skill.name, skill.description, skill.author, skill.identifier].join(' ').toLowerCase()
-    return haystack.includes(query)
-  })
+  return filterCatalogItems(skills, options, (item) => [item.name, item.description, item.author, item.identifier])
 }

@@ -154,6 +154,33 @@ AI 创建或修改 React 组件时必须遵循：
 - 迁移后若静态 `className` 超过 120 字符，应先复用已有 utility，仍超限则退回 `createStaticStyles`，不得机械拆分字符串。
 - 删除 `createStaticStyles` 后，必须确认对应的样式 helper import、测试 mock 和无用样式变量也一并清理。
 
+## 重复样式治理
+
+先核对计算后的样式和交互条件，再做等价替换。每批记录原写法、替换结果和实际调用位置，避免将普通内容字符串误识别成类名。
+
+| 原写法 | 优先复用 | 条件 |
+| --- | --- | --- |
+| `flex items-center justify-center` | `flex-center` | 保留方向、换行和断点 |
+| `flex items-center justify-between` | `flex-between` | 带 `flex-wrap` 时使用 `flex-between-wrap` |
+| `flex flex-col items-center justify-center` | `flex-col-center` | 两个轴的对齐均相同 |
+| `h-full w-full`、`h-8 w-8` | `size-full`、`size-8` | 宽高值与变体完全相同 |
+| `absolute inset-0`、`fixed inset-0` | `absolute-fill`、`fixed-fill` | 保留定位参考容器和层级 |
+| `text-sm leading-6` | `text-sm/6` | 字号与行高保持一致 |
+
+`Flex` 已有 flex 显示行为，普通布局可省略独立的 `flex`。包含 `hidden md:flex` 等条件显示规则时必须保留原显示范围；`inline-flex` 也不能直接改成会设置 `display: flex` 的组合。
+
+新增全局 `@utility` 至少要有两个功能域、三个真实调用点，且不包含页面尺寸、间距、颜色等设计决策。只在同一领域复用的复杂状态样式可以放入该领域的共享 `createStaticStyles`；简单的侧栏宽度、背景和布局优先使用已有 token 和普通类。
+
+主题颜色必须精确匹配。`colorTextDescription`、`colorTextSecondary` 与应用的 `muted-foreground` 不视为同一个颜色；尚无等价 token 时共享领域样式，不以近似颜色替代。逻辑方向边框也应保留其 writing-mode 行为。
+
+CSS-in-JS 中不要假定 `--text-xl`、`--font-weight-semibold`、`--radius-lg` 等 Tailwind 变量一定出现在运行时；工具类可以被编译为静态值。优先保留 `text-xl`、`font-semibold`、`rounded-lg` 等原子类，直接读取变量时核对实际计算样式和回退值。
+
+共享类名必须是完整静态字符串，不拼接 `bg-${color}` 之类的动态类名。移动共享源码后检查 `@source` 范围。涉及 hover 的样式迁移保留 `@media (hover: hover)` 条件，避免触屏行为变化。
+
+验收覆盖浅色、深色、宽屏、窄屏、焦点、hover、拖放和滚动，并验证 Web 与桌面共享 SPA 构建。不为只服务一个控件的长类名添加全局组合，仍超限时使用组件级样式。
+
+规则依据：[自定义工具类](https://tailwindcss.com/docs/adding-custom-styles)、[尺寸工具](https://tailwindcss.com/docs/width)、[字号与行高](https://tailwindcss.com/docs/font-size)、[源码检测](https://tailwindcss.com/docs/detecting-classes-in-source-files)。
+
 ## 相关文件
 
 - [Tailwind 样式迁移方案](./tailwind-migration.md)

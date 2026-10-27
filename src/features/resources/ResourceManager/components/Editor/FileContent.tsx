@@ -78,7 +78,7 @@ const PreviewMessage = memo<PreviewMessageProps>(({ description, fileName, url }
   const [downloading, setDownloading] = useState(false)
 
   return (
-    <Flex className={['w-full h-full p-6', 'flex-col-center ']}>
+    <Flex className={['size-full p-6', 'flex-col-center ']}>
       <Text strong>{fileName}</Text>
       <Text type='secondary'>{description}</Text>
       {url && (
@@ -119,7 +119,7 @@ const LoadedTextPreview = ({ content, fileName, url }: { content: string; fileNa
     <div className={styles.source}>
       <Suspense
         fallback={
-          <Flex className={['w-full h-full p-6', 'flex-col-center']}>
+          <Flex className={['size-full p-6', 'flex-col-center']}>
             <Spin />
           </Flex>
         }
@@ -155,7 +155,7 @@ const RemoteTextPreview = ({ fileName, url }: { fileName: string; url: string })
 
   if (requestState.url !== url) {
     return (
-      <Flex className={['w-full h-full p-6', 'flex-col-center']}>
+      <Flex className={['size-full p-6', 'flex-col-center']}>
         <Spin />
       </Flex>
     )
@@ -188,7 +188,7 @@ const ImagePreview = memo<ImagePreviewProps>(({ fileName, onError, url }) => {
   const [loaded, setLoaded] = useState(false)
 
   return (
-    <Flex className={['w-full h-full p-6', 'flex-col-center']}>
+    <Flex className={['size-full p-6', 'flex-col-center']}>
       {!loaded && <Spin />}
       {/* The preview URL may be authenticated or remote and has no known dimensions. */}
       <img
@@ -231,7 +231,7 @@ const FileContent = memo<FileContentProps>(({ item }) => {
 
   if (previewKind === 'video') {
     return (
-      <Flex className={['w-full h-full p-6', 'flex-col-center']}>
+      <Flex className={['size-full p-6', 'flex-col-center']}>
         <video controls className={'block max-w-full max-h-full'} src={item.url} onError={() => setMediaFailed(true)} />
       </Flex>
     )
@@ -239,7 +239,7 @@ const FileContent = memo<FileContentProps>(({ item }) => {
 
   if (previewKind === 'audio') {
     return (
-      <Flex className={['w-full h-full p-6', 'flex-col-center']}>
+      <Flex className={['size-full p-6', 'flex-col-center']}>
         <audio controls className={'w-[min(640px,100%)]'} src={item.url} onError={() => setMediaFailed(true)} />
       </Flex>
     )

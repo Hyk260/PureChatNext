@@ -1,5 +1,9 @@
 'use client'
 
+import { useCopyState } from '../shared/useCopyState'
+
+import { getErrorMessage } from '@pure/utils/error'
+
 import { toast, Segmented } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
 import { useEffect, useState } from 'react'
@@ -25,7 +29,7 @@ import {
   S3_API_PATH,
   withSearch,
 } from './s3Model'
-import type { ActionMode, CopyState, FileInfo, ResultView, RunState, S3FormValues } from './s3Model'
+import type { ActionMode, FileInfo, ResultView, RunState, S3FormValues } from './s3Model'
 
 const ACTION_ICONS = {
   delete: Trash2,
@@ -76,7 +80,7 @@ export default function S3Page() {
   const [payload, setPayload] = useState<unknown>(null)
   const [resultAction, setResultAction] = useState<ActionMode | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [copyState, setCopyState] = useState<CopyState>('idle')
+  const { copyState, copyText, setCopyState } = useCopyState()
   const [fileList, setFileList] = useState<FileInfo[]>([])
   const [imagePreview, setImagePreview] = useState<{ key: string; url: string } | null>(null)
   const [previewLoadingKey, setPreviewLoadingKey] = useState<string | null>(null)
@@ -157,7 +161,7 @@ export default function S3Page() {
         status: 0,
         submittedAt,
       })
-      setError(requestError instanceof Error ? requestError.message : 'Request failed')
+      setError(getErrorMessage(requestError, 'Request failed'))
     } finally {
       setIsLoading(false)
     }
@@ -174,15 +178,7 @@ export default function S3Page() {
     setCopyState('idle')
   }
 
-  const copyRequestJson = async () => {
-    try {
-      await navigator.clipboard.writeText(requestJson)
-      setCopyState('copied')
-      window.setTimeout(() => setCopyState('idle'), 1600)
-    } catch {
-      setCopyState('failed')
-    }
-  }
+  const copyRequestJson = () => copyText(requestJson)
 
   const acceptFiles = (incoming: File[], replace: boolean) => {
     if (incoming.length === 0) return
@@ -212,7 +208,7 @@ export default function S3Page() {
     try {
       window.open(await fetchDownloadUrl(key), '_blank', 'noopener')
     } catch (requestError) {
-      toast.error(requestError instanceof Error ? requestError.message : '下载失败')
+      toast.error(getErrorMessage(requestError, '下载失败'))
     }
   }
 
@@ -221,7 +217,7 @@ export default function S3Page() {
     try {
       setImagePreview({ key, url: await fetchDownloadUrl(key) })
     } catch (requestError) {
-      toast.error(requestError instanceof Error ? requestError.message : '预览失败')
+      toast.error(getErrorMessage(requestError, '预览失败'))
     } finally {
       setPreviewLoadingKey(null)
     }

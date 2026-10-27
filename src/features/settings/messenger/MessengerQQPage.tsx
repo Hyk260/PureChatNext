@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { confirmModal, toast, Spin } from '@lobehub/ui'
 import { ActionIcon, Button, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
@@ -44,7 +46,7 @@ function getQqGatewayStatus(params: {
 
   if (error) {
     return {
-      description: error instanceof Error ? error.message : '无法读取 QQ 网关状态。',
+      description: getErrorMessage(error, '无法读取 QQ 网关状态。'),
       title: '状态读取失败',
       type: 'error',
     }
@@ -165,7 +167,7 @@ const MessengerQQPage = memo(() => {
   useEffect(() => {
     const error = statusError ?? agentsError
     if (!error || status || agentList?.length) return
-    toast.error(error instanceof Error ? error.message : '加载失败')
+    toast.error(getErrorMessage(error, '加载失败'))
   }, [agentList?.length, agentsError, status, statusError])
 
   useEffect(() => {
@@ -197,7 +199,7 @@ const MessengerQQPage = memo(() => {
         setAgentId(previous.agentId)
         setProvider(previous.provider)
         setModelId(previous.model)
-        toast.error(error instanceof Error ? error.message : '更新失败')
+        toast.error(getErrorMessage(error, '更新失败'))
       } finally {
         setSaving(false)
       }

@@ -1,6 +1,6 @@
 export const DEFAULT_WORK_PANEL_WIDTH = 320
 export const DEFAULT_FILE_PREVIEW_WIDTH = 560
-export const MIN_WORK_PANEL_WIDTH = 220
+export const MIN_WORK_PANEL_WIDTH = 285
 export const MIN_FILE_PREVIEW_WIDTH = 280
 export const MAX_WORK_PANEL_WIDTH = 800
 export const MIN_CHAT_WIDTH = 280

@@ -18,6 +18,7 @@ export {
 } from './aiModels'
 export { computeChatCost, USD_TO_CNY, type ChatCostResult, type ChatTokenUsage } from './computeChatCost'
 export { ModelProvider, type ModelProviderId } from './const/modelProvider'
+export { PROVIDER_DEFAULT_MODELS } from './providerDefaults'
 export {
   DEFAULT_MODEL_PROVIDER_LIST,
   deepseekProviderCard,

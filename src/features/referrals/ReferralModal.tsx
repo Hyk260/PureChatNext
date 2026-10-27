@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { Text, Flex, Button, TextArea, Modal } from '@pure/ui'
 import { CheckCircle2, CircleAlert } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -49,7 +50,7 @@ export default function ReferralModal({ open, onClose }: Props) {
       requestRef.current = null
       setView('result')
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : '邀请发送失败')
+      setError(getErrorMessage(requestError, '邀请发送失败'))
     } finally {
       setLoading(false)
     }

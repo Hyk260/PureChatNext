@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { confirmModal, toast } from '@lobehub/ui'
 import { ActionIcon, Button, Text, Flex } from '@pure/ui'
 import { Plus, Trash2 } from 'lucide-react'
@@ -23,7 +25,7 @@ const LibraryList = memo(() => {
       await createKnowledgeBase(name)
       toast.success('知识库已创建')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '创建失败')
+      toast.error(getErrorMessage(err, '创建失败'))
     }
   }
 

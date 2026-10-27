@@ -1,10 +1,11 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { writeFile, unlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createHash, randomUUID } from 'node:crypto'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createDeepSeek } from '@ai-sdk/deepseek'
-import { PURECHAT_PROVIDER_ID } from '@pure/const'
+import { PURECHAT_PROVIDER_ID, isValidProviderId } from '@pure/const'
 import { getAiModel } from '@pure/model-bank'
 import { loadFile } from '@pure/file-loaders'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
@@ -14,7 +15,11 @@ import type { ToolExecutionEndEvent, ToolSet, UIMessage } from 'ai'
 import debug from 'debug'
 import { createNanoId } from '@pure/utils'
 
-import { createOpenAICompatibleLanguageModel, isSupportedProviderId } from '@/libs/ai-providers/resolveClient'
+import {
+  createOpenAICompatibleLanguageModel,
+  isSupportedProviderId,
+  resolveApiKeyFromHeader,
+} from '@/libs/ai-providers/resolveClient'
 import { createTimedFetch } from '@/libs/ai-providers/timedFetch'
 import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
@@ -42,7 +47,6 @@ import { resolveChatToolInstructions, resolveChatTools } from '@/server/chat/too
 import { desktopTools } from '@/server/chat/desktopTools'
 import { CHAT_TOOL_CAPABILITIES, isToolApprovalRequired } from '@/server/chat/permissionPolicy'
 import { safeFileName } from '@/libs/utils/safeFileName'
-import { isValidProviderId } from '@pure/database/models/customProvider'
 
 import { resolveUserWebTools, WEB_FETCH_INSTRUCTION } from '@/server/search/webTools'
 
@@ -153,13 +157,6 @@ const normalizeAttachmentMessages = async (messages: UIMessage[], supportsVision
 }
 
 /** Prefer Authorization: Bearer <token>; otherwise fall back to provider env keys. */
-const resolveApiKeyFromHeader = (request: Request) => {
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader?.startsWith('Bearer ')) return undefined
-
-  const token = authHeader.slice('Bearer '.length).trim()
-  return token || undefined
-}
 
 const resolveProviderOptions = (apiKey: string | undefined, baseURL: string | undefined) => {
   const options: { apiKey?: string; baseURL?: string; fetch: typeof fetch } = { fetch: createTimedFetch() }
@@ -444,7 +441,7 @@ export async function POST(request: Request) {
     try {
       return await normalizeAttachmentMessages(selectedMessages, supportsVision)
     } catch (error) {
-      const message = error instanceof Error ? error.message : '附件解析失败'
+      const message = getErrorMessage(error, '附件解析失败')
       throw new ChatSDKError('bad_request:api', message)
     }
   }

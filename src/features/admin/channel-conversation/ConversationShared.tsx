@@ -1,10 +1,12 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Check, Copy, Download, Loader2, X } from 'lucide-react'
 import { Alert, Segmented } from '@lobehub/ui'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { formatSize } from '@pure/utils/client'
+import { formatSize, downloadBlob } from '@pure/utils/client'
 import { Flex, Button, Image, MaterialFileTypeIcon, Modal, Tag } from '@pure/ui'
 import type { ChannelExportMode } from './channelConversationExport'
 
@@ -81,12 +83,7 @@ export function ConversationExportDialog<Message, Session>({
   }
 
   const download = () => {
-    const url = URL.createObjectURL(new Blob([content], { type: 'application/json;charset=utf-8' }))
-    const link = document.createElement('a')
-    link.download = createFilename(session)
-    link.href = url
-    link.click()
-    URL.revokeObjectURL(url)
+    downloadBlob(new Blob([content], { type: 'application/json;charset=utf-8' }), createFilename(session))
   }
 
   return (
@@ -281,7 +278,7 @@ function PendingFileContentPreview({ file, onClose }: { file: File; onClose: () 
           setContent(text)
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : '预览失败')
+        if (!cancelled) setError(getErrorMessage(err, '预览失败'))
       } finally {
         if (!cancelled) setLoading(false)
       }

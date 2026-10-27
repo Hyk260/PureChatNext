@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import type { ChannelTimelineEvent } from '@pure/database/models/channelEvent'
 
 export type QQTimelineMessage = {
@@ -45,13 +46,9 @@ const USER_KIND_TEXT: Record<string, string> = {
   video: '[视频]',
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object'
-}
-
 function readQQAttachments(payload: Record<string, unknown> | null | undefined): QQAttachmentPayload[] {
   if (!payload || !Array.isArray(payload.attachments)) return []
-  return payload.attachments.filter(isRecord).map((item) => ({
+  return payload.attachments.filter(isObjectLike).map((item) => ({
     mimeType: typeof item.mimeType === 'string' ? item.mimeType : undefined,
     name: typeof item.name === 'string' ? item.name : undefined,
     size: typeof item.size === 'number' ? item.size : undefined,

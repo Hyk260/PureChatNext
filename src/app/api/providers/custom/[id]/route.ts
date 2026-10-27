@@ -1,34 +1,19 @@
+import { toPublicProvider } from '@/libs/ai-providers/providerProjection'
+import { isValidProviderId } from '@pure/const'
+import { isProviderHttpUrl } from '@pure/utils/url'
 import { z } from 'zod'
 
-import { CustomProviderModel, isValidProviderId } from '@pure/database/models/customProvider'
+import { CustomProviderModel } from '@pure/database/models/customProvider'
 import { UserProviderSecretModel } from '@pure/database/models/userProviderSecret'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
-const isHttpUrl = (value: string) => {
-  try {
-    const url = new URL(value)
-    return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password && !url.hash && !url.search
-  } catch {
-    return false
-  }
-}
-
 const patchSchema = z.object({
   apiKey: z.string().max(8192).optional(),
-  baseURL: z.string().trim().min(1).max(2048).refine(isHttpUrl, '请输入有效的 http(s) 地址').optional(),
+  baseURL: z.string().trim().min(1).max(2048).refine(isProviderHttpUrl, '请输入有效的 http(s) 地址').optional(),
   description: z.string().trim().max(1000).optional(),
   enabled: z.boolean().optional(),
-  logo: z.union([z.literal(''), z.string().trim().max(2048).refine(isHttpUrl, '请输入有效的 http(s) 地址')]).optional(),
+  logo: z.union([z.literal(''), z.string().trim().max(2048).refine(isProviderHttpUrl, '请输入有效的 http(s) 地址')]).optional(),
   name: z.string().trim().min(1).max(128).optional(),
-})
-
-const toPublicProvider = (provider: NonNullable<Awaited<ReturnType<CustomProviderModel['find']>>>) => ({
-  baseURL: provider.baseURL,
-  description: provider.description,
-  enabled: provider.enabled,
-  id: provider.providerId,
-  logo: provider.logo,
-  name: provider.name,
 })
 
 /** PUT /api/providers/custom/[id] — 更新服务商资料，服务商 ID 保持不变。 */

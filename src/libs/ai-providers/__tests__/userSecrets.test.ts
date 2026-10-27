@@ -15,7 +15,7 @@ vi.mock('@pure/database/models/customProvider', () => ({
   CustomProviderModel: class {},
   isValidProviderId: (id: string) => /^[a-z0-9][a-z0-9_-]{0,31}$/.test(id),
 }))
-vi.mock('./resolveClient', () => ({
+vi.mock('../resolveClient', () => ({
   isSupportedProviderId: (id: string) => id === 'openai' || id === 'deepseek',
   PROVIDER_RUNTIME_DEFAULT_BASE_URLS: {
     deepseek: 'https://api.deepseek.com',
@@ -29,7 +29,7 @@ vi.mock('./resolveClient', () => ({
   resolveProviderApiKey: mocks.resolveProviderApiKey,
 }))
 
-import { resolveUserProviderCredentials } from './userSecrets'
+import { resolveUserProviderCredentials } from '../userSecrets'
 
 describe('resolveUserProviderCredentials', () => {
   beforeEach(() => {

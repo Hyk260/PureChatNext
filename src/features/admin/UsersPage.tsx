@@ -1,5 +1,9 @@
 'use client'
 
+import { TABLE_SORT_DIRECTIONS } from '@/const/table'
+
+import { getErrorMessage } from '@pure/utils/error'
+
 import { ActionIcon, confirmModal, toast, Select } from '@lobehub/ui'
 import { Form, useForm, useWatch } from '@lobehub/ui/form'
 import { ProTable } from '@lobehub/ui/pro-table'
@@ -37,7 +41,7 @@ type UserFormValues = {
 }
 
 const PAGE_SIZE = 20
-const TABLE_SORT_DIRECTIONS: Array<'ascend' | 'descend'> = ['descend', 'ascend', 'descend']
+const USER_TABLE_SORT_DIRECTIONS = [...TABLE_SORT_DIRECTIONS]
 const formatUserDateTime = (value: string) => formatCompactDateTime(value, { timeZone: SHANGHAI_TIMEZONE })
 
 const formatUserCredits = (credits: AdminUser['credits']) => {
@@ -186,7 +190,7 @@ export default function AdminUsersPage() {
       closeForm()
       await actionRef.current?.reload()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '保存失败')
+      toast.error(getErrorMessage(error, '保存失败'))
       throw error
     } finally {
       setSaving(false)
@@ -211,7 +215,7 @@ export default function AdminUsersPage() {
           await actionRef.current?.reload()
           toast.success('已重置用户本月额度')
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : '重置用户额度失败')
+          toast.error(getErrorMessage(error, '重置用户额度失败'))
           throw error
         } finally {
           setResettingCredits(false)
@@ -233,7 +237,7 @@ export default function AdminUsersPage() {
           actionRef.current?.clearSelected()
           await actionRef.current?.reload()
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : '删除失败')
+          toast.error(getErrorMessage(error, '删除失败'))
           throw error
         }
       },
@@ -413,7 +417,7 @@ export default function AdminUsersPage() {
           rowSelection={{}}
           scroll={{ x: 1640 }}
           search={false}
-          sortDirections={TABLE_SORT_DIRECTIONS}
+          sortDirections={USER_TABLE_SORT_DIRECTIONS}
           toolBarRender={() => [
             <ActionIcon
               key='create'

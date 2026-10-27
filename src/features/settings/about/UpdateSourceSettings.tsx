@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { Button, Flex, Input, Select, Text } from '@pure/ui'
 import type { FormEvent } from 'react'
 import { useState } from 'react'
@@ -30,7 +31,7 @@ export function UpdateSourceSettings({ preferences, source, disabled, onSave }: 
     try {
       normalizedUrl = normalizeUpdateUrl(customUrl)
     } catch (error) {
-      validationError = error instanceof Error ? error.message : '更新地址无效。'
+      validationError = getErrorMessage(error, '更新地址无效。')
     }
   }
   const sourceChanged = !source || sourceType !== source.type

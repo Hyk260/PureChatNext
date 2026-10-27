@@ -2,15 +2,15 @@ export type AbortableDelayOptions = {
   rejectOnAbort?: boolean
 }
 
-const createAbortError = () => Object.assign(new Error('aborted'), { name: 'AbortError' })
+export const createAbortError = () => Object.assign(new Error('aborted'), { name: 'AbortError' })
 
 export function abortableDelay(
   ms: number,
-  signal: AbortSignal,
+  signal?: AbortSignal,
   { rejectOnAbort = false }: AbortableDelayOptions = {}
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (signal.aborted) {
+    if (signal?.aborted) {
       if (rejectOnAbort) {
         reject(createAbortError())
       } else {
@@ -26,7 +26,7 @@ export function abortableDelay(
 
     const cleanup = () => {
       clearTimeout(timer)
-      signal.removeEventListener('abort', onAbort)
+      signal?.removeEventListener('abort', onAbort)
     }
 
     const onAbort = () => {
@@ -35,6 +35,6 @@ export function abortableDelay(
       else resolve()
     }
 
-    signal.addEventListener('abort', onAbort, { once: true })
+    signal?.addEventListener('abort', onAbort, { once: true })
   })
 }

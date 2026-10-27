@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
 
@@ -92,7 +93,7 @@ export const createEditExcelTool = (context: ChannelToolContext) =>
           return { code: error.code, error: error.message, success: false as const }
         }
         return {
-          error: error instanceof Error ? error.message : 'Excel 编辑失败。',
+          error: getErrorMessage(error, 'Excel 编辑失败。'),
           success: false as const,
         }
       }

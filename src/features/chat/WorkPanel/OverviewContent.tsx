@@ -1,5 +1,7 @@
 'use client'
 
+import { OS_PLATFORM_LABELS } from '@/const/platform'
+
 import { Progress, cssVar } from '@lobehub/ui'
 import { Text, Flex } from '@pure/ui'
 import { formatDateTime } from '@pure/utils/client'
@@ -10,12 +12,6 @@ import { countBusyTopics, useChatRuntimeStore } from '@/features/chat/runtime/st
 import type { LocalChatTopic } from '@/features/chat/types'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopSystemMetrics } from '@/types/desktop'
-
-const PLATFORM_LABELS: Partial<Record<NodeJS.Platform, string>> = {
-  darwin: 'macOS',
-  linux: 'Linux',
-  win32: 'Windows',
-}
 
 type ResourceProgressRowProps = {
   color: string
@@ -86,7 +82,7 @@ const SystemResourceCard = memo(() => {
   if (!desktopApi?.getSystemMetrics) return null
 
   const hostname = metrics?.hostname ?? '—'
-  const platformLabel = metrics ? (PLATFORM_LABELS[metrics.platform] ?? metrics.platform) : null
+  const platformLabel = metrics ? (OS_PLATFORM_LABELS[metrics.platform] ?? metrics.platform) : null
   const systemLabel = metrics ? `在线 · 已连接 · ${platformLabel} · ${metrics.arch}` : '在线 · 正在读取系统信息'
 
   return (
@@ -95,7 +91,7 @@ const SystemResourceCard = memo(() => {
       className='flex flex-col gap-3 rounded-xl border border-app-border-secondary bg-app-surface p-4 shadow-sm'
     >
       <Flex className='min-w-0 items-center gap-3'>
-        <div className='flex size-10 shrink-0 items-center justify-center rounded-xl border border-app-border-secondary bg-app-layout'>
+        <div className='flex-center size-10 shrink-0 rounded-xl border border-app-border-secondary bg-app-layout'>
           <Monitor aria-hidden='true' size={18} style={{ color: cssVar.colorTextSecondary }} />
         </div>
         <div className='flex min-w-0 flex-1 flex-col gap-1'>

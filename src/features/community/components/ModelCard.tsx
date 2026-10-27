@@ -1,33 +1,16 @@
 'use client'
 
+import { communityCardStyles } from './cardStyles'
+
 import { Block, Icon, ModelIcon, ProviderIcon, Text, Flex } from '@pure/ui'
 import { formatDate } from '@pure/utils/client'
-import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
+import { cx } from '@lobehub/ui'
 import { ClockIcon } from 'lucide-react'
 import { memo } from 'react'
 
 import ModelFeatureTags from '@/features/community/components/ModelFeatureTags'
 import ModelTypeIcon from '@/features/community/components/ModelTypeIcon'
 import type { DiscoverModelItem } from '@/features/community/types'
-
-const styles = createStaticStyles(({ css }) => ({
-  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
-  author: css`
-    color: ${cssVar.colorTextDescription};
-  `,
-  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
-  desc: css`
-    color: ${cssVar.colorTextSecondary};
-  `,
-  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
-  footer: css`
-    border-block-start: 1px dashed ${cssVar.colorBorder};
-  `,
-  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
-  secondaryDesc: css`
-    color: ${cssVar.colorTextDescription};
-  `,
-}))
 
 const ModelCard = memo<DiscoverModelItem>(
   ({ abilities, contextWindowTokens, description, displayName, identifier, providers, releasedAt, type }) => {
@@ -50,7 +33,7 @@ const ModelCard = memo<DiscoverModelItem>(
               <Text ellipsis className={'!m-0 !text-base !font-medium'}>
                 {displayName}
               </Text>
-              <div className={styles.author}>{identifier}</div>
+              <div className={communityCardStyles.secondaryDesc}>{identifier}</div>
             </Flex>
           </Flex>
           <ModelTypeIcon type={type} />
@@ -60,7 +43,7 @@ const ModelCard = memo<DiscoverModelItem>(
           {description ? (
             <Text
               as='p'
-              className={cx(styles.desc, 'flex-1 !m-0')}
+              className={cx(communityCardStyles.desc, 'flex-1 !m-0')}
               ellipsis={{
                 rows: 3,
               }}
@@ -69,8 +52,8 @@ const ModelCard = memo<DiscoverModelItem>(
             </Text>
           ) : null}
         </Flex>
-        <Flex className={[cx(styles.footer, 'mt-4 bg-app-surface'), 'flex-between p-4']}>
-          <Flex className={[cx(styles.secondaryDesc, 'text-xs'), 'items-center gap-1']}>
+        <Flex className={[cx(communityCardStyles.footer, 'mt-4 bg-app-surface'), 'flex-between p-4']}>
+          <Flex className={[cx(communityCardStyles.secondaryDesc, 'text-xs'), 'items-center gap-1']}>
             {releasedAt ? (
               <>
                 <Icon icon={ClockIcon} size={14} />

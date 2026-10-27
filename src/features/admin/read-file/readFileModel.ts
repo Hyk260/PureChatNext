@@ -1,24 +1,16 @@
+import { COPY_LABEL as COMMON_COPY_LABEL } from '../shared/diagnosticState'
+import { downloadBlob } from '@pure/utils/client'
+import type { CopyState, SummaryItem, RunState as DiagnosticRunState } from '../shared/diagnosticState'
 import type { DocumentPage, FileDocument } from '@pure/file-loaders'
 
 export type RequestMode = 'file' | 'url'
 export type ResultView = 'content' | 'pages' | 'json'
-export type CopyState = 'idle' | 'copied' | 'failed'
 
 export type ApiError = {
   error?: string
 }
 
-export type RunState = {
-  durationMs: number
-  mode: RequestMode
-  status: number
-  submittedAt: string
-}
-
-export type SummaryItem = {
-  label: string
-  value: string
-}
+export type RunState = DiagnosticRunState & { mode: RequestMode }
 
 export const READ_FILE_API_PATH = '/api/admin/read-file'
 export const READ_FILE_ENDPOINT_LABEL = 'POST /api/admin/read-file'
@@ -26,9 +18,8 @@ export const READ_FILE_ENDPOINT_LABEL = 'POST /api/admin/read-file'
 export const SUPPORTED_FORMATS = ['TXT', 'MD', 'CSV', 'JSON', 'PDF', 'DOCX', 'XLSX', 'XLS', 'PPTX'] as const
 
 export const COPY_LABEL: Record<CopyState, string> = {
+  ...COMMON_COPY_LABEL,
   idle: '复制 JSON',
-  copied: '已复制',
-  failed: '复制失败',
 }
 
 export const MODE_META: Record<RequestMode, { description: string; label: string }> = {
@@ -96,13 +87,7 @@ export const resultSummaryItems = (result: FileDocument | null): SummaryItem[] =
 ]
 
 export const downloadResultJson = (rawJson: string, filename: string) => {
-  const blob = new Blob([rawJson], { type: 'application/json' })
-  const href = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = href
-  anchor.download = `${filename || 'read-file-result'}.json`
-  anchor.click()
-  URL.revokeObjectURL(href)
+  downloadBlob(new Blob([rawJson], { type: 'application/json' }), `${filename || 'read-file-result'}.json`)
 }
 
 export const metaRows = (mode: RequestMode, runState: RunState | null): Array<[string, string]> => [
@@ -112,3 +97,5 @@ export const metaRows = (mode: RequestMode, runState: RunState | null): Array<[s
   ['耗时', runState ? `${runState.durationMs.toLocaleString()} ms` : 'N/A'],
   ['提交时间', runState?.submittedAt ?? 'N/A'],
 ]
+
+export type { CopyState, SummaryItem } from '../shared/diagnosticState'

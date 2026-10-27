@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { BRANDING_NAME } from '@/const/branding'
 import AuthAgreement, { withAuthAgreement } from '@/features/AuthAgreement'
 import { AuthCard } from '@/features/AuthCard'
@@ -52,7 +54,7 @@ const SignUpFormContent = () => {
         setInvitationReady(true)
       })
       .catch((error: unknown) => {
-        if (!cancelled) setInvitationError(error instanceof Error ? error.message : '邀请信息加载失败')
+        if (!cancelled) setInvitationError(getErrorMessage(error, '邀请信息加载失败'))
       })
     return () => {
       cancelled = true

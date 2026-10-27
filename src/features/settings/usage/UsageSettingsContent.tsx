@@ -1,5 +1,9 @@
 'use client'
 
+import { TABLE_SORT_DIRECTIONS } from '@/const/table'
+
+import { getErrorMessage } from '@pure/utils/error'
+
 import { DayjsDateRangePicker, Pagination, Progress, Table, createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import type { DayjsDateRangeValue, TableProps } from '@lobehub/ui'
 import { Block, Button, Empty, Grid, ModelIcon, SearchBar, Select, Skeleton, Tag, Text, Flex } from '@pure/ui'
@@ -156,7 +160,7 @@ const triggerFilterOptions = [
 
 const SORT_ORDER = { asc: 'ascend', desc: 'descend' } as const
 /** 升降序循环，不含取消。默认时间倒序时，悬停提示为「点击升序」。 */
-const TABLE_SORT_DIRECTIONS: Array<'ascend' | 'descend'> = ['descend', 'ascend', 'descend']
+const USAGE_TABLE_SORT_DIRECTIONS = [...TABLE_SORT_DIRECTIONS]
 
 export function UsageSettingsContent() {
   const [data, setData] = useState<UsageResponse | null>(null)
@@ -201,7 +205,7 @@ export function UsageSettingsContent() {
       })
       .catch((cause: unknown) => {
         if (cancelled) return
-        setError(cause instanceof Error ? cause.message : '加载失败')
+        setError(getErrorMessage(cause, '加载失败'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -424,7 +428,7 @@ export function UsageSettingsContent() {
             locale={{ emptyText: <Empty description='暂无用量明细' /> }}
             pagination={false}
             rowKey='id'
-            sortDirections={TABLE_SORT_DIRECTIONS}
+            sortDirections={USAGE_TABLE_SORT_DIRECTIONS}
             // scroll={{ x: 1017 }}
             onChange={(_pagination, _filters, sorter) => {
               const current = Array.isArray(sorter) ? sorter[0] : sorter

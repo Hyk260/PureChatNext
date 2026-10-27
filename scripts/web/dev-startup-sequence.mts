@@ -202,6 +202,7 @@ const printPortInUseError = async ({
   }
   if (!isWindows) {
     console.error(`   - 查看占用：lsof -nP -iTCP:${port} -sTCP:LISTEN`)
+    console.error(`   - 清理占用：kill $(lsof -tiTCP:${port} -sTCP:LISTEN)`)
   }
   console.error('')
 }

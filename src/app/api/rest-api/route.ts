@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { isAdminRole } from '@pure/const'
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, result }, { status: 200 })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorMessage = getErrorMessage(error, 'Unknown error')
     log('error: %s', errorMessage)
 
     return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })

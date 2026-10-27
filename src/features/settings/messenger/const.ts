@@ -1,4 +1,5 @@
-import { PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
+import { BUILTIN_PROVIDER_ID_LIST } from '@pure/const'
+import { PROVIDER_DEFAULT_MODELS } from '@pure/model-bank'
 import { formatDateTime } from '@pure/utils/client'
 
 import { CHANNEL_COMMAND_CATALOG } from '@/libs/channels/core/commands'
@@ -6,14 +7,10 @@ import type { ChannelCommandCatalogItem } from '@/libs/channels/core/commands'
 
 export type MessengerPlatformId = 'slack' | 'telegram' | 'discord' | 'wechat' | 'qq'
 
-export const MESSENGER_PROVIDER_IDS = ['purechat', 'openai', 'deepseek'] as const
+export const MESSENGER_PROVIDER_IDS = BUILTIN_PROVIDER_ID_LIST
 export type MessengerProviderId = (typeof MESSENGER_PROVIDER_IDS)[number]
 export const MESSENGER_DEFAULT_PROVIDER: MessengerProviderId = 'deepseek'
-export const MESSENGER_DEFAULT_MODELS: Record<MessengerProviderId, string> = {
-  deepseek: 'deepseek-v4-flash',
-  openai: 'gpt-5.4-nano',
-  purechat: PURECHAT_DEFAULT_MODEL,
-}
+export const MESSENGER_DEFAULT_MODELS = PROVIDER_DEFAULT_MODELS
 /** QQ 与微信共用 DeepSeek 默认服务商。 */
 export const QQ_DEFAULT_PROVIDER: MessengerProviderId = MESSENGER_DEFAULT_PROVIDER
 export const QQ_DEFAULT_MODEL = MESSENGER_DEFAULT_MODELS[QQ_DEFAULT_PROVIDER]

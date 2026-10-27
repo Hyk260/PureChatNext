@@ -1,3 +1,6 @@
+import { buildConversationFileContext } from '../core/files'
+import { abortableDelay } from '@pure/utils/async'
+import { getErrorMessage } from '@pure/utils/error'
 import { MessageItemType, WechatApiClient, WechatUploadMediaType } from '@pure/chat-adapter/wechat'
 import debug from 'debug'
 
@@ -83,26 +86,6 @@ type WechatEventResponse = Partial<Omit<WechatAgentReply, 'text'>> & { text: str
 
 const systemResponse = (text: string): WechatEventResponse => ({ text })
 
-function buildConversationFileContext(
-  conversationFiles: Awaited<ReturnType<typeof listWechatConversationFiles>>
-) {
-  if (!conversationFiles.length) return undefined
-  return [
-    '<wechat_conversation_files>',
-    ...conversationFiles.map(({ artifact, file }) =>
-      JSON.stringify({
-        direction: artifact.direction,
-        fileId: file.id,
-        filename: file.name,
-        summary: artifact.summary,
-        version: artifact.version,
-      })
-    ),
-    '</wechat_conversation_files>',
-    '用户说“这个文件/上面的文件”时，默认使用列表中最新的 output，否则使用最新 input。多个同等候选时先询问。',
-  ].join('\n')
-}
-
 async function buildResponse(event: ChannelEventItem): Promise<WechatEventResponse> {
   if (event.responseText) {
     return {
@@ -167,7 +150,7 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
         userText = `用户发送了文件：${prepared.fileName}（${prepared.fileType}）。请结合附件内容回答用户问题。`
         userContent = `${userText}\n文件 ID：${inputArtifact.file.id}\n\n<附件内容>${prepared.truncated ? '\n（内容已截断）' : ''}\n${prepared.content}\n</附件内容>`
       } catch (error) {
-        return systemResponse(error instanceof Error ? error.message : '文件解析失败，暂时无法处理。')
+        return systemResponse(getErrorMessage(error, '文件解析失败，暂时无法处理。'))
       }
     } else if (event.messageKind === 'image') {
       const { downloadStoredWechatImage, WECHAT_MAX_INBOUND_FILE_BYTES } = await import('./inboundMedia')
@@ -191,7 +174,7 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
       ]
     }
     const conversationFiles = await listWechatConversationFiles(event.sessionId, event.conversationVersion)
-    const attachmentContext = buildConversationFileContext(conversationFiles)
+    const attachmentContext = buildConversationFileContext(conversationFiles, 'wechat')
     const producedArtifacts: ChannelToolArtifact[] = []
     stopTyping = startWechatTyping(api, event.externalUserId, contextToken)
     return await generateWechatAgentReply({
@@ -300,7 +283,7 @@ async function sendResponse(event: ChannelEventItem, owner: string, responseText
       })
       await artifactModel.markSent(artifact.id)
     } catch (error) {
-      await artifactModel.markFailed(artifact.id, error instanceof Error ? error.message : '文件发送失败')
+      await artifactModel.markFailed(artifact.id, getErrorMessage(error, '文件发送失败'))
       throw error
     }
   }
@@ -310,7 +293,7 @@ function safeError(error: unknown) {
   const code = String(
     (error as { code?: string | number; name?: string })?.code ?? (error as Error)?.name ?? 'PROCESSING_ERROR'
   )
-  const raw = error instanceof Error ? error.message : 'Unknown processing error'
+  const raw = getErrorMessage(error, 'Unknown processing error')
   return { code: code.slice(0, 100), message: raw.replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]').slice(0, 500) }
 }
 
@@ -365,10 +348,10 @@ export async function runWechatProcessor(signal?: AbortSignal, onProcessed?: () 
     try {
       const processed = await processNextWechatEvent(owner)
       if (processed) onProcessed?.()
-      if (!processed) await new Promise((resolve) => setTimeout(resolve, IDLE_DELAY_MS))
+      if (!processed) await abortableDelay(IDLE_DELAY_MS)
     } catch (error) {
       log('processor loop error owner=%s: %O', owner, error)
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      await abortableDelay(2000)
     }
   }
 }

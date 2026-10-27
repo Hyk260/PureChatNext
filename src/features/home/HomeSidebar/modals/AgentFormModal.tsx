@@ -1,5 +1,6 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
 
 import { toast } from '@lobehub/ui'
 import { Avatar, Input, Text, TextArea, Modal, Flex, Button } from '@pure/ui'
@@ -97,7 +98,7 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
       }))
       toast.success('已生成开场内容')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '生成失败')
+      toast.error(getErrorMessage(error, '生成失败'))
     } finally {
       setGenerating(false)
     }

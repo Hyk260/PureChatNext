@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Avatar, Center, DropdownMenu, Block, Icon, Text, Flex } from '@pure/ui'
 import type { DropdownItem, MenuInfo } from '@pure/ui'
 import { confirmModal, toast, createStaticStyles, cssVar, cx } from '@lobehub/ui'
@@ -95,7 +97,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
     try {
       await onDelete(agent.id)
     } catch (error) {
-      const code = error instanceof Error ? error.message : ''
+      const code = getErrorMessage(error, '')
       if (code === 'BUILTIN') toast.error('系统内置助理不可删除')
       else toast.error('删除失败')
       throw error

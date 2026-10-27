@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { WECHAT_RET_CODES, WechatApiClient } from '@pure/chat-adapter/wechat'
 import type { WechatRawMessage } from '@pure/chat-adapter/wechat'
 import { abortableDelay } from '@pure/utils'
@@ -27,7 +28,7 @@ export type WechatPollOptions = {
 
 function errorDetails(error: unknown) {
   const code = String((error as { code?: number | string; name?: string })?.code ?? (error as Error)?.name ?? 'POLL_ERROR')
-  const raw = error instanceof Error ? error.message : 'WeChat polling failed'
+  const raw = getErrorMessage(error, 'WeChat polling failed')
   const cause = error instanceof Error && error.cause instanceof Error ? error.cause.message : undefined
   const message = raw.replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]').slice(0, 500)
   return {

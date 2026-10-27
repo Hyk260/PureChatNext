@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { ActionIcon, Button, Text, toast } from '@lobehub/ui'
 import {
   Camera,
@@ -75,7 +76,7 @@ const BrowserPane = memo<Props>(({ contextKey, historyScope, instanceId, agentId
         }
       })
       .catch((error: unknown) => {
-        if (!cancelled) setOpeningError(error instanceof Error ? error.message : '打开浏览器失败')
+        if (!cancelled) setOpeningError(getErrorMessage(error, '打开浏览器失败'))
       })
     return () => {
       cancelled = true
@@ -97,7 +98,7 @@ const BrowserPane = memo<Props>(({ contextKey, historyScope, instanceId, agentId
     try {
       await action()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '浏览器操作失败')
+      toast.error(getErrorMessage(error, '浏览器操作失败'))
     }
   }
   const focusInput = () => {
@@ -123,7 +124,7 @@ const BrowserPane = memo<Props>(({ contextKey, historyScope, instanceId, agentId
       focusInput()
     } catch (error) {
       if (useBrowserPanelStore.getState().entries[contextKey]?.state?.sessionId === state.sessionId)
-        toast.error(error instanceof Error ? error.message : '截图失败')
+        toast.error(getErrorMessage(error, '截图失败'))
     } finally {
       if (mounted.current) setCapturing(false)
     }
@@ -145,7 +146,7 @@ const BrowserPane = memo<Props>(({ contextKey, historyScope, instanceId, agentId
       drafts.setBrowserSelections(draftKey, [...selections, { ...element, id: crypto.randomUUID() }])
       focusInput()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '选择元素失败')
+      toast.error(getErrorMessage(error, '选择元素失败'))
     } finally {
       if (mounted.current) setPicking(false)
     }

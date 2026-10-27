@@ -1,5 +1,6 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
 
 import { toast } from '@lobehub/ui'
 import { ActionIcon, Button, Flex, Input, Modal, Select, Text, Tooltip } from '@pure/ui'
@@ -284,7 +285,7 @@ const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(({ initialSet
       onSaved(next)
       onClose()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '保存失败')
+      toast.error(getErrorMessage(error, '保存失败'))
     } finally {
       setSaving(false)
     }

@@ -8,6 +8,4 @@ export const devActionSuccess = (action: string, result: unknown) => {
   return NextResponse.json({ action, result, success: true }, { status: 200 })
 }
 
-export const getErrorMessage = (error: unknown, fallback = 'Internal server error') => {
-  return error instanceof Error ? error.message : fallback
-}
+export { getErrorMessage } from '@pure/utils/error'

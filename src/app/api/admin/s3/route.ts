@@ -1,9 +1,10 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 import { FileS3 } from '@/server/modules/S3'
 import { withAdmin } from '@/libs/auth/get-session-user'
-import { devError, getErrorMessage } from '../../dev/_utils'
+import { devError } from '../../dev/_utils'
 
 const DEV_S3_PREFIX = 'dev/'
 let fileS3: FileS3 | undefined
@@ -230,6 +231,6 @@ export const PUT = withAdmin(async (req: NextRequest) => {
 
     return devError(`Unknown action: ${action}`)
   } catch (error) {
-    return devError(error instanceof Error ? error.message : 'Unknown error', 500)
+    return devError(getErrorMessage(error, 'Unknown error'), 500)
   }
 })

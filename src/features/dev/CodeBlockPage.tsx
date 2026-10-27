@@ -19,7 +19,7 @@ export default function CodeBlockPage() {
       <div className='mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8'>
         <header className='flex flex-col gap-2'>
           <div className='flex items-center gap-3'>
-            <span className='flex size-10 items-center justify-center rounded-xl bg-white shadow-sm'>
+            <span className='flex-center size-10 rounded-xl bg-white shadow-sm'>
               <Code2 className='size-5 text-slate-700' />
             </span>
             <div>

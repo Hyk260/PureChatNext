@@ -1,9 +1,9 @@
+import type { RunState, SummaryItem } from '../shared/diagnosticState'
 export type ActionMode = 'verify' | 'sendMail'
 export type ContentMode = 'custom' | 'template'
 export type ResultView = 'summary' | 'json'
 export type RightPanelView = 'preview' | 'response'
 export type ProviderOption = '' | 'nodemailer' | 'resend'
-export type CopyState = 'idle' | 'copied' | 'failed'
 
 export type VerifyResult = {
   valid: boolean
@@ -25,12 +25,6 @@ export type ApiFailure = {
   success: false
 }
 
-export type RunState = {
-  durationMs: number
-  status: number
-  submittedAt: string
-}
-
 export type EmailFormValues = {
   from: string
   html: string
@@ -41,19 +35,8 @@ export type EmailFormValues = {
   to: string
 }
 
-export type SummaryItem = {
-  label: string
-  value: string
-}
-
 export const EMAIL_API_PATH = '/api/admin/email'
 export const EMAIL_ENDPOINT_LABEL = 'POST /api/admin/email'
-
-export const COPY_LABEL: Record<CopyState, string> = {
-  idle: '复制',
-  copied: '已复制',
-  failed: '复制失败',
-}
 
 export const ACTION_ORDER: ActionMode[] = ['sendMail', 'verify']
 
@@ -177,3 +160,7 @@ export const buildResultSummary = ({
   { label: '结果', value: getEmailResultSummary(verifyResult, sendMailResult?.messageId) ?? 'N/A' },
   { label: 'HTTP 耗时', value: runState ? `${runState.durationMs.toLocaleString()} ms` : 'N/A' },
 ]
+
+export type { CopyState, RunState, SummaryItem } from '../shared/diagnosticState'
+
+export { COPY_LABEL } from '../shared/diagnosticState'

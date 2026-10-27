@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { confirmModal, toast } from '@lobehub/ui'
 import { ActionIcon, DropdownMenu, Icon } from '@pure/ui'
 import type { DropdownItem } from '@pure/ui'
@@ -36,7 +38,7 @@ const ProjectGroupMenu = memo<Props>(({ disabled, projectName, topicCount, onDel
       }
       await api.openPath(project.rootPath)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '打开文件夹失败')
+      toast.error(getErrorMessage(error, '打开文件夹失败'))
     }
   }, [projectName])
 

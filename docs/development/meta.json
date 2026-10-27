@@ -4,5 +4,5 @@
   "icon": "CodeXml",
   "root": true,
   "pagesIndex": "README",
-  "pages": ["README", "architecture", "database", "quality", "styling", "ponytail"]
+  "pages": ["README", "architecture", "code-sharing", "database", "quality", "styling", "ponytail"]
 }

@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Button as LobeButton, createModal, QRCode, RadioGroup, Spin } from '@lobehub/ui'
 import { Button, Flex, Input, InputPassword, Select, Text } from '@pure/ui'
 import { LinkIcon, RefreshCw } from 'lucide-react'
@@ -134,7 +136,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
         poll(result.sessionId)
       } catch (err) {
         if (attemptRef.current === attempt) {
-          setError(err instanceof Error ? err.message : '获取 QQ 二维码失败')
+          setError(getErrorMessage(err, '获取 QQ 二维码失败'))
         }
       } finally {
         if (attemptRef.current === attempt) setLoading(false)
@@ -165,7 +167,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
         })
         await finish()
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'QQ 绑定失败')
+        setError(getErrorMessage(err, 'QQ 绑定失败'))
       } finally {
         setLoading(false)
       }
@@ -179,7 +181,7 @@ const QQConnectContent = memo<QQConnectContentProps>(
         await completeQQQrLogin(sessionId, selectedAppId)
         await finish()
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'QQ 绑定失败')
+        setError(getErrorMessage(err, 'QQ 绑定失败'))
       } finally {
         setLoading(false)
       }

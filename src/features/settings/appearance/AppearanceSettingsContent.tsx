@@ -3,10 +3,21 @@
 import { Button, Flex, Input, Text } from '@pure/ui'
 import { Monitor, Moon, Sun } from 'lucide-react'
 import { useState } from 'react'
+import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { useAppThemeMode } from '@/layout/themeMode'
 import type { ThemeMode } from '@/layout/themeMode'
 
 import { DEFAULT_THEME_COLOR, useThemeColor } from '@/layout/themeColor'
+
+// Keep the control's exact theme border while its focus ring remains a Tailwind variant.
+const styles = createStaticStyles(({ css }) => ({
+  colorPicker: css`
+    position: relative;
+    flex-shrink: 0;
+    background-color: ${cssVar.colorBgContainer};
+    border: 1px solid ${cssVar.colorBorderSecondary};
+  `,
+}))
 
 const themeModeOptions: { icon: typeof Sun; label: string; value: ThemeMode }[] = [
   { icon: Sun, label: '浅色', value: 'light' },
@@ -128,12 +139,15 @@ const ThemeColorPicker = () => {
           )
         })}
       </Flex>
-      <label className='relative flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-app-border-secondary bg-app-surface shadow-sm outline-none focus-within:ring-2 focus-within:ring-primary'>
+      <label className={cx(
+        styles.colorPicker,
+        'flex-center size-10 cursor-pointer rounded-lg shadow-sm outline-none focus-within:ring-2 focus-within:ring-primary'
+      )}>
         <input
           type='color'
           value={resolvedThemeColor}
           aria-label='自定义主题颜色'
-          className='absolute inset-0 size-full cursor-pointer opacity-0'
+          className='absolute-fill size-full cursor-pointer opacity-0'
           onChange={(event) => handleThemeColorChange(event.currentTarget.value.toUpperCase())}
         />
         <span
@@ -186,7 +200,7 @@ const AppearanceSettingsContent = () => {
                 <div className={`rounded-xl border bg-background p-2 transition-colors ${cardStateClass}`}>
                   <ThemePreview mode={option.value} />
                 </div>
-                <span className='mt-3 flex items-center justify-center gap-2 text-sm'>
+                <span className='mt-3 flex-center gap-2 text-sm'>
                   <Icon aria-hidden='true' className='size-4' />
                   {option.label}
                 </span>

@@ -59,7 +59,7 @@ export default function ContextWindowPage() {
     <main className='h-full min-h-0 overflow-y-auto bg-background text-foreground'>
       <div className='mx-auto flex w-full max-w-5xl flex-col gap-6 px-5 py-8 sm:px-8'>
         <header className='flex items-center gap-3'>
-          <span className='flex size-10 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm'>
+          <span className='flex-center size-10 shrink-0 rounded-xl bg-card shadow-sm'>
             <Layers3 aria-hidden='true' className='size-5 text-primary' />
           </span>
           <div>

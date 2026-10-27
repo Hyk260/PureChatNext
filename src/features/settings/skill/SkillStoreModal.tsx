@@ -1,5 +1,7 @@
 'use client'
 
+import { getSkillInstallErrorMessage } from '@/features/community/catalog'
+
 import { toast, Pagination, Segmented } from '@lobehub/ui'
 import { ActionIcon, Avatar, Block, Button, DropdownMenu, Empty, Flex, Grid, Modal, SearchBar, Text } from '@pure/ui'
 import type { DropdownItem } from '@pure/ui'
@@ -27,14 +29,6 @@ type StoreTab = (typeof STORE_TAB_OPTIONS)[number]['value']
 type InstalledSkillRef = {
   id: string
   identifier: string
-}
-
-const getSkillInstallErrorMessage = (status: number) => {
-  if (status === 401) return '请先登录后再安装'
-  if (status === 409) return '已安装'
-  if (status === 503) return '对象存储未配置，无法安装'
-  if (status === 404) return '技能不存在'
-  return '安装失败'
 }
 
 export interface SkillStoreModalProps {

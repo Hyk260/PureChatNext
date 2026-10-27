@@ -1,5 +1,6 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
 
 import { toast } from '@lobehub/ui'
 import { Flex, Input } from '@pure/ui'
@@ -31,7 +32,7 @@ export function FullNameSetting({ fullName, onUpdated }: FullNameSettingProps) {
       onUpdated(result.fullName)
       toast.success('全名已更新')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '全名更新失败')
+      toast.error(getErrorMessage(error, '全名更新失败'))
     } finally {
       setSaving(false)
     }

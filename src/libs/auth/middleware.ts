@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import type { NextRequest } from 'next/server'
 import { verifyAccessToken } from '@/libs/auth/jwt'
 import type { AccessTokenPayload } from '@/libs/auth/jwt'
@@ -69,7 +70,7 @@ export async function verifyAuth(request: NextRequest): Promise<{
       error: null,
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : '未知错误'
+    const errorMessage = getErrorMessage(error, '未知错误')
     logger.error(`[VerifyAuth] Token verification error: ${errorMessage}`)
 
     return {

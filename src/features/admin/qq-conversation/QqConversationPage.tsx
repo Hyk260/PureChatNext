@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Button } from '@pure/ui'
 import { Settings2 } from 'lucide-react'
 import { useNavigate } from 'react-router'
@@ -153,7 +155,7 @@ export default function QqConversationPage() {
         })
       } catch (err) {
         if (selectedIdRef.current !== id) return
-        setError(err instanceof Error ? err.message : '消息加载失败')
+        setError(getErrorMessage(err, '消息加载失败'))
       } finally {
         if (selectedIdRef.current === id) {
           setMessagesLoading(false)
@@ -200,7 +202,7 @@ export default function QqConversationPage() {
           clearSelection()
         }
       } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : '加载失败')
+        if (active) setError(getErrorMessage(err, '加载失败'))
       } finally {
         if (active) setLoading(false)
       }
@@ -289,7 +291,7 @@ export default function QqConversationPage() {
       pendingRequestIdRef.current = null
     } catch (err) {
       if (selectedIdRef.current === sendingSessionId) {
-        setError(err instanceof Error ? err.message : '发送失败')
+        setError(getErrorMessage(err, '发送失败'))
       }
     } finally {
       setSending(false)

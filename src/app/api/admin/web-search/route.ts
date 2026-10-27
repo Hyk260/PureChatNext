@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import type { CrawlImplType } from '@pure/web-crawler'
 import type { SearchImplType } from '@/server/search/impls'
 import type { NextRequest } from 'next/server'
@@ -112,7 +113,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
 
     return devActionSuccess(action, result)
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Internal server error'
+    const message = getErrorMessage(error, 'Internal server error')
 
     return devError(message, 500)
   }

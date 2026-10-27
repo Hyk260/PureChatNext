@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { SHANGHAI_TIMEZONE } from '@pure/const'
 import { formatFullDateTime } from '@pure/utils'
 import type { ModelMessage } from 'ai'
@@ -121,7 +122,7 @@ export async function handleWechatMention(params: {
     await thread.post({ markdown: reply.text })
   } catch (error) {
     log('handleMention failed agent=%s: %O', agentId, error)
-    const errMsg = error instanceof Error ? error.message : '处理失败'
+    const errMsg = getErrorMessage(error, '处理失败')
     try {
       await thread.post({ markdown: `⚠️ ${errMsg}` })
     } catch {

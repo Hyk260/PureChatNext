@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import debug from 'debug'
 
 import { ReferralModel, ReferralRuleError } from '@pure/database/models/referral'
@@ -58,7 +59,7 @@ export function serializeReferral(row: Referral): ReferralItem {
 }
 
 function isAmbiguousSend(error: unknown) {
-  const message = error instanceof Error ? error.message : ''
+  const message = getErrorMessage(error, '')
   const cause = error instanceof Error ? error.cause : undefined
   if (cause && typeof cause === 'object' && 'responseCode' in cause) {
     const code = Number(cause.responseCode)

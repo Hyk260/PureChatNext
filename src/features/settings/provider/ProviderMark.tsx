@@ -1,5 +1,7 @@
 'use client'
 
+import { BUILTIN_PROVIDER_IDS } from '@pure/const'
+
 import { ProviderCombine, ProviderIcon } from '@pure/ui'
 import { Avatar } from '@lobehub/ui'
 import { memo } from 'react'
@@ -11,8 +13,6 @@ interface ProviderMarkProps {
   name: string
   size: number
 }
-
-const BUILTIN_PROVIDER_IDS = new Set(['purechat', 'openai', 'deepseek'])
 
 const ProviderMark = memo<ProviderMarkProps>(({ combined = false, id, logo, name, size }) => {
   if (logo) {

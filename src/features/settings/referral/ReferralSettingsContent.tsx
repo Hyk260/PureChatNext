@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Block, Button, Flexbox as Flex, Icon, Table, Text, toast } from '@lobehub/ui'
 import { Input, Skeleton } from '@pure/ui'
 import type { TableProps } from '@lobehub/ui'
@@ -129,7 +131,7 @@ export function ReferralSettingsContent() {
       </Block>
       {error ? (
         <Flex direction='vertical' gap={12} role='alert'>
-          <Text type='danger'>{error instanceof Error ? error.message : '推荐奖励加载失败'}</Text>
+          <Text type='danger'>{getErrorMessage(error, '推荐奖励加载失败')}</Text>
           <Button onClick={retry} className='self-start'>
             重新加载
           </Button>
@@ -167,7 +169,7 @@ export function ReferralSettingsContent() {
             <li key={rule.label} className='flex min-w-0 gap-3 rounded-xl bg-background p-3'>
               <span
                 aria-hidden='true'
-                className='flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary'
+                className='flex-center size-7 shrink-0 rounded-full bg-primary/10 text-sm font-semibold text-primary'
               >
                 {index + 1}
               </span>

@@ -7,6 +7,23 @@ afterEach(() => {
 })
 
 describe('abortableDelay', () => {
+  it('supports ordinary waiting without a signal', async () => {
+    vi.useFakeTimers()
+    const promise = abortableDelay(50)
+    await vi.advanceTimersByTimeAsync(50)
+    await expect(promise).resolves.toBeUndefined()
+  })
+
+  it('removes the abort listener after normal completion', async () => {
+    vi.useFakeTimers()
+    const signal = new AbortController().signal
+    const remove = vi.spyOn(signal, 'removeEventListener')
+    const promise = abortableDelay(50, signal)
+    await vi.advanceTimersByTimeAsync(50)
+    await promise
+    expect(remove).toHaveBeenCalledWith('abort', expect.any(Function))
+  })
+
   it('resolves after the requested delay', async () => {
     vi.useFakeTimers()
     const promise = abortableDelay(100, new AbortController().signal)

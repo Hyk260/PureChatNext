@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ChatBotRegistry } from './chatBotRegistry'
+import { ChatBotRegistry } from '../chatBotRegistry'
 
 type FakeChat = {
   initialize: ReturnType<typeof vi.fn>
@@ -52,7 +52,9 @@ describe('ChatBotRegistry', () => {
     await registry.getOrCreate({ applicationId: 'app-1', fingerprint: 'v1', platform: 'qq' }, () => chat)
 
     await registry.invalidate('qq', 'app-1')
-    await registry.getOrCreate({ applicationId: 'app-1', fingerprint: 'v1', platform: 'qq' }, () => createFakeChat('new'))
+    await registry.getOrCreate({ applicationId: 'app-1', fingerprint: 'v1', platform: 'qq' }, () =>
+      createFakeChat('new')
+    )
 
     expect(chat.shutdown).toHaveBeenCalledOnce()
   })

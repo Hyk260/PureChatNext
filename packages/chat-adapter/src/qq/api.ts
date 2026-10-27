@@ -1,3 +1,4 @@
+import { abortableDelay } from '@pure/utils/async'
 import { QQ_MAX_TEXT_LENGTH } from '@pure/utils/qqText'
 import { QQ_MSG_TYPE } from './types'
 import type { QQAccessTokenResponse, QQGatewayUrlResponse, QQSendMessageParams, QQSendMessageResponse } from './types'
@@ -47,11 +48,11 @@ export class QQApiClient {
         })
         if (!RETRYABLE_STATUS_CODES.has(response.status) || attempt === NETWORK_RETRY_COUNT) return response
         await response.body?.cancel()
-        await new Promise((resolve) => setTimeout(resolve, retryDelayMs(response, attempt)))
+        await abortableDelay(retryDelayMs(response, attempt))
       } catch (error) {
         lastError = error
         if (attempt === NETWORK_RETRY_COUNT) break
-        await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt))
+        await abortableDelay(500 * 2 ** attempt)
       }
     }
 

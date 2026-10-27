@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { ActionIcon, Flex, Text } from '@pure/ui'
 import { confirmModal, toast, createStaticStyles, cssVar } from '@lobehub/ui'
 import { ArrowLeft, Trash2 } from 'lucide-react'
@@ -69,7 +71,7 @@ const ProviderDetailPage = memo<ProviderDetailPageProps>(({ id }) => {
           toast.success(`已删除服务商 ${meta.name}`)
           router.push('/settings/provider/all')
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : '删除服务商失败')
+          toast.error(getErrorMessage(error, '删除服务商失败'))
         }
       },
     })

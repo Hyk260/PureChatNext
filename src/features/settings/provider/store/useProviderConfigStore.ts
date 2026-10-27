@@ -1,5 +1,7 @@
 'use client'
 
+import { isBuiltinProviderId, isValidProviderId } from '@pure/const'
+
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { create } from 'zustand'
@@ -92,12 +94,6 @@ export const mergeProviderConfig = (
     models,
   }
 }
-
-const isBuiltinProviderId = (id: string): id is 'openai' | 'deepseek' | 'purechat' =>
-  id === 'openai' || id === 'deepseek' || id === 'purechat'
-
-const isValidProviderId = (id: string) =>
-  /^[a-z0-9][a-z0-9_-]{0,31}$/.test(id) && !['__proto__', 'constructor', 'prototype'].includes(id)
 
 const normalizePersistedConfigs = (configs?: Partial<ProviderConfigs>): ProviderConfigs => {
   const next: ProviderConfigs = {

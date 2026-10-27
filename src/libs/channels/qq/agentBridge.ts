@@ -1,3 +1,5 @@
+import { buildConversationFileContext } from '../core/files'
+import { getErrorMessage } from '@pure/utils/error'
 import { createHash } from 'node:crypto'
 
 import type { ModelMessage } from 'ai'
@@ -201,27 +203,6 @@ async function prepareAndPersistQQAttachments(params: {
     }
   }
   return { failures, files }
-}
-
-function buildQQConversationFileContext(
-  conversationFiles: Awaited<ReturnType<typeof listWechatConversationFiles>>
-): string | undefined {
-  if (!conversationFiles.length) return undefined
-
-  return [
-    '<qq_conversation_files>',
-    ...conversationFiles.map(({ artifact, file }) =>
-      JSON.stringify({
-        direction: artifact.direction,
-        fileId: file.id,
-        filename: file.name,
-        summary: artifact.summary,
-        version: artifact.version,
-      })
-    ),
-    '</qq_conversation_files>',
-    '用户说“这个文件/上面的文件”时，默认使用列表中最新的 output，否则使用最新 input。多个同等候选时先询问。',
-  ].join('\n')
 }
 
 function buildQQFileAgentContent(files: QQPreparedAttachment[], caption?: string | null) {
@@ -435,7 +416,7 @@ export async function handleQQMention(params: {
       const replyResult = await generateQQAgentReply({
         abortSignal: abortController.signal,
         agentId,
-        attachmentContext: buildQQConversationFileContext(conversationFiles),
+        attachmentContext: buildConversationFileContext(conversationFiles, 'qq'),
         history,
         model: resolvedModel,
         provider: resolvedProvider,
@@ -496,7 +477,7 @@ export async function handleQQMention(params: {
     }
     await recordChannelGatewayLog({ userId, platform: 'qq', bindingId, event: diagnosticStage, code: channelErrorCode(error) })
     log('handleMention failed agent=%s: %O', agentId, error)
-    const errorMessage = error instanceof Error ? error.message : 'QQ message processing failed'
+    const errorMessage = getErrorMessage(error, 'QQ message processing failed')
     // 配额耗尽时再发失败提示只会继续 40034128，且把已成功的分片在网页标成失败。
     if (/passive reply budget exhausted|40034128/.test(errorMessage)) {
       await eventModel
@@ -524,7 +505,7 @@ export async function handleQQMention(params: {
       await eventModel
         .saveQQResponse(event.id, {
           errorCode: 'PROCESSING_ERROR',
-          errorMessage: sendError instanceof Error ? sendError.message : 'QQ failure reply failed',
+          errorMessage: getErrorMessage(sendError, 'QQ failure reply failed'),
           status: 'failed',
           text: '',
         })

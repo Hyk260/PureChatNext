@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { DEFAULT_MODEL_PROVIDER_LIST, getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { ActionIcon, Flex, SortableList, Tabs } from '@pure/ui'
@@ -114,7 +116,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         toast.success(`已获取 ${remoteModels.length} 个模型`)
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '获取模型列表失败')
+      toast.error(getErrorMessage(error, '获取模型列表失败'))
     } finally {
       setLoading(false)
     }
@@ -336,7 +338,7 @@ const ModelList = memo<ModelListProps>(({ id }) => {
           failureCount += 1
           setModelHealth(id, model.id, {
             checkedAt: new Date().toISOString(),
-            message: error instanceof Error ? error.message : '检查失败',
+            message: getErrorMessage(error, '检查失败'),
             status: 'failure',
           })
         }

@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import {
   ActionIcon,
   DropdownMenu,
@@ -37,7 +39,7 @@ async function readDirectory(projectId: string, relativePath: string): Promise<D
     const result = await getDesktopApi()!.listProjectEntries({ projectId, relativePath })
     return { entries: result.entries }
   } catch (error) {
-    return { error: error instanceof Error ? error.message : '读取文件夹失败' }
+    return { error: getErrorMessage(error, '读取文件夹失败') }
   }
 }
 
@@ -201,7 +203,7 @@ const FilesContent = memo<Props>(({ activePath, error, loading, onOpenFile, proj
     try {
       await getDesktopApi()?.openPath(project.rootPath)
     } catch (openError) {
-      toast.error(openError instanceof Error ? openError.message : '打开项目失败')
+      toast.error(getErrorMessage(openError, '打开项目失败'))
     }
   }
 

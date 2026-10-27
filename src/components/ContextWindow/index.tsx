@@ -293,7 +293,7 @@ export const ContextWindow = ({ limit, model, onCompact, onNewChat, onRemoveItem
       aria-label='Context window'
       className='w-full max-w-[380px] rounded-2xl border border-border bg-card p-4 text-foreground shadow-card'
     >
-      <header className='flex items-center justify-between gap-3'>
+      <header className='flex-between gap-3'>
         <h2 className='min-w-0 truncate text-[13px] font-medium leading-5'>Context window</h2>
         <span className='flex max-w-[58%] items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-[11px] text-muted-foreground'>
           <Sparkles aria-hidden='true' className='size-3 shrink-0 text-primary' />
@@ -359,7 +359,7 @@ export const ContextWindow = ({ limit, model, onCompact, onNewChat, onRemoveItem
         ))}
       </div>
 
-      <footer className='mt-2 flex items-center justify-between gap-3 text-[12px]'>
+      <footer className='mt-2 flex-between gap-3 text-[12px]'>
         <span className='text-muted-foreground'>{formatContextTokens(view.remainingTokens)} free</span>
         <button className={styles.newChatButton} disabled={!onNewChat} onClick={onNewChat} type='button'>
           New chat <ArrowRight aria-hidden='true' className='size-3.5' />

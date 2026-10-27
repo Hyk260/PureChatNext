@@ -306,7 +306,7 @@ const ChatHeader = memo<Props>(
               </Flex>
               <div aria-hidden='true' className={styles.sharePreviewFade} />
             </div>
-            <Flex className='items-center justify-between gap-4'>
+            <Flex className='flex-between gap-4'>
               <Text type='secondary'>任何知道此链接的人都可以查看此聊天</Text>
               <Button
                 disabled={!shareUrl}

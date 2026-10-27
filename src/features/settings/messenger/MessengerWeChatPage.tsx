@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { confirmModal, toast, Spin } from '@lobehub/ui'
 import { ActionIcon, Button, Text, Flex } from '@pure/ui'
 import type { AgentListItem } from '@/const/home/agents'
@@ -66,7 +68,7 @@ function getWechatGatewayStatus(params: {
 
   if (error) {
     return {
-      description: error instanceof Error ? error.message : '无法读取微信网关状态。',
+      description: getErrorMessage(error, '无法读取微信网关状态。'),
       title: '状态读取失败',
       type: 'error',
     }
@@ -163,7 +165,7 @@ const MessengerWeChatPage = memo(() => {
   useEffect(() => {
     const error = statusError ?? agentsError
     if (!error || status || agentList?.length) return
-    toast.error(error instanceof Error ? error.message : '加载失败')
+    toast.error(getErrorMessage(error, '加载失败'))
   }, [agentList?.length, agentsError, status, statusError])
 
   useEffect(() => {
@@ -187,7 +189,7 @@ const MessengerWeChatPage = memo(() => {
       toast.success(`已重新入队 ${count} 条消息`)
       await refreshStatus()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '重试失败')
+      toast.error(getErrorMessage(error, '重试失败'))
     } finally {
       setRetryingFailedEvents(false)
     }
@@ -224,7 +226,7 @@ const MessengerWeChatPage = memo(() => {
         })
         toast.success('凭证已保存，正在等待 Gateway')
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : '绑定失败')
+        toast.error(getErrorMessage(error, '绑定失败'))
       } finally {
         setBinding(false)
       }
@@ -243,7 +245,7 @@ const MessengerWeChatPage = memo(() => {
         setAgentId(previous.agentId)
         setProvider(previous.provider)
         setModelId(previous.model)
-        toast.error(error instanceof Error ? error.message : '更新失败')
+        toast.error(getErrorMessage(error, '更新失败'))
         setSaving(false)
         return
       }

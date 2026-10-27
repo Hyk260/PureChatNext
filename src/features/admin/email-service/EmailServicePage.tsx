@@ -1,5 +1,9 @@
 'use client'
 
+import { useCopyState } from '../shared/useCopyState'
+
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Flex } from '@pure/ui'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -27,7 +31,6 @@ import type {
   ApiFailure,
   ApiSuccess,
   ContentMode,
-  CopyState,
   EmailFormValues,
   ResultView,
   RightPanelView,
@@ -55,7 +58,7 @@ export default function EmailServicePage() {
   const [runState, setRunState] = useState<RunState | null>(initialCache?.runState ?? null)
   const [payload, setPayload] = useState<ApiSuccess | null>(initialCache?.payload ?? null)
   const [error, setError] = useState<string | null>(initialCache?.error ?? null)
-  const [copyState, setCopyState] = useState<CopyState>('idle')
+  const { copyState, copyText, setCopyState } = useCopyState()
 
   const requestBody = buildRequestBody(action, values)
   const requestJson = JSON.stringify(requestBody, null, 2)
@@ -169,7 +172,7 @@ export default function EmailServicePage() {
         status: 0,
         submittedAt,
       })
-      setError(requestError instanceof Error ? requestError.message : 'Request failed')
+      setError(getErrorMessage(requestError, 'Request failed'))
     } finally {
       setIsLoading(false)
     }
@@ -198,15 +201,7 @@ export default function EmailServicePage() {
     reset()
   }
 
-  const copyRequestJson = async () => {
-    try {
-      await navigator.clipboard.writeText(requestJson)
-      setCopyState('copied')
-      window.setTimeout(() => setCopyState('idle'), 1600)
-    } catch {
-      setCopyState('failed')
-    }
-  }
+  const copyRequestJson = () => copyText(requestJson)
 
   return (
     <main className='flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground'>

@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Progress, Spin } from '@lobehub/ui'
 import { Text, Flex } from '@pure/ui'
 import { formatNumber, getPercentage } from '@pure/utils/client'
@@ -34,7 +36,7 @@ export function CreditsSettingsContent() {
         const json = (await res.json()) as CreditsResponse
         if (!cancelled) setData(json)
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : '加载失败')
+        if (!cancelled) setError(getErrorMessage(e, '加载失败'))
       } finally {
         if (!cancelled) setLoading(false)
       }

@@ -107,7 +107,7 @@ const DetailRows = memo<{ items: UsageDetailItem[] }>(({ items }) => (
     {items.map((item) => (
       <div className={styles.detailRow} key={item.key}>
         <span className={styles.detailLabel}>
-          <span className={'w-[7px] h-[7px] rounded-full'} style={{ background: item.color }} />
+          <span className={'size-[7px] rounded-full'} style={{ background: item.color }} />
           {item.label}
         </span>
         <span className={cx(styles.value, 'tabular-nums font-medium')}>{tokenFormatter.format(item.value)}</span>

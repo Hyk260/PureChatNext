@@ -1,5 +1,6 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
 
 import { toast, Spin } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
@@ -88,7 +89,7 @@ const Explorer = memo(() => {
             parentId: currentFolderSlug ?? undefined,
           })
         } catch (err) {
-          toast.error(err instanceof Error ? err.message : '上传失败')
+          toast.error(getErrorMessage(err, '上传失败'))
         }
       }
       revalidateResources()
@@ -124,7 +125,7 @@ const Explorer = memo(() => {
       revalidateResources()
       toast.success('文件夹已创建')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '创建失败')
+      toast.error(getErrorMessage(err, '创建失败'))
     }
   }, [currentFolderSlug, libraryId])
 
@@ -141,7 +142,7 @@ const Explorer = memo(() => {
       await useResourceStore.getState().batchDelete(items)
       clearSelection()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '删除失败')
+      toast.error(getErrorMessage(err, '删除失败'))
       throw err
     }
   }, [clearSelection, resourceList, selectedFileIds])

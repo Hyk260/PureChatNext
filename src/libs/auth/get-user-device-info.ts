@@ -1,12 +1,7 @@
+import { OS_PLATFORM_LABELS } from '@/const/platform'
 import UAParser from 'ua-parser-js'
 
 import type { UserDeviceInfo } from '@pure/database/schemas'
-
-const ELECTRON_OS_NAMES: Record<string, string> = {
-  darwin: 'macOS',
-  linux: 'Linux',
-  win32: 'Windows',
-}
 
 const readHeaderValue = (headers: Headers, name: string, maxLength = 100) => {
   const value = headers.get(name)?.trim().slice(0, maxLength)
@@ -23,7 +18,7 @@ const getElectronDeviceInfo = (headers: Headers): UserDeviceInfo => {
     browserVersion: null,
     clientType: 'electron',
     deviceType: 'desktop',
-    os: platform ? ELECTRON_OS_NAMES[platform] ?? platform : null,
+    os: platform ? OS_PLATFORM_LABELS[platform] ?? platform : null,
     osVersion: readHeaderValue(headers, 'x-purechat-os-version', 80),
   }
 }

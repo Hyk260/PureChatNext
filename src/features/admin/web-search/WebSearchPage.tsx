@@ -1,5 +1,9 @@
 'use client'
 
+import { useCopyState } from '../shared/useCopyState'
+
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Flex } from '@pure/ui'
 import { useEffect, useState } from 'react'
 import { Segmented } from '@lobehub/ui'
@@ -24,7 +28,6 @@ import {
 import type {
   ApiFailure,
   ApiSuccess,
-  CopyState,
   ResultView,
   RunState,
   SearXNGConfig,
@@ -71,7 +74,7 @@ export default function WebSearchPage() {
   const [runState, setRunState] = useState<RunState | null>(null)
   const [payload, setPayload] = useState<ApiSuccess | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [copyState, setCopyState] = useState<CopyState>('idle')
+  const { copyState, copyText, setCopyState } = useCopyState()
   const [searxngConfig, setSearxngConfig] = useState<SearXNGConfig | null>(null)
   const [configuredProviders, setConfiguredProviders] = useState<string[] | null>(null)
 
@@ -204,7 +207,7 @@ export default function WebSearchPage() {
         status: 0,
         submittedAt,
       })
-      setError(requestError instanceof Error ? requestError.message : 'Request failed')
+      setError(getErrorMessage(requestError, 'Request failed'))
     } finally {
       setIsLoading(false)
     }
@@ -235,15 +238,7 @@ export default function WebSearchPage() {
     setCopyState('idle')
   }
 
-  const copyRequestJson = async () => {
-    try {
-      await navigator.clipboard.writeText(requestJson)
-      setCopyState('copied')
-      window.setTimeout(() => setCopyState('idle'), 1600)
-    } catch {
-      setCopyState('failed')
-    }
-  }
+  const copyRequestJson = () => copyText(requestJson)
 
   return (
     <main className='flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground'>

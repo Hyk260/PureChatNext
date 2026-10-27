@@ -1,35 +1,20 @@
+import { toPublicProvider } from '@/libs/ai-providers/providerProjection'
+import { isValidProviderId, BUILTIN_PROVIDER_IDS } from '@pure/const'
+import { isProviderHttpUrl } from '@pure/utils/url'
 import { z } from 'zod'
 
-import { CustomProviderModel, BUILTIN_PROVIDER_IDS, isValidProviderId } from '@pure/database/models/customProvider'
+import { CustomProviderModel } from '@pure/database/models/customProvider'
 import { UserProviderSecretModel } from '@pure/database/models/userProviderSecret'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 
-const isHttpUrl = (value: string) => {
-  try {
-    const url = new URL(value)
-    return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password && !url.hash && !url.search
-  } catch {
-    return false
-  }
-}
-
 const customProviderSchema = z.object({
   apiKey: z.string().max(8192).optional(),
-  baseURL: z.string().trim().min(1).max(2048).refine(isHttpUrl, '请输入有效的 http(s) 地址'),
+  baseURL: z.string().trim().min(1).max(2048).refine(isProviderHttpUrl, '请输入有效的 http(s) 地址'),
   description: z.string().trim().max(1000).default(''),
   enabled: z.boolean().optional(),
   id: z.string().trim().refine(isValidProviderId, 'ID 只能使用小写字母、数字、下划线和连字符，最长 32 位'),
-  logo: z.union([z.literal(''), z.string().trim().max(2048).refine(isHttpUrl, '请输入有效的 http(s) 地址')]).optional(),
+  logo: z.union([z.literal(''), z.string().trim().max(2048).refine(isProviderHttpUrl, '请输入有效的 http(s) 地址')]).optional(),
   name: z.string().trim().min(1).max(128),
-})
-
-const toPublicProvider = (provider: Awaited<ReturnType<CustomProviderModel['create']>>) => ({
-  baseURL: provider.baseURL,
-  description: provider.description,
-  enabled: provider.enabled,
-  id: provider.providerId,
-  logo: provider.logo,
-  name: provider.name,
 })
 
 /** GET /api/providers/custom — 列出当前用户的自定义服务商。 */

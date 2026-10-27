@@ -1,3 +1,4 @@
+export { BUILTIN_PROVIDER_IDS, isValidProviderId } from '@pure/const'
 import { and, eq, inArray, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
@@ -8,11 +9,6 @@ import { customProviders } from '../schemas/customProvider'
 import { userProviderSecrets } from '../schemas/providerSecret'
 import type { CustomProviderItem, NewCustomProvider } from '../schemas/customProvider'
 import type { ChatDatabase } from '../type'
-
-export const BUILTIN_PROVIDER_IDS = new Set(['purechat', 'openai', 'deepseek'])
-
-export const isValidProviderId = (id: string) =>
-  /^[a-z0-9][a-z0-9_-]{0,31}$/.test(id) && !['__proto__', 'constructor', 'prototype'].includes(id)
 
 export type CustomProviderPatch = Partial<Pick<CustomProviderItem, 'baseURL' | 'description' | 'enabled' | 'logo' | 'name'>>
 

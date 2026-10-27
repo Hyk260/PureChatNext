@@ -1,9 +1,15 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Input, Select, Text } from '@pure/ui'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { EMAIL_TEMPLATE_CATALOG, EMAIL_TEMPLATE_PREVIEW_MOCK, getEmailTemplatePreviewParams } from '@/libs/better-auth/email-templates/preview'
+import {
+  EMAIL_TEMPLATE_CATALOG,
+  EMAIL_TEMPLATE_PREVIEW_MOCK,
+  getEmailTemplatePreviewParams,
+} from '@/libs/better-auth/email-templates/preview'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 import type {
   EmailTemplateKey,
@@ -139,7 +145,7 @@ export function EmailTemplateComposer({
           return
         }
 
-        const message = requestError instanceof Error ? requestError.message : 'Request failed'
+        const message = getErrorMessage(requestError, 'Request failed')
         setError(message)
         onRenderErrorRef.current?.(message)
       } finally {

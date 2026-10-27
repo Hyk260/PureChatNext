@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { ChannelCommandEffects } from './commands'
+import type { ChannelCommandEffects } from '../commands'
 import {
   applyChannelFirstBindWelcome,
   buildAgentSwitchReply,
@@ -13,7 +13,7 @@ import {
   parseChannelCommand,
   prependChannelFirstBindWelcome,
   runChannelCommand,
-} from './commands'
+} from '../commands'
 
 const createEffects = (overrides?: Partial<ChannelCommandEffects>): ChannelCommandEffects => ({
   abortActiveGeneration: vi.fn(() => false),
@@ -158,9 +158,7 @@ describe('runChannelCommand', () => {
     const effects = createEffects({
       listAgents: vi.fn(async () => [{ id: 'agt_a', title: '助手 A' }]),
     })
-    await expect(runChannelCommand('/agents', effects)).resolves.toContain(
-      '发送 /agents 1 切换「助手 A」。'
-    )
+    await expect(runChannelCommand('/agents', effects)).resolves.toContain('发送 /agents 1 切换「助手 A」。')
   })
 
   it('lists available agents when the target is missing', async () => {
@@ -180,9 +178,7 @@ describe('runChannelCommand', () => {
       listAgents: vi.fn(async () => []),
     })
     await expect(runChannelCommand('/agents', effects)).resolves.toBe('当前没有可用助手。')
-    await expect(runChannelCommand('/agents foo', effects)).resolves.toBe(
-      '未找到「foo」。\n当前没有可用助手。'
-    )
+    await expect(runChannelCommand('/agents foo', effects)).resolves.toBe('未找到「foo」。\n当前没有可用助手。')
   })
 
   it('respects assertAgentsAllowed', async () => {

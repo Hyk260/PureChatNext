@@ -1,13 +1,12 @@
 import { UserProviderSecretModel } from '@pure/database/models/userProviderSecret'
-import { PURECHAT_PROVIDER_ID } from '@pure/const'
-import { getAiModel, PURECHAT_DEFAULT_MODEL } from '@pure/model-bank'
+import { PURECHAT_PROVIDER_ID, BUILTIN_PROVIDER_ID_LIST, MISSING_USER_PROVIDER_SECRET_MESSAGE } from '@pure/const'
+import { getAiModel, PROVIDER_DEFAULT_MODELS } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 
 import { isSupportedProviderId } from '@/libs/ai-providers/resolveClient'
-import { MISSING_USER_PROVIDER_SECRET_MESSAGE } from '@/libs/ai-providers/userSecrets'
 import { isPureChatRuntimeAvailable } from '@/server/purechat'
 
-export const CHANNEL_PROVIDER_IDS = ['purechat', 'openai', 'deepseek'] as const
+export const CHANNEL_PROVIDER_IDS = BUILTIN_PROVIDER_ID_LIST
 export type ChannelProviderId = (typeof CHANNEL_PROVIDER_IDS)[number]
 
 export function isChannelProviderId(provider: string): provider is ChannelProviderId {
@@ -19,9 +18,7 @@ export function normalizeChannelProvider(provider: string | null | undefined, fa
 }
 
 export function defaultChannelModel(provider: ChannelProviderId): string {
-  if (provider === PURECHAT_PROVIDER_ID) return PURECHAT_DEFAULT_MODEL
-  if (provider === 'openai') return 'gpt-5.4-nano'
-  return 'deepseek-v4-flash'
+  return PROVIDER_DEFAULT_MODELS[isChannelProviderId(provider) ? provider : 'deepseek']
 }
 
 export function validateChannelModel(provider: ChannelProviderId, model: string): string | null {

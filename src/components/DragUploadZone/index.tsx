@@ -73,7 +73,7 @@ const DragUploadZone = memo<DragUploadZoneProps>(({ children, disabled, onUpload
 
   return (
     <div
-      className={'relative w-full h-full'}
+      className={'relative size-full'}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}

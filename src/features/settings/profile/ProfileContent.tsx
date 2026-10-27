@@ -1,6 +1,7 @@
 'use client'
 
 import { Button, Flex, Text } from '@pure/ui'
+import { createStaticStyles, cx } from '@lobehub/ui'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { formatDateTime } from '@pure/utils/client'
@@ -10,6 +11,14 @@ import type { ReactNode } from 'react'
 import type { UserWithoutPassword } from '@pure/database/schemas'
 import { getUserRoleLabel } from '@/const/auth'
 import { signOutWorkspace } from '@/features/auth/signOutWorkspace'
+
+// Keep component styles here so the gradient avatar className remains within 120 characters.
+const styles = createStaticStyles(({ css }) => ({
+  initials: css`
+    flex-shrink: 0;
+    color: var(--primary);
+  `,
+}))
 
 type DateKeys = 'accessedAt' | 'banExpires' | 'createdAt' | 'emailVerifiedAt' | 'lastActiveAt' | 'updatedAt'
 
@@ -110,7 +119,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
                 src={user.avatar}
               />
             ) : (
-              <Flex className='flex-center size-16 shrink-0 rounded-full bg-linear-to-br from-primary/20 to-primary/5 text-xl font-semibold text-primary ring-2 ring-border'>
+              <Flex className={cx(styles.initials, 'flex-center size-16 rounded-full bg-linear-to-br from-primary/20 to-primary/5 text-xl font-semibold ring-2 ring-border')}>
                 {initials}
               </Flex>
             )}

@@ -1,3 +1,5 @@
+import { listOutboundAttachments } from '@/libs/channels/core/files/server'
+import { getErrorMessage } from '@pure/utils/error'
 import { createHash } from 'node:crypto'
 
 import { NextResponse } from 'next/server'
@@ -76,25 +78,7 @@ async function parseOutboundBody(
   return { media: [], requestId, text }
 }
 
-function outboundAttachments(eventId: string) {
-  return new ChannelEventFileModel().listForEvent(eventId).then((rows) =>
-    rows
-      .filter(({ artifact }) => artifact.direction === 'output')
-      .map(({ artifact, file }) => ({
-        deliveryError: artifact.deliveryError,
-        deliveryStatus: artifact.deliveryStatus,
-        direction: artifact.direction,
-        fileId: file.id,
-        fileName: file.name,
-        fileSize: file.size,
-        id: artifact.id,
-        summary: artifact.summary,
-        version: artifact.version,
-      }))
-  )
-}
-
-function outboundMessage(event: ChannelEventItem, attachments: Awaited<ReturnType<typeof outboundAttachments>>) {
+function outboundMessage(event: ChannelEventItem, attachments: Awaited<ReturnType<typeof listOutboundAttachments>>) {
   const [message] = expandQQEventsToMessages([
     {
       ...event,
@@ -220,7 +204,7 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
   let event = await eventModel.findByPlatformMessageId(binding.id, platformMessageId)
   if (event && event.sessionId !== session.id) return jsonError('Invalid requestId', 400)
   if (event?.status === 'completed') {
-    const message = outboundMessage(event, await outboundAttachments(event.id))
+    const message = outboundMessage(event, await listOutboundAttachments(event.id))
     if (!message) return jsonError('已发送消息记录为空', 500)
     return NextResponse.json({ message })
   }
@@ -307,17 +291,17 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
     if (chunksSent > 0) await eventModel.setOutboundSentChunkCount(event.id, chunksSent)
     await eventModel.completeOutbound(event.id)
   } catch (error) {
-    await eventModel.failOutbound(event.id, error instanceof Error ? error.message : 'Send failed')
+    await eventModel.failOutbound(event.id, getErrorMessage(error, 'Send failed'))
     if (error instanceof QQOutboundError || error instanceof WechatFileArtifactError) {
       return jsonError(error.message, 400)
     }
-    const message = error instanceof Error ? error.message : 'Send failed'
+    const message = getErrorMessage(error, 'Send failed')
     return jsonError(message.replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]').slice(0, 200), 502)
   }
 
   const message = outboundMessage(
     { ...event, responseText: text || event.responseText || '' },
-    await outboundAttachments(event.id)
+    await listOutboundAttachments(event.id)
   )
   if (!message) return jsonError('发送成功但未返回消息记录', 500)
   return NextResponse.json({ message })

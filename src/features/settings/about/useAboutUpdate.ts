@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { toast } from '@lobehub/ui'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
@@ -104,7 +105,7 @@ export function useAboutUpdate() {
       setInstallConfirmationOpen(false)
       clearInstallRequest()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '安装失败，请重试。')
+      toast.error(getErrorMessage(error, '安装失败，请重试。'))
     } finally {
       setInstalling(false)
     }
@@ -123,7 +124,7 @@ export function useAboutUpdate() {
       if (aliveRef.current) {
         toast.error({
           id: CHECK_MESSAGE_KEY,
-          description: error instanceof Error ? error.message : '检查更新失败，请重试。',
+          description: getErrorMessage(error, '检查更新失败，请重试。'),
           duration: 3000,
         })
       }
@@ -152,7 +153,7 @@ export function useAboutUpdate() {
       }
       return true
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '保存更新设置失败。')
+      toast.error(getErrorMessage(error, '保存更新设置失败。'))
       return false
     } finally {
       busyRef.current = false
@@ -169,7 +170,7 @@ export function useAboutUpdate() {
       receive(await api.updater.clearCache())
       toast.success('下载安装包缓存已清理')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '清理更新缓存失败，请重试。')
+      toast.error(getErrorMessage(error, '清理更新缓存失败，请重试。'))
     } finally {
       busyRef.current = false
       if (aliveRef.current) {

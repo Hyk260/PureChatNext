@@ -770,7 +770,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
       onRenameTopic={handleRenameTopic}
     >
       {!isClient ? (
-        <div className={'w-full h-full'} />
+        <div className={'size-full'} />
       ) : (
         <Flex className={[styles.page, 'flex-col']}>
           {chatReady ? (

@@ -20,9 +20,15 @@ import {
   defaultChannelModel,
   isChannelProviderId,
   resolveChannelModelConfig,
-} from './modelResolver'
+} from '../modelResolver'
+import type { ChannelProviderId } from '../modelResolver'
 
 describe('channel model resolver', () => {
+  it('retains the DeepSeek default for unexpected runtime provider values', () => {
+    const unknownProvider = 'unknown' as ChannelProviderId
+    expect(defaultChannelModel(unknownProvider)).toBe(defaultChannelModel('deepseek'))
+  })
+
   beforeEach(() => {
     mocks.hasSecret.mockReset()
     mocks.hasSecret.mockResolvedValue(true)

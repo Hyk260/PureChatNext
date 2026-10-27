@@ -1,7 +1,2 @@
-export enum ModelProvider {
-  PureChat = 'purechat',
-  OpenAI = 'openai',
-  DeepSeek = 'deepseek',
-}
-
-export type ModelProviderId = `${ModelProvider}`
+export { ModelProvider } from '@pure/const'
+export type { ModelProviderId } from '@pure/const'

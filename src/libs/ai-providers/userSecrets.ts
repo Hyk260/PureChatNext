@@ -1,5 +1,6 @@
+import { isValidProviderId } from '@pure/const'
 import { UserProviderSecretModel } from '@pure/database/models/userProviderSecret'
-import { CustomProviderModel, isValidProviderId } from '@pure/database/models/customProvider'
+import { CustomProviderModel } from '@pure/database/models/customProvider'
 
 import {
   isSupportedProviderId,
@@ -13,7 +14,7 @@ export type UserProviderCredentials = {
   baseURL?: string
 }
 
-export const MISSING_USER_PROVIDER_SECRET_MESSAGE = '请先在设置中保存该服务商 API Key'
+export { MISSING_USER_PROVIDER_SECRET_MESSAGE } from '@pure/const'
 
 export async function resolveUserProviderCredentials(params: {
   allowEnvFallback: boolean

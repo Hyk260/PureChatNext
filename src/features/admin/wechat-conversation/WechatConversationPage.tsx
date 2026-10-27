@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Button } from '@pure/ui'
 import { RotateCcw, Settings2 } from 'lucide-react'
 import { useNavigate } from 'react-router'
@@ -185,7 +187,7 @@ export default function WechatConversationPage() {
       try {
         await Promise.all([refreshStatus(signal), refreshSessions(signal)])
       } catch (err) {
-        if (!isAbortError(err)) setError(err instanceof Error ? err.message : '加载失败')
+        if (!isAbortError(err)) setError(getErrorMessage(err, '加载失败'))
       } finally {
         if (!signal.aborted) setLoading(false)
       }
@@ -331,7 +333,7 @@ export default function WechatConversationPage() {
             })
         if (!initial && merged.changed) refreshSessionsNow()
       } catch (err) {
-        if (!isAbortError(err) && !stopped) setError(err instanceof Error ? err.message : '消息加载失败')
+        if (!isAbortError(err) && !stopped) setError(getErrorMessage(err, '消息加载失败'))
       } finally {
         inFlight = false
         controller = null
@@ -404,7 +406,7 @@ export default function WechatConversationPage() {
       refreshSessionsNow()
       refreshStatusNow()
     } catch (err) {
-      setError(err instanceof Error ? err.message : '重试失败')
+      setError(getErrorMessage(err, '重试失败'))
     } finally {
       setRetrying(false)
     }
@@ -489,7 +491,7 @@ export default function WechatConversationPage() {
       refreshSessionsNow()
     } catch (err) {
       if (selectedIdRef.current === sendingSessionId) {
-        setError(err instanceof Error ? err.message : '发送失败')
+        setError(getErrorMessage(err, '发送失败'))
       }
     } finally {
       if (selectedIdRef.current === sendingSessionId) refreshMessagesNowRef.current()

@@ -1,19 +1,13 @@
+
+import { isObjectLike } from '@pure/utils/object'
 export type ActionMode = 'upload' | 'list' | 'download' | 'delete' | 'rename'
 
 export type ResultView = 'results' | 'json'
-
-export type CopyState = 'idle' | 'copied' | 'failed'
 
 export type FileInfo = {
   Key: string
   LastModified: string
   Size: number
-}
-
-export type RunState = {
-  durationMs: number
-  status: number
-  submittedAt: string
 }
 
 export type S3FormValues = {
@@ -67,12 +61,6 @@ export type S3SubmitPlan = { file: File; key: string; kind: 'file' } | { kind: '
 export const S3_API_PATH = '/api/admin/s3'
 export const DEFAULT_EXPIRES_IN = '7200'
 export const DEFAULT_LIST_PREFIX = 'dev/'
-
-export const COPY_LABEL: Record<CopyState, string> = {
-  idle: '复制',
-  copied: '已复制',
-  failed: '复制失败',
-}
 
 export const ACTION_ORDER: ActionMode[] = ['upload', 'list', 'download', 'delete', 'rename']
 
@@ -181,11 +169,11 @@ export function formAfterSuccess(action: ActionMode, values: S3FormValues): S3Fo
 }
 
 export function isApiSuccess(value: unknown): value is { data: unknown; success: true } {
-  return isRecord(value) && value.success === true
+  return isObjectLike(value) && value.success === true
 }
 
 export function readApiError(value: unknown, status: number): string {
-  if (isRecord(value) && typeof value.error === 'string' && value.error) return value.error
+  if (isObjectLike(value) && typeof value.error === 'string' && value.error) return value.error
   return status ? `Request failed with ${status}` : 'Request failed'
 }
 
@@ -258,7 +246,7 @@ function jsonRequest(action: ActionMode, values: S3FormValues): S3JsonRequest {
 }
 
 function readUpload(data: unknown): UploadResultData | null {
-  if (!isRecord(data) || typeof data.key !== 'string' || typeof data.size !== 'number') return null
+  if (!isObjectLike(data) || typeof data.key !== 'string' || typeof data.size !== 'number') return null
   return {
     contentType: typeof data.contentType === 'string' ? data.contentType : undefined,
     key: data.key,
@@ -267,7 +255,7 @@ function readUpload(data: unknown): UploadResultData | null {
 }
 
 function readDownload(data: unknown): DownloadResultData | null {
-  if (!isRecord(data) || typeof data.key !== 'string' || typeof data.downloadUrl !== 'string') return null
+  if (!isObjectLike(data) || typeof data.key !== 'string' || typeof data.downloadUrl !== 'string') return null
   return {
     downloadUrl: data.downloadUrl,
     expiresIn: typeof data.expiresIn === 'number' ? data.expiresIn : 0,
@@ -276,7 +264,7 @@ function readDownload(data: unknown): DownloadResultData | null {
 }
 
 function readDelete(data: unknown): DeleteResultData | null {
-  if (!isRecord(data) || data.deleted !== true) return null
+  if (!isObjectLike(data) || data.deleted !== true) return null
   const keys = readStringList(data.keys)
   if (keys) return { deleted: true, keys }
   if (typeof data.key === 'string') return { deleted: true, key: data.key }
@@ -284,13 +272,13 @@ function readDelete(data: unknown): DeleteResultData | null {
 }
 
 function readRename(data: unknown): RenameResultData | null {
-  if (!isRecord(data) || data.renamed !== true) return null
+  if (!isObjectLike(data) || data.renamed !== true) return null
   if (typeof data.oldKey !== 'string' || typeof data.newKey !== 'string') return null
   return { newKey: data.newKey, oldKey: data.oldKey, renamed: true }
 }
 
 function readFileInfo(value: unknown): FileInfo | null {
-  if (!isRecord(value) || typeof value.Key !== 'string') return null
+  if (!isObjectLike(value) || typeof value.Key !== 'string') return null
   return {
     Key: value.Key,
     LastModified: typeof value.LastModified === 'string' ? value.LastModified : '',
@@ -304,6 +292,6 @@ function readStringList(value: unknown): string[] | null {
   return value
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
+export type { CopyState, RunState } from '../shared/diagnosticState'
+
+export { COPY_LABEL } from '../shared/diagnosticState'

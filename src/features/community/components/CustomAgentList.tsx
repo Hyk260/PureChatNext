@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { confirmModal, toast } from '@lobehub/ui'
 import { Center, Grid, Text } from '@pure/ui'
 import { lazy, memo, Suspense, useCallback, useMemo, useState } from 'react'
@@ -106,7 +108,7 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
               }
             }
           } catch (error) {
-            const code = error instanceof Error ? error.message : ''
+            const code = getErrorMessage(error, '')
             if (code === 'BUILTIN') toast.error('系统内置助理不可删除')
             else toast.error('删除失败')
             throw error

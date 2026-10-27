@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { isRecord, toTrimmedString } from '../object'
+import { isObjectLike, isRecord, toTrimmedString } from '../object'
 
 describe('object helpers', () => {
+  it('keeps array-compatible guards distinct from records', () => {
+    expect(isObjectLike([])).toBe(true)
+    expect(isRecord([])).toBe(false)
+    expect(isObjectLike(new Date())).toBe(true)
+    expect(isObjectLike(null)).toBe(false)
+    expect(isObjectLike(() => ({}))).toBe(false)
+  })
+
   it.each([
     [{ key: 'value' }, true],
     [[], false],

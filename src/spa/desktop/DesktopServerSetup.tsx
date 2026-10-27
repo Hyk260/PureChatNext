@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { useEffect, useState } from 'react'
 
 import { getDesktopApi } from '@/types/desktop'
@@ -26,7 +27,7 @@ const DesktopServerSetup = () => {
       await api.setRemoteServer(url)
       window.location.reload()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '保存远程服务地址失败')
+      setError(getErrorMessage(cause, '保存远程服务地址失败'))
     } finally {
       setSaving(false)
     }

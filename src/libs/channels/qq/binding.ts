@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { QQApiClient } from '@pure/chat-adapter/qq'
 
 import { AgentModel } from '@pure/database/models/agent'
@@ -65,7 +66,7 @@ export async function bindQQCredentials(params: BindQQCredentialsParams) {
     await new QQApiClient(appId, appSecret).getAccessToken()
   } catch (error) {
     await recordChannelGatewayLog({ userId: params.userId, platform: 'qq', event: 'authorization_failed', code: channelErrorCode(error) })
-    const message = error instanceof Error ? error.message : 'QQ auth failed'
+    const message = getErrorMessage(error, 'QQ auth failed')
     throw new QQBindingError(`Invalid QQ credentials: ${message}`)
   }
 

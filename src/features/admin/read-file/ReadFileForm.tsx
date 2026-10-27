@@ -1,3 +1,5 @@
+import { diagnosticStyles } from '../shared/diagnosticStyles'
+import { cx } from '@lobehub/ui'
 import type { ChangeEvent, DragEvent, ReactNode } from 'react'
 import { useState } from 'react'
 import { FileText, Link2, RefreshCcw, Sparkles, UploadCloud, X } from 'lucide-react'
@@ -11,10 +13,6 @@ import { MODE_META, canSubmit, createSampleFile, metaRows } from './readFileMode
 import type { RequestMode, RunState } from './readFileModel'
 
 const LABEL_CLASS = 'text-sm font-medium text-foreground'
-const DROP_IDLE =
-  'flex-col-center min-h-44 cursor-pointer rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center transition hover:border-primary hover:bg-hover'
-const DROP_ACTIVE =
-  'flex-col-center min-h-44 cursor-pointer rounded-lg border border-dashed border-primary bg-secondary px-4 py-6 text-center transition'
 
 function Field({
   children,
@@ -103,7 +101,8 @@ export function ReadFileForm({
             <>
               <Field label='选择文件'>
                 <label
-                  className={isDragging ? DROP_ACTIVE : DROP_IDLE}
+                  className={cx(diagnosticStyles.dropzone, 'flex-col-center min-h-44 rounded-lg px-4 py-6 text-center transition')}
+                  data-dragging={isDragging}
                   onDragLeave={() => setIsDragging(false)}
                   onDragOver={(event) => {
                     event.preventDefault()

@@ -1,6 +1,6 @@
-import { PURECHAT_PROVIDER_ID } from '@pure/const'
+import { getErrorMessage } from '@pure/utils/error'
+import { PURECHAT_PROVIDER_ID, isValidProviderId } from '@pure/const'
 import { FreePlanLimitError } from '@pure/database/models/credits'
-import { isValidProviderId } from '@pure/database/models/customProvider'
 import { ChatMessageModel } from '@pure/database/models/chatMessage'
 import { ChatTopicModel } from '@pure/database/models/chatTopic'
 import { generateText } from 'ai'
@@ -155,7 +155,7 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
       settlementPeriod = settlement.settlementPeriod
     } catch (error) {
       if (error instanceof FreePlanLimitError) return jsonError(error.message, 429)
-      const message = error instanceof Error ? error.message : 'PureChat temporarily unavailable'
+      const message = getErrorMessage(error, 'PureChat temporarily unavailable')
       if (message === PURECHAT_MODEL_UNAVAILABLE_MESSAGE) return jsonError(message)
       if (message === 'PureChat is disabled') return jsonError(message)
       if (message === 'PureChat temporarily unavailable') return jsonError(message, 503)

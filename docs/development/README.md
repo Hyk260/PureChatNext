@@ -10,6 +10,7 @@ description: 面向 PureChatNext 贡献者的数据库、质量检查与前端�
 ## 架构
 
 - [Vite SPA、Next.js BFF 与 AI SDK](./architecture.md)
+- [共享工具与常量规范](./code-sharing.md)
 
 ## 数据库
 

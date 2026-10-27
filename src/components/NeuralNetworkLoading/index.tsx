@@ -147,7 +147,7 @@ const NeuralNetworkLoading = memo<NeuralNetworkLoadingProps>(({ size = 16 }) => 
 
   return (
     <div className={'flex-center'} style={{ height: size, width: size }}>
-      <svg className={'w-full h-full'} viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'>
+      <svg className={'size-full'} viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'>
         {connections}
 
         {nodes}

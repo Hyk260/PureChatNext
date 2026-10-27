@@ -1,3 +1,4 @@
+import { abortableDelay, createAbortError } from '@pure/utils/async'
 import type { QQApiClient } from './api'
 import { QQ_INTENTS, QQ_WS_OP_CODES } from './types'
 import type { QQGatewayHelloData, QQGatewayPayload, QQGatewayReadyData, QQGatewayUrlResponse } from './types'
@@ -47,22 +48,6 @@ export interface QQGatewayOptions {
   webhookHeaders?: Record<string, string>
   /** 接收 Gateway 事件转发请求的 Webhook 地址。 */
   webhookUrl: string
-}
-
-function abortError(): Error {
-  return Object.assign(new Error('aborted'), { name: 'AbortError' })
-}
-
-/** 可被 AbortSignal 中断的延迟。 */
-function delay(ms: number, signal?: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) return reject(abortError())
-    const timer = setTimeout(resolve, ms)
-    signal?.addEventListener('abort', () => {
-      clearTimeout(timer)
-      reject(abortError())
-    }, { once: true })
-  })
 }
 
 /** 管理 QQ Bot Gateway 持久连接，并提供明确的就绪与终止生命周期。 */
@@ -166,7 +151,7 @@ export class QQGatewayConnection {
 
   private openConnection(url: string, isResume: boolean): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (this.closed || this.abortSignal?.aborted) return reject(abortError())
+      if (this.closed || this.abortSignal?.aborted) return reject(createAbortError())
       const ws = new WebSocket(url)
       this.ws = ws
       let readySettled = false
@@ -366,7 +351,7 @@ export class QQGatewayConnection {
       } catch (error) {
         lastError = error
         if (this.closed || this.abortSignal?.aborted) return
-        if (attempt < WEBHOOK_FORWARD_ATTEMPTS - 1) await delay(1000 * 2 ** attempt, this.abortSignal)
+        if (attempt < WEBHOOK_FORWARD_ATTEMPTS - 1) await abortableDelay(1000 * 2 ** attempt, this.abortSignal, { rejectOnAbort: true })
       }
     }
     throw lastError instanceof Error ? lastError : new Error('QQ webhook forwarding failed')

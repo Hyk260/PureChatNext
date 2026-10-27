@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { toast } from '@lobehub/ui'
 import { FETCH_PROVIDER_IDS, SEARCH_PROVIDER_IDS, WEB_PROVIDER_CATALOG } from '@pure/types'
 import type {
@@ -87,7 +88,7 @@ export function ProviderCard({
       })
       return true
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '保存失败')
+      toast.error(getErrorMessage(error, '保存失败'))
       return false
     }
   }
@@ -96,7 +97,7 @@ export function ProviderCard({
     try {
       await save({ [selectionKey]: value === 'server' ? null : value })
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '保存失败')
+      toast.error(getErrorMessage(error, '保存失败'))
     }
   }
   const openKeys = async () => {
@@ -111,7 +112,7 @@ export function ProviderCard({
       if (result.success) toast.success('连接成功')
       else toast.error(result.message)
     } catch (error) {
-      setCheckMessage(error instanceof Error ? error.message : '检测失败')
+      setCheckMessage(getErrorMessage(error, '检测失败'))
     } finally {
       setChecking(false)
     }

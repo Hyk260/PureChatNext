@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { writeFile, unlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -130,7 +131,7 @@ export const POST = withAdmin(async (request: NextRequest) => {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
 
-    const message = error instanceof Error ? error.message : 'Internal server error'
+    const message = getErrorMessage(error, 'Internal server error')
     return NextResponse.json({ error: message }, { status: 500 })
   }
 })

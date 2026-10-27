@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@pure/utils/error'
 import { ActionIcon, Button, Select, Text, toast } from '@lobehub/ui'
 import { Flex } from '@pure/ui'
 import { SquareTerminal, Square, X } from 'lucide-react'
@@ -31,7 +32,7 @@ export default function Content({ projectName, onProjectChange }: TerminalPanelP
         setLoaded(true)
       })
       .catch((error: unknown) => {
-        setLoadError(error instanceof Error ? error.message : '加载本机项目失败')
+        setLoadError(getErrorMessage(error, '加载本机项目失败'))
       })
   }, [])
 
@@ -59,7 +60,7 @@ export default function Content({ projectName, onProjectChange }: TerminalPanelP
     try {
       await onProjectChange(next)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '切换项目失败')
+      toast.error(getErrorMessage(error, '切换项目失败'))
     } finally {
       setSaving(false)
     }
@@ -70,7 +71,7 @@ export default function Content({ projectName, onProjectChange }: TerminalPanelP
     try {
       await terminalManager.kill(entry)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '结束终端失败')
+      toast.error(getErrorMessage(error, '结束终端失败'))
     }
   }
 
@@ -80,7 +81,7 @@ export default function Content({ projectName, onProjectChange }: TerminalPanelP
     try {
       await terminalManager.restart(projectId)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '重新打开终端失败')
+      toast.error(getErrorMessage(error, '重新打开终端失败'))
     }
   }
 

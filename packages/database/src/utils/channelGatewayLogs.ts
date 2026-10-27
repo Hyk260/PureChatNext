@@ -1,8 +1,5 @@
-import {
-  CHANNEL_LOG_LIMIT,
-  CHANNEL_LOG_MAX_BYTES,
-  CHANNEL_LOG_MESSAGES,
-} from '@pure/types'
+import { CHANNEL_MESSAGE_KIND_LABEL } from '@pure/const'
+import { CHANNEL_LOG_LIMIT, CHANNEL_LOG_MAX_BYTES, CHANNEL_LOG_MESSAGES } from '@pure/types'
 import type { ChannelGatewayLogs, ChannelLogEvent, ChannelLogInput } from '@pure/types'
 
 const PUBLIC_ERROR_CODES = new Set([
@@ -17,17 +14,6 @@ const ERROR_EVENTS = new Set<ChannelLogEvent>([
   'authorization_failed', 'callback_failed', 'processing_failed', 'send_failed',
 ])
 const WARNING_EVENTS = new Set<ChannelLogEvent>(['offline', 'lease_lost', 'needs_rebind', 'retry'])
-type ChannelInboundMessageKind = NonNullable<NonNullable<ChannelLogInput['inboundMessage']>['messageKind']>
-
-const CHANNEL_MESSAGE_KIND_LABEL: Record<ChannelInboundMessageKind, string> = {
-  audio: '语音',
-  command: '指令',
-  file: '文件',
-  image: '图片',
-  text: '文本',
-  unsupported: '非文本',
-  video: '视频',
-}
 
 function normalizeInboundMessage(input: ChannelLogInput): string {
   const details = input.inboundMessage

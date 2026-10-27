@@ -51,7 +51,7 @@ const StatusPageFrame = ({
       <div className='flex flex-col items-center gap-3 text-sm leading-6 text-muted-foreground md:text-base'>
         {description}
       </div>
-      {extra && <div className='mt-3 flex flex-wrap items-center justify-center gap-3'>{extra}</div>}
+      {extra && <div className='mt-3 flex-center flex-wrap gap-3'>{extra}</div>}
     </div>
   </main>
 )
@@ -77,8 +77,6 @@ export const StatusPage = ({ status, ...props }: StatusPageProps) => {
           <>
             <StatusHomeButton />
             <Button
-              className='h-12 px-5'
-              icon={<ArrowLeft size={16} />}
               onClick={() => (window.history.length > 1 ? router.back() : router.push('/'))}
             >
               返回上一页
@@ -105,8 +103,8 @@ export const StatusPage = ({ status, ...props }: StatusPageProps) => {
     <main
       className={
         getDesktopApi()
-          ? 'min-h-full shrink-0 flex w-full items-center justify-center bg-background'
-          : 'min-h-svh flex w-full items-center justify-center bg-background'
+          ? 'min-h-full shrink-0 flex-center w-full bg-background'
+          : 'min-h-svh flex-center w-full bg-background'
       }
     >
       <Result {...props} status={status === '403' ? 'error' : status} />

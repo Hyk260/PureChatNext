@@ -1,3 +1,4 @@
+import type { RunState, SummaryItem } from '../shared/diagnosticState'
 import type { CrawlUniformResult, UniformSearchResponse } from '@pure/types'
 
 import type { ActionMode } from '../webSearchCache'
@@ -35,15 +36,7 @@ export type WebSearchConfigResponse = {
   searxng?: SearXNGConfig | null
 }
 
-export type RunState = {
-  durationMs: number
-  status: number
-  submittedAt: string
-}
-
 export type ResultView = 'summary' | 'json'
-
-export type CopyState = 'idle' | 'copied' | 'failed'
 
 export type WebSearchFormValues = {
   categories: string
@@ -53,11 +46,6 @@ export type WebSearchFormValues = {
   query: string
   timeRange: string
   urls: string
-}
-
-export type SummaryItem = {
-  label: string
-  value: string
 }
 
 export type CrawlItemView = {
@@ -75,12 +63,6 @@ export const EMPTY_SELECT_VALUE = '__empty__'
 export const EXAMPLE_QUERY = '今日新闻'
 export const EXAMPLE_URLS =
   'https://vercel.com/\nhttps://nextjs.org\nhttps://app.purechat.cn\nhttps://docs.purechat.cn\nhttps://next-docs.purechat.cn\nhttps://landing.purechat.cn'
-
-export const COPY_LABEL: Record<CopyState, string> = {
-  idle: '复制',
-  copied: '已复制',
-  failed: '复制失败',
-}
 
 export const ACTION_META: Record<ActionMode, { description: string; label: string }> = {
   crawlPages: {
@@ -314,3 +296,7 @@ export const readCrawlItem = (item: CrawlUniformResult): CrawlItemView => {
 export const canSubmit = (action: ActionMode, values: WebSearchFormValues) => {
   return action === 'crawlPages' ? parseList(values.urls).length > 0 : values.query.trim().length > 0
 }
+
+export type { RunState, CopyState, SummaryItem } from '../shared/diagnosticState'
+
+export { COPY_LABEL } from '../shared/diagnosticState'

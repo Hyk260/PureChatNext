@@ -1,5 +1,9 @@
 'use client'
 
+import { isValidProviderId } from '@pure/const'
+
+import { isProviderHttpUrl } from '@pure/utils/url'
+
 import { Flex, Input, InputPassword, Modal, Select, Text, TextArea } from '@pure/ui'
 import { memo, useEffect, useState } from 'react'
 
@@ -12,15 +16,6 @@ interface CustomProviderModalProps {
   open: boolean
   onCancel: () => void
   onCreate: (provider: CustomProviderInput) => void
-}
-
-const isHttpUrl = (value: string) => {
-  try {
-    const url = new URL(value)
-    return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password && !url.hash && !url.search
-  } catch {
-    return false
-  }
 }
 
 const CustomProviderModal = memo<CustomProviderModalProps>(
@@ -45,10 +40,9 @@ const CustomProviderModal = memo<CustomProviderModalProps>(
     const normalizedId = id.trim().toLowerCase()
     const duplicate = existingProviderIds.includes(normalizedId)
     const validId =
-      /^[a-z0-9][a-z0-9_-]{0,31}$/.test(normalizedId) &&
-      !['__proto__', 'constructor', 'prototype'].includes(normalizedId)
-    const validBaseURL = isHttpUrl(baseURL.trim())
-    const validLogo = !logo.trim() || isHttpUrl(logo.trim())
+      isValidProviderId(normalizedId)
+    const validBaseURL = isProviderHttpUrl(baseURL.trim())
+    const validLogo = !logo.trim() || isProviderHttpUrl(logo.trim())
     const canCreate = validId && !duplicate && name.trim().length > 0 && validBaseURL && validLogo && !loading
 
     const duplicateMessage = duplicate ? `服务商 ID「${normalizedId}」已存在` : null

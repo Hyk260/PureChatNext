@@ -1,18 +1,15 @@
+import { BUILTIN_PROVIDER_ID_LIST } from '@pure/const'
 import {
   DEFAULT_MODEL_PROVIDER_LIST,
   ModelProvider,
-  PURECHAT_DEFAULT_MODEL,
   getProviderChatModels,
   purechatProviderCard,
+  PROVIDER_DEFAULT_MODELS,
 } from '@pure/model-bank'
 
 import type { CustomProviderDefinition, ProviderConfig, ProviderConfigs, ProviderId, ProviderModelItem } from './types'
 
-export const SETTINGS_PROVIDER_IDS = [
-  ModelProvider.PureChat,
-  ModelProvider.OpenAI,
-  ModelProvider.DeepSeek,
-] as const satisfies readonly ProviderId[]
+export const SETTINGS_PROVIDER_IDS = BUILTIN_PROVIDER_ID_LIST
 
 export type SettingsProviderId = (typeof SETTINGS_PROVIDER_IDS)[number]
 
@@ -36,11 +33,7 @@ export const LEGACY_PROVIDER_DEFAULT_BASE_URLS: Record<(typeof SETTINGS_PROVIDER
   purechat: 'https://ai-gateway.vercel.sh/v1',
 }
 
-export const PROVIDER_CHECK_MODELS: Record<(typeof SETTINGS_PROVIDER_IDS)[number], string> = {
-  deepseek: 'deepseek-v4-flash',
-  openai: 'gpt-5.4-nano',
-  purechat: PURECHAT_DEFAULT_MODEL,
-}
+export const PROVIDER_CHECK_MODELS = PROVIDER_DEFAULT_MODELS
 
 /** Server-side env var that backs each provider when the browser key is empty. */
 export const PROVIDER_ENV_API_KEY_NAME: Partial<Record<ProviderId, string>> = {

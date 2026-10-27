@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import {
   AccordionRoot,
   AccordionHeader,
@@ -131,7 +133,7 @@ const ProviderSettingsNav = memo(() => {
       setCreateModalOpen(false)
       toast.success(`已创建服务商 ${created.name}`)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '创建服务商失败')
+      toast.error(getErrorMessage(error, '创建服务商失败'))
     } finally {
       setCreating(false)
     }

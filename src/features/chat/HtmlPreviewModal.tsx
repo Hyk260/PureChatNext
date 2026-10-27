@@ -2,7 +2,7 @@
 
 import type { HtmlPreviewProps } from '@pure/ui'
 import { ActionIcon, HtmlPreview, Modal } from '@pure/ui'
-import { copyToClipboard } from '@pure/utils/client'
+import { copyToClipboard, downloadBlob } from '@pure/utils/client'
 import { Segmented } from '@lobehub/ui'
 import { Copy, Download } from 'lucide-react'
 import { memo } from 'react'
@@ -15,19 +15,7 @@ const MODE_OPTIONS = [
 ] as const
 
 async function downloadHtml(content: string, fileName = 'preview.html') {
-  const blob = new Blob([content], { type: 'text/html;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  try {
-    const link = document.createElement('a')
-    link.download = fileName
-    link.href = url
-    link.style.display = 'none'
-    document.body.append(link)
-    link.click()
-    link.remove()
-  } finally {
-    URL.revokeObjectURL(url)
-  }
+  downloadBlob(new Blob([content], { type: 'text/html;charset=utf-8' }), fileName)
 }
 
 const actionsRender: NonNullable<HtmlPreviewProps['actionsRender']> = ({

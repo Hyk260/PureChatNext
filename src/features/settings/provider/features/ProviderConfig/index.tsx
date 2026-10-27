@@ -1,5 +1,6 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
 
 import { toast, Switch } from '@lobehub/ui'
 import { ActionIcon, Flex, Input, Text } from '@pure/ui'
@@ -90,7 +91,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
           if (!customProvider) patchConfig(id, { baseURL: item.baseURL })
           return true
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : '保存失败')
+          toast.error(getErrorMessage(error, '保存失败'))
           return false
         } finally {
           setSaving(false)
@@ -121,7 +122,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
         draftDirtyRef.current = false
         return true
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : '删除密钥失败')
+        toast.error(getErrorMessage(error, '删除密钥失败'))
         setApiKeyDraft(savedApiKey)
         return false
       } finally {
@@ -177,7 +178,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
         })
         .catch((error: unknown) => {
           patchConfig(id, { baseURL: customProvider.baseURL })
-          toast.error(error instanceof Error ? error.message : '保存代理地址失败')
+          toast.error(getErrorMessage(error, '保存代理地址失败'))
         })
         .finally(() => setSaving(false))
       return
@@ -233,7 +234,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
       })
       .catch((error: unknown) => {
         setEnabled(id, !checked)
-        toast.error(error instanceof Error ? error.message : '更新服务商状态失败')
+        toast.error(getErrorMessage(error, '更新服务商状态失败'))
       })
       .finally(() => setSaving(false))
   }

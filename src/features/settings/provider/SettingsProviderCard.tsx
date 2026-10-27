@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { Block, Flex, Text } from '@pure/ui'
 import { toast, createStaticStyles, cssVar, Switch, cx } from '@lobehub/ui'
 import { useRouter } from 'next/navigation'
@@ -62,7 +64,7 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
       setCustomProviders(nextProviders)
     } catch (error) {
       setEnabled(id, !checked)
-      toast.error(error instanceof Error ? error.message : '更新服务商状态失败')
+      toast.error(getErrorMessage(error, '更新服务商状态失败'))
     }
   }
 

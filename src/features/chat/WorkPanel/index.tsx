@@ -1,5 +1,7 @@
 'use client'
 
+import { getErrorMessage } from '@pure/utils/error'
+
 import { ActionIcon, DropdownMenu, Flex, Icon } from '@pure/ui'
 import type { DropdownItem } from '@pure/ui'
 import { FocusScope, createStaticStyles, cssVar, cx, toast } from '@lobehub/ui'
@@ -202,7 +204,7 @@ const WorkPanelWorkspace = memo<Props>(({ value, onChange, topic, topicTitle, us
     (tabId: WorkPanelTabId) => {
       if (tabId === 'browser') {
         browserClose(browserKey).catch((error: unknown) =>
-          toast.error(error instanceof Error ? error.message : '关闭浏览器失败')
+          toast.error(getErrorMessage(error, '关闭浏览器失败'))
         )
         if (!openTabs.length) useChatUiStore.getState().setRightCollapsed(true)
       } else {
@@ -237,7 +239,7 @@ const WorkPanelWorkspace = memo<Props>(({ value, onChange, topic, topicTitle, us
         if (!cancelled) setProject(projects.find((item) => item.name === topic.projectName) ?? null)
       })
       .catch((error) => {
-        if (!cancelled) setProjectError(error instanceof Error ? error.message : '加载项目失败')
+        if (!cancelled) setProjectError(getErrorMessage(error, '加载项目失败'))
       })
       .finally(() => {
         if (!cancelled) setProjectLoading(false)

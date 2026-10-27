@@ -699,6 +699,9 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
   const inputBusy = isBusy || waitingApproval || !messagesReady || !permissionModeReady
   const cachedMessages = runtimeSession?.chat.messages ?? (activeTopicId ? messagesCache.get(activeTopicId) : undefined)
   const activeMessages = cachedMessages ?? (loadedTopicId === activeTopicId ? initialMessages : EMPTY_MESSAGES)
+  const currentProjectName = activeTopicId === null ? draftProjectName : (activeTopic?.projectName ?? null)
+  const chatInitialMessages =
+    runtimeSession?.chat.messages ?? (activeTopicId === null ? EMPTY_MESSAGES : initialMessages)
   const hasActiveMessages =
     activeTopicId !== null &&
     ((cachedMessages?.length ?? 0) > 0 || (loadedTopicId === activeTopicId && initialMessages.length > 0))
@@ -713,6 +716,9 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
     },
     [messagesReady, permissionModeReady]
   )
+  const terminalPanel = isDesktop ? (
+    <TerminalPanel projectName={currentProjectName} onProjectChange={handleComposerProjectChange} />
+  ) : null
 
   return (
     <ChatLayout
@@ -755,14 +761,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
         />
       }
       title={topicTitle}
-      terminal={
-        isDesktop ? (
-          <TerminalPanel
-            projectName={activeTopicId === null ? draftProjectName : (activeTopic?.projectName ?? null)}
-            onProjectChange={handleComposerProjectChange}
-          />
-        ) : null
-      }
+      terminal={terminalPanel}
       autoRenamingTopicId={autoRenamingTopicId}
       onAutoRenameTopic={handleAutoRenameTopic}
       onDeleteTopic={handleDeleteTopic}
@@ -770,7 +769,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
       onRenameTopic={handleRenameTopic}
     >
       {!isClient ? (
-        <div className={'size-full'} />
+        <div className='size-full' />
       ) : (
         <Flex className={[styles.page, 'flex-col']}>
           {chatReady ? (
@@ -778,9 +777,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
               key={`${userId}:${agentId}:${activeTopicId ?? 'draft'}`}
               userId={userId}
               agentId={agentId}
-              initialMessages={
-                runtimeSession?.chat.messages ?? (activeTopicId === null ? EMPTY_MESSAGES : initialMessages)
-              }
+              initialMessages={chatInitialMessages}
               topicId={activeTopicId}
               onBindActions={handleBindActions}
               onCacheMessages={handleCacheMessages}
@@ -800,7 +797,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
               isBusy={inputBusy}
               permissionMode={isDesktop ? permissionMode : undefined}
               prefillKey={inputPrefillKey}
-              projectName={activeTopicId === null ? draftProjectName : (activeTopic?.projectName ?? null)}
+              projectName={currentProjectName}
               searchMode={searchMode}
               topicId={activeTopicId}
               onPermissionModeChange={isDesktop ? handlePermissionModeChange : undefined}

@@ -126,30 +126,28 @@ const ChatLayout = memo<Props>(
     const panelWidth = useWorkPanelLayoutStore((s) => s.panelWidth)
     const previewWidth = useWorkPanelLayoutStore((s) => s.previewWidth)
     const { handleResizeStart, isResizing, sidebarWidth } = useSidebarResize()
+    const containerStyle = {
+      '--chat-sidebar-width': `${sidebarCollapsed ? 0 : sidebarWidth}px`,
+      '--chat-frame-gutter': `${sidebarCollapsed ? 19 : 11}px`,
+      '--work-panel-preferred-width': `${panelWidth}px`,
+      '--file-preview-preferred-width': `${previewWidth}px`,
+    } as CSSProperties
+    const sidebarStyle = {
+      '--main-shell-sidebar-width': `${sidebarWidth}px`,
+      width: sidebarCollapsed ? 0 : sidebarWidth,
+    } as CSSProperties
 
     return (
       <Flex
         className={[styles.container, 'size-full overflow-hidden bg-app-layout']}
-        style={
-          {
-            '--chat-sidebar-width': `${sidebarCollapsed ? 0 : sidebarWidth}px`,
-            '--chat-frame-gutter': `${sidebarCollapsed ? 19 : 11}px`,
-            '--work-panel-preferred-width': `${panelWidth}px`,
-            '--file-preview-preferred-width': `${previewWidth}px`,
-          } as CSSProperties
-        }
+        style={containerStyle}
       >
         <div
           className={sidebarResizeStyles.sidebarWrapper}
           data-collapsed={sidebarCollapsed}
           data-resizing={isResizing}
           inert={sidebarCollapsed}
-          style={
-            {
-              '--main-shell-sidebar-width': `${sidebarWidth}px`,
-              width: sidebarCollapsed ? 0 : sidebarWidth,
-            } as CSSProperties
-          }
+          style={sidebarStyle}
         >
           <Flex className='size-full flex-col overflow-hidden'>{left}</Flex>
         </div>

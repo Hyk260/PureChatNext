@@ -15,7 +15,8 @@ function compareMessages(a: ChannelPollMessage, b: ChannelPollMessage): number {
   if (timeDifference) return timeDifference
   if (a.eventId !== b.eventId) return a.eventId < b.eventId ? -1 : 1
   if (a.role !== b.role) return a.role === 'user' ? -1 : 1
-  return a.id === b.id ? 0 : a.id < b.id ? -1 : 1
+  if (a.id === b.id) return 0
+  return a.id < b.id ? -1 : 1
 }
 
 export function mergeChannelMessages<T extends ChannelPollMessage>(

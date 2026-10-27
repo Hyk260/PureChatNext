@@ -289,20 +289,28 @@ function PendingFileContentPreview({ file, onClose }: { file: File; onClose: () 
     }
   }, [file])
 
-  return (
-    <Modal destroyOnHidden footer={null} open title={`预览 · ${file.name}`} width={640} onCancel={onClose}>
-      {loading ? (
+  const renderPreviewContent = () => {
+    if (loading) {
+      return (
         <Flex className='items-center gap-2 py-8 text-sm text-muted-foreground'>
           <Loader2 className='size-4 animate-spin' />
           正在解析…
         </Flex>
-      ) : error ? (
-        <div className='py-4 text-sm text-destructive'>{error}</div>
-      ) : (
-        <pre className='max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-lg bg-muted p-3 text-xs leading-relaxed'>
-          {content}
-        </pre>
-      )}
+      )
+    }
+
+    if (error) return <div className='py-4 text-sm text-destructive'>{error}</div>
+
+    return (
+      <pre className='max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-lg bg-muted p-3 text-xs leading-relaxed'>
+        {content}
+      </pre>
+    )
+  }
+
+  return (
+    <Modal destroyOnHidden footer={null} open title={`预览 · ${file.name}`} width={640} onCancel={onClose}>
+      {renderPreviewContent()}
     </Modal>
   )
 }

@@ -121,7 +121,7 @@ export const SignInPasswordStep = ({
               修改账号
             </Button>
           </Flex>
-          <Button block loading={loading} size='large' type='primary' onClick={() => form.submit()}>
+          <Button block loading={loading} size='large' type='primary' onClick={form.submit}>
             登录
           </Button>
         </Flex>

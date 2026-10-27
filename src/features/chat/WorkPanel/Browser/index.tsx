@@ -163,6 +163,35 @@ const BrowserPane = memo<Props>(({ contextKey, historyScope, instanceId, agentId
 
   const error = openingError || state?.error
   const ready = Boolean(state && state.url !== 'about:blank' && !error)
+  const handleRetry = () => {
+    if (state) {
+      run(() => api.browser.reload(state))
+      return
+    }
+    setOpeningRevision((value) => value + 1)
+  }
+  const renderViewportContent = () => {
+    if (error) {
+      return (
+        <div className='flex-col-center h-full gap-3 p-5 text-center' role='alert'>
+          <Text>{error}</Text>
+          <Button onClick={handleRetry}>重试</Button>
+        </div>
+      )
+    }
+
+    if (!state || state.url === 'about:blank') {
+      return (
+        <div className='flex-col-center h-full gap-3 p-5 text-center'>
+          <Globe aria-hidden size={32} />
+          <Text type='secondary'>在地址栏输入网址或搜索关键词</Text>
+        </div>
+      )
+    }
+
+    return null
+  }
+
   return (
     <div className='flex h-full min-h-0 flex-col' data-browser-panel>
       <div
@@ -240,21 +269,7 @@ const BrowserPane = memo<Props>(({ contextKey, historyScope, instanceId, agentId
         <div aria-label='网页加载中' className='h-0.5 flex-none bg-primary' role='progressbar' />
       ) : null}
       <div className='relative min-h-0 flex-1' ref={viewport}>
-        {error ? (
-          <div className='flex-col-center h-full gap-3 p-5 text-center' role='alert'>
-            <Text>{error}</Text>
-            <Button
-              onClick={() => (state ? run(() => api.browser.reload(state)) : setOpeningRevision((value) => value + 1))}
-            >
-              重试
-            </Button>
-          </div>
-        ) : !state || state.url === 'about:blank' ? (
-          <div className='flex-col-center h-full gap-3 p-5 text-center'>
-            <Globe aria-hidden size={32} />
-            <Text type='secondary'>在地址栏输入网址或搜索关键词</Text>
-          </div>
-        ) : null}
+        {renderViewportContent()}
       </div>
     </div>
   )

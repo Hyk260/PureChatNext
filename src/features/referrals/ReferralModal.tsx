@@ -37,11 +37,13 @@ export default function ReferralModal({ open, onClose }: Props) {
 
   const send = async (emails: string[], merge = false) => {
     const fingerprint = JSON.stringify(emails)
-    if (requestRef.current?.fingerprint !== fingerprint) requestRef.current = { fingerprint, key: crypto.randomUUID() }
+    const currentRequest = requestRef.current
+    const requestKey = currentRequest?.fingerprint === fingerprint ? currentRequest.key : crypto.randomUUID()
+    if (currentRequest?.fingerprint !== fingerprint) requestRef.current = { fingerprint, key: requestKey }
     setLoading(true)
     setError('')
     try {
-      const response = await referralRequest<ReferralBatchResponse>('', { emails, requestKey: requestRef.current!.key })
+      const response = await referralRequest<ReferralBatchResponse>('', { emails, requestKey })
       setResult((previous) => {
         if (!merge || !previous) return response
         const replacements = new Map(response.results.map((item) => [item.email, item]))
@@ -86,7 +88,6 @@ export default function ReferralModal({ open, onClose }: Props) {
     setError('')
     setInput('')
   }
-  const close = onClose
   const returnToSend = () => {
     setView('send')
     setError('')
@@ -98,7 +99,7 @@ export default function ReferralModal({ open, onClose }: Props) {
   return (
     <Modal
       open={open}
-      onCancel={close}
+      onCancel={onClose}
       afterClose={resetAfterClose}
       footer={null}
       width={720}
@@ -214,7 +215,7 @@ export default function ReferralModal({ open, onClose }: Props) {
               {retryable.length ? '重试发送失败的邀请' : '请等待 60 秒后重试'}
             </Button>
           ) : null}
-          <Button block size='large' shape='round' type='primary' onClick={close}>
+          <Button block size='large' shape='round' type='primary' onClick={onClose}>
             完成
           </Button>
           <Button block size='large' onClick={showHistory}>

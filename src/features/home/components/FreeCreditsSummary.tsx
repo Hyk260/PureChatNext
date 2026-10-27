@@ -43,17 +43,19 @@ const fetchCredits = async (): Promise<CreditsSummary> => {
 
 const formatMillions = (value: number) => `${(value / 1_000_000).toFixed(1)}M`
 
+const getCreditsValue = (data: CreditsSummary | undefined, isLoading: boolean) => {
+  if (isLoading) return '加载中'
+  if (!data) return '暂不可用'
+  return `${formatMillions(data.used)} / ${formatMillions(data.grant)}`
+}
+
 const FreeCreditsSummary = memo<{ onClick?: () => void }>(({ onClick }) => {
   const { data, isLoading } = useSWR<CreditsSummary>('user-credits', fetchCredits, {
     revalidateOnFocus: false,
   })
 
   const percent = data ? Math.min(100, Math.round((data.used / Math.max(1, data.grant)) * 100)) : 0
-  const value = isLoading
-    ? '加载中'
-    : data
-      ? `${formatMillions(data.used)} / ${formatMillions(data.grant)}`
-      : '暂不可用'
+  const value = getCreditsValue(data, isLoading)
 
   return (
     <Link className={styles.link} href='/settings/usage' onClick={onClick}>

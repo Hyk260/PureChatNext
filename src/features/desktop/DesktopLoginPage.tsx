@@ -15,6 +15,29 @@ type DesktopLoginPageProps = {
   standalone?: boolean
 }
 
+type DesktopLoginViewState = 'signedOut' | 'verifying' | 'waiting'
+
+const DESKTOP_LOGIN_COPY: Record<DesktopLoginViewState, { description: string; title: string }> = {
+  signedOut: {
+    description: '登录后即可在桌面端继续使用你的聊天、设置和服务实例。',
+    title: '登录以同步你的 PureChat',
+  },
+  verifying: {
+    description: '授权结果已返回，正在确认服务连接和登录状态。',
+    title: '正在验证桌面登录',
+  },
+  waiting: {
+    description: '请在刚刚打开的浏览器页面中完成登录，授权结果会自动返回桌面应用。',
+    title: '正在等待浏览器授权',
+  },
+}
+
+const getDesktopLoginViewState = (waiting: boolean, verifying: boolean): DesktopLoginViewState => {
+  if (waiting) return 'waiting'
+  if (verifying) return 'verifying'
+  return 'signedOut'
+}
+
 const formatRemaining = (expiresAt: number, now: number) => {
   const seconds = Math.max(0, Math.ceil((expiresAt - now) / 1000))
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
@@ -129,20 +152,12 @@ const DesktopLoginPage = ({ onSuccess, standalone = false }: DesktopLoginPagePro
   }
 
   const verifying = status.status === 'signedIn' && !desktopSession?.user
-  const title = waiting ? '正在等待浏览器授权' : verifying ? '正在验证桌面登录' : '登录以同步你的 PureChat'
-  const description = waiting
-    ? '请在刚刚打开的浏览器页面中完成登录，授权结果会自动返回桌面应用。'
-    : verifying
-      ? '授权结果已返回，正在确认服务连接和登录状态。'
-      : '登录后即可在桌面端继续使用你的聊天、设置和服务实例。'
+  const { description, title } = DESKTOP_LOGIN_COPY[getDesktopLoginViewState(waiting, verifying)]
 
   return (
     <Flex className='w-full overflow-y-auto px-6 py-10 sm:px-10'>
       <Flex className='m-auto w-full max-w-[560px] flex-col gap-8 py-6 sm:py-12'>
         <Flex className='flex-col items-start gap-5'>
-          {/* <Flex className='size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground'>
-              <Cloud aria-hidden size={26} strokeWidth={1.8} />
-            </Flex> */}
           <Text as='h1' className='m-0! text-2xl! tracking-tight sm:text-3xl!' weight={600}>
             {title}
           </Text>

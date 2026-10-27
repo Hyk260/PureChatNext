@@ -17,6 +17,8 @@ export const buildListItems = (
 
   const keyword = searchKeyword.trim().toLowerCase()
   const matchesSearch = (text: string) => !keyword || text.toLowerCase().includes(keyword)
+  const matchesProviderModel = (provider: EnabledProviderGroup, model: EnabledProviderGroup['models'][number]) =>
+    [model.displayName, model.model, provider.name, provider.id].some(matchesSearch)
 
   const sortedProviders = [...enabledProviders].sort((a, b) => providerPriority(a.id) - providerPriority(b.id))
 
@@ -25,14 +27,7 @@ export const buildListItems = (
 
     for (const provider of sortedProviders) {
       for (const model of provider.models) {
-        if (
-          !matchesSearch(model.displayName) &&
-          !matchesSearch(model.model) &&
-          !matchesSearch(provider.name) &&
-          !matchesSearch(provider.id)
-        ) {
-          continue
-        }
+        if (!matchesProviderModel(provider, model)) continue
 
         const existing = modelMap.get(model.model)
         if (!existing) {
@@ -69,13 +64,7 @@ export const buildListItems = (
   const items: ListItem[] = []
 
   for (const provider of sortedProviders) {
-    const filteredModels = provider.models.filter(
-      (model) =>
-        matchesSearch(model.displayName) ||
-        matchesSearch(model.model) ||
-        matchesSearch(provider.name) ||
-        matchesSearch(provider.id)
-    )
+    const filteredModels = provider.models.filter((model) => matchesProviderModel(provider, model))
 
     if (filteredModels.length === 0 && keyword) continue
 

@@ -133,6 +133,12 @@ const styles = createStaticStyles(({ css }) => ({
   `,
 }))
 
+const getSearchQuery = (action: Record<string, unknown>) => {
+  if (Array.isArray(action.queries)) return action.queries.join(' · ')
+  if (typeof action.query === 'string') return action.query
+  return '模型内置 Web'
+}
+
 const WEB_TOOL_NAMES = new Set(['webSearch', 'fetchUrls', 'web_search'])
 
 type MessagePart = UIMessage['parts'][number]
@@ -209,11 +215,7 @@ export const getWebSearchParts = (message: UIMessage): ToolUIPart[] => {
       return [{ url, title: typeof source.title === 'string' ? source.title : url, content: '' }]
     })
     const action = isRecord(part.output.action) ? part.output.action : {}
-    const query = Array.isArray(action.queries)
-      ? action.queries.join(' · ')
-      : typeof action.query === 'string'
-        ? action.query
-        : '模型内置 Web'
+    const query = getSearchQuery(action)
     return { ...part, output: { query, results, success: true } }
   })
 }

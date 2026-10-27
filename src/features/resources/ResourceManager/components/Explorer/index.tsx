@@ -147,6 +147,20 @@ const Explorer = memo(() => {
     }
   }, [clearSelection, resourceList, selectedFileIds])
 
+  const renderResourceContent = () => {
+    if (isLoading) {
+      return (
+        <Flex className='flex-col-center flex-1'>
+          <Spin />
+        </Flex>
+      )
+    }
+
+    if (resourceList.length === 0) return <EmptyPlaceholder onUpload={handleUpload} />
+    if (viewMode === 'masonry') return <MasonryView items={resourceList} onOpen={handleOpen} />
+    return <ListView items={resourceList} onOpen={handleOpen} />
+  }
+
   return (
     <Flex className='flex-col flex-1 size-full'>
       <ExplorerHeader
@@ -156,17 +170,7 @@ const Explorer = memo(() => {
         onUpload={(files) => handleUpload(files)}
       />
       <Flex className='flex-col flex-1 overflow-auto'>
-        {isLoading ? (
-          <Flex className='flex-col-center flex-1'>
-            <Spin />
-          </Flex>
-        ) : resourceList.length === 0 ? (
-          <EmptyPlaceholder onUpload={handleUpload} />
-        ) : viewMode === 'masonry' ? (
-          <MasonryView items={resourceList} onOpen={handleOpen} />
-        ) : (
-          <ListView items={resourceList} onOpen={handleOpen} />
-        )}
+        {renderResourceContent()}
       </Flex>
     </Flex>
   )

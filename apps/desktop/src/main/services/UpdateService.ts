@@ -50,6 +50,15 @@ function toRelease(info: UpdateInfo): DesktopUpdateRelease {
   }
 }
 
+function getDownloadedMessage(
+  isPackaged: boolean,
+  installationSupport: DesktopUpdateState['installationSupport']
+): string | null {
+  if (!isPackaged) return '更新已下载。开发版本不会安装此更新。'
+  if (installationSupport?.supported) return null
+  return installationSupport?.message || '尚未完成安装条件检查。'
+}
+
 /** Main-process owner of update state. Pages only query snapshots and subscribe. */
 export class UpdateService {
   private readonly logger = createLogger('desktop:update')
@@ -302,9 +311,7 @@ export class UpdateService {
         status: isPackaged ? 'ready' : 'downloaded',
         progress: 100,
         release: toRelease(info),
-        message: isPackaged
-          ? (this.state.installationSupport?.supported ? null : this.state.installationSupport?.message || '尚未完成安装条件检查。')
-          : '更新已下载。开发版本不会安装此更新。',
+        message: getDownloadedMessage(isPackaged, this.state.installationSupport),
       })
       if (isPackaged && Notification.isSupported()) {
         new Notification({ title: 'PureChat 更新已就绪', body: '请在关于页面确认重启并安装更新。' }).show()

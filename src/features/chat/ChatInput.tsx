@@ -1,13 +1,8 @@
 'use client'
 
 import {
-  DropdownMenuPopup,
-  DropdownMenuPortal,
-  DropdownMenuPositioner,
-  DropdownMenuRoot,
-  DropdownMenuTrigger,
-  renderDropdownMenuItems,
   Block,
+  DropdownMenu,
   Icon,
   Flex,
 } from '@pure/ui'
@@ -141,23 +136,31 @@ interface ChatInputProps {
   topicId?: string | null
 }
 
-const MenuLabel = memo<{
+type MenuLabelProps = {
   active?: boolean
   chevron?: boolean
   label: string
   toggle?: boolean
-}>(({ label, chevron, active, toggle }) => (
-  <div className={styles.menuLabel}>
-    <span>{label}</span>
-    {toggle ? (
+}
+
+const MenuLabelAccessory = ({ active, chevron, toggle }: Omit<MenuLabelProps, 'label'>) => {
+  if (toggle) {
+    return (
       <div aria-hidden className={cx(styles.toggle, active && styles.toggleActive)}>
         <div className={cx(styles.toggleThumb, active && 'translate-x-3')} />
       </div>
-    ) : chevron ? (
-      <Icon className={cx(styles.submenuChevron, 'flex-none')} icon={ChevronRight} size={16} />
-    ) : active ? (
-      <Icon icon={Check} size={16} />
-    ) : null}
+    )
+  }
+
+  if (chevron) return <Icon className={cx(styles.submenuChevron, 'flex-none')} icon={ChevronRight} size={16} />
+  if (active) return <Icon icon={Check} size={16} />
+  return null
+}
+
+const MenuLabel = memo<MenuLabelProps>(({ label, ...accessoryProps }) => (
+  <div className={styles.menuLabel}>
+    <span>{label}</span>
+    <MenuLabelAccessory {...accessoryProps} />
   </div>
 ))
 
@@ -295,8 +298,6 @@ const ChatInput = memo<ChatInputProps>((props) => {
     [handleAttachmentClick, handleSearchModeChange, handleToggleParams, isBusy, rightCollapsed, searchMode]
   )
 
-  const plusMenuContent = useMemo(() => renderDropdownMenuItems(plusMenuItems), [plusMenuItems])
-
   const canSend = Boolean(input.trim() || files.length > 0 || browserSelections.length > 0) && !isBusy
 
   return (
@@ -376,17 +377,18 @@ const ChatInput = memo<ChatInputProps>((props) => {
       <Flex className='mt-2 flex-between'>
         <Flex className='items-center gap-1'>
           <ModelSelector />
-          <DropdownMenuRoot open={plusOpen} onOpenChange={setPlusOpen}>
-            <DropdownMenuTrigger className={styles.plusTrigger} disabled={isBusy} nativeButton>
-              <Icon icon={Plus} size={18} />
-              <span className='sr-only'>添加</span>
-            </DropdownMenuTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuPositioner placement='topLeft'>
-                <DropdownMenuPopup className={'min-w-[220px]'}>{plusMenuContent}</DropdownMenuPopup>
-              </DropdownMenuPositioner>
-            </DropdownMenuPortal>
-          </DropdownMenuRoot>
+          <DropdownMenu
+            items={plusMenuItems}
+            nativeButton
+            open={plusOpen}
+            placement='topLeft'
+            popupProps={{ className: 'min-w-[220px]' }}
+            triggerProps={{ className: styles.plusTrigger, disabled: isBusy, nativeButton: true }}
+            onOpenChange={setPlusOpen}
+          >
+            <Icon icon={Plus} size={18} />
+            <span className='sr-only'>添加</span>
+          </DropdownMenu>
           {permissionMode && onPermissionModeChange ? (
             <PermissionModeSelector disabled={isBusy} value={permissionMode} onChange={onPermissionModeChange} />
           ) : null}

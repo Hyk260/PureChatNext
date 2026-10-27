@@ -54,6 +54,16 @@ interface ModelItemProps {
   showDragHandle?: boolean
 }
 
+const getHealthLabel = (health: ProviderModelItem['health']) => {
+  if (health?.status === 'success') {
+    const duration = typeof health.durationMs === 'number' ? ` · ${formatDuration(health.durationMs)}` : ''
+    return `检查成功${duration}`
+  }
+  if (health?.status === 'failure') return `检查失败：${health.message || '未知原因'}`
+  if (health?.status === 'checking') return '正在检查'
+  return '未检测'
+}
+
 const ModelItem = memo<ModelItemProps>(
   ({ model, onDeleteCustomModel, onEditCustomModel, provider, showDragHandle = false }) => {
     const toggleModelEnabled = useProviderConfigStore((s) => s.toggleModelEnabled)
@@ -68,14 +78,7 @@ const ModelItem = memo<ModelItemProps>(
     ].filter(Boolean)
 
     const health = model.enabled ? model.health : undefined
-    const healthLabel =
-      health?.status === 'success'
-        ? `检查成功${typeof health.durationMs === 'number' ? ` · ${formatDuration(health.durationMs)}` : ''}`
-        : health?.status === 'failure'
-          ? `检查失败：${health.message || '未知原因'}`
-          : health?.status === 'checking'
-            ? '正在检查'
-            : '未检测'
+    const healthLabel = getHealthLabel(health)
 
     const healthStatus = (
       <span className={styles.status}>

@@ -16,6 +16,10 @@ const ResourcesShellLayout = ({
   sidebarCollapsed?: boolean
 }) => {
   const { handleResizeStart, isResizing, sidebarWidth } = useSidebarResize()
+  const sidebarStyle = {
+    '--main-shell-sidebar-width': `${sidebarWidth}px`,
+    width: sidebarCollapsed ? 0 : sidebarWidth,
+  } as CSSProperties
 
   return (
     <Flex className='size-full overflow-hidden'>
@@ -24,12 +28,7 @@ const ResourcesShellLayout = ({
         data-collapsed={sidebarCollapsed}
         data-resizing={isResizing}
         inert={sidebarCollapsed}
-        style={
-          {
-            '--main-shell-sidebar-width': `${sidebarWidth}px`,
-            width: sidebarCollapsed ? 0 : sidebarWidth,
-          } as CSSProperties
-        }
+        style={sidebarStyle}
       >
         {innerSidebar}
       </div>

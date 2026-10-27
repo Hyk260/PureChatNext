@@ -126,6 +126,20 @@ const formatDuration = (durationMs: number) => {
   return seconds > 0 ? `用时 ${minutes} 分 ${seconds} 秒` : `用时 ${minutes} 分钟`
 }
 
+const getExecutionStatusText = (
+  execution: DesktopCommandExecution | undefined,
+  isRunning: boolean,
+  isSuccessful: boolean
+) => {
+  if (isRunning) return '正在运行'
+  if (isSuccessful) return '已运行'
+  if (execution?.status === 'cancelled') return '已停止'
+  if (execution?.status === 'timedOut') return '运行超时'
+  if (execution?.status === 'failed') return '运行失败'
+  if (execution?.exitCode === null || execution?.exitCode === undefined) return '运行失败'
+  return `退出码 ${execution.exitCode}`
+}
+
 const CommandExecutionCard = ({ part, running }: { part: CommandExecutionPart; running: boolean }) => {
   const execution = getExecution(part.output)
   const isRunning = running && !execution
@@ -136,19 +150,11 @@ const CommandExecutionCard = ({ part, running }: { part: CommandExecutionPart; r
   const isSuccessful =
     execution?.status === 'completed' ||
     (!execution && part.state === 'output-available' && isRecord(part.output) && part.output.success === true)
-  const statusText = isRunning
-    ? '正在运行'
-    : isSuccessful
-      ? '已运行'
-      : execution?.status === 'cancelled'
-        ? '已停止'
-        : execution?.status === 'timedOut'
-          ? '运行超时'
-          : execution?.status === 'failed'
-            ? '运行失败'
-            : execution?.exitCode === null || execution?.exitCode === undefined
-              ? '运行失败'
-              : `退出码 ${execution.exitCode}`
+  const statusText = getExecutionStatusText(execution, isRunning, isSuccessful)
+  let StatusIcon = CircleAlert
+  if (isSuccessful) StatusIcon = CircleCheck
+  if (isRunning) StatusIcon = LoaderCircle
+  const statusIconClassName = isRunning ? cx('flex-none', styles.spinner) : 'flex-none'
 
   if (!execution && !isRunning && !output) return null
 
@@ -159,13 +165,7 @@ const CommandExecutionCard = ({ part, running }: { part: CommandExecutionPart; r
       data-command-status={isRunning ? 'running' : (execution?.status ?? 'failed')}
     >
       <div className={styles.header}>
-        {isRunning ? (
-          <LoaderCircle className={cx('flex-none', styles.spinner)} size={16} aria-hidden />
-        ) : isSuccessful ? (
-          <CircleCheck className='flex-none' size={16} aria-hidden />
-        ) : (
-          <CircleAlert className='flex-none' size={16} aria-hidden />
-        )}
+        <StatusIcon className={statusIconClassName} size={16} aria-hidden />
         <span>{statusText}</span>
         <code className={styles.command} title={command}>
           {command}

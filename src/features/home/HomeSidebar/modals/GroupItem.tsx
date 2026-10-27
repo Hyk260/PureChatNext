@@ -95,9 +95,8 @@ const GroupItem = memo<GroupItemProps>(({ canRemove, id, name }) => {
         <div
           className={'flex-1 min-w-0'}
           onMouseDown={(event) => {
-            const target = event.target as HTMLElement | null
             // ControlInput 后缀的 Reset / Save
-            if (target?.closest('button, [role="button"]')) {
+            if (event.target instanceof Element && event.target.closest('button, [role="button"]')) {
               skipBlurCommitRef.current = true
             }
           }}

@@ -157,34 +157,35 @@ export function LinkedAccountsSetting({ userEmail }: LinkedAccountsSettingProps)
     },
   }))
 
+  const renderAccounts = () => {
+    if (loading) return <Text type='secondary'>加载中…</Text>
+    if (oauthAccounts.length === 0) return <Text type='secondary'>暂无关联的第三方账户</Text>
+
+    return oauthAccounts.map((account) => (
+      <Flex className='flex-between' key={account.id}>
+        <Flex className='items-center gap-1.5 min-w-0 text-xs'>
+          {AuthIcons(account.providerId, 16)}
+          <span>{getProviderLabel(account.providerId)}</span>
+          {userEmail ? (
+            <Text className='text-[11px]' type='secondary'>
+              · {userEmail}
+            </Text>
+          ) : null}
+        </Flex>
+        <ActionIcon
+          disabled={!allowUnlink || unlinkingId === account.id}
+          icon={Unlink}
+          onClick={() => confirmUnlink(account)}
+          size='small'
+        />
+      </Flex>
+    ))
+  }
+
   return (
     <SettingRow label='已关联的账户'>
       <Flex className='flex-col gap-2 w-full'>
-        {loading ? (
-          <Text type='secondary'>加载中…</Text>
-        ) : oauthAccounts.length === 0 ? (
-          <Text type='secondary'>暂无关联的第三方账户</Text>
-        ) : (
-          oauthAccounts.map((account) => (
-            <Flex className='flex-between' key={account.id}>
-              <Flex className='items-center gap-1.5 min-w-0 text-xs'>
-                {AuthIcons(account.providerId, 16)}
-                <span>{getProviderLabel(account.providerId)}</span>
-                {userEmail ? (
-                  <Text className='text-[11px]' type='secondary'>
-                    · {userEmail}
-                  </Text>
-                ) : null}
-              </Flex>
-              <ActionIcon
-                disabled={!allowUnlink || unlinkingId === account.id}
-                icon={Unlink}
-                onClick={() => confirmUnlink(account)}
-                size='small'
-              />
-            </Flex>
-          ))
-        )}
+        {renderAccounts()}
 
         {availableProviders.length > 0 ? (
           <DropdownMenu items={linkMenuItems} popupProps={{ style: { maxWidth: 200 } }}>

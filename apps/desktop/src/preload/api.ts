@@ -5,6 +5,12 @@ import { ipcRenderer } from 'electron'
 import { DESKTOP_IPC_EVENTS } from '../common/ipc/contracts'
 import { invoke } from './invoke'
 
+const subscribe = <Payload>(eventName: string, listener: (payload: Payload) => void) => {
+  const handler = (_event: Electron.IpcRendererEvent, payload: Payload) => listener(payload)
+  ipcRenderer.on(eventName, handler)
+  return () => ipcRenderer.removeListener(eventName, handler)
+}
+
 export const createDesktopApi = (): DesktopApi => ({
   browser: {
     open: (input) => invoke('browser.open', input),
@@ -20,27 +26,15 @@ export const createDesktopApi = (): DesktopApi => ({
     cancelPick: (input) => invoke('browser.cancelPick', input),
     close: (input) => invoke('browser.close', input),
     reset: () => invoke('browser.reset'),
-    onStateChange: (listener) => {
-      const handler = (_event: Electron.IpcRendererEvent, state: Parameters<typeof listener>[0]) => listener(state)
-      ipcRenderer.on(DESKTOP_IPC_EVENTS.browserState, handler)
-      return () => ipcRenderer.removeListener(DESKTOP_IPC_EVENTS.browserState, handler)
-    },
+    onStateChange: (listener) => subscribe(DESKTOP_IPC_EVENTS.browserState, listener),
   },
   terminal: {
     open: (input) => invoke('terminal.open', input),
     write: (input) => invoke('terminal.write', input),
     resize: (input) => invoke('terminal.resize', input),
     kill: (input) => invoke('terminal.kill', input),
-    onData: (listener) => {
-      const handler = (_event: Electron.IpcRendererEvent, data: Parameters<typeof listener>[0]) => listener(data)
-      ipcRenderer.on(DESKTOP_IPC_EVENTS.terminalData, handler)
-      return () => ipcRenderer.removeListener(DESKTOP_IPC_EVENTS.terminalData, handler)
-    },
-    onExit: (listener) => {
-      const handler = (_event: Electron.IpcRendererEvent, data: Parameters<typeof listener>[0]) => listener(data)
-      ipcRenderer.on(DESKTOP_IPC_EVENTS.terminalExit, handler)
-      return () => ipcRenderer.removeListener(DESKTOP_IPC_EVENTS.terminalExit, handler)
-    },
+    onData: (listener) => subscribe(DESKTOP_IPC_EVENTS.terminalData, listener),
+    onExit: (listener) => subscribe(DESKTOP_IPC_EVENTS.terminalExit, listener),
   },
   updater: {
     getState: () => invoke('updater.getState'),
@@ -50,11 +44,7 @@ export const createDesktopApi = (): DesktopApi => ({
     clearCache: () => invoke('updater.clearCache'),
     setPreferences: (preferences) => invoke('updater.setPreferences', preferences),
     install: () => invoke('updater.install'),
-    onStateChange: (listener) => {
-      const handler = (_event: Electron.IpcRendererEvent, state: Parameters<typeof listener>[0]) => listener(state)
-      ipcRenderer.on(DESKTOP_IPC_EVENTS.updateState, handler)
-      return () => ipcRenderer.removeListener(DESKTOP_IPC_EVENTS.updateState, handler)
-    },
+    onStateChange: (listener) => subscribe(DESKTOP_IPC_EVENTS.updateState, listener),
   },
   openDevTools: () => invoke('window.openDevTools'),
   getDataInfo: () => invoke('data.getInfo'),
@@ -95,11 +85,7 @@ export const createDesktopApi = (): DesktopApi => ({
     cancel: () => invoke('auth.cancel'),
     getStatus: () => invoke('auth.getStatus'),
     logout: () => invoke('auth.logout'),
-    onStatusChange: (listener) => {
-      const handler = (_event: Electron.IpcRendererEvent, status: Parameters<typeof listener>[0]) => listener(status)
-      ipcRenderer.on(DESKTOP_IPC_EVENTS.authStatus, handler)
-      return () => ipcRenderer.removeListener(DESKTOP_IPC_EVENTS.authStatus, handler)
-    },
+    onStatusChange: (listener) => subscribe(DESKTOP_IPC_EVENTS.authStatus, listener),
     start: (input) => invoke('auth.start', input),
   },
 })

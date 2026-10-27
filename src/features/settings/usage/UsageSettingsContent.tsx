@@ -23,6 +23,7 @@ import type { UsageItem, UsageResponse } from './types'
 
 type DateRange = DayjsDateRangeValue
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
 const formatUsageDateTime = (value: string) => formatCompactDateTime(value, { timeZone: SHANGHAI_TIMEZONE })
 const formatResetHint = (days: number, hours: number) => {
   if (days > 0) return `${days} 天后重置`
@@ -305,6 +306,8 @@ export function UsageSettingsContent() {
   const rebatePercentage = data
     ? Math.min(100, getPercentage(rebateRemaining, data.balance.rebateEarned))
     : 0
+  const showInitialLoading = loading && !data
+  const showInitialError = !loading && !data && Boolean(error)
 
   return (
     <Flex className={['w-full pt-6 px-6 pb-16', 'flex-col gap-10']}>
@@ -313,15 +316,17 @@ export function UsageSettingsContent() {
           <Text className={'text-lg font-semibold'}>总览</Text>
           {/* <Text className={cx(styles.plan, 'text-[13px]')}>当前方案：免费版</Text> */}
         </Flex>
-        {loading && !data ? (
+        {showInitialLoading ? (
           <Block padding={16} variant='outlined'>
             <Skeleton.Text rows={3} />
           </Block>
-        ) : error && !data ? (
+        ) : null}
+        {showInitialError ? (
           <Block variant='outlined'>
             <Empty action={<Button onClick={retry}>重试</Button>} description={error} />
           </Block>
-        ) : data ? (
+        ) : null}
+        {data ? (
           <Block padding={0} variant='outlined'>
             <Grid className={'w-full'} gap={0} maxItemWidth={160} rows={1}>
               <UsageMetric
@@ -448,7 +453,7 @@ export function UsageSettingsContent() {
               size='small'
               current={page}
               pageSize={pageSize}
-              pageSizeOptions={[10, 20, 50, 100]}
+              pageSizeOptions={PAGE_SIZE_OPTIONS}
               showSizeChanger
               total={total}
               onChange={(nextPage, nextPageSize) => {

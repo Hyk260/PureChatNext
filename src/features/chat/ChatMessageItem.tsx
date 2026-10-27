@@ -148,6 +148,34 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
     )
     const showApprovalCard = permissionMode === undefined || permissionMode === 'ask'
     const approvalItems = showApprovalCard ? getToolApprovalItems(message.parts) : []
+    const renderMessageContent = () => {
+      if (isUser) {
+        if (!text) return null
+        return <MessageMarkdown className={cx(styles.markdown, 'text-inherit')} text={text} />
+      }
+
+      return message.parts.map((part, index) => {
+        if (part.type === 'text' && part.text) {
+          return (
+            <MessageMarkdown
+              key={`text-${index}`}
+              className={styles.markdown}
+              isStreaming={isStreaming}
+              text={formatNativeWebCitations(part)}
+            />
+          )
+        }
+
+        if (isCommandExecutionPart(part)) {
+          const running = runningCommandCallIds?.has(part.toolCallId) ?? false
+          if (running || part.state === 'output-available' || part.state === 'output-error') {
+            return <CommandExecutionCard key={part.toolCallId} part={part} running={running} />
+          }
+        }
+
+        return null
+      })
+    }
 
     if (
       !text &&
@@ -192,34 +220,7 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
               onReject={() => applyToolApprovalDecision(item, false, onToolApproval, onServerToolApproval)}
             />
           ))}
-          {/* <LoadingState /> */}
-          {isUser ? (
-            text ? (
-              <MessageMarkdown className={cx(styles.markdown, 'text-inherit')} text={text} />
-            ) : null
-          ) : (
-            message.parts.map((part, index) => {
-              if (part.type === 'text' && part.text) {
-                return (
-                  <MessageMarkdown
-                    key={`text-${index}`}
-                    className={styles.markdown}
-                    isStreaming={isStreaming}
-                    text={formatNativeWebCitations(part)}
-                  />
-                )
-              }
-
-              if (isCommandExecutionPart(part)) {
-                const running = runningCommandCallIds?.has(part.toolCallId) ?? false
-                if (running || part.state === 'output-available' || part.state === 'output-error') {
-                  return <CommandExecutionCard key={part.toolCallId} part={part} running={running} />
-                }
-              }
-
-              return null
-            })
-          )}
+          {renderMessageContent()}
           {!text && isStreaming && !reasoning && !hasWebSearch && !hasRunningCommand ? <LoadingState /> : null}
         </div>
 

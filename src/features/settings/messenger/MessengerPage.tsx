@@ -76,8 +76,8 @@ const MessengerPage = memo(() => {
     return <MessengerQQPage />
   }
 
-  if (platform && COMING_SOON_IDS.has(platform as MessengerPlatformId)) {
-    return <MessengerComingSoonPage platform={platform as MessengerPlatformId} />
+  if (isMessengerPlatform(platform) && COMING_SOON_IDS.has(platform)) {
+    return <MessengerComingSoonPage platform={platform} />
   }
 
   return (

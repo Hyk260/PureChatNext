@@ -31,6 +31,12 @@ const providerDraft = (config: WebProviderConfig, capability: WebCapability): Dr
   basicAuthPassword: config.basicAuthPassword ?? '',
 })
 
+const getApiKeyPlaceholder = (followingServer: boolean, serverHasApiKey?: boolean) => {
+  if (followingServer) return '默认（服务器配置），不使用个人 API 密钥'
+  if (serverHasApiKey) return '服务器已配置；留空继承，多个密钥用逗号分隔'
+  return 'API 密钥，多个密钥用逗号分隔'
+}
+
 export function ProviderCard({
   capability,
   data,
@@ -60,9 +66,11 @@ export function ProviderCard({
 
   const meta = WEB_PROVIDER_CATALOG[provider]
   const server = data.server.providers[provider]
+  const serverHasApiKey = capability === 'search' ? server?.hasSearchApiKey : server?.hasFetchApiKey
   const title = capability === 'search' ? '搜索服务商' : 'URL 获取服务商'
   const hasKey = provider !== 'naive' && provider !== 'searxng'
   const serverEndpoint = server?.[`${capability}BaseURL`] || meta[`${capability}BaseURL`] || '服务商默认地址'
+  const apiKeyPlaceholder = getApiKeyPlaceholder(followingServer, serverHasApiKey)
   const update = (key: keyof Draft, value: string) => setEdits((current) => ({ ...current, [key]: value }))
   const commit = async (keys?: string[]) => {
     if (!dirty && keys === undefined) return true
@@ -189,13 +197,7 @@ export function ProviderCard({
                 disabled={followingServer}
                 onChange={(event) => update('apiKeys', event.target.value)}
                 onBlur={blur}
-                placeholder={
-                  followingServer
-                    ? '默认（服务器配置），不使用个人 API 密钥'
-                    : server?.[capability === 'search' ? 'hasSearchApiKey' : 'hasFetchApiKey']
-                      ? '服务器已配置；留空继承，多个密钥用逗号分隔'
-                      : 'API 密钥，多个密钥用逗号分隔'
-                }
+                placeholder={apiKeyPlaceholder}
               />
               <ActionIcon
                 aria-label='密钥列表'

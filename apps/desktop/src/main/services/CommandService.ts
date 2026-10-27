@@ -45,6 +45,18 @@ const failure = (content: string, data?: unknown, execution?: DesktopCommandExec
 const getOutputText = (execution: DesktopCommandExecution) =>
   execution.output || (execution.status === 'completed' ? '命令执行成功，没有产生输出。' : '命令没有产生输出。')
 
+const getExecutionStatus = (
+  cancelled: boolean,
+  timedOut: boolean,
+  spawnError: Error | undefined,
+  exitCode: number | null
+) => {
+  if (cancelled) return 'cancelled'
+  if (timedOut) return 'timedOut'
+  if (spawnError || exitCode !== 0) return 'failed'
+  return 'completed'
+}
+
 const getCommandKey = (topicId: string, toolCallId: string) => JSON.stringify([topicId, toolCallId])
 
 export class CommandService {
@@ -125,13 +137,7 @@ export class CommandService {
         this.running.delete(shellId)
 
         const output = [state.output.toString('utf8'), spawnError?.message].filter(Boolean).join('\n')
-        const status = state.cancelled
-          ? 'cancelled'
-          : state.timedOut
-            ? 'timedOut'
-            : spawnError || exitCode !== 0
-              ? 'failed'
-              : 'completed'
+        const status = getExecutionStatus(state.cancelled, state.timedOut, spawnError, exitCode)
         const execution: DesktopCommandExecution = {
           command,
           cwd,
@@ -170,9 +176,8 @@ export class CommandService {
     if (!execution) return failure('命令已完成或不存在')
 
     const content = getOutputText(execution)
-    return execution.status === 'completed'
-      ? success(content, { shellId }, execution)
-      : failure(content, { shellId }, execution)
+    if (execution.status === 'completed') return success(content, { shellId }, execution)
+    return failure(content, { shellId }, execution)
   }
 
   kill(shellId: string) {

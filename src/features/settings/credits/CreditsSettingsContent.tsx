@@ -47,6 +47,29 @@ export function CreditsSettingsContent() {
   }, [])
 
   const percent = data ? Math.min(100, getPercentage(data.used, data.grant)) : 0
+  const renderCredits = () => {
+    if (loading) return <Spin />
+    if (error) return <Text type='danger'>{error}</Text>
+    if (!data) return null
+
+    return (
+      <Flex className='flex-col gap-4 max-w-[480px]'>
+        <Flex className='flex-col gap-1'>
+          <Text className='text-[28px] font-semibold'>{formatNumber(data.totalRemaining)}</Text>
+          <Text type='secondary'>总可用积分</Text>
+          <Text type='secondary'>
+            本月免费剩余 {formatNumber(data.remaining)} / {formatNumber(data.grant)}
+          </Text>
+          <Text type='secondary'>返利余额 {formatNumber(data.rebateRemaining)}（免费积分优先消耗）</Text>
+        </Flex>
+        <Progress percent={percent} showInfo format={() => `已用 ${formatNumber(data.used)}`} />
+        <Text type='secondary'>
+          计费周期 {data.period}（Asia/Shanghai）· 下次重置约 {data.resetIn.days} 天 {data.resetIn.hours} 小时
+        </Text>
+        <Text type='secondary'>返利跨月保留，连续 90 天未活跃后清除；登录或访问已登录功能可续期。</Text>
+      </Flex>
+    )
+  }
 
   return (
     <Flex className='flex-col gap-6 py-[24px_64px] px-6 w-full'>
@@ -55,27 +78,7 @@ export function CreditsSettingsContent() {
         Key。本页不提供购买入口。
       </Text>
 
-      {loading ? (
-        <Spin />
-      ) : error ? (
-        <Text type='danger'>{error}</Text>
-      ) : data ? (
-        <Flex className='flex-col gap-4 max-w-[480px]'>
-          <Flex className='flex-col gap-1'>
-            <Text className='text-[28px] font-semibold'>{formatNumber(data.totalRemaining)}</Text>
-            <Text type='secondary'>总可用积分</Text>
-            <Text type='secondary'>
-              本月免费剩余 {formatNumber(data.remaining)} / {formatNumber(data.grant)}
-            </Text>
-            <Text type='secondary'>返利余额 {formatNumber(data.rebateRemaining)}（免费积分优先消耗）</Text>
-          </Flex>
-          <Progress percent={percent} showInfo format={() => `已用 ${formatNumber(data.used)}`} />
-          <Text type='secondary'>
-            计费周期 {data.period}（Asia/Shanghai）· 下次重置约 {data.resetIn.days} 天 {data.resetIn.hours} 小时
-          </Text>
-          <Text type='secondary'>返利跨月保留，连续 90 天未活跃后清除；登录或访问已登录功能可续期。</Text>
-        </Flex>
-      ) : null}
+      {renderCredits()}
     </Flex>
   )
 }

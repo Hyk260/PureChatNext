@@ -12,6 +12,7 @@ import type { DesktopConfigService } from './DesktopConfigService'
 import type { PermissionService } from './PermissionService'
 
 const MAX_FILE_BYTES = 512 * 1024
+const MAX_FILE_SEARCH_MATCHES = 200
 const APPROVAL_TOOLS = new Set(['writeFile', 'editFile', 'moveFile', 'runCommand'])
 
 const result = (content: string, success = true, data?: unknown): DesktopLocalToolResult => ({
@@ -19,6 +20,22 @@ const result = (content: string, success = true, data?: unknown): DesktopLocalTo
   ...(data === undefined ? {} : { data }),
   success,
 })
+
+const findMatchingFiles = async (root: string, query: string) => {
+  const matches: string[] = []
+  const walk = async (directory: string): Promise<void> => {
+    if (matches.length >= MAX_FILE_SEARCH_MATCHES) return
+    for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
+      const fullPath = path.join(directory, entry.name)
+      if (entry.name.toLowerCase().includes(query)) matches.push(fullPath)
+      if (entry.isDirectory()) await walk(fullPath)
+      if (matches.length >= MAX_FILE_SEARCH_MATCHES) return
+    }
+  }
+
+  await walk(root)
+  return matches
+}
 
 export class LocalToolService {
   private readonly completedCalls = new Map<string, DesktopLocalToolResult>()
@@ -71,17 +88,7 @@ export class LocalToolService {
         case 'searchFiles': {
           const root = await resolveSafePath(request, config, String(args.path ?? '.'))
           const query = String(args.query ?? '').toLowerCase()
-          const matches: string[] = []
-          const walk = async (directory: string): Promise<void> => {
-            if (matches.length >= 200) return
-            for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
-              const fullPath = path.join(directory, entry.name)
-              if (entry.name.toLowerCase().includes(query)) matches.push(fullPath)
-              if (entry.isDirectory()) await walk(fullPath)
-              if (matches.length >= 200) return
-            }
-          }
-          await walk(root)
+          const matches = await findMatchingFiles(root, query)
           output = result(JSON.stringify(matches), true, { path: root })
           break
         }

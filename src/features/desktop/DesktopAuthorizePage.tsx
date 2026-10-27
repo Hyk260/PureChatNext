@@ -11,6 +11,7 @@ import { useSession } from '@/libs/better-auth/client'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 type AuthorizePageState = 'error' | 'loginRequired' | 'pending' | 'success'
+type DesktopAuthorizeResponse = { error?: string; redirectUri?: string }
 
 const PAGE_CONTENT: Record<AuthorizePageState, { description: string; title: string }> = {
   error: { description: '', title: '授权未完成' },
@@ -83,7 +84,7 @@ const DesktopAuthorizePage = () => {
           { method: 'POST' }
         )
       )
-      const body = (await response.json().catch(() => ({}))) as { error?: string; redirectUri?: string }
+      const body = (await response.json().catch(() => ({}))) as DesktopAuthorizeResponse
       if (!response.ok || !body.redirectUri) throw new Error(body.error || '桌面授权失败')
       setRedirectUri(body.redirectUri)
       window.location.assign(body.redirectUri)

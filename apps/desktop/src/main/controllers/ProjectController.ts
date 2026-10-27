@@ -1,7 +1,8 @@
+import { execFile, spawn } from 'node:child_process'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
-import type { DesktopProjectEntries, DesktopProjectFile } from '@/types/desktop'
+import type { DesktopProjectEntries, DesktopProjectFile, DesktopProjectGitChange } from '@/types/desktop'
 
 import type { IpcRegistry } from '../ipc/IpcRegistry'
 import type { DesktopConfigService } from '../services/DesktopConfigService'
@@ -10,6 +11,8 @@ import type { DirectorySelectionService } from '../services/DirectorySelectionSe
 import { assertNotSensitive } from '../security/PathPolicy'
 
 const MAX_ENTRIES = 500
+const GIT_COMMAND_TIMEOUT_MS = 5_000
+const GIT_MAX_BUFFER_BYTES = 5 * 1024 * 1024
 const MAX_TEXT_BYTES = 2 * 1024 * 1024
 const MAX_MEDIA_BYTES = 10 * 1024 * 1024
 const IMAGE_MIME_TYPES: Record<string, string> = {
@@ -35,6 +38,116 @@ function decodeText(buffer: Buffer): string | null {
 }
 
 const isInside = (target: string, root: string) => target === root || target.startsWith(`${root}${path.sep}`)
+const toGitPath = (value: string) => value.split(path.sep).join('/')
+
+const runGitCommand = (cwd: string, args: string[]) =>
+  new Promise<string>((resolve, reject) => {
+    execFile(
+      'git',
+      args,
+      {
+        cwd,
+        encoding: 'utf8',
+        maxBuffer: GIT_MAX_BUFFER_BYTES,
+        timeout: GIT_COMMAND_TIMEOUT_MS,
+        windowsHide: true,
+      },
+      (error, stdout) => {
+        if (error) reject(error)
+        else resolve(stdout)
+      }
+    )
+  })
+
+const findGitRoot = async (directory: string) => {
+  try {
+    const output = await runGitCommand(directory, ['rev-parse', '--show-toplevel'])
+    return path.resolve(output.trim())
+  } catch {
+    return null
+  }
+}
+
+const getGitChangeStatus = (status: string): DesktopProjectGitChange['status'] => {
+  if (status === '??') return '?'
+  if (status.includes('U')) return 'U'
+  if (status.includes('D')) return 'D'
+  if (status.includes('A')) return 'A'
+  if (status.includes('R')) return 'R'
+  if (status.includes('C')) return 'C'
+  if (status.includes('T')) return 'T'
+  return 'M'
+}
+
+const getProjectGitChanges = async (projectRoot: string, gitRoot: string): Promise<DesktopProjectGitChange[]> => {
+  const projectRelativePath = toGitPath(path.relative(gitRoot, projectRoot))
+  const projectPathspec = projectRelativePath ? `:(top,literal)${projectRelativePath}` : '.'
+  const output = await runGitCommand(gitRoot, [
+    'status',
+    '--porcelain=v1',
+    '-z',
+    '--untracked-files=all',
+    '--',
+    projectPathspec,
+  ])
+  const records = output.split('\0')
+  const projectPrefix = projectRelativePath || '.'
+  const changes: DesktopProjectGitChange[] = []
+
+  for (let index = 0; index < records.length; index++) {
+    const record = records[index]
+    if (!record) continue
+
+    const status = record.slice(0, 2)
+    const gitPath = toGitPath(record.slice(3))
+    const relativePath = projectPrefix === '.' ? gitPath : path.posix.relative(projectPrefix, gitPath)
+    if (!relativePath || relativePath === '..' || relativePath.startsWith('../')) continue
+
+    changes.push({ path: relativePath, status: getGitChangeStatus(status) })
+    if (status.includes('R') || status.includes('C')) index++
+  }
+
+  return changes
+}
+
+const findIgnoredPaths = (gitRoot: string, paths: string[]) =>
+  new Promise<Set<string>>((resolve) => {
+    if (paths.length === 0) {
+      resolve(new Set())
+      return
+    }
+
+    const child = spawn('git', ['check-ignore', '-z', '--stdin'], {
+      cwd: gitRoot,
+      stdio: ['pipe', 'pipe', 'ignore'],
+      windowsHide: true,
+    })
+    const output: Buffer[] = []
+    let settled = false
+    const timer = setTimeout(() => {
+      child.kill()
+      finish(new Set())
+    }, GIT_COMMAND_TIMEOUT_MS)
+
+    const finish = (ignored: Set<string>) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve(ignored)
+    }
+
+    child.stdout.on('data', (chunk: Buffer) => output.push(Buffer.from(chunk)))
+    child.on('error', () => finish(new Set()))
+    child.on('close', (code) => {
+      if (code !== 0 && code !== 1) {
+        finish(new Set())
+        return
+      }
+      finish(new Set(Buffer.concat(output).toString('utf8').split('\0').filter(Boolean)))
+    })
+    child.stdin.on('error', () => finish(new Set()))
+    child.stdin.end(`${paths.join('\0')}\0`)
+  })
 
 export class ProjectController {
   private readonly pendingProjectAccess = new Map<string, { promise: Promise<string> }>()
@@ -76,7 +189,7 @@ export class ProjectController {
     return this.config.createProject({ accessConfirmed: true, name, rootPath: resolved })
   }
 
-  private async resolveProjectPath(input: { projectId: string; relativePath?: string }) {
+  private async resolveProjectContext(input: { projectId: string; relativePath?: string }) {
     if (!input || typeof input !== 'object') throw new Error('项目参数无效')
     const projectId = typeof input.projectId === 'string' ? input.projectId.trim() : ''
     if (!projectId || projectId.length > 80) throw new Error('项目标识无效')
@@ -92,7 +205,7 @@ export class ProjectController {
     assertNotSensitive(resolved)
     if (!isInside(resolved, root)) throw new Error('路径不在项目目录内')
 
-    return resolved
+    return { path: resolved, projectRoot: root }
   }
 
   private async resolveProjectRoot(project: Awaited<ReturnType<DesktopConfigService['listProjects']>>[number]) {
@@ -132,12 +245,12 @@ export class ProjectController {
   }
 
   async listEntries(input: { projectId: string; relativePath?: string }): Promise<DesktopProjectEntries> {
-    const resolved = await this.resolveProjectPath(input)
+    const { path: resolved, projectRoot } = await this.resolveProjectContext(input)
 
     const stat = await fs.stat(resolved)
     if (!stat.isDirectory()) throw new Error('目标路径不是目录')
 
-    const entries = (await fs.readdir(resolved, { withFileTypes: true }))
+    const directoryEntries = (await fs.readdir(resolved, { withFileTypes: true }))
       .filter((entry) => entry.name !== '.git')
       .slice(0, MAX_ENTRIES)
       .map((entry) => ({ isDirectory: entry.isDirectory(), name: entry.name }))
@@ -146,12 +259,31 @@ export class ProjectController {
         return a.name.localeCompare(b.name, 'zh-CN')
       })
 
-    return { entries, path: resolved }
+    const gitRoot = await findGitRoot(projectRoot)
+    let entries = directoryEntries
+    let gitChanges: DesktopProjectGitChange[] = []
+    if (gitRoot) {
+      const gitPaths = directoryEntries.map((entry) => toGitPath(path.relative(gitRoot, path.join(resolved, entry.name))))
+      const ignoredPaths = await findIgnoredPaths(gitRoot, gitPaths)
+      entries = directoryEntries.map((entry, index) =>
+        ignoredPaths.has(gitPaths[index]) ? { ...entry, gitIgnored: true } : entry
+      )
+
+      if (!input.relativePath) {
+        try {
+          gitChanges = await getProjectGitChanges(projectRoot, gitRoot)
+        } catch {
+          gitChanges = []
+        }
+      }
+    }
+
+    return { entries, gitChanges, isGitRepository: Boolean(gitRoot), path: resolved }
   }
 
   async readFile(input: { projectId: string; relativePath: string }): Promise<DesktopProjectFile> {
     if (typeof input?.relativePath !== 'string' || !input.relativePath) throw new Error('文件路径无效')
-    const resolved = await this.resolveProjectPath(input)
+    const { path: resolved } = await this.resolveProjectContext(input)
     const file = await fs.open(resolved, 'r')
     try {
       const stat = await file.stat()

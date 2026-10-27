@@ -90,16 +90,16 @@ function renderUserLegacyMedia(message: QQMessage): ReactNode {
   )
 }
 
+function renderMessageText(message: QQMessage, isUser: boolean, showText: boolean): ReactNode {
+  if (!showText) return null
+  if (isUser) return <div className='whitespace-pre-wrap text-sm'>{message.text}</div>
+  return <MessageMarkdown text={message.text} />
+}
+
 function renderBubbleBody(message: QQMessage, isUser: boolean, showText: boolean): ReactNode {
   return (
     <>
-      {showText ? (
-        isUser ? (
-          <div className='whitespace-pre-wrap text-sm'>{message.text}</div>
-        ) : (
-          <MessageMarkdown text={message.text} />
-        )
-      ) : null}
+      {renderMessageText(message, isUser, showText)}
       {isUser && message.attachments?.length ? (
         <div className='mt-2 space-y-2'>{message.attachments.map((item) => renderAttachment(item, true))}</div>
       ) : null}

@@ -167,12 +167,6 @@ const styles = createStaticStyles(({ css }) => ({
       background: var(--lobe-color-bg-container, #fff);
     }
   `,
-  tabIcon: css`
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-  `,
   tabTitle: css`
     min-width: 0;
     overflow: hidden;
@@ -419,12 +413,11 @@ const DesktopTitleBarChrome = ({
         <div className={styles.tabs}>
           {tabs.map((tab, index) => {
             const active = tab.id === activeTabId
-            const Icon = tabIconForPath(tab.path)
             return (
               <Fragment key={tab.id}>
                 {index > 0 ? <Divider orientation='vertical' /> : null}
                 <div
-                  className={`${styles.tab} ${active ? `${styles.tabActive} active` : ''}`}
+                  className={cx(styles.tab, active && styles.tabActive, active && 'active')}
                   role='tab'
                   tabIndex={0}
                   onClick={() => onActivateTab(tab.id)}
@@ -435,9 +428,6 @@ const DesktopTitleBarChrome = ({
                     }
                   }}
                 >
-                  {/* <span className={styles.tabIcon}>
-                    <Icon size={14} />
-                  </span> */}
                   <span className={styles.tabTitle}>{tab.title}</span>
                   <button
                     aria-label={`关闭 ${tab.title}`}

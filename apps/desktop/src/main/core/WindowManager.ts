@@ -7,6 +7,20 @@ import { isSafeExternalUrl, isTrustedRendererUrl } from '../security/RendererSec
 import type { DesktopConfigService, DesktopWindowState } from '../services/DesktopConfigService'
 import { getRendererReloadDelayMs, MAX_RENDERER_RELOAD_ATTEMPTS, shouldRetryRendererLoad } from './rendererLoadRetry'
 
+const persistWindowState = (window: BrowserWindow, config?: DesktopConfigService) => {
+  if (!config || window.isDestroyed()) return
+
+  const bounds = window.getNormalBounds()
+  const state: DesktopWindowState = {
+    height: bounds.height,
+    isMaximized: window.isMaximized(),
+    width: bounds.width,
+    x: bounds.x,
+    y: bounds.y,
+  }
+  config.setWindowState(state)
+}
+
 export class WindowManager {
   private readonly logger = createLogger('desktop:window')
   private window: BrowserWindow | null = null
@@ -55,36 +69,20 @@ export class WindowManager {
     this.window = window
     if (savedState?.isMaximized) window.maximize()
     let persistTimer: ReturnType<typeof setTimeout> | null = null
+    const persistNow = () => persistWindowState(window, this.config)
     const persistState = () => {
       if (!this.config || window.isDestroyed()) return
       if (persistTimer) clearTimeout(persistTimer)
       persistTimer = setTimeout(() => {
         persistTimer = null
-        if (!this.config || window.isDestroyed()) return
-        const bounds = window.getNormalBounds()
-        const state: DesktopWindowState = {
-          height: bounds.height,
-          isMaximized: window.isMaximized(),
-          width: bounds.width,
-          x: bounds.x,
-          y: bounds.y,
-        }
-        this.config.setWindowState(state)
+        persistNow()
       }, 250)
     }
     const persistImmediately = () => {
       if (!this.config || window.isDestroyed()) return
       if (persistTimer) clearTimeout(persistTimer)
       persistTimer = null
-      const bounds = window.getNormalBounds()
-      const state: DesktopWindowState = {
-        height: bounds.height,
-        isMaximized: window.isMaximized(),
-        width: bounds.width,
-        x: bounds.x,
-        y: bounds.y,
-      }
-      this.config.setWindowState(state)
+      persistNow()
     }
     window.on('resize', persistState)
     window.on('move', persistState)

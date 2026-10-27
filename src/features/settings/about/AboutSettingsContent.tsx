@@ -55,6 +55,12 @@ const TEST_CHANNEL_OPTIONS = [
   { label: '测试版 (Beta)', value: 'beta' },
 ]
 
+const getFeedbackPresentation = (feedback: { isError: boolean; isUpToDate: boolean } | null) => {
+  if (feedback?.isError) return { color: 'text-red!', icon: CircleX }
+  if (feedback?.isUpToDate) return { color: 'text-green!', icon: CheckCircle2 }
+  return { color: 'text-amber-600! dark:text-amber-400!', icon: TriangleAlert }
+}
+
 function ResourceRow({
   icon: Icon,
   title,
@@ -121,16 +127,7 @@ export function AboutSettingsContent() {
   }
 
   const displayedFeedback = update.status === 'checking' ? settledFeedback.feedback : currentFeedback
-  const displayedFeedbackIcon = displayedFeedback?.isError
-    ? CircleX
-    : displayedFeedback?.isUpToDate
-      ? CheckCircle2
-      : TriangleAlert
-  const displayedFeedbackColor = displayedFeedback?.isError
-    ? 'text-red!'
-    : displayedFeedback?.isUpToDate
-      ? 'text-green!'
-      : 'text-amber-600! dark:text-amber-400!'
+  const displayedFeedbackPresentation = getFeedbackPresentation(displayedFeedback)
 
   const openExternal = async (href: string) => {
     try {
@@ -238,8 +235,8 @@ export function AboutSettingsContent() {
                 {displayedFeedback ? (
                   <ActionIcon
                     aria-label={`${displayedFeedback.isError ? '更新错误' : '更新提示'}：${displayedFeedback.message}`}
-                    className={displayedFeedbackColor}
-                    icon={displayedFeedbackIcon}
+                    className={displayedFeedbackPresentation.color}
+                    icon={displayedFeedbackPresentation.icon}
                     size='small'
                     title={displayedFeedback.message}
                   />

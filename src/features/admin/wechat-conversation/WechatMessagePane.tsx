@@ -29,6 +29,16 @@ import { wechatAccessLabel, wechatComposerPlaceholder, wechatSessionTitle } from
 
 export type ChatPerspective = 'agent' | 'wechat'
 
+const PERSPECTIVE_LABEL: Record<ChatPerspective, string> = {
+  agent: 'Agent 视角',
+  wechat: '微信视角',
+}
+
+const PERSPECTIVE_TITLE: Record<ChatPerspective, string> = {
+  agent: '当前：Agent 左 / 微信右',
+  wechat: '当前：微信 左 / Agent 右',
+}
+
 export type PendingAttachment = ChannelPendingAttachment
 
 const KIND_LABEL: Record<string, string> = {
@@ -273,11 +283,11 @@ export function WechatMessagePane({
         sessionMeta ? (
           <PaneHeaderButton
             aria-label='切换消息视角'
-            title={perspective === 'agent' ? '当前：Agent 左 / 微信右' : '当前：微信 左 / Agent 右'}
+            title={PERSPECTIVE_TITLE[perspective]}
             onClick={onPerspectiveToggle}
           >
             <ArrowLeftRight className='size-3.5' />
-            {perspective === 'agent' ? 'Agent 视角' : '微信视角'}
+            {PERSPECTIVE_LABEL[perspective]}
           </PaneHeaderButton>
         ) : undefined
       }

@@ -127,6 +127,36 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
     }
   }
 
+  const renderAgentContent = () => {
+    if (!loaded && loading) {
+      return Array.from({ length: 6 }).map((_, index) => (
+        <div className={styles.skeletonRow} key={index}>
+          <Skeleton.Avatar animated size={28} />
+          <Skeleton.Text rows={1} style={{ flex: 1 }} />
+        </div>
+      ))
+    }
+
+    if (agents.length > 0) {
+      return agents.map((agent) => (
+        <AgentItem
+          key={agent.id}
+          agent={agent}
+          onDelete={handleDelete}
+          onEdit={setEditing}
+          onPin={handlePin}
+          onSelect={applyAgent}
+        />
+      ))
+    }
+
+    return (
+      <Flex className='flex-col py-1 px-3'>
+        <Text className={`${styles.empty} text-[12px]`}>暂无内容</Text>
+      </Flex>
+    )
+  }
+
   return (
     <>
       <AccordionItem value={itemKey}>
@@ -139,31 +169,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
           {<SectionActions addMenuItems={addMenu} menuItems={dropdownMenu} />}
         </AccordionHeader>
         <AccordionPanel>
-          <Flex className='flex-col gap-px py-px'>
-            {!loaded && loading ? (
-              Array.from({ length: 6 }).map((_, index) => (
-                <div className={styles.skeletonRow} key={index}>
-                  <Skeleton.Avatar animated size={28} />
-                  <Skeleton.Text rows={1} style={{ flex: 1 }} />
-                </div>
-              ))
-            ) : agents.length > 0 ? (
-              agents.map((agent) => (
-                <AgentItem
-                  key={agent.id}
-                  agent={agent}
-                  onDelete={handleDelete}
-                  onEdit={setEditing}
-                  onPin={handlePin}
-                  onSelect={applyAgent}
-                />
-              ))
-            ) : (
-              <Flex className='flex-col py-1 px-3'>
-                <Text className={`${styles.empty} text-[12px]`}>暂无内容</Text>
-              </Flex>
-            )}
-          </Flex>
+          <Flex className='flex-col gap-px py-px'>{renderAgentContent()}</Flex>
         </AccordionPanel>
       </AccordionItem>
 

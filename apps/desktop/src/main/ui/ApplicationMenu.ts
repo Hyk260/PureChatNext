@@ -11,6 +11,9 @@ export const installApplicationMenu = (rootDir?: string) => {
   const logger = createLogger('ApplicationMenu', rootDir)
   const fileStorage = new FileStorage(rootDir)
   const isMac = process.platform === 'darwin'
+  const openExternal = (url: string, action: string) => () => {
+    shell.openExternal(url).catch((error) => logger.error(action, error))
+  }
   const appMenu: MenuItemConstructorOptions | undefined = isMac
     ? {
         label: 'PureChat',
@@ -70,27 +73,19 @@ export const installApplicationMenu = (rootDir?: string) => {
     submenu: [
       {
         label: '文档',
-        click: () =>
-          shell.openExternal('https://next-docs.purechat.cn').catch((error) => logger.error('打开文档失败', error)),
+        click: openExternal('https://next-docs.purechat.cn', '打开文档失败'),
       },
       {
         label: '网站',
-        click: () =>
-          shell.openExternal('https://app.purechat.cn').catch((error) => logger.error('打开网站失败', error)),
+        click: openExternal('https://app.purechat.cn', '打开网站失败'),
       },
       {
         label: '反馈',
-        click: () =>
-          shell
-            .openExternal('https://github.com/Hyk260/PureChatNext/discussions')
-            .catch((error) => logger.error('打开反馈页面失败', error)),
+        click: openExternal('https://github.com/Hyk260/PureChatNext/discussions', '打开反馈页面失败'),
       },
       {
         label: '版本发布',
-        click: () =>
-          shell
-            .openExternal('https://github.com/Hyk260/PureChatNext/releases')
-            .catch((error) => logger.error('打开版本发布页面失败', error)),
+        click: openExternal('https://github.com/Hyk260/PureChatNext/releases', '打开版本发布页面失败'),
       },
       {
         label: '打开日志目录',

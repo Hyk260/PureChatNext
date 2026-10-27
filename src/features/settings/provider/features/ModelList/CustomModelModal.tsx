@@ -50,6 +50,13 @@ const ABILITY_OPTIONS: Array<{ description: string; key: keyof ModelAbilities; l
 ]
 
 type AbilityKey = (typeof ABILITY_OPTIONS)[number]['key']
+type AbilitySelectValue = AbilityKey | AbilityKey[] | undefined
+
+const getSelectedAbilityKeys = (value: AbilitySelectValue): AbilityKey[] => {
+  if (Array.isArray(value)) return value
+  if (!value) return []
+  return [value]
+}
 
 const ABILITY_SELECT_OPTIONS = ABILITY_OPTIONS.map(({ description, key, label }) => ({
   label,
@@ -61,6 +68,12 @@ const CONTEXT_WINDOW_MARK_ENTRIES = Object.entries(CONTEXT_WINDOW_MARKS).map(([i
   index: Number(index),
   label,
 }))
+
+const getSliderMarkTransform = (isFirst: boolean, isLast: boolean) => {
+  if (isFirst) return 'none'
+  if (isLast) return 'translateX(-100%)'
+  return 'translateX(-50%)'
+}
 
 export interface CustomModelFormValues {
   abilities: ModelAbilities
@@ -177,7 +190,7 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
                       key={index}
                       style={{
                         left: `${position}%`,
-                        transform: isFirst ? 'none' : isLast ? 'translateX(-100%)' : 'translateX(-50%)',
+                        transform: getSliderMarkTransform(isFirst, isLast),
                       }}
                     >
                       {label}
@@ -218,8 +231,7 @@ const CustomModelModal = memo<CustomModelModalProps>(({ existingModelIds, model,
               )
             }}
             onChange={(value) => {
-              const nextKeys = Array.isArray(value) ? value : value ? [value] : []
-              const selectedKeys = new Set(nextKeys)
+              const selectedKeys = new Set(getSelectedAbilityKeys(value))
               setAbilities((current) => {
                 const nextAbilities = { ...current }
                 for (const { key } of ABILITY_OPTIONS) nextAbilities[key] = selectedKeys.has(key)

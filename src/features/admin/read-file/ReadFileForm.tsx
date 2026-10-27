@@ -13,6 +13,7 @@ import { MODE_META, canSubmit, createSampleFile, metaRows } from './readFileMode
 import type { RequestMode, RunState } from './readFileModel'
 
 const LABEL_CLASS = 'text-sm font-medium text-foreground'
+const SOURCE_MODES = ['file', 'url'] as const
 
 function Field({
   children,
@@ -84,7 +85,7 @@ export function ReadFileForm({
           <p className='text-sm leading-6 text-muted-foreground'>{MODE_META[mode].description}</p>
 
           <div className='grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1'>
-            {(['file', 'url'] as const).map((value) => (
+            {SOURCE_MODES.map((value) => (
               <Button
                 key={value}
                 type={mode === value ? 'default' : 'text'}

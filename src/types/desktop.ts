@@ -63,13 +63,23 @@ export interface DesktopProject {
   rootPath: string
 }
 
+export type DesktopProjectGitStatus = 'A' | 'C' | 'D' | 'M' | 'R' | 'T' | 'U' | '?'
+
+export interface DesktopProjectGitChange {
+  path: string
+  status: DesktopProjectGitStatus
+}
+
 export interface DesktopProjectEntry {
+  gitIgnored?: boolean
   isDirectory: boolean
   name: string
 }
 
 export interface DesktopProjectEntries {
   entries: DesktopProjectEntry[]
+  gitChanges: DesktopProjectGitChange[]
+  isGitRepository: boolean
   path: string
 }
 

@@ -103,6 +103,8 @@ export const SignInEmailStep = ({
       </Text>
     </Divider>
   )
+  const showUnavailableProviderWarning =
+    serverConfigInit && disableEmailPassword && oAuthSSOProviders.length === 0
 
   return (
     <AuthCard title={`登录 ${BRANDING_NAME} 账号`}>
@@ -146,7 +148,7 @@ export const SignInEmailStep = ({
           </Flex>
         )}
 
-        {serverConfigInit && disableEmailPassword && oAuthSSOProviders.length === 0 && (
+        {showUnavailableProviderWarning && (
           <Alert showIcon title='未配置可用的第三方登录方式' type='warning' />
         )}
 
@@ -172,7 +174,7 @@ export const SignInEmailStep = ({
         <Flex className='flex-col gap-4 py-1'>
           <AuthAgreement />
           {!disableEmailPassword && (
-            <Button block loading={loading} size='large' type='primary' onClick={() => form.submit()}>
+            <Button block loading={loading} size='large' type='primary' onClick={form.submit}>
               下一步
             </Button>
           )}

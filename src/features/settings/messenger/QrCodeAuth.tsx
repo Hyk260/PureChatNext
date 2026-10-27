@@ -20,6 +20,12 @@ const QR_SIZE = 240
 // qrWrap: QR_SIZE(240) + padding(14*2) + border(1*2) = 270；+ gap(16) + 状态行(~22) ≈ 308
 const QR_PLACEHOLDER_HEIGHT = QR_SIZE + 28 + 2 + 16 + 22
 
+const getQrStatusText = (status: string) => {
+  if (status === 'wait') return '请使用微信扫一扫'
+  if (status === 'scaned') return '已扫码，请在手机上确认'
+  return ''
+}
+
 export type WechatAuthCredentials = {
   botId: string
   botToken: string
@@ -146,7 +152,7 @@ const QrCodeContent = memo<QrCodeContentProps>(({ close, onAuthenticated }) => {
     }
   }, [beginPolling, stopPolling])
 
-  const statusText = status === 'wait' ? '请使用微信扫一扫' : status === 'scaned' ? '已扫码，请在手机上确认' : ''
+  const statusText = getQrStatusText(status)
 
   return (
     <Flex className='flex-col items-center gap-4 py-4'>

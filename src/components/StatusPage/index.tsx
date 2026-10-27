@@ -43,7 +43,7 @@ const StatusPageFrame = ({
     <div className='flex w-full max-w-3xl flex-col items-center gap-5'>
       <div
         aria-hidden='true'
-        className='bg-linear-to-r from-violet-500 via-pink-500 to-orange-400 bg-clip-text text-8xl font-bold text-transparent md:text-9xl'
+        className='bg-linear-to-r from-violet-500 via-pink-500 to-orange-400 bg-clip-text text-4xl font-bold text-transparent md:text-9xl'
       >
         {code}
       </div>

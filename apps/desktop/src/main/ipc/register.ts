@@ -105,7 +105,7 @@ export const registerDesktopIpc = async (options: {
   new ProjectController(config, directorySelections, confirmDesktopAction).register(registry)
   new LocalSystemController(tools).register(registry)
   new SystemController().register(registry)
-  new WindowController().register(registry)
+  new WindowController(config, options.getTrustedContents).register(registry)
   new UpdateController(options.updater).register(registry)
 
   return {

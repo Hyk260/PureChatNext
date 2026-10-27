@@ -12,6 +12,10 @@ const subscribe = <Payload>(eventName: string, listener: (payload: Payload) => v
 }
 
 export const createDesktopApi = (): DesktopApi => ({
+  zoom: {
+    getFactor: () => invoke('window.getZoomFactor'),
+    adjust: (input) => invoke('window.adjustZoom', input),
+  },
   browser: {
     open: (input) => invoke('browser.open', input),
     navigate: (input) => invoke('browser.navigate', input),

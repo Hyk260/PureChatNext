@@ -3,12 +3,15 @@
 import { loadCodeMirror, lobeTheme } from '@lobehub/editor/codemirror'
 import type { ICodeMirrorInstance } from '@lobehub/editor/codemirror'
 import { Button, Flexbox as Flex, Text, Tooltip, createStaticStyles, cssVar } from '@lobehub/ui'
+import { localStg } from '@pure/utils/storage'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useSystemAppearance } from '@/hooks/useSystemAppearance'
 import { resolveThemeAppearance, useAppThemeMode } from '@/layout/themeMode'
 
 import { detectFileIndent, getPreviewLanguage, getTextCursor } from './previewUtils'
+
+const CODE_PREVIEW_LINE_WRAPPING_KEY = 'purechat:code-preview:line-wrapping'
 
 // 编辑器由 CodeMirror 创建 DOM，需要通过其公开的 cm-* 类控制滚动、行号和主题。
 const styles = createStaticStyles(({ css }) => ({
@@ -76,7 +79,9 @@ const CodePreview = memo(({ content, filePath }: { content: string; filePath: st
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const instanceRef = useRef<ICodeMirrorInstance | null>(null)
   const [cursor, setCursor] = useState({ column: 1, line: 1 })
-  const [lineWrapping, setLineWrapping] = useState(true)
+  const [lineWrapping, setLineWrapping] = useState(
+    () => localStg.getString(CODE_PREVIEW_LINE_WRAPPING_KEY) !== 'false'
+  )
   const [loadError, setLoadError] = useState(false)
   const language = useMemo(() => getPreviewLanguage(filePath), [filePath])
   const indent = useMemo(() => detectFileIndent(content), [content])
@@ -94,6 +99,14 @@ const CodePreview = memo(({ content, filePath }: { content: string; filePath: st
     const line = view.state.doc.lineAt(position)
     setCursor({ column: position - line.from + 1, line: line.number })
   }, [])
+
+  const toggleLineWrapping = () => {
+    setLineWrapping((current) => {
+      const next = !current
+      localStg.setString(CODE_PREVIEW_LINE_WRAPPING_KEY, String(next))
+      return next
+    })
+  }
 
   useEffect(() => {
     let disposed = false
@@ -173,7 +186,7 @@ const CodePreview = memo(({ content, filePath }: { content: string; filePath: st
               aria-pressed={lineWrapping}
               size='small'
               type='text'
-              onClick={() => setLineWrapping((current) => !current)}
+              onClick={toggleLineWrapping}
             >
               <Text fontSize={11} type='secondary'>
                 {lineWrapping ? '自动换行' : '不换行'}

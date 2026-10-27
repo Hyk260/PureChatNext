@@ -55,9 +55,11 @@
   display: none;
 }
 
-/* Keep the shared input focus ring neutral while preserving validation and borderless states. */
+/* Style public Lobe UI input classes so direct @lobehub/ui imports keep the shared focus treatment. */
 @layer utilities {
-  .input-focus-neutral:not([data-variant='borderless']):focus-within:not(:has([data-invalid], [aria-invalid='true'])) {
+  :is(.lobe-input, .lobe-text-area):not([data-variant='borderless']):focus-within:not(
+      :has([data-invalid], [aria-invalid='true'])
+    ) {
     border-color: var(--input-focus-border-color);
     box-shadow: var(--input-focus-shadow);
   }

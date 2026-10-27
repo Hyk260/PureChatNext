@@ -529,7 +529,7 @@ const FilesContent = memo<Props>(({ activePath, error, loading, onOpenFile, proj
           onClick={handleCollapseAll}
         />
         <DropdownMenu items={moreItems}>
-          <ActionIcon aria-label='文件更多操作' icon={MoreHorizontal} size='small' title='文件更多操作' />
+          <ActionIcon aria-label='更多' icon={MoreHorizontal} size='small' title='更多' />
         </DropdownMenu>
       </Flex>
       <div aria-label={viewMode === 'project' ? '项目文件' : 'Git 变更文件'} className='min-h-0 flex-1 overflow-auto px-1 pb-2'>

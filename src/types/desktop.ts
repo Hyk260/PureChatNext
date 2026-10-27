@@ -159,6 +159,10 @@ export interface DesktopDataInfo {
 export interface DesktopApi {
   browser: DesktopBrowserApi
   terminal: DesktopTerminalApi
+  zoom: {
+    getFactor: () => Promise<number>
+    adjust: (input: { delta: number; reset?: boolean }) => Promise<number>
+  }
   updater: {
     getState: () => Promise<DesktopUpdateState>
     getLogs: () => Promise<DesktopUpdateLogs>

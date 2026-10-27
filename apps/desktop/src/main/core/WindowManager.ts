@@ -45,7 +45,8 @@ export class WindowManager {
 
   async create() {
     if (this.window) return this.window
-    const savedState = await this.config?.read().then((value) => value.windowState)
+    const savedConfig = await this.config?.read()
+    const savedState = savedConfig?.windowState
     const window = new BrowserWindow({
       // Let the first click on custom titlebar controls reach the renderer when macOS activates the window.
       ...(process.platform === 'darwin' ? { acceptFirstMouse: true } : {}),
@@ -67,6 +68,7 @@ export class WindowManager {
       },
     })
     this.window = window
+    window.webContents.setZoomFactor(savedConfig?.zoomFactor ?? 1)
     if (savedState?.isMaximized) window.maximize()
     let persistTimer: ReturnType<typeof setTimeout> | null = null
     const persistNow = () => persistWindowState(window, this.config)

@@ -1,23 +1,15 @@
 'use client'
 
-import { Button, Flex, Input, Text } from '@pure/ui'
-import { Monitor, Moon, Sun } from 'lucide-react'
-import { useState } from 'react'
-import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
+import { Flex, Input, Text } from '@pure/ui'
+import { ActionIcon, ColorSwatches, cssVar, primaryColors, toast } from '@lobehub/ui'
+import { Minus, Monitor, Moon, Plus, RotateCcw, Sun } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
 import { useAppThemeMode } from '@/layout/themeMode'
 import type { ThemeMode } from '@/layout/themeMode'
+import { getDesktopApi } from '@/types/desktop'
 
 import { DEFAULT_THEME_COLOR, useThemeColor } from '@/layout/themeColor'
-
-// Keep the control's exact theme border while its focus ring remains a Tailwind variant.
-const styles = createStaticStyles(({ css }) => ({
-  colorPicker: css`
-    position: relative;
-    flex-shrink: 0;
-    background-color: ${cssVar.colorBgContainer};
-    border: 1px solid ${cssVar.colorBorderSecondary};
-  `,
-}))
 
 const themeModeOptions: { icon: typeof Sun; label: string; value: ThemeMode }[] = [
   { icon: Sun, label: '浅色', value: 'light' },
@@ -25,7 +17,20 @@ const themeModeOptions: { icon: typeof Sun; label: string; value: ThemeMode }[] 
   { icon: Monitor, label: '系统', value: 'auto' },
 ]
 
-const themeColorPresets = ['#00B96B', '#EF4444', '#F59E0B', '#3B82F6', '#8B5CF6']
+const defaultThemeColorSwatch = 'rgba(0, 0, 0, 0)'
+const themeColorSwatches = [
+  { color: defaultThemeColorSwatch, title: 'Default', themeColor: DEFAULT_THEME_COLOR },
+  { color: cssVar.red, title: 'Red', themeColor: primaryColors.red },
+  { color: cssVar.orange, title: 'Orange', themeColor: primaryColors.orange },
+  { color: cssVar.gold, title: 'Gold', themeColor: primaryColors.gold },
+  { color: cssVar.green, title: 'Green', themeColor: primaryColors.green },
+  { color: cssVar.cyan, title: 'Cyan', themeColor: primaryColors.cyan },
+  { color: cssVar.blue, title: 'Blue', themeColor: primaryColors.blue },
+  { color: cssVar.geekblue, title: 'Geekblue', themeColor: primaryColors.geekblue },
+  { color: cssVar.purple, title: 'Purple', themeColor: primaryColors.purple },
+  { color: cssVar.magenta, title: 'Magenta', themeColor: primaryColors.magenta },
+  { color: cssVar.volcano, title: 'Volcano', themeColor: primaryColors.volcano },
+]
 const fullHexColorPattern = /^#[\da-f]{6}$/i
 const shortHexColorPattern = /^#[\da-f]{3}$/i
 
@@ -47,7 +52,7 @@ const normalizeHexColor = (value: string): string | null => {
 const ThemePreview = ({ mode }: { mode: ThemeMode }) => {
   if (mode === 'auto') {
     return (
-      <div className='flex aspect-[16/9] overflow-hidden rounded-lg border border-neutral-300'>
+      <div className='flex aspect-16/9 overflow-hidden rounded-lg border border-neutral-300'>
         <ThemePreviewPanel mode='light' className='w-1/2 border-r border-neutral-300' />
         <ThemePreviewPanel mode='dark' className='w-1/2' />
       </div>
@@ -58,7 +63,7 @@ const ThemePreview = ({ mode }: { mode: ThemeMode }) => {
   const previewClass = isDark ? 'border-neutral-700 bg-neutral-950' : 'border-neutral-300 bg-white'
 
   return (
-    <div className={`flex aspect-[16/9] overflow-hidden rounded-lg border ${previewClass}`}>
+    <div className={`flex aspect-16/9 overflow-hidden rounded-lg border ${previewClass}`}>
       <ThemePreviewPanel mode={mode} className='w-full' />
     </div>
   )
@@ -90,11 +95,20 @@ const ThemePreviewPanel = ({ mode, className }: { mode: 'light' | 'dark'; classN
 const ThemeColorPicker = () => {
   const { themeColor, resolvedThemeColor, setThemeColor } = useThemeColor()
   const [draftColor, setDraftColor] = useState<string | null>(null)
-  const isDefaultThemeColor = themeColor === DEFAULT_THEME_COLOR
+  const activeThemeColorSwatch = themeColorSwatches.find(
+    (swatch) => swatch.themeColor.toUpperCase() === themeColor.toUpperCase()
+  )
 
   const handleThemeColorChange = (nextColor: string) => {
     setDraftColor(null)
     setThemeColor(nextColor)
+  }
+
+  const handleSwatchesChange = (color?: string) => {
+    if (!color) return
+
+    const selectedSwatch = themeColorSwatches.find((swatch) => swatch.color === color)
+    handleThemeColorChange(selectedSwatch?.themeColor ?? color.toUpperCase())
   }
 
   const handleHexBlur = () => {
@@ -111,50 +125,19 @@ const ThemeColorPicker = () => {
 
   return (
     <Flex className='flex-wrap items-center justify-end gap-3'>
-      <Flex className='flex-wrap items-center gap-3' role='group' aria-label='主题颜色预设'>
-        <Button
-          aria-label='默认主题颜色'
-          aria-pressed={isDefaultThemeColor}
-          size='small'
-          type={isDefaultThemeColor ? 'primary' : 'default'}
-          onClick={() => handleThemeColorChange(DEFAULT_THEME_COLOR)}
-        >
-          默认
-        </Button>
-        {themeColorPresets.map((color) => {
-          const isSelected = themeColor.toUpperCase() === color
-          const selectedClass = isSelected ? 'border-primary' : 'border-transparent'
-
-          return (
-            <button
-              key={color}
-              type='button'
-              aria-label={color}
-              aria-pressed={isSelected}
-              className={`size-8 rounded-full border-2 p-0.5 outline-none transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-primary ${selectedClass}`}
-              onClick={() => handleThemeColorChange(color)}
-            >
-              <span className='block size-full rounded-full' style={{ backgroundColor: color }} />
-            </button>
-          )
-        })}
-      </Flex>
-      <label className={cx(
-        styles.colorPicker,
-        'flex-center size-10 cursor-pointer rounded-lg shadow-sm outline-none focus-within:ring-2 focus-within:ring-primary'
-      )}>
-        <input
-          type='color'
-          value={resolvedThemeColor}
-          aria-label='自定义主题颜色'
-          className='absolute-fill size-full cursor-pointer opacity-0'
-          onChange={(event) => handleThemeColorChange(event.currentTarget.value.toUpperCase())}
-        />
-        <span
-          className='size-7 rounded-md border border-app-border-secondary'
-          style={{ backgroundColor: resolvedThemeColor }}
-        />
-      </label>
+      <ColorSwatches
+        aria-label='主题颜色预设'
+        className='flex-wrap'
+        colors={themeColorSwatches}
+        enableColorPicker
+        enableColorSwatches
+        onChange={handleSwatchesChange}
+        role='group'
+        shape='circle'
+        size={32}
+        texts={{ custom: '自定义' }}
+        value={activeThemeColorSwatch?.color ?? themeColor}
+      />
       <Input
         aria-label='主题颜色十六进制值'
         value={draftColor ?? resolvedThemeColor}
@@ -169,6 +152,41 @@ const ThemeColorPicker = () => {
 
 const AppearanceSettingsContent = () => {
   const { setThemeMode, themeMode } = useAppThemeMode()
+  const desktopApi = getDesktopApi()
+  const [zoomFactor, setZoomFactor] = useState(1)
+  const [isZoomBusy, setIsZoomBusy] = useState(false)
+  const isDefaultZoom = Math.abs(zoomFactor - 1) < 0.001
+
+  useEffect(() => {
+    if (!desktopApi) return
+
+    let cancelled = false
+    desktopApi.zoom
+      .getFactor()
+      .then((factor) => {
+        if (!cancelled) setZoomFactor(factor)
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('读取缩放设置失败')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [desktopApi])
+
+  const handleZoomChange = async (delta: number, reset = false) => {
+    if (!desktopApi || isZoomBusy) return
+
+    setIsZoomBusy(true)
+    try {
+      setZoomFactor(await desktopApi.zoom.adjust({ delta, reset }))
+    } catch {
+      toast.error('调整缩放失败')
+    } finally {
+      setIsZoomBusy(false)
+    }
+  }
 
   return (
     <Flex className='w-full flex-col gap-6 px-6 pb-16 pt-6'>
@@ -214,6 +232,49 @@ const AppearanceSettingsContent = () => {
           <ThemeColorPicker />
         </Flex>
       </section>
+      {desktopApi ? (
+        <section
+          aria-labelledby='appearance-display-heading'
+          className='mx-auto w-full max-w-[1200px] rounded-2xl border border-app-border-secondary bg-app-surface p-6'
+        >
+          <Text as='h2' id='appearance-display-heading' strong>
+            显示与语言
+          </Text>
+          <div className='my-4 border-t border-app-border-secondary' />
+          <Flex className='flex-between-wrap gap-4'>
+            <Text>缩放</Text>
+            <Flex className='items-center gap-1'>
+              {!isDefaultZoom ? (
+                <ActionIcon
+                  aria-label='重置缩放'
+                  disabled={isZoomBusy}
+                  icon={RotateCcw}
+                  size='small'
+                  title='重置缩放'
+                  onClick={() => handleZoomChange(0, true)}
+                />
+              ) : null}
+              <ActionIcon
+                aria-label='缩小'
+                disabled={isZoomBusy || zoomFactor <= 0.5}
+                icon={Minus}
+                size='small'
+                title='缩小'
+                onClick={() => handleZoomChange(-0.1)}
+              />
+              <Text className='min-w-12 text-center tabular-nums'>{Math.round(zoomFactor * 100)}%</Text>
+              <ActionIcon
+                aria-label='放大'
+                disabled={isZoomBusy || zoomFactor >= 2}
+                icon={Plus}
+                size='small'
+                title='放大'
+                onClick={() => handleZoomChange(0.1)}
+              />
+            </Flex>
+          </Flex>
+        </section>
+      ) : null}
     </Flex>
   )
 }

@@ -20,6 +20,7 @@ export interface DesktopConfig {
   updatePreferences?: DesktopUpdatePreferences
   logRetentionDays?: DesktopLogRetentionDays
   pendingAuth?: DesktopPendingAuth | null
+  zoomFactor?: number
   permissionScopes: Record<string, string[]>
   projects: DesktopProject[]
   remoteServerUrl: string | null
@@ -47,6 +48,7 @@ export const DEFAULT_CONFIG: DesktopConfig = {
   updatePreferences: DEFAULT_UPDATE_PREFERENCES,
   logRetentionDays: 30,
   pendingAuth: null,
+  zoomFactor: 1,
   permissionScopes: {},
   projects: [],
   remoteServerUrl: process.env.PURECHAT_DESKTOP_REMOTE_URL?.trim() || null,
@@ -131,6 +133,11 @@ export const isLogRetentionDays = (value: unknown): value is DesktopLogRetention
 
 const normalizeLogRetentionDays = (value: unknown): DesktopLogRetentionDays => (isLogRetentionDays(value) ? value : 30)
 
+export const normalizeZoomFactor = (value: unknown) => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 1
+  return Math.min(2, Math.max(0.5, Math.round(value * 10) / 10))
+}
+
 export class DesktopConfigService {
   readonly configPath: string
 
@@ -159,6 +166,7 @@ export class DesktopConfigService {
         updatePreferences: normalizeUpdatePreferences(parsed.updatePreferences),
         logRetentionDays: normalizeLogRetentionDays(parsed.logRetentionDays),
         pendingAuth: normalizePendingAuth(parsed.pendingAuth),
+        zoomFactor: normalizeZoomFactor(parsed.zoomFactor),
         permissionScopes:
           parsed.permissionScopes && typeof parsed.permissionScopes === 'object' ? parsed.permissionScopes : {},
         projects,
@@ -197,6 +205,17 @@ export class DesktopConfigService {
     await this.update((config) =>
       this.persist({ ...config, updatePreferences: normalizeUpdatePreferences(preferences) })
     )
+  }
+
+  async setZoomFactor(zoomFactor: number) {
+    if (!Number.isFinite(zoomFactor) || zoomFactor < 0.5 || zoomFactor > 2) {
+      throw new Error('缩放比例无效')
+    }
+    return this.update(async (config) => {
+      const normalizedZoomFactor = normalizeZoomFactor(zoomFactor)
+      await this.persist({ ...config, zoomFactor: normalizedZoomFactor })
+      return normalizedZoomFactor
+    })
   }
 
   private async persist(config: DesktopConfig) {

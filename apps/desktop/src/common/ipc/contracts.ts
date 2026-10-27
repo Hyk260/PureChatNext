@@ -99,6 +99,8 @@ export interface DesktopIpcContractMap {
   'window.minimize': { args: []; result: void }
   'window.toggleMaximize': { args: []; result: DesktopWindowState }
   'window.close': { args: []; result: void }
+  'window.getZoomFactor': { args: []; result: number }
+  'window.adjustZoom': { args: [input: { delta: number; reset?: boolean }]; result: number }
   'notification.show': { args: [input: DesktopNotificationInput]; result: void }
 }
 
@@ -176,6 +178,8 @@ export const DESKTOP_IPC_CHANNELS = {
     minimize: 'window.minimize',
     openExternal: 'window.openExternal',
     toggleMaximize: 'window.toggleMaximize',
+    getZoomFactor: 'window.getZoomFactor',
+    adjustZoom: 'window.adjustZoom',
   },
 } as const
 

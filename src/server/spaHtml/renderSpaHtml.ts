@@ -39,7 +39,8 @@ const publicMetadataTags = ({ baseUrl, hasFilters, pathname }: NonNullable<Rende
   const base = new URL(baseUrl)
   const canonicalUrl = new URL(routeMetadata.canonicalPath, base).toString()
   const imageUrl = new URL('/opengraph-image', base).toString()
-  const robots = routeMetadata.indexable ? 'index,follow' : 'noindex,follow'
+  const robots = routeMetadata.indexable ? 'index,follow,max-image-preview:large' : 'noindex,follow'
+  const keywords = routeMetadata.keywords?.join(',')
   const structuredData = serializeForHtml({
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -58,14 +59,17 @@ const publicMetadataTags = ({ baseUrl, hasFilters, pathname }: NonNullable<Rende
     `<meta name="msvalidate.01" content="${SITE_BING_WEBMASTER_VERIFICATION}" />`,
     `<link rel="canonical" href="${escapeHtmlAttribute(canonicalUrl)}" />`,
     `<meta name="robots" content="${robots}" />`,
+    ...(keywords ? [`<meta name="keywords" content="${escapeHtmlAttribute(keywords)}" />`] : []),
     `<meta property="og:type" content="${routeMetadata.openGraphType}" />`,
     `<meta property="og:site_name" content="${SITE_NAME}" />`,
     `<meta property="og:title" content="${escapeHtmlAttribute(routeMetadata.title)}" />`,
     `<meta property="og:description" content="${escapeHtmlAttribute(routeMetadata.description)}" />`,
     `<meta property="og:url" content="${escapeHtmlAttribute(canonicalUrl)}" />`,
     `<meta property="og:image" content="${escapeHtmlAttribute(imageUrl)}" />`,
+    `<meta property="og:image:alt" content="${escapeHtmlAttribute(routeMetadata.title)}" />`,
     '<meta property="og:image:width" content="1200" />',
     '<meta property="og:image:height" content="630" />',
+    '<meta property="og:locale" content="zh_CN" />',
     '<meta name="twitter:card" content="summary_large_image" />',
     `<meta name="twitter:title" content="${escapeHtmlAttribute(routeMetadata.title)}" />`,
     `<meta name="twitter:description" content="${escapeHtmlAttribute(routeMetadata.description)}" />`,

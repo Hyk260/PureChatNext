@@ -1,6 +1,21 @@
 export const SITE_NAME = 'PureChatNext 文档'
-export const SITE_DESCRIPTION = 'PureChatNext 的中文指南：AI 工作台自托管部署、Docker 配置、微信与 QQ AI 助手接入及开发参考。'
+export const SITE_DESCRIPTION =
+  'PureChatNext 的中文指南：AI 工作台自托管部署、Docker 配置、微信与 QQ AI 助手接入及开发参考。'
 export const SITE_URL = 'https://next-docs.purechat.cn'
+export const SITE_KEYWORDS = [
+  'PureChat',
+  'PureChatNext',
+  'AI 工作台',
+  '自托管部署',
+  'Docker 部署',
+  '微信机器人',
+  'QQ 机器人',
+  'AI 助手接入',
+  '联网搜索',
+  '多模型',
+  'Next.js',
+  '开源 AI',
+]
 export const LEGACY_DOCS_URL = 'https://docs.purechat.cn'
 export const PRODUCT_URL = 'https://app.purechat.cn'
 export const SOCIAL_IMAGE_URL = `${PRODUCT_URL}/opengraph-image`

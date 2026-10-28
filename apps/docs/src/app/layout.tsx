@@ -4,18 +4,34 @@ import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 import { AskAI } from '@/components/ask-ai'
 import { CategorySwitcher } from '@/components/category-switcher'
 import { SidebarFooter } from '@/components/sidebar-footer'
+import { docsEnv } from '@pure/env/docs'
 import { baseOptions } from '@/lib/layout'
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL } from '@/lib/site'
+import {
+  REPOSITORY_OWNER,
+  REPOSITORY_URL,
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SOCIAL_IMAGE_URL,
+} from '@/lib/site'
+import { getSiteUrl } from '@/lib/site-url'
 import { source } from '@/lib/source'
 import { docsI18n } from '@/lib/translations'
 import './global.css'
+
+const siteUrl = getSiteUrl()
 
 export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
+  applicationName: SITE_NAME,
+  authors: [{ name: REPOSITORY_OWNER, url: `https://github.com/${REPOSITORY_OWNER}` }],
+  category: 'technology',
+  creator: REPOSITORY_OWNER,
   description: SITE_DESCRIPTION,
-  metadataBase: new URL(SITE_URL),
+  keywords: SITE_KEYWORDS,
+  metadataBase: siteUrl,
   openGraph: {
     description: SITE_DESCRIPTION,
     images: [{ alt: SITE_NAME, height: 630, url: SOCIAL_IMAGE_URL, width: 1200 }],
@@ -23,7 +39,19 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: SITE_NAME,
     type: 'website',
-    url: SITE_URL,
+    url: siteUrl.toString(),
+  },
+  publisher: REPOSITORY_OWNER,
+  robots: {
+    follow: true,
+    googleBot: {
+      follow: true,
+      index: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+    index: true,
   },
   title: {
     default: SITE_NAME,
@@ -34,6 +62,16 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [SOCIAL_IMAGE_URL],
     title: SITE_NAME,
+  },
+  verification: {
+    google: docsEnv.DOCS_GOOGLE_VERIFICATION,
+    other: {
+      ...(docsEnv.DOCS_BAIDU_VERIFICATION ? { 'baidu-site-verification': docsEnv.DOCS_BAIDU_VERIFICATION } : {}),
+      ...(docsEnv.DOCS_BING_VERIFICATION ? { 'msvalidate.01': docsEnv.DOCS_BING_VERIFICATION } : {}),
+    },
+  },
+  other: {
+    'code-repository': REPOSITORY_URL,
   },
 }
 

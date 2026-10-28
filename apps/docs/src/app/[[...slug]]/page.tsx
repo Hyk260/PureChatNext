@@ -5,9 +5,19 @@ import { notFound } from 'next/navigation'
 import { getMDXComponents } from '@/components/mdx'
 import { HomeCards } from '@/components/home-cards'
 import { PageActions } from '@/components/page-actions'
+import { StructuredData } from '@/components/structured-data'
 import { TocFooter } from '@/components/toc-footer'
 import { getMarkdownUrl } from '@/lib/markdown'
-import { SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL } from '@/lib/site'
+import {
+  breadcrumbJsonLd,
+  buildBreadcrumbs,
+  jsonLdGraph,
+  softwareApplicationJsonLd,
+  techArticleJsonLd,
+  websiteJsonLd,
+} from '@/lib/seo'
+import { SITE_NAME, SOCIAL_IMAGE_URL } from '@/lib/site'
+import { getSiteUrl } from '@/lib/site-url'
 import { getGitHubEditUrl, getGitHubSourceUrl, source } from '@/lib/source'
 
 export const dynamicParams = false
@@ -21,6 +31,19 @@ export default async function Page({ params }: PageProps<'/[[...slug]]'>) {
   const editUrl = getGitHubEditUrl(page.path)
   const githubUrl = getGitHubSourceUrl(page.path)
   const markdownUrl = getMarkdownUrl(page.url)
+  const canonical = new URL(page.url, getSiteUrl()).toString()
+  const isHome = page.url === '/'
+  const jsonLd = isHome
+    ? jsonLdGraph(websiteJsonLd(), softwareApplicationJsonLd())
+    : jsonLdGraph(
+        breadcrumbJsonLd([...buildBreadcrumbs(page.slugs), { name: page.data.title, url: canonical }]),
+        techArticleJsonLd({
+          dateModified: page.data.lastModified,
+          description: page.data.description,
+          title: page.data.title,
+          url: canonical,
+        })
+      )
 
   return (
     <DocsPage
@@ -33,8 +56,9 @@ export default async function Page({ params }: PageProps<'/[[...slug]]'>) {
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <PageActions githubUrl={githubUrl} markdownUrl={markdownUrl} />
+      <StructuredData id='docs-structured-data' json={jsonLd} />
       <DocsBody className='docs-body'>
-        {page.url === '/' ? <HomeCards /> : null}
+        {isHome ? <HomeCards /> : null}
         <MDX components={getMDXComponents({ a: createRelativeLink(source, page), h1: () => null })} />
       </DocsBody>
     </DocsPage>
@@ -50,7 +74,7 @@ export async function generateMetadata({ params }: PageProps<'/[[...slug]]'>): P
   const page = source.getPage(slug)
   if (!page) notFound()
 
-  const canonical = new URL(page.url, SITE_URL).toString()
+  const canonical = new URL(page.url, getSiteUrl()).toString()
 
   return {
     alternates: { canonical },

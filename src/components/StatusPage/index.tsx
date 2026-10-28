@@ -41,12 +41,12 @@ const StatusPageFrame = ({
     }
   >
     <div className='flex w-full max-w-3xl flex-col items-center gap-5'>
-      <div
+      {/* <div
         aria-hidden='true'
-        className='bg-linear-to-r from-violet-500 via-pink-500 to-orange-400 bg-clip-text text-4xl font-bold text-transparent md:text-9xl'
+        className='bg-linear-to-r from-violet-500 via-pink-500 to-orange-400 bg-clip-text text-xl font-bold text-transparent md:text-9xl'
       >
         {code}
-      </div>
+      </div> */}
       <h1 className='text-2xl font-semibold tracking-tight text-foreground md:text-[30px]'>{title}</h1>
       <div className='flex flex-col items-center gap-3 text-sm leading-6 text-muted-foreground md:text-base'>
         {description}

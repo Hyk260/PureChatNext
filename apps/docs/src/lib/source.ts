@@ -7,6 +7,8 @@ const docs = defineDocs({
   dir: '../../docs',
   docs: {
     files: ['**/*.md', '!private/**'],
+    /** 从 git 读取每篇文档的最后修改时间，供 sitemap 的 lastmod 与页面展示使用。 */
+    lastModified: true,
     postprocess: {
       includeProcessedMarkdown: true,
     },

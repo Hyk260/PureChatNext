@@ -44,7 +44,7 @@ const SETTINGS_SEGMENT_LABELS: Record<string, string> = {
   notification: '通知',
   profile: '个人资料',
   provider: 'AI 服务商',
-  'qq-conversation': 'QQ 对话',
+  'qq-conversation': 'QQ 对话记录',
   'read-file': '文件读取',
   s3: 'S3 测试',
   'service-model': '服务模型',
@@ -56,16 +56,16 @@ const SETTINGS_SEGMENT_LABELS: Record<string, string> = {
   users: '用户管理',
   'web-search': '网络搜索',
   'web-search-console': '联网搜索测试台',
-  'wechat-conversation': '微信对话',
+  'wechat-conversation': '微信对话记录',
 }
 
 const ADMIN_SEGMENT_LABELS: Record<string, string> = {
   'email-service': '邮件服务',
-  'qq-conversation': 'QQ 对话',
+  'qq-conversation': 'QQ 对话管理',
   'read-file': '文件读取',
   s3: 'S3 测试',
   users: '用户管理',
-  'wechat-conversation': '微信对话',
+  'wechat-conversation': '微信对话管理',
 }
 
 function segmentLabel(pathname: string, index: number, fallback: string, labels?: Record<string, string>) {

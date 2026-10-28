@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 
 import { ChannelGatewayLogModel } from '@pure/database/models/channelGatewayLog'
 import { isChannelLogPlatform } from '@pure/types'
-import { withAuth } from '@/libs/auth/get-session-user'
+import { withAdmin, withAuth } from '@/libs/auth/get-session-user'
 
 export const runtime = 'nodejs'
 
@@ -17,7 +17,7 @@ const readLogs = withAuth<{ platform: string }>(async (_request, { params, userI
   }
 })
 
-const clearLogs = withAuth<{ platform: string }>(async (_request, { params, userId }) => {
+const clearLogs = withAdmin<{ platform: string }>(async (_request, { params, userId }) => {
   const { platform } = await params
   if (!isChannelLogPlatform(platform)) return NextResponse.json({ error: 'Unknown channel' }, { status: 404 })
   try {

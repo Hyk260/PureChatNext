@@ -57,8 +57,12 @@ function mapOutputAttachments(event: ChannelTimelineEvent) {
 }
 
 /** 将 channel_events 时间线展开为 Dev 会话气泡（outbound 仅 assistant）。 */
-export function expandEventsToMessages(events: ChannelTimelineEvent[]): TimelineMessage[] {
+export function expandEventsToMessages(
+  events: ChannelTimelineEvent[],
+  options?: { mediaRouteBase?: string }
+): TimelineMessage[] {
   const messages: TimelineMessage[] = []
+  const mediaRouteBase = options?.mediaRouteBase ?? '/api/admin/wechat/events'
   for (const event of events) {
     if (event.messageKind === 'outbound') {
       const outputAttachments = mapOutputAttachments(event)
@@ -87,12 +91,12 @@ export function expandEventsToMessages(events: ChannelTimelineEvent[]): Timeline
       createdAt: event.createdAt.toISOString(),
       eventId: event.id,
       id: `${event.id}:user`,
-      ...(isImage ? { imageUrl: `/api/admin/wechat/events/${event.id}/image` } : {}),
+      ...(isImage ? { imageUrl: `${mediaRouteBase}/${encodeURIComponent(event.id)}/image` } : {}),
       ...(isFile
         ? {
             fileName: filePayload?.file_name || '未命名文件',
             fileSize: parseFileSize(filePayload?.len),
-            fileUrl: `/api/admin/wechat/events/${event.id}/file`,
+            fileUrl: `${mediaRouteBase}/${encodeURIComponent(event.id)}/file`,
           }
         : {}),
       messageKind: event.messageKind,

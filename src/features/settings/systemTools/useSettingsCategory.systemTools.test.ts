@@ -56,6 +56,24 @@ describe('useSettingsCategory system tools', () => {
     )
   })
 
+  it.each([false, true])('shows personal conversation entries for admin=%s', (isAdmin) => {
+    const { result } = renderHook(() => useSettingsCategory(isAdmin))
+    const group = result.current.find((item) => item.title === '对话记录')
+
+    expect(group?.items).toEqual([
+      expect.objectContaining({
+        href: '/settings/qq-conversation',
+        key: SettingsTab.QqConversation,
+        label: 'QQ 对话记录',
+      }),
+      expect.objectContaining({
+        href: '/settings/wechat-conversation',
+        key: SettingsTab.WechatConversation,
+        label: '微信对话记录',
+      }),
+    ])
+  })
+
   it('includes the manage group only for admins', () => {
     mocks.getDesktopApi.mockReturnValue(undefined)
     const { result: user } = renderHook(useSettingsCategory)
@@ -68,8 +86,8 @@ describe('useSettingsCategory system tools', () => {
       '邮件服务',
       '文件读取',
       'S3 测试',
-      'QQ 对话',
-      '微信对话',
+      'QQ 对话管理',
+      '微信对话管理',
       '联网搜索测试台',
     ])
     expect(manage?.items.map((item) => item.href)).toEqual([
@@ -77,8 +95,8 @@ describe('useSettingsCategory system tools', () => {
       '/settings/email-service',
       '/settings/read-file',
       '/settings/s3',
-      '/settings/qq-conversation',
-      '/settings/wechat-conversation',
+      '/admin/qq-conversation',
+      '/admin/wechat-conversation',
       '/settings/web-search-console',
     ])
 

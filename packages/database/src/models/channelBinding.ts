@@ -39,6 +39,14 @@ export class ChannelBindingModel {
     })
   }
 
+  findCredentialsByIds = async (ids: string[]) => {
+    if (ids.length === 0) return []
+    return this.db
+      .select({ credentials: channelBindings.credentials, id: channelBindings.id })
+      .from(channelBindings)
+      .where(inArray(channelBindings.id, ids))
+  }
+
   upsert = async (params: {
     agentId: string
     applicationId: string

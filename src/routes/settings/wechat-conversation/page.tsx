@@ -1,12 +1,12 @@
 'use client'
 
-import WechatConversationPage from '@/features/admin/wechat-conversation/WechatConversationPage'
-import RequireAdmin from '@/spa/auth/RequireAdmin'
+import WechatConversationPage from '@/features/channel-conversation/wechat/WechatConversationPage'
+import RequireAuth from '@/spa/auth/RequireAuth'
 
 export default function SettingsWechatConversationPage() {
   return (
-    <RequireAdmin>
-      <WechatConversationPage />
-    </RequireAdmin>
+    <RequireAuth>
+      <WechatConversationPage mode='personal' />
+    </RequireAuth>
   )
 }

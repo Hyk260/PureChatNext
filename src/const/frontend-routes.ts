@@ -35,6 +35,8 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
       { href: '/profile', label: '个人资料' },
       { href: '/settings', label: '设置' },
       { href: '/settings/profile', label: '账号设置' },
+      { href: '/settings/qq-conversation', label: 'QQ 对话记录' },
+      { href: '/settings/wechat-conversation', label: '微信对话记录' },
     ],
   },
   {
@@ -46,8 +48,8 @@ export const FRONTEND_ROUTE_GROUPS: FrontendRouteGroup[] = [
       { href: '/admin/email-service', label: '邮件服务' },
       { href: '/admin/read-file', label: '文件读取' },
       { href: '/admin/s3', label: 'S3 测试' },
-      { href: '/admin/qq-conversation', label: 'QQ 对话' },
-      { href: '/admin/wechat-conversation', label: '微信对话' },
+      { href: '/admin/qq-conversation', label: 'QQ 对话管理' },
+      { href: '/admin/wechat-conversation', label: '微信对话管理' },
     ],
   },
   {

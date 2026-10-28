@@ -603,8 +603,37 @@ export class ChannelEventModel {
     return this.db.query.channelSessions.findFirst({ where: eq(channelSessions.id, id) })
   }
 
+  /** Read a session only when it belongs to the authorized channel binding. */
+  getSessionByBinding = async (id: string, bindingId: string) => {
+    return this.db.query.channelSessions.findFirst({
+      where: and(eq(channelSessions.id, id), eq(channelSessions.bindingId, bindingId)),
+    })
+  }
+
   findById = async (id: string) => {
     return this.db.query.channelEvents.findFirst({ where: eq(channelEvents.id, id) })
+  }
+
+  /** Read media metadata only when the event belongs to an authorized session and binding. */
+  findMediaEventBySessionAndBinding = async (id: string, sessionId: string, bindingId: string) => {
+    const [event] = await this.db
+      .select({
+        bindingId: channelEvents.bindingId,
+        content: channelEvents.content,
+        id: channelEvents.id,
+        messageKind: channelEvents.messageKind,
+        sessionId: channelEvents.sessionId,
+      })
+      .from(channelEvents)
+      .where(
+        and(
+          eq(channelEvents.id, id),
+          eq(channelEvents.sessionId, sessionId),
+          eq(channelEvents.bindingId, bindingId)
+        )
+      )
+      .limit(1)
+    return event ?? null
   }
 
   /** 按最近活跃时间列出绑定下的渠道会话。 */
@@ -632,7 +661,14 @@ export class ChannelEventModel {
         activeAgentId: channelSessions.activeAgentId,
         applicationId: channelBindings.applicationId,
         bindingAgentId: channelBindings.agentId,
+        bindingEnabled: channelBindings.enabled,
         bindingId: channelSessions.bindingId,
+        bindingLastErrorCode: channelBindings.lastErrorCode,
+        bindingLastErrorMessage: channelBindings.lastErrorMessage,
+        bindingLastHeartbeatAt: channelBindings.lastHeartbeatAt,
+        bindingNeedsRebind: channelBindings.needsRebind,
+        bindingRuntimeStatus: channelBindings.runtimeStatus,
+        bindingUpdatedAt: channelBindings.updatedAt,
         bindingUserId: channelBindings.userId,
         conversationVersion: channelSessions.conversationVersion,
         externalUserId: channelSessions.externalUserId,
@@ -656,12 +692,15 @@ export class ChannelEventModel {
     sessionId: string,
     options?: {
       after?: { createdAt: Date; id: string }
+      bindingId?: string
       conversationVersion?: number
       limit?: number
       watchEventIds?: string[]
     }
   ): Promise<{ events: ChannelTimelineEvent[]; session: ChannelSessionItem } | null> => {
-    const session = await this.getSession(sessionId)
+    const session = options?.bindingId
+      ? await this.getSessionByBinding(sessionId, options.bindingId)
+      : await this.getSession(sessionId)
     if (!session) return null
 
     const version = options?.conversationVersion ?? session.conversationVersion
@@ -681,6 +720,7 @@ export class ChannelEventModel {
     const conditions = [
       eq(channelEvents.sessionId, sessionId),
       eq(channelEvents.conversationVersion, version),
+      ...(options?.bindingId ? [eq(channelEvents.bindingId, options.bindingId)] : []),
       ...(timelineCondition ? [timelineCondition] : []),
     ]
 
@@ -776,6 +816,16 @@ export class ChannelEventModel {
       .from(channelEvents)
       .where(and(eq(channelEvents.bindingId, bindingId), eq(channelEvents.status, 'failed')))
     return row?.count ?? 0
+  }
+
+  countFailedByBindings = async (bindingIds: string[]) => {
+    if (bindingIds.length === 0) return new Map<string, number>()
+    const rows = await this.db
+      .select({ bindingId: channelEvents.bindingId, count: sql<number>`count(*)::int` })
+      .from(channelEvents)
+      .where(and(inArray(channelEvents.bindingId, bindingIds), eq(channelEvents.status, 'failed')))
+      .groupBy(channelEvents.bindingId)
+    return new Map(rows.map((row) => [row.bindingId, row.count]))
   }
 
   getQueueCounts = async () => {

@@ -93,14 +93,14 @@ function collectQQAuthorNames(
   return names
 }
 
-function mapQQAttachments(event: ChannelTimelineEvent) {
+function mapQQAttachments(event: ChannelTimelineEvent, includeRemoteUrls: boolean) {
   return readQQAttachments(event.platformPayload)
-    .filter((attachment) => Boolean(attachment.url))
+    .filter((attachment) => Boolean(attachment.url || attachment.name || attachment.mimeType))
     .map((attachment, index) => ({
       deliveryStatus: 'available',
       fileName: attachment.name || attachment.mimeType || '附件',
       fileSize: attachment.size,
-      fileUrl: attachment.url!,
+      fileUrl: includeRemoteUrls ? attachment.url || '' : '',
       id: `${event.id}:attachment:${index}`,
       version: 1,
     }))
@@ -123,10 +123,11 @@ function mapOutputAttachments(event: ChannelTimelineEvent) {
 /** 将 QQ channel_events 时间线展开为 Dev 会话气泡；附件直接使用 QQ 原始 URL。 */
 export function expandQQEventsToMessages(
   events: ChannelTimelineEvent[],
-  options?: { sessionUserName?: string | null }
+  options?: { includeRemoteUrls?: boolean; sessionUserName?: string | null }
 ): QQTimelineMessage[] {
   const messages: QQTimelineMessage[] = []
   const authorNames = collectQQAuthorNames(events, options?.sessionUserName)
+  const includeRemoteUrls = options?.includeRemoteUrls ?? true
   for (const event of events) {
     if (event.messageKind === 'outbound') {
       const outputAttachments = mapOutputAttachments(event)
@@ -146,7 +147,7 @@ export function expandQQEventsToMessages(
       continue
     }
 
-    const attachments = mapQQAttachments(event)
+    const attachments = mapQQAttachments(event, includeRemoteUrls)
     const author = readQQAuthor(event.platformPayload)
     const authorName = author.authorName || (author.authorId ? authorNames.get(author.authorId) : undefined)
     const firstImage = attachments.find(({ fileName }) =>

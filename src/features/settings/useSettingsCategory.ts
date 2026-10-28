@@ -34,6 +34,7 @@ import { getDesktopApi } from '@/types/desktop'
 
 export enum SettingsGroupKey {
   Agent = 'agent',
+  Conversations = 'conversations',
   General = 'general',
   Manage = 'manage',
   System = 'system',
@@ -101,8 +102,8 @@ export const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
   [SettingsTab.Email]: '邮件服务',
   [SettingsTab.ReadFile]: '文件读取',
   [SettingsTab.S3]: 'S3 测试',
-  [SettingsTab.QqConversation]: 'QQ 对话',
-  [SettingsTab.WechatConversation]: '微信对话',
+  [SettingsTab.QqConversation]: 'QQ 对话记录',
+  [SettingsTab.WechatConversation]: '微信对话记录',
 }
 
 export function getSettingsTabLabel(tab: string | undefined): string {
@@ -154,16 +155,16 @@ const MANAGE_GROUP: SettingsCategoryGroup = {
       label: 'S3 测试',
     },
     {
-      href: tabHref(SettingsTab.QqConversation),
+      href: '/admin/qq-conversation',
       icon: MessageSquare,
       key: SettingsTab.QqConversation,
-      label: 'QQ 对话',
+      label: 'QQ 对话管理',
     },
     {
-      href: tabHref(SettingsTab.WechatConversation),
+      href: '/admin/wechat-conversation',
       icon: MessageCircleIcon,
       key: SettingsTab.WechatConversation,
-      label: '微信对话',
+      label: '微信对话管理',
     },
     {
       href: tabHref(SettingsTab.WebSearchConsole),
@@ -301,6 +302,24 @@ export function useSettingsCategory(isAdmin = false): SettingsCategoryGroup[] {
         ],
         key: SettingsGroupKey.Agent,
         title: '智能体',
+      },
+      {
+        items: [
+          {
+            href: tabHref(SettingsTab.QqConversation),
+            icon: MessageSquare,
+            key: SettingsTab.QqConversation,
+            label: 'QQ 对话记录',
+          },
+          {
+            href: tabHref(SettingsTab.WechatConversation),
+            icon: MessageCircleIcon,
+            key: SettingsTab.WechatConversation,
+            label: '微信对话记录',
+          },
+        ],
+        key: SettingsGroupKey.Conversations,
+        title: '对话记录',
       },
       {
         items: [

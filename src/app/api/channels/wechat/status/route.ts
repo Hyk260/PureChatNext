@@ -5,28 +5,10 @@ import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/chan
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { isWechatGatewaySupported } from '@/libs/channels/wechat'
+import { CHANNEL_HEARTBEAT_STALE_MS, isChannelHeartbeatStale, resolveWechatRuntimeStatus } from '@/libs/channels/wechat/runtimeStatus'
 import { ensureChannelGatewayRunning } from '@/server/channel-gateway'
 
 const log = debug('channel:wechat:status')
-
-const HEARTBEAT_STALE_MS = 90_000
-
-function resolveWechatRuntimeStatus(input: {
-  failedEventCount: number
-  gatewaySupported: boolean
-  heartbeatStale: boolean
-  needsRebind: boolean
-  runtimeStatus: string
-  waitingForFirstHeartbeat: boolean
-}) {
-  if (input.needsRebind) return 'needs_rebind'
-  if (!input.gatewaySupported) return 'offline'
-  if (input.waitingForFirstHeartbeat) return 'starting'
-  if (input.runtimeStatus === 'degraded' && input.heartbeatStale) return 'reconnecting'
-  if (input.heartbeatStale) return 'offline'
-  if (input.failedEventCount > 0) return 'degraded'
-  return input.runtimeStatus
-}
 
 /**
  * GET /api/channels/wechat/status
@@ -49,14 +31,14 @@ export const GET = withAuth(async (_request, { userId }) => {
     })
   }
 
-  const heartbeatStale =
-    !binding.lastHeartbeatAt || Date.now() - binding.lastHeartbeatAt.getTime() > HEARTBEAT_STALE_MS
+  const heartbeatStale = isChannelHeartbeatStale(binding.lastHeartbeatAt)
   const waitingForFirstHeartbeat =
     binding.runtimeStatus === 'starting' &&
     !binding.lastHeartbeatAt &&
-    Date.now() - binding.updatedAt.getTime() <= HEARTBEAT_STALE_MS
+    Date.now() - binding.updatedAt.getTime() <= CHANNEL_HEARTBEAT_STALE_MS
   const failedEventCount = await new ChannelEventModel().countFailed(binding.id)
   const runtimeStatus = resolveWechatRuntimeStatus({
+    enabled: binding.enabled,
     failedEventCount,
     gatewaySupported,
     heartbeatStale,

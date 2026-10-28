@@ -6,6 +6,8 @@ import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { withAdmin } from '@/libs/auth/get-session-user'
 import { decryptCredentials } from '@/libs/channels/wechat/encrypt'
 import { canSendWechatDevOutbound } from '@/libs/channels/wechat/outbound'
+import { isWechatGatewaySupported } from '@/libs/channels/wechat'
+import { isChannelHeartbeatStale, resolveWechatRuntimeStatus } from '@/libs/channels/wechat/runtimeStatus'
 
 /**
  * GET /api/admin/wechat/sessions
@@ -24,7 +26,11 @@ export const GET = withAdmin(async (_request, { userId }) => {
   }
 
   // 展示本库全部 wechat 会话，便于切换查看；代发仍仅限本人 binding + 扫码授权者
-  const sessions = await new ChannelEventModel().listSessionsByPlatform(WECHAT_PLATFORM)
+  const eventModel = new ChannelEventModel()
+  const sessions = await eventModel.listSessionsByPlatform(WECHAT_PLATFORM)
+  const bindingIds = [...new Set(sessions.map(({ bindingId }) => bindingId))]
+  const failedEventCounts = await eventModel.countFailedByBindings(bindingIds)
+  const gatewaySupported = isWechatGatewaySupported()
   const agentModel = new AgentModel(userId)
   const agentIds = new Set<string>()
   if (myBinding?.agentId) agentIds.add(myBinding.agentId)
@@ -49,6 +55,21 @@ export const GET = withAdmin(async (_request, { userId }) => {
     sessions: sessions.map((session) => {
       const isOwnBinding = Boolean(myBinding && session.bindingId === myBinding.id)
       const effectiveAgentId = session.activeAgentId || session.bindingAgentId
+      const failedEventCount = failedEventCounts.get(session.bindingId) ?? 0
+      const heartbeatStale = isChannelHeartbeatStale(session.bindingLastHeartbeatAt)
+      const waitingForFirstHeartbeat =
+        session.bindingRuntimeStatus === 'starting' &&
+        !session.bindingLastHeartbeatAt &&
+        Date.now() - session.bindingUpdatedAt.getTime() <= 90_000
+      const runtimeStatus = resolveWechatRuntimeStatus({
+        enabled: session.bindingEnabled,
+        failedEventCount,
+        gatewaySupported,
+        heartbeatStale,
+        needsRebind: session.bindingNeedsRebind,
+        runtimeStatus: session.bindingRuntimeStatus,
+        waitingForFirstHeartbeat,
+      })
       return {
         activeAgentId: session.activeAgentId,
         agentId: effectiveAgentId,
@@ -56,14 +77,27 @@ export const GET = withAdmin(async (_request, { userId }) => {
         applicationId: session.applicationId,
         bindingId: session.bindingId,
         canSend:
-          isOwnBinding && canSendWechatDevOutbound(ownerExternalUserId, session.externalUserId),
+          isOwnBinding &&
+          session.bindingEnabled &&
+          !session.bindingNeedsRebind &&
+          canSendWechatDevOutbound(ownerExternalUserId, session.externalUserId),
         conversationVersion: session.conversationVersion,
+        connected: runtimeStatus === 'online' || runtimeStatus === 'degraded',
         externalUserId: session.externalUserId,
         externalUserName: session.externalUserName,
+        failedEventCount,
         id: session.id,
         isOwnBinding,
         lastActiveAt: session.lastActiveAt.toISOString(),
+        lastError: session.bindingLastErrorCode
+          ? {
+              code: session.bindingLastErrorCode,
+              message: session.bindingLastErrorMessage || '微信渠道暂时异常',
+            }
+          : null,
+        lastHeartbeatAt: session.bindingLastHeartbeatAt?.toISOString() ?? null,
+        runtimeStatus,
       }
     }),
-  })
+  }, { headers: { 'Cache-Control': 'private, no-store' } })
 })

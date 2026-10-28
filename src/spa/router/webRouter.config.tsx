@@ -313,14 +313,20 @@ export const webRoutes: RouteObject[] = [
       },
       {
         element: dynamicElement(
-          () => import('@/features/admin/qq-conversation/QqConversationPage'),
+          () =>
+            import('@/features/channel-conversation/qq/QqConversationPage').then(({ default: Page }) => ({
+              default: () => <Page mode='admin' />,
+            })),
           'Admin > QqConversation'
         ),
         path: 'qq-conversation',
       },
       {
         element: dynamicElement(
-          () => import('@/features/admin/wechat-conversation/WechatConversationPage'),
+          () =>
+            import('@/features/channel-conversation/wechat/WechatConversationPage').then(({ default: Page }) => ({
+              default: () => <Page mode='admin' />,
+            })),
           'Admin > WechatConversation'
         ),
         path: 'wechat-conversation',

@@ -92,6 +92,15 @@ describe('expandEventsToMessages', () => {
     ])
   })
 
+  it('uses an authenticated personal media route when requested', () => {
+    const messages = expandEventsToMessages(
+      [base({ id: 'event-1', messageKind: 'image' })],
+      { mediaRouteBase: '/api/channels/wechat/sessions/session-1/events' }
+    )
+
+    expect(messages[0]?.imageUrl).toBe('/api/channels/wechat/sessions/session-1/events/event-1/image')
+  })
+
   it('marks replies with persisted generation metadata as model output', () => {
     const messages = expandEventsToMessages([
       base({

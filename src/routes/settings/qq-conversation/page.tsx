@@ -1,12 +1,12 @@
 'use client'
 
-import QqConversationPage from '@/features/admin/qq-conversation/QqConversationPage'
-import RequireAdmin from '@/spa/auth/RequireAdmin'
+import QqConversationPage from '@/features/channel-conversation/qq/QqConversationPage'
+import RequireAuth from '@/spa/auth/RequireAuth'
 
 export default function SettingsQqConversationPage() {
   return (
-    <RequireAdmin>
-      <QqConversationPage />
-    </RequireAdmin>
+    <RequireAuth>
+      <QqConversationPage mode='personal' />
+    </RequireAuth>
   )
 }

@@ -8,7 +8,7 @@ import { decryptCredentials } from '@/libs/channels/wechat/encrypt'
 import { downloadStoredWechatFile, parseWechatFileContent } from '@/libs/channels/wechat/inboundMedia'
 
 function contentDispositionFilename(fileName: string) {
-  const safe = fileName.replaceAll(/["\\\r\n]/g, '_').slice(0, 180) || 'file'
+  const safe = fileName.replaceAll(/[^\x20-\x7E]/g, '_').replaceAll(/["\\\r\n]/g, '_').slice(0, 180) || 'file'
   const encoded = encodeURIComponent(fileName).replaceAll(/['()]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)
   return `attachment; filename="${safe}"; filename*=UTF-8''${encoded}`
 }
@@ -17,15 +17,19 @@ function contentDispositionFilename(fileName: string) {
  * GET /api/admin/wechat/events/[eventId]/file
  * 管理员：下载微信入站文件事件内容
  */
-export const GET = withAdmin<{ eventId: string }>(async (_request, { params, userId }) => {
+export const GET = withAdmin<{ eventId: string }>(async (_request, { params }) => {
   const { eventId } = await params
   if (!eventId?.trim()) return jsonError('Invalid eventId', 400)
-
-  const binding = await new ChannelBindingModel().findByUserAndPlatform(userId, WECHAT_PLATFORM)
-  if (!binding) return jsonError('WeChat not bound', 404)
-
-  const event = await new ChannelEventModel().findById(eventId)
-  if (!event || event.bindingId !== binding.id) return jsonError('Event not found', 404)
+  const eventModel = new ChannelEventModel()
+  const event = await eventModel.findById(eventId)
+  if (!event) return jsonError('Event not found', 404)
+  const [binding, session] = await Promise.all([
+    new ChannelBindingModel().findById(event.bindingId),
+    eventModel.getSession(event.sessionId),
+  ])
+  if (!binding || binding.platform !== WECHAT_PLATFORM || session?.bindingId !== binding.id) {
+    return jsonError('Event not found', 404)
+  }
   if (event.messageKind !== 'file') return jsonError('Not a file event', 400)
 
   const payload = parseWechatFileContent(event.content)
@@ -39,7 +43,7 @@ export const GET = withAdmin<{ eventId: string }>(async (_request, { params, use
 
     return new NextResponse(new Uint8Array(downloaded.buffer), {
       headers: {
-        'Cache-Control': 'private, max-age=300',
+        'Cache-Control': 'private, no-store',
         'Content-Disposition': contentDispositionFilename(downloaded.fileName),
         'Content-Type': downloaded.mimeType,
       },

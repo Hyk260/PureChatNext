@@ -6,6 +6,7 @@ import { appEnv } from '@/envs/app'
 import { gatewayEnv } from '@/envs/gateway'
 import { withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials, normalizeQQChannelSettings } from '@/libs/channels/qq'
+import { isChannelHeartbeatFresh, resolveQqConnected, resolveQqRuntimeStatus } from '@/libs/channels/qq/runtimeStatus'
 import { ensureChannelGatewayRunning } from '@/server/channel-gateway'
 
 const log = debug('channel:qq:status')
@@ -14,29 +15,6 @@ function resolveAppBaseUrl(): string {
   const fromEnv = appEnv.APP_URL?.trim()
   if (fromEnv) return fromEnv.replace(/\/$/, '')
   return 'http://localhost:3000'
-}
-
-function resolveQqRuntimeStatus(input: {
-  connectionMode: 'websocket' | 'webhook'
-  enabled: boolean
-  gatewaySupported: boolean
-  heartbeatFresh: boolean
-  runtimeStatus: string
-}) {
-  if (input.connectionMode === 'webhook') {
-    return input.enabled ? 'online' : 'offline'
-  }
-  if (!input.gatewaySupported || !input.heartbeatFresh) return 'offline'
-  return input.runtimeStatus
-}
-
-function resolveQqConnected(input: {
-  connectionMode: 'websocket' | 'webhook'
-  enabled: boolean
-  runtimeStatus: string
-}) {
-  if (input.connectionMode === 'webhook') return input.enabled
-  return input.runtimeStatus === 'online' || input.runtimeStatus === 'degraded'
 }
 
 /** GET /api/channels/qq/status — 当前用户 QQ 连接状态（不含 Secret） */
@@ -70,19 +48,16 @@ export const GET = withAuth(async (_request, { userId }) => {
     resolveAppBaseUrl()
   )
   const gatewaySupported = gatewayEnv.CHANNEL_GATEWAY_ENABLED
-  const heartbeatFresh = Boolean(binding.lastHeartbeatAt && Date.now() - binding.lastHeartbeatAt.getTime() <= 90_000)
+  const heartbeatFresh = isChannelHeartbeatFresh(binding.lastHeartbeatAt)
   const runtimeStatus = resolveQqRuntimeStatus({
     connectionMode,
     enabled: binding.enabled,
     gatewaySupported,
     heartbeatFresh,
+    needsRebind: binding.needsRebind,
     runtimeStatus: binding.runtimeStatus,
   })
-  const connected = resolveQqConnected({
-    connectionMode,
-    enabled: binding.enabled,
-    runtimeStatus,
-  })
+  const connected = resolveQqConnected(runtimeStatus)
 
   return NextResponse.json({
     agentId: binding.agentId,

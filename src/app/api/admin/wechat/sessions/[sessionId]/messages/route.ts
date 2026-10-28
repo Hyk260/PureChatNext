@@ -138,7 +138,10 @@ export const GET = withAdmin<{ sessionId: string }>(async (request, { params, us
       agentTitle: agent?.title ?? null,
       applicationId: sessionBinding.applicationId,
       bindingId: session.bindingId,
-      canSend: isOwnBinding && canSendWechatDevOutbound(ownerExternalUserId, session.externalUserId),
+      canSend:
+        isOwnBinding &&
+        Boolean(myBinding?.enabled && !myBinding.needsRebind) &&
+        canSendWechatDevOutbound(ownerExternalUserId, session.externalUserId),
       conversationVersion: session.conversationVersion,
       externalUserId: session.externalUserId,
       externalUserName: session.externalUserName,

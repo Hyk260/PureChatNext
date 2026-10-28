@@ -165,6 +165,25 @@ describe('expandQQEventsToMessages', () => {
     })
   })
 
+  it('omits raw QQ media URLs in the personal read-only view', () => {
+    const messages = expandQQEventsToMessages(
+      [
+        event({
+          content: '看这个文件',
+          messageKind: 'file',
+          platformPayload: {
+            attachments: [{ name: 'report.pdf', url: 'https://cdn.example/signed?token=secret' }],
+            threadType: 'c2c',
+          },
+        }),
+      ],
+      { includeRemoteUrls: false }
+    )
+
+    expect(messages[0]?.attachments?.[0]?.fileUrl).toBe('')
+    expect(JSON.stringify(messages)).not.toContain('token=secret')
+  })
+
   it('expands manual outbound messages', () => {
     const messages = expandQQEventsToMessages([
       event({

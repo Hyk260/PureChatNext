@@ -1,5 +1,4 @@
-import { confirmModal, toast } from '@lobehub/ui'
-import { Button, Flex, Modal, Text } from '@pure/ui'
+import { Button, confirmModal, Flexbox as Flex, Modal, Text, toast } from '@lobehub/ui'
 import type { ChannelGatewayLogs, ChannelLogPlatform } from '@pure/types'
 import useSWR from 'swr'
 import { useState } from 'react'
@@ -11,6 +10,7 @@ type Props = {
   userId: string | undefined
   platform: ChannelLogPlatform
   bound: boolean
+  canClear: boolean
   gatewaySupported: boolean
   connectionMode?: string
   onClose: () => void
@@ -30,7 +30,7 @@ async function fetchLogs(platform: ChannelLogPlatform): Promise<ChannelGatewayLo
 }
 
 export function ChannelGatewayLogsModal(props: Props) {
-  const { platform, userId, onClose } = props
+  const { canClear, platform, userId, onClose } = props
   const [isClearing, setIsClearing] = useState(false)
   const service = getDesktopRemoteBaseUrl() || window.location.origin
   const { data, error, isValidating, mutate } = useSWR(
@@ -48,6 +48,7 @@ export function ChannelGatewayLogsModal(props: Props) {
   }
 
   const handleClear = () => {
+    if (!canClear) return
     confirmModal({
       content: `将永久删除当前账号的${platform === 'qq' ? 'QQ' : '微信'}诊断日志，无法恢复。`,
       okText: '清除日志',
@@ -84,10 +85,12 @@ export function ChannelGatewayLogsModal(props: Props) {
       width={880}
       onCancel={onClose}
       footer={
-        <Flex className='justify-end gap-2'>
-          <Button danger disabled={isClearing} loading={isClearing} onClick={handleClear}>
-            清除日志
-          </Button>
+        <Flex direction='horizontal' className='justify-end gap-2'>
+          {canClear ? (
+            <Button danger disabled={isClearing} loading={isClearing} onClick={handleClear}>
+              清除日志
+            </Button>
+          ) : null}
           <Button loading={isValidating} onClick={handleRefresh}>
             更新
           </Button>
@@ -95,7 +98,7 @@ export function ChannelGatewayLogsModal(props: Props) {
         </Flex>
       }
     >
-      <Flex className='flex-col gap-3'>
+      <Flex direction='vertical' className='flex-col gap-3'>
         <Text>{statusDescription(props)}</Text>
         <Text className='text-xs' type='secondary'>
           {platform === 'qq'

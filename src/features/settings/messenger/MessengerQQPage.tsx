@@ -292,11 +292,9 @@ const MessengerQQPage = memo(() => {
       >
         高级设置
       </Button>
-      {isAdminRole(session?.user?.role) ? (
-        <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/settings/qq-conversation')}>
-          对话监控
-        </Button>
-      ) : null}
+      <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/settings/qq-conversation')}>
+        对话记录
+      </Button>
       {showConnect ? (
         <QQConnectButton
           agentId={agentId}
@@ -375,6 +373,7 @@ const MessengerQQPage = memo(() => {
           userId={userId}
           platform='qq'
           bound={!showConnect}
+          canClear={isAdminRole(session?.user?.role)}
           gatewaySupported={gatewaySupported}
           connectionMode={status?.connectionMode}
           onClose={() => setLogsOpen(false)}

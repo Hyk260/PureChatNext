@@ -324,23 +324,18 @@ const MessengerWeChatPage = memo(() => {
     status,
   })
 
-  // Gateway 不可用（Vercel / 未开启内置进程）时不展示连接配置与操作按钮。
-  const headerAction = gatewaySupported ? (
+  const headerAction = (
     <Flex className='items-center gap-2'>
-      {isAdminRole(session?.user?.role) ? (
-        <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/settings/wechat-conversation')}>
-          对话监控
-        </Button>
-      ) : null}
-      {showConnect ? (
-        <QrCodeAuth disabled={binding} onAuthenticated={(c) => handleAuthenticated(c)} />
-      ) : (
-        <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>
-          断开
-        </Button>
-      )}
+      <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/settings/wechat-conversation')}>
+        对话记录
+      </Button>
+      {gatewaySupported
+        ? showConnect
+          ? <QrCodeAuth disabled={binding} onAuthenticated={(c) => handleAuthenticated(c)} />
+          : <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>断开</Button>
+        : null}
     </Flex>
-  ) : undefined
+  )
 
   return (
     <MessengerDetailShell headerAction={headerAction} platform='wechat' platformMeta={platformMeta}>
@@ -356,7 +351,7 @@ const MessengerWeChatPage = memo(() => {
           onClick={() => setLogsOpen(true)}
         />
         <ChannelGatewayStatusIndicator {...gatewayStatus} />
-        {status?.runtimeStatus === 'degraded' && status.failedEventCount ? (
+        {isAdminRole(session?.user?.role) && status?.runtimeStatus === 'degraded' && status.failedEventCount ? (
           <Button
             disabled={retryingFailedEvents}
             loading={retryingFailedEvents}
@@ -396,6 +391,7 @@ const MessengerWeChatPage = memo(() => {
           userId={userId}
           platform='wechat'
           bound={bound}
+          canClear={isAdminRole(session?.user?.role)}
           gatewaySupported={gatewaySupported}
           onClose={() => setLogsOpen(false)}
         />

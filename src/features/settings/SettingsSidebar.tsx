@@ -16,6 +16,7 @@ import { SettingsGroupKey, SettingsTab, useSettingsCategory } from './useSetting
 const DEFAULT_EXPANDED_GROUPS = [
   SettingsGroupKey.General,
   SettingsGroupKey.Agent,
+  SettingsGroupKey.Conversations,
   SettingsGroupKey.Tools,
   SettingsGroupKey.System,
   SettingsGroupKey.Manage,

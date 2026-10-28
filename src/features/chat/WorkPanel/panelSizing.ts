@@ -19,8 +19,18 @@ export function resizePanelWidths(
   delta: number,
   boundary: ResizeBoundary,
   maxTotalWidth: number,
-  previewOpen: boolean
+  previewOpen: boolean,
+  keepPanelWidth = false
 ): PanelWidths {
+  if (keepPanelWidth && previewOpen) {
+    const maxPreview = Math.max(0, maxTotalWidth - current.panelWidth)
+    const minPreview = Math.min(MIN_FILE_PREVIEW_WIDTH, maxPreview)
+    return {
+      panelWidth: current.panelWidth,
+      previewWidth: clamp(current.previewWidth - delta, minPreview, maxPreview),
+    }
+  }
+
   if (boundary === 'preview' && !previewOpen) return current
   if (boundary === 'preview') {
     const total = current.panelWidth + current.previewWidth

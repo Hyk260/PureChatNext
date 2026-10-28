@@ -12,18 +12,24 @@ import {
 } from './panelSizing'
 import type { PanelWidths, ResizeBoundary } from './panelSizing'
 
-type LayoutState = PanelWidths & { setWidths: (widths: PanelWidths) => void }
+type LayoutState = PanelWidths & {
+  keepPanelWidth: boolean
+  setKeepPanelWidth: (keep: boolean) => void
+  setWidths: (widths: PanelWidths) => void
+}
 
 export const useWorkPanelLayoutStore = create<LayoutState>()(
   persist(
     (set) => ({
       panelWidth: DEFAULT_WORK_PANEL_WIDTH,
       previewWidth: DEFAULT_FILE_PREVIEW_WIDTH,
+      keepPanelWidth: false,
+      setKeepPanelWidth: (keepPanelWidth) => set({ keepPanelWidth }),
       setWidths: (widths) => set(widths),
     }),
     {
       name: 'purechat:layout:work-panel',
-      partialize: ({ panelWidth, previewWidth }) => ({ panelWidth, previewWidth }),
+      partialize: ({ keepPanelWidth, panelWidth, previewWidth }) => ({ keepPanelWidth, panelWidth, previewWidth }),
     }
   )
 )
@@ -31,6 +37,7 @@ export const useWorkPanelLayoutStore = create<LayoutState>()(
 type DragState = {
   boundary: ResizeBoundary
   cursor: string
+  keepPanelWidth: boolean
   maxTotalWidth: number
   previewOpen: boolean
   selection: string
@@ -93,6 +100,7 @@ export function usePanelResize(previewOpen: boolean) {
       ...layout,
       boundary,
       cursor: document.body.style.cursor,
+      keepPanelWidth: useWorkPanelLayoutStore.getState().keepPanelWidth,
       previewOpen,
       selection: document.body.style.userSelect,
       startX: event.clientX,
@@ -106,7 +114,14 @@ export function usePanelResize(previewOpen: boolean) {
     const drag = dragRef.current
     if (!drag) return
     setWidths(
-      resizePanelWidths(drag.widths, event.clientX - drag.startX, drag.boundary, drag.maxTotalWidth, drag.previewOpen)
+      resizePanelWidths(
+        drag.widths,
+        event.clientX - drag.startX,
+        drag.boundary,
+        drag.maxTotalWidth,
+        drag.previewOpen,
+        drag.keepPanelWidth
+      )
     )
   }
 
@@ -117,7 +132,16 @@ export function usePanelResize(previewOpen: boolean) {
     event.preventDefault()
     const direction = event.key === 'ArrowRight' ? 1 : -1
     const delta = direction * (event.shiftKey ? 50 : 10)
-    setWidths(resizePanelWidths(layout.widths, delta, boundary, layout.maxTotalWidth, previewOpen))
+    setWidths(
+      resizePanelWidths(
+        layout.widths,
+        delta,
+        boundary,
+        layout.maxTotalWidth,
+        previewOpen,
+        useWorkPanelLayoutStore.getState().keepPanelWidth
+      )
+    )
   }
 
   const separatorProps = (boundary: ResizeBoundary) => ({

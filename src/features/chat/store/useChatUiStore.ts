@@ -20,6 +20,7 @@ type ChatUiState = {
   rightCollapsed: boolean
   /** true = 聊天区占满主栏宽度；false = 居中限宽 */
   wideScreen: boolean
+  showMessageUsage: boolean
   advancedSettingsByAgent: Record<string, ChatAdvancedSettings>
   /** Shared across all agents */
   searchMode: ChatSearchMode
@@ -34,6 +35,7 @@ type ChatUiState = {
   toggleRightCollapsed: () => void
   toggleWideScreen: (value?: boolean) => void
   setRightCollapsed: (v: boolean) => void
+  setShowMessageUsage: (value: boolean) => void
   openWorkPanelTab: (tab: WorkPanelTabId) => void
   closeWorkPanelTab: (tab: WorkPanelTabId) => void
   setWorkPanelActiveTab: (tab: WorkPanelTabId) => void
@@ -58,6 +60,7 @@ export const useChatUiStore = create<ChatUiState>()(
     (set, get) => ({
       rightCollapsed: true,
       wideScreen: false,
+      showMessageUsage: true,
       advancedSettingsByAgent: {},
       searchMode: 'off',
       permissionMode: DEFAULT_CHAT_PERMISSION_MODE,
@@ -84,6 +87,7 @@ export const useChatUiStore = create<ChatUiState>()(
           wideScreen: typeof value === 'boolean' ? value : !s.wideScreen,
         })),
       setRightCollapsed: (rightCollapsed) => set({ rightCollapsed }),
+      setShowMessageUsage: (showMessageUsage) => set({ showMessageUsage }),
       openWorkPanelTab: (tab) => {
         if (!isWorkPanelTabId(tab)) return
         set((s) => ({

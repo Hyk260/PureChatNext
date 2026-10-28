@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { useWorkPanelLayoutStore } from '@/features/chat/WorkPanel/usePanelResize'
 import { getDesktopApi } from '@/types/desktop'
 import type {
   DesktopProject,
@@ -283,6 +284,8 @@ const FilesContent = memo<Props>(({ activePath, error, loading, onOpenFile, proj
   const [filter, setFilter] = useState('')
   const [hideIgnoredFiles, setHideIgnoredFiles] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const keepPanelWidth = useWorkPanelLayoutStore((state) => state.keepPanelWidth)
+  const setKeepPanelWidth = useWorkPanelLayoutStore((state) => state.setKeepPanelWidth)
   const requestsRef = useRef({ pending: new Set<string>(), generation: 0 })
   const directories =
     directoryCache.projectId === project?.id ? directoryCache.directories : EMPTY_DIRECTORY_CACHE
@@ -466,8 +469,23 @@ const FilesContent = memo<Props>(({ activePath, error, loading, onOpenFile, proj
         onCheckedChange: setHideIgnoredFiles,
         type: 'checkbox' as const,
       },
+      {
+        checked: keepPanelWidth,
+        key: 'keep-panel-width',
+        label: '固定工作面板宽度',
+        onCheckedChange: setKeepPanelWidth,
+        type: 'checkbox' as const,
+      },
     ],
-    [handleCopyPath, handleOpenProject, handleRefresh, hideIgnoredFiles, isGitRepository]
+    [
+      handleCopyPath,
+      handleOpenProject,
+      handleRefresh,
+      hideIgnoredFiles,
+      isGitRepository,
+      keepPanelWidth,
+      setKeepPanelWidth,
+    ]
   )
 
   if (!getDesktopApi()?.listProjectEntries) return <FileEmptyState description='文件列表仅在桌面端可用' />

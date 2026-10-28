@@ -187,7 +187,6 @@ export const SETTINGS_EMPTY_TABS = [
   SettingsTab.Memory,
   SettingsTab.Creds,
   SettingsTab.Storage,
-  SettingsTab.Advanced,
 ] as const
 
 export function useSettingsCategory(isAdmin = false): SettingsCategoryGroup[] {
@@ -339,12 +338,12 @@ export function useSettingsCategory(isAdmin = false): SettingsCategoryGroup[] {
                 },
               ]
             : []),
-          // {
-          //   href: tabHref(SettingsTab.Advanced),
-          //   icon: EllipsisIcon,
-          //   key: SettingsTab.Advanced,
-          //   label: '高级设置',
-          // },
+          {
+            href: tabHref(SettingsTab.Advanced),
+            icon: EllipsisIcon,
+            key: SettingsTab.Advanced,
+            label: '高级设置',
+          },
           {
             href: tabHref(SettingsTab.About),
             icon: Info,

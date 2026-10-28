@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
+import { DESKTOP_APP_OPEN_URI } from '@/const/desktopAuth'
+
 import {
   isRecognizedProtocolLink,
+  isRendererHomeLink,
   parseDesktopAuthCallback,
   protocolLinksFromCommandLine,
   resolveProtocolLink,
@@ -12,6 +15,12 @@ describe('desktop protocol links', () => {
     expect(resolveProtocolLink('purechat://renderer/chat/123?from=email')).toBe(
       'purechat://renderer/chat/123?from=email'
     )
+  })
+
+  it('recognizes the app home link as a focus-only link', () => {
+    expect(resolveProtocolLink(DESKTOP_APP_OPEN_URI)).toBe(DESKTOP_APP_OPEN_URI)
+    expect(isRendererHomeLink(DESKTOP_APP_OPEN_URI)).toBe(true)
+    expect(isRendererHomeLink('purechat://renderer/chat/123')).toBe(false)
   })
 
   it('maps public deep links into the SPA path', () => {

@@ -1,4 +1,6 @@
-export const APP_RENDERER_URL = 'purechat://renderer/'
+import { DESKTOP_APP_OPEN_URI } from '@/const/desktopAuth'
+
+export const APP_RENDERER_URL = DESKTOP_APP_OPEN_URI
 
 const parseUrl = (value: string) => {
   try {

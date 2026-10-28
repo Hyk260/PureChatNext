@@ -2,101 +2,45 @@
 
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
-import { Icon, ModelIcon, Popover, Tooltip, Flex } from '@pure/ui'
+import { Flex, ModelIcon } from '@pure/ui'
 import type { ChatMessageMetadata } from '@pure/types'
-import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
+import { Button, Icon, Popover, Text, Tooltip, cssVar } from '@lobehub/ui'
 import { CircleHelpIcon, CoinsIcon } from 'lucide-react'
 import { memo } from 'react'
 
 import { getMessageUsageDetails } from '@/features/chat/usageDetails'
 import type { UsageDetailItem } from '@/features/chat/usageDetails'
+import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 
 const tokenFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
+const summaryClassName = 'min-w-0 flex-1 flex-between gap-4 text-xs'
+const detailRowClassName = 'min-h-6 flex-between gap-5 text-[13px]'
+const detailLabelClassName = 'inline-flex items-center gap-1.5'
+const detailValueClassName = 'tabular-nums font-medium'
 
-const styles = createStaticStyles(({ css }) => ({
-  detailLabel: css`
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: ${cssVar.colorTextSecondary};
-  `,
-  detailRow: css`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    min-height: 24px;
-    font-size: 13px;
-  `,
-  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
-  detailTitle: css`
-    color: ${cssVar.colorTextDescription};
-  `,
-  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
-  divider: css`
-    background: ${cssVar.colorBorderSecondary};
-  `,
-  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
-  info: css`
-    color: ${cssVar.colorTextQuaternary};
-  `,
-  left: css`
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    min-width: 0;
-  `,
-  progress: css`
-    overflow: hidden;
-    display: flex;
-    width: 100%;
-    height: 6px;
-    border-radius: 999px;
-    background: ${cssVar.colorFillSecondary};
-  `,
-  summary: css`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    width: 100%;
-    margin-block-start: 8px;
-    color: ${cssVar.colorTextQuaternary};
-    font-size: 12px;
-  `,
-  tokenTrigger: css`
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 0;
-    border: 0;
-    color: inherit;
-    background: transparent;
-    font: inherit;
-
-    &:hover,
-    &:focus-visible {
-      color: ${cssVar.colorTextSecondary};
-      outline: none;
-    }
-  `,
-  // 保留 createStaticStyles：依赖尚无对应 Tailwind 语义 token 的主题或运行时变量。
-  value: css`
-    color: ${cssVar.colorText};
-  `,
-}))
+const getModelCard = (provider: string | undefined, model: string | undefined) => {
+  if (!provider || !model) return undefined
+  return getAiModel(provider as ModelProviderId, model)
+}
 
 const SegmentedProgress = memo<{ items: UsageDetailItem[] }>(({ items }) => {
   const total = items.reduce((sum, item) => sum + item.value, 0)
   if (total <= 0) return null
 
   return (
-    <div className={styles.progress}>
+    <Flex
+      aria-hidden='true'
+      className='h-[6px] w-full overflow-hidden rounded-full'
+      style={{ backgroundColor: cssVar.colorFillSecondary }}
+    >
       {items.map((item) => (
-        <span key={item.key} style={{ background: item.color, width: `${(item.value / total) * 100}%` }} />
+        <Flex
+          key={item.key}
+          className='h-full shrink-0'
+          style={{ backgroundColor: item.color, width: `${(item.value / total) * 100}%` }}
+        />
       ))}
-    </div>
+    </Flex>
   )
 })
 
@@ -105,13 +49,20 @@ SegmentedProgress.displayName = 'SegmentedProgress'
 const DetailRows = memo<{ items: UsageDetailItem[] }>(({ items }) => (
   <>
     {items.map((item) => (
-      <div className={styles.detailRow} key={item.key}>
-        <span className={styles.detailLabel}>
-          <span className={'size-[7px] rounded-full'} style={{ background: item.color }} />
+      <Flex className={detailRowClassName} key={item.key}>
+        <Text
+          as='span'
+          className={detailLabelClassName}
+          color={cssVar.colorTextSecondary}
+          fontSize={13}
+        >
+          <span aria-hidden='true' className='size-[7px] shrink-0 rounded-full' style={{ background: item.color }} />
           {item.label}
-        </span>
-        <span className={cx(styles.value, 'tabular-nums font-medium')}>{tokenFormatter.format(item.value)}</span>
-      </div>
+        </Text>
+        <Text as='span' className={detailValueClassName} color={cssVar.colorText} fontSize={13}>
+          {tokenFormatter.format(item.value)}
+        </Text>
+      </Flex>
     ))}
   </>
 ))
@@ -119,15 +70,22 @@ const DetailRows = memo<{ items: UsageDetailItem[] }>(({ items }) => (
 DetailRows.displayName = 'DetailRows'
 
 const PerformanceLabel = memo<{ label: string; tooltip: string; value: string }>(({ label, tooltip, value }) => (
-  <div className={styles.detailRow}>
-    <span className={styles.detailLabel}>
+  <Flex className={detailRowClassName}>
+    <Text
+      as='span'
+      className={detailLabelClassName}
+      color={cssVar.colorTextSecondary}
+      fontSize={13}
+    >
       {label}
       <Tooltip title={tooltip}>
-        <Icon className={styles.info} icon={CircleHelpIcon} size={13} />
+        <Icon color={cssVar.colorTextQuaternary} icon={CircleHelpIcon} size={13} />
       </Tooltip>
-    </span>
-    <span className={cx(styles.value, 'tabular-nums font-medium')}>{value}</span>
-  </div>
+    </Text>
+    <Text as='span' className={detailValueClassName} color={cssVar.colorText} fontSize={13}>
+      {value}
+    </Text>
+  </Flex>
 ))
 
 PerformanceLabel.displayName = 'PerformanceLabel'
@@ -138,13 +96,21 @@ interface MessageUsageProps {
 }
 
 const MessageUsage = memo<MessageUsageProps>(({ isStreaming = false, metadata }) => {
+  const showMessageUsage = useChatUiStore((state) => state.showMessageUsage)
+
+  if (!showMessageUsage) return null
+
   if (isStreaming) {
     return (
-      <div aria-hidden className={styles.summary}>
-        <span className={styles.left}>
-          <span className={'w-[120px] h-3.5 invisible'} />
-        </span>
-      </div>
+      <Flex
+        aria-hidden='true'
+        className={summaryClassName}
+        style={{ color: cssVar.colorTextQuaternary }}
+      >
+        <Flex className='min-w-0 items-center gap-1'>
+          <Text as='span' className='invisible h-3.5 w-[120px]' />
+        </Flex>
+      </Flex>
     )
   }
 
@@ -152,7 +118,7 @@ const MessageUsage = memo<MessageUsageProps>(({ isStreaming = false, metadata })
 
   const { model, performance, provider } = metadata
   const details = getMessageUsageDetails(metadata)
-  const modelCard = model && provider ? getAiModel(provider as ModelProviderId, model) : undefined
+  const modelCard = getModelCard(provider, model)
   const tps = performance?.tps && performance.tps > 0 ? performance.tps : undefined
   const ttft = performance?.ttft && performance.ttft > 0 ? performance.ttft : undefined
   const hasDetail = Boolean(details.totalTokens || tps || ttft)
@@ -160,31 +126,37 @@ const MessageUsage = memo<MessageUsageProps>(({ isStreaming = false, metadata })
   if (!model && !hasDetail) return null
 
   const detailContent = (
-    <Flex className={['min-w-[240px]', 'flex-col gap-2']}>
-      <div className={cx(styles.detailTitle, 'text-[13px] font-medium')}>输出明细</div>
+    <Flex className='min-w-[240px] flex-col gap-2'>
+      <Text className='text-[13px] font-medium' color={cssVar.colorTextDescription} fontSize={13}>
+        输出明细
+      </Text>
 
       {details.output.length > 0 ? (
-        <div className={'flex flex-col gap-1'}>
+        <Flex className='flex-col gap-1'>
           <SegmentedProgress items={details.output} />
           <DetailRows items={details.output} />
-        </div>
+        </Flex>
       ) : null}
 
       {details.input.length > 0 ? (
-        <div className={'flex flex-col gap-1'}>
+        <Flex className='flex-col gap-1'>
           <SegmentedProgress items={details.input} />
           <DetailRows items={details.input} />
-        </div>
+        </Flex>
       ) : null}
 
-      {hasDetail ? <div className={cx(styles.divider, 'h-px my-2')} /> : null}
+      {hasDetail ? (
+        <Flex className='my-2 h-px' style={{ backgroundColor: cssVar.colorBorderSecondary }} />
+      ) : null}
       {details.totalTokens ? (
-        <div className={styles.detailRow}>
-          <span className={styles.detailLabel}>总消耗</span>
-          <span className={cx(styles.value, 'tabular-nums font-medium')}>
+        <Flex className={detailRowClassName}>
+          <Text as='span' color={cssVar.colorTextSecondary} fontSize={13}>
+            总消耗
+          </Text>
+          <Text as='span' className={detailValueClassName} color={cssVar.colorText} fontSize={13}>
             {tokenFormatter.format(details.totalTokens)}
-          </span>
-        </div>
+          </Text>
+        </Flex>
       ) : null}
       {tps ? (
         <PerformanceLabel label='TPS' tooltip='模型开始输出后每秒生成的 Token 数量' value={tps.toFixed(2)} />
@@ -200,23 +172,36 @@ const MessageUsage = memo<MessageUsageProps>(({ isStreaming = false, metadata })
   )
 
   return (
-    <div className={styles.summary}>
-      <span className={styles.left}>
+    <Flex
+      className={summaryClassName}
+      style={{ color: cssVar.colorTextQuaternary }}
+    >
+      <Flex className='min-w-0 items-center gap-1'>
         {model ? <ModelIcon model={model} size={14} type='mono' /> : null}
-        {model ? <span>{modelCard?.displayName || model}</span> : null}
-        {model && tps ? <span>·</span> : null}
-        {tps ? <span>{tps.toFixed(1)} TPS</span> : null}
-      </span>
+        {model ? (
+          <Text as='span' className='truncate' color={cssVar.colorTextQuaternary} fontSize={12}>
+            {modelCard?.displayName || model}
+          </Text>
+        ) : null}
+        {model && tps ? <Text as='span' color={cssVar.colorTextQuaternary} fontSize={12}>·</Text> : null}
+        {tps ? <Text as='span' color={cssVar.colorTextQuaternary} fontSize={12}>{tps.toFixed(1)} TPS</Text> : null}
+      </Flex>
 
       {details.totalTokens ? (
         <Popover content={detailContent} placement='topRight' trigger='hover'>
-          <button aria-label='查看输出明细' className={styles.tokenTrigger} type='button'>
-            <Icon icon={CoinsIcon} size={14} />
+          <Button
+            aria-label='查看输出明细'
+            className='h-auto gap-[3px] p-0 text-inherit'
+            size='small'
+            style={{ color: cssVar.colorTextQuaternary }}
+            type='text'
+          >
+            <Icon aria-hidden='true' icon={CoinsIcon} size={14} />
             {tokenFormatter.format(details.totalTokens)}
-          </button>
+          </Button>
         </Popover>
       ) : null}
-    </div>
+    </Flex>
   )
 })
 

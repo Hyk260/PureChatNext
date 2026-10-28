@@ -1,5 +1,7 @@
-import { fireEvent, render } from '@testing-library/react'
+import { fireEvent, render as renderRTL, within } from '@testing-library/react'
 import type { UIMessage } from 'ai'
+import { ConfigProvider } from '@lobehub/ui'
+import { motion } from 'motion/react'
 import React from 'react'
 import { copyToClipboard } from '@pure/utils/client'
 import { describe, expect, it, vi } from 'vitest'
@@ -7,6 +9,12 @@ import { describe, expect, it, vi } from 'vitest'
 const autoScrollMocks = vi.hoisted(() => ({
   useAutoScroll: vi.fn(),
 }))
+
+const TestUIProvider = ({ children }: { children?: React.ReactNode }) => (
+  <ConfigProvider motion={motion}>{children}</ConfigProvider>
+)
+
+const render = (ui: React.ReactElement) => renderRTL(ui, { wrapper: TestUIProvider })
 
 vi.mock('@pure/ui', () => ({
   AccordionRoot: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
@@ -88,7 +96,6 @@ vi.mock('@pure/utils/client', () => ({
 
 vi.mock('@/components/Loading', () => ({
   LoadingState: () => <span data-testid='loading-state' />,
-  PulseDots: () => <span data-testid='pulse-dots' />,
 }))
 
 vi.mock('@/components/Scrollbar', () => ({
@@ -158,7 +165,7 @@ describe('ChatMessages message layout', () => {
     expect(autoScrollMocks.useAutoScroll).toHaveBeenCalledWith(expect.objectContaining({ initialScrollToBottom: true }))
   })
 
-  it('renders both action bars as siblings of message content', () => {
+  it('renders message actions and assistant usage in a shared footer', () => {
     const { container, getByTestId } = render(
       <ChatMessages
         agentMeta={{ avatar: '✨', title: 'Pure AI' }}
@@ -175,23 +182,30 @@ describe('ChatMessages message layout', () => {
     for (const role of ['user', 'assistant']) {
       const row = container.querySelector(`[data-role="${role}"]`)
       const content = row?.querySelector('[data-message-content]')
-      const actions = row?.querySelector('[data-message-actions]')
+      const footer = row?.querySelector('[data-message-footer]')
+      const actions = footer?.querySelector('[data-message-actions]')
+      const usage = row?.querySelector('[data-testid="message-usage"]')
 
       expect(content).toBeTruthy()
+      expect(footer).toBeTruthy()
       expect(actions).toBeTruthy()
-      expect(content?.contains(actions ?? null)).toBe(false)
-      expect(actions?.parentElement).toBe(row)
+      expect(content?.contains(footer ?? null)).toBe(false)
+      expect(actions?.parentElement).toBe(footer)
+      expect(footer?.classList.contains('items-center')).toBe(true)
+      expect(footer?.classList.contains(role === 'assistant' ? 'justify-between' : 'justify-end')).toBe(true)
+
+      if (role === 'assistant') expect(usage?.parentElement).toBe(footer)
     }
   })
 
   it('opens the editor from the action bar edit button', () => {
     const onEdit = vi.fn()
-    const { container, getByLabelText, getByTestId, getByText } = render(
+    const { container, getByTestId, getByText } = render(
       <ChatMessages messages={[messages[0]]} onDelete={vi.fn()} onEdit={onEdit} onRegenerate={vi.fn()} />
     )
 
-    const row = container.querySelector('[data-role="user"]')!
-    fireEvent.click(getByLabelText('编辑', { selector: `[data-role="user"] button` }))
+    const row = container.querySelector<HTMLElement>('[data-role="user"]')!
+    fireEvent.click(within(row).getByRole('button', { name: '编辑' }))
 
     const editor = getByTestId('message-editor')
     expect(editor.dataset.value).toBe('hello')
@@ -204,17 +218,17 @@ describe('ChatMessages message layout', () => {
   it('copies, edits, and deletes a completed assistant message', () => {
     const onDelete = vi.fn()
     const onEdit = vi.fn()
-    const { getByLabelText, getByTestId, getByText } = render(
+    const { getByRole, getByTestId, getByText } = render(
       <ChatMessages messages={[messages[1]]} onDelete={onDelete} onEdit={onEdit} onRegenerate={vi.fn()} />
     )
 
-    fireEvent.click(getByLabelText('复制'))
+    fireEvent.click(getByRole('button', { name: '复制' }))
     expect(copyToClipboard).toHaveBeenCalledWith('hi')
-    fireEvent.click(getByLabelText('编辑'))
+    fireEvent.click(getByRole('button', { name: '编辑' }))
     expect(getByTestId('message-editor').dataset.value).toBe('hi')
     fireEvent.click(getByText('提交编辑'))
     expect(onEdit).toHaveBeenCalledWith('assistant-1', 'edited message')
-    fireEvent.click(getByLabelText('删除'))
+    fireEvent.click(getByRole('button', { name: '删除' }))
     expect(onDelete).toHaveBeenCalledWith('assistant-1')
   })
 
@@ -338,16 +352,16 @@ describe('ChatMessages message layout', () => {
     expect(getByTestId('message-usage').dataset.streaming).toBeUndefined()
   })
 
-  it('uses PulseDots while waiting for the first response content', () => {
+  it('uses LoadingState while waiting for the first response content', () => {
     const message: UIMessage = { id: 'assistant-loading', parts: [], role: 'assistant' }
     const { getByTestId } = render(
       <ChatMessages isStreaming messages={[message]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />
     )
 
-    expect(getByTestId('pulse-dots')).toBeTruthy()
+    expect(getByTestId('loading-state')).toBeTruthy()
   })
 
-  it('hides PulseDots once reasoning content starts', () => {
+  it('hides LoadingState once reasoning content starts', () => {
     const message: UIMessage = {
       id: 'assistant-reasoning-loading',
       parts: [{ state: 'streaming', text: 'thinking…', type: 'reasoning' }],
@@ -357,7 +371,7 @@ describe('ChatMessages message layout', () => {
       <ChatMessages isStreaming messages={[message]} onDelete={vi.fn()} onEdit={vi.fn()} onRegenerate={vi.fn()} />
     )
 
-    expect(queryByTestId('pulse-dots')).toBeNull()
+    expect(queryByTestId('loading-state')).toBeNull()
   })
 
   it('renders a search-only assistant message without the generic loading dots', () => {

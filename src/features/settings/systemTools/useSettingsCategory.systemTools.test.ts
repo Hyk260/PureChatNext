@@ -30,6 +30,20 @@ describe('useSettingsCategory system tools', () => {
     expect(webSystemGroup?.items.some((item) => item.key === SettingsTab.Data)).toBe(false)
   })
 
+  it('exposes advanced settings in the system group', () => {
+    mocks.getDesktopApi.mockReturnValue(undefined)
+    const { result } = renderHook(useSettingsCategory)
+    const systemGroup = result.current.find((group) => group.title === '系统')
+
+    expect(systemGroup?.items).toContainEqual(
+      expect.objectContaining({
+        href: '/settings/advanced',
+        key: SettingsTab.Advanced,
+        label: '高级设置',
+      })
+    )
+  })
+
   it.each([false, true])('exposes network search in tools settings for admin=%s', (isAdmin) => {
     const { result } = renderHook(() => useSettingsCategory(isAdmin))
     const group = result.current.find((item) => item.title === '工具')

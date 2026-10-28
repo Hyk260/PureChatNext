@@ -224,15 +224,18 @@ const ChatMessageItem = memo<ChatMessageItemProps>(
           {!text && isStreaming && !reasoning && !hasWebSearch && !hasRunningCommand ? <LoadingState /> : null}
         </div>
 
-        {!isUser && (metadata || isStreaming) ? <MessageUsage isStreaming={isStreaming} metadata={metadata} /> : null}
-
-        <MessageActions
-          isStreaming={isStreaming}
-          isUser={isUser}
-          onCopy={handleCopy}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-        />
+        <Flex
+          className={cx('mt-1 min-w-0 items-center gap-4', isUser ? 'justify-end' : 'justify-between')}
+          data-message-footer
+        >
+          <MessageActions
+            isStreaming={isStreaming}
+            onCopy={handleCopy}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+          />
+          {!isUser && (metadata || isStreaming) ? <MessageUsage isStreaming={isStreaming} metadata={metadata} /> : null}
+        </Flex>
         <MessageEditorModal
           open={editing}
           value={text}

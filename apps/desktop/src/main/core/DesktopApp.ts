@@ -4,7 +4,12 @@ import { app } from 'electron'
 import { DESKTOP_IPC_EVENTS } from '../../common/ipc/contracts'
 
 import { registerDesktopIpc } from '../ipc/register'
-import { parseDesktopAuthCallback, protocolLinksFromCommandLine, resolveProtocolLink } from '../protocolLink'
+import {
+  isRendererHomeLink,
+  parseDesktopAuthCallback,
+  protocolLinksFromCommandLine,
+  resolveProtocolLink,
+} from '../protocolLink'
 import { APP_RENDERER_URL, isTrustedRendererUrl } from '../rendererSecurity'
 import { installApplicationMenu } from '../ui/ApplicationMenu'
 import { DesktopConfigService } from '../services/DesktopConfigService'
@@ -149,7 +154,7 @@ export class DesktopApp {
   private async createWindow() {
     const window = await this.windowManager.create()
     const initialLink = this.pendingProtocolLinks.pop()
-    if (initialLink) await window.loadURL(initialLink)
+    if (initialLink && !isRendererHomeLink(initialLink)) await window.loadURL(initialLink)
     return window
   }
 
@@ -177,12 +182,12 @@ export class DesktopApp {
       .filter((url): url is string => Boolean(url))
     if (rendererLinks.length === 0) return
     if (!this.windowManager.isOpen) {
-      this.pendingProtocolLinks.push(...rendererLinks)
+      this.pendingProtocolLinks.push(...rendererLinks.filter((url) => !isRendererHomeLink(url)))
       return
     }
     this.focusWindow()
     const url = rendererLinks.at(-1)
-    if (url) this.windowManager.navigate(url)
+    if (url && !isRendererHomeLink(url)) this.windowManager.navigate(url)
   }
 
   private registerProtocolClient() {

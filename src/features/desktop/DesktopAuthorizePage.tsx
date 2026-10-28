@@ -7,6 +7,7 @@ import { AlertCircle, CheckCircle2, LoaderCircle } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
+import { DESKTOP_APP_OPEN_URI } from '@/const/desktopAuth'
 import { useSession } from '@/libs/better-auth/client'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
@@ -38,15 +39,15 @@ const getPageState = ({
   error,
   hasSession,
   isPending,
-  hasRedirectUri,
+  authorizationComplete,
 }: {
+  authorizationComplete: boolean
   error: string
-  hasRedirectUri: boolean
   hasSession: boolean
   isPending: boolean
 }): AuthorizePageState => {
   if (error) return 'error'
-  if (hasRedirectUri) return 'success'
+  if (authorizationComplete) return 'success'
   if (isPending || hasSession) return 'pending'
   return 'loginRequired'
 }
@@ -57,7 +58,7 @@ const DesktopAuthorizePage = () => {
   const { data: session, isPending } = useSession()
   const started = useRef(false)
   const [error, setError] = useState('')
-  const [redirectUri, setRedirectUri] = useState('')
+  const [authorizationComplete, setAuthorizationComplete] = useState(false)
   const search = useMemo(() => new URLSearchParams(location.search), [location.search])
   const callbackUrl = `${location.pathname}${location.search}`
 
@@ -86,7 +87,7 @@ const DesktopAuthorizePage = () => {
       )
       const body = (await response.json().catch(() => ({}))) as DesktopAuthorizeResponse
       if (!response.ok || !body.redirectUri) throw new Error(body.error || '桌面授权失败')
-      setRedirectUri(body.redirectUri)
+      setAuthorizationComplete(true)
       window.location.assign(body.redirectUri)
     }
 
@@ -97,8 +98,8 @@ const DesktopAuthorizePage = () => {
   }, [isPending, search, session?.user])
 
   const pageState = getPageState({
+    authorizationComplete,
     error,
-    hasRedirectUri: Boolean(redirectUri),
     hasSession: Boolean(session?.user),
     isPending,
   })
@@ -107,8 +108,7 @@ const DesktopAuthorizePage = () => {
   const description = pageState === 'error' ? error : pageContent.description
 
   const openDesktopApp = () => {
-    if (!redirectUri) return
-    window.location.assign(redirectUri)
+    window.location.assign(DESKTOP_APP_OPEN_URI)
   }
 
   const reloadPage = () => window.location.reload()

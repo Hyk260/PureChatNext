@@ -13,6 +13,7 @@ describe('useChatUiStore search mode', () => {
       permissionMode: 'auto',
       permissionModeInitialized: false,
       searchMode: 'off',
+      showMessageUsage: true,
     })
     localStorage.clear()
   })
@@ -27,6 +28,13 @@ describe('useChatUiStore search mode', () => {
 
     const persisted = JSON.parse(localStorage.getItem('purechat:chat:v2:ui') || '{}')
     expect(persisted.state.searchMode).toBe('auto')
+  })
+
+  it('persists the message usage visibility preference', () => {
+    useChatUiStore.getState().setShowMessageUsage(false)
+
+    expect(useChatUiStore.getState().showMessageUsage).toBe(false)
+    expect(JSON.parse(localStorage.getItem('purechat:chat:v2:ui') || '{}').state.showMessageUsage).toBe(false)
   })
 
   it('resets a persisted full permission mode when migrating from the vulnerable version', async () => {

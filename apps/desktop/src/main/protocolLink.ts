@@ -32,6 +32,8 @@ export const parseDesktopAuthCallback = (value: string): DesktopAuthProtocolCall
 
 export const isRecognizedProtocolLink = (value: string) => Boolean(parseProtocolUrl(value))
 
+export const isRendererHomeLink = (value: string) => value === APP_RENDERER_URL
+
 /**
  * Convert an OS-level purechat:// link into a trusted renderer URL.
  *

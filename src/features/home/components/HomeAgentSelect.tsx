@@ -19,7 +19,6 @@ import { BotIcon, Check, ChevronRight } from 'lucide-react'
 import { memo, useEffect, useMemo } from 'react'
 
 import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
-import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 
@@ -46,10 +45,10 @@ interface HomeAgentSelectProps {
 const HomeAgentSelect = memo<HomeAgentSelectProps>(({ onSelect }) => {
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
-  const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
 
   const agents = useAgentsStore((s) => s.agents)
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
+  const refreshAgent = useAgentsStore((s) => s.refreshAgent)
 
   useEffect(() => {
     fetchAgentsList()
@@ -63,7 +62,7 @@ const HomeAgentSelect = memo<HomeAgentSelectProps>(({ onSelect }) => {
   const selectAgent = (agentId: string) => {
     const agent = agents.find((item) => item.id === agentId) ?? DEFAULT_PURE_AI_META
     setSelectedAgentId(agent.id)
-    setActiveAgent(toActiveCommunityAgent(agent))
+    refreshAgent(agent.id).catch((error) => console.error('[agents] refresh failed:', error))
     onSelect?.()
   }
 

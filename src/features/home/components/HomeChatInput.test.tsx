@@ -95,7 +95,7 @@ vi.mock('@/features/home/store/useAgentsStore', () => ({
 }))
 vi.mock('@/features/home/store/useHomeStore', () => ({
   useHomeStore: (selector: (state: unknown) => unknown) =>
-    selector({ activeAgent: null, selectedAgentId: 'pure-ai', setActiveAgent: vi.fn() }),
+    selector({ selectedAgentId: 'pure-ai' }),
 }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: mocks.push }) }))
 vi.mock('@/types/desktop', () => ({

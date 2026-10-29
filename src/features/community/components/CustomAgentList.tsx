@@ -8,7 +8,6 @@ import { lazy, memo, Suspense, useCallback, useMemo, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'
 import { toDiscoverAgentFromListItem } from '@/features/community/customAgents'
-import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 import { deleteAgent, updateAgent } from '@/features/home/agentApi'
 import AgentFormModal from '@/features/home/HomeSidebar/modals/AgentFormModal'
 import type { AgentFormValues } from '@/features/home/HomeSidebar/modals/AgentFormModal'
@@ -39,7 +38,6 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
   const agents = useAgentsStore((s) => s.agents)
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
-  const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
 
   const detailAgent = useMemo(() => data.find((item) => item.id === detailAgentId) ?? null, [data, detailAgentId])
   const detailDiscoverAgent = useMemo(
@@ -58,10 +56,9 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
   const handleUse = useCallback(
     (agent: AgentListItem) => {
       setSelectedAgentId(agent.id)
-      setActiveAgent(toActiveCommunityAgent(agent))
       router.push(`/chat?agent=${encodeURIComponent(agent.id)}`)
     },
-    [router, setActiveAgent, setSelectedAgentId]
+    [router, setSelectedAgentId]
   )
 
   const handleEdit = useCallback(
@@ -71,9 +68,6 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
       try {
         const agent = await updateAgent(editing.id, values)
         upsertLocal(agent)
-        if (selectedAgentId === agent.id) {
-          setActiveAgent(toActiveCommunityAgent(agent))
-        }
         setEditing(null)
         toast.success('已保存')
       } catch (editError) {
@@ -83,7 +77,7 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
         setSaving(false)
       }
     },
-    [editing, selectedAgentId, setActiveAgent, upsertLocal]
+    [editing, upsertLocal]
   )
 
   const handleDelete = useCallback(
@@ -104,7 +98,6 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
               const next = agents.find((item) => item.id !== agent.id)
               if (next) {
                 setSelectedAgentId(next.id)
-                setActiveAgent(toActiveCommunityAgent(next))
               }
             }
           } catch (error) {
@@ -117,7 +110,7 @@ const CustomAgentList = memo<CustomAgentListProps>(({ data = [], rows = 3 }) => 
         title: '删除该助理？',
       })
     },
-    [agents, detailAgentId, editing, removeLocal, selectedAgentId, setActiveAgent, setSelectedAgentId]
+    [agents, detailAgentId, editing, removeLocal, selectedAgentId, setSelectedAgentId]
   )
 
   const handleEditFromDetail = useCallback(() => {

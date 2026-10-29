@@ -4,7 +4,17 @@ import { Flex } from '@pure/ui'
 import { toast, createStaticStyles } from '@lobehub/ui'
 import type { UIMessage } from 'ai'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import { DEFAULT_CHAT_ADVANCED_SETTINGS } from '@pure/types'
 import type { ChatAdvancedSettings, ChatPermissionMode } from '@pure/types'
 
@@ -45,8 +55,7 @@ import {
 } from '@/features/chat/runtime/store'
 import { getChatSettingsKey } from '@/features/chat/advancedSettings'
 import type { ChatSearchMode, LocalChatTopic, TopicDeleteScope, TopicUpdate } from '@/features/chat/types'
-import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
-import { fetchAgent } from '@/features/home/agentApi'
+import { AgentRequestError } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { getDesktopApi } from '@/types/desktop'
@@ -88,14 +97,12 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
     [router]
   )
 
-  const activeAgent = useHomeStore((s) => s.activeAgent)
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
   const selectedModel = useHomeStore((s) => s.selectedModel)
   const selectedProvider = useHomeStore((s) => s.selectedProvider)
-  const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
 
-  const agentId = agentFromQuery ?? activeAgent?.identifier ?? selectedAgentId ?? PURE_AI_AGENT_ID
+  const agentId = agentFromQuery ?? selectedAgentId ?? PURE_AI_AGENT_ID
   const runtimeSession = useChatRuntimeStore((state) =>
     state.sessions.get(JSON.stringify([userId, agentId, activeTopicId]))
   )
@@ -105,7 +112,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
   )
   const topicsRevision = useChatRuntimeStore((state) => state.topicsRevision[agentId] ?? 0)
 
-  const upsertLocalAgent = useAgentsStore((s) => s.upsertLocal)
+  const refreshAgent = useAgentsStore((s) => s.refreshAgent)
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
   const agents = useAgentsStore((s) => s.agents)
 
@@ -214,32 +221,35 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
     }
   }, [agentId, userId])
 
-  // Deep-link / refresh: sync `?agent=` into home store from API.
+  const handleUnavailableAgent = useEffectEvent(() => {
+    setSelectedAgentId(DEFAULT_PURE_AI_META.id)
+    pushChatHref(DEFAULT_PURE_AI_META.id)
+  })
+
+  // Revalidate on activation and focus; navigation callbacks may change on SPA renders.
   useEffect(() => {
-    if (!agentFromQuery) return
-    if (activeAgent?.identifier === agentFromQuery) return
+    if (!agentId) return
 
     let cancelled = false
-    ;(async () => {
+    const refresh = async () => {
       try {
-        const agent = await fetchAgent(agentFromQuery)
+        const agent = await refreshAgent(agentId)
         if (cancelled) return
-        upsertLocalAgent(agent)
         setSelectedAgentId(agent.id)
-        setActiveAgent(toActiveCommunityAgent(agent))
       } catch (error) {
         console.error('[chat] fetchAgent failed', error)
-        if (cancelled) return
-        const fallback = DEFAULT_PURE_AI_META
-        setSelectedAgentId(fallback.id)
-        setActiveAgent(toActiveCommunityAgent(fallback))
+        if (cancelled || !(error instanceof AgentRequestError) || error.status !== 404) return
+        handleUnavailableAgent()
       }
-    })()
+    }
+    refresh()
+    window.addEventListener('focus', refresh)
 
     return () => {
       cancelled = true
+      window.removeEventListener('focus', refresh)
     }
-  }, [activeAgent?.identifier, agentFromQuery, setActiveAgent, setSelectedAgentId, upsertLocalAgent])
+  }, [activeTopicId, agentId, refreshAgent, setSelectedAgentId, userId])
 
   useEffect(() => {
     fetchAgentsList()
@@ -359,7 +369,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
   const handleAgentSelect = useCallback(
     (agent: AgentListItem) => {
       setSelectedAgentId(agent.id)
-      setActiveAgent(toActiveCommunityAgent(agent))
+      refreshAgent(agent.id).catch(() => toast.error('刷新助理配置失败'))
       if (agent.id === agentId && activeTopicId === null) return
       if (agent.id !== agentId) {
         setTopics([])
@@ -367,7 +377,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
       }
       pushChatHref(agent.id)
     },
-    [activeTopicId, agentId, pushChatHref, setActiveAgent, setSelectedAgentId]
+    [activeTopicId, agentId, pushChatHref, refreshAgent, setSelectedAgentId]
   )
 
   const handleSelectTopic = useCallback(

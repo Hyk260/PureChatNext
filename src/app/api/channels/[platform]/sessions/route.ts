@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { AgentModel } from '@pure/database/models/agent'
+import { AgentService } from '@/server/agents/service'
 import { ChannelBindingModel } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
@@ -36,7 +36,7 @@ export const GET = withAuth<{ platform: string }>(async (_request, { params, use
   for (const session of sessions) {
     if (session.activeAgentId) agentIds.add(session.activeAgentId)
   }
-  const agentModel = new AgentModel(userId)
+  const agentModel = new AgentService(userId)
   const agentTitles = new Map<string, string>()
   await Promise.all(
     [...agentIds].map(async (id) => {

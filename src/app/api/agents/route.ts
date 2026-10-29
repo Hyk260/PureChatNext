@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { AgentModel } from '@pure/database/models/agent'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
+import { AgentConfigurationError, AgentService } from '@/server/agents/service'
 
 const createSchema = z.object({
   avatar: z.string().optional(),
@@ -17,7 +17,7 @@ const createSchema = z.object({
   provider: z.string().optional(),
   sort: z.number().int().optional(),
   systemRole: z.string().optional(),
-  title: z.string().min(1),
+  title: z.string().min(1).optional(),
 })
 
 /**
@@ -26,8 +26,8 @@ const createSchema = z.object({
  */
 export const GET = withAuth(async (_request, { userId }) => {
   try {
-    const items = await new AgentModel(userId).listVisible()
-    return NextResponse.json(items)
+    const items = await new AgentService(userId).listVisible()
+    return NextResponse.json(items, { headers: { 'Cache-Control': 'private, no-store' } })
   } catch (error) {
     console.error('[api/agents] GET failed:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
@@ -37,13 +37,21 @@ export const GET = withAuth(async (_request, { userId }) => {
 /**
  * POST /api/agents
  * 创建 Agent
- * @param request - JSON body（title 必填，其余可选）
+ * @param request - 社区助理仅传 marketIdentifier；自定义助理 title 必填
  */
 export const POST = withAuth(async (request, { userId }) => {
   const body = await request.json()
   const parsed = createSchema.safeParse(body)
   if (!parsed.success) return jsonError(parsed.error.message)
 
-  const item = await new AgentModel(userId).create(parsed.data)
-  return NextResponse.json(item)
+  const { marketIdentifier, title, ...input } = parsed.data
+  const service = new AgentService(userId)
+  try {
+    if (marketIdentifier) return NextResponse.json(await service.install(marketIdentifier))
+    if (!title) return jsonError('title is required')
+    return NextResponse.json(await service.create({ ...input, title }))
+  } catch (error) {
+    if (error instanceof AgentConfigurationError) return jsonError(error.message, error.status)
+    throw error
+  }
 })

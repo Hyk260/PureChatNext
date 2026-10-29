@@ -9,19 +9,41 @@ vi.mock('@/server/purechat', async () => ({
   ...(await import('@/server/purechat/period')),
 }))
 
-const { assertCanChat, chargeChatUsage, createModel, createOpenAI, generateText, getAuthenticatedUserId, streamText } =
-  vi.hoisted(() => {
-    const modelFactory = vi.fn((modelId: string) => ({ modelId, provider: 'openai.responses' }))
-    return {
-      assertCanChat: vi.fn(),
-      chargeChatUsage: vi.fn(),
-      createModel: modelFactory,
-      createOpenAI: vi.fn(() => modelFactory),
-      generateText: vi.fn(),
-      getAuthenticatedUserId: vi.fn().mockResolvedValue('user-1'),
-      streamText: vi.fn(),
-    }
-  })
+const {
+  assertCanChat,
+  chargeChatUsage,
+  createModel,
+  createOpenAI,
+  generateText,
+  getAuthenticatedUserId,
+  streamText,
+  findAgent,
+  findTopic,
+} = vi.hoisted(() => {
+  const modelFactory = vi.fn((modelId: string) => ({ modelId, provider: 'openai.responses' }))
+  return {
+    assertCanChat: vi.fn(),
+    chargeChatUsage: vi.fn(),
+    createModel: modelFactory,
+    createOpenAI: vi.fn(() => modelFactory),
+    generateText: vi.fn(),
+    findAgent: vi.fn(),
+    findTopic: vi.fn(),
+    getAuthenticatedUserId: vi.fn().mockResolvedValue('user-1'),
+    streamText: vi.fn(),
+  }
+})
+
+vi.mock('@pure/database/models/agent', () => ({
+  AgentModel: class {
+    findVisibleById = findAgent
+  },
+}))
+vi.mock('@pure/database/models/chatTopic', () => ({
+  ChatTopicModel: class {
+    findById = findTopic
+  },
+}))
 
 vi.mock('@pure/database/models/webSearchSettings', () => ({
   WebSearchSettingsModel: class {
@@ -118,10 +140,47 @@ describe('POST /api/chat PureChat model availability', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     getAuthenticatedUserId.mockResolvedValue('user-1')
+    findAgent.mockResolvedValue({ id: 'owned-agent', systemRole: 'latest server prompt' })
+    findTopic.mockResolvedValue({ id: 'owned-topic', agentId: 'owned-agent' })
     assertCanChat.mockResolvedValue(undefined)
     chargeChatUsage.mockResolvedValue(undefined)
     generateText.mockReset()
     streamText.mockReturnValue({ stream: new ReadableStream() })
+  })
+
+  it('resolves server-side agent instructions for new and legacy clients instead of trusting cached prompts', async () => {
+    for (const reference of [{ agentId: 'owned-agent' }, { topicId: 'owned-topic' }]) {
+      const response = await POST(
+        new Request('http://localhost/api/chat', {
+          body: JSON.stringify({
+            ...reference,
+            messages: [],
+            model: 'gpt-5.2',
+            provider: 'purechat',
+            system: 'stale client prompt',
+          }),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+        })
+      )
+      expect(response.status).toBe(200)
+      const instructions = streamText.mock.lastCall![0].instructions
+      expect(instructions).toContain('latest server prompt')
+      expect(instructions).not.toContain('stale client prompt')
+    }
+  })
+
+  it('rejects an inaccessible agent before contacting the model', async () => {
+    findAgent.mockResolvedValue(undefined)
+    const response = await POST(
+      new Request('http://localhost/api/chat', {
+        body: JSON.stringify({ agentId: 'not-owned', messages: [], model: 'gpt-5.2', provider: 'purechat' }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+    )
+    expect(response.status).toBe(404)
+    expect(streamText).not.toHaveBeenCalled()
   })
 
   it('rejects a disabled free-tier model before creating the Gateway model', async () => {

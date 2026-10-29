@@ -19,6 +19,7 @@ import { getDesktopApi } from '@/types/desktop'
 import type { DesktopLocalToolRequest } from '@/types/desktop'
 
 export type ChatRequestBody = {
+  agentId?: string
   advancedSettings?: ChatAdvancedSettings
   modelContextWindow?: number
   model: string

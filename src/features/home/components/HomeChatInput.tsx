@@ -19,7 +19,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatPermissionMode } from '@pure/types'
 
 import mechaCat from '@/assets/mascots/purechat-mecha-cat.png'
-import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
+import { PURE_AI_AGENT_ID } from '@/const/home/agents'
 import { CHAT_ATTACHMENT_ACCEPT, validateChatAttachments } from '@/features/chat/attachmentRules'
 import ComposerImageAttachment from '@/features/chat/ComposerImageAttachment'
 import {
@@ -36,7 +36,6 @@ import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
 import { useImeEnterGuard } from '@/features/chat/useImeEnterGuard'
 import HomeAgentSelect from '@/features/home/components/HomeAgentSelect'
 import HomeProjectBar from '@/features/home/components/HomeProjectBar'
-import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { trackAcquisitionEvent } from '@/libs/analytics/acquisition'
@@ -176,12 +175,9 @@ const HomeChatInput = memo(() => {
   const isDesktop = Boolean(getDesktopApi())
   const { onCompositionEnd, onCompositionStart, shouldIgnoreEnter } = useImeEnterGuard()
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
-  const activeAgent = useHomeStore((s) => s.activeAgent)
-  const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
   const permissionMode = useChatUiStore((s) => s.permissionMode)
   const setPermissionMode = useChatUiStore((s) => s.setPermissionMode)
 
-  const agents = useAgentsStore((s) => s.agents)
   const fetchAgentsList = useAgentsStore((s) => s.fetchAgents)
   const canSend = Boolean(input.trim() || files.length > 0) && !sending
 
@@ -277,15 +273,6 @@ const HomeChatInput = memo(() => {
 
     try {
       const agentId = selectedAgentId || PURE_AI_AGENT_ID
-      const listed = agents.find((agent) => agent.id === agentId)
-
-      if (listed) {
-        setActiveAgent(toActiveCommunityAgent(listed))
-      } else if (activeAgent?.identifier !== agentId) {
-        const fallback = agents[0] ?? DEFAULT_PURE_AI_META
-        setActiveAgent(toActiveCommunityAgent(fallback))
-      }
-
       setPendingChatText(text)
       setPendingChatFiles(files)
       if (isDesktop) {

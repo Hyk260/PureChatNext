@@ -4,7 +4,7 @@ import { getErrorMessage } from '@pure/utils/error'
 import { MessageItemType, WechatApiClient, WechatUploadMediaType } from '@pure/chat-adapter/wechat'
 import debug from 'debug'
 
-import { AgentModel } from '@pure/database/models/agent'
+import { AgentService } from '@/server/agents/service'
 import { ChannelBindingModel } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
@@ -61,7 +61,7 @@ async function handleCommand(event: ChannelEventItem): Promise<string> {
       },
       getCurrentAgentId: async () => session.activeAgentId || binding.agentId,
       listAgents: async () => {
-        const agents = await new AgentModel(binding.userId).listVisible()
+        const agents = await new AgentService(binding.userId).listVisible()
         return agents.map((agent) => ({
           id: agent.id,
           openingMessage: agent.openingMessage,
@@ -216,7 +216,7 @@ async function sendResponse(event: ChannelEventItem, owner: string, responseText
   let outboundText = responseText
   // 首条出站时将欢迎语拼入同一条回复；iLink 无法在绑定时主动推送。
   if (event.sentChunkCount === 0 && binding.pendingWelcome) {
-    const agent = await new AgentModel(binding.userId).findVisibleById(binding.agentId)
+    const agent = await new AgentService(binding.userId).findVisibleById(binding.agentId)
     outboundText = await applyChannelFirstBindWelcome({
       agentTitle: agent?.title ?? '助手',
       bindingId: binding.id,

@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { AgentDeleteError, AgentModel, AgentUpdateError } from '@pure/database/models/agent'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
+import { AgentConfigurationError, AgentService } from '@/server/agents/service'
 
 const updateSchema = z.object({
   avatar: z.string().optional(),
@@ -26,10 +27,10 @@ const updateSchema = z.object({
  */
 export const GET = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
-  const item = await new AgentModel(userId).findVisibleById(id)
+  const item = await new AgentService(userId).findVisibleById(id)
   if (!item) return jsonError('Agent not found', 404)
 
-  return NextResponse.json(item)
+  return NextResponse.json(item, { headers: { 'Cache-Control': 'private, no-store' } })
 })
 
 /**
@@ -44,11 +45,12 @@ export const PATCH = withAuth(async (request, { params, userId }) => {
   if (!parsed.success) return jsonError(parsed.error.message)
 
   try {
-    const item = await new AgentModel(userId).update(id, parsed.data)
+    const item = await new AgentService(userId).update(id, parsed.data)
     if (!item) return jsonError('Agent not found', 404)
 
     return NextResponse.json(item)
   } catch (error) {
+    if (error instanceof AgentConfigurationError) return jsonError(error.message, error.status)
     if (error instanceof AgentUpdateError) {
       return jsonError(error.message, error.code === 'builtin' ? 403 : 404)
     }

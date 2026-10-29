@@ -6,7 +6,7 @@ import type { ModelMessage } from 'ai'
 import type { Message, Thread } from 'chat'
 import debug from 'debug'
 
-import { AgentModel } from '@pure/database/models/agent'
+import { AgentService } from '@/server/agents/service'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { chunkQQTextLimited } from '@pure/utils/qqText'
@@ -90,7 +90,7 @@ async function finalizeQQOutbound(params: { agentId: string; reply: string; user
   const bindingModel = new ChannelBindingModel()
   const binding = await bindingModel.findByUserAndPlatform(params.userId, QQ_PLATFORM)
   if (!binding) return params.reply
-  const agent = await new AgentModel(params.userId).findVisibleById(params.agentId)
+  const agent = await new AgentService(params.userId).findVisibleById(params.agentId)
   return applyChannelFirstBindWelcome({
     agentTitle: agent?.title ?? '助手',
     bindingId: binding.id,

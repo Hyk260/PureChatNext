@@ -8,17 +8,12 @@ import { lazy, memo, Suspense, useEffect, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'
 import { generateAgentProfile } from '@/features/home/agentApi'
+import { padOpeningQuestions, profileFormValues } from './agentFormValues'
+import type { AgentFormValues } from './agentFormValues'
+
+export type { AgentFormValues }
 
 const EmojiPicker = lazy(() => import('@pure/ui/EmojiPicker'))
-
-export type AgentFormValues = {
-  avatar: string
-  description: string
-  openingMessage: string
-  openingQuestions: string[]
-  systemRole: string
-  title: string
-}
 
 interface AgentFormModalProps {
   agent?: AgentListItem | null
@@ -28,27 +23,18 @@ interface AgentFormModalProps {
   open: boolean
 }
 
-const OPENING_QUESTION_COUNT = 3
-
-const padOpeningQuestions = (questions?: string[] | null) => {
-  const cleaned = (questions ?? []).map((question) => question.trim()).filter(Boolean).slice(0, OPENING_QUESTION_COUNT)
-  return [...cleaned, ...Array.from({ length: OPENING_QUESTION_COUNT - cleaned.length }, () => '')]
-}
-
-const emptyValues: AgentFormValues = {
-  avatar: '🤖',
-  description: '',
-  openingMessage: '',
-  openingQuestions: padOpeningQuestions(),
-  systemRole: '',
-  title: '',
-}
+const emptyValues = profileFormValues()
 
 const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCancel, onSubmit, open }) => {
   const [values, setValues] = useState<AgentFormValues>(emptyValues)
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const isEdit = Boolean(agent)
+  const isCommunity = Boolean(agent?.marketIdentifier)
+  const editTitle = isEdit ? '编辑助理' : '新建助理'
+  const editOkText = isEdit ? '保存' : '创建'
+  const modalTitle = isCommunity ? '另存为自定义助理' : editTitle
+  const okText = isCommunity ? '另存' : editOkText
   const canGenerate = values.description.trim().length > 0
 
   const handleUpload = (file: File) => {
@@ -69,14 +55,7 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
     setUploading(false)
     setGenerating(false)
     if (agent) {
-      setValues({
-        avatar: agent.avatar || '🤖',
-        description: agent.description ?? '',
-        openingMessage: agent.openingMessage ?? '',
-        openingQuestions: padOpeningQuestions(agent.openingQuestions),
-        systemRole: agent.systemRole ?? '',
-        title: agent.title,
-      })
+      setValues(profileFormValues(agent))
     } else {
       setValues(emptyValues)
     }
@@ -112,11 +91,16 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
     })
   }
 
+  const handleLoadSavedConfig = () => {
+    if (agent?.savedConfig) setValues(profileFormValues(agent.savedConfig))
+  }
+
   const handleOk = async () => {
     const title = values.title.trim()
     if (!title) return
     await onSubmit({
       avatar: values.avatar.trim() || '🤖',
+      backgroundColor: values.backgroundColor,
       description: values.description.trim(),
       openingMessage: values.openingMessage.trim(),
       openingQuestions: values.openingQuestions.map((question) => question.trim()).filter(Boolean),
@@ -129,15 +113,29 @@ const AgentFormModal = memo<AgentFormModalProps>(({ agent, confirmLoading, onCan
     <Modal
       confirmLoading={confirmLoading}
       destroyOnHidden
-      okText={isEdit ? '保存' : '创建'}
+      okText={okText}
       open={open}
       cancelText='取消'
-      title={isEdit ? '编辑助理' : '新建助理'}
+      title={modalTitle}
       width={480}
       onCancel={onCancel}
       onOk={handleOk}
     >
       <Flex className='max-h-[60vh] flex-col gap-3 overflow-y-auto py-2'>
+        {isCommunity ? (
+          <Flex className='flex-col gap-2'>
+            <Text as='p' className='m-0 text-sm text-muted-foreground'>
+              {agent?.configSource === 'snapshot'
+                ? '社区来源已不可用，当前使用原有配置。保存后会创建独立的自定义助理。'
+                : '社区助理自动跟随最新配置。保存后会创建独立的自定义助理。'}
+            </Text>
+            {agent?.savedConfig ? (
+              <Button size='small' onClick={handleLoadSavedConfig}>
+                载入原有配置
+              </Button>
+            ) : null}
+          </Flex>
+        ) : null}
         <Flex className='flex-col gap-1'>
           <Text className='text-[12px]' type='secondary'>
             头像

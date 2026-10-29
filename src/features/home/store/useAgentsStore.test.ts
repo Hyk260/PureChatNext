@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DEFAULT_PURE_AI_META } from '@/const/home/agents'
 import type { AgentListItem } from '@/const/home/agents'
-import { AgentRequestError, fetchAgents } from '@/features/home/agentApi'
+import { AgentRequestError, fetchAgent, fetchAgents } from '@/features/home/agentApi'
 
 import { useAgentsStore } from './useAgentsStore'
 
@@ -10,6 +10,7 @@ vi.mock('@/features/home/agentApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/home/agentApi')>()
   return {
     ...actual,
+    fetchAgent: vi.fn(),
     fetchAgents: vi.fn(),
   }
 })
@@ -27,6 +28,7 @@ const customAgent: AgentListItem = {
 describe('useAgentsStore', () => {
   beforeEach(() => {
     vi.mocked(fetchAgents).mockReset()
+    vi.mocked(fetchAgent).mockReset()
     vi.spyOn(console, 'error').mockImplementation(() => {})
     useAgentsStore.getState().reset()
   })
@@ -95,5 +97,41 @@ describe('useAgentsStore', () => {
 
     expect(useAgentsStore.getState().agents).toEqual([DEFAULT_PURE_AI_META])
     expect(useAgentsStore.getState().loaded).toBe(false)
+  })
+
+  it('revalidates loaded assistants and deduplicates concurrent activation requests', async () => {
+    useAgentsStore.setState({ agents: [customAgent], loaded: true })
+    const updated = { ...customAgent, openingMessage: 'new welcome', systemRole: 'latest prompt' }
+    vi.mocked(fetchAgent).mockResolvedValue(updated)
+    await Promise.all([
+      useAgentsStore.getState().refreshAgent(customAgent.id),
+      useAgentsStore.getState().refreshAgent(customAgent.id),
+    ])
+    expect(fetchAgent).toHaveBeenCalledTimes(1)
+    expect(useAgentsStore.getState().findById(customAgent.id)).toEqual(updated)
+    await useAgentsStore.getState().refreshAgent(customAgent.id)
+    expect(fetchAgent).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not restore assistant details after the account cache was reset', async () => {
+    let resolveFetch!: (agent: AgentListItem) => void
+    vi.mocked(fetchAgent).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve
+        })
+    )
+    const pending = useAgentsStore.getState().refreshAgent(customAgent.id)
+    useAgentsStore.getState().reset()
+    resolveFetch(customAgent)
+    await pending
+    expect(useAgentsStore.getState().findById(customAgent.id)).toBeUndefined()
+  })
+
+  it('clears user data when detail revalidation loses authentication', async () => {
+    useAgentsStore.setState({ agents: [customAgent], loaded: true })
+    vi.mocked(fetchAgent).mockRejectedValue(new AgentRequestError('fetchAgent', 401))
+    await expect(useAgentsStore.getState().refreshAgent(customAgent.id)).rejects.toMatchObject({ status: 401 })
+    expect(useAgentsStore.getState().agents).toEqual([DEFAULT_PURE_AI_META])
   })
 })

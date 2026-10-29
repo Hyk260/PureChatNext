@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { AgentModel } from '@pure/database/models/agent'
+import { AgentService } from '@/server/agents/service'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { gatewayEnv } from '@/envs/gateway'
@@ -26,7 +26,7 @@ export const GET = withAdmin(async (_request, { userId }) => {
     }
   }
 
-  const agentModel = new AgentModel(userId)
+  const agentModel = new AgentService(userId)
   const agentIds = new Set<string>()
   if (myBinding?.agentId) agentIds.add(myBinding.agentId)
   for (const session of sessions) {

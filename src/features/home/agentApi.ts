@@ -1,4 +1,4 @@
-import type { AgentListItem } from '@/const/home/agents'
+import type { AgentConfigSource, AgentListItem, AgentProfile } from '@/const/home/agents'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
 export type ApiAgent = {
@@ -8,8 +8,12 @@ export type ApiAgent = {
   id: string
   isBuiltin: boolean
   marketIdentifier?: string | null
+  configSource?: AgentConfigSource
+  definitionRevision?: string | null
+  savedConfig?: AgentProfile | null
   model?: string | null
   provider?: string | null
+  params?: Record<string, unknown> | null
   openingMessage?: string | null
   openingQuestions?: string[] | null
   pinned: boolean | null
@@ -27,6 +31,9 @@ export type AgentCreateBody = {
   openingQuestions?: string[] | null
   systemRole?: string
   title: string
+  model?: string
+  provider?: string
+  params?: Record<string, unknown>
 }
 
 export type AgentUpdateBody = Partial<AgentCreateBody> & {
@@ -52,8 +59,12 @@ const toListItem = (a: ApiAgent): AgentListItem => ({
   id: a.id,
   isBuiltin: a.isBuiltin,
   marketIdentifier: a.marketIdentifier ?? null,
+  configSource: a.configSource,
+  definitionRevision: a.definitionRevision,
+  savedConfig: a.savedConfig,
   model: a.model,
   provider: a.provider,
+  params: a.params,
   openingMessage: a.openingMessage,
   openingQuestions: a.openingQuestions,
   pinned: a.pinned,
@@ -73,21 +84,27 @@ export class AgentRequestError extends Error {
 }
 
 export const fetchAgents = async (): Promise<AgentListItem[]> => {
-  const res = await apiFetch('/api/agents')
+  const res = await apiFetch('/api/agents', { cache: 'no-store' })
   if (!res.ok) throw new AgentRequestError('fetchAgents', res.status)
   const items = (await res.json()) as ApiAgent[]
   return items.map(toListItem)
 }
 
 export const fetchAgent = async (id: string): Promise<AgentListItem> => {
-  const res = await apiFetch(`/api/agents/${encodeURIComponent(id)}`)
-  if (!res.ok) throw new Error(`fetchAgent failed: ${res.status}`)
+  const res = await apiFetch(`/api/agents/${encodeURIComponent(id)}`, { cache: 'no-store' })
+  if (!res.ok) throw new AgentRequestError('fetchAgent', res.status)
   return toListItem((await res.json()) as ApiAgent)
 }
 
 export const createAgent = async (body: AgentCreateBody): Promise<AgentListItem> => {
   const res = await apiFetch('/api/agents', jsonInit(body, { method: 'POST' }))
   if (!res.ok) throw new Error(`createAgent failed: ${res.status}`)
+  return toListItem((await res.json()) as ApiAgent)
+}
+
+export const installCommunityAgent = async (identifier: string): Promise<AgentListItem> => {
+  const res = await apiFetch('/api/agents', jsonInit({ marketIdentifier: identifier }, { method: 'POST' }))
+  if (!res.ok) throw new AgentRequestError('installCommunityAgent', res.status)
   return toListItem((await res.json()) as ApiAgent)
 }
 

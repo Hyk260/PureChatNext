@@ -80,7 +80,6 @@ const ChatView = memo<ChatViewProps>(
     const router = useRouter()
     const selectedModel = useHomeStore((state) => state.selectedModel)
     const selectedProvider = useHomeStore((state) => state.selectedProvider)
-    const activeAgent = useHomeStore((state) => state.activeAgent)
     const advancedSettings = useChatUiStore(
       (state) => state.advancedSettingsByAgent[getChatSettingsKey(userId, agentId)] ?? DEFAULT_CHAT_ADVANCED_SETTINGS
     )
@@ -107,10 +106,10 @@ const ChatView = memo<ChatViewProps>(
         ...(modelContextWindow ? { modelContextWindow } : {}),
         ...(modelAbilities ? { modelAbilities } : {}),
         ...(permissionMode ? { permissionMode } : {}),
-        ...(activeAgent?.systemRole ? { system: activeAgent.systemRole } : {}),
+        agentId,
       }),
       [
-        activeAgent?.systemRole,
+        agentId,
         advancedSettings,
         modelAbilities,
         modelContextWindow,

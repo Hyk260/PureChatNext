@@ -124,15 +124,6 @@ export type DiscoverAgentDetails = Pick<
 
 export type DiscoverAgentSummary = Omit<DiscoverAgentItem, keyof DiscoverAgentDetails>
 
-export interface ActiveCommunityAgent {
-  avatar: string
-  identifier: string
-  openingMessage?: string | null
-  openingQuestions?: string[] | null
-  systemRole: string
-  title: string
-}
-
 export interface DiscoverSkillItem {
   author: string
   category: Exclude<SkillCategory, SkillCategory.All>

@@ -1,22 +1,17 @@
 'use client'
 
-
 import { toast } from '@lobehub/ui'
 import { useCallback, useState } from 'react'
 
-import { loadCommunityAgent } from '@/const/community/agentDetails'
 import type { DiscoverAgentItem, DiscoverAgentSummary } from '@/features/community/types'
-import { createAgent } from '@/features/home/agentApi'
+import { installCommunityAgent } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { useRouter } from 'next/navigation'
 
-import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
-
 export function useAddCommunityAgent() {
   const router = useRouter()
   const [adding, setAdding] = useState(false)
-  const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
   const upsertLocal = useAgentsStore((s) => s.upsertLocal)
 
@@ -26,20 +21,9 @@ export function useAddCommunityAgent() {
       setAdding(true)
 
       try {
-        const detail = await loadCommunityAgent(item)
-        const agent = await createAgent({
-          avatar: item.avatar,
-          backgroundColor: item.backgroundColor,
-          description: item.description,
-          marketIdentifier: item.identifier,
-          openingMessage: detail.openingMessage ?? null,
-          openingQuestions: detail.openingQuestions ?? [],
-          systemRole: detail.systemRole,
-          title: item.title,
-        })
+        const agent = await installCommunityAgent(item.identifier)
         upsertLocal(agent)
         setSelectedAgentId(agent.id)
-        setActiveAgent(toActiveCommunityAgent(agent))
         toast.success(`已添加「${agent.title}」到助理列表`)
         router.push(`/chat?agent=${encodeURIComponent(agent.id)}`)
       } catch (error) {
@@ -49,7 +33,7 @@ export function useAddCommunityAgent() {
         setAdding(false)
       }
     },
-    [adding, router, setActiveAgent, setSelectedAgentId, upsertLocal]
+    [adding, router, setSelectedAgentId, upsertLocal]
   )
 
   return { addAgent, adding }

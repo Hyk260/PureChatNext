@@ -3041,6 +3041,23 @@ export const COMMUNITY_AGENTS_DATA = [
     "tokenUsage": 106
   },
   {
+    "author": "PureChatNext",
+    "avatar": "🐳",
+    "category": "entertainment",
+    "createdAt": "2026-10-29",
+    "description": "以 DeepSeek 小鲸鱼网络形象为灵感的虚拟 AI 群友，嘴硬爱接梗，也能认真倾听。",
+    "identifier": "purechat-xiaojingyu",
+    "title": "小鲸鱼",
+    "tags": [
+      "轻松聊天",
+      "虚拟角色",
+      "网络梗",
+      "陪伴"
+    ],
+    "knowledgeCount": 0,
+    "pluginCount": 0
+  },
+  {
     "author": "renhai-lab",
     "avatar": "😋",
     "category": "entertainment",

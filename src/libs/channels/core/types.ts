@@ -44,6 +44,7 @@ export type ChannelAgentResponse = {
   durationMs: number
   diagnostics: {
     agentId: string
+    agentDefinitionRevision?: string | null
     contextMessageCount: number
     finish?: string
     steps: Array<{ finish: string; resultCount: number; step: number; tools: string[] }>

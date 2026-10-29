@@ -115,15 +115,15 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
           onPin(agent, !isPinned)
         },
       },
-      // {
-      //   icon: <Icon icon={Pencil} />,
-      //   key: 'rename',
-      //   label: '重命名',
-      //   onClick: (info: MenuInfo) => {
-      //     stopMenuEvent(info)
-      //     onEdit(agent)
-      //   },
-      // },
+      {
+        icon: <Icon icon={Pencil} />,
+        key: 'edit',
+        label: agent.marketIdentifier ? '另存为自定义助理' : '编辑',
+        onClick: (info: MenuInfo) => {
+          stopMenuEvent(info)
+          onEdit(agent)
+        },
+      },
       { type: 'divider' },
       {
         danger: true,
@@ -143,7 +143,7 @@ const AgentItem = memo<AgentItemProps>(({ agent, onDelete, onEdit, onPin, onSele
         },
       },
     ],
-    [agent, handleConfirmDelete, isPinned, onPin]
+    [agent, handleConfirmDelete, isPinned, onEdit, onPin]
   )
 
   return (

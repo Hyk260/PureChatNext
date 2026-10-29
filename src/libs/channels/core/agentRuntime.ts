@@ -3,7 +3,7 @@ import type { LanguageModel, ModelMessage } from 'ai'
 import debug from 'debug'
 
 import { PURECHAT_PROVIDER_ID } from '@pure/const'
-import { AgentModel } from '@pure/database/models/agent'
+import { AgentService } from '@/server/agents/service'
 import type { CreditUsageTrigger } from '@pure/database/schemas'
 import { createProviderLanguageModel, isSupportedProviderId } from '@/libs/ai-providers/resolveClient'
 import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
@@ -149,7 +149,7 @@ async function settlePureChatUsage(params: {
 
 export class ChannelAgentRuntime {
   async generate(params: ChannelAgentRequest): Promise<ChannelAgentResponse> {
-    const agent = await new AgentModel(params.userId).findVisibleById(params.agentId)
+    const agent = await new AgentService(params.userId).findVisibleById(params.agentId)
     if (!agent) throw new Error(`Agent not found: ${params.agentId}`)
 
     const { model: modelId, provider } = resolveChannelModelConfig({
@@ -251,6 +251,7 @@ export class ChannelAgentRuntime {
       artifacts: [],
       diagnostics: {
         agentId: agent.id,
+        agentDefinitionRevision: agent.definitionRevision,
         contextMessageCount: generationMessages(params, params.generation).length,
         finish: result.finishReason,
         steps,

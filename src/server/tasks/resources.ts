@@ -1,5 +1,5 @@
 import { PURECHAT_PROVIDER_ID, isValidProviderId } from '@pure/const'
-import { AgentModel } from '@pure/database/models/agent'
+import { AgentService } from '@/server/agents/service'
 import { getAiModel, getEnabledPureChatModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import type { TaskInput, TaskRunSnapshot } from '@pure/types'
@@ -27,7 +27,7 @@ export async function validateTaskModel(userId: string, provider: string, model:
 }
 
 export async function validateTaskResources(userId: string, input: TaskInput) {
-  const agent = await new AgentModel(userId).findVisibleById(input.agentId)
+  const agent = await new AgentService(userId).findVisibleById(input.agentId)
   if (!agent) throw new TaskServiceError('执行助理不存在或无权使用', 404)
   await validateTaskModel(userId, input.provider, input.model)
   if (input.channels.length) validateTaskNotificationUrl(appEnv.APP_URL)
@@ -36,7 +36,12 @@ export async function validateTaskResources(userId: string, input: TaskInput) {
 
 export async function prepareTaskSnapshot(userId: string, snapshot: TaskRunSnapshot): Promise<TaskRunSnapshot> {
   if (snapshot.systemRole !== undefined) return snapshot
-  const agent = await new AgentModel(userId).findVisibleById(snapshot.agentId)
+  const agent = await new AgentService(userId).findVisibleById(snapshot.agentId)
   if (!agent) throw new TaskServiceError('执行助理已被删除或不可用')
-  return { ...snapshot, agentTitle: agent.title, systemRole: agent.systemRole ?? '' }
+  return {
+    ...snapshot,
+    agentTitle: agent.title,
+    agentDefinitionRevision: agent.definitionRevision ?? undefined,
+    systemRole: agent.systemRole ?? '',
+  }
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { AgentModel } from '@pure/database/models/agent'
+import { AgentService } from '@/server/agents/service'
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { withAdmin } from '@/libs/auth/get-session-user'
@@ -31,7 +31,7 @@ export const GET = withAdmin(async (_request, { userId }) => {
   const bindingIds = [...new Set(sessions.map(({ bindingId }) => bindingId))]
   const failedEventCounts = await eventModel.countFailedByBindings(bindingIds)
   const gatewaySupported = isWechatGatewaySupported()
-  const agentModel = new AgentModel(userId)
+  const agentModel = new AgentService(userId)
   const agentIds = new Set<string>()
   if (myBinding?.agentId) agentIds.add(myBinding.agentId)
   for (const session of sessions) {

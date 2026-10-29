@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 
 import { NextResponse } from 'next/server'
 
-import { AgentModel } from '@pure/database/models/agent'
+import { AgentService } from '@/server/agents/service'
 import { ChannelBindingModel, WECHAT_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
@@ -117,7 +117,7 @@ export const GET = withAdmin<{ sessionId: string }>(async (request, { params, us
 
   const { events, session } = result
   const effectiveAgentId = session.activeAgentId || sessionBinding.agentId
-  const agent = await new AgentModel(userId).findVisibleById(effectiveAgentId)
+  const agent = await new AgentService(userId).findVisibleById(effectiveAgentId)
   const isOwnBinding = Boolean(myBinding && session.bindingId === myBinding.id)
   const ownerExternalUserId = myBinding ? resolveOwnerExternalUserId(myBinding.credentials) : ''
 

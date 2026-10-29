@@ -27,6 +27,7 @@ export type TaskRunStatus = 'pending' | 'running' | 'retry' | 'succeeded' | 'fai
 export type TaskDeliveryStatus = 'pending' | 'sending' | 'retry' | 'accepted' | 'failed' | 'action_required' | 'unknown'
 
 export type TaskRunSnapshot = TaskInput & {
+  agentDefinitionRevision?: string
   agentTitle?: string
   systemRole?: string
 }

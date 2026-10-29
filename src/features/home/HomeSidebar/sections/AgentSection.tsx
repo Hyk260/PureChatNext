@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { memo, useCallback, useEffect, useState } from 'react'
 
 import type { AgentListItem } from '@/const/home/agents'
-import { toActiveCommunityAgent } from '@/features/community/toActiveCommunityAgent'
 import { createAgent, deleteAgent, updateAgent } from '@/features/home/agentApi'
 import AgentItem from '@/features/home/HomeSidebar/components/AgentItem'
 import SectionActions from '@/features/home/HomeSidebar/components/SectionActions'
@@ -53,11 +52,11 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
   const loaded = useAgentsStore((s) => s.loaded)
   const loading = useAgentsStore((s) => s.loading)
   const upsertLocal = useAgentsStore((s) => s.upsertLocal)
+  const refreshAgent = useAgentsStore((s) => s.refreshAgent)
   const removeLocal = useAgentsStore((s) => s.removeLocal)
 
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
-  const setActiveAgent = useHomeStore((s) => s.setActiveAgent)
 
   useEffect(() => {
     fetchAgentsList()
@@ -66,10 +65,10 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
   const applyAgent = useCallback(
     (agent: AgentListItem) => {
       setSelectedAgentId(agent.id)
-      setActiveAgent(toActiveCommunityAgent(agent))
+      refreshAgent(agent.id).catch(() => toast.error('刷新助理配置失败'))
       router.push(`/chat?agent=${encodeURIComponent(agent.id)}`)
     },
-    [router, setActiveAgent, setSelectedAgentId]
+    [refreshAgent, router, setSelectedAgentId]
   )
 
   const handleCreate = async (values: AgentFormValues) => {
@@ -92,18 +91,31 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
     if (!editing) return
     setSaving(true)
     try {
-      const agent = await updateAgent(editing.id, values)
+      const agent = editing.marketIdentifier
+        ? await createAgent({
+            ...values,
+            model: editing.model ?? undefined,
+            params: editing.params ?? undefined,
+            provider: editing.provider ?? undefined,
+          })
+        : await updateAgent(editing.id, values)
       upsertLocal(agent)
-      if (selectedAgentId === agent.id) {
-        setActiveAgent(toActiveCommunityAgent(agent))
-      }
       setEditing(null)
-      toast.success('已保存')
+      toast.success(editing.marketIdentifier ? '已另存为自定义助理' : '已保存')
+      if (editing.marketIdentifier) applyAgent(agent)
     } catch (error) {
       console.error('[agents] update failed:', error)
       toast.error('保存失败')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleOpenEdit = async (agent: AgentListItem) => {
+    try {
+      setEditing(await refreshAgent(agent.id))
+    } catch {
+      toast.error('读取助理配置失败')
     }
   }
 
@@ -143,7 +155,7 @@ const AgentSection = memo<AgentSectionProps>(({ itemKey }) => {
           key={agent.id}
           agent={agent}
           onDelete={handleDelete}
-          onEdit={setEditing}
+          onEdit={handleOpenEdit}
           onPin={handlePin}
           onSelect={applyAgent}
         />

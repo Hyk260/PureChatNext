@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { AgentModel } from '@pure/database/models/agent'
+import { AgentService } from '@/server/agents/service'
 import { ChannelBindingModel } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
@@ -62,7 +62,7 @@ export const GET = withAuth<{ platform: string; sessionId: string }>(async (requ
 
   const { events, session } = result
   const agentId = session.activeAgentId || binding.agentId
-  const agent = await new AgentModel(userId).findVisibleById(agentId)
+  const agent = await new AgentService(userId).findVisibleById(agentId)
   const responseCursor = encodeWechatTimelineCursor(
     advanceWechatTimelineCursor(
       after,

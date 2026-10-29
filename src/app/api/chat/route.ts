@@ -51,6 +51,8 @@ import { safeFileName } from '@/libs/utils/safeFileName'
 import { resolveUserWebTools, WEB_FETCH_INSTRUCTION } from '@/server/search/webTools'
 
 import { createMessageMetadata } from './messageMetadata'
+import { resolveChatAgent } from '@/server/agents/chat'
+import { AgentConfigurationError } from '@/server/agents/service'
 
 export const maxDuration = 60
 
@@ -68,6 +70,7 @@ const RATE_LIMIT_PUBLIC_MESSAGE = '上游限流，请稍后重试。'
 type ChatPermissionMode = (typeof CHAT_PERMISSION_MODES)[number]
 
 type ChatRequestBody = {
+  agentId?: string
   advancedSettings?: unknown
   modelContextWindow?: unknown
   baseURL?: string
@@ -372,7 +375,8 @@ export async function POST(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse()
   }
 
-  const { baseURL, model, system, topicId } = requestBody
+  const { baseURL, model, topicId } = requestBody
+  let system = requestBody.system
   const messages = requestBody.messages
   const provider = requestBody.provider
 
@@ -417,12 +421,24 @@ export async function POST(request: Request) {
   let topicPermissionMode = requestBody.permissionMode as ChatPermissionMode | undefined
   let requestUserId: string | null = null
 
+  if (requestBody.agentId !== undefined || topicId !== undefined) {
+    requestUserId = await getAuthenticatedUserId()
+    try {
+      system = await resolveChatAgent(requestUserId, requestBody)
+    } catch (error) {
+      if (!(error instanceof AgentConfigurationError)) throw error
+      if (error.status === 401) return new ChatSDKError('unauthorized:chat', error.message).toResponse()
+      if (error.status === 404) return new ChatSDKError('not_found:chat', error.message).toResponse()
+      return new ChatSDKError('bad_request:api', error.message).toResponse()
+    }
+  }
+
   if (desktopClient) {
     if (!toolsEnv.TOOL_APPROVAL_SECRET) {
       return new ChatSDKError('bad_request:api', 'Desktop approval secret is not configured').toResponse()
     }
     if (!topicId) return new ChatSDKError('bad_request:api', 'Desktop chat requires topicId').toResponse()
-    requestUserId = await getAuthenticatedUserId()
+    requestUserId ??= await getAuthenticatedUserId()
     if (!requestUserId) return new ChatSDKError('unauthorized:chat').toResponse()
     const { ChatTopicModel } = await import('@pure/database/models/chatTopic')
     const topic = await new ChatTopicModel(requestUserId).findById(topicId)
@@ -503,7 +519,7 @@ export async function POST(request: Request) {
       return new ChatSDKError('bad_request:api', 'PureChat is disabled').toResponse()
     }
 
-    const userId = await getAuthenticatedUserId()
+    const userId = requestUserId ?? (await getAuthenticatedUserId())
     if (!userId) {
       return new ChatSDKError('unauthorized:chat').toResponse()
     }

@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => {
     desktopApi,
     permissionModeInitialized: true,
     fetchAgents: vi.fn(),
+    refreshAgent: vi.fn(async (id: string) => ({ id })),
     fetchMessages: vi.fn(),
     fetchTopics: vi.fn(),
     navigation,
@@ -203,20 +204,21 @@ vi.mock('@/features/chat/store/useChatUiStore', () => ({
     }),
 }))
 
-vi.mock('@/features/home/agentApi', () => ({ fetchAgent: vi.fn() }))
+vi.mock('@/features/home/agentApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/home/agentApi')>()),
+  fetchAgent: vi.fn(),
+}))
 
 vi.mock('@/features/home/store/useAgentsStore', () => ({
   useAgentsStore: (selector: (state: unknown) => unknown) =>
-    selector({ agents: [], fetchAgents: mocks.fetchAgents, upsertLocal: vi.fn() }),
+    selector({ agents: [], fetchAgents: mocks.fetchAgents, refreshAgent: mocks.refreshAgent, upsertLocal: vi.fn() }),
 }))
 
 vi.mock('@/features/home/store/useHomeStore', () => {
   const state = {
-    activeAgent: { identifier: 'agt_inbox', systemRole: '', title: 'Inbox' },
     selectedAgentId: 'agt_inbox',
     selectedModel: 'test-model',
     selectedProvider: 'purechat',
-    setActiveAgent: vi.fn(),
     setSelectedAgentId: vi.fn(),
   }
   const useHomeStore = Object.assign((selector: (value: typeof state) => unknown) => selector(state), {
@@ -267,6 +269,7 @@ describe('ChatPage message loading state', () => {
     mocks.fetchMessages.mockReset().mockReturnValue(new Promise(() => {}))
     mocks.fetchTopics.mockReset().mockResolvedValue([])
     mocks.fetchAgents.mockReset()
+    mocks.refreshAgent.mockClear()
     mocks.updateTopic.mockReset()
     mocks.sendMessage.mockReset().mockResolvedValue(undefined)
     mocks.clearChatError.mockClear()
@@ -279,6 +282,16 @@ describe('ChatPage message loading state', () => {
     setPendingTopicSend('')
     setPendingChatText('')
     setPendingChatFiles([])
+  })
+
+  it('revalidates assistant configuration on focus without refetching on unrelated renders', async () => {
+    render(<ChatPage />)
+    await act(async () => {})
+    expect(mocks.refreshAgent).toHaveBeenCalledTimes(1)
+    expect(mocks.refreshAgent).toHaveBeenCalledWith('agt_inbox')
+    fireEvent(window, new Event('focus'))
+    await act(async () => {})
+    expect(mocks.refreshAgent).toHaveBeenCalledTimes(2)
   })
 
   it('opens a newly-created topic without showing a message skeleton', async () => {

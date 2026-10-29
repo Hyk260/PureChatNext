@@ -3,7 +3,7 @@ import { create } from 'zustand'
 
 import { DEFAULT_PURE_AI_META, PURE_AI_AGENT_ID } from '@/const/home/agents'
 import type { AgentListItem } from '@/const/home/agents'
-import { AgentRequestError, fetchAgents } from '@/features/home/agentApi'
+import { AgentRequestError, fetchAgent, fetchAgents } from '@/features/home/agentApi'
 
 type FetchAgentsOptions = {
   /** Bypass cache and in-flight reuse (e.g. after pin/unpin). */
@@ -16,6 +16,7 @@ interface AgentsStoreState {
   loaded: boolean
   loading: boolean
   fetchAgents: (options?: FetchAgentsOptions) => Promise<AgentListItem[]>
+  refreshAgent: (id: string) => Promise<AgentListItem>
   findById: (id: string) => AgentListItem | undefined
   removeLocal: (id: string) => void
   reset: () => void
@@ -32,6 +33,8 @@ const createInitialAgentsState = () => ({
 /** Share one list request across Strict Mode remounts / multi-mount callers. */
 let agentsInflight: Promise<AgentListItem[]> | null = null
 let agentsFetchGeneration = 0
+let agentsSessionGeneration = 0
+const detailRequests = new Map<string, Promise<AgentListItem>>()
 
 function isUnauthorizedAgentError(error: unknown): error is AgentRequestError {
   return error instanceof AgentRequestError && error.status === 401
@@ -79,6 +82,25 @@ export const useAgentsStore = create<AgentsStoreState>((set, get) => ({
 
   findById: (id) => get().agents.find((agent) => agent.id === id),
 
+  refreshAgent: async (id) => {
+    const existing = detailRequests.get(id)
+    if (existing) return existing
+    const generation = agentsSessionGeneration
+    const request = fetchAgent(id).then((agent) => {
+      if (generation === agentsSessionGeneration) get().upsertLocal(agent)
+      return agent
+    })
+    detailRequests.set(id, request)
+    try {
+      return await request
+    } catch (error) {
+      if (generation === agentsSessionGeneration && isUnauthorizedAgentError(error)) get().reset()
+      throw error
+    } finally {
+      if (detailRequests.get(id) === request) detailRequests.delete(id)
+    }
+  },
+
   removeLocal: (id) => {
     set((state) => ({
       agents: state.agents.filter((agent) => agent.id !== id),
@@ -87,7 +109,9 @@ export const useAgentsStore = create<AgentsStoreState>((set, get) => ({
 
   reset: () => {
     agentsFetchGeneration += 1
+    agentsSessionGeneration += 1
     agentsInflight = null
+    detailRequests.clear()
     set(createInitialAgentsState())
   },
 

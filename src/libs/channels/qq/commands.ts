@@ -1,4 +1,4 @@
-import { AgentModel } from '@pure/database/models/agent'
+import { AgentService } from '@/server/agents/service'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import type { ChannelEventModel } from '@pure/database/models/channelEvent'
 
@@ -56,7 +56,7 @@ function createQQCommandEffects(params: {
       return binding.agentId
     },
     listAgents: async () => {
-      const agents = await new AgentModel(params.userId).listVisible()
+      const agents = await new AgentService(params.userId).listVisible()
       return agents.map((agent) => ({
         id: agent.id,
         openingMessage: agent.openingMessage,

@@ -1,6 +1,18 @@
 /** Pure AI 系统内置助理固定 id（对应 `agents.id`） */
 export const PURE_AI_AGENT_ID = 'agt_inbox'
 
+export type AgentConfigSource = 'builtin' | 'community' | 'custom' | 'snapshot'
+
+export interface AgentProfile {
+  avatar: string | null
+  backgroundColor: string | null
+  description: string | null
+  openingMessage: string | null
+  openingQuestions: string[] | null
+  systemRole: string | null
+  title: string
+}
+
 export interface AgentListItem {
   avatar: string
   backgroundColor?: string | null
@@ -8,8 +20,12 @@ export interface AgentListItem {
   id: string
   isBuiltin?: boolean
   marketIdentifier?: string | null
+  configSource?: AgentConfigSource
+  definitionRevision?: string | null
+  savedConfig?: AgentProfile | null
   model?: string | null
   provider?: string | null
+  params?: Record<string, unknown> | null
   openingMessage?: string | null
   openingQuestions?: string[] | null
   pinned?: boolean | null

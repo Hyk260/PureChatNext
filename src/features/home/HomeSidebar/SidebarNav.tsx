@@ -6,20 +6,25 @@ import { Route } from 'lucide-react'
 import { memo, useState } from 'react'
 
 import NavItem from '@/components/NavItem'
+import { isAdminRole } from '@/const/auth'
 import { HOME_TOP_NAV } from '@/const/home/nav'
 import { RouteNavContent } from '@/features/dev/RouteNavContent'
+import { useSession } from '@/libs/better-auth/client'
 import { isDev } from '@/libs/constants'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const SidebarNav = memo(() => {
   const pathname = usePathname()
+  const { data: session } = useSession()
   const [routeNavOpen, setRouteNavOpen] = useState(false)
+  const isAdmin = isAdminRole(session?.user?.role)
+  const visibleNavItems = HOME_TOP_NAV.filter((item) => item.key !== 'tasks' || isAdmin)
 
   return (
     <>
       <Flex className='flex-col gap-px px-1'>
-        {HOME_TOP_NAV.map((item) => {
+        {visibleNavItems.map((item) => {
           const active = item.href === '/' ? pathname === '/' : Boolean(item.href && pathname.startsWith(item.href))
 
           if (item.key === 'search') {

@@ -251,6 +251,21 @@ describe('WechatApiClient', () => {
   // ---------- sendItem ----------
 
   describe('sendItem', () => {
+    it('uses the caller provided stable client id and abort signal', async () => {
+      mockFetch.mockResolvedValueOnce(jsonResponse({ ret: 0 }))
+      const controller = new AbortController()
+
+      await client.sendItem('user_1', { text_item: { text: '喝水提醒' }, type: MessageItemType.TEXT }, 'ctx', {
+        clientId: 'delivery-123',
+        signal: controller.signal,
+      })
+
+      const [, init] = mockFetch.mock.calls[0]
+      const body = JSON.parse(init!.body as string)
+      expect(body.msg.client_id).toBe('delivery-123')
+      expect(init!.signal).toBe(controller.signal)
+    })
+
     it('should send a single media item with the provided MessageItem shape', async () => {
       mockFetch.mockResolvedValueOnce(jsonResponse({ ret: 0 }))
 

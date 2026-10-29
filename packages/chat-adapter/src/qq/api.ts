@@ -14,6 +14,23 @@ const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
 
 type PassiveReply = { eventId?: string; msgId?: string; msgSeq?: number }
 type RichMediaUpload = { file_info: string; ttl?: number }
+
+export type QQActiveMessageFailureKind = 'not_sent' | 'rejected' | 'unknown'
+
+/** Failure details for a C2C push that does not use passive-reply context. */
+export class QQActiveMessageError extends Error {
+  constructor(
+    message: string,
+    readonly kind: QQActiveMessageFailureKind,
+    readonly code?: number,
+    readonly statusCode?: number,
+    options?: ErrorOptions
+  ) {
+    super(message, options)
+    this.name = 'QQActiveMessageError'
+  }
+}
+
 export type RichMediaFileType = 1 | 2 | 3 | 4
 export type RichMediaSource = { fileData: string; url?: never } | { fileData?: never; url: string }
 
@@ -149,6 +166,74 @@ export class QQApiClient {
     return this.sendText(`/v2/users/${openId}/messages`, content, options)
   }
 
+  /**
+   * 向 QQ 用户发送不依赖入站消息上下文的 C2C 主动消息。
+   * 该请求不携带 `msg_id` / `event_id`，且发送接口不自动重试，避免网络结果不确定时重复推送。
+   */
+  async sendC2CActiveMessage(openId: string, content: string, signal?: AbortSignal): Promise<void> {
+    const recipient = openId.trim()
+    if (!recipient) throw new QQActiveMessageError('QQ 推送缺少 user_openid', 'not_sent', undefined, 400)
+    if (content.length > QQ_MAX_TEXT_LENGTH) {
+      throw new QQActiveMessageError(`QQ 单条消息不能超过 ${QQ_MAX_TEXT_LENGTH} 个字符`, 'not_sent', undefined, 413)
+    }
+
+    let token: string
+    try {
+      token = await this.getAccessToken()
+    } catch (error) {
+      throw new QQActiveMessageError('QQ Access Token 获取失败，消息尚未发送', 'not_sent', undefined, undefined, {
+        cause: error,
+      })
+    }
+
+    const path = `/v2/users/${encodeURIComponent(recipient)}/messages`
+    let response: Response
+    try {
+      response = await fetch(`${API_BASE_URL}${path}`, {
+        body: JSON.stringify({ content, msg_type: QQ_MSG_TYPE.TEXT }),
+        headers: {
+          Authorization: `QQBot ${token}`,
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)])
+          : AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
+    } catch (error) {
+      throw new QQActiveMessageError(
+        'QQ 主动推送请求未能确认结果，请核实是否收到后再重试',
+        'unknown',
+        undefined,
+        undefined,
+        { cause: error }
+      )
+    }
+
+    let responseText: string
+    try {
+      responseText = await response.text()
+    } catch (error) {
+      throw new QQActiveMessageError(
+        'QQ 主动推送响应未能读取，请核实是否收到后再重试',
+        'unknown',
+        undefined,
+        response.status,
+        { cause: error }
+      )
+    }
+
+    const payload = parseQQResponse(responseText)
+    if (!response.ok) {
+      throw new QQActiveMessageError(
+        `QQ 主动推送被拒绝（HTTP ${response.status}${payload.code ? `, code ${payload.code}` : ''}）`,
+        'rejected',
+        payload.code,
+        response.status
+      )
+    }
+  }
+
   /** 向 QQ 频道私信会话（DMS）发送文本消息。 */
   sendDmsMessage(guildId: string, content: string, options?: PassiveReply): Promise<QQSendMessageResponse> {
     return this.sendText(`/dms/${guildId}/messages`, content, options)
@@ -249,5 +334,14 @@ export class QQApiClient {
       return null
     }
   }
+}
 
+function parseQQResponse(responseText: string): { code?: number } {
+  if (!responseText) return {}
+  try {
+    const parsed = JSON.parse(responseText) as { code?: unknown }
+    return typeof parsed.code === 'number' ? { code: parsed.code } : {}
+  } catch {
+    return {}
+  }
 }

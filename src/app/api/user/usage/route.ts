@@ -11,7 +11,7 @@ import { formatResetCountdown, getShanghaiBillingPeriod } from '@/server/purecha
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const SORT_FIELDS = new Set<UsageSortBy>(['createdAt', 'credits', 'durationMs', 'totalTokens'])
-const USAGE_TRIGGERS = new Set<CreditUsageTrigger>(['web', 'wechat', 'qq'])
+const USAGE_TRIGGERS = new Set<CreditUsageTrigger>(['web', 'wechat', 'qq', 'automation'])
 
 const isValidDate = (value: string) => {
   if (!DATE_RE.test(value)) return false

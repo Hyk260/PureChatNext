@@ -43,7 +43,7 @@ export const userRebates = pgTable(
 )
 
 export type CreditLedgerReason = 'grant' | 'reset' | 'chat_usage' | 'adjust' | 'referral_reward' | 'referral_expire'
-export type CreditUsageTrigger = 'web' | 'wechat' | 'qq'
+export type CreditUsageTrigger = 'web' | 'wechat' | 'qq' | 'automation'
 
 /** 积分流水；同一 `message_id` + `reason=chat_usage` 只入账一次。 */
 export const creditLedger = pgTable(

@@ -242,7 +242,7 @@ const SkillStoreModal = memo<SkillStoreModalProps>(({ installedSkills, onClose, 
           ) : (
             <>
               <SearchBar
-                placeholder='搜索技能名称或关键词，按回车键搜索...'
+                placeholder='搜索技能名称或关键词，按回车键搜索'
                 value={query}
                 onInputChange={(value) => {
                   setQuery(value)

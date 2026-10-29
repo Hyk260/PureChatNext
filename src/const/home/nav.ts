@@ -1,5 +1,5 @@
 import type { IconProps } from '@pure/ui'
-import { Home, Layers, Search, Users } from 'lucide-react'
+import { Home, Layers, ListTodo, Search, Users } from 'lucide-react'
 
 import { isDev } from '@/libs/constants'
 
@@ -21,6 +21,7 @@ const RESOURCES_NAV_ITEM: HomeNavItem = {
 export const HOME_TOP_NAV: HomeNavItem[] = [
   // { href: '#', icon: Search, key: 'search', title: '搜索' },
   { href: '/', icon: Home, key: 'home', title: '首页' },
+  { href: '/tasks', icon: ListTodo, key: 'tasks', title: '任务' },
   { href: '/community', icon: Users, key: 'community', title: '社区' },
   ...(isDev ? [RESOURCES_NAV_ITEM] : []),
 ]
@@ -41,11 +42,7 @@ export const HOME_SIDEBAR_SECTIONS: HomeSidebarSection[] = [
   { alwaysVisible: true, key: 'agents', title: '助理' },
 ]
 
-export const DEFAULT_SIDEBAR_ITEMS: string[] = [
-  'recents',
-  'agents',
-  SIDEBAR_SPACER_ID,
-]
+export const DEFAULT_SIDEBAR_ITEMS: string[] = ['recents', 'agents', SIDEBAR_SPACER_ID]
 
 export const SIDEBAR_ACCORDION_KEYS = new Set(['recents', 'agents'])
 

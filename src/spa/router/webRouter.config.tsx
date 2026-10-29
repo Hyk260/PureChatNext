@@ -58,6 +58,14 @@ export const webRoutes: RouteObject[] = [
         element: dynamicElement(() => import('@/routes/main/page'), 'Home'),
         index: true,
       },
+      {
+        element: dynamicElement(() => import('@/routes/tasks/page'), 'Tasks'),
+        path: 'tasks',
+      },
+      {
+        element: dynamicElement(() => import('@/routes/tasks/detail'), 'TaskDetail'),
+        path: 'tasks/:id',
+      },
     ],
     element: dynamicLayout(() => import('@/routes/main/layout'), 'MainLayout'),
   },
@@ -178,10 +186,7 @@ export const webRoutes: RouteObject[] = [
         path: 'about',
       },
       {
-        element: dynamicElement(
-          () => import('@/routes/settings/system-tools/page'),
-          'Settings > System Tools'
-        ),
+        element: dynamicElement(() => import('@/routes/settings/system-tools/page'), 'Settings > System Tools'),
         path: 'system-tools',
       },
       {
@@ -216,10 +221,7 @@ export const webRoutes: RouteObject[] = [
         path: 's3',
       },
       {
-        element: dynamicElement(
-          () => import('@/routes/settings/qq-conversation/page'),
-          'Settings > QQ Conversation'
-        ),
+        element: dynamicElement(() => import('@/routes/settings/qq-conversation/page'), 'Settings > QQ Conversation'),
         path: 'qq-conversation',
       },
       {
@@ -300,7 +302,10 @@ export const webRoutes: RouteObject[] = [
         path: 'users',
       },
       {
-        element: dynamicElement(() => import('@/features/admin/email-service/EmailServicePage'), 'Admin > EmailService'),
+        element: dynamicElement(
+          () => import('@/features/admin/email-service/EmailServicePage'),
+          'Admin > EmailService'
+        ),
         path: 'email-service',
       },
       {

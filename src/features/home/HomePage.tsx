@@ -1,7 +1,6 @@
 'use client'
 
 import { memo } from 'react'
-
 import { Flex } from '@pure/ui'
 import NavHeader from '@/features/home/components/NavHeader'
 import WideScreenContainer from '@/features/home/components/WideScreenContainer'

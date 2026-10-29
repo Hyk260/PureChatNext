@@ -8,7 +8,7 @@ export interface AgentSearchProps {
   placeholder?: string
 }
 
-const AgentSearch = memo<AgentSearchProps>(({ placeholder = '搜索名称、描述或关键词...' }) => {
+const AgentSearch = memo<AgentSearchProps>(({ placeholder = '搜索名称、描述或关键词' }) => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()

@@ -34,7 +34,7 @@ export interface ToolbarProps {
 const Toolbar = memo<ToolbarProps>(({ groupMode, keyword, onGroupModeChange, onKeywordChange }) => (
   <Flex className={['border-b border-app-border-secondary', 'items-center gap-1 py-2 px-2']}>
     <SearchBar
-      placeholder='搜索模型...'
+      placeholder='搜索模型'
       size='small'
       style={{ flex: 1 }}
       value={keyword}

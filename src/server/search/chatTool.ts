@@ -1,3 +1,4 @@
+import { SEARCH_SEARXNG_NOT_CONFIG } from '@pure/types'
 import type { ChatWebSearchResultItem, ChatWebSearchToolResult, SearchQuery, WebSearchSettings } from '@pure/types'
 import { tool } from 'ai'
 import debug from 'debug'
@@ -7,7 +8,10 @@ import { searchService } from '@/server/search'
 import { processWebResults } from './resultProcessing'
 
 const MAX_TITLE_LENGTH = 200
-const SEARCH_UNAVAILABLE_MESSAGE = '联网搜索暂不可用，请检查搜索服务配置后重试。'
+const SEARCH_UNAVAILABLE_MESSAGE =
+  '联网搜索暂不可用。请在“设置 → 工具 → 网络搜索”选择并配置搜索服务商，或联系管理员检查 SEARCH_PROVIDERS 和服务凭证；SearXNG 还需要配置 SEARXNG_URL。'
+const SEARCH_NOT_CONFIGURED_MESSAGE =
+  '联网搜索服务未配置。请在“设置 → 工具 → 网络搜索”选择并配置服务商；使用 SearXNG 时，管理员需设置 SEARCH_PROVIDERS=searxng 和 SEARXNG_URL。'
 const log = debug('chat:web-search')
 
 const SEARCH_CATEGORIES = ['general', 'news', 'images', 'videos', 'it', 'science', 'social media'] as const
@@ -72,6 +76,9 @@ export const resolveWebSearchQuery = (input: {
   }
 }
 
+const searchUnavailableMessage = (errorDetail?: string) =>
+  errorDetail === SEARCH_SEARXNG_NOT_CONFIG ? SEARCH_NOT_CONFIGURED_MESSAGE : SEARCH_UNAVAILABLE_MESSAGE
+
 export const createWebSearchTool = (service: WebSearchService = searchService, settings: WebSearchSettings = {}) =>
   tool({
     description:
@@ -110,13 +117,23 @@ export const createWebSearchTool = (service: WebSearchService = searchService, s
 
         if (results.length === 0 && response.errorDetail) {
           log('provider failed q=%d: %s', request.query.length, response.errorDetail)
-          return { error: SEARCH_UNAVAILABLE_MESSAGE, query: request.query, results: [], success: false }
+          return {
+            error: searchUnavailableMessage(response.errorDetail),
+            query: request.query,
+            results: [],
+            success: false,
+          }
         }
 
         return { query: request.query, results, success: true }
       } catch (error) {
         log('failed q=%d durationMs=%d: %O', request.query.length, Date.now() - startedAt, error)
-        return { error: SEARCH_UNAVAILABLE_MESSAGE, query: request.query, results: [], success: false }
+        return {
+          error: searchUnavailableMessage(error instanceof Error ? error.message : undefined),
+          query: request.query,
+          results: [],
+          success: false,
+        }
       }
     },
   })

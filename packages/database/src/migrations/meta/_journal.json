@@ -281,6 +281,13 @@
       "when": 1792719807463,
       "tag": "0039_bouncy_skullbuster",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1793159980828,
+      "tag": "0040_wooden_smiling_tiger",
+      "breakpoints": true
     }
   ]
 }

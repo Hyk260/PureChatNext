@@ -115,7 +115,7 @@ const FilePreviewBody = memo(({ project, path }: { project: DesktopProject; path
   }, [path, project.id])
 
   if (error) return <FileEmptyState description={error} />
-  if (!file) return <FileEmptyState description='正在读取文件...' />
+  if (!file) return <FileEmptyState description='正在读取文件' />
   if (file.kind === 'text') return <CodePreview content={file.content} filePath={path} />
   if (file.kind === 'image') {
     return (

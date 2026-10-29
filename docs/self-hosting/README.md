@@ -31,6 +31,7 @@ description: 部署、配置和维护 PureChatNext 自托管实例的文档入�
 
 - [文件解析支持范围](./features/file-processing.md)
 - [联网搜索与网页抓取](./features/online-search.md)
+- [自动化任务与定时任务](./features/tasks.md)
 
 ## 认证
 

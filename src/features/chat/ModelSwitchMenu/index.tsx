@@ -55,6 +55,7 @@ const styles = createStaticStyles(({ css }) => ({
 export interface ModelSwitchDropdownItem {
   children: ReactNode
   disabled?: boolean
+  includeCustomProviders?: boolean
   openOnHover?: boolean
   /** Controlled select. When set, does not write the home/chat model store. */
   onSelect?: (provider: string, model: string) => void
@@ -70,6 +71,7 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
   ({
     children,
     disabled,
+    includeCustomProviders = false,
     openOnHover = true,
     onSelect,
     placement = 'topLeft',
@@ -88,8 +90,11 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
     const customProviders = registry.data ?? storedCustomProviders
     const isControlled = onSelect != null
     const providerIds = useMemo(
-      () => [...SETTINGS_PROVIDER_IDS, ...(isControlled ? [] : customProviders.map((provider) => provider.id))],
-      [customProviders, isControlled]
+      () => [
+        ...SETTINGS_PROVIDER_IDS,
+        ...(!isControlled || includeCustomProviders ? customProviders.map((provider) => provider.id) : []),
+      ],
+      [customProviders, includeCustomProviders, isControlled]
     )
     const scrollListenersRef = useRef(new Set<() => void>())
     const selectedModel = selectedModelProp ?? storeModel

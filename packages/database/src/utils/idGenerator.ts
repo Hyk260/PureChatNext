@@ -6,6 +6,8 @@ const prefixes = {
   documents: 'docs',
   sessions: 'ssn',
   tasks: 'task',
+  taskRuns: 'trun',
+  taskDeliveries: 'tdlv',
   agents: 'agt',
   user: 'user',
   files: 'file',

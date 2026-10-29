@@ -8,6 +8,8 @@ export interface AgentListItem {
   id: string
   isBuiltin?: boolean
   marketIdentifier?: string | null
+  model?: string | null
+  provider?: string | null
   openingMessage?: string | null
   openingQuestions?: string[] | null
   pinned?: boolean | null

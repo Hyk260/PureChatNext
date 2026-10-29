@@ -279,15 +279,6 @@ export function ProviderCard({
             />
           </Flex>
         )}
-        {provider === 'naive' && (
-          <ActionIcon
-            aria-label='检测 Fetch'
-            icon={Activity}
-            title='检测 Fetch'
-            loading={checking}
-            onClick={check}
-          />
-        )}
         {checkMessage && (
           <Text role='status' type='secondary' fontSize={12}>
             {checkMessage}

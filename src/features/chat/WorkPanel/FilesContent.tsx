@@ -489,7 +489,7 @@ const FilesContent = memo<Props>(({ activePath, error, loading, onOpenFile, proj
   )
 
   if (!getDesktopApi()?.listProjectEntries) return <FileEmptyState description='文件列表仅在桌面端可用' />
-  if (loading) return <FileEmptyState description='正在加载项目...' />
+  if (loading) return <FileEmptyState description='正在加载项目' />
   if (error) return <FileEmptyState description={error} />
   if (!project) return <FileEmptyState description='此工作区中没有文件' />
 
@@ -508,7 +508,7 @@ const FilesContent = memo<Props>(({ activePath, error, loading, onOpenFile, proj
             aria-label='筛选文件'
             autoFocus
             className='min-w-0 flex-1'
-            placeholder='筛选已加载的文件...'
+            placeholder='筛选已加载的文件'
             prefix={<Icon icon={Search} size={14} />}
             size='small'
             value={filter}

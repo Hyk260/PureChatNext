@@ -63,35 +63,22 @@ const SideBarHeaderLayout = memo<SideBarHeaderLayoutProps>(
     showHomeIcon = true,
     showTogglePanelButton = true,
   }) => {
-    const homeSidebarCollapsed = useHomeStore((s) => s.sidebarCollapsed)
-    const toggleHomeSidebarCollapsed = useHomeStore((s) => s.toggleSidebarCollapsed)
-    const sidebarCollapsed = collapsed ?? homeSidebarCollapsed
-    const toggleSidebarCollapsed = onToggleCollapsed ?? toggleHomeSidebarCollapsed
+    const sidebarCollapsed = useHomeStore((s) => collapsed ?? s.sidebarCollapsed)
+    const toggleSidebarCollapsed = useHomeStore((s) => onToggleCollapsed ?? s.toggleSidebarCollapsed)
     const router = useRouter()
     const showToggle = showTogglePanelButton && !getDesktopApi()
 
-    const breadcrumbItems: BreadcrumbProps['items'] = [
-      ...(showHomeIcon
-        ? [
-            {
-              href: homeHref,
-              title: <Icon icon={HomeIcon} size={14} />,
-            },
-          ]
-        : []),
-      ...breadcrumb,
-    ].map((item) => ({
+    const homeBreadcrumbItems: BreadcrumbProps['items'] = showHomeIcon
+      ? [{ href: homeHref, title: <Icon icon={HomeIcon} size={14} /> }]
+      : []
+    const breadcrumbItems: BreadcrumbProps['items'] = [...homeBreadcrumbItems, ...breadcrumb].map((item) => ({
       ...item,
       onClick: (event: MouseEvent<HTMLAnchorElement>) => {
-        if (event.defaultPrevented) return
+        const isModifiedClick = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
+        if (event.defaultPrevented || isModifiedClick || !item.href) return
 
-        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-
-        const href = item.href
-        if (href) {
-          event.preventDefault()
-          router.push(String(href))
-        }
+        event.preventDefault()
+        router.push(String(item.href))
       },
     }))
 

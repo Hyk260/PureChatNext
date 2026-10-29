@@ -147,6 +147,7 @@ function renderTokenUsage(_value: unknown, record: UsageItem) {
 }
 
 const triggerLabels: Record<UsageItem['trigger'], string> = {
+  automation: '自动化任务',
   qq: 'QQ 网关',
   web: '网页聊天',
   wechat: '微信网关',
@@ -157,6 +158,7 @@ const triggerFilterOptions = [
   { label: triggerLabels.web, value: 'web' },
   { label: triggerLabels.wechat, value: 'wechat' },
   { label: triggerLabels.qq, value: 'qq' },
+  { label: triggerLabels.automation, value: 'automation' },
 ] as const
 
 const SORT_ORDER = { asc: 'ascend', desc: 'descend' } as const
@@ -303,9 +305,7 @@ export function UsageSettingsContent() {
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1
   const rangeEnd = Math.min(page * pageSize, total)
   const rebateRemaining = data?.balance.rebateRemaining ?? 0
-  const rebatePercentage = data
-    ? Math.min(100, getPercentage(rebateRemaining, data.balance.rebateEarned))
-    : 0
+  const rebatePercentage = data ? Math.min(100, getPercentage(rebateRemaining, data.balance.rebateEarned)) : 0
   const showInitialLoading = loading && !data
   const showInitialError = !loading && !data && Boolean(error)
 

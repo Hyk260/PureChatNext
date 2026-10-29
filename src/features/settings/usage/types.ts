@@ -9,7 +9,7 @@ export type UsageItem = {
   outputTokens: number | null
   provider: string | null
   totalTokens: number
-  trigger: 'web' | 'wechat' | 'qq'
+  trigger: 'web' | 'wechat' | 'qq' | 'automation'
 }
 
 export type UsageResponse = {

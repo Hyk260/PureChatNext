@@ -5,7 +5,7 @@ import { weatherTool } from '@/server/weather/chatTool'
 import { createEditExcelTool } from './editExcelTool'
 import { createReadFileTool } from './readFileTool'
 
-export type ChatToolChannel = 'web' | 'qq' | 'wechat'
+export type ChatToolChannel = 'web' | 'qq' | 'wechat' | 'automation'
 export type ChatToolSearchMode = 'auto' | 'off'
 
 export type ChannelToolArtifact = {

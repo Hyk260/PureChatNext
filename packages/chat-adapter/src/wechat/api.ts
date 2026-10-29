@@ -75,7 +75,7 @@ async function parseResponse<T>(response: Response, label: string): Promise<T> {
 
   if (!response.ok) {
     const msg = (payload as { errmsg?: string } | null)?.errmsg ?? `${label} failed with HTTP ${response.status}`
-    throw new Error(msg)
+    throw Object.assign(new Error(msg), { statusCode: response.status })
   }
 
   const ret = (payload as { ret?: number } | null)?.ret
@@ -120,11 +120,20 @@ export class WechatApiClient {
    * 通过 iLink Bot API 长轮询新消息。
    * 服务端会保持连接约 35 秒。
    */
-  getUpdates(cursor?: string, signal?: AbortSignal, timeoutMs: number = POLL_TIMEOUT_MS): Promise<WechatGetUpdatesResponse> {
-    return this.post('/ilink/bot/getupdates', {
-      base_info: BASE_INFO,
-      get_updates_buf: cursor || '',
-    }, 'getupdates', combinedSignal(signal, timeoutMs))
+  getUpdates(
+    cursor?: string,
+    signal?: AbortSignal,
+    timeoutMs: number = POLL_TIMEOUT_MS
+  ): Promise<WechatGetUpdatesResponse> {
+    return this.post(
+      '/ilink/bot/getupdates',
+      {
+        base_info: BASE_INFO,
+        get_updates_buf: cursor || '',
+      },
+      'getupdates',
+      combinedSignal(signal, timeoutMs)
+    )
   }
 
   /**
@@ -152,19 +161,29 @@ export class WechatApiClient {
    * 按 protocol.md §6.7，稳定用法是每次请求一个 MessageItem —
    * 文本与媒体分开发送。调用方每次应生成新的 `client_id`；本方法内部会分配。
    */
-  sendItem(toUserId: string, item: MessageItem, contextToken: string): Promise<WechatSendMessageResponse> {
-    return this.post('/ilink/bot/sendmessage', {
-      base_info: BASE_INFO,
-      msg: {
-        client_id: crypto.randomUUID(),
-        context_token: contextToken,
-        from_user_id: '',
-        item_list: [item],
-        message_state: MessageState.FINISH,
-        message_type: MessageType.BOT,
-        to_user_id: toUserId,
+  sendItem(
+    toUserId: string,
+    item: MessageItem,
+    contextToken: string,
+    options?: { clientId?: string; signal?: AbortSignal }
+  ): Promise<WechatSendMessageResponse> {
+    return this.post(
+      '/ilink/bot/sendmessage',
+      {
+        base_info: BASE_INFO,
+        msg: {
+          client_id: options?.clientId ?? crypto.randomUUID(),
+          context_token: contextToken,
+          from_user_id: '',
+          item_list: [item],
+          message_state: MessageState.FINISH,
+          message_type: MessageType.BOT,
+          to_user_id: toUserId,
+        },
       },
-    }, 'sendmessage')
+      'sendmessage',
+      options?.signal
+    )
   }
 
   /**
@@ -192,17 +211,21 @@ export class WechatApiClient {
     const cipherSize = ciphertext.length
     const rawfilemd5 = createHash('md5').update(plaintext).digest('hex')
 
-    const { upload_param: uploadParam } = await this.post<{ upload_param?: string }>('/ilink/bot/getuploadurl', {
-      aeskey: aesKeyHex,
-      base_info: BASE_INFO,
-      filekey,
-      filesize: cipherSize,
-      media_type: mediaType,
-      no_need_thumb: true,
-      rawfilemd5,
-      rawsize: rawSize,
-      to_user_id: toUserId,
-    }, 'getuploadurl')
+    const { upload_param: uploadParam } = await this.post<{ upload_param?: string }>(
+      '/ilink/bot/getuploadurl',
+      {
+        aeskey: aesKeyHex,
+        base_info: BASE_INFO,
+        filekey,
+        filesize: cipherSize,
+        media_type: mediaType,
+        no_need_thumb: true,
+        rawfilemd5,
+        rawsize: rawSize,
+        to_user_id: toUserId,
+      },
+      'getuploadurl'
+    )
     if (!uploadParam) {
       throw new Error('getuploadurl returned empty upload_param')
     }
@@ -235,12 +258,16 @@ export class WechatApiClient {
 
   /** 通过 iLink Bot API 发送正在输入指示。尽力而为，失败可忽略。 */
   async sendTyping(toUserId: string, typingTicket: string, start = true): Promise<void> {
-    await this.post('/ilink/bot/sendtyping', {
-      base_info: BASE_INFO,
-      ilink_user_id: toUserId,
-      status: start ? 1 : 2,
-      typing_ticket: typingTicket,
-    }, 'sendtyping').catch(() => {})
+    await this.post(
+      '/ilink/bot/sendtyping',
+      {
+        base_info: BASE_INFO,
+        ilink_user_id: toUserId,
+        status: start ? 1 : 2,
+        typing_ticket: typingTicket,
+      },
+      'sendtyping'
+    ).catch(() => {})
   }
 
   /** 便捷方法：getConfig + sendTyping 一次调用。尽力而为，永不抛错。 */
@@ -298,11 +325,15 @@ export class WechatApiClient {
    * 参考实现要求传入 userId 与 contextToken。
    */
   getConfig(userId: string, contextToken: string): Promise<WechatGetConfigResponse> {
-    return this.post('/ilink/bot/getconfig', {
-      base_info: BASE_INFO,
-      context_token: contextToken,
-      ilink_user_id: userId,
-    }, 'getconfig')
+    return this.post(
+      '/ilink/bot/getconfig',
+      {
+        base_info: BASE_INFO,
+        context_token: contextToken,
+        ilink_user_id: userId,
+      },
+      'getconfig'
+    )
   }
 }
 

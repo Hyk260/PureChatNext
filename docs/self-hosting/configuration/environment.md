@@ -262,6 +262,10 @@ S3_PUBLIC_DOMAIN=https://cdn.purechat.cn
 
 见 [微信渠道](../channels/wechat/setup.md)。`KEY_VAULTS_SECRET` 为必填。回复使用用户在设置页保存的服务商密钥，不读取 `OPENAI_API_KEY` / `DEEPSEEK_API_KEY`。本地需显式设置 `CHANNEL_GATEWAY_ENABLED=1`；Docker 在单一 Next 容器内启用；Vercel 不支持。
 
+### 自动化任务调度器
+
+见 [自动化任务与定时任务](../features/tasks.md)。持久自部署实例可设置 `TASK_SCHEDULER_ENABLED=1` 启动数据库任务调度器；Docker Compose 自托管配置默认启用，开发环境默认关闭。调度器与消息渠道 Gateway 独立；Vercel 会强制关闭此功能。
+
 ### QQ 开放平台渠道
 
 见 [QQ 渠道](../channels/qq/setup.md)。协议层在 `@pure/chat-adapter/qq`。凭证按绑定加密存储；WebSocket 由开启后的 Next Server 内置 Gateway 维护，Webhook 继续使用公网回调与平台验证。Vercel 仅支持 Webhook。

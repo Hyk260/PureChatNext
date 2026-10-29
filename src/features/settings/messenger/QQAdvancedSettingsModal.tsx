@@ -212,12 +212,7 @@ function AllowedUsersEditor({
           <ActionIcon icon={Trash2} size='small' title='移除用户' onClick={() => onRemove(user.id)} />
         </Flex>
       ))}
-      <Button
-        block
-        type='dashed'
-        icon={<Plus className='size-4' />}
-        onClick={onAdd}
-      >
+      <Button block type='dashed' icon={<Plus className='size-4' />} onClick={onAdd}>
         添加用户
       </Button>
     </Flex>
@@ -321,14 +316,14 @@ const QQAdvancedSettingsModal = memo<QQAdvancedSettingsModalProps>(({ initialSet
           icon={<ScanFace className='size-4' />}
           label='你的平台用户 ID'
           labelExtra={
-            <Tooltip title='填写 QQ OpenAPI 事件中的 tiny_id（不是 QQ 号）。先私信机器人一次，再从入站日志/事件中复制；用于白名单防锁定。'>
+            <Tooltip title='填写入站事件中的用户标识，不是 QQ 号：C2C 使用 user_openid，群聊使用 member_openid。先与机器人交互一次，再从入站日志/事件中复制。'>
               <CircleHelp className='size-3.5 cursor-help text-muted-foreground' />
             </Tooltip>
           }
         >
           <Input
             className='w-full'
-            placeholder='QQ tiny_id'
+            placeholder='QQ OpenAPI 用户标识'
             value={draft.platformUserId}
             onChange={(event) => patchDraft({ platformUserId: event.target.value })}
           />

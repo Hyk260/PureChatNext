@@ -16,10 +16,12 @@
     "test:coverage": "vitest --coverage --silent='passed-only'"
   },
   "dependencies": {
+    "@pure/types": "workspace:*",
     "@vercel/functions": "^3.3.0",
     "brotli-wasm": "^3.0.1",
     "chroma-js": "^3.1.2",
     "countries-and-timezones": "^3.8.0",
+    "cron-parser": "^5.10.2",
     "dayjs": "^1.11.19",
     "debug": "^4.4.3",
     "dompurify": "^3.3.0",

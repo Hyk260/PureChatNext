@@ -8,6 +8,8 @@ export type ApiAgent = {
   id: string
   isBuiltin: boolean
   marketIdentifier?: string | null
+  model?: string | null
+  provider?: string | null
   openingMessage?: string | null
   openingQuestions?: string[] | null
   pinned: boolean | null
@@ -50,6 +52,8 @@ const toListItem = (a: ApiAgent): AgentListItem => ({
   id: a.id,
   isBuiltin: a.isBuiltin,
   marketIdentifier: a.marketIdentifier ?? null,
+  model: a.model,
+  provider: a.provider,
   openingMessage: a.openingMessage,
   openingQuestions: a.openingQuestions,
   pinned: a.pinned,

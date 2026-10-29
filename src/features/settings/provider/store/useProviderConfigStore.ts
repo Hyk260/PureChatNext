@@ -63,16 +63,25 @@ export const mergeProviderConfig = (
   const baseURL = rawBaseURL.trim() === legacyDefault ? '' : rawBaseURL
 
   const catalogById = new Map(defaults.models.map((model) => [model.id, model]))
-  const persistedModels = Array.isArray(partial.models) && partial.models.length > 0 ? partial.models : defaults.models
+  const storedModels = Array.isArray(partial.models) && partial.models.length > 0 ? partial.models : defaults.models
+  const persistedModels = isServerManagedProvider(id)
+    ? storedModels.filter((model) => model.source !== 'builtin' || catalogById.has(model.id))
+    : storedModels
 
-  // Reconcile with model-bank: catalog `enabled: false` stays off after persist hydrate.
+  // Reconcile built-in metadata with model-bank after persist hydrate.
   const models: ProviderModelItem[] = persistedModels.map((model) => {
     const catalog = catalogById.get(model.id)
     const health = model.health?.status === 'checking' ? { status: 'idle' as const } : model.health
-    if (catalog && !catalog.enabled) {
-      return { ...model, displayName: catalog.displayName, enabled: false, health }
+    if (!catalog) return { ...model, health }
+
+    return {
+      ...model,
+      abilities: catalog.abilities,
+      contextWindowTokens: catalog.contextWindowTokens,
+      displayName: catalog.displayName,
+      enabled: catalog.enabled === false ? false : model.enabled,
+      health,
     }
-    return { ...model, health }
   })
 
   const knownIds = new Set(models.map((model) => model.id))
@@ -82,7 +91,12 @@ export const mergeProviderConfig = (
 
   const requestedCheckModel =
     typeof partial.checkModel === 'string' && partial.checkModel.trim() ? partial.checkModel.trim() : ''
-  const checkModelEnabled = requestedCheckModel ? catalogById.get(requestedCheckModel)?.enabled !== false : false
+  const requestedCheckModelCard = catalogById.get(requestedCheckModel)
+  const checkModelEnabled = requestedCheckModel
+    ? isServerManagedProvider(id)
+      ? requestedCheckModelCard !== undefined && requestedCheckModelCard.enabled !== false
+      : requestedCheckModelCard?.enabled !== false
+    : false
 
   return {
     ...defaults,

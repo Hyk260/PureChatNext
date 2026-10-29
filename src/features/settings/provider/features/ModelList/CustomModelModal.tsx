@@ -18,6 +18,16 @@ const clampContextWindowTokens = (raw: number) =>
 
 const ABILITY_OPTIONS: Array<{ description: string; key: keyof ModelAbilities; label: string }> = [
   {
+    description: '允许模型理解消息中的音频内容。',
+    key: 'audioInput',
+    label: '支持音频输入',
+  },
+  {
+    description: '标记模型可以生成音频。',
+    key: 'audioOutput',
+    label: '支持音频输出',
+  },
+  {
     description: '允许模型使用工具或函数调用能力。',
     key: 'functionCall',
     label: '支持工具使用',

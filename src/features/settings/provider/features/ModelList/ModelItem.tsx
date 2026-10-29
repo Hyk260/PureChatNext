@@ -5,7 +5,21 @@ import { copyToClipboard, formatDuration, formatTokenNumber } from '@pure/utils/
 import { getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 import { toast, createStaticStyles, cssVar, Switch, cx } from '@lobehub/ui'
-import { Check, CircleX, Code2, Eye, Globe2, ImageIcon, Lightbulb, Loader2, Pencil, Trash2, Wrench } from 'lucide-react'
+import {
+  Check,
+  CircleX,
+  Code2,
+  Eye,
+  Globe2,
+  ImageIcon,
+  Lightbulb,
+  Loader2,
+  Mic,
+  Pencil,
+  Trash2,
+  Volume2,
+  Wrench,
+} from 'lucide-react'
 import { memo } from 'react'
 
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
@@ -175,6 +189,8 @@ const ModelCapabilityTags = ({
 }) => {
   if (
     !abilities?.functionCall &&
+    !abilities?.audioInput &&
+    !abilities?.audioOutput &&
     !abilities?.imageGeneration &&
     !abilities?.reasoning &&
     !abilities?.structuredOutput &&
@@ -205,6 +221,20 @@ const ModelCapabilityTags = ({
         <Tooltip title='支持视觉输入'>
           <Tag color='geekblue' size='small'>
             <Icon icon={Eye} size={12} />
+          </Tag>
+        </Tooltip>
+      ) : null}
+      {abilities?.audioInput ? (
+        <Tooltip title='支持音频输入'>
+          <Tag color='cyan' size='small'>
+            <Icon icon={Mic} size={12} />
+          </Tag>
+        </Tooltip>
+      ) : null}
+      {abilities?.audioOutput ? (
+        <Tooltip title='支持音频输出'>
+          <Tag color='purple' size='small'>
+            <Icon icon={Volume2} size={12} />
           </Tag>
         </Tooltip>
       ) : null}

@@ -8,7 +8,6 @@ import { memo, useMemo } from 'react'
 
 interface ModelTitleProps {
   canClearRemoteModels?: boolean
-  loading: boolean
   healthLoading?: boolean
   healthModelCount?: number
   onAddCustomModel?: () => void
@@ -52,7 +51,6 @@ const ModelTitle = memo<ModelTitleProps>(
   ({
     searchKeyword,
     onKeywordChange,
-    loading,
     canClearRemoteModels = false,
     healthLoading = false,
     healthModelCount = 0,
@@ -90,25 +88,15 @@ const ModelTitle = memo<ModelTitleProps>(
         ...(showModelFetcher && onFetch
           ? [
               {
-                disabled: loading,
                 icon: <RefreshCcwDot size={16} />,
                 key: 'fetch-models',
-                label: loading ? '正在获取模型列表…' : '获取模型列表',
+                label: '获取模型列表',
                 onClick: onFetch,
               },
             ]
           : []),
       ],
-      [
-        healthLoading,
-        healthModelCount,
-        onCancelHealthCheck,
-        onFetch,
-        onHealthCheck,
-        onResetModels,
-        showModelFetcher,
-        loading,
-      ]
+      [healthLoading, healthModelCount, onCancelHealthCheck, onFetch, onHealthCheck, onResetModels, showModelFetcher]
     )
 
     return (

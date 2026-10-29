@@ -50,8 +50,10 @@ export const isServerManagedProvider = (id: ProviderId) => {
 export const getBuiltinProviderModels = (id: ProviderId): ProviderModelItem[] =>
   isSettingsProviderId(id)
     ? getProviderChatModels(id).map((item) => ({
+        abilities: item.abilities,
+        contextWindowTokens: item.contextWindowTokens,
         displayName: item.displayName,
-        enabled: item.enabled !== false,
+        enabled: item.defaultEnabled ?? (item.enabled !== false),
         id: item.id,
         source: 'builtin' as const,
       }))

@@ -17,6 +17,8 @@ export type ModelTokenPricing = {
 
 /** 模型能力开关 */
 export type ModelAbilities = {
+  audioInput?: boolean
+  audioOutput?: boolean
   functionCall?: boolean
   imageGeneration?: boolean
   reasoning?: boolean
@@ -33,6 +35,8 @@ export type AiModelCard = {
   gatewayId?: string
   pricing: ModelTokenPricing
   enabled?: boolean
+  /** Default toggle state in provider settings; does not affect free-tier availability. */
+  defaultEnabled?: boolean
   recommended?: boolean
   /** 上下文窗口（input + output 上限量级） */
   contextWindowTokens?: number

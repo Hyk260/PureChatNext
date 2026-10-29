@@ -1,9 +1,12 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useCallback, useState } from 'react'
 
 import { Flex, TypewriterEffect } from '@pure/ui'
+import { sessionStg } from '@pure/utils/storage'
 import HomeChatInput from '@/features/home/components/HomeChatInput'
+
+const HOME_WELCOME_TYPEWRITER_INDEX_KEY = 'purechat.home.welcome-typewriter-index'
 
 const welcomeMessages = {
   '1': '欢迎回来 👋',
@@ -47,7 +50,33 @@ const welcomeMessages = {
   '39': '记得休息一下 ☕',
 } as const
 
+const welcomeSentences = Object.values(welcomeMessages)
+
+const getSavedWelcomeSentenceIndex = () => {
+  const savedIndex = Number(sessionStg.getString(HOME_WELCOME_TYPEWRITER_INDEX_KEY))
+
+  if (!Number.isInteger(savedIndex) || savedIndex < 0 || savedIndex >= welcomeSentences.length) return 0
+
+  return savedIndex
+}
+
+const getWelcomeSentencesFrom = (index: number) => [
+  ...welcomeSentences.slice(index),
+  ...welcomeSentences.slice(0, index),
+]
+
 const HomeContent = memo(() => {
+  const [welcomeStartIndex] = useState(getSavedWelcomeSentenceIndex)
+  const sentences = getWelcomeSentencesFrom(welcomeStartIndex)
+
+  const handleSentenceComplete = useCallback(
+    (_sentence: string, index: number) => {
+      const nextIndex = (welcomeStartIndex + index + 1) % welcomeSentences.length
+      sessionStg.setString(HOME_WELCOME_TYPEWRITER_INDEX_KEY, String(nextIndex))
+    },
+    [welcomeStartIndex]
+  )
+
   return (
     <Flex className='w-full flex-col gap-6'>
       <Flex className='flex-col-center'>
@@ -56,10 +85,12 @@ const HomeContent = memo(() => {
           cursorClassName='text-primary'
           pauseDuration={12400}
           deletePauseDuration={500}
+          hideCursorWhileTyping='afterTyping'
           typingSpeed={48}
           deletingSpeed={30}
           loop
-          sentences={Object.values(welcomeMessages)}
+          onSentenceComplete={handleSentenceComplete}
+          sentences={sentences}
         />
       </Flex>
       <HomeChatInput />

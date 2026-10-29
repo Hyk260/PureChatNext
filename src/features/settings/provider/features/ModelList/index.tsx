@@ -17,11 +17,29 @@ import EmptyModels from './EmptyModels'
 import CustomModelModal from './CustomModelModal'
 import type { CustomModelFormValues } from './CustomModelModal'
 import HealthCheckModal from './HealthCheckModal'
+import ModelCatalogModal from './ModelCatalogModal'
 import { DEFAULT_HEALTH_CHECK_CONCURRENCY, runWithConcurrency } from './healthCheck'
 import ModelItem from './ModelItem'
 import ModelTitle from './ModelTitle'
+import { applyModelCatalogSelection } from './modelCatalog'
+import type { ModelCatalogItem } from './modelCatalog'
 
-type ModelTab = 'all' | 'chat'
+type ModelTab = 'all' | 'chat' | 'image' | 'audio'
+const MODEL_TABS: ReadonlyArray<ModelTab> = ['all', 'chat', 'image', 'audio']
+
+const isModelTab = (key: string): key is ModelTab => MODEL_TABS.some((tab) => tab === key)
+
+const getCatalogModel = (provider: ProviderId, modelId: string) =>
+  getAiModel(provider as ModelProviderId, modelId)
+
+const matchesModelTab = (provider: ProviderId, model: ProviderModelItem, tab: ModelTab) => {
+  if (tab === 'all' || tab === 'chat') return true
+
+  const abilities = model.abilities ?? getCatalogModel(provider, model.id)?.abilities
+  if (tab === 'image') return Boolean(abilities?.vision || abilities?.imageGeneration)
+
+  return Boolean(abilities?.audioInput || abilities?.audioOutput)
+}
 
 interface ModelListProps {
   id: ProviderId
@@ -32,17 +50,17 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   const customProviders = useProviderConfigStore((s) => s.customProviders)
   const addCustomModel = useProviderConfigStore((s) => s.addCustomModel)
   const clearRemoteModels = useProviderConfigStore((s) => s.clearRemoteModels)
-  const mergeRemoteModels = useProviderConfigStore((s) => s.mergeRemoteModels)
   const removeCustomModel = useProviderConfigStore((s) => s.removeCustomModel)
   const reorderModels = useProviderConfigStore((s) => s.reorderModels)
   const resetModels = useProviderConfigStore((s) => s.resetModels)
-  const setAllModelsEnabled = useProviderConfigStore((s) => s.setAllModelsEnabled)
+  const setModels = useProviderConfigStore((s) => s.setModels)
   const setModelHealth = useProviderConfigStore((s) => s.setModelHealth)
   const updateCustomModel = useProviderConfigStore((s) => s.updateCustomModel)
 
   const [keyword, setKeyword] = useState('')
   const [tab, setTab] = useState<ModelTab>('all')
-  const [loading, setLoading] = useState(false)
+  const [catalogModalOpen, setCatalogModalOpen] = useState(false)
+  const [catalogModalKey, setCatalogModalKey] = useState(0)
   const [healthLoading, setHealthLoading] = useState(false)
   const [healthModalOpen, setHealthModalOpen] = useState(false)
   const [customModelModalOpen, setCustomModelModalOpen] = useState(false)
@@ -57,72 +75,63 @@ const ModelList = memo<ModelListProps>(({ id }) => {
   const canManageCustomModels = !isServerManagedProvider(id)
 
   const models = useMemo(() => config?.models ?? [], [config?.models])
+  const providerName = getSettingsProviderMeta(id, customProviders).name
+
+  const openModelCatalog = () => {
+    setCatalogModalKey((current) => current + 1)
+    setCatalogModalOpen(true)
+  }
+
+  const availableModels = useMemo(
+    () => models.filter((model) => getCatalogModel(id, model.id)?.enabled !== false),
+    [id, models]
+  )
+
+  const modelCounts = useMemo(
+    () => ({
+      all: availableModels.length,
+      audio: availableModels.filter((model) => matchesModelTab(id, model, 'audio')).length,
+      chat: availableModels.length,
+      image: availableModels.filter((model) => matchesModelTab(id, model, 'image')).length,
+    }),
+    [availableModels, id]
+  )
 
   const filteredModels = useMemo(() => {
     const query = keyword.trim().toLowerCase()
-    // All current providers only expose chat models; keep a single tab for now.
-    const list = models.filter((model) => getAiModel(id as ModelProviderId, model.id)?.enabled !== false)
+    const list = availableModels.filter((model) => matchesModelTab(id, model, tab))
 
     if (!query) return list
 
     return list.filter(
       (model) => model.displayName.toLowerCase().includes(query) || model.id.toLowerCase().includes(query)
     )
-  }, [id, keyword, models])
+  }, [availableModels, id, keyword, tab])
 
   const enabledModels = filteredModels.filter((model) => model.enabled)
   const disabledModels = filteredModels.filter((model) => !model.enabled)
   const enabledHealthModels = useMemo(
-    () => models.filter((model) => model.enabled && getAiModel(id as ModelProviderId, model.id)?.enabled !== false),
-    [id, models]
+    () => availableModels.filter((model) => model.enabled),
+    [availableModels]
   )
   const remoteModelCount = useMemo(() => models.filter((model) => model.source === 'remote').length, [models])
 
-  const fetchRemoteModels = async () => {
-    if (!showModelFetcher) return
+  const handleSaveCatalogModels = useCallback(
+    (catalogEntries: ModelCatalogItem[], selectedModelIds: ReadonlySet<string>) => {
+      const currentModels = useProviderConfigStore.getState().getConfig(id).models
+      const nextModels = applyModelCatalogSelection(currentModels, catalogEntries, selectedModelIds)
+      setModels(id, nextModels)
+      setCatalogModalOpen(false)
+      toast.success('模型列表已保存')
+    },
+    [id, setModels]
+  )
 
-    setLoading(true)
-    try {
-      const baseURL = config?.baseURL.trim() ?? ''
-      const response = await apiFetch(
-        '/api/providers/models',
-        jsonInit(
-          {
-            baseURL: baseURL || undefined,
-            provider: id,
-          },
-          { method: 'POST' }
-        )
-      )
-
-      const json = (await response.json()) as {
-        cause?: string
-        fallback?: boolean
-        message?: string
-        models?: Array<{ displayName?: string; id: string }>
-      }
-
-      if (!response.ok) {
-        toast.error(json.cause || json.message || '获取模型列表失败')
-        return
-      }
-
-      const remoteModels = Array.isArray(json.models) ? json.models : []
-      mergeRemoteModels(id, remoteModels)
-
-      if (json.fallback) {
-        toast.warning(json.message || '远程拉取失败，已使用内置模型列表')
-      } else {
-        toast.success(`已获取 ${remoteModels.length} 个模型`)
-      }
-    } catch (error) {
-      toast.error(getErrorMessage(error, '获取模型列表失败'))
-    } finally {
-      setLoading(false)
-    }
+  const handleTabChange = (key: string) => {
+    if (isModelTab(key)) setTab(key)
   }
 
-  const handleFetch = showModelFetcher ? fetchRemoteModels : undefined
+  const handleFetch = showModelFetcher ? openModelCatalog : undefined
 
   const handleSaveCustomModel = useCallback(
     (model: CustomModelFormValues) => {
@@ -235,10 +244,16 @@ const ModelList = memo<ModelListProps>(({ id }) => {
 
   const handleSetAllModelsEnabled = useCallback(
     (enabled: boolean) => {
-      setAllModelsEnabled(id, enabled)
+      const filteredModelIds = new Set(filteredModels.map((model) => model.id))
+      setModels(
+        id,
+        models.map((model) =>
+          filteredModelIds.has(model.id) ? { ...model, enabled } : model
+        )
+      )
       toast.success(enabled ? '已全部启用模型' : '已全部禁用模型')
     },
-    [id, setAllModelsEnabled]
+    [filteredModels, id, models, setModels]
   )
 
   const renderSortableModels = useCallback(
@@ -361,7 +376,6 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         canClearRemoteModels={remoteModelCount > 0}
         healthLoading={healthLoading}
         healthModelCount={enabledHealthModels.length}
-        loading={loading}
         onAddCustomModel={canManageCustomModels ? handleOpenAddCustomModel : undefined}
         searchKeyword={keyword}
         showModelFetcher={showModelFetcher}
@@ -384,6 +398,17 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         }}
       />
 
+      <ModelCatalogModal
+        baseURL={config?.baseURL ?? ''}
+        configuredModels={models}
+        key={`${id}:${catalogModalKey}`}
+        open={catalogModalOpen}
+        provider={id}
+        providerName={providerName}
+        onSave={handleSaveCatalogModels}
+        onClose={() => setCatalogModalOpen(false)}
+      />
+
       <HealthCheckModal
         enabledModelCount={enabledHealthModels.length}
         loading={healthLoading}
@@ -396,14 +421,16 @@ const ModelList = memo<ModelListProps>(({ id }) => {
       <Tabs
         activeKey={tab}
         items={[
-          { key: 'all', label: `全部 (${models.length})` },
-          { key: 'chat', label: `对话 (${models.length})` },
+          { key: 'all', label: `全部 (${modelCounts.all})` },
+          { key: 'chat', label: `对话 (${modelCounts.chat})` },
+          { key: 'image', label: `图片 (${modelCounts.image})` },
+          { key: 'audio', label: `音频 (${modelCounts.audio})` },
         ]}
-        onChange={(key) => setTab(key as ModelTab)}
+        onChange={handleTabChange}
       />
 
       {filteredModels.length === 0 ? (
-        <EmptyModels loading={loading} onFetch={handleFetch} />
+        <EmptyModels onFetch={handleFetch} />
       ) : (
         <Flex className='flex-col gap-1 w-full'>
           {enabledModels.length > 0 ? (

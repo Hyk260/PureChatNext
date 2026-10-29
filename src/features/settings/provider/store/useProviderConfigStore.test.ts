@@ -4,7 +4,7 @@ import { mergeProviderConfig, useProviderConfigStore } from './useProviderConfig
 import type { ProviderConfigs } from '../types'
 
 describe('PureChat provider config migration', () => {
-  it('reconciles a v4-style model list with the current catalog', () => {
+  it('drops unavailable built-ins and preserves saved model toggles', () => {
     const config = mergeProviderConfig('purechat', {
       models: [
         {
@@ -22,7 +22,7 @@ describe('PureChat provider config migration', () => {
       ],
     })
 
-    expect(config.models.find((model) => model.id === 'gpt-5.5')?.enabled).toBe(false)
+    expect(config.models.find((model) => model.id === 'gpt-5.5')).toBeUndefined()
     expect(config.models.find((model) => model.id === 'gpt-5.2')?.enabled).toBe(true)
     expect(config.models.find((model) => model.id === 'gpt-5-nano')?.enabled).toBe(false)
   })
@@ -32,35 +32,38 @@ describe('PureChat provider config migration', () => {
     expect(config.enabled).toBe(true)
   })
 
-  it('remaps a persisted check model that the catalog has disabled', () => {
+  it('remaps a persisted check model that the catalog has disabled or removed', () => {
     const config = mergeProviderConfig('openai', { checkModel: 'gpt-5.4-mini' })
+    const purechatConfig = mergeProviderConfig('purechat', { checkModel: 'grok-4.1-fast-reasoning' })
+
     expect(config.checkModel).toBe('gpt-5.4-nano')
+    expect(purechatConfig.checkModel).toBe('gpt-5.4-nano')
   })
 
   it('does not restore an interrupted health check as active', () => {
     const config = mergeProviderConfig('purechat', {
       models: [
         {
-          displayName: 'GPT 5.4 Mini',
+          displayName: 'GPT-5 nano',
           enabled: true,
           health: { status: 'checking' },
-          id: 'gpt-5.4-mini',
+          id: 'gpt-5-nano',
           source: 'builtin',
         },
       ],
     })
 
-    expect(config.models[0]?.health).toEqual({ status: 'idle' })
+    expect(config.models.find((model) => model.id === 'gpt-5-nano')?.health).toEqual({ status: 'idle' })
   })
 
   it('persists model health state without changing model configuration shape', () => {
-    useProviderConfigStore.getState().setModelHealth('purechat', 'gpt-5.4-mini', {
+    useProviderConfigStore.getState().setModelHealth('purechat', 'gpt-5.4-nano', {
       durationMs: 120,
       message: '检查成功',
       status: 'success',
     })
 
-    expect(useProviderConfigStore.getState().configs.purechat.models[0]?.health).toMatchObject({
+    expect(useProviderConfigStore.getState().configs.purechat.models.find((model) => model.id === 'gpt-5.4-nano')?.health).toMatchObject({
       durationMs: 120,
       status: 'success',
     })
@@ -68,13 +71,15 @@ describe('PureChat provider config migration', () => {
   })
 
   it('does not persist an active health check state', () => {
-    useProviderConfigStore.getState().setModelHealth('purechat', 'gpt-5.4-mini', { status: 'checking' })
+    useProviderConfigStore.getState().setModelHealth('purechat', 'gpt-5.4-nano', { status: 'checking' })
 
     const partialized = useProviderConfigStore.persist.getOptions().partialize?.(useProviderConfigStore.getState()) as {
       configs: ProviderConfigs
     }
 
-    expect(partialized.configs.purechat.models[0]?.health).toEqual({ status: 'idle' })
+    expect(partialized.configs.purechat.models.find((model) => model.id === 'gpt-5.4-nano')?.health).toEqual({
+      status: 'idle',
+    })
   })
 
   it('does not persist apiKey or baseURL', () => {

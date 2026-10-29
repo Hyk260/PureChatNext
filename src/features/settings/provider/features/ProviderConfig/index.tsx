@@ -261,7 +261,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
           <Text className='text-[13px]' type='secondary'>
             由 PureChat 官方托管，无需填写 API Key。用量计入每月免费积分；用尽后可等待下月重置，或改用下方自配服务商。
           </Text>
-          <Text className={`${styles.hint} mt-2`}>设置中不提供购买积分入口。</Text>
+          {/* <Text className={`${styles.hint} mt-2`}>设置中不提供购买积分入口。</Text> */}
         </>
       ) : (
         <>

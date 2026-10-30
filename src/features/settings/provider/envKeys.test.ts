@@ -21,7 +21,7 @@ describe('provider env key cache', () => {
   it('uses injected server config without fetching', async () => {
     window.__SERVER_CONFIG__ = {
       renderedAt: '2026-01-01T00:00:00.000Z',
-      providerEnvKeys: { deepseek: true, openai: false },
+      providerEnvKeys: { bailian: false, deepseek: true, openai: false },
     }
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
@@ -36,13 +36,13 @@ describe('provider env key cache', () => {
   it('fetches and caches flags when the shell did not inject them', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ envKeys: { deepseek: false, openai: true } }),
+      json: async () => ({ envKeys: { bailian: false, deepseek: false, openai: true } }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const { loadProviderEnvKeyFlags, providerHasEnvApiKey } = await loadModule()
 
-    await expect(loadProviderEnvKeyFlags()).resolves.toEqual({ deepseek: false, openai: true })
+    await expect(loadProviderEnvKeyFlags()).resolves.toEqual({ bailian: false, deepseek: false, openai: true })
     await expect(providerHasEnvApiKey('openai')).resolves.toBe(true)
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(fetchMock).toHaveBeenCalledWith('/api/providers/config', {

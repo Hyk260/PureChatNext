@@ -8,6 +8,7 @@ describe('GET /api/providers/config', () => {
   it('returns boolean flags without leaking secrets', async () => {
     vi.stubEnv('OPENAI_API_KEY', 'sk-secret')
     vi.stubEnv('DEEPSEEK_API_KEY', '')
+    vi.stubEnv('DASHSCOPE_API_KEY', '')
 
     const { GET } = await import('./route')
     const response = await GET()
@@ -16,6 +17,7 @@ describe('GET /api/providers/config', () => {
     expect(response.status).toBe(200)
     expect(json).toEqual({
       envKeys: {
+        bailian: false,
         deepseek: false,
         openai: true,
       },

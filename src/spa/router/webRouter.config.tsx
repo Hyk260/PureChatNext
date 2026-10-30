@@ -21,7 +21,6 @@ const SETTINGS_FROM_EMPTY = [
   ['memory', 'MemoryPage'],
   ['creds', 'CredsPage'],
   ['connector', 'ConnectorPage'],
-  ['service-model', 'ServiceModelPage'],
 ] as const
 
 function settingsFromEmpty([path, page]: (typeof SETTINGS_FROM_EMPTY)[number]): RouteObject {
@@ -200,6 +199,13 @@ export const webRoutes: RouteObject[] = [
       {
         element: dynamicElement(() => import('@/routes/settings/web-search/page'), 'Settings > Web Search'),
         path: 'web-search',
+      },
+      {
+        element: dynamicElement(
+          () => import('@/routes/settings/service-model/page'),
+          'Settings > Service Model'
+        ),
+        path: 'service-model',
       },
       {
         element: dynamicElement(

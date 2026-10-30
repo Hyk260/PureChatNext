@@ -5,6 +5,9 @@ import { formatTokenNumber } from '@pure/utils/client'
 import { getErrorMessage } from '@pure/utils/error'
 import { Checkbox, toast } from '@lobehub/ui'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
+import { useSession } from '@/libs/better-auth/client'
+import { fetchLmStudioModels } from '@/libs/ai-providers/lmstudio'
+import { getLmStudioRuntimeConfig } from '@/features/settings/provider/lmstudioRuntimeConfig'
 import {
   Check,
   ChevronDown,
@@ -26,7 +29,15 @@ import { useEffect, useMemo, useState } from 'react'
 
 import type { ModelAbilities } from '@pure/model-bank'
 import type { ProviderId, ProviderModelItem } from '../../types'
-import { buildModelCatalog, filterModelCatalog, groupModelCatalog, isAudioCatalogModel } from './modelCatalog'
+import {
+  buildModelCatalog,
+  filterModelCatalog,
+  groupModelCatalog,
+  isAudioCatalogModel,
+  isFreeCatalogModel,
+  isImageCatalogModel,
+  isReasoningCatalogModel,
+} from './modelCatalog'
 import type { ModelCatalogItem, ModelCatalogTab } from './modelCatalog'
 
 interface ModelCatalogModalProps {
@@ -43,12 +54,15 @@ interface ModelCatalogResponse {
   cause?: string
   fallback?: boolean
   message?: string
-  models?: Array<{ displayName?: string; id: string }>
+  models?: ModelCatalogItem[]
 }
 
 const CATALOG_TABS: Array<{ key: ModelCatalogTab; label: string }> = [
   { key: 'all', label: '全部' },
   { key: 'chat', label: '会话' },
+  { key: 'free', label: '免费' },
+  { key: 'reasoning', label: '决策' },
+  { key: 'image', label: '图片' },
   { key: 'audio', label: '音频' },
 ]
 
@@ -74,6 +88,7 @@ const ModelCatalogModal = ({
   onSave,
   onClose,
 }: ModelCatalogModalProps) => {
+  const { data: session } = useSession()
   const [models, setModels] = useState(() => buildModelCatalog(provider, []))
   const [loading, setLoading] = useState(true)
   const [keyword, setKeyword] = useState('')
@@ -89,6 +104,15 @@ const ModelCatalogModal = ({
     const controller = new AbortController()
     const loadModels = async () => {
       try {
+        if (provider === 'lmstudio') {
+          const accountId = session?.user?.id
+          const runtimeConfig = await getLmStudioRuntimeConfig({ accountId, baseURL })
+          const localModels = await fetchLmStudioModels(runtimeConfig, controller.signal)
+          if (controller.signal.aborted) return
+          setModels(buildModelCatalog(provider, localModels))
+          return
+        }
+
         const response = await apiFetch(
           '/api/providers/models',
           jsonInit({ baseURL: baseURL.trim() || undefined, provider }, { method: 'POST', signal: controller.signal })
@@ -108,7 +132,7 @@ const ModelCatalogModal = ({
 
     loadModels()
     return () => controller.abort()
-  }, [baseURL, open, provider])
+  }, [baseURL, open, provider, session?.user?.id])
 
   const filteredModels = useMemo(() => filterModelCatalog(models, keyword, tab), [models, keyword, tab])
   const groups = useMemo(() => groupModelCatalog(filteredModels, providerName), [filteredModels, providerName])
@@ -117,6 +141,9 @@ const ModelCatalogModal = ({
       all: models.length,
       audio: models.filter(isAudioCatalogModel).length,
       chat: models.filter((model) => !isAudioCatalogModel(model)).length,
+      free: models.filter(isFreeCatalogModel).length,
+      image: models.filter(isImageCatalogModel).length,
+      reasoning: models.filter(isReasoningCatalogModel).length,
     }),
     [models]
   )

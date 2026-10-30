@@ -24,6 +24,7 @@ import NavItem from '@/components/NavItem'
 import Scrollbar from '@/components/Scrollbar'
 
 import { createCustomProvider } from './customProvidersApi'
+import { useProviderEnabledSettings } from './providerEnabledApi'
 import CustomProviderModal from './CustomProviderModal'
 import { SETTINGS_PROVIDER_IDS, getSettingsProviderMeta } from './const'
 import ProviderMark from './ProviderMark'
@@ -92,6 +93,7 @@ const ProviderSettingsNav = memo(() => {
   const [creating, setCreating] = useState(false)
   const createButtonRef = useRef<HTMLButtonElement>(null)
   const registry = useCustomProviderRegistry()
+  useProviderEnabledSettings()
   const configs = useProviderConfigStore((s) => s.configs)
   const customProviders = useProviderConfigStore((s) => s.customProviders)
   const setCustomProviders = useProviderConfigStore((s) => s.setCustomProviders)

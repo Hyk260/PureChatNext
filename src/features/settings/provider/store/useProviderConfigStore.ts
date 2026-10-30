@@ -29,11 +29,15 @@ interface ProviderConfigState {
   clearRemoteModels: (id: ProviderId) => void
   getConfig: (id: ProviderId) => ProviderConfig
   getEnabledModels: () => Array<{ displayName: string; model: string; provider: ProviderId }>
-  mergeRemoteModels: (id: ProviderId, remote: Array<{ displayName?: string; id: string }>) => void
+  mergeRemoteModels: (
+    id: ProviderId,
+    remote: Array<Partial<ProviderModelItem> & { id: string }>
+  ) => void
   patchConfig: (id: ProviderId, patch: Partial<ProviderConfig>) => void
   removeCustomModel: (id: ProviderId, modelId: string) => void
   setCheckModel: (id: ProviderId, checkModel: string) => void
   setEnabled: (id: ProviderId, enabled: boolean) => void
+  syncBuiltinProviderEnabled: (enabled: Partial<Record<ProviderId, boolean>>) => void
   setCustomProviders: (providers: CustomProviderDefinition[]) => void
   removeCustomProvider: (id: ProviderId) => void
   setModelHealth: (id: ProviderId, modelId: string, health: ProviderModelHealth) => void
@@ -111,8 +115,11 @@ export const mergeProviderConfig = (
 
 const normalizePersistedConfigs = (configs?: Partial<ProviderConfigs>): ProviderConfigs => {
   const next: ProviderConfigs = {
+    bailian: mergeProviderConfig('bailian', configs?.bailian),
     deepseek: mergeProviderConfig('deepseek', configs?.deepseek),
+    lmstudio: mergeProviderConfig('lmstudio', configs?.lmstudio),
     openai: mergeProviderConfig('openai', configs?.openai),
+    openrouter: mergeProviderConfig('openrouter', configs?.openrouter),
     purechat: mergeProviderConfig('purechat', configs?.purechat),
   }
 
@@ -151,6 +158,22 @@ const stripSecretFields = (configs: ProviderConfigs): ProviderConfigs =>
       },
     ])
   )
+
+const stripEnabledFields = (configs: ProviderConfigs) =>
+  Object.fromEntries(
+    Object.entries(configs).map(([id, config]) => {
+      const { enabled: _enabled, ...persistedConfig } = config
+      return [id, persistedConfig]
+    })
+  )
+
+const withDefaultProviderEnabled = (configs: ProviderConfigs): ProviderConfigs => {
+  const next = { ...configs }
+  for (const [id, config] of Object.entries(next) as [ProviderId, ProviderConfig][]) {
+    next[id] = { ...config, enabled: createDefaultProviderConfig(id).enabled }
+  }
+  return next
+}
 
 export const useProviderConfigStore = create<ProviderConfigState>()(
   persist(
@@ -234,6 +257,15 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
                   existing.source === 'custom'
                     ? existing.displayName
                     : item.displayName?.trim() || existing.displayName,
+                abilities: item.abilities
+                  ? { ...existing.abilities, ...item.abilities, textToSpeech: existing.abilities?.textToSpeech }
+                  : existing.abilities,
+                contextWindowTokens: item.contextWindowTokens ?? existing.contextWindowTokens,
+                family: item.family ?? existing.family,
+                group: item.group ?? existing.group,
+                inputModalities: item.inputModalities ?? existing.inputModalities,
+                outputModalities: item.outputModalities ?? existing.outputModalities,
+                pricing: item.pricing ?? existing.pricing,
               }
             }
 
@@ -241,6 +273,13 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
               displayName: item.displayName?.trim() || item.id,
               enabled: true,
               id: item.id,
+              abilities: item.abilities,
+              contextWindowTokens: item.contextWindowTokens,
+              family: item.family,
+              group: item.group,
+              inputModalities: item.inputModalities,
+              outputModalities: item.outputModalities,
+              pricing: item.pricing,
               source: 'remote',
             }
           })
@@ -312,6 +351,17 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
             },
           },
         }))
+      },
+      syncBuiltinProviderEnabled: (enabled) => {
+        set((state) => {
+          const configs = { ...state.configs }
+          for (const [id, value] of Object.entries(enabled) as [ProviderId, boolean][]) {
+            if (!isBuiltinProviderId(id) || isServerManagedProvider(id) || typeof value !== 'boolean') continue
+            const current = configs[id] ?? createDefaultProviderConfig(id)
+            configs[id] = { ...current, enabled: value }
+          }
+          return { configs }
+        })
       },
       setCustomProviders: (providers) => {
         set((state) => {
@@ -467,7 +517,7 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
           return { configs: DEFAULT_PROVIDER_CONFIGS }
         }
 
-        const next = stripSecretFields(normalizePersistedConfigs(configs))
+        const next = stripSecretFields(withDefaultProviderEnabled(normalizePersistedConfigs(configs)))
 
         return { configs: next }
       },
@@ -475,12 +525,16 @@ export const useProviderConfigStore = create<ProviderConfigState>()(
         const state = persisted as { configs?: Partial<ProviderConfigs> } | undefined
         return {
           ...current,
-          configs: stripSecretFields(normalizePersistedHealth(normalizePersistedConfigs(state?.configs))),
+          configs: stripSecretFields(
+            withDefaultProviderEnabled(normalizePersistedHealth(normalizePersistedConfigs(state?.configs)))
+          ),
         }
       },
       name: 'purechat:provider:v1',
-      partialize: (state) => ({ configs: stripSecretFields(normalizePersistedHealth(state.configs)) }),
-      version: 10,
+      partialize: (state) => ({
+        configs: stripEnabledFields(stripSecretFields(normalizePersistedHealth(state.configs))),
+      }),
+      version: 11,
     }
   )
 )

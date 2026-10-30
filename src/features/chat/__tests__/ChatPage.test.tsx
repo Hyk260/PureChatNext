@@ -120,6 +120,10 @@ vi.mock('@/features/chat/chatApi', () => ({
   updateTopic: mocks.updateTopic,
 }))
 
+vi.mock('@/features/settings/serviceModel/api', () => ({
+  useServiceModelSettings: () => ({ data: {} }),
+}))
+
 vi.mock('@/features/chat/ChatInput', () => ({
   default: ({
     onPermissionModeChange,

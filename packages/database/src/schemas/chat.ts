@@ -26,6 +26,7 @@ export const chatTopics = pgTable(
     permissionMode: text('permission_mode').$type<ChatPermissionMode>().notNull().default('auto'),
     projectName: text('project_name'),
     title: text('title').notNull(),
+    titleSource: text('title_source').$type<'initial' | 'generated' | 'manual'>().notNull().default('manual'),
     ...timestamps,
   },
   (t) => [

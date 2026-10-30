@@ -1,5 +1,7 @@
 import { QQ_MAX_TEXT_LENGTH, chunkQQText } from '@pure/utils/qqText'
 import type { ChannelAccessPolicy, ChannelAllowedUser, ChannelBindingSettings } from '@pure/database/schemas/channel'
+import { isQQSpeechReplyMode, speechConfigError } from '@pure/const'
+import type { QQSpeechModelReference } from '@pure/types'
 
 import type { QQThreadType } from './thread'
 
@@ -12,6 +14,7 @@ export type QQChannelSettings = {
   dmPolicy: QQAccessPolicy
   groupPolicy: QQAccessPolicy
   platformUserId: string
+  speechModel?: QQSpeechModelReference
 }
 
 /** QQ OpenAPI outbound text hard limit — single source from `@pure/chat-adapter/qq`. */
@@ -58,14 +61,41 @@ function clampCharLimit(value: unknown): number {
   return Math.min(QQ_PLATFORM_MAX_TEXT_LENGTH, Math.max(QQ_MIN_CHAR_LIMIT, Math.round(raw)))
 }
 
+function normalizeSpeechInstruction(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const instruction = value.trim()
+  return instruction && instruction.length <= 500 ? instruction : undefined
+}
+
 /** Normalize persisted / API payloads into a complete settings object. */
 export function normalizeQQChannelSettings(raw?: ChannelBindingSettings | null): QQChannelSettings {
+  const rawSpeechModel =
+    raw?.speechModel &&
+    typeof raw.speechModel.provider === 'string' &&
+    typeof raw.speechModel.model === 'string' &&
+    raw.speechModel.provider.trim() &&
+    raw.speechModel.model.trim()
+      ? raw.speechModel
+      : undefined
+  const speechInstruction = normalizeSpeechInstruction(rawSpeechModel?.instruction)
+  const speechModel = rawSpeechModel
+    ? {
+        model: rawSpeechModel.model.trim(),
+        provider: rawSpeechModel.provider.trim(),
+        ...(typeof rawSpeechModel.voice === 'string' && rawSpeechModel.voice.trim()
+          ? { voice: rawSpeechModel.voice.trim() }
+          : {}),
+        ...(speechInstruction ? { instruction: speechInstruction } : {}),
+        ...(isQQSpeechReplyMode(rawSpeechModel.replyMode) ? { replyMode: rawSpeechModel.replyMode } : {}),
+      }
+    : undefined
   return {
     allowedUsers: normalizeAllowedUsers(raw?.allowedUsers),
     charLimit: clampCharLimit(raw?.charLimit),
     dmPolicy: isAccessPolicy(raw?.dmPolicy) ? raw.dmPolicy : DEFAULT_QQ_CHANNEL_SETTINGS.dmPolicy,
     groupPolicy: isAccessPolicy(raw?.groupPolicy) ? raw.groupPolicy : DEFAULT_QQ_CHANNEL_SETTINGS.groupPolicy,
     platformUserId: typeof raw?.platformUserId === 'string' ? raw.platformUserId.trim() : '',
+    ...(speechModel ? { speechModel } : {}),
   }
 }
 
@@ -94,6 +124,36 @@ export function parseQQChannelSettingsInput(raw: unknown):
   if (body.platformUserId !== undefined && typeof body.platformUserId !== 'string') {
     return { ok: false, error: 'Invalid platformUserId' }
   }
+  if (
+    body.speechModel !== undefined &&
+    (!body.speechModel ||
+      typeof body.speechModel !== 'object' ||
+      typeof (body.speechModel as { provider?: unknown }).provider !== 'string' ||
+      typeof (body.speechModel as { model?: unknown }).model !== 'string')
+  ) {
+    return { ok: false, error: 'Invalid speechModel' }
+  }
+  if (body.speechModel !== undefined) {
+    const speechModel = body.speechModel as Record<string, unknown>
+    if (speechModel.voice !== undefined && (typeof speechModel.voice !== 'string' || !speechModel.voice.trim())) {
+      return { ok: false, error: 'Invalid speechModel voice' }
+    }
+    if (speechModel.replyMode !== undefined && !isQQSpeechReplyMode(speechModel.replyMode)) {
+      return { ok: false, error: 'Invalid speechModel replyMode' }
+    }
+    if (
+      speechModel.instruction !== undefined &&
+      (typeof speechModel.instruction !== 'string' || speechModel.instruction.length > 500)
+    ) {
+      return { ok: false, error: 'Invalid speechModel instruction' }
+    }
+    const invalid = speechConfigError({
+      model: speechModel.model as string,
+      provider: speechModel.provider as string,
+      ...(typeof speechModel.voice === 'string' ? { voice: speechModel.voice.trim() } : {}),
+    })
+    if (invalid) return { ok: false, error: invalid }
+  }
   if (body.allowedUsers !== undefined && !Array.isArray(body.allowedUsers)) {
     return { ok: false, error: 'Invalid allowedUsers' }
   }
@@ -105,6 +165,7 @@ export function parseQQChannelSettingsInput(raw: unknown):
       dmPolicy: body.dmPolicy as QQAccessPolicy | undefined,
       groupPolicy: body.groupPolicy as QQAccessPolicy | undefined,
       platformUserId: body.platformUserId as string | undefined,
+      speechModel: body.speechModel as ChannelBindingSettings['speechModel'] | undefined,
     }),
   }
 }

@@ -18,7 +18,7 @@ import mime from 'mime'
 import { resolveMimeTypeFromBytes } from '@pure/utils'
 
 import { QQ_MAX_PASSIVE_REPLIES, QQ_MAX_TEXT_LENGTH, chunkQQText, chunkQQTextLimited } from '@pure/utils/qqText'
-import { QQApiClient } from './api'
+import { QQApiClient, QQDeliveryError } from './api'
 import { toQQMediaFileType } from './mediaType'
 import { isValidWebhookChallenge, signWebhookResponse } from './crypto'
 import { QQFormatConverter } from './format-converter'
@@ -60,6 +60,7 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   readonly name = 'qq'
   private readonly api: QQApiClient
   private readonly clientSecret: string
+  private readonly onIncomingMessage?: QQAdapterConfig['onIncomingMessage']
   private readonly formatConverter: QQFormatConverter
   private _userName: string
   private _botUserId?: string
@@ -67,6 +68,48 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   private logger!: Logger
   /** `threadId` → 最近一条入站消息的上下文，用于发送被动回复。 */
   private readonly replyContext = new Map<string, PendingReplyContext>()
+
+  /** Capture the triggering msg_id, rather than the most recently received message in this thread. */
+  createReplySender(threadId: string, msgId: string, options: { createdAt: Date; signal: AbortSignal; onConsume: (seq: number, fallbackSlots?: number) => Promise<number | void> }) {
+    const target = this.decodeThreadId(threadId)
+    const current = this.replyContext.get(threadId)
+    let usedSeq = current?.msgId === msgId ? current.msgSeq - 1 : 0
+    const assertAvailable = (reserved = 0) => {
+      options.signal.throwIfAborted()
+      if (!msgId || (target.type !== 'c2c' && target.type !== 'group')) throw new QQDeliveryError('QQ_PASSIVE_CONTEXT_MISSING', 'not_sent')
+      const windowMs = target.type === 'c2c' ? 60 * 60_000 : 5 * 60_000
+      if (!Number.isFinite(options.createdAt.getTime()) || Date.now() - options.createdAt.getTime() > windowMs) throw new QQDeliveryError('QQ_REPLY_EXPIRED', 'not_sent')
+      if (usedSeq + reserved >= QQ_MAX_PASSIVE_REPLIES) throw new QQDeliveryError('QQ_REPLY_BUDGET', 'not_sent')
+    }
+    const nextReply = async (fallbackSlots = 0) => {
+      assertAvailable()
+      let msgSeq = usedSeq + 1
+      const reservedSeq = await options.onConsume(msgSeq, fallbackSlots)
+      if (reservedSeq !== undefined) msgSeq = reservedSeq
+      usedSeq = msgSeq
+      if (this.replyContext.get(threadId)?.msgId === msgId) this.replyContext.set(threadId, { msgId, msgSeq: msgSeq + 1 })
+      return { msgId, msgSeq }
+    }
+    return {
+      get usedSeq() { return usedSeq },
+      assertAvailable,
+      sendText: async (text: string) => {
+        const reply = await nextReply()
+        options.signal.throwIfAborted()
+        await this.api.sendPassiveReply(target.type as 'group' | 'c2c', target.id, { text }, reply, AbortSignal.any([options.signal, AbortSignal.timeout(15_000)]))
+      },
+      sendAudio: async (audio: Buffer, signal: AbortSignal, beforeSend?: () => Promise<void>) => {
+        signal.throwIfAborted()
+        assertAvailable(1)
+        const uploaded = await this.api.uploadSpeech(target.type as 'group' | 'c2c', target.id, audio, signal)
+        signal.throwIfAborted()
+        await beforeSend?.()
+        const reply = await nextReply(1)
+        signal.throwIfAborted()
+        await this.api.sendPassiveReply(target.type as 'group' | 'c2c', target.id, { fileInfo: uploaded }, reply, signal)
+      },
+    }
+  }
 
   /** 返回当前 Bot 的显示名称。 */
   get userName(): string {
@@ -82,6 +125,7 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
   constructor(config: QQAdapterConfig & { userName?: string }) {
     this.api = new QQApiClient(config.appId, config.clientSecret)
     this.clientSecret = config.clientSecret
+    this.onIncomingMessage = config.onIncomingMessage
     this.formatConverter = new QQFormatConverter()
     this._userName = config.userName || 'qq-bot'
   }
@@ -155,6 +199,8 @@ export class QQAdapter implements Adapter<QQThreadId, QQRawMessage> {
     if (!threadId) {
       return Response.json({ ok: true })
     }
+
+    await this.onIncomingMessage?.(threadId, eventData)
 
     // 记住入站 `msg_id`，让后续 `postMessage` 能发送被动回复。
     if (eventData.id) {

@@ -114,11 +114,14 @@ export class UserProviderSecretModel {
       }
     }
 
-    const nextApiKey = patch.apiKey?.trim() ? patch.apiKey.trim() : current.apiKey.trim()
-    if (!nextApiKey) throw new MissingProviderApiKeyError()
+    const suppliedApiKey = patch.apiKey?.trim()
+    const nextApiKey = providerId === 'lmstudio' && patch.apiKey !== undefined
+      ? suppliedApiKey ?? ''
+      : suppliedApiKey || current.apiKey.trim()
+    if (!nextApiKey && providerId !== 'lmstudio') throw new MissingProviderApiKeyError()
     const nextBaseURL = patch.baseURL !== undefined ? patch.baseURL.trim() : current.baseURL
     const keyVaults = encryptVaultJson({ apiKey: nextApiKey, baseURL: nextBaseURL } satisfies ProviderSecretVault)
-    const keyHint = providerKeyHint(nextApiKey)
+    const keyHint = nextApiKey ? providerKeyHint(nextApiKey) : ''
     const now = new Date()
 
     if (existing) {

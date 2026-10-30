@@ -1,4 +1,3 @@
-import { BUILTIN_PROVIDER_ID_LIST } from '@pure/const'
 import { PROVIDER_DEFAULT_MODELS } from '@pure/model-bank'
 import { formatDateTime } from '@pure/utils/client'
 
@@ -7,7 +6,7 @@ import type { ChannelCommandCatalogItem } from '@/libs/channels/core/commands'
 
 export type MessengerPlatformId = 'slack' | 'telegram' | 'discord' | 'wechat' | 'qq'
 
-export const MESSENGER_PROVIDER_IDS = BUILTIN_PROVIDER_ID_LIST
+export const MESSENGER_PROVIDER_IDS = ['purechat', 'openai', 'deepseek', 'bailian'] as const
 export type MessengerProviderId = (typeof MESSENGER_PROVIDER_IDS)[number]
 export const MESSENGER_DEFAULT_PROVIDER: MessengerProviderId = 'deepseek'
 export const MESSENGER_DEFAULT_MODELS = PROVIDER_DEFAULT_MODELS
@@ -15,7 +14,7 @@ export const MESSENGER_DEFAULT_MODELS = PROVIDER_DEFAULT_MODELS
 export const QQ_DEFAULT_PROVIDER: MessengerProviderId = MESSENGER_DEFAULT_PROVIDER
 export const QQ_DEFAULT_MODEL = MESSENGER_DEFAULT_MODELS[QQ_DEFAULT_PROVIDER]
 export const isMessengerProviderId = (id: string): id is MessengerProviderId =>
-  MESSENGER_PROVIDER_IDS.includes(id as MessengerProviderId)
+  MESSENGER_PROVIDER_IDS.some((provider) => provider === id)
 export const formatMessengerActiveAt = (value: string) =>
   formatDateTime(value, { hourCycle: 'h23', second: '2-digit' })
 

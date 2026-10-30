@@ -9,8 +9,9 @@ describe('getProviderEnvKeyFlags', () => {
   it('reports presence without exposing the key', async () => {
     vi.stubEnv('OPENAI_API_KEY', ' sk-openai ')
     vi.stubEnv('DEEPSEEK_API_KEY', '   ')
+    vi.stubEnv('DASHSCOPE_API_KEY', '')
 
     const { getProviderEnvKeyFlags } = await import('../envKeys')
-    expect(getProviderEnvKeyFlags()).toEqual({ deepseek: false, openai: true })
+    expect(getProviderEnvKeyFlags()).toEqual({ bailian: false, deepseek: false, openai: true })
   })
 })

@@ -6,6 +6,13 @@ import debug from 'debug'
 
 import { buildChatBotFingerprint, ChatBotRegistry } from '../core/chatBotRegistry'
 import { handleQQMention } from './agentBridge'
+import { abortQQGeneration } from './commands'
+import { parseChannelCommand } from '../core/commands'
+import { ChannelBindingModel } from '@pure/database/models/channelBinding'
+import { ChannelEventModel } from '@pure/database/models/channelEvent'
+import { QQSpeechModel } from '@pure/database/models/qqSpeech'
+import { evaluateQQInboundAccess, normalizeQQChannelSettings } from './advancedSettings'
+import { resolveQQThreadType } from './thread'
 
 const log = debug('channel:qq:chatBot')
 
@@ -66,7 +73,22 @@ export async function getOrCreateQQChat(ctx: QQChatContext): Promise<Chat> {
       platform: 'qq',
     },
     () => {
-      const adapter = createQQAdapter({ appId: ctx.appId, clientSecret: ctx.appSecret })
+      const adapter = createQQAdapter({
+        appId: ctx.appId, clientSecret: ctx.appSecret,
+        onIncomingMessage: async (threadId, message) => {
+          const command = parseChannelCommand((message.content ?? '').replace(/<@!?\w+>/g, '').trim())
+          if (command?.name !== 'stop' || message.author?.bot || !message.id) return
+          const binding = await new ChannelBindingModel().findById(ctx.bindingId)
+          if (!binding?.enabled || binding.needsRebind || binding.userId !== ctx.userId) return
+          const access = evaluateQQInboundAccess({
+            authorId: message.author?.id || message.author?.user_openid || message.author?.member_openid || 'unknown',
+            settings: normalizeQQChannelSettings(binding.settings), threadType: resolveQQThreadType(threadId),
+          })
+          if (!access.ok || await new ChannelEventModel().findByPlatformMessageId(ctx.bindingId, message.id)) return
+          abortQQGeneration(ctx.applicationId, threadId)
+          await new QQSpeechModel().cancelPending(ctx.bindingId, threadId)
+        },
+      })
       const chat = new Chat({
         adapters: { qq: adapter },
         concurrency: 'queue',

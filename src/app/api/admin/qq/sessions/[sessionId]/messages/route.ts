@@ -8,6 +8,8 @@ import { AgentService } from '@/server/agents/service'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { ChannelEventFileModel } from '@pure/database/models/channelEventFile'
+import { QQSpeechModel } from '@pure/database/models/qqSpeech'
+import { chunkQQOutboundText, normalizeQQChannelSettings } from '@/libs/channels/qq/advancedSettings'
 import type { ChannelEventItem } from '@pure/database/schemas/channel'
 import { jsonError, withAdmin } from '@/libs/auth/get-session-user'
 import { safeFileName } from '@/libs/utils/safeFileName'
@@ -210,11 +212,13 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
   }
 
   const inFlightChunks = event && event.status !== 'completed' ? event.sentChunkCount : 0
-  const agentReplyCount = inbound?.responseText?.trim() ? Math.max(inbound.sentChunkCount || 0, 1) : 0
+  const consumedSeq = Number(inbound?.platformPayload?.replySeqUsed) || 0
+  const hasReplyLedger = inbound?.platformPayload?.replySeqUsed !== undefined
+  const agentReplyCount = Math.max(consumedSeq, inbound?.responseText?.trim() ? Math.max(inbound.sentChunkCount || 0, 1) : 0)
   const reply = resolveQQPassiveReply({
     agentReplyCount,
     inboundCreatedAt: inbound?.createdAt,
-    outboundCount: outboundCount + inFlightChunks,
+    outboundCount: hasReplyLedger ? 0 : outboundCount + inFlightChunks,
     platformMessageId: inbound?.platformMessageId,
     threadType: resolveQQThreadType(session.externalUserId),
   })
@@ -270,6 +274,8 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
       .filter(({ index }) => persisted[index]?.deliveryStatus !== 'sent')
     const outboundText = skipText ? '' : text
     if (outboundText || sendable.length > 0) {
+      const count = (outboundText ? chunkQQOutboundText(outboundText, normalizeQQChannelSettings(binding.settings).charLimit).length : 0) + sendable.length
+      const msgSeq = await new QQSpeechModel().reserveReply(inbound!.id, count)
       await sendQQDevOutbound({
         binding,
         media: sendable.map(({ item }) => item),
@@ -283,7 +289,7 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
           chunksSent += chunkCount
           await eventModel.setOutboundSentChunkCount(event!.id, chunksSent, { textSent: true })
         },
-        reply: reply.reply,
+        reply: { ...reply.reply, msgSeq },
         session,
         text: outboundText,
       })
@@ -292,6 +298,8 @@ export const POST = withAdmin<{ sessionId: string }>(async (request, { params, u
     await eventModel.completeOutbound(event.id)
   } catch (error) {
     await eventModel.failOutbound(event.id, getErrorMessage(error, 'Send failed'))
+    if (error instanceof Error && error.message === 'QQ_REPLY_BUDGET') return jsonError('被动回复次数已用完，请让用户再发一条消息。', 409)
+    if (error instanceof Error && error.message === 'BINDING_ACCESS_CHANGED') return jsonError('QQ 绑定已停用，请重新连接后再试。', 409)
     if (error instanceof QQOutboundError || error instanceof WechatFileArtifactError) {
       return jsonError(error.message, 400)
     }

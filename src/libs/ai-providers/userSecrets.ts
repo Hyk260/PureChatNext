@@ -23,6 +23,7 @@ export async function resolveUserProviderCredentials(params: {
   requestBaseURL?: string
   userId?: string | null
 }): Promise<UserProviderCredentials | null> {
+  if (params.provider === 'lmstudio') return null
   const requestBaseURL = resolveOptionalBaseURL(params.requestBaseURL)
 
   if (!isSupportedProviderId(params.provider)) {
@@ -67,11 +68,13 @@ const resolveCustomProviderCredentials = async (providerId: string, userId?: str
   try {
     const provider = await new CustomProviderModel(userId).find(providerId)
     if (!provider) return null
-
     const vault = await new UserProviderSecretModel().getDecrypted(userId, providerId)
     if (!vault?.apiKey) return null
 
-    return { apiKey: vault.apiKey, baseURL: provider.baseURL }
+    return {
+      apiKey: vault.apiKey,
+      baseURL: provider.baseURL,
+    }
   } catch {
     return null
   }

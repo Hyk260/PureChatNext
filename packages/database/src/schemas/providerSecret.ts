@@ -4,7 +4,7 @@ import { idGenerator } from '../utils/idGenerator'
 import { timestamps } from './_helpers'
 import { users } from './user'
 
-export const USER_PROVIDER_SECRET_IDS = ['openai', 'deepseek'] as const
+export const USER_PROVIDER_SECRET_IDS = ['openai', 'deepseek', 'lmstudio'] as const
 export type UserProviderSecretId = string
 
 export const isUserProviderSecretId = (value: string): value is UserProviderSecretId =>
@@ -12,7 +12,7 @@ export const isUserProviderSecretId = (value: string): value is UserProviderSecr
 
 /**
  * 用户自备服务商密钥（BYOK）。
- * `key_vaults` 为 AES-256-GCM 密文，勿把明文 apiKey 下发到客户端。
+ * `key_vaults` 为 AES-256-GCM 密文；明文仅供已认证的账号本人使用，勿写入日志或返回给其他用户。
  */
 export const userProviderSecrets = pgTable(
   'user_provider_secrets',

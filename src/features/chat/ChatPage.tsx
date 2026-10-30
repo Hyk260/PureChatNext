@@ -28,6 +28,7 @@ import {
   fetchMessages,
   fetchTopics,
   putMessages,
+  renameTopic,
   updateTopic,
 } from '@/features/chat/chatApi'
 import ChatInput from '@/features/chat/ChatInput'
@@ -59,7 +60,10 @@ import { AgentRequestError } from '@/features/home/agentApi'
 import { useAgentsStore } from '@/features/home/store/useAgentsStore'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { getDesktopApi } from '@/types/desktop'
+import { useServiceModelSettings } from '@/features/settings/serviceModel/api'
+import { getLmStudioRuntimeConfig } from '@/features/settings/provider/lmstudioRuntimeConfig'
 import { useSession } from '@/libs/better-auth/client'
+import { generateLmStudioTitle } from '@/libs/ai-providers/lmstudio'
 import type { DesktopProject } from '@/types/desktop'
 
 const subscribeNoop = () => () => {}
@@ -100,6 +104,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
   const selectedAgentId = useHomeStore((s) => s.selectedAgentId)
   const selectedModel = useHomeStore((s) => s.selectedModel)
   const selectedProvider = useHomeStore((s) => s.selectedProvider)
+  const { data: serviceModelSettings } = useServiceModelSettings()
   const setSelectedAgentId = useHomeStore((s) => s.setSelectedAgentId)
 
   const agentId = agentFromQuery ?? selectedAgentId ?? PURE_AI_AGENT_ID
@@ -422,10 +427,23 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
           if (cachedMessages) await putMessages(id, cachedMessages)
         }
 
-        const updated = await autoRenameTopic(id, {
-          model: selectedModel,
-          provider: selectedProvider,
-        })
+        const titleModel = serviceModelSettings?.topicNaming ?? { model: selectedModel, provider: selectedProvider }
+        const isLocalProvider = titleModel.provider === 'lmstudio'
+        let updated: LocalChatTopic
+        if (isLocalProvider) {
+          const activeSession = findChatSession(userId, agentId, id)
+          const messages = activeSession?.chat.messages ?? messagesCache.get(id) ?? []
+          const config = await getLmStudioRuntimeConfig({ accountId: userId })
+          const title = await generateLmStudioTitle(config, titleModel.model, messages)
+          if (!title) throw new Error('LM Studio 未生成有效标题')
+          updated = await renameTopic(id, title)
+        } else {
+          updated = await autoRenameTopic(id, {
+            contextWindowTokens: titleModel.contextWindowTokens,
+            model: titleModel.model,
+            provider: titleModel.provider,
+          })
+        }
         setTopics((prev) => prev.map((topic) => (topic.id === id ? updated : topic)))
         toast.success('已智能重命名')
       } catch (error) {
@@ -436,7 +454,7 @@ const ChatPageContent = memo(({ userId }: { userId: string }) => {
         setAutoRenamingTopicId((currentId) => (currentId === id ? null : currentId))
       }
     },
-    [agentId, messagesCache, selectedModel, selectedProvider, userId]
+    [agentId, messagesCache, selectedModel, selectedProvider, serviceModelSettings?.topicNaming, userId]
   )
 
   const handleProjectChange = useCallback(

@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
+  findCustomProvider: vi.fn(),
   getDecrypted: vi.fn(),
   resolveProviderApiKey: vi.fn(),
 }))
@@ -12,14 +13,17 @@ vi.mock('@pure/database/models/userProviderSecret', () => ({
   },
 }))
 vi.mock('@pure/database/models/customProvider', () => ({
-  CustomProviderModel: class {},
+  CustomProviderModel: class {
+    find = mocks.findCustomProvider
+  },
   isValidProviderId: (id: string) => /^[a-z0-9][a-z0-9_-]{0,31}$/.test(id),
 }))
 vi.mock('../resolveClient', () => ({
-  isSupportedProviderId: (id: string) => id === 'openai' || id === 'deepseek',
+  isSupportedProviderId: (id: string) => id === 'openai' || id === 'deepseek' || id === 'openrouter',
   PROVIDER_RUNTIME_DEFAULT_BASE_URLS: {
     deepseek: 'https://api.deepseek.com',
     openai: 'https://api.openai.com/v1',
+    openrouter: 'https://openrouter.ai/api/v1',
   },
   resolveOptionalBaseURL: (value?: string) => {
     if (typeof value !== 'string') return undefined
@@ -34,6 +38,7 @@ import { resolveUserProviderCredentials } from '../userSecrets'
 describe('resolveUserProviderCredentials', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.findCustomProvider.mockResolvedValue(null)
     mocks.getDecrypted.mockResolvedValue(null)
     mocks.resolveProviderApiKey.mockReturnValue(undefined)
   })
@@ -62,6 +67,38 @@ describe('resolveUserProviderCredentials', () => {
         userId: 'user-1',
       })
     ).resolves.toBeNull()
+  })
+
+  it('keeps legacy custom providers in generic compatibility mode', async () => {
+    mocks.findCustomProvider.mockResolvedValue({ baseURL: 'https://custom.example/v1' })
+    mocks.getDecrypted.mockResolvedValue({ apiKey: 'custom-key' })
+
+    await expect(
+      resolveUserProviderCredentials({
+        allowEnvFallback: true,
+        provider: 'legacy-provider',
+        userId: 'user-1',
+      })
+    ).resolves.toEqual({ apiKey: 'custom-key', baseURL: 'https://custom.example/v1' })
+  })
+
+  it('resolves OpenRouter credentials as a built-in provider', async () => {
+    mocks.getDecrypted.mockResolvedValue({ apiKey: 'or-key' })
+
+    await expect(
+      resolveUserProviderCredentials({ allowEnvFallback: true, provider: 'openrouter', userId: 'user-1' })
+    ).resolves.toEqual({
+      apiKey: 'or-key',
+      baseURL: undefined,
+    })
+    expect(mocks.findCustomProvider).not.toHaveBeenCalled()
+  })
+
+  it('does not resolve LM Studio through cloud provider credentials', async () => {
+    await expect(
+      resolveUserProviderCredentials({ allowEnvFallback: true, provider: 'lmstudio', userId: 'user-1' })
+    ).resolves.toBeNull()
+    expect(mocks.findCustomProvider).not.toHaveBeenCalled()
   })
 
   it('uses env keys for web when the vault is empty', async () => {

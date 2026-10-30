@@ -5,13 +5,18 @@ import type {
   QQAllowedUser,
   QQChannelSettings,
 } from '@/libs/channels/qq/advancedSettings'
+import type { QQSpeechModelReference } from '@pure/types'
 
 export type { QQAccessPolicy, QQAllowedUser }
 export type QQAdvancedSettings = QQChannelSettings
 
 export type QQConnectionMode = 'websocket' | 'webhook'
-export type QQProviderId = 'purechat' | 'openai' | 'deepseek'
+export type QQProviderId = 'purechat' | 'openai' | 'deepseek' | 'bailian'
 export type QQConfiguration = { agentId: string; model: string; provider: QQProviderId }
+export type QQSpeechModel = Pick<
+  QQSpeechModelReference,
+  'instruction' | 'model' | 'provider' | 'replyMode' | 'voice'
+>
 
 export type QQStatus = {
   agentId?: string
@@ -121,6 +126,14 @@ export async function updateQQConfiguration(config: QQConfiguration): Promise<vo
   if (!res.ok) {
     throw await readApiError(res, `update configuration failed: ${res.status}`)
   }
+}
+
+export async function updateQQSpeechModel(speechModel: QQSpeechModel): Promise<QQAdvancedSettings> {
+  const res = await apiFetch('/api/channels/qq/bind', jsonInit({ speechModel }, { method: 'PATCH' }))
+  if (!res.ok) throw await readApiError(res, `update speech model failed: ${res.status}`)
+  const body = (await res.json()) as { settings?: QQAdvancedSettings }
+  if (!body.settings) throw new Error('update speech model returned empty settings')
+  return body.settings
 }
 
 export async function updateQQAdvancedSettings(settings: QQAdvancedSettings): Promise<QQAdvancedSettings> {

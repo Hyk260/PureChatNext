@@ -16,7 +16,7 @@ vi.mock('@/server/purechat', () => ({
   isPureChatRuntimeAvailable: vi.fn(() => true),
 }))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
-  isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek',
+  isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek' || provider === 'openrouter',
 }))
 vi.mock('@pure/database/models/userProviderSecret', () => ({
   UserProviderSecretModel: class {},

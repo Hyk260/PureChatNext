@@ -27,8 +27,13 @@ export interface ProviderModelItem {
   contextWindowTokens?: number
   displayName: string
   enabled: boolean
+  family?: string
   health?: ProviderModelHealth
   id: string
+  group?: string
+  inputModalities?: string[]
+  outputModalities?: string[]
+  pricing?: { inputPerMillion?: number; outputPerMillion?: number }
   source: ProviderModelSource
 }
 

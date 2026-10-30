@@ -29,6 +29,7 @@ import { DESKTOP_IPC_EVENTS } from '../../common/ipc/contracts'
 import { BrowserController } from '../controllers/BrowserController'
 import { BrowserService } from '../services/BrowserService'
 import { DirectorySelectionService } from '../services/DirectorySelectionService'
+import { LmStudioController } from '../controllers/LmStudioController'
 
 export const registerDesktopIpc = async (options: {
   config?: DesktopConfigService
@@ -38,6 +39,7 @@ export const registerDesktopIpc = async (options: {
   updater: UpdateService
 }) => {
   const config = options.config ?? new DesktopConfigService(app.getPath('userData'))
+  const lmStudio = new LmStudioController(config)
   const directorySelections = new DirectorySelectionService()
   const confirmDesktopAction: DesktopApprovalHandler = async ({ detail, message, title }) => {
     const contents = options.getTrustedContents()
@@ -95,6 +97,7 @@ export const registerDesktopIpc = async (options: {
   new DataController(data).register(registry)
 
   new ConfigController(config, () => browser.reset()).register(registry)
+  lmStudio.register(registry)
   new AuthController(auth, () => {
     terminal.reset()
     browser.reset().catch(() => undefined)

@@ -39,6 +39,7 @@ const styles = createStaticStyles(({ css }) => ({
 
 export interface ModelSwitchListProps {
   activeKey: string
+  emptyMessage?: string
   items: ListItem[]
   onClose: () => void
   onScroll?: () => void
@@ -47,11 +48,11 @@ export interface ModelSwitchListProps {
 }
 
 const ModelSwitchList = memo<ModelSwitchListProps>(
-  ({ activeKey, items, onClose, onScroll, onSelect, subscribeScroll }) => {
+  ({ activeKey, emptyMessage, items, onClose, onScroll, onSelect, subscribeScroll }) => {
     const navigate = useNavigate()
 
     if (items.length === 0) {
-      return <div className={styles.empty}>未找到匹配模型</div>
+      return <div className={styles.empty}>{emptyMessage ?? '未找到匹配模型'}</div>
     }
 
     return (

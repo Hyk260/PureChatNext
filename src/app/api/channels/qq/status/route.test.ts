@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   decryptCredentials: vi.fn(),
   ensureChannelGatewayRunning: vi.fn().mockResolvedValue(undefined),
   findByUserAndPlatform: vi.fn(),
+  getServiceModelSettings: vi.fn().mockResolvedValue({}),
   normalizeQQChannelSettings: vi.fn((raw: unknown) => raw ?? {
     allowedUsers: [],
     charLimit: 2000,
@@ -28,6 +29,11 @@ vi.mock('@pure/database/models/channelBinding', () => ({
     findByUserAndPlatform = mocks.findByUserAndPlatform
   },
   QQ_PLATFORM: 'qq',
+}))
+vi.mock('@pure/database/models/serviceModelSettings', () => ({
+  ServiceModelSettingsModel: class {
+    get = mocks.getServiceModelSettings
+  },
 }))
 vi.mock('@/libs/channels/qq', () => ({
   decryptCredentials: mocks.decryptCredentials,
@@ -58,6 +64,7 @@ const createBinding = (credentials: string) => ({
 describe('GET /api/channels/qq/status', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.getServiceModelSettings.mockResolvedValue({})
     mocks.decryptCredentials.mockReturnValue({
       appId: 'app-1',
       appSecret: 'never-expose-this-secret',
@@ -70,13 +77,26 @@ describe('GET /api/channels/qq/status', () => {
     const response = await GET(new NextRequest('http://localhost/api/channels/qq/status'))
 
     expect(response.status).toBe(200)
-    const data = (await response.json()) as { webhookUrl: string }
+    const data = (await response.json()) as {
+      settings: { speechModel?: { model: string; provider: string } }
+      webhookUrl: string
+    }
     const webhookUrl = new URL(data.webhookUrl)
     expect(webhookUrl.origin).toBe('https://chat.example.com')
     expect(webhookUrl.pathname).toBe('/api/channels/qq/webhook/app-1')
     expect(webhookUrl.search).toBe('')
     expect(data.webhookUrl).not.toContain(encryptedCredentials)
     expect(data.webhookUrl).not.toContain('never-expose-this-secret')
+    expect(data.settings.speechModel).toEqual({ provider: 'bailian', model: 'qwen-audio-3.1-tts-flash' })
+  })
+
+  it('returns the legacy speech model during settings migration', async () => {
+    mocks.getServiceModelSettings.mockResolvedValue({
+      qqSpeech: { model: 'tts-1', provider: 'openai' },
+    })
+    const response = await GET(new NextRequest('http://localhost/api/channels/qq/status'))
+    const data = (await response.json()) as { settings: { speechModel?: { model: string; provider: string } } }
+    expect(data.settings.speechModel).toEqual({ model: 'tts-1', provider: 'openai' })
   })
 
   it.each([

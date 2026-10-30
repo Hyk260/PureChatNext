@@ -1,6 +1,9 @@
 'use client'
 
 import { getErrorMessage } from '@pure/utils/error'
+import { useSession } from '@/libs/better-auth/client'
+import { checkLmStudioConnection } from '@/libs/ai-providers/lmstudio'
+import { getLmStudioRuntimeConfig } from '@/features/settings/provider/lmstudioRuntimeConfig'
 
 import { DEFAULT_MODEL_PROVIDER_LIST, getAiModel } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
@@ -48,6 +51,7 @@ interface ModelListProps {
 const ModelList = memo<ModelListProps>(({ id }) => {
   const config = useProviderConfigStore((s) => s.configs[id])
   const customProviders = useProviderConfigStore((s) => s.customProviders)
+  const { data: session } = useSession()
   const addCustomModel = useProviderConfigStore((s) => s.addCustomModel)
   const clearRemoteModels = useProviderConfigStore((s) => s.clearRemoteModels)
   const removeCustomModel = useProviderConfigStore((s) => s.removeCustomModel)
@@ -308,42 +312,56 @@ const ModelList = memo<ModelListProps>(({ id }) => {
         setModelHealth(id, model.id, { status: 'checking' })
 
         try {
-          const response = await apiFetch(
-            '/api/providers/check',
-            jsonInit(
-              {
-                baseURL: baseURL || undefined,
-                model: model.id,
-                provider: id,
-                timeoutMs,
-              },
-              { method: 'POST', signal: controller.signal }
+          let durationMs: number | undefined
+          if (id === 'lmstudio') {
+            const startedAt = Date.now()
+            const runtimeConfig = await getLmStudioRuntimeConfig({
+              accountId: session?.user?.id,
+              baseURL,
+            })
+            await checkLmStudioConnection(runtimeConfig, model.id, controller.signal, timeoutMs)
+            durationMs = Date.now() - startedAt
+          } else {
+            const response = await apiFetch(
+              '/api/providers/check',
+              jsonInit(
+                {
+                  baseURL: baseURL || undefined,
+                  model: model.id,
+                  provider: id,
+                  timeoutMs,
+                },
+                { method: 'POST', signal: controller.signal }
+              )
             )
-          )
-          const json = (await response.json()) as {
-            durationMs?: number
-            error?: { message?: string }
-            cause?: string
-            message?: string
-            ok?: boolean
+            const json = (await response.json()) as {
+              durationMs?: number
+              error?: { message?: string }
+              cause?: string
+              message?: string
+              ok?: boolean
+            }
+
+            if (!isCurrentRun()) return
+
+            if (!response.ok || !json.ok) {
+              failureCount += 1
+              setModelHealth(id, model.id, {
+                checkedAt: new Date().toISOString(),
+                message: json.error?.message || json.cause || json.message || '检查失败',
+                status: 'failure',
+              })
+              return
+            }
+            durationMs = json.durationMs
           }
 
           if (!isCurrentRun()) return
 
-          if (!response.ok || !json.ok) {
-            failureCount += 1
-            setModelHealth(id, model.id, {
-              checkedAt: new Date().toISOString(),
-              message: json.error?.message || json.cause || json.message || '检查失败',
-              status: 'failure',
-            })
-            return
-          }
-
           successCount += 1
           setModelHealth(id, model.id, {
             checkedAt: new Date().toISOString(),
-            durationMs: json.durationMs,
+            durationMs,
             message: '检查成功',
             status: 'success',
           })

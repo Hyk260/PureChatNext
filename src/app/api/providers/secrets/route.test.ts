@@ -14,6 +14,12 @@ vi.mock('@/libs/auth/get-session-user', () => ({
     (handler: (request: NextRequest, context: { userId: string }) => Promise<Response>) => (request: NextRequest) =>
       handler(request, { userId: 'user-1' }),
 }))
+vi.mock('server-only', () => ({}))
+vi.mock('@pure/database/models/customProvider', () => ({
+  CustomProviderModel: class {
+    find = vi.fn()
+  },
+}))
 vi.mock('@pure/database/models/userProviderSecret', () => ({
   MissingProviderApiKeyError: class MissingProviderApiKeyError extends Error {
     constructor(message = '请填写 API Key') {
@@ -26,7 +32,7 @@ vi.mock('@pure/database/models/userProviderSecret', () => ({
     listPublic = mocks.listPublic
     upsert = mocks.upsert
   },
-  isUserProviderSecretId: (value: string) => value === 'openai' || value === 'deepseek',
+  isUserProviderSecretId: (value: string) => value === 'openai' || value === 'deepseek' || value === 'lmstudio',
 }))
 
 import { DELETE, GET, PUT } from './route'
@@ -70,6 +76,21 @@ describe('/api/providers/secrets', () => {
     expect(mocks.upsert).toHaveBeenCalledWith('user-1', 'deepseek', { apiKey: 'sk-live-wxyz', baseURL: undefined })
   })
 
+  it('stores LM Studio proxy settings without requiring an API key', async () => {
+    mocks.upsert.mockResolvedValueOnce({
+      apiKey: '',
+      baseURL: 'http://localhost:1234/v1',
+      keyHint: '',
+      providerId: 'lmstudio',
+    })
+    const response = await PUT(request('PUT', { baseURL: 'http://localhost:1234/v1', provider: 'lmstudio' }))
+    expect(response.status).toBe(200)
+    expect(mocks.upsert).toHaveBeenCalledWith('user-1', 'lmstudio', {
+      apiKey: undefined,
+      baseURL: 'http://localhost:1234/v1',
+    })
+  })
+
   it('returns 503 when KEY_VAULTS_SECRET is missing', async () => {
     mocks.upsert.mockRejectedValueOnce(new Error('KEY_VAULTS_SECRET is required to encrypt provider secrets'))
     const response = await PUT(request('PUT', { apiKey: 'sk-live', provider: 'openai' }))
@@ -81,5 +102,11 @@ describe('/api/providers/secrets', () => {
     const response = await DELETE(request('DELETE', { provider: 'openai' }))
     expect(response.status).toBe(200)
     expect(mocks.delete).toHaveBeenCalledWith('user-1', 'openai')
+  })
+
+  it('deletes LM Studio secrets as a built-in provider', async () => {
+    const response = await DELETE(request('DELETE', { provider: 'lmstudio' }))
+    expect(response.status).toBe(200)
+    expect(mocks.delete).toHaveBeenCalledWith('user-1', 'lmstudio')
   })
 })

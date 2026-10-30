@@ -5,7 +5,10 @@ import { Alert, Button, Flex, ModelIcon, Select } from '@pure/ui'
 import { Highlighter } from '@pure/ui/Markdown'
 import { createModal, cssVar } from '@lobehub/ui'
 import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
+import { checkLmStudioConnection } from '@/libs/ai-providers/lmstudio'
+import { getLmStudioRuntimeConfig } from '@/features/settings/provider/lmstudioRuntimeConfig'
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
+import { useSession } from '@/libs/better-auth/client'
 import { memo, useEffect, useMemo, useState } from 'react'
 
 import { getAiModel } from '@pure/model-bank'
@@ -32,7 +35,9 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
   const meta = getSettingsProviderMeta(provider, customProviders)
 
   const { data: secrets } = useProviderSecrets()
+  const { data: session } = useSession()
   const hasVaultKey = Boolean(secretForProvider(secrets, provider))
+  const isLmStudio = provider === 'lmstudio'
   const models = useMemo(() => config?.models ?? [], [config?.models])
   const availableModelIds = useMemo(
     () =>
@@ -70,7 +75,7 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
 
   const checkConnection = async () => {
     if (disabled) return
-    const hasSavedKey = ensureSecret ? await ensureSecret() : hasVaultKey
+    const hasSavedKey = ensureSecret ? await ensureSecret() : isLmStudio || hasVaultKey
     if (!hasSavedKey) {
       createModal({
         title: '缺少 API Key',
@@ -85,6 +90,17 @@ const Checker = memo<CheckerProps>(({ disabled, ensureSecret, provider }) => {
 
     try {
       const baseURL = config?.baseURL.trim() ?? ''
+      if (isLmStudio) {
+        const runtimeConfig = await getLmStudioRuntimeConfig({
+          accountId: session?.user?.id,
+          baseURL,
+        })
+        await checkLmStudioConnection(runtimeConfig, checkModel)
+        setPass(true)
+        setError(undefined)
+        return
+      }
+
       const response = await apiFetch(
         '/api/providers/check',
         jsonInit(

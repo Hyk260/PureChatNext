@@ -9,6 +9,12 @@ const PUBLIC_ERROR_CODES = new Set([
   'LEASE_LOST', 'SESSION_EXPIRED', 'PROCESSING_ERROR', 'PASSIVE_REPLY_BUDGET',
   'GATEWAY_ERROR', 'POLL_ERROR', 'FORWARD_ERROR', 'INVALID_SIGNATURE', 'INTERNAL_UNAUTHORIZED',
   'DISCONNECTED', 'WEBHOOK_FORWARD_FAILED',
+  'SPEECH_CONFIGURATION', 'SPEECH_PROVIDER_DISABLED', 'SPEECH_PROVIDER_UNAVAILABLE', 'SPEECH_CREDENTIALS_MISSING',
+  'SPEECH_AUDIO_SIZE', 'SPEECH_AUDIO_FORMAT', 'SPEECH_AUDIO_MISSING', 'SPEECH_RATE_LIMIT',
+  'SPEECH_SYNTHESIS_FAILED', 'SPEECH_DOWNLOAD_FAILED', 'SPEECH_CONFIGURATION_FAILED', 'SPEECH_INTENT_FAILED', 'SPEECH_DELIVERY_FAILED',
+  'SPEECH_NOT_REQUESTED', 'SPEECH_SENT', 'SPEECH_CANCELLED', 'SPEECH_CONFIGURATION_CHANGED', 'SENDER_RATE_LIMIT', 'BINDING_RATE_LIMIT', 'CONCURRENCY_LIMIT',
+  'DUPLICATE_ATTEMPT', 'BINDING_DISABLED', 'BINDING_ACCESS_CHANGED', 'QQ_REPLY_EXPIRED', 'QQ_REPLY_BUDGET',
+  'QQ_PASSIVE_CONTEXT_MISSING', 'QQ_DELIVERY_UNKNOWN', 'QQ_AUTH_FAILED', 'QQ_UPLOAD_INVALID', 'QQ_INVALID_AUDIO', 'QQ_REPLY_FAILED',
 ])
 const ERROR_EVENTS = new Set<ChannelLogEvent>([
   'authorization_failed', 'callback_failed', 'processing_failed', 'send_failed',
@@ -75,7 +81,10 @@ function normalizeAgentReply(input: ChannelLogInput): string {
 export function safeChannelLogCode(value: unknown): string | null {
   if (typeof value !== 'string' && typeof value !== 'number') return null
   const code = String(value)
-  return PUBLIC_ERROR_CODES.has(code) || /^\d{1,8}$/.test(code) ? code : null
+  if (/^QQ_\d{1,8}$/.test(code)) return code.slice(3)
+  return PUBLIC_ERROR_CODES.has(code) || /^SPEECH_HTTP_[45]\d{2}$/.test(code) || /^\d{1,8}$/.test(code)
+    ? code
+    : null
 }
 
 export function channelErrorCode(error: unknown): string {

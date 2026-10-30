@@ -39,6 +39,7 @@ async function taskModel(
   model: LanguageModel
   settlement?: PureChatSettlement
 }> {
+  if (snapshot.provider === 'lmstudio') throw new TaskServiceError('LM Studio 仅支持桌面端聊天，不能用于云端任务')
   if (snapshot.provider === PURECHAT_PROVIDER_ID) {
     const settlement = await assertPureChatCanChat(userId, snapshot.model)
     const model = createPureChatLanguageModel(snapshot.model)

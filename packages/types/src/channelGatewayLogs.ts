@@ -23,6 +23,7 @@ export const CHANNEL_LOG_MESSAGES = {
   agent_reply: 'Agent 已生成回复',
   processing_failed: '消息处理失败',
   send_failed: '回复发送失败',
+  speech_result: 'QQ 语音处理结果',
 } as const
 
 export type ChannelLogEvent = keyof typeof CHANNEL_LOG_MESSAGES

@@ -1,11 +1,12 @@
 'use client'
 
-import { ModelIcon, Text, Flex } from '@pure/ui'
+import { ModelIcon, Text, Flex, Tooltip } from '@pure/ui'
+import { QWEN_SPEECH_MODEL } from '@pure/const'
 import { getAiModel } from '@pure/model-bank'
-import type { ModelProviderId } from '@pure/model-bank'
+import type { ModelAbilities, ModelProviderId } from '@pure/model-bank'
 import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
-import { ChevronDownIcon } from 'lucide-react'
-import { memo } from 'react'
+import { ChevronDownIcon, CircleHelp } from 'lucide-react'
+import * as React from 'react'
 
 import ModelSwitchMenu from '@/features/chat/ModelSwitchMenu'
 
@@ -31,25 +32,53 @@ const styles = createStaticStyles(({ css }) => ({
 
 export interface MessengerModelSwitchProps {
   disabled?: boolean
+  excludedAbilities?: Array<keyof ModelAbilities>
+  includeCustomProviders?: boolean
+  label?: string
+  headerAction?: React.ReactNode
   modelId: string
   onSelect: (provider: string, model: string) => void
   provider: string
+  requiredAbility?: keyof ModelAbilities
 }
 
 /** 渠道设置页共用的模型切换入口（与 /chat 同一套 ModelSwitchMenu）。 */
-export const MessengerModelSwitch = memo<MessengerModelSwitchProps>(
-  ({ disabled, modelId, onSelect, provider }) => {
-    const currentDisplayName = getAiModel(provider as ModelProviderId, modelId)?.displayName ?? modelId
+export const MessengerModelSwitch = React.memo<MessengerModelSwitchProps>(
+  ({
+    disabled,
+    excludedAbilities,
+    headerAction,
+    includeCustomProviders,
+    label = '对话模型',
+    modelId,
+    onSelect,
+    provider,
+    requiredAbility,
+  }) => {
+    const currentDisplayName =
+      getAiModel(provider as ModelProviderId, modelId)?.displayName ??
+      (provider === 'bailian' && modelId === QWEN_SPEECH_MODEL ? 'Qwen Audio 3.1 TTS Flash' : modelId)
 
     return (
       <Flex className='flex-col gap-2'>
-        <Text className='text-[13px]' type='secondary'>
-          模型
-        </Text>
+        <Flex className='items-center gap-1.5'>
+          <Text className='text-[13px]' type='secondary'>
+            {label}
+          </Text>
+          {requiredAbility === 'textToSpeech' ? (
+            <Tooltip title='Agent 回复将使用此模型生成语音消息回复'>
+              <CircleHelp aria-label='语音模型说明' className='size-3.5 cursor-help text-muted-foreground' />
+            </Tooltip>
+          ) : null}
+          {headerAction}
+        </Flex>
         <ModelSwitchMenu
           disabled={disabled}
+          excludedAbilities={excludedAbilities}
+          includeCustomProviders={includeCustomProviders}
           openOnHover={false}
           placement='bottomLeft'
+          requiredAbility={requiredAbility}
           selectedModel={modelId}
           selectedProvider={provider}
           onSelect={onSelect}

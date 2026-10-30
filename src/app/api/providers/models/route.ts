@@ -2,12 +2,14 @@ import { isValidProviderId } from '@pure/const'
 import debug from 'debug'
 
 import {
+  fetchBailianModels,
   fetchOpenAICompatibleModels,
+  fetchOpenRouterModels,
   isSupportedProviderId,
   resolveApiKeyFromHeader,
   resolveModelsListBaseURL,
 } from '@/libs/ai-providers/resolveClient'
-import type { SupportedProviderId } from '@/libs/ai-providers/resolveClient'
+import type { RemoteModelListItem, SupportedProviderId } from '@/libs/ai-providers/resolveClient'
 import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 import { ChatSDKError } from '@/libs/errors'
@@ -17,6 +19,7 @@ export const maxDuration = 30
 const log = debug('providers:models')
 
 const BUILTIN_FALLBACK: Record<SupportedProviderId, Array<{ displayName: string; id: string }>> = {
+  bailian: [{ displayName: '通义千问 3.8 Max', id: 'qwen3.8-max' }],
   deepseek: [
     { displayName: 'DeepSeek V4 Flash', id: 'deepseek-v4-flash' },
     { displayName: 'DeepSeek V4 Flash Vision Exp', id: 'deepseek-v4-flash-vision-exp' },
@@ -28,11 +31,12 @@ const BUILTIN_FALLBACK: Record<SupportedProviderId, Array<{ displayName: string;
     { displayName: 'GPT-5.4 mini', id: 'gpt-5.4-mini' },
     { displayName: 'GPT-5.4 nano', id: 'gpt-5.4-nano' },
   ],
+  openrouter: [],
 }
 
 /**
  * POST /api/providers/models
- * 列出 Provider 模型（OpenAI 兼容 /models）
+ * 列出 Provider 模型（OpenAI 兼容目录或服务商目录接口）
  * @param request - JSON `{ provider, baseURL? }`；密钥来自账号金库，可选 Header `Authorization: Bearer <api-key>` 或服务端 env
  */
 export async function POST(request: Request) {
@@ -51,6 +55,9 @@ export async function POST(request: Request) {
   const provider = body.provider
   if (!provider || (!isSupportedProviderId(provider) && !isValidProviderId(provider))) {
     return new ChatSDKError('bad_request:api', 'Unsupported provider').toResponse()
+  }
+  if (provider === 'lmstudio') {
+    return new ChatSDKError('bad_request:api', 'LM Studio 仅支持客户端直连').toResponse()
   }
 
   const userId = await getAuthenticatedUserId()
@@ -76,7 +83,14 @@ export async function POST(request: Request) {
   log('list models provider=%o baseURL=%o', provider, baseURL)
 
   try {
-    const models = await fetchOpenAICompatibleModels({ apiKey: credentials.apiKey, baseURL })
+    let models: RemoteModelListItem[]
+    if (provider === 'bailian') {
+      models = await fetchBailianModels({ apiKey: credentials.apiKey, baseURL })
+    } else if (provider === 'openrouter') {
+      models = await fetchOpenRouterModels({ apiKey: credentials.apiKey, baseURL })
+    } else {
+      models = await fetchOpenAICompatibleModels({ apiKey: credentials.apiKey, baseURL })
+    }
     return Response.json({ fallback: false, models })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)

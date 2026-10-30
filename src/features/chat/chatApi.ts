@@ -12,8 +12,11 @@ export const buildChatHref = (agentId: string, topicId?: string | null) => {
 }
 
 export type AutoRenameTopicConfig = {
+  automatic?: boolean
   model: string
   provider: string
+  title?: string
+  contextWindowTokens?: number
 }
 
 type ApiTopic = {
@@ -24,6 +27,7 @@ type ApiTopic = {
   permissionMode: ChatPermissionMode
   projectName: string | null
   title: string
+  titleSource: 'initial' | 'generated' | 'manual'
   updatedAt: string
 }
 
@@ -35,6 +39,7 @@ const toLocalTopic = (t: ApiTopic): LocalChatTopic => ({
   permissionMode: t.permissionMode,
   projectName: t.projectName ?? null,
   title: t.title,
+  titleSource: t.titleSource ?? 'manual',
   updatedAt: new Date(t.updatedAt).getTime(),
 })
 
@@ -93,13 +98,9 @@ export const createTopicShare = async (topicId: string): Promise<{ shareId: stri
   return (await res.json()) as { shareId: string }
 }
 
-export const autoRenameTopic = async (
-  id: string,
-  { model, provider }: AutoRenameTopicConfig
-): Promise<LocalChatTopic> => {
+export const autoRenameTopic = async (id: string, config: AutoRenameTopicConfig): Promise<LocalChatTopic> => {
   const res = await apiFetch(`/api/chat/topics/${encodeURIComponent(id)}/auto-rename`, jsonInit({
-    model,
-    provider,
+    ...config,
   }, { method: 'POST' }))
   if (!res.ok) throw new Error(`autoRenameTopic failed: ${res.status}`)
 

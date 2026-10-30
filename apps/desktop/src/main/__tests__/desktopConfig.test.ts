@@ -1,4 +1,5 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -36,6 +37,31 @@ describe('DesktopConfigService', () => {
     expect(await store.readSecret('auth.accessToken')).toBe('access-token')
     expect(await readFile(store.configPath, 'utf8')).not.toContain('access-token')
     expect(await new DesktopConfigService(dir).readSecret('auth.accessToken')).toBe('access-token')
+  })
+
+  it('reads encrypted legacy LM Studio settings for account-vault migration and can clear them', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-lmstudio-config-'))
+    tempDirs.push(dir)
+    const store = new DesktopConfigService(dir)
+    const accountId = 'account-one'
+    const providerId = 'lmstudio'
+    const remoteServerUrl = 'https://account.example'
+    await store.setRemoteServer(remoteServerUrl)
+
+    const scope = createHash('sha256').update(`${remoteServerUrl}\0${accountId}\0${providerId}`).digest('hex')
+    await store.storeSecret(`local-provider.${scope}.apiKey`, 'legacy-lmstudio-token')
+    await store.storeSecret(`local-provider.${scope}.baseURL`, 'http://localhost:4567/v1')
+
+    expect(await store.getLmStudioRuntimeConfig(accountId, providerId)).toEqual({
+      apiKey: 'legacy-lmstudio-token',
+      baseURL: 'http://localhost:4567/v1',
+    })
+    expect(await readFile(store.configPath, 'utf8')).not.toContain('legacy-lmstudio-token')
+
+    await store.clearLmStudioLegacySettings(accountId, providerId)
+    expect(await store.getLmStudioRuntimeConfig(accountId, providerId)).toEqual({
+      baseURL: 'http://localhost:1234/v1',
+    })
   })
 
   it('validates and persists update preferences without losing concurrent configuration writes', async () => {

@@ -9,8 +9,12 @@ const mocks = vi.hoisted(() => ({
   generateText: vi.fn(),
   getAuthenticatedUserId: vi.fn(),
   resolveApiKeyFromHeader: vi.fn(),
-  resolveModelsListBaseURL: vi.fn((provider: 'openai' | 'deepseek', baseURL?: string) => {
-    const defaults = { deepseek: 'https://api.deepseek.com', openai: 'https://api.openai.com/v1' }
+  resolveModelsListBaseURL: vi.fn((provider: 'openai' | 'deepseek' | 'openrouter', baseURL?: string) => {
+    const defaults = {
+      deepseek: 'https://api.deepseek.com',
+      openai: 'https://api.openai.com/v1',
+      openrouter: 'https://openrouter.ai/api/v1',
+    }
     return baseURL?.trim() || defaults[provider]
   }),
   resolveOptionalBaseURL: vi.fn((value?: string) => value?.trim() || undefined),
@@ -27,7 +31,7 @@ vi.mock('@pure/database/models/customProvider', () => ({
 }))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
   createProviderLanguageModel: mocks.createProviderLanguageModel,
-  isSupportedProviderId: (id: string) => id === 'openai' || id === 'deepseek',
+  isSupportedProviderId: (id: string) => id === 'openai' || id === 'deepseek' || id === 'openrouter',
   resolveApiKeyFromHeader: mocks.resolveApiKeyFromHeader,
   resolveModelsListBaseURL: mocks.resolveModelsListBaseURL,
   resolveOptionalBaseURL: mocks.resolveOptionalBaseURL,

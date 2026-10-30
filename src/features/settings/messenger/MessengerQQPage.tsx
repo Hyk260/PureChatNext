@@ -1,11 +1,18 @@
 'use client'
 
 import { getErrorMessage } from '@pure/utils/error'
+import {
+  defaultSpeechVoice,
+  isQQSpeechReplyMode,
+  QWEN_SPEECH_MODEL,
+  speechVoiceOptions,
+} from '@pure/const'
 
 import { confirmModal, toast, Spin } from '@lobehub/ui'
 import { ActionIcon, Button, Text, Flex } from '@pure/ui'
 import { copyToClipboard } from '@pure/utils/client'
 import type { AgentListItem } from '@/const/home/agents'
+import type { QQSpeechModelReference } from '@pure/types'
 import { Copy, FileText, MessagesSquareIcon, Settings2Icon, Trash2Icon } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -32,8 +39,9 @@ import MessengerCommandList from './MessengerCommandList'
 import { MessengerDetailShell } from './MessengerDetailShell'
 import { MessengerModelSwitch } from './MessengerModelSwitch'
 import QQAdvancedSettingsModal from './QQAdvancedSettingsModal'
+import QQSpeechSettingsModal from './QQSpeechSettingsModal'
 import { QQConnectButton } from './QQConnectModal'
-import { fetchQQStatus, unbindQQ, updateQQConfiguration } from './qqApi'
+import { fetchQQStatus, unbindQQ, updateQQConfiguration, updateQQSpeechModel } from './qqApi'
 import type { QQProviderId, QQStatus } from './qqApi'
 
 function getQqGatewayStatus(params: {
@@ -142,9 +150,15 @@ const MessengerQQPage = memo(() => {
   const [saving, setSaving] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [logsOpen, setLogsOpen] = useState(false)
+  const [speechSettingsOpen, setSpeechSettingsOpen] = useState(false)
   const [agentId, setAgentId] = useState('agt_inbox')
   const [provider, setProvider] = useState<QQProviderId>(QQ_DEFAULT_PROVIDER)
   const [modelId, setModelId] = useState(QQ_DEFAULT_MODEL)
+  const [speechProvider, setSpeechProvider] = useState('bailian')
+  const [speechModelId, setSpeechModelId] = useState(QWEN_SPEECH_MODEL)
+  const [speechVoice, setSpeechVoice] = useState(defaultSpeechVoice('bailian', QWEN_SPEECH_MODEL))
+  const [speechReplyMode, setSpeechReplyMode] = useState<NonNullable<QQSpeechModelReference['replyMode']>>('smart')
+  const [speechInstruction, setSpeechInstruction] = useState('')
 
   const {
     data: status,
@@ -175,6 +189,14 @@ const MessengerQQPage = memo(() => {
     else if (agentList?.[0]) setAgentId((current) => (current === 'agt_inbox' ? agentList[0].id : current))
     if (status?.provider && isMessengerProviderId(status.provider)) setProvider(status.provider)
     if (status?.model) setModelId(status.model)
+    if (status?.settings?.speechModel) {
+      const speechModel = status.settings.speechModel
+      setSpeechProvider(speechModel.provider)
+      setSpeechModelId(speechModel.model)
+      setSpeechVoice(speechModel.voice ?? defaultSpeechVoice(speechModel.provider, speechModel.model))
+      setSpeechReplyMode(isQQSpeechReplyMode(speechModel.replyMode) ? speechModel.replyMode : 'smart')
+      setSpeechInstruction(speechModel.instruction ?? '')
+    }
   }, [agentList, status])
 
   const refreshStatus = useCallback(async () => {
@@ -225,6 +247,45 @@ const MessengerQQPage = memo(() => {
       saveConfiguration({ agentId, model: nextModel, provider: nextProvider }, previous)
     },
     [agentId, modelId, provider, saveConfiguration]
+  )
+
+  const handleSpeechModelSelect = useCallback(
+    async (nextProvider: string, nextModel: string) => {
+      const previous = { model: speechModelId, provider: speechProvider, replyMode: speechReplyMode, voice: speechVoice }
+      const availableVoices = speechVoiceOptions(nextProvider, nextModel)
+      const nextVoice = availableVoices.some(({ value }) => value === speechVoice)
+        ? speechVoice
+        : defaultSpeechVoice(nextProvider, nextModel)
+      const nextSpeechModel = {
+        instruction: speechInstruction,
+        model: nextModel,
+        provider: nextProvider,
+        replyMode: speechReplyMode,
+        voice: nextVoice,
+      }
+      setSpeechProvider(nextProvider)
+      setSpeechModelId(nextModel)
+      setSpeechVoice(nextVoice)
+      setSaving(true)
+      try {
+        const settings = await updateQQSpeechModel(nextSpeechModel)
+        await mutateStatus((current) => (current ? { ...current, settings } : current), { revalidate: false })
+        const savedSpeechModel = settings.speechModel
+        setSpeechVoice(savedSpeechModel?.voice ?? nextVoice)
+        if (isQQSpeechReplyMode(savedSpeechModel?.replyMode)) setSpeechReplyMode(savedSpeechModel.replyMode)
+        setSpeechInstruction(savedSpeechModel?.instruction ?? speechInstruction)
+        toast.success('已更新 QQ 语音模型')
+      } catch (error) {
+        setSpeechProvider(previous.provider)
+        setSpeechModelId(previous.model)
+        setSpeechVoice(previous.voice)
+        setSpeechReplyMode(previous.replyMode)
+        toast.error(getErrorMessage(error, '更新语音模型失败'))
+      } finally {
+        setSaving(false)
+      }
+    },
+    [mutateStatus, speechInstruction, speechModelId, speechProvider, speechReplyMode, speechVoice]
   )
 
   const handleConnected = useCallback(async () => {
@@ -342,9 +403,29 @@ const MessengerQQPage = memo(() => {
 
         <MessengerModelSwitch
           disabled={controlsDisabled}
+          excludedAbilities={['textToSpeech']}
           modelId={modelId}
           provider={provider}
           onSelect={handleModelSelect}
+        />
+        <MessengerModelSwitch
+          disabled={controlsDisabled || showConnect}
+          includeCustomProviders
+          label='语音模型'
+          modelId={speechModelId}
+          provider={speechProvider}
+          requiredAbility='textToSpeech'
+          headerAction={
+            <ActionIcon
+              aria-label='语音回复设置'
+              disabled={controlsDisabled || showConnect}
+              icon={Settings2Icon}
+              size='small'
+              title={showConnect ? '请先连接 QQ' : '语音回复设置'}
+              onClick={() => setSpeechSettingsOpen(true)}
+            />
+          }
+          onSelect={handleSpeechModelSelect}
         />
         {webhookUrl ? (
           <Flex className='items-center gap-2 rounded-lg bg-secondary px-3 py-2'>
@@ -387,6 +468,25 @@ const MessengerQQPage = memo(() => {
           onClose={() => setAdvancedOpen(false)}
           onSaved={(settings) => {
             mutateStatus((current) => (current ? { ...current, settings } : current), { revalidate: false })
+          }}
+        />
+      ) : null}
+      {speechSettingsOpen ? (
+        <QQSpeechSettingsModal
+          initialInstruction={speechInstruction}
+          initialReplyMode={speechReplyMode}
+          initialVoice={speechVoice}
+          model={speechModelId}
+          open
+          provider={speechProvider}
+          onClose={() => setSpeechSettingsOpen(false)}
+          onSaved={(settings) => {
+            mutateStatus((current) => (current ? { ...current, settings } : current), { revalidate: false })
+            const savedSpeechModel = settings.speechModel
+            if (!savedSpeechModel) return
+            setSpeechVoice(savedSpeechModel.voice ?? defaultSpeechVoice(savedSpeechModel.provider, savedSpeechModel.model))
+            setSpeechReplyMode(isQQSpeechReplyMode(savedSpeechModel.replyMode) ? savedSpeechModel.replyMode : 'smart')
+            setSpeechInstruction(savedSpeechModel.instruction ?? '')
           }}
         />
       ) : null}

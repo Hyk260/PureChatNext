@@ -103,4 +103,41 @@ describe('UserProviderSecretModel', () => {
     )
     expect(inserted).toHaveLength(0)
   })
+
+  it('allows LM Studio proxy settings without an apiKey', async () => {
+    const { db, inserted } = createDb()
+    const result = await new UserProviderSecretModel(db).upsert('user-1', 'lmstudio', {
+      baseURL: 'http://localhost:1234/v1',
+    })
+
+    expect(result).toEqual({
+      apiKey: '',
+      baseURL: 'http://localhost:1234/v1',
+      keyHint: '',
+      providerId: 'lmstudio',
+    })
+    expect(inserted).toHaveLength(1)
+    expect(String(inserted[0]?.keyVaults)).not.toContain('http://localhost:1234/v1')
+  })
+
+  it('clears an LM Studio apiKey while retaining its proxy address', async () => {
+    const keyVaults = encryptVaultJson({ apiKey: 'lm-secret', baseURL: 'https://proxy.example/v1' })
+    const { db, updated } = createDb({
+      existing: { id: 'ups_1', keyHint: 'cret', keyVaults, providerId: 'lmstudio' },
+    })
+
+    const result = await new UserProviderSecretModel(db).upsert('user-1', 'lmstudio', {
+      apiKey: '',
+      baseURL: 'https://proxy.example/v1',
+    })
+
+    expect(result).toEqual({
+      apiKey: '',
+      baseURL: 'https://proxy.example/v1',
+      keyHint: '',
+      providerId: 'lmstudio',
+    })
+    expect(updated[0]?.keyHint).toBe('')
+    expect(typeof updated[0]?.keyVaults).toBe('string')
+  })
 })

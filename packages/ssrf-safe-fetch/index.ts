@@ -7,6 +7,8 @@ import type { RequestFilteringAgentOptions } from 'request-filtering-agent'
  * Options for per-call SSRF configuration overrides
  */
 export interface SSRFOptions {
+  /** For signed media URLs: never print or retain URL-bearing transport errors. */
+  redactErrors?: boolean
   /** Preserve incremental response delivery for provider SSE streams. */
   streamResponse?: boolean
   /** List of IP addresses to allow */
@@ -111,6 +113,7 @@ export const ssrfSafeFetch = async (
       statusText: response.statusText,
     })
   } catch (error) {
+    if (ssrfOptions?.redactErrors) throw new Error('Upstream fetch failed')
     const errorMessage = error instanceof Error ? error.message : String(error)
     // request-filtering-agent errors contain "is not allowed" when blocking private/denied IPs
     const isSSRFBlock = errorMessage.includes('is not allowed')

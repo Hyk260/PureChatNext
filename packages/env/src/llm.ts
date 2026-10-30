@@ -17,6 +17,8 @@ declare global {
       OPENAI_API_KEY?: string
       /** DeepSeek API Key。 */
       DEEPSEEK_API_KEY?: string
+      /** 阿里云百炼 API Key。 */
+      DASHSCOPE_API_KEY?: string
       /** 是否启用 PureChat / Vercel AI Gateway；默认开启。 */
       PURECHAT_ENABLED?: string
       /** PureChat / Vercel AI Gateway API Key。 */
@@ -46,6 +48,8 @@ export const getLLMConfig = () => {
       ENABLED_DEEPSEEK: z.boolean(),
       /** DeepSeek API Key。 */
       DEEPSEEK_API_KEY: z.string().optional(),
+      /** 阿里云百炼 API Key。 */
+      DASHSCOPE_API_KEY: z.string().optional(),
       /** 是否启用 PureChat / Vercel AI Gateway；默认开启。 */
       PURECHAT_ENABLED: z.boolean(),
       /** PureChat / Vercel AI Gateway API Key。 */
@@ -67,6 +71,8 @@ export const getLLMConfig = () => {
       // Deepseek
       ENABLED_DEEPSEEK: !!process.env.DEEPSEEK_API_KEY,
       DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
+      // 阿里云百炼
+      DASHSCOPE_API_KEY: process.env.DASHSCOPE_API_KEY,
       // PureChat
       PURECHAT_ENABLED: parseEnvBooleanDefaultTrue(process.env.PURECHAT_ENABLED),
       PURECHAT_API_KEY: process.env.PURECHAT_API_KEY,

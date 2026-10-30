@@ -36,6 +36,7 @@ import { useProviderConfigStore } from '@/features/settings/provider/store/usePr
 import { getDesktopApi } from '@/types/desktop'
 import { getChatSettingsKey } from '@/features/chat/advancedSettings'
 import { useChatUiStore } from '@/features/chat/store/useChatUiStore'
+import { useServiceModelSettings } from '@/features/settings/serviceModel/api'
 
 const EMPTY_MESSAGES: UIMessage[] = []
 
@@ -80,6 +81,7 @@ const ChatView = memo<ChatViewProps>(
     const router = useRouter()
     const selectedModel = useHomeStore((state) => state.selectedModel)
     const selectedProvider = useHomeStore((state) => state.selectedProvider)
+    const { data: serviceModelSettings } = useServiceModelSettings()
     const advancedSettings = useChatUiStore(
       (state) => state.advancedSettingsByAgent[getChatSettingsKey(userId, agentId)] ?? DEFAULT_CHAT_ADVANCED_SETTINGS
     )
@@ -101,8 +103,12 @@ const ChatView = memo<ChatViewProps>(
       () => ({
         model: selectedModel,
         provider: selectedProvider,
+        compressionModel: serviceModelSettings?.historyCompression,
+        topicNamingModel: serviceModelSettings?.topicNaming,
+        serviceModelSettingsLoaded: serviceModelSettings !== undefined,
         searchMode,
         advancedSettings,
+        serviceModelSettings,
         ...(modelContextWindow ? { modelContextWindow } : {}),
         ...(modelAbilities ? { modelAbilities } : {}),
         ...(permissionMode ? { permissionMode } : {}),
@@ -114,6 +120,7 @@ const ChatView = memo<ChatViewProps>(
         modelAbilities,
         modelContextWindow,
         permissionMode,
+        serviceModelSettings,
         searchMode,
         selectedModel,
         selectedProvider,

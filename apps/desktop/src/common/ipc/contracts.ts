@@ -18,6 +18,7 @@ import type {
   DesktopWindowState,
   DesktopUpdatePreferences,
   DesktopUpdateState,
+  DesktopLmStudioRuntimeConfig,
 } from '@/types/desktop'
 import type { DesktopUpdateLogs } from '@/types/desktopUpdater'
 import type { TerminalData, TerminalOpenInput, TerminalSession, TerminalSizeInput } from '@/types/desktopTerminal'
@@ -31,6 +32,14 @@ import type {
 } from '@/types/desktopBrowser'
 
 export interface DesktopIpcContractMap {
+  'lmstudio.settings.getRuntimeConfig': {
+    args: [input: { accountId: string; providerId: string }]
+    result: DesktopLmStudioRuntimeConfig
+  }
+  'lmstudio.settings.clearLegacy': {
+    args: [input: { accountId: string; providerId: string }]
+    result: void
+  }
   'browser.open': { args: [input: BrowserSessionInput]; result: BrowserState }
   'browser.navigate': { args: [input: BrowserSessionRef & { url: string }]; result: void }
   'browser.back': { args: [input: BrowserSessionRef]; result: void }

@@ -19,6 +19,9 @@ export const AI_MODELS_BY_PROVIDER: Record<ModelProviderId, AiModelCard[]> = {
   [ModelProvider.PureChat]: purechatChatModels,
   [ModelProvider.OpenAI]: openaiChatModels,
   [ModelProvider.DeepSeek]: deepseekChatModels,
+  [ModelProvider.Bailian]: [],
+  [ModelProvider.OpenRouter]: [],
+  [ModelProvider.LmStudio]: [],
 }
 
 export const getProviderChatModels = (provider: ModelProviderId): AiModelCard[] => AI_MODELS_BY_PROVIDER[provider] ?? []
@@ -31,6 +34,10 @@ export const getAiModel = (provider: ModelProviderId, modelId: string): AiModelC
       return getOpenAIModel(modelId)
     case ModelProvider.DeepSeek:
       return getDeepSeekModel(modelId)
+    case ModelProvider.Bailian:
+    case ModelProvider.OpenRouter:
+    case ModelProvider.LmStudio:
+      return undefined
     default:
       return undefined
   }

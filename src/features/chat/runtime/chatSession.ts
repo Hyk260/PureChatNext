@@ -6,9 +6,11 @@ import {
   lastAssistantMessageIsCompleteWithToolCalls,
 } from 'ai'
 import type { UIMessage } from 'ai'
-import type { ChatAdvancedSettings, ChatPermissionMode } from '@pure/types'
+import type { ChatAdvancedSettings, ChatContextSummary, ChatPermissionMode, ServiceModelReference } from '@pure/types'
 
-import { putMessages, updateToolApproval, upsertToolApproval } from '@/features/chat/chatApi'
+import { autoRenameTopic, putMessages, updateToolApproval, upsertToolApproval } from '@/features/chat/chatApi'
+import { fetchServiceModelSettings } from '@/features/settings/serviceModel/api'
+import { prepareAuxiliaryContextSummary } from '@/features/chat/contextSummary'
 import { LOCAL_TOOL_NAMES } from '@/features/chat/localTools'
 import { getMessageText, withMessageText } from '@/features/chat/messageText'
 import { getToolApprovalItems } from '@/features/chat/toolApprovalParts'
@@ -17,6 +19,9 @@ import { chatAdvancedSettingsSchema, selectChatHistory } from '@/features/chat/a
 import { markFirstConversion, trackAcquisitionEvent } from '@/libs/analytics/acquisition'
 import { getDesktopApi } from '@/types/desktop'
 import type { DesktopLocalToolRequest } from '@/types/desktop'
+import { getLmStudioRuntimeConfig } from '@/features/settings/provider/lmstudioRuntimeConfig'
+import { createLmStudioChatResponse } from './lmStudioChat'
+import { generateLmStudioTitle } from '@/libs/ai-providers/lmstudio'
 
 export type ChatRequestBody = {
   agentId?: string
@@ -28,6 +33,11 @@ export type ChatRequestBody = {
   modelAbilities?: { vision?: boolean }
   permissionMode?: ChatPermissionMode
   system?: string
+  desktopAccountId?: string
+  compressionModel?: ServiceModelReference
+  topicNamingModel?: ServiceModelReference
+  serviceModelSettingsLoaded?: boolean
+  contextSummary?: ChatContextSummary
 }
 
 type SessionOptions = {
@@ -39,13 +49,92 @@ type SessionOptions = {
   onTopicsRefresh: () => void
 }
 
+const resolveLocalCompressionModel = (
+  provider: string,
+  model: unknown,
+  contextWindowTokens: unknown
+): ServiceModelReference | undefined => {
+  if (provider !== 'lmstudio' || typeof model !== 'string') return undefined
+  if (typeof contextWindowTokens === 'number') {
+    return { contextWindowTokens, model, provider }
+  }
+  return { model, provider }
+}
+
+const createLmStudioChatFetch: typeof fetch = async (input, init) => {
+  const request = new Request(input, init)
+  const body = (await request.clone().json().catch(() => ({}))) as Record<string, unknown>
+  const providerId = typeof body.provider === 'string' ? body.provider : ''
+  if (providerId !== 'lmstudio') return fetch(input, init)
+
+  const messages = Array.isArray(body.messages) ? (body.messages as UIMessage[]) : []
+  const accountId = typeof body.desktopAccountId === 'string' ? body.desktopAccountId : undefined
+  const config = await getLmStudioRuntimeConfig({ accountId })
+  return createLmStudioChatResponse(
+    {
+      advancedSettings: body.advancedSettings as ChatAdvancedSettings | undefined,
+      compressionModel: body.compressionModel as ServiceModelReference | undefined,
+      contextSummary: body.contextSummary as ChatContextSummary | undefined,
+      messages,
+      model: typeof body.model === 'string' ? body.model : '',
+      modelContextWindow: typeof body.modelContextWindow === 'number' ? body.modelContextWindow : undefined,
+      permissionMode: body.permissionMode as ChatPermissionMode | undefined,
+      providerId,
+      system: typeof body.system === 'string' ? body.system : undefined,
+    },
+    config,
+    request.signal
+  )
+}
+
 const chatTransport = new DefaultChatTransport({
   api: '/api/chat',
   credentials: 'include',
-  prepareSendMessagesRequest: ({ id, messages, body, trigger, messageId }) => {
+  fetch: createLmStudioChatFetch,
+  prepareSendMessagesRequest: async ({ id, messages, body, trigger, messageId }) => {
     const parsed = chatAdvancedSettingsSchema.safeParse(body?.advancedSettings ?? {})
     const outbound = parsed.success ? selectChatHistory(messages, parsed.data) : messages
-    return { body: { ...body, id, messages: outbound, trigger, messageId } }
+    const loadedServiceSettings = body?.serviceModelSettingsLoaded === true
+    const serviceSettings = loadedServiceSettings ? undefined : await fetchServiceModelSettings()
+    const configuredCompressionModel =
+      (loadedServiceSettings ? body?.compressionModel : serviceSettings?.historyCompression) as
+        | ServiceModelReference
+        | undefined
+    const mainProvider = typeof body?.provider === 'string' ? body.provider : ''
+    const modelContextWindow =
+      typeof body?.modelContextWindow === 'number' ? body.modelContextWindow : undefined
+    const compressionModel =
+      configuredCompressionModel ??
+      resolveLocalCompressionModel(mainProvider, body?.model, modelContextWindow)
+    const needsClientSummary = Boolean(
+      compressionModel &&
+        parsed.success &&
+        (mainProvider === 'lmstudio' || compressionModel.provider === 'lmstudio')
+    )
+    const desktopAccountId = typeof body?.desktopAccountId === 'string' ? body.desktopAccountId : undefined
+    const contextSummary = needsClientSummary && parsed.success
+      ? await prepareAuxiliaryContextSummary({
+          accountId: desktopAccountId,
+          compressionModel: compressionModel!,
+          mainContextWindow: modelContextWindow,
+          messages: outbound,
+          settings: parsed.data,
+        })
+      : undefined
+    const requestBody = { ...body }
+    delete requestBody.serviceModelSettingsLoaded
+    delete requestBody.topicNamingModel
+    return {
+      body: {
+        ...requestBody,
+        ...(compressionModel ? { compressionModel } : {}),
+        ...(contextSummary ? { contextSummary } : {}),
+        id,
+        messages: outbound,
+        trigger,
+        messageId,
+      },
+    }
   },
 })
 const signature = (messages: UIMessage[]) => JSON.stringify(messages)
@@ -81,6 +170,7 @@ export class ChatSession {
   private stopRequested = false
   private blocked = false
   private preparing = false
+  private autoNamingTopic = false
   private epoch = 0
   private savedSignature: string
   private observedMessages: UIMessage[]
@@ -134,12 +224,21 @@ export class ChatSession {
       onFinish: ({ messages, isAbort, isError, isDisconnect }) => {
         if (this.blocked) return
         this.scheduleSave(messages, true)
-        this.flush().then(() => {
-          if (!this.blocked) this.onTopicsRefresh()
-        })
         const last = messages.at(-1)
-        if (isAbort || isError || isDisconnect || this.stopRequested || last?.role !== 'assistant') return
-        if (canContinue(messages) || getToolApprovalItems(last.parts).length > 0) return
+        const isComplete =
+          !isAbort &&
+          !isError &&
+          !isDisconnect &&
+          !this.stopRequested &&
+          last?.role === 'assistant' &&
+          !canContinue(messages) &&
+          getToolApprovalItems(last.parts).length === 0
+        this.flush().then(() => {
+          if (this.blocked) return
+          this.onTopicsRefresh()
+          if (isComplete) this.autoNameTopic(messages)
+        })
+        if (!isComplete) return
         trackAcquisitionEvent('chat_response_completed', {
           first: markFirstConversion('chat_response'),
           model: this.body?.model ?? null,
@@ -148,6 +247,37 @@ export class ChatSession {
       },
     })
     this.observedMessages = this.chat.messages
+  }
+
+  private async autoNameTopic(messages: UIMessage[]) {
+    if (!this.topicId || !this.body || this.autoNamingTopic) return
+    this.autoNamingTopic = true
+    try {
+      const selected = this.body.topicNamingModel ?? { model: this.body.model, provider: this.body.provider }
+      if (selected.provider === 'lmstudio') {
+        const config = await getLmStudioRuntimeConfig({ accountId: this.userId })
+        const title = await generateLmStudioTitle(config, selected.model, messages)
+        if (!title.trim()) throw new Error('LM Studio 未生成有效标题')
+        await autoRenameTopic(this.topicId, {
+          automatic: true,
+          model: selected.model,
+          provider: selected.provider,
+          title,
+        })
+      } else {
+        await autoRenameTopic(this.topicId, {
+          automatic: true,
+          contextWindowTokens: selected.contextWindowTokens,
+          model: selected.model,
+          provider: selected.provider,
+        })
+      }
+      if (!this.blocked) this.onTopicsRefresh()
+    } catch (error) {
+      console.error('[chat] automatic topic naming failed', error)
+    } finally {
+      this.autoNamingTopic = false
+    }
   }
 
   get busy() {
@@ -190,6 +320,7 @@ export class ChatSession {
   private requestOptions() {
     return {
       ...this.body,
+      ...(getDesktopApi() ? { desktopAccountId: this.userId } : {}),
       ...(this.topicId ? { topicId: this.topicId } : {}),
       ...(getDesktopApi() ? { clientCapabilities: { desktop: true } } : {}),
     }

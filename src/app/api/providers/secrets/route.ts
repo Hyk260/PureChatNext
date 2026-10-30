@@ -20,7 +20,12 @@ const deleteSchema = z.object({
   provider: z.string().trim().min(1).max(32).refine(isUserProviderSecretId),
 })
 
-const isBuiltinSecretProvider = (provider: string) => provider === 'openai' || provider === 'deepseek'
+const isBuiltinSecretProvider = (provider: string) =>
+  provider === 'openai' ||
+  provider === 'deepseek' ||
+  provider === 'bailian' ||
+  provider === 'openrouter' ||
+  provider === 'lmstudio'
 
 const isOwnedProvider = async (userId: string, provider: string) => {
   if (isBuiltinSecretProvider(provider)) return true
@@ -50,7 +55,10 @@ export const PUT = withAuth(async (request: NextRequest, { userId }) => {
 
   const { apiKey, baseURL, provider } = parsed.data
   if (apiKey === undefined && baseURL === undefined) return jsonError('apiKey or baseURL is required')
-  if (!(await isOwnedProvider(userId, provider))) return jsonError('Unsupported provider', 400)
+  if (!isBuiltinSecretProvider(provider)) {
+    const customProvider = await new CustomProviderModel(userId).find(provider)
+    if (!customProvider) return jsonError('Unsupported provider', 400)
+  }
 
   try {
     const item = await new UserProviderSecretModel().upsert(userId, provider, { apiKey, baseURL })

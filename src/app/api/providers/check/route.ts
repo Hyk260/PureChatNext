@@ -9,6 +9,7 @@ import type { ModelProviderId } from '@pure/model-bank'
 import { DEFAULT_PROVIDER_CHECK_TIMEOUT_MS } from '@/libs/ai-providers/checkTimeout'
 import {
   createProviderLanguageModel,
+  createOpenRouterLanguageModel,
   createOpenAICompatibleLanguageModel,
   isSupportedProviderId,
   resolveApiKeyFromHeader,
@@ -164,6 +165,9 @@ export async function POST(request: Request) {
   if (!model) {
     return new ChatSDKError('bad_request:api', 'Missing model').toResponse()
   }
+  if (provider === 'lmstudio') {
+    return new ChatSDKError('bad_request:api', 'LM Studio 仅支持客户端直连').toResponse()
+  }
 
   const baseURL = resolveOptionalBaseURL(body.baseURL)
   let languageModel
@@ -213,15 +217,18 @@ export async function POST(request: Request) {
       const message = userId ? MISSING_USER_PROVIDER_SECRET_MESSAGE : `Missing API key for provider "${provider}"`
       return new ChatSDKError('bad_request:api', message).toResponse()
     }
-
     const resolvedBaseURL = isSupportedProviderId(provider)
       ? resolveModelsListBaseURL(provider, credentials.baseURL ?? baseURL)
       : credentials.baseURL ?? baseURL
     if (!resolvedBaseURL) return new ChatSDKError('bad_request:api', 'Missing provider base URL').toResponse()
 
-    languageModel = isSupportedProviderId(provider)
-      ? createProviderLanguageModel(provider, model, credentials.apiKey, resolvedBaseURL, { timeoutMs })
-      : createOpenAICompatibleLanguageModel(model, credentials.apiKey, resolvedBaseURL, { timeoutMs })
+    if (provider === 'openrouter') {
+      languageModel = createOpenRouterLanguageModel(model, credentials.apiKey, resolvedBaseURL, { timeoutMs })
+    } else if (isSupportedProviderId(provider)) {
+      languageModel = createProviderLanguageModel(provider, model, credentials.apiKey, resolvedBaseURL, { timeoutMs })
+    } else {
+      languageModel = createOpenAICompatibleLanguageModel(model, credentials.apiKey, resolvedBaseURL, { timeoutMs })
+    }
   }
 
   log('check provider=%o model=%o baseURL=%o timeoutMs=%o', provider, model, baseURL ?? '(default)', timeoutMs)

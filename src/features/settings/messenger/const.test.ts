@@ -6,11 +6,16 @@ import {
   MESSENGER_COMMANDS,
   MESSENGER_DEFAULT_MODELS,
   MESSENGER_DEFAULT_PROVIDER,
+  isMessengerProviderId,
   QQ_DEFAULT_MODEL,
   QQ_DEFAULT_PROVIDER,
 } from './const'
 
 describe('messenger provider defaults', () => {
+  it('allows Bailian models in messenger channel settings', () => {
+    expect(isMessengerProviderId('bailian')).toBe(true)
+  })
+
   it('uses DeepSeek for new QQ connections, matching WeChat', () => {
     expect(QQ_DEFAULT_PROVIDER).toBe('deepseek')
     expect(QQ_DEFAULT_MODEL).toBe(MESSENGER_DEFAULT_MODELS.deepseek)

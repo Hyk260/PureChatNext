@@ -67,6 +67,10 @@ export const createDesktopApi = (): DesktopApi => ({
   getSystemMetrics: () => invoke('app.getSystemMetrics'),
   getWindowState: () => invoke('window.getState'),
   getSystemTools: () => invoke('app.getSystemTools'),
+  lmStudio: {
+    clearLegacySettings: (input) => invoke('lmstudio.settings.clearLegacy', input),
+    getRuntimeConfig: (input) => invoke('lmstudio.settings.getRuntimeConfig', input),
+  },
   getPermissionScope: (topicId) => invoke('permission.getScope', topicId),
   getRemoteServer: () => invoke('config.getRemoteServer'),
   getCloudServer: () => invoke('config.getCloudServer'),

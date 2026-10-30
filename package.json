@@ -93,6 +93,7 @@
   "dependencies": {
     "@ai-sdk/deepseek": "^3.0.7",
     "@ai-sdk/openai": "^4.0.11",
+    "@ai-sdk/openai-compatible": "^3.0.80",
     "@ai-sdk/react": "^4.0.20",
     "@aws-sdk/client-s3": "~3.1114.0",
     "@aws-sdk/s3-request-presigner": "~3.1114.0",
@@ -103,6 +104,7 @@
     "@lobehub/fluent-emoji": "^5.0.0",
     "@lobehub/icons": "^6.0.0",
     "@lobehub/ui": "^6.5.1",
+    "@openrouter/ai-sdk-provider": "^3.1.0",
     "@pure/chat-adapter": "workspace:*",
     "@pure/const": "workspace:*",
     "@pure/database": "workspace:*",

@@ -12,6 +12,7 @@ export type ChatTopicUpdate = {
   permissionMode?: ChatPermissionMode
   projectName?: string | null
   title?: string
+  titleSource?: 'generated' | 'initial' | 'manual'
 }
 
 export type TopicDeleteScope = 'all' | 'unfavorited'
@@ -60,6 +61,7 @@ export class ChatTopicModel {
         permissionMode,
         projectName: projectName?.trim() || null,
         title: title ?? DEFAULT_TITLE,
+        titleSource: 'initial',
         userId: this.userId,
       })
       .returning()
@@ -67,7 +69,16 @@ export class ChatTopicModel {
   }
 
   updateTitle = async (id: string, title: string) => {
-    return this.update(id, { title })
+    return this.update(id, { title, titleSource: 'manual' })
+  }
+
+  updateGeneratedTitle = async (id: string, title: string) => {
+    const [item] = await this.db
+      .update(chatTopics)
+      .set({ title, titleSource: 'generated', updatedAt: new Date() })
+      .where(and(eq(chatTopics.id, id), this.ownership(), eq(chatTopics.titleSource, 'initial')))
+      .returning()
+    return item
   }
 
   update = async (id: string, patch: ChatTopicUpdate) => {
@@ -75,7 +86,11 @@ export class ChatTopicModel {
       patch.title !== undefined || patch.favorite !== undefined || patch.projectName !== undefined
     const [item] = await this.db
       .update(chatTopics)
-      .set({ ...patch, updatedAt: changesTopicDetails ? new Date() : sql`${chatTopics.updatedAt}` })
+      .set({
+        ...patch,
+        ...(patch.title !== undefined && patch.titleSource === undefined ? { titleSource: 'manual' as const } : {}),
+        updatedAt: changesTopicDetails ? new Date() : sql`${chatTopics.updatedAt}`,
+      })
       .where(and(eq(chatTopics.id, id), this.ownership()))
       .returning()
     return item

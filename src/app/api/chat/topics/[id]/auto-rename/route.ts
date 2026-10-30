@@ -12,6 +12,7 @@ import { z } from 'zod'
 
 import {
   createOpenAICompatibleLanguageModel,
+  createOpenRouterLanguageModel,
   createProviderLanguageModel,
   isSupportedProviderId,
   resolveApiKeyFromHeader,
@@ -33,9 +34,14 @@ const ROLE_LABEL: Record<string, string> = {
 }
 
 const bodySchema = z.object({
+  automatic: z.boolean().optional(),
   baseURL: z.string().trim().max(2048).optional(),
-  model: z.string().trim().min(1).max(256),
-  provider: z.string().trim().min(1).max(64),
+  contextWindowTokens: z.number().int().min(1024).max(2_000_000).optional(),
+  model: z.string().trim().min(1).max(256).optional(),
+  provider: z.string().trim().min(1).max(64).optional(),
+  title: z.string().trim().min(1).max(256).optional(),
+}).strict().refine((body) => Boolean(body.title) || Boolean(body.model && body.provider), {
+  message: '需要标题文本或模型信息',
 })
 
 const getMessageText = (message: UIMessage) =>
@@ -92,6 +98,9 @@ const createSelfHostedModel = async (
   model: string,
   baseURL?: string
 ): Promise<HostedModelResult> => {
+  if (provider === 'lmstudio') {
+    return { error: 'LM Studio 仅支持客户端直连', languageModel: null }
+  }
   if (!isSupportedProviderId(provider) && !isValidProviderId(provider)) {
     return { error: 'Unsupported provider', languageModel: null }
   }
@@ -106,13 +115,17 @@ const createSelfHostedModel = async (
   if (!credentials) {
     return { error: MISSING_USER_PROVIDER_SECRET_MESSAGE, languageModel: null }
   }
-
   const resolvedBaseURL = credentials.baseURL ?? resolveOptionalBaseURL(baseURL)
   if (!resolvedBaseURL) return { error: 'Missing provider base URL', languageModel: null }
 
-  const languageModel = isSupportedProviderId(provider)
-    ? createProviderLanguageModel(provider, model, credentials.apiKey, resolvedBaseURL)
-    : createOpenAICompatibleLanguageModel(model, credentials.apiKey, resolvedBaseURL)
+  let languageModel: LanguageModel
+  if (provider === 'openrouter') {
+    languageModel = createOpenRouterLanguageModel(model, credentials.apiKey, resolvedBaseURL)
+  } else if (isSupportedProviderId(provider)) {
+    languageModel = createProviderLanguageModel(provider, model, credentials.apiKey, resolvedBaseURL)
+  } else {
+    languageModel = createOpenAICompatibleLanguageModel(model, credentials.apiKey, resolvedBaseURL)
+  }
 
   return { error: null, languageModel }
 }
@@ -137,8 +150,21 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
   const parsed = bodySchema.safeParse(body)
   if (!parsed.success) return jsonError(parsed.error.message)
 
-  const { baseURL, model } = parsed.data
-  const provider = parsed.data.provider
+  const { automatic = false, baseURL, model, provider, title: providedTitle } = parsed.data
+  if (automatic && topic.titleSource !== 'initial') return NextResponse.json(topic)
+
+  if (providedTitle) {
+    const title = normalizeGeneratedTitle(providedTitle)
+    if (!title) return jsonError('Model returned an empty title', 400)
+    const updated = automatic
+      ? await topicModel.updateGeneratedTitle(id, title)
+      : await topicModel.updateTitle(id, title)
+    if (updated) return NextResponse.json(updated)
+    const current = await topicModel.findById(id)
+    return current ? NextResponse.json(current) : jsonError('Topic not found', 404)
+  }
+
+  if (!provider || !model) return jsonError('需要指定模型', 400)
   const messages = await new ChatMessageModel(userId).listByTopic(id)
   const transcript = buildTranscript(messages)
   if (!transcript) return jsonError('Topic has no text messages')
@@ -201,8 +227,13 @@ export const POST = withAuth<{ id: string }>(async (request, { params, userId })
       }
     }
 
-    const updated = await topicModel.update(id, { title })
-    if (!updated) return jsonError('Topic not found', 404)
+    const updated = automatic
+      ? await topicModel.updateGeneratedTitle(id, title)
+      : await topicModel.updateTitle(id, title)
+    if (!updated) {
+      const current = await topicModel.findById(id)
+      return current ? NextResponse.json(current) : jsonError('Topic not found', 404)
+    }
     return NextResponse.json(updated)
   } catch (error) {
     log('generate title failed: %o', error)

@@ -48,6 +48,11 @@ export interface DesktopRemoteServer {
   url: string | null
 }
 
+export interface DesktopLmStudioRuntimeConfig {
+  apiKey?: string
+  baseURL: string
+}
+
 export type DesktopAuthStatus =
   | { status: 'signedOut' }
   | { expiresAt: number; status: 'waiting' }
@@ -157,6 +162,10 @@ export interface DesktopDataInfo {
 }
 
 export interface DesktopApi {
+  lmStudio: {
+    clearLegacySettings: (input: { accountId: string; providerId: string }) => Promise<void>
+    getRuntimeConfig: (input: { accountId: string; providerId: string }) => Promise<DesktopLmStudioRuntimeConfig>
+  }
   browser: DesktopBrowserApi
   terminal: DesktopTerminalApi
   zoom: {

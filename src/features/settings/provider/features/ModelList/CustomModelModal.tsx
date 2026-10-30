@@ -28,6 +28,11 @@ const ABILITY_OPTIONS: Array<{ description: string; key: keyof ModelAbilities; l
     label: '支持音频输出',
   },
   {
+    description: '标记模型提供文本转语音（TTS）能力。',
+    key: 'textToSpeech',
+    label: '支持 TTS',
+  },
+  {
     description: '允许模型使用工具或函数调用能力。',
     key: 'functionCall',
     label: '支持工具使用',

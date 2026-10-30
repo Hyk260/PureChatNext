@@ -19,6 +19,10 @@ type ContextOptions = {
   messages: UIMessage[]
   settings: ChatAdvancedSettings
   model: LanguageModel
+  summaryModel?: LanguageModel
+  summaryContextWindow?: number
+  providedSummary?: ChatContextSummary
+  requireProvidedSummary?: boolean
   contextWindow: number
   instructions: string
   nativeSearch: boolean
@@ -126,6 +130,17 @@ export async function prepareChatContext(options: ContextOptions): Promise<{
   signal?.throwIfAborted()
   const source = selectChatHistory(options.messages, settings)
   let summary = settings.enableContextCompression ? findSummary(source) : undefined
+  if (settings.enableContextCompression && options.providedSummary) {
+    const parsed = chatContextSummarySchema.safeParse(options.providedSummary)
+    if (
+      !parsed.success ||
+      parsed.data.messageCount > source.length ||
+      hashContextMessages(source.slice(0, parsed.data.messageCount)) !== parsed.data.sourceHash
+    ) {
+      throw new ChatSDKError('bad_request:api', '会话摘要与当前历史不匹配，请重试。')
+    }
+    summary = parsed.data
+  }
   const summarizedCount = summary?.messageCount ?? 0
   const normalized = await options.normalizeMessages(source.slice(summarizedCount))
   const adapted = prepareWebSearchHistory(normalized, nativeSearch)
@@ -153,8 +168,16 @@ export async function prepareChatContext(options: ContextOptions): Promise<{
   }
 
   if (settings.enableContextCompression && needsCompression && boundary > summarizedCount) {
+    if (options.requireProvidedSummary) {
+      throw new ChatSDKError('bad_request:api', '所选压缩模型未能为当前历史生成摘要，请重试。')
+    }
     const olderMessages = adapted.slice(0, boundary - summarizedCount)
-    const summaryBudget = inputBudget - Math.min(2048, outputReserve) - 1024
+    const summaryWindow = options.summaryContextWindow ?? contextWindow
+    const summaryOutputReserve = Math.min(2048, Math.max(256, Math.floor(summaryWindow * 0.1)))
+    const summaryBudget = Math.min(
+      inputBudget - Math.min(2048, outputReserve) - 1024,
+      summaryWindow - summaryOutputReserve - 1024
+    )
     if (summaryBudget < 512) {
       throw new ChatSDKError('bad_request:api', '模型上下文窗口过小，无法生成有效摘要。请限制历史消息数量后重试。')
     }
@@ -162,14 +185,14 @@ export async function prepareChatContext(options: ContextOptions): Promise<{
     for (const batch of batches) {
       signal?.throwIfAborted()
       const result = await generateText({
-        model,
+        model: options.summaryModel ?? model,
         instructions: SUMMARY_INSTRUCTIONS,
         messages: [
           ...summaryMessage(summary),
           ...batch,
           { role: 'user', content: '请更新对话摘要，保留继续任务所需的信息。' },
         ],
-        maxOutputTokens: Math.min(2048, outputReserve),
+        maxOutputTokens: Math.min(2048, outputReserve, summaryOutputReserve),
         abortSignal: signal,
         async onEnd({ usage }) {
           await options.onSummaryUsage?.(usage)

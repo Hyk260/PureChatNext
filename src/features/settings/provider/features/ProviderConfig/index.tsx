@@ -1,15 +1,20 @@
 'use client'
 
 import { getErrorMessage } from '@pure/utils/error'
+import { normalizeLmStudioBaseURL } from '@/libs/ai-providers/lmstudioBaseUrl'
+import { useSession } from '@/libs/better-auth/client'
+import { getDesktopApi } from '@/types/desktop'
 
 import { toast, Switch } from '@lobehub/ui'
 import { ActionIcon, Flex, Input, Text } from '@pure/ui'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Trash2 } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FocusEvent, FormEvent } from 'react'
 
 import { getSettingsProviderMeta, isServerManagedProvider, PROVIDER_DEFAULT_BASE_URLS } from '../../const'
 import { updateCustomProvider } from '../../customProvidersApi'
+import { useProviderEnabledSettings } from '../../providerEnabledApi'
+import { getLmStudioRuntimeConfig } from '../../lmstudioRuntimeConfig'
 import ProviderMark from '../../ProviderMark'
 import { deleteProviderSecret, saveProviderSecret, secretForProvider, useProviderSecrets } from '../../secretsApi'
 import { useProviderConfigStore } from '../../store/useProviderConfigStore'
@@ -29,13 +34,16 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
   const storedCustomProviders = useProviderConfigStore((s) => s.customProviders)
   const customProviders = registry.data ?? storedCustomProviders
   const customProvider = customProviders.find((provider) => provider.id === id)
+  const isLmStudio = id === 'lmstudio'
+  const { data: session } = useSession()
   const meta = getSettingsProviderMeta(id, customProviders)
   const config = useProviderConfigStore((s) => s.configs[id])
   const patchConfig = useProviderConfigStore((s) => s.patchConfig)
   const setEnabled = useProviderConfigStore((s) => s.setEnabled)
+  const { isReady: providerEnabledSettingsReady, updateEnabled: updateBuiltinEnabled } = useProviderEnabledSettings()
   const setCustomProviders = useProviderConfigStore((s) => s.setCustomProviders)
   const serverManaged = isServerManagedProvider(id)
-  const { data: secrets, mutate } = useProviderSecrets()
+  const { data: secrets, isLoading: secretsLoading, mutate } = useProviderSecrets()
   const saved = secretForProvider(secrets, id)
   const apiKeyWrapRef = useRef<HTMLDivElement>(null)
   const persistInflightRef = useRef<Promise<boolean> | null>(null)
@@ -43,11 +51,14 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
   const [apiKeyDraft, setApiKeyDraft] = useState('')
   const [keyVisible, setKeyVisible] = useState(false)
   const [saving, setSaving] = useState(false)
+  const legacyMigrationAttemptedRef = useRef(false)
 
   const enabled = config?.enabled ?? false
   const baseURL = config?.baseURL ?? ''
   const baseURLPlaceholder = customProvider?.baseURL ?? PROVIDER_DEFAULT_BASE_URLS[id as keyof typeof PROVIDER_DEFAULT_BASE_URLS]
   const savedApiKey = saved?.apiKey ?? ''
+  const desktopAvailable = Boolean(getDesktopApi())
+  const accountId = session?.user?.id
 
   useEffect(() => {
     draftDirtyRef.current = false
@@ -63,6 +74,26 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
     if (serverManaged || customProvider || saved?.baseURL === undefined) return
     patchConfig(id, { baseURL: saved.baseURL })
   }, [customProvider, id, patchConfig, saved?.baseURL, serverManaged])
+
+  useEffect(() => {
+    legacyMigrationAttemptedRef.current = false
+  }, [accountId, id])
+
+  useEffect(() => {
+    if (!isLmStudio || !accountId || !desktopAvailable || secretsLoading) return
+    if (legacyMigrationAttemptedRef.current) return
+    legacyMigrationAttemptedRef.current = true
+
+    let active = true
+    getLmStudioRuntimeConfig({ accountId })
+      .then(async () => {
+        if (active) await mutate()
+      })
+      .catch((error: unknown) => toast.error(getErrorMessage(error, '迁移 LM Studio 账号配置失败')))
+    return () => {
+      active = false
+    }
+  }, [accountId, desktopAvailable, id, isLmStudio, mutate, secretsLoading])
 
   const persistSecrets = useCallback(
     async (next: { apiKey?: string; baseURL?: string }) => {
@@ -112,6 +143,33 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
     if (!isByokProvider(id)) return false
     if (persistInflightRef.current) return persistInflightRef.current
 
+    if (isLmStudio) {
+      setSaving(true)
+      try {
+        const item = await saveProviderSecret({
+          apiKey: '',
+          baseURL: saved?.baseURL ?? baseURL,
+          provider: id,
+        })
+        await mutate(
+          (current) => {
+            const rest = (current ?? []).filter((entry) => entry.providerId !== id)
+            return [...rest, item]
+          },
+          { revalidate: false }
+        )
+        setApiKeyDraft('')
+        setKeyVisible(true)
+        draftDirtyRef.current = false
+        return true
+      } catch (error) {
+        toast.error(getErrorMessage(error, '删除 LM Studio API Key 失败'))
+        return false
+      } finally {
+        setSaving(false)
+      }
+    }
+
     const run = (async () => {
       setSaving(true)
       try {
@@ -136,7 +194,32 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
     } finally {
       if (persistInflightRef.current === run) persistInflightRef.current = null
     }
-  }, [id, mutate, savedApiKey])
+  }, [baseURL, id, isLmStudio, mutate, saved?.baseURL, savedApiKey])
+
+  const saveLmStudioSettings = useCallback(
+    async (next: { apiKey?: string; baseURL: string }) => {
+      let baseURL: string
+      try {
+        baseURL = normalizeLmStudioBaseURL(next.baseURL.trim() || PROVIDER_DEFAULT_BASE_URLS.lmstudio)
+      } catch (error) {
+        toast.error(getErrorMessage(error, 'LM Studio API 代理地址无效'))
+        return false
+      }
+
+      try {
+        const savedToVault = await persistSecrets({ ...next, baseURL })
+        if (!savedToVault) return false
+        setKeyVisible(false)
+        draftDirtyRef.current = false
+        toast.success('LM Studio 配置已保存')
+        return true
+      } catch (error) {
+        toast.error(getErrorMessage(error, '保存 LM Studio 配置失败'))
+        return false
+      }
+    },
+    [persistSecrets]
+  )
 
   const resolveApiKey = () => {
     const input = apiKeyWrapRef.current?.querySelector('input')
@@ -162,11 +245,19 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
       return
     }
     if (apiKey === savedApiKey) return
+    if (isLmStudio) {
+      saveLmStudioSettings({ apiKey, baseURL })
+      return
+    }
     persistSecrets({ apiKey, baseURL })
   }
 
   const handleBaseURLBlur = () => {
     if (saving) return
+    if (isLmStudio) {
+      saveLmStudioSettings({ apiKey: resolveApiKey() || undefined, baseURL })
+      return
+    }
     if (customProvider) {
       if (customProvider.baseURL === baseURL.trim()) return
       setSaving(true)
@@ -194,7 +285,18 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
 
   const ensureSecretForCheck = () => {
     const apiKey = resolveApiKey()
-    if (apiKey && apiKey !== savedApiKey) return persistSecrets({ apiKey, baseURL })
+    if (apiKey && apiKey !== savedApiKey) {
+      return isLmStudio
+        ? saveLmStudioSettings({ apiKey, baseURL })
+        : persistSecrets({ apiKey, baseURL })
+    }
+    if (isLmStudio) {
+      const savedBaseURL = saved?.baseURL ?? ''
+      if (savedBaseURL !== baseURL) {
+        return saveLmStudioSettings({ apiKey: apiKey || undefined, baseURL })
+      }
+      return Promise.resolve(true)
+    }
     return Promise.resolve(Boolean(savedApiKey || apiKey))
   }
 
@@ -221,10 +323,20 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
     </Flex>
   ) : null
 
-  const handleEnabledChange = (checked: boolean) => {
-    setEnabled(id, checked)
-    if (!customProvider) return
+  const handleEnabledChange = async (checked: boolean) => {
+    if (!customProvider) {
+      setSaving(true)
+      try {
+        await updateBuiltinEnabled(id, checked)
+      } catch (error) {
+        toast.error(getErrorMessage(error, '更新服务商状态失败'))
+      } finally {
+        setSaving(false)
+      }
+      return
+    }
 
+    setEnabled(id, checked)
     setSaving(true)
     updateCustomProvider(id, { enabled: checked })
       .then((updated) => {
@@ -249,7 +361,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
             <Switch
               aria-label={`${enabled ? '停用' : '启用'} ${meta.name}`}
               checked={enabled}
-              disabled={saving}
+              disabled={saving || (!customProvider && !providerEnabledSettingsReady)}
               onChange={handleEnabledChange}
             />
           </Flex>
@@ -269,7 +381,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
             <Flex className='flex-1 min-w-0 flex-col gap-1'>
               <Text className='font-medium'>API Key</Text>
               <Text className='text-[12px]' type='secondary'>
-                请填写你的 {meta.name} API Key
+                {isLmStudio ? '请填写你的 LM Studio API Key' : `请填写你的 ${meta.name} API Key`}
               </Text>
             </Flex>
             <div className={styles.rowBody}>
@@ -281,15 +393,28 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
                   value={apiKeyDraft}
                   type={keyVisible ? 'text' : 'password'}
                   suffix={
-                    <ActionIcon
-                      aria-label={keyVisible ? '隐藏 API Key' : '显示 API Key'}
-                      disabled={saving}
-                      icon={keyVisible ? EyeOff : Eye}
-                      size='small'
-                      title={keyVisible ? '隐藏 API Key' : '显示 API Key'}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => setKeyVisible((visible) => !visible)}
-                    />
+                    <Flex className='items-center gap-1'>
+                      <ActionIcon
+                        aria-label={keyVisible ? '隐藏 API Key' : '显示 API Key'}
+                        disabled={saving}
+                        icon={keyVisible ? EyeOff : Eye}
+                        size='small'
+                        title={keyVisible ? '隐藏 API Key' : '显示 API Key'}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => setKeyVisible((visible) => !visible)}
+                      />
+                      {isLmStudio && Boolean(savedApiKey) ? (
+                        <ActionIcon
+                          aria-label='清除已保存的 API Key'
+                          disabled={saving}
+                          icon={Trash2}
+                          size='small'
+                          title='清除已保存的 API Key'
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={clearSecrets}
+                        />
+                      ) : null}
+                    </Flex>
                   }
                   onBlur={handleApiKeyBlur}
                   onChange={handleApiKeyChange}
@@ -308,12 +433,17 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
               <Text className='text-[12px]' type='secondary'>
                 必须包含 http(s)://
               </Text>
+              {isLmStudio ? (
+                <Text className='text-[12px]' type='secondary'>
+                  浏览器直连需在 LM Studio 的 Developer &gt; Local Server &gt; Server Settings 开启 Enable CORS
+                </Text>
+              ) : null}
             </Flex>
             <div className={styles.rowBody}>
               <Input
                 allowClear
                 disabled={saving}
-                placeholder={baseURLPlaceholder}
+                placeholder={isLmStudio ? 'http://localhost:1234/v1' : baseURLPlaceholder}
                 value={baseURL}
                 onBlur={handleBaseURLBlur}
                 onChange={(event) => {
@@ -332,7 +462,7 @@ const ProviderConfig = memo<ProviderConfigProps>(({ id }) => {
             <Flex className='flex-1 min-w-0 flex-col gap-1'>
               <Text className='font-medium'>连通性检查</Text>
               <Text className='text-[12px]' type='secondary'>
-                测试 API Key 与代理地址是否正确填写
+                {isLmStudio ? '测试 Api Key 与代理地址是否正确填写' : '测试 API Key 与代理地址是否正确填写'}
               </Text>
             </Flex>
             <div className={styles.rowBody}>

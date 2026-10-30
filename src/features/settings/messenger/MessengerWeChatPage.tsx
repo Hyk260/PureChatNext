@@ -378,6 +378,7 @@ const MessengerWeChatPage = memo(() => {
 
           <MessengerModelSwitch
             disabled={controlsDisabled}
+            excludedAbilities={['textToSpeech']}
             modelId={modelId}
             provider={provider}
             onSelect={handleModelSelect}

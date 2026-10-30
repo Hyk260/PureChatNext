@@ -486,6 +486,8 @@ export const openaiChatModels: AiModelCard[] = [
     maxOutput: 16_384,
     releasedAt: '2025-08-28',
     abilities: {
+      audioInput: true,
+      audioOutput: true,
       functionCall: true,
     },
     pricing: {

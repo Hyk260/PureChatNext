@@ -34,6 +34,13 @@ export class QQActiveMessageError extends Error {
 export type RichMediaFileType = 1 | 2 | 3 | 4
 export type RichMediaSource = { fileData: string; url?: never } | { fileData?: never; url: string }
 
+export class QQDeliveryError extends Error {
+  constructor(readonly code: string, readonly kind: 'not_sent' | 'rejected' | 'unknown', readonly statusCode?: number) {
+    super(code)
+    this.name = 'QQDeliveryError'
+  }
+}
+
 function retryDelayMs(response: Response, attempt: number): number {
   const retryAfter = Number(response.headers.get('retry-after'))
   if (Number.isFinite(retryAfter) && retryAfter >= 0) return Math.min(retryAfter * 1000, 30_000)
@@ -61,12 +68,13 @@ export class QQApiClient {
       try {
         const response = await fetch(url, {
           ...init,
-          signal: AbortSignal.timeout(timeoutMs),
+          signal: init.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs),
         })
         if (!RETRYABLE_STATUS_CODES.has(response.status) || attempt === NETWORK_RETRY_COUNT) return response
         await response.body?.cancel()
         await abortableDelay(retryDelayMs(response, attempt))
       } catch (error) {
+        init.signal?.throwIfAborted()
         lastError = error
         if (attempt === NETWORK_RETRY_COUNT) break
         await abortableDelay(500 * 2 ** attempt)
@@ -85,7 +93,7 @@ export class QQApiClient {
   }
 
   /** 获取可复用的 Access Token，并在临近过期时自动刷新。 */
-  async getAccessToken(): Promise<string> {
+  async getAccessToken(signal?: AbortSignal): Promise<string> {
     // 在有效期内复用缓存的 Access Token，避免重复请求鉴权接口。
     if (this.cachedToken && Date.now() < this.tokenExpiresAt) {
       return this.cachedToken
@@ -98,6 +106,7 @@ export class QQApiClient {
       }),
       headers: { 'Content-Type': 'application/json' },
       method: 'POST',
+      signal,
     })
 
     if (!response.ok) {
@@ -112,6 +121,60 @@ export class QQApiClient {
     this.tokenExpiresAt = Date.now() + (data.expires_in - 300) * 1000
 
     return this.cachedToken
+  }
+
+  /** Speech delivery never retries a POST whose outcome could already have reached QQ. */
+  private async callSpeech(path: string, body: Record<string, unknown>, signal: AbortSignal): Promise<Record<string, unknown>> {
+    signal.throwIfAborted()
+    let token: string
+    try {
+      token = await this.getAccessToken(signal)
+    } catch {
+      signal.throwIfAborted()
+      throw new QQDeliveryError('QQ_AUTH_FAILED', 'not_sent')
+    }
+    let response: Response
+    let responseText: string
+    try {
+      response = await fetch(`${API_BASE_URL}${path}`, {
+        method: 'POST',
+        headers: { Authorization: `QQBot ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal,
+      })
+      responseText = await response.text()
+    } catch {
+      throw new QQDeliveryError('QQ_DELIVERY_UNKNOWN', 'unknown')
+    }
+    const code = parseQQResponse(responseText).code
+    if (!response.ok || (code !== undefined && code !== 0)) {
+      throw new QQDeliveryError(code === undefined ? `QQ_HTTP_${response.status}` : `QQ_${code}`, 'rejected', response.status)
+    }
+    try {
+      return JSON.parse(responseText) as Record<string, unknown>
+    } catch {
+      throw new QQDeliveryError('QQ_DELIVERY_UNKNOWN', 'unknown')
+    }
+  }
+
+  async uploadSpeech(type: 'group' | 'c2c', id: string, audio: Buffer, signal: AbortSignal): Promise<string> {
+    if (!audio.length || audio.length > 5 * 1024 * 1024) throw new QQDeliveryError('QQ_INVALID_AUDIO', 'not_sent')
+    const segment = type === 'group' ? 'groups' : 'users'
+    const uploaded = await this.callSpeech(`/v2/${segment}/${encodeURIComponent(id)}/files`, {
+      file_type: 3, file_name: 'reply.mp3', file_data: audio.toString('base64'), srv_send_msg: false,
+    }, signal)
+    if (typeof uploaded.file_info !== 'string' || !uploaded.file_info) throw new QQDeliveryError('QQ_UPLOAD_INVALID', 'not_sent')
+    return uploaded.file_info
+  }
+
+  async sendPassiveReply(type: 'group' | 'c2c', id: string, message: { text: string } | { fileInfo: string }, reply: PassiveReply, signal: AbortSignal): Promise<void> {
+    if (!reply.msgId || !reply.msgSeq) throw new QQDeliveryError('QQ_PASSIVE_CONTEXT_MISSING', 'not_sent')
+    const segment = type === 'group' ? 'groups' : 'users'
+    const sent = await this.callSpeech(`/v2/${segment}/${encodeURIComponent(id)}/messages`, {
+      ...('text' in message ? { content: message.text, msg_type: QQ_MSG_TYPE.TEXT } : { content: ' ', media: { file_info: message.fileInfo }, msg_type: QQ_MSG_TYPE.MEDIA }),
+      ...passiveReply(reply),
+    }, signal)
+    if (typeof sent.id !== 'string' || !sent.id) throw new QQDeliveryError('QQ_DELIVERY_UNKNOWN', 'unknown')
   }
 
   private async call<T>(

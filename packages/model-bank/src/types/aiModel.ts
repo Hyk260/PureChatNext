@@ -19,6 +19,8 @@ export type ModelTokenPricing = {
 export type ModelAbilities = {
   audioInput?: boolean
   audioOutput?: boolean
+  /** Explicit text-to-speech capability; distinct from generic audio output. */
+  textToSpeech?: boolean
   functionCall?: boolean
   imageGeneration?: boolean
   reasoning?: boolean

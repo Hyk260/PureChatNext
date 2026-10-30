@@ -80,6 +80,40 @@ describe('context compression', () => {
     expect(source).toEqual(snapshot)
   })
 
+  it('uses the selected auxiliary model for compression and keeps the chat model untouched', async () => {
+    const main = mockModel('main model output')
+    const summary = mockModel('selected compression summary')
+    const result = await prepare(history(), {
+      model: main.model,
+      summaryContextWindow: 6000,
+      summaryModel: summary.model,
+    })
+
+    expect(result.summary?.text).toBe('selected compression summary')
+    expect(summary.generated).toHaveBeenCalledOnce()
+    expect(main.generated).not.toHaveBeenCalled()
+  })
+
+  it('validates client prepared summaries and requires them for local-only compression models', async () => {
+    const source = history()
+    const providedSummary = {
+      messageCount: 4,
+      sourceHash: hashContextMessages(source.slice(0, 4)),
+      text: 'client prepared summary',
+    }
+    const reused = await prepare(source, { providedSummary, requireProvidedSummary: true })
+    expect(reused.summary).toEqual(providedSummary)
+
+    const edited = structuredClone(source)
+    edited[0].parts = [{ type: 'text', text: 'edited history' }]
+    await expect(prepare(edited, { providedSummary, requireProvidedSummary: true })).rejects.toMatchObject({
+      cause: expect.stringContaining('摘要与当前历史不匹配'),
+    })
+    await expect(prepare(source, { requireProvidedSummary: true })).rejects.toMatchObject({
+      cause: expect.stringContaining('未能为当前历史生成摘要'),
+    })
+  })
+
   it('reuses a persisted summary on reload and invalidates it after source edits or deletes', async () => {
     const source = history()
     const contextSummary = {

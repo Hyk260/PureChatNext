@@ -1,12 +1,12 @@
 import { UserProviderSecretModel } from '@pure/database/models/userProviderSecret'
-import { PURECHAT_PROVIDER_ID, BUILTIN_PROVIDER_ID_LIST, MISSING_USER_PROVIDER_SECRET_MESSAGE } from '@pure/const'
+import { PURECHAT_PROVIDER_ID, MISSING_USER_PROVIDER_SECRET_MESSAGE } from '@pure/const'
 import { getAiModel, PROVIDER_DEFAULT_MODELS } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 
 import { isSupportedProviderId } from '@/libs/ai-providers/resolveClient'
 import { isPureChatRuntimeAvailable } from '@/server/purechat'
 
-export const CHANNEL_PROVIDER_IDS = BUILTIN_PROVIDER_ID_LIST
+export const CHANNEL_PROVIDER_IDS = ['purechat', 'openai', 'deepseek', 'bailian'] as const
 export type ChannelProviderId = (typeof CHANNEL_PROVIDER_IDS)[number]
 
 export function isChannelProviderId(provider: string): provider is ChannelProviderId {
@@ -22,6 +22,7 @@ export function defaultChannelModel(provider: ChannelProviderId): string {
 }
 
 export function validateChannelModel(provider: ChannelProviderId, model: string): string | null {
+  if (provider === 'bailian') return model.trim() ? null : '所选模型不属于该服务商或已停用'
   const item = getAiModel(provider as ModelProviderId, model)
   return !item || item.enabled === false ? '所选模型不属于该服务商或已停用' : null
 }

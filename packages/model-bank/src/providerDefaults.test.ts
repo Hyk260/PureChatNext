@@ -9,10 +9,13 @@ import { PROVIDER_DEFAULT_MODELS } from './providerDefaults'
 describe('provider definitions', () => {
   it('preserves enum identity, provider order and default models', () => {
     expect(CompatibleModelProvider).toBe(ModelProvider)
-    expect(BUILTIN_PROVIDER_ID_LIST).toEqual(['purechat', 'openai', 'deepseek'])
+    expect(BUILTIN_PROVIDER_ID_LIST).toEqual(['purechat', 'openai', 'deepseek', 'bailian', 'openrouter', 'lmstudio'])
     expect(PROVIDER_DEFAULT_MODELS).toEqual({
+      bailian: 'qwen3.8-max',
       deepseek: 'deepseek-v4-flash',
+      lmstudio: '',
       openai: 'gpt-5.4-nano',
+      openrouter: '',
       purechat: PURECHAT_DEFAULT_MODEL,
     })
   })

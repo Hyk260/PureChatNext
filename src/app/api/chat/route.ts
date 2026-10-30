@@ -6,17 +6,22 @@ import { createHash, randomUUID } from 'node:crypto'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createDeepSeek } from '@ai-sdk/deepseek'
 import { PURECHAT_PROVIDER_ID, isValidProviderId } from '@pure/const'
+import type { ModelProviderId } from '@pure/const'
 import { getAiModel } from '@pure/model-bank'
 import { loadFile } from '@pure/file-loaders'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
+import { ServiceModelSettingsModel } from '@pure/database/models/serviceModelSettings'
 import { CHAT_PERMISSION_MODES } from '@pure/types'
+import type { ChatContextSummary, ServiceModelReference } from '@pure/types'
 import { createUIMessageStreamResponse, isStepCount, streamText, toUIMessageStream } from 'ai'
-import type { ToolExecutionEndEvent, ToolSet, UIMessage } from 'ai'
+import type { LanguageModel, LanguageModelUsage, ToolExecutionEndEvent, ToolSet, UIMessage } from 'ai'
 import debug from 'debug'
 import { createNanoId } from '@pure/utils'
 
 import {
   createOpenAICompatibleLanguageModel,
+  createOpenRouterLanguageModel,
+  createProviderLanguageModel,
   isSupportedProviderId,
   resolveApiKeyFromHeader,
 } from '@/libs/ai-providers/resolveClient'
@@ -33,6 +38,8 @@ import {
   getShanghaiBillingPeriod,
   PURECHAT_DEFAULT_MODEL,
   resolvePureChatGatewayId,
+  assertPureChatCanChat,
+  createPureChatLanguageModel,
 } from '@/server/purechat'
 import {
   getPureChatStreamErrorMessage,
@@ -83,6 +90,7 @@ type ChatRequestBody = {
   provider?: string
   searchMode?: unknown
   system?: string
+  contextSummary?: ChatContextSummary
 }
 
 type ChatFilePart = Extract<UIMessage['parts'][number], { type: 'file' }> & {
@@ -188,6 +196,8 @@ const resolveModel = (
     }
     case 'openai':
       return createOpenAI(options)(resolvedModel)
+    case 'bailian':
+      return createProviderLanguageModel('bailian', resolvedModel, apiKey, baseURL)
     case 'deepseek':
     default:
       return createDeepSeek(options)(resolvedModel)
@@ -345,6 +355,85 @@ const chargePureChatUsage = async ({
   }
 }
 
+const resolveCompressionRuntime = async ({
+  request,
+  userId,
+  selected,
+  mainProvider,
+  mainModel,
+  mainLanguageModel,
+}: {
+  request: Request
+  userId: string
+  selected?: ServiceModelReference
+  mainProvider: string
+  mainModel: string
+  mainLanguageModel: LanguageModel
+}): Promise<{
+  chargeAsMain?: boolean
+  contextWindow: number
+  model: LanguageModel
+  requireProvidedSummary?: boolean
+  onUsage?: (usage: LanguageModelUsage) => Promise<void>
+}> => {
+  const contextWindow = selected
+    ? selected.contextWindowTokens ??
+      getAiModel(selected.provider as ModelProviderId, selected.model)?.contextWindowTokens ??
+      128_000
+    : getAiModel(mainProvider as ModelProviderId, mainModel)?.contextWindowTokens ?? 128_000
+  if (!selected) return { chargeAsMain: true, contextWindow, model: mainLanguageModel }
+  if (selected.provider === 'lmstudio') {
+    return { contextWindow, model: mainLanguageModel, requireProvidedSummary: true }
+  }
+  if (selected.provider === mainProvider && selected.model === mainModel) {
+    return { chargeAsMain: true, contextWindow, model: mainLanguageModel }
+  }
+
+  if (selected.provider === PURECHAT_PROVIDER_ID) {
+    const settlement = await assertPureChatCanChat(userId, selected.model)
+    const model = createPureChatLanguageModel(selected.model)
+    if (!model) throw new ChatSDKError('bad_request:api', 'PureChat temporarily unavailable')
+    const usageStartedAt = Date.now()
+    return {
+      contextWindow,
+      model,
+      onUsage: async (usage) => {
+        await chargePureChatUsage({
+          cachedInputTokens: usage.inputTokenDetails.cacheReadTokens,
+          displayModel: selected.model,
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+          settlementId: createNanoId(24)(),
+          settlementPeriod: settlement.settlementPeriod,
+          usageStartedAt,
+          userId,
+        })
+      },
+    }
+  }
+
+  if (!isSupportedProviderId(selected.provider) && !isValidProviderId(selected.provider)) {
+    throw new ChatSDKError('bad_request:api', `Unsupported provider "${selected.provider}"`)
+  }
+  const credentials = await resolveUserProviderCredentials({
+    allowEnvFallback: true,
+    headerKey: selected.provider === mainProvider ? resolveApiKeyFromHeader(request) : undefined,
+    provider: selected.provider,
+    userId,
+  })
+  if (!credentials) throw new ChatSDKError('bad_request:api', MISSING_USER_PROVIDER_SECRET_MESSAGE)
+  let model: LanguageModel | undefined
+  if (selected.provider === 'openrouter') {
+    model = createOpenRouterLanguageModel(selected.model, credentials.apiKey, credentials.baseURL)
+  } else if (isSupportedProviderId(selected.provider)) {
+    model = createProviderLanguageModel(selected.provider, selected.model, credentials.apiKey, credentials.baseURL)
+  } else if (credentials.baseURL) {
+    model = createOpenAICompatibleLanguageModel(selected.model, credentials.apiKey, credentials.baseURL)
+  }
+  if (!model) throw new ChatSDKError('bad_request:api', 'Missing provider base URL')
+  return { contextWindow, model }
+}
+
 const toPureChatErrorResponse = (error: unknown) => {
   log('purechat streamText failed: %o', error)
   if (error instanceof ChatSDKError) return error.toResponse()
@@ -451,7 +540,7 @@ export async function POST(request: Request) {
 
   const supportsVision = Boolean(
     requestBody.modelAbilities?.vision ??
-    getAiModel((provider ?? 'deepseek') as 'purechat' | 'deepseek' | 'openai', model ?? '')?.abilities?.vision
+    getAiModel((provider ?? 'deepseek') as ModelProviderId, model ?? '')?.abilities?.vision
   )
   const normalizeRequestMessages = async (selectedMessages: UIMessage[]) => {
     try {
@@ -462,7 +551,7 @@ export async function POST(request: Request) {
     }
   }
   const resolveContextWindow = (runtimeProvider: string, runtimeModel: string) => {
-    const catalog = getAiModel(runtimeProvider as 'purechat' | 'deepseek' | 'openai', runtimeModel)?.contextWindowTokens
+    const catalog = getAiModel(runtimeProvider as ModelProviderId, runtimeModel)?.contextWindowTokens
     if (typeof modelContextWindow === 'number')
       return catalog ? Math.min(catalog, modelContextWindow) : modelContextWindow
     return catalog ?? 128_000
@@ -554,6 +643,15 @@ export async function POST(request: Request) {
     try {
       const usageStartedAt = Date.now()
       const resolvedModel = resolveModel(PURECHAT_PROVIDER_ID, displayModel, gatewayKey, resolveAiGatewayBaseURL())
+      const configuredCompression = await new ServiceModelSettingsModel().get(userId)
+      const compression = await resolveCompressionRuntime({
+        request,
+        userId,
+        selected: configuredCompression.historyCompression,
+        mainProvider: PURECHAT_PROVIDER_ID,
+        mainModel: displayModel,
+        mainLanguageModel: resolvedModel,
+      })
 
       const { instructions, searchOptions, native } = await prepareWebRuntime(
         userId,
@@ -561,30 +659,37 @@ export async function POST(request: Request) {
         displayModel
       )
 
-      log('purechat modelId: %o', resolvedModel.modelId)
+      log('purechat modelId: %o', resolvePureChatGatewayId(displayModel))
 
       const context = await prepareChatContext({
         messages,
         settings: advancedSettings,
         model: resolvedModel,
+        summaryModel: compression.model,
+        summaryContextWindow: compression.contextWindow,
+        providedSummary: requestBody.contextSummary,
+        requireProvidedSummary: compression.requireProvidedSummary,
         contextWindow: resolveContextWindow(PURECHAT_PROVIDER_ID, displayModel),
         instructions,
         nativeSearch: native,
         tools: searchOptions.tools,
         signal: request.signal,
         normalizeMessages: normalizeRequestMessages,
-        onSummaryUsage: async (usage) => {
-          await chargePureChatUsage({
-            cachedInputTokens: usage.inputTokenDetails.cacheReadTokens,
-            displayModel,
-            inputTokens: usage.inputTokens,
-            outputTokens: usage.outputTokens,
-            settlementId: createNanoId(24)(),
-            settlementPeriod,
-            usageStartedAt,
-            userId,
-          })
-        },
+        onSummaryUsage: compression.onUsage ??
+          (compression.chargeAsMain
+            ? async (usage) => {
+                await chargePureChatUsage({
+                  cachedInputTokens: usage.inputTokenDetails.cacheReadTokens,
+                  displayModel,
+                  inputTokens: usage.inputTokens,
+                  outputTokens: usage.outputTokens,
+                  settlementId: createNanoId(24)(),
+                  settlementPeriod,
+                  usageStartedAt,
+                  userId,
+                })
+              }
+            : undefined),
       })
       const result = streamText({
         messages: context.messages,
@@ -627,6 +732,9 @@ export async function POST(request: Request) {
   ) {
     return new ChatSDKError('bad_request:api', `Unsupported provider "${resolvedProvider}"`).toResponse()
   }
+  if (resolvedProvider === 'lmstudio') {
+    return new ChatSDKError('bad_request:api', 'LM Studio 仅支持客户端直连').toResponse()
+  }
 
   const userId = requestUserId ?? (await getAuthenticatedUserId())
   const hasDocumentAttachments = messages.some((message) =>
@@ -645,10 +753,15 @@ export async function POST(request: Request) {
     const message = userId ? MISSING_USER_PROVIDER_SECRET_MESSAGE : `Missing API key for provider "${resolvedProvider}"`
     return new ChatSDKError('bad_request:api', message).toResponse()
   }
-
   try {
     let resolvedModel
-    if (isSupportedProviderId(resolvedProvider)) {
+    if (resolvedProvider === 'openrouter') {
+      resolvedModel = createOpenRouterLanguageModel(
+        model ?? 'openai/gpt-4o-mini',
+        credentials.apiKey,
+        credentials.baseURL
+      )
+    } else if (isSupportedProviderId(resolvedProvider)) {
       resolvedModel = resolveModel(provider, model, credentials.apiKey, credentials.baseURL)
     } else {
       if (!credentials.baseURL) return new ChatSDKError('bad_request:api', 'Missing provider base URL').toResponse()
@@ -668,16 +781,31 @@ export async function POST(request: Request) {
 
     log('model=%o, provider=%o', model, resolvedProvider)
 
+    const configuredCompression = userId ? await new ServiceModelSettingsModel().get(userId) : {}
+    const compression = await resolveCompressionRuntime({
+      request,
+      userId: userId ?? '',
+      selected: configuredCompression.historyCompression,
+      mainProvider: resolvedProvider,
+      mainModel: model ?? 'deepseek-v4-flash',
+      mainLanguageModel: resolvedModel,
+    })
+
     const context = await prepareChatContext({
       messages,
       settings: advancedSettings,
       model: resolvedModel,
+      summaryModel: compression.model,
+      summaryContextWindow: compression.contextWindow,
+      providedSummary: requestBody.contextSummary,
+      requireProvidedSummary: compression.requireProvidedSummary,
       contextWindow: resolveContextWindow(resolvedProvider, model ?? 'deepseek-v4-flash'),
       instructions,
       nativeSearch: native,
       tools: searchOptions.tools,
       signal: request.signal,
       normalizeMessages: normalizeRequestMessages,
+      ...(compression.onUsage ? { onSummaryUsage: compression.onUsage } : {}),
     })
     const result = streamText({
       messages: context.messages,

@@ -1,0 +1,1 @@
+CREATE INDEX "channel_events_speech_requested_idx" ON "channel_events" USING btree ("binding_id",("platform_payload"->'speech'->>'requestedAt'));

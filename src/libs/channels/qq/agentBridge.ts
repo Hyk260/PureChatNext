@@ -1,6 +1,9 @@
 import { buildConversationFileContext } from '../core/files'
 import { getErrorMessage } from '@pure/utils/error'
 import { createHash } from 'node:crypto'
+import { QQAdapter } from '@pure/chat-adapter/qq'
+import { QQSpeechModel } from '@pure/database/models/qqSpeech'
+import { stripQwenTtsTags } from '@pure/const'
 
 import type { ModelMessage } from 'ai'
 import type { Message, Thread } from 'chat'
@@ -40,6 +43,8 @@ import {
 } from './advancedSettings'
 import { QQ_MAX_PASSIVE_REPLIES } from './passiveReply'
 import { buildQQPlatformPayload, resolveQQAuthorLabel, resolveQQSessionLabel, resolveQQThreadType } from './thread'
+import { isQQSpeechCandidate, tryQQSpeech } from './speech'
+import type { QQReplySender } from './speech'
 
 const log = debug('channel:qq:bridge')
 export const QQ_UNSUPPORTED_MESSAGE = formatQQUnsupportedMessage
@@ -55,6 +60,7 @@ async function postQQMarkdown(
   text: string,
   charLimit: number,
   diagnosticOwner: { bindingId: string; userId: string },
+  sender?: QQReplySender,
 ): Promise<{ sentCount: number; text: string }> {
   const limit = Math.min(QQ_PLATFORM_MAX_TEXT_LENGTH, Math.max(QQ_MIN_CHAR_LIMIT, Math.round(charLimit)))
   const chunks = chunkQQTextLimited(text, limit, QQ_MAX_PASSIVE_REPLIES)
@@ -65,7 +71,8 @@ async function postQQMarkdown(
   const sentParts: string[] = []
   for (const chunk of chunks) {
     try {
-      await thread.post(chunk)
+      if (sender) await sender.sendText(chunk)
+      else await thread.post(chunk)
       sentParts.push(chunk)
     } catch (error) {
       await recordChannelGatewayLog({ ...diagnosticOwner, platform: 'qq', event: 'send_failed', code: channelErrorCode(error) })
@@ -119,6 +126,7 @@ export async function generateQQAgentReply(params: {
   const tools = resolveChatTools({ channel: 'qq', channelContext, searchMode: 'auto' })
   const instructions = [
     '调用工具后必须用中文直接回答用户，不要只回复“正在查询”，不要输出工具调用、XML 或 DSML 标记。',
+    'QQ 平台会按配置处理语音合成。用户要求语音时仍生成直接回答的文字，不要声称无法发语音，也不要承诺语音已经发送。',
     resolveChatToolInstructions({ channel: 'qq', channelContext, searchMode: 'auto' }).join('\n\n'),
     params.attachmentContext,
   ]
@@ -449,14 +457,51 @@ export async function handleQQMention(params: {
       })
       const reply = replyResult.text
       const finalReply = await finalizeQQOutbound({ agentId, reply, userId })
+      const textReply = stripQwenTtsTags(finalReply)
       diagnosticStage = 'send_failed'
-      const outbound = await postQQMarkdown(thread, finalReply, settings.charLimit, { userId, bindingId })
+      abortController.signal.throwIfAborted()
+      const speechEligible =
+        isQQSpeechCandidate(message.text ?? '', finalReply, settings.speechModel?.replyMode) &&
+        (threadType === 'c2c' || threadType === 'group')
+      const sender = (threadType === 'c2c' || threadType === 'group') && thread.adapter instanceof QQAdapter
+        ? thread.adapter.createReplySender(thread.id, message.id, {
+            createdAt: message.metadata.dateSent,
+            signal: abortController.signal,
+            onConsume: (_seq, fallbackSlots) => new QQSpeechModel().reserveReply(event.id, 1, fallbackSlots),
+          })
+        : undefined
+      let outbound: { sentCount: number; text: string }
+      let speechSent = false
+      try {
+        const delivery = speechEligible && sender ? await tryQQSpeech({
+          agentId, bindingId, eventId: event.id, userId, senderId: authorId, threadType,
+          input: message.text ?? '', reply: finalReply, model: resolvedModel, provider: resolvedProvider,
+          signal: abortController.signal, sender,
+        }) : 'text'
+        abortController.signal.throwIfAborted()
+        if (delivery === 'stopped') {
+          await eventModel.saveQQResponse(event.id, { status: 'failed', errorCode: 'QQ_REPLY_STOPPED', text: finalReply, sentChunkCount: 0 })
+          return
+        }
+        speechSent = delivery === 'sent'
+        outbound = delivery === 'sent'
+          ? { sentCount: 1, text: finalReply }
+          : await postQQMarkdown(thread, textReply, settings.charLimit, { userId, bindingId }, sender)
+      } catch {
+        // The generated answer is the fallback. Never replace it with a second generic failure reply.
+        await eventModel.saveQQResponse(event.id, {
+          status: 'failed', errorCode: abortController.signal.aborted ? 'ABORTED' : 'QQ_REPLY_FAILED',
+          text: finalReply, sentChunkCount: 0,
+        }).catch(() => {})
+        await recordChannelGatewayLog({ userId, bindingId, platform: 'qq', event: 'send_failed', code: abortController.signal.aborted ? 'ABORTED' : 'QQ_REPLY_FAILED' })
+        return
+      }
       await eventModel
         .saveQQResponse(event.id, {
           ...(model ? { model } : {}),
           ...(provider ? { provider } : {}),
           sentChunkCount: outbound.sentCount,
-          text: outbound.text,
+          text: sender ? (speechSent ? finalReply : textReply) : outbound.text,
         })
         .catch((saveError) => log('save reply event failed app=%s: %O', applicationId, saveError))
     } finally {

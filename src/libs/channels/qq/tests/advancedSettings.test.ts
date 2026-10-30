@@ -8,6 +8,7 @@ import {
   evaluateQQInboundAccess,
   normalizeQQChannelSettings,
   chunkQQOutboundText,
+  parseQQChannelSettingsInput,
 } from '@/libs/channels/qq/advancedSettings'
 
 describe('normalizeQQChannelSettings', () => {
@@ -30,6 +31,24 @@ describe('normalizeQQChannelSettings', () => {
         ],
       }).allowedUsers
     ).toEqual([{ platformUserId: 'a', remark: 'Alice' }])
+  })
+
+  it('preserves a supported QQ speech model and rejects unsupported built-in models', () => {
+    const speechModel = { model: 'qwen-audio-3.1-tts-flash', provider: 'bailian' }
+    expect(normalizeQQChannelSettings({ speechModel }).speechModel).toEqual(speechModel)
+    expect(parseQQChannelSettingsInput({ speechModel }).ok).toBe(true)
+    expect(parseQQChannelSettingsInput({ speechModel: { model: 'tts-1', provider: 'deepseek' } })).toMatchObject({
+      ok: false,
+    })
+  })
+
+  it('normalizes optional speech instructions and enforces their length', () => {
+    const speechModel = { model: 'qwen-audio-3.1-tts-flash', provider: 'bailian', instruction: '  说话嗲一点  ' }
+    expect(normalizeQQChannelSettings({ speechModel }).speechModel?.instruction).toBe('说话嗲一点')
+    expect(parseQQChannelSettingsInput({ speechModel }).ok).toBe(true)
+    expect(
+      parseQQChannelSettingsInput({ speechModel: { ...speechModel, instruction: 'i'.repeat(501) } })
+    ).toMatchObject({ ok: false })
   })
 })
 

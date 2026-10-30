@@ -3,6 +3,7 @@ export { createQQAdapter, QQAdapter } from './adapter'
 export {
   QQActiveMessageError,
   QQApiClient,
+  QQDeliveryError,
   type QQActiveMessageFailureKind,
   type RichMediaFileType,
   type RichMediaSource,

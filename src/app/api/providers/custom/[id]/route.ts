@@ -24,6 +24,9 @@ export const PUT = withAuth<{ id: string }>(async (request, { params, userId }) 
   const parsed = patchSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return jsonError(parsed.error.issues[0]?.message || '服务商信息无效')
   const { apiKey, ...patch } = parsed.data
+  const model = new CustomProviderModel(userId)
+  const existing = await model.find(id)
+  if (!existing) return jsonError('服务商不存在', 404)
   const normalizedPatch = {
     ...patch,
     ...(patch.baseURL ? { baseURL: patch.baseURL.replace(/\/+$/, '') } : {}),
@@ -31,7 +34,6 @@ export const PUT = withAuth<{ id: string }>(async (request, { params, userId }) 
   }
   if (Object.keys(normalizedPatch).length === 0 && apiKey === undefined) return jsonError('没有可更新的字段')
 
-  const model = new CustomProviderModel(userId)
   const provider = await model.update(id, normalizedPatch)
   if (!provider) return jsonError('服务商不存在', 404)
 

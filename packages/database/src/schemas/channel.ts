@@ -1,9 +1,11 @@
 import { boolean, index, integer, jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 
 import { idGenerator } from '../utils/idGenerator'
 import { timestamptz, timestamps, varchar255 } from './_helpers'
 import { users } from './user'
 import { files } from './file'
+import type { QQSpeechModelReference } from '@pure/types'
 
 /** QQ / 通用渠道高级设置（持久化在 channel_bindings.settings）。 */
 export type ChannelAccessPolicy = 'allowlist' | 'disabled' | 'open'
@@ -19,6 +21,7 @@ export type ChannelBindingSettings = {
   dmPolicy?: ChannelAccessPolicy
   groupPolicy?: ChannelAccessPolicy
   platformUserId?: string
+  speechModel?: QQSpeechModelReference
 }
 
 /**
@@ -135,6 +138,7 @@ export const channelEvents = pgTable(
     index('channel_events_queue_idx').on(t.status, t.availableAt, t.leaseExpiresAt),
     index('channel_events_history_idx').on(t.sessionId, t.conversationVersion, t.completedAt),
     index('channel_events_binding_status_idx').on(t.bindingId, t.status),
+    index('channel_events_speech_requested_idx').on(t.bindingId, sql`(${t.platformPayload}->'speech'->>'requestedAt')`),
   ]
 )
 

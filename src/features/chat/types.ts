@@ -8,6 +8,7 @@ export type LocalChatTopic = {
   permissionMode: ChatPermissionMode
   projectName: string | null
   title: string
+  titleSource?: 'initial' | 'generated' | 'manual'
   updatedAt: number
 }
 

@@ -3,6 +3,8 @@ import type { NextRequest } from 'next/server'
 
 import { AgentModel } from '@pure/database/models/agent'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
+import { DEFAULT_QQ_SPEECH_CONFIG, isQQSpeechReplyMode, speechConfigError } from '@pure/const'
+import type { QQSpeechModelReference } from '@pure/types'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { decryptCredentials, encryptCredentials, invalidateQQChat, normalizeQQChannelSettings } from '@/libs/channels/qq'
 import type { QQConnectionMode } from '@/libs/channels/qq'
@@ -13,6 +15,7 @@ import { bindQQCredentials, QQBindingError } from '@/libs/channels/qq/binding'
 import { gatewayEnv } from '@/envs/gateway'
 import { cancelQQQrSessionsForUser } from '@/libs/channels/qq/qrSession'
 import { recordChannelGatewayLog } from '@/server/channel-gateway/diagnostics'
+import { resolveSpeechCredentials, SpeechError } from '@/server/speech'
 
 const requestGatewayReconcile = async () => {
   const { reconcileChannelGateway } = await import('@/server/channel-gateway')
@@ -139,6 +142,7 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     connectionMode?: string
     model?: string
     provider?: string
+    speechModel?: unknown
     settings?: unknown
   }
   try {
@@ -150,6 +154,81 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
   const bindingModel = new ChannelBindingModel()
   const existing = await bindingModel.findByUserAndPlatform(userId, QQ_PLATFORM)
   if (!existing) return jsonError('QQ not connected', 404)
+
+  if (body.speechModel !== undefined) {
+    if (
+      body.agentId !== undefined ||
+      body.connectionMode !== undefined ||
+      body.model !== undefined ||
+      body.provider !== undefined ||
+      body.settings !== undefined
+    ) {
+      return jsonError('speechModel cannot be combined with other configuration fields', 400)
+    }
+    if (
+      !body.speechModel ||
+      typeof body.speechModel !== 'object' ||
+      Array.isArray(body.speechModel) ||
+      !('provider' in body.speechModel) ||
+      !('model' in body.speechModel) ||
+      typeof body.speechModel.provider !== 'string' ||
+      typeof body.speechModel.model !== 'string'
+    ) {
+      return jsonError('speechModel must include provider and model', 400)
+    }
+    const speechModelInput = body.speechModel as Record<string, unknown>
+    const speechVoice = speechModelInput.voice
+    const replyMode = speechModelInput.replyMode
+    const speechInstruction = speechModelInput.instruction
+    if (
+      speechVoice !== undefined &&
+      (typeof speechVoice !== 'string' || !speechVoice.trim() || speechVoice.trim().length > 128)
+    ) {
+      return jsonError('speechModel voice is invalid', 400)
+    }
+    if (replyMode !== undefined && !isQQSpeechReplyMode(replyMode)) {
+      return jsonError('speechModel replyMode is invalid', 400)
+    }
+    if (
+      speechInstruction !== undefined &&
+      (typeof speechInstruction !== 'string' || speechInstruction.length > 500)
+    ) {
+      return jsonError('speechModel instruction must be a string of at most 500 characters', 400)
+    }
+    const persistedInstruction =
+      speechInstruction === undefined ? existing.settings?.speechModel?.instruction : speechInstruction.trim()
+    const speechModel: QQSpeechModelReference = {
+      model: (speechModelInput.model as string).trim(),
+      provider: (speechModelInput.provider as string).trim(),
+      ...(typeof speechVoice === 'string' ? { voice: speechVoice.trim() } : {}),
+      ...(isQQSpeechReplyMode(replyMode) ? { replyMode } : {}),
+      ...(persistedInstruction ? { instruction: persistedInstruction } : {}),
+    }
+    const invalid = speechConfigError(speechModel)
+    if (invalid) return jsonError(invalid, 400)
+    const currentSpeechModel = existing.settings?.speechModel ?? DEFAULT_QQ_SPEECH_CONFIG
+    const modelChanged =
+      currentSpeechModel.model !== speechModel.model || currentSpeechModel.provider !== speechModel.provider
+    const hasSpeechPreferences =
+      speechVoice !== undefined || replyMode !== undefined || speechInstruction !== undefined
+    if (modelChanged || !hasSpeechPreferences) {
+      try {
+        await resolveSpeechCredentials(userId, speechModel)
+      } catch (error) {
+        if (error instanceof SpeechError) return jsonError('语音服务商未启用、未配置密钥或模型配置无效', 400)
+        throw error
+      }
+    }
+    const updated = await bindingModel.updateSettings(userId, QQ_PLATFORM, {
+      ...existing.settings,
+      speechModel,
+    })
+    if (!updated) return jsonError('QQ not connected', 404)
+    return NextResponse.json({
+      ok: true,
+      settings: normalizeQQChannelSettings(updated.settings),
+    })
+  }
 
   if (body.settings !== undefined) {
     if (body.agentId !== undefined || body.connectionMode !== undefined || body.model !== undefined || body.provider !== undefined) {

@@ -6,6 +6,8 @@ export interface QQAdapterConfig {
   appId: string
   /** QQ 开放平台客户端密钥。 */
   clientSecret: string
+  /** Called before the SDK queue, so authorized stop commands can interrupt active synthesis. */
+  onIncomingMessage?: (threadId: string, message: QQWebhookEventData) => Promise<void>
 }
 
 /** QQ 会话在线程中的统一标识。 */

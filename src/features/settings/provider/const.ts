@@ -21,13 +21,16 @@ export const isCustomProviderId = (id: string, providers: readonly CustomProvide
 
 /** UI placeholder only — empty config.baseURL falls back to SDK defaults at request time. */
 export const PROVIDER_DEFAULT_BASE_URLS: Record<(typeof SETTINGS_PROVIDER_IDS)[number], string> = {
+  bailian: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
   deepseek: 'https://api.deepseek.com',
+  lmstudio: 'http://localhost:1234/v1',
   openai: 'https://api.openai.com/v1',
+  openrouter: 'https://openrouter.ai/api/v1',
   purechat: 'https://ai-gateway.vercel.sh/v1',
 }
 
 /** Legacy defaults persisted in purechat:provider:v1 before empty-baseURL migration. */
-export const LEGACY_PROVIDER_DEFAULT_BASE_URLS: Record<(typeof SETTINGS_PROVIDER_IDS)[number], string> = {
+export const LEGACY_PROVIDER_DEFAULT_BASE_URLS: Partial<Record<(typeof SETTINGS_PROVIDER_IDS)[number], string>> = {
   deepseek: 'https://api.deepseek.com',
   openai: 'https://api.openai.com/v1',
   purechat: 'https://ai-gateway.vercel.sh/v1',
@@ -37,6 +40,7 @@ export const PROVIDER_CHECK_MODELS = PROVIDER_DEFAULT_MODELS
 
 /** Server-side env var that backs each provider when the browser key is empty. */
 export const PROVIDER_ENV_API_KEY_NAME: Partial<Record<ProviderId, string>> = {
+  bailian: 'DASHSCOPE_API_KEY',
   deepseek: 'DEEPSEEK_API_KEY',
   openai: 'OPENAI_API_KEY',
   purechat: 'PURECHAT_API_KEY',
@@ -68,8 +72,11 @@ export const createDefaultProviderConfig = (id: ProviderId): ProviderConfig => (
 })
 
 export const DEFAULT_PROVIDER_CONFIGS: ProviderConfigs = {
+  bailian: createDefaultProviderConfig('bailian'),
   deepseek: createDefaultProviderConfig('deepseek'),
+  lmstudio: createDefaultProviderConfig('lmstudio'),
   openai: createDefaultProviderConfig('openai'),
+  openrouter: createDefaultProviderConfig('openrouter'),
   purechat: createDefaultProviderConfig('purechat'),
 }
 

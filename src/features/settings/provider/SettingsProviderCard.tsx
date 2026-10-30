@@ -5,10 +5,11 @@ import { getErrorMessage } from '@pure/utils/error'
 import { Block, Flex, Text } from '@pure/ui'
 import { toast, createStaticStyles, cssVar, Switch, cx } from '@lobehub/ui'
 import { useRouter } from 'next/navigation'
-import { memo } from 'react'
+import { memo, useState } from 'react'
 
 import { updateCustomProvider } from './customProvidersApi'
 import { getSettingsProviderMeta, isServerManagedProvider } from './const'
+import { useProviderEnabledSettings } from './providerEnabledApi'
 import ProviderMark from './ProviderMark'
 import { useProviderConfigStore } from './store/useProviderConfigStore'
 import { useCustomProviderRegistry } from './useCustomProviderRegistry'
@@ -45,6 +46,8 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
   const registry = useCustomProviderRegistry()
   const customProviders = useProviderConfigStore((s) => s.customProviders)
   const setCustomProviders = useProviderConfigStore((s) => s.setCustomProviders)
+  const { isReady: providerEnabledSettingsReady, updateEnabled: updateBuiltinEnabled } = useProviderEnabledSettings()
+  const [saving, setSaving] = useState(false)
   const availableCustomProviders = registry.data ?? customProviders
   const meta = getSettingsProviderMeta(id, availableCustomProviders)
   const customProvider = availableCustomProviders.find((provider) => provider.id === id)
@@ -54,17 +57,24 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
   const isEnabled = serverManaged || enabled
 
   const handleEnabledChange = async (checked: boolean) => {
-    setEnabled(id, checked)
-    if (!customProvider) return
+    if (saving) return
+    setSaving(true)
+    if (customProvider) setEnabled(id, checked)
 
     try {
-      const updated = await updateCustomProvider(id, { enabled: checked })
-      const nextProviders = availableCustomProviders.map((provider) => (provider.id === id ? updated : provider))
-      await registry.mutate(nextProviders, { revalidate: false })
-      setCustomProviders(nextProviders)
+      if (customProvider) {
+        const updated = await updateCustomProvider(id, { enabled: checked })
+        const nextProviders = availableCustomProviders.map((provider) => (provider.id === id ? updated : provider))
+        await registry.mutate(nextProviders, { revalidate: false })
+        setCustomProviders(nextProviders)
+      } else {
+        await updateBuiltinEnabled(id, checked)
+      }
     } catch (error) {
-      setEnabled(id, !checked)
+      if (customProvider) setEnabled(id, !checked)
       toast.error(getErrorMessage(error, '更新服务商状态失败'))
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -96,6 +106,7 @@ const SettingsProviderCard = memo<SettingsProviderCardProps>(({ id }) => {
           <Switch
             aria-label={`${enabled ? '停用' : '启用'} ${meta.name}`}
             checked={enabled}
+            disabled={saving || (!customProvider && !providerEnabledSettingsReady)}
             size='small'
             onChange={(checked, event) => {
               event.stopPropagation()

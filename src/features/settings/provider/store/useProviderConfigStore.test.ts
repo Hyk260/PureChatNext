@@ -67,7 +67,7 @@ describe('PureChat provider config migration', () => {
       durationMs: 120,
       status: 'success',
     })
-    expect(useProviderConfigStore.persist.getOptions().version).toBe(10)
+    expect(useProviderConfigStore.persist.getOptions().version).toBe(11)
   })
 
   it('does not persist an active health check state', () => {
@@ -91,6 +91,21 @@ describe('PureChat provider config migration', () => {
 
     expect(partialized.configs.deepseek.apiKey).toBe('')
     expect(partialized.configs.deepseek.baseURL).toBe('')
+  })
+
+  it('does not persist provider enabled states and ignores legacy local states', () => {
+    useProviderConfigStore.getState().setEnabled('deepseek', true)
+
+    const partialized = useProviderConfigStore.persist.getOptions().partialize?.(useProviderConfigStore.getState()) as {
+      configs: Record<string, Record<string, unknown>>
+    }
+    const migrated = useProviderConfigStore.persist.getOptions().migrate?.(
+      { configs: { deepseek: { enabled: true } } },
+      10
+    ) as { configs: ProviderConfigs }
+
+    expect(partialized.configs.deepseek?.enabled).toBeUndefined()
+    expect(migrated.configs.deepseek.enabled).toBe(false)
   })
 
   it('supports custom models, remote cleanup, bulk toggles, and ordering', () => {

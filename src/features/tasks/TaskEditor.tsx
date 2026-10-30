@@ -15,6 +15,7 @@ import type { ModelProviderId } from '@pure/model-bank'
 
 import { PURE_AI_AGENT_ID } from '@/const/home/agents'
 import type { AgentListItem } from '@/const/home/agents'
+import { DEFAULT_HOME_MODEL } from '@/const/home/models'
 import ModelSwitchMenu from '@/features/chat/ModelSwitchMenu'
 import { useHomeStore } from '@/features/home/store/useHomeStore'
 import { taskInputSchema } from '@/libs/tasks/schema'
@@ -58,6 +59,7 @@ function TaskModelPicker({ form }: { form: FormInstance<TaskInput> }) {
       selectedModel={model}
       selectedProvider={provider}
       includeCustomProviders
+      excludeLocalProviders
       openOnHover={false}
       placement='bottomLeft'
       onSelect={(nextProvider, nextModel) =>
@@ -146,10 +148,13 @@ type TaskEditorProps = {
 export function TaskEditor({ agents, availability, onClose, onSave, task }: TaskEditorProps) {
   const provider = useHomeStore((state) => state.selectedProvider)
   const model = useHomeStore((state) => state.selectedModel)
+  const isLocalDefault = provider === 'lmstudio'
+  const initialProvider = isLocalDefault ? DEFAULT_HOME_MODEL.provider : provider
+  const initialModel = isLocalDefault ? DEFAULT_HOME_MODEL.model : model
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const form = useForm<TaskInput>({
-    initialValues: editorValues(task, provider, model),
+    initialValues: editorValues(task, initialProvider, initialModel),
     schema: taskInputSchema,
     onSubmit: async (values) => {
       if (saving) return

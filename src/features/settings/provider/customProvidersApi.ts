@@ -6,8 +6,9 @@ import useSWR from 'swr'
 
 import type { CustomProviderDefinition } from './types'
 
-export type CustomProviderInput = Omit<CustomProviderDefinition, 'enabled'> & {
+export type CustomProviderInput = Omit<CustomProviderDefinition, 'baseURL' | 'enabled'> & {
   apiKey?: string
+  baseURL?: string
   enabled?: boolean
 }
 

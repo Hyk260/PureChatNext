@@ -30,7 +30,12 @@ vi.mock('@/libs/auth/get-session-user', () => ({
 }))
 
 vi.mock('@pure/database/models/chatTopic', () => ({
-  ChatTopicModel: vi.fn(() => ({ findById: mocks.findById, update: mocks.update })),
+  ChatTopicModel: vi.fn(() => ({
+    findById: mocks.findById,
+    update: mocks.update,
+    updateTitle: (id: string, title: string) => mocks.update(id, { title, titleSource: 'manual' }),
+    updateGeneratedTitle: (id: string, title: string) => mocks.update(id, { title, titleSource: 'generated' }),
+  })),
 }))
 vi.mock('@pure/database/models/chatMessage', () => ({
   ChatMessageModel: vi.fn(() => ({ listByTopic: mocks.listByTopic })),
@@ -44,7 +49,7 @@ vi.mock('@pure/const', () => ({
 }))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
   createProviderLanguageModel: mocks.createProviderLanguageModel,
-  isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek',
+  isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek' || provider === 'openrouter',
   resolveApiKeyFromHeader: (request: Request) => request.headers.get('authorization')?.replace('Bearer ', ''),
   resolveOptionalBaseURL: (baseURL?: string) => baseURL,
 }))
@@ -141,7 +146,30 @@ describe('POST /api/chat/topics/[id]/auto-rename', () => {
       'test-key',
       'https://models.example/v1'
     )
-    expect(mocks.update).toHaveBeenCalledWith('topic-1', { title: '设计会话标题菜单' })
+    expect(mocks.update).toHaveBeenCalledWith('topic-1', { title: '设计会话标题菜单', titleSource: 'manual' })
+  })
+
+  it('generates an automatic title only while the topic still has its initial title', async () => {
+    mocks.findById.mockResolvedValueOnce({ id: 'topic-1', title: '开场标题', titleSource: 'initial' })
+    const response = await POST(
+      request(
+        { automatic: true, baseURL: 'https://models.example/v1', model: 'deepseek-chat', provider: 'deepseek' },
+        { Authorization: 'Bearer test-key' }
+      ),
+      context
+    )
+
+    expect(response.status, await response.clone().text()).toBe(200)
+    expect(mocks.update).toHaveBeenCalledWith('topic-1', { title: '设计会话标题菜单', titleSource: 'generated' })
+  })
+
+  it('does not overwrite a manual title when an automatic request arrives late', async () => {
+    mocks.findById.mockResolvedValueOnce({ id: 'topic-1', title: '手动标题', titleSource: 'manual' })
+    const response = await POST(request({ automatic: true, model: 'deepseek-chat', provider: 'deepseek' }), context)
+
+    expect(response.status).toBe(200)
+    expect(mocks.generateText).not.toHaveBeenCalled()
+    expect(mocks.update).not.toHaveBeenCalled()
   })
 
   it('checks and charges PureChat usage', async () => {

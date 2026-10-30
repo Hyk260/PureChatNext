@@ -35,7 +35,13 @@ vi.mock('@/types/desktop', () => ({ getDesktopApi: () => mocks.desktop }))
 type Request = Parameters<ChatTransport<UIMessage>['sendMessages']>[0]
 type Stream = { request: Request; controller: ReadableStreamDefaultController<UIMessageChunk> }
 const streams: Stream[] = []
-const body: ChatRequestBody = { model: 'model-a', provider: 'provider-a', searchMode: 'auto', system: 'Agent A' }
+const body: ChatRequestBody = {
+  model: 'model-a',
+  provider: 'provider-a',
+  searchMode: 'auto',
+  system: 'Agent A',
+  serviceModelSettingsLoaded: true,
+}
 const seed: UIMessage[] = [{ id: 'seed', role: 'user', parts: [{ type: 'text', text: 'history' }] }]
 
 const deferred = <T,>() => {
@@ -104,6 +110,16 @@ beforeEach(() => {
   setChatRuntimeOwner(null)
   setChatRuntimeOwner('user-1')
   vi.spyOn(chatApi, 'putMessages').mockResolvedValue(undefined)
+  vi.spyOn(chatApi, 'autoRenameTopic').mockResolvedValue({
+    id: 'topic-a',
+    agentId: 'agent-a',
+    createdAt: Date.now(),
+    favorite: false,
+    permissionMode: 'auto',
+    projectName: null,
+    title: 'Generated title',
+    updatedAt: Date.now(),
+  })
   vi.spyOn(chatApi, 'upsertToolApproval').mockResolvedValue({})
   vi.spyOn(chatApi, 'updateToolApproval').mockResolvedValue({})
   vi.spyOn(DefaultChatTransport.prototype, 'sendMessages').mockImplementation(

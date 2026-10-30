@@ -3,6 +3,7 @@
 import { apiFetch } from '@/utils/apiFetch'
 
 export type ProviderEnvKeyFlags = {
+  bailian: boolean
   deepseek: boolean
   openai: boolean
 }
@@ -20,6 +21,7 @@ const flagsFromWindow = (): ProviderEnvKeyFlags | null => {
   const keys = window.__SERVER_CONFIG__?.providerEnvKeys
   if (!keys) return null
   return {
+    bailian: keys.bailian === true,
     deepseek: keys.deepseek === true,
     openai: keys.openai === true,
   }
@@ -41,6 +43,7 @@ export const loadProviderEnvKeyFlags = (): Promise<ProviderEnvKeyFlags> => {
       }
       const data = (await response.json()) as { envKeys?: Partial<ProviderEnvKeyFlags> }
       const flags: ProviderEnvKeyFlags = {
+        bailian: data.envKeys?.bailian === true,
         deepseek: data.envKeys?.deepseek === true,
         openai: data.envKeys?.openai === true,
       }
@@ -57,7 +60,7 @@ export const loadProviderEnvKeyFlags = (): Promise<ProviderEnvKeyFlags> => {
 /** `undefined` means we could not tell (config fetch failed) — caller should not block. */
 export const providerHasEnvApiKey = async (provider: string): Promise<boolean | undefined> => {
   if (provider === 'purechat') return true
-  if (provider !== 'openai' && provider !== 'deepseek') return undefined
+  if (provider !== 'openai' && provider !== 'deepseek' && provider !== 'bailian') return undefined
 
   try {
     const flags = await loadProviderEnvKeyFlags()

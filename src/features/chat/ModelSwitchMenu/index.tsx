@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@pure/ui'
 import { getAiModel } from '@pure/model-bank'
-import type { ModelProviderId } from '@pure/model-bank'
+import type { ModelAbilities, ModelProviderId } from '@pure/model-bank'
 import { createStaticStyles } from '@lobehub/ui'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -21,6 +21,7 @@ import {
   isSettingsProviderId,
   SETTINGS_PROVIDER_IDS,
 } from '@/features/settings/provider/const'
+import { useProviderEnabledSettings } from '@/features/settings/provider/providerEnabledApi'
 import { useProviderConfigStore } from '@/features/settings/provider/store/useProviderConfigStore'
 import { useCustomProviderRegistry } from '@/features/settings/provider/useCustomProviderRegistry'
 
@@ -29,11 +30,11 @@ import Toolbar from './Toolbar'
 import { menuKey } from './types'
 import type { EnabledProviderGroup, GroupMode } from './types'
 import { useBuildListItems } from './useBuildListItems'
+import { hasExcludedModelAbilities, hasRequiredModelAbility, withNativeTTSAbility } from './modelFilter'
 
 /** model-bank `enabled: false` 的模型不进入切换列表（即使本地 store 曾被打开）。 */
 const isCatalogEnabled = (providerId: string, modelId: string) =>
   getAiModel(providerId as ModelProviderId, modelId)?.enabled !== false
-
 const styles = createStaticStyles(({ css }) => ({
   container: css`
     pointer-events: auto;
@@ -56,7 +57,12 @@ export interface ModelSwitchDropdownItem {
   children: ReactNode
   disabled?: boolean
   includeCustomProviders?: boolean
+  excludeLocalProviders?: boolean
   openOnHover?: boolean
+  /** Show only models explicitly marked with this capability. */
+  requiredAbility?: keyof ModelAbilities
+  /** Hide models marked with any of these capabilities. */
+  excludedAbilities?: Array<keyof ModelAbilities>
   /** Controlled select. When set, does not write the home/chat model store. */
   onSelect?: (provider: string, model: string) => void
   placement?: 'topLeft' | 'bottomLeft' | 'topRight' | 'bottomRight'
@@ -71,10 +77,13 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
   ({
     children,
     disabled,
+    excludedAbilities,
     includeCustomProviders = false,
+    excludeLocalProviders = false,
     openOnHover = true,
     onSelect,
     placement = 'topLeft',
+    requiredAbility,
     selectedModel: selectedModelProp,
     selectedProvider: selectedProviderProp,
   }) => {
@@ -84,6 +93,7 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
     const storeModel = useHomeStore((s) => s.selectedModel)
     const storeProvider = useHomeStore((s) => s.selectedProvider)
     const setStoreModel = useHomeStore((s) => s.setSelectedModel)
+    const { isReady: providerEnabledSettingsReady } = useProviderEnabledSettings()
     const configs = useProviderConfigStore((s) => s.configs)
     const storedCustomProviders = useProviderConfigStore((s) => s.customProviders)
     const registry = useCustomProviderRegistry()
@@ -104,6 +114,7 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
       const groups: EnabledProviderGroup[] = []
 
       for (const providerId of providerIds) {
+        if (providerId === 'lmstudio' && excludeLocalProviders) continue
         const config = configs[providerId]
         if (!config?.enabled) continue
 
@@ -111,8 +122,16 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
         for (const model of config.models ?? []) {
           if (!model.enabled) continue
           if (!isCatalogEnabled(providerId, model.id)) continue
+          const abilities = withNativeTTSAbility(
+            providerId,
+            model.id,
+            model.abilities ?? getAiModel(providerId as ModelProviderId, model.id)?.abilities
+          )
+          const modelItem = { abilities, model: model.id, provider: providerId, displayName: model.displayName }
+          if (!hasRequiredModelAbility(modelItem, requiredAbility)) continue
+          if (!hasExcludedModelAbilities(modelItem, excludedAbilities)) continue
           models.push({
-            abilities: model.abilities ?? getAiModel(providerId as ModelProviderId, model.id)?.abilities,
+            abilities,
             contextWindowTokens:
               model.contextWindowTokens ?? getAiModel(providerId as ModelProviderId, model.id)?.contextWindowTokens,
             displayName: model.displayName,
@@ -120,6 +139,8 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
             provider: providerId,
           })
         }
+
+        if (requiredAbility && models.length === 0) continue
 
         groups.push({
           id: providerId,
@@ -130,6 +151,7 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
       }
 
       if (groups.length === 0) {
+        if (requiredAbility) return []
         return [
           {
             id: DEFAULT_HOME_MODEL.provider,
@@ -142,7 +164,7 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
       }
 
       return groups
-    }, [configs, customProviders, providerIds])
+    }, [configs, customProviders, excludeLocalProviders, excludedAbilities, providerIds, requiredAbility])
 
     const availableModels = useMemo(() => enabledProviders.flatMap((group) => group.models), [enabledProviders])
 
@@ -169,7 +191,7 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
     )
 
     useEffect(() => {
-      if (isControlled) return
+      if (isControlled || !providerEnabledSettingsReady) return
       const stillAvailable = availableModels.some(
         (item) => item.provider === selectedProvider && item.model === selectedModel
       )
@@ -177,7 +199,7 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
 
       const fallback = availableModels[0] ?? DEFAULT_HOME_MODEL
       setStoreModel(fallback.provider, fallback.model)
-    }, [availableModels, isControlled, selectedModel, selectedProvider, setStoreModel])
+    }, [availableModels, isControlled, providerEnabledSettingsReady, selectedModel, selectedProvider, setStoreModel])
 
     return (
       <DropdownMenuRoot
@@ -202,6 +224,7 @@ const ModelSwitchMenu = memo<ModelSwitchDropdownItem>(
               />
               <ModelSwitchList
                 activeKey={activeKey}
+                emptyMessage={requiredAbility === 'textToSpeech' ? '未找到支持 TTS 的模型，请在服务商模型设置中标记该能力。' : undefined}
                 items={listItems}
                 subscribeScroll={subscribeScroll}
                 onClose={() => setOpen(false)}

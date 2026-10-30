@@ -16,6 +16,7 @@ export type SPAServerConfig = {
   reactScanApiKey?: string
   /** Whether server env has a provider API key. Booleans only — never the secret. */
   providerEnvKeys?: {
+    bailian?: boolean
     deepseek?: boolean
     openai?: boolean
   }

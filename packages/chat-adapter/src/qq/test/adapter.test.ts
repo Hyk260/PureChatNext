@@ -1,8 +1,57 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createQQAdapter, QQAdapter } from '../adapter'
+import { QQApiClient, QQDeliveryError } from '../api'
 import type { QQAttachment, QQRawMessage, QQWebhookPayload } from '../types'
 import { QQ_EVENT_TYPES, QQ_OP_CODES } from '../types'
+
+describe('QQ captured passive speech reply', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it('keeps independent message ids and spends a new sequence for uncertain voice fallback', async () => {
+    const send = vi.spyOn(QQApiClient.prototype, 'sendPassiveReply').mockRejectedValueOnce(new QQDeliveryError('QQ_DELIVERY_UNKNOWN', 'unknown')).mockResolvedValue(undefined)
+    vi.spyOn(QQApiClient.prototype, 'uploadSpeech').mockResolvedValue('file-info')
+    const consume = vi.fn().mockResolvedValue(undefined)
+    const adapter = createQQAdapter({ appId: 'app', clientSecret: 'secret' })
+    const options = { createdAt: new Date(), signal: new AbortController().signal, onConsume: consume }
+    const first = adapter.createReplySender('qq:c2c:user', 'message-1', options)
+    const second = adapter.createReplySender('qq:c2c:user', 'message-2', options)
+    await expect(first.sendAudio(Buffer.from('ID3'), options.signal)).rejects.toMatchObject({ kind: 'unknown' })
+    await first.sendText('original answer')
+    await second.sendText('second answer')
+    expect(send.mock.calls.map((call) => call[3])).toEqual([{ msgId: 'message-1', msgSeq: 1 }, { msgId: 'message-1', msgSeq: 2 }, { msgId: 'message-2', msgSeq: 1 }])
+    expect(first.usedSeq).toBe(2)
+    expect(consume.mock.calls.map((call) => call[0])).toEqual([1, 2, 1])
+  })
+
+  it('reserves a fallback slot and stops before upload when expired/cancelled', async () => {
+    const upload = vi.spyOn(QQApiClient.prototype, 'uploadSpeech').mockResolvedValue('file-info')
+    const send = vi.spyOn(QQApiClient.prototype, 'sendPassiveReply').mockResolvedValue(undefined)
+    const adapter = createQQAdapter({ appId: 'app', clientSecret: 'secret' })
+    const options = { createdAt: new Date(), signal: new AbortController().signal, onConsume: vi.fn().mockResolvedValue(undefined) }
+    const sender = adapter.createReplySender('qq:group:group', 'inbound', options)
+    for (let i = 0; i < 4; i++) await sender.sendText('used')
+    await expect(sender.sendAudio(Buffer.from('ID3'), options.signal)).rejects.toMatchObject({ code: 'QQ_REPLY_BUDGET' })
+    const expired = adapter.createReplySender('qq:group:group', 'old', { ...options, createdAt: new Date(Date.now() - 300_001) })
+    await expect(expired.sendAudio(Buffer.from('ID3'), options.signal)).rejects.toMatchObject({ code: 'QQ_REPLY_EXPIRED' })
+    const controller = new AbortController()
+    controller.abort()
+    await expect(sender.sendAudio(Buffer.from('ID3'), controller.signal)).rejects.toMatchObject({ name: 'AbortError' })
+    expect(upload).not.toHaveBeenCalled()
+    expect(send).toHaveBeenCalledTimes(4)
+  })
+
+  it('rechecks access after upload and persists the sequence before network delivery', async () => {
+    vi.spyOn(QQApiClient.prototype, 'uploadSpeech').mockResolvedValue('file-info')
+    const send = vi.spyOn(QQApiClient.prototype, 'sendPassiveReply').mockResolvedValue(undefined)
+    const adapter = createQQAdapter({ appId: 'app', clientSecret: 'secret' })
+    const options = { createdAt: new Date(), signal: new AbortController().signal, onConsume: vi.fn().mockRejectedValue(new Error('database down')) }
+    const sender = adapter.createReplySender('qq:c2c:user', 'inbound', options)
+    await expect(sender.sendAudio(Buffer.from('ID3'), options.signal, async () => { throw new QQDeliveryError('BINDING_ACCESS_CHANGED', 'not_sent') })).rejects.toMatchObject({ code: 'BINDING_ACCESS_CHANGED' })
+    await expect(sender.sendText('answer')).rejects.toThrow('database down')
+    expect(send).not.toHaveBeenCalled()
+  })
+})
 
 // ---- helpers ----
 

@@ -1,11 +1,13 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import path from 'node:path'
 
-import type { DesktopLogRetentionDays } from '@/types/desktop'
+import type { DesktopLmStudioRuntimeConfig, DesktopLogRetentionDays } from '@/types/desktop'
 import type { DesktopUpdatePreferences } from '@/types/desktopUpdater'
 import { DEFAULT_UPDATE_PREFERENCES, isUpdatePreferences, normalizeUpdatePreferences } from '@/types/desktopUpdater'
 
 import Store from 'electron-store'
+import { isValidProviderId } from '@pure/const'
+import { normalizeLmStudioBaseURL } from '../../common/lmstudio'
 
 export interface DesktopProject {
   accessConfirmed: boolean
@@ -287,6 +289,40 @@ export class DesktopConfigService {
       }
       await this.persist(config)
     })
+  }
+
+  async getLmStudioRuntimeConfig(accountId: string, providerId: string): Promise<DesktopLmStudioRuntimeConfig> {
+    this.validateLocalProviderScope(accountId, providerId)
+    const config = await this.read()
+    const keys = this.getLmStudioSecretKeys(config, accountId, providerId)
+    const apiKey = config.secrets[keys.apiKey]
+    return {
+      ...(apiKey ? { apiKey } : {}),
+      baseURL: normalizeLmStudioBaseURL(config.secrets[keys.baseURL] || 'http://localhost:1234/v1'),
+    }
+  }
+
+  async clearLmStudioLegacySettings(accountId: string, providerId: string): Promise<void> {
+    this.validateLocalProviderScope(accountId, providerId)
+    return this.update(async (config) => {
+      const keys = this.getLmStudioSecretKeys(config, accountId, providerId)
+      if (!(keys.apiKey in config.secrets) && !(keys.baseURL in config.secrets)) return
+      delete config.secrets[keys.apiKey]
+      delete config.secrets[keys.baseURL]
+      await this.persist(config)
+    })
+  }
+
+  private validateLocalProviderScope(accountId: string, providerId: string) {
+    if (!accountId.trim() || accountId.length > 256 || !isValidProviderId(providerId)) {
+      throw new Error('LM Studio 服务商配置范围无效')
+    }
+  }
+
+  private getLmStudioSecretKeys(config: DesktopConfig, accountId: string, providerId: string) {
+    const server = config.remoteServerUrl || process.env.PURECHAT_DESKTOP_CLOUD_URL?.trim() || 'cloud'
+    const scope = createHash('sha256').update(`${server}\0${accountId}\0${providerId}`).digest('hex')
+    return { apiKey: `local-provider.${scope}.apiKey`, baseURL: `local-provider.${scope}.baseURL` }
   }
 
   async setPermissionScope(topicId: string, scope: string | null) {

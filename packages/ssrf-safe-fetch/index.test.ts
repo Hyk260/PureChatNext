@@ -37,6 +37,12 @@ describe('ssrfSafeFetch (@pure/ssrf-safe-fetch)', () => {
     delete process.env.SSRF_ALLOW_PRIVATE_IP_ADDRESS
   })
 
+  it('redacts signed-media transport errors without logging their URLs', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('request to https://audio.example/reply?signature=private failed'))
+    await expect(ssrfSafeFetch('https://audio.example/reply?signature=private', {}, { redactErrors: true })).rejects.toThrow('Upstream fetch failed')
+    expect(console.error).not.toHaveBeenCalled()
+  })
+
   describe('successful requests to allowed URLs', () => {
     it('should make a successful fetch request to external URL', async () => {
       const mockResponse = createMockResponse({

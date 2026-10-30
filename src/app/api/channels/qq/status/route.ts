@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import debug from 'debug'
 
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
+import { ServiceModelSettingsModel } from '@pure/database/models/serviceModelSettings'
+import { DEFAULT_QQ_SPEECH_CONFIG } from '@pure/const'
 import { appEnv } from '@/envs/app'
 import { gatewayEnv } from '@/envs/gateway'
 import { withAuth } from '@/libs/auth/get-session-user'
@@ -58,6 +60,15 @@ export const GET = withAuth(async (_request, { userId }) => {
     runtimeStatus: binding.runtimeStatus,
   })
   const connected = resolveQqConnected(runtimeStatus)
+  const settings = normalizeQQChannelSettings(binding.settings)
+  const legacySpeechModel = (await new ServiceModelSettingsModel().get(userId)).qqSpeech
+  settings.speechModel ??= legacySpeechModel
+    ? {
+        model: legacySpeechModel.model,
+        provider: legacySpeechModel.provider,
+        ...(legacySpeechModel.voice ? { voice: legacySpeechModel.voice } : {}),
+      }
+    : { model: DEFAULT_QQ_SPEECH_CONFIG.model, provider: DEFAULT_QQ_SPEECH_CONFIG.provider }
 
   return NextResponse.json({
     agentId: binding.agentId,
@@ -75,7 +86,7 @@ export const GET = withAuth(async (_request, { userId }) => {
     model: binding.model,
     provider: binding.provider,
     runtimeStatus,
-    settings: normalizeQQChannelSettings(binding.settings),
+    settings,
     webhookUrl: webhookUrl.toString(),
   })
 })

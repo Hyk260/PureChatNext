@@ -1,5 +1,8 @@
+import { bailianProviderCard } from './bailian'
 import { deepseekProviderCard } from './deepseek'
+import { lmStudioProviderCard } from './lmstudio'
 import { openaiProviderCard } from './openai'
+import { openRouterProviderCard } from './openrouter'
 import { purechatProviderCard } from './purechat'
 import type { ModelProviderCard } from '../types/aiModel'
 
@@ -8,6 +11,16 @@ export const DEFAULT_MODEL_PROVIDER_LIST: ModelProviderCard[] = [
   purechatProviderCard,
   openaiProviderCard,
   deepseekProviderCard,
+  bailianProviderCard,
+  openRouterProviderCard,
+  lmStudioProviderCard,
 ]
 
-export { deepseekProviderCard, openaiProviderCard, purechatProviderCard }
+export {
+  bailianProviderCard,
+  deepseekProviderCard,
+  lmStudioProviderCard,
+  openaiProviderCard,
+  openRouterProviderCard,
+  purechatProviderCard,
+}

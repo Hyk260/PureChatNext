@@ -17,7 +17,7 @@ export type WechatStatus = {
   runtimeStatus?: 'starting' | 'online' | 'degraded' | 'reconnecting' | 'offline' | 'needs_rebind' | 'stopped'
 }
 
-export type WechatProviderId = 'purechat' | 'openai' | 'deepseek'
+export type WechatProviderId = 'purechat' | 'openai' | 'deepseek' | 'bailian'
 export type WechatConfiguration = { agentId: string; model: string; provider: WechatProviderId }
 
 export async function retryFailedWechatEvents(): Promise<number> {

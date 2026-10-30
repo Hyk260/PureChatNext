@@ -35,6 +35,24 @@ description: 配置 QQ 开放平台机器人接入 PureChatNext：选择扫码�
 
 扫码和 WebSocket 需要 `CHANNEL_GATEWAY_ENABLED=1`；关闭 Gateway 时，设置页仍允许配置 Webhook，但会禁用其他两种方式。回复模型密钥保存在用户账号加密配置中，不读取服务器的 `OPENAI_API_KEY` / `DEEPSEEK_API_KEY`。
 
+## 按需语音回复
+
+登录后打开「设置 → 聊天平台 → QQ」，在对话模型下方选择「语音模型」。列表仅显示明确标记支持 TTS 的模型；未单独配置时默认使用阿里云百炼 `qwen-audio-3.1-tts-flash`。合成地址由百炼服务商 Base URL 自动拼接 `/services/audio/tts/SpeechSynthesizer`，无需单独填写；使用默认音色。
+
+原「服务模型」中已保存的 QQ 语音模型会继续生效并显示在 QQ 设置页；下次选择模型后，配置将保存到 QQ 绑定。
+
+- 百炼支持 `qwen-audio-3.1-tts-flash` 和 `qwen-audio-3.0-tts-flash`。3.1 默认音色为 `longanhuan_v3.1`，3.0 默认音色为 `longanfengyue`；音色必须与模型版本匹配。先在服务商设置中启用百炼并保存当前账号的 API Key；若服务商 Base URL 配置为聊天用的 `/compatible-mode/v1`，语音请求会自动转换为同域 `/api/v1` 地址。
+- OpenAI 支持 `gpt-4o-mini-tts`、`tts-1`、`tts-1-hd`。自定义服务商需启用模型并标记支持 TTS，提供 OpenAI `/audio/speech` 兼容接口，并支持默认音色 `alloy`。
+- 语音模型与 QQ 的聊天模型独立。不会使用服务器公共密钥；意图确认使用当前聊天模型，语音合成使用所选 TTS 服务，两者分别产生相应服务的用量。
+
+在 QQ 私聊或群内 @机器人发送「请用语音回复，介绍一下你自己」。只有当前消息明确要求语音、且最终回答适合朗读时才合成；否定、引用或讨论语音功能不会自动开启后续语音。超过 300 字、含代码、表格、公式或链接的回答继续使用文字。命令与错误提示也使用文字；首版不识别用户发来的语音。
+
+成功时 QQ 只显示语音条，网页会话保留对应文字。合成、下载、上传或发送失败时，在有效被动回复窗口和剩余配额内发送原回答文字。语音发送超时且结果未知时不重试语音，而补发一次文字，因此偶尔可能同时收到语音和文字；窗口过期、配额耗尽、机器人被禁言或执行已取消时，不继续补发。
+
+语音阶段最多 30 秒，音频最多 5 MB。每个绑定内同一发送者每分钟最多尝试 3 次，每个绑定每分钟最多 20 次、同时最多 2 次；失败尝试也计数，超限则回复文字。限额由 PostgreSQL 跨实例共享。`/stop` 会在队列前检查发送者权限，并停止当前执行及尚未投递的语音。
+
+部署前运行 `pnpm db:migrate` 应用 `0043_brief_morbius.sql` 的语音请求索引。诊断日志中的 `speech_result` 记录固定结果码；百炼合成失败时记录 HTTP 状态码，不记录响应正文、密钥或音频签名下载地址。QQ 富媒体权限和客户端实际播放效果需在机器人获准的私聊及群聊中分别验证。协议依据见 [百炼语音 HTTP API](https://help.aliyun.com/en/model-studio/qwen-audio-tts-http-api) 和 [QQ 富媒体消息](https://bot.q.qq.com/wiki/develop/api-v2/server-inter/message/rich-media.html)。
+
 ## 回调验证与排错
 
 Webhook 保存时，QQ 平台会发送验证事件。平台验证失败时，先确认回调 URL 精确复制自设置页，路径末尾的 App ID 与绑定时一致，HTTPS 证书有效，且请求不会被防火墙、登录页或 Deployment Protection 拦截。开发时可在应用日志中用 `DEBUG=channel:qq:webhook` 查看 `verify-signed` / `dispatch` 等诊断事件；日志不要公开其中的账号标识或请求数据。

@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/server/purechat', () => ({ isPureChatRuntimeAvailable: () => true }))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
-  isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek',
+  isSupportedProviderId: (provider: string) =>
+    provider === 'openai' || provider === 'deepseek' || provider === 'bailian' || provider === 'openrouter',
 }))
 vi.mock('@pure/database/models/userProviderSecret', () => ({
   UserProviderSecretModel: class {
@@ -20,6 +21,7 @@ import {
   defaultChannelModel,
   isChannelProviderId,
   resolveChannelModelConfig,
+  validateChannelModel,
 } from '../modelResolver'
 import type { ChannelProviderId } from '../modelResolver'
 
@@ -73,8 +75,11 @@ describe('channel model resolver', () => {
       model: defaultChannelModel('openai'),
       provider: 'openai',
     })
-    expect(resolveChannelModelConfig({ model: 'minimax-m3', provider: 'purechat' })).toEqual({
-      model: defaultChannelModel('purechat'),
+  })
+
+  it('keeps available PureChat models that are disabled by default', () => {
+    expect(resolveChannelModelConfig({ model: 'minimax-m3.1-flash', provider: 'purechat' })).toEqual({
+      model: 'minimax-m3.1-flash',
       provider: 'purechat',
     })
   })
@@ -82,7 +87,13 @@ describe('channel model resolver', () => {
   it('recognizes only providers supported by the channel runtime', () => {
     expect(isChannelProviderId('purechat')).toBe(true)
     expect(isChannelProviderId('openai')).toBe(true)
+    expect(isChannelProviderId('bailian')).toBe(true)
     expect(isChannelProviderId('anthropic')).toBe(false)
+  })
+
+  it('accepts dynamically configured Bailian models for channel chat', () => {
+    expect(validateChannelModel('bailian', 'deepseek-v4.1-flash')).toBeNull()
+    expect(validateChannelModel('bailian', '')).toBe('所选模型不属于该服务商或已停用')
   })
 
   it('requires a saved user vault key for BYOK channel providers', async () => {

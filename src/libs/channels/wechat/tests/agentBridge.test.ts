@@ -31,7 +31,7 @@ vi.mock('@pure/database/models/agent', () => ({
 }))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
   createProviderLanguageModel: mocks.createProviderLanguageModel,
-  isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek',
+  isSupportedProviderId: (provider: string) => provider === 'openai' || provider === 'deepseek' || provider === 'openrouter',
 }))
 vi.mock('@/libs/ai-providers/userSecrets', () => ({
   MISSING_USER_PROVIDER_SECRET_MESSAGE: '请先在设置中保存该服务商 API Key',

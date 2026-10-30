@@ -1,6 +1,10 @@
-import { AgentService } from '@/server/agents/service'
+import { isAdminRole } from '@pure/const'
 import { ChannelBindingModel, QQ_PLATFORM } from '@pure/database/models/channelBinding'
 import type { ChannelEventModel } from '@pure/database/models/channelEvent'
+import { UserModel } from '@pure/database/models/user'
+
+import { AgentService } from '@/server/agents/service'
+import { isDev } from '@/libs/constants'
 
 import type { ChannelCommandEffects } from '../core/commands'
 import { buildChannelHelpText, runChannelCommand } from '../core/commands'
@@ -11,6 +15,32 @@ export const QQ_HELP_TEXT = buildChannelHelpText({
 })
 
 const pendingChatInvalidations = new Set<string>()
+
+export type ParsedQQDevelopmentTTSCommand = { error: 'usage' } | { text: string }
+
+export function parseQQDevelopmentTTSCommand(input: string): ParsedQQDevelopmentTTSCommand | null {
+  const match = input.trim().match(/^\/tts(?:[ \t]+([\s\S]*))?$/i)
+  if (!match) return null
+
+  const argument = match[1]?.trim() ?? ''
+  if (!argument.startsWith('text=')) return { error: 'usage' }
+
+  const rawText = argument.slice('text='.length).trim()
+  const closingQuotes: Record<string, string> = { '"': '"', "'": "'", '“': '”', '‘': '’' }
+  const closingQuote = closingQuotes[rawText[0] ?? '']
+  if (closingQuote) {
+    if (!rawText.endsWith(closingQuote)) return { error: 'usage' }
+    return { text: rawText.slice(1, -1) }
+  }
+  if (["'", '"', '“', '‘'].includes(rawText.at(-1) ?? '')) return { error: 'usage' }
+  return { text: rawText }
+}
+
+export async function canUseQQDevelopmentTTSCommand(userId: string): Promise<boolean> {
+  if (!isDev) return false
+  const user = await new UserModel().findById(userId)
+  return Boolean(user && !user.banned && isAdminRole(user.role))
+}
 
 const sessionKey = (applicationId: string, externalUserId: string) => `${applicationId}:${externalUserId}`
 

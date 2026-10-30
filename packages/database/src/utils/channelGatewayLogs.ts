@@ -1,6 +1,8 @@
-import { CHANNEL_MESSAGE_KIND_LABEL } from '@pure/const'
+import { CHANNEL_MESSAGE_KIND_LABEL, isBailianQwenSpeechModel, speechVoiceOptions } from '@pure/const'
 import { CHANNEL_LOG_LIMIT, CHANNEL_LOG_MAX_BYTES, CHANNEL_LOG_MESSAGES } from '@pure/types'
 import type { ChannelGatewayLogs, ChannelLogEvent, ChannelLogInput } from '@pure/types'
+
+type SpeechResultState = NonNullable<ChannelLogInput['speechResult']>['state']
 
 const PUBLIC_ERROR_CODES = new Set([
   'Error', 'TypeError', 'AbortError', 'TimeoutError', 'SyntaxError',
@@ -11,7 +13,7 @@ const PUBLIC_ERROR_CODES = new Set([
   'DISCONNECTED', 'WEBHOOK_FORWARD_FAILED',
   'SPEECH_CONFIGURATION', 'SPEECH_PROVIDER_DISABLED', 'SPEECH_PROVIDER_UNAVAILABLE', 'SPEECH_CREDENTIALS_MISSING',
   'SPEECH_AUDIO_SIZE', 'SPEECH_AUDIO_FORMAT', 'SPEECH_AUDIO_MISSING', 'SPEECH_RATE_LIMIT',
-  'SPEECH_SYNTHESIS_FAILED', 'SPEECH_DOWNLOAD_FAILED', 'SPEECH_CONFIGURATION_FAILED', 'SPEECH_INTENT_FAILED', 'SPEECH_DELIVERY_FAILED',
+  'SPEECH_SYNTHESIS_FAILED', 'SPEECH_DOWNLOAD_FAILED', 'SPEECH_CONFIGURATION_FAILED', 'SPEECH_INTENT_FAILED', 'SPEECH_DELIVERY_FAILED', 'SPEECH_TAGS_UNSUPPORTED',
   'SPEECH_NOT_REQUESTED', 'SPEECH_SENT', 'SPEECH_CANCELLED', 'SPEECH_CONFIGURATION_CHANGED', 'SENDER_RATE_LIMIT', 'BINDING_RATE_LIMIT', 'CONCURRENCY_LIMIT',
   'DUPLICATE_ATTEMPT', 'BINDING_DISABLED', 'BINDING_ACCESS_CHANGED', 'QQ_REPLY_EXPIRED', 'QQ_REPLY_BUDGET',
   'QQ_PASSIVE_CONTEXT_MISSING', 'QQ_DELIVERY_UNKNOWN', 'QQ_AUTH_FAILED', 'QQ_UPLOAD_INVALID', 'QQ_INVALID_AUDIO', 'QQ_REPLY_FAILED',
@@ -20,6 +22,36 @@ const ERROR_EVENTS = new Set<ChannelLogEvent>([
   'authorization_failed', 'callback_failed', 'processing_failed', 'send_failed',
 ])
 const WARNING_EVENTS = new Set<ChannelLogEvent>(['offline', 'lease_lost', 'needs_rebind', 'retry'])
+const SPEECH_RESULT_DESCRIPTIONS: Record<string, string> = {
+  BINDING_ACCESS_CHANGED: 'QQ 绑定权限已变化，已停止发送',
+  BINDING_DISABLED: 'QQ 绑定已停用，语音未发送',
+  BINDING_RATE_LIMIT: 'QQ 绑定语音频率达到上限，已回退文字',
+  CONCURRENCY_LIMIT: '语音并发达到上限，已回退文字',
+  DUPLICATE_ATTEMPT: '重复语音请求已忽略',
+  '40034128': 'QQ 平台拒绝了本次语音发送',
+  '850018': 'QQ 平台暂时无法接收本次语音',
+  QQ_PASSIVE_CONTEXT_MISSING: '缺少 QQ 被动回复上下文，语音未发送',
+  QQ_REPLY_BUDGET: 'QQ 回复额度不足，语音未发送',
+  QQ_REPLY_EXPIRED: 'QQ 回复上下文已过期，语音未发送',
+  SENDER_RATE_LIMIT: '发送者语音频率达到上限，已回退文字',
+  SPEECH_AUDIO_FORMAT: '生成的音频格式不受支持',
+  SPEECH_AUDIO_MISSING: '语音服务没有返回音频',
+  SPEECH_AUDIO_SIZE: '生成的音频为空或超过大小限制',
+  SPEECH_CANCELLED: '语音处理已取消',
+  SPEECH_CONFIGURATION: '语音模型配置无效',
+  SPEECH_CONFIGURATION_CHANGED: '语音设置已变化，未发送旧音频',
+  SPEECH_CREDENTIALS_MISSING: '缺少语音服务 API 密钥',
+  SPEECH_DELIVERY_FAILED: '音频发送失败，已回退文字',
+  SPEECH_DOWNLOAD_FAILED: '语音服务音频下载失败',
+  SPEECH_INTENT_FAILED: '语音意图判断失败，已回退文字',
+  SPEECH_NOT_REQUESTED: '智能判断认为本次无需语音回复',
+  SPEECH_PROVIDER_DISABLED: '语音服务商已停用',
+  SPEECH_PROVIDER_UNAVAILABLE: '语音服务商不可用',
+  SPEECH_RATE_LIMIT: '语音服务请求频率达到上限',
+  SPEECH_SENT: '语音已生成并发送',
+  SPEECH_SYNTHESIS_FAILED: '语音合成失败，已回退文字',
+  SPEECH_TAGS_UNSUPPORTED: '所选语音模型不支持控制类与富语言类标签，已回退文字',
+}
 
 function normalizeInboundMessage(input: ChannelLogInput): string {
   const details = input.inboundMessage
@@ -77,6 +109,40 @@ function normalizeAgentReply(input: ChannelLogInput): string {
   return `${platformName} Agent 回复已生成：agentId=${safeValue(details.agentId)}，model=${safeValue(details.model)}，platform=${safeValue(details.platform)}，provider=${safeValue(details.provider)}，durationMs=${durationMs}，contextMessageCount=${contextMessageCount}，finish=${safeValue(details.finish, 40)}，tools.available=[${available}]，tools.called=[${called}]，steps=[${steps.join('; ')}]${output}`
 }
 
+function normalizeSpeechResult(input: ChannelLogInput): string {
+  const details = input.speechResult
+  const code = safeChannelLogCode(input.code) ?? ''
+  const description = getSpeechResultDescription(code, details?.state)
+  if (!details) return `${CHANNEL_LOG_MESSAGES.speech_result}：${description}`
+
+  const safeValue = (value: string | undefined) => (value ? clampLogText(value, 100) : '-')
+  const voiceId = details.voice ? safeValue(details.voice) : ''
+  const voiceLabel = details.voice
+    ? speechVoiceOptions(details.provider ?? '', details.model).find(({ value }) => value === details.voice)?.label
+    : undefined
+  const voice = voiceId && voiceLabel && voiceLabel !== details.voice ? `${safeValue(voiceLabel)}-${voiceId}` : voiceId || '-'
+  const instruction = normalizeSpeechInstruction(details)
+
+  return `${CHANNEL_LOG_MESSAGES.speech_result}：${description}，provider=${safeValue(details.provider)}，model=${safeValue(details.model)}，音色=${voice}，自定义语音指令 instruction=${instruction}`
+}
+
+function getSpeechResultDescription(code: string, state: SpeechResultState): string {
+  const knownDescription = SPEECH_RESULT_DESCRIPTIONS[code]
+  if (knownDescription) return knownDescription
+  if (code.startsWith('SPEECH_HTTP_')) return '语音服务接口返回错误'
+  if (state === 'fallback') return '语音处理未完成，已回退文字'
+  if (state === 'failed') return '语音处理失败，未发送'
+  if (state === 'cancelled') return '语音处理已取消'
+  if (state === 'skipped') return '本次未发送语音'
+  return '语音处理完成'
+}
+
+function normalizeSpeechInstruction(details: NonNullable<ChannelLogInput['speechResult']>): string {
+  if (details.instructionSent) return JSON.stringify(clampLogText(details.instruction ?? '', 160))
+  if (details.instructionApplicable) return '（未设置）'
+  return '（当前模型不支持，未发送）'
+}
+
 /** Persist public protocol/network codes only; arbitrary messages and stack traces never enter diagnostics. */
 export function safeChannelLogCode(value: unknown): string | null {
   if (typeof value !== 'string' && typeof value !== 'number') return null
@@ -102,6 +168,7 @@ export function normalizeChannelLog(input: ChannelLogInput) {
     message = normalizeInboundMessage(input)
   }
   if (input.event === 'agent_reply') message = normalizeAgentReply(input)
+  if (input.event === 'speech_result') message = normalizeSpeechResult(input)
   if (input.event === 'retry') {
     if (typeof input.attempt === 'number' && Number.isFinite(input.attempt)) message += `，第 ${Math.min(Math.max(Math.trunc(input.attempt), 1), 9999)} 次`
     if (typeof input.delayMs === 'number' && Number.isFinite(input.delayMs)) message += `，${Math.min(Math.max(Math.trunc(input.delayMs), 0), 300_000)}ms 后执行`

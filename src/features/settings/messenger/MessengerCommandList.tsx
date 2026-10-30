@@ -2,9 +2,11 @@
 
 import { Block, Icon, Text, Flex } from '@pure/ui'
 import { createStaticStyles, cssVar, Divider } from '@lobehub/ui'
-import { BotIcon, CircleStopIcon, HelpCircleIcon, MegaphoneIcon, SquarePlusIcon } from 'lucide-react'
+import { BotIcon, CircleStopIcon, Code2, HelpCircleIcon, MegaphoneIcon, SquarePlusIcon } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Fragment, memo } from 'react'
+
+import { QQ_DEVELOPMENT_TTS_COMMAND } from '@/libs/channels/core/commands'
 
 import { MESSENGER_COMMANDS } from './const'
 import type { MessengerCommandItem, MessengerPlatformId } from './const'
@@ -25,6 +27,7 @@ const styles = createStaticStyles(({ css }) => ({
 
 const COMMAND_ICONS: Record<MessengerCommandItem['icon'], LucideIcon> = {
   agents: BotIcon,
+  code2: Code2,
   feedback: MegaphoneIcon,
   help: HelpCircleIcon,
   new: SquarePlusIcon,
@@ -37,11 +40,16 @@ const PLATFORM_HINT: Partial<Record<MessengerPlatformId, string>> = {
 }
 
 type MessengerCommandListProps = {
+  isAdmin?: boolean
   platform?: MessengerPlatformId
 }
 
-const MessengerCommandList = memo(({ platform }: MessengerCommandListProps) => {
+const MessengerCommandList = memo(({ isAdmin = false, platform }: MessengerCommandListProps) => {
   const hint = (platform && PLATFORM_HINT[platform]) || '在与机器人的私信中发送以下指令。'
+  const commands =
+    platform === 'qq' && import.meta.env.DEV && isAdmin
+      ? [...MESSENGER_COMMANDS, QQ_DEVELOPMENT_TTS_COMMAND]
+      : MESSENGER_COMMANDS
 
   return (
     <Flex className='flex-col gap-2 w-full'>
@@ -53,7 +61,7 @@ const MessengerCommandList = memo(({ platform }: MessengerCommandListProps) => {
       </Text>
 
       <Block className={'overflow-hidden !p-0'} variant='outlined'>
-        {MESSENGER_COMMANDS.map((item, index) => (
+        {commands.map((item, index) => (
           <Fragment key={item.command}>
             {index > 0 && <Divider />}
             <Flex className='items-center gap-3 py-3.5 px-4'>

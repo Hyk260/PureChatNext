@@ -1,3 +1,4 @@
+import debug from 'debug'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateSpeech } from 'ai'
 import {
@@ -17,6 +18,8 @@ import { resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import type { UserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 
 export { DEFAULT_QQ_SPEECH_CONFIG } from '@pure/const'
+
+const log = debug('channel:core:agent')
 
 export class SpeechError extends Error {
   constructor(readonly code: string) {
@@ -84,6 +87,7 @@ export async function synthesizeSpeech(params: {
         ? { instruction: instruction.trim() }
         : {}),
     }
+    log('speech synthesis input provider=%s model=%s input=%O', config.provider, config.model, input)
     const response = await ssrfSafeFetch(
       endpoint,
       {
@@ -105,7 +109,9 @@ export async function synthesizeSpeech(params: {
       { maxContentLength: QQ_SPEECH_LIMITS.bytes + 1, redactErrors: true }
     )
     if (!audio.ok) throw new SpeechError('SPEECH_DOWNLOAD_FAILED')
-    return validateSpeechAudio(new Uint8Array(await audio.arrayBuffer()))
+    const resultAudio = validateSpeechAudio(new Uint8Array(await audio.arrayBuffer()))
+    logSpeechOutput(config, resultAudio)
+    return resultAudio
   }
   const client = createOpenAI({
     apiKey: credentials.apiKey,
@@ -125,13 +131,25 @@ export async function synthesizeSpeech(params: {
       )
     },
   })
+  const input = { text, voice, outputFormat: 'mp3' as const }
+  log('speech synthesis input provider=%s model=%s input=%O', config.provider, config.model, {
+    model: config.model,
+    ...input,
+  })
   const result = await generateSpeech({
     model: client.speech(config.model),
-    text,
-    voice,
-    outputFormat: 'mp3',
+    ...input,
     abortSignal: signal,
     maxRetries: 0,
   })
-  return validateSpeechAudio(result.audio.uint8Array)
+  const resultAudio = validateSpeechAudio(result.audio.uint8Array)
+  logSpeechOutput(config, resultAudio)
+  return resultAudio
+}
+
+function logSpeechOutput(config: ServiceSpeechModelReference, audio: Buffer): void {
+  log('speech synthesis output provider=%s model=%s output=%O', config.provider, config.model, {
+    byteLength: audio.byteLength,
+    format: 'mp3',
+  })
 }

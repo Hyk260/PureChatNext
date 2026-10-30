@@ -166,6 +166,38 @@ describe('QQ speech reply policy', () => {
     )
   })
 
+  it('direct TTS commands bypass smart intent and keep tagged text with Qwen models', async () => {
+    const taggedText = '[excited]今天的天气真不错！[laughing]我们一起出去玩吧！'
+    const config = {
+      model: 'qwen-audio-3.1-tts-flash',
+      provider: 'bailian',
+      replyMode: 'never',
+    }
+    mocks.binding.mockResolvedValue({
+      id: 'binding',
+      userId: 'owner',
+      enabled: true,
+      needsRebind: false,
+      settings: { speechModel: config },
+    })
+
+    expect(await tryQQSpeech({ ...request(), input: `/tts text='${taggedText}'`, reply: taggedText, force: true })).toBe(
+      'sent'
+    )
+    expect(mocks.confirm).not.toHaveBeenCalled()
+    expect(mocks.synthesize).toHaveBeenCalledWith(expect.objectContaining({ text: taggedText }))
+  })
+
+  it('does not synthesize tagged direct commands with models that do not support Qwen tags', async () => {
+    const params = { ...request(), force: true }
+    expect(await tryQQSpeech(params)).toBe('text')
+    expect(mocks.credentials).not.toHaveBeenCalled()
+    expect(mocks.synthesize).not.toHaveBeenCalled()
+    expect(mocks.log).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'speech_result', code: 'SPEECH_TAGS_UNSUPPORTED' })
+    )
+  })
+
   it('strips Qwen tags and omits instructions for non-Qwen speech models', async () => {
     const config = {
       instruction: '不要传给 OpenAI',

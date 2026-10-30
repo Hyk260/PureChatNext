@@ -64,6 +64,15 @@ export type ChannelLogInput = {
     toolsAvailable?: string[]
     toolsCalled?: string[]
   }
+  speechResult?: {
+    instruction?: string
+    instructionApplicable?: boolean
+    instructionSent?: boolean
+    model?: string
+    provider?: string
+    state?: 'cancelled' | 'failed' | 'fallback' | 'sent' | 'skipped'
+    voice?: string
+  }
 }
 
 export const isChannelLogPlatform = (value: string): value is ChannelLogPlatform =>

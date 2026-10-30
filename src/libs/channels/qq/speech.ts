@@ -1,4 +1,4 @@
-import { isBailianQwenSpeechModel, QQ_SPEECH_LIMITS, stripQwenTtsTags } from '@pure/const'
+import { isBailianQwenSpeechModel, QQ_SPEECH_LIMITS, speechVoices, stripQwenTtsTags } from '@pure/const'
 import { QQDeliveryError } from '@pure/chat-adapter/qq'
 import type { QQAdapter } from '@pure/chat-adapter/qq'
 import { ChannelBindingModel } from '@pure/database/models/channelBinding'
@@ -77,6 +77,8 @@ export async function tryQQSpeech(params: {
   provider: string
   signal: AbortSignal
   sender: QQReplySender
+  /** Explicit development command; still uses normal QQ access and speech admission checks. */
+  force?: boolean
 }): Promise<'sent' | 'text' | 'stopped'> {
   if (!['group', 'c2c'].includes(params.threadType)) return 'text'
   const speechModel = new QQSpeechModel()
@@ -91,12 +93,28 @@ export async function tryQQSpeech(params: {
   }
   const finish = async (state: 'sent' | 'skipped' | 'fallback' | 'failed' | 'cancelled', code: string) => {
     if (reserved) await speechModel.finish(params.eventId, state, code).catch(() => {})
+    const speechSupportsInstruction = configured
+      ? isBailianQwenSpeechModel(configured.provider, configured.model)
+      : false
     await recordChannelGatewayLog({
       userId: params.userId,
       bindingId: params.bindingId,
       platform: 'qq',
       event: 'speech_result',
       code,
+      ...(configured
+        ? {
+            speechResult: {
+              instruction: configured.instruction,
+              instructionApplicable: speechSupportsInstruction,
+              instructionSent: speechSupportsInstruction && Boolean(configured.instruction?.trim()),
+              model: configured.model,
+              provider: configured.provider,
+              state,
+              voice: configured.voice ?? speechVoices(configured.provider, configured.model)[0],
+            },
+          }
+        : { speechResult: { state } }),
     })
   }
   const accessStatus = async (): Promise<'voice' | 'text' | 'stopped'> => {
@@ -128,7 +146,12 @@ export async function tryQQSpeech(params: {
     params.signal.throwIfAborted()
     configured = await getSpeechConfig()
     const replyMode = configured.replyMode ?? 'smart'
-    if (!isQQSpeechCandidate(params.input, params.reply, replyMode)) return 'text'
+    if (!params.force && !isQQSpeechCandidate(params.input, params.reply, replyMode)) return 'text'
+    const supportsQwenTags = isBailianQwenSpeechModel(configured.provider, configured.model)
+    if (params.force && !supportsQwenTags) {
+      await finish('fallback', 'SPEECH_TAGS_UNSUPPORTED')
+      return 'text'
+    }
     params.sender.assertAvailable(1)
     const initialAccess = await accessStatus()
     if (initialAccess !== 'voice') return initialAccess
@@ -142,7 +165,7 @@ export async function tryQQSpeech(params: {
         : 'text'
     }
     reserved = true
-    if (replyMode === 'smart') {
+    if (!params.force && replyMode === 'smart') {
       stage = 'intent'
       const speak = await confirmChannelSpeechIntent({
         agentId: params.agentId,
@@ -158,7 +181,6 @@ export async function tryQQSpeech(params: {
       }
     }
     stage = 'synthesis'
-    const supportsQwenTags = isBailianQwenSpeechModel(configured.provider, configured.model)
     const audio = await synthesizeSpeech({
       config: toSpeechSynthesisConfig(configured),
       credentials,

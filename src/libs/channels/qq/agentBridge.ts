@@ -3,7 +3,7 @@ import { getErrorMessage } from '@pure/utils/error'
 import { createHash } from 'node:crypto'
 import { QQAdapter } from '@pure/chat-adapter/qq'
 import { QQSpeechModel } from '@pure/database/models/qqSpeech'
-import { stripQwenTtsTags } from '@pure/const'
+import { QQ_SPEECH_LIMITS, stripQwenTtsTags } from '@pure/const'
 
 import type { ModelMessage } from 'ai'
 import type { Message, Thread } from 'chat'
@@ -26,7 +26,14 @@ import type { ChannelAgentResponse } from '../core/types'
 import { listWechatConversationFiles, persistWechatFile, readWechatFile } from '../wechat/fileArtifacts'
 import { prepareQQFileForAgent } from './inboundMedia'
 import type { PreparedQQFile } from './inboundMedia'
-import { beginQQGeneration, endQQGeneration, flushQQChatInvalidation, tryHandleQQCommand } from './commands'
+import {
+  beginQQGeneration,
+  canUseQQDevelopmentTTSCommand,
+  endQQGeneration,
+  flushQQChatInvalidation,
+  parseQQDevelopmentTTSCommand,
+  tryHandleQQCommand,
+} from './commands'
 import {
   formatQQAttachmentContext,
   formatQQUnsupportedMessage,
@@ -84,6 +91,107 @@ async function postQQMarkdown(
     }
   }
   return { sentCount: sentParts.length, text: sentParts.join('') }
+}
+
+async function handleQQDevelopmentTTSCommand(params: {
+  agentId: string
+  applicationId: string
+  authorId: string
+  bindingId: string
+  command: NonNullable<ReturnType<typeof parseQQDevelopmentTTSCommand>>
+  event: { id: string }
+  eventModel: ChannelEventModel
+  message: Message
+  model?: string | null
+  provider?: string | null
+  settings: ReturnType<typeof normalizeQQChannelSettings>
+  thread: Thread
+  threadType: ReturnType<typeof resolveQQThreadType>
+  userId: string
+}): Promise<void> {
+  const {
+    agentId,
+    applicationId,
+    authorId,
+    bindingId,
+    command,
+    event,
+    eventModel,
+    message,
+    model,
+    provider,
+    settings,
+    thread,
+    threadType,
+    userId,
+  } = params
+  const abortController = beginQQGeneration(applicationId, thread.id)
+  const sender = (threadType === 'c2c' || threadType === 'group') && thread.adapter instanceof QQAdapter
+    ? thread.adapter.createReplySender(thread.id, message.id, {
+        createdAt: message.metadata.dateSent,
+        signal: abortController.signal,
+        onConsume: (_seq, fallbackSlots) => new QQSpeechModel().reserveReply(event.id, 1, fallbackSlots),
+      })
+    : undefined
+  const reply = async (text: string) => {
+    const outbound = await postQQMarkdown(thread, text, settings.charLimit, { userId, bindingId }, sender)
+    await eventModel.saveQQResponse(event.id, { sentChunkCount: outbound.sentCount, text: outbound.text })
+  }
+
+  try {
+    if ('error' in command) {
+      await reply('用法：/tts text=\'[excited]今天的天气真不错！[laughing]我们一起出去玩吧！\'')
+      return
+    }
+
+    const text = command.text.trim()
+    if (!text) {
+      await reply('text 参数不能为空。用法：/tts text=\'[excited]今天的天气真不错！[laughing]我们一起出去玩吧！\'')
+      return
+    }
+    if (Array.from(text).length > QQ_SPEECH_LIMITS.characters) {
+      await reply(`text 参数过长，请控制在 ${QQ_SPEECH_LIMITS.characters} 个字符以内。`)
+      return
+    }
+    if (!sender) {
+      await reply('该语音指令需要在 QQ 私聊或群聊中使用。')
+      return
+    }
+
+    const delivery = await tryQQSpeech({
+      agentId,
+      bindingId,
+      eventId: event.id,
+      userId,
+      senderId: authorId,
+      threadType,
+      input: message.text ?? '',
+      reply: text,
+      model: model ?? '',
+      provider: provider ?? '',
+      signal: abortController.signal,
+      sender,
+      force: true,
+    })
+    if (delivery === 'sent') {
+      await eventModel.saveQQResponse(event.id, { sentChunkCount: 1, text })
+      return
+    }
+    if (delivery === 'stopped') {
+      await eventModel.saveQQResponse(event.id, {
+        errorCode: 'QQ_REPLY_STOPPED',
+        status: 'failed',
+        text,
+        sentChunkCount: 0,
+      })
+      return
+    }
+
+    const textFallback = stripQwenTtsTags(text)
+    await reply(`语音合成未能发送，以下为纯文本：\n${textFallback}`)
+  } finally {
+    endQQGeneration(applicationId, thread.id, abortController)
+  }
 }
 
 function buildQQUserText(message: Message, text?: string): string | undefined {
@@ -365,6 +473,27 @@ export async function handleQQMention(params: {
     await thread.startTyping().catch(() => {
       /* typing is best-effort / unsupported on QQ */
     })
+
+    const speechCommand = parseQQDevelopmentTTSCommand(userText)
+    if (speechCommand && await canUseQQDevelopmentTTSCommand(userId)) {
+      await handleQQDevelopmentTTSCommand({
+        agentId,
+        applicationId,
+        authorId,
+        bindingId,
+        command: speechCommand,
+        event,
+        eventModel,
+        message,
+        model,
+        provider,
+        settings,
+        thread,
+        threadType,
+        userId,
+      })
+      return
+    }
 
     const commandReply = await tryHandleQQCommand({
       applicationId,

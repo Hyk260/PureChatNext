@@ -448,7 +448,7 @@ const MessengerQQPage = memo(() => {
         ) : null}
       </Flex>
 
-      <MessengerCommandList platform='qq' />
+      <MessengerCommandList isAdmin={isAdminRole(session?.user?.role)} platform='qq' />
       {logsOpen ? (
         <ChannelGatewayLogsModal
           userId={userId}

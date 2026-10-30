@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   findByUserAndPlatform: vi.fn(),
+  findUserById: vi.fn(),
   invalidateQQChat: vi.fn(),
   listVisible: vi.fn(),
   updateAgent: vi.fn(),
@@ -21,6 +22,14 @@ vi.mock('@pure/database/models/channelBinding', () => ({
   QQ_PLATFORM: 'qq',
 }))
 
+vi.mock('@pure/database/models/user', () => ({
+  UserModel: class {
+    findById = mocks.findUserById
+  },
+}))
+
+vi.mock('@/libs/constants', () => ({ isDev: true }))
+
 vi.mock('../chatBot', () => ({
   invalidateQQChat: mocks.invalidateQQChat,
 }))
@@ -28,8 +37,10 @@ vi.mock('../chatBot', () => ({
 import {
   abortQQGeneration,
   beginQQGeneration,
+  canUseQQDevelopmentTTSCommand,
   endQQGeneration,
   flushQQChatInvalidation,
+  parseQQDevelopmentTTSCommand,
   QQ_HELP_TEXT,
   tryHandleQQCommand,
 } from '../commands'
@@ -37,6 +48,7 @@ import {
 describe('QQ commands', () => {
   beforeEach(() => {
     mocks.findByUserAndPlatform.mockReset()
+    mocks.findUserById.mockReset()
     mocks.invalidateQQChat.mockReset()
     mocks.listVisible.mockReset()
     mocks.updateAgent.mockReset()
@@ -47,6 +59,29 @@ describe('QQ commands', () => {
     ])
     mocks.updateAgent.mockResolvedValue({ agentId: 'agt_b' })
     mocks.invalidateQQChat.mockResolvedValue(undefined)
+  })
+
+  it('parses tagged TTS text from quoted and unquoted parameters', () => {
+    const taggedText = '[excited]今天的天气真不错！[laughing]我们一起出去玩吧！'
+    expect(parseQQDevelopmentTTSCommand(`/tts text='${taggedText}'`)).toEqual({ text: taggedText })
+    expect(parseQQDevelopmentTTSCommand(`/tts text=‘${taggedText}’`)).toEqual({ text: taggedText })
+    expect(parseQQDevelopmentTTSCommand(`/tts text=“${taggedText}”`)).toEqual({ text: taggedText })
+    expect(parseQQDevelopmentTTSCommand(`/tts text=${taggedText}`)).toEqual({ text: taggedText })
+    expect(parseQQDevelopmentTTSCommand('/tts text=\'unterminated')).toEqual({ error: 'usage' })
+    expect(parseQQDevelopmentTTSCommand('/tts unknown=value')).toEqual({ error: 'usage' })
+    expect(parseQQDevelopmentTTSCommand('/help')).toBeNull()
+  })
+
+  it('allows the active admin binding owner without comparing a QQ member id', async () => {
+    mocks.findUserById.mockResolvedValue({ banned: false, role: 'admin' })
+    await expect(canUseQQDevelopmentTTSCommand('account-owner')).resolves.toBe(true)
+    expect(mocks.findUserById).toHaveBeenCalledWith('account-owner')
+
+    mocks.findUserById.mockResolvedValue({ banned: true, role: 'admin' })
+    await expect(canUseQQDevelopmentTTSCommand('account-owner')).resolves.toBe(false)
+
+    mocks.findUserById.mockResolvedValue({ banned: false, role: 'user' })
+    await expect(canUseQQDevelopmentTTSCommand('account-owner')).resolves.toBe(false)
   })
 
   it('documents the same command surface as WeChat', () => {

@@ -1,4 +1,4 @@
-export type ChannelCommandName = 'agents' | 'help' | 'new' | 'stop'
+export type ChannelCommandName = 'agents' | 'help' | 'new' | 'stop' | 'tts'
 
 export type ParsedChannelCommand = {
   argument: string
@@ -8,7 +8,7 @@ export type ParsedChannelCommand = {
 export type ChannelCommandCatalogItem = {
   command: string
   description: string
-  icon: 'agents' | 'feedback' | 'help' | 'new' | 'stop'
+  icon: 'agents' | 'code2' | 'feedback' | 'help' | 'new' | 'stop'
   name: ChannelCommandName
 }
 
@@ -39,6 +39,14 @@ export const CHANNEL_COMMAND_CATALOG: readonly ChannelCommandCatalogItem[] = [
     name: 'help',
   },
 ] as const
+
+/** Local development command shown to administrators in QQ settings. */
+export const QQ_DEVELOPMENT_TTS_COMMAND: ChannelCommandCatalogItem = {
+  command: '/tts text=…',
+  description: '用TTS api接口直接将文字转为语音并回复',
+  icon: 'code2',
+  name: 'tts',
+}
 
 export type ChannelCommandAgent = {
   id: string

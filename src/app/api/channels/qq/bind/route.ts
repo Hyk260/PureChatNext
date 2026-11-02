@@ -231,7 +231,13 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
   }
 
   if (body.settings !== undefined) {
-    if (body.agentId !== undefined || body.connectionMode !== undefined || body.model !== undefined || body.provider !== undefined) {
+    const hasChannelConfigFields =
+      body.agentId !== undefined ||
+      body.connectionMode !== undefined ||
+      body.model !== undefined ||
+      body.provider !== undefined
+
+    if (hasChannelConfigFields) {
       return jsonError('settings cannot be combined with agentId/connectionMode/model/provider', 400)
     }
     if (!body.settings || typeof body.settings !== 'object' || Array.isArray(body.settings)) {

@@ -12,6 +12,10 @@ const log = debug('db:service-model-settings')
 const response = (settings: Awaited<ReturnType<ServiceModelSettingsModel['get']>>) =>
   NextResponse.json({ settings }, { headers: { 'Cache-Control': 'no-store' } })
 
+/**
+ * GET /api/user/service-model-settings
+ * 获取当前用户的服务模型设置
+ */
 export const GET = withAuth(async (_request, { userId }) => {
   try {
     return response(await new ServiceModelSettingsModel().get(userId))
@@ -21,6 +25,11 @@ export const GET = withAuth(async (_request, { userId }) => {
   }
 })
 
+/**
+ * PATCH /api/user/service-model-settings
+ * 更新当前用户的服务模型设置，并校验语音配置与凭证
+ * @param request - JSON 服务模型设置补丁
+ */
 export const PATCH = withAuth(async (request, { userId }) => {
   const parsed = serviceModelSettingsPatchSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return jsonError(parsed.error.issues.map((issue) => issue.message).join('；'))
@@ -38,6 +47,10 @@ export const PATCH = withAuth(async (request, { userId }) => {
   }
 })
 
+/**
+ * DELETE /api/user/service-model-settings
+ * 清除当前用户保存的服务模型设置
+ */
 export const DELETE = withAuth(async (_request, { userId }) => {
   try {
     await new ServiceModelSettingsModel().delete(userId)

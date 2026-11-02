@@ -24,15 +24,6 @@ class ReadFileInputError extends Error {
   }
 }
 
-/**
- * 解析文件内容（仅管理员）
- * POST /api/admin/read-file
- *
- * 支持两种入参方式：
- * 1. 上传文件: multipart/form-data, 字段名 "file"
- * 2. 传入 URL: application/json, body: { "url": "https://example.com/file.pdf" }
- */
-
 async function downloadFromUrl(url: string): Promise<{ buffer: Buffer; filename: string }> {
   let parsedUrl: URL
   try {
@@ -77,6 +68,11 @@ async function saveTempFile(buffer: Buffer, filename: string): Promise<string> {
   return tmpPath
 }
 
+/**
+ * POST /api/admin/read-file
+ * 解析文件内容（仅管理员）
+ * @param request - multipart/form-data 的 file，或 JSON `{ url }`
+ */
 export const POST = withAdmin(async (request: NextRequest) => {
   let tmpPath: string | null = null
 

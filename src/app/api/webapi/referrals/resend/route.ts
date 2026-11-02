@@ -8,6 +8,12 @@ import { readBody, referralResponse } from '@/server/services/referrals/http'
 export { OPTIONS } from '@/server/services/referrals/http'
 export const maxDuration = 30
 const schema = z.object({ id: z.string().uuid(), requestKey: z.string().uuid() })
+
+/**
+ * POST /api/webapi/referrals/resend
+ * 重新发送当前用户创建的邀请
+ * @param request - JSON `{ id, requestKey }`
+ */
 export const POST = withAuth(async (request, { userId }) =>
   referralResponse(request, async () => {
     const body = await readBody(request, schema)

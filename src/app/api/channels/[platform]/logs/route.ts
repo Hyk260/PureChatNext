@@ -28,12 +28,20 @@ const clearLogs = withAdmin<{ platform: string }>(async (_request, { params, use
   }
 })
 
+/**
+ * GET /api/channels/[platform]/logs
+ * 读取当前用户指定渠道的诊断日志
+ */
 export async function GET(request: NextRequest, context: { params: Promise<{ platform: string }> }) {
   const response = await readLogs(request, context)
   response.headers.set('Cache-Control', 'private, no-store')
   return response
 }
 
+/**
+ * DELETE /api/channels/[platform]/logs
+ * 管理员清除当前用户指定渠道的诊断日志
+ */
 export async function DELETE(request: NextRequest, context: { params: Promise<{ platform: string }> }) {
   const response = await clearLogs(request, context)
   response.headers.set('Cache-Control', 'private, no-store')

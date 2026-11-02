@@ -11,3 +11,18 @@
 | 根目录 | Docker、数据库、渠道、缓存清理和通用质量检查 | 按 `package.json` 对应命令运行 |
 
 Electron 包自身的打包校验 hook 保留在 `apps/desktop/scripts/`。更新服务默认提供真实发布文件，模拟下载需显式使用 `--mode development`，详见 [桌面开发与更新说明](../apps/desktop/README.md)。
+
+## 环境配置初始化
+
+```bash
+pnpm env:setup                           # 从 .env.example 创建 .env，或补全现有 .env
+pnpm env:setup --file .env.local          # 补全本地覆盖文件
+pnpm env:setup --file .env.production.local
+pnpm env:setup --help
+```
+
+`env.mts` 自动生成 `AUTH_SECRET`、`KEY_VAULTS_SECRET`、`TOOL_APPROVAL_SECRET`、`CRON_SECRET` 与 RSA `JWKS_KEY`，保留所有非空配置。缺失字段会先复用 shell / CI 及其他根环境文件中的值。默认补上本地 `APP_URL` 与 `DATABASE_DRIVER=neon`，数据库连接和第三方服务凭据需自行填写。
+
+文件权限设为 `0600`，终端不打印密钥；排他锁和原子写入避免并行初始化覆盖密钥。相对 `--file` 路径以仓库根目录为基准，目标文件名限定为 Git 忽略的 `.env`、`.env.local` 或 `.env.<环境>.local`。
+
+此命令用于首次部署与配置补全，不能用于恢复丢失的旧密钥或轮换密钥。请备份配置文件，并在复用旧数据库或多实例部署时使用同一组密钥。完整说明见[环境变量配置](../docs/self-hosting/configuration/environment.md)。

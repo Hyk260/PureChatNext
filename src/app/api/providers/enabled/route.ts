@@ -16,6 +16,10 @@ const updateSchema = z.object({
 const response = (items: Record<string, boolean>) =>
   NextResponse.json({ items }, { headers: { 'Cache-Control': 'no-store' } })
 
+/**
+ * GET /api/providers/enabled
+ * 列出当前用户的服务商启用状态
+ */
 export const GET = withAuth(async (_request, { userId }) => {
   try {
     return response(await new UserProviderSettingsModel().list(userId))
@@ -25,6 +29,11 @@ export const GET = withAuth(async (_request, { userId }) => {
   }
 })
 
+/**
+ * PUT /api/providers/enabled
+ * 更新当前用户指定服务商的启用状态
+ * @param request - JSON `{ provider, enabled }`
+ */
 export const PUT = withAuth(async (request, { userId }) => {
   const parsed = updateSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return jsonError('服务商启用状态无效')

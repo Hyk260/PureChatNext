@@ -24,6 +24,11 @@ const constantTimeEqual = (left: string, right: string) => {
 
 const getError = (error: string, status = 400) => NextResponse.json({ error }, { status })
 
+/**
+ * POST /api/auth/desktop/token
+ * 校验授权码与 PKCE，兑换桌面访问令牌和刷新令牌
+ * @param request - URL 编码表单 `{ client_id, code, code_verifier, grant_type, redirect_uri }`
+ */
 export async function POST(request: Request) {
   const form = new URLSearchParams(await request.text())
   const clientId = form.get('client_id') ?? ''

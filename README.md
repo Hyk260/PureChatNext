@@ -129,10 +129,12 @@ git clone https://github.com/Hyk260/PureChatNext.git
 cd PureChatNext
 
 pnpm install
-cp .env.example .env.local
+pnpm env:setup
 ```
 
-编辑 `.env.local`，至少准备：
+`env:setup` 从 `.env.example` 创建 `.env`，自动生成并保存 `AUTH_SECRET`、`KEY_VAULTS_SECRET`、`TOOL_APPROVAL_SECRET`、`CRON_SECRET` 与 RSA `JWKS_KEY`。重复执行只补全缺失或空值，保留已有配置。需要使用 `.env.local` 时执行 `pnpm env:setup --file .env.local`。
+
+编辑 `.env`，填写实际数据库连接和按需使用的模型密钥：
 
 ```env
 # 本地必须指向 SPA 端口；CORS 默认允许该地址，不必再配相同的 ALLOWED_ORIGINS
@@ -142,16 +144,11 @@ APP_URL=http://localhost:5174
 DATABASE_DRIVER=neon
 DATABASE_URL=postgresql://user:password@host:5432/database
 
-# 生成方式见 .env.example
-KEY_VAULTS_SECRET=your-random-secret
-AUTH_SECRET=your-random-secret
-JWKS_KEY='{"keys":[...]}'
-
 # 至少配置一个可用的模型 Provider
 OPENAI_API_KEY=your-api-key
 ```
 
-密钥生成和完整变量说明见 [.env.example](./.env.example) 与 [环境变量配置](./docs/self-hosting/configuration/environment.md)。
+请安全备份生成的文件；连接旧数据库时必须使用原来的加密密钥，多实例需共享相同密钥。生产部署还需将 `APP_URL` 改为正式地址。完整变量说明见 [.env.example](./.env.example) 与 [环境变量配置](./docs/self-hosting/configuration/environment.md)。
 
 ### 2. 执行数据库迁移
 

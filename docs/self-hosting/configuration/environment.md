@@ -7,7 +7,29 @@ description: 按领域配置 PureChatNext 本地开发、Vercel 与 Docker 环�
 
 ## 创建环境变量文件
 
-在项目根目录创建 `.env.local` 文件，并添加以下配置：
+在项目根目录运行以下命令，自动创建 `.env` 并补全应用密钥：
+
+```bash
+pnpm env:setup
+
+# 为已有本地配置补全密钥
+pnpm env:setup --file .env.local
+
+# 单独准备本地生产预览配置
+pnpm env:setup --file .env.production.local
+```
+
+首次创建以 `.env.example` 为模板。脚本自动生成 `AUTH_SECRET`、`KEY_VAULTS_SECRET`、`TOOL_APPROVAL_SECRET`、`CRON_SECRET` 以及包含 RSA 私钥的 `JWKS_KEY`，并以 `0600` 权限保存文件。已有非空值原样保留；缺失或空值优先复用 shell / CI 和当前环境下其他根环境文件中的配置，之后才随机生成。普通随机密钥使用 32 字节安全随机数；每个字段独立生成，终端仅显示字段名。
+
+默认按开发环境读取其他配置；指定 `.env.production.local` 时使用生产环境顺序，也可通过 `NODE_ENV=production pnpm env:setup` 为根 `.env` 复用生产环境配置。应用运行时 shell / CI 和 `.env.local` 等文件仍可能覆盖 `.env`；脚本会提示较高优先级文件中的空值，应对对应文件执行 `--file` 补全。
+
+`APP_URL` 默认 `http://localhost:5174`，`DATABASE_DRIVER` 默认 `neon`。数据库地址无法自动生成；`DATABASE_URL`、数据库密码、OAuth、对象存储和第三方 API 凭据需要自行填写。生产部署还需修改 `APP_URL`。
+
+**密钥只在初始化时生成，不会在应用启动时重新生成。** 请安全备份配置文件；恢复数据库时同时恢复相应密钥，多实例部署共享相同密钥。已有数据库必须使用原来的 `KEY_VAULTS_SECRET`；后续改成另一把密钥不会自动重新加密旧数据。本脚本不执行密钥轮换，也不会连接数据库判断其是否已经使用旧密钥。
+
+Docker 安装继续使用 `install.sh` 或 `pnpm docker:setup:deploy` 生成 `docker-compose/deploy/.env`；根目录的 `env:setup` 不替代 Docker 安装流程。托管部署应把生成的密钥安全设置到部署平台的环境变量中。
+
+接着编辑生成的 `.env`（或 `.env.local`），填写实际配置：
 
 ```dotenv
 # 数据库连接（用于 Drizzle ORM）

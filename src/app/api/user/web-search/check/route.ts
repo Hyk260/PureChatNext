@@ -26,6 +26,11 @@ const naiveFetchFailureMessage = (errorType?: string, errorMessage = '') => {
   }
 }
 
+/**
+ * POST /api/user/web-search/check
+ * 使用当前用户的配置检测搜索或网页抓取服务
+ * @param request - JSON `{ capability, provider }`
+ */
 export const POST = withAuth(async (request, { userId }) => {
   const parsed = webSearchCheckSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return jsonError('无效的检测请求')

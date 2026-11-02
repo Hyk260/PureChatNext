@@ -15,6 +15,11 @@ const querySchema = z.object({
   cursor: z.string().max(256).optional(),
 })
 
+/**
+ * POST /api/webapi/referrals
+ * 向去重后的邮箱列表发送当前用户的邀请
+ * @param request - JSON `{ emails, requestKey }`
+ */
 export const POST = withAuth(async (request, { userId }) =>
   referralResponse(request, async () => {
     const body = await readBody(request, sendSchema)
@@ -22,6 +27,11 @@ export const POST = withAuth(async (request, { userId }) =>
   })
 )
 
+/**
+ * GET /api/webapi/referrals
+ * 分页查询当前用户的邀请历史
+ * @param request - query `days` / `cursor`
+ */
 export const GET = withAuth(async (request, { userId }) =>
   referralResponse(request, async () => {
     const parsed = querySchema.safeParse(Object.fromEntries(request.nextUrl.searchParams))

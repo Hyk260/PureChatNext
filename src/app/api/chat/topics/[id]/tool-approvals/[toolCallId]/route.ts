@@ -10,6 +10,11 @@ const updateSchema = z.object({
   status: z.enum(['approved', 'denied', 'completed', 'failed']),
 })
 
+/**
+ * PATCH /api/chat/topics/[id]/tool-approvals/[toolCallId]
+ * 更新当前用户指定话题中工具审批的状态
+ * @param request - JSON `{ status, error? }`
+ */
 export const PATCH = withAuth(async (request, { params, userId }) => {
   const { id, toolCallId } = await params
   const topic = await new ChatTopicModel(userId).findById(id)

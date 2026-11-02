@@ -96,9 +96,15 @@ const getStatusCode = (error: unknown) => {
   return undefined
 }
 
+function getCheckErrorMessage(value: unknown) {
+  if (value instanceof Error) return value.message
+  if (typeof value === 'string') return value
+  return ''
+}
+
 const summarizeCheckError = (error: unknown, timeoutMs: number) => {
   const rawMessage = getErrorValues(error)
-    .map((value) => (value instanceof Error ? value.message : typeof value === 'string' ? value : ''))
+    .map(getCheckErrorMessage)
     .filter(Boolean)
     .join(' | ')
   const message = rawMessage.replace(/Bearer\s+\S+/gi, 'Bearer [redacted]').replace(/sk-[\w-]+/gi, '[redacted]')

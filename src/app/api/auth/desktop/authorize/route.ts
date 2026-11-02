@@ -20,6 +20,11 @@ const readString = (value: unknown) => (typeof value === 'string' ? value : '')
 const isBase64Url = (value: string, minLength: number, maxLength: number) =>
   value.length >= minLength && value.length <= maxLength && /^[A-Za-z0-9_-]+$/.test(value)
 
+/**
+ * POST /api/auth/desktop/authorize
+ * 使用 Web 登录会话创建桌面授权码并返回回调地址
+ * @param request - JSON `{ client_id, code_challenge, code_challenge_method, redirect_uri, state }`
+ */
 export async function POST(request: Request) {
   const requestHeaders = await headers()
   if (requestHeaders.get('authorization')) {

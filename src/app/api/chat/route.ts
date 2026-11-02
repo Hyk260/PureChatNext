@@ -100,11 +100,17 @@ type ChatFilePart = Extract<UIMessage['parts'][number], { type: 'file' }> & {
 
 type ToolApprovalCall = { toolCallId?: string; toolName: string; input: unknown }
 
+function getBase64Padding(encoded: string) {
+  if (encoded.endsWith('==')) return 2
+  if (encoded.endsWith('=')) return 1
+  return 0
+}
+
 const dataUrlToBuffer = (url: string) => {
   const match = /^data:([^;,]+);base64,(.+)$/s.exec(url)
   if (!match) throw new Error('附件数据格式无效')
   const encoded = match[2]
-  const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0
+  const padding = getBase64Padding(encoded)
   if (Math.floor((encoded.length * 3) / 4) - padding > MAX_ATTACHMENT_BYTES) {
     throw new Error('附件超过 10MB 限制')
   }

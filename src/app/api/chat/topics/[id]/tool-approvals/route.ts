@@ -17,6 +17,10 @@ const createSchema = z.object({
 
 const hashArgs = (args: Record<string, unknown>) => createHash('sha256').update(JSON.stringify(args)).digest('hex')
 
+/**
+ * GET /api/chat/topics/[id]/tool-approvals
+ * 列出当前用户指定话题中待处理的工具审批
+ */
 export const GET = withAuth(async (_request, { params, userId }) => {
   const { id } = await params
   const topic = await new ChatTopicModel(userId).findById(id)
@@ -24,6 +28,11 @@ export const GET = withAuth(async (_request, { params, userId }) => {
   return NextResponse.json(await new ChatToolApprovalModel(userId).listPending(id))
 })
 
+/**
+ * POST /api/chat/topics/[id]/tool-approvals
+ * 校验参数哈希并创建或更新待处理的工具审批
+ * @param request - JSON `{ apiName, args, argsHash, identifier, toolCallId }`
+ */
 export const POST = withAuth(async (request, { params, userId }) => {
   const { id } = await params
   const topic = await new ChatTopicModel(userId).findById(id)

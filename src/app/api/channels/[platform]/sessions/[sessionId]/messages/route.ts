@@ -13,6 +13,10 @@ import {
 } from '@/libs/channels/wechat/timelineCursor'
 
 const CHANNEL_PLATFORMS = new Set(['qq', 'wechat'])
+const QQ_THREAD_PREFIX = new Map([
+  ['group', 'qq:group:'],
+  ['guild', 'qq:guild:'],
+])
 
 function maskChannelId(value: string) {
   if (value.length < 9) return '已隐藏'
@@ -20,7 +24,7 @@ function maskChannelId(value: string) {
 }
 
 function maskQQThreadId(value: string, threadType: string | null) {
-  const prefix = threadType === 'group' ? 'qq:group:' : threadType === 'guild' ? 'qq:guild:' : 'qq:c2c:'
+  const prefix = QQ_THREAD_PREFIX.get(threadType ?? '') ?? 'qq:c2c:'
   const id = value.replace(/^qq:(?:group|guild|c2c):/, '')
   return `${prefix}${maskChannelId(id)}`
 }

@@ -42,7 +42,15 @@ pnpm db:migrate
 
 ## 3. 配置环境变量
 
-在项目根目录创建 `.env.local`（也可从 `.env.example` 复制）：
+在项目根目录执行：
+
+```bash
+pnpm env:setup
+```
+
+该命令从 `.env.example` 创建 `.env`，自动生成并持久保存 `AUTH_SECRET`、`KEY_VAULTS_SECRET`、`TOOL_APPROVAL_SECRET`、`CRON_SECRET` 与 RSA `JWKS_KEY`。重复执行只补全缺失或空值，不覆盖已填写的配置；使用已有 `.env.local` 时可运行 `pnpm env:setup --file .env.local`。
+
+然后在 `.env` 中填写实际的数据库连接：
 
 ```dotenv
 APP_URL=http://localhost:5174
@@ -51,12 +59,9 @@ NODE_ENV=development
 # 本地 Docker PostgreSQL（与 docker-compose/dev/.env 一致）
 DATABASE_DRIVER=node
 DATABASE_URL=postgresql://purechat:<URL 编码后的 POSTGRES_PASSWORD>@127.0.0.1:5432/purechat
-
-# 密钥生成方式见 .env.example
-KEY_VAULTS_SECRET=your-random-secret
-AUTH_SECRET=your-random-secret
-JWKS_KEY='{"keys":[...]}'
 ```
+
+数据库连接、OAuth、对象存储和第三方 API 凭据需要自行填写。请安全备份生成的文件；已有数据库必须恢复原来的 `KEY_VAULTS_SECRET`，不能通过重新生成密钥恢复旧凭证。
 
 本地 **`APP_URL` 统一为 `http://localhost:5174`**（不要写成 `:3000`）。邮件验证、重置密码、OAuth 回调会落在 SPA；`/api` 由 Vite 代理到 Next。详见 [环境变量 · APP\_URL](../self-hosting/configuration/environment.md#app_url)。
 
@@ -154,7 +159,7 @@ curl -X GET http://localhost:3000/api/auth/me \
 
 ### Q: 提示缺少 `DATABASE_URL` 或无法连接数据库
 
-**A**: 确认已配置 `.env.local` 中的 `DATABASE_URL`，本地 Docker 需先执行 `pnpm dev:docker`，云托管需检查连接串与 `DATABASE_DRIVER`。
+**A**: 确认已配置 `.env`（或 `.env.local`）中的 `DATABASE_URL`，本地 Docker 需先执行 `pnpm dev:docker`，云托管需检查连接串与 `DATABASE_DRIVER`。
 
 ### Q: CORS 错误
 

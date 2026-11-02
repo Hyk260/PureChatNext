@@ -3,6 +3,7 @@ import type { EmailProviderFilter, UserRole } from '@pure/const'
 import { createNanoId, generateCompactUuid } from '@pure/utils'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { and, asc, count, desc, eq, ilike, inArray, lt, or, sql } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/pg-core'
 
 import { getServerDB } from '../core/db-adaptor'
 import { account, channelBindings, passkey, session, twoFactor, users, verification } from '../schemas'
@@ -107,17 +108,8 @@ const adminUserColumns = {
   username: users.username,
 }
 
-const adminUserListColumns = {
-  ...adminUserColumns,
-  qqBound: sql<boolean>`exists (
-    select 1 from ${channelBindings}
-    where ${channelBindings.userId} = ${users.id} and ${channelBindings.platform} = 'qq'
-  )`,
-  wechatBound: sql<boolean>`exists (
-    select 1 from ${channelBindings}
-    where ${channelBindings.userId} = ${users.id} and ${channelBindings.platform} = 'wechat'
-  )`,
-}
+const qqBindings = alias(channelBindings, 'qq_bindings')
+const wechatBindings = alias(channelBindings, 'wechat_bindings')
 
 const ADMIN_USER_SORT_COLUMNS = {
   lastActiveAt: users.lastActiveAt,
@@ -389,8 +381,20 @@ export class UserModel {
 
     const [items, [totalRow]] = await Promise.all([
       this.db
-        .select(adminUserListColumns)
+        .select({
+          ...adminUserColumns,
+          qqBound: sql<boolean>`${qqBindings.id} is not null`,
+          wechatBound: sql<boolean>`${wechatBindings.id} is not null`,
+        })
         .from(users)
+        .leftJoin(
+          qqBindings,
+          and(eq(qqBindings.userId, users.id), eq(qqBindings.platform, 'qq'))
+        )
+        .leftJoin(
+          wechatBindings,
+          and(eq(wechatBindings.userId, users.id), eq(wechatBindings.platform, 'wechat'))
+        )
         .where(where)
         .orderBy(orderByClause, desc(users.id))
         .limit(query.pageSize)

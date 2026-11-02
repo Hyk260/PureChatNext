@@ -28,10 +28,10 @@ import { prepareQQFileForAgent } from './inboundMedia'
 import type { PreparedQQFile } from './inboundMedia'
 import {
   beginQQGeneration,
-  canUseQQDevelopmentTTSCommand,
+  canUseQQTTSCommand,
   endQQGeneration,
   flushQQChatInvalidation,
-  parseQQDevelopmentTTSCommand,
+  parseQQTTSCommand,
   tryHandleQQCommand,
 } from './commands'
 import {
@@ -93,12 +93,12 @@ async function postQQMarkdown(
   return { sentCount: sentParts.length, text: sentParts.join('') }
 }
 
-async function handleQQDevelopmentTTSCommand(params: {
+async function handleQQTTSCommand(params: {
   agentId: string
   applicationId: string
   authorId: string
   bindingId: string
-  command: NonNullable<ReturnType<typeof parseQQDevelopmentTTSCommand>>
+  command: NonNullable<ReturnType<typeof parseQQTTSCommand>>
   event: { id: string }
   eventModel: ChannelEventModel
   message: Message
@@ -474,9 +474,9 @@ export async function handleQQMention(params: {
       /* typing is best-effort / unsupported on QQ */
     })
 
-    const speechCommand = parseQQDevelopmentTTSCommand(userText)
-    if (speechCommand && await canUseQQDevelopmentTTSCommand(userId)) {
-      await handleQQDevelopmentTTSCommand({
+    const speechCommand = parseQQTTSCommand(userText)
+    if (speechCommand && await canUseQQTTSCommand(userId)) {
+      await handleQQTTSCommand({
         agentId,
         applicationId,
         authorId,

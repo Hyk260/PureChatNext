@@ -1,5 +1,5 @@
 import { USER_ROLE } from '@pure/const'
-import type { UserRole } from '@pure/const'
+import type { EmailProviderFilter, UserRole } from '@pure/const'
 
 import { apiFetch, jsonInit } from '@/utils/apiFetch'
 
@@ -32,9 +32,11 @@ export type AdminUser = {
   fullName: string | null
   id: string
   lastActiveAt: string
+  qqBound?: boolean
   role: string | null
   userId: string
   username: string | null
+  wechatBound?: boolean
 }
 
 export type AdminUsersListResponse = {
@@ -75,7 +77,14 @@ const readError = async (response: Response, fallback: string) => {
 }
 
 export async function fetchAdminUsers(
-  params: { page: number; pageSize: number; q: string; sortBy?: AdminUserSortBy; sortOrder?: 'asc' | 'desc' },
+  params: {
+    emailProvider?: EmailProviderFilter
+    page: number
+    pageSize: number
+    q: string
+    sortBy?: AdminUserSortBy
+    sortOrder?: 'asc' | 'desc'
+  },
   signal?: AbortSignal
 ) {
   const search = new URLSearchParams({
@@ -83,6 +92,7 @@ export async function fetchAdminUsers(
     pageSize: String(params.pageSize),
   })
   if (params.q) search.set('q', params.q)
+  if (params.emailProvider) search.set('emailProvider', params.emailProvider)
   if (params.sortBy) {
     search.set('sortBy', params.sortBy)
     search.set('sortOrder', params.sortOrder ?? 'desc')

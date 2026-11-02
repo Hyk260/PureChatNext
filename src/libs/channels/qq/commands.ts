@@ -4,7 +4,6 @@ import type { ChannelEventModel } from '@pure/database/models/channelEvent'
 import { UserModel } from '@pure/database/models/user'
 
 import { AgentService } from '@/server/agents/service'
-import { isDev } from '@/libs/constants'
 
 import type { ChannelCommandEffects } from '../core/commands'
 import { buildChannelHelpText, runChannelCommand } from '../core/commands'
@@ -16,9 +15,9 @@ export const QQ_HELP_TEXT = buildChannelHelpText({
 
 const pendingChatInvalidations = new Set<string>()
 
-export type ParsedQQDevelopmentTTSCommand = { error: 'usage' } | { text: string }
+export type ParsedQQTTSCommand = { error: 'usage' } | { text: string }
 
-export function parseQQDevelopmentTTSCommand(input: string): ParsedQQDevelopmentTTSCommand | null {
+export function parseQQTTSCommand(input: string): ParsedQQTTSCommand | null {
   const match = input.trim().match(/^\/tts(?:[ \t]+([\s\S]*))?$/i)
   if (!match) return null
 
@@ -36,8 +35,7 @@ export function parseQQDevelopmentTTSCommand(input: string): ParsedQQDevelopment
   return { text: rawText }
 }
 
-export async function canUseQQDevelopmentTTSCommand(userId: string): Promise<boolean> {
-  if (!isDev) return false
+export async function canUseQQTTSCommand(userId: string): Promise<boolean> {
   const user = await new UserModel().findById(userId)
   return Boolean(user && !user.banned && isAdminRole(user.role))
 }

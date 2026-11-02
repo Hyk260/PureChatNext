@@ -6,7 +6,7 @@ import { BotIcon, CircleStopIcon, Code2, HelpCircleIcon, MegaphoneIcon, SquarePl
 import type { LucideIcon } from 'lucide-react'
 import { Fragment, memo } from 'react'
 
-import { QQ_DEVELOPMENT_TTS_COMMAND } from '@/libs/channels/core/commands'
+import { QQ_TTS_COMMAND } from '@/libs/channels/core/commands'
 
 import { MESSENGER_COMMANDS } from './const'
 import type { MessengerCommandItem, MessengerPlatformId } from './const'
@@ -47,8 +47,8 @@ type MessengerCommandListProps = {
 const MessengerCommandList = memo(({ isAdmin = false, platform }: MessengerCommandListProps) => {
   const hint = (platform && PLATFORM_HINT[platform]) || '在与机器人的私信中发送以下指令。'
   const commands =
-    platform === 'qq' && import.meta.env.DEV && isAdmin
-      ? [...MESSENGER_COMMANDS, QQ_DEVELOPMENT_TTS_COMMAND]
+    platform === 'qq' && isAdmin
+      ? [...MESSENGER_COMMANDS, QQ_TTS_COMMAND]
       : MESSENGER_COMMANDS
 
   return (

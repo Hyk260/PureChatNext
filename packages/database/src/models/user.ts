@@ -1,11 +1,11 @@
-import { isAdminRole, USER_ROLE } from '@pure/const'
-import type { UserRole } from '@pure/const'
+import { EMAIL_PROVIDER_FILTERS, isAdminRole, USER_ROLE } from '@pure/const'
+import type { EmailProviderFilter, UserRole } from '@pure/const'
 import { createNanoId, generateCompactUuid } from '@pure/utils'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { and, asc, count, desc, eq, ilike, inArray, lt, or, sql } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
-import { account, passkey, session, twoFactor, users, verification } from '../schemas'
+import { account, channelBindings, passkey, session, twoFactor, users, verification } from '../schemas'
 import type { User, UserDeviceInfo, UserItem, UserWithoutPassword } from '../schemas'
 import { userRebates } from '../schemas/credits'
 import { expireRebate, rebateExpiry } from './rebate'
@@ -48,9 +48,11 @@ export type AdminUserListItem = {
   fullName: string | null
   id: string
   lastActiveAt: Date
+  qqBound: boolean
   role: string | null
   userId: string
   username: string | null
+  wechatBound: boolean
 }
 
 export type AdminUserPatch = {
@@ -105,6 +107,18 @@ const adminUserColumns = {
   username: users.username,
 }
 
+const adminUserListColumns = {
+  ...adminUserColumns,
+  qqBound: sql<boolean>`exists (
+    select 1 from ${channelBindings}
+    where ${channelBindings.userId} = ${users.id} and ${channelBindings.platform} = 'qq'
+  )`,
+  wechatBound: sql<boolean>`exists (
+    select 1 from ${channelBindings}
+    where ${channelBindings.userId} = ${users.id} and ${channelBindings.platform} = 'wechat'
+  )`,
+}
+
 const ADMIN_USER_SORT_COLUMNS = {
   lastActiveAt: users.lastActiveAt,
   role: users.role,
@@ -113,6 +127,7 @@ const ADMIN_USER_SORT_COLUMNS = {
 export type AdminUserSortBy = keyof typeof ADMIN_USER_SORT_COLUMNS
 
 export type AdminUserListQuery = {
+  emailProvider?: EmailProviderFilter
   page: number
   pageSize: number
   q?: string
@@ -358,9 +373,15 @@ export class UserModel {
   listUsers = async (query: AdminUserListQuery) => {
     const search = query.q?.trim()
     const pattern = search ? `%${search}%` : undefined
-    const where = pattern
+    const searchCondition = pattern
       ? or(ilike(users.email, pattern), ilike(users.username, pattern), ilike(users.fullName, pattern))
       : undefined
+    const emailProviderCondition = query.emailProvider
+      ? or(
+          ...EMAIL_PROVIDER_FILTERS[query.emailProvider].domains.map((domain) => ilike(users.email, `%@${domain}`))
+        )
+      : undefined
+    const where = and(searchCondition, emailProviderCondition)
 
     const sortColumn = query.sortBy ? ADMIN_USER_SORT_COLUMNS[query.sortBy] : undefined
     const sortFn = query.sortOrder === 'asc' ? asc : desc
@@ -368,7 +389,7 @@ export class UserModel {
 
     const [items, [totalRow]] = await Promise.all([
       this.db
-        .select(adminUserColumns)
+        .select(adminUserListColumns)
         .from(users)
         .where(where)
         .orderBy(orderByClause, desc(users.id))

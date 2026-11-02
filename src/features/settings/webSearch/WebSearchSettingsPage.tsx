@@ -215,11 +215,11 @@ export default function WebSearchSettingsPage() {
         save={save}
       />
       <Flex className='flex-between-wrap gap-3'>
-        <Text type='secondary' fontSize={12} role='status'>
+        {/* <Text type='secondary' fontSize={12} role='status'>
           {saving ? '正在保存…' : '按账号同步，未填写字段继承服务器配置。'}
-        </Text>
+        </Text> */}
         <Button disabled={saving} onClick={restore}>
-          恢复服务器配置
+          恢复默认设置
         </Button>
       </Flex>
     </Flex>

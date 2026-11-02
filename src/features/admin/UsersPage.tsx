@@ -8,11 +8,11 @@ import { ActionIcon, confirmModal, toast, Select } from '@lobehub/ui'
 import { Form, useForm, useWatch } from '@lobehub/ui/form'
 import { ProTable } from '@lobehub/ui/pro-table'
 import type { ProColumns, ProTableActionType } from '@lobehub/ui/pro-table'
-import { Button, Checkbox, Flex, Input, InputPassword, Modal, SearchBar, Tag, Text } from '@pure/ui'
-import { MONTHLY_FREE_CREDITS, SHANGHAI_TIMEZONE, USER_ROLE } from '@pure/const'
-import type { UserRole } from '@pure/const'
+import { Button, Checkbox, Flex, Input, InputPassword, Modal, SearchBar, Tag, Text, Tooltip } from '@pure/ui'
+import { EMAIL_PROVIDER_FILTERS, isEmailProviderFilter, MONTHLY_FREE_CREDITS, SHANGHAI_TIMEZONE, USER_ROLE } from '@pure/const'
+import type { EmailProviderFilter, UserRole } from '@pure/const'
 import { EMPTY_PLACEHOLDER, formatCompactDateTime, formatNumber } from '@pure/utils/client'
-import { Pencil, Trash2, UserPlus } from 'lucide-react'
+import { ListFilter, Pencil, Trash2, UserPlus } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { z } from 'zod'
 
@@ -42,6 +42,10 @@ type UserFormValues = {
 
 const PAGE_SIZE = 20
 const USER_TABLE_SORT_DIRECTIONS = [...TABLE_SORT_DIRECTIONS]
+const EMAIL_PROVIDER_TABLE_FILTERS = Object.entries(EMAIL_PROVIDER_FILTERS).map(([value, { label }]) => ({
+  text: label,
+  value,
+}))
 const formatUserDateTime = (value: string) => formatCompactDateTime(value, { timeZone: SHANGHAI_TIMEZONE })
 
 const formatUserCredits = (credits: AdminUser['credits']) => {
@@ -91,6 +95,17 @@ const renderUserStatus = (banned: boolean) =>
       正常
     </Tag>
   )
+
+const renderGatewayBindingTag = (platform: 'QQ' | 'WeChat', isBound: boolean) => {
+  const status = isBound ? '已绑定' : '未绑定'
+  return (
+    <Tooltip title={`${platform} ${status}`}>
+      <Tag aria-label={`${platform} ${status}`} color={isBound ? 'green' : 'orange'} size='small'>
+        {platform}
+      </Tag>
+    </Tooltip>
+  )
+}
 
 const emptyCreateValues: UserFormValues = {
   banned: false,
@@ -250,6 +265,12 @@ export default function AdminUsersPage() {
       dataIndex: 'email',
       ellipsis: true,
       fixed: 'left',
+      filterIcon: (filtered) => (
+        <ListFilter className={filtered ? 'text-primary' : 'text-muted-foreground'} size={14} />
+      ),
+      filterMultiple: false,
+      filters: EMAIL_PROVIDER_TABLE_FILTERS,
+      key: 'email',
       title: '邮箱',
       copyable: true,
       width: 200,
@@ -268,6 +289,17 @@ export default function AdminUsersPage() {
         ),
       title: '邮箱验证',
       width: 90,
+    },
+    {
+      key: 'gatewayBindings',
+      render: (_value: unknown, user) => (
+        <Flex className='items-center gap-1.5'>
+          {renderGatewayBindingTag('QQ', user.qqBound === true)}
+          {renderGatewayBindingTag('WeChat', user.wechatBound === true)}
+        </Flex>
+      ),
+      title: '网关绑定',
+      width: 150,
     },
     {
       dataIndex: 'username',
@@ -400,11 +432,14 @@ export default function AdminUsersPage() {
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
           }}
           params={{ q: query }}
-          request={async ({ current = 1, pageSize = PAGE_SIZE, q }, sort) => {
+          request={async ({ current = 1, pageSize = PAGE_SIZE, q }, sort, filter) => {
             const sortBy = Object.keys(sort).find(
               (key): key is AdminUserSortBy => key === 'role' || key === 'lastActiveAt'
             )
+            const selectedEmailProvider = filter.email?.[0]
+            const emailProvider = isEmailProviderFilter(selectedEmailProvider) ? selectedEmailProvider : undefined
             const result = await fetchAdminUsers({
+              ...(emailProvider ? { emailProvider } : {}),
               page: current,
               pageSize,
               q,
@@ -415,7 +450,7 @@ export default function AdminUsersPage() {
           }}
           rowKey='id'
           rowSelection={{}}
-          scroll={{ x: 1640 }}
+          scroll={{ x: 1800 }}
           search={false}
           sortDirections={USER_TABLE_SORT_DIRECTIONS}
           toolBarRender={() => [

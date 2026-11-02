@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { MONTHLY_FREE_CREDITS, USER_ROLE } from '@pure/const'
+import { isEmailProviderFilter, MONTHLY_FREE_CREDITS, USER_ROLE } from '@pure/const'
 import type { UserRole } from '@pure/const'
 import type { UserDeviceInfo } from '@pure/database/schemas'
 import { isRecord, toTrimmedString } from '@pure/utils/object'
@@ -47,9 +47,11 @@ type AdminUserJson = {
   fullName: string | null
   id: string
   lastActiveAt: string
+  qqBound?: boolean
   role: string | null
   userId: string
   username: string | null
+  wechatBound?: boolean
 }
 
 const parsePositiveInt = (value: string | null, fallback: number, max: number) => {
@@ -74,9 +76,11 @@ const serializeAdminUser = (user: {
   fullName?: string | null
   id: string
   lastActiveAt?: Date
+  qqBound?: boolean
   role?: string | null
   userId: string
   username?: string | null
+  wechatBound?: boolean
 }): AdminUserJson => {
   const createdAt = user.createdAt
   const lastActiveAt = user.lastActiveAt ?? createdAt
@@ -93,6 +97,8 @@ const serializeAdminUser = (user: {
     role: user.role ?? null,
     userId: user.userId,
     username: user.username ?? null,
+    ...(user.qqBound !== undefined ? { qqBound: user.qqBound } : {}),
+    ...(user.wechatBound !== undefined ? { wechatBound: user.wechatBound } : {}),
   }
 }
 
@@ -124,6 +130,8 @@ export const GET = withAdmin(async (request) => {
   const page = parsePositiveInt(url.searchParams.get('page'), DEFAULT_PAGE, Number.MAX_SAFE_INTEGER)
   const pageSize = parsePositiveInt(url.searchParams.get('pageSize'), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
   const q = toTrimmedString(url.searchParams.get('q')) ?? undefined
+  const rawEmailProvider = url.searchParams.get('emailProvider')
+  const emailProvider = isEmailProviderFilter(rawEmailProvider) ? rawEmailProvider : undefined
   const sortBy = parseSortBy(url.searchParams.get('sortBy'))
   const sortOrder = url.searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc'
 
@@ -131,6 +139,7 @@ export const GET = withAdmin(async (request) => {
     page,
     pageSize,
     q,
+    ...(emailProvider ? { emailProvider } : {}),
     ...(sortBy ? { sortBy, sortOrder } : {}),
   })
   const balances = await new CreditsModel().listPeriodBalances(

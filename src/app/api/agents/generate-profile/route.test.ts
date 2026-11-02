@@ -41,7 +41,7 @@ vi.mock('@/libs/ai-providers/userSecrets', () => ({
   MISSING_USER_PROVIDER_SECRET_MESSAGE: '请先在设置中保存该服务商 API Key',
   resolveUserProviderCredentials: mocks.resolveUserProviderCredentials,
 }))
-vi.mock('@/server/purechat', () => ({
+vi.mock('@/server/purechat/runtime', () => ({
   assertPureChatCanChat: mocks.assertPureChatCanChat,
   chargePureChatGenerateUsage: mocks.chargePureChatGenerateUsage,
   createPureChatLanguageModel: mocks.createPureChatLanguageModel,

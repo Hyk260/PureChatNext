@@ -9,7 +9,7 @@ import {
   FILE_NAME_DEFAULT_WIDTH,
   FILE_SIZE_WIDTH,
 } from '@/features/resources/ResourceManager/components/Explorer/ListView/constants'
-import { FilesTabs, SortType } from '@/types/files'
+import { FilesTabs, SortType } from '@pure/types'
 
 export type ViewMode = 'list' | 'masonry'
 export type SelectAllState = 'all' | 'loaded' | 'none'

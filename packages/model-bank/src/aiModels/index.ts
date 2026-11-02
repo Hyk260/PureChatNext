@@ -11,8 +11,8 @@ import {
   resolvePureChatDisplayId,
   resolvePureChatGatewayId,
 } from './purechat'
-import { ModelProvider } from '../const/modelProvider'
-import type { ModelProviderId } from '../const/modelProvider'
+import { ModelProvider } from '@pure/const'
+import type { ModelProviderId } from '@pure/const'
 import type { AiModelCard } from '../types/aiModel'
 
 export const AI_MODELS_BY_PROVIDER: Record<ModelProviderId, AiModelCard[]> = {

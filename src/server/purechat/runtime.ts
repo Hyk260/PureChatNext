@@ -6,10 +6,10 @@ import { computeChatCost, getEnabledPureChatModel, getPureChatModel, resolvePure
 import { createNanoId } from '@pure/utils'
 import type { LanguageModel } from 'ai'
 
-import { llmEnv, resolveAiGatewayApiKey, resolveAiGatewayBaseURL } from '@/envs/llm'
+import { llmEnv } from '@/envs/llm'
 import { touchUserLastActive } from '@/libs/auth/touch-last-active'
 import { PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
-import { getShanghaiBillingPeriod } from '@/server/purechat/period'
+import { getShanghaiBillingPeriod } from '@pure/utils/billingPeriod'
 
 export type PureChatSettlement = {
   settlementId: string
@@ -25,14 +25,14 @@ export type PureChatUsageSource = {
 }
 
 /** PureChat 渠道是否已启用且配置了 AI Gateway 密钥。 */
-export const isPureChatRuntimeAvailable = () => Boolean(llmEnv.PURECHAT_ENABLED && resolveAiGatewayApiKey()?.trim())
+export const isPureChatRuntimeAvailable = () => Boolean(llmEnv.PURECHAT_ENABLED && llmEnv.AI_GATEWAY_API_KEY)
 
 export const createPureChatLanguageModel = (displayModel: string): LanguageModel | null => {
   const gatewayId = resolvePureChatGatewayId(displayModel)
-  const gatewayKey = resolveAiGatewayApiKey()
+  const gatewayKey = llmEnv.AI_GATEWAY_API_KEY
   if (!gatewayId || !gatewayKey) return null
 
-  return createOpenAI({ apiKey: gatewayKey, baseURL: resolveAiGatewayBaseURL() })(gatewayId)
+  return createOpenAI({ apiKey: gatewayKey, baseURL: llmEnv.AI_GATEWAY_BASE_URL })(gatewayId)
 }
 
 /**
@@ -46,7 +46,7 @@ export async function assertPureChatCanChat(userId: string, model: string): Prom
   if (!getEnabledPureChatModel(model)) {
     throw new Error(PURECHAT_MODEL_UNAVAILABLE_MESSAGE)
   }
-  if (!resolveAiGatewayApiKey()?.trim()) {
+  if (!llmEnv.AI_GATEWAY_API_KEY) {
     throw new Error('PureChat temporarily unavailable')
   }
 

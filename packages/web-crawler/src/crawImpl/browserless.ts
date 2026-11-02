@@ -4,7 +4,7 @@ import urlJoin from 'url-join'
 import type { CrawlImpl, CrawlSuccessResult } from '../type'
 import { PageNotFoundError, toFetchError } from '../utils/errorType'
 import { htmlToMarkdown } from '../utils/htmlToMarkdown'
-import { createHTTPStatusError } from '../utils/response'
+import { createHTTPStatusError } from '@pure/utils/http/response'
 import { DEFAULT_TIMEOUT, withTimeout } from '../utils/withTimeout'
 
 const BASE_URL = process.env.BROWSERLESS_URL ?? 'https://chrome.browserless.io'

@@ -4,9 +4,9 @@ import { toUIMessageStream } from 'ai'
 import { DEFAULT_CHAT_ADVANCED_SETTINGS } from '@pure/types'
 
 vi.mock('server-only', () => ({}))
-vi.mock('@/server/purechat', async () => ({
-  ...(await import('@pure/model-bank')),
-  ...(await import('@/server/purechat/period')),
+vi.mock('@/server/purechat/runtime', () => ({
+  assertPureChatCanChat: vi.fn(),
+  createPureChatLanguageModel: vi.fn(),
 }))
 
 const {
@@ -50,6 +50,11 @@ vi.mock('@pure/database/models/webSearchSettings', () => ({
     get = vi.fn().mockResolvedValue({})
   },
 }))
+vi.mock('@pure/database/models/serviceModelSettings', () => ({
+  ServiceModelSettingsModel: class {
+    get = vi.fn().mockResolvedValue({})
+  },
+}))
 vi.mock('@pure/database/models/customProvider', () => ({ isValidProviderId: (id: string) => /^[a-z0-9_-]+$/.test(id) }))
 
 vi.mock('@ai-sdk/openai', () => ({ createOpenAI }))
@@ -69,9 +74,11 @@ vi.mock('@/libs/ai-providers/userSecrets', () => ({
   resolveUserProviderCredentials: vi.fn(async () => ({ apiKey: 'user-key' })),
 }))
 vi.mock('@/envs/llm', () => ({
-  llmEnv: { PURECHAT_ENABLED: true },
-  resolveAiGatewayApiKey: () => 'gateway-test-key',
-  resolveAiGatewayBaseURL: () => 'https://ai-gateway.vercel.sh/v1',
+  llmEnv: {
+    PURECHAT_ENABLED: true,
+    AI_GATEWAY_API_KEY: 'gateway-test-key',
+    AI_GATEWAY_BASE_URL: 'https://ai-gateway.vercel.sh/v1',
+  },
 }))
 vi.mock('@/server/search/chatTool', () => ({
   webSearchTool: { description: 'search tool' },

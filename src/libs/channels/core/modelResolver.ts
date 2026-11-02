@@ -4,7 +4,7 @@ import { getAiModel, PROVIDER_DEFAULT_MODELS } from '@pure/model-bank'
 import type { ModelProviderId } from '@pure/model-bank'
 
 import { isSupportedProviderId } from '@/libs/ai-providers/resolveClient'
-import { isPureChatRuntimeAvailable } from '@/server/purechat'
+import { isPureChatRuntimeAvailable } from '@/server/purechat/runtime'
 
 export const CHANNEL_PROVIDER_IDS = ['purechat', 'openai', 'deepseek', 'bailian'] as const
 export type ChannelProviderId = (typeof CHANNEL_PROVIDER_IDS)[number]

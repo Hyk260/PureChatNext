@@ -1,7 +1,9 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/server/purechat', () => ({ isPureChatRuntimeAvailable: () => true }))
+vi.mock('@/server/purechat/runtime', () => ({
+  isPureChatRuntimeAvailable: () => true,
+}))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
   isSupportedProviderId: (provider: string) =>
     provider === 'openai' || provider === 'deepseek' || provider === 'bailian' || provider === 'openrouter',

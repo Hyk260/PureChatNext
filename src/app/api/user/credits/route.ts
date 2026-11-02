@@ -2,12 +2,9 @@ import { withAuth } from '@/libs/auth/get-session-user'
 import { CreditsModel } from '@pure/database/models/credits'
 import { NextResponse } from 'next/server'
 
-import {
-  formatResetCountdown,
-  getShanghaiBillingPeriod,
-  PURECHAT_DEFAULT_MODEL,
-  PURECHAT_ENABLED_MODELS,
-} from '@/server/purechat'
+import { formatResetCountdown } from '@/server/purechat/period'
+import { getShanghaiBillingPeriod } from '@pure/utils/billingPeriod'
+import { PURECHAT_DEFAULT_MODEL, purechatEnabledChatModels } from '@pure/model-bank'
 
 /**
  * GET /api/user/credits
@@ -21,7 +18,7 @@ export const GET = withAuth(async (_request, { userId }) => {
   return NextResponse.json({
     ...balance,
     defaultModel: PURECHAT_DEFAULT_MODEL,
-    models: PURECHAT_ENABLED_MODELS.map((m) => ({
+    models: purechatEnabledChatModels.map((m) => ({
       displayId: m.id,
       displayName: m.displayName,
       recommended: Boolean(m.recommended),

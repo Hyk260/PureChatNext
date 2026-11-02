@@ -20,7 +20,11 @@ import {
 } from '@/libs/ai-providers/resolveClient'
 import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
-import { assertPureChatCanChat, chargePureChatGenerateUsage, createPureChatLanguageModel } from '@/server/purechat'
+import {
+  assertPureChatCanChat,
+  chargePureChatGenerateUsage,
+  createPureChatLanguageModel,
+} from '@/server/purechat/runtime'
 import { isPureChatRestrictedModelError, PURECHAT_MODEL_UNAVAILABLE_MESSAGE } from '@/server/purechat/gatewayError'
 
 export const maxDuration = 30

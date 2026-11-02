@@ -1,6 +1,6 @@
 import type { CrawlImpl, CrawlSuccessResult } from '../type'
 import { PageNotFoundError, toFetchError } from '../utils/errorType'
-import { createHTTPStatusError, parseJSONResponse } from '../utils/response'
+import { createHTTPStatusError, parseJSONResponse } from '@pure/utils/http/response'
 import { DEFAULT_TIMEOUT, withTimeout } from '../utils/withTimeout'
 
 interface ExaResults {

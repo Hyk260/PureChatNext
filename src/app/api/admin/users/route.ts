@@ -10,12 +10,8 @@ import { isAdminUserError, UserModel } from '@pure/database/models/user'
 import type { AdminUserSortBy } from '@pure/database/models/user'
 
 import { jsonError, withAdmin } from '@/libs/auth/get-session-user'
-import {
-  allocateUniqueUsername,
-  LOGIN_USERNAME_REGEX,
-  normalizeLoginIdentifier,
-} from '@/libs/better-auth/shared'
-import { getShanghaiBillingPeriod } from '@/server/purechat/period'
+import { allocateUniqueUsername, LOGIN_USERNAME_REGEX, normalizeLoginIdentifier } from '@/libs/better-auth/shared'
+import { getShanghaiBillingPeriod } from '@pure/utils/billingPeriod'
 import { deleteAdminUserWithStorage, UserStorageCleanupError } from '@/server/services/user/cleanup-storage'
 
 const DEFAULT_PAGE = 1

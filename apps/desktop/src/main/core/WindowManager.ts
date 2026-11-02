@@ -3,7 +3,7 @@ import path from 'node:path'
 import { BrowserWindow, shell } from 'electron'
 
 import { createLogger, redactLogText } from '../logger'
-import { isSafeExternalUrl, isTrustedRendererUrl } from '../security/RendererSecurity'
+import { isSafeExternalUrl, isTrustedRendererUrl } from '../rendererSecurity'
 import type { DesktopConfigService, DesktopWindowState } from '../services/DesktopConfigService'
 import { getRendererReloadDelayMs, MAX_RENDERER_RELOAD_ATTEMPTS, shouldRetryRendererLoad } from './rendererLoadRetry'
 

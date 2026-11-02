@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { FileListItem } from '@/types/files'
+import type { FileListItem } from '@pure/types'
 
 const fetchMock = vi.fn()
 

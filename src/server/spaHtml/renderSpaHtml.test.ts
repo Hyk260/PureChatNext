@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { renderSpaHtml, serializeForHtml } from '@/server/spaHtml'
+import { renderSpaHtml } from '@/server/spaHtml/renderSpaHtml'
+import { serializeForHtml } from '@/server/spaHtml/serializeForHtml'
 
 describe('serializeForHtml', () => {
   it('escapes HTML-sensitive characters in JSON', () => {

@@ -5,7 +5,7 @@ import { app, Notification, shell } from 'electron'
 
 import type { IpcRegistry } from '../ipc/IpcRegistry'
 import { assertNotSensitive } from '../security/PathPolicy'
-import { isSafeExternalUrl } from '../security/RendererSecurity'
+import { isSafeExternalUrl } from '../rendererSecurity'
 import { SystemMetricsService } from '../services/SystemMetricsService'
 import { SystemToolsService } from '../services/SystemToolsService'
 

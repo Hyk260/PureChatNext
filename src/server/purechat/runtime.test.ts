@@ -8,7 +8,11 @@ const mocks = vi.hoisted(() => ({
   createOpenAI: vi.fn(),
   getEnabledPureChatModel: vi.fn(),
   getPureChatModel: vi.fn(),
-  resolveAiGatewayApiKey: vi.fn(),
+  llmEnv: {
+    PURECHAT_ENABLED: true,
+    AI_GATEWAY_API_KEY: 'gateway-key',
+    AI_GATEWAY_BASE_URL: 'https://gateway.example/v1',
+  },
   resolvePureChatGatewayId: vi.fn(),
   touch: vi.fn(),
 }))
@@ -37,11 +41,9 @@ vi.mock('@pure/model-bank', () => ({
 }))
 vi.mock('@pure/utils', () => ({ createNanoId: () => () => 'settlement-1' }))
 vi.mock('@/envs/llm', () => ({
-  llmEnv: { PURECHAT_ENABLED: true },
-  resolveAiGatewayApiKey: mocks.resolveAiGatewayApiKey,
-  resolveAiGatewayBaseURL: () => 'https://gateway.example/v1',
+  llmEnv: mocks.llmEnv,
 }))
-vi.mock('@/server/purechat/period', () => ({
+vi.mock('@pure/utils/billingPeriod', () => ({
   getShanghaiBillingPeriod: () => '2026-08',
 }))
 vi.mock('@/server/purechat/gatewayError', () => ({
@@ -59,7 +61,8 @@ describe('purechat runtime', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.createOpenAI.mockReturnValue(mocks.createOpenAIModel)
-    mocks.resolveAiGatewayApiKey.mockReturnValue('gateway-key')
+    mocks.llmEnv.PURECHAT_ENABLED = true
+    mocks.llmEnv.AI_GATEWAY_API_KEY = 'gateway-key'
     mocks.resolvePureChatGatewayId.mockReturnValue('openai/gpt-5.4-mini')
     mocks.getEnabledPureChatModel.mockReturnValue({ id: 'gpt-5.4-mini' })
     mocks.getPureChatModel.mockReturnValue({ pricing: {} })
@@ -68,8 +71,15 @@ describe('purechat runtime', () => {
 
   it('reports runtime availability from env + gateway key', () => {
     expect(isPureChatRuntimeAvailable()).toBe(true)
-    mocks.resolveAiGatewayApiKey.mockReturnValueOnce('')
+    mocks.llmEnv.AI_GATEWAY_API_KEY = ''
     expect(isPureChatRuntimeAvailable()).toBe(false)
+  })
+
+  it('does not enable PureChat just because an AI Gateway key is configured', async () => {
+    mocks.llmEnv.PURECHAT_ENABLED = false
+    expect(isPureChatRuntimeAvailable()).toBe(false)
+    await expect(assertPureChatCanChat('user-1', 'gpt-5.4-mini')).rejects.toThrow('PureChat is disabled')
+    expect(mocks.assertCanChat).not.toHaveBeenCalled()
   })
 
   it('creates a gateway language model', () => {

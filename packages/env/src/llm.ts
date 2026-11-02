@@ -1,7 +1,7 @@
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 
-import { optionalUrlEnv, parseEnvBooleanDefaultTrue } from './helpers'
+import { nonEmptyEnv, optionalUrlEnv, parseEnvBoolean, parseEnvBooleanDefaultTrue } from './helpers'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -19,10 +19,8 @@ declare global {
       DEEPSEEK_API_KEY?: string
       /** 阿里云百炼 API Key。 */
       DASHSCOPE_API_KEY?: string
-      /** 是否启用 PureChat / Vercel AI Gateway；默认开启。 */
+      /** 是否启用 PureChat / Vercel AI Gateway；默认关闭，需手动设置为 1。 */
       PURECHAT_ENABLED?: string
-      /** PureChat / Vercel AI Gateway API Key。 */
-      PURECHAT_API_KEY?: string
       /** Vercel AI Gateway API Key，服务端使用，不暴露给浏览器。 */
       AI_GATEWAY_API_KEY?: string
       /** AI Gateway 请求地址；默认 `https://ai-gateway.vercel.sh/v1`。 */
@@ -50,14 +48,12 @@ export const getLLMConfig = () => {
       DEEPSEEK_API_KEY: z.string().optional(),
       /** 阿里云百炼 API Key。 */
       DASHSCOPE_API_KEY: z.string().optional(),
-      /** 是否启用 PureChat / Vercel AI Gateway；默认开启。 */
+      /** 是否启用 PureChat / Vercel AI Gateway；默认关闭。 */
       PURECHAT_ENABLED: z.boolean(),
-      /** PureChat / Vercel AI Gateway API Key。 */
-      PURECHAT_API_KEY: z.string().optional(),
       /** Vercel AI Gateway API Key，服务端使用，不暴露给浏览器。 */
       AI_GATEWAY_API_KEY: z.string().optional(),
       /** AI Gateway 请求地址；默认 `https://ai-gateway.vercel.sh/v1`。 */
-      AI_GATEWAY_BASE_URL: z.string().optional(),
+      AI_GATEWAY_BASE_URL: z.string().default('https://ai-gateway.vercel.sh/v1'),
       /** Vercel OIDC Token，用于访问 Vercel AI Gateway。 */
       VERCEL_OIDC_TOKEN: z.string().optional(),
     },
@@ -74,20 +70,13 @@ export const getLLMConfig = () => {
       // 阿里云百炼
       DASHSCOPE_API_KEY: process.env.DASHSCOPE_API_KEY,
       // PureChat
-      PURECHAT_ENABLED: parseEnvBooleanDefaultTrue(process.env.PURECHAT_ENABLED),
-      PURECHAT_API_KEY: process.env.PURECHAT_API_KEY,
+      PURECHAT_ENABLED: parseEnvBoolean(process.env.PURECHAT_ENABLED),
       // AI Gateway
-      AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
-      AI_GATEWAY_BASE_URL: process.env.AI_GATEWAY_BASE_URL,
+      AI_GATEWAY_API_KEY: nonEmptyEnv(process.env.AI_GATEWAY_API_KEY),
+      AI_GATEWAY_BASE_URL: nonEmptyEnv(process.env.AI_GATEWAY_BASE_URL),
       VERCEL_OIDC_TOKEN: process.env.VERCEL_OIDC_TOKEN,
     },
   })
 }
 
 export const llmEnv = getLLMConfig()
-
-export const resolveAiGatewayApiKey = () => {
-  return llmEnv.AI_GATEWAY_API_KEY?.trim() || llmEnv.PURECHAT_API_KEY?.trim() || undefined
-}
-
-export const resolveAiGatewayBaseURL = () => llmEnv.AI_GATEWAY_BASE_URL?.trim() || 'https://ai-gateway.vercel.sh/v1'

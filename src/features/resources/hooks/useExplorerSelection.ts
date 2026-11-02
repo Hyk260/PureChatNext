@@ -4,7 +4,7 @@ import { useCallback } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useResourceManagerStore } from '@/features/resources/store'
-import type { FileListItem } from '@/types/files'
+import type { FileListItem } from '@pure/types'
 
 interface ExplorerSelectionOptions {
   data: FileListItem[]

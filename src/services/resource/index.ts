@@ -1,4 +1,4 @@
-import type { FileListItem, PaginatedFileList, QueryFileListParams } from '@/types/files'
+import type { FileListItem, PaginatedFileList, QueryFileListParams } from '@pure/types'
 import type { KnowledgeBaseListItem } from '@/types/resource'
 import { apiFetch } from '@/utils/apiFetch'
 

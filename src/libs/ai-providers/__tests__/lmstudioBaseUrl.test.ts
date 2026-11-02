@@ -4,7 +4,7 @@ import {
   getLmStudioModelsEndpoint,
   getLmStudioNativeModelsEndpoint,
   normalizeLmStudioBaseURL,
-} from './lmstudio'
+} from '../lmstudioBaseUrl'
 
 describe('LM Studio endpoint helpers', () => {
   it('normalizes HTTP(S) endpoints to a single v1 suffix', () => {

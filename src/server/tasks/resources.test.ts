@@ -10,7 +10,9 @@ vi.mock('@/server/agents/service', () => ({
 }))
 vi.mock('@/envs/app', () => ({ appEnv: {} }))
 vi.mock('@/libs/ai-providers/userSecrets', () => ({ resolveUserProviderCredentials: vi.fn() }))
-vi.mock('@/server/purechat', () => ({ isPureChatRuntimeAvailable: vi.fn() }))
+vi.mock('@/server/purechat/runtime', () => ({
+  isPureChatRuntimeAvailable: vi.fn(),
+}))
 vi.mock('./targets', () => ({ resolveTaskTarget: vi.fn() }))
 
 import { prepareTaskSnapshot } from './resources'

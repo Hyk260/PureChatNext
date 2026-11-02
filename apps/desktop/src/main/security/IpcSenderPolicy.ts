@@ -1,6 +1,6 @@
 import type { WebContents } from 'electron'
 
-import { isTrustedRendererUrl } from './RendererSecurity'
+import { isTrustedRendererUrl } from '../rendererSecurity'
 
 export const assertTrustedIpcSender = (
   event: { sender: WebContents; senderFrame: { url: string } | null },

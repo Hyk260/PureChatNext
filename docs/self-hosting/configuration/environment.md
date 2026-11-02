@@ -195,6 +195,19 @@ PostgreSQL 数据库连接字符串，用于 Drizzle ORM 迁移和数据库操�
 
 敏感配置加密密钥（AES-256-GCM）。用于微信 / QQ 渠道凭证与 `context_token`，以及用户在设置页保存的服务商 API Key / 代理地址。生成：`openssl rand -base64 32`。未配置时无法加密保存用户密钥，渠道绑定也会失败。
 
+### AI Gateway 与 PureChat
+
+PureChat 默认关闭。需要启用服务端 AI Gateway 模型与积分能力时，手动配置：
+
+```dotenv
+AI_GATEWAY_API_KEY=填写实际的网关密钥
+PURECHAT_ENABLED=1
+# 可选：覆盖网关地址
+# AI_GATEWAY_BASE_URL=https://ai-gateway.vercel.sh/v1
+```
+
+网关密钥仅使用 `AI_GATEWAY_API_KEY`；仅配置密钥不会自动开启 PureChat。使用用户自行填写的其他服务商密钥时，无需开启此功能。
+
 ### Docker 内部服务地址
 
 开发时从宿主机运行应用，因此 PostgreSQL、Redis、RustFS 与 SearXNG 使用 `127.0.0.1` 加映射端口（见 `pnpm dev:docker`）。生产只运行应用容器：PostgreSQL 与 Redis 使用宿主机已有实例（`install.sh` 将应用加入共享 Docker 网络，主机名为容器名）；文件与搜索走云端配置。

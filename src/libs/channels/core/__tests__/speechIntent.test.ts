@@ -18,7 +18,7 @@ vi.mock('@/libs/ai-providers/userSecrets', () => ({
   resolveUserProviderCredentials: mocks.credentials,
   MISSING_USER_PROVIDER_SECRET_MESSAGE: 'missing',
 }))
-vi.mock('@/server/purechat', () => ({
+vi.mock('@/server/purechat/runtime', () => ({
   assertPureChatCanChat: vi.fn(),
   createPureChatLanguageModel: vi.fn(),
   chargePureChatGenerateUsage: mocks.charge,

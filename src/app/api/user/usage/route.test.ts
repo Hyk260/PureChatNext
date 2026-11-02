@@ -29,8 +29,10 @@ vi.mock('@pure/database/models/file', () => ({
   },
 }))
 vi.mock('@/envs/file', () => ({ fileStorageLimitBytes: 15 * 1024 * 1024 }))
-vi.mock('@/server/purechat', () => ({
+vi.mock('@/server/purechat/period', () => ({
   formatResetCountdown: () => ({ days: 8, hours: 3, ms: 1, resetAt: '2026-08-01T00:00:00+08:00' }),
+}))
+vi.mock('@pure/utils/billingPeriod', () => ({
   getShanghaiBillingPeriod: () => '2026-07',
 }))
 

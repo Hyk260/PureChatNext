@@ -114,7 +114,7 @@ vi.mock('@/features/chat/MessageUsage', () => ({
   ),
 }))
 
-vi.mock('@/features/chat/MessageEditorModal', () => ({
+vi.mock('@/components/ContentEditorModal', () => ({
   default: ({ onSubmit, open, value }: { onSubmit: (value: string) => void; open: boolean; value: string }) =>
     open ? (
       <div data-testid='message-editor' data-value={value}>

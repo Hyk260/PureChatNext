@@ -7,7 +7,8 @@ import type { NextRequest } from 'next/server'
 
 import { fileStorageLimitBytes } from '@/envs/file'
 import { withAuth } from '@/libs/auth/get-session-user'
-import { formatResetCountdown, getShanghaiBillingPeriod } from '@/server/purechat'
+import { formatResetCountdown } from '@/server/purechat/period'
+import { getShanghaiBillingPeriod } from '@pure/utils/billingPeriod'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const SORT_FIELDS = new Set<UsageSortBy>(['createdAt', 'credits', 'durationMs', 'totalTokens'])

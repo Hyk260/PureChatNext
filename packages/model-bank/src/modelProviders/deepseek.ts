@@ -1,5 +1,5 @@
 import type { ModelProviderCard } from '../types/aiModel'
-import { ModelProvider } from '../const/modelProvider'
+import { ModelProvider } from '@pure/const'
 
 export const deepseekProviderCard: ModelProviderCard = {
   id: ModelProvider.DeepSeek,

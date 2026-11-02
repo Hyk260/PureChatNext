@@ -16,11 +16,15 @@ vi.mock('@pure/database/models/credits', () => ({
   },
 }))
 
-vi.mock('@/server/purechat', () => ({
+vi.mock('@/server/purechat/period', () => ({
   formatResetCountdown: () => ({ days: 3, hours: 2, resetAt: '2026-08-01T00:00:00+08:00' }),
+}))
+vi.mock('@pure/utils/billingPeriod', () => ({
   getShanghaiBillingPeriod: () => '2026-07',
+}))
+vi.mock('@pure/model-bank', () => ({
   PURECHAT_DEFAULT_MODEL: 'gpt-5.4-nano',
-  PURECHAT_ENABLED_MODELS: [
+  purechatEnabledChatModels: [
     { displayName: 'GPT 5.4 Nano', id: 'gpt-5.4-nano', recommended: true },
     { displayName: 'GPT 5.2', id: 'gpt-5.2' },
   ],

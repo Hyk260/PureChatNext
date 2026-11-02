@@ -59,7 +59,7 @@ vi.mock('@/libs/ai-providers/userSecrets', () => ({
     headerKey ? { apiKey: headerKey, baseURL: requestBaseURL } : null
   ),
 }))
-vi.mock('@/server/purechat', () => ({
+vi.mock('@/server/purechat/runtime', () => ({
   assertPureChatCanChat: mocks.assertPureChatCanChat,
   chargePureChatGenerateUsage: mocks.chargePureChatGenerateUsage,
   createPureChatLanguageModel: mocks.createPureChatLanguageModel,

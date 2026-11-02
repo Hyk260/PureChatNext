@@ -412,7 +412,7 @@ warn_if_public_bind() {
 
 warn_if_missing_provider() {
   local key value
-  for key in OPENAI_API_KEY DEEPSEEK_API_KEY AI_GATEWAY_API_KEY PURECHAT_API_KEY; do
+  for key in OPENAI_API_KEY DEEPSEEK_API_KEY AI_GATEWAY_API_KEY; do
     value="$(env_value "$key")"
     if [[ -n "$value" ]]; then
       return 0

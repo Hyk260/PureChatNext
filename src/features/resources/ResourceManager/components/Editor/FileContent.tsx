@@ -5,7 +5,7 @@ import { createStaticStyles, cssVar, Spin } from '@lobehub/ui'
 import { Download } from 'lucide-react'
 import { lazy, memo, Suspense, useEffect, useState } from 'react'
 
-import type { FileListItem } from '@/types/files'
+import type { FileListItem } from '@pure/types'
 
 import { getPreviewKind } from './fileType'
 

@@ -17,7 +17,7 @@ export {
   resolvePureChatGatewayId,
 } from './aiModels'
 export { computeChatCost, USD_TO_CNY, type ChatCostResult, type ChatTokenUsage } from './computeChatCost'
-export { ModelProvider, type ModelProviderId } from './const/modelProvider'
+export { ModelProvider, type ModelProviderId } from '@pure/const'
 export { PROVIDER_DEFAULT_MODELS } from './providerDefaults'
 export {
   bailianProviderCard,

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/server/purechat', () => ({
+vi.mock('@/server/purechat/runtime', () => ({
   isPureChatRuntimeAvailable: () => true,
 }))
 vi.mock('@pure/database/models/userProviderSecret', () => ({

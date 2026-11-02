@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import { BUILTIN_PROVIDER_ID_LIST, isBuiltinProviderId, isValidProviderId, ModelProvider } from '@pure/const'
 
-import { ModelProvider as CompatibleModelProvider } from './const/modelProvider'
+import { ModelProvider as PublicModelProvider } from './index'
 import { PURECHAT_DEFAULT_MODEL } from './aiModels/purechat'
 import { PROVIDER_DEFAULT_MODELS } from './providerDefaults'
 
 describe('provider definitions', () => {
   it('preserves enum identity, provider order and default models', () => {
-    expect(CompatibleModelProvider).toBe(ModelProvider)
+    expect(PublicModelProvider).toBe(ModelProvider)
     expect(BUILTIN_PROVIDER_ID_LIST).toEqual(['purechat', 'openai', 'deepseek', 'bailian', 'openrouter', 'lmstudio'])
     expect(PROVIDER_DEFAULT_MODELS).toEqual({
       bailian: 'qwen3.8-max',

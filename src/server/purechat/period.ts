@@ -3,8 +3,6 @@
 import { SHANGHAI_TIMEZONE } from '@pure/const'
 import { HOUR } from '@pure/utils/units'
 
-export { getShanghaiBillingPeriod } from '@pure/utils/billingPeriod'
-
 const shanghaiParts = (date: Date) => {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: SHANGHAI_TIMEZONE,

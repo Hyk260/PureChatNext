@@ -307,7 +307,7 @@ export function defineConfig() {
             log('user create after: %O', user)
             try {
               const { CreditsModel } = await import('@pure/database/models/credits')
-              const { getShanghaiBillingPeriod } = await import('@/server/purechat/period')
+              const { getShanghaiBillingPeriod } = await import('@pure/utils/billingPeriod')
               if (user?.id) {
                 await new CreditsModel().ensurePeriod(user.id, getShanghaiBillingPeriod())
               }

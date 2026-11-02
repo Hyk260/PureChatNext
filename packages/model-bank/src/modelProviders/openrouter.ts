@@ -1,5 +1,5 @@
 import type { ModelProviderCard } from '../types/aiModel'
-import { ModelProvider } from '../const/modelProvider'
+import { ModelProvider } from '@pure/const'
 
 export const openRouterProviderCard: ModelProviderCard = {
   id: ModelProvider.OpenRouter,

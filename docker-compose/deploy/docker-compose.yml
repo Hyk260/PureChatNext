@@ -57,7 +57,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       AI_GATEWAY_API_KEY: ${AI_GATEWAY_API_KEY:-}
-      PURECHAT_API_KEY: ${PURECHAT_API_KEY:-}
+      PURECHAT_ENABLED: ${PURECHAT_ENABLED:-0}
       NODE_OPTIONS: >-
         --dns-result-order=ipv4first --use-openssl-ca
         --max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE:-320}

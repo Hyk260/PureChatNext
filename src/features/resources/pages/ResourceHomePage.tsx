@@ -6,7 +6,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import ResourceManager from '@/features/resources/ResourceManager'
 import { useResourceManagerStore } from '@/features/resources/store'
-import { FilesTabs } from '@/types/files'
+import { FilesTabs } from '@pure/types'
 
 const ResourceHomePage = () => {
   const pathname = usePathname()

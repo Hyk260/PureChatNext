@@ -43,7 +43,7 @@ export const PROVIDER_ENV_API_KEY_NAME: Partial<Record<ProviderId, string>> = {
   bailian: 'DASHSCOPE_API_KEY',
   deepseek: 'DEEPSEEK_API_KEY',
   openai: 'OPENAI_API_KEY',
-  purechat: 'PURECHAT_API_KEY',
+  purechat: 'AI_GATEWAY_API_KEY',
 }
 
 /** showConfig=false 的服务商（如 PureChat）由服务端持有 Key。 */

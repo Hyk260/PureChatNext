@@ -15,8 +15,8 @@ import { useResourceManagerUrlSync } from '@/features/resources/hooks/useResourc
 import { useResourceManagerStore } from '@/features/resources/store'
 import { revalidateResources, useFetchResources, useResourceStore } from '@/features/resources/store/resourceStore'
 import { resourceService } from '@/services/resource'
-import { FilesTabs } from '@/types/files'
-import type { FileListItem } from '@/types/files'
+import { FilesTabs } from '@pure/types'
+import type { FileListItem } from '@pure/types'
 
 const CATEGORY_TITLES: Record<FilesTabs, string> = {
   [FilesTabs.All]: '全部',

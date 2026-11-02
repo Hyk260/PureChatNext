@@ -6,7 +6,7 @@ import { UserModel } from '@pure/database/models/user'
 import { isRecord, toTrimmedString } from '@pure/utils/object'
 
 import { jsonError, withAdmin } from '@/libs/auth/get-session-user'
-import { getShanghaiBillingPeriod } from '@/server/purechat/period'
+import { getShanghaiBillingPeriod } from '@pure/utils/billingPeriod'
 
 const parseJsonBody = async (request: NextRequest) => {
   try {

@@ -5,7 +5,7 @@ import { useQueryState } from 'nuqs'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useResourceManagerStore } from '@/features/resources/store'
-import { SortType } from '@/types/files'
+import { SortType } from '@pure/types'
 
 /**
  * Store 为排序状态源，URL 仅用于书签同步。

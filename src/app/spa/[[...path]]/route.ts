@@ -5,7 +5,7 @@ import { isKnownSpaRoute } from '@/const/spaRouteManifest'
 import { PUBLIC_SPA_FILTER_PARAMS } from '@/const/publicSpaMetadata'
 import { getProviderEnvKeyFlags } from '@/libs/ai-providers/envKeys'
 import { sanitizeReferralTelemetryUrl } from '@/libs/referrals/helpers'
-import { renderSpaHtml } from '@/server/spaHtml'
+import { renderSpaHtml } from '@/server/spaHtml/renderSpaHtml'
 import type { SPAServerConfig } from '@/types/spaServerConfig'
 
 import type { NextRequest } from 'next/server'

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 
 import { jsonError, withAuth } from '@/libs/auth/get-session-user'
 import { resolveFileAccessUrl } from '@/server/modules/S3/url'
-import { QueryFileListSchema } from '@/types/files'
+import { QueryFileListSchema } from '@pure/types'
 
 /**
  * GET /api/resources/items

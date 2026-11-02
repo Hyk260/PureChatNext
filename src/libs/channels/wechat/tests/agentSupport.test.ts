@@ -12,7 +12,7 @@ vi.mock('@pure/model-bank', async (importOriginal) => {
     getAiModel: mocks.getAiModel,
   }
 })
-vi.mock('@/server/purechat', () => ({
+vi.mock('@/server/purechat/runtime', () => ({
   isPureChatRuntimeAvailable: vi.fn(() => true),
 }))
 vi.mock('@/libs/ai-providers/resolveClient', () => ({
@@ -22,11 +22,7 @@ vi.mock('@pure/database/models/userProviderSecret', () => ({
   UserProviderSecretModel: class {},
 }))
 
-import {
-  normalizeWechatAgentProvider,
-  resolveWechatAgentModelId,
-  wechatModelSupportsVision,
-} from '../agentSupport'
+import { normalizeWechatAgentProvider, resolveWechatAgentModelId, wechatModelSupportsVision } from '../agentSupport'
 
 describe('wechat agentSupport', () => {
   beforeEach(() => {

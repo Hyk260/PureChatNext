@@ -9,7 +9,7 @@ import { FileText, ImageIcon, LayoutPanelTopIcon, Mic2, SquarePlay } from 'lucid
 import type { LucideIcon } from 'lucide-react'
 
 import NavItem from '@/components/NavItem'
-import { FilesTabs } from '@/types/files'
+import { FilesTabs } from '@pure/types'
 
 const CATEGORIES: { icon: LucideIcon; key: FilesTabs; label: string }[] = [
   { icon: LayoutPanelTopIcon, key: FilesTabs.All, label: '全部' },

@@ -2,7 +2,7 @@ import { getJinaReaderBaseUrl } from '@pure/utils'
 
 import type { CrawlImpl } from '../type'
 import { toFetchError } from '../utils/errorType'
-import { parseJSONResponse } from '../utils/response'
+import { parseJSONResponse } from '@pure/utils/http/response'
 import { withTimeout } from '../utils/withTimeout'
 
 const JINA_TIMEOUT = 15_000

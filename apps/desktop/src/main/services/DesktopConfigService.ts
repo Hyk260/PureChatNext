@@ -7,7 +7,7 @@ import { DEFAULT_UPDATE_PREFERENCES, isUpdatePreferences, normalizeUpdatePrefere
 
 import Store from 'electron-store'
 import { isValidProviderId } from '@pure/const'
-import { normalizeLmStudioBaseURL } from '../../common/lmstudio'
+import { normalizeLmStudioBaseURL } from '@/libs/ai-providers/lmstudioBaseUrl'
 
 export interface DesktopProject {
   accessConfirmed: boolean

@@ -16,8 +16,12 @@ import {
   resolveChatTools,
   WEB_SEARCH_SYSTEM_INSTRUCTION,
 } from '@/server/chat/toolRegistry'
-import { assertPureChatCanChat, chargePureChatGenerateUsage, createPureChatLanguageModel } from '@/server/purechat'
-import type { PureChatSettlement } from '@/server/purechat'
+import {
+  assertPureChatCanChat,
+  chargePureChatGenerateUsage,
+  createPureChatLanguageModel,
+} from '@/server/purechat/runtime'
+import type { PureChatSettlement } from '@/server/purechat/runtime'
 import { resolveUserWebTools, WEB_FETCH_INSTRUCTION } from '@/server/search/webTools'
 import { TaskServiceError } from './errors'
 

@@ -8,9 +8,10 @@ import {
   resolvePureChatGatewayId,
 } from '@pure/model-bank'
 
-import { getNextShanghaiResetAt, getShanghaiBillingPeriod } from './period'
+import { getShanghaiBillingPeriod } from '@pure/utils/billingPeriod'
+import { getNextShanghaiResetAt } from './period'
 
-describe('purechat re-exports from model-bank', () => {
+describe('PureChat model catalog', () => {
   it('maps display id ↔ gateway id', () => {
     expect(resolvePureChatGatewayId('gpt-5.4-mini')).toBe('openai/gpt-5.4-mini')
     expect(resolvePureChatDisplayId('anthropic/claude-sonnet-4.6')).toBe('claude-sonnet-4-6')

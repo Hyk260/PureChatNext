@@ -3,7 +3,7 @@ import { ssrfSafeFetch } from '@pure/ssrf-safe-fetch'
 import type { CrawlImpl, CrawlSuccessResult } from '../type'
 import { PageNotFoundError, toFetchError } from '../utils/errorType'
 import { htmlToMarkdown, MAX_HTML_SIZE } from '../utils/htmlToMarkdown'
-import { createHTTPStatusError } from '../utils/response'
+import { createHTTPStatusError } from '@pure/utils/http/response'
 import { DEFAULT_TIMEOUT, withTimeout } from '../utils/withTimeout'
 
 const mixinHeaders = {

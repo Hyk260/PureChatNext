@@ -7,7 +7,14 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createDeepSeek } from '@ai-sdk/deepseek'
 import { PURECHAT_PROVIDER_ID, isValidProviderId } from '@pure/const'
 import type { ModelProviderId } from '@pure/const'
-import { getAiModel } from '@pure/model-bank'
+import {
+  getAiModel,
+  computeChatCost,
+  getEnabledPureChatModel,
+  getPureChatModel,
+  PURECHAT_DEFAULT_MODEL,
+  resolvePureChatGatewayId,
+} from '@pure/model-bank'
 import { loadFile } from '@pure/file-loaders'
 import { CreditsModel, FreePlanLimitError } from '@pure/database/models/credits'
 import { ServiceModelSettingsModel } from '@pure/database/models/serviceModelSettings'
@@ -29,18 +36,10 @@ import { createTimedFetch } from '@/libs/ai-providers/timedFetch'
 import { MISSING_USER_PROVIDER_SECRET_MESSAGE, resolveUserProviderCredentials } from '@/libs/ai-providers/userSecrets'
 import { getAuthenticatedUserId } from '@/libs/auth/get-session-user'
 import { ChatSDKError } from '@/libs/errors'
-import { llmEnv, resolveAiGatewayApiKey, resolveAiGatewayBaseURL } from '@/envs/llm'
+import { llmEnv } from '@/envs/llm'
 import { toolsEnv } from '@/envs/tools'
-import {
-  computeChatCost,
-  getEnabledPureChatModel,
-  getPureChatModel,
-  getShanghaiBillingPeriod,
-  PURECHAT_DEFAULT_MODEL,
-  resolvePureChatGatewayId,
-  assertPureChatCanChat,
-  createPureChatLanguageModel,
-} from '@/server/purechat'
+import { getShanghaiBillingPeriod } from '@pure/utils/billingPeriod'
+import { assertPureChatCanChat, createPureChatLanguageModel } from '@/server/purechat/runtime'
 import {
   getPureChatStreamErrorMessage,
   getPublicGatewayErrorMessage,
@@ -628,7 +627,7 @@ export async function POST(request: Request) {
       return new ChatSDKError('bad_request:api', PURECHAT_MODEL_UNAVAILABLE_MESSAGE).toResponse()
     }
 
-    const gatewayKey = resolveAiGatewayApiKey()
+    const gatewayKey = llmEnv.AI_GATEWAY_API_KEY
     if (!gatewayKey) {
       log('PureChat missing AI_GATEWAY_API_KEY')
       return new ChatSDKError('bad_request:api', 'PureChat temporarily unavailable').toResponse()
@@ -648,7 +647,7 @@ export async function POST(request: Request) {
 
     try {
       const usageStartedAt = Date.now()
-      const resolvedModel = resolveModel(PURECHAT_PROVIDER_ID, displayModel, gatewayKey, resolveAiGatewayBaseURL())
+      const resolvedModel = resolveModel(PURECHAT_PROVIDER_ID, displayModel, gatewayKey, llmEnv.AI_GATEWAY_BASE_URL)
       const configuredCompression = await new ServiceModelSettingsModel().get(userId)
       const compression = await resolveCompressionRuntime({
         request,

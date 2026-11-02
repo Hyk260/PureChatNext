@@ -40,7 +40,7 @@ vi.mock('@/libs/ai-providers/userSecrets', () => ({
 vi.mock('@pure/database/models/userProviderSecret', () => ({
   UserProviderSecretModel: class {},
 }))
-vi.mock('@/server/purechat', () => ({
+vi.mock('@/server/purechat/runtime', () => ({
   assertPureChatCanChat: mocks.assertPureChatCanChat,
   chargePureChatGenerateUsage: mocks.chargePureChatGenerateUsage,
   createPureChatLanguageModel: mocks.createPureChatLanguageModel,

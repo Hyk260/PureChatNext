@@ -36,6 +36,7 @@ tmp/
 .env
 .env.local
 .env*.local
+/scripts/electron/env
 venv/
 .venv/
 

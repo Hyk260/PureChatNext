@@ -28,6 +28,12 @@ const RAW = CODE_LINES.join('\n')
 type Piece = { text: string; change?: 'add' | 'del' }
 type Row = { old: number | null; cur: number | null; type: 'ctx' | 'add' | 'del'; pieces: Piece[] }
 
+const DIFF_ROW_STYLES = {
+  add: { background: 'bg-green-tint', number: 'text-green' },
+  del: { background: 'bg-red-tint', number: 'text-red' },
+  ctx: { background: '', number: 'text-ink-3' },
+}
+
 const DIFF: Row[] = [
   { old: 1, cur: 1, type: 'ctx', pieces: [{ text: 'export async function churnBatch() {' }] },
   { old: 2, cur: 2, type: 'ctx', pieces: [{ text: '  const flavor = await getFlavor("pistachio");' }] },
@@ -311,13 +317,14 @@ export default function CodeBlock({
             {DIFF.map((r, i) => {
               const add = r.type === 'add'
               const del = r.type === 'del'
+              const rowStyle = DIFF_ROW_STYLES[r.type]
               // one gutter column: removals keep the old number, additions/context show the new one
               const num = del ? r.old : r.cur
               return (
                 <div
                   key={i}
                   className={`relative grid grid-cols-[20px_minmax(0,1fr)] items-start
-                    ${add ? 'bg-green-tint' : del ? 'bg-red-tint' : ''}`}
+                    ${rowStyle.background}`}
                 >
                   {(add || del) && (
                     <span
@@ -326,7 +333,7 @@ export default function CodeBlock({
                     />
                   )}
                   <span
-                    className={`select-none text-center text-[11px] ${add ? 'text-green' : del ? 'text-red' : 'text-ink-3'}`}
+                    className={`select-none text-center text-[11px] ${rowStyle.number}`}
                   >
                     {num ?? ''}
                   </span>

@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { open, readFile, readdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
@@ -14,7 +15,7 @@ async function getUpdateLogFiles(logDir: string) {
   try {
     entries = await readdir(logDir, { withFileTypes: true })
   } catch (error) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') return []
+    if (isObjectLike(error) && 'code' in error && error.code === 'ENOENT') return []
     throw error
   }
   return entries.filter((entry) => entry.isFile() && LOG_FILENAME.test(entry.name))

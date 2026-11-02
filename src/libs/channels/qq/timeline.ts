@@ -1,3 +1,4 @@
+import { buildManualTimelineMessage } from '../core/timeline'
 import { isObjectLike } from '@pure/utils/object'
 import type { ChannelTimelineEvent } from '@pure/database/models/channelEvent'
 
@@ -130,20 +131,8 @@ export function expandQQEventsToMessages(
   const includeRemoteUrls = options?.includeRemoteUrls ?? true
   for (const event of events) {
     if (event.messageKind === 'outbound') {
-      const outputAttachments = mapOutputAttachments(event)
-      const text = event.responseText?.trim() || ''
-      if (!text && outputAttachments.length === 0) continue
-      messages.push({
-        ...(outputAttachments.length ? { attachments: outputAttachments } : {}),
-        createdAt: (event.completedAt ?? event.createdAt).toISOString(),
-        eventId: event.id,
-        id: `${event.id}:assistant`,
-        messageKind: event.messageKind,
-        role: 'assistant',
-        source: 'manual',
-        status: event.status,
-        text: text || '[附件]',
-      })
+      const message = buildManualTimelineMessage(event, mapOutputAttachments(event))
+      if (message) messages.push(message)
       continue
     }
 
@@ -156,7 +145,8 @@ export function expandQQEventsToMessages(
     const firstFile = attachments.find(({ fileName }) =>
       !(fileName || '').match(/\.(jpe?g|png|gif|webp|bmp)$/i)
     )
-    const isImage = event.messageKind === 'image'
+    const imageAttachment = event.messageKind === 'image' ? firstImage : undefined
+    const primaryAttachment = imageAttachment ?? firstFile
 
     messages.push({
       ...(attachments.length ? { attachments } : {}),
@@ -164,20 +154,12 @@ export function expandQQEventsToMessages(
       ...(authorName ? { authorName } : {}),
       createdAt: event.createdAt.toISOString(),
       eventId: event.id,
-      ...(isImage && firstImage
-        ? {
-            fileName: firstImage.fileName,
-            fileSize: firstImage.fileSize,
-            fileUrl: firstImage.fileUrl,
-            imageUrl: firstImage.fileUrl,
-          }
-        : firstFile
-          ? {
-              fileName: firstFile.fileName,
-              fileSize: firstFile.fileSize,
-              fileUrl: firstFile.fileUrl,
-            }
-          : {}),
+      ...(primaryAttachment ? {
+        fileName: primaryAttachment.fileName,
+        fileSize: primaryAttachment.fileSize,
+        fileUrl: primaryAttachment.fileUrl,
+      } : {}),
+      ...(imageAttachment ? { imageUrl: imageAttachment.fileUrl } : {}),
       id: `${event.id}:user`,
       messageKind: event.messageKind,
       role: 'user',

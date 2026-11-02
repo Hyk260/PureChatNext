@@ -12,8 +12,9 @@ export function compileBlacklistRule(rule: string): RegExp {
   const [, rawScheme, rawHost, path] = match
   const scheme = rawScheme.toLowerCase()
   const host = rawHost.toLowerCase()
-  const hostPattern =
-    host === '*' ? '[^/]+' : host.startsWith('*.') ? `(?:[^/]+\\.)?${escapeRegex(host.slice(2))}` : escapeRegex(host)
+  let hostPattern = escapeRegex(host)
+  if (host === '*') hostPattern = '[^/]+'
+  else if (host.startsWith('*.')) hostPattern = `(?:[^/]+\\.)?${escapeRegex(host.slice(2))}`
   return new RegExp(
     `^${scheme === '*' ? 'https?' : scheme}://${hostPattern}(?::[0-9]+)?${escapeRegex(path).replaceAll('*', '.*')}$`
   )

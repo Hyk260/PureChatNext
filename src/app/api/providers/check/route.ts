@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { isValidProviderId } from '@pure/const'
 import { generateText } from 'ai'
 import debug from 'debug'
@@ -88,7 +89,7 @@ const getErrorValues = (error: unknown) => {
 
 const getStatusCode = (error: unknown) => {
   for (const value of getErrorValues(error)) {
-    if (!value || typeof value !== 'object') continue
+    if (!isObjectLike(value)) continue
     const candidate = value as { status?: unknown; statusCode?: unknown }
     const status = candidate.status ?? candidate.statusCode
     if (typeof status === 'number') return status

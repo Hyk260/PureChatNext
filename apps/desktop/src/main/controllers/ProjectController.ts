@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { execFile, spawn } from 'node:child_process'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
@@ -175,7 +176,7 @@ export class ProjectController {
   }
 
   async createProject(input: unknown) {
-    if (!input || typeof input !== 'object') throw new Error('项目参数无效')
+    if (!isObjectLike(input)) throw new Error('项目参数无效')
     const projectInput = input as { name?: unknown; rootPath?: unknown }
     const name = typeof projectInput.name === 'string' ? projectInput.name.trim() : ''
     const rootPath = typeof projectInput.rootPath === 'string' ? projectInput.rootPath.trim() : ''
@@ -190,7 +191,7 @@ export class ProjectController {
   }
 
   private async resolveProjectContext(input: { projectId: string; relativePath?: string }) {
-    if (!input || typeof input !== 'object') throw new Error('项目参数无效')
+    if (!isObjectLike(input)) throw new Error('项目参数无效')
     const projectId = typeof input.projectId === 'string' ? input.projectId.trim() : ''
     if (!projectId || projectId.length > 80) throw new Error('项目标识无效')
 

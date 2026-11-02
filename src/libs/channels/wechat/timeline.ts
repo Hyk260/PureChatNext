@@ -1,3 +1,4 @@
+import { buildManualTimelineMessage } from '../core/timeline'
 import type { ChannelTimelineEvent } from '@pure/database/models/channelEvent'
 
 import { parseWechatFileContent } from './inboundMedia'
@@ -65,20 +66,8 @@ export function expandEventsToMessages(
   const mediaRouteBase = options?.mediaRouteBase ?? '/api/admin/wechat/events'
   for (const event of events) {
     if (event.messageKind === 'outbound') {
-      const outputAttachments = mapOutputAttachments(event)
-      const text = event.responseText?.trim() || ''
-      if (!text && outputAttachments.length === 0) continue
-      messages.push({
-        ...(outputAttachments.length ? { attachments: outputAttachments } : {}),
-        createdAt: (event.completedAt ?? event.createdAt).toISOString(),
-        eventId: event.id,
-        id: `${event.id}:assistant`,
-        messageKind: event.messageKind,
-        role: 'assistant',
-        source: 'manual',
-        status: event.status,
-        text: text || '[附件]',
-      })
+      const message = buildManualTimelineMessage(event, mapOutputAttachments(event))
+      if (message) messages.push(message)
       continue
     }
 

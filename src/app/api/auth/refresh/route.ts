@@ -4,17 +4,11 @@ import { RefreshTokenFamilyModel } from '@pure/database/models/refreshTokenFamil
 import { verifyRefreshToken, signAccessToken, signRefreshToken } from '@/libs/auth/jwt'
 import { UserModel } from '@pure/database/models/user'
 import { isUserCurrentlyBanned } from '@/libs/auth/user-status'
-import { authEnv } from '@/envs/auth'
+import { ACCESS_TOKEN_EXPIRES_IN } from '@/libs/auth/accessTokenExpiry'
 import { getRefreshTokenCookie, setRefreshTokenCookie } from '@/libs/auth/refreshTokenCookie'
 import debug from 'debug'
 
 const log = debug('refresh-token')
-
-const expiresIn = (() => {
-  const match = authEnv.JWT_ACCESS_EXPIRATION.match(/^(\d+)([smhd])$/i)
-  if (!match) return 900
-  return Number(match[1]) * { d: 86_400, h: 3_600, m: 60, s: 1 }[match[2].toLowerCase() as 'd' | 'h' | 'm' | 's']
-})()
 
 /**
  * 刷新 Token 接口
@@ -71,7 +65,7 @@ export async function POST(request: NextRequest) {
         code: 200,
         data: {
           accessToken,
-          expiresIn,
+          expiresIn: ACCESS_TOKEN_EXPIRES_IN,
           refreshToken: nextRefresh.token,
         },
       },

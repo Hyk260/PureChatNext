@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
@@ -33,7 +34,7 @@ function toFeed(source: DesktopUpdateSource): UpdateFeed {
 }
 
 function getUpdateErrorMessage(error: unknown, status: DesktopUpdateState['status']) {
-  const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : ''
+  const code = isObjectLike(error) && 'code' in error ? String(error.code) : ''
   const message = error instanceof Error ? error.message : String(error)
   if (/code signature|code requirement|signature_invalid|invalid_signature/i.test(`${code} ${message}`)) {
     return '更新包签名校验未通过。请手动安装正式签名版本后再尝试自动更新。'
@@ -337,7 +338,7 @@ export class UpdateService {
       try {
         result = await this.updater.checkForUpdates()
       } catch (error) {
-        const code = error && typeof error === 'object' && 'code' in error ? error.code : null
+        const code = isObjectLike(error) && 'code' in error ? error.code : null
         const requestedChannel = getUpdateChannel(this.state.preferences)
         const source = this.state.effectiveSource
         const shouldFallbackToStable =

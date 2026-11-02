@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { waitUntil } from '@vercel/functions'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
@@ -84,7 +85,7 @@ async function readQQWebhookBody(
     const payload: unknown = JSON.parse(bodyText)
     return {
       bodyText,
-      payload: payload && typeof payload === 'object' ? (payload as QQWebhookProbe) : null,
+      payload: isObjectLike(payload) ? (payload as QQWebhookProbe) : null,
     }
   } catch {
     return { bodyText, payload: null }

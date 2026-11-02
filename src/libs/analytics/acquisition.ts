@@ -1,3 +1,4 @@
+import { isRecord } from '@pure/utils/object'
 import { track } from '@vercel/analytics'
 import { localStg } from '@pure/utils/storage'
 
@@ -14,7 +15,7 @@ type Attribution = {
 }
 
 const isAttribution = (value: unknown): value is Attribution => {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  if (!isRecord(value)) return false
 
   const attribution = value as Record<string, unknown>
   return (

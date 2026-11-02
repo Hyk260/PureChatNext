@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { getErrorMessage } from '@pure/utils/error'
 import debug from 'debug'
 
@@ -61,7 +62,7 @@ export function serializeReferral(row: Referral): ReferralItem {
 function isAmbiguousSend(error: unknown) {
   const message = getErrorMessage(error, '')
   const cause = error instanceof Error ? error.cause : undefined
-  if (cause && typeof cause === 'object' && 'responseCode' in cause) {
+  if (isObjectLike(cause) && 'responseCode' in cause) {
     const code = Number(cause.responseCode)
     if (code >= 400 && code < 600) return false
   }

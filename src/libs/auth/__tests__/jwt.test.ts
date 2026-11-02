@@ -74,7 +74,7 @@ describe('auth/jwt', () => {
 
   describe('signAccessToken', () => {
     it('signs an access token with configured expiry and purpose', async () => {
-      const { signAccessToken } = await import('./jwt')
+      const { signAccessToken } = await import('../jwt')
 
       const token = await signAccessToken('user-123')
 
@@ -90,7 +90,7 @@ describe('auth/jwt', () => {
     })
 
     it('includes role claim when provided', async () => {
-      const { signAccessToken } = await import('./jwt')
+      const { signAccessToken } = await import('../jwt')
 
       await signAccessToken('user-123', 'admin')
 
@@ -104,7 +104,7 @@ describe('auth/jwt', () => {
 
   describe('signRefreshToken', () => {
     it('signs a refresh token with family claim', async () => {
-      const { signRefreshToken } = await import('./jwt')
+      const { signRefreshToken } = await import('../jwt')
 
       const result = await signRefreshToken('user-123')
 
@@ -133,7 +133,7 @@ describe('auth/jwt', () => {
         },
       })
 
-      const { verifyAccessToken } = await import('./jwt')
+      const { verifyAccessToken } = await import('../jwt')
       const payload = await verifyAccessToken('valid.token')
 
       expect(payload).toEqual({
@@ -153,7 +153,7 @@ describe('auth/jwt', () => {
         },
       })
 
-      const { verifyAccessToken } = await import('./jwt')
+      const { verifyAccessToken } = await import('../jwt')
       const payload = await verifyAccessToken('refresh.token')
 
       expect(payload).toBeNull()
@@ -162,7 +162,7 @@ describe('auth/jwt', () => {
     it('returns null when verification throws', async () => {
       jwtVerifyMock.mockRejectedValue(new Error('invalid token'))
 
-      const { verifyAccessToken } = await import('./jwt')
+      const { verifyAccessToken } = await import('../jwt')
       const payload = await verifyAccessToken('invalid.token')
 
       expect(payload).toBeNull()
@@ -181,7 +181,7 @@ describe('auth/jwt', () => {
         },
       })
 
-      const { verifyRefreshToken } = await import('./jwt')
+      const { verifyRefreshToken } = await import('../jwt')
       const result = await verifyRefreshToken('valid.refresh.token')
 
       expect(result).toEqual({
@@ -206,7 +206,7 @@ describe('auth/jwt', () => {
         },
       })
 
-      const { verifyRefreshToken } = await import('./jwt')
+      const { verifyRefreshToken } = await import('../jwt')
       const result = await verifyRefreshToken('valid.refresh.token')
 
       expect(result).toMatchObject({ valid: true, tokenId: 'token-abc', family: 'family-abc' })
@@ -222,7 +222,7 @@ describe('auth/jwt', () => {
         },
       })
 
-      const { verifyRefreshToken } = await import('./jwt')
+      const { verifyRefreshToken } = await import('../jwt')
       const result = await verifyRefreshToken('access.token')
 
       expect(result).toEqual({
@@ -237,7 +237,7 @@ describe('auth/jwt', () => {
         name: 'JWTExpired',
       })
 
-      const { verifyRefreshToken } = await import('./jwt')
+      const { verifyRefreshToken } = await import('../jwt')
       const result = await verifyRefreshToken('expired.token')
 
       expect(result).toEqual({
@@ -249,7 +249,7 @@ describe('auth/jwt', () => {
     it('returns invalid result for non-expired verification errors', async () => {
       jwtVerifyMock.mockRejectedValue(new Error('bad signature'))
 
-      const { verifyRefreshToken } = await import('./jwt')
+      const { verifyRefreshToken } = await import('../jwt')
       const result = await verifyRefreshToken('bad.token')
 
       expect(result).toEqual({

@@ -1,5 +1,6 @@
 import { MONTHLY_FREE_CREDITS, MIN_RESERVE_CREDITS } from '@pure/const'
 import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or, sql, sum } from 'drizzle-orm'
+import type { SQLWrapper } from 'drizzle-orm'
 import { createNanoId } from '@pure/utils'
 
 import { getServerDB } from '../core/db-adaptor'
@@ -305,14 +306,10 @@ export class CreditsModel {
     }
     const where = and(...filters)
     const totalTokens = sql<number>`coalesce(${creditLedger.inputTokens}, 0) + coalesce(${creditLedger.outputTokens}, 0)`
-    const sortColumn =
-      query.sortBy === 'credits'
-        ? creditLedger.credits
-        : query.sortBy === 'durationMs'
-          ? creditLedger.durationMs
-          : query.sortBy === 'totalTokens'
-            ? totalTokens
-            : creditLedger.createdAt
+    let sortColumn: SQLWrapper = creditLedger.createdAt
+    if (query.sortBy === 'credits') sortColumn = creditLedger.credits
+    else if (query.sortBy === 'durationMs') sortColumn = creditLedger.durationMs
+    else if (query.sortBy === 'totalTokens') sortColumn = totalTokens
     const orderBy = query.sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn)
     const [items, [summary], modelRows] = await Promise.all([
       this.db

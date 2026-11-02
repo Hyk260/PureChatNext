@@ -1,6 +1,8 @@
 'use client'
 
-import { isRecord } from '@pure/utils/object'
+import { isBoolean, isNumber, isString } from 'es-toolkit'
+
+import { isRecord, matchesShape } from '@pure/utils/object'
 import { createStaticStyles, cssVar, cx } from '@lobehub/ui'
 import { CircleAlert, CircleCheck, LoaderCircle } from 'lucide-react'
 import type { UIMessage } from 'ai'
@@ -78,24 +80,20 @@ export type CommandExecutionPart = UIMessage['parts'][number] & {
 export const isCommandExecutionPart = (part: UIMessage['parts'][number]): part is CommandExecutionPart =>
   part.type === 'tool-runCommand'
 
+const isExecutionStatus = (value: unknown): value is DesktopCommandExecution['status'] =>
+  value === 'cancelled' || value === 'completed' || value === 'failed' || value === 'timedOut'
+const isNullableNumber = (value: unknown): value is number | null => value === null || isNumber(value)
+const isNullableString = (value: unknown): value is string | null => value === null || isString(value)
+const isExecution = matchesShape({
+  command: isString, cwd: isString, durationMs: isNumber, exitCode: isNullableNumber,
+  output: isString, shellId: isString, signal: isNullableString, startedAt: isNumber,
+  status: isExecutionStatus, truncated: isBoolean,
+})
+
 const getExecution = (output: unknown): DesktopCommandExecution | undefined => {
   if (!isRecord(output) || !isRecord(output.execution)) return undefined
   const execution = output.execution
-  const status = execution.status
-  if (
-    typeof execution.command !== 'string' ||
-    typeof execution.cwd !== 'string' ||
-    typeof execution.durationMs !== 'number' ||
-    !(typeof execution.exitCode === 'number' || execution.exitCode === null) ||
-    typeof execution.output !== 'string' ||
-    typeof execution.shellId !== 'string' ||
-    !(typeof execution.signal === 'string' || execution.signal === null) ||
-    typeof execution.startedAt !== 'number' ||
-    !(status === 'cancelled' || status === 'completed' || status === 'failed' || status === 'timedOut') ||
-    typeof execution.truncated !== 'boolean'
-  ) {
-    return undefined
-  }
+  if (!isExecution(execution)) return undefined
 
   return {
     command: execution.command,
@@ -106,7 +104,7 @@ const getExecution = (output: unknown): DesktopCommandExecution | undefined => {
     shellId: execution.shellId,
     signal: execution.signal,
     startedAt: execution.startedAt,
-    status,
+    status: execution.status,
     truncated: execution.truncated,
   }
 }

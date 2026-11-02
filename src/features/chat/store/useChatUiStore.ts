@@ -1,5 +1,7 @@
 'use client'
 
+import { isObjectLike } from '@pure/utils/object'
+
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
@@ -175,7 +177,7 @@ export const useChatUiStore = create<ChatUiState>()(
         } = state
         const advancedSettingsByAgent: Record<string, ChatAdvancedSettings> = {}
         const storedSettings = rest.advancedSettingsByAgent
-        if (storedSettings && typeof storedSettings === 'object') {
+        if (isObjectLike(storedSettings)) {
           for (const [key, value] of Object.entries(storedSettings)) {
             const parsed = chatAdvancedSettingsSchema.safeParse(value)
             if (parsed.success) advancedSettingsByAgent[key] = parsed.data

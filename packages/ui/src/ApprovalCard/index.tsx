@@ -706,7 +706,8 @@ export function ApprovalCard({
               />
             </button>
           </div>
-        ) : variant === "plan" && autoUI !== "gone" ? (
+        ) : null}
+        {variant === "plan" && autoUI !== "gone" ? (
           <div
             className={`${styles.autoApprove}${
               autoUI === "leaving" ? ` ${styles.autoApproveOut}` : ""

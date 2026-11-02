@@ -1,5 +1,7 @@
 'use client'
 
+import { isObjectLike } from '@pure/utils/object'
+
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
@@ -115,7 +117,7 @@ export const useHomeStore = create<HomeStoreState>()(
     }),
     {
       migrate: (persistedState, version) => {
-        if (!persistedState || typeof persistedState !== 'object') return persistedState
+        if (!isObjectLike(persistedState)) return persistedState
 
         const state = persistedState as Partial<HomeStoreState>
 

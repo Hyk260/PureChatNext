@@ -36,7 +36,7 @@ export const IS_VERCEL = parseEnvBoolean(process.env.VERCEL)
 
 const vercelUrl = `https://${process.env.VERCEL_URL}`
 
-const APP_URL = process.env.APP_URL ? process.env.APP_URL : IS_VERCEL ? vercelUrl : undefined
+const APP_URL = process.env.APP_URL || (IS_VERCEL ? vercelUrl : undefined)
 
 export const getAppConfig = () => {
   return createEnv({

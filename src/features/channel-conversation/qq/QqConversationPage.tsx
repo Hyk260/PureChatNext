@@ -1,5 +1,7 @@
 'use client'
 
+import { ConversationBanner } from '../ConversationShared'
+
 import { getErrorMessage } from '@pure/utils/error'
 
 import { Button } from '@lobehub/ui'
@@ -309,19 +311,7 @@ export default function QqConversationPage({ mode = 'admin' }: { mode?: 'admin' 
 
   return (
     <ChannelConversationShell
-      banner={
-        !readOnly && selectedSession?.lastError ? (
-          <div className='border-t border-border bg-amber-500/10 px-4 py-2 text-xs text-amber-800 dark:text-amber-200 sm:px-6'>
-            <span className='font-medium'>{selectedSession.lastError.code}</span>
-            <span className='mx-1.5 opacity-50'>·</span>
-            {selectedSession.lastError.message}
-          </div>
-        ) : readOnly ? (
-          <div className='border-t border-border px-4 py-2 text-xs text-muted-foreground sm:px-6'>
-            仅显示当前账号绑定的 QQ 对话记录
-          </div>
-        ) : null
-      }
+      banner={<ConversationBanner readOnly={readOnly} readOnlyText='仅显示当前账号绑定的 QQ 对话记录' error={selectedSession?.lastError} />}
       connected={readOnly || !selectedSession ? undefined : Boolean(selectedSession.connected)}
       sessionCount={sessions.length}
       sidebar={(onSessionSelected) => (

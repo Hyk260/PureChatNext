@@ -1,4 +1,5 @@
-import { isRecord } from '@pure/utils/object'
+import { isNumber, isString } from 'es-toolkit'
+import { isRecord, matchesShape } from '@pure/utils/object'
 import { localStg } from '@pure/utils/storage'
 
 import {
@@ -61,15 +62,11 @@ const parseValues = (value: unknown): EmailFormValues => {
   }
 }
 
+const isRunState = matchesShape({ durationMs: isNumber, status: isNumber, submittedAt: isString })
+const isRenderedTemplate = matchesShape({ html: isString, subject: isString, text: isString })
+
 const parseRunState = (value: unknown): RunState | null => {
-  if (
-    !isRecord(value) ||
-    typeof value.durationMs !== 'number' ||
-    typeof value.status !== 'number' ||
-    typeof value.submittedAt !== 'string'
-  ) {
-    return null
-  }
+  if (!isRecord(value) || !isRunState(value)) return null
 
   return { durationMs: value.durationMs, status: value.status, submittedAt: value.submittedAt }
 }
@@ -86,14 +83,7 @@ const parsePayload = (value: unknown): ApiSuccess | null => {
 }
 
 const parseRenderedTemplate = (value: unknown): RenderedEmailTemplate | null => {
-  if (
-    !isRecord(value) ||
-    typeof value.html !== 'string' ||
-    typeof value.subject !== 'string' ||
-    typeof value.text !== 'string'
-  ) {
-    return null
-  }
+  if (!isRecord(value) || !isRenderedTemplate(value)) return null
   return { html: value.html, subject: value.subject, text: value.text }
 }
 

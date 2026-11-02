@@ -714,7 +714,8 @@ function AIAgentInputInstance({
               <span aria-label='正在增强提示词' className={`${styles.iconBtn} ${styles.spinnerBtn}`}>
                 <LoaderCircle aria-hidden className={`${styles.spinner} size-3.5`} />
               </span>
-            ) : hasText && !pending ? (
+            ) : null}
+            {!enhancing && hasText && !pending ? (
               <button
                 className={styles.pill}
                 onClick={enhancePhase === 'enhanced' ? revertPrompt : enhancePrompt}

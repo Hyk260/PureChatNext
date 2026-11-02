@@ -1,3 +1,4 @@
+import { isRecord } from '@pure/utils/object'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -10,7 +11,7 @@ import { decryptCredentials, encryptCredentials, invalidateQQChat, normalizeQQCh
 import type { QQConnectionMode } from '@/libs/channels/qq'
 import { isQQProviderId, qqChannelByokUnavailableReason, validateQQModel } from '@/libs/channels/qq/agentSupport'
 import type { QQProviderId } from '@/libs/channels/qq/agentSupport'
-import { parseQQChannelSettingsInput } from '@/libs/channels/qq/advancedSettings'
+import { isQQSpeechModelFields, parseQQChannelSettingsInput } from '@/libs/channels/qq/advancedSettings'
 import { bindQQCredentials, QQBindingError } from '@/libs/channels/qq/binding'
 import { gatewayEnv } from '@/envs/gateway'
 import { cancelQQQrSessionsForUser } from '@/libs/channels/qq/qrSession'
@@ -165,18 +166,10 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     ) {
       return jsonError('speechModel cannot be combined with other configuration fields', 400)
     }
-    if (
-      !body.speechModel ||
-      typeof body.speechModel !== 'object' ||
-      Array.isArray(body.speechModel) ||
-      !('provider' in body.speechModel) ||
-      !('model' in body.speechModel) ||
-      typeof body.speechModel.provider !== 'string' ||
-      typeof body.speechModel.model !== 'string'
-    ) {
+    if (!isRecord(body.speechModel) || !isQQSpeechModelFields(body.speechModel)) {
       return jsonError('speechModel must include provider and model', 400)
     }
-    const speechModelInput = body.speechModel as Record<string, unknown>
+    const speechModelInput = body.speechModel
     const speechVoice = speechModelInput.voice
     const replyMode = speechModelInput.replyMode
     const speechInstruction = speechModelInput.instruction
@@ -240,7 +233,7 @@ export const PATCH = withAuth(async (request: NextRequest, { userId }) => {
     if (hasChannelConfigFields) {
       return jsonError('settings cannot be combined with agentId/connectionMode/model/provider', 400)
     }
-    if (!body.settings || typeof body.settings !== 'object' || Array.isArray(body.settings)) {
+    if (!isRecord(body.settings)) {
       return jsonError('settings must be an object', 400)
     }
     const existingSettings = normalizeQQChannelSettings(existing.settings)

@@ -329,11 +329,12 @@ const MessengerWeChatPage = memo(() => {
       <Button icon={<MessagesSquareIcon size={16} />} onClick={() => navigate('/settings/wechat-conversation')}>
         对话记录
       </Button>
-      {gatewaySupported
-        ? showConnect
-          ? <QrCodeAuth disabled={binding} onAuthenticated={(c) => handleAuthenticated(c)} />
-          : <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>断开</Button>
-        : null}
+      {gatewaySupported && showConnect ? (
+        <QrCodeAuth disabled={binding} onAuthenticated={handleAuthenticated} />
+      ) : null}
+      {gatewaySupported && !showConnect ? (
+        <Button danger disabled={binding} icon={<Trash2Icon size={16} />} onClick={handleDisconnect}>断开</Button>
+      ) : null}
     </Flex>
   )
 

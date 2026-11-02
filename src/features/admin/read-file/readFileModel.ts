@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { COPY_LABEL as COMMON_COPY_LABEL } from '../shared/diagnosticState'
 import { downloadBlob } from '@pure/utils/client'
 import type { CopyState, SummaryItem, RunState as DiagnosticRunState } from '../shared/diagnosticState'
@@ -72,7 +73,7 @@ export const createSampleFile = (): File =>
   new File([EXAMPLE_MARKDOWN], 'read-file-sample.md', { type: 'text/markdown' })
 
 export const readApiError = (payload: unknown, status: number): string => {
-  if (payload && typeof payload === 'object' && 'error' in payload) {
+  if (isObjectLike(payload) && 'error' in payload) {
     const message = (payload as ApiError).error
     if (message) return message
   }

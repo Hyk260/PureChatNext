@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { getErrorMessage } from '@pure/utils/error'
 import { writeFile, unlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -122,7 +123,7 @@ const hasValidMessageParts = (value: unknown, advanced: boolean): value is UIMes
 
   let totalParts = 0
   for (const item of value) {
-    if (!item || typeof item !== 'object') return false
+    if (!isObjectLike(item)) return false
     const parts = (item as { parts?: unknown }).parts
     if (!Array.isArray(parts) || parts.length > MAX_CHAT_MESSAGE_PARTS) return false
     totalParts += parts.length
@@ -211,7 +212,7 @@ const resolveModel = (
 
 const isInvalidClientCapabilities = (value: unknown) => {
   if (value === undefined) return false
-  if (!value || typeof value !== 'object') return true
+  if (!isObjectLike(value)) return true
   const desktop = (value as { desktop?: unknown }).desktop
   return desktop !== undefined && typeof desktop !== 'boolean'
 }
@@ -234,7 +235,7 @@ const createDesktopToolApproval = (context: {
   return async ({ toolCall }: { toolCall: ToolApprovalCall }) => {
     if (Object.hasOwn(desktopTools, toolCall.toolName)) return undefined
 
-    const input = toolCall.input && typeof toolCall.input === 'object' ? toolCall.input : undefined
+    const input = isObjectLike(toolCall.input) ? toolCall.input : undefined
     const identifier = resolveToolIdentifier(toolCall.toolName)
 
     if (requestUserId && topicId && toolCall.toolCallId && input) {

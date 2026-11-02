@@ -5,16 +5,10 @@ import { UserModel } from '@pure/database/models/user'
 import { NextResponse } from 'next/server'
 
 import { DESKTOP_AUTH_CLIENT_ID, DESKTOP_AUTH_REDIRECT_URI } from '@/const/desktopAuth'
-import { authEnv } from '@/envs/auth'
+import { ACCESS_TOKEN_EXPIRES_IN } from '@/libs/auth/accessTokenExpiry'
 import { signAccessToken } from '@/libs/auth/jwt'
 import { issueRefreshToken } from '@/libs/auth/refreshTokenStore'
 import { isUserCurrentlyBanned } from '@/libs/auth/user-status'
-
-const ACCESS_TOKEN_EXPIRES_IN = (() => {
-  const match = authEnv.JWT_ACCESS_EXPIRATION.match(/^(\d+)([smhd])$/i)
-  if (!match) return 900
-  return Number(match[1]) * { d: 86_400, h: 3_600, m: 60, s: 1 }[match[2].toLowerCase() as 'd' | 'h' | 'm' | 's']
-})()
 
 const constantTimeEqual = (left: string, right: string) => {
   const leftBuffer = Buffer.from(left)

@@ -7,12 +7,18 @@ import { SITE_DEFAULT_URL } from '@/const/site'
 /** Resolve the canonical origin from the serving deployment at request time. */
 export const dynamic = 'force-dynamic'
 
+const getPriority = (pathname: string) => {
+  if (pathname.startsWith('/community/')) return 0.8
+  if (pathname === '/help') return 0.7
+  return 0.4
+}
+
 const sitemap = (): MetadataRoute.Sitemap => {
   const siteUrl = new URL(appEnv.SITE_CANONICAL_URL ?? appEnv.APP_URL ?? SITE_DEFAULT_URL)
 
   return PUBLIC_SPA_PATHS.map((pathname) => ({
     changeFrequency: pathname.startsWith('/community/') ? 'weekly' : 'monthly',
-    priority: pathname.startsWith('/community/') ? 0.8 : pathname === '/help' ? 0.7 : 0.4,
+    priority: getPriority(pathname),
     url: new URL(pathname, siteUrl).toString(),
   }))
 }

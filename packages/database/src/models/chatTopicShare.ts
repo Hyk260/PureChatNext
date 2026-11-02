@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { and, asc, eq } from 'drizzle-orm'
 import type { UIMessage } from 'ai'
 
@@ -9,7 +10,7 @@ const toPublicUIMessage = (row: typeof chatMessages.$inferSelect): UIMessage | u
   const partsText = Array.isArray(row.parts)
     ? row.parts
         .map((part) => {
-          if (!part || typeof part !== 'object' || !('type' in part) || !('text' in part)) return ''
+          if (!isObjectLike(part) || !('type' in part) || !('text' in part)) return ''
           return part.type === 'text' && typeof part.text === 'string' ? part.text : ''
         })
         .join('')

@@ -95,16 +95,15 @@ export const ssrfSafeFetch = async (
     } as any)
 
     const cap = ssrfOptions?.maxContentLength
-    const body: BodyInit | null =
-      ssrfOptions?.streamResponse
-        ? response.body
-          ? Readable.toWeb(response.body as unknown as Readable) as ReadableStream<Uint8Array>
-          : null
-        : cap && cap > 0
-        ? // Buffer is a Uint8Array subclass; the Response constructor accepts it at
-          // runtime even though the BodyInit lib type doesn't list Uint8Array.
-          ((await readBodyWithCap(response.body as NodeJS.ReadableStream | null, cap)) as any)
-        : await response.arrayBuffer()
+    let body: BodyInit | null
+    if (ssrfOptions?.streamResponse) {
+      body = response.body ? Readable.toWeb(response.body as unknown as Readable) as ReadableStream<Uint8Array> : null
+    } else if (cap && cap > 0) {
+      // Buffer is accepted at runtime but is missing from the BodyInit lib type.
+      body = (await readBodyWithCap(response.body as NodeJS.ReadableStream | null, cap)) as any
+    } else {
+      body = await response.arrayBuffer()
+    }
 
     // Convert node-fetch Response to standard Response
     return new Response([204, 205, 304].includes(response.status) ? null : body, {

@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { sessionStg } from '@pure/utils/storage'
 
 export const SPA_UPDATE_DISMISS_KEY = 'spa-update-dismissed-build-time'
@@ -28,7 +29,7 @@ export async function fetchRemoteSpaBuildTime(fetcher: typeof fetch = fetch): Pr
     const res = await fetcher('/api/version', { cache: 'no-store', signal: AbortSignal.timeout(10_000) })
     if (!res.ok) return null
     const data: unknown = await res.json()
-    if (!data || typeof data !== 'object' || !('buildTime' in data)) return null
+    if (!isObjectLike(data) || !('buildTime' in data)) return null
     return typeof data.buildTime === 'string' && data.buildTime.length > 0 ? data.buildTime : null
   } catch {
     return null

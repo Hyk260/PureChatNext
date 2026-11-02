@@ -166,20 +166,19 @@ function ensureDockerReady() {
 
   const output = `${result.stderr ?? ''}\n${result.stdout ?? ''}`.trim()
   if (isDockerDaemonDown(output)) {
-    const steps =
-      process.platform === 'darwin'
-        ? [
-            '  1. 打开 Docker Desktop（启动台 / 应用程序）',
-            '  2. 等待菜单栏鲸鱼图标变为 Running（引擎已启动）',
-            '  3. 再执行：pnpm run dev:docker',
-          ]
-        : process.platform === 'win32'
-          ? ['  1. 打开 Docker Desktop', '  2. 等待托盘图标显示 Running', '  3. 再执行：pnpm run dev:docker']
-          : [
-              '  1. 启动 Docker 服务，例如：sudo systemctl start docker',
-              '  2. 确认当前用户已加入 docker 组（或使用有权限的方式）',
-              '  3. 再执行：pnpm run dev:docker',
-            ]
+    const platformSteps: Partial<Record<NodeJS.Platform, string[]>> = {
+      darwin: [
+        '  1. 打开 Docker Desktop（启动台 / 应用程序）',
+        '  2. 等待菜单栏鲸鱼图标变为 Running（引擎已启动）',
+        '  3. 再执行：pnpm run dev:docker',
+      ],
+      win32: ['  1. 打开 Docker Desktop', '  2. 等待托盘图标显示 Running', '  3. 再执行：pnpm run dev:docker'],
+    }
+    const steps = platformSteps[process.platform] ?? [
+      '  1. 启动 Docker 服务，例如：sudo systemctl start docker',
+      '  2. 确认当前用户已加入 docker 组（或使用有权限的方式）',
+      '  3. 再执行：pnpm run dev:docker',
+    ]
 
     throw new Error(
       [

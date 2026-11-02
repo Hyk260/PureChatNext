@@ -17,9 +17,14 @@ export interface PureChatMarkProps {
   variant?: PureChatMarkVariant
 }
 
+const MARK_COLORS = {
+  color: { stroke: BRAND_STROKE, dot: BRAND_DOT },
+  mono: { stroke: 'currentColor', dot: 'currentColor' },
+  'on-dark': { stroke: ON_DARK_STROKE, dot: ON_DARK_DOT },
+}
+
 const PureChatMark = memo<PureChatMarkProps>(({ className, size = 12, style, variant = 'color' }) => {
-  const stroke = variant === 'mono' ? 'currentColor' : variant === 'on-dark' ? ON_DARK_STROKE : BRAND_STROKE
-  const dot = variant === 'mono' ? 'currentColor' : variant === 'on-dark' ? ON_DARK_DOT : BRAND_DOT
+  const { stroke, dot } = MARK_COLORS[variant] ?? MARK_COLORS.color
 
   return (
     <svg

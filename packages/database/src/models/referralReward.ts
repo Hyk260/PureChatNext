@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { randomInt } from 'node:crypto'
 import { REFERRAL_REWARD_CREDITS } from '@pure/const'
 import { createNanoId, getShanghaiBillingPeriod } from '@pure/utils'
@@ -17,7 +18,7 @@ const ledgerId = createNanoId(21)
 const inviterScope = (userId: string) => sql`${users.signupReferral}->>'inviterId' = ${userId}`
 
 function isUniqueViolation(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false
+  if (!isObjectLike(error)) return false
   if ('code' in error && error.code === '23505') return true
   return 'cause' in error && isUniqueViolation(error.cause)
 }

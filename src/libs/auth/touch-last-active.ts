@@ -27,9 +27,10 @@ export function touchUserLastActive(userId: string, deviceInfo?: UserDeviceInfo 
   const deviceChanged = Boolean(deviceInfoKey && deviceInfoKey !== prev?.deviceInfoKey)
   if (prev && now - prev.touchedAt < LAST_ACTIVE_TOUCH_INTERVAL_MS && !deviceChanged) return
 
+  const retainedDeviceInfoKey = deviceInfoKey || prev?.deviceInfoKey
   lastTouchByUser.set(userId, {
     touchedAt: now,
-    ...(deviceInfoKey ? { deviceInfoKey } : prev?.deviceInfoKey ? { deviceInfoKey: prev.deviceInfoKey } : {}),
+    ...(retainedDeviceInfoKey ? { deviceInfoKey: retainedDeviceInfoKey } : {}),
   })
 
   const userModel = new UserModel()

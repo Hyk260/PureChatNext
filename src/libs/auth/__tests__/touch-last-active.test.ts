@@ -17,7 +17,7 @@ vi.mock('@pure/database/models/user', () => ({
   },
 }))
 
-import { LAST_ACTIVE_TOUCH_INTERVAL_MS, resetTouchLastActiveForTests, touchUserLastActive } from './touch-last-active'
+import { LAST_ACTIVE_TOUCH_INTERVAL_MS, resetTouchLastActiveForTests, touchUserLastActive } from '../touch-last-active'
 
 describe('touchUserLastActive', () => {
   beforeEach(() => {

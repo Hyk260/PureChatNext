@@ -1,3 +1,4 @@
+import { postSearchRequest } from '../request'
 import type { SearchParams, UniformSearchResponse, UniformSearchResult } from '@pure/types'
 import debug from 'debug'
 import urlJoin from 'url-join'
@@ -50,25 +51,7 @@ export class BochaImpl implements SearchServiceImpl {
 
     log('Constructed request body: %o', body)
 
-    let response: Response
-    const startAt = Date.now()
-    let costTime: number
-    try {
-      log('Sending request to endpoint: %s', endpoint)
-      response = await (this.options.fetch ?? fetch)(endpoint, {
-        body: JSON.stringify(body),
-        headers: {
-          Authorization: this.apiKey ? `Bearer ${this.apiKey}` : '',
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      })
-      log('Received response with status: %d', response.status)
-      costTime = Date.now() - startAt
-    } catch (error) {
-      log.extend('error')('Bocha fetch error: %o', error)
-      throw new Error('Failed to connect to Bocha.', { cause: error })
-    }
+    const { response, costTime } = await postSearchRequest(endpoint, body, this.apiKey, this.options, 'Bocha', log)
 
     if (!response.ok) {
       const errorBody = await response.text()

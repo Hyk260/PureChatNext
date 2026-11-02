@@ -13,6 +13,26 @@ import SendButton from '@/features/chat/SendArea/SendButton'
 import { READ_FILE_API_PATH } from '@/features/admin/read-file/readFileModel'
 import { apiFetch } from '@/utils/apiFetch'
 
+export function ConversationBanner({ readOnly, readOnlyText, error }: {
+  readOnly: boolean
+  readOnlyText: string
+  error?: { code: string; message: string } | null
+}) {
+  if (readOnly) return (
+    <div className='border-t border-border px-4 py-2 text-xs text-muted-foreground sm:px-6'>
+      {readOnlyText}
+    </div>
+  )
+  if (!error) return null
+  return (
+    <div className='border-t border-border bg-amber-500/10 px-4 py-2 text-xs text-amber-800 dark:text-amber-200 sm:px-6'>
+      <span className='font-medium'>{error.code}</span>
+      <span className='mx-1.5 opacity-50'>·</span>
+      {error.message}
+    </div>
+  )
+}
+
 export function StatusChip({ status }: { status?: string }) {
   if (!status || status === 'completed') return null
 

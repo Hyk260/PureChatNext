@@ -1,3 +1,5 @@
+import { isBoolean } from 'es-toolkit'
+import { matchesShape } from '@pure/utils/object'
 export type DesktopUpdateChannel = 'latest' | 'rc' | 'beta'
 export type DesktopUpdateSourceType = 'local' | 'github' | 'custom'
 
@@ -67,15 +69,11 @@ export function getUpdateChannel(preferences: DesktopUpdatePreferences): Desktop
   return preferences.testPlan ? preferences.testChannel : 'latest'
 }
 
-function hasBaseUpdatePreferences(value: unknown): value is DesktopUpdatePreferences {
-  if (!value || typeof value !== 'object') return false
-  const preferences = value as Partial<DesktopUpdatePreferences>
-  return (
-    typeof preferences.autoUpdate === 'boolean' &&
-    typeof preferences.testPlan === 'boolean' &&
-    (preferences.testChannel === 'rc' || preferences.testChannel === 'beta')
-  )
-}
+const isTestChannel = (value: unknown): value is DesktopUpdatePreferences['testChannel'] =>
+  value === 'rc' || value === 'beta'
+const hasBaseUpdatePreferences = matchesShape({
+  autoUpdate: isBoolean, testPlan: isBoolean, testChannel: isTestChannel,
+})
 
 export function isUpdateSourceType(value: unknown): value is DesktopUpdateSourceType {
   return value === 'local' || value === 'github' || value === 'custom'

@@ -5,6 +5,8 @@ import type { DesktopLmStudioRuntimeConfig, DesktopLogRetentionDays } from '@/ty
 import type { DesktopUpdatePreferences } from '@/types/desktopUpdater'
 import { DEFAULT_UPDATE_PREFERENCES, isUpdatePreferences, normalizeUpdatePreferences } from '@/types/desktopUpdater'
 
+import { isObjectLike, matchesShape } from '@pure/utils/object'
+import { isNumber, isString } from 'es-toolkit'
 import Store from 'electron-store'
 import isFiniteNumber from 'es-toolkit/compat/isFinite'
 import { isValidProviderId } from '@pure/const'
@@ -59,16 +61,16 @@ export const DEFAULT_CONFIG: DesktopConfig = {
   windowState: null,
 }
 
+const isPendingAuth = matchesShape({
+  expiresAt: isNumber, redirectUri: isString, serverUrl: isString, state: isString,
+})
+const isProject = matchesShape({
+  id: isString, name: isString, rootPath: isString, createdAt: isNumber,
+})
+
 const normalizePendingAuth = (value: unknown): DesktopPendingAuth | null => {
-  if (!value || typeof value !== 'object') return null
-  const pending = value as Partial<DesktopPendingAuth>
-  if (
-    typeof pending.expiresAt !== 'number' ||
-    typeof pending.redirectUri !== 'string' ||
-    typeof pending.serverUrl !== 'string' ||
-    typeof pending.state !== 'string'
-  )
-    return null
+  if (!isPendingAuth(value)) return null
+  const pending = value
   if (pending.expiresAt <= Date.now()) return null
   return {
     expiresAt: pending.expiresAt,
@@ -81,16 +83,8 @@ const normalizePendingAuth = (value: unknown): DesktopPendingAuth | null => {
 const normalizeProjects = (value: unknown): DesktopProject[] => {
   if (!Array.isArray(value)) return []
   return value.flatMap((item) => {
-    if (!item || typeof item !== 'object') return []
-    const project = item as Partial<DesktopProject>
-    if (
-      typeof project.id !== 'string' ||
-      typeof project.name !== 'string' ||
-      typeof project.rootPath !== 'string' ||
-      typeof project.createdAt !== 'number'
-    ) {
-      return []
-    }
+    if (!isProject(item)) return []
+    const project = item
     const name = project.name.trim()
     const rootPath = project.rootPath.trim()
     if (!name || !rootPath || !path.isAbsolute(rootPath)) return []
@@ -105,7 +99,7 @@ const normalizeProjects = (value: unknown): DesktopProject[] => {
 }
 
 const normalizeWindowState = (value: unknown): DesktopWindowState | null => {
-  if (!value || typeof value !== 'object') return null
+  if (!isObjectLike(value)) return null
   const state = value as Partial<DesktopWindowState>
   if (!isFiniteNumber(state.width) || !isFiniteNumber(state.height)) {
     return null
@@ -166,10 +160,10 @@ export class DesktopConfigService {
         pendingAuth: normalizePendingAuth(parsed.pendingAuth),
         zoomFactor: normalizeZoomFactor(parsed.zoomFactor),
         permissionScopes:
-          parsed.permissionScopes && typeof parsed.permissionScopes === 'object' ? parsed.permissionScopes : {},
+          isObjectLike(parsed.permissionScopes) ? parsed.permissionScopes : {},
         projects,
         remoteServerUrl: parsed.remoteServerUrl ? normalizeRemoteServerUrl(parsed.remoteServerUrl) : null,
-        secrets: parsed.secrets && typeof parsed.secrets === 'object' ? parsed.secrets : {},
+        secrets: isObjectLike(parsed.secrets) ? parsed.secrets : {},
         windowState: normalizeWindowState(parsed.windowState),
       }
     } catch {

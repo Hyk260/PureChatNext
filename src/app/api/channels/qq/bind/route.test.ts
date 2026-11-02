@@ -39,7 +39,8 @@ vi.mock('@/libs/channels/qq', () => ({
   invalidateQQChat: vi.fn(),
   normalizeQQChannelSettings: vi.fn((settings: unknown) => settings),
 }))
-vi.mock('@/libs/channels/qq/advancedSettings', () => ({
+vi.mock('@/libs/channels/qq/advancedSettings', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/libs/channels/qq/advancedSettings')>(),
   parseQQChannelSettingsInput: vi.fn(),
 }))
 vi.mock('@/libs/channels/qq/agentSupport', () => ({

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isUserCurrentlyBanned } from './user-status'
+import { isUserCurrentlyBanned } from '../user-status'
 
 describe('isUserCurrentlyBanned', () => {
   it('allows active and expired accounts', () => {

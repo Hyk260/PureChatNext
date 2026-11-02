@@ -11,7 +11,7 @@ vi.mock('@pure/database/models/user', () => ({
   },
 }))
 
-import { verifyAuth } from './middleware'
+import { verifyAuth } from '../middleware'
 
 describe('verifyAuth', () => {
   beforeEach(() => {

@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { and, desc, eq } from 'drizzle-orm'
 
 import { getServerDB } from '../core/db-adaptor'
@@ -36,7 +37,7 @@ export type UserSkillCreateInput = {
 }
 
 const isUniqueViolation = (error: unknown) => {
-  if (!error || typeof error !== 'object') return false
+  if (!isObjectLike(error)) return false
   const candidate = error as { cause?: { code?: string }; code?: string }
   return candidate.code === '23505' || candidate.cause?.code === '23505'
 }

@@ -1,5 +1,7 @@
 'use client'
 
+import { isObjectLike } from '@pure/utils/object'
+
 import { lazy, memo, Suspense, useEffect } from 'react'
 import type { ComponentType, ReactElement } from 'react'
 import { createBrowserRouter, isRouteErrorResponse, Navigate, Outlet, useLocation, useRouteError } from 'react-router'
@@ -76,7 +78,7 @@ export function redirectElement(to: string): ReactElement {
 function normalizeRouteError(error: unknown): Error {
   if (error instanceof Error) return error
   if (typeof error === 'string') return new Error(error)
-  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+  if (isObjectLike(error) && 'message' in error && typeof error.message === 'string') {
     return new Error(error.message)
   }
   return new Error('Unknown route error')

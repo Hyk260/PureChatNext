@@ -96,11 +96,9 @@ export const mergeProviderConfig = (
   const requestedCheckModel =
     typeof partial.checkModel === 'string' && partial.checkModel.trim() ? partial.checkModel.trim() : ''
   const requestedCheckModelCard = catalogById.get(requestedCheckModel)
-  const checkModelEnabled = requestedCheckModel
-    ? isServerManagedProvider(id)
-      ? requestedCheckModelCard !== undefined && requestedCheckModelCard.enabled !== false
-      : requestedCheckModelCard?.enabled !== false
-    : false
+  const checkModelEnabled = Boolean(requestedCheckModel) &&
+    (!isServerManagedProvider(id) || requestedCheckModelCard !== undefined) &&
+    requestedCheckModelCard?.enabled !== false
 
   return {
     ...defaults,

@@ -712,11 +712,11 @@ export class ChannelEventModel {
         )
       : undefined
     const watchedIds = options?.watchEventIds?.slice(0, 20) ?? []
-    const timelineCondition = watchedIds.length
-      ? afterCondition
-        ? or(afterCondition, inArray(channelEvents.id, watchedIds))
-        : inArray(channelEvents.id, watchedIds)
-      : afterCondition
+    let timelineCondition = afterCondition
+    if (watchedIds.length) {
+      const watchedCondition = inArray(channelEvents.id, watchedIds)
+      timelineCondition = afterCondition ? or(afterCondition, watchedCondition) : watchedCondition
+    }
     const conditions = [
       eq(channelEvents.sessionId, sessionId),
       eq(channelEvents.conversationVersion, version),

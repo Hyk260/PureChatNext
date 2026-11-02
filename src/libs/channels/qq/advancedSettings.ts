@@ -1,3 +1,5 @@
+import { isString } from 'es-toolkit'
+import { isObjectLike, matchesShape } from '@pure/utils/object'
 import { QQ_MAX_TEXT_LENGTH, chunkQQText } from '@pure/utils/qqText'
 import type { ChannelAccessPolicy, ChannelAllowedUser, ChannelBindingSettings } from '@pure/database/schemas/channel'
 import { isQQSpeechReplyMode, speechConfigError } from '@pure/const'
@@ -30,6 +32,8 @@ export const DEFAULT_QQ_CHANNEL_SETTINGS: QQChannelSettings = {
   platformUserId: '',
 }
 
+export const isQQSpeechModelFields = matchesShape({ provider: isString, model: isString })
+
 const ACCESS_POLICIES = new Set<QQAccessPolicy>(['open', 'allowlist', 'disabled'])
 
 function isAccessPolicy(value: unknown): value is QQAccessPolicy {
@@ -41,14 +45,11 @@ function normalizeAllowedUsers(value: unknown): QQAllowedUser[] {
   const seen = new Set<string>()
   const users: QQAllowedUser[] = []
   for (const entry of value) {
-    if (!entry || typeof entry !== 'object') continue
-    const platformUserId =
-      typeof (entry as { platformUserId?: unknown }).platformUserId === 'string'
-        ? (entry as { platformUserId: string }).platformUserId.trim()
-        : ''
+    if (!isObjectLike(entry)) continue
+    const platformUserId = typeof entry.platformUserId === 'string' ? entry.platformUserId.trim() : ''
     if (!platformUserId || seen.has(platformUserId)) continue
     seen.add(platformUserId)
-    const remarkRaw = (entry as { remark?: unknown }).remark
+    const remarkRaw = entry.remark
     const remark = typeof remarkRaw === 'string' ? remarkRaw.trim().slice(0, 120) : ''
     users.push(remark ? { platformUserId, remark } : { platformUserId })
   }
@@ -107,8 +108,8 @@ export function normalizeQQChannelSettings(raw?: ChannelBindingSettings | null):
 export function parseQQChannelSettingsInput(raw: unknown):
   | { ok: true; settings: QQChannelSettings }
   | { ok: false; error: string } {
-  if (!raw || typeof raw !== 'object') return { ok: false, error: 'settings is required' }
-  const body = raw as Record<string, unknown>
+  if (!isObjectLike(raw)) return { ok: false, error: 'settings is required' }
+  const body = raw
   if (body.dmPolicy !== undefined && !isAccessPolicy(body.dmPolicy)) {
     return { ok: false, error: 'Invalid dmPolicy' }
   }
@@ -124,17 +125,9 @@ export function parseQQChannelSettingsInput(raw: unknown):
   if (body.platformUserId !== undefined && typeof body.platformUserId !== 'string') {
     return { ok: false, error: 'Invalid platformUserId' }
   }
-  if (
-    body.speechModel !== undefined &&
-    (!body.speechModel ||
-      typeof body.speechModel !== 'object' ||
-      typeof (body.speechModel as { provider?: unknown }).provider !== 'string' ||
-      typeof (body.speechModel as { model?: unknown }).model !== 'string')
-  ) {
-    return { ok: false, error: 'Invalid speechModel' }
-  }
   if (body.speechModel !== undefined) {
-    const speechModel = body.speechModel as Record<string, unknown>
+    if (!isQQSpeechModelFields(body.speechModel)) return { ok: false, error: 'Invalid speechModel' }
+    const speechModel = body.speechModel
     if (speechModel.voice !== undefined && (typeof speechModel.voice !== 'string' || !speechModel.voice.trim())) {
       return { ok: false, error: 'Invalid speechModel voice' }
     }
@@ -148,8 +141,8 @@ export function parseQQChannelSettingsInput(raw: unknown):
       return { ok: false, error: 'Invalid speechModel instruction' }
     }
     const invalid = speechConfigError({
-      model: speechModel.model as string,
-      provider: speechModel.provider as string,
+      model: speechModel.model,
+      provider: speechModel.provider,
       ...(typeof speechModel.voice === 'string' ? { voice: speechModel.voice.trim() } : {}),
     })
     if (invalid) return { ok: false, error: invalid }

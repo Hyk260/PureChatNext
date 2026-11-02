@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { getErrorMessage } from '@pure/utils/error'
 import { isValidProviderId, PURECHAT_PROVIDER_ID } from '@pure/const'
 import { FreePlanLimitError } from '@pure/database/models/credits'
@@ -66,7 +67,7 @@ const getAttachmentName = (value: Record<string, unknown>) => {
 }
 
 const formatPart = (part: unknown) => {
-  if (!part || typeof part !== 'object') return ''
+  if (!isObjectLike(part)) return ''
   const value = part as Record<string, unknown>
   if (value.type === 'text' && typeof value.text === 'string') return value.text
   if (value.type === 'file') {

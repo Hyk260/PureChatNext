@@ -471,12 +471,9 @@ const startElectronDev = async (
     assertRunning(child)
     if (result.kind === 'ready') return child
 
-    const reason =
-      result.kind === 'exit'
-        ? `process exited (code ${result.code})`
-        : result.kind === 'no-renderer'
-          ? `renderer port ${rendererPort} did not open`
-          : 'Electron app process did not appear (possible single-instance lock)'
+    let reason = 'Electron app process did not appear (possible single-instance lock)'
+    if (result.kind === 'exit') reason = `process exited (code ${result.code})`
+    else if (result.kind === 'no-renderer') reason = `renderer port ${rendererPort} did not open`
 
     console.warn(
       `Electron desktop start failed on attempt ${attempt}: ${reason}. ` +

@@ -7,9 +7,9 @@ vi.mock('@pure/database/models/refreshTokenFamily', () => ({
     create = mocks.create
   },
 }))
-vi.mock('./jwt', () => ({ signRefreshToken: mocks.signRefreshToken }))
+vi.mock('../jwt', () => ({ signRefreshToken: mocks.signRefreshToken }))
 
-import { issueRefreshToken } from './refreshTokenStore'
+import { issueRefreshToken } from '../refreshTokenStore'
 
 describe('issueRefreshToken', () => {
   it('persists token family state before returning the signed token', async () => {

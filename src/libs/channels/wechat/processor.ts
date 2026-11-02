@@ -96,7 +96,8 @@ async function buildResponse(event: ChannelEventItem): Promise<WechatEventRespon
     }
   }
   if (event.messageKind === 'audio' || event.messageKind === 'video' || event.messageKind === 'unsupported') {
-    const kindLabel = event.messageKind === 'audio' ? '语音' : event.messageKind === 'video' ? '视频' : '该类型'
+    const kindLabels = { audio: '语音', video: '视频', unsupported: '该类型' }
+    const kindLabel = kindLabels[event.messageKind]
     return systemResponse(`当前版本暂不支持${kindLabel}消息`)
   }
   if (event.messageKind === 'command' || event.content.startsWith('/')) {

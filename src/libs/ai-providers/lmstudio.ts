@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { generateText } from 'ai'
 import type { LanguageModel, UIMessage } from 'ai'
@@ -45,7 +46,7 @@ type NativeModel = {
 
 const extractStringSet = (value: unknown) => {
   if (Array.isArray(value)) return new Set(value.filter((item): item is string => typeof item === 'string'))
-  if (value && typeof value === 'object') {
+  if (isObjectLike(value)) {
     return new Set(Object.entries(value).filter(([, enabled]) => enabled === true).map(([key]) => key))
   }
   return new Set<string>()

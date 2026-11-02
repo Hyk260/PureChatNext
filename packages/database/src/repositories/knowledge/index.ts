@@ -63,11 +63,11 @@ export class KnowledgeRepo {
         .map((d) => this.documentToKnowledgeItem(d)),
     ]
 
+    const field = params.sorter === 'name' || params.sorter === 'size' ? params.sorter : 'createdAt'
+    const dir = params.sortType === 'asc' ? 1 : -1
     items.sort((a, b) => {
-      const field = params.sorter ?? 'createdAt'
-      const dir = params.sortType === 'asc' ? 1 : -1
-      const av = a[field === 'name' ? 'name' : field === 'size' ? 'size' : 'createdAt']
-      const bv = b[field === 'name' ? 'name' : field === 'size' ? 'size' : 'createdAt']
+      const av = a[field]
+      const bv = b[field]
       if (av instanceof Date && bv instanceof Date) return (av.getTime() - bv.getTime()) * dir
       if (typeof av === 'string' && typeof bv === 'string') return av.localeCompare(bv) * dir
       if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir

@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { generateText, isStepCount } from 'ai'
 import type { LanguageModel, ModelMessage } from 'ai'
 import debug from 'debug'
@@ -173,7 +174,7 @@ export async function confirmChannelSpeechIntent(params: {
   })
   try {
     const value: unknown = JSON.parse(result.text)
-    return typeof value === 'object' && value !== null && 'speak' in value && value.speak === true
+    return isObjectLike(value) && 'speak' in value && value.speak === true
   } catch {
     return false
   }

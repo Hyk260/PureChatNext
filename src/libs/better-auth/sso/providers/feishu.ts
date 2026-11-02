@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { checkProviderEnvs } from '../helpers'
 import type { GenericProviderDefinition } from '../types'
 
@@ -42,7 +43,7 @@ type FeishuTokenResponse = {
 } & FeishuTokenPayload
 
 const isFeishuProfile = (value: unknown): value is FeishuUserProfile => {
-  if (!value || typeof value !== 'object') return false
+  if (!isObjectLike(value)) return false
   const candidate = value as Record<string, unknown>
   return (
     typeof candidate.union_id === 'string' ||

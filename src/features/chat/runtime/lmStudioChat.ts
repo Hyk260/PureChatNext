@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import {
   convertToModelMessages,
   createUIMessageStreamResponse,
@@ -179,7 +180,7 @@ export async function createLmStudioChatResponse(
         ? {
             toolApproval: async ({ toolCall }: { toolCall: { input: unknown; toolName: string } }) => {
               let args: Record<string, unknown> | undefined
-              if (toolCall.input && typeof toolCall.input === 'object') {
+              if (isObjectLike(toolCall.input)) {
                 args = toolCall.input as Record<string, unknown>
               }
               const decision = isToolApprovalRequired({

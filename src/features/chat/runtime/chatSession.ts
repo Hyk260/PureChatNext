@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { getErrorMessage } from '@pure/utils/error'
 import { Chat } from '@ai-sdk/react'
 import {
@@ -199,7 +200,7 @@ export class ChatSession {
         if (this.blocked || this.stopRequested || toolCall.dynamic || !desktop || !body) return
         if (!LOCAL_TOOL_NAMES.has(toolCall.toolName)) return
         const epoch = this.epoch
-        const args = (toolCall.input && typeof toolCall.input === 'object' ? toolCall.input : {}) as Record<
+        const args = (isObjectLike(toolCall.input) ? toolCall.input : {}) as Record<
           string,
           unknown
         >

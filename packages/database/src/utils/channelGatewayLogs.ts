@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { CHANNEL_MESSAGE_KIND_LABEL, isBailianQwenSpeechModel, speechVoiceOptions } from '@pure/const'
 import { CHANNEL_LOG_LIMIT, CHANNEL_LOG_MAX_BYTES, CHANNEL_LOG_MESSAGES } from '@pure/types'
 import type { ChannelGatewayLogs, ChannelLogEvent, ChannelLogInput } from '@pure/types'
@@ -161,7 +162,7 @@ export function safeChannelLogCode(value: unknown): string | null {
 }
 
 export function channelErrorCode(error: unknown): string {
-  if (!error || typeof error !== 'object') return 'Error'
+  if (!isObjectLike(error)) return 'Error'
   const details = error as { code?: unknown; name?: unknown }
   return safeChannelLogCode(details.code) || safeChannelLogCode(details.name) || 'Error'
 }

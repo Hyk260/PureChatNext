@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
@@ -170,7 +171,7 @@ export class SystemToolsService {
       })
       return normalizeVersion(stdout) ?? normalizeVersion(stderr)
     } catch (error) {
-      if (error && typeof error === 'object') {
+      if (isObjectLike(error)) {
         const stdout = 'stdout' in error && typeof error.stdout === 'string' ? error.stdout : ''
         const stderr = 'stderr' in error && typeof error.stderr === 'string' ? error.stderr : ''
         return normalizeVersion(stdout) ?? normalizeVersion(stderr)

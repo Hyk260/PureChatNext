@@ -625,12 +625,13 @@ export async function handleQQMention(params: {
         await recordChannelGatewayLog({ userId, bindingId, platform: 'qq', event: 'send_failed', code: abortController.signal.aborted ? 'ABORTED' : 'QQ_REPLY_FAILED' })
         return
       }
+      const senderReply = speechSent ? finalReply : textReply
       await eventModel
         .saveQQResponse(event.id, {
           ...(model ? { model } : {}),
           ...(provider ? { provider } : {}),
           sentChunkCount: outbound.sentCount,
-          text: sender ? (speechSent ? finalReply : textReply) : outbound.text,
+          text: sender ? senderReply : outbound.text,
         })
         .catch((saveError) => log('save reply event failed app=%s: %O', applicationId, saveError))
     } finally {

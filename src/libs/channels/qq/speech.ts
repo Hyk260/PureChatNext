@@ -1,3 +1,4 @@
+import { isObjectLike } from '@pure/utils/object'
 import { isBailianQwenSpeechModel, QQ_SPEECH_LIMITS, speechVoices, stripQwenTtsTags } from '@pure/const'
 import { QQDeliveryError } from '@pure/chat-adapter/qq'
 import type { QQAdapter } from '@pure/chat-adapter/qq'
@@ -59,7 +60,7 @@ const terminalQQCodes = new Set([
   'QQ_HTTP_401',
 ])
 function terminalCode(error: unknown): string | undefined {
-  if (!error || typeof error !== 'object' || !('code' in error)) return undefined
+  if (!isObjectLike(error) || !('code' in error)) return undefined
   return typeof error.code === 'string' && terminalQQCodes.has(error.code) ? error.code : undefined
 }
 export const canFallbackQQSpeech = (error: unknown) => !terminalCode(error)

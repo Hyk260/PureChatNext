@@ -1,3 +1,6 @@
+import { isRecord } from '@pure/utils/object'
+import isFiniteNumber from 'es-toolkit/compat/isFinite'
+
 import { SITE_DEFAULT_URL } from '@/const/site'
 import { referralCallback } from '@/libs/referrals/helpers'
 import { getDesktopRemoteBaseUrl } from '@/utils/desktopFetch'
@@ -94,12 +97,11 @@ export function parseEmailTemplateKey(value: unknown): EmailTemplateKey | undefi
   return typeof value === 'string' && isEmailTemplateKey(value) ? value : undefined
 }
 
-export function parseEmailTemplateParams(value: unknown): EmailTemplateParams | undefined {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+export function parseEmailTemplateParams(raw: unknown): EmailTemplateParams | undefined {
+  if (!isRecord(raw)) {
     return undefined
   }
 
-  const raw = value as Record<string, unknown>
   const params: EmailTemplateParams = {}
 
   if (typeof raw.url === 'string' && raw.url.trim()) {
@@ -112,7 +114,7 @@ export function parseEmailTemplateParams(value: unknown): EmailTemplateParams | 
     params.userName = null
   }
 
-  if (typeof raw.expiresInSeconds === 'number' && Number.isFinite(raw.expiresInSeconds)) {
+  if (isFiniteNumber(raw.expiresInSeconds)) {
     params.expiresInSeconds = raw.expiresInSeconds
   }
 

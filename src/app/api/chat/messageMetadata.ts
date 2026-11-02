@@ -1,9 +1,10 @@
 import type { LanguageModelUsage, StepResultPerformance, TextStreamPart, ToolSet } from 'ai'
+import isFiniteNumber from 'es-toolkit/compat/isFinite'
 
 import type { ChatContextSummary, ChatMessageMetadata, ModelPerformance, ModelUsage } from '@pure/types'
 
 const finiteNumber = (value: number | undefined) =>
-  typeof value === 'number' && Number.isFinite(value) ? value : undefined
+  isFiniteNumber(value) ? value : undefined
 
 export const toModelUsage = (usage: LanguageModelUsage): ModelUsage => ({
   inputCachedTokens: finiteNumber(usage.inputTokenDetails.cacheReadTokens),

@@ -4,6 +4,21 @@ import { CHANNEL_LOG_MAX_BYTES } from '@pure/types'
 import { channelErrorCode, formatChannelGatewayLogs, normalizeChannelLog } from './channelGatewayLogs'
 
 describe('channel diagnostics formatting', () => {
+  it('ignores invalid retry numbers and keeps rounding and bounds for finite values', () => {
+    const retry = { userId: 'owner', platform: 'qq', event: 'retry' } as const
+    const baseMessage = normalizeChannelLog(retry).message
+    for (const value of [NaN, Infinity, -Infinity, '2', null, undefined]) {
+      expect(normalizeChannelLog({ ...retry, attempt: value as never, delayMs: value as never }).message)
+        .toBe(baseMessage)
+    }
+    expect(normalizeChannelLog({ ...retry, attempt: 2.9, delayMs: 10.9 }).message)
+      .toBe(`${baseMessage}，第 2 次，10ms 后执行`)
+    expect(normalizeChannelLog({ ...retry, attempt: 0, delayMs: -1 }).message)
+      .toBe(`${baseMessage}，第 1 次，0ms 后执行`)
+    expect(normalizeChannelLog({ ...retry, attempt: 1e6, delayMs: 1e6 }).message)
+      .toBe(`${baseMessage}，第 9999 次，300000ms 后执行`)
+  })
+
   it('drops credentials, arbitrary codes and raw error objects', () => {
     const secret = 'secret-token-qr-body'
     expect(channelErrorCode({ code: secret, name: secret, message: secret, stack: secret })).toBe('Error')

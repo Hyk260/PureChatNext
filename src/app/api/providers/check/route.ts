@@ -1,6 +1,7 @@
 import { isValidProviderId } from '@pure/const'
 import { generateText } from 'ai'
 import debug from 'debug'
+import isFiniteNumber from 'es-toolkit/compat/isFinite'
 
 import { FreePlanLimitError } from '@pure/database/models/credits'
 import { getAiModel } from '@pure/model-bank'
@@ -51,7 +52,7 @@ const getHealthCheckPlan = (provider: string, model: string) => {
 }
 
 const normalizeTimeoutMs = (value: unknown) => {
-  const timeoutMs = typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : DEFAULT_TIMEOUT_MS
+  const timeoutMs = isFiniteNumber(value) ? Math.round(value) : DEFAULT_TIMEOUT_MS
   return Math.min(MAX_TIMEOUT_MS, Math.max(MIN_TIMEOUT_MS, timeoutMs))
 }
 

@@ -5,7 +5,7 @@ import path from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { DEFAULT_CONFIG, DesktopConfigService, normalizeRemoteServerUrl } from '../services/DesktopConfigService'
+import { DEFAULT_CONFIG, DesktopConfigService, normalizeRemoteServerUrl, normalizeZoomFactor } from '../services/DesktopConfigService'
 import { DEFAULT_UPDATE_PREFERENCES } from '@/types/desktopUpdater'
 import type { DesktopUpdatePreferences } from '@/types/desktopUpdater'
 
@@ -27,6 +27,26 @@ describe('normalizeRemoteServerUrl', () => {
 })
 
 describe('DesktopConfigService', () => {
+  it('rejects invalid window dimensions and coordinates without coercing strings', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-desktop-'))
+    tempDirs.push(dir)
+    const store = new DesktopConfigService(dir)
+    const windowState = { height: 800, width: 1200, isMaximized: false, x: 0, y: 0 }
+
+    for (const value of [NaN, Infinity, -Infinity, '1200', null, undefined]) {
+      for (const dimension of ['width', 'height']) {
+        await store.write({ ...DEFAULT_CONFIG, windowState: { ...windowState, [dimension]: value } })
+        expect((await store.read()).windowState).toBeNull()
+      }
+      await store.write({ ...DEFAULT_CONFIG, windowState: { ...windowState, x: value as never, y: value as never } })
+      expect((await store.read()).windowState).toEqual({ ...windowState, x: null, y: null })
+      expect(normalizeZoomFactor(value)).toBe(1)
+    }
+    expect(normalizeZoomFactor(0)).toBe(0.5)
+    expect(normalizeZoomFactor(1.24)).toBe(1.2)
+    expect(normalizeZoomFactor(3)).toBe(2)
+  })
+
   it('encrypts the config file and persists secrets across restart', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'purechat-desktop-'))
     tempDirs.push(dir)

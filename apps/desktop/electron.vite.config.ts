@@ -37,7 +37,7 @@ export default defineConfig({
     build: {
       // electron-builder excludes node_modules; bundle runtime dependencies into the
       // main entry so packaged apps can run without a dependency tree.
-      externalizeDeps: { exclude: ['electron-log', 'electron-updater', 'electron-store'] },
+      externalizeDeps: { exclude: ['electron-log', 'electron-updater', 'electron-store', 'es-toolkit'] },
       outDir: path.resolve(desktopDir, 'dist/main'),
       sourcemap: process.env.NODE_ENV !== 'production',
     },

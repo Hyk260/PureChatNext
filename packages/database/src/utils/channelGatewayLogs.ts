@@ -1,8 +1,10 @@
 import { CHANNEL_MESSAGE_KIND_LABEL, isBailianQwenSpeechModel, speechVoiceOptions } from '@pure/const'
 import { CHANNEL_LOG_LIMIT, CHANNEL_LOG_MAX_BYTES, CHANNEL_LOG_MESSAGES } from '@pure/types'
 import type { ChannelGatewayLogs, ChannelLogEvent, ChannelLogInput } from '@pure/types'
+import isFiniteNumber from 'es-toolkit/compat/isFinite'
 
 type SpeechResultState = NonNullable<ChannelLogInput['speechResult']>['state']
+type AgentReplyStep = NonNullable<NonNullable<ChannelLogInput['agentReply']>['steps']>[number]
 
 const PUBLIC_ERROR_CODES = new Set([
   'Error', 'TypeError', 'AbortError', 'TimeoutError', 'SyntaxError',
@@ -65,7 +67,7 @@ function normalizeInboundMessage(input: ChannelLogInput): string {
   const contactHash = details?.contactHash && /^[a-f\d]{10}$/i.test(details.contactHash)
     ? `，联系人=sha256:${details.contactHash}`
     : ''
-  const contentLength = typeof details?.contentLength === 'number' && Number.isFinite(details.contentLength)
+  const contentLength = isFiniteNumber(details?.contentLength)
     ? `，长度=${Math.min(Math.max(Math.trunc(details.contentLength), 0), 1_000_000_000)}`
     : ''
   const identity = details?.identityType && details.identity && /^[\w@.-]{1,255}$/.test(details.identity)
@@ -84,25 +86,30 @@ function clampLogText(value: string, maxLength: number): string {
   return `${characters.slice(0, maxLength).join('')}…`
 }
 
+function normalizeAgentReplyStep(step: AgentReplyStep): string {
+  const safeValue = (value: string | undefined, maxLength = 100) => (value ? clampLogText(value, maxLength) : '-')
+  const tools = (step.tools ?? []).slice(0, 20).map((tool) => safeValue(tool, 60)).join(',') || '-'
+  const stepNumber = isFiniteNumber(step.step) ? Math.trunc(step.step) : 0
+  const resultCount = isFiniteNumber(step.resultCount) ? Math.trunc(step.resultCount) : 0
+  const boundedStepNumber = Math.max(0, Math.min(stepNumber, 999))
+  const boundedResultCount = Math.max(0, Math.min(resultCount, 999))
+
+  return `${boundedStepNumber}:${safeValue(step.finish, 40)} tools=${tools} results=${boundedResultCount}`
+}
+
 function normalizeAgentReply(input: ChannelLogInput): string {
   const details = input.agentReply
   const platformName = input.platform === 'qq' ? 'QQ' : '微信'
   if (!details) return `${platformName} Agent 回复已生成`
 
   const safeValue = (value: string | undefined, maxLength = 100) => value ? clampLogText(value, maxLength) : '-'
-  const steps = (details.steps ?? []).slice(0, 20).map((step) => {
-    const stepTools = step.tools ?? []
-    const tools = stepTools.length ? stepTools.slice(0, 20).map((tool) => safeValue(tool, 60)).join(',') : '-'
-    const stepNumber = typeof step.step === 'number' && Number.isFinite(step.step) ? step.step : 0
-    const resultCount = typeof step.resultCount === 'number' && Number.isFinite(step.resultCount) ? step.resultCount : 0
-    return `${Math.max(0, Math.min(Math.trunc(stepNumber), 999))}:${safeValue(step.finish, 40)} tools=${tools} results=${Math.max(0, Math.min(Math.trunc(resultCount), 999))}`
-  })
+  const steps = (details.steps ?? []).slice(0, 20).map(normalizeAgentReplyStep)
   const available = (details.toolsAvailable ?? []).slice(0, 20).map((tool) => safeValue(tool, 60)).join(',') || '-'
   const called = (details.toolsCalled ?? []).slice(0, 20).map((tool) => safeValue(tool, 60)).join(',') || '-'
-  const durationMs = typeof details.durationMs === 'number' && Number.isFinite(details.durationMs)
+  const durationMs = isFiniteNumber(details.durationMs)
     ? Math.max(0, Math.min(Math.trunc(details.durationMs), 86_400_000))
     : 0
-  const contextMessageCount = typeof details.contextMessageCount === 'number' && Number.isFinite(details.contextMessageCount)
+  const contextMessageCount = isFiniteNumber(details.contextMessageCount)
     ? Math.max(0, Math.min(Math.trunc(details.contextMessageCount), 100_000))
     : 0
   const output = details.aiOutput ? `，aiOutput=${JSON.stringify(clampLogText(details.aiOutput, 500))}` : ''
@@ -170,8 +177,16 @@ export function normalizeChannelLog(input: ChannelLogInput) {
   if (input.event === 'agent_reply') message = normalizeAgentReply(input)
   if (input.event === 'speech_result') message = normalizeSpeechResult(input)
   if (input.event === 'retry') {
-    if (typeof input.attempt === 'number' && Number.isFinite(input.attempt)) message += `，第 ${Math.min(Math.max(Math.trunc(input.attempt), 1), 9999)} 次`
-    if (typeof input.delayMs === 'number' && Number.isFinite(input.delayMs)) message += `，${Math.min(Math.max(Math.trunc(input.delayMs), 0), 300_000)}ms 后执行`
+    if (isFiniteNumber(input.attempt)) {
+      const attempt = Math.trunc(input.attempt)
+      const boundedAttempt = Math.min(Math.max(attempt, 1), 9999)
+      message += `，第 ${boundedAttempt} 次`
+    }
+    if (isFiniteNumber(input.delayMs)) {
+      const delayMs = Math.trunc(input.delayMs)
+      const boundedDelayMs = Math.min(Math.max(delayMs, 0), 300_000)
+      message += `，${boundedDelayMs}ms 后执行`
+    }
   }
   return { level, message, code: safeChannelLogCode(input.code) } as const
 }

@@ -1,3 +1,5 @@
+import isFiniteNumber from 'es-toolkit/compat/isFinite'
+
 export const SKILL_MARKET_CATEGORIES = [
   'coding-agents-ides',
   'web-frontend-development',
@@ -84,7 +86,7 @@ export const isSkillMarketCategory = (value: string | undefined): value is Skill
   Boolean(value && (SKILL_MARKET_CATEGORIES as readonly string[]).includes(value))
 
 const asFiniteNumber = (value: unknown): number | undefined =>
-  typeof value === 'number' && Number.isFinite(value) ? value : undefined
+  isFiniteNumber(value) ? value : undefined
 
 const asNonEmptyString = (value: unknown): string | undefined =>
   typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined

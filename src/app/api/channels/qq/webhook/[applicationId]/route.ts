@@ -1,6 +1,7 @@
 import { waitUntil } from '@vercel/functions'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import isFiniteNumber from 'es-toolkit/compat/isFinite'
 
 import { isValidWebhookChallenge, QQ_OP_CODES, signWebhookResponse, verifyWebhookSignature } from '@pure/chat-adapter/qq'
 import { decryptCredentials } from '@/libs/channels/qq/encrypt'
@@ -24,7 +25,7 @@ type QQWebhookProbe = {
 
 function asNonEmptyString(value: unknown): string | null {
   if (typeof value === 'string' && value) return value
-  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  if (isFiniteNumber(value)) return String(value)
   return null
 }
 

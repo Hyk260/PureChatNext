@@ -1,3 +1,5 @@
+import isFiniteNumber from 'es-toolkit/compat/isFinite'
+
 export interface ContextWindowItem {
   id: string
   label: string
@@ -35,7 +37,7 @@ interface TokenSegment {
 }
 
 const normalizeTokens = (tokens: number | undefined): number =>
-  typeof tokens === 'number' && Number.isFinite(tokens) ? Math.max(0, tokens) : 0
+  isFiniteNumber(tokens) ? Math.max(0, tokens) : 0
 
 export const getContextWindowPartTokens = (part: ContextWindowPart): number => {
   if (part.items) {

@@ -1,4 +1,5 @@
 import type { ChatMessageMetadata } from '@pure/types'
+import isFiniteNumber from 'es-toolkit/compat/isFinite'
 
 export interface UsageDetailItem {
   color: string
@@ -14,7 +15,7 @@ export interface MessageUsageDetails {
 }
 
 const nonNegative = (value: number | undefined) =>
-  typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : undefined
+  isFiniteNumber(value) ? Math.max(0, value) : undefined
 
 const positiveItem = (key: string, label: string, color: string, value: number | undefined) =>
   value !== undefined && value > 0 ? { color, key, label, value } : undefined

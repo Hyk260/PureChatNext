@@ -6,6 +6,7 @@ import type { DesktopUpdatePreferences } from '@/types/desktopUpdater'
 import { DEFAULT_UPDATE_PREFERENCES, isUpdatePreferences, normalizeUpdatePreferences } from '@/types/desktopUpdater'
 
 import Store from 'electron-store'
+import isFiniteNumber from 'es-toolkit/compat/isFinite'
 import { isValidProviderId } from '@pure/const'
 import { normalizeLmStudioBaseURL } from '@/libs/ai-providers/lmstudioBaseUrl'
 
@@ -106,20 +107,15 @@ const normalizeProjects = (value: unknown): DesktopProject[] => {
 const normalizeWindowState = (value: unknown): DesktopWindowState | null => {
   if (!value || typeof value !== 'object') return null
   const state = value as Partial<DesktopWindowState>
-  if (
-    typeof state.width !== 'number' ||
-    typeof state.height !== 'number' ||
-    !Number.isFinite(state.width) ||
-    !Number.isFinite(state.height)
-  ) {
+  if (!isFiniteNumber(state.width) || !isFiniteNumber(state.height)) {
     return null
   }
   return {
     height: Math.min(2160, Math.max(520, Math.round(state.height))),
     isMaximized: state.isMaximized === true,
     width: Math.min(3840, Math.max(860, Math.round(state.width))),
-    x: typeof state.x === 'number' && Number.isFinite(state.x) ? Math.round(state.x) : null,
-    y: typeof state.y === 'number' && Number.isFinite(state.y) ? Math.round(state.y) : null,
+    x: isFiniteNumber(state.x) ? Math.round(state.x) : null,
+    y: isFiniteNumber(state.y) ? Math.round(state.y) : null,
   }
 }
 
@@ -136,7 +132,7 @@ export const isLogRetentionDays = (value: unknown): value is DesktopLogRetention
 const normalizeLogRetentionDays = (value: unknown): DesktopLogRetentionDays => (isLogRetentionDays(value) ? value : 30)
 
 export const normalizeZoomFactor = (value: unknown) => {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return 1
+  if (!isFiniteNumber(value)) return 1
   return Math.min(2, Math.max(0.5, Math.round(value * 10) / 10))
 }
 
